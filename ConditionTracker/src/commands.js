@@ -16,7 +16,7 @@ import {
   MENU_REMOVE,
   SCRIPT_NAME,
   SCRIPT_VERSION,
-} from "./constants.js";
+} from './constants.js';
 import {
   buildApplyMessage,
   buildDisplayText,
@@ -24,7 +24,7 @@ import {
   getConditionDisplayName,
   isCustomEffectType,
   isCustomTextCondition,
-} from "./conditions.js";
+} from './conditions.js';
 import {
   announceHtml,
   buildButton,
@@ -35,11 +35,11 @@ import {
   whisperError,
   whisperGms,
   whisperWarning,
-} from "./chat.js";
-import { parseDuration } from "./durations.js";
-import { applyMarker } from "./markers.js";
-import { parseCommand } from "./parser.js";
-import { removeConditionById } from "./removal.js";
+} from './chat.js';
+import { parseDuration } from './durations.js';
+import { applyMarker } from './markers.js';
+import { parseCommand } from './parser.js';
+import { removeConditionById } from './removal.js';
 import {
   addActiveCondition,
   clearActorTokenOverride,
@@ -52,7 +52,7 @@ import {
   getActiveByTarget,
   setActorTokenOverride,
   setConfig,
-} from "./state.js";
+} from './state.js';
 import {
   ACTOR_TYPE_AUTO,
   ACTOR_TYPE_IGNORED,
@@ -62,13 +62,13 @@ import {
   classifyTokenDetail,
   clearCharacterOverrideAttr,
   setCharacterOverrideAttr,
-} from "./actorClassification.js";
+} from './actorClassification.js';
 
 import {
   GAME_SYSTEM_DEFINITIONS,
   VALID_GAME_SYSTEM_LIST,
   getSystemProfile,
-} from "./systems/index.js";
+} from './systems/index.js';
 import {
   escapeHtml,
   getGraphicToken,
@@ -76,7 +76,7 @@ import {
   createId,
   queryObjects,
   toText,
-} from "./utils.js";
+} from './utils.js';
 import {
   getCurrentTurnTokenId,
   getTurnOrder,
@@ -85,7 +85,7 @@ import {
   insertConditionRows,
   removeTokenRow,
   reorderAllConditionRows,
-} from "./turnOrder.js";
+} from './turnOrder.js';
 import {
   validateApplyArgs,
   validateBoolean,
@@ -94,21 +94,15 @@ import {
   validateLocale,
   validateMarkerConfig,
   isGmMessage,
-} from "./validation.js";
-import { runCleanup } from "./cleanup.js";
-import { installMacro } from "./macros.js";
-import { installHandout } from "./handout.js";
-import { handleSaved } from "./savedEffectsCommands.js";
-import { getSavedEffectsForToken } from "./savedEffects.js";
-import {
-  getLocale,
-  getLocalizedLanguageName,
-  LOCALE_DEFINITIONS,
-  t,
-  tRaw,
-} from "./i18n.js";
+} from './validation.js';
+import { runCleanup } from './cleanup.js';
+import { installMacro } from './macros.js';
+import { installHandout } from './handout.js';
+import { handleSaved } from './savedEffectsCommands.js';
+import { getSavedEffectsForToken } from './savedEffects.js';
+import { getLocale, getLocalizedLanguageName, LOCALE_DEFINITIONS, t, tRaw } from './i18n.js';
 
-const SUBJECT_NONE = "__none__";
+const SUBJECT_NONE = '__none__';
 
 const SECTION_HEADING_STYLE = [
   `background:${COLOR_HEADER_LIGHT}`,
@@ -122,7 +116,7 @@ const SECTION_HEADING_STYLE = [
   `font-weight:bold`,
   `padding:3px 6px`,
   `margin:2px 0`,
-].join(";");
+].join(';');
 
 /**
  * Builds an in-card section heading distinct from the message header.
@@ -131,9 +125,7 @@ const SECTION_HEADING_STYLE = [
  * @returns {object} Trusted HTML line.
  */
 export function heading(text) {
-  return rawHtml(
-    `<div style="${SECTION_HEADING_STYLE}">${escapeHtml(text)}</div>`,
-  );
+  return rawHtml(`<div style="${SECTION_HEADING_STYLE}">${escapeHtml(text)}</div>`);
 }
 
 /**
@@ -153,10 +145,7 @@ function code(text) {
  * @returns {string} Text ready for the chat escaping pipeline.
  */
 function decodeHelpText(value) {
-  return toText(value)
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&amp;", "&");
+  return toText(value).replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
 }
 
 /**
@@ -168,10 +157,10 @@ function decodeHelpText(value) {
 function flagAssetUrl(flag) {
   const codepoints = Array.from(toText(flag))
     .map((character) => character.codePointAt(0).toString(16))
-    .join("-");
+    .join('-');
   return codepoints
     ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
-    : "";
+    : '';
 }
 
 /**
@@ -184,7 +173,7 @@ function localeFlag(locale) {
   const label = escapeHtml(locale.flagLabel || locale.name);
   const url = flagAssetUrl(locale.flag);
   if (!url) {
-    return "";
+    return '';
   }
   return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
 }
@@ -207,17 +196,13 @@ function localeLabel(locale) {
  * @returns {string} Human-readable locale label.
  */
 function localeDisplayName(localeCode) {
-  const locale = LOCALE_DEFINITIONS.find(
-    (definition) => definition.code === localeCode,
-  );
+  const locale = LOCALE_DEFINITIONS.find((definition) => definition.code === localeCode);
   if (!locale) {
     return localeCode;
   }
 
   const nativeName =
-    locale.nativeName && locale.nativeName !== locale.name
-      ? ` (${locale.nativeName})`
-      : "";
+    locale.nativeName && locale.nativeName !== locale.name ? ` (${locale.nativeName})` : '';
   return `${locale.name}${nativeName} [${locale.code}]`;
 }
 
@@ -228,8 +213,8 @@ function localeDisplayName(localeCode) {
  * @returns {string} Intro text ending before the locale table.
  */
 function invalidLocaleIntro(locale) {
-  return t("ui.msg.invalidLocale", locale, { locales: "" })
-    .replace(/\s*:?\s*\.?$/, ":")
+  return t('ui.msg.invalidLocale', locale, { locales: '' })
+    .replace(/\s*:?\s*\.?$/, ':')
     .trim();
 }
 
@@ -239,10 +224,7 @@ function invalidLocaleIntro(locale) {
  * @returns {string[][]} Trusted HTML table rows.
  */
 function localeTableRows() {
-  return LOCALE_DEFINITIONS.map((locale) => [
-    code(locale.code),
-    localeLabel(locale),
-  ]);
+  return LOCALE_DEFINITIONS.map((locale) => [code(locale.code), localeLabel(locale)]);
 }
 
 /**
@@ -254,10 +236,7 @@ function localeTableRows() {
  * @returns {object} Trusted HTML button.
  */
 function buildTokenChoiceButton(token, args, slot) {
-  return buildButton(
-    token.name,
-    buildWizardBase({ ...args, [slot]: token.id }),
-  );
+  return buildButton(token.name, buildWizardBase({ ...args, [slot]: token.id }));
 }
 
 /**
@@ -290,10 +269,7 @@ function buildDurationCommand(args, duration) {
  * @returns {string[][]} Escaped HTML rows.
  */
 function toEscapedHandoutTableRows(rows) {
-  return rows.map(([a, b]) => [
-    code(decodeHelpText(a)),
-    escapeHtml(decodeHelpText(b)),
-  ]);
+  return rows.map(([a, b]) => [code(decodeHelpText(a)), escapeHtml(decodeHelpText(b))]);
 }
 
 /**
@@ -302,7 +278,7 @@ function toEscapedHandoutTableRows(rows) {
  * @returns {object} Trusted HTML spacer.
  */
 function sectionSpacer() {
-  return rawHtml("<br><br>");
+  return rawHtml('<br><br>');
 }
 
 /**
@@ -326,12 +302,12 @@ export function isPlayerToken(token) {
  * @returns {string} Display name, or empty string if none found.
  */
 function getTokenDisplayName(token) {
-  const tokenName = toText(token.get("name"));
+  const tokenName = toText(token.get('name'));
   if (tokenName) return tokenName;
-  const characterId = toText(token.get("represents"));
-  if (!characterId) return "";
-  const character = getObj("character", characterId);
-  return character ? toText(character.get("name")) : "";
+  const characterId = toText(token.get('represents'));
+  if (!characterId) return '';
+  const character = getObj('character', characterId);
+  return character ? toText(character.get('name')) : '';
 }
 
 /**
@@ -345,7 +321,7 @@ function getTokenDisplayName(token) {
 function hasZeroHp(token) {
   const bar = getConfig().healthBar;
   const raw = token.get(bar);
-  if (raw === "" || raw === null || raw === undefined) return false;
+  if (raw === '' || raw === null || raw === undefined) return false;
   const value = Number(raw);
   return Number.isFinite(value) && value <= 0;
 }
@@ -395,10 +371,8 @@ function getTokensFromTurnOrder() {
  * @returns {{id: string, name: string, isPlayer: boolean}[]} Token entries.
  */
 function getTokensFromPage() {
-  const pageId = Campaign().get("playerpageid");
-  return queryObjects({ _type: "graphic", _pageid: pageId })
-    .map(tokenToEntry)
-    .filter(Boolean);
+  const pageId = Campaign().get('playerpageid');
+  return queryObjects({ _type: 'graphic', _pageid: pageId }).map(tokenToEntry).filter(Boolean);
 }
 
 /**
@@ -413,8 +387,7 @@ function getTokensFromPage() {
  */
 function getPageTokens() {
   const fromTurnOrder = getTokensFromTurnOrder();
-  const entries =
-    fromTurnOrder.length > 0 ? fromTurnOrder : getTokensFromPage();
+  const entries = fromTurnOrder.length > 0 ? fromTurnOrder : getTokensFromPage();
   return entries.sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -428,15 +401,15 @@ function getPageTokens() {
  * @returns {string} Command prefix for wizard step buttons.
  */
 function buildWizardBase(args) {
-  const parts = ["--prompt"];
+  const parts = ['--prompt'];
   const sourceId = toText(args.source);
   const subjectRaw = toText(args.subject);
-  const subjectId = subjectRaw === SUBJECT_NONE ? "" : subjectRaw;
+  const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
   const targetId = toText(args.target);
   const targetsRaw = toText(args.targets);
-  const selectedIdsRaw = toText(args["selected-ids"]);
+  const selectedIdsRaw = toText(args['selected-ids']);
   const conditionRaw = toText(args.condition);
-  const canonical = conditionRaw ? getCanonicalCondition(conditionRaw) : "";
+  const canonical = conditionRaw ? getCanonicalCondition(conditionRaw) : '';
   const durationRaw = toText(args.duration);
   const langRaw = toText(args.lang);
 
@@ -459,7 +432,7 @@ function buildWizardBase(args) {
  * @returns {string} Joined command string.
  */
 function buildCommand(parts) {
-  return [COMMAND, ...parts].join(" ");
+  return [COMMAND, ...parts].join(' ');
 }
 
 /**
@@ -474,12 +447,10 @@ function buildDurationQuery(defaultDuration) {
   const text = toText(defaultDuration);
   if (text) {
     const rest = DURATION_OPTIONS.filter((o) => o !== text);
-    const options = DURATION_OPTIONS.includes(text)
-      ? [text, ...rest]
-      : [text, ...DURATION_OPTIONS];
-    return `?{Duration|${options.join("|")}}`;
+    const options = DURATION_OPTIONS.includes(text) ? [text, ...rest] : [text, ...DURATION_OPTIONS];
+    return `?{Duration|${options.join('|')}}`;
   }
-  return `?{Duration|${DURATION_OPTIONS.join("|")}}`;
+  return `?{Duration|${DURATION_OPTIONS.join('|')}}`;
 }
 
 /**
@@ -495,8 +466,8 @@ function buildTwoColumnRows(leftButtons, rightButtons) {
 
   for (let i = 0; i < maxRows; i += 1) {
     tableRows.push([
-      i < leftButtons.length ? leftButtons[i] : "",
-      i < rightButtons.length ? rightButtons[i] : "",
+      i < leftButtons.length ? leftButtons[i] : '',
+      i < rightButtons.length ? rightButtons[i] : '',
     ]);
   }
 
@@ -520,7 +491,7 @@ function showTokenStep(playerId, title, args, slot, description) {
   const locale = getConfig().language;
   const tokens = getPageTokens();
   if (tokens.length === 0) {
-    whisper(playerId, title, t("ui.wizard.noTokens", locale));
+    whisper(playerId, title, t('ui.wizard.noTokens', locale));
     return;
   }
 
@@ -535,36 +506,29 @@ function showTokenStep(playerId, title, args, slot, description) {
   const body = [];
   if (description) {
     body.push(
-      rawHtml(
-        `<div style="font-style:italic;margin:2px 0 4px;">${escapeHtml(description)}</div>`,
-      ),
+      rawHtml(`<div style="font-style:italic;margin:2px 0 4px;">${escapeHtml(description)}</div>`)
     );
   }
-  if (slot === "subject") {
+  if (slot === 'subject') {
     body.push(
       buildButton(
-        t("ui.wizard.noneBtn", locale),
-        buildWizardBase({ ...args, subject: SUBJECT_NONE }),
-      ),
+        t('ui.wizard.noneBtn', locale),
+        buildWizardBase({ ...args, subject: SUBJECT_NONE })
+      )
     );
   }
-  if (slot === "target") {
+  if (slot === 'target') {
     const sourceId = toText(args.source);
     if (sourceId) {
       body.push(
         buildButton(
-          t("ui.wizard.noneOrSourceBtn", locale),
-          buildWizardBase({ ...args, target: sourceId }),
-        ),
+          t('ui.wizard.noneOrSourceBtn', locale),
+          buildWizardBase({ ...args, target: sourceId })
+        )
       );
     }
   }
-  body.push(
-    htmlTable(
-      [t("ui.col.players", locale), t("ui.col.npcs", locale)],
-      tableRows,
-    ),
-  );
+  body.push(htmlTable([t('ui.col.players', locale), t('ui.col.npcs', locale)], tableRows));
   whisper(playerId, title, body);
 }
 
@@ -578,8 +542,8 @@ function showTokenStep(playerId, title, args, slot, description) {
  */
 function showMultiTargetStep(playerId, args) {
   const locale = getConfig().language;
-  const selectedIdsRaw = toText(args["selected-ids"]);
-  const ids = selectedIdsRaw.split(",").filter(Boolean);
+  const selectedIdsRaw = toText(args['selected-ids']);
+  const ids = selectedIdsRaw.split(',').filter(Boolean);
 
   const resolved = ids
     .map((id) => {
@@ -591,26 +555,26 @@ function showMultiTargetStep(playerId, args) {
     .filter(Boolean);
 
   if (resolved.length === 0) {
-    whisperWarning(playerId, t("ui.msg.reSelectTokens", locale));
+    whisperWarning(playerId, t('ui.msg.reSelectTokens', locale));
     return;
   }
 
-  const confirmedIds = resolved.map((tok) => tok.id).join(",");
+  const confirmedIds = resolved.map((tok) => tok.id).join(',');
   const confirmCmd = buildWizardBase({
     ...args,
     targets: confirmedIds,
-    "selected-ids": "",
+    'selected-ids': '',
   });
   const tokenListHtml = resolved
     .map((tok) => `<div style="padding:1px 0;">• ${escapeHtml(tok.name)}</div>`)
-    .join("");
+    .join('');
 
-  whisper(playerId, t("ui.wizard.confirmTargetTitle", locale), [
+  whisper(playerId, t('ui.wizard.confirmTargetTitle', locale), [
     rawHtml(
-      `<div style="margin-bottom:4px;font-style:italic;">${escapeHtml(t("ui.wizard.confirmIntro", locale))}</div>`,
+      `<div style="margin-bottom:4px;font-style:italic;">${escapeHtml(t('ui.wizard.confirmIntro', locale))}</div>`
     ),
     rawHtml(tokenListHtml),
-    buildButton(t("ui.wizard.confirmBtn", locale), confirmCmd),
+    buildButton(t('ui.wizard.confirmBtn', locale), confirmCmd),
   ]);
 }
 
@@ -631,20 +595,17 @@ function showConditionStep(playerId, args) {
   const base = buildWizardBase(args);
 
   const standardButtons = profile.STANDARD_CONDITIONS.map((c) =>
-    buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`),
+    buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`)
   );
 
   const customButtons = profile.CUSTOM_EFFECT_TYPES.map((c) =>
-    buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`),
+    buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`)
   );
 
   const tableRows = buildTwoColumnRows(standardButtons, customButtons);
 
-  whisper(playerId, t("ui.wizard.selectCondition", locale), [
-    htmlTable(
-      [t("ui.col.conditions", locale), t("ui.col.customEffects", locale)],
-      tableRows,
-    ),
+  whisper(playerId, t('ui.wizard.selectCondition', locale), [
+    htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows),
   ]);
 }
 
@@ -663,42 +624,37 @@ function showDurationStep(playerId, args) {
 
   // English canonical values used in command URLs; localized labels shown on buttons
   const leftOptions = [
-    { dur: "Until removed", label: t("ui.dur.untilRemoved", locale) },
+    { dur: 'Until removed', label: t('ui.dur.untilRemoved', locale) },
     {
-      dur: "End of target next turn",
-      label: t("ui.dur.endOfTargetTurn", locale),
+      dur: 'End of target next turn',
+      label: t('ui.dur.endOfTargetTurn', locale),
     },
     {
-      dur: "End of source next turn",
-      label: t("ui.dur.endOfSourceTurn", locale),
+      dur: 'End of source next turn',
+      label: t('ui.dur.endOfSourceTurn', locale),
     },
   ];
   const rightOptions = [
-    { dur: "1 round", label: t("ui.dur.round1", locale) },
-    { dur: "2 rounds", label: t("ui.dur.round2", locale) },
-    { dur: "3 rounds", label: t("ui.dur.round3", locale) },
-    { dur: "10 rounds", label: t("ui.dur.round10", locale) },
+    { dur: '1 round', label: t('ui.dur.round1', locale) },
+    { dur: '2 rounds', label: t('ui.dur.round2', locale) },
+    { dur: '3 rounds', label: t('ui.dur.round3', locale) },
+    { dur: '10 rounds', label: t('ui.dur.round10', locale) },
   ];
-  const customPrompt = t("ui.dur.customPrompt", locale);
+  const customPrompt = t('ui.dur.customPrompt', locale);
   const customCmd = buildDurationCommand(args, `?{${customPrompt}|} rounds`);
 
   const leftButtons = leftOptions.map(({ dur, label }) =>
-    buildButton(label, buildDurationCommand(args, dur)),
+    buildButton(label, buildDurationCommand(args, dur))
   );
   const rightButtons = [
-    ...rightOptions.map(({ dur, label }) =>
-      buildButton(label, buildDurationCommand(args, dur)),
-    ),
-    buildButton(t("ui.dur.custom", locale), customCmd),
+    ...rightOptions.map(({ dur, label }) => buildButton(label, buildDurationCommand(args, dur))),
+    buildButton(t('ui.dur.custom', locale), customCmd),
   ];
 
   const tableRows = buildTwoColumnRows(leftButtons, rightButtons);
 
-  whisper(playerId, t("ui.wizard.selectDuration", locale), [
-    htmlTable(
-      [t("ui.col.permanentTurnEnd", locale), t("ui.col.rounds", locale)],
-      tableRows,
-    ),
+  whisper(playerId, t('ui.wizard.selectDuration', locale), [
+    htmlTable([t('ui.col.permanentTurnEnd', locale), t('ui.col.rounds', locale)], tableRows),
   ]);
 }
 
@@ -721,9 +677,9 @@ function showCustomTextStep(playerId, args, condition) {
   const langRaw = toText(args.lang);
   const durationQuery = buildDurationQuery(toText(args.duration));
   const prompt =
-    condition === "Other"
-      ? t("ui.wizard.otherText", locale)
-      : t("ui.wizard.effectDetails", locale, { condition });
+    condition === 'Other'
+      ? t('ui.wizard.otherText', locale)
+      : t('ui.wizard.effectDetails', locale, { condition });
   const parts = [
     `--source ${sourceId}`,
     targetsRaw ? `--targets ${targetsRaw}` : `--target ${targetId}`,
@@ -733,8 +689,8 @@ function showCustomTextStep(playerId, args, condition) {
   ];
   if (langRaw) parts.push(`--lang ${langRaw}`);
   const cmd = buildCommand(parts);
-  whisper(playerId, t("ui.wizard.applyEffectTitle", locale, { condition }), [
-    buildButton(t("ui.wizard.enterDetails", locale), cmd),
+  whisper(playerId, t('ui.wizard.applyEffectTitle', locale, { condition }), [
+    buildButton(t('ui.wizard.enterDetails', locale), cmd),
   ]);
 }
 
@@ -746,7 +702,7 @@ function showCustomTextStep(playerId, args, condition) {
  * @returns {boolean} True when the combination is valid.
  */
 function isSubjectAllowed(subjectId, canonical) {
-  const value = subjectId === SUBJECT_NONE ? "" : subjectId;
+  const value = subjectId === SUBJECT_NONE ? '' : subjectId;
   if (!value || !canonical) return true;
   return isCustomEffectType(canonical);
 }
@@ -798,31 +754,28 @@ function showEffectDetailStep(playerId, args, canonical) {
  */
 export function showPromptUi(playerId, args) {
   const conditionRaw = toText(args.condition);
-  const canonical = conditionRaw ? getCanonicalCondition(conditionRaw) : "";
+  const canonical = conditionRaw ? getCanonicalCondition(conditionRaw) : '';
   const config = getConfig();
   const subjectBypassForCommand = resolveSubjectPromptBypassOverride(
     args,
-    config.subjectPromptBypass,
+    config.subjectPromptBypass
   );
   if (!subjectBypassForCommand.valid) {
     whisperWarning(playerId, subjectBypassForCommand.message);
     return;
   }
 
-  const shouldBypassSubject =
-    subjectBypassForCommand.value && isCustomEffectType(canonical);
-  const wizardArgs = shouldBypassSubject
-    ? { ...args, subject: SUBJECT_NONE }
-    : args;
+  const shouldBypassSubject = subjectBypassForCommand.value && isCustomEffectType(canonical);
+  const wizardArgs = shouldBypassSubject ? { ...args, subject: SUBJECT_NONE } : args;
 
   const sourceId = toText(wizardArgs.source);
   const subjectRaw = toText(wizardArgs.subject);
-  const subjectId = subjectRaw === SUBJECT_NONE ? "" : subjectRaw;
+  const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
 
   const locale = getConfig().language;
 
   if (!isSubjectAllowed(toText(wizardArgs.subject), canonical)) {
-    whisperWarning(playerId, t("ui.msg.subjectOnlyCustom", locale));
+    whisperWarning(playerId, t('ui.msg.subjectOnlyCustom', locale));
     return;
   }
 
@@ -835,10 +788,10 @@ export function showPromptUi(playerId, args) {
   if (isCustomEffectType(canonical) && !subjectChosen) {
     showTokenStep(
       playerId,
-      t("ui.wizard.selectSubject", locale),
+      t('ui.wizard.selectSubject', locale),
       wizardArgs,
-      "subject",
-      t("ui.wizard.subjectDesc", locale),
+      'subject',
+      t('ui.wizard.subjectDesc', locale)
     );
     return;
   }
@@ -846,10 +799,10 @@ export function showPromptUi(playerId, args) {
   if (!sourceId) {
     showTokenStep(
       playerId,
-      t("ui.wizard.selectSource", locale),
+      t('ui.wizard.selectSource', locale),
       wizardArgs,
-      "source",
-      t("ui.wizard.sourceDesc", locale),
+      'source',
+      t('ui.wizard.sourceDesc', locale)
     );
     return;
   }
@@ -858,23 +811,22 @@ export function showPromptUi(playerId, args) {
   const targetsRaw = toText(wizardArgs.targets);
 
   if (!targetId && !targetsRaw) {
-    const selectedIdsRaw = toText(wizardArgs["selected-ids"]);
+    const selectedIdsRaw = toText(wizardArgs['selected-ids']);
     if (selectedIdsRaw) {
       showMultiTargetStep(playerId, wizardArgs);
       return;
     }
     showTokenStep(
       playerId,
-      t("ui.wizard.selectTarget", locale),
+      t('ui.wizard.selectTarget', locale),
       wizardArgs,
-      "target",
-      t("ui.wizard.targetDesc", locale),
+      'target',
+      t('ui.wizard.targetDesc', locale)
     );
     return;
   }
 
-  const resolvedArgs =
-    subjectRaw === SUBJECT_NONE ? { ...wizardArgs, subject: "" } : wizardArgs;
+  const resolvedArgs = subjectRaw === SUBJECT_NONE ? { ...wizardArgs, subject: '' } : wizardArgs;
 
   showEffectDetailStep(playerId, resolvedArgs, canonical);
 }
@@ -890,7 +842,7 @@ export function showPromptUi(playerId, args) {
  * @returns {{valid: boolean, value?: boolean, message?: string}} Resolution result.
  */
 function resolveSubjectPromptBypassOverride(args, configDefault) {
-  const overrideRaw = args.subjectPromptBypass ?? args["subject-prompt-bypass"];
+  const overrideRaw = args.subjectPromptBypass ?? args['subject-prompt-bypass'];
   if (overrideRaw === undefined) {
     return { valid: true, value: configDefault };
   }
@@ -903,7 +855,7 @@ function resolveSubjectPromptBypassOverride(args, configDefault) {
   if (!parsed.valid) {
     return {
       valid: false,
-      message: t("ui.msg.subjectBypassInvalid", getConfig().language),
+      message: t('ui.msg.subjectBypassInvalid', getConfig().language),
     };
   }
 
@@ -925,7 +877,7 @@ export function handleInput(msg) {
     ensureState();
     routeCommand(msg, parseCommand(msg.content));
   } catch (error) {
-    whisperError(msg.playerid, t("ui.msg.commandFailed", getConfig().language));
+    whisperError(msg.playerid, t('ui.msg.commandFailed', getConfig().language));
     log(`${SCRIPT_NAME} error: ${error.message}`);
   }
 }
@@ -937,9 +889,7 @@ export function handleInput(msg) {
  * @returns {boolean} True for Condition Tracker API messages.
  */
 export function isConditionTrackerMessage(msg) {
-  return Boolean(
-    msg && msg.type === "api" && toText(msg.content).startsWith(COMMAND),
-  );
+  return Boolean(msg && msg.type === 'api' && toText(msg.content).startsWith(COMMAND));
 }
 
 /**
@@ -956,11 +906,11 @@ export function routeCommand(msg, args) {
   }
 
   if (!isGmMessage(msg)) {
-    whisperError(msg.playerid, t("ui.msg.gmOnly", getConfig().language));
+    whisperError(msg.playerid, t('ui.msg.gmOnly', getConfig().language));
     return;
   }
 
-  if (args["multi-target"] !== undefined) {
+  if (args['multi-target'] !== undefined) {
     handleMultiTargetTrigger(msg);
     return;
   }
@@ -985,22 +935,22 @@ export function routeCommand(msg, args) {
     return;
   }
 
-  if (args["reorder-conditions"] !== undefined) {
+  if (args['reorder-conditions'] !== undefined) {
     handleReorderConditions(msg.playerid);
     return;
   }
 
-  if (args["reinstall-macro"]) {
+  if (args['reinstall-macro']) {
     handleReinstallMacro(msg.playerid);
     return;
   }
 
-  if (args["reinstall-handout"]) {
+  if (args['reinstall-handout']) {
     handleReinstallHandout(msg.playerid);
     return;
   }
 
-  if (args["report-token"] !== undefined) {
+  if (args['report-token'] !== undefined) {
     handleReportToken(msg);
     return;
   }
@@ -1041,27 +991,27 @@ export function routeCommand(msg, args) {
  * @returns {void}
  */
 function routeZeroHpCommand(playerId, args) {
-  if (args["zero-hp-dead"]) {
-    handleZeroHpDead(playerId, args["zero-hp-dead"]);
+  if (args['zero-hp-dead']) {
+    handleZeroHpDead(playerId, args['zero-hp-dead']);
     return;
   }
-  if (args["zero-hp-incapacitated"]) {
-    handleZeroHpIncapacitated(playerId, args["zero-hp-incapacitated"]);
+  if (args['zero-hp-incapacitated']) {
+    handleZeroHpIncapacitated(playerId, args['zero-hp-incapacitated']);
     return;
   }
-  if (args["zero-hp-remove-all"]) {
-    handleZeroHpRemoveAll(playerId, args["zero-hp-remove-all"]);
+  if (args['zero-hp-remove-all']) {
+    handleZeroHpRemoveAll(playerId, args['zero-hp-remove-all']);
     return;
   }
-  if (args["zero-hp-remove-from-turn"]) {
-    handleZeroHpRemoveFromTurnOrder(playerId, args["zero-hp-remove-from-turn"]);
+  if (args['zero-hp-remove-from-turn']) {
+    handleZeroHpRemoveFromTurnOrder(playerId, args['zero-hp-remove-from-turn']);
     return;
   }
-  if (args["zero-hp-to-map"]) {
-    handleZeroHpToMapLayer(playerId, args["zero-hp-to-map"]);
+  if (args['zero-hp-to-map']) {
+    handleZeroHpToMapLayer(playerId, args['zero-hp-to-map']);
     return;
   }
-  showMenu(playerId, "main");
+  showMenu(playerId, 'main');
 }
 
 /**
@@ -1075,18 +1025,18 @@ function handleMultiTargetTrigger(msg) {
   const locale = getConfig().language;
   const selected = Array.isArray(msg.selected) ? msg.selected : [];
   if (selected.length === 0) {
-    whisperWarning(msg.playerid, t("ui.msg.noSelection", locale));
+    whisperWarning(msg.playerid, t('ui.msg.noSelection', locale));
     return;
   }
   const selectedIds = selected
     .map((s) => toText(s._id))
     .filter(Boolean)
-    .join(",");
+    .join(',');
   if (!selectedIds) {
-    whisperWarning(msg.playerid, t("ui.msg.invalidIds", locale));
+    whisperWarning(msg.playerid, t('ui.msg.invalidIds', locale));
     return;
   }
-  showPromptUi(msg.playerid, { prompt: true, "selected-ids": selectedIds });
+  showPromptUi(msg.playerid, { prompt: true, 'selected-ids': selectedIds });
 }
 
 /**
@@ -1123,29 +1073,19 @@ function prepareApply(playerId, args) {
   if (
     isDuplicate(
       validation.sourceToken.id,
-      validation.subjectToken?.id || "",
-      validation.subjectName || "",
+      validation.subjectToken?.id || '',
+      validation.subjectName || '',
       validation.targetToken.id,
       validation.condition,
-      validation.customText,
+      validation.customText
     )
   ) {
-    whisperWarning(playerId, t("ui.msg.duplicate", locale));
+    whisperWarning(playerId, t('ui.msg.duplicate', locale));
     return null;
   }
 
-  const condition = buildConditionRecord(
-    validation,
-    config,
-    durationResult.duration,
-    locale,
-  );
-  const markerNotice = applyConfiguredMarker(
-    validation.targetToken,
-    condition,
-    config,
-    locale,
-  );
+  const condition = buildConditionRecord(validation, config, durationResult.duration, locale);
+  const markerNotice = applyConfiguredMarker(validation.targetToken, condition, config, locale);
   return { condition, markerNotice, locale, extraLocale };
 }
 
@@ -1162,9 +1102,9 @@ function prepareApply(playerId, args) {
  */
 export function handleMultiApply(playerId, args) {
   const targetsRaw = toText(args.targets);
-  const targetIds = targetsRaw.split(",").filter(Boolean);
+  const targetIds = targetsRaw.split(',').filter(Boolean);
   if (targetIds.length === 0) {
-    whisperWarning(playerId, t("ui.msg.noTargets", getConfig().language));
+    whisperWarning(playerId, t('ui.msg.noTargets', getConfig().language));
     return;
   }
 
@@ -1173,7 +1113,7 @@ export function handleMultiApply(playerId, args) {
     const prep = prepareApply(playerId, {
       ...args,
       target: targetId,
-      targets: "",
+      targets: '',
     });
     if (!prep) continue;
     addActiveCondition(prep.condition);
@@ -1214,13 +1154,7 @@ export function handleApply(playerId, args) {
   if (extraLocale !== locale) {
     announceHtml(buildApplyMessage(condition, extraLocale));
   }
-  whisperApplySummary(
-    playerId,
-    condition,
-    insertResult.appended,
-    markerNotice,
-    locale,
-  );
+  whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale);
 }
 
 /**
@@ -1236,9 +1170,9 @@ export function buildConditionRecord(validation, config, duration, locale) {
   const sourceName = getTokenName(validation.sourceToken);
   const subjectName = validation.subjectToken
     ? getTokenName(validation.subjectToken)
-    : validation.subjectName || "";
+    : validation.subjectName || '';
   const targetName = getTokenName(validation.targetToken);
-  const marker = toText(config.markers[validation.condition]) || "";
+  const marker = toText(config.markers[validation.condition]) || '';
   const details = {
     sourceName,
     subjectName,
@@ -1253,7 +1187,7 @@ export function buildConditionRecord(validation, config, duration, locale) {
   return {
     id,
     sourceTokenId: validation.sourceToken.id,
-    subjectTokenId: validation.subjectToken?.id || "",
+    subjectTokenId: validation.subjectToken?.id || '',
     targetTokenId: validation.targetToken.id,
     sourceName,
     subjectName,
@@ -1279,17 +1213,17 @@ export function buildConditionRecord(validation, config, duration, locale) {
  */
 export function applyConfiguredMarker(targetToken, condition, config, locale) {
   if (!config.useMarkers) {
-    return t("ui.msg.markersDisabled", locale);
+    return t('ui.msg.markersDisabled', locale);
   }
 
   if (!condition.marker) {
-    return t("ui.msg.noMarkerConfigured", locale);
+    return t('ui.msg.noMarkerConfigured', locale);
   }
 
   const added = applyMarker(targetToken, condition.marker);
   return added
-    ? t("ui.msg.markerApplied", locale, { marker: condition.marker })
-    : t("ui.msg.markerPresent", locale, { marker: condition.marker });
+    ? t('ui.msg.markerApplied', locale, { marker: condition.marker })
+    : t('ui.msg.markerPresent', locale, { marker: condition.marker });
 }
 
 /**
@@ -1309,24 +1243,17 @@ export function isDuplicate(
   subjectName,
   targetTokenId,
   condition,
-  customText,
+  customText
 ) {
   return someActiveCondition((activeCondition) => {
     const sameSource = activeCondition.sourceTokenId === sourceTokenId;
-    const sameSubject =
-      (activeCondition.subjectTokenId || "") === (subjectTokenId || "");
-    const sameSubjectName =
-      (activeCondition.subjectName || "") === (subjectName || "");
+    const sameSubject = (activeCondition.subjectTokenId || '') === (subjectTokenId || '');
+    const sameSubjectName = (activeCondition.subjectName || '') === (subjectName || '');
     const sameTarget = activeCondition.targetTokenId === targetTokenId;
     const sameCondition = activeCondition.condition === condition;
     const sameCustomText = activeCondition.customText === customText;
     return (
-      sameSource &&
-      sameSubject &&
-      sameSubjectName &&
-      sameTarget &&
-      sameCondition &&
-      sameCustomText
+      sameSource && sameSubject && sameSubjectName && sameTarget && sameCondition && sameCustomText
     );
   });
 }
@@ -1342,13 +1269,13 @@ export function handleRemove(playerId, conditionId) {
   const locale = getConfig().language;
   const condition = findActiveCondition(toText(conditionId));
   if (!condition) {
-    whisperWarning(playerId, t("ui.msg.conditionNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.conditionNotFound', locale));
     return;
   }
 
   removeConditionById(condition.id, {
     playerId,
-    reason: t("ui.msg.manuallyRemoved", locale),
+    reason: t('ui.msg.manuallyRemoved', locale),
     publicAnnounce: true,
     whisperResult: true,
     locale,
@@ -1428,8 +1355,8 @@ function handleClassifyShow(playerId, selected, locale) {
           [t('ui.classify.fieldType', locale), escapeHtml(detail.type)],
           [t('ui.classify.fieldSource', locale), escapeHtml(detail.source)],
           [t('ui.classify.fieldReason', locale), escapeHtml(detail.reason)],
-        ],
-      ),
+        ]
+      )
     );
     found += 1;
   }
@@ -1489,11 +1416,10 @@ export function handleClassify(msg, args) {
     return;
   }
 
-  whisper(
-    msg.playerid,
-    t('ui.classify.title', locale),
-    [heading(t('ui.classify.resultHeading', locale)), ...resultLines.map((l) => rawHtml(`<div>${l}</div>`))],
-  );
+  whisper(msg.playerid, t('ui.classify.title', locale), [
+    heading(t('ui.classify.resultHeading', locale)),
+    ...resultLines.map((l) => rawHtml(`<div>${l}</div>`)),
+  ]);
 }
 
 /**
@@ -1511,54 +1437,54 @@ export function handleConfig(playerId, configText) {
 
   const parts = toText(configText).split(/\s+/);
   const option = parts[0];
-  const value = parts.slice(1).join(" ");
+  const value = parts.slice(1).join(' ');
 
-  if (option === "marker") {
+  if (option === 'marker') {
     updateMarkerConfig(playerId, value);
     return;
   }
 
-  if (option === "useMarkers") {
-    updateBooleanConfig(playerId, "useMarkers", value);
+  if (option === 'useMarkers') {
+    updateBooleanConfig(playerId, 'useMarkers', value);
     return;
   }
 
-  if (option === "icons") {
-    updateBooleanConfig(playerId, "useIcons", value);
+  if (option === 'icons') {
+    updateBooleanConfig(playerId, 'useIcons', value);
     return;
   }
 
-  if (option === "subjectPromptBypass") {
-    updateBooleanConfig(playerId, "subjectPromptBypass", value);
+  if (option === 'subjectPromptBypass') {
+    updateBooleanConfig(playerId, 'subjectPromptBypass', value);
     return;
   }
 
-  if (option === "suppressPublicChat") {
-    updateBooleanConfig(playerId, "suppressPublicChat", value);
+  if (option === 'suppressPublicChat') {
+    updateBooleanConfig(playerId, 'suppressPublicChat', value);
     return;
   }
 
-  if (option === "healthBar") {
+  if (option === 'healthBar') {
     updateHealthBarConfig(playerId, value);
     return;
   }
 
-  if (option === "language") {
+  if (option === 'language') {
     updateLocaleConfig(playerId, value);
     return;
   }
 
-  if (option === "gameSystem") {
+  if (option === 'gameSystem') {
     updateGameSystemConfig(playerId, value);
     return;
   }
 
-  if (option === "reset") {
+  if (option === 'reset') {
     resetConfig(playerId);
     return;
   }
 
-  whisperWarning(playerId, t("ui.msg.unknownConfig", getConfig().language));
+  whisperWarning(playerId, t('ui.msg.unknownConfig', getConfig().language));
 }
 
 /**
@@ -1573,8 +1499,8 @@ export function resetConfig(playerId) {
   installHandout(defaultConfig.language);
   whisper(
     playerId,
-    t("ui.title.configTracker", defaultConfig.language),
-    t("ui.msg.configReset", defaultConfig.language),
+    t('ui.title.configTracker', defaultConfig.language),
+    t('ui.msg.configReset', defaultConfig.language)
   );
 }
 
@@ -1593,10 +1519,10 @@ export function updateLocaleConfig(playerId, value) {
       invalidLocaleIntro(locale),
       htmlTable(
         [
-          t("handout.availableLocales.colLocale", locale),
-          t("handout.availableLocales.colLanguage", locale),
+          t('handout.availableLocales.colLocale', locale),
+          t('handout.availableLocales.colLanguage', locale),
         ],
-        localeTableRows(),
+        localeTableRows()
       ),
     ]);
     return;
@@ -1607,10 +1533,10 @@ export function updateLocaleConfig(playerId, value) {
     (config) => {
       config.language = result.value;
     },
-    t("ui.msg.langSet", result.value, {
+    t('ui.msg.langSet', result.value, {
       locale: localeDisplayName(result.value),
     }),
-    result.value,
+    result.value
   );
 
   installHandout(result.value);
@@ -1628,10 +1554,10 @@ export function updateGameSystemConfig(playerId, value) {
   if (!result.valid) {
     const locale = getConfig().language;
     whisperWarning(playerId, [
-      t("ui.msg.invalidGameSystem", locale),
+      t('ui.msg.invalidGameSystem', locale),
       htmlTable(
-        [t("ui.col.option", locale), t("ui.col.description", locale)],
-        gameSystemTableRows(),
+        [t('ui.col.option', locale), t('ui.col.description', locale)],
+        gameSystemTableRows()
       ),
     ]);
     return;
@@ -1645,7 +1571,7 @@ export function updateGameSystemConfig(playerId, value) {
       cfg.gameSystem = result.value;
       cfg.markers = { ...profile.DEFAULT_MARKERS };
     },
-    t("ui.msg.gameSystemSet", config.language, { system: result.value }),
+    t('ui.msg.gameSystemSet', config.language, { system: result.value })
   );
   installHandout(getConfig().language);
 }
@@ -1659,10 +1585,7 @@ export function updateGameSystemConfig(playerId, value) {
  * @returns {string[][]} Two-column table rows: [[id, name], ...].
  */
 function gameSystemTableRows() {
-  return GAME_SYSTEM_DEFINITIONS.map((def) => [
-    code(def.id),
-    escapeHtml(def.name),
-  ]);
+  return GAME_SYSTEM_DEFINITIONS.map((def) => [code(def.id), escapeHtml(def.name)]);
 }
 
 /**
@@ -1674,15 +1597,15 @@ function gameSystemTableRows() {
  */
 export function updateMarkerConfig(playerId, value) {
   const locale = getConfig().language;
-  const separatorIndex = value.indexOf("=");
+  const separatorIndex = value.indexOf('=');
   if (separatorIndex < 1) {
-    whisperWarning(playerId, t("ui.msg.markerConfigFormat", locale));
+    whisperWarning(playerId, t('ui.msg.markerConfigFormat', locale));
     return;
   }
 
   const result = validateMarkerConfig(
     value.slice(0, separatorIndex),
-    value.slice(separatorIndex + 1),
+    value.slice(separatorIndex + 1)
   );
   if (!result.valid) {
     whisperWarning(playerId, result.message);
@@ -1694,10 +1617,10 @@ export function updateMarkerConfig(playerId, value) {
     (config) => {
       config.markers[result.condition] = result.marker;
     },
-    t("ui.msg.markerSet", locale, {
+    t('ui.msg.markerSet', locale, {
       condition: result.condition,
       marker: result.marker,
-    }),
+    })
   );
 }
 
@@ -1715,7 +1638,7 @@ function applyConfigUpdate(playerId, applyMutation, successMessage, locale) {
   applyMutation(config);
   setConfig(config);
   const lang = locale || config.language;
-  whisper(playerId, t("ui.title.configTracker", lang), successMessage);
+  whisper(playerId, t('ui.title.configTracker', lang), successMessage);
 }
 
 /**
@@ -1739,7 +1662,7 @@ export function updateBooleanConfig(playerId, key, value) {
     (config) => {
       config[key] = result.value;
     },
-    t("ui.msg.boolSet", locale, { key, value: String(result.value) }),
+    t('ui.msg.boolSet', locale, { key, value: String(result.value) })
   );
 }
 
@@ -1763,7 +1686,7 @@ export function updateHealthBarConfig(playerId, value) {
     (config) => {
       config.healthBar = result.value;
     },
-    t("ui.msg.healthBarSet", locale, { bar: result.value }),
+    t('ui.msg.healthBarSet', locale, { bar: result.value })
   );
 }
 
@@ -1793,56 +1716,26 @@ export function showMenu(playerId, menu) {
   const cmdReinstallHandout = `${COMMAND} --reinstall-handout`;
   const cmdHelp = `${COMMAND} --help`;
 
-  whisper(playerId, t("ui.title.menu", locale), [
-    heading(t("ui.heading.quickActions", locale)),
+  whisper(playerId, t('ui.title.menu', locale), [
+    heading(t('ui.heading.quickActions', locale)),
     htmlTable(
-      [t("ui.col.command", locale), t("ui.col.result", locale)],
+      [t('ui.col.command', locale), t('ui.col.result', locale)],
       [
-        [
-          code(cmdPrompt),
-          buildButton(t("ui.btn.openWizard", locale), cmdPrompt),
-        ],
-        [
-          code(cmdMultiTarget),
-          buildButton(t("ui.btn.openMultiTarget", locale), cmdMultiTarget),
-        ],
-        [
-          code(cmdReportToken),
-          buildButton(t("ui.btn.reportToken", locale), cmdReportToken),
-        ],
-        [
-          code(cmdSaved),
-          buildButton(t("ui.btn.savedEffects", locale), cmdSaved),
-        ],
-        [
-          code(cmdRemoveMenu),
-          buildButton(t("ui.btn.openRemovalList", locale), cmdRemoveMenu),
-        ],
-        [
-          code(cmdConfig),
-          buildButton(t("ui.btn.showConfig", locale), cmdConfig),
-        ],
-        [
-          code(cmdCleanup),
-          buildButton(t("ui.btn.runCleanup", locale), cmdCleanup),
-        ],
-        [
-          code(cmdReorder),
-          buildButton(t("ui.btn.reorderConditions", locale), cmdReorder),
-        ],
-        [
-          code(cmdReinstall),
-          buildButton(t("ui.btn.reinstallMacro", locale), cmdReinstall),
-        ],
+        [code(cmdPrompt), buildButton(t('ui.btn.openWizard', locale), cmdPrompt)],
+        [code(cmdMultiTarget), buildButton(t('ui.btn.openMultiTarget', locale), cmdMultiTarget)],
+        [code(cmdReportToken), buildButton(t('ui.btn.reportToken', locale), cmdReportToken)],
+        [code(cmdSaved), buildButton(t('ui.btn.savedEffects', locale), cmdSaved)],
+        [code(cmdRemoveMenu), buildButton(t('ui.btn.openRemovalList', locale), cmdRemoveMenu)],
+        [code(cmdConfig), buildButton(t('ui.btn.showConfig', locale), cmdConfig)],
+        [code(cmdCleanup), buildButton(t('ui.btn.runCleanup', locale), cmdCleanup)],
+        [code(cmdReorder), buildButton(t('ui.btn.reorderConditions', locale), cmdReorder)],
+        [code(cmdReinstall), buildButton(t('ui.btn.reinstallMacro', locale), cmdReinstall)],
         [
           code(cmdReinstallHandout),
-          buildButton(
-            t("ui.btn.reinstallHandout", locale),
-            cmdReinstallHandout,
-          ),
+          buildButton(t('ui.btn.reinstallHandout', locale), cmdReinstallHandout),
         ],
-        [code(cmdHelp), buildButton(t("ui.btn.showHelp", locale), cmdHelp)],
-      ],
+        [code(cmdHelp), buildButton(t('ui.btn.showHelp', locale), cmdHelp)],
+      ]
     ),
   ]);
 }
@@ -1857,11 +1750,7 @@ export function showRemovalMenu(playerId) {
   const locale = getConfig().language;
   const active = ensureState().active;
   if (active.length === 0) {
-    whisper(
-      playerId,
-      t("ui.title.removalMenu", locale),
-      t("ui.msg.noActive", locale),
-    );
+    whisper(playerId, t('ui.title.removalMenu', locale), t('ui.msg.noActive', locale));
     return;
   }
 
@@ -1870,7 +1759,7 @@ export function showRemovalMenu(playerId) {
     lines.push(buildRemoveButton(condition));
   }
 
-  whisper(playerId, t("ui.title.removalMenu", locale), lines);
+  whisper(playerId, t('ui.title.removalMenu', locale), lines);
 }
 
 /**
@@ -1886,32 +1775,29 @@ export function showConfig(playerId) {
   const allConditions = [...profile.STANDARD_CONDITIONS, ...profile.CUSTOM_EFFECT_TYPES];
   const markerRows = allConditions.map((condition) => [
     escapeHtml(getConditionDisplayName(condition, profile, locale)),
-    code(config.markers[condition] || "(none)"),
+    code(config.markers[condition] || '(none)'),
   ]);
 
   const systemDef = GAME_SYSTEM_DEFINITIONS.find((d) => d.id === config.gameSystem);
   const systemLabel = systemDef ? `${config.gameSystem} — ${systemDef.name}` : config.gameSystem;
 
-  whisper(playerId, t("ui.title.config", locale), [
-    heading(t("ui.heading.settings", locale)),
+  whisper(playerId, t('ui.title.config', locale), [
+    heading(t('ui.heading.settings', locale)),
     htmlTable(
-      [t("ui.col.option", locale), t("ui.col.value", locale)],
+      [t('ui.col.option', locale), t('ui.col.value', locale)],
       [
-        ["gameSystem", code(systemLabel)],
-        ["useMarkers", code(String(config.useMarkers))],
-        ["useIcons", code(String(config.useIcons))],
-        ["subjectPromptBypass", code(String(config.subjectPromptBypass))],
-        ["suppressPublicChat", code(String(config.suppressPublicChat))],
-        ["healthBar", code(config.healthBar)],
-        ["language", code(config.language)],
-      ],
+        ['gameSystem', code(systemLabel)],
+        ['useMarkers', code(String(config.useMarkers))],
+        ['useIcons', code(String(config.useIcons))],
+        ['subjectPromptBypass', code(String(config.subjectPromptBypass))],
+        ['suppressPublicChat', code(String(config.suppressPublicChat))],
+        ['healthBar', code(config.healthBar)],
+        ['language', code(config.language)],
+      ]
     ),
     sectionSpacer(),
-    heading(t("ui.heading.markerMappings", locale)),
-    htmlTable(
-      [t("ui.col.condition", locale), t("ui.col.marker", locale)],
-      markerRows,
-    ),
+    heading(t('ui.heading.markerMappings', locale)),
+    htmlTable([t('ui.col.condition', locale), t('ui.col.marker', locale)], markerRows),
   ]);
 }
 
@@ -1923,15 +1809,9 @@ export function showConfig(playerId) {
  */
 export function showHelp(playerId) {
   const locale = getConfig().language;
-  const commandRows = /** @type {string[][]} */ (
-    tRaw("handout.commandsRef.rows", locale) || []
-  );
-  const quickStartRows = /** @type {string[][]} */ (
-    tRaw("handout.quickStart.rows", locale) || []
-  );
-  const configRows = /** @type {string[][]} */ (
-    tRaw("handout.configuration.rows", locale) || []
-  );
+  const commandRows = /** @type {string[][]} */ (tRaw('handout.commandsRef.rows', locale) || []);
+  const quickStartRows = /** @type {string[][]} */ (tRaw('handout.quickStart.rows', locale) || []);
+  const configRows = /** @type {string[][]} */ (tRaw('handout.configuration.rows', locale) || []);
 
   const configTableRows = configRows.map(([option, values, description]) => [
     code(decodeHelpText(option)),
@@ -1939,66 +1819,57 @@ export function showHelp(playerId) {
     escapeHtml(decodeHelpText(description)),
   ]);
 
-  whisper(playerId, t("ui.title.help", locale), [
-    heading(t("ui.heading.info", locale)),
+  whisper(playerId, t('ui.title.help', locale), [
+    heading(t('ui.heading.info', locale)),
     htmlTable(
-      [t("ui.col.item", locale), t("ui.col.details", locale)],
+      [t('ui.col.item', locale), t('ui.col.details', locale)],
       [
         [escapeHtml(SCRIPT_NAME), code(SCRIPT_VERSION)],
-        [escapeHtml(HANDOUT_NAME), escapeHtml(t("handout.subtitle", locale))],
+        [escapeHtml(HANDOUT_NAME), escapeHtml(t('handout.subtitle', locale))],
         [
-          escapeHtml(t("handout.overview.heading", locale)),
-          escapeHtml(decodeHelpText(t("handout.overview.body", locale))),
+          escapeHtml(t('handout.overview.heading', locale)),
+          escapeHtml(decodeHelpText(t('handout.overview.body', locale))),
         ],
-      ],
+      ]
     ),
     sectionSpacer(),
-    heading(t("ui.heading.commandOptions", locale)),
+    heading(t('ui.heading.commandOptions', locale)),
     htmlTable(
-      [
-        t("handout.commandsRef.colFlag", locale),
-        t("handout.commandsRef.colDesc", locale),
-      ],
-      toEscapedHandoutTableRows(commandRows),
+      [t('handout.commandsRef.colFlag', locale), t('handout.commandsRef.colDesc', locale)],
+      toEscapedHandoutTableRows(commandRows)
     ),
     sectionSpacer(),
-    heading(t("handout.configuration.heading", locale)),
+    heading(t('handout.configuration.heading', locale)),
     htmlTable(
       [
-        t("handout.configuration.colOption", locale),
-        t("handout.configuration.colValues", locale),
-        t("handout.configuration.colDesc", locale),
+        t('handout.configuration.colOption', locale),
+        t('handout.configuration.colValues', locale),
+        t('handout.configuration.colDesc', locale),
       ],
-      configTableRows,
+      configTableRows
     ),
     sectionSpacer(),
-    heading(t("handout.gameSystems.heading", locale)),
-    t("handout.gameSystems.intro", locale),
+    heading(t('handout.gameSystems.heading', locale)),
+    t('handout.gameSystems.intro', locale),
     htmlTable(
-      [
-        t("handout.gameSystems.colId", locale),
-        t("handout.gameSystems.colName", locale),
-      ],
-      gameSystemTableRows(),
+      [t('handout.gameSystems.colId', locale), t('handout.gameSystems.colName', locale)],
+      gameSystemTableRows()
     ),
     sectionSpacer(),
-    heading(t("handout.availableLocales.heading", locale)),
-    t("handout.availableLocales.intro", locale),
+    heading(t('handout.availableLocales.heading', locale)),
+    t('handout.availableLocales.intro', locale),
     htmlTable(
       [
-        t("handout.availableLocales.colLocale", locale),
-        t("handout.availableLocales.colLanguage", locale),
+        t('handout.availableLocales.colLocale', locale),
+        t('handout.availableLocales.colLanguage', locale),
       ],
-      localeTableRows(),
+      localeTableRows()
     ),
     sectionSpacer(),
-    heading(t("ui.heading.examples", locale)),
+    heading(t('ui.heading.examples', locale)),
     htmlTable(
-      [
-        t("handout.quickStart.colCommand", locale),
-        t("handout.quickStart.colDesc", locale),
-      ],
-      toEscapedHandoutTableRows(quickStartRows),
+      [t('handout.quickStart.colCommand', locale), t('handout.quickStart.colDesc', locale)],
+      toEscapedHandoutTableRows(quickStartRows)
     ),
     sectionSpacer(),
   ]);
@@ -2014,31 +1885,20 @@ export function showHelp(playerId) {
  * @param {string} [locale] Output locale.
  * @returns {void}
  */
-export function whisperApplySummary(
-  playerId,
-  condition,
-  appended,
-  markerNotice,
-  locale,
-) {
-  whisper(playerId, t("ui.title.applied", locale), [
-    heading(t("ui.heading.result", locale)),
+export function whisperApplySummary(playerId, condition, appended, markerNotice, locale) {
+  whisper(playerId, t('ui.title.applied', locale), [
+    heading(t('ui.heading.result', locale)),
     htmlTable(
-      [t("ui.col.field", locale), t("ui.col.value", locale)],
+      [t('ui.col.field', locale), t('ui.col.value', locale)],
       [
+        [t('ui.removal.conditionField', locale), escapeHtml(condition.displayText)],
         [
-          t("ui.removal.conditionField", locale),
-          escapeHtml(condition.displayText),
+          t('ui.title.turnOrder', locale),
+          appended ? t('ui.apply.turnAppended', locale) : t('ui.apply.turnInserted', locale),
         ],
-        [
-          t("ui.title.turnOrder", locale),
-          appended
-            ? t("ui.apply.turnAppended", locale)
-            : t("ui.apply.turnInserted", locale),
-        ],
-        [t("ui.removal.markerField", locale), escapeHtml(markerNotice)],
-        ["Duration", escapeHtml(formatDuration(condition.duration, locale))],
-      ],
+        [t('ui.removal.markerField', locale), escapeHtml(markerNotice)],
+        ['Duration', escapeHtml(formatDuration(condition.duration, locale))],
+      ]
     ),
   ]);
 }
@@ -2057,64 +1917,62 @@ export function whisperApplySummary(
  */
 function buildTokenReportSections(tokenId, tokenName, locale) {
   const appliedTo = getActiveByTarget(tokenId);
-  const appliedBy = getActiveBySource(tokenId).filter(
-    (c) => c.targetTokenId !== tokenId,
-  );
+  const appliedBy = getActiveBySource(tokenId).filter((c) => c.targetTokenId !== tokenId);
 
   const lines = [heading(tokenName)];
 
-  lines.push(heading(t("ui.heading.appliedTo", locale)));
+  lines.push(heading(t('ui.heading.appliedTo', locale)));
   if (appliedTo.length === 0) {
-    lines.push(t("ui.msg.noConditionsAppliedTo", locale, { name: tokenName }));
+    lines.push(t('ui.msg.noConditionsAppliedTo', locale, { name: tokenName }));
   } else {
     lines.push(
       htmlTable(
-        [t("ui.col.condition", locale), t("ui.col.duration", locale), ""],
+        [t('ui.col.condition', locale), t('ui.col.duration', locale), ''],
         appliedTo.map((c) => [
           escapeHtml(c.displayText),
           escapeHtml(formatDuration(c.duration, locale)),
-          buildButton("🗑", `${COMMAND} --remove ${c.id}`),
-        ]),
-      ),
+          buildButton('🗑', `${COMMAND} --remove ${c.id}`),
+        ])
+      )
     );
   }
 
-  lines.push(heading(t("ui.heading.appliedBy", locale)));
+  lines.push(heading(t('ui.heading.appliedBy', locale)));
   if (appliedBy.length === 0) {
-    lines.push(t("ui.msg.noConditionsAppliedBy", locale, { name: tokenName }));
+    lines.push(t('ui.msg.noConditionsAppliedBy', locale, { name: tokenName }));
   } else {
     lines.push(
       htmlTable(
-        [t("ui.col.condition", locale), t("ui.col.duration", locale), ""],
+        [t('ui.col.condition', locale), t('ui.col.duration', locale), ''],
         appliedBy.map((c) => [
           escapeHtml(c.displayText),
           escapeHtml(formatDuration(c.duration, locale)),
-          buildButton("🗑", `${COMMAND} --remove ${c.id}`),
-        ]),
-      ),
+          buildButton('🗑', `${COMMAND} --remove ${c.id}`),
+        ])
+      )
     );
   }
 
   const savedEffects = getSavedEffectsForToken(tokenId);
-  lines.push(heading(t("ui.heading.savedEffectsFor", locale, { name: tokenName })));
+  lines.push(heading(t('ui.heading.savedEffectsFor', locale, { name: tokenName })));
   if (savedEffects.length === 0) {
-    lines.push(t("ui.msg.noSavedEffects", locale, { name: tokenName }));
+    lines.push(t('ui.msg.noSavedEffects', locale, { name: tokenName }));
   } else {
     lines.push(
       htmlTable(
-        [t("ui.saved.field.gmLabel", locale), t("ui.saved.field.visibility", locale), ""],
+        [t('ui.saved.field.gmLabel', locale), t('ui.saved.field.visibility', locale), ''],
         savedEffects.map((effect) => {
-          const label = effect.gmLabel || effect.condition || "";
+          const label = effect.gmLabel || effect.condition || '';
           const snoozedLabel = effect.snooze
-            ? `${label} (${t("ui.saved.snoozed", locale)})`
+            ? `${label} (${t('ui.saved.snoozed', locale)})`
             : label;
           return [
             escapeHtml(snoozedLabel),
             escapeHtml(t(`ui.saved.visibility.${effect.visibility}`, locale)),
-            buildButton("🗑", `${COMMAND} --saved remove ${effect.id}`),
+            buildButton('🗑', `${COMMAND} --saved remove ${effect.id}`),
           ];
-        }),
-      ),
+        })
+      )
     );
   }
 
@@ -2135,13 +1993,13 @@ export function handleReportToken(msg) {
   const selected = Array.isArray(msg.selected) ? msg.selected : [];
 
   if (selected.length === 0) {
-    whisperWarning(msg.playerid, t("ui.msg.noTokensSelectedReport", locale));
+    whisperWarning(msg.playerid, t('ui.msg.noTokensSelectedReport', locale));
     return;
   }
 
   const tokenIds = selected.map((s) => toText(s._id)).filter(Boolean);
   if (tokenIds.length === 0) {
-    whisperWarning(msg.playerid, t("ui.msg.invalidIds", locale));
+    whisperWarning(msg.playerid, t('ui.msg.invalidIds', locale));
     return;
   }
 
@@ -2162,11 +2020,11 @@ export function handleReportToken(msg) {
   }
 
   if (tokenCount === 0) {
-    whisperWarning(msg.playerid, t("ui.msg.reSelectTokens", locale));
+    whisperWarning(msg.playerid, t('ui.msg.reSelectTokens', locale));
     return;
   }
 
-  whisper(msg.playerid, t("ui.title.tokenReport", locale), bodyLines);
+  whisper(msg.playerid, t('ui.title.tokenReport', locale), bodyLines);
 }
 
 /**
@@ -2178,10 +2036,10 @@ export function handleReportToken(msg) {
  */
 export function formatDuration(duration, locale) {
   if (!duration || duration.type === DURATION_UNTIL_REMOVED) {
-    return t("ui.dur.untilRemovedDisplay", locale);
+    return t('ui.dur.untilRemovedDisplay', locale);
   }
 
-  return t("ui.dur.turnsRemaining", locale, { n: duration.remaining });
+  return t('ui.dur.turnsRemaining', locale, { n: duration.remaining });
 }
 
 /**
@@ -2198,44 +2056,44 @@ export function promptZeroHpConditionRemoval(token, targetName, isPlayer) {
   const locale = getConfig().language;
   const tokenId = token.id;
   const active = getActiveByTarget(tokenId);
-  const title = t("ui.title.zeroHp", locale, { name: targetName });
+  const title = t('ui.title.zeroHp', locale, { name: targetName });
 
   if (active.length === 0) {
     if (isPlayer) {
       return;
     }
     whisperGms(title, [
-      t("ui.msg.zeroHpNoConditions", locale, { name: targetName }),
+      t('ui.msg.zeroHpNoConditions', locale, { name: targetName }),
       buildButton(
-        t("ui.msg.removeFromTurnOrder", locale),
-        `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`,
+        t('ui.msg.removeFromTurnOrder', locale),
+        `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`
       ),
     ]);
     return;
   }
 
   const lines = [
-    t("ui.msg.zeroHpConditions", locale, { name: targetName }),
+    t('ui.msg.zeroHpConditions', locale, { name: targetName }),
     ...active.map((condition) => buildRemoveButton(condition)),
     buildButton(
-      t("ui.msg.removeAllBtn", locale, { name: targetName }),
-      `${COMMAND} --zero-hp-remove-all ${tokenId}`,
+      t('ui.msg.removeAllBtn', locale, { name: targetName }),
+      `${COMMAND} --zero-hp-remove-all ${tokenId}`
     ),
   ];
 
   if (isPlayer) {
     lines.push(
       buildButton(
-        t("ui.msg.markIncapacitated", locale),
-        `${COMMAND} --zero-hp-incapacitated ${tokenId}`,
-      ),
+        t('ui.msg.markIncapacitated', locale),
+        `${COMMAND} --zero-hp-incapacitated ${tokenId}`
+      )
     );
   } else {
     lines.push(
       buildButton(
-        t("ui.msg.removeFromTurnOrder", locale),
-        `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`,
-      ),
+        t('ui.msg.removeFromTurnOrder', locale),
+        `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`
+      )
     );
   }
 
@@ -2254,7 +2112,7 @@ export function removeExpiredConditions(playerId, expired) {
   for (const condition of expired) {
     removeConditionById(condition.id, {
       playerId,
-      reason: t("ui.msg.durationExpired", locale),
+      reason: t('ui.msg.durationExpired', locale),
       publicAnnounce: true,
       whisperResult: true,
       locale,
@@ -2275,15 +2133,15 @@ export function handleZeroHpRemoveAll(playerId, tokenId) {
   const targetName = token ? getTokenName(token) : tokenId;
   const active = getActiveByTarget(tokenId);
   if (active.length === 0) {
-    whisper(playerId, t("ui.title.noConditions", locale), [
-      t("ui.msg.noActiveConditions", locale, { name: targetName }),
+    whisper(playerId, t('ui.title.noConditions', locale), [
+      t('ui.msg.noActiveConditions', locale, { name: targetName }),
     ]);
     return;
   }
   for (const condition of active) {
     removeConditionById(condition.id, {
       playerId,
-      reason: t("ui.msg.reachedZeroHp", locale, { name: targetName }),
+      reason: t('ui.msg.reachedZeroHp', locale, { name: targetName }),
       publicAnnounce: true,
       whisperResult: true,
       locale,
@@ -2305,16 +2163,16 @@ export function handleZeroHpRemoveFromTurnOrder(playerId, tokenId) {
   const targetName = token ? getTokenName(token) : tokenId;
   const removed = removeTokenRow(tokenId);
   const message = removed
-    ? t("ui.msg.tokenRemovedFromTurn", locale, { name: targetName })
-    : t("ui.msg.tokenNotInTurn", locale, { name: targetName });
-  whisper(playerId, t("ui.title.turnOrder", locale), [message]);
+    ? t('ui.msg.tokenRemovedFromTurn', locale, { name: targetName })
+    : t('ui.msg.tokenNotInTurn', locale, { name: targetName });
+  whisper(playerId, t('ui.title.turnOrder', locale), [message]);
 
   if (token) {
-    whisperGms(t("ui.title.moveToken", locale, { name: targetName }), [
-      t("ui.msg.moveTokenPrompt", locale, { name: targetName }),
+    whisperGms(t('ui.title.moveToken', locale, { name: targetName }), [
+      t('ui.msg.moveTokenPrompt', locale, { name: targetName }),
       buildButton(
-        t("ui.msg.moveTokenBtn", locale, { name: targetName }),
-        `${COMMAND} --zero-hp-to-map ${tokenId}`,
+        t('ui.msg.moveTokenBtn', locale, { name: targetName }),
+        `${COMMAND} --zero-hp-to-map ${tokenId}`
       ),
     ]);
   }
@@ -2331,14 +2189,14 @@ export function handleZeroHpToMapLayer(playerId, tokenId) {
   const locale = getConfig().language;
   const token = getGraphicToken(tokenId);
   if (!token) {
-    whisperError(playerId, t("ui.msg.tokenNotFound", locale));
+    whisperError(playerId, t('ui.msg.tokenNotFound', locale));
     return;
   }
 
   const targetName = getTokenName(token);
-  token.set("layer", "map");
-  whisper(playerId, t("ui.title.tokenMoved", locale), [
-    t("ui.msg.tokenMoved", locale, { name: targetName }),
+  token.set('layer', 'map');
+  whisper(playerId, t('ui.title.tokenMoved', locale), [
+    t('ui.msg.tokenMoved', locale, { name: targetName }),
   ]);
 }
 
@@ -2355,15 +2213,15 @@ export function handleZeroHpDead(playerId, tokenId) {
   const targetName = token ? getTokenName(token) : tokenId;
   const active = getActiveByTarget(tokenId);
   if (active.length === 0) {
-    whisper(playerId, t("ui.title.markedDead", locale), [
-      t("ui.msg.deadNoConditions", locale, { name: targetName }),
+    whisper(playerId, t('ui.title.markedDead', locale), [
+      t('ui.msg.deadNoConditions', locale, { name: targetName }),
     ]);
     return;
   }
   for (const condition of active) {
     removeConditionById(condition.id, {
       playerId,
-      reason: t("ui.msg.markedAsDead", locale, { name: targetName }),
+      reason: t('ui.msg.markedAsDead', locale, { name: targetName }),
       publicAnnounce: true,
       whisperResult: true,
       locale,
@@ -2383,17 +2241,14 @@ export function handleZeroHpIncapacitated(playerId, tokenId) {
   const locale = config.language;
   const token = getGraphicToken(tokenId);
   if (!token) {
-    whisperError(playerId, t("ui.msg.tokenNotFound", locale));
+    whisperError(playerId, t('ui.msg.tokenNotFound', locale));
     return;
   }
 
   const tokenName = getTokenName(token);
 
-  if (isDuplicate(tokenId, "", "", tokenId, "Incapacitated", "")) {
-    whisperWarning(
-      playerId,
-      t("ui.msg.alreadyIncapacitated", locale, { name: tokenName }),
-    );
+  if (isDuplicate(tokenId, '', '', tokenId, 'Incapacitated', '')) {
+    whisperWarning(playerId, t('ui.msg.alreadyIncapacitated', locale, { name: tokenName }));
     return;
   }
 
@@ -2401,8 +2256,8 @@ export function handleZeroHpIncapacitated(playerId, tokenId) {
     sourceToken: token,
     subjectToken: null,
     targetToken: token,
-    condition: "Incapacitated",
-    customText: "",
+    condition: 'Incapacitated',
+    customText: '',
   };
   const duration = { type: DURATION_UNTIL_REMOVED };
   const condition = buildConditionRecord(validation, config, duration, locale);
@@ -2411,13 +2266,7 @@ export function handleZeroHpIncapacitated(playerId, tokenId) {
   const insertResult = insertConditionRow(condition);
 
   announceHtml(buildApplyMessage(condition, locale));
-  whisperApplySummary(
-    playerId,
-    condition,
-    insertResult.appended,
-    markerNotice,
-    locale,
-  );
+  whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale);
 }
 
 /**
@@ -2431,8 +2280,8 @@ function handleReorderConditions(playerId) {
   reorderAllConditionRows();
   whisper(
     playerId,
-    t("ui.title.conditionReorder", locale),
-    t("ui.msg.conditionsReordered", locale),
+    t('ui.title.conditionReorder', locale),
+    t('ui.msg.conditionsReordered', locale)
   );
 }
 
@@ -2447,14 +2296,14 @@ export function handleReinstallMacro(playerId) {
   installMacro();
   whisper(
     playerId,
-    t("ui.title.macroReinstalled", locale),
-    t("ui.msg.macroReinstalled", locale, {
+    t('ui.title.macroReinstalled', locale),
+    t('ui.msg.macroReinstalled', locale, {
       wizard: MACRO_NAME,
       multiTarget: MACRO_NAME_MULTI_TARGET,
       reportToken: MACRO_NAME_REPORT_TOKEN,
       saved: MACRO_NAME_SAVED,
       classify: MACRO_NAME_CLASSIFY,
-    }),
+    })
   );
 }
 
@@ -2469,7 +2318,7 @@ export function handleReinstallHandout(playerId) {
   installHandout(locale);
   whisper(
     playerId,
-    t("ui.title.handoutReinstalled", locale),
-    t("ui.msg.handoutReinstalled", locale, { handout: HANDOUT_NAME }),
+    t('ui.title.handoutReinstalled', locale),
+    t('ui.msg.handoutReinstalled', locale, { handout: HANDOUT_NAME })
   );
 }

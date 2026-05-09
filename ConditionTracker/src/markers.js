@@ -1,6 +1,6 @@
-import { TOKEN_MARKER_SEPARATOR } from "./constants.js";
-import { ensureState } from "./state.js";
-import { toText } from "./utils.js";
+import { TOKEN_MARKER_SEPARATOR } from './constants.js';
+import { ensureState } from './state.js';
+import { toText } from './utils.js';
 
 /**
  * Applies a marker to a token if needed.
@@ -34,14 +34,14 @@ export function applyMarker(token, marker) {
 export function removeMarkerIfUnused(condition) {
   const marker = toText(condition.marker);
   if (!marker) {
-    return { removed: false, marker: "" };
+    return { removed: false, marker: '' };
   }
 
   if (isMarkerStillRequired(condition.targetTokenId, marker, condition.id)) {
     return { removed: false, marker };
   }
 
-  const token = getObj("graphic", condition.targetTokenId);
+  const token = getObj('graphic', condition.targetTokenId);
   if (!token) {
     return { removed: false, marker };
   }
@@ -64,11 +64,7 @@ export function removeMarkerIfUnused(condition) {
  * @param {string} ignoredConditionId Condition id being removed.
  * @returns {boolean} True when the marker is still needed.
  */
-export function isMarkerStillRequired(
-  targetTokenId,
-  marker,
-  ignoredConditionId,
-) {
+export function isMarkerStillRequired(targetTokenId, marker, ignoredConditionId) {
   for (const condition of ensureState().active) {
     const sameTarget = condition.targetTokenId === targetTokenId;
     const sameMarker = condition.marker === marker;
@@ -88,7 +84,7 @@ export function isMarkerStillRequired(
  * @returns {string[]} Marker list.
  */
 export function getTokenMarkers(token) {
-  const text = toText(token.get("statusmarkers"));
+  const text = toText(token.get('statusmarkers'));
   if (!text) {
     return [];
   }
@@ -113,7 +109,7 @@ export function getTokenMarkers(token) {
  * @returns {void}
  */
 export function setTokenMarkers(token, markers) {
-  token.set("statusmarkers", markers.join(TOKEN_MARKER_SEPARATOR));
+  token.set('statusmarkers', markers.join(TOKEN_MARKER_SEPARATOR));
 }
 
 /**
@@ -171,5 +167,5 @@ export function removeMarkerFromList(markers, marker) {
  * @returns {string} Marker base.
  */
 export function getMarkerBase(marker) {
-  return toText(marker).split("@")[0];
+  return toText(marker).split('@')[0];
 }

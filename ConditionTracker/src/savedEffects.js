@@ -1,6 +1,6 @@
-import { DURATION_UNTIL_REMOVED, SAVED_VISIBILITY_GM } from "./constants.js";
-import { ensureState } from "./state.js";
-import { createId, isRecord } from "./utils.js";
+import { DURATION_UNTIL_REMOVED, SAVED_VISIBILITY_GM } from './constants.js';
+import { ensureState } from './state.js';
+import { createId, isRecord } from './utils.js';
 
 /**
  * @typedef {object} SavedEffect
@@ -46,20 +46,18 @@ export function createSavedEffect(fields) {
   return {
     id: createId(),
     visibility: fields.visibility || SAVED_VISIBILITY_GM,
-    condition: fields.condition || "Other",
-    other: fields.other || "",
-    targetTokenId: fields.targetTokenId || "",
-    targetCharacterId: fields.targetCharacterId || "",
-    sourceTokenId: fields.sourceTokenId || "",
-    sourceCharacterId: fields.sourceCharacterId || "",
-    subjectTokenId: fields.subjectTokenId || "",
-    duration: isRecord(fields.duration)
-      ? fields.duration
-      : { type: DURATION_UNTIL_REMOVED },
-    publicLabel: fields.publicLabel || "",
-    gmLabel: fields.gmLabel || fields.other || "",
+    condition: fields.condition || 'Other',
+    other: fields.other || '',
+    targetTokenId: fields.targetTokenId || '',
+    targetCharacterId: fields.targetCharacterId || '',
+    sourceTokenId: fields.sourceTokenId || '',
+    sourceCharacterId: fields.sourceCharacterId || '',
+    subjectTokenId: fields.subjectTokenId || '',
+    duration: isRecord(fields.duration) ? fields.duration : { type: DURATION_UNTIL_REMOVED },
+    publicLabel: fields.publicLabel || '',
+    gmLabel: fields.gmLabel || fields.other || '',
     snooze: null,
-    lastReminderTurnKey: "",
+    lastReminderTurnKey: '',
     createdAt: now,
     updatedAt: now,
   };
@@ -192,7 +190,7 @@ export function removeSavedEffectsForToken(tokenId) {
 export function clearCombatSnoozes() {
   let cleared = 0;
   for (const effect of getAllSavedEffects()) {
-    if (effect.snooze?.scope === "combat") {
+    if (effect.snooze?.scope === 'combat') {
       updateSavedEffect(effect.id, { snooze: null });
       cleared += 1;
     }

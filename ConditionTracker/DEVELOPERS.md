@@ -122,20 +122,21 @@ Handles all `--saved` sub-commands and the GM reminder system.
 **Promotion** copies a saved effect into the Turn Tracker by calling `buildActiveConditionFromSaved()`, which mirrors `buildConditionRecord()` in `commands.js` but is local to `savedEffectsCommands.js` to avoid a circular import (`commands.js` imports `handleSaved`; `savedEffectsCommands.js` must not import back into `commands.js`).
 
 **Snooze logic** (`shouldShowReminder`):
+
 - `scope: "turn"` — stores the current turn key; clears when the key changes.
 - `scope: "rounds"` — stores a remaining-rounds counter; decrements each new-first-turn tick.
 - `scope: "combat"` — persists until `clearCombatSnoozes()` is called when the Turn Tracker empties.
 
 ### Integration points
 
-| Location | What was added |
-|---|---|
-| `src/state.js` `ensureState()` | Initializes `savedEffects: {}` on first run |
+| Location                                 | What was added                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `src/state.js` `ensureState()`           | Initializes `savedEffects: {}` on first run                                                            |
 | `src/index.js` `handleTurnOrderChange()` | Calls `processSavedEffectReminders` on new-first-turn; calls `clearCombatSnoozes` when tracker empties |
-| `src/index.js` `handleTokenDestroy()` | Calls `removeSavedEffectsForToken` |
-| `src/commands.js` `routeCommand()` | Routes `args.saved` to `handleSaved` |
-| `src/commands.js` `showMenu()` | Adds Saved Effects button to the main menu |
-| `src/macros.js` | Adds `ConditionTrackerSaved` to `MACRO_DEFINITIONS` |
+| `src/index.js` `handleTokenDestroy()`    | Calls `removeSavedEffectsForToken`                                                                     |
+| `src/commands.js` `routeCommand()`       | Routes `args.saved` to `handleSaved`                                                                   |
+| `src/commands.js` `showMenu()`           | Adds Saved Effects button to the main menu                                                             |
+| `src/macros.js`                          | Adds `ConditionTrackerSaved` to `MACRO_DEFINITIONS`                                                    |
 
 ## Updating Version Metadata
 

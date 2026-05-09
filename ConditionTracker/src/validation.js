@@ -1,17 +1,9 @@
-import {
-  BOOLEAN_TEXT,
-  CONDITION_OTHER,
-  VALID_HEALTH_BARS,
-} from "./constants.js";
-import {
-  getCanonicalCondition,
-  isCustomEffectType,
-  isCustomTextCondition,
-} from "./conditions.js";
-import { normalizeLocale, SUPPORTED_LOCALE_LIST, t } from "./i18n.js";
-import { getConfig } from "./state.js";
-import { VALID_GAME_SYSTEMS } from "./systems/index.js";
-import { getGraphicToken, toText } from "./utils.js";
+import { BOOLEAN_TEXT, CONDITION_OTHER, VALID_HEALTH_BARS } from './constants.js';
+import { getCanonicalCondition, isCustomEffectType, isCustomTextCondition } from './conditions.js';
+import { normalizeLocale, SUPPORTED_LOCALE_LIST, t } from './i18n.js';
+import { getConfig } from './state.js';
+import { VALID_GAME_SYSTEMS } from './systems/index.js';
+import { getGraphicToken, toText } from './utils.js';
 
 /**
  * Returns true when a chat sender is a GM.
@@ -33,34 +25,34 @@ export function validateApplyArgs(args) {
   const locale = getConfig().language;
   const sourceToken = getGraphicToken(args.source);
   if (!sourceToken) {
-    return invalid(t("ui.msg.sourceTokenNotFound", locale));
+    return invalid(t('ui.msg.sourceTokenNotFound', locale));
   }
 
   const condition = getCanonicalCondition(args.condition);
   if (!condition) {
-    return invalid(t("ui.msg.invalidCondition", locale));
+    return invalid(t('ui.msg.invalidCondition', locale));
   }
 
   const subjectRaw = toText(args.subject);
-  const subjectId = subjectRaw === "__none__" ? "" : subjectRaw;
+  const subjectId = subjectRaw === '__none__' ? '' : subjectRaw;
   if (subjectId && !isCustomEffectType(condition)) {
-    return invalid(t("ui.msg.subjectOnlyCustom", locale));
+    return invalid(t('ui.msg.subjectOnlyCustom', locale));
   }
 
   const subjectToken = subjectId ? getGraphicToken(subjectId) : null;
   if (subjectId && !subjectToken) {
-    return invalid(t("ui.msg.subjectTokenNotFound", locale));
+    return invalid(t('ui.msg.subjectTokenNotFound', locale));
   }
 
   const targetId = toText(args.target);
   const targetToken = getGraphicToken(targetId);
   if (!targetToken) {
-    return invalid(t("ui.msg.targetTokenNotFound", locale));
+    return invalid(t('ui.msg.targetTokenNotFound', locale));
   }
 
   const customText = toText(args.other);
   if (isCustomTextCondition(condition) && !customText) {
-    return invalid(t("ui.msg.customDetailsRequired", locale, { condition }));
+    return invalid(t('ui.msg.customDetailsRequired', locale, { condition }));
   }
 
   return {
@@ -69,7 +61,7 @@ export function validateApplyArgs(args) {
     subjectToken,
     targetToken,
     condition,
-    customText: isCustomTextCondition(condition) ? customText : "",
+    customText: isCustomTextCondition(condition) ? customText : '',
   };
 }
 
@@ -84,11 +76,11 @@ export function validateMarkerConfig(condition, marker) {
   const locale = getConfig().language;
   const canonical = getCanonicalCondition(condition);
   if (!canonical || canonical === CONDITION_OTHER) {
-    return invalid(t("ui.msg.markerPredefinedRequired", locale));
+    return invalid(t('ui.msg.markerPredefinedRequired', locale));
   }
 
   if (!toText(marker)) {
-    return invalid(t("ui.msg.markerNameRequired", locale));
+    return invalid(t('ui.msg.markerNameRequired', locale));
   }
 
   return { valid: true, condition: canonical, marker: toText(marker) };
@@ -104,10 +96,10 @@ export function validateBoolean(value) {
   const locale = getConfig().language;
   const text = toText(value).toLowerCase();
   if (!BOOLEAN_TEXT.has(text)) {
-    return invalid(t("ui.msg.expectedBoolean", locale));
+    return invalid(t('ui.msg.expectedBoolean', locale));
   }
 
-  return { valid: true, value: text === "true" };
+  return { valid: true, value: text === 'true' };
 }
 
 /**
@@ -120,7 +112,7 @@ export function validateHealthBar(value) {
   const locale = getConfig().language;
   const text = toText(value);
   if (!VALID_HEALTH_BARS.includes(text)) {
-    return invalid(t("ui.msg.invalidHealthBar", locale));
+    return invalid(t('ui.msg.invalidHealthBar', locale));
   }
 
   return { valid: true, value: text };
@@ -135,7 +127,7 @@ export function validateHealthBar(value) {
 export function validateGameSystem(value) {
   const text = toText(value).trim();
   if (!VALID_GAME_SYSTEMS.has(text)) {
-    return invalid(t("ui.msg.invalidGameSystem", getConfig().language));
+    return invalid(t('ui.msg.invalidGameSystem', getConfig().language));
   }
   return { valid: true, value: text };
 }
@@ -151,9 +143,9 @@ export function validateLocale(value) {
   const text = normalizeLocale(value);
   if (!text) {
     return invalid(
-      t("ui.msg.invalidLocale", locale, {
+      t('ui.msg.invalidLocale', locale, {
         locales: SUPPORTED_LOCALE_LIST,
-      }),
+      })
     );
   }
   return { valid: true, value: text };

@@ -233,9 +233,7 @@ const ConditionTrackerMod = (() => {
     },
   ]);
 
-  const SUPPORTED_LOCALES = Object.freeze(
-    LOCALE_DEFINITIONS.map(({ code }) => code),
-  );
+  const SUPPORTED_LOCALES = Object.freeze(LOCALE_DEFINITIONS.map(({ code }) => code));
   const VALID_LOCALES = new Set(SUPPORTED_LOCALES);
   const LOCALE_ALIASES = Object.freeze(
     LOCALE_DEFINITIONS.reduce((aliases, locale) => {
@@ -243,7 +241,7 @@ const ConditionTrackerMod = (() => {
         aliases[alias] = locale.code;
       }
       return aliases;
-    }, {}),
+    }, {})
   );
   const LOCALE_LABELS = Object.freeze(
     LOCALE_DEFINITIONS.reduce((labels, locale) => {
@@ -252,11 +250,9 @@ const ConditionTrackerMod = (() => {
         : `${locale.code} - ${locale.name}`;
       labels[locale.code] = displayName;
       return labels;
-    }, {}),
+    }, {})
   );
-  const SUPPORTED_LOCALE_LIST = SUPPORTED_LOCALES.map(
-    (code) => LOCALE_LABELS[code],
-  ).join(' / ');
+  const SUPPORTED_LOCALE_LIST = SUPPORTED_LOCALES.map((code) => LOCALE_LABELS[code]).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0.beta-3.2';
@@ -303,18 +299,14 @@ const ConditionTrackerMod = (() => {
   const SAVED_VISIBILITY_MASKED = 'masked';
   const SAVED_VISIBILITY_GM = 'gm';
   const VALID_SAVED_VISIBILITIES = Object.freeze(
-    new Set([
-      SAVED_VISIBILITY_PUBLIC,
-      SAVED_VISIBILITY_MASKED,
-      SAVED_VISIBILITY_GM,
-    ]),
+    new Set([SAVED_VISIBILITY_PUBLIC, SAVED_VISIBILITY_MASKED, SAVED_VISIBILITY_GM])
   );
 
   const SAVED_SNOOZE_TURN = 'turn';
   const SAVED_SNOOZE_ROUNDS = 'rounds';
   const SAVED_SNOOZE_COMBAT = 'combat';
   const VALID_SNOOZE_SCOPES = Object.freeze(
-    new Set([SAVED_SNOOZE_TURN, SAVED_SNOOZE_ROUNDS, SAVED_SNOOZE_COMBAT]),
+    new Set([SAVED_SNOOZE_TURN, SAVED_SNOOZE_ROUNDS, SAVED_SNOOZE_COMBAT])
   );
 
   // Canonical custom-effect-type keys — stable across all game systems.
@@ -333,12 +325,12 @@ const ConditionTrackerMod = (() => {
       CONDITION_ADVANTAGE,
       CONDITION_DISADVANTAGE,
       CONDITION_OTHER,
-    ]),
+    ])
   );
 
   // Custom types that always require free-text input via --other.
   const CANONICAL_TEXT_CONDITIONS = Object.freeze(
-    new Set([CONDITION_SPELL, CONDITION_ABILITY, CONDITION_OTHER]),
+    new Set([CONDITION_SPELL, CONDITION_ABILITY, CONDITION_OTHER])
   );
 
   const DURATION_OPTIONS = Object.freeze([
@@ -351,10 +343,8 @@ const ConditionTrackerMod = (() => {
     '10 rounds',
   ]);
 
-  const LOGO_URL_256 =
-    'https://files.d20.io/images/485066521/0h0oZF8g-5RuLMztE7mTSw/original.png';
-  const LOGO_URL_512 =
-    'https://files.d20.io/images/485066393/v9LJk9VFfPohrzbTJ3b51Q/original.png';
+  const LOGO_URL_256 = 'https://files.d20.io/images/485066521/0h0oZF8g-5RuLMztE7mTSw/original.png';
+  const LOGO_URL_512 = 'https://files.d20.io/images/485066393/v9LJk9VFfPohrzbTJ3b51Q/original.png';
 
   const TRANSLATION$n = {
     conditions: {
@@ -468,15 +458,13 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} het voordeel teen {target}{subject}.',
         disadvantage: '{source} het nadeel teen {target}{subject}.',
         self: '{target} is {past}.',
-        withSuffix:
-          'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN PLEKHOUER3TOKEN.',
+        withSuffix: 'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN PLEKHOUER3TOKEN.',
         standard: 'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN.',
       },
       remove: {
         custom: '{target} word nie meer deur {effect} geraak nie.',
         advantage: '{source} het nie meer voordeel teen {target}{subject} nie.',
-        disadvantage:
-          '{source} het nie meer nadeel teen {target}{subject} nie.',
+        disadvantage: '{source} het nie meer nadeel teen {target}{subject} nie.',
         noBy: '{target} is nie meer {past} nie.',
         self: '{target} is nie meer {past} nie.',
         standard: '{target} word nie meer {past} deur {source} nie.',
@@ -616,10 +604,8 @@ const ConditionTrackerMod = (() => {
         handoutReinstalled: 'Die hulp-handout {handout} is herinstalleer.',
         duplicate:
           'Hierdie presiese kombinasie van bron, onderwerp, teiken, toestand en aangepaste teks is reeds aktief.',
-        noTargets:
-          'Geen teikentoken gespesifiseer vir multiteiken-toepassing nie.',
-        noSelection:
-          'Kies ten minste een token op die bord voordat jy --multi-target gebruik.',
+        noTargets: 'Geen teikentoken gespesifiseer vir multiteiken-toepassing nie.',
+        noSelection: 'Kies ten minste een token op die bord voordat jy --multi-target gebruik.',
         invalidIds: "Geen geldige token-ID's gevind in die huidige keuse nie.",
         reSelectTokens:
           'Nie een van die oorspronklik gekose tokens kon gevind word nie. Kies tokens weer en probeer opnuut.',
@@ -630,25 +616,21 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Bron-token kon nie gevind word nie.',
         targetTokenNotFound: 'Teikentoken kon nie gevind word nie.',
         subjectTokenNotFound: 'Onderwerp-token kon nie gevind word nie.',
-        invalidCondition:
-          'Toestand moet een van die vooraf bepaalde toestande of Ander wees.',
+        invalidCondition: 'Toestand moet een van die vooraf bepaalde toestande of Ander wees.',
         subjectOnlyCustom:
           '--subject is slegs geldig vir Towerspreuk, Vermoë, Voordeel, Nadeel en Ander.',
         subjectBypassInvalid:
           "--subjectPromptBypass verwag true of false wanneer 'n waarde verskaf word.",
         customDetailsRequired:
           '{condition}-besonderhede is vereis. Gebruik --other om dit te verskaf.',
-        markerConfigFormat:
-          'Merker-konfigurasieformaat is: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          "Merkerkonfigurasie vereis 'n vooraf bepaalde toestandnaam.",
+        markerConfigFormat: 'Merker-konfigurasieformaat is: --config marker Grappled=grab',
+        markerPredefinedRequired: "Merkerkonfigurasie vereis 'n vooraf bepaalde toestandnaam.",
         markerNameRequired: "Merkerkonfigurasie vereis 'n nie-leë merkernaam.",
         markerSet: '{condition}-merker gestel op {marker}.',
         healthBarSet: 'Gesondheidsstaaf gestel op {bar}.',
         boolSet: '{key} gestel op {value}.',
         expectedBoolean: 'true of false verwag.',
-        invalidHealthBar:
-          'Gesondheidsstaaf moet bar1_value, bar2_value of bar3_value wees.',
+        invalidHealthBar: 'Gesondheidsstaaf moet bar1_value, bar2_value of bar3_value wees.',
         markersDisabled: 'Merkers is gedeaktiveer.',
         noMarkerConfigured: 'Geen merker is opgestel vir hierdie toestand nie.',
         markerApplied: 'Merker toegepas: {marker}',
@@ -659,10 +641,8 @@ const ConditionTrackerMod = (() => {
           "Ander-duur vereis 'n numeriese rondte-telling, byvoorbeeld --duration 5 rounds.",
         invalidDuration:
           "Duur moet Tot verwydering, 'n beurt-einde-opsie of 'n positiewe rondte-telling wees.",
-        zeroHpNoConditions:
-          '{name} het 0 LP bereik en het geen aktiewe toestande nie.',
-        zeroHpConditions:
-          '{name} het 0 LP bereik. Kies toestande om te verwyder:',
+        zeroHpNoConditions: '{name} het 0 LP bereik en het geen aktiewe toestande nie.',
+        zeroHpConditions: '{name} het 0 LP bereik. Kies toestande om te verwyder:',
         removeAllBtn: 'Verwyder Alle Toestande vir {name}',
         markIncapacitated: 'Merk as Onbekwaam',
         removeFromTurnOrder: 'Verwyder uit Beurtorde',
@@ -674,10 +654,8 @@ const ConditionTrackerMod = (() => {
         moveTokenBtn: 'Verskuif {name} na Kaartlaag',
         tokenMoved: '{name} is na die kaartlaag verskuif.',
         tokenNotFound: 'Token nie gevind nie.',
-        noActiveConditions:
-          '{name} het geen aktiewe toestande om te verwyder nie.',
-        deadNoConditions:
-          '{name} is as dood gemerk. Geen toestande was aktief nie.',
+        noActiveConditions: '{name} het geen aktiewe toestande om te verwyder nie.',
+        deadNoConditions: '{name} is as dood gemerk. Geen toestande was aktief nie.',
         scriptReady: '{name} is aktief en jy gebruik weergawe {version}.',
         reachedZeroHp: '{name} het 0 LP bereik',
         manuallyRemoved: 'dit is handmatig verwyder',
@@ -685,25 +663,19 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} is as dood gemerk',
         conditionReorder:
           'Die beurtorde het verander en {count} gevolge toestandry(e) mag nou buite plek wees. Klik hieronder om hulle ná hul toegewysde tokens te herstel.',
-        conditionsReordered:
-          'Toestandrye is herposisioneer ná hul toegewysde tokens.',
+        conditionsReordered: 'Toestandrye is herposisioneer ná hul toegewysde tokens.',
         noTokensSelectedReport:
           'Kies ten minste een teken op die bord voordat jy --report-token gebruik.',
-        noConditionsAppliedTo:
-          '{name} het geen aktiewe voorwaardes daarop toegepas nie.',
-        noConditionsAppliedBy:
-          '{name} het geen aktiewe voorwaardes wat op ander toegepas is nie.',
+        noConditionsAppliedTo: '{name} het geen aktiewe voorwaardes daarop toegepas nie.',
+        noConditionsAppliedBy: '{name} het geen aktiewe voorwaardes wat op ander toegepas is nie.',
         noSavedEffects: 'Geen gestoorde effekte gestoor vir {name} nie.',
-        noTokenSelectedSaved:
-          "Kies 'n teken op die bord voordat jy --save gebruik.",
+        noTokenSelectedSaved: "Kies 'n teken op die bord voordat jy --save gebruik.",
         savedEffectAdded: 'Gestoorde effek bygevoeg vir {name}.',
         savedEffectUpdated: 'Gestoorde effek is opgedateer.',
         savedEffectRemoved: 'Gestoorde effek is verwyder.',
         savedEffectNotFound: 'Gestoorde effek nie gevind nie.',
-        savedInvalidVisibility:
-          'Ongeldige sigbaarheid. Gebruik publiek, gemaskerde of GM.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Ongeldige sigbaarheid. Gebruik publiek, gemaskerde of GM.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Effek is as publiek by Turn Tracker gevoeg.',
         savedPromotedMasked:
           'Effek bygevoeg by Turn Tracker as gemaskerde — spelers sien: {publicLabel}.',
@@ -759,17 +731,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Klassifikasie-Diagnose',
         showHeading: 'Token-Klassifikasie-Besonderhede',
         resultHeading: 'Oorskrywing Toegepas',
-        noSelection:
-          'Kies ten minste een token op die bord voordat jy --classify gebruik.',
-        invalidType:
-          'Ongeldige klassifikasietipe: {type}. Gebruik pc, npc, ignored of auto.',
+        noSelection: 'Kies ten minste een token op die bord voordat jy --classify gebruik.',
+        invalidType: 'Ongeldige klassifikasietipe: {type}. Gebruik pc, npc, ignored of auto.',
         set: '{name} → {type} (omvang: {scope})',
-        cleared:
-          '{name} oorskrywing uitgevee (omvang: {scope}) — outomatiese opsporing herstel.',
-        setTokenFallback:
-          '{name} → {type} (token-oorskrywing — geen karakterblad gekoppel nie).',
-        clearedTokenFallback:
-          '{name} token-oorskrywing uitgevee — outomatiese opsporing herstel.',
+        cleared: '{name} oorskrywing uitgevee (omvang: {scope}) — outomatiese opsporing herstel.',
+        setTokenFallback: '{name} → {type} (token-oorskrywing — geen karakterblad gekoppel nie).',
+        clearedTokenFallback: '{name} token-oorskrywing uitgevee — outomatiese opsporing herstel.',
         fieldToken: 'Teken',
         fieldType: 'Klassifikasie',
         fieldSource: 'Bron',
@@ -782,16 +749,14 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Ongebruikte merkers',
       },
       apply: {
-        turnAppended:
-          'Teiken was nie in die beurtorde nie; toestandry is aangeheg.',
+        turnAppended: 'Teiken was nie in die beurtorde nie; toestandry is aangeheg.',
         turnInserted: 'Toestandry ingevoeg onder die teikentoken.',
       },
     },
     handout: {
       versionLabel: 'Weergawe',
       subtitle: 'D&D 5e Statuseffek-bestuurder',
-      footerNote:
-        'Hierdie handout word outomaties geskep en bygewerk elke keer as die skrip laai.',
+      footerNote: 'Hierdie handout word outomaties geskep en bygewerk elke keer as die skrip laai.',
       overview: {
         heading: 'Oorsig',
         body: "Condition Tracker bestuur D&D 5e-statustoestande en aangepaste effekte as geëtiketteerde rye in die Roll20 Beurtopvolger. Pas toestande toe op tokens, volg duurtes op inisiatieford en verwyder verstekde effekte outomaties wanneer 'n beurt eindig. Alle opdragte is slegs vir die GM en kan vanuit die klets of via die geïnstalleerde makros uitgevoer word.",
@@ -825,30 +790,12 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Beskrywing',
         rows: [
           ['-- prompt', 'Interaktiewe stap-vir-stap towenaar-koppelvlak'],
-          [
-            '-- multi-teiken',
-            "Pas 'n toestand op verskeie teikentoken gelyktydig toe",
-          ],
-          [
-            '-- spyskaart',
-            'Wys hoofkieslys (voeg remove by vir verwyderingskieslys)',
-          ],
-          [
-            '--bron X --teiken Y --toestand Z',
-            "Pas 'n toestand direk toe sonder die towenaar",
-          ],
-          [
-            '--duration &lt;waarde&gt;',
-            "Duur vir 'n direkte toepassing (bv. 2 rounds)",
-          ],
-          [
-            '--other &lt;teks&gt;',
-            'Aangepaste teks vir Towerspreuk / Vermoë / Ander effektipes',
-          ],
-          [
-            '--remove &lt;toestand-ID&gt;',
-            "Verwyder 'n spesifieke toestand met sy unieke ID",
-          ],
+          ['-- multi-teiken', "Pas 'n toestand op verskeie teikentoken gelyktydig toe"],
+          ['-- spyskaart', 'Wys hoofkieslys (voeg remove by vir verwyderingskieslys)'],
+          ['--bron X --teiken Y --toestand Z', "Pas 'n toestand direk toe sonder die towenaar"],
+          ['--duration &lt;waarde&gt;', "Duur vir 'n direkte toepassing (bv. 2 rounds)"],
+          ['--other &lt;teks&gt;', 'Aangepaste teks vir Towerspreuk / Vermoë / Ander effektipes'],
+          ['--remove &lt;toestand-ID&gt;', "Verwyder 'n spesifieke toestand met sy unieke ID"],
           [
             '--config &lt;opsie&gt; &lt;waarde&gt;',
             'Pas konfigurasie-instellings aan (sien Konfigurasie-afdeling hieronder)',
@@ -857,19 +804,13 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'Oorskryf subjectPromptBypass slegs vir hierdie opdrag (ondersteun ook --subject-prompt-bypass)',
           ],
-          [
-            '-- skoonmaak',
-            'Versoen toestand — verwyder weesagtige toestande en beurtorde-rye',
-          ],
+          ['-- skoonmaak', 'Versoen toestand — verwyder weesagtige toestande en beurtorde-rye'],
           [
             '--herbestel-voorwaardes',
             'Verskuif toestandrye handmatig agter hul aangewese tokens in die beurtorde',
           ],
           ['--herinstalleer-makro', 'Herskep of dateer GM-makros op'],
-          [
-            '--herinstalleer-uitdeelstuk',
-            'Herskep of dateer die gelokaliseerde hulp-handout op',
-          ],
+          ['--herinstalleer-uitdeelstuk', 'Herskep of dateer die gelokaliseerde hulp-handout op'],
           [
             '--verslag-token',
             "Fluister 'n GM-enigste toestandverslag vir elke geselekteerde teken (toestande wat daarop toegepas word en daardeur)",
@@ -906,22 +847,13 @@ const ConditionTrackerMod = (() => {
             '🔮 Towerspreuk',
             "Volg 'n benoemde towerspreukeffek — jy sal gevra word vir die spreukse naam",
           ],
-          [
-            '🎯 Vermoë',
-            "Volg 'n benoemde klas- of rasvermoë — jy sal gevra word vir die naam",
-          ],
+          ['🎯 Vermoë', "Volg 'n benoemde klas- of rasvermoë — jy sal gevra word vir die naam"],
           [
             '🍀 Voordeel',
             "Teken voordeel op van een token na 'n ander; gegroepeer met die bron in inisiatief",
           ],
-          [
-            '⬇️ Nadeel',
-            'Teken opgelegde nadeel op; gegroepeer met die bron in inisiatief',
-          ],
-          [
-            '📝 Ander',
-            "Vryvorm aangepaste etiket — jy sal gevra word vir 'n beskrywing",
-          ],
+          ['⬇️ Nadeel', 'Teken opgelegde nadeel op; gegroepeer met die bron in inisiatief'],
+          ['📝 Ander', "Vryvorm aangepaste etiket — jy sal gevra word vir 'n beskrywing"],
         ],
       },
       durationOptions: {
@@ -956,10 +888,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'Sigbaarheidmodusse',
           rows: [
-            [
-              'publiek',
-              'Volledige effek-etiket is sigbaar in die Turn Tracker en publieke klets.',
-            ],
+            ['publiek', 'Volledige effek-etiket is sigbaar in die Turn Tracker en publieke klets.'],
             [
               'gemasker',
               "'n Vae publieke etiket word aan spelers gewys; volledige besonderhede is slegs vir GM.",
@@ -987,10 +916,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               "Wysig etikette of sigbaarheid vir 'n bestaande gestoorde effek.",
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              "Verwyder 'n gestoorde effek permanent.",
-            ],
+            ['!condition-tracker --saved remove <id>', "Verwyder 'n gestoorde effek permanent."],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               "Kopieer 'n gestoorde effek na die Turn Tracker (publiek of gemaskerde) of bevestig dit is slegs GM-nagespoor.",
@@ -1020,11 +946,7 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Kontrole',
           colResult: 'Resultaat',
           rows: [
-            [
-              '1',
-              'Token-toestand-oorskrywing (--classify --scope token)',
-              'pc / npc / geïgnoreer',
-            ],
+            ['1', 'Token-toestand-oorskrywing (--classify --scope token)', 'pc / npc / geïgnoreer'],
             [
               '2',
               'Karakter ct_mod_actor_type-kenmerk (--classify --scope character)',
@@ -1045,10 +967,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Tipe',
           colMeaning: 'Betekenis',
           rows: [
-            [
-              'rekenaar',
-              'Spelerkarakter — altyd ingesluit as SC in die towenaar en opsporing',
-            ],
+            ['rekenaar', 'Spelerkarakter — altyd ingesluit as SC in die towenaar en opsporing'],
             ['npc', 'Nie-spelerkarakter — altyd ingesluit as NPC'],
             [
               'geïgnoreer',
@@ -1062,17 +981,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Klassifikasieopdragte',
-          intro:
-            'Kies een of meer tokens voordat jy --classify-opdragte uitvoer.',
+          intro: 'Kies een of meer tokens voordat jy --classify-opdragte uitvoer.',
           rows: [
             [
               '!toestand-spoorsnyer --klassifiseer rekenaar',
               "Merk gekose tokens as SC's (standaard omvang: karakter).",
             ],
-            [
-              '!condition-tracker --klassifiseer npc',
-              "Merk gekose tokens as NPC's.",
-            ],
+            ['!condition-tracker --klassifiseer npc', "Merk gekose tokens as NPC's."],
             [
               '!condition-tracker --klassifiseer geïgnoreer',
               'Sluit gekose tokens uit van alle nasporing.',
@@ -1256,8 +1171,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} afectat per {effect} ({source})',
         advantage: '{emoji} {source} té avantatge contra {target}{subject}',
-        disadvantage:
-          '{emoji} {source} té desavantatge contra {target}{subject}',
+        disadvantage: '{emoji} {source} té desavantatge contra {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} està {past}',
         standard: '{emoji} {target} {past} per {source}',
@@ -1273,8 +1187,7 @@ const ConditionTrackerMod = (() => {
       remove: {
         custom: '{target} ja no està afectat per {effect}.',
         advantage: '{source} ja no té avantatge contra {target}{subject}.',
-        disadvantage:
-          '{source} ja no té desavantatge contra {target}{subject}.',
+        disadvantage: '{source} ja no té desavantatge contra {target}{subject}.',
         noBy: '{target} ja no {past}.',
         self: '{target} ja no està {past}.',
         standard: '{target} ja no està {past} per {source}.',
@@ -1296,8 +1209,7 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Cap',
         noneOrSourceBtn: "Cap o aplica a l'origen",
         subjectDesc: "Selecciona qui o què aplica l'efecte.",
-        sourceDesc:
-          "Selecciona la criatura que crea o genera la condició o l'efecte.",
+        sourceDesc: "Selecciona la criatura que crea o genera la condició o l'efecte.",
         targetDesc: "Selecciona la criatura que rebrà la condició o l'efecte.",
         otherText: 'Text de condició personalitzat',
         effectDetails: 'Detalls de {condition}',
@@ -1417,10 +1329,8 @@ const ConditionTrackerMod = (() => {
           "Aquesta combinació d'origen, subjecte, destinatari, condició i text personalitzat ja és activa.",
         noTargets:
           "No s'ha especificat cap testimoni destinatari per a l'aplicació multi-destinatari.",
-        noSelection:
-          "Selecciona almenys un testimoni al tauler abans d'usar --multi-target.",
-        invalidIds:
-          "No s'han trobat identificadors de testimoni vàlids a la selecció actual.",
+        noSelection: "Selecciona almenys un testimoni al tauler abans d'usar --multi-target.",
+        invalidIds: "No s'han trobat identificadors de testimoni vàlids a la selecció actual.",
         reSelectTokens:
           "No s'ha pogut trobar cap dels testimonis seleccionats originalment. Torna a seleccionar els testimonis i intenta-ho de nou.",
         conditionNotFound: "No s'ha trobat l'identificador de condició.",
@@ -1430,8 +1340,7 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: "No s'ha trobat el testimoni origen.",
         targetTokenNotFound: "No s'ha trobat el testimoni destinatari.",
         subjectTokenNotFound: "No s'ha trobat el testimoni subjecte.",
-        invalidCondition:
-          'La condició ha de ser una de les condicions predefinides o Altres.',
+        invalidCondition: 'La condició ha de ser una de les condicions predefinides o Altres.',
         subjectOnlyCustom:
           '--subject només és vàlid per a Encanteri, Habilitat, Avantatge, Desavantatge i Altres.',
         subjectBypassInvalid:
@@ -1442,17 +1351,14 @@ const ConditionTrackerMod = (() => {
           'El format de configuració del marcador és: --config marker Grappled=grab',
         markerPredefinedRequired:
           'La configuració del marcador requereix un nom de condició predefinit.',
-        markerNameRequired:
-          'La configuració del marcador requereix un nom de marcador no buit.',
+        markerNameRequired: 'La configuració del marcador requereix un nom de marcador no buit.',
         markerSet: "El marcador de {condition} s'ha establert a {marker}.",
         healthBarSet: "La barra de salut s'ha establert a {bar}.",
         boolSet: "{key} s'ha establert a {value}.",
         expectedBoolean: "S'esperava true o false.",
-        invalidHealthBar:
-          'La barra de salut ha de ser bar1_value, bar2_value o bar3_value.',
+        invalidHealthBar: 'La barra de salut ha de ser bar1_value, bar2_value o bar3_value.',
         markersDisabled: 'Els marcadors estan desactivats.',
-        noMarkerConfigured:
-          'No hi ha cap marcador configurat per a aquesta condició.',
+        noMarkerConfigured: 'No hi ha cap marcador configurat per a aquesta condició.',
         markerApplied: 'Marcador aplicat: {marker}',
         markerPresent: 'Marcador ja present: {marker}',
         langSet: 'Idioma establert a {locale}.',
@@ -1462,10 +1368,8 @@ const ConditionTrackerMod = (() => {
           'La durada Altre requereix un nombre de rondes, per exemple --duration 5 rounds.',
         invalidDuration:
           "La durada ha de ser Fins que s'elimini, una opció de fi de torn o un nombre de rondes positiu.",
-        zeroHpNoConditions:
-          '{name} ha arribat a 0 PV i no té cap condició activa.',
-        zeroHpConditions:
-          '{name} ha arribat a 0 PV. Tria les condicions a eliminar:',
+        zeroHpNoConditions: '{name} ha arribat a 0 PV i no té cap condició activa.',
+        zeroHpConditions: '{name} ha arribat a 0 PV. Tria les condicions a eliminar:',
         removeAllBtn: 'Elimina totes les condicions de {name}',
         markIncapacitated: 'Marca com a Incapacitat',
         removeFromTurnOrder: "Elimina de l'ordre d'iniciativa",
@@ -1478,8 +1382,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: "{name} s'ha mogut al calque del mapa.",
         tokenNotFound: "No s'ha trobat el testimoni.",
         noActiveConditions: '{name} no té cap condició activa a eliminar.',
-        deadNoConditions:
-          "{name} s'ha marcat com a mort. No hi havia cap condició activa.",
+        deadNoConditions: "{name} s'ha marcat com a mort. No hi havia cap condició activa.",
         scriptReady: '{name} és actiu i estàs usant la versió {version}.',
         reachedZeroHp: '{name} ha arribat a 0 PV',
         manuallyRemoved: "s'ha eliminat manualment",
@@ -1492,21 +1395,16 @@ const ConditionTrackerMod = (() => {
         noTokensSelectedReport:
           "Seleccioneu almenys un testimoni al tauler abans d'utilitzar --report-token.",
         noConditionsAppliedTo: '{name} no té cap condició activa aplicada.',
-        noConditionsAppliedBy:
-          '{name} no té cap condició activa aplicada als altres.',
+        noConditionsAppliedBy: '{name} no té cap condició activa aplicada als altres.',
         noSavedEffects: "No s'ha guardat cap efecte desat per a {name}.",
-        noTokenSelectedSaved:
-          "Seleccioneu una fitxa al tauler abans d'utilitzar --saved.",
+        noTokenSelectedSaved: "Seleccioneu una fitxa al tauler abans d'utilitzar --saved.",
         savedEffectAdded: "S'ha afegit efecte desat per a {name}.",
         savedEffectUpdated: "S'ha actualitzat l'efecte desat.",
         savedEffectRemoved: "S'ha eliminat l'efecte desat.",
         savedEffectNotFound: "No s'ha trobat l'efecte desat.",
-        savedInvalidVisibility:
-          'Visibilitat no vàlida. Utilitzeu públic, emmascarat o gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          "S'ha afegit l'efecte al Turn Tracker com a públic.",
+        savedInvalidVisibility: 'Visibilitat no vàlida. Utilitzeu públic, emmascarat o gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: "S'ha afegit l'efecte al Turn Tracker com a públic.",
         savedPromotedMasked:
           "S'ha afegit l'efecte al Seguidor de torns com a emmascarat; els jugadors veuen: {publicLabel}.",
         savedPromotedGm:
@@ -1561,13 +1459,10 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnòstic de Classificació',
         showHeading: 'Detalls de Classificació del Token',
         resultHeading: 'Substitució Aplicada',
-        noSelection:
-          "Selecciona almenys un token al tauler abans d'usar --classify.",
-        invalidType:
-          'Tipus de classificació no vàlid: {type}. Usa pc, npc, ignored o auto.',
+        noSelection: "Selecciona almenys un token al tauler abans d'usar --classify.",
+        invalidType: 'Tipus de classificació no vàlid: {type}. Usa pc, npc, ignored o auto.',
         set: '{name} → {type} (àmbit: {scope})',
-        cleared:
-          '{name} substitució eliminada (àmbit: {scope}) — detecció automàtica restaurada.',
+        cleared: '{name} substitució eliminada (àmbit: {scope}) — detecció automàtica restaurada.',
         setTokenFallback:
           '{name} → {type} (substitució de token — cap full de personatge vinculat).',
         clearedTokenFallback:
@@ -1586,8 +1481,7 @@ const ConditionTrackerMod = (() => {
       apply: {
         turnAppended:
           "El destinatari no era a l'ordre d'iniciativa; la fila de condició s'ha afegit al final.",
-        turnInserted:
-          'Fila de condició inserida sota el testimoni destinatari.',
+        turnInserted: 'Fila de condició inserida sota el testimoni destinatari.',
       },
     },
     handout: {
@@ -1628,22 +1522,13 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Descripció',
         rows: [
           ['--demanada', "Interfície de l'assistent pas a pas"],
-          [
-            '--multi-objectiu',
-            'Aplica una condició a diversos testimonis destinataris alhora',
-          ],
-          [
-            '--menú',
-            "Mostra el menú principal (afegeix remove per al menú d'eliminació)",
-          ],
+          ['--multi-objectiu', 'Aplica una condició a diversos testimonis destinataris alhora'],
+          ['--menú', "Mostra el menú principal (afegeix remove per al menú d'eliminació)"],
           [
             '--source X --target Y --condició Z',
             "Aplica una condició directament sense l'assistent",
           ],
-          [
-            '--duration &lt;valor&gt;',
-            'Durada per a una aplicació directa (p. ex. 2 rounds)',
-          ],
+          ['--duration &lt;valor&gt;', 'Durada per a una aplicació directa (p. ex. 2 rounds)'],
           [
             '--altre <text>',
             "Text personalitzat per als tipus d'efecte Encanteri / Habilitat / Altres",
@@ -1669,10 +1554,7 @@ const ConditionTrackerMod = (() => {
             "Reposiciona manualment les files de condicions darrere dels seus tokens assignats a l'ordre de torns",
           ],
           ['--reinstall-macro', 'Torna a crear o actualitza les macros del MJ'],
-          [
-            '--reinstall-handout',
-            "Torna a crear o actualitza el fullet d'ajuda localitzat",
-          ],
+          ['--reinstall-handout', "Torna a crear o actualitza el fullet d'ajuda localitzat"],
           [
             '--informe-token',
             'Xiuxiueja un informe de condicions només per a GM per a cada testimoni seleccionat (condicions aplicades a i per aquest)',
@@ -1709,10 +1591,7 @@ const ConditionTrackerMod = (() => {
             '🔮 Encanteri',
             "Segueix un efecte d'encanteri amb nom — se't demanarà el nom de l'encanteri",
           ],
-          [
-            '🎯 Habilitat',
-            "Segueix una habilitat de classe o raça amb nom — se't demanarà el nom",
-          ],
+          ['🎯 Habilitat', "Segueix una habilitat de classe o raça amb nom — se't demanarà el nom"],
           [
             '🍀 Avantatge',
             "Registra un avantatge atorgat d'un testimoni a un altre; agrupat amb l'origen a la iniciativa",
@@ -1721,10 +1600,7 @@ const ConditionTrackerMod = (() => {
             '⬇️ Desavantatge',
             "Registra un desavantatge imposat; agrupat amb l'origen a la iniciativa",
           ],
-          [
-            '📝 Altres',
-            "Etiqueta personalitzada de forma lliure — se't demanarà una descripció",
-          ],
+          ['📝 Altres', "Etiqueta personalitzada de forma lliure — se't demanarà una descripció"],
         ],
       },
       durationOptions: {
@@ -1790,10 +1666,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               "Editeu les etiquetes o la visibilitat d'un efecte desat existent.",
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Elimina permanentment un efecte desat.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Elimina permanentment un efecte desat.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Copieu un efecte desat al Seguidor de torns (públic o emmascarat) o confirmeu que només es fa un seguiment de GM.',
@@ -1823,22 +1696,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Comprovació',
           colResult: 'Resultat',
           rows: [
-            [
-              '1',
-              "Substitució d'estat del token (--classify --scope token)",
-              'pc / npc / ignorat',
-            ],
+            ['1', "Substitució d'estat del token (--classify --scope token)", 'pc / npc / ignorat'],
             [
               '2',
               'Atribut ct_mod_actor_type del personatge (--classify --scope character)',
               'pc / npc / ignorat',
             ],
             ['3', 'Token no vinculat — cap full de personatge', 'ignorat'],
-            [
-              '4',
-              'Adaptador del sistema de joc (atribut npc / is_npc)',
-              'pc / npc',
-            ],
+            ['4', 'Adaptador del sistema de joc (atribut npc / is_npc)', 'pc / npc'],
             [
               '5',
               "Escaneig d'atributs NPC genèrics (npc, is_npc, npcflag, sheet_type, character_type)",
@@ -1852,15 +1717,9 @@ const ConditionTrackerMod = (() => {
           colType: 'Tipus',
           colMeaning: 'Significat',
           rows: [
-            [
-              'pc',
-              "Personatge jugador — sempre inclòs com a PJ a l'assistent i la detecció",
-            ],
+            ['pc', "Personatge jugador — sempre inclòs com a PJ a l'assistent i la detecció"],
             ['npc', 'Personatge no jugador — sempre inclòs com a PNJ'],
-            [
-              'ignorat',
-              "Mai mostrat ni rastreat — exclòs del selector de tokens de l'assistent",
-            ],
+            ['ignorat', "Mai mostrat ni rastreat — exclòs del selector de tokens de l'assistent"],
             [
               'desconegut',
               "Només detecció automàtica; no s'ha pogut determinar el tipus (tractat com PNJ a l'assistent)",
@@ -1869,17 +1728,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Ordres de Classificació',
-          intro:
-            "Selecciona un o més tokens abans d'executar les ordres --classify.",
+          intro: "Selecciona un o més tokens abans d'executar les ordres --classify.",
           rows: [
             [
               "!condition-tracker --classifica l'ordinador",
               'Marcar els tokens seleccionats com a PJs (àmbit de personatge per defecte).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Marcar els tokens seleccionats com a PNJs.',
-            ],
+            ['!condition-tracker --classify npc', 'Marcar els tokens seleccionats com a PNJs.'],
             [
               '!condition-tracker --classificar ignorat',
               'Excloure els tokens seleccionats de tot seguiment.',
@@ -2228,12 +2083,9 @@ const ConditionTrackerMod = (() => {
         targetTokenNotFound: '找不到目標 Token。',
         subjectTokenNotFound: '找不到主體 Token。',
         invalidCondition: '狀態必須是預先定義的狀態之一或 Other。',
-        subjectOnlyCustom:
-          '--subject 僅適用於 Spell、Ability、Advantage、Disadvantage 和 Other。',
-        subjectBypassInvalid:
-          '提供值時，--subjectPromptBypass 需為 true 或 false。',
-        customDetailsRequired:
-          '{condition} 需要詳細資料。使用 --other 提供內容。',
+        subjectOnlyCustom: '--subject 僅適用於 Spell、Ability、Advantage、Disadvantage 和 Other。',
+        subjectBypassInvalid: '提供值時，--subjectPromptBypass 需為 true 或 false。',
+        customDetailsRequired: '{condition} 需要詳細資料。使用 --other 提供內容。',
         markerConfigFormat: '標記設定格式：--config marker Grappled=grab',
         markerPredefinedRequired: '標記設定需要預先定義的狀態名稱。',
         markerNameRequired: '標記設定需要非空白的標記名稱。',
@@ -2241,16 +2093,14 @@ const ConditionTrackerMod = (() => {
         healthBarSet: '生命值欄位已設定為 {bar}。',
         boolSet: '{key} 已設定為 {value}。',
         expectedBoolean: '應為 true 或 false。',
-        invalidHealthBar:
-          '生命值欄位必須是 bar1_value、bar2_value 或 bar3_value。',
+        invalidHealthBar: '生命值欄位必須是 bar1_value、bar2_value 或 bar3_value。',
         markersDisabled: '標記已停用。',
         noMarkerConfigured: '此狀態未設定標記。',
         markerApplied: '已套用標記：{marker}',
         markerPresent: '標記已存在：{marker}',
         langSet: '語言已設定為 {locale}。',
         invalidLocale: '無效的語言環境。支援的語言環境：{locales}。',
-        otherDurationRequiresRounds:
-          '其他持續時間需要數字輪數，例如 --duration 5 rounds。',
+        otherDurationRequiresRounds: '其他持續時間需要數字輪數，例如 --duration 5 rounds。',
         invalidDuration: '持續時間必須是直到移除、回合結束選項，或正數輪數。',
         zeroHpNoConditions: '{name} 已降至 0 HP，且沒有 active 狀態。',
         zeroHpConditions: '{name} 已降至 0 HP。選擇要移除的狀態：',
@@ -2260,8 +2110,7 @@ const ConditionTrackerMod = (() => {
         alreadyIncapacitated: '{name} 已經失能。',
         tokenRemovedFromTurn: '{name} 已從回合順序移除。',
         tokenNotInTurn: '在回合順序中找不到 {name}。',
-        moveTokenPrompt:
-          '要將 {name} 移至地圖圖層，使其保持可見但不干擾其他 Token 嗎？',
+        moveTokenPrompt: '要將 {name} 移至地圖圖層，使其保持可見但不干擾其他 Token 嗎？',
         moveTokenBtn: '將 {name} 移至地圖圖層',
         tokenMoved: '{name} 已移至地圖圖層。',
         tokenNotFound: '找不到 Token。',
@@ -2275,8 +2124,7 @@ const ConditionTrackerMod = (() => {
         conditionReorder:
           '行動順序已變更，{count} 個追蹤中的狀態列可能已不在正確位置。點擊下方將其還原至指定代幣之後。',
         conditionsReordered: '狀態列已重新排列至其指定代幣之後。',
-        noTokensSelectedReport:
-          '在使用 --report-token 之前，至少在板上選擇一個令牌。',
+        noTokensSelectedReport: '在使用 --report-token 之前，至少在板上選擇一個令牌。',
         noConditionsAppliedTo: '{name} 沒有套用任何有效條件。',
         noConditionsAppliedBy: '{name} 沒有適用於其他人的有效條件。',
         noSavedEffects: '沒有為 {name} 儲存已儲存的效果。',
@@ -2286,11 +2134,9 @@ const ConditionTrackerMod = (() => {
         savedEffectRemoved: '已刪除已儲存的效果。',
         savedEffectNotFound: '未找到保存的效果。',
         savedInvalidVisibility: '可見性無效。使用 public、masked 或 gm。',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: '效果已作為公開添加到回合追蹤器中。',
-        savedPromotedMasked:
-          '加入回合追蹤器中的效果被遮蓋 — 玩家看到：{publicLabel}。',
+        savedPromotedMasked: '加入回合追蹤器中的效果被遮蓋 — 玩家看到：{publicLabel}。',
         savedPromotedGm:
           '效果僅限 GM — 不會建立回合追蹤器行。當該標記到達回合順序的頂部時，提醒系統將顯示它。',
         savedSnoozed: '提醒已延遲：{scope}。',
@@ -2344,8 +2190,7 @@ const ConditionTrackerMod = (() => {
         showHeading: 'Token 分類詳情',
         resultHeading: '已套用覆寫',
         noSelection: '使用 --classify 前，請先在版面上選取至少一個 Token。',
-        invalidType:
-          '無效的分類類型：{type}。請使用 pc、npc、ignored 或 auto。',
+        invalidType: '無效的分類類型：{type}。請使用 pc、npc、ignored 或 auto。',
         set: '{name} → {type}（範圍：{scope}）',
         cleared: '{name} 覆寫已清除（範圍：{scope}）— 自動偵測已恢復。',
         setTokenFallback: '{name} → {type}（Token 覆寫 — 未連結角色卡）。',
@@ -2391,10 +2236,7 @@ const ConditionTrackerMod = (() => {
             '!條件追蹤器--報告令牌',
             '首先选择一个或多个令牌，然后运行此命令以获取 GM 耳语，列出每个选定令牌所应用的每个条件。也可當 ConditionTrackerReportToken 巨集。',
           ],
-          [
-            '!condition-tracker --menu',
-            '開啟主要管理選單，可套用、檢視或移除狀態。',
-          ],
+          ['!condition-tracker --menu', '開啟主要管理選單，可套用、檢視或移除狀態。'],
         ],
       },
       commandsRef: {
@@ -2418,10 +2260,7 @@ const ConditionTrackerMod = (() => {
           ['--重新排序條件', '手動將狀態列重新排列到輪序中其對應代幣之後'],
           ['--重新安裝巨集', '重新建立或更新 GM 巨集'],
           ['--重新安裝講義', '重新建立或更新本地化說明講義'],
-          [
-            '--報表令牌',
-            '為每個選定的代幣產生僅 GM 的條件報告（應用於其並由其應用的條件）',
-          ],
+          ['--報表令牌', '為每個選定的代幣產生僅 GM 的條件報告（應用於其並由其應用的條件）'],
           ['--已儲存', '查看所選令牌保存的長期效果（首先選擇令牌）'],
           ['--儲存新增', '將已儲存的效果（詛咒、疾病等）新增至所選標記'],
           ['--saved edit <id>', '按 id 編輯現有已儲存效果'],
@@ -2441,10 +2280,7 @@ const ConditionTrackerMod = (() => {
             '覆寫選取 Token 的角色類型 — 請先選取 Token。預設範圍為角色（寫入 ct_mod_actor_type 屬性）；加上 --scope token 可改為儲存在腳本狀態中',
           ],
           ['--將汽車分類', '移除角色類型覆寫，恢復選取 Token 的自動偵測'],
-          [
-            '--分類顯示',
-            '對每個選取的 Token 傳送分類診斷密語 — 顯示偵測到的類型、偵測來源與原因',
-          ],
+          ['--分類顯示', '對每個選取的 Token 傳送分類診斷密語 — 顯示偵測到的類型、偵測來源與原因'],
           [' - 幫助', '在聊天中顯示簡短說明卡'],
         ],
       },
@@ -2459,18 +2295,14 @@ const ConditionTrackerMod = (() => {
         rows: [
           ['🔮 咒語', '追蹤具名法術效果 — 會提示輸入法術名稱'],
           ['🎯能力', '追蹤具名職業或種族能力 — 會提示輸入能力名稱'],
-          [
-            '🍀 優勢',
-            '記錄一個 Token 對另一個 Token 的優勢；在先攻中與來源分組',
-          ],
+          ['🍀 優勢', '記錄一個 Token 對另一個 Token 的優勢；在先攻中與來源分組'],
           ['⬇️缺點', '記錄劣勢；在先攻中與來源分組'],
           ['📝其他', '自由格式自訂標籤 — 會提示輸入描述'],
         ],
       },
       durationOptions: {
         heading: '持續時間選項',
-        intro:
-          '剩餘數會顯示在回合追蹤器的 pr 欄位，並在錨定 Token 的回合結束時遞減。',
+        intro: '剩餘數會顯示在回合追蹤器的 pr 欄位，並在錨定 Token 的回合結束時遞減。',
         colOption: '選項',
         colBehaviour: '行為',
         rows: [
@@ -2497,19 +2329,12 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: '保存的效果命令',
-          intro:
-            '所有 --saved 指令僅適用於 GM。在執行 --saved 或 --saved add 之前選擇一個令牌。',
+          intro: '所有 --saved 指令僅適用於 GM。在執行 --saved 或 --saved add 之前選擇一個令牌。',
           rows: [
             ['!條件追蹤器--已儲存', '查看所選標記的已儲存效果。'],
             ['!condition-tracker --saved 添加', '啟動新增保存效果精靈。'],
-            [
-              '!condition-tracker --saved edit <id>',
-              '編輯現有已儲存效果的標籤或可見性。',
-            ],
-            [
-              '!condition-tracker --saved remove <id>',
-              '永久刪除已儲存的效果。',
-            ],
+            ['!condition-tracker --saved edit <id>', '編輯現有已儲存效果的標籤或可見性。'],
+            ['!condition-tracker --saved remove <id>', '永久刪除已儲存的效果。'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               '將保存的效果複製到回合追蹤器（公共或屏蔽）中，或確認它是僅 GM 追蹤的。',
@@ -2518,10 +2343,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
               '暫停本回合、N 輪或本次戰鬥的 GM 提醒。',
             ],
-            [
-              '!condition-tracker --saved snooze-clear <id>',
-              '清除活動的暫停，以便立即恢復提醒。',
-            ],
+            ['!condition-tracker --saved snooze-clear <id>', '清除活動的暫停，以便立即恢復提醒。'],
           ],
         },
         reminders: {
@@ -2539,11 +2361,7 @@ const ConditionTrackerMod = (() => {
           colCheck: '檢查',
           colResult: '結果',
           rows: [
-            [
-              '1',
-              'Token 狀態覆寫（--classify --scope token）',
-              'pc / npc / 被忽略',
-            ],
+            ['1', 'Token 狀態覆寫（--classify --scope token）', 'pc / npc / 被忽略'],
             [
               '2',
               '角色 ct_mod_actor_type 屬性（--classify --scope character）',
@@ -2574,18 +2392,9 @@ const ConditionTrackerMod = (() => {
           heading: '分類指令',
           intro: '執行 --classify 指令前，請先選取一個或多個 Token。',
           rows: [
-            [
-              '!condition-tracker --將電腦分類',
-              '將選取的 Token 標記為 PC（預設範圍：角色）。',
-            ],
-            [
-              '!condition-tracker --對 npc 進行分類',
-              '將選取的 Token 標記為 NPC。',
-            ],
-            [
-              '!condition-tracker --classify 被忽略',
-              '從所有追蹤中排除選取的 Token。',
-            ],
+            ['!condition-tracker --將電腦分類', '將選取的 Token 標記為 PC（預設範圍：角色）。'],
+            ['!condition-tracker --對 npc 進行分類', '將選取的 Token 標記為 NPC。'],
+            ['!condition-tracker --classify 被忽略', '從所有追蹤中排除選取的 Token。'],
             ['!condition-tracker --將汽車分類', '移除覆寫 — 恢復自動偵測。'],
             [
               '!condition-tracker --分類顯示',
@@ -2610,16 +2419,8 @@ const ConditionTrackerMod = (() => {
         colValues: '值',
         colDesc: '描述',
         rows: [
-          [
-            'useMarkers',
-            'true / false',
-            '新增狀態時將 Roll20 狀態標記套用到 Token',
-          ],
-          [
-            'useIcons',
-            '真/假',
-            '在回合追蹤列中顯示短圖示代碼（例如 [G]）而非 emoji',
-          ],
+          ['useMarkers', 'true / false', '新增狀態時將 Roll20 狀態標記套用到 Token'],
+          ['useIcons', '真/假', '在回合追蹤列中顯示短圖示代碼（例如 [G]）而非 emoji'],
           [
             'subjectPromptBypass',
             '真/假',
@@ -2635,11 +2436,7 @@ const ConditionTrackerMod = (() => {
             'bar1_value / bar2_value / bar3_value',
             '要監控的 Token 欄位；降至 0 時提示 GM 清理狀態',
           ],
-          [
-            'language',
-            'en-US / fr / de / es / pt-BR / ko',
-            '聊天訊息與說明講義的輸出語言',
-          ],
+          ['language', 'en-US / fr / de / es / pt-BR / ko', '聊天訊息與說明講義的輸出語言'],
           [
             'marker',
             '&lt;Condition&gt;=&lt;marker name&gt;',
@@ -2820,8 +2617,7 @@ const ConditionTrackerMod = (() => {
         selectDuration: 'Vybrat trvání',
         confirmTargetTitle: 'Potvrdit seznam cílů',
         applyEffectTitle: 'Uplatnit efekt {condition}',
-        noTokens:
-          'Na aktivní stránce nebyly nalezeny žádné pojmenované žetony.',
+        noTokens: 'Na aktivní stránce nebyly nalezeny žádné pojmenované žetony.',
         confirmIntro: 'Následující žetony obdrží stav:',
         confirmBtn: 'Potvrdit seznam cílů',
         enterDetails: 'Zadat podrobnosti efektu',
@@ -2947,39 +2743,31 @@ const ConditionTrackerMod = (() => {
         duplicate:
           'Tato přesná kombinace zdroje, subjektu, cíle, stavu a vlastního textu je již aktivní.',
         noTargets: 'Pro hromadné uplatnění nebyly zadány žádné cílové žetony.',
-        noSelection:
-          'Před použitím --multi-target vyberte alespoň jeden žeton na hrací ploše.',
-        invalidIds:
-          'V aktuálním výběru nebyla nalezena žádná platná ID žetonů.',
+        noSelection: 'Před použitím --multi-target vyberte alespoň jeden žeton na hrací ploše.',
+        invalidIds: 'V aktuálním výběru nebyla nalezena žádná platná ID žetonů.',
         reSelectTokens:
           'Žádný z původně vybraných žetonů nebylo možné nalézt. Vyberte žetony znovu a zkuste to znovu.',
         conditionNotFound: 'ID stavu nebylo nalezeno.',
         gmOnly: 'Příkazy Condition Trackeru jsou určeny pouze pro GM.',
-        commandFailed:
-          'Příkaz nebylo možné bezpečně dokončit. Zkontrolujte konzoli API.',
+        commandFailed: 'Příkaz nebylo možné bezpečně dokončit. Zkontrolujte konzoli API.',
         sourceTokenNotFound: 'Zdrojový žeton nebylo možné nalézt.',
         targetTokenNotFound: 'Cílový žeton nebylo možné nalézt.',
         subjectTokenNotFound: 'Žeton subjektu nebylo možné nalézt.',
-        invalidCondition:
-          'Stav musí být jedním z předdefinovaných stavů nebo Jiné.',
+        invalidCondition: 'Stav musí být jedním z předdefinovaných stavů nebo Jiné.',
         subjectOnlyCustom:
           '--subject je platný pouze pro Kouzlo, Schopnost, Výhodu, Nevýhodu a Jiné.',
         subjectBypassInvalid:
           '--subjectPromptBypass očekává true nebo false, pokud je zadána hodnota.',
         customDetailsRequired:
           'Podrobnosti {condition} jsou povinné. Použijte --other pro jejich zadání.',
-        markerConfigFormat:
-          'Formát konfigurace značky: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          'Konfigurace značky vyžaduje předdefinovaný název stavu.',
-        markerNameRequired:
-          'Konfigurace značky vyžaduje neprázdný název značky.',
+        markerConfigFormat: 'Formát konfigurace značky: --config marker Grappled=grab',
+        markerPredefinedRequired: 'Konfigurace značky vyžaduje předdefinovaný název stavu.',
+        markerNameRequired: 'Konfigurace značky vyžaduje neprázdný název značky.',
         markerSet: 'Značka {condition} nastavena na {marker}.',
         healthBarSet: 'Lišta zdraví nastavena na {bar}.',
         boolSet: '{key} nastaveno na {value}.',
         expectedBoolean: 'Očekáváno true nebo false.',
-        invalidHealthBar:
-          'Lišta zdraví musí být bar1_value, bar2_value nebo bar3_value.',
+        invalidHealthBar: 'Lišta zdraví musí být bar1_value, bar2_value nebo bar3_value.',
         markersDisabled: 'Značky jsou zakázány.',
         noMarkerConfigured: 'Pro tento stav není nakonfigurována žádná značka.',
         markerApplied: 'Značka uplatněna: {marker}',
@@ -2988,10 +2776,8 @@ const ConditionTrackerMod = (() => {
         invalidLocale: 'Neplatný jazyk. Podporované jazyky: {locales}.',
         otherDurationRequiresRounds:
           'Jiné trvání vyžaduje číselný počet kol, například --duration 5 rounds.',
-        invalidDuration:
-          'Trvání musí být Do odebrání, možnost konce tahu nebo kladný počet kol.',
-        zeroHpNoConditions:
-          '{name} dosáhl 0 životů a nemá žádné aktivní stavy.',
+        invalidDuration: 'Trvání musí být Do odebrání, možnost konce tahu nebo kladný počet kol.',
+        zeroHpNoConditions: '{name} dosáhl 0 životů a nemá žádné aktivní stavy.',
         zeroHpConditions: '{name} dosáhl 0 životů. Vyberte stavy k odebrání:',
         removeAllBtn: 'Odebrat všechny stavy pro {name}',
         markIncapacitated: 'Označit jako vyřazeného',
@@ -3005,8 +2791,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} byl přesunut na vrstvu mapy.',
         tokenNotFound: 'Žeton nenalezen.',
         noActiveConditions: '{name} nemá žádné aktivní stavy k odebrání.',
-        deadNoConditions:
-          '{name} byl označen jako mrtvý. Nebyly aktivní žádné stavy.',
+        deadNoConditions: '{name} byl označen jako mrtvý. Nebyly aktivní žádné stavy.',
         scriptReady: '{name} je aktivní a používáte verzi {version}.',
         reachedZeroHp: '{name} dosáhl 0 životů',
         manuallyRemoved: 'bylo ručně odebráno',
@@ -3014,24 +2799,19 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} byl označen jako mrtvý',
         conditionReorder:
           'Pořadí tahů se změnilo a {count} sledovaný (sledovaných) řádek stavů může být mimo pořadí. Klikněte níže pro jejich obnovení za přiřazené žetony.',
-        conditionsReordered:
-          'Řádky stavů byly přesunuty za jejich přiřazené žetony.',
+        conditionsReordered: 'Řádky stavů byly přesunuty za jejich přiřazené žetony.',
         noTokensSelectedReport:
           'Před použitím --report-token vyberte alespoň jeden žeton na hrací desce.',
         noConditionsAppliedTo: '{name} nemá žádné aktivní podmínky.',
-        noConditionsAppliedBy:
-          '{name} nemá žádné aktivní podmínky aplikované na ostatní.',
+        noConditionsAppliedBy: '{name} nemá žádné aktivní podmínky aplikované na ostatní.',
         noSavedEffects: 'Pro {name} nejsou uloženy žádné uložené efekty.',
-        noTokenSelectedSaved:
-          'Před použitím --saved vyberte žeton na hrací ploše.',
+        noTokenSelectedSaved: 'Před použitím --saved vyberte žeton na hrací ploše.',
         savedEffectAdded: 'Uložený efekt byl přidán pro {name}.',
         savedEffectUpdated: 'Uložený efekt byl aktualizován.',
         savedEffectRemoved: 'Uložený efekt byl odstraněn.',
         savedEffectNotFound: 'Uložený efekt nebyl nalezen.',
-        savedInvalidVisibility:
-          'Neplatná viditelnost. Použijte veřejné, maskované nebo GM.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Neplatná viditelnost. Použijte veřejné, maskované nebo GM.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Efekt přidán do Turn Tracker jako veřejný.',
         savedPromotedMasked:
           'Efekt přidán do Turn Tracker jako maskovaný – hráči vidí: {publicLabel}.',
@@ -3087,17 +2867,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnostika Klasifikace',
         showHeading: 'Podrobnosti Klasifikace Tokenu',
         resultHeading: 'Přepsání Použito',
-        noSelection:
-          'Před použitím --classify vyberte alespoň jeden token na hracím poli.',
-        invalidType:
-          'Neplatný typ klasifikace: {type}. Použijte pc, npc, ignored nebo auto.',
+        noSelection: 'Před použitím --classify vyberte alespoň jeden token na hracím poli.',
+        invalidType: 'Neplatný typ klasifikace: {type}. Použijte pc, npc, ignored nebo auto.',
         set: '{name} → {type} (rozsah: {scope})',
-        cleared:
-          '{name} přepsání vymazáno (rozsah: {scope}) — automatická detekce obnovena.',
-        setTokenFallback:
-          '{name} → {type} (přepsání tokenu — žádný list postavy není propojen).',
-        clearedTokenFallback:
-          '{name} přepsání tokenu vymazáno — automatická detekce obnovena.',
+        cleared: '{name} přepsání vymazáno (rozsah: {scope}) — automatická detekce obnovena.',
+        setTokenFallback: '{name} → {type} (přepsání tokenu — žádný list postavy není propojen).',
+        clearedTokenFallback: '{name} přepsání tokenu vymazáno — automatická detekce obnovena.',
         fieldToken: 'Žeton',
         fieldType: 'Klasifikace',
         fieldSource: 'Zdroj',
@@ -3110,8 +2885,7 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Nepoužívané značky',
       },
       apply: {
-        turnAppended:
-          'Cíl nebyl v pořadí tahů; řádek stavu byl připojen na konec.',
+        turnAppended: 'Cíl nebyl v pořadí tahů; řádek stavu byl připojen na konec.',
         turnInserted: 'Řádek stavu vložen pod žeton cíle.',
       },
     },
@@ -3154,26 +2928,11 @@ const ConditionTrackerMod = (() => {
         rows: [
           ['--pohotovost', 'Interaktivní průvodce krok za krokem'],
           ['--multi-cíl', 'Uplatnit stav na více cílových žetonů najednou'],
-          [
-            '--menu',
-            'Zobrazit hlavní nabídku (přidat remove pro nabídku odebrání)',
-          ],
-          [
-            '--zdroj X --cíl Y --podmínka Z',
-            'Uplatnit stav přímo bez průvodce',
-          ],
-          [
-            '--duration &lt;hodnota&gt;',
-            'Trvání pro přímé uplatnění (např. 2 rounds)',
-          ],
-          [
-            '--other <text>',
-            'Vlastní text pro typy efektů Kouzlo / Schopnost / Jiné',
-          ],
-          [
-            '--remove &lt;ID stavu&gt;',
-            'Odebrat konkrétní stav podle jeho jedinečného ID',
-          ],
+          ['--menu', 'Zobrazit hlavní nabídku (přidat remove pro nabídku odebrání)'],
+          ['--zdroj X --cíl Y --podmínka Z', 'Uplatnit stav přímo bez průvodce'],
+          ['--duration &lt;hodnota&gt;', 'Trvání pro přímé uplatnění (např. 2 rounds)'],
+          ['--other <text>', 'Vlastní text pro typy efektů Kouzlo / Schopnost / Jiné'],
+          ['--remove &lt;ID stavu&gt;', 'Odebrat konkrétní stav podle jeho jedinečného ID'],
           [
             '--config &lt;možnost&gt; &lt;hodnota&gt;',
             'Upravit nastavení konfigurace (viz sekce Konfigurace níže)',
@@ -3182,14 +2941,8 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'Přepsat subjectPromptBypass pouze pro tento příkaz (podporuje také --subject-prompt-bypass)',
           ],
-          [
-            '-- úklid',
-            'Sladit stav — odebrat osiřelé stavy a řádky sledování tahů',
-          ],
-          [
-            '--změna-podmínky',
-            'Ručně přemístit řádky podmínek za přiřazené tokeny v pořadí kol',
-          ],
+          ['-- úklid', 'Sladit stav — odebrat osiřelé stavy a řádky sledování tahů'],
+          ['--změna-podmínky', 'Ručně přemístit řádky podmínek za přiřazené tokeny v pořadí kol'],
           ['--reinstall-macro', 'Znovu vytvořit nebo aktualizovat makra GM'],
           [
             '--reinstall-handout',
@@ -3239,10 +2992,7 @@ const ConditionTrackerMod = (() => {
             '🍀 Výhoda',
             'Zaznamenat výhodu udělenou od jednoho žetonu druhému; seskupeno se zdrojem v iniciativě',
           ],
-          [
-            '⬇️ Nevýhoda',
-            'Zaznamenat uloženou nevýhodu; seskupeno se zdrojem v iniciativě',
-          ],
+          ['⬇️ Nevýhoda', 'Zaznamenat uloženou nevýhodu; seskupeno se zdrojem v iniciativě'],
           ['📝 Jiné', 'Volný vlastní popisek — budete vyzváni k zadání popisu'],
         ],
       },
@@ -3253,10 +3003,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Možnost',
         colBehaviour: 'Chování',
         rows: [
-          [
-            'Do odebrání',
-            'Trvalé — musí být odebrán ručně přes nabídku nebo --remove',
-          ],
+          ['Do odebrání', 'Trvalé — musí být odebrán ručně přes nabídku nebo --remove'],
           [
             'Konec příštího tahu cíle',
             'Vyprší na konci příštího tahu cílového žetonu v iniciativě',
@@ -3265,10 +3012,7 @@ const ConditionTrackerMod = (() => {
             'Konec příštího tahu zdroje',
             'Vyprší na konci příštího tahu zdrojového žetonu v iniciativě',
           ],
-          [
-            '1 / 2 / 3 / 10 kol',
-            'Pevný odpočet; jedno snížení za konec tahu kotevního žetonu',
-          ],
+          ['1 / 2 / 3 / 10 kol', 'Pevný odpočet; jedno snížení za konec tahu kotevního žetonu'],
         ],
       },
       savedEffects: {
@@ -3278,10 +3022,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'Režimy viditelnosti',
           rows: [
-            [
-              'veřejnost',
-              'Štítek plného efektu je viditelný v Turn Tracker a veřejném chatu.',
-            ],
+            ['veřejnost', 'Štítek plného efektu je viditelný v Turn Tracker a veřejném chatu.'],
             [
               'maskovaný',
               'Hráčům se zobrazuje vágní veřejný štítek; úplné podrobnosti jsou pouze GM.',
@@ -3297,22 +3038,13 @@ const ConditionTrackerMod = (() => {
           intro:
             'Všechny --uložené příkazy jsou pouze GM. Před spuštěním --saved nebo --saved add vyberte token.',
           rows: [
-            [
-              '!condition-tracker --uloženo',
-              'Zobrazit uložené efekty pro vybraný token.',
-            ],
-            [
-              '!condition-tracker --saved add',
-              'Spusťte průvodce přidáním uloženého efektu.',
-            ],
+            ['!condition-tracker --uloženo', 'Zobrazit uložené efekty pro vybraný token.'],
+            ['!condition-tracker --saved add', 'Spusťte průvodce přidáním uloženého efektu.'],
             [
               '!condition-tracker --saved edit <id>',
               'Upravit štítky nebo viditelnost pro existující uložený efekt.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Trvale odstranit uložený efekt.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Trvale odstranit uložený efekt.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Zkopírujte uložený efekt do Turn Tracker (veřejný nebo maskovaný) nebo potvrďte, že je sledován pouze GM.',
@@ -3342,11 +3074,7 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Kontrola',
           colResult: 'Výsledek',
           rows: [
-            [
-              '1',
-              'Přepsání stavu tokenu (--classify --scope token)',
-              'pc / npc / ignorováno',
-            ],
+            ['1', 'Přepsání stavu tokenu (--classify --scope token)', 'pc / npc / ignorováno'],
             [
               '2',
               'Atribut ct_mod_actor_type postavy (--classify --scope character)',
@@ -3367,15 +3095,9 @@ const ConditionTrackerMod = (() => {
           colType: 'Typ',
           colMeaning: 'Význam',
           rows: [
-            [
-              'pc',
-              'Hráčova postava — vždy zahrnuta jako HP v průvodci a detekci',
-            ],
+            ['pc', 'Hráčova postava — vždy zahrnuta jako HP v průvodci a detekci'],
             ['npc', 'Neherní postava — vždy zahrnuta jako NPC'],
-            [
-              'ignoroval',
-              'Nikdy nezobrazena ani sledována — vyloučena z výběru tokenů průvodce',
-            ],
+            ['ignoroval', 'Nikdy nezobrazena ani sledována — vyloučena z výběru tokenů průvodce'],
             [
               'neznámý',
               'Pouze automatická detekce; typ nelze určit (v průvodci zacházeno jako s NPC)',
@@ -3384,17 +3106,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Příkazy Klasifikace',
-          intro:
-            'Před spuštěním příkazů --classify vyberte jeden nebo více tokenů.',
+          intro: 'Před spuštěním příkazů --classify vyberte jeden nebo více tokenů.',
           rows: [
             [
               '!condition-tracker --klasifikovat pc',
               'Označit vybrané tokeny jako HP (výchozí rozsah: postava).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Označit vybrané tokeny jako NPC.',
-            ],
+            ['!condition-tracker --classify npc', 'Označit vybrané tokeny jako NPC.'],
             [
               '!condition-tracker --classify ignorováno',
               'Vyloučit vybrané tokeny ze všeho sledování.',
@@ -3618,10 +3336,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Ingen',
         noneOrSourceBtn: 'Ingen eller anvend på kilde',
         subjectDesc: 'Vælg hvem eller hvad der leverer effekten.',
-        sourceDesc:
-          'Vælg den skabning, der opretter/genererer tilstanden eller effekten.',
-        targetDesc:
-          'Vælg den skabning, der vil modtage tilstanden eller effekten.',
+        sourceDesc: 'Vælg den skabning, der opretter/genererer tilstanden eller effekten.',
+        targetDesc: 'Vælg den skabning, der vil modtage tilstanden eller effekten.',
         otherText: 'Brugerdefineret tilstandstekst',
         effectDetails: '{condition}-detaljer',
       },
@@ -3739,10 +3455,8 @@ const ConditionTrackerMod = (() => {
         duplicate:
           'Den præcise kombination af kilde, subjekt, mål, tilstand og brugerdefineret tekst er allerede aktiv.',
         noTargets: 'Ingen måltoken angivet til multi-mål-anvendelse.',
-        noSelection:
-          'Vælg mindst ét token på brættet, før du bruger --multi-target.',
-        invalidIds:
-          "Ingen gyldige token-id'er fundet i den aktuelle markering.",
+        noSelection: 'Vælg mindst ét token på brættet, før du bruger --multi-target.',
+        invalidIds: "Ingen gyldige token-id'er fundet i den aktuelle markering.",
         reSelectTokens:
           'Ingen af de oprindeligt valgte tokens kunne findes. Vælg tokens igen og prøv på ny.',
         conditionNotFound: 'Tilstands-id blev ikke fundet.',
@@ -3752,26 +3466,20 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Kildetoken kunne ikke findes.',
         targetTokenNotFound: 'Måltoken kunne ikke findes.',
         subjectTokenNotFound: 'Subjekttoken kunne ikke findes.',
-        invalidCondition:
-          'Tilstanden skal være en af de foruddefinerede tilstande eller Andet.',
+        invalidCondition: 'Tilstanden skal være en af de foruddefinerede tilstande eller Andet.',
         subjectOnlyCustom:
           '--subject er kun gyldigt for Besværgelse, Evne, Fordel, Ulempe og Andet.',
         subjectBypassInvalid:
           '--subjectPromptBypass forventer true eller false, når en værdi angives.',
-        customDetailsRequired:
-          '{condition}-detaljer er påkrævet. Brug --other til at angive dem.',
-        markerConfigFormat:
-          'Markørkonfigurationsformat: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          'Markørkonfiguration kræver et foruddefineret tilstandsnavn.',
-        markerNameRequired:
-          'Markørkonfiguration kræver et ikke-tomt markørnavn.',
+        customDetailsRequired: '{condition}-detaljer er påkrævet. Brug --other til at angive dem.',
+        markerConfigFormat: 'Markørkonfigurationsformat: --config marker Grappled=grab',
+        markerPredefinedRequired: 'Markørkonfiguration kræver et foruddefineret tilstandsnavn.',
+        markerNameRequired: 'Markørkonfiguration kræver et ikke-tomt markørnavn.',
         markerSet: '{condition}-markør sat til {marker}.',
         healthBarSet: 'Helsebjælke sat til {bar}.',
         boolSet: '{key} sat til {value}.',
         expectedBoolean: 'Forventede true eller false.',
-        invalidHealthBar:
-          'Helsebjælken skal være bar1_value, bar2_value eller bar3_value.',
+        invalidHealthBar: 'Helsebjælken skal være bar1_value, bar2_value eller bar3_value.',
         markersDisabled: 'Markører er deaktiverede.',
         noMarkerConfigured: 'Ingen markør er konfigureret for denne tilstand.',
         markerApplied: 'Markør anvendt: {marker}',
@@ -3782,10 +3490,8 @@ const ConditionTrackerMod = (() => {
           'Anden varighed kræver et numerisk rundeantal, for eksempel --duration 5 rounds.',
         invalidDuration:
           'Varighed skal være Indtil fjernet, en turslut-indstilling eller et positivt rundeantal.',
-        zeroHpNoConditions:
-          '{name} har nået 0 HP og har ingen aktive tilstande.',
-        zeroHpConditions:
-          '{name} har nået 0 HP. Vælg tilstande, der skal fjernes:',
+        zeroHpNoConditions: '{name} har nået 0 HP og har ingen aktive tilstande.',
+        zeroHpConditions: '{name} har nået 0 HP. Vælg tilstande, der skal fjernes:',
         removeAllBtn: 'Fjern alle tilstande for {name}',
         markIncapacitated: 'Markér som ukampdygtig',
         removeFromTurnOrder: 'Fjern fra turrækkefølge',
@@ -3798,8 +3504,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} er blevet flyttet til kortlaget.',
         tokenNotFound: 'Token ikke fundet.',
         noActiveConditions: '{name} har ingen aktive tilstande at fjerne.',
-        deadNoConditions:
-          '{name} blev markeret som død. Ingen tilstande var aktive.',
+        deadNoConditions: '{name} blev markeret som død. Ingen tilstande var aktive.',
         scriptReady: '{name} er aktiv, og du bruger version {version}.',
         reachedZeroHp: '{name} nåede 0 HP',
         manuallyRemoved: 'manuelt fjernet',
@@ -3807,24 +3512,18 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} blev markeret som død',
         conditionReorder:
           'Turrækkefølgen ændrede sig, og {count} sporet tilstandsrække(r) kan nu være fejlplaceret. Klik nedenfor for at gendanne dem efter deres tildelte tokens.',
-        conditionsReordered:
-          'Tilstandsrækker er omplaceret efter deres tildelte tokens.',
-        noTokensSelectedReport:
-          'Vælg mindst et token på tavlen, før du bruger --report-token.',
-        noConditionsAppliedTo:
-          '{name} har ingen aktive betingelser anvendt på sig.',
-        noConditionsAppliedBy:
-          '{name} har ingen aktive betingelser anvendt på andre.',
+        conditionsReordered: 'Tilstandsrækker er omplaceret efter deres tildelte tokens.',
+        noTokensSelectedReport: 'Vælg mindst et token på tavlen, før du bruger --report-token.',
+        noConditionsAppliedTo: '{name} har ingen aktive betingelser anvendt på sig.',
+        noConditionsAppliedBy: '{name} har ingen aktive betingelser anvendt på andre.',
         noSavedEffects: 'Ingen gemte effekter gemt for {name}.',
         noTokenSelectedSaved: 'Vælg et token på brættet, før du bruger --gemt.',
         savedEffectAdded: 'Gemt effekt tilføjet for {name}.',
         savedEffectUpdated: 'Gemt effekt opdateret.',
         savedEffectRemoved: 'Gemt effekt fjernet.',
         savedEffectNotFound: 'Den gemte effekt blev ikke fundet.',
-        savedInvalidVisibility:
-          'Ugyldig synlighed. Brug offentlig, maskeret eller gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Ugyldig synlighed. Brug offentlig, maskeret eller gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Effekt føjet til Turn Tracker som offentlig.',
         savedPromotedMasked:
           'Effekt tilføjet til Turn Tracker som maskeret — spillere se: {publicLabel}.',
@@ -3880,15 +3579,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Klassificeringsdiagnostik',
         showHeading: 'Token-klassificeringsdetaljer',
         resultHeading: 'Tilsidesættelse Anvendt',
-        noSelection:
-          'Vælg mindst ét token på brættet inden brug af --classify.',
-        invalidType:
-          'Ugyldigt klassificeringstype: {type}. Brug pc, npc, ignored eller auto.',
+        noSelection: 'Vælg mindst ét token på brættet inden brug af --classify.',
+        invalidType: 'Ugyldigt klassificeringstype: {type}. Brug pc, npc, ignored eller auto.',
         set: '{name} → {type} (omfang: {scope})',
         cleared:
           '{name} tilsidesættelse slettet (omfang: {scope}) — automatisk registrering gendannet.',
-        setTokenFallback:
-          '{name} → {type} (token-tilsidesættelse — intet karakterark tilknyttet).',
+        setTokenFallback: '{name} → {type} (token-tilsidesættelse — intet karakterark tilknyttet).',
         clearedTokenFallback:
           '{name} token-tilsidesættelse slettet — automatisk registrering gendannet.',
         fieldToken: 'Token',
@@ -3903,16 +3599,14 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Ubrugte markører',
       },
       apply: {
-        turnAppended:
-          'Mål var ikke i turrækkefølgen; tilstandsrække tilføjet til sidst.',
+        turnAppended: 'Mål var ikke i turrækkefølgen; tilstandsrække tilføjet til sidst.',
         turnInserted: 'Tilstandsrække indsat under måltoken.',
       },
     },
     handout: {
       versionLabel: 'Version',
       subtitle: 'D&D 5e-statuseffektstyring',
-      footerNote:
-        'Dette handout oprettes og opdateres automatisk, hver gang scriptet indlæses.',
+      footerNote: 'Dette handout oprettes og opdateres automatisk, hver gang scriptet indlæses.',
       overview: {
         heading: 'Oversigt',
         body: "Condition Tracker styrer D&D 5e-statustilstande og brugerdefinerede effekter som mærkede rækker i Roll20's tursporing. Anvend tilstande på tokens, spor varigheder efter initiativrækkefølge, og fjern automatisk udløbne effekter, når en tur slutter. Alle kommandoer er kun tilgængelige for GM'en og kan udløses fra chatten eller via de installerede makroer.",
@@ -3948,22 +3642,13 @@ const ConditionTrackerMod = (() => {
           ['--hurtig', 'Interaktiv trin-for-trin-guide'],
           ['--multimål', 'Anvend en tilstand på flere måltoken på én gang'],
           ['--menu', 'Vis hovedmenu (tilføj remove for fjernelsesmenu)'],
-          [
-            '--kilde X --mål Y --betingelse Z',
-            'Anvend en tilstand direkte uden guiden',
-          ],
-          [
-            '--duration &lt;værdi&gt;',
-            'Varighed for direkte anvendelse (f.eks. 2 rounds)',
-          ],
+          ['--kilde X --mål Y --betingelse Z', 'Anvend en tilstand direkte uden guiden'],
+          ['--duration &lt;værdi&gt;', 'Varighed for direkte anvendelse (f.eks. 2 rounds)'],
           [
             '--other &lt;tekst&gt;',
             'Brugerdefineret tekst til Besværgelse / Evne / Anden effekttype',
           ],
-          [
-            '--remove &lt;tilstands-id&gt;',
-            'Fjern en bestemt tilstand via dens unikke id',
-          ],
+          ['--remove &lt;tilstands-id&gt;', 'Fjern en bestemt tilstand via dens unikke id'],
           [
             '--config &lt;indstilling&gt; &lt;værdi&gt;',
             'Juster konfigurationsindstillinger (se afsnittet Konfiguration nedenfor)',
@@ -3972,19 +3657,13 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'Tilsidesæt subjectPromptBypass kun for denne kommando (understøtter også --subject-prompt-bypass)',
           ],
-          [
-            '-- oprydning',
-            'Afstem tilstand — fjern forladte tilstande og tursporing-rækker',
-          ],
+          ['-- oprydning', 'Afstem tilstand — fjern forladte tilstande og tursporing-rækker'],
           [
             '--genbestillingsbetingelser',
             'Flyt betingelsesrækker manuelt bag de tilknyttede tokens i turordenen',
           ],
           ['--geninstaller-makro', 'Genopret eller opdater GM-makroerne'],
-          [
-            '--geninstaller-handout',
-            'Genopret eller opdater det lokaliserede hjælpe-handout',
-          ],
+          ['--geninstaller-handout', 'Genopret eller opdater det lokaliserede hjælpe-handout'],
           [
             '--rapport-token',
             'Hvisk en GM-kun tilstandsrapport for hvert valgt token (betingelser anvendt på og af det)',
@@ -4029,14 +3708,8 @@ const ConditionTrackerMod = (() => {
             '🍀 Fordel',
             'Registrer fordel givet fra ét token til et andet; grupperet med kilden i initiativet',
           ],
-          [
-            '⬇️ Ulempe',
-            'Registrer pålagt ulempe; grupperet med kilden i initiativet',
-          ],
-          [
-            '📝 Andet',
-            'Friform brugerdefineret etiket — du vil blive bedt om en beskrivelse',
-          ],
+          ['⬇️ Ulempe', 'Registrer pålagt ulempe; grupperet med kilden i initiativet'],
+          ['📝 Andet', 'Friform brugerdefineret etiket — du vil blive bedt om en beskrivelse'],
         ],
       },
       durationOptions: {
@@ -4046,10 +3719,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Indstilling',
         colBehaviour: 'Adfærd',
         rows: [
-          [
-            'Indtil fjernet',
-            'Permanent — skal fjernes manuelt via menuen eller --remove',
-          ],
+          ['Indtil fjernet', 'Permanent — skal fjernes manuelt via menuen eller --remove'],
           [
             'Slutningen af målets næste tur',
             "Udløber, når måltoken's næste tur slutter i initiativet",
@@ -4058,10 +3728,7 @@ const ConditionTrackerMod = (() => {
             'Slutningen af kildens næste tur',
             "Udløber, når kildetoken's næste tur slutter i initiativet",
           ],
-          [
-            '1 / 2 / 3 / 10 runder',
-            'Fast nedtælling; ét trin per ankertokens turslut',
-          ],
+          ['1 / 2 / 3 / 10 runder', 'Fast nedtælling; ét trin per ankertokens turslut'],
         ],
       },
       savedEffects: {
@@ -4071,10 +3738,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'Synlighedstilstande',
           rows: [
-            [
-              'offentlig',
-              'Etiketten med fuld effekt er synlig i Turn Tracker og offentlig chat.',
-            ],
+            ['offentlig', 'Etiketten med fuld effekt er synlig i Turn Tracker og offentlig chat.'],
             [
               'maskeret',
               'En vag offentlig etiket vises til spillere; alle detaljer er kun for GM.',
@@ -4090,22 +3754,13 @@ const ConditionTrackerMod = (() => {
           intro:
             'Alle --gemte kommandoer er kun GM. Vælg et token før du kører --gemt eller --gemt tilføjelse.',
           rows: [
-            [
-              '!condition-tracker --gemt',
-              'Se gemte effekter for det valgte token.',
-            ],
-            [
-              '!condition-tracker --gemte tilføjelse',
-              'Start guiden Tilføj-gemt-effekt.',
-            ],
+            ['!condition-tracker --gemt', 'Se gemte effekter for det valgte token.'],
+            ['!condition-tracker --gemte tilføjelse', 'Start guiden Tilføj-gemt-effekt.'],
             [
               '!condition-tracker --saved edit <id>',
               'Rediger etiketter eller synlighed for en eksisterende gemt effekt.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Fjern en gemt effekt permanent.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Fjern en gemt effekt permanent.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Kopier en gemt effekt til Turn Tracker (offentlig eller maskeret), eller bekræft, at den kun er GM-sporet.',
@@ -4160,15 +3815,9 @@ const ConditionTrackerMod = (() => {
           colType: 'Type',
           colMeaning: 'Betydning',
           rows: [
-            [
-              'pc',
-              'Spillerkarakter — altid inkluderet som SK i guiden og registreringen',
-            ],
+            ['pc', 'Spillerkarakter — altid inkluderet som SK i guiden og registreringen'],
             ['npc', 'Ikke-spillerkarakter — altid inkluderet som NPC'],
-            [
-              'ignoreret',
-              'Vises eller spores aldrig — udelukket fra guidens tokenvælger',
-            ],
+            ['ignoreret', 'Vises eller spores aldrig — udelukket fra guidens tokenvælger'],
             [
               'ukendt',
               'Kun automatisk registrering; type kunne ikke bestemmes (behandles som NPC i guiden)',
@@ -4177,17 +3826,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Klassificeringskommandoer',
-          intro:
-            'Vælg et eller flere tokens, inden du kører --classify-kommandoer.',
+          intro: 'Vælg et eller flere tokens, inden du kører --classify-kommandoer.',
           rows: [
             [
               '!condition-tracker --klassificere pc',
               "Markere valgte tokens som SK'er (standardomfang: karakter).",
             ],
-            [
-              '!condition-tracker --klassificer npc',
-              "Markere valgte tokens som NPC'er.",
-            ],
+            ['!condition-tracker --klassificer npc', "Markere valgte tokens som NPC'er."],
             [
               '!condition-tracker --classify ignoreret',
               'Udelukkelse af valgte tokens fra al sporing.',
@@ -4388,10 +4033,8 @@ const ConditionTrackerMod = (() => {
       },
       remove: {
         custom: '{target} wordt niet langer beïnvloed door {effect}.',
-        advantage:
-          '{source} heeft niet langer voordeel tegen {target}{subject}.',
-        disadvantage:
-          '{source} heeft niet langer nadeel tegen {target}{subject}.',
+        advantage: '{source} heeft niet langer voordeel tegen {target}{subject}.',
+        disadvantage: '{source} heeft niet langer nadeel tegen {target}{subject}.',
         noBy: '{target} is niet langer {past}.',
         self: '{target} is niet langer {past}.',
         standard: '{target} wordt niet langer {past} door {source}.',
@@ -4413,10 +4056,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Geen',
         noneOrSourceBtn: 'Geen of toepassen op bron',
         subjectDesc: 'Selecteer wie of wat het effect veroorzaakt.',
-        sourceDesc:
-          'Selecteer het wezen dat de conditie of het effect creëert.',
-        targetDesc:
-          'Selecteer het wezen dat de conditie of het effect ontvangt.',
+        sourceDesc: 'Selecteer het wezen dat de conditie of het effect creëert.',
+        targetDesc: 'Selecteer het wezen dat de conditie of het effect ontvangt.',
         otherText: 'Aangepaste conditietekst',
         effectDetails: '{condition}-details',
       },
@@ -4546,29 +4187,24 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Brontoken kon niet worden gevonden.',
         targetTokenNotFound: 'Doeltoken kon niet worden gevonden.',
         subjectTokenNotFound: 'Onderwerptoken kon niet worden gevonden.',
-        invalidCondition:
-          'Conditie moet een van de voorgedefinieerde condities of Overig zijn.',
+        invalidCondition: 'Conditie moet een van de voorgedefinieerde condities of Overig zijn.',
         subjectOnlyCustom:
           '--subject is alleen geldig voor Spreuk, Vaardigheid, Voordeel, Nadeel en Overig.',
         subjectBypassInvalid:
           '--subjectPromptBypass verwacht true of false wanneer een waarde wordt opgegeven.',
         customDetailsRequired:
           '{condition}-details zijn vereist. Gebruik --other om deze op te geven.',
-        markerConfigFormat:
-          'Markeringsconfiguratieformaat is: --config marker Grappled=grab',
+        markerConfigFormat: 'Markeringsconfiguratieformaat is: --config marker Grappled=grab',
         markerPredefinedRequired:
           'Markeringsconfiguratie vereist een voorgedefinieerde conditienaam.',
-        markerNameRequired:
-          'Markeringsconfiguratie vereist een niet-lege markeringsnaam.',
+        markerNameRequired: 'Markeringsconfiguratie vereist een niet-lege markeringsnaam.',
         markerSet: '{condition}-markering ingesteld op {marker}.',
         healthBarSet: 'Gezondheidsbalk ingesteld op {bar}.',
         boolSet: '{key} ingesteld op {value}.',
         expectedBoolean: 'true of false verwacht.',
-        invalidHealthBar:
-          'Gezondheidsbalk moet bar1_value, bar2_value of bar3_value zijn.',
+        invalidHealthBar: 'Gezondheidsbalk moet bar1_value, bar2_value of bar3_value zijn.',
         markersDisabled: 'Markeringen zijn uitgeschakeld.',
-        noMarkerConfigured:
-          'Er is geen markering geconfigureerd voor deze conditie.',
+        noMarkerConfigured: 'Er is geen markering geconfigureerd voor deze conditie.',
         markerApplied: 'Markering toegepast: {marker}',
         markerPresent: 'Markering al aanwezig: {marker}',
         langSet: 'Taal ingesteld op {locale}.',
@@ -4577,10 +4213,8 @@ const ConditionTrackerMod = (() => {
           'Overige duur vereist een numeriek aantal rondes, bijvoorbeeld --duration 5 rounds.',
         invalidDuration:
           'Duur moet Tot verwijdering, een beurteindeoptie of een positief aantal rondes zijn.',
-        zeroHpNoConditions:
-          '{name} heeft 0 LP bereikt en heeft geen actieve condities.',
-        zeroHpConditions:
-          '{name} heeft 0 LP bereikt. Kies condities om te verwijderen:',
+        zeroHpNoConditions: '{name} heeft 0 LP bereikt en heeft geen actieve condities.',
+        zeroHpConditions: '{name} heeft 0 LP bereikt. Kies condities om te verwijderen:',
         removeAllBtn: 'Verwijder Alle Condities voor {name}',
         markIncapacitated: 'Markeer als Uitgeschakeld',
         removeFromTurnOrder: 'Verwijder uit Beurtenvolgorde',
@@ -4592,10 +4226,8 @@ const ConditionTrackerMod = (() => {
         moveTokenBtn: 'Verplaats {name} naar Kaartlaag',
         tokenMoved: '{name} is verplaatst naar de kaartlaag.',
         tokenNotFound: 'Token niet gevonden.',
-        noActiveConditions:
-          '{name} heeft geen actieve condities om te verwijderen.',
-        deadNoConditions:
-          '{name} is gemarkeerd als dood. Er waren geen actieve condities.',
+        noActiveConditions: '{name} heeft geen actieve condities om te verwijderen.',
+        deadNoConditions: '{name} is gemarkeerd als dood. Er waren geen actieve condities.',
         scriptReady: '{name} is actief en je gebruikt versie {version}.',
         reachedZeroHp: '{name} heeft 0 LP bereikt',
         manuallyRemoved: 'het is handmatig verwijderd',
@@ -4603,25 +4235,19 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} is gemarkeerd als dood',
         conditionReorder:
           'De beurtenvolgorde is gewijzigd en {count} bijgehouden conditierij(en) staan mogelijk op de verkeerde plek. Klik hieronder om ze te herstellen na hun toegewezen tokens.',
-        conditionsReordered:
-          'Conditierijen zijn hergeplaatst na hun toegewezen tokens.',
+        conditionsReordered: 'Conditierijen zijn hergeplaatst na hun toegewezen tokens.',
         noTokensSelectedReport:
           'Selecteer ten minste één token op het bord voordat u --report-token gebruikt.',
-        noConditionsAppliedTo:
-          'Op {name} zijn geen actieve voorwaarden van toepassing.',
-        noConditionsAppliedBy:
-          'Op {name} zijn geen actieve voorwaarden van toepassing op anderen.',
+        noConditionsAppliedTo: 'Op {name} zijn geen actieve voorwaarden van toepassing.',
+        noConditionsAppliedBy: 'Op {name} zijn geen actieve voorwaarden van toepassing op anderen.',
         noSavedEffects: 'Geen opgeslagen effecten opgeslagen voor {name}.',
-        noTokenSelectedSaved:
-          'Selecteer een token op het bord voordat u --saved gebruikt.',
+        noTokenSelectedSaved: 'Selecteer een token op het bord voordat u --saved gebruikt.',
         savedEffectAdded: 'Opgeslagen effect toegevoegd voor {name}.',
         savedEffectUpdated: 'Opgeslagen effect bijgewerkt.',
         savedEffectRemoved: 'Opgeslagen effect verwijderd.',
         savedEffectNotFound: 'Opgeslagen effect niet gevonden.',
-        savedInvalidVisibility:
-          'Ongeldige zichtbaarheid. Gebruik openbaar, gemaskeerd of gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Ongeldige zichtbaarheid. Gebruik openbaar, gemaskeerd of gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Effect toegevoegd aan Turn Tracker als openbaar.',
         savedPromotedMasked:
           'Effect toegevoegd aan Turn Tracker als gemaskeerd — spelers zien: {publicLabel}.',
@@ -4677,17 +4303,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Classificatiediagnostiek',
         showHeading: 'Token-classificatiedetails',
         resultHeading: 'Overschrijving Toegepast',
-        noSelection:
-          'Selecteer ten minste één token op het bord voordat je --classify gebruikt.',
-        invalidType:
-          'Ongeldig classificatietype: {type}. Gebruik pc, npc, ignored of auto.',
+        noSelection: 'Selecteer ten minste één token op het bord voordat je --classify gebruikt.',
+        invalidType: 'Ongeldig classificatietype: {type}. Gebruik pc, npc, ignored of auto.',
         set: '{name} → {type} (bereik: {scope})',
-        cleared:
-          '{name} overschrijving gewist (bereik: {scope}) — automatische detectie hersteld.',
-        setTokenFallback:
-          '{name} → {type} (tokenoverschrijving — geen karakterblad gekoppeld).',
-        clearedTokenFallback:
-          '{name} tokenoverschrijving gewist — automatische detectie hersteld.',
+        cleared: '{name} overschrijving gewist (bereik: {scope}) — automatische detectie hersteld.',
+        setTokenFallback: '{name} → {type} (tokenoverschrijving — geen karakterblad gekoppeld).',
+        clearedTokenFallback: '{name} tokenoverschrijving gewist — automatische detectie hersteld.',
         fieldToken: 'Token',
         fieldType: 'Classificatie',
         fieldSource: 'Bron',
@@ -4700,8 +4321,7 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Ongebruikte markeringen',
       },
       apply: {
-        turnAppended:
-          'Doel stond niet in de beurtenvolgorde; conditierij is toegevoegd.',
+        turnAppended: 'Doel stond niet in de beurtenvolgorde; conditierij is toegevoegd.',
         turnInserted: 'Conditierij ingevoegd onder het doeltoken.',
       },
     },
@@ -4743,27 +4363,15 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Beschrijving',
         rows: [
           ['--snel', 'Interactieve stap-voor-stap wizard-interface'],
-          [
-            '--meerdere doelen',
-            'Pas een conditie tegelijkertijd toe op meerdere doeltokens',
-          ],
+          ['--meerdere doelen', 'Pas een conditie tegelijkertijd toe op meerdere doeltokens'],
           ['--menu', 'Toon hoofdmenu (voeg remove toe voor verwijdermenu)'],
-          [
-            '--bron X --doel Y --voorwaarde Z',
-            'Pas een conditie direct toe zonder de wizard',
-          ],
-          [
-            '--duration &lt;waarde&gt;',
-            'Duur voor directe toepassing (bijv. 2 rounds)',
-          ],
+          ['--bron X --doel Y --voorwaarde Z', 'Pas een conditie direct toe zonder de wizard'],
+          ['--duration &lt;waarde&gt;', 'Duur voor directe toepassing (bijv. 2 rounds)'],
           [
             '--other &lt;tekst&gt;',
             'Aangepaste tekst voor Spreuk / Vaardigheid / Overige effecttypen',
           ],
-          [
-            '--remove &lt;conditie-ID&gt;',
-            'Verwijder een specifieke conditie via zijn unieke ID',
-          ],
+          ['--remove &lt;conditie-ID&gt;', 'Verwijder een specifieke conditie via zijn unieke ID'],
           [
             '--config &lt;optie&gt; &lt;waarde&gt;',
             'Pas configuratie-instellingen aan (zie het Configuratie-gedeelte hieronder)',
@@ -4772,10 +4380,7 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'Overschrijf subjectPromptBypass alleen voor deze opdracht (ondersteunt ook --subject-prompt-bypass)',
           ],
-          [
-            '--opruimen',
-            'Herstel staat — verwijder verweesde condities en beurtenvolgorde-rijen',
-          ],
+          ['--opruimen', 'Herstel staat — verwijder verweesde condities en beurtenvolgorde-rijen'],
           [
             '--herbestelvoorwaarden',
             'Conditierijen handmatig herpositioneren achter hun toegewezen tokens in de beurtvolgorde',
@@ -4817,10 +4422,7 @@ const ConditionTrackerMod = (() => {
         colType: 'Type',
         colNotes: 'Notities',
         rows: [
-          [
-            '🔮 Spreuk',
-            'Volg een benoemd spreukeneffect — je wordt gevraagd naar de spreuknaam',
-          ],
+          ['🔮 Spreuk', 'Volg een benoemd spreukeneffect — je wordt gevraagd naar de spreuknaam'],
           [
             '🎯 Vaardigheid',
             'Volg een benoemde klasse- of rasvaardigheid — je wordt gevraagd naar de naam',
@@ -4829,14 +4431,8 @@ const ConditionTrackerMod = (() => {
             '🍀 Voordeel',
             'Registreer voordeel van het ene token naar het andere; gegroepeerd bij de bron in initiatief',
           ],
-          [
-            '⬇️ Nadeel',
-            'Registreer opgelegd nadeel; gegroepeerd bij de bron in initiatief',
-          ],
-          [
-            '📝 Overig',
-            'Vrij aangepast label — je wordt gevraagd naar een beschrijving',
-          ],
+          ['⬇️ Nadeel', 'Registreer opgelegd nadeel; gegroepeerd bij de bron in initiatief'],
+          ['📝 Overig', 'Vrij aangepast label — je wordt gevraagd naar een beschrijving'],
         ],
       },
       durationOptions: {
@@ -4935,11 +4531,7 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Controle',
           colResult: 'Resultaat',
           rows: [
-            [
-              '1',
-              'Token-statusoverschrijving (--classify --scope token)',
-              'pc / npc / genegeerd',
-            ],
+            ['1', 'Token-statusoverschrijving (--classify --scope token)', 'pc / npc / genegeerd'],
             [
               '2',
               'Karakter ct_mod_actor_type-attribuut (--classify --scope character)',
@@ -4960,10 +4552,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Type',
           colMeaning: 'Betekenis',
           rows: [
-            [
-              'pc',
-              'Spelerkarakter — altijd opgenomen als SC in de wizard en detectie',
-            ],
+            ['pc', 'Spelerkarakter — altijd opgenomen als SC in de wizard en detectie'],
             ['npc', 'Niet-spelerkarakter — altijd opgenomen als NPC'],
             [
               'genegeerd',
@@ -4977,17 +4566,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Classificatieopdrachten',
-          intro:
-            'Selecteer één of meer tokens voordat je --classify-opdrachten uitvoert.',
+          intro: 'Selecteer één of meer tokens voordat je --classify-opdrachten uitvoert.',
           rows: [
             [
               '!condition-tracker --classificeer pc',
               "Geselecteerde tokens als SC's markeren (standaard bereik: karakter).",
             ],
-            [
-              '!condition-tracker --classificeer npc',
-              "Geselecteerde tokens als NPC's markeren.",
-            ],
+            ['!condition-tracker --classificeer npc', "Geselecteerde tokens als NPC's markeren."],
             [
               '!condition-tracker --classify genegeerd',
               'Geselecteerde tokens uitsluiten van alle tracking.',
@@ -5294,8 +4879,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} affected by {effect} ({source})',
         advantage: '{emoji} {source} has advantage against {target}{subject}',
-        disadvantage:
-          '{emoji} {source} has disadvantage against {target}{subject}',
+        disadvantage: '{emoji} {source} has disadvantage against {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} is {past}',
         standard: '{emoji} {target} {past} by {source}',
@@ -5310,10 +4894,8 @@ const ConditionTrackerMod = (() => {
       },
       remove: {
         custom: '{target} is no longer affected by {effect}.',
-        advantage:
-          '{source} no longer has advantage against {target}{subject}.',
-        disadvantage:
-          '{source} no longer has disadvantage against {target}{subject}.',
+        advantage: '{source} no longer has advantage against {target}{subject}.',
+        disadvantage: '{source} no longer has disadvantage against {target}{subject}.',
         noBy: '{target} no longer {past}.',
         self: '{target} is no longer {past}.',
         standard: '{target} is no longer {past} by {source}.',
@@ -5335,10 +4917,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'None',
         noneOrSourceBtn: 'None or Apply to Source',
         subjectDesc: 'Select who or what delivers the effect.',
-        sourceDesc:
-          'Select the creature that is creating / generating the condition or effect.',
-        targetDesc:
-          'Select the creature that will receive the condition or effect.',
+        sourceDesc: 'Select the creature that is creating / generating the condition or effect.',
+        targetDesc: 'Select the creature that will receive the condition or effect.',
         otherText: 'Other condition text',
         effectDetails: '{condition} details',
       },
@@ -5448,16 +5028,14 @@ const ConditionTrackerMod = (() => {
       msg: {
         noActive: 'No active conditions are tracked.',
         configReset: 'Configuration reset to mod defaults.',
-        unknownConfig:
-          'Unknown config option. Use --config to view supported settings.',
+        unknownConfig: 'Unknown config option. Use --config to view supported settings.',
         macroReinstalled:
           'The {wizard}, {multiTarget}, {reportToken}, {saved}, and {classify} macros have been reinstalled for all current GM players.',
         handoutReinstalled: 'The help handout {handout} has been reinstalled.',
         duplicate:
           'That exact source, subject, target, condition, and custom text is already active.',
         noTargets: 'No target tokens specified for multi-target apply.',
-        noSelection:
-          'Select at least one token on the board before using --multi-target.',
+        noSelection: 'Select at least one token on the board before using --multi-target.',
         invalidIds: 'No valid token ids found in the current selection.',
         reSelectTokens:
           'None of the originally-selected tokens could be found. Re-select tokens and try again.',
@@ -5470,28 +5048,21 @@ const ConditionTrackerMod = (() => {
         subjectTokenNotFound: 'Subject token could not be found.',
         invalidGameSystem:
           'Invalid game system. Use --config gameSystem &lt;id&gt;. Supported systems:',
-        gameSystemSet:
-          'Game system set to {system}. Markers have been reset to system defaults.',
-        invalidCondition:
-          'Condition must be one of the predefined conditions or Other.',
+        gameSystemSet: 'Game system set to {system}. Markers have been reset to system defaults.',
+        invalidCondition: 'Condition must be one of the predefined conditions or Other.',
         subjectOnlyCustom:
           '--subject is only valid for Spell, Ability, Advantage, Disadvantage, and Other.',
         subjectBypassInvalid:
           '--subjectPromptBypass expects true or false when a value is provided.',
-        customDetailsRequired:
-          '{condition} details are required. Use --other to provide them.',
-        markerConfigFormat:
-          'Marker config format is: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          'Marker configuration requires a predefined condition name.',
-        markerNameRequired:
-          'Marker configuration requires a non-empty marker name.',
+        customDetailsRequired: '{condition} details are required. Use --other to provide them.',
+        markerConfigFormat: 'Marker config format is: --config marker Grappled=grab',
+        markerPredefinedRequired: 'Marker configuration requires a predefined condition name.',
+        markerNameRequired: 'Marker configuration requires a non-empty marker name.',
         markerSet: '{condition} marker set to {marker}.',
         healthBarSet: 'Health bar set to {bar}.',
         boolSet: '{key} set to {value}.',
         expectedBoolean: 'Expected true or false.',
-        invalidHealthBar:
-          'Health bar must be bar1_value, bar2_value, or bar3_value.',
+        invalidHealthBar: 'Health bar must be bar1_value, bar2_value, or bar3_value.',
         markersDisabled: 'Markers are disabled.',
         noMarkerConfigured: 'No marker is configured for this condition.',
         markerApplied: 'Marker applied: {marker}',
@@ -5502,10 +5073,8 @@ const ConditionTrackerMod = (() => {
           'Other duration requires a numeric round count, for example --duration 5 rounds.',
         invalidDuration:
           'Duration must be Until removed, an end-of-turn option, or a positive round count.',
-        zeroHpNoConditions:
-          '{name} has reached 0 HP and has no active conditions.',
-        zeroHpConditions:
-          '{name} has reached 0 HP. Choose conditions to remove:',
+        zeroHpNoConditions: '{name} has reached 0 HP and has no active conditions.',
+        zeroHpConditions: '{name} has reached 0 HP. Choose conditions to remove:',
         removeAllBtn: 'Remove All Conditions for {name}',
         markIncapacitated: 'Mark as Incapacitated',
         removeFromTurnOrder: 'Remove from Turn Order',
@@ -5518,8 +5087,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} has been moved to the map layer.',
         tokenNotFound: 'Token not found.',
         noActiveConditions: '{name} has no active conditions to remove.',
-        deadNoConditions:
-          '{name} was marked as dead. No conditions were active.',
+        deadNoConditions: '{name} was marked as dead. No conditions were active.',
         scriptReady: '{name} is active and you are using version {version}.',
         reachedZeroHp: '{name} reached 0 HP',
         manuallyRemoved: 'it was manually removed',
@@ -5527,27 +5095,21 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} was marked as dead',
         conditionReorder:
           'The turn order changed and {count} tracked condition row(s) may now be out of place. Click below to restore them after their assigned tokens.',
-        conditionsReordered:
-          'Condition rows have been repositioned after their assigned tokens.',
+        conditionsReordered: 'Condition rows have been repositioned after their assigned tokens.',
         noTokensSelectedReport:
           'Select at least one token on the board before using --report-token.',
         noConditionsAppliedTo: '{name} has no active conditions applied to it.',
-        noConditionsAppliedBy:
-          '{name} has no active conditions applied to others.',
+        noConditionsAppliedBy: '{name} has no active conditions applied to others.',
         noSavedEffects: 'No saved effects stored for {name}.',
-        noTokenSelectedSaved:
-          'Select a token on the board before using --saved.',
+        noTokenSelectedSaved: 'Select a token on the board before using --saved.',
         savedEffectAdded: 'Saved effect added for {name}.',
         savedEffectUpdated: 'Saved effect updated.',
         savedEffectRemoved: 'Saved effect removed.',
         savedEffectNotFound: 'Saved effect not found.',
-        savedInvalidVisibility:
-          'Invalid visibility. Use public, masked, or gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition &lt;type&gt;.',
+        savedInvalidVisibility: 'Invalid visibility. Use public, masked, or gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition &lt;type&gt;.',
         savedPromotedPublic: 'Effect added to Turn Tracker as public.',
-        savedPromotedMasked:
-          'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
+        savedPromotedMasked: 'Effect added to Turn Tracker as masked — players see: {publicLabel}.',
         savedPromotedGm:
           'Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.',
         savedSnoozed: 'Reminder snoozed: {scope}.',
@@ -5600,17 +5162,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Classification Diagnostic',
         showHeading: 'Token Classification Details',
         resultHeading: 'Override Applied',
-        noSelection:
-          'Select at least one token on the board before using --classify.',
-        invalidType:
-          'Invalid classification type: {type}. Use pc, npc, ignored, or auto.',
+        noSelection: 'Select at least one token on the board before using --classify.',
+        invalidType: 'Invalid classification type: {type}. Use pc, npc, ignored, or auto.',
         set: '{name} → {type} (scope: {scope})',
-        cleared:
-          '{name} override cleared (scope: {scope}) — automatic detection restored.',
-        setTokenFallback:
-          '{name} → {type} (token override — no character sheet linked).',
-        clearedTokenFallback:
-          '{name} token override cleared — automatic detection restored.',
+        cleared: '{name} override cleared (scope: {scope}) — automatic detection restored.',
+        setTokenFallback: '{name} → {type} (token override — no character sheet linked).',
+        clearedTokenFallback: '{name} token override cleared — automatic detection restored.',
         fieldToken: 'Token',
         fieldType: 'Classification',
         fieldSource: 'Source',
@@ -5623,16 +5180,14 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Unused markers',
       },
       apply: {
-        turnAppended:
-          'Target was not in turn order; condition row was appended.',
+        turnAppended: 'Target was not in turn order; condition row was appended.',
         turnInserted: 'Condition row inserted below target token.',
       },
     },
     handout: {
       versionLabel: 'Version',
       subtitle: 'Multi-System Status Effect Manager',
-      footerNote:
-        'This handout is automatically created and updated each time the script loads.',
+      footerNote: 'This handout is automatically created and updated each time the script loads.',
       overview: {
         heading: 'Overview',
         body: 'Condition Tracker manages status conditions and custom effects as labelled rows in the Roll20 Turn Tracker. Apply conditions to tokens, track durations by initiative order, and automatically remove expired effects when a turn ends. Supports multiple game systems — set the game system once and the tracker uses the right condition list automatically. All commands are GM-only and can be triggered from chat or via the installed macros.',
@@ -5674,27 +5229,12 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Description',
         rows: [
           ['--prompt', 'Interactive step-by-step wizard UI'],
-          [
-            '--multi-target',
-            'Apply a condition to multiple target tokens at once',
-          ],
+          ['--multi-target', 'Apply a condition to multiple target tokens at once'],
           ['--menu', 'Show main menu (add remove for removal menu)'],
-          [
-            '--source X --target Y --condition Z',
-            'Apply a condition directly without the wizard',
-          ],
-          [
-            '--duration &lt;value&gt;',
-            'Duration for a direct apply (e.g. 2 rounds)',
-          ],
-          [
-            '--other &lt;text&gt;',
-            'Custom text for Spell / Ability / Other effect types',
-          ],
-          [
-            '--remove &lt;condition-id&gt;',
-            'Remove a specific condition by its unique ID',
-          ],
+          ['--source X --target Y --condition Z', 'Apply a condition directly without the wizard'],
+          ['--duration &lt;value&gt;', 'Duration for a direct apply (e.g. 2 rounds)'],
+          ['--other &lt;text&gt;', 'Custom text for Spell / Ability / Other effect types'],
+          ['--remove &lt;condition-id&gt;', 'Remove a specific condition by its unique ID'],
           [
             '--config &lt;option&gt; &lt;value&gt;',
             'Adjust configuration settings (see Config section below)',
@@ -5703,31 +5243,19 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'Override subjectPromptBypass for this command only (also supports --subject-prompt-bypass)',
           ],
-          [
-            '--cleanup',
-            'Reconcile state — remove orphaned conditions and Turn Tracker rows',
-          ],
+          ['--cleanup', 'Reconcile state — remove orphaned conditions and Turn Tracker rows'],
           [
             '--reorder-conditions',
             'Manually reposition condition rows after their assigned tokens in the Turn Tracker',
           ],
           ['--reinstall-macro', 'Recreate or update the GM macros'],
-          [
-            '--reinstall-handout',
-            'Recreate or update the localized help handout',
-          ],
+          ['--reinstall-handout', 'Recreate or update the localized help handout'],
           [
             '--report-token',
             'Whisper a GM-only condition report for each selected token (conditions applied to and by it)',
           ],
-          [
-            '--saved',
-            'View saved long-term effects for the selected token (select token first)',
-          ],
-          [
-            '--saved add',
-            'Add a saved effect (curse, disease, etc.) to the selected token',
-          ],
+          ['--saved', 'View saved long-term effects for the selected token (select token first)'],
+          ['--saved add', 'Add a saved effect (curse, disease, etc.) to the selected token'],
           ['--saved edit &lt;id&gt;', 'Edit an existing saved effect by id'],
           ['--saved remove &lt;id&gt;', 'Remove a saved effect by id'],
           [
@@ -5738,10 +5266,7 @@ const ConditionTrackerMod = (() => {
             '--saved snooze &lt;id&gt; --scope turn|rounds|combat --rounds &lt;n&gt;',
             'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
           ],
-          [
-            '--saved snooze-clear &lt;id&gt;',
-            'Clear an active snooze on a saved effect',
-          ],
+          ['--saved snooze-clear &lt;id&gt;', 'Clear an active snooze on a saved effect'],
           [
             '--lang &lt;locale&gt;',
             "Output this command's messages in an additional locale (bilingual mode)",
@@ -5771,10 +5296,7 @@ const ConditionTrackerMod = (() => {
         colType: 'Type',
         colNotes: 'Notes',
         rows: [
-          [
-            '🔮 Spell',
-            'Track a named spell effect — you will be prompted for the spell name',
-          ],
+          ['🔮 Spell', 'Track a named spell effect — you will be prompted for the spell name'],
           [
             '🎯 Ability',
             'Track a named class or racial ability — you will be prompted for the ability name',
@@ -5783,14 +5305,8 @@ const ConditionTrackerMod = (() => {
             '🍀 Advantage',
             'Record advantage granted from one token to another; grouped with the source in initiative',
           ],
-          [
-            '⬇️ Disadvantage',
-            'Record disadvantage imposed; grouped with the source in initiative',
-          ],
-          [
-            '📝 Other',
-            'Freeform custom label — you will be prompted for a description',
-          ],
+          ['⬇️ Disadvantage', 'Record disadvantage imposed; grouped with the source in initiative'],
+          ['📝 Other', 'Freeform custom label — you will be prompted for a description'],
         ],
       },
       durationOptions: {
@@ -5800,10 +5316,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Option',
         colBehaviour: 'Behaviour',
         rows: [
-          [
-            'Until removed',
-            'Permanent — must be removed manually via the menu or --remove',
-          ],
+          ['Until removed', 'Permanent — must be removed manually via the menu or --remove'],
           [
             "End of target's next turn",
             "Expires when the target token's next turn ends in initiative",
@@ -5812,10 +5325,7 @@ const ConditionTrackerMod = (() => {
             "End of source's next turn",
             "Expires when the source token's next turn ends in initiative",
           ],
-          [
-            '1 / 2 / 3 / 10 rounds',
-            'Fixed countdown; one decrement per anchor-token turn-end',
-          ],
+          ['1 / 2 / 3 / 10 rounds', 'Fixed countdown; one decrement per anchor-token turn-end'],
         ],
       },
       savedEffects: {
@@ -5825,14 +5335,8 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'Visibility Modes',
           rows: [
-            [
-              'public',
-              'Full effect label is visible in the Turn Tracker and public chat.',
-            ],
-            [
-              'masked',
-              'A vague public label is shown to players; full details are GM-only.',
-            ],
+            ['public', 'Full effect label is visible in the Turn Tracker and public chat.'],
+            ['masked', 'A vague public label is shown to players; full details are GM-only.'],
             [
               'gm',
               'No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative.',
@@ -5844,22 +5348,13 @@ const ConditionTrackerMod = (() => {
           intro:
             'All --saved commands are GM-only. Select a token before running --saved or --saved add.',
           rows: [
-            [
-              '!condition-tracker --saved',
-              'View saved effects for the selected token.',
-            ],
-            [
-              '!condition-tracker --saved add',
-              'Launch the add-saved-effect wizard.',
-            ],
+            ['!condition-tracker --saved', 'View saved effects for the selected token.'],
+            ['!condition-tracker --saved add', 'Launch the add-saved-effect wizard.'],
             [
               '!condition-tracker --saved edit &lt;id&gt;',
               'Edit labels or visibility for an existing saved effect.',
             ],
-            [
-              '!condition-tracker --saved remove &lt;id&gt;',
-              'Permanently remove a saved effect.',
-            ],
+            ['!condition-tracker --saved remove &lt;id&gt;', 'Permanently remove a saved effect.'],
             [
               '!condition-tracker --saved promote &lt;id&gt; --visibility public|masked|gm',
               'Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked.',
@@ -5889,22 +5384,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Check',
           colResult: 'Result',
           rows: [
-            [
-              '1',
-              'Token state override (--classify --scope token)',
-              'pc / npc / ignored',
-            ],
+            ['1', 'Token state override (--classify --scope token)', 'pc / npc / ignored'],
             [
               '2',
               'Character ct_mod_actor_type attribute (--classify --scope character)',
               'pc / npc / ignored',
             ],
             ['3', 'Unlinked token — no character sheet', 'ignored'],
-            [
-              '4',
-              'Game-system sheet adapter (npc / is_npc attribute)',
-              'pc / npc',
-            ],
+            ['4', 'Game-system sheet adapter (npc / is_npc attribute)', 'pc / npc'],
             [
               '5',
               'Generic NPC attribute scan (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -5918,38 +5405,22 @@ const ConditionTrackerMod = (() => {
           colType: 'Type',
           colMeaning: 'Meaning',
           rows: [
-            [
-              'pc',
-              'Player character — always included as a PC in wizard and detection',
-            ],
+            ['pc', 'Player character — always included as a PC in wizard and detection'],
             ['npc', 'Non-player character — always included as an NPC'],
-            [
-              'ignored',
-              'Never shown or tracked — excluded from the wizard token picker',
-            ],
-            [
-              'unknown',
-              'Auto-detected only; could not determine type (treated as NPC in wizard)',
-            ],
+            ['ignored', 'Never shown or tracked — excluded from the wizard token picker'],
+            ['unknown', 'Auto-detected only; could not determine type (treated as NPC in wizard)'],
           ],
         },
         commands: {
           heading: 'Classification Commands',
-          intro:
-            'Select one or more tokens before running --classify commands.',
+          intro: 'Select one or more tokens before running --classify commands.',
           rows: [
             [
               '!condition-tracker --classify pc',
               'Mark selected tokens as PCs (character scope by default).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Mark selected tokens as NPCs.',
-            ],
-            [
-              '!condition-tracker --classify ignored',
-              'Exclude selected tokens from all tracking.',
-            ],
+            ['!condition-tracker --classify npc', 'Mark selected tokens as NPCs.'],
+            ['!condition-tracker --classify ignored', 'Exclude selected tokens from all tracking.'],
             [
               '!condition-tracker --classify auto',
               'Remove override — restore automatic detection.',
@@ -6181,8 +5652,7 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Ei mitään',
         noneOrSourceBtn: 'Ei mitään tai käytä lähteeseen',
         subjectDesc: 'Valitse kuka tai mikä tuottaa vaikutuksen.',
-        sourceDesc:
-          'Valitse olento, joka luo tai tuottaa tilan tai vaikutuksen.',
+        sourceDesc: 'Valitse olento, joka luo tai tuottaa tilan tai vaikutuksen.',
         targetDesc: 'Valitse olento, joka vastaanottaa tilan tai vaikutuksen.',
         otherText: 'Mukautettu tilateksti',
         effectDetails: '{condition}-tiedot',
@@ -6293,18 +5763,14 @@ const ConditionTrackerMod = (() => {
       msg: {
         noActive: 'Aktiivisia tiloja ei seurata.',
         configReset: 'Asetukset palautettu oletuksiin.',
-        unknownConfig:
-          'Tuntematon asetusvaihtoehto. Käytä --config nähdäksesi tuetut asetukset.',
+        unknownConfig: 'Tuntematon asetusvaihtoehto. Käytä --config nähdäksesi tuetut asetukset.',
         macroReinstalled:
           'Makrot {wizard}, {multiTarget}, {reportToken}, {saved} ja {classify} on asennettu uudelleen kaikille nykyisille GM-pelaajille.',
         handoutReinstalled: 'Ohje-handout {handout} on asennettu uudelleen.',
-        duplicate:
-          'Täsmälleen sama lähde, kohde, tila ja mukautettu teksti on jo aktiivinen.',
+        duplicate: 'Täsmälleen sama lähde, kohde, tila ja mukautettu teksti on jo aktiivinen.',
         noTargets: 'Monikohdesovellukselle ei määritetty kohde-tokeneita.',
-        noSelection:
-          'Valitse vähintään yksi token laudalta ennen --multi-target-komennon käyttöä.',
-        invalidIds:
-          'Nykyisestä valinnasta ei löydy kelvollisia token-tunnuksia.',
+        noSelection: 'Valitse vähintään yksi token laudalta ennen --multi-target-komennon käyttöä.',
+        invalidIds: 'Nykyisestä valinnasta ei löydy kelvollisia token-tunnuksia.',
         reSelectTokens:
           'Yhtään alun perin valituista tokeneista ei löydy. Valitse tokenit uudelleen ja yritä uudelleen.',
         conditionNotFound: 'Tilatunnusta ei löydy.',
@@ -6314,25 +5780,19 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Lähde-tokenia ei löydy.',
         targetTokenNotFound: 'Kohde-tokenia ei löydy.',
         subjectTokenNotFound: 'Kohde-tokenia ei löydy.',
-        invalidCondition:
-          'Tilan on oltava jokin ennalta määritetyistä tiloista tai Muu.',
+        invalidCondition: 'Tilan on oltava jokin ennalta määritetyistä tiloista tai Muu.',
         subjectOnlyCustom:
           '--subject on kelvollinen vain Loitsulle, Kyvylle, Edulle, Haitalle ja Muulle.',
-        subjectBypassInvalid:
-          '--subjectPromptBypass odottaa arvoa true tai false.',
-        customDetailsRequired:
-          '{condition}-tiedot ovat pakollisia. Käytä --other antaaksesi ne.',
-        markerConfigFormat:
-          'Merkkimäärityksen muoto: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          'Merkkimääritys edellyttää ennalta määritettyä tilanimeä.',
+        subjectBypassInvalid: '--subjectPromptBypass odottaa arvoa true tai false.',
+        customDetailsRequired: '{condition}-tiedot ovat pakollisia. Käytä --other antaaksesi ne.',
+        markerConfigFormat: 'Merkkimäärityksen muoto: --config marker Grappled=grab',
+        markerPredefinedRequired: 'Merkkimääritys edellyttää ennalta määritettyä tilanimeä.',
         markerNameRequired: 'Merkkimääritys edellyttää ei-tyhjää merkin nimeä.',
         markerSet: 'Tilan {condition} merkiksi asetettu {marker}.',
         healthBarSet: 'Elämäpalkki asetettu: {bar}.',
         boolSet: '{key} asetettu arvoon {value}.',
         expectedBoolean: 'Odotettiin true tai false.',
-        invalidHealthBar:
-          'Elämäpalkin on oltava bar1_value, bar2_value tai bar3_value.',
+        invalidHealthBar: 'Elämäpalkin on oltava bar1_value, bar2_value tai bar3_value.',
         markersDisabled: 'Merkit ovat poistettu käytöstä.',
         noMarkerConfigured: 'Tälle tilalle ei ole määritetty merkkiä.',
         markerApplied: 'Merkki sovellettu: {marker}',
@@ -6343,8 +5803,7 @@ const ConditionTrackerMod = (() => {
           'Mukautettu kesto edellyttää numeerista kierrosmäärää, esim. --duration 5 rounds.',
         invalidDuration:
           'Keston on oltava Kunnes poistetaan, vuoron loppuvaihtoehto tai positiivinen kierrosmäärä.',
-        zeroHpNoConditions:
-          '{name} saavutti 0 HP eikä sillä ole aktiivisia tiloja.',
+        zeroHpNoConditions: '{name} saavutti 0 HP eikä sillä ole aktiivisia tiloja.',
         zeroHpConditions: '{name} saavutti 0 HP. Valitse poistettavat tilat:',
         removeAllBtn: 'Poista kaikki {name}-tilat',
         markIncapacitated: 'Merkitse toimintakyvyttömäksi',
@@ -6357,10 +5816,8 @@ const ConditionTrackerMod = (() => {
         moveTokenBtn: 'Siirrä {name} karttatasolle',
         tokenMoved: '{name} siirrettiin karttatasolle.',
         tokenNotFound: 'Tokenia ei löydy.',
-        noActiveConditions:
-          '{name}:llä ei ole aktiivisia tiloja poistettavaksi.',
-        deadNoConditions:
-          '{name} merkittiin kuolleeksi. Aktiivisia tiloja ei ollut.',
+        noActiveConditions: '{name}:llä ei ole aktiivisia tiloja poistettavaksi.',
+        deadNoConditions: '{name} merkittiin kuolleeksi. Aktiivisia tiloja ei ollut.',
         scriptReady: '{name} on aktiivinen ja käytät versiota {version}.',
         reachedZeroHp: '{name} saavutti 0 HP',
         manuallyRemoved: 'poistettiin manuaalisesti',
@@ -6374,18 +5831,14 @@ const ConditionTrackerMod = (() => {
           'Valitse laudalta vähintään yksi merkki ennen --report-tokenin käyttöä.',
         noConditionsAppliedTo: '{name} ei sisällä aktiivisia ehtoja.',
         noConditionsAppliedBy: '{name} ei sisällä muita aktiivisia ehtoja.',
-        noSavedEffects:
-          'Ei tallennettuja tehosteita tallennettuna kohteelle {name}.',
-        noTokenSelectedSaved:
-          'Valitse pelilaudalta pelimerkki ennen kuin käytät --saved.',
+        noSavedEffects: 'Ei tallennettuja tehosteita tallennettuna kohteelle {name}.',
+        noTokenSelectedSaved: 'Valitse pelilaudalta pelimerkki ennen kuin käytät --saved.',
         savedEffectAdded: 'Tallennettu tehoste lisätty kohteelle {name}.',
         savedEffectUpdated: 'Tallennettu tehoste päivitetty.',
         savedEffectRemoved: 'Tallennettu tehoste poistettu.',
         savedEffectNotFound: 'Tallennettua tehostetta ei löydy.',
-        savedInvalidVisibility:
-          'Virheellinen näkyvyys. Käytä julkista, naamioitua tai gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Virheellinen näkyvyys. Käytä julkista, naamioitua tai gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Tehoste lisättiin Turn Trackeriin julkisena.',
         savedPromotedMasked:
           'Tehoste lisätty Turn Trackeriin maskattuina – pelaajat näkevät: {publicLabel}.',
@@ -6441,17 +5894,13 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Luokitteludiagnostiikka',
         showHeading: 'Tunnuksen Luokittelutiedot',
         resultHeading: 'Ohitus Sovellettu',
-        noSelection:
-          'Valitse vähintään yksi tunnus laudalta ennen --classify-käyttöä.',
+        noSelection: 'Valitse vähintään yksi tunnus laudalta ennen --classify-käyttöä.',
         invalidType:
           'Virheellinen luokittelutyyppi: {type}. Käytä arvoa pc, npc, ignored tai auto.',
         set: '{name} → {type} (laajuus: {scope})',
-        cleared:
-          '{name} ohitus poistettu (laajuus: {scope}) — automaattinen tunnistus palautettu.',
-        setTokenFallback:
-          '{name} → {type} (tunnusohitus — hahmoarkkia ei ole linkitetty).',
-        clearedTokenFallback:
-          '{name} tunnusohitus poistettu — automaattinen tunnistus palautettu.',
+        cleared: '{name} ohitus poistettu (laajuus: {scope}) — automaattinen tunnistus palautettu.',
+        setTokenFallback: '{name} → {type} (tunnusohitus — hahmoarkkia ei ole linkitetty).',
+        clearedTokenFallback: '{name} tunnusohitus poistettu — automaattinen tunnistus palautettu.',
         fieldToken: 'Tunnus',
         fieldType: 'Luokittelu',
         fieldSource: 'Lähde',
@@ -6464,16 +5913,14 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Käyttämättömiä merkkejä',
       },
       apply: {
-        turnAppended:
-          'Kohde ei ollut vuorojärjestyksessä; tilarivi lisättiin loppuun.',
+        turnAppended: 'Kohde ei ollut vuorojärjestyksessä; tilarivi lisättiin loppuun.',
         turnInserted: 'Tilarivi lisätty kohde-tokenin alapuolelle.',
       },
     },
     handout: {
       versionLabel: 'Versio',
       subtitle: 'D&D 5e -tilavaikutusten hallinta',
-      footerNote:
-        'Tämä handout luodaan ja päivitetään automaattisesti aina, kun skripti latautuu.',
+      footerNote: 'Tämä handout luodaan ja päivitetään automaattisesti aina, kun skripti latautuu.',
       overview: {
         heading: 'Yleiskatsaus',
         body: 'Condition Tracker hallitsee D&D 5e -tiloja ja mukautettuja vaikutuksia nimettyinä riveinä Roll20:n Turn Trackerissa. Sovella tiloja tokeneihin, seuraa kestoja aloitejärjestyksessä ja poista vanhentuneet vaikutukset automaattisesti vuoron päättyessä. Kaikki komennot ovat vain GM:n käytettävissä ja ne voidaan käynnistää chatissa tai asennettujen makrojen kautta.',
@@ -6508,47 +5955,23 @@ const ConditionTrackerMod = (() => {
         rows: [
           ['--kehottaa', 'Vuorovaikutteinen vaiheittainen ohjaustoiminto'],
           ['-- moni kohde', 'Sovella tila useisiin kohde-tokeneihin kerralla'],
-          [
-            '--valikko',
-            'Näytä päävalikko (lisää remove poistovalikkoa varten)',
-          ],
-          [
-            '--lähde X --kohde Y --ehto Z',
-            'Sovella tila suoraan ilman ohjaustoimintoa',
-          ],
-          [
-            '--duration &lt;arvo&gt;',
-            'Kesto suoraa soveltamista varten (esim. 2 rounds)',
-          ],
-          [
-            '--other &lt;teksti&gt;',
-            'Mukautettu teksti Loitsu / Kyky / Muu -vaikutustyypeille',
-          ],
-          [
-            '--poista <ehtotunnus>',
-            'Poista tietty tila sen yksilöllisellä tunnuksella',
-          ],
-          [
-            '--config <optio> <arvo>',
-            'Muuta asetuksia (katso alla oleva Asetukset-osio)',
-          ],
+          ['--valikko', 'Näytä päävalikko (lisää remove poistovalikkoa varten)'],
+          ['--lähde X --kohde Y --ehto Z', 'Sovella tila suoraan ilman ohjaustoimintoa'],
+          ['--duration &lt;arvo&gt;', 'Kesto suoraa soveltamista varten (esim. 2 rounds)'],
+          ['--other &lt;teksti&gt;', 'Mukautettu teksti Loitsu / Kyky / Muu -vaikutustyypeille'],
+          ['--poista <ehtotunnus>', 'Poista tietty tila sen yksilöllisellä tunnuksella'],
+          ['--config <optio> <arvo>', 'Muuta asetuksia (katso alla oleva Asetukset-osio)'],
           [
             '--prompt --subjectPromptBypass true|false',
             'Ohita subjectPromptBypass vain tätä komentoa varten (tukee myös --subject-prompt-bypass)',
           ],
-          [
-            '--siivous',
-            'Täsmäytä tila — poista orpot tilat ja Turn Tracker -rivit',
-          ],
+          ['--siivous', 'Täsmäytä tila — poista orpot tilat ja Turn Tracker -rivit'],
           [
             '--reorder-ehdot',
             'Siirrä ehtoriviä manuaalisesti niille määrättyjen pelinappuloiden taakse vuorojärjestyksessä',
           ],
           ['--reinstall-macro', 'Luo GM-makrot uudelleen tai päivitä ne'],
-          [
-            '--reinstall-moniste',
-            'Luo lokalisoitu ohje-handout uudelleen tai päivitä se',
-          ],
+          ['--reinstall-moniste', 'Luo lokalisoitu ohje-handout uudelleen tai päivitä se'],
           [
             '--raportti-tunnus',
             'Kuiskaa vain GM:n kuntoraportti jokaiselle valitulle tunnukselle (sitä koskevat ehdot)',
@@ -6581,26 +6004,14 @@ const ConditionTrackerMod = (() => {
         colType: 'Tyyppi',
         colNotes: 'Huomautukset',
         rows: [
-          [
-            '🔮 Loitsu',
-            'Seuraa nimettyä loitsuvaikutusta — sinulta pyydetään loitsun nimi',
-          ],
-          [
-            '🎯 Kyky',
-            'Seuraa nimettyä luokka- tai rotukyvykkyyttä — sinulta pyydetään kyvyn nimi',
-          ],
+          ['🔮 Loitsu', 'Seuraa nimettyä loitsuvaikutusta — sinulta pyydetään loitsun nimi'],
+          ['🎯 Kyky', 'Seuraa nimettyä luokka- tai rotukyvykkyyttä — sinulta pyydetään kyvyn nimi'],
           [
             '🍀 Etu',
             'Kirjaa etulyöntiasema, joka annetaan tokenilta toiselle; ryhmitellään lähteen kanssa aloitejärjestyksessä',
           ],
-          [
-            '⬇️ Haitta',
-            'Kirjaa asetettu haitta; ryhmitellään lähteen kanssa aloitejärjestyksessä',
-          ],
-          [
-            '📝 Muu',
-            'Vapaamuotoinen mukautettu tunniste — sinulta pyydetään kuvaus',
-          ],
+          ['⬇️ Haitta', 'Kirjaa asetettu haitta; ryhmitellään lähteen kanssa aloitejärjestyksessä'],
+          ['📝 Muu', 'Vapaamuotoinen mukautettu tunniste — sinulta pyydetään kuvaus'],
         ],
       },
       durationOptions: {
@@ -6635,10 +6046,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'Näkyvyystilat',
           rows: [
-            [
-              'julkinen',
-              'Täysi tehostemerkki näkyy Turn Trackerissa ja julkisessa chatissa.',
-            ],
+            ['julkinen', 'Täysi tehostemerkki näkyy Turn Trackerissa ja julkisessa chatissa.'],
             [
               'naamioitunut',
               'Pelaajille näytetään epämääräinen julkinen etiketti; täydelliset tiedot ovat GM-vain.',
@@ -6666,10 +6074,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               'Muokkaa olemassa olevan tallennetun tehosteen tunnisteita tai näkyvyyttä.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Poista tallennettu tehoste pysyvästi.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Poista tallennettu tehoste pysyvästi.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Kopioi tallennettu tehoste Turn Trackeriin (julkinen tai peitetty) tai vahvista, että se on vain GM-seuraama.',
@@ -6699,22 +6104,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Tarkistus',
           colResult: 'Tulos',
           rows: [
-            [
-              '1',
-              'Tunnuksen tilaohitus (--classify --scope token)',
-              'pc / npc / ohitettu',
-            ],
+            ['1', 'Tunnuksen tilaohitus (--classify --scope token)', 'pc / npc / ohitettu'],
             [
               '2',
               'Hahmon ct_mod_actor_type-attribuutti (--classify --scope character)',
               'pc / npc / ohitettu',
             ],
             ['3', 'Linkittämätön tunnus — ei hahmoarkkia', 'huomiotta'],
-            [
-              '4',
-              'Pelisysteemin sovitin (npc / is_npc -attribuutti)',
-              'pc / npc',
-            ],
+            ['4', 'Pelisysteemin sovitin (npc / is_npc -attribuutti)', 'pc / npc'],
             [
               '5',
               'Yleinen NPC-attribuuttiskannaus (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -6728,10 +6125,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Tyyppi',
           colMeaning: 'Merkitys',
           rows: [
-            [
-              'pc',
-              'Pelaajahahmo — aina mukana PP:nä ohjurissa ja tunnistuksessa',
-            ],
+            ['pc', 'Pelaajahahmo — aina mukana PP:nä ohjurissa ja tunnistuksessa'],
             ['npc', 'Ei-pelaajahahmo — aina mukana NPC:nä'],
             [
               'huomiotta',
@@ -6745,17 +6139,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Luokittelukomennot',
-          intro:
-            'Valitse yksi tai useampi tunnus ennen --classify-komentojen suorittamista.',
+          intro: 'Valitse yksi tai useampi tunnus ennen --classify-komentojen suorittamista.',
           rows: [
             [
               '!condition-tracker --classify pc',
               'Merkitse valitut tunnukset PP:ksi (oletuslaajuus: hahmo).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Merkitse valitut tunnukset NPC:ksi.',
-            ],
+            ['!condition-tracker --classify npc', 'Merkitse valitut tunnukset NPC:ksi.'],
             [
               '!condition-tracker --classify ohitettu',
               'Sulje valitut tunnukset pois kaikesta seurannasta.',
@@ -6787,11 +6177,7 @@ const ConditionTrackerMod = (() => {
         colValues: 'Arvot',
         colDesc: 'Kuvaus',
         rows: [
-          [
-            'useMarkers',
-            'true / false',
-            'Lisää Roll20-tilamarkerit tokeneihin, kun tila lisätään',
-          ],
+          ['useMarkers', 'true / false', 'Lisää Roll20-tilamarkerit tokeneihin, kun tila lisätään'],
           [
             'useIcons',
             'tosi / epätosi',
@@ -6940,8 +6326,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} affecté par {effect} ({source})',
         advantage: '{emoji} {source} a l’avantage contre {target}{subject}',
-        disadvantage:
-          '{emoji} {source} a le désavantage contre {target}{subject}',
+        disadvantage: '{emoji} {source} a le désavantage contre {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} est {past}',
         standard: '{emoji} {target} {past} par {source}',
@@ -6957,8 +6342,7 @@ const ConditionTrackerMod = (() => {
       remove: {
         custom: '{target} n’est plus affecté par {effect}.',
         advantage: '{source} n’a plus l’avantage contre {target}{subject}.',
-        disadvantage:
-          '{source} n’a plus le désavantage contre {target}{subject}.',
+        disadvantage: '{source} n’a plus le désavantage contre {target}{subject}.',
         noBy: '{target} n’est plus {past}.',
         self: '{target} n’est plus {past}.',
         standard: '{target} n’est plus {past} par {source}.',
@@ -6980,10 +6364,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Aucun',
         noneOrSourceBtn: 'Aucun ou appliquer à la source',
         subjectDesc: 'Sélectionnez qui ou quoi délivre l’effet.',
-        sourceDesc:
-          'Sélectionnez la créature qui crée ou génère la condition ou l’effet.',
-        targetDesc:
-          'Sélectionnez la créature qui recevra la condition ou l’effet.',
+        sourceDesc: 'Sélectionnez la créature qui crée ou génère la condition ou l’effet.',
+        targetDesc: 'Sélectionnez la créature qui recevra la condition ou l’effet.',
         otherText: 'Texte de condition personnalisé',
         effectDetails: 'Détails de {condition}',
       },
@@ -7100,12 +6482,10 @@ const ConditionTrackerMod = (() => {
         handoutReinstalled: 'Le livret d’aide {handout} a été réinstallé.',
         duplicate:
           'Cette combinaison source, sujet, cible, condition et texte personnalisé est déjà active.',
-        noTargets:
-          'Aucun jeton cible spécifié pour l’application multi-cibles.',
+        noTargets: 'Aucun jeton cible spécifié pour l’application multi-cibles.',
         noSelection:
           'Sélectionnez au moins un jeton sur le plateau avant d’utiliser --multi-target.',
-        invalidIds:
-          'Aucun identifiant de jeton valide trouvé dans la sélection actuelle.',
+        invalidIds: 'Aucun identifiant de jeton valide trouvé dans la sélection actuelle.',
         reSelectTokens:
           'Aucun des jetons initialement sélectionnés n’a pu être trouvé. Veuillez resélectionner les jetons et réessayer.',
         conditionNotFound: 'Identifiant de condition introuvable.',
@@ -7115,29 +6495,24 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Le jeton source est introuvable.',
         targetTokenNotFound: 'Le jeton cible est introuvable.',
         subjectTokenNotFound: 'Le jeton sujet est introuvable.',
-        invalidCondition:
-          'La condition doit être une condition prédéfinie ou Autre.',
+        invalidCondition: 'La condition doit être une condition prédéfinie ou Autre.',
         subjectOnlyCustom:
           '--subject est uniquement valide pour Sort, Capacité, Avantage, Désavantage et Autre.',
         subjectBypassInvalid:
           '--subjectPromptBypass attend true ou false si une valeur est fournie.',
         customDetailsRequired:
           'Les détails de {condition} sont requis. Utilisez --other pour les fournir.',
-        markerConfigFormat:
-          'Format de configuration du marqueur : --config marker Grappled=grab',
+        markerConfigFormat: 'Format de configuration du marqueur : --config marker Grappled=grab',
         markerPredefinedRequired:
           'La configuration du marqueur requiert un nom de condition prédéfini.',
-        markerNameRequired:
-          'La configuration du marqueur requiert un nom de marqueur non vide.',
+        markerNameRequired: 'La configuration du marqueur requiert un nom de marqueur non vide.',
         markerSet: 'Marqueur de {condition} défini sur {marker}.',
         healthBarSet: 'Barre de santé définie sur {bar}.',
         boolSet: '{key} défini sur {value}.',
         expectedBoolean: 'true ou false est attendu.',
-        invalidHealthBar:
-          'La barre de santé doit être bar1_value, bar2_value ou bar3_value.',
+        invalidHealthBar: 'La barre de santé doit être bar1_value, bar2_value ou bar3_value.',
         markersDisabled: 'Les marqueurs sont désactivés.',
-        noMarkerConfigured:
-          'Aucun marqueur n’est configuré pour cette condition.',
+        noMarkerConfigured: 'Aucun marqueur n’est configuré pour cette condition.',
         markerApplied: 'Marqueur appliqué : {marker}',
         markerPresent: 'Marqueur déjà présent : {marker}',
         langSet: 'Langue définie sur {locale}.',
@@ -7146,10 +6521,8 @@ const ConditionTrackerMod = (() => {
           'La durée Autre requiert un nombre de rounds, par exemple --duration 5 rounds.',
         invalidDuration:
           'La durée doit être Jusqu’à suppression, une option de fin de tour ou un nombre de rounds positif.',
-        zeroHpNoConditions:
-          '{name} a atteint 0 PV et n’a aucune condition active.',
-        zeroHpConditions:
-          '{name} a atteint 0 PV. Choisissez les conditions à supprimer :',
+        zeroHpNoConditions: '{name} a atteint 0 PV et n’a aucune condition active.',
+        zeroHpConditions: '{name} a atteint 0 PV. Choisissez les conditions à supprimer :',
         removeAllBtn: 'Supprimer toutes les conditions de {name}',
         markIncapacitated: 'Marquer comme Incapacité',
         removeFromTurnOrder: 'Retirer de l’ordre d’initiative',
@@ -7162,8 +6535,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} a été déplacé vers le calque carte.',
         tokenNotFound: 'Jeton introuvable.',
         noActiveConditions: '{name} n’a aucune condition active à supprimer.',
-        deadNoConditions:
-          '{name} a été marqué comme mort. Aucune condition n’était active.',
+        deadNoConditions: '{name} a été marqué comme mort. Aucune condition n’était active.',
         scriptReady: '{name} est actif et vous utilisez la version {version}.',
         reachedZeroHp: '{name} a atteint 0 PV',
         manuallyRemoved: 'suppression manuelle',
@@ -7176,19 +6548,15 @@ const ConditionTrackerMod = (() => {
         noTokensSelectedReport:
           "Sélectionnez au moins un jeton sur le tableau avant d'utiliser --report-token.",
         noConditionsAppliedTo: "{name} n'est soumis à aucune condition active.",
-        noConditionsAppliedBy:
-          "{name} n'a aucune condition active appliquée aux autres.",
+        noConditionsAppliedBy: "{name} n'a aucune condition active appliquée aux autres.",
         noSavedEffects: "Aucun effet enregistré n'est stocké pour {name}.",
-        noTokenSelectedSaved:
-          "Sélectionnez un jeton sur le tableau avant d'utiliser --saved.",
+        noTokenSelectedSaved: "Sélectionnez un jeton sur le tableau avant d'utiliser --saved.",
         savedEffectAdded: 'Effet enregistré ajouté pour {name}.',
         savedEffectUpdated: 'Effet enregistré mis à jour.',
         savedEffectRemoved: 'Effet enregistré supprimé.',
         savedEffectNotFound: 'Effet enregistré introuvable.',
-        savedInvalidVisibility:
-          'Visibilité invalide. Utilisez public, masqué ou gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Visibilité invalide. Utilisez public, masqué ou gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Effet ajouté à Turn Tracker en tant que public.',
         savedPromotedMasked:
           'Effet ajouté à Turn Tracker comme masqué — les joueurs voient : {publicLabel}.',
@@ -7244,10 +6612,8 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnostic de Classification',
         showHeading: 'Détails de Classification du Token',
         resultHeading: 'Substitution Appliquée',
-        noSelection:
-          "Sélectionne au moins un token sur le plateau avant d'utiliser --classify.",
-        invalidType:
-          'Type de classification invalide : {type}. Utilise pc, npc, ignored ou auto.',
+        noSelection: "Sélectionne au moins un token sur le plateau avant d'utiliser --classify.",
+        invalidType: 'Type de classification invalide : {type}. Utilise pc, npc, ignored ou auto.',
         set: '{name} → {type} (portée : {scope})',
         cleared:
           '{name} substitution supprimée (portée : {scope}) — détection automatique restaurée.',
@@ -7275,8 +6641,7 @@ const ConditionTrackerMod = (() => {
     handout: {
       versionLabel: 'Version',
       subtitle: 'Gestionnaire d’états D&D 5e',
-      footerNote:
-        'Ce livret est créé et mis à jour automatiquement à chaque chargement du script.',
+      footerNote: 'Ce livret est créé et mis à jour automatiquement à chaque chargement du script.',
       overview: {
         heading: 'Présentation',
         body: 'Condition Tracker gère les conditions de statut D&D 5e et les effets personnalisés sous forme de lignes dans le suivi d’initiative Roll20. Appliquez des conditions aux jetons, suivez les durées par ordre d’initiative et supprimez automatiquement les effets expirés à la fin d’un tour. Toutes les commandes sont réservées au MJ.',
@@ -7310,51 +6675,30 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Description',
         rows: [
           ['--rapide', 'Interface de l’assistant pas à pas'],
-          [
-            '--multi-cible',
-            'Appliquer une condition à plusieurs jetons cibles',
-          ],
-          [
-            '--menu',
-            'Afficher le menu principal (ajouter remove pour le menu de suppression)',
-          ],
+          ['--multi-cible', 'Appliquer une condition à plusieurs jetons cibles'],
+          ['--menu', 'Afficher le menu principal (ajouter remove pour le menu de suppression)'],
           [
             '--source X --cible Y --condition Z',
             'Appliquer une condition directement sans l’assistant',
           ],
-          [
-            '--duration &lt;valeur&gt;',
-            'Durée pour une application directe (ex. 2 rounds)',
-          ],
-          [
-            '--other &lt;texte&gt;',
-            'Texte personnalisé pour les types Sort / Capacité / Autre',
-          ],
+          ['--duration &lt;valeur&gt;', 'Durée pour une application directe (ex. 2 rounds)'],
+          ['--other &lt;texte&gt;', 'Texte personnalisé pour les types Sort / Capacité / Autre'],
           [
             '--remove &lt;id-condition&gt;',
             'Supprimer une condition spécifique par son identifiant unique',
           ],
-          [
-            '--config &lt;option&gt; &lt;valeur&gt;',
-            'Modifier les paramètres de configuration',
-          ],
+          ['--config &lt;option&gt; &lt;valeur&gt;', 'Modifier les paramètres de configuration'],
           [
             '--prompt --subjectPromptBypass vrai|faux',
             'Remplacer subjectPromptBypass pour cette commande uniquement (prend aussi en charge --subject-prompt-bypass)',
           ],
-          [
-            '--nettoyage',
-            'Nettoyer l’état — supprimer les conditions et lignes orphelines',
-          ],
+          ['--nettoyage', 'Nettoyer l’état — supprimer les conditions et lignes orphelines'],
           [
             '--conditions de réapprovisionnement',
             'Repositionner manuellement les lignes de condition après leurs jetons assignés dans l’ordre d’initiative',
           ],
           ['--réinstaller-macro', 'Recréer ou mettre à jour les macros MJ'],
-          [
-            '--réinstaller-document',
-            'Recréer ou mettre à jour le livret d’aide localisé',
-          ],
+          ['--réinstaller-document', 'Recréer ou mettre à jour le livret d’aide localisé'],
           [
             '--jeton de rapport',
             'Chuchotez un rapport de condition réservé au GM pour chaque jeton sélectionné (conditions appliquées à et par celui-ci)',
@@ -7387,10 +6731,7 @@ const ConditionTrackerMod = (() => {
         colType: 'Taper',
         colNotes: 'Remarques',
         rows: [
-          [
-            '🔮 Sort',
-            'Suivre un effet de sort nommé — vous serez invité à saisir le nom du sort',
-          ],
+          ['🔮 Sort', 'Suivre un effet de sort nommé — vous serez invité à saisir le nom du sort'],
           [
             '🎯 Capacité',
             'Suivre une capacité de classe ou raciale — vous serez invité à saisir le nom',
@@ -7428,10 +6769,7 @@ const ConditionTrackerMod = (() => {
             'Fin du prochain tour de la source',
             'Expire à la fin du prochain tour du jeton source dans l’initiative',
           ],
-          [
-            '1/2/3/10 tours',
-            'Compte à rebours fixe ; un décrément par fin de tour du jeton ancre',
-          ],
+          ['1/2/3/10 tours', 'Compte à rebours fixe ; un décrément par fin de tour du jeton ancre'],
         ],
       },
       savedEffects: {
@@ -7505,22 +6843,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Vérification',
           colResult: 'Résultat',
           rows: [
-            [
-              '1',
-              "Substitution d'état du token (--classify --scope token)",
-              'pc / npc / ignoré',
-            ],
+            ['1', "Substitution d'état du token (--classify --scope token)", 'pc / npc / ignoré'],
             [
               '2',
               'Attribut ct_mod_actor_type du personnage (--classify --scope character)',
               'pc / npc / ignoré',
             ],
             ['3', 'Token non lié — aucune fiche de personnage', 'ignoré'],
-            [
-              '4',
-              'Adaptateur de système de jeu (attribut npc / is_npc)',
-              'PC / PNJ',
-            ],
+            ['4', 'Adaptateur de système de jeu (attribut npc / is_npc)', 'PC / PNJ'],
             [
               '5',
               "Scan d'attributs NPC génériques (npc, is_npc, npcflag, sheet_type, character_type)",
@@ -7539,10 +6869,7 @@ const ConditionTrackerMod = (() => {
               "Personnage joueur — toujours inclus comme PJ dans l'assistant et la détection",
             ],
             ['PNJ', 'Personnage non joueur — toujours inclus comme PNJ'],
-            [
-              'ignoré',
-              "Jamais affiché ni suivi — exclu du sélecteur de tokens de l'assistant",
-            ],
+            ['ignoré', "Jamais affiché ni suivi — exclu du sélecteur de tokens de l'assistant"],
             [
               'inconnu',
               "Détection automatique uniquement ; type indéterminé (traité comme PNJ dans l'assistant)",
@@ -7551,17 +6878,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Commandes de Classification',
-          intro:
-            "Sélectionne un ou plusieurs tokens avant d'exécuter les commandes --classify.",
+          intro: "Sélectionne un ou plusieurs tokens avant d'exécuter les commandes --classify.",
           rows: [
             [
               '!condition-tracker --classify pc',
               'Marquer les tokens sélectionnés comme PJ (portée personnage par défaut).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Marquer les tokens sélectionnés comme PNJ.',
-            ],
+            ['!condition-tracker --classify npc', 'Marquer les tokens sélectionnés comme PNJ.'],
             [
               '!condition-tracker --classify ignoré',
               'Exclure les tokens sélectionnés de tout suivi.',
@@ -7756,15 +7079,13 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} hat Vorteil gegen {target}{subject}.',
         disadvantage: '{source} hat Nachteil gegen {target}{subject}.',
         self: '{target} ist {past}.',
-        withSuffix:
-          'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN PLATZHALTER3TOKEN.',
+        withSuffix: 'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN PLATZHALTER3TOKEN.',
         standard: 'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN.',
       },
       remove: {
         custom: '{target} ist nicht mehr von {effect} betroffen.',
         advantage: '{source} hat keinen Vorteil mehr gegen {target}{subject}.',
-        disadvantage:
-          '{source} hat keinen Nachteil mehr gegen {target}{subject}.',
+        disadvantage: '{source} hat keinen Nachteil mehr gegen {target}{subject}.',
         noBy: '{target} ist nicht mehr {past}.',
         self: '{target} ist nicht mehr {past}.',
         standard: '{target} ist nicht mehr {past} durch {source}.',
@@ -7787,10 +7108,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Keines',
         noneOrSourceBtn: 'Keines oder auf Quelle anwenden',
         subjectDesc: 'Wähle aus, wer oder was den Effekt auslöst.',
-        sourceDesc:
-          'Wähle das Wesen, das die Bedingung oder den Effekt erzeugt.',
-        targetDesc:
-          'Wähle das Wesen, das die Bedingung oder den Effekt erhält.',
+        sourceDesc: 'Wähle das Wesen, das die Bedingung oder den Effekt erzeugt.',
+        targetDesc: 'Wähle das Wesen, das die Bedingung oder den Effekt erhält.',
         otherText: 'Benutzerdefinierter Bedingungstext',
         effectDetails: 'Details zu {condition}',
       },
@@ -7904,15 +7223,13 @@ const ConditionTrackerMod = (() => {
           'Unbekannte Konfigurationsoption. Verwende --config, um unterstützte Einstellungen anzuzeigen.',
         macroReinstalled:
           'Die Makros {wizard}, {multiTarget}, {reportToken}, {saved} und {classify} wurden für alle aktuellen GM-Spieler neu installiert.',
-        handoutReinstalled:
-          'Das Hilfe-Handout {handout} wurde neu installiert.',
+        handoutReinstalled: 'Das Hilfe-Handout {handout} wurde neu installiert.',
         duplicate:
           'Diese exakte Kombination aus Quelle, Subjekt, Ziel, Zustand und benutzerdefiniertem Text ist bereits aktiv.',
         noTargets: 'Keine Ziel-Tokens für die Mehrfachanwendung angegeben.',
         noSelection:
           'Wähle mindestens einen Token auf dem Spielfeld aus, bevor du --multi-target verwendest.',
-        invalidIds:
-          'Keine gültigen Token-IDs in der aktuellen Auswahl gefunden.',
+        invalidIds: 'Keine gültigen Token-IDs in der aktuellen Auswahl gefunden.',
         reSelectTokens:
           'Keiner der ursprünglich ausgewählten Tokens konnte gefunden werden. Tokens neu auswählen und erneut versuchen.',
         conditionNotFound: 'Zustands-ID nicht gefunden.',
@@ -7922,26 +7239,22 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Quell-Token konnte nicht gefunden werden.',
         targetTokenNotFound: 'Ziel-Token konnte nicht gefunden werden.',
         subjectTokenNotFound: 'Subjekt-Token konnte nicht gefunden werden.',
-        invalidCondition:
-          'Der Zustand muss einer der vordefinierten Zustände oder Sonstiges sein.',
+        invalidCondition: 'Der Zustand muss einer der vordefinierten Zustände oder Sonstiges sein.',
         subjectOnlyCustom:
           '--subject ist nur für Zauber, Fähigkeit, Vorteil, Nachteil und Sonstiges gültig.',
         subjectBypassInvalid:
           '--subjectPromptBypass erwartet true oder false, wenn ein Wert angegeben wird.',
         customDetailsRequired:
           'Details für {condition} sind erforderlich. Verwende --other, um sie anzugeben.',
-        markerConfigFormat:
-          'Marker-Konfigurationsformat: --config marker Grappled=grab',
+        markerConfigFormat: 'Marker-Konfigurationsformat: --config marker Grappled=grab',
         markerPredefinedRequired:
           'Die Marker-Konfiguration erfordert einen vordefinierten Zustandsnamen.',
-        markerNameRequired:
-          'Die Marker-Konfiguration erfordert einen nicht-leeren Markernamen.',
+        markerNameRequired: 'Die Marker-Konfiguration erfordert einen nicht-leeren Markernamen.',
         markerSet: 'Marker für {condition} auf {marker} gesetzt.',
         healthBarSet: 'Gesundheitsleiste auf {bar} gesetzt.',
         boolSet: '{key} auf {value} gesetzt.',
         expectedBoolean: 'true oder false erwartet.',
-        invalidHealthBar:
-          'Die Gesundheitsleiste muss bar1_value, bar2_value oder bar3_value sein.',
+        invalidHealthBar: 'Die Gesundheitsleiste muss bar1_value, bar2_value oder bar3_value sein.',
         markersDisabled: 'Marker sind deaktiviert.',
         noMarkerConfigured: 'Für diesen Zustand ist kein Marker konfiguriert.',
         markerApplied: 'Marker angewendet: {marker}',
@@ -7952,16 +7265,13 @@ const ConditionTrackerMod = (() => {
           'Die Dauer Sonstiges erfordert eine numerische Rundenzahl, zum Beispiel --duration 5 rounds.',
         invalidDuration:
           'Die Dauer muss Bis zur Entfernung, eine Zugende-Option oder eine positive Rundenzahl sein.',
-        zeroHpNoConditions:
-          '{name} hat 0 TP erreicht und hat keine aktiven Zustände.',
-        zeroHpConditions:
-          '{name} hat 0 TP erreicht. Zustände zum Entfernen auswählen:',
+        zeroHpNoConditions: '{name} hat 0 TP erreicht und hat keine aktiven Zustände.',
+        zeroHpConditions: '{name} hat 0 TP erreicht. Zustände zum Entfernen auswählen:',
         removeAllBtn: 'Alle Zustände für {name} entfernen',
         markIncapacitated: 'Als kampfunfähig markieren',
         removeFromTurnOrder: 'Aus Rundenreihenfolge entfernen',
         alreadyIncapacitated: '{name} ist bereits kampfunfähig.',
-        tokenRemovedFromTurn:
-          '{name} wurde aus der Rundenreihenfolge entfernt.',
+        tokenRemovedFromTurn: '{name} wurde aus der Rundenreihenfolge entfernt.',
         tokenNotInTurn: '{name} wurde nicht in der Rundenreihenfolge gefunden.',
         moveTokenPrompt:
           '{name} auf die Kartenebene verschieben, damit es sichtbar bleibt, aber andere Tokens nicht stört?',
@@ -7969,8 +7279,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} wurde auf die Kartenebene verschoben.',
         tokenNotFound: 'Token nicht gefunden.',
         noActiveConditions: '{name} hat keine aktiven Zustände zum Entfernen.',
-        deadNoConditions:
-          '{name} wurde als tot markiert. Keine Zustände waren aktiv.',
+        deadNoConditions: '{name} wurde als tot markiert. Keine Zustände waren aktiv.',
         scriptReady: '{name} ist aktiv und du verwendest Version {version}.',
         reachedZeroHp: '{name} hat 0 TP erreicht',
         manuallyRemoved: 'manuell entfernt',
@@ -7978,14 +7287,11 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} wurde als tot markiert',
         conditionReorder:
           'Die Rundenreihenfolge wurde geändert und {count} verfolgte Bedingungszeile(n) könnte(n) nun falsch platziert sein. Klicke unten, um sie hinter ihre zugewiesenen Tokens zu verschieben.',
-        conditionsReordered:
-          'Bedingungszeilen wurden hinter ihre zugewiesenen Tokens verschoben.',
+        conditionsReordered: 'Bedingungszeilen wurden hinter ihre zugewiesenen Tokens verschoben.',
         noTokensSelectedReport:
           'Wählen Sie mindestens einen Token auf der Tafel aus, bevor Sie --report-token verwenden.',
-        noConditionsAppliedTo:
-          'Auf {name} wurden keine aktiven Bedingungen angewendet.',
-        noConditionsAppliedBy:
-          'Für {name} gelten keine aktiven Bedingungen für andere.',
+        noConditionsAppliedTo: 'Auf {name} wurden keine aktiven Bedingungen angewendet.',
+        noConditionsAppliedBy: 'Für {name} gelten keine aktiven Bedingungen für andere.',
         noSavedEffects: 'Keine gespeicherten Effekte für {name} gespeichert.',
         noTokenSelectedSaved:
           'Wählen Sie einen Token auf der Tafel aus, bevor Sie --saved verwenden.',
@@ -7995,10 +7301,8 @@ const ConditionTrackerMod = (() => {
         savedEffectNotFound: 'Gespeicherter Effekt nicht gefunden.',
         savedInvalidVisibility:
           'Ungültige Sichtbarkeit. Verwenden Sie „public“, „masked“ oder „gm“.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          'Effekt als öffentlich zum Turn Tracker hinzugefügt.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effekt als öffentlich zum Turn Tracker hinzugefügt.',
         savedPromotedMasked:
           'Effekt als maskiert zum Turn Tracker hinzugefügt – Spieler sehen: {publicLabel}.',
         savedPromotedGm:
@@ -8007,8 +7311,7 @@ const ConditionTrackerMod = (() => {
         savedSnoozeCleared: 'Schlummerfunktion gelöscht.',
         hiddenEffectsReminder: 'Versteckte Effekte sind am {name} aktiv.',
         visibilityPublicHint: 'Vollständiges Etikett für alle sichtbar',
-        visibilityMaskedHint:
-          'Den Spielern wird eine vage Beschriftung angezeigt',
+        visibilityMaskedHint: 'Den Spielern wird eine vage Beschriftung angezeigt',
         visibilityGmHint: 'Nur GM-Flüstern, keine Turn-Tracker-Reihe',
       },
       removal: {
@@ -8045,8 +7348,7 @@ const ConditionTrackerMod = (() => {
         },
         prompt: {
           enterGmLabel: 'Vollständige Effektbeschreibung (nur GM)',
-          enterPublicLabel:
-            'Den Spielern wird eine vage Beschriftung angezeigt',
+          enterPublicLabel: 'Den Spielern wird eine vage Beschriftung angezeigt',
         },
         snoozed: 'schlief',
       },
@@ -8055,15 +7357,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Klassifizierungsdiagnose',
         showHeading: 'Token-Klassifizierungsdetails',
         resultHeading: 'Überschreibung angewendet',
-        noSelection:
-          'Wähle vor der Verwendung von --classify mindestens ein Token aus.',
-        invalidType:
-          'Ungültiger Klassifizierungstyp: {type}. Verwende pc, npc, ignored oder auto.',
+        noSelection: 'Wähle vor der Verwendung von --classify mindestens ein Token aus.',
+        invalidType: 'Ungültiger Klassifizierungstyp: {type}. Verwende pc, npc, ignored oder auto.',
         set: '{name} → {type} (Bereich: {scope})',
         cleared:
           '{name} Überschreibung gelöscht (Bereich: {scope}) — automatische Erkennung wiederhergestellt.',
-        setTokenFallback:
-          '{name} → {type} (Token-Überschreibung — kein Charakterbogen verknüpft).',
+        setTokenFallback: '{name} → {type} (Token-Überschreibung — kein Charakterbogen verknüpft).',
         clearedTokenFallback:
           '{name} Token-Überschreibung gelöscht — automatische Erkennung wiederhergestellt.',
         fieldToken: 'Token',
@@ -8078,8 +7377,7 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Unbenutzte Marker',
       },
       apply: {
-        turnAppended:
-          'Ziel war nicht in der Rundenreihenfolge; Zustandszeile wurde angehängt.',
+        turnAppended: 'Ziel war nicht in der Rundenreihenfolge; Zustandszeile wurde angehängt.',
         turnInserted: 'Zustandszeile unterhalb des Ziel-Tokens eingefügt.',
       },
     },
@@ -8122,47 +7420,23 @@ const ConditionTrackerMod = (() => {
         rows: [
           ['--prompt', 'Schritt-für-Schritt-Assistent-Oberfläche'],
           ['--multi-target', 'Zustand auf mehrere Ziel-Tokens anwenden'],
-          [
-            '--Speisekarte',
-            'Hauptmenü anzeigen (remove für Entfernungsmenü hinzufügen)',
-          ],
-          [
-            '--source X --target Y --condition Z',
-            'Zustand direkt ohne Assistenten anwenden',
-          ],
-          [
-            '--duration &lt;Wert&gt;',
-            'Dauer für direkte Anwendung (z. B. 2 rounds)',
-          ],
-          [
-            '--other &lt;Text&gt;',
-            'Benutzerdefinierter Text für Zauber / Fähigkeit / Sonstiges',
-          ],
-          [
-            '--remove &lt;Zustands-ID&gt;',
-            'Bestimmten Zustand per eindeutiger ID entfernen',
-          ],
-          [
-            '--config &lt;Option&gt; &lt;Wert&gt;',
-            'Konfigurationseinstellungen anpassen',
-          ],
+          ['--Speisekarte', 'Hauptmenü anzeigen (remove für Entfernungsmenü hinzufügen)'],
+          ['--source X --target Y --condition Z', 'Zustand direkt ohne Assistenten anwenden'],
+          ['--duration &lt;Wert&gt;', 'Dauer für direkte Anwendung (z. B. 2 rounds)'],
+          ['--other &lt;Text&gt;', 'Benutzerdefinierter Text für Zauber / Fähigkeit / Sonstiges'],
+          ['--remove &lt;Zustands-ID&gt;', 'Bestimmten Zustand per eindeutiger ID entfernen'],
+          ['--config &lt;Option&gt; &lt;Wert&gt;', 'Konfigurationseinstellungen anpassen'],
           [
             '--prompt --subjectPromptBypass true|false',
             'subjectPromptBypass nur für diesen Befehl überschreiben (unterstützt auch --subject-prompt-bypass)',
           ],
-          [
-            '--cleanup',
-            'Status bereinigen — verwaiste Zustände und Zeilen entfernen',
-          ],
+          ['--cleanup', 'Status bereinigen — verwaiste Zustände und Zeilen entfernen'],
           [
             '--reorder-conditions',
             'Bedingungszeilen manuell hinter ihre zugewiesenen Tokens in der Rundenreihenfolge verschieben',
           ],
           ['--reinstall-macro', 'GM-Makros neu erstellen oder aktualisieren'],
-          [
-            '--reinstall-handout',
-            'Lokalisiertes Hilfe-Handout neu erstellen oder aktualisieren',
-          ],
+          ['--reinstall-handout', 'Lokalisiertes Hilfe-Handout neu erstellen oder aktualisieren'],
           [
             '--report-token',
             'Flüstern Sie einen Nur-GM-Zustandsbericht für jeden ausgewählten Token (auf ihn angewendete und von ihm angewendete Bedingungen)',
@@ -8195,10 +7469,7 @@ const ConditionTrackerMod = (() => {
         colType: 'Typ',
         colNotes: 'Hinweise',
         rows: [
-          [
-            '🔮 Zauber',
-            'Benannten Zaubereffekt verfolgen — du wirst nach dem Zaubernamen gefragt',
-          ],
+          ['🔮 Zauber', 'Benannten Zaubereffekt verfolgen — du wirst nach dem Zaubernamen gefragt'],
           [
             '🎯 Fähigkeit',
             'Benannte Klassen- oder Rassafähigkeit verfolgen — du wirst nach dem Namen gefragt',
@@ -8207,10 +7478,7 @@ const ConditionTrackerMod = (() => {
             '🍀 Vorteil',
             'Vorteil von einem Token auf einen anderen aufzeichnen; in der Initiative mit der Quelle gruppiert',
           ],
-          [
-            '⬇️ Nachteil',
-            'Nachteil aufzeichnen; in der Initiative mit der Quelle gruppiert',
-          ],
+          ['⬇️ Nachteil', 'Nachteil aufzeichnen; in der Initiative mit der Quelle gruppiert'],
           [
             '📝 Sonstiges',
             'Freies benutzerdefiniertes Etikett — du wirst nach einer Beschreibung gefragt',
@@ -8236,10 +7504,7 @@ const ConditionTrackerMod = (() => {
             'Ende des nächsten Zugs der Quelle',
             'Verfällt am Ende des nächsten Zugs des Quell-Tokens',
           ],
-          [
-            '1 / 2 / 3 / 10 Runden',
-            'Fester Countdown; ein Dekrement pro Zugende des Ankertokens',
-          ],
+          ['1 / 2 / 3 / 10 Runden', 'Fester Countdown; ein Dekrement pro Zugende des Ankertokens'],
         ],
       },
       savedEffects: {
@@ -8338,10 +7603,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Typ',
           colMeaning: 'Bedeutung',
           rows: [
-            [
-              'Stk',
-              'Spielercharakter — immer als SC im Assistenten und bei der Erkennung',
-            ],
+            ['Stk', 'Spielercharakter — immer als SC im Assistenten und bei der Erkennung'],
             ['NPC', 'Nicht-Spieler-Charakter — immer als NSC'],
             [
               'ignoriert',
@@ -8355,17 +7617,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Klassifizierungsbefehle',
-          intro:
-            'Wähle ein oder mehrere Tokens aus, bevor du --classify-Befehle verwendest.',
+          intro: 'Wähle ein oder mehrere Tokens aus, bevor du --classify-Befehle verwendest.',
           rows: [
             [
               '!condition-tracker --classify pc',
               'Ausgewählte Tokens als SCs markieren (Standardbereich: Charakter).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Ausgewählte Tokens als NSCs markieren.',
-            ],
+            ['!condition-tracker --classify npc', 'Ausgewählte Tokens als NSCs markieren.'],
             [
               '!condition-tracker --classify ignoriert',
               'Ausgewählte Tokens von der gesamten Verfolgung ausschließen.',
@@ -8550,10 +7808,8 @@ const ConditionTrackerMod = (() => {
     templates: {
       display: {
         custom: '{emoji} {target} υπό επίδραση {effect} ({source})',
-        advantage:
-          '{emoji} {source} έχει πλεονέκτημα εναντίον {target}{subject}',
-        disadvantage:
-          '{emoji} {source} έχει μειονέκτημα εναντίον {target}{subject}',
+        advantage: '{emoji} {source} έχει πλεονέκτημα εναντίον {target}{subject}',
+        disadvantage: '{emoji} {source} έχει μειονέκτημα εναντίον {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} είναι {past}',
         standard: '{emoji} {target} {past} από {source}',
@@ -8568,10 +7824,8 @@ const ConditionTrackerMod = (() => {
       },
       remove: {
         custom: '{target} δεν επηρεάζεται πλέον από {effect}.',
-        advantage:
-          '{source} δεν έχει πλέον πλεονέκτημα εναντίον {target}{subject}.',
-        disadvantage:
-          '{source} δεν έχει πλέον μειονέκτημα εναντίον {target}{subject}.',
+        advantage: '{source} δεν έχει πλέον πλεονέκτημα εναντίον {target}{subject}.',
+        disadvantage: '{source} δεν έχει πλέον μειονέκτημα εναντίον {target}{subject}.',
         noBy: '{target} δεν είναι πλέον {past}.',
         self: '{target} δεν είναι πλέον {past}.',
         standard: '{target} δεν είναι πλέον {past} από {source}.',
@@ -8593,8 +7847,7 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Κανένα',
         noneOrSourceBtn: 'Κανένα ή εφαρμογή στην πηγή',
         subjectDesc: 'Επιλέξτε ποιος ή τι παράγει το εφέ.',
-        sourceDesc:
-          'Επιλέξτε το πλάσμα που δημιουργεί ή παράγει την κατάσταση ή το εφέ.',
+        sourceDesc: 'Επιλέξτε το πλάσμα που δημιουργεί ή παράγει την κατάσταση ή το εφέ.',
         targetDesc: 'Επιλέξτε το πλάσμα που θα λάβει την κατάσταση ή το εφέ.',
         otherText: 'Προσαρμοσμένο κείμενο κατάστασης',
         effectDetails: 'Λεπτομέρειες {condition}',
@@ -8729,24 +7982,19 @@ const ConditionTrackerMod = (() => {
           'Η κατάσταση πρέπει να είναι μία από τις προκαθορισμένες καταστάσεις ή Άλλο.',
         subjectOnlyCustom:
           '--subject ισχύει μόνο για Ξόρκι, Ικανότητα, Πλεονέκτημα, Μειονέκτημα και Άλλο.',
-        subjectBypassInvalid:
-          '--subjectPromptBypass αναμένει true ή false όταν παρέχεται τιμή.',
+        subjectBypassInvalid: '--subjectPromptBypass αναμένει true ή false όταν παρέχεται τιμή.',
         customDetailsRequired:
           'Απαιτούνται λεπτομέρειες για {condition}. Χρησιμοποιήστε --other για να τις δώσετε.',
-        markerConfigFormat:
-          'Μορφή ρύθμισης δείκτη: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          'Η ρύθμιση δείκτη απαιτεί προκαθορισμένο όνομα κατάστασης.',
+        markerConfigFormat: 'Μορφή ρύθμισης δείκτη: --config marker Grappled=grab',
+        markerPredefinedRequired: 'Η ρύθμιση δείκτη απαιτεί προκαθορισμένο όνομα κατάστασης.',
         markerNameRequired: 'Η ρύθμιση δείκτη απαιτεί μη κενό όνομα δείκτη.',
         markerSet: 'Ο δείκτης για {condition} ορίστηκε σε {marker}.',
         healthBarSet: 'Η μπάρα υγείας ορίστηκε σε {bar}.',
         boolSet: 'Το {key} ορίστηκε σε {value}.',
         expectedBoolean: 'Αναμένεται true ή false.',
-        invalidHealthBar:
-          'Η μπάρα υγείας πρέπει να είναι bar1_value, bar2_value ή bar3_value.',
+        invalidHealthBar: 'Η μπάρα υγείας πρέπει να είναι bar1_value, bar2_value ή bar3_value.',
         markersDisabled: 'Οι δείκτες είναι απενεργοποιημένοι.',
-        noMarkerConfigured:
-          'Δεν έχει ρυθμιστεί δείκτης για αυτήν την κατάσταση.',
+        noMarkerConfigured: 'Δεν έχει ρυθμιστεί δείκτης για αυτήν την κατάσταση.',
         markerApplied: 'Ο δείκτης εφαρμόστηκε: {marker}',
         markerPresent: 'Ο δείκτης υπάρχει ήδη: {marker}',
         langSet: 'Η γλώσσα ορίστηκε σε {locale}.',
@@ -8755,10 +8003,8 @@ const ConditionTrackerMod = (() => {
           'Η προσαρμοσμένη διάρκεια απαιτεί αριθμητικό πλήθος γύρων, π.χ. --duration 5 rounds.',
         invalidDuration:
           'Η διάρκεια πρέπει να είναι Μέχρι αφαίρεσης, επιλογή τέλους σειράς ή θετικός αριθμός γύρων.',
-        zeroHpNoConditions:
-          '{name} έφτασε στα 0 ΒΖ και δεν έχει ενεργές καταστάσεις.',
-        zeroHpConditions:
-          '{name} έφτασε στα 0 ΒΖ. Επιλέξτε καταστάσεις για αφαίρεση:',
+        zeroHpNoConditions: '{name} έφτασε στα 0 ΒΖ και δεν έχει ενεργές καταστάσεις.',
+        zeroHpConditions: '{name} έφτασε στα 0 ΒΖ. Επιλέξτε καταστάσεις για αφαίρεση:',
         removeAllBtn: 'Αφαίρεση Όλων των Καταστάσεων για τον {name}',
         markIncapacitated: 'Σήμανση ως Ανίκανος',
         removeFromTurnOrder: 'Αφαίρεση από τη Σειρά Πρωτοβουλίας',
@@ -8771,8 +8017,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} μετακινήθηκε στο επίπεδο χάρτη.',
         tokenNotFound: 'Το token δεν βρέθηκε.',
         noActiveConditions: '{name} δεν έχει ενεργές καταστάσεις για αφαίρεση.',
-        deadNoConditions:
-          '{name} σημειώθηκε ως νεκρός. Δεν υπήρχαν ενεργές καταστάσεις.',
+        deadNoConditions: '{name} σημειώθηκε ως νεκρός. Δεν υπήρχαν ενεργές καταστάσεις.',
         scriptReady: '{name} είναι ενεργό και χρησιμοποιείτε έκδοση {version}.',
         reachedZeroHp: '{name} έφτασε στα 0 ΒΖ',
         manuallyRemoved: 'αφαιρέθηκε χειροκίνητα',
@@ -8780,13 +8025,11 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} σημειώθηκε ως νεκρός',
         conditionReorder:
           'Η σειρά πρωτοβουλίας άλλαξε και {count} παρακολουθούμενη/ες σειρά/ές κατάστασης μπορεί να είναι εκτός θέσης. Κάντε κλικ παρακάτω για να τις επαναφέρετε μετά τα αντίστοιχα tokens.',
-        conditionsReordered:
-          'Οι σειρές κατάστασης επανατοποθετήθηκαν μετά τα αντίστοιχα tokens.',
+        conditionsReordered: 'Οι σειρές κατάστασης επανατοποθετήθηκαν μετά τα αντίστοιχα tokens.',
         noTokensSelectedReport:
           'Επιλέξτε τουλάχιστον ένα διακριτικό στον πίνακα πριν χρησιμοποιήσετε το --report-token.',
         noConditionsAppliedTo: 'Το {name} δεν έχει ενεργές συνθήκες.',
-        noConditionsAppliedBy:
-          'Ο {name} δεν έχει ενεργές συνθήκες που να ισχύουν για άλλους.',
+        noConditionsAppliedBy: 'Ο {name} δεν έχει ενεργές συνθήκες που να ισχύουν για άλλους.',
         noSavedEffects: 'Δεν έχουν αποθηκευτεί αποθηκευμένα εφέ για {name}.',
         noTokenSelectedSaved:
           'Επιλέξτε ένα διακριτικό στον πίνακα πριν χρησιμοποιήσετε το --saved.',
@@ -8794,10 +8037,8 @@ const ConditionTrackerMod = (() => {
         savedEffectUpdated: 'Το αποθηκευμένο εφέ ενημερώθηκε.',
         savedEffectRemoved: 'Το αποθηκευμένο εφέ καταργήθηκε.',
         savedEffectNotFound: 'Το αποθηκευμένο εφέ δεν βρέθηκε.',
-        savedInvalidVisibility:
-          'Μη έγκυρη ορατότητα. Χρησιμοποιήστε δημόσια, με μάσκα ή gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Μη έγκυρη ορατότητα. Χρησιμοποιήστε δημόσια, με μάσκα ή gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Το εφέ προστέθηκε στο Turn Tracker ως δημόσιο.',
         savedPromotedMasked:
           'Το εφέ προστέθηκε στο Turn Tracker ως καλυμμένο — οι παίκτες βλέπουν: {publicLabel}.',
@@ -8853,10 +8094,8 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Διαγνωστικό Ταξινόμησης',
         showHeading: 'Λεπτομέρειες Ταξινόμησης Token',
         resultHeading: 'Εφαρμόστηκε Παράκαμψη',
-        noSelection:
-          'Επίλεξε τουλάχιστον ένα token στον χάρτη πριν χρησιμοποιήσεις --classify.',
-        invalidType:
-          'Μη έγκυρος τύπος ταξινόμησης: {type}. Χρησιμοποίησε pc, npc, ignored ή auto.',
+        noSelection: 'Επίλεξε τουλάχιστον ένα token στον χάρτη πριν χρησιμοποιήσεις --classify.',
+        invalidType: 'Μη έγκυρος τύπος ταξινόμησης: {type}. Χρησιμοποίησε pc, npc, ignored ή auto.',
         set: '{name} → {type} (εύρος: {scope})',
         cleared:
           '{name} παράκαμψη διαγράφηκε (εύρος: {scope}) — αποκαταστάθηκε αυτόματη ανίχνευση.',
@@ -8919,34 +8158,16 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Περιγραφή',
         rows: [
           ['--ταχύς', 'Διαδραστικός οδηγός βήμα-βήμα'],
-          [
-            '--πολλαπλών στόχων',
-            'Εφαρμογή κατάστασης σε πολλά tokens-στόχους ταυτόχρονα',
-          ],
-          [
-            '--μενού',
-            'Εμφάνιση κύριου μενού (προσθέστε remove για μενού αφαίρεσης)',
-          ],
-          [
-            '--πηγή X --στόχος Υ --συνθήκη Ζ',
-            'Εφαρμογή κατάστασης απευθείας χωρίς τον οδηγό',
-          ],
-          [
-            '--duration &lt;τιμή&gt;',
-            'Διάρκεια για απευθείας εφαρμογή (π.χ. 2 rounds)',
-          ],
+          ['--πολλαπλών στόχων', 'Εφαρμογή κατάστασης σε πολλά tokens-στόχους ταυτόχρονα'],
+          ['--μενού', 'Εμφάνιση κύριου μενού (προσθέστε remove για μενού αφαίρεσης)'],
+          ['--πηγή X --στόχος Υ --συνθήκη Ζ', 'Εφαρμογή κατάστασης απευθείας χωρίς τον οδηγό'],
+          ['--duration &lt;τιμή&gt;', 'Διάρκεια για απευθείας εφαρμογή (π.χ. 2 rounds)'],
           [
             '--other &lt;κείμενο&gt;',
             'Προσαρμοσμένο κείμενο για τύπους εφέ Ξόρκι / Ικανότητα / Άλλο',
           ],
-          [
-            '--αφαίρεση <condition-id>',
-            'Αφαίρεση συγκεκριμένης κατάστασης με το μοναδικό της ID',
-          ],
-          [
-            '--config <επιλογή> <τιμή>',
-            'Προσαρμογή ρυθμίσεων (βλ. ενότητα Ρυθμίσεων παρακάτω)',
-          ],
+          ['--αφαίρεση <condition-id>', 'Αφαίρεση συγκεκριμένης κατάστασης με το μοναδικό της ID'],
+          ['--config <επιλογή> <τιμή>', 'Προσαρμογή ρυθμίσεων (βλ. ενότητα Ρυθμίσεων παρακάτω)'],
           [
             '--prompt --subjectPromptBypass true|false',
             'Παράκαμψη subjectPromptBypass μόνο για αυτήν την εντολή (υποστηρίζεται επίσης --subject-prompt-bypass)',
@@ -8959,10 +8180,7 @@ const ConditionTrackerMod = (() => {
             '--επαναπαραγγελία-προϋποθέσεις',
             'Χειροκίνητη επανατοποθέτηση γραμμών συνθηκών μετά τα εκχωρημένα τεκμήρια στη σειρά στροφών',
           ],
-          [
-            '--Επανεγκατάσταση-μακροεντολή',
-            'Εκ νέου δημιουργία ή ενημέρωση των GM macros',
-          ],
+          ['--Επανεγκατάσταση-μακροεντολή', 'Εκ νέου δημιουργία ή ενημέρωση των GM macros'],
           [
             '--Επανεγκατάσταση-φυλλάδιο',
             'Εκ νέου δημιουργία ή ενημέρωση του τοπικοποιημένου handout βοήθειας',
@@ -8999,10 +8217,7 @@ const ConditionTrackerMod = (() => {
         colType: 'Τύπος',
         colNotes: 'Σημειώσεις',
         rows: [
-          [
-            '🔮 Ξόρκι',
-            'Παρακολούθηση ονομαστού εφέ ξορκιού — θα σας ζητηθεί το όνομα του ξορκιού',
-          ],
+          ['🔮 Ξόρκι', 'Παρακολούθηση ονομαστού εφέ ξορκιού — θα σας ζητηθεί το όνομα του ξορκιού'],
           [
             '🎯 Ικανότητα',
             'Παρακολούθηση ονομαστής ικανότητας κλάσης ή φυλής — θα σας ζητηθεί το όνομά της',
@@ -9015,10 +8230,7 @@ const ConditionTrackerMod = (() => {
             '⬇️ Μειονέκτημα',
             'Καταγραφή επιβληθέντος μειονεκτήματος· ομαδοποιείται με την πηγή στην πρωτοβουλία',
           ],
-          [
-            '📝 Άλλο',
-            'Ελεύθερη προσαρμοσμένη ετικέτα — θα σας ζητηθεί περιγραφή',
-          ],
+          ['📝 Άλλο', 'Ελεύθερη προσαρμοσμένη ετικέτα — θα σας ζητηθεί περιγραφή'],
         ],
       },
       durationOptions: {
@@ -9028,10 +8240,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Επιλογή',
         colBehaviour: 'Συμπεριφορά',
         rows: [
-          [
-            'Μέχρι αφαίρεσης',
-            'Μόνιμο — πρέπει να αφαιρεθεί χειροκίνητα μέσω του μενού ή --remove',
-          ],
+          ['Μέχρι αφαίρεσης', 'Μόνιμο — πρέπει να αφαιρεθεί χειροκίνητα μέσω του μενού ή --remove'],
           [
             'Τέλος επόμενης σειράς στόχου',
             'Λήγει όταν τελειώσει η επόμενη σειρά του token-στόχου στην πρωτοβουλία',
@@ -9084,10 +8293,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               'Επεξεργαστείτε ετικέτες ή ορατότητα για ένα υπάρχον αποθηκευμένο εφέ.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Καταργήστε οριστικά ένα αποθηκευμένο εφέ.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Καταργήστε οριστικά ένα αποθηκευμένο εφέ.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Αντιγράψτε ένα αποθηκευμένο εφέ στο Turn Tracker (δημόσιο ή με μάσκα) ή επιβεβαιώστε ότι παρακολουθείται μόνο για GM.',
@@ -9117,22 +8323,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Έλεγχος',
           colResult: 'Αποτέλεσμα',
           rows: [
-            [
-              '1',
-              'Παράκαμψη κατάστασης token (--classify --scope token)',
-              'pc / npc / αγνοήθηκε',
-            ],
+            ['1', 'Παράκαμψη κατάστασης token (--classify --scope token)', 'pc / npc / αγνοήθηκε'],
             [
               '2',
               'Ιδιότητα ct_mod_actor_type χαρακτήρα (--classify --scope character)',
               'pc / npc / αγνοήθηκε',
             ],
             ['3', 'Μη συνδεδεμένο token — χωρίς φύλλο χαρακτήρα', 'αγνόησε'],
-            [
-              '4',
-              'Προσαρμογέας συστήματος παιχνιδιού (ιδιότητα npc / is_npc)',
-              'pc / npc',
-            ],
+            ['4', 'Προσαρμογέας συστήματος παιχνιδιού (ιδιότητα npc / is_npc)', 'pc / npc'],
             [
               '5',
               'Γενική σάρωση ιδιοτήτων ΜΠΧ (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -9163,17 +8361,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Εντολές Ταξινόμησης',
-          intro:
-            'Επίλεξε ένα ή περισσότερα tokens πριν εκτελέσεις εντολές --classify.',
+          intro: 'Επίλεξε ένα ή περισσότερα tokens πριν εκτελέσεις εντολές --classify.',
           rows: [
             [
               '!condition-tracker --ταξινόμηση pc',
               'Σήμανση επιλεγμένων tokens ως ΠΧ (προεπιλεγμένο εύρος: χαρακτήρας).',
             ],
-            [
-              '!condition-tracker --ταξινόμηση npc',
-              'Σήμανση επιλεγμένων tokens ως ΜΠΧ.',
-            ],
+            ['!condition-tracker --ταξινόμηση npc', 'Σήμανση επιλεγμένων tokens ως ΜΠΧ.'],
             [
               '!condition-tracker --ταξινόμηση αγνοήθηκε',
               'Αποκλεισμός επιλεγμένων tokens από όλη την παρακολούθηση.',
@@ -9507,8 +8701,7 @@ const ConditionTrackerMod = (() => {
       msg: {
         noActive: 'אין מצבים פעילים במעקב.',
         configReset: 'ההגדרות אופסו לברירות המחדל של המוד.',
-        unknownConfig:
-          'אפשרות הגדרה לא מוכרת. השתמש ב־--config להצגת ההגדרות הנתמכות.',
+        unknownConfig: 'אפשרות הגדרה לא מוכרת. השתמש ב־--config להצגת ההגדרות הנתמכות.',
         macroReinstalled:
           'המאקרואים {wizard}, {multiTarget}, {reportToken}, {saved} ו־{classify} הותקנו מחדש לכל שחקני ה־GM הנוכחיים.',
         handoutReinstalled: 'דף העזרה {handout} הותקן מחדש.',
@@ -9516,22 +8709,17 @@ const ConditionTrackerMod = (() => {
         noTargets: 'לא צוינו אסימוני יעד להחלה מרובת יעדים.',
         noSelection: 'בחר לפחות אסימון אחד בלוח לפני שימוש ב־--multi-target.',
         invalidIds: 'לא נמצאו מזהי אסימונים תקינים בבחירה הנוכחית.',
-        reSelectTokens:
-          'לא ניתן למצוא את האסימונים שנבחרו במקור. בחר אותם שוב ונסה מחדש.',
+        reSelectTokens: 'לא ניתן למצוא את האסימונים שנבחרו במקור. בחר אותם שוב ונסה מחדש.',
         conditionNotFound: 'מזהה המצב לא נמצא.',
         gmOnly: 'פקודות Condition Tracker מיועדות ל־GM בלבד.',
-        commandFailed:
-          'לא ניתן להשלים את הפקודה בבטחה. בדוק את מסוף ה־API לפרטים.',
+        commandFailed: 'לא ניתן להשלים את הפקודה בבטחה. בדוק את מסוף ה־API לפרטים.',
         sourceTokenNotFound: 'אסימון המקור לא נמצא.',
         targetTokenNotFound: 'אסימון היעד לא נמצא.',
         subjectTokenNotFound: 'אסימון הנושא לא נמצא.',
         invalidCondition: 'המצב חייב להיות אחד מהמצבים המוגדרים מראש או אחר.',
-        subjectOnlyCustom:
-          '--subject תקף רק עבור לחש, יכולת, יתרון, חיסרון ואחר.',
-        subjectBypassInvalid:
-          '--subjectPromptBypass מצפה ל־true או false כאשר מסופק ערך.',
-        customDetailsRequired:
-          'נדרשים פרטי {condition}. השתמש ב־--other כדי לספק אותם.',
+        subjectOnlyCustom: '--subject תקף רק עבור לחש, יכולת, יתרון, חיסרון ואחר.',
+        subjectBypassInvalid: '--subjectPromptBypass מצפה ל־true או false כאשר מסופק ערך.',
+        customDetailsRequired: 'נדרשים פרטי {condition}. השתמש ב־--other כדי לספק אותם.',
         markerConfigFormat: 'תבנית הגדרת סמן: --config marker Grappled=grab',
         markerPredefinedRequired: 'הגדרת סמן דורשת שם מצב מוגדר מראש.',
         markerNameRequired: 'הגדרת סמן דורשת שם סמן שאינו ריק.',
@@ -9539,18 +8727,15 @@ const ConditionTrackerMod = (() => {
         healthBarSet: 'סרגל הבריאות הוגדר ל־{bar}.',
         boolSet: '{key} הוגדר ל־{value}.',
         expectedBoolean: 'נדרש true או false.',
-        invalidHealthBar:
-          'סרגל הבריאות חייב להיות bar1_value, bar2_value או bar3_value.',
+        invalidHealthBar: 'סרגל הבריאות חייב להיות bar1_value, bar2_value או bar3_value.',
         markersDisabled: 'הסמנים מושבתים.',
         noMarkerConfigured: 'לא מוגדר סמן עבור מצב זה.',
         markerApplied: 'סמן הוחל: {marker}',
         markerPresent: 'הסמן כבר קיים: {marker}',
         langSet: 'השפה הוגדרה ל־{locale}.',
         invalidLocale: 'אזור שפה לא תקין. אזורי שפה נתמכים: {locales}.',
-        otherDurationRequiresRounds:
-          'משך אחר דורש מספר סיבובים, לדוגמה --duration 5 rounds.',
-        invalidDuration:
-          'משך חייב להיות עד להסרה, אפשרות סוף תור או מספר סיבובים חיובי.',
+        otherDurationRequiresRounds: 'משך אחר דורש מספר סיבובים, לדוגמה --duration 5 rounds.',
+        invalidDuration: 'משך חייב להיות עד להסרה, אפשרות סוף תור או מספר סיבובים חיובי.',
         zeroHpNoConditions: '{name} הגיע ל־0 נק״פ ואין לו מצבים פעילים.',
         zeroHpConditions: '{name} הגיע ל־0 נק״פ. בחר מצבים להסרה:',
         removeAllBtn: 'הסר את כל המצבים של {name}',
@@ -9559,8 +8744,7 @@ const ConditionTrackerMod = (() => {
         alreadyIncapacitated: '{name} כבר מנוטרל.',
         tokenRemovedFromTurn: '{name} הוסר מסדר התורות.',
         tokenNotInTurn: '{name} לא נמצא בסדר התורות.',
-        moveTokenPrompt:
-          'להעביר את {name} לשכבת המפה כדי שיישאר גלוי בלי להפריע לאסימונים אחרים?',
+        moveTokenPrompt: 'להעביר את {name} לשכבת המפה כדי שיישאר גלוי בלי להפריע לאסימונים אחרים?',
         moveTokenBtn: 'העבר את {name} לשכבת המפה',
         tokenMoved: '{name} הועבר לשכבת המפה.',
         tokenNotFound: 'אסימון לא נמצא.',
@@ -9574,8 +8758,7 @@ const ConditionTrackerMod = (() => {
         conditionReorder:
           'סדר התורות השתנה ו-{count} שורת/שורות תנאי עקובות עשויות להיות כעת במיקום שגוי. לחץ למטה כדי לשחזר אותן אחרי הטוקנים שהוקצו להן.',
         conditionsReordered: 'שורות התנאי מוקמו מחדש אחרי הטוקנים שהוקצו להן.',
-        noTokensSelectedReport:
-          'בחר לפחות אסימון אחד בלוח לפני השימוש ב--report-token.',
+        noTokensSelectedReport: 'בחר לפחות אסימון אחד בלוח לפני השימוש ב--report-token.',
         noConditionsAppliedTo: '{name} לא הוחלו עליו תנאים פעילים.',
         noConditionsAppliedBy: 'ל-{name} לא הוחלו תנאים פעילים על אחרים.',
         noSavedEffects: 'אין אפקטים שמורים שמורים עבור {name}.',
@@ -9584,13 +8767,10 @@ const ConditionTrackerMod = (() => {
         savedEffectUpdated: 'אפקט שמור עודכן.',
         savedEffectRemoved: 'האפקט השמור הוסר.',
         savedEffectNotFound: 'האפקט השמור לא נמצא.',
-        savedInvalidVisibility:
-          'ראות לא חוקית. השתמש ציבורי, רעולי פנים או GM.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'ראות לא חוקית. השתמש ציבורי, רעולי פנים או GM.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'אפקט נוסף ל-Turn Tracker כציבורי.',
-        savedPromotedMasked:
-          'אפקט נוסף ל-Turn Tracker כמסווה - שחקנים רואים: {publicLabel}.',
+        savedPromotedMasked: 'אפקט נוסף ל-Turn Tracker כמסווה - שחקנים רואים: {publicLabel}.',
         savedPromotedGm:
           'ההשפעה היא GM בלבד - לא תיווצר שורה של Tracker Turner. מערכת התזכורת תעלה אותו כשאסימון זה יגיע לראש סדר התור.',
         savedSnoozed: 'התזכורת הושהה: {scope}.',
@@ -9644,14 +8824,11 @@ const ConditionTrackerMod = (() => {
         showHeading: 'פרטי סיווג אסימון',
         resultHeading: 'עקיפה הוחלה',
         noSelection: 'בחר לפחות אסימון אחד על הלוח לפני השימוש ב-‎--classify.',
-        invalidType:
-          'סוג סיווג לא חוקי: {type}. השתמש ב-pc,‏ npc,‏ ignored או auto.',
+        invalidType: 'סוג סיווג לא חוקי: {type}. השתמש ב-pc,‏ npc,‏ ignored או auto.',
         set: '{name} → {type} (תחום: {scope})',
         cleared: '{name} עקיפה נמחקה (תחום: {scope}) — זיהוי אוטומטי שוחזר.',
-        setTokenFallback:
-          '{name} → {type} (עקיפת אסימון — לא מקושר לגיליון דמות).',
-        clearedTokenFallback:
-          '{name} עקיפת אסימון נמחקה — זיהוי אוטומטי שוחזר.',
+        setTokenFallback: '{name} → {type} (עקיפת אסימון — לא מקושר לגיליון דמות).',
+        clearedTokenFallback: '{name} עקיפת אסימון נמחקה — זיהוי אוטומטי שוחזר.',
         fieldToken: 'אסימון',
         fieldType: 'סיווג',
         fieldSource: 'מקור',
@@ -9685,18 +8862,12 @@ const ConditionTrackerMod = (() => {
             '!condition-tracker --prompt',
             'אשף שלב אחר שלב לבחירת מצב, אסימונים ומשך באופן אינטראקטיבי.',
           ],
-          [
-            '!condition-tracker --multi-target',
-            'החלת מצב אחד על כמה אסימונים בו־זמנית.',
-          ],
+          ['!condition-tracker --multi-target', 'החלת מצב אחד על כמה אסימונים בו־זמנית.'],
           [
             '!condition-tracker --report-token',
             'בחר תחילה אסימון אחד או יותר, ולאחר מכן הפעל את הפקודה הזו כדי לקבל לחישה של GM המפרטת כל תנאי שהוחל על ועל ידי כל אסימון שנבחר. זמין גם כמאקרו ConditionTrackerReportToken.',
           ],
-          [
-            '!condition-tracker --menu',
-            'פתיחת תפריט הניהול הראשי להחלה, בדיקה או הסרה של מצבים.',
-          ],
+          ['!condition-tracker --menu', 'פתיחת תפריט הניהול הראשי להחלה, בדיקה או הסרה של מצבים.'],
         ],
       },
       commandsRef: {
@@ -9712,25 +8883,16 @@ const ConditionTrackerMod = (() => {
           ['--אחר <טקסט>', 'טקסט מותאם לאפקטים מותאמים'],
           ['--הסר את <condition-id>', 'הסרת מצב לפי מזהה'],
           ['--config <אופציה> <ערך>', 'עדכון הגדרות'],
-          [
-            '--prompt --subjectPromptBypass true|false',
-            'עקיפת שלב הנושא לפקודה זו בלבד',
-          ],
+          ['--prompt --subjectPromptBypass true|false', 'עקיפת שלב הנושא לפקודה זו בלבד'],
           ['--ניקוי', 'ניקוי רשומות ושורות יתומות'],
-          [
-            '-- תנאי הזמנה מחדש',
-            'מיקום מחדש ידני של שורות תנאי אחרי הטוקנים המוקצים בסדר התורות',
-          ],
+          ['-- תנאי הזמנה מחדש', 'מיקום מחדש ידני של שורות תנאי אחרי הטוקנים המוקצים בסדר התורות'],
           ['---reinstall-macro', 'יצירה או עדכון של מאקרואים ל־GM'],
           ['--התקן מחדש נדב', 'יצירה או עדכון של דף העזרה המקומי'],
           [
             '--דוח-אסימון',
             'לחשו דוח מצב של GM בלבד עבור כל אסימון שנבחר (תנאים שהוחלו עליו ועל ידו)',
           ],
-          [
-            '-- נשמר',
-            'הצג אפקטים ארוכי טווח שמורים עבור האסימון שנבחר (בחר אסימון תחילה)',
-          ],
+          ['-- נשמר', 'הצג אפקטים ארוכי טווח שמורים עבור האסימון שנבחר (בחר אסימון תחילה)'],
           ['--הוספה נשמרת', "הוסף אפקט שמור (קללה, מחלה וכו') לאסימון שנבחר"],
           ['--saved edit <id>', 'ערוך אפקט שמור קיים לפי מזהה'],
           ['--saved remove <id>', 'הסר אפקט שמור לפי מזהה'],
@@ -9748,10 +8910,7 @@ const ConditionTrackerMod = (() => {
             '--סיווג pc|npc|התעלם',
             'עקוף את סוג השחקן עבור אסימונים נבחרים — בחר תחילה אסימון(ים). ברירת המחדל של התחום היא דמות (כותב תכונת ct_mod_actor_type); הוסף --scope token לשמירה בסטטוס הסקריפט',
           ],
-          [
-            '--לסווג אוטומטי',
-            'הסר את עקיפת סוג השחקן ושחזר זיהוי אוטומטי עבור אסימונים נבחרים',
-          ],
+          ['--לסווג אוטומטי', 'הסר את עקיפת סוג השחקן ושחזר זיהוי אוטומטי עבור אסימונים נבחרים'],
           [
             '--לסווג מופע',
             'לחוש אבחון סיווג עבור כל אסימון נבחר — מציג את הסוג שזוהה, מקור הזיהוי והסיבה',
@@ -9777,8 +8936,7 @@ const ConditionTrackerMod = (() => {
       },
       durationOptions: {
         heading: 'אפשרויות משך',
-        intro:
-          'הספירה שנותרה מוצגת בעמודת pr של מעקב התורות ופוחתת בסוף תור אסימון העוגן.',
+        intro: 'הספירה שנותרה מוצגת בעמודת pr של מעקב התורות ופוחתת בסוף תור אסימון העוגן.',
         colOption: 'אפשרות',
         colBehaviour: 'התנהגות',
         rows: [
@@ -9795,14 +8953,8 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'מצבי נראות',
           rows: [
-            [
-              'פּוּמְבֵּי',
-              "תווית האפקט המלא גלויה ב-Turn Tracker ובצ'אט הציבורי.",
-            ],
-            [
-              'מוּסוֶה',
-              'תווית ציבורית מעורפלת מוצגת לשחקנים; הפרטים המלאים הם GM בלבד.',
-            ],
+            ['פּוּמְבֵּי', "תווית האפקט המלא גלויה ב-Turn Tracker ובצ'אט הציבורי."],
+            ['מוּסוֶה', 'תווית ציבורית מעורפלת מוצגת לשחקנים; הפרטים המלאים הם GM בלבד.'],
             [
               'gm',
               'אין שורה של מעקב אחר סיבובים. הפרטים המלאים מאוחסנים במצב ונלחשים ל-GM כאשר האסימון המושפע מגיע לראש היוזמה.',
@@ -9811,22 +8963,12 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'פקודות אפקטים שמורות',
-          intro:
-            'כל הפקודות שנשמרו הן ל-GM בלבד. בחר אסימון לפני הפעלת הוספה --שמורה או --שמורה.',
+          intro: 'כל הפקודות שנשמרו הן ל-GM בלבד. בחר אסימון לפני הפעלת הוספה --שמורה או --שמורה.',
           rows: [
-            [
-              '!condition-tracker --שמר',
-              'הצג אפקטים שמורים עבור האסימון שנבחר.',
-            ],
+            ['!condition-tracker --שמר', 'הצג אפקטים שמורים עבור האסימון שנבחר.'],
             ['!condition-tracker --שמר הוספה', 'הפעל את אשף ההוספה-שמור-אפקט.'],
-            [
-              '!condition-tracker --saved edit <id>',
-              'ערוך תוויות או נראות עבור אפקט שמור קיים.',
-            ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'הסר לצמיתות אפקט שמור.',
-            ],
+            ['!condition-tracker --saved edit <id>', 'ערוך תוויות או נראות עבור אפקט שמור קיים.'],
+            ['!condition-tracker --saved remove <id>', 'הסר לצמיתות אפקט שמור.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'העתק אפקט שמור ל-Turn Tracker (ציבורי או רעולי פנים) או אשר שהוא במעקב GM בלבד.',
@@ -9856,11 +8998,7 @@ const ConditionTrackerMod = (() => {
           colCheck: 'בדיקה',
           colResult: 'תוצאה',
           rows: [
-            [
-              '1',
-              'עקיפת מצב אסימון (--classify --scope token)',
-              'pc / npc / התעלמו',
-            ],
+            ['1', 'עקיפת מצב אסימון (--classify --scope token)', 'pc / npc / התעלמו'],
             [
               '2',
               'תכונת ct_mod_actor_type של דמות (--classify --scope character)',
@@ -9883,14 +9021,8 @@ const ConditionTrackerMod = (() => {
           rows: [
             ['PC', 'דמות שחקן — תמיד נכללת כ-PC באשף ובזיהוי'],
             ['npc', 'דמות שאינה שחקן — תמיד נכללת כ-NPC'],
-            [
-              'התעלמו',
-              'לעולם אינה מוצגת או עוקבת — מוחרגת מבוחר האסימונים של האשף',
-            ],
-            [
-              'לֹא יְדוּעַ',
-              'זיהוי אוטומטי בלבד; לא ניתן לקבוע את הסוג (מטופל כ-NPC באשף)',
-            ],
+            ['התעלמו', 'לעולם אינה מוצגת או עוקבת — מוחרגת מבוחר האסימונים של האשף'],
+            ['לֹא יְדוּעַ', 'זיהוי אוטומטי בלבד; לא ניתן לקבוע את הסוג (מטופל כ-NPC באשף)'],
           ],
         },
         commands: {
@@ -9902,14 +9034,8 @@ const ConditionTrackerMod = (() => {
               'סמן אסימונים נבחרים כ-PC (תחום דמות כברירת מחדל).',
             ],
             ['!condition-tracker --סיווג npc', 'סמן אסימונים נבחרים כ-NPC.'],
-            [
-              'התעלמו מ-!condition-tracker --classify',
-              'הוצא אסימונים נבחרים מכל מעקב.',
-            ],
-            [
-              '!condition-tracker --סיווג אוטומטי',
-              'הסר עקיפה — שחזר זיהוי אוטומטי.',
-            ],
+            ['התעלמו מ-!condition-tracker --classify', 'הוצא אסימונים נבחרים מכל מעקב.'],
+            ['!condition-tracker --סיווג אוטומטי', 'הסר עקיפה — שחזר זיהוי אוטומטי.'],
             [
               '!condition-tracker --סיווג מופע',
               'הצג אבחון סיווג (סוג, מקור, סיבה) עבור כל אסימון נבחר.',
@@ -9933,11 +9059,7 @@ const ConditionTrackerMod = (() => {
         colValues: 'ערכים',
         colDesc: 'תיאור',
         rows: [
-          [
-            'useMarkers',
-            'true / false',
-            'החלת סמני סטטוס של Roll20 על אסימונים',
-          ],
+          ['useMarkers', 'true / false', 'החלת סמני סטטוס של Roll20 על אסימונים'],
           ['useIcons', 'נכון/שקר', 'הצגת קודי אייקון קצרים במקום אימוג׳י'],
           ['subjectPromptBypass', 'נכון/שקר', 'דילוג על שלב הנושא האופציונלי'],
           [
@@ -9945,16 +9067,8 @@ const ConditionTrackerMod = (() => {
             'נכון/שקר',
             "דכא את כל הודעות הצ'אט הציבוריות (הודעות החלה והסרה). לחישות ה-GM אינן מושפעות.",
           ],
-          [
-            'healthBar',
-            'bar1_value / bar2_value / bar3_value',
-            'סרגל בריאות למעקב',
-          ],
-          [
-            'language',
-            'en-US / fr / de / es / pt-BR / ko',
-            'שפת הודעות הצ׳אט ודף העזרה',
-          ],
+          ['healthBar', 'bar1_value / bar2_value / bar3_value', 'סרגל בריאות למעקב'],
+          ['language', 'en-US / fr / de / es / pt-BR / ko', 'שפת הודעות הצ׳אט ודף העזרה'],
           [
             'marker',
             '&lt;Condition&gt;=&lt;marker name&gt;',
@@ -10075,8 +9189,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} {effect} hatása alatt ({source})',
         advantage: '{emoji} {source} előnnyel támad {target}{subject} ellen',
-        disadvantage:
-          '{emoji} {source} hátránnyal támad {target}{subject} ellen',
+        disadvantage: '{emoji} {source} hátránnyal támad {target}{subject} ellen',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} {past}',
         standard: '{emoji} {target} {past} — {source}',
@@ -10091,10 +9204,8 @@ const ConditionTrackerMod = (() => {
       },
       remove: {
         custom: '{target} már nem áll {effect} hatása alatt.',
-        advantage:
-          '{source} már nem rendelkezik előnnyel {target}{subject} ellen.',
-        disadvantage:
-          '{source} már nem rendelkezik hátránnyal {target}{subject} ellen.',
+        advantage: '{source} már nem rendelkezik előnnyel {target}{subject} ellen.',
+        disadvantage: '{source} már nem rendelkezik hátránnyal {target}{subject} ellen.',
         noBy: '{target} már nem {past}.',
         self: '{target} már nem {past}.',
         standard: '{target} már nem {past} — {source}.',
@@ -10118,8 +9229,7 @@ const ConditionTrackerMod = (() => {
         subjectDesc: 'Válassza ki, ki vagy mi hozza létre a hatást.',
         sourceDesc:
           'Válassza ki azt a lényt, amely létrehozza vagy előidézi az állapotot vagy hatást.',
-        targetDesc:
-          'Válassza ki azt a lényt, amely megkapja az állapotot vagy hatást.',
+        targetDesc: 'Válassza ki azt a lényt, amely megkapja az állapotot vagy hatást.',
         otherText: 'Egyéni állapotszöveg',
         effectDetails: '{condition} részletei',
       },
@@ -10234,14 +9344,10 @@ const ConditionTrackerMod = (() => {
         macroReinstalled:
           'A(z) {wizard}, {multiTarget}, {reportToken}, {saved} és {classify} makrók újra lettek telepítve az összes jelenlegi GM-játékos számára.',
         handoutReinstalled: 'A(z) {handout} súgó-handout újra lett telepítve.',
-        duplicate:
-          'Pontosan ugyanez a forrás, alany, célpont, állapot és egyéni szöveg már aktív.',
-        noTargets:
-          'Nem adtak meg célpont tokeneket a többcélpontos alkalmazáshoz.',
-        noSelection:
-          'Jelöljön ki legalább egy tokent a táblán a --multi-target használata előtt.',
-        invalidIds:
-          'Nem találhatók érvényes token-azonosítók a jelenlegi kijelölésben.',
+        duplicate: 'Pontosan ugyanez a forrás, alany, célpont, állapot és egyéni szöveg már aktív.',
+        noTargets: 'Nem adtak meg célpont tokeneket a többcélpontos alkalmazáshoz.',
+        noSelection: 'Jelöljön ki legalább egy tokent a táblán a --multi-target használata előtt.',
+        invalidIds: 'Nem találhatók érvényes token-azonosítók a jelenlegi kijelölésben.',
         reSelectTokens:
           'Az eredetileg kijelölt tokenek egyike sem található. Jelölje ki újra a tokeneket, és próbálja újra.',
         conditionNotFound: 'Az állapot azonosítója nem található.',
@@ -10255,16 +9361,13 @@ const ConditionTrackerMod = (() => {
           'Az állapotnak az előre meghatározott állapotok egyikének vagy az Egyébnek kell lennie.',
         subjectOnlyCustom:
           'A --subject csak Varázslat, Képesség, Előny, Hátrány és Egyéb esetén érvényes.',
-        subjectBypassInvalid:
-          'A --subjectPromptBypass értékként true vagy false értéket vár.',
+        subjectBypassInvalid: 'A --subjectPromptBypass értékként true vagy false értéket vár.',
         customDetailsRequired:
           'A(z) {condition} részletei kötelezők. Adja meg őket a --other kapcsolóval.',
-        markerConfigFormat:
-          'Jelölő-beállítás formátuma: --config marker Grappled=grab',
+        markerConfigFormat: 'Jelölő-beállítás formátuma: --config marker Grappled=grab',
         markerPredefinedRequired:
           'A jelölő konfigurálásához előre meghatározott állapotnév szükséges.',
-        markerNameRequired:
-          'A jelölő konfigurálásához nem üres jelölőnév szükséges.',
+        markerNameRequired: 'A jelölő konfigurálásához nem üres jelölőnév szükséges.',
         markerSet: 'A(z) {condition} jelölője {marker} értékre állítva.',
         healthBarSet: 'Az életerő sáv {bar} értékre állítva.',
         boolSet: 'A(z) {key} {value} értékre állítva.',
@@ -10282,8 +9385,7 @@ const ConditionTrackerMod = (() => {
         invalidDuration:
           'Az időtartamnak Eltávolításig, kör-végi beállítás vagy pozitív körszám kell lennie.',
         zeroHpNoConditions: '{name} 0 ÉP-re jutott, és nincs aktív állapota.',
-        zeroHpConditions:
-          '{name} 0 ÉP-re jutott. Válassza ki az eltávolítandó állapotokat:',
+        zeroHpConditions: '{name} 0 ÉP-re jutott. Válassza ki az eltávolítandó állapotokat:',
         removeAllBtn: 'Minden állapot eltávolítása ({name})',
         markIncapacitated: 'Megjelölés cselekvőképtelenként',
         removeFromTurnOrder: 'Eltávolítás a körsorendből',
@@ -10295,10 +9397,8 @@ const ConditionTrackerMod = (() => {
         moveTokenBtn: '{name} áthelyezése a térképrétegre',
         tokenMoved: '{name} áthelyezve a térképrétegre.',
         tokenNotFound: 'A token nem található.',
-        noActiveConditions:
-          '{name}-nek nincsenek aktív állapotai az eltávolításhoz.',
-        deadNoConditions:
-          '{name} halottnak lett jelölve. Nem volt aktív állapot.',
+        noActiveConditions: '{name}-nek nincsenek aktív állapotai az eltávolításhoz.',
+        deadNoConditions: '{name} halottnak lett jelölve. Nem volt aktív állapot.',
         scriptReady: '{name} aktív, és a(z) {version} verziót használja.',
         reachedZeroHp: '{name} elérte a 0 ÉP-t',
         manuallyRemoved: 'kézzel eltávolítva',
@@ -10306,34 +9406,27 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} halottnak lett jelölve',
         conditionReorder:
           'A körsorend megváltozott, és {count} követett állapotsor lehet rossz helyen. Kattintson alább a visszaállításhoz a hozzárendelt tokenek után.',
-        conditionsReordered:
-          'Az állapotsorok vissza lettek helyezve a hozzárendelt tokenek mögé.',
+        conditionsReordered: 'Az állapotsorok vissza lettek helyezve a hozzárendelt tokenek mögé.',
         noTokensSelectedReport:
           'A --report-token használata előtt válassz legalább egy tokent a táblán.',
         noConditionsAppliedTo: 'A {name} nem alkalmaz aktív feltételeket.',
-        noConditionsAppliedBy:
-          'A {name} nem rendelkezik más aktív feltételekkel.',
+        noConditionsAppliedBy: 'A {name} nem rendelkezik más aktív feltételekkel.',
         noSavedEffects: 'Nincsenek mentett effektusok a következőhöz: {name}.',
-        noTokenSelectedSaved:
-          'A --saved használata előtt válassz ki egy tokent a táblán.',
+        noTokenSelectedSaved: 'A --saved használata előtt válassz ki egy tokent a táblán.',
         savedEffectAdded: 'Mentett effektus hozzáadva a következőhöz: {name}.',
         savedEffectUpdated: 'A mentett effektus frissítve.',
         savedEffectRemoved: 'A mentett hatás eltávolítva.',
         savedEffectNotFound: 'A mentett hatás nem található.',
-        savedInvalidVisibility:
-          'Érvénytelen láthatóság. Használja nyilvános, maszkos vagy gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          'Az effektus hozzáadva a Turn Trackerhez nyilvánosként.',
+        savedInvalidVisibility: 'Érvénytelen láthatóság. Használja nyilvános, maszkos vagy gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Az effektus hozzáadva a Turn Trackerhez nyilvánosként.',
         savedPromotedMasked:
           'A Turn Trackerhez maszkoltként hozzáadott effektus – a játékosok ezt látják: {publicLabel}.',
         savedPromotedGm:
           'A hatás csak a GM-re vonatkozik – nem jön létre Kanyarkövető sor. Az emlékeztető rendszer akkor jeleníti meg, amikor ez a token eléri a körsorrend tetejét.',
         savedSnoozed: 'Emlékeztető elhalasztva: {scope}.',
         savedSnoozeCleared: 'A szundi törölve.',
-        hiddenEffectsReminder:
-          'A rejtett effektusok aktívak a következőn: {name}.',
+        hiddenEffectsReminder: 'A rejtett effektusok aktívak a következőn: {name}.',
         visibilityPublicHint: 'a teljes címke mindenki számára látható',
         visibilityMaskedHint: 'homályos címke látható a játékosoknak',
         visibilityGmHint: 'Csak GM suttogás, nincs kanyarkövető sor',
@@ -10381,15 +9474,13 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Osztályozási Diagnosztika',
         showHeading: 'Token Osztályozási Részletek',
         resultHeading: 'Felülbírálás Alkalmazva',
-        noSelection:
-          'Válassz ki legalább egy tokent a táblán a --classify használata előtt.',
+        noSelection: 'Válassz ki legalább egy tokent a táblán a --classify használata előtt.',
         invalidType:
           'Érvénytelen osztályozási típus: {type}. Használj pc, npc, ignored vagy auto értéket.',
         set: '{name} → {type} (hatókör: {scope})',
         cleared:
           '{name} felülbírálás törölve (hatókör: {scope}) — az automatikus észlelés visszaállítva.',
-        setTokenFallback:
-          '{name} → {type} (token felülbírálás — nincs karakterlap csatolva).',
+        setTokenFallback: '{name} → {type} (token felülbírálás — nincs karakterlap csatolva).',
         clearedTokenFallback:
           '{name} token felülbírálás törölve — az automatikus észlelés visszaállítva.',
         fieldToken: 'Jelképes',
@@ -10404,8 +9495,7 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Nem használt jelölők',
       },
       apply: {
-        turnAppended:
-          'A célpont nem volt a körsorendben; az állapotsor hozzáfűzve a végéhez.',
+        turnAppended: 'A célpont nem volt a körsorendben; az állapotsor hozzáfűzve a végéhez.',
         turnInserted: 'Az állapotsor a célpont token alá lett illesztve.',
       },
     },
@@ -10447,30 +9537,12 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Leírás',
         rows: [
           ['--gyors', 'Interaktív lépésről lépésre haladó varázsló'],
-          [
-            '--több célpont',
-            'Állapot alkalmazása több célpont tokenre egyszerre',
-          ],
-          [
-            '--menü',
-            'Főmenü megjelenítése (add remove az eltávolítási menühöz)',
-          ],
-          [
-            '--forrás X --cél Y --feltétel Z',
-            'Állapot közvetlen alkalmazása varázsló nélkül',
-          ],
-          [
-            '--duration &lt;érték&gt;',
-            'Időtartam közvetlen alkalmazáshoz (pl. 2 rounds)',
-          ],
-          [
-            '--other &lt;szöveg&gt;',
-            'Egyéni szöveg Varázslat / Képesség / Egyéb hatástípusokhoz',
-          ],
-          [
-            '--remove <feltétel-azonosító>',
-            'Adott állapot eltávolítása az egyedi azonosítójával',
-          ],
+          ['--több célpont', 'Állapot alkalmazása több célpont tokenre egyszerre'],
+          ['--menü', 'Főmenü megjelenítése (add remove az eltávolítási menühöz)'],
+          ['--forrás X --cél Y --feltétel Z', 'Állapot közvetlen alkalmazása varázsló nélkül'],
+          ['--duration &lt;érték&gt;', 'Időtartam közvetlen alkalmazáshoz (pl. 2 rounds)'],
+          ['--other &lt;szöveg&gt;', 'Egyéni szöveg Varázslat / Képesség / Egyéb hatástípusokhoz'],
+          ['--remove <feltétel-azonosító>', 'Adott állapot eltávolítása az egyedi azonosítójával'],
           [
             '--config <beállítás> <érték>',
             'Konfigurációs beállítások módosítása (lásd lent a Beállítások részt)',
@@ -10488,10 +9560,7 @@ const ConditionTrackerMod = (() => {
             'Feltétel sorok kézi átrendezése a hozzárendelt tokenek mögé a körsorrendben',
           ],
           ['--reinstall-macro', 'GM makrók újralétrehozása vagy frissítése'],
-          [
-            '--reinstall-handout',
-            'A lokalizált súgó-handout újralétrehozása vagy frissítése',
-          ],
+          ['--reinstall-handout', 'A lokalizált súgó-handout újralétrehozása vagy frissítése'],
           [
             '--jelentés-token',
             'Suttogjon egy csak GM állapotjelentést minden kiválasztott tokenhez (a rájuk és általa alkalmazott feltételek)',
@@ -10536,14 +9605,8 @@ const ConditionTrackerMod = (() => {
             '🍀 Előny',
             'Az egyik tokenről a másikra adott előny rögzítése; az iniciativában a forrással csoportosítva',
           ],
-          [
-            '⬇️ Hátrány',
-            'Kirótt hátrány rögzítése; az iniciativában a forrással csoportosítva',
-          ],
-          [
-            '📝 Egyéb',
-            'Szabad formátumú egyéni címke — leírás bekérésre kerül',
-          ],
+          ['⬇️ Hátrány', 'Kirótt hátrány rögzítése; az iniciativában a forrással csoportosítva'],
+          ['📝 Egyéb', 'Szabad formátumú egyéni címke — leírás bekérésre kerül'],
         ],
       },
       durationOptions: {
@@ -10652,16 +9715,8 @@ const ConditionTrackerMod = (() => {
               'Karakter ct_mod_actor_type attribútum (--classify --scope character)',
               'pc / npc / figyelmen kívül hagyva',
             ],
-            [
-              '3',
-              'Nem csatolt token — nincs karakterlap',
-              'figyelmen kívül hagyva',
-            ],
-            [
-              '4',
-              'Játékrendszer-adapter (npc / is_npc attribútum)',
-              'pc / npc',
-            ],
+            ['3', 'Nem csatolt token — nincs karakterlap', 'figyelmen kívül hagyva'],
+            ['4', 'Játékrendszer-adapter (npc / is_npc attribútum)', 'pc / npc'],
             [
               '5',
               'Általános NPC attribútum pásztázás (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -10675,10 +9730,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Típus',
           colMeaning: 'Jelentés',
           rows: [
-            [
-              'pc',
-              'Játékos karakter — mindig JK-ként szerepel a varázslóban és az észlelésben',
-            ],
+            ['pc', 'Játékos karakter — mindig JK-ként szerepel a varázslóban és az észlelésben'],
             ['npc', 'Nem-játékos karakter — mindig NJK-ként szerepel'],
             [
               'figyelmen kívül hagyva',
@@ -10692,17 +9744,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Osztályozási Parancsok',
-          intro:
-            'Válassz ki egy vagy több tokent a --classify parancsok futtatása előtt.',
+          intro: 'Válassz ki egy vagy több tokent a --classify parancsok futtatása előtt.',
           rows: [
             [
               '!condition-tracker --classify pc',
               'Kiválasztott tokenek JK-ként jelölése (alapértelmezett hatókör: karakter).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Kiválasztott tokenek NJK-ként jelölése.',
-            ],
+            ['!condition-tracker --classify npc', 'Kiválasztott tokenek NJK-ként jelölése.'],
             [
               '!condition-tracker --classify figyelmen kívül hagyva',
               'Kiválasztott tokenek kizárása minden követésből.',
@@ -10897,15 +9945,13 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} ha vantaggio contro {target}{subject}.',
         disadvantage: '{source} ha svantaggio contro {target}{subject}.',
         self: '{target} è {past}.',
-        withSuffix:
-          'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN SEGNAPOSTO3TOKEN.',
+        withSuffix: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN SEGNAPOSTO3TOKEN.',
         standard: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN.',
       },
       remove: {
         custom: '{target} non è più influenzato da {effect}.',
         advantage: '{source} non ha più vantaggio contro {target}{subject}.',
-        disadvantage:
-          '{source} non ha più svantaggio contro {target}{subject}.',
+        disadvantage: '{source} non ha più svantaggio contro {target}{subject}.',
         noBy: '{target} non è più {past}.',
         self: '{target} non è più {past}.',
         standard: '{target} non è più {past} da {source}.',
@@ -10927,10 +9973,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Nessuno',
         noneOrSourceBtn: 'Nessuno o applica alla fonte',
         subjectDesc: "Seleziona chi o cosa applica l'effetto.",
-        sourceDesc:
-          "Seleziona la creatura che crea o genera la condizione o l'effetto.",
-        targetDesc:
-          "Seleziona la creatura che riceverà la condizione o l'effetto.",
+        sourceDesc: "Seleziona la creatura che crea o genera la condizione o l'effetto.",
+        targetDesc: "Seleziona la creatura che riceverà la condizione o l'effetto.",
         otherText: 'Testo condizione personalizzato',
         effectDetails: 'Dettagli {condition}',
       },
@@ -11039,20 +10083,16 @@ const ConditionTrackerMod = (() => {
       },
       msg: {
         noActive: 'Nessuna condizione attiva è tracciata.',
-        configReset:
-          'Configurazione ripristinata ai valori predefiniti del mod.',
+        configReset: 'Configurazione ripristinata ai valori predefiniti del mod.',
         unknownConfig:
           'Opzione di configurazione sconosciuta. Usa --config per visualizzare le impostazioni supportate.',
         macroReinstalled:
           'Le macro {wizard}, {multiTarget}, {reportToken}, {saved} e {classify} sono state reinstallate per tutti i GM attivi.',
-        handoutReinstalled:
-          'Il documento di aiuto {handout} è stato reinstallato.',
+        handoutReinstalled: 'Il documento di aiuto {handout} è stato reinstallato.',
         duplicate:
           'Questa combinazione esatta di sorgente, soggetto, bersaglio, condizione e testo personalizzato è già attiva.',
-        noTargets:
-          "Nessun token bersaglio specificato per l'applicazione multi-bersaglio.",
-        noSelection:
-          'Seleziona almeno un token sulla mappa prima di usare --multi-target.',
+        noTargets: "Nessun token bersaglio specificato per l'applicazione multi-bersaglio.",
+        noSelection: 'Seleziona almeno un token sulla mappa prima di usare --multi-target.',
         invalidIds: 'Nessun ID token valido trovato nella selezione corrente.',
         reSelectTokens:
           'Nessuno dei token originariamente selezionati è stato trovato. Seleziona nuovamente i token e riprova.',
@@ -11081,11 +10121,9 @@ const ConditionTrackerMod = (() => {
         healthBarSet: 'Barra della salute impostata su {bar}.',
         boolSet: '{key} impostato su {value}.',
         expectedBoolean: 'Previsto true o false.',
-        invalidHealthBar:
-          'La barra della salute deve essere bar1_value, bar2_value o bar3_value.',
+        invalidHealthBar: 'La barra della salute deve essere bar1_value, bar2_value o bar3_value.',
         markersDisabled: 'Gli indicatori sono disabilitati.',
-        noMarkerConfigured:
-          'Nessun indicatore configurato per questa condizione.',
+        noMarkerConfigured: 'Nessun indicatore configurato per questa condizione.',
         markerApplied: 'Indicatore applicato: {marker}',
         markerPresent: 'Indicatore già presente: {marker}',
         langSet: 'Lingua impostata su {locale}.',
@@ -11094,16 +10132,13 @@ const ConditionTrackerMod = (() => {
           'La durata Altro richiede un numero di round, ad esempio --duration 5 rounds.',
         invalidDuration:
           "La durata deve essere Fino alla rimozione, un'opzione di fine turno o un numero positivo di round.",
-        zeroHpNoConditions:
-          '{name} ha raggiunto 0 PF e non ha condizioni attive.',
-        zeroHpConditions:
-          '{name} ha raggiunto 0 PF. Scegli le condizioni da rimuovere:',
+        zeroHpNoConditions: '{name} ha raggiunto 0 PF e non ha condizioni attive.',
+        zeroHpConditions: '{name} ha raggiunto 0 PF. Scegli le condizioni da rimuovere:',
         removeAllBtn: 'Rimuovi tutte le condizioni di {name}',
         markIncapacitated: 'Segna come Incapacitato',
         removeFromTurnOrder: "Rimuovi dall'ordine di iniziativa",
         alreadyIncapacitated: '{name} è già Incapacitato.',
-        tokenRemovedFromTurn:
-          "{name} è stato rimosso dall'ordine di iniziativa.",
+        tokenRemovedFromTurn: "{name} è stato rimosso dall'ordine di iniziativa.",
         tokenNotInTurn: "{name} non è stato trovato nell'ordine di iniziativa.",
         moveTokenPrompt:
           'Sposta {name} al livello mappa in modo che rimanga visibile senza interferire con altri token?',
@@ -11111,8 +10146,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} è stato spostato al livello mappa.',
         tokenNotFound: 'Token non trovato.',
         noActiveConditions: '{name} non ha condizioni attive da rimuovere.',
-        deadNoConditions:
-          '{name} è stato segnato come morto. Nessuna condizione era attiva.',
+        deadNoConditions: '{name} è stato segnato come morto. Nessuna condizione era attiva.',
         scriptReady: '{name} è attivo e stai usando la versione {version}.',
         reachedZeroHp: '{name} ha raggiunto 0 PF',
         manuallyRemoved: 'è stata rimossa manualmente',
@@ -11125,19 +10159,15 @@ const ConditionTrackerMod = (() => {
         noTokensSelectedReport:
           'Seleziona almeno un token sul tabellone prima di utilizzare --report-token.',
         noConditionsAppliedTo: 'A {name} non sono applicate condizioni attive.',
-        noConditionsAppliedBy:
-          '{name} non ha condizioni attive applicate ad altri.',
+        noConditionsAppliedBy: '{name} non ha condizioni attive applicate ad altri.',
         noSavedEffects: 'Nessun effetto salvato memorizzato per {name}.',
-        noTokenSelectedSaved:
-          'Seleziona un token sul tabellone prima di utilizzare --saved.',
+        noTokenSelectedSaved: 'Seleziona un token sul tabellone prima di utilizzare --saved.',
         savedEffectAdded: 'Effetto salvato aggiunto per {name}.',
         savedEffectUpdated: 'Effetto salvato aggiornato.',
         savedEffectRemoved: 'Effetto salvato rimosso.',
         savedEffectNotFound: 'Effetto salvato non trovato.',
-        savedInvalidVisibility:
-          'Visibilità non valida. Utilizza pubblico, mascherato o gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Visibilità non valida. Utilizza pubblico, mascherato o gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Effetto aggiunto al Turn Tracker come pubblico.',
         savedPromotedMasked:
           'Effetto aggiunto a Turn Tracker come mascherato: i giocatori vedono: {publicLabel}.',
@@ -11193,10 +10223,8 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnostica di Classificazione',
         showHeading: 'Dettagli Classificazione Token',
         resultHeading: 'Sovrascrittura Applicata',
-        noSelection:
-          'Seleziona almeno un token sulla plancia prima di usare --classify.',
-        invalidType:
-          'Tipo di classificazione non valido: {type}. Usa pc, npc, ignored o auto.',
+        noSelection: 'Seleziona almeno un token sulla plancia prima di usare --classify.',
+        invalidType: 'Tipo di classificazione non valido: {type}. Usa pc, npc, ignored o auto.',
         set: '{name} → {type} (ambito: {scope})',
         cleared:
           '{name} sovrascrittura rimossa (ambito: {scope}) — rilevamento automatico ripristinato.',
@@ -11218,8 +10246,7 @@ const ConditionTrackerMod = (() => {
       apply: {
         turnAppended:
           "Il bersaglio non era nell'ordine di iniziativa; la riga della condizione è stata aggiunta in fondo.",
-        turnInserted:
-          'Riga della condizione inserita sotto il token bersaglio.',
+        turnInserted: 'Riga della condizione inserita sotto il token bersaglio.',
       },
     },
     handout: {
@@ -11259,26 +10286,14 @@ const ConditionTrackerMod = (() => {
         colFlag: 'Bandiera',
         colDesc: 'Descrizione',
         rows: [
-          [
-            '--richiesta',
-            'Interfaccia della procedura guidata passo dopo passo',
-          ],
-          [
-            '--multi-bersaglio',
-            'Applica una condizione a più token bersaglio contemporaneamente',
-          ],
-          [
-            '--menu',
-            'Mostra il menu principale (aggiungi remove per il menu di rimozione)',
-          ],
+          ['--richiesta', 'Interfaccia della procedura guidata passo dopo passo'],
+          ['--multi-bersaglio', 'Applica una condizione a più token bersaglio contemporaneamente'],
+          ['--menu', 'Mostra il menu principale (aggiungi remove per il menu di rimozione)'],
           [
             '--source X --target Y --condizione Z',
             'Applica una condizione direttamente senza la procedura guidata',
           ],
-          [
-            '--duration &lt;valore&gt;',
-            "Durata per un'applicazione diretta (es. 2 rounds)",
-          ],
+          ['--duration &lt;valore&gt;', "Durata per un'applicazione diretta (es. 2 rounds)"],
           [
             '--other &lt;testo&gt;',
             'Testo personalizzato per i tipi di effetto Incantesimo / Abilità / Altro',
@@ -11304,10 +10319,7 @@ const ConditionTrackerMod = (() => {
             "Riposizionare manualmente le righe di condizione dopo i token assegnati nell'ordine dei turni",
           ],
           ['--reinstalla-macro', 'Ricrea o aggiorna le macro del GM'],
-          [
-            '--dispensa-di-reinstallazione',
-            'Ricrea o aggiorna il documento di aiuto localizzato',
-          ],
+          ['--dispensa-di-reinstallazione', 'Ricrea o aggiorna il documento di aiuto localizzato'],
           [
             '--token-report',
             'Sussurra un rapporto sulle condizioni riservato al GM per ciascun gettone selezionato (condizioni applicate a e da esso)',
@@ -11356,10 +10368,7 @@ const ConditionTrackerMod = (() => {
             '⬇️ Svantaggio',
             "Registra uno svantaggio imposto; raggruppato con la sorgente nell'iniziativa",
           ],
-          [
-            '📝 Altro',
-            'Etichetta personalizzata libera — ti verrà chiesta una descrizione',
-          ],
+          ['📝 Altro', 'Etichetta personalizzata libera — ti verrà chiesta una descrizione'],
         ],
       },
       durationOptions: {
@@ -11458,26 +10467,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Controllo',
           colResult: 'Risultato',
           rows: [
-            [
-              '1',
-              'Sovrascrittura di stato token (--classify --scope token)',
-              'pc/npc/ignorato',
-            ],
+            ['1', 'Sovrascrittura di stato token (--classify --scope token)', 'pc/npc/ignorato'],
             [
               '2',
               'Attributo ct_mod_actor_type del personaggio (--classify --scope character)',
               'pc/npc/ignorato',
             ],
-            [
-              '3',
-              'Token non collegato — nessuna scheda personaggio',
-              'ignorato',
-            ],
-            [
-              '4',
-              'Adattatore sistema di gioco (attributo npc / is_npc)',
-              'pc/npc',
-            ],
+            ['3', 'Token non collegato — nessuna scheda personaggio', 'ignorato'],
+            ['4', 'Adattatore sistema di gioco (attributo npc / is_npc)', 'pc/npc'],
             [
               '5',
               'Scansione attributi NPC generici (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -11496,10 +10493,7 @@ const ConditionTrackerMod = (() => {
               "Personaggio giocante — sempre incluso come PG nell'assistente e nel rilevamento",
             ],
             ['npc', 'Personaggio non giocante — sempre incluso come PNG'],
-            [
-              'ignorato',
-              "Mai mostrato o tracciato — escluso dal selettore token dell'assistente",
-            ],
+            ['ignorato', "Mai mostrato o tracciato — escluso dal selettore token dell'assistente"],
             [
               'sconosciuto',
               "Solo rilevamento automatico; tipo non determinabile (trattato come PNG nell'assistente)",
@@ -11508,17 +10502,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Comandi di Classificazione',
-          intro:
-            'Seleziona uno o più token prima di eseguire i comandi --classify.',
+          intro: 'Seleziona uno o più token prima di eseguire i comandi --classify.',
           rows: [
             [
               '!condition-tracker --classifica pc',
               'Segna i token selezionati come PG (ambito personaggio per impostazione predefinita).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Segna i token selezionati come PNG.',
-            ],
+            ['!condition-tracker --classify npc', 'Segna i token selezionati come PNG.'],
             [
               '!condition-tracker --classify ignorato',
               'Escludi i token selezionati da qualsiasi tracciamento.',
@@ -11716,8 +10706,7 @@ const ConditionTrackerMod = (() => {
       remove: {
         custom: '{target}はもはや{effect}の影響を受けていない。',
         advantage: '{source}はもはや{target}{subject}に対して有利を持たない。',
-        disadvantage:
-          '{source}はもはや{target}{subject}に対して不利を持たない。',
+        disadvantage: '{source}はもはや{target}{subject}に対して不利を持たない。',
         noBy: '{target}はもはや{past}ではない。',
         self: '{target}はもはや{past}ではない。',
         standard: '{target}はもはや{source}によって{past}ではない。',
@@ -11854,12 +10843,10 @@ const ConditionTrackerMod = (() => {
           '不明な設定オプションです。--configを使用してサポートされている設定を確認してください。',
         macroReinstalled:
           '{wizard}、{multiTarget}、{reportToken}、{saved}および{classify}マクロが現在のすべてのGMプレイヤーに再インストールされました。',
-        handoutReinstalled:
-          'ヘルプハンドアウト{handout}が再インストールされました。',
+        handoutReinstalled: 'ヘルプハンドアウト{handout}が再インストールされました。',
         duplicate:
           '同一のソース、対象、ターゲット、状態、カスタムテキストの組み合わせがすでにアクティブです。',
-        noTargets:
-          'マルチターゲット適用のためのターゲットトークンが指定されていません。',
+        noTargets: 'マルチターゲット適用のためのターゲットトークンが指定されていません。',
         noSelection:
           '--multi-targetを使用する前に、ボード上で少なくとも1つのトークンを選択してください。',
         invalidIds: '現在の選択に有効なトークンIDが見つかりません。',
@@ -11872,17 +10859,13 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'ソーストークンが見つかりません。',
         targetTokenNotFound: 'ターゲットトークンが見つかりません。',
         subjectTokenNotFound: '対象トークンが見つかりません。',
-        invalidCondition:
-          '状態は事前定義された状態またはその他のいずれかである必要があります。',
-        subjectOnlyCustom:
-          '--subjectは呪文、能力、有利、不利、その他にのみ有効です。',
+        invalidCondition: '状態は事前定義された状態またはその他のいずれかである必要があります。',
+        subjectOnlyCustom: '--subjectは呪文、能力、有利、不利、その他にのみ有効です。',
         subjectBypassInvalid:
           '--subjectPromptBypassは値が指定された場合、trueまたはfalseを期待します。',
-        customDetailsRequired:
-          '{condition}の詳細が必要です。--otherを使用して指定してください。',
+        customDetailsRequired: '{condition}の詳細が必要です。--otherを使用して指定してください。',
         markerConfigFormat: 'マーカー設定の形式：--config marker Grappled=grab',
-        markerPredefinedRequired:
-          'マーカー設定には事前定義された状態名が必要です。',
+        markerPredefinedRequired: 'マーカー設定には事前定義された状態名が必要です。',
         markerNameRequired: 'マーカー設定には空でないマーカー名が必要です。',
         markerSet: '{condition}のマーカーを{marker}に設定しました。',
         healthBarSet: 'ヘルスバーを{bar}に設定しました。',
@@ -11895,16 +10878,13 @@ const ConditionTrackerMod = (() => {
         markerApplied: 'マーカーを適用しました：{marker}',
         markerPresent: 'マーカーはすでに存在します：{marker}',
         langSet: '言語を{locale}に設定しました。',
-        invalidLocale:
-          '無効なロケールです。サポートされているロケール：{locales}。',
+        invalidLocale: '無効なロケールです。サポートされているロケール：{locales}。',
         otherDurationRequiresRounds:
           'その他の継続時間には数値のラウンド数が必要です（例：--duration 5 rounds）。',
         invalidDuration:
           '継続時間は「削除されるまで」、ターン終了オプション、または正のラウンド数である必要があります。',
-        zeroHpNoConditions:
-          '{name}はHP0になりましたが、アクティブな状態はありません。',
-        zeroHpConditions:
-          '{name}はHP0になりました。削除する状態を選択してください：',
+        zeroHpNoConditions: '{name}はHP0になりましたが、アクティブな状態はありません。',
+        zeroHpConditions: '{name}はHP0になりました。削除する状態を選択してください：',
         removeAllBtn: '{name}のすべての状態を削除',
         markIncapacitated: '無力状態としてマーク',
         removeFromTurnOrder: 'ターン順序から削除',
@@ -11919,35 +10899,27 @@ const ConditionTrackerMod = (() => {
         noActiveConditions: '{name}には削除するアクティブな状態がありません。',
         deadNoConditions:
           '{name}は死亡としてマークされました。アクティブな状態はありませんでした。',
-        scriptReady:
-          '{name}はアクティブで、バージョン{version}を使用しています。',
+        scriptReady: '{name}はアクティブで、バージョン{version}を使用しています。',
         reachedZeroHp: '{name}がHP0に達しました',
         manuallyRemoved: '手動で削除されました',
         durationExpired: '継続時間が終了しました',
         markedAsDead: '{name}が死亡としてマークされました',
         conditionReorder:
           'ターン順序が変更され、追跡中の{count}件の状態行が正しい位置にない可能性があります。割り当てられたトークンの後に復元するには以下をクリックしてください。',
-        conditionsReordered:
-          '状態行が割り当てられたトークンの後に再配置されました。',
+        conditionsReordered: '状態行が割り当てられたトークンの後に再配置されました。',
         noTokensSelectedReport:
           '--report-token を使用する前に、ボード上で少なくとも 1 つのトークンを選択してください。',
-        noConditionsAppliedTo:
-          '{name} にはアクティブな条件が適用されていません。',
-        noConditionsAppliedBy:
-          '{name} には、他に適用されるアクティブな条件がありません。',
+        noConditionsAppliedTo: '{name} にはアクティブな条件が適用されていません。',
+        noConditionsAppliedBy: '{name} には、他に適用されるアクティブな条件がありません。',
         noSavedEffects: '{name} には保存されたエフェクトが保存されていません。',
-        noTokenSelectedSaved:
-          '--saved を使用する前に、ボード上のトークンを選択してください。',
+        noTokenSelectedSaved: '--saved を使用する前に、ボード上のトークンを選択してください。',
         savedEffectAdded: '{name} の保存済みエフェクトが追加されました。',
         savedEffectUpdated: '保存されたエフェクトが更新されました。',
         savedEffectRemoved: '保存されたエフェクトが削除されました。',
         savedEffectNotFound: '保存されたエフェクトが見つかりません。',
-        savedInvalidVisibility:
-          '無効な可視性。 public、masked、または gm を使用します。',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          'エフェクトがターン トラッカーにパブリックとして追加されました。',
+        savedInvalidVisibility: '無効な可視性。 public、masked、または gm を使用します。',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'エフェクトがターン トラッカーにパブリックとして追加されました。',
         savedPromotedMasked:
           'マスクされた効果がターン トラッカーに追加されました — プレイヤーは次を参照してください: {publicLabel}。',
         savedPromotedGm:
@@ -12004,13 +10976,10 @@ const ConditionTrackerMod = (() => {
         resultHeading: '上書きが適用されました',
         noSelection:
           '--classify を使用する前に、ボード上のトークンを少なくとも1つ選択してください。',
-        invalidType:
-          '無効な分類タイプ: {type}。pc、npc、ignored、または auto を使用してください。',
+        invalidType: '無効な分類タイプ: {type}。pc、npc、ignored、または auto を使用してください。',
         set: '{name} → {type}（スコープ: {scope}）',
-        cleared:
-          '{name} 上書きがクリアされました（スコープ: {scope}）— 自動検出が復元されました。',
-        setTokenFallback:
-          '{name} → {type}（トークン上書き — キャラクターシートが未リンク）。',
+        cleared: '{name} 上書きがクリアされました（スコープ: {scope}）— 自動検出が復元されました。',
+        setTokenFallback: '{name} → {type}（トークン上書き — キャラクターシートが未リンク）。',
         clearedTokenFallback:
           '{name} トークン上書きがクリアされました — 自動検出が復元されました。',
         fieldToken: 'トークン',
@@ -12025,16 +10994,14 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: '未使用のマーカー',
       },
       apply: {
-        turnAppended:
-          'ターゲットはターン順序にありませんでした。状態行を末尾に追加しました。',
+        turnAppended: 'ターゲットはターン順序にありませんでした。状態行を末尾に追加しました。',
         turnInserted: 'ターゲットトークンの下に状態行を挿入しました。',
       },
     },
     handout: {
       versionLabel: 'バージョン',
       subtitle: 'D&D 5e ステータス効果マネージャー',
-      footerNote:
-        'このハンドアウトはスクリプトが読み込まれるたびに自動的に作成・更新されます。',
+      footerNote: 'このハンドアウトはスクリプトが読み込まれるたびに自動的に作成・更新されます。',
       overview: {
         heading: '概要',
         body: 'Condition TrackerはD&D 5eのステータス状態およびカスタム効果を、Roll20のターントラッカー内のラベル付き行として管理します。トークンに状態を適用し、イニシアチブ順に継続時間を追跡し、ターン終了時に期限切れの効果を自動的に削除します。すべてのコマンドはGM専用で、チャットまたはインストール済みマクロから実行できます。',
@@ -12067,24 +11034,12 @@ const ConditionTrackerMod = (() => {
         colFlag: 'フラグ',
         colDesc: '説明',
         rows: [
-          [
-            ' - プロンプト',
-            'インタラクティブなステップバイステップウィザードUI',
-          ],
+          [' - プロンプト', 'インタラクティブなステップバイステップウィザードUI'],
           ['--マルチターゲット', '複数のターゲットトークンに状態を一括適用'],
-          [
-            ' - メニュー',
-            'メインメニューを表示（削除メニューにはremoveを追加）',
-          ],
-          [
-            '--ソース X --ターゲット Y --条件 Z',
-            'ウィザードを使わずに直接状態を適用',
-          ],
+          [' - メニュー', 'メインメニューを表示（削除メニューにはremoveを追加）'],
+          ['--ソース X --ターゲット Y --条件 Z', 'ウィザードを使わずに直接状態を適用'],
           ['--duration &lt;値&gt;', '直接適用時の継続時間（例：2 rounds）'],
-          [
-            '--other &lt;テキスト&gt;',
-            '呪文・能力・その他の効果タイプ用のカスタムテキスト',
-          ],
+          ['--other &lt;テキスト&gt;', '呪文・能力・その他の効果タイプ用のカスタムテキスト'],
           ['--remove &lt;状態ID&gt;', '一意のIDで特定の状態を削除'],
           [
             '--config &lt;オプション&gt; &lt;値&gt;',
@@ -12094,19 +11049,13 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'このコマンドのみsubjectPromptBypassを上書き（--subject-prompt-bypassも使用可）',
           ],
-          [
-            ' - 掃除',
-            '状態を整合する — 孤立した状態とターントラッカー行を削除',
-          ],
+          [' - 掃除', '状態を整合する — 孤立した状態とターントラッカー行を削除'],
           [
             '--再注文条件',
             'ターン順序において条件行を割り当てられたトークンの後ろに手動で再配置します',
           ],
           ['--reinstall-マクロ', 'GMマクロを再作成または更新'],
-          [
-            '--reinstall-handout',
-            'ローカライズされたヘルプハンドアウトを再作成または更新',
-          ],
+          ['--reinstall-handout', 'ローカライズされたヘルプハンドアウトを再作成または更新'],
           [
             '--レポートトークン',
             '選択した各トークンの GM のみの条件レポートをウィスパーします (トークンに適用される条件、およびトークンによって適用される条件)',
@@ -12139,22 +11088,13 @@ const ConditionTrackerMod = (() => {
         colType: 'タイプ',
         colNotes: '備考',
         rows: [
-          [
-            '🔮 呪文',
-            '名前付き呪文効果を追跡します — 呪文名の入力を求められます',
-          ],
-          [
-            '🎯 能力',
-            '名前付きクラスまたは種族能力を追跡します — 能力名の入力を求められます',
-          ],
+          ['🔮 呪文', '名前付き呪文効果を追跡します — 呪文名の入力を求められます'],
+          ['🎯 能力', '名前付きクラスまたは種族能力を追跡します — 能力名の入力を求められます'],
           [
             '🍀 有利',
             'あるトークンから別のトークンへ付与された有利を記録します。イニシアチブではソースとグループ化されます',
           ],
-          [
-            '⬇️ 不利',
-            '課された不利を記録します。イニシアチブではソースとグループ化されます',
-          ],
+          ['⬇️ 不利', '課された不利を記録します。イニシアチブではソースとグループ化されます'],
           ['📝 その他', '自由形式のカスタムラベル — 説明の入力を求められます'],
         ],
       },
@@ -12187,10 +11127,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: '可視性モード',
           rows: [
-            [
-              '公共',
-              '完全な効果ラベルはターン トラッカーとパブリック チャットに表示されます。',
-            ],
+            ['公共', '完全な効果ラベルはターン トラッカーとパブリック チャットに表示されます。'],
             [
               'マスクされた',
               '曖昧な公開ラベルがプレイヤーに表示されます。詳細は GM のみに公開されています。',
@@ -12206,22 +11143,13 @@ const ConditionTrackerMod = (() => {
           intro:
             'すべての --saved コマンドは GM 専用です。 --saved または --saved add を実行する前にトークンを選択してください。',
           rows: [
-            [
-              '!条件トラッカー -- 保存済み',
-              '選択したトークンの保存された効果を表示します。',
-            ],
-            [
-              '!condition-tracker --saved add',
-              '保存済みエフェクトの追加ウィザードを起動します。',
-            ],
+            ['!条件トラッカー -- 保存済み', '選択したトークンの保存された効果を表示します。'],
+            ['!condition-tracker --saved add', '保存済みエフェクトの追加ウィザードを起動します。'],
             [
               '!condition-tracker --saved edit <id>',
               '既存の保存済みエフェクトのラベルまたは表示設定を編集します。',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              '保存したエフェクトを永久に削除します。',
-            ],
+            ['!condition-tracker --saved remove <id>', '保存したエフェクトを永久に削除します。'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               '保存したエフェクトをターン トラッカー (パブリックまたはマスク) にコピーするか、それが GM のみで追跡されていることを確認します。',
@@ -12251,26 +11179,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'チェック',
           colResult: '結果',
           rows: [
-            [
-              '1',
-              'トークン状態の上書き（--classify --scope token）',
-              'PC / NPC / 無視',
-            ],
+            ['1', 'トークン状態の上書き（--classify --scope token）', 'PC / NPC / 無視'],
             [
               '2',
               'キャラクターの ct_mod_actor_type 属性（--classify --scope character）',
               'PC / NPC / 無視',
             ],
-            [
-              '3',
-              '未リンクのトークン — キャラクターシートなし',
-              '無視されました',
-            ],
-            [
-              '4',
-              'ゲームシステムアダプター（npc / is_npc 属性）',
-              'パソコン/NPC',
-            ],
+            ['3', '未リンクのトークン — キャラクターシートなし', '無視されました'],
+            ['4', 'ゲームシステムアダプター（npc / is_npc 属性）', 'パソコン/NPC'],
             [
               '5',
               '汎用NPC属性スキャン（npc、is_npc、npcflag、sheet_type、character_type）',
@@ -12284,42 +11200,26 @@ const ConditionTrackerMod = (() => {
           colType: 'タイプ',
           colMeaning: '意味',
           rows: [
-            [
-              'パソコン',
-              'プレイヤーキャラクター — ウィザードと検出で常にPCとして含まれる',
-            ],
+            ['パソコン', 'プレイヤーキャラクター — ウィザードと検出で常にPCとして含まれる'],
             ['NPC', 'ノンプレイヤーキャラクター — 常にNPCとして含まれる'],
-            [
-              '無視されました',
-              '表示または追跡されない — ウィザードのトークンピッカーから除外',
-            ],
-            [
-              '未知',
-              '自動検出のみ；タイプを特定できなかった（ウィザードでNPCとして扱われる）',
-            ],
+            ['無視されました', '表示または追跡されない — ウィザードのトークンピッカーから除外'],
+            ['未知', '自動検出のみ；タイプを特定できなかった（ウィザードでNPCとして扱われる）'],
           ],
         },
         commands: {
           heading: '分類コマンド',
-          intro:
-            '--classify コマンドを実行する前に、1つ以上のトークンを選択してください。',
+          intro: '--classify コマンドを実行する前に、1つ以上のトークンを選択してください。',
           rows: [
             [
               '!condition-tracker --pc を分類',
               '選択したトークンをPCとしてマークします（デフォルトスコープ：キャラクター）。',
             ],
-            [
-              '!condition-tracker --npc を分類する',
-              '選択したトークンをNPCとしてマークします。',
-            ],
+            ['!condition-tracker --npc を分類する', '選択したトークンをNPCとしてマークします。'],
             [
               '!condition-tracker --classify は無視されました',
               '選択したトークンをすべてのトラッキングから除外します。',
             ],
-            [
-              '!condition-tracker --classify auto',
-              '上書きを削除 — 自動検出を復元します。',
-            ],
+            ['!condition-tracker --classify auto', '上書きを削除 — 自動検出を復元します。'],
             [
               '!condition-tracker --classify ショー',
               '各選択トークンの分類診断（タイプ、ソース、理由）を表示します。',
@@ -12493,10 +11393,8 @@ const ConditionTrackerMod = (() => {
     templates: {
       display: {
         custom: '{emoji} {target} 이(가) {effect}의 영향을 받음 ({source})',
-        advantage:
-          '{emoji} {source} 이(가) {target}{subject} 에 대해 이점을 가짐',
-        disadvantage:
-          '{emoji} {source} 이(가) {target}{subject} 에 대해 불이익을 가짐',
+        advantage: '{emoji} {source} 이(가) {target}{subject} 에 대해 이점을 가짐',
+        disadvantage: '{emoji} {source} 이(가) {target}{subject} 에 대해 불이익을 가짐',
         noBy: '{emoji} {target} 이(가) {past} ({source})',
         self: '{target} 이(가) {past}',
         standard: '{emoji} {target} 이(가) {source} 에 의해 {past}',
@@ -12504,23 +11402,18 @@ const ConditionTrackerMod = (() => {
       apply: {
         custom: '{source} 이(가) {target} 에게 {effect} 효과를 적용함.',
         advantage: '{source} 이(가) {target}{subject} 에 대해 이점을 가짐.',
-        disadvantage:
-          '{source} 이(가) {target}{subject} 에 대해 불이익을 가짐.',
+        disadvantage: '{source} 이(가) {target}{subject} 에 대해 불이익을 가짐.',
         self: '{target} 이(가) {past}.',
-        withSuffix:
-          '자리 표시자0토큰 자리 표시자1토큰 자리 표시자2토큰 자리 표시자3토큰.',
+        withSuffix: '자리 표시자0토큰 자리 표시자1토큰 자리 표시자2토큰 자리 표시자3토큰.',
         standard: '자리 표시자0토큰 자리 표시자1토큰 자리 표시자2토큰.',
       },
       remove: {
         custom: '{target} 에게 적용된 {effect} 효과가 종료됨.',
-        advantage:
-          '{source} 이(가) {target}{subject} 에 대해 더 이상 이점을 가지지 않음.',
-        disadvantage:
-          '{source} 이(가) {target}{subject} 에 대해 더 이상 불이익을 가지지 않음.',
+        advantage: '{source} 이(가) {target}{subject} 에 대해 더 이상 이점을 가지지 않음.',
+        disadvantage: '{source} 이(가) {target}{subject} 에 대해 더 이상 불이익을 가지지 않음.',
         noBy: '{target} 이(가) 더 이상 {past} 상태가 아님.',
         self: '{target} 이(가) 더 이상 {past} 상태가 아님.',
-        standard:
-          '{target} 이(가) 더 이상 {source} 에 의해 {past} 상태가 아님.',
+        standard: '{target} 이(가) 더 이상 {source} 에 의해 {past} 상태가 아님.',
       },
     },
     ui: {
@@ -12658,51 +11551,42 @@ const ConditionTrackerMod = (() => {
         duplicate:
           '동일한 시전자, 주체, 대상, 상태 및 사용자 정의 텍스트가 이미 활성화되어 있습니다.',
         noTargets: '다중 대상 적용을 위한 대상 토큰이 지정되지 않았습니다.',
-        noSelection:
-          '--multi-target 을 사용하기 전에 보드에서 하나 이상의 토큰을 선택하세요.',
+        noSelection: '--multi-target 을 사용하기 전에 보드에서 하나 이상의 토큰을 선택하세요.',
         invalidIds: '현재 선택 항목에서 유효한 토큰 ID를 찾을 수 없습니다.',
         reSelectTokens:
           '원래 선택한 토큰을 찾을 수 없습니다. 토큰을 다시 선택하고 다시 시도하세요.',
         conditionNotFound: '상태 ID를 찾을 수 없습니다.',
         gmOnly: '상태 추적기 명령어는 GM 전용입니다.',
-        commandFailed:
-          '명령어를 안전하게 완료할 수 없습니다. 자세한 내용은 API 콘솔을 확인하세요.',
+        commandFailed: '명령어를 안전하게 완료할 수 없습니다. 자세한 내용은 API 콘솔을 확인하세요.',
         sourceTokenNotFound: '시전자 토큰을 찾을 수 없습니다.',
         targetTokenNotFound: '대상 토큰을 찾을 수 없습니다.',
         subjectTokenNotFound: '주체 토큰을 찾을 수 없습니다.',
-        invalidCondition:
-          "상태는 미리 정의된 상태 중 하나이거나 '기타'여야 합니다.",
-        subjectOnlyCustom:
-          '--subject 는 주문, 능력, 이점, 불이익 및 기타 효과에만 유효합니다.',
+        invalidCondition: "상태는 미리 정의된 상태 중 하나이거나 '기타'여야 합니다.",
+        subjectOnlyCustom: '--subject 는 주문, 능력, 이점, 불이익 및 기타 효과에만 유효합니다.',
         subjectBypassInvalid:
           '--subjectPromptBypass 는 값이 제공될 때 true 또는 false를 기대합니다.',
         customDetailsRequired:
           '{condition} 상세 내용이 필요합니다. --other 를 사용하여 제공하세요.',
         markerConfigFormat: '마커 설정 형식: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          '마커 설정에는 미리 정의된 상태 이름이 필요합니다.',
-        markerNameRequired:
-          '마커 설정에는 비어 있지 않은 마커 이름이 필요합니다.',
+        markerPredefinedRequired: '마커 설정에는 미리 정의된 상태 이름이 필요합니다.',
+        markerNameRequired: '마커 설정에는 비어 있지 않은 마커 이름이 필요합니다.',
         markerSet: '{condition} 마커가 {marker} 로 설정되었습니다.',
         healthBarSet: '체력 바가 {bar} 로 설정되었습니다.',
         boolSet: '{key} 이(가) {value} 로 설정되었습니다.',
         expectedBoolean: 'true 또는 false를 기대했습니다.',
-        invalidHealthBar:
-          '체력 바는 bar1_value, bar2_value 또는 bar3_value 여야 합니다.',
+        invalidHealthBar: '체력 바는 bar1_value, bar2_value 또는 bar3_value 여야 합니다.',
         markersDisabled: '마커가 비활성화되었습니다.',
         noMarkerConfigured: '이 상태에 대해 설정된 마커가 없습니다.',
         markerApplied: '마커 적용됨: {marker}',
         markerPresent: '마커가 이미 존재함: {marker}',
         langSet: '언어가 {locale} 로 설정되었습니다.',
-        invalidLocale:
-          '유효하지 않은 로케일입니다. 지원되는 로케일: {locales}.',
+        invalidLocale: '유효하지 않은 로케일입니다. 지원되는 로케일: {locales}.',
         otherDurationRequiresRounds:
           '기타 지속 시간은 숫자 라운드 수가 필요합니다. 예: --duration 5 rounds.',
         invalidDuration:
           "지속 시간은 '제거될 때까지', 턴 종료 옵션 또는 양수 라운드 수여야 합니다.",
         zeroHpNoConditions: '{name} 의 HP가 0이 되었으며 활성 상태가 없습니다.',
-        zeroHpConditions:
-          '{name} 의 HP가 0이 되었습니다. 제거할 상태를 선택하세요:',
+        zeroHpConditions: '{name} 의 HP가 0이 되었습니다. 제거할 상태를 선택하세요:',
         removeAllBtn: '{name} 의 모든 상태 제거',
         markIncapacitated: '무력화됨으로 표시',
         removeFromTurnOrder: '턴 순서에서 제거',
@@ -12715,10 +11599,8 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} 이(가) 지도 레이어로 이동되었습니다.',
         tokenNotFound: '토큰을 찾을 수 없습니다.',
         noActiveConditions: '{name} 에 제거할 활성 상태가 없습니다.',
-        deadNoConditions:
-          '{name} 이(가) 사망으로 표시되었습니다. 활성 상태가 없었습니다.',
-        scriptReady:
-          '{name} 이(가) 활성화되었으며 버전 {version} 을(를) 사용 중입니다.',
+        deadNoConditions: '{name} 이(가) 사망으로 표시되었습니다. 활성 상태가 없었습니다.',
+        scriptReady: '{name} 이(가) 활성화되었으며 버전 {version} 을(를) 사용 중입니다.',
         reachedZeroHp: '{name} 의 HP가 0에 도달함',
         manuallyRemoved: '수동으로 제거됨',
         durationExpired: '지속 시간이 만료됨',
@@ -12729,19 +11611,15 @@ const ConditionTrackerMod = (() => {
         noTokensSelectedReport:
           '--report-token을 사용하기 전에 보드에서 하나 이상의 토큰을 선택하세요.',
         noConditionsAppliedTo: '{name}에는 적용된 활성 조건이 없습니다.',
-        noConditionsAppliedBy:
-          '{name}에는 다른 사람에게 적용된 활성 조건이 없습니다.',
+        noConditionsAppliedBy: '{name}에는 다른 사람에게 적용된 활성 조건이 없습니다.',
         noSavedEffects: '{name}에 대해 저장된 효과가 없습니다.',
-        noTokenSelectedSaved:
-          '--saved를 사용하기 전에 보드에서 토큰을 선택하세요.',
+        noTokenSelectedSaved: '--saved를 사용하기 전에 보드에서 토큰을 선택하세요.',
         savedEffectAdded: '{name}에 저장된 효과가 추가되었습니다.',
         savedEffectUpdated: '저장된 효과가 업데이트되었습니다.',
         savedEffectRemoved: '저장된 효과가 제거되었습니다.',
         savedEffectNotFound: '저장된 효과를 찾을 수 없습니다.',
-        savedInvalidVisibility:
-          '공개 상태가 잘못되었습니다. 공개, 마스크 또는 GM을 사용하세요.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: '공개 상태가 잘못되었습니다. 공개, 마스크 또는 GM을 사용하세요.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Turn Tracker에 효과가 공개로 추가되었습니다.',
         savedPromotedMasked:
           'Turn Tracker에 마스크된 효과가 추가되었습니다. 플레이어는 다음을 볼 수 있습니다: {publicLabel}.',
@@ -12797,17 +11675,12 @@ const ConditionTrackerMod = (() => {
         showTitle: '분류 진단',
         showHeading: '토큰 분류 세부 정보',
         resultHeading: '재정의 적용됨',
-        noSelection:
-          '--classify를 사용하기 전에 보드에서 최소 하나의 토큰을 선택하세요.',
-        invalidType:
-          '유효하지 않은 분류 유형: {type}. pc, npc, ignored 또는 auto를 사용하세요.',
+        noSelection: '--classify를 사용하기 전에 보드에서 최소 하나의 토큰을 선택하세요.',
+        invalidType: '유효하지 않은 분류 유형: {type}. pc, npc, ignored 또는 auto를 사용하세요.',
         set: '{name} → {type} (범위: {scope})',
-        cleared:
-          '{name} 재정의가 삭제되었습니다 (범위: {scope}) — 자동 감지가 복원되었습니다.',
-        setTokenFallback:
-          '{name} → {type} (토큰 재정의 — 연결된 캐릭터 시트 없음).',
-        clearedTokenFallback:
-          '{name} 토큰 재정의가 삭제되었습니다 — 자동 감지가 복원되었습니다.',
+        cleared: '{name} 재정의가 삭제되었습니다 (범위: {scope}) — 자동 감지가 복원되었습니다.',
+        setTokenFallback: '{name} → {type} (토큰 재정의 — 연결된 캐릭터 시트 없음).',
+        clearedTokenFallback: '{name} 토큰 재정의가 삭제되었습니다 — 자동 감지가 복원되었습니다.',
         fieldToken: '토큰',
         fieldType: '분류',
         fieldSource: '출처',
@@ -12827,8 +11700,7 @@ const ConditionTrackerMod = (() => {
     handout: {
       versionLabel: '버전',
       subtitle: 'D&D 5e 상태 효과 관리자',
-      footerNote:
-        '이 유인물은 스크립트가 로드될 때마다 자동으로 생성 및 업데이트됩니다.',
+      footerNote: '이 유인물은 스크립트가 로드될 때마다 자동으로 생성 및 업데이트됩니다.',
       overview: {
         heading: '개요',
         body: '상태 추적기(Condition Tracker)는 D&D 5e 상태 조건 및 사용자 정의 효과를 Roll20 턴 추적기의 레이블이 지정된 행으로 관리합니다. 토큰에 상태를 적용하고, 이니셔티브 순서에 따라 지속 시간을 추적하며, 턴이 종료될 때 만료된 효과를 자동으로 제거합니다. 모든 명령어는 GM 전용이며 채팅 또는 설치된 매크로를 통해 실행할 수 있습니다.',
@@ -12866,42 +11738,27 @@ const ConditionTrackerMod = (() => {
           ['--메뉴', '메인 메뉴 표시 (제거 메뉴의 경우 remove 추가)'],
           ['--소스 X --대상 Y --조건 Z', '위저드 없이 직접 상태 적용'],
           ['--duration &lt;값&gt;', '직접 적용 시 지속 시간 (예: 2 rounds)'],
-          [
-            '--other &lt;텍스트&gt;',
-            '주문 / 능력 / 기타 효과 유형에 대한 사용자 정의 텍스트',
-          ],
+          ['--other &lt;텍스트&gt;', '주문 / 능력 / 기타 효과 유형에 대한 사용자 정의 텍스트'],
           ['--remove <조건 ID>', '고유 ID로 특정 상태 제거'],
-          [
-            '--config &lt;옵션&gt; &lt;값&gt;',
-            '구성 설정 조정 (아래 설정 섹션 참조)',
-          ],
+          ['--config &lt;옵션&gt; &lt;값&gt;', '구성 설정 조정 (아래 설정 섹션 참조)'],
           [
             '--prompt --subjectPromptBypass true|false',
             '이 명령어에 대해서만 subjectPromptBypass 재정의 (--subject-prompt-bypass 도 지원)',
           ],
           ['--대청소', '상태 조정 — 연결이 끊긴 상태 및 턴 추적기 행 제거'],
-          [
-            '--재주문 조건',
-            '턴 순서에서 조건 행을 할당된 토큰 뒤로 수동으로 재배치',
-          ],
+          ['--재주문 조건', '턴 순서에서 조건 행을 할당된 토큰 뒤로 수동으로 재배치'],
           ['--재설치-매크로', 'GM 매크로 재생성 또는 업데이트'],
           ['--재설치-유인물', '현지화된 도움말 유인물 재생성 또는 업데이트'],
           [
             '--보고서 토큰',
             '선택한 각 토큰에 대해 GM 전용 조건 보고서를 속삭입니다(에 적용되는 조건).',
           ],
-          [
-            '--lang &lt;로케일&gt;',
-            '이 명령어의 메시지를 추가 로케일로 출력 (이중 언어 모드)',
-          ],
+          ['--lang &lt;로케일&gt;', '이 명령어의 메시지를 추가 로케일로 출력 (이중 언어 모드)'],
           [
             '--classify pc|npc|ignored',
             '선택한 토큰의 배우 유형을 재정의합니다 — 먼저 토큰을 선택하세요. 기본 범위는 캐릭터(ct_mod_actor_type 속성 작성)입니다; --scope token을 추가하면 스크립트 상태에 저장됩니다',
           ],
-          [
-            '--classify auto',
-            '배우 유형 재정의를 제거하고 선택한 토큰의 자동 감지를 복원합니다',
-          ],
+          ['--classify auto', '배우 유형 재정의를 제거하고 선택한 토큰의 자동 감지를 복원합니다'],
           [
             '--classify show',
             '선택한 각 토큰의 분류 진단을 귓속말합니다 — 감지된 유형, 감지 출처, 이유를 표시합니다',
@@ -12942,19 +11799,12 @@ const ConditionTrackerMod = (() => {
       },
       durationOptions: {
         heading: '지속 시간 옵션',
-        intro:
-          '남은 카운트는 턴 추적기 pr 열에 표시되며 고정된 토큰의 턴이 종료될 때 감소합니다.',
+        intro: '남은 카운트는 턴 추적기 pr 열에 표시되며 고정된 토큰의 턴이 종료될 때 감소합니다.',
         colOption: '옵션',
         colBehaviour: '동작',
         rows: [
-          [
-            '제거될 때까지',
-            '영구적 — 메뉴 또는 --remove 를 통해 수동으로 제거해야 합니다.',
-          ],
-          [
-            '대상의 다음 턴 종료 시',
-            '이니셔티브에서 대상 토큰의 다음 턴이 종료될 때 만료됩니다.',
-          ],
+          ['제거될 때까지', '영구적 — 메뉴 또는 --remove 를 통해 수동으로 제거해야 합니다.'],
+          ['대상의 다음 턴 종료 시', '이니셔티브에서 대상 토큰의 다음 턴이 종료될 때 만료됩니다.'],
           [
             '시전자의 다음 턴 종료 시',
             '이니셔티브에서 시전자 토큰의 다음 턴이 종료될 때 만료됩니다.',
@@ -12972,10 +11822,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: '가시성 모드',
           rows: [
-            [
-              '공공의',
-              '전체 효과 라벨은 Turn Tracker 및 공개 채팅에 표시됩니다.',
-            ],
+            ['공공의', '전체 효과 라벨은 Turn Tracker 및 공개 채팅에 표시됩니다.'],
             [
               '가면을 쓴',
               '모호한 공개 라벨이 플레이어에게 표시됩니다. 자세한 내용은 GM에게만 해당됩니다.',
@@ -12991,22 +11838,13 @@ const ConditionTrackerMod = (() => {
           intro:
             '모든 --saved 명령은 GM 전용입니다. --saved 또는 --saved add를 실행하기 전에 토큰을 선택하십시오.',
           rows: [
-            [
-              '!조건 추적기 --저장됨',
-              '선택한 토큰에 대해 저장된 효과를 봅니다.',
-            ],
-            [
-              '!조건 추적기 --saved 추가',
-              '저장된 효과 추가 마법사를 시작합니다.',
-            ],
+            ['!조건 추적기 --저장됨', '선택한 토큰에 대해 저장된 효과를 봅니다.'],
+            ['!조건 추적기 --saved 추가', '저장된 효과 추가 마법사를 시작합니다.'],
             [
               '!condition-tracker --saved edit <id>',
               '기존에 저장된 효과의 라벨 또는 가시성을 편집합니다.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              '저장된 효과를 영구적으로 제거합니다.',
-            ],
+            ['!condition-tracker --saved remove <id>', '저장된 효과를 영구적으로 제거합니다.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               '저장된 효과를 Turn Tracker(공개 또는 마스크)에 복사하거나 GM 전용 추적인지 확인하세요.',
@@ -13036,11 +11874,7 @@ const ConditionTrackerMod = (() => {
           colCheck: '확인',
           colResult: '결과',
           rows: [
-            [
-              '1',
-              '토큰 상태 재정의 (--classify --scope token)',
-              'pc / npc / 무시됨',
-            ],
+            ['1', '토큰 상태 재정의 (--classify --scope token)', 'pc / npc / 무시됨'],
             [
               '2',
               '캐릭터 ct_mod_actor_type 속성 (--classify --scope character)',
@@ -13063,34 +11897,18 @@ const ConditionTrackerMod = (() => {
           rows: [
             ['PC', '플레이어 캐릭터 — 위저드와 감지에서 항상 PC로 포함'],
             ['NPC', '비플레이어 캐릭터 — 항상 NPC로 포함'],
-            [
-              '무시됨',
-              '표시되거나 추적되지 않음 — 위저드 토큰 선택기에서 제외',
-            ],
-            [
-              '알려지지 않은',
-              '자동 감지만 가능; 유형을 확인할 수 없음 (위저드에서 NPC로 처리)',
-            ],
+            ['무시됨', '표시되거나 추적되지 않음 — 위저드 토큰 선택기에서 제외'],
+            ['알려지지 않은', '자동 감지만 가능; 유형을 확인할 수 없음 (위저드에서 NPC로 처리)'],
           ],
         },
         commands: {
           heading: '분류 명령',
-          intro:
-            '--classify 명령을 실행하기 전에 하나 이상의 토큰을 선택하세요.',
+          intro: '--classify 명령을 실행하기 전에 하나 이상의 토큰을 선택하세요.',
           rows: [
-            [
-              '!condition-tracker --PC 분류',
-              '선택한 토큰을 PC로 표시합니다 (기본 범위: 캐릭터).',
-            ],
+            ['!condition-tracker --PC 분류', '선택한 토큰을 PC로 표시합니다 (기본 범위: 캐릭터).'],
             ['!조건 추적기 --npc 분류', '선택한 토큰을 NPC로 표시합니다.'],
-            [
-              '!condition-tracker --classify 무시됨',
-              '선택한 토큰을 모든 추적에서 제외합니다.',
-            ],
-            [
-              '!condition-tracker --자동 분류',
-              '재정의를 제거합니다 — 자동 감지를 복원합니다.',
-            ],
+            ['!condition-tracker --classify 무시됨', '선택한 토큰을 모든 추적에서 제외합니다.'],
+            ['!condition-tracker --자동 분류', '재정의를 제거합니다 — 자동 감지를 복원합니다.'],
             [
               '!조건 추적기 --분류 표시',
               '각 선택한 토큰의 분류 진단(유형, 출처, 이유)을 표시합니다.',
@@ -13114,11 +11932,7 @@ const ConditionTrackerMod = (() => {
         colValues: '값',
         colDesc: '설명',
         rows: [
-          [
-            'useMarkers',
-            'true / false',
-            '상태가 추가될 때 토큰에 Roll20 상태 마커를 적용합니다.',
-          ],
+          ['useMarkers', 'true / false', '상태가 추가될 때 토큰에 Roll20 상태 마커를 적용합니다.'],
           [
             'useIcons',
             '참/거짓',
@@ -13265,8 +12079,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} pod wpływem {effect} ({source})',
         advantage: '{emoji} {source} ma ułatwienie przeciwko {target}{subject}',
-        disadvantage:
-          '{emoji} {source} ma utrudnienie przeciwko {target}{subject}',
+        disadvantage: '{emoji} {source} ma utrudnienie przeciwko {target}{subject}',
         noBy: 'MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN ({source})',
         self: '{target} jest {past}',
         standard: '{emoji} {target} {past} przez {source}',
@@ -13282,10 +12095,8 @@ const ConditionTrackerMod = (() => {
       },
       remove: {
         custom: '{target} nie jest już pod wpływem {effect}.',
-        advantage:
-          '{source} nie ma już ułatwienia przeciwko {target}{subject}.',
-        disadvantage:
-          '{source} nie ma już utrudnienia przeciwko {target}{subject}.',
+        advantage: '{source} nie ma już ułatwienia przeciwko {target}{subject}.',
+        disadvantage: '{source} nie ma już utrudnienia przeciwko {target}{subject}.',
         noBy: '{target} nie jest już {past}.',
         self: '{target} nie jest już {past}.',
         standard: '{target} nie jest już {past} przez {source}.',
@@ -13307,8 +12118,7 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Żaden',
         noneOrSourceBtn: 'Żaden lub zastosuj do źródła',
         subjectDesc: 'Wybierz, kto lub co wywołuje efekt.',
-        sourceDesc:
-          'Wybierz stworzenie, które tworzy lub generuje stan albo efekt.',
+        sourceDesc: 'Wybierz stworzenie, które tworzy lub generuje stan albo efekt.',
         targetDesc: 'Wybierz stworzenie, które otrzyma stan lub efekt.',
         otherText: 'Własny tekst stanu',
         effectDetails: 'Szczegóły {condition}',
@@ -13423,47 +12233,37 @@ const ConditionTrackerMod = (() => {
           'Nieznana opcja konfiguracji. Użyj --config, aby wyświetlić obsługiwane ustawienia.',
         macroReinstalled:
           'Makra {wizard}, {multiTarget}, {reportToken}, {saved} i {classify} zostały ponownie zainstalowane dla wszystkich obecnych graczy z rolą MG.',
-        handoutReinstalled:
-          'Handout pomocy {handout} został ponownie zainstalowany.',
+        handoutReinstalled: 'Handout pomocy {handout} został ponownie zainstalowany.',
         duplicate:
           'Ta dokładna kombinacja źródła, podmiotu, celu, stanu i własnego tekstu jest już aktywna.',
         noTargets: 'Nie podano żetonów celu dla zastosowania wielu celów.',
-        noSelection:
-          'Wybierz przynajmniej jeden żeton na planszy przed użyciem --multi-target.',
-        invalidIds:
-          'Nie znaleziono prawidłowych identyfikatorów żetonów w bieżącym zaznaczeniu.',
+        noSelection: 'Wybierz przynajmniej jeden żeton na planszy przed użyciem --multi-target.',
+        invalidIds: 'Nie znaleziono prawidłowych identyfikatorów żetonów w bieżącym zaznaczeniu.',
         reSelectTokens:
           'Żaden z pierwotnie wybranych żetonów nie mógł zostać znaleziony. Wybierz żetony ponownie i spróbuj jeszcze raz.',
         conditionNotFound: 'Nie znaleziono identyfikatora stanu.',
         gmOnly: 'Polecenia Condition Trackera są dostępne tylko dla MG.',
-        commandFailed:
-          'Polecenia nie można było bezpiecznie wykonać. Sprawdź konsolę API.',
+        commandFailed: 'Polecenia nie można było bezpiecznie wykonać. Sprawdź konsolę API.',
         sourceTokenNotFound: 'Nie można było znaleźć żetonu źródła.',
         targetTokenNotFound: 'Nie można było znaleźć żetonu celu.',
         subjectTokenNotFound: 'Nie można było znaleźć żetonu podmiotu.',
-        invalidCondition:
-          'Stan musi być jednym ze wstępnie zdefiniowanych stanów lub Inne.',
+        invalidCondition: 'Stan musi być jednym ze wstępnie zdefiniowanych stanów lub Inne.',
         subjectOnlyCustom:
           '--subject jest prawidłowy tylko dla Zaklęcia, Zdolności, Ułatwienia, Utrudnienia i Innego.',
         subjectBypassInvalid:
           '--subjectPromptBypass oczekuje wartości true lub false, gdy wartość jest podana.',
-        customDetailsRequired:
-          'Szczegóły {condition} są wymagane. Użyj --other, aby je podać.',
-        markerConfigFormat:
-          'Format konfiguracji znacznika: --config marker Grappled=grab',
+        customDetailsRequired: 'Szczegóły {condition} są wymagane. Użyj --other, aby je podać.',
+        markerConfigFormat: 'Format konfiguracji znacznika: --config marker Grappled=grab',
         markerPredefinedRequired:
           'Konfiguracja znacznika wymaga wstępnie zdefiniowanej nazwy stanu.',
-        markerNameRequired:
-          'Konfiguracja znacznika wymaga niepustej nazwy znacznika.',
+        markerNameRequired: 'Konfiguracja znacznika wymaga niepustej nazwy znacznika.',
         markerSet: 'Znacznik {condition} ustawiony na {marker}.',
         healthBarSet: 'Pasek zdrowia ustawiony na {bar}.',
         boolSet: '{key} ustawione na {value}.',
         expectedBoolean: 'Oczekiwano true lub false.',
-        invalidHealthBar:
-          'Pasek zdrowia musi być bar1_value, bar2_value lub bar3_value.',
+        invalidHealthBar: 'Pasek zdrowia musi być bar1_value, bar2_value lub bar3_value.',
         markersDisabled: 'Znaczniki są wyłączone.',
-        noMarkerConfigured:
-          'Dla tego stanu nie skonfigurowano żadnego znacznika.',
+        noMarkerConfigured: 'Dla tego stanu nie skonfigurowano żadnego znacznika.',
         markerApplied: 'Znacznik zastosowany: {marker}',
         markerPresent: 'Znacznik już obecny: {marker}',
         langSet: 'Język ustawiony na {locale}.',
@@ -13486,8 +12286,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} został przeniesiony na warstwę mapy.',
         tokenNotFound: 'Nie znaleziono żetonu.',
         noActiveConditions: '{name} nie ma aktywnych stanów do usunięcia.',
-        deadNoConditions:
-          '{name} został oznaczony jako martwy. Nie było aktywnych stanów.',
+        deadNoConditions: '{name} został oznaczony jako martwy. Nie było aktywnych stanów.',
         scriptReady: '{name} jest aktywny i używasz wersji {version}.',
         reachedZeroHp: '{name} osiągnął 0 PŻ',
         manuallyRemoved: 'zostało ręcznie usunięte',
@@ -13495,26 +12294,20 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} został oznaczony jako martwy',
         conditionReorder:
           'Kolejność tur zmieniła się i {count} śledzony (śledzonych) wiersz stanów może być teraz poza kolejnością. Kliknij poniżej, aby przywrócić je po przypisanych żetonach.',
-        conditionsReordered:
-          'Wiersze stanów zostały przesunięte po ich przypisanych żetonach.',
+        conditionsReordered: 'Wiersze stanów zostały przesunięte po ich przypisanych żetonach.',
         noTokensSelectedReport:
           'Wybierz co najmniej jeden token na planszy przed użyciem --report-token.',
-        noConditionsAppliedTo:
-          '{name} nie ma zastosowanych żadnych aktywnych warunków.',
-        noConditionsAppliedBy:
-          '{name} nie ma aktywnych warunków zastosowanych do innych.',
+        noConditionsAppliedTo: '{name} nie ma zastosowanych żadnych aktywnych warunków.',
+        noConditionsAppliedBy: '{name} nie ma aktywnych warunków zastosowanych do innych.',
         noSavedEffects: 'Brak zapisanych efektów dla {name}.',
         noTokenSelectedSaved: 'Wybierz żeton na planszy przed użyciem --saved.',
         savedEffectAdded: 'Zapisany efekt dodano dla {name}.',
         savedEffectUpdated: 'Zapisany efekt został zaktualizowany.',
         savedEffectRemoved: 'Zapisany efekt został usunięty.',
         savedEffectNotFound: 'Nie znaleziono zapisanego efektu.',
-        savedInvalidVisibility:
-          'Nieprawidłowa widoczność. Użyj publicznego, zamaskowanego lub gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          'Efekt dodany do narzędzia Turn Tracker jako publiczny.',
+        savedInvalidVisibility: 'Nieprawidłowa widoczność. Użyj publicznego, zamaskowanego lub gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Efekt dodany do narzędzia Turn Tracker jako publiczny.',
         savedPromotedMasked:
           'Efekt dodany do modułu śledzenia tur jako zamaskowany — gracze widzą: {publicLabel}.',
         savedPromotedGm:
@@ -13569,15 +12362,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnostyka Klasyfikacji',
         showHeading: 'Szczegóły Klasyfikacji Tokena',
         resultHeading: 'Nadpisanie Zastosowane',
-        noSelection:
-          'Wybierz co najmniej jeden token na planszy przed użyciem --classify.',
-        invalidType:
-          'Nieprawidłowy typ klasyfikacji: {type}. Użyj pc, npc, ignored lub auto.',
+        noSelection: 'Wybierz co najmniej jeden token na planszy przed użyciem --classify.',
+        invalidType: 'Nieprawidłowy typ klasyfikacji: {type}. Użyj pc, npc, ignored lub auto.',
         set: '{name} → {type} (zakres: {scope})',
         cleared:
           '{name} nadpisanie usunięte (zakres: {scope}) — automatyczne wykrywanie przywrócone.',
-        setTokenFallback:
-          '{name} → {type} (nadpisanie tokena — brak powiązanej karty postaci).',
+        setTokenFallback: '{name} → {type} (nadpisanie tokena — brak powiązanej karty postaci).',
         clearedTokenFallback:
           '{name} nadpisanie tokena usunięte — automatyczne wykrywanie przywrócone.',
         fieldToken: 'Znak',
@@ -13592,8 +12382,7 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Nieużywane znaczniki',
       },
       apply: {
-        turnAppended:
-          'Cel nie był w kolejności tur; wiersz stanu został dołączony na końcu.',
+        turnAppended: 'Cel nie był w kolejności tur; wiersz stanu został dołączony na końcu.',
         turnInserted: 'Wiersz stanu wstawiony poniżej żetonu celu.',
       },
     },
@@ -13637,18 +12426,12 @@ const ConditionTrackerMod = (() => {
           ['--podpowiedź', 'Interaktywny kreator krok po kroku'],
           ['--wiele celów', 'Zastosuj stan do wielu żetonów celu naraz'],
           ['--menu', 'Pokaż główne menu (dodaj remove dla menu usuwania)'],
-          [
-            '--źródło X --cel Y --warunek Z',
-            'Zastosuj stan bezpośrednio bez kreatora',
-          ],
+          ['--źródło X --cel Y --warunek Z', 'Zastosuj stan bezpośrednio bez kreatora'],
           [
             '--duration &lt;wartość&gt;',
             'Czas trwania dla bezpośredniego zastosowania (np. 2 rounds)',
           ],
-          [
-            '--other &lt;tekst&gt;',
-            'Własny tekst dla typów efektów Zaklęcie / Zdolność / Inne',
-          ],
+          ['--other &lt;tekst&gt;', 'Własny tekst dla typów efektów Zaklęcie / Zdolność / Inne'],
           [
             '--remove &lt;ID stanu&gt;',
             'Usuń konkretny stan według jego unikalnego identyfikatora',
@@ -13661,19 +12444,13 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass prawda|fałsz',
             'Nadpisz subjectPromptBypass tylko dla tego polecenia (obsługuje również --subject-prompt-bypass)',
           ],
-          [
-            '--posprzątać',
-            'Uzgodnij stan — usuń osierocone stany i wiersze Śledzika Tur',
-          ],
+          ['--posprzątać', 'Uzgodnij stan — usuń osierocone stany i wiersze Śledzika Tur'],
           [
             '--warunki ponownego zamówienia',
             'Ręcznie przenieść wiersze warunków za przypisane tokeny w kolejności tur',
           ],
           ['--reinstall-makro', 'Utwórz ponownie lub zaktualizuj makra MG'],
-          [
-            '--reinstall-ulotka',
-            'Utwórz ponownie lub zaktualizuj zlokalizowany handout pomocy',
-          ],
+          ['--reinstall-ulotka', 'Utwórz ponownie lub zaktualizuj zlokalizowany handout pomocy'],
           [
             '--token raportu',
             'Szepnij raport o stanie tylko dla GM dla każdego wybranego tokena (warunki zastosowane do niego i przez niego)',
@@ -13718,14 +12495,8 @@ const ConditionTrackerMod = (() => {
             '🍀 Ułatwienie',
             'Zapisz ułatwienie przyznane od jednego żetonu drugiemu; zgrupowane ze źródłem w inicjatywie',
           ],
-          [
-            '⬇️ Utrudnienie',
-            'Zapisz nałożone utrudnienie; zgrupowane ze źródłem w inicjatywie',
-          ],
-          [
-            '📝 Inne',
-            'Dowolna własna etykieta — zostaniesz poproszony o podanie opisu',
-          ],
+          ['⬇️ Utrudnienie', 'Zapisz nałożone utrudnienie; zgrupowane ze źródłem w inicjatywie'],
+          ['📝 Inne', 'Dowolna własna etykieta — zostaniesz poproszony o podanie opisu'],
         ],
       },
       durationOptions: {
@@ -13735,10 +12506,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Opcja',
         colBehaviour: 'Zachowanie',
         rows: [
-          [
-            'Do usunięcia',
-            'Trwały — musi być usunięty ręcznie przez menu lub --remove',
-          ],
+          ['Do usunięcia', 'Trwały — musi być usunięty ręcznie przez menu lub --remove'],
           [
             'Koniec następnej tury celu',
             'Wygasa gdy kończy się następna tura żetonu celu w inicjatywie',
@@ -13779,10 +12547,7 @@ const ConditionTrackerMod = (() => {
           intro:
             'Wszystkie polecenia --saved są dostępne tylko dla GM. Wybierz token przed uruchomieniem --saved lub --saved add.',
           rows: [
-            [
-              '!condition-tracker --zapisano',
-              'Zobacz zapisane efekty dla wybranego tokena.',
-            ],
+            ['!condition-tracker --zapisano', 'Zobacz zapisane efekty dla wybranego tokena.'],
             [
               '!condition-tracker --zapisany dodatek',
               'Uruchom kreator dodawania zapisanych efektów.',
@@ -13791,10 +12556,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               'Edytuj etykiety lub widoczność istniejącego zapisanego efektu.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Trwale usuń zapisany efekt.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Trwale usuń zapisany efekt.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Skopiuj zapisany efekt do narzędzia Turn Tracker (publicznego lub zamaskowanego) lub potwierdź, że jest śledzony tylko przez GM.',
@@ -13824,11 +12586,7 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Sprawdzenie',
           colResult: 'Wynik',
           rows: [
-            [
-              '1',
-              'Nadpisanie stanu tokena (--classify --scope token)',
-              'pc / npc / ignorowane',
-            ],
+            ['1', 'Nadpisanie stanu tokena (--classify --scope token)', 'pc / npc / ignorowane'],
             [
               '2',
               'Atrybut ct_mod_actor_type postaci (--classify --scope character)',
@@ -13849,10 +12607,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Typ',
           colMeaning: 'Znaczenie',
           rows: [
-            [
-              'szt',
-              'Postać gracza — zawsze uwzględniana jako BG w kreatorze i wykrywaniu',
-            ],
+            ['szt', 'Postać gracza — zawsze uwzględniana jako BG w kreatorze i wykrywaniu'],
             ['npc', 'Postać niezależna — zawsze uwzględniana jako NPC'],
             [
               'ignorowane',
@@ -13866,17 +12621,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Polecenia Klasyfikacji',
-          intro:
-            'Wybierz jeden lub więcej tokenów przed uruchomieniem poleceń --classify.',
+          intro: 'Wybierz jeden lub więcej tokenów przed uruchomieniem poleceń --classify.',
           rows: [
             [
               '!condition-tracker --klasyfikacja komputera',
               'Oznacz wybrane tokeny jako BG (domyślny zakres: postać).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Oznacz wybrane tokeny jako NPC.',
-            ],
+            ['!condition-tracker --classify npc', 'Oznacz wybrane tokeny jako NPC.'],
             [
               '!condition-tracker --classify zignorowany',
               'Wyklucz wybrane tokeny ze wszystkich śledzonych.',
@@ -14060,8 +12811,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} afetado por {effect} ({source})',
         advantage: '{emoji} {source} tem vantagem contra {target}{subject}',
-        disadvantage:
-          '{emoji} {source} tem desvantagem contra {target}{subject}',
+        disadvantage: '{emoji} {source} tem desvantagem contra {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} está {past}',
         standard: '{emoji} {target} {past} por {source}',
@@ -14077,8 +12827,7 @@ const ConditionTrackerMod = (() => {
       remove: {
         custom: '{target} já não está afetado por {effect}.',
         advantage: '{source} já não tem vantagem contra {target}{subject}.',
-        disadvantage:
-          '{source} já não tem desvantagem contra {target}{subject}.',
+        disadvantage: '{source} já não tem desvantagem contra {target}{subject}.',
         noBy: '{target} já não {past}.',
         self: '{target} já não está {past}.',
         standard: '{target} já não está {past} por {source}.',
@@ -14100,10 +12849,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Nenhum',
         noneOrSourceBtn: 'Nenhum ou aplicar à origem',
         subjectDesc: 'Selecione quem ou o que aplica o efeito.',
-        sourceDesc:
-          'Selecione a criatura que cria ou gera a condição ou o efeito.',
-        targetDesc:
-          'Selecione a criatura que irá receber a condição ou o efeito.',
+        sourceDesc: 'Selecione a criatura que cria ou gera a condição ou o efeito.',
+        targetDesc: 'Selecione a criatura que irá receber a condição ou o efeito.',
         otherText: 'Texto de condição personalizado',
         effectDetails: 'Detalhes de {condition}',
       },
@@ -14220,12 +12967,10 @@ const ConditionTrackerMod = (() => {
         handoutReinstalled: 'O documento de ajuda {handout} foi reinstalado.',
         duplicate:
           'Esta combinação exacta de origem, sujeito, alvo, condição e texto personalizado já está activa.',
-        noTargets:
-          'Não foram especificadas fichas alvo para a aplicação multi-alvo.',
+        noTargets: 'Não foram especificadas fichas alvo para a aplicação multi-alvo.',
         noSelection:
           'Seleccione pelo menos uma ficha no tabuleiro antes de utilizar --multi-target.',
-        invalidIds:
-          'Não foram encontrados IDs de ficha válidos na selecção actual.',
+        invalidIds: 'Não foram encontrados IDs de ficha válidos na selecção actual.',
         reSelectTokens:
           'Nenhuma das fichas originalmente seleccionadas foi encontrada. Volte a seleccionar as fichas e tente novamente.',
         conditionNotFound: 'ID de condição não encontrado.',
@@ -14235,8 +12980,7 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Ficha de origem não encontrada.',
         targetTokenNotFound: 'Ficha alvo não encontrada.',
         subjectTokenNotFound: 'Ficha do sujeito não encontrada.',
-        invalidCondition:
-          'A condição deve ser uma das condições predefinidas ou Outro.',
+        invalidCondition: 'A condição deve ser uma das condições predefinidas ou Outro.',
         subjectOnlyCustom:
           '--subject só é válido para Feitiço, Habilidade, Vantagem, Desvantagem e Outro.',
         subjectBypassInvalid:
@@ -14247,17 +12991,14 @@ const ConditionTrackerMod = (() => {
           'O formato de configuração do marcador é: --config marker Grappled=grab',
         markerPredefinedRequired:
           'A configuração do marcador requer um nome de condição predefinido.',
-        markerNameRequired:
-          'A configuração do marcador requer um nome de marcador não vazio.',
+        markerNameRequired: 'A configuração do marcador requer um nome de marcador não vazio.',
         markerSet: 'Marcador de {condition} definido para {marker}.',
         healthBarSet: 'Barra de saúde definida para {bar}.',
         boolSet: '{key} definido para {value}.',
         expectedBoolean: 'Esperado true ou false.',
-        invalidHealthBar:
-          'A barra de saúde deve ser bar1_value, bar2_value ou bar3_value.',
+        invalidHealthBar: 'A barra de saúde deve ser bar1_value, bar2_value ou bar3_value.',
         markersDisabled: 'Os marcadores estão desactivados.',
-        noMarkerConfigured:
-          'Não há nenhum marcador configurado para esta condição.',
+        noMarkerConfigured: 'Não há nenhum marcador configurado para esta condição.',
         markerApplied: 'Marcador aplicado: {marker}',
         markerPresent: 'Marcador já presente: {marker}',
         langSet: 'Idioma definido para {locale}.',
@@ -14268,8 +13009,7 @@ const ConditionTrackerMod = (() => {
         invalidDuration:
           'A duração deve ser Até ser removido, uma opção de fim de turno ou um número positivo de rondas.',
         zeroHpNoConditions: '{name} chegou a 0 PV e não tem condições activas.',
-        zeroHpConditions:
-          '{name} chegou a 0 PV. Escolha as condições a remover:',
+        zeroHpConditions: '{name} chegou a 0 PV. Escolha as condições a remover:',
         removeAllBtn: 'Remover todas as condições de {name}',
         markIncapacitated: 'Marcar como Incapacitado',
         removeFromTurnOrder: 'Remover da ordem de iniciativa',
@@ -14282,8 +13022,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} foi movido para a camada do mapa.',
         tokenNotFound: 'Ficha não encontrada.',
         noActiveConditions: '{name} não tem condições activas para remover.',
-        deadNoConditions:
-          '{name} foi marcado como morto. Não havia condições activas.',
+        deadNoConditions: '{name} foi marcado como morto. Não havia condições activas.',
         scriptReady: '{name} está activo e está a utilizar a versão {version}.',
         reachedZeroHp: '{name} chegou a 0 PV',
         manuallyRemoved: 'foi removida manualmente',
@@ -14295,21 +13034,16 @@ const ConditionTrackerMod = (() => {
           'As linhas de condições foram reposicionadas após as fichas atribuídas.',
         noTokensSelectedReport:
           'Selecione pelo menos um token no quadro antes de usar --report-token.',
-        noConditionsAppliedTo:
-          '{name} não tem condições ativas aplicadas a ele.',
-        noConditionsAppliedBy:
-          '{name} não tem condições ativas aplicadas a outros.',
+        noConditionsAppliedTo: '{name} não tem condições ativas aplicadas a ele.',
+        noConditionsAppliedBy: '{name} não tem condições ativas aplicadas a outros.',
         noSavedEffects: 'Nenhum efeito salvo armazenado para {name}.',
-        noTokenSelectedSaved:
-          'Selecione um token no quadro antes de usar --saved.',
+        noTokenSelectedSaved: 'Selecione um token no quadro antes de usar --saved.',
         savedEffectAdded: 'Efeito salvo adicionado para {name}.',
         savedEffectUpdated: 'Efeito salvo atualizado.',
         savedEffectRemoved: 'Efeito salvo removido.',
         savedEffectNotFound: 'Efeito salvo não encontrado.',
-        savedInvalidVisibility:
-          'Visibilidade inválida. Use público, mascarado ou GM.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Visibilidade inválida. Use público, mascarado ou GM.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Efeito adicionado ao Turn Tracker como público.',
         savedPromotedMasked:
           'Efeito adicionado ao Turn Tracker como mascarado – os jogadores veem: {publicLabel}.',
@@ -14365,13 +13099,10 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnóstico de Classificação',
         showHeading: 'Detalhes de Classificação do Token',
         resultHeading: 'Substituição Aplicada',
-        noSelection:
-          'Seleciona pelo menos um token no tabuleiro antes de usar --classify.',
-        invalidType:
-          'Tipo de classificação inválido: {type}. Usa pc, npc, ignored ou auto.',
+        noSelection: 'Seleciona pelo menos um token no tabuleiro antes de usar --classify.',
+        invalidType: 'Tipo de classificação inválido: {type}. Usa pc, npc, ignored ou auto.',
         set: '{name} → {type} (âmbito: {scope})',
-        cleared:
-          '{name} substituição removida (âmbito: {scope}) — deteção automática restaurada.',
+        cleared: '{name} substituição removida (âmbito: {scope}) — deteção automática restaurada.',
         setTokenFallback:
           '{name} → {type} (substituição de token — nenhuma ficha de personagem associada).',
         clearedTokenFallback:
@@ -14431,30 +13162,15 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Descrição',
         rows: [
           ['--incitar', 'Interface do assistente passo a passo'],
-          [
-            '--multi-alvo',
-            'Aplicar uma condição a várias fichas alvo de uma vez',
-          ],
-          [
-            '--menu',
-            'Mostrar o menu principal (adicione remove para o menu de remoção)',
-          ],
-          [
-            '--fonte X --alvo Y --condição Z',
-            'Aplicar uma condição directamente sem o assistente',
-          ],
-          [
-            '--duration &lt;valor&gt;',
-            'Duração para uma aplicação directa (ex. 2 rounds)',
-          ],
+          ['--multi-alvo', 'Aplicar uma condição a várias fichas alvo de uma vez'],
+          ['--menu', 'Mostrar o menu principal (adicione remove para o menu de remoção)'],
+          ['--fonte X --alvo Y --condição Z', 'Aplicar uma condição directamente sem o assistente'],
+          ['--duration &lt;valor&gt;', 'Duração para uma aplicação directa (ex. 2 rounds)'],
           [
             '--other &lt;texto&gt;',
             'Texto personalizado para os tipos de efeito Feitiço / Habilidade / Outro',
           ],
-          [
-            '--remove &lt;id-condição&gt;',
-            'Remover uma condição específica pelo seu ID único',
-          ],
+          ['--remove &lt;id-condição&gt;', 'Remover uma condição específica pelo seu ID único'],
           [
             '--config &lt;opção&gt; &lt;valor&gt;',
             'Ajustar as definições de configuração (consulte a secção Configuração)',
@@ -14472,10 +13188,7 @@ const ConditionTrackerMod = (() => {
             'Reposicionar manualmente as linhas de condição a seguir aos tokens atribuídos na ordem de turnos',
           ],
           ['--reinstalar-macro', 'Recriar ou actualizar as macros do Mestre'],
-          [
-            '--reinstalar-apostila',
-            'Recriar ou actualizar o documento de ajuda localizado',
-          ],
+          ['--reinstalar-apostila', 'Recriar ou actualizar o documento de ajuda localizado'],
           [
             '--report-token',
             'Sussurre um relatório de condição exclusivo do GM para cada ficha selecionada (condições aplicadas a ela e por ela)',
@@ -14524,10 +13237,7 @@ const ConditionTrackerMod = (() => {
             '⬇️ Desvantagem',
             'Registar uma desvantagem imposta; agrupada com a origem na iniciativa',
           ],
-          [
-            '📝 Outro',
-            'Etiqueta personalizada livre — ser-lhe-á pedida uma descrição',
-          ],
+          ['📝 Outro', 'Etiqueta personalizada livre — ser-lhe-á pedida uma descrição'],
         ],
       },
       durationOptions: {
@@ -14581,10 +13291,7 @@ const ConditionTrackerMod = (() => {
           intro:
             'Todos os comandos --saved são apenas do GM. Selecione um token antes de executar --saved ou --saved add.',
           rows: [
-            [
-              '!condition-tracker --saved',
-              'Veja os efeitos salvos para o token selecionado.',
-            ],
+            ['!condition-tracker --saved', 'Veja os efeitos salvos para o token selecionado.'],
             [
               '!condition-tracker --saved adicionar',
               'Inicie o assistente para adicionar efeitos salvos.',
@@ -14593,10 +13300,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               'Edite rótulos ou visibilidade de um efeito salvo existente.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Remova permanentemente um efeito salvo.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Remova permanentemente um efeito salvo.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Copie um efeito salvo no Turn Tracker (público ou mascarado) ou confirme se ele é rastreado apenas pelo GM.',
@@ -14626,22 +13330,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Verificação',
           colResult: 'Resultado',
           rows: [
-            [
-              '1',
-              'Substituição de estado do token (--classify --scope token)',
-              'pc/npc/ignorado',
-            ],
+            ['1', 'Substituição de estado do token (--classify --scope token)', 'pc/npc/ignorado'],
             [
               '2',
               'Atributo ct_mod_actor_type do personagem (--classify --scope character)',
               'pc/npc/ignorado',
             ],
             ['3', 'Token não associado — sem ficha de personagem', 'ignorado'],
-            [
-              '4',
-              'Adaptador do sistema de jogo (atributo npc / is_npc)',
-              'computador/npc',
-            ],
+            ['4', 'Adaptador do sistema de jogo (atributo npc / is_npc)', 'computador/npc'],
             [
               '5',
               'Análise de atributos NPC genéricos (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -14672,17 +13368,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Comandos de Classificação',
-          intro:
-            'Seleciona um ou mais tokens antes de executar os comandos --classify.',
+          intro: 'Seleciona um ou mais tokens antes de executar os comandos --classify.',
           rows: [
             [
               '!condition-tracker --classify pc',
               'Marcar os tokens selecionados como PJs (âmbito de personagem por predefinição).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Marcar os tokens selecionados como PNJs.',
-            ],
+            ['!condition-tracker --classify npc', 'Marcar os tokens selecionados como PNJs.'],
             [
               '!condition-tracker --classify ignorado',
               'Excluir os tokens selecionados de todo rastreamento.',
@@ -14866,8 +13558,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} afetado por {effect} ({source})',
         advantage: '{emoji} {source} tem vantagem contra {target}{subject}',
-        disadvantage:
-          '{emoji} {source} tem desvantagem contra {target}{subject}',
+        disadvantage: '{emoji} {source} tem desvantagem contra {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} está {past}',
         standard: '{emoji} {target} {past} por {source}',
@@ -14883,8 +13574,7 @@ const ConditionTrackerMod = (() => {
       remove: {
         custom: '{target} não está mais afetado por {effect}.',
         advantage: '{source} não tem mais vantagem contra {target}{subject}.',
-        disadvantage:
-          '{source} não tem mais desvantagem contra {target}{subject}.',
+        disadvantage: '{source} não tem mais desvantagem contra {target}{subject}.',
         noBy: '{target} não está mais {past}.',
         self: '{target} não está mais {past}.',
         standard: '{target} não está mais {past} por {source}.',
@@ -14907,8 +13597,7 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Nenhum',
         noneOrSourceBtn: 'Nenhum ou aplicar à origem',
         subjectDesc: 'Selecione quem ou o que aplica o efeito.',
-        sourceDesc:
-          'Selecione a criatura que está criando ou gerando a condição ou efeito.',
+        sourceDesc: 'Selecione a criatura que está criando ou gerando a condição ou efeito.',
         targetDesc: 'Selecione a criatura que receberá a condição ou efeito.',
         otherText: 'Texto de condição personalizada',
         effectDetails: 'Detalhes de {condition}',
@@ -15027,8 +13716,7 @@ const ConditionTrackerMod = (() => {
         duplicate:
           'Essa combinação exata de origem, sujeito, alvo, condição e texto personalizado já está ativa.',
         noTargets: 'Nenhuma ficha alvo especificada para aplicação múltipla.',
-        noSelection:
-          'Selecione pelo menos uma ficha no tabuleiro antes de usar --multi-target.',
+        noSelection: 'Selecione pelo menos uma ficha no tabuleiro antes de usar --multi-target.',
         invalidIds: 'Nenhum ID de ficha válido encontrado na seleção atual.',
         reSelectTokens:
           'Nenhuma das fichas selecionadas originalmente pôde ser encontrada. Selecione novamente e tente de novo.',
@@ -15046,21 +13734,17 @@ const ConditionTrackerMod = (() => {
           '--subjectPromptBypass espera true ou false quando um valor é fornecido.',
         customDetailsRequired:
           'Os detalhes de {condition} são obrigatórios. Use --other para fornecê-los.',
-        markerConfigFormat:
-          'Formato de configuração do marcador: --config marker Grappled=grab',
+        markerConfigFormat: 'Formato de configuração do marcador: --config marker Grappled=grab',
         markerPredefinedRequired:
           'A configuração do marcador requer um nome de condição predefinido.',
-        markerNameRequired:
-          'A configuração do marcador requer um nome de marcador não vazio.',
+        markerNameRequired: 'A configuração do marcador requer um nome de marcador não vazio.',
         markerSet: 'Marcador de {condition} definido como {marker}.',
         healthBarSet: 'Barra de saúde definida como {bar}.',
         boolSet: '{key} definido como {value}.',
         expectedBoolean: 'Era esperado true ou false.',
-        invalidHealthBar:
-          'A barra de saúde deve ser bar1_value, bar2_value ou bar3_value.',
+        invalidHealthBar: 'A barra de saúde deve ser bar1_value, bar2_value ou bar3_value.',
         markersDisabled: 'Os marcadores estão desativados.',
-        noMarkerConfigured:
-          'Nenhum marcador está configurado para esta condição.',
+        noMarkerConfigured: 'Nenhum marcador está configurado para esta condição.',
         markerApplied: 'Marcador aplicado: {marker}',
         markerPresent: 'Marcador já presente: {marker}',
         langSet: 'Idioma definido como {locale}.',
@@ -15070,8 +13754,7 @@ const ConditionTrackerMod = (() => {
         invalidDuration:
           'A duração deve ser Até ser removido, uma opção de fim de turno ou uma contagem positiva de rodadas.',
         zeroHpNoConditions: '{name} chegou a 0 PV e não tem condições ativas.',
-        zeroHpConditions:
-          '{name} chegou a 0 PV. Escolha as condições a remover:',
+        zeroHpConditions: '{name} chegou a 0 PV. Escolha as condições a remover:',
         removeAllBtn: 'Remover todas as condições de {name}',
         markIncapacitated: 'Marcar como incapacitado',
         removeFromTurnOrder: 'Remover da ordem de iniciativa',
@@ -15084,8 +13767,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} foi movido para a camada do mapa.',
         tokenNotFound: 'Ficha não encontrada.',
         noActiveConditions: '{name} não tem condições ativas para remover.',
-        deadNoConditions:
-          '{name} foi marcado como morto. Nenhuma condição estava ativa.',
+        deadNoConditions: '{name} foi marcado como morto. Nenhuma condição estava ativa.',
         scriptReady: '{name} está ativo e você está usando a versão {version}.',
         reachedZeroHp: '{name} chegou a 0 PV',
         manuallyRemoved: 'remoção manual',
@@ -15097,21 +13779,16 @@ const ConditionTrackerMod = (() => {
           'As linhas de condição foram reposicionadas após seus tokens atribuídos.',
         noTokensSelectedReport:
           'Selecione pelo menos um token no quadro antes de usar --report-token.',
-        noConditionsAppliedTo:
-          '{name} não tem condições ativas aplicadas a ele.',
-        noConditionsAppliedBy:
-          '{name} não tem condições ativas aplicadas a outros.',
+        noConditionsAppliedTo: '{name} não tem condições ativas aplicadas a ele.',
+        noConditionsAppliedBy: '{name} não tem condições ativas aplicadas a outros.',
         noSavedEffects: 'Nenhum efeito salvo armazenado para {name}.',
-        noTokenSelectedSaved:
-          'Selecione um token no quadro antes de usar --saved.',
+        noTokenSelectedSaved: 'Selecione um token no quadro antes de usar --saved.',
         savedEffectAdded: 'Efeito salvo adicionado para {name}.',
         savedEffectUpdated: 'Efeito salvo atualizado.',
         savedEffectRemoved: 'Efeito salvo removido.',
         savedEffectNotFound: 'Efeito salvo não encontrado.',
-        savedInvalidVisibility:
-          'Visibilidade inválida. Use público, mascarado ou GM.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Visibilidade inválida. Use público, mascarado ou GM.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Efeito adicionado ao Turn Tracker como público.',
         savedPromotedMasked:
           'Efeito adicionado ao Turn Tracker como mascarado – os jogadores veem: {publicLabel}.',
@@ -15167,13 +13844,10 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnóstico de Classificação',
         showHeading: 'Detalhes de Classificação do Token',
         resultHeading: 'Substituição Aplicada',
-        noSelection:
-          'Selecione pelo menos um token no tabuleiro antes de usar --classify.',
-        invalidType:
-          'Tipo de classificação inválido: {type}. Use pc, npc, ignored ou auto.',
+        noSelection: 'Selecione pelo menos um token no tabuleiro antes de usar --classify.',
+        invalidType: 'Tipo de classificação inválido: {type}. Use pc, npc, ignored ou auto.',
         set: '{name} → {type} (escopo: {scope})',
-        cleared:
-          '{name} substituição removida (escopo: {scope}) — detecção automática restaurada.',
+        cleared: '{name} substituição removida (escopo: {scope}) — detecção automática restaurada.',
         setTokenFallback:
           '{name} → {type} (substituição de token — nenhuma ficha de personagem vinculada).',
         clearedTokenFallback:
@@ -15234,30 +13908,12 @@ const ConditionTrackerMod = (() => {
         rows: [
           ['--incitar', 'Interface do assistente passo a passo'],
           ['--multi-alvo', 'Aplicar uma condição a várias fichas alvo'],
-          [
-            '--menu',
-            'Mostrar menu principal (adicionar remove para o menu de remoção)',
-          ],
-          [
-            '--fonte X --alvo Y --condição Z',
-            'Aplicar uma condição diretamente sem o assistente',
-          ],
-          [
-            '--duration &lt;valor&gt;',
-            'Duração para aplicação direta (ex. 2 rounds)',
-          ],
-          [
-            '--other &lt;texto&gt;',
-            'Texto personalizado para tipos Magia / Habilidade / Outro',
-          ],
-          [
-            '--remove &lt;id-condição&gt;',
-            'Remover uma condição específica pelo seu ID único',
-          ],
-          [
-            '--config &lt;opção&gt; &lt;valor&gt;',
-            'Ajustar opções de configuração',
-          ],
+          ['--menu', 'Mostrar menu principal (adicionar remove para o menu de remoção)'],
+          ['--fonte X --alvo Y --condição Z', 'Aplicar uma condição diretamente sem o assistente'],
+          ['--duration &lt;valor&gt;', 'Duração para aplicação direta (ex. 2 rounds)'],
+          ['--other &lt;texto&gt;', 'Texto personalizado para tipos Magia / Habilidade / Outro'],
+          ['--remove &lt;id-condição&gt;', 'Remover uma condição específica pelo seu ID único'],
+          ['--config &lt;opção&gt; &lt;valor&gt;', 'Ajustar opções de configuração'],
           [
             '--prompt --subjectPromptBypass verdadeiro|falso',
             'Substituir subjectPromptBypass somente para este comando (também aceita --subject-prompt-bypass)',
@@ -15268,10 +13924,7 @@ const ConditionTrackerMod = (() => {
             'Reposicionar manualmente as linhas de condição após os tokens atribuídos na ordem de iniciativa',
           ],
           ['--reinstalar-macro', 'Recriar ou atualizar as macros do GM'],
-          [
-            '--reinstalar-apostila',
-            'Recriar ou atualizar o livreto de ajuda localizado',
-          ],
+          ['--reinstalar-apostila', 'Recriar ou atualizar o livreto de ajuda localizado'],
           [
             '--report-token',
             'Sussurre um relatório de condição exclusivo do GM para cada ficha selecionada (condições aplicadas a ela e por ela)',
@@ -15316,14 +13969,8 @@ const ConditionTrackerMod = (() => {
             '🍀 Vantagem',
             'Registrar vantagem concedida de uma ficha a outra; agrupada com a origem na iniciativa',
           ],
-          [
-            '⬇️ Desvantagem',
-            'Registrar desvantagem imposta; agrupada com a origem na iniciativa',
-          ],
-          [
-            '📝 Outro',
-            'Rótulo personalizado livre — você será solicitado a inserir uma descrição',
-          ],
+          ['⬇️ Desvantagem', 'Registrar desvantagem imposta; agrupada com a origem na iniciativa'],
+          ['📝 Outro', 'Rótulo personalizado livre — você será solicitado a inserir uma descrição'],
         ],
       },
       durationOptions: {
@@ -15333,10 +13980,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Opção',
         colBehaviour: 'Comportamento',
         rows: [
-          [
-            'Até ser removido',
-            'Permanente — deve ser removido manualmente pelo menu ou --remove',
-          ],
+          ['Até ser removido', 'Permanente — deve ser removido manualmente pelo menu ou --remove'],
           [
             'Fim do próximo turno do alvo',
             'Expira quando o próximo turno do alvo termina na iniciativa',
@@ -15377,10 +14021,7 @@ const ConditionTrackerMod = (() => {
           intro:
             'Todos os comandos --saved são apenas do GM. Selecione um token antes de executar --saved ou --saved add.',
           rows: [
-            [
-              '!condition-tracker --saved',
-              'Veja os efeitos salvos para o token selecionado.',
-            ],
+            ['!condition-tracker --saved', 'Veja os efeitos salvos para o token selecionado.'],
             [
               '!condition-tracker --saved adicionar',
               'Inicie o assistente para adicionar efeitos salvos.',
@@ -15389,10 +14030,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               'Edite rótulos ou visibilidade de um efeito salvo existente.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Remova permanentemente um efeito salvo.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Remova permanentemente um efeito salvo.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Copie um efeito salvo no Turn Tracker (público ou mascarado) ou confirme se ele é rastreado apenas pelo GM.',
@@ -15422,22 +14060,14 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Verificação',
           colResult: 'Resultado',
           rows: [
-            [
-              '1',
-              'Substituição de estado do token (--classify --scope token)',
-              'pc/npc/ignorado',
-            ],
+            ['1', 'Substituição de estado do token (--classify --scope token)', 'pc/npc/ignorado'],
             [
               '2',
               'Atributo ct_mod_actor_type do personagem (--classify --scope character)',
               'pc/npc/ignorado',
             ],
             ['3', 'Token não vinculado — sem ficha de personagem', 'ignorado'],
-            [
-              '4',
-              'Adaptador do sistema de jogo (atributo npc / is_npc)',
-              'computador/npc',
-            ],
+            ['4', 'Adaptador do sistema de jogo (atributo npc / is_npc)', 'computador/npc'],
             [
               '5',
               'Varredura de atributos NPC genéricos (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -15468,17 +14098,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Comandos de Classificação',
-          intro:
-            'Selecione um ou mais tokens antes de executar os comandos --classify.',
+          intro: 'Selecione um ou mais tokens antes de executar os comandos --classify.',
           rows: [
             [
               '!condition-tracker --classify pc',
               'Marcar os tokens selecionados como PJs (escopo de personagem por padrão).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Marcar os tokens selecionados como PNJs.',
-            ],
+            ['!condition-tracker --classify npc', 'Marcar os tokens selecionados como PNJs.'],
             [
               '!condition-tracker --classify ignorado',
               'Excluir os tokens selecionados de todo rastreamento.',
@@ -15663,8 +14289,7 @@ const ConditionTrackerMod = (() => {
     templates: {
       display: {
         custom: '{emoji} {target} под воздействием {effect} ({source})',
-        advantage:
-          '{emoji} {source} имеет преимущество против {target}{subject}',
+        advantage: '{emoji} {source} имеет преимущество против {target}{subject}',
         disadvantage: '{emoji} {source} имеет помеху против {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} {past}',
@@ -15680,10 +14305,8 @@ const ConditionTrackerMod = (() => {
       },
       remove: {
         custom: '{target} больше не находится под воздействием {effect}.',
-        advantage:
-          '{source} больше не имеет преимущества против {target}{subject}.',
-        disadvantage:
-          '{source} больше не имеет помехи против {target}{subject}.',
+        advantage: '{source} больше не имеет преимущества против {target}{subject}.',
+        disadvantage: '{source} больше не имеет помехи против {target}{subject}.',
         noBy: '{target} больше не {past}.',
         self: '{target} больше не {past}.',
         standard: '{target} больше не {past} от {source}.',
@@ -15705,8 +14328,7 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Нет',
         noneOrSourceBtn: 'Нет или применить к источнику',
         subjectDesc: 'Выберите, кто или что вызывает эффект.',
-        sourceDesc:
-          'Выберите существо, создающее или генерирующее состояние или эффект.',
+        sourceDesc: 'Выберите существо, создающее или генерирующее состояние или эффект.',
         targetDesc: 'Выберите существо, которое получит состояние или эффект.',
         otherText: 'Произвольный текст состояния',
         effectDetails: 'Подробности {condition}',
@@ -15825,39 +14447,31 @@ const ConditionTrackerMod = (() => {
         duplicate:
           'Точное сочетание источника, субъекта, цели, состояния и произвольного текста уже активно.',
         noTargets: 'Не указаны жетоны целей для применения к нескольким целям.',
-        noSelection:
-          'Выберите хотя бы один жетон на поле перед использованием --multi-target.',
-        invalidIds:
-          'В текущем выделении не найдено допустимых идентификаторов жетонов.',
+        noSelection: 'Выберите хотя бы один жетон на поле перед использованием --multi-target.',
+        invalidIds: 'В текущем выделении не найдено допустимых идентификаторов жетонов.',
         reSelectTokens:
           'Ни один из первоначально выбранных жетонов не найден. Выберите жетоны заново и повторите попытку.',
         conditionNotFound: 'Идентификатор состояния не найден.',
         gmOnly: 'Команды Condition Tracker доступны только для ДМ.',
-        commandFailed:
-          'Команда не могла быть безопасно выполнена. Проверьте консоль API.',
+        commandFailed: 'Команда не могла быть безопасно выполнена. Проверьте консоль API.',
         sourceTokenNotFound: 'Жетон источника не найден.',
         targetTokenNotFound: 'Жетон цели не найден.',
         subjectTokenNotFound: 'Жетон субъекта не найден.',
-        invalidCondition:
-          'Состояние должно быть одним из предопределённых состояний или Другое.',
+        invalidCondition: 'Состояние должно быть одним из предопределённых состояний или Другое.',
         subjectOnlyCustom:
           '--subject допустим только для Заклинания, Умения, Преимущества, Помехи и Другого.',
         subjectBypassInvalid:
           '--subjectPromptBypass ожидает значение true или false, если значение указано.',
         customDetailsRequired:
           'Подробности {condition} обязательны. Используйте --other для их указания.',
-        markerConfigFormat:
-          'Формат конфигурации маркера: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          'Конфигурация маркера требует предопределённого имени состояния.',
-        markerNameRequired:
-          'Конфигурация маркера требует непустого имени маркера.',
+        markerConfigFormat: 'Формат конфигурации маркера: --config marker Grappled=grab',
+        markerPredefinedRequired: 'Конфигурация маркера требует предопределённого имени состояния.',
+        markerNameRequired: 'Конфигурация маркера требует непустого имени маркера.',
         markerSet: 'Маркер {condition} установлен на {marker}.',
         healthBarSet: 'Полоса здоровья установлена на {bar}.',
         boolSet: '{key} установлено на {value}.',
         expectedBoolean: 'Ожидалось true или false.',
-        invalidHealthBar:
-          'Полоса здоровья должна быть bar1_value, bar2_value или bar3_value.',
+        invalidHealthBar: 'Полоса здоровья должна быть bar1_value, bar2_value или bar3_value.',
         markersDisabled: 'Маркеры отключены.',
         noMarkerConfigured: 'Для данного состояния не настроен маркер.',
         markerApplied: 'Маркер применён: {marker}',
@@ -15869,8 +14483,7 @@ const ConditionTrackerMod = (() => {
         invalidDuration:
           'Длительность должна быть «До удаления», вариантом конца хода или положительным числом раундов.',
         zeroHpNoConditions: '{name} достиг 0 ХП и не имеет активных состояний.',
-        zeroHpConditions:
-          '{name} достиг 0 ХП. Выберите состояния для удаления:',
+        zeroHpConditions: '{name} достиг 0 ХП. Выберите состояния для удаления:',
         removeAllBtn: 'Удалить все состояния для {name}',
         markIncapacitated: 'Пометить как недееспособного',
         removeFromTurnOrder: 'Убрать из порядка ходов',
@@ -15883,8 +14496,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} был перемещён на слой карты.',
         tokenNotFound: 'Жетон не найден.',
         noActiveConditions: '{name} не имеет активных состояний для удаления.',
-        deadNoConditions:
-          '{name} был помечен как мёртвый. Активных состояний не было.',
+        deadNoConditions: '{name} был помечен как мёртвый. Активных состояний не было.',
         scriptReady: '{name} активен, вы используете версию {version}.',
         reachedZeroHp: '{name} достиг 0 ХП',
         manuallyRemoved: 'было удалено вручную',
@@ -15892,27 +14504,20 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} был помечен как мёртвый',
         conditionReorder:
           'Порядок ходов изменился, и {count} отслеживаемая (отслеживаемых) строка состояний может быть не на своём месте. Нажмите ниже, чтобы восстановить их после назначенных жетонов.',
-        conditionsReordered:
-          'Строки состояний были перемещены после назначенных им жетонов.',
+        conditionsReordered: 'Строки состояний были перемещены после назначенных им жетонов.',
         noTokensSelectedReport:
           'Прежде чем использовать --report-token, выберите хотя бы один жетон на доске.',
-        noConditionsAppliedTo:
-          'К {name} не применено никаких активных условий.',
-        noConditionsAppliedBy:
-          '{name} не имеет активных условий, применимых к другим.',
+        noConditionsAppliedTo: 'К {name} не применено никаких активных условий.',
+        noConditionsAppliedBy: '{name} не имеет активных условий, применимых к другим.',
         noSavedEffects: 'Для {name} сохраненных эффектов нет.',
-        noTokenSelectedSaved:
-          'Прежде чем использовать --saved, выберите жетон на доске.',
+        noTokenSelectedSaved: 'Прежде чем использовать --saved, выберите жетон на доске.',
         savedEffectAdded: 'Сохраненный эффект добавлен для {name}.',
         savedEffectUpdated: 'Сохраненный эффект обновлен.',
         savedEffectRemoved: 'Сохраненный эффект удален.',
         savedEffectNotFound: 'Сохраненный эффект не найден.',
-        savedInvalidVisibility:
-          'Неверная видимость. Используйте общедоступный, в маске или GM.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          'Эффект добавлен в Turn Tracker как общедоступный.',
+        savedInvalidVisibility: 'Неверная видимость. Используйте общедоступный, в маске или GM.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Эффект добавлен в Turn Tracker как общедоступный.',
         savedPromotedMasked:
           'Эффект добавлен в «Отслеживание ходов» в маске — игроки видят: {publicLabel}.',
         savedPromotedGm:
@@ -15967,15 +14572,13 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Диагностика Классификации',
         showHeading: 'Подробности Классификации Токена',
         resultHeading: 'Переопределение Применено',
-        noSelection:
-          'Выберите хотя бы один токен на поле перед использованием --classify.',
+        noSelection: 'Выберите хотя бы один токен на поле перед использованием --classify.',
         invalidType:
           'Недопустимый тип классификации: {type}. Используйте pc, npc, ignored или auto.',
         set: '{name} → {type} (область: {scope})',
         cleared:
           '{name} переопределение сброшено (область: {scope}) — автоматическое определение восстановлено.',
-        setTokenFallback:
-          '{name} → {type} (переопределение токена — лист персонажа не привязан).',
+        setTokenFallback: '{name} → {type} (переопределение токена — лист персонажа не привязан).',
         clearedTokenFallback:
           '{name} переопределение токена сброшено — автоматическое определение восстановлено.',
         fieldToken: 'Токен',
@@ -15990,16 +14593,14 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Неиспользуемые маркеры',
       },
       apply: {
-        turnAppended:
-          'Цель не была в порядке ходов; строка состояния добавлена в конец.',
+        turnAppended: 'Цель не была в порядке ходов; строка состояния добавлена в конец.',
         turnInserted: 'Строка состояния вставлена ниже жетона цели.',
       },
     },
     handout: {
       versionLabel: 'Версия',
       subtitle: 'Менеджер состояний D&D 5e',
-      footerNote:
-        'Этот хэндаут автоматически создаётся и обновляется при каждой загрузке скрипта.',
+      footerNote: 'Этот хэндаут автоматически создаётся и обновляется при каждой загрузке скрипта.',
       overview: {
         heading: 'Обзор',
         body: 'Condition Tracker управляет состояниями D&D 5e и пользовательскими эффектами в виде подписанных строк в Трекере Ходов Roll20. Применяйте состояния к жетонам, отслеживайте длительности по порядку инициативы и автоматически удаляйте истёкшие эффекты в конце хода. Все команды доступны только для ДМ и могут вызываться из чата или через установленные макросы.',
@@ -16033,18 +14634,9 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Описание',
         rows: [
           ['--быстрый', 'Интерактивный пошаговый мастер'],
-          [
-            '--многоцелевой',
-            'Применить состояние к нескольким жетонам цели сразу',
-          ],
-          [
-            '--меню',
-            'Показать главное меню (добавить remove для меню удаления)',
-          ],
-          [
-            '--source X --target Y --condition Z',
-            'Применить состояние напрямую без мастера',
-          ],
+          ['--многоцелевой', 'Применить состояние к нескольким жетонам цели сразу'],
+          ['--меню', 'Показать главное меню (добавить remove для меню удаления)'],
+          ['--source X --target Y --condition Z', 'Применить состояние напрямую без мастера'],
           [
             '--duration &lt;значение&gt;',
             'Длительность для прямого применения (например, 2 rounds)',
@@ -16122,10 +14714,7 @@ const ConditionTrackerMod = (() => {
             '🍀 Преимущество',
             'Записать преимущество, предоставленное от одного жетона другому; сгруппировано с источником в инициативе',
           ],
-          [
-            '⬇️ Помеха',
-            'Записать наложенную помеху; сгруппировано с источником в инициативе',
-          ],
+          ['⬇️ Помеха', 'Записать наложенную помеху; сгруппировано с источником в инициативе'],
           [
             '📝 Другое',
             'Произвольная пользовательская метка — вам будет предложено ввести описание',
@@ -16139,10 +14728,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Вариант',
         colBehaviour: 'Поведение',
         rows: [
-          [
-            'До удаления',
-            'Постоянное — должно быть удалено вручную через меню или --remove',
-          ],
+          ['До удаления', 'Постоянное — должно быть удалено вручную через меню или --remove'],
           [
             'Конец следующего хода цели',
             'Истекает, когда заканчивается следующий ход жетона цели в инициативе',
@@ -16195,10 +14781,7 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --saved edit <id>',
               'Редактируйте метки или видимость существующего сохраненного эффекта.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Удаление сохраненного эффекта навсегда.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Удаление сохраненного эффекта навсегда.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Скопируйте сохраненный эффект в трекер ходов (публичный или замаскированный) или подтвердите, что он отслеживается только GM.',
@@ -16253,10 +14836,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Тип',
           colMeaning: 'Значение',
           rows: [
-            [
-              'ПК',
-              'Игровой персонаж — всегда включается как ИП в мастере и определении',
-            ],
+            ['ПК', 'Игровой персонаж — всегда включается как ИП в мастере и определении'],
             ['НПС', 'Неигровой персонаж — всегда включается как НИП'],
             [
               'игнорируется',
@@ -16270,17 +14850,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Команды Классификации',
-          intro:
-            'Выберите один или несколько токенов перед выполнением команд --classify.',
+          intro: 'Выберите один или несколько токенов перед выполнением команд --classify.',
           rows: [
             [
               '!condition-tracker --классифицировать компьютер',
               'Отметить выбранные токены как ИП (область по умолчанию: персонаж).',
             ],
-            [
-              '!condition-tracker --классифицировать NPC',
-              'Отметить выбранные токены как НИП.',
-            ],
+            ['!condition-tracker --классифицировать NPC', 'Отметить выбранные токены как НИП.'],
             [
               '!condition-tracker --classify игнорируется',
               'Исключить выбранные токены из всего отслеживания.',
@@ -16464,8 +15040,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} afectado por {effect} ({source})',
         advantage: '{emoji} {source} tiene ventaja contra {target}{subject}',
-        disadvantage:
-          '{emoji} {source} tiene desventaja contra {target}{subject}',
+        disadvantage: '{emoji} {source} tiene desventaja contra {target}{subject}',
         noBy: 'MARCADOR0TOKEN MARCADOR1TOKEN MARCADOR2TOKEN (MARCADOR3TOKEN)',
         self: '{target} está {past}',
         standard: '{emoji} {target} {past} por {source}',
@@ -16475,15 +15050,13 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} tiene ventaja contra {target}{subject}.',
         disadvantage: '{source} tiene desventaja contra {target}{subject}.',
         self: '{target} está {past}.',
-        withSuffix:
-          'MARCADOR0TOKEN MARCADOR1TOKEN MARCADOR2TOKEN MARCADOR3TOKEN.',
+        withSuffix: 'MARCADOR0TOKEN MARCADOR1TOKEN MARCADOR2TOKEN MARCADOR3TOKEN.',
         standard: 'MARCADOR0TOKEN MARCADOR1TOKEN MARCADOR2TOKEN.',
       },
       remove: {
         custom: '{target} ya no está afectado por {effect}.',
         advantage: '{source} ya no tiene ventaja contra {target}{subject}.',
-        disadvantage:
-          '{source} ya no tiene desventaja contra {target}{subject}.',
+        disadvantage: '{source} ya no tiene desventaja contra {target}{subject}.',
         noBy: '{target} ya no está {past}.',
         self: '{target} ya no está {past}.',
         standard: '{target} ya no está {past} por {source}.',
@@ -16505,10 +15078,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Ninguno',
         noneOrSourceBtn: 'Ninguno o aplicar al origen',
         subjectDesc: 'Selecciona quién o qué aplica el efecto.',
-        sourceDesc:
-          'Selecciona la criatura que crea o genera la condición o efecto.',
-        targetDesc:
-          'Selecciona la criatura que recibirá la condición o efecto.',
+        sourceDesc: 'Selecciona la criatura que crea o genera la condición o efecto.',
+        targetDesc: 'Selecciona la criatura que recibirá la condición o efecto.',
         otherText: 'Texto de condición personalizada',
         effectDetails: 'Detalles de {condition}',
       },
@@ -16617,8 +15188,7 @@ const ConditionTrackerMod = (() => {
       },
       msg: {
         noActive: 'No se están rastreando condiciones activas.',
-        configReset:
-          'Configuración restablecida a los valores predeterminados.',
+        configReset: 'Configuración restablecida a los valores predeterminados.',
         unknownConfig:
           'Opción de configuración desconocida. Usa --config para ver los ajustes disponibles.',
         macroReinstalled:
@@ -16626,12 +15196,9 @@ const ConditionTrackerMod = (() => {
         handoutReinstalled: 'El folleto de ayuda {handout} se reinstaló.',
         duplicate:
           'Esa combinación exacta de fuente, sujeto, objetivo, condición y texto personalizado ya está activa.',
-        noTargets:
-          'No se especificaron fichas objetivo para la aplicación múltiple.',
-        noSelection:
-          'Selecciona al menos una ficha en el tablero antes de usar --multi-target.',
-        invalidIds:
-          'No se encontraron identificadores de ficha válidos en la selección actual.',
+        noTargets: 'No se especificaron fichas objetivo para la aplicación múltiple.',
+        noSelection: 'Selecciona al menos una ficha en el tablero antes de usar --multi-target.',
+        invalidIds: 'No se encontraron identificadores de ficha válidos en la selección actual.',
         reSelectTokens:
           'No se encontró ninguna de las fichas seleccionadas originalmente. Vuelve a seleccionarlas e inténtalo de nuevo.',
         conditionNotFound: 'No se encontró el identificador de condición.',
@@ -16641,16 +15208,14 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'No se encontró la ficha de origen.',
         targetTokenNotFound: 'No se encontró la ficha objetivo.',
         subjectTokenNotFound: 'No se encontró la ficha del sujeto.',
-        invalidCondition:
-          'La condición debe ser una de las predefinidas u Otro.',
+        invalidCondition: 'La condición debe ser una de las predefinidas u Otro.',
         subjectOnlyCustom:
           '--subject solo es válido para Conjuro, Habilidad, Ventaja, Desventaja y Otro.',
         subjectBypassInvalid:
           '--subjectPromptBypass espera true o false cuando se proporciona un valor.',
         customDetailsRequired:
           'Se requieren los detalles de {condition}. Usa --other para proporcionarlos.',
-        markerConfigFormat:
-          'Formato de configuración del marcador: --config marker Grappled=grab',
+        markerConfigFormat: 'Formato de configuración del marcador: --config marker Grappled=grab',
         markerPredefinedRequired:
           'La configuración del marcador requiere un nombre de condición predefinido.',
         markerNameRequired:
@@ -16659,30 +15224,24 @@ const ConditionTrackerMod = (() => {
         healthBarSet: 'Barra de salud establecida en {bar}.',
         boolSet: '{key} establecido en {value}.',
         expectedBoolean: 'Se esperaba true o false.',
-        invalidHealthBar:
-          'La barra de salud debe ser bar1_value, bar2_value o bar3_value.',
+        invalidHealthBar: 'La barra de salud debe ser bar1_value, bar2_value o bar3_value.',
         markersDisabled: 'Los marcadores están desactivados.',
-        noMarkerConfigured:
-          'No hay ningún marcador configurado para esta condición.',
+        noMarkerConfigured: 'No hay ningún marcador configurado para esta condición.',
         markerApplied: 'Marcador aplicado: {marker}',
         markerPresent: 'Marcador ya presente: {marker}',
         langSet: 'Idioma establecido en {locale}.',
-        invalidLocale:
-          'Configuración regional no válida. Locales admitidas: {locales}.',
+        invalidLocale: 'Configuración regional no válida. Locales admitidas: {locales}.',
         otherDurationRequiresRounds:
           'La duración Otro requiere un número de rondas, por ejemplo --duration 5 rounds.',
         invalidDuration:
           'La duración debe ser Hasta retirar, una opción de fin de turno o un número positivo de rondas.',
-        zeroHpNoConditions:
-          '{name} ha llegado a 0 PV y no tiene condiciones activas.',
-        zeroHpConditions:
-          '{name} ha llegado a 0 PV. Elige las condiciones a eliminar:',
+        zeroHpNoConditions: '{name} ha llegado a 0 PV y no tiene condiciones activas.',
+        zeroHpConditions: '{name} ha llegado a 0 PV. Elige las condiciones a eliminar:',
         removeAllBtn: 'Eliminar todas las condiciones de {name}',
         markIncapacitated: 'Marcar como incapacitado',
         removeFromTurnOrder: 'Eliminar del orden de iniciativa',
         alreadyIncapacitated: '{name} ya está incapacitado.',
-        tokenRemovedFromTurn:
-          '{name} ha sido eliminado del orden de iniciativa.',
+        tokenRemovedFromTurn: '{name} ha sido eliminado del orden de iniciativa.',
         tokenNotInTurn: '{name} no se encontró en el orden de iniciativa.',
         moveTokenPrompt:
           '¿Mover {name} a la capa del mapa para que permanezca visible sin interferir con otras fichas?',
@@ -16690,8 +15249,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} ha sido movido a la capa del mapa.',
         tokenNotFound: 'Ficha no encontrada.',
         noActiveConditions: '{name} no tiene condiciones activas que eliminar.',
-        deadNoConditions:
-          '{name} fue marcado como muerto. No había condiciones activas.',
+        deadNoConditions: '{name} fue marcado como muerto. No había condiciones activas.',
         scriptReady: '{name} está activo y usas la versión {version}.',
         reachedZeroHp: '{name} alcanzó 0 PV',
         manuallyRemoved: 'eliminación manual',
@@ -16704,19 +15262,15 @@ const ConditionTrackerMod = (() => {
         noTokensSelectedReport:
           'Seleccione al menos una ficha en el tablero antes de usar --report-token.',
         noConditionsAppliedTo: '{name} no tiene condiciones activas aplicadas.',
-        noConditionsAppliedBy:
-          '{name} no tiene condiciones activas aplicadas a otros.',
+        noConditionsAppliedBy: '{name} no tiene condiciones activas aplicadas a otros.',
         noSavedEffects: 'No hay efectos guardados almacenados para {name}.',
-        noTokenSelectedSaved:
-          'Seleccione una ficha en el tablero antes de usar --saved.',
+        noTokenSelectedSaved: 'Seleccione una ficha en el tablero antes de usar --saved.',
         savedEffectAdded: 'Efecto guardado agregado para {name}.',
         savedEffectUpdated: 'Efecto guardado actualizado.',
         savedEffectRemoved: 'Se eliminó el efecto guardado.',
         savedEffectNotFound: 'Efecto guardado no encontrado.',
-        savedInvalidVisibility:
-          'Visibilidad no válida. Utilice público, enmascarado o GM.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Visibilidad no válida. Utilice público, enmascarado o GM.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Efecto agregado a Turn Tracker como público.',
         savedPromotedMasked:
           'Efecto agregado al Turn Tracker como enmascarado: los jugadores ven: {publicLabel}.',
@@ -16772,13 +15326,10 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Diagnóstico de Clasificación',
         showHeading: 'Detalles de Clasificación del Token',
         resultHeading: 'Anulación Aplicada',
-        noSelection:
-          'Selecciona al menos un token en el tablero antes de usar --classify.',
-        invalidType:
-          'Tipo de clasificación no válido: {type}. Usa pc, npc, ignored o auto.',
+        noSelection: 'Selecciona al menos un token en el tablero antes de usar --classify.',
+        invalidType: 'Tipo de clasificación no válido: {type}. Usa pc, npc, ignored o auto.',
         set: '{name} → {type} (ámbito: {scope})',
-        cleared:
-          '{name} anulación borrada (ámbito: {scope}) — detección automática restaurada.',
+        cleared: '{name} anulación borrada (ámbito: {scope}) — detección automática restaurada.',
         setTokenFallback:
           '{name} → {type} (anulación de token — ninguna hoja de personaje vinculada).',
         clearedTokenFallback:
@@ -16797,8 +15348,7 @@ const ConditionTrackerMod = (() => {
       apply: {
         turnAppended:
           'El objetivo no estaba en el orden de iniciativa; se agregó la fila de condición.',
-        turnInserted:
-          'Fila de condición insertada debajo de la ficha objetivo.',
+        turnInserted: 'Fila de condición insertada debajo de la ficha objetivo.',
       },
     },
     handout: {
@@ -16839,51 +15389,27 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Descripción',
         rows: [
           ['--inmediato', 'Interfaz del asistente paso a paso'],
-          [
-            '--objetivo múltiple',
-            'Aplicar una condición a varias fichas objetivo',
-          ],
-          [
-            '--menú',
-            'Mostrar menú principal (añadir remove para el menú de eliminación)',
-          ],
+          ['--objetivo múltiple', 'Aplicar una condición a varias fichas objetivo'],
+          ['--menú', 'Mostrar menú principal (añadir remove para el menú de eliminación)'],
           [
             '--fuente X --destino Y --condición Z',
             'Aplicar una condición directamente sin el asistente',
           ],
-          [
-            '--duration &lt;valor&gt;',
-            'Duración para aplicación directa (p. ej. 2 rounds)',
-          ],
-          [
-            '--other &lt;texto&gt;',
-            'Texto personalizado para tipos Conjuro / Habilidad / Otro',
-          ],
-          [
-            '--remove &lt;id-condición&gt;',
-            'Eliminar una condición específica por su ID único',
-          ],
-          [
-            '--config &lt;opción&gt; &lt;valor&gt;',
-            'Ajustar opciones de configuración',
-          ],
+          ['--duration &lt;valor&gt;', 'Duración para aplicación directa (p. ej. 2 rounds)'],
+          ['--other &lt;texto&gt;', 'Texto personalizado para tipos Conjuro / Habilidad / Otro'],
+          ['--remove &lt;id-condición&gt;', 'Eliminar una condición específica por su ID único'],
+          ['--config &lt;opción&gt; &lt;valor&gt;', 'Ajustar opciones de configuración'],
           [
             '--prompt --subjectPromptBypass verdadero|falso',
             'Sobrescribir subjectPromptBypass solo para este comando (también admite --subject-prompt-bypass)',
           ],
-          [
-            '--limpieza',
-            'Reconciliar estado — eliminar condiciones y filas huérfanas',
-          ],
+          ['--limpieza', 'Reconciliar estado — eliminar condiciones y filas huérfanas'],
           [
             '--condiciones-de-reorden',
             'Reposicionar manualmente las filas de condición detrás de sus fichas asignadas en el orden de turno',
           ],
           ['--reinstalar-macro', 'Recrear o actualizar las macros del GM'],
-          [
-            '--reinstalar-folleto',
-            'Recrear o actualizar el folleto de ayuda localizado',
-          ],
+          ['--reinstalar-folleto', 'Recrear o actualizar el folleto de ayuda localizado'],
           [
             '--reporte-token',
             'Susurrar un informe de condición exclusivo de GM para cada token seleccionado (condiciones aplicadas a él y por él)',
@@ -16920,10 +15446,7 @@ const ConditionTrackerMod = (() => {
             '🔮 Conjuro',
             'Rastrear un efecto de conjuro nombrado — se te pedirá el nombre del conjuro',
           ],
-          [
-            '🎯 Habilidad',
-            'Rastrear una habilidad de clase o racial — se te pedirá el nombre',
-          ],
+          ['🎯 Habilidad', 'Rastrear una habilidad de clase o racial — se te pedirá el nombre'],
           [
             '🍀 Ventaja',
             'Registrar ventaja otorgada de una ficha a otra; agrupada con la fuente en la iniciativa',
@@ -16932,10 +15455,7 @@ const ConditionTrackerMod = (() => {
             '⬇️ Desventaja',
             'Registrar desventaja impuesta; agrupada con la fuente en la iniciativa',
           ],
-          [
-            '📝 Otro',
-            'Etiqueta personalizada libre — se te pedirá una descripción',
-          ],
+          ['📝 Otro', 'Etiqueta personalizada libre — se te pedirá una descripción'],
         ],
       },
       durationOptions: {
@@ -16945,10 +15465,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Opción',
         colBehaviour: 'Comportamiento',
         rows: [
-          [
-            'Hasta retirar',
-            'Permanente — debe eliminarse manualmente mediante el menú o --remove',
-          ],
+          ['Hasta retirar', 'Permanente — debe eliminarse manualmente mediante el menú o --remove'],
           [
             'Fin del próximo turno del objetivo',
             'Expira cuando termina el próximo turno del objetivo en la iniciativa',
@@ -17034,11 +15551,7 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Comprobación',
           colResult: 'Resultado',
           rows: [
-            [
-              '1',
-              'Anulación de estado del token (--classify --scope token)',
-              'pc/npc/ignorado',
-            ],
+            ['1', 'Anulación de estado del token (--classify --scope token)', 'pc/npc/ignorado'],
             [
               '2',
               'Atributo ct_mod_actor_type del personaje (--classify --scope character)',
@@ -17055,11 +15568,7 @@ const ConditionTrackerMod = (() => {
               'Escaneo de atributos NPC genéricos (npc, is_npc, npcflag, sheet_type, character_type)',
               'ordenador personal / PNJ',
             ],
-            [
-              '6',
-              'Alternativa controlledby del personaje',
-              'ordenador personal / PNJ',
-            ],
+            ['6', 'Alternativa controlledby del personaje', 'ordenador personal / PNJ'],
           ],
         },
         types: {
@@ -17084,8 +15593,7 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Comandos de Clasificación',
-          intro:
-            'Selecciona uno o más tokens antes de ejecutar los comandos --classify.',
+          intro: 'Selecciona uno o más tokens antes de ejecutar los comandos --classify.',
           rows: [
             [
               '!rastreador de condiciones --clasificar pc',
@@ -17317,10 +15825,8 @@ const ConditionTrackerMod = (() => {
         noneBtn: 'Ingen',
         noneOrSourceBtn: 'Ingen eller applicera på källa',
         subjectDesc: 'Välj vem eller vad som levererar effekten.',
-        sourceDesc:
-          'Välj det väsen som skapar/genererar tillståndet eller effekten.',
-        targetDesc:
-          'Välj det väsen som kommer att ta emot tillståndet eller effekten.',
+        sourceDesc: 'Välj det väsen som skapar/genererar tillståndet eller effekten.',
+        targetDesc: 'Välj det väsen som kommer att ta emot tillståndet eller effekten.',
         otherText: 'Anpassad tillståndstext',
         effectDetails: '{condition}-detaljer',
       },
@@ -17438,8 +15944,7 @@ const ConditionTrackerMod = (() => {
         duplicate:
           'Exakt den kombinationen av källa, subjekt, mål, tillstånd och anpassad text är redan aktiv.',
         noTargets: 'Inga måltoken angivna för tillämpning på flera mål.',
-        noSelection:
-          'Välj minst en token på spelplanen innan du använder --multi-target.',
+        noSelection: 'Välj minst en token på spelplanen innan du använder --multi-target.',
         invalidIds: 'Inga giltiga token-id:n hittades i det aktuella urvalet.',
         reSelectTokens:
           'Ingen av de ursprungligen valda tokenerna kunde hittas. Välj tokens igen och försök på nytt.',
@@ -17456,20 +15961,15 @@ const ConditionTrackerMod = (() => {
           '--subject är endast giltigt för Besvärjelse, Förmåga, Fördel, Nackdel och Annat.',
         subjectBypassInvalid:
           '--subjectPromptBypass förväntar true eller false när ett värde anges.',
-        customDetailsRequired:
-          '{condition}-detaljer krävs. Använd --other för att ange dem.',
-        markerConfigFormat:
-          'Format för markörskonfiguration: --config marker Grappled=grab',
-        markerPredefinedRequired:
-          'Markörskonfiguration kräver ett fördefinierat tillståndsnamn.',
-        markerNameRequired:
-          'Markörskonfiguration kräver ett icke-tomt markörnamn.',
+        customDetailsRequired: '{condition}-detaljer krävs. Använd --other för att ange dem.',
+        markerConfigFormat: 'Format för markörskonfiguration: --config marker Grappled=grab',
+        markerPredefinedRequired: 'Markörskonfiguration kräver ett fördefinierat tillståndsnamn.',
+        markerNameRequired: 'Markörskonfiguration kräver ett icke-tomt markörnamn.',
         markerSet: '{condition}-markör inställd på {marker}.',
         healthBarSet: 'Hälsomätare inställd på {bar}.',
         boolSet: '{key} inställd på {value}.',
         expectedBoolean: 'Förväntade true eller false.',
-        invalidHealthBar:
-          'Hälsomätaren måste vara bar1_value, bar2_value eller bar3_value.',
+        invalidHealthBar: 'Hälsomätaren måste vara bar1_value, bar2_value eller bar3_value.',
         markersDisabled: 'Markörer är inaktiverade.',
         noMarkerConfigured: 'Ingen markör är konfigurerad för detta tillstånd.',
         markerApplied: 'Markör applicerad: {marker}',
@@ -17480,8 +15980,7 @@ const ConditionTrackerMod = (() => {
           'Annan varaktighet kräver ett numeriskt antal rundor, till exempel --duration 5 rounds.',
         invalidDuration:
           'Varaktigheten måste vara Tills borttagen, ett turslut-alternativ eller ett positivt antal rundor.',
-        zeroHpNoConditions:
-          '{name} har nått 0 HP och har inga aktiva tillstånd.',
+        zeroHpNoConditions: '{name} har nått 0 HP och har inga aktiva tillstånd.',
         zeroHpConditions: '{name} har nått 0 HP. Välj tillstånd att ta bort:',
         removeAllBtn: 'Ta bort alla tillstånd för {name}',
         markIncapacitated: 'Markera som oskadliggjord',
@@ -17495,8 +15994,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} har flyttats till kartlagret.',
         tokenNotFound: 'Token hittades inte.',
         noActiveConditions: '{name} har inga aktiva tillstånd att ta bort.',
-        deadNoConditions:
-          '{name} markerades som död. Inga tillstånd var aktiva.',
+        deadNoConditions: '{name} markerades som död. Inga tillstånd var aktiva.',
         scriptReady: '{name} är aktiv och du använder version {version}.',
         reachedZeroHp: '{name} nådde 0 HP',
         manuallyRemoved: 'manuellt borttagen',
@@ -17504,27 +16002,19 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} markerades som död',
         conditionReorder:
           'Turordningen ändrades och {count} spårad(e) tillståndsrad(er) kan nu vara felplacerade. Klicka nedan för att återställa dem efter sina tilldelade tokens.',
-        conditionsReordered:
-          'Tillståndsrader har ompositionerats efter sina tilldelade tokens.',
-        noTokensSelectedReport:
-          'Välj minst en token på tavlan innan du använder --report-token.',
-        noConditionsAppliedTo:
-          '{name} har inga aktiva villkor tillämpade på sig.',
-        noConditionsAppliedBy:
-          '{name} har inga aktiva villkor tillämpade på andra.',
+        conditionsReordered: 'Tillståndsrader har ompositionerats efter sina tilldelade tokens.',
+        noTokensSelectedReport: 'Välj minst en token på tavlan innan du använder --report-token.',
+        noConditionsAppliedTo: '{name} har inga aktiva villkor tillämpade på sig.',
+        noConditionsAppliedBy: '{name} har inga aktiva villkor tillämpade på andra.',
         noSavedEffects: 'Inga sparade effekter lagrade för {name}.',
-        noTokenSelectedSaved:
-          'Välj en token på tavlan innan du använder --sparad.',
+        noTokenSelectedSaved: 'Välj en token på tavlan innan du använder --sparad.',
         savedEffectAdded: 'Sparad effekt har lagts till för {name}.',
         savedEffectUpdated: 'Sparad effekt uppdaterad.',
         savedEffectRemoved: 'Sparad effekt har tagits bort.',
         savedEffectNotFound: 'Den sparade effekten hittades inte.',
-        savedInvalidVisibility:
-          'Ogiltig synlighet. Använd offentliga, maskerade eller gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          'Effekt har lagts till i Turn Tracker som offentlig.',
+        savedInvalidVisibility: 'Ogiltig synlighet. Använd offentliga, maskerade eller gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: 'Effekt har lagts till i Turn Tracker som offentlig.',
         savedPromotedMasked:
           'Effekt läggs till Turn Tracker som maskerad — spelare ser: {publicLabel}.',
         savedPromotedGm:
@@ -17579,15 +16069,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Klassificeringsdiagnostik',
         showHeading: 'Token-klassificeringsdetaljer',
         resultHeading: 'Åsidosättning Tillämpad',
-        noSelection:
-          'Välj minst en token på spelplanen innan du använder --classify.',
-        invalidType:
-          'Ogiltigt klassificeringstyp: {type}. Använd pc, npc, ignored eller auto.',
+        noSelection: 'Välj minst en token på spelplanen innan du använder --classify.',
+        invalidType: 'Ogiltigt klassificeringstyp: {type}. Använd pc, npc, ignored eller auto.',
         set: '{name} → {type} (omfång: {scope})',
         cleared:
           '{name} åsidosättning rensad (omfång: {scope}) — automatisk identifiering återställd.',
-        setTokenFallback:
-          '{name} → {type} (tokenåsidosättning — inget karaktärsblad länkat).',
+        setTokenFallback: '{name} → {type} (tokenåsidosättning — inget karaktärsblad länkat).',
         clearedTokenFallback:
           '{name} tokenåsidosättning rensad — automatisk identifiering återställd.',
         fieldToken: 'Tecken',
@@ -17602,16 +16089,14 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Oanvända markörer',
       },
       apply: {
-        turnAppended:
-          'Målet var inte i turordningen; tillståndsrad lades till sist.',
+        turnAppended: 'Målet var inte i turordningen; tillståndsrad lades till sist.',
         turnInserted: 'Tillståndsrad infogad under måltoken.',
       },
     },
     handout: {
       versionLabel: 'Version',
       subtitle: 'D&D 5e-statuseffekthanterare',
-      footerNote:
-        'Detta handout skapas och uppdateras automatiskt varje gång skriptet laddas.',
+      footerNote: 'Detta handout skapas och uppdateras automatiskt varje gång skriptet laddas.',
       overview: {
         heading: 'Översikt',
         body: 'Condition Tracker hanterar D&D 5e-statustillstånd och anpassade effekter som märkta rader i Roll20:s turspårare. Applicera tillstånd på tokens, spåra varaktigheter efter initiativordning och ta automatiskt bort utgångna effekter när en tur slutar. Alla kommandon är GM-exklusiva och kan utlösas från chatten eller via de installerade makrona.',
@@ -17645,27 +16130,12 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Beskrivning',
         rows: [
           ['--prompt', 'Interaktiv steg-för-steg-guide'],
-          [
-            '--multi-target',
-            'Applicera ett tillstånd på flera måltoken på en gång',
-          ],
+          ['--multi-target', 'Applicera ett tillstånd på flera måltoken på en gång'],
           ['--meny', 'Visa huvudmeny (lägg till remove för borttagningsmenyn)'],
-          [
-            '--källa X --mål Y --villkor Z',
-            'Applicera ett tillstånd direkt utan guiden',
-          ],
-          [
-            '--duration &lt;värde&gt;',
-            'Varaktighet för direkt applicering (t.ex. 2 rounds)',
-          ],
-          [
-            '--other <text>',
-            'Anpassad text för Besvärjelse / Förmåga / Annan effekttyp',
-          ],
-          [
-            '--remove &lt;tillstånds-id&gt;',
-            'Ta bort ett specifikt tillstånd via dess unika id',
-          ],
+          ['--källa X --mål Y --villkor Z', 'Applicera ett tillstånd direkt utan guiden'],
+          ['--duration &lt;värde&gt;', 'Varaktighet för direkt applicering (t.ex. 2 rounds)'],
+          ['--other <text>', 'Anpassad text för Besvärjelse / Förmåga / Annan effekttyp'],
+          ['--remove &lt;tillstånds-id&gt;', 'Ta bort ett specifikt tillstånd via dess unika id'],
           [
             '--config &lt;alternativ&gt; &lt;värde&gt;',
             'Justera konfigurationsinställningar (se avsnittet Konfiguration nedan)',
@@ -17674,19 +16144,13 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'Åsidosätt subjectPromptBypass enbart för detta kommando (stöder även --subject-prompt-bypass)',
           ],
-          [
-            '--rengöring',
-            'Stäm av tillstånd — ta bort övergivna tillstånd och turspårningsrader',
-          ],
+          ['--rengöring', 'Stäm av tillstånd — ta bort övergivna tillstånd och turspårningsrader'],
           [
             '--beställningsvillkor',
             'Flytta manuellt tillståndsrader bakom deras tilldelade tokens i turordningen',
           ],
           ['--installera om-makro', 'Återskapa eller uppdatera GM-makrona'],
-          [
-            '--installera om-handout',
-            'Återskapa eller uppdatera det lokaliserade hjälp-handouten',
-          ],
+          ['--installera om-handout', 'Återskapa eller uppdatera det lokaliserade hjälp-handouten'],
           [
             '--rapport-token',
             'Viska en tillståndsrapport endast för GM för varje vald token (villkor som tillämpas på och av den)',
@@ -17731,14 +16195,8 @@ const ConditionTrackerMod = (() => {
             '🍀 Fördel',
             'Registrera fördel given från en token till en annan; grupperad med källan i initiativet',
           ],
-          [
-            '⬇️ Nackdel',
-            'Registrera pålagd nackdel; grupperad med källan i initiativet',
-          ],
-          [
-            '📝 Annat',
-            'Fritext anpassad etikett — du uppmanas att ange en beskrivning',
-          ],
+          ['⬇️ Nackdel', 'Registrera pålagd nackdel; grupperad med källan i initiativet'],
+          ['📝 Annat', 'Fritext anpassad etikett — du uppmanas att ange en beskrivning'],
         ],
       },
       durationOptions: {
@@ -17748,22 +16206,13 @@ const ConditionTrackerMod = (() => {
         colOption: 'Alternativ',
         colBehaviour: 'Beteende',
         rows: [
-          [
-            'Tills borttagen',
-            'Permanent — måste tas bort manuellt via menyn eller --remove',
-          ],
-          [
-            'Slutet av målets nästa tur',
-            'Löper ut när måltoken:s nästa tur slutar i initiativet',
-          ],
+          ['Tills borttagen', 'Permanent — måste tas bort manuellt via menyn eller --remove'],
+          ['Slutet av målets nästa tur', 'Löper ut när måltoken:s nästa tur slutar i initiativet'],
           [
             'Slutet av källans nästa tur',
             'Löper ut när källtoken:s nästa tur slutar i initiativet',
           ],
-          [
-            '1 / 2 / 3 / 10 rundor',
-            'Fast nedräkning; ett steg per ankertokenens turslut',
-          ],
+          ['1 / 2 / 3 / 10 rundor', 'Fast nedräkning; ett steg per ankertokenens turslut'],
         ],
       },
       savedEffects: {
@@ -17773,10 +16222,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'Synlighetslägen',
           rows: [
-            [
-              'offentlig',
-              'Full effektetikett är synlig i Turn Tracker och offentlig chatt.',
-            ],
+            ['offentlig', 'Full effektetikett är synlig i Turn Tracker och offentlig chatt.'],
             [
               'maskerad',
               'En vag offentlig etikett visas för spelare; fullständiga detaljer är endast för GM.',
@@ -17792,22 +16238,13 @@ const ConditionTrackerMod = (() => {
           intro:
             'Alla --sparade kommandon är endast för GM. Välj en token innan du kör --sparade eller --sparade tillägg.',
           rows: [
-            [
-              '!condition-tracker --sparad',
-              'Visa sparade effekter för den valda token.',
-            ],
-            [
-              '!condition-tracker --saved add',
-              'Starta guiden Lägg till sparad effekt.',
-            ],
+            ['!condition-tracker --sparad', 'Visa sparade effekter för den valda token.'],
+            ['!condition-tracker --saved add', 'Starta guiden Lägg till sparad effekt.'],
             [
               '!condition-tracker --saved edit <id>',
               'Redigera etiketter eller synlighet för en befintlig sparad effekt.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Ta bort en sparad effekt permanent.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Ta bort en sparad effekt permanent.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Kopiera en sparad effekt till Turn Tracker (offentlig eller maskerad) eller bekräfta att den endast är GM-spårad.',
@@ -17837,11 +16274,7 @@ const ConditionTrackerMod = (() => {
           colCheck: 'Kontroll',
           colResult: 'Resultat',
           rows: [
-            [
-              '1',
-              'Tokenstatusåsidosättning (--classify --scope token)',
-              'pc / npc / ignoreras',
-            ],
+            ['1', 'Tokenstatusåsidosättning (--classify --scope token)', 'pc / npc / ignoreras'],
             [
               '2',
               'Karaktär ct_mod_actor_type-attribut (--classify --scope character)',
@@ -17862,15 +16295,9 @@ const ConditionTrackerMod = (() => {
           colType: 'Typ',
           colMeaning: 'Betydelse',
           rows: [
-            [
-              'st',
-              'Spelarkaraktär — inkluderas alltid som SC i guiden och identifieringen',
-            ],
+            ['st', 'Spelarkaraktär — inkluderas alltid som SC i guiden och identifieringen'],
             ['npc', 'Icke-spelarkaraktär — inkluderas alltid som NPC'],
-            [
-              'ignoreras',
-              'Visas eller spåras aldrig — undantagen från guidens tokenväljare',
-            ],
+            ['ignoreras', 'Visas eller spåras aldrig — undantagen från guidens tokenväljare'],
             [
               'okänd',
               'Endast automatisk identifiering; kunde inte fastställa typ (behandlas som NPC i guiden)',
@@ -17879,21 +16306,14 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Klassificeringskommandon',
-          intro:
-            'Välj en eller flera tokens innan du kör --classify-kommandon.',
+          intro: 'Välj en eller flera tokens innan du kör --classify-kommandon.',
           rows: [
             [
               '!condition-tracker --klassificera pc',
               'Markera valda tokens som SC:s (standardomfång: karaktär).',
             ],
-            [
-              '!condition-tracker --klassificera npc',
-              'Markera valda tokens som NPC:s.',
-            ],
-            [
-              '!condition-tracker --classify ignoreras',
-              'Utesluta valda tokens från all spårning.',
-            ],
+            ['!condition-tracker --klassificera npc', 'Markera valda tokens som NPC:s.'],
+            ['!condition-tracker --classify ignoreras', 'Utesluta valda tokens från all spårning.'],
             [
               '!condition-tracker --klassificera auto',
               'Ta bort åsidosättning — återställ automatisk identifiering.',
@@ -18071,8 +16491,7 @@ const ConditionTrackerMod = (() => {
       display: {
         custom: '{emoji} {target} {effect} etkisi altında ({source})',
         advantage: '{emoji} {source}, {target}{subject} karşısında avantajlı',
-        disadvantage:
-          '{emoji} {source}, {target}{subject} karşısında dezavantajlı',
+        disadvantage: '{emoji} {source}, {target}{subject} karşısında dezavantajlı',
         noBy: '{emoji} {target} {past} ({source})',
         self: '{target} {past}',
         standard: '{emoji} {target} {source} tarafından {past}',
@@ -18087,10 +16506,8 @@ const ConditionTrackerMod = (() => {
       },
       remove: {
         custom: '{target} artık {effect} etkisi altında değil.',
-        advantage:
-          '{source} artık {target}{subject} karşısında avantajlı değil.',
-        disadvantage:
-          '{source} artık {target}{subject} karşısında dezavantajlı değil.',
+        advantage: '{source} artık {target}{subject} karşısında avantajlı değil.',
+        disadvantage: '{source} artık {target}{subject} karşısında dezavantajlı değil.',
         noBy: '{target} artık {past} değil.',
         self: '{target} artık {past} değil.',
         standard: '{target} artık {source} tarafından {past} değil.',
@@ -18230,8 +16647,7 @@ const ConditionTrackerMod = (() => {
         handoutReinstalled: 'Yardım el ilanı {handout} yeniden yüklendi.',
         duplicate: 'Aynı kaynak, özne, hedef, durum ve özel metin zaten aktif.',
         noTargets: 'Çoklu hedef uygulaması için hedef token belirtilmedi.',
-        noSelection:
-          '--multi-target kullanmadan önce tabloda en az bir token seçin.',
+        noSelection: '--multi-target kullanmadan önce tabloda en az bir token seçin.',
         invalidIds: 'Mevcut seçimde geçerli token kimliği bulunamadı.',
         reSelectTokens:
           'Orijinal olarak seçilen tokenların hiçbiri bulunamadı. Tokenları yeniden seçip tekrar deneyin.',
@@ -18242,40 +16658,34 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Kaynak token bulunamadı.',
         targetTokenNotFound: 'Hedef token bulunamadı.',
         subjectTokenNotFound: 'Özne token bulunamadı.',
-        invalidCondition:
-          'Durum, önceden tanımlanmış durumlardan biri veya Diğer olmalıdır.',
+        invalidCondition: 'Durum, önceden tanımlanmış durumlardan biri veya Diğer olmalıdır.',
         subjectOnlyCustom:
           '--subject yalnızca Büyü, Yetenek, Avantaj, Dezavantaj ve Diğer için geçerlidir.',
         subjectBypassInvalid:
           '--subjectPromptBypass, bir değer sağlandığında true veya false bekler.',
         customDetailsRequired:
           '{condition} ayrıntıları gereklidir. Bunları sağlamak için --other kullanın.',
-        markerConfigFormat:
-          'İşaretçi yapılandırma biçimi: --config marker Grappled=grab',
+        markerConfigFormat: 'İşaretçi yapılandırma biçimi: --config marker Grappled=grab',
         markerPredefinedRequired:
           'İşaretçi yapılandırması önceden tanımlanmış bir durum adı gerektirir.',
-        markerNameRequired:
-          'İşaretçi yapılandırması boş olmayan bir işaretçi adı gerektirir.',
+        markerNameRequired: 'İşaretçi yapılandırması boş olmayan bir işaretçi adı gerektirir.',
         markerSet: '{condition} işaretçisi {marker} olarak ayarlandı.',
         healthBarSet: 'Sağlık çubuğu {bar} olarak ayarlandı.',
         boolSet: '{key}, {value} olarak ayarlandı.',
         expectedBoolean: 'true veya false bekleniyor.',
-        invalidHealthBar:
-          'Sağlık çubuğu bar1_value, bar2_value veya bar3_value olmalıdır.',
+        invalidHealthBar: 'Sağlık çubuğu bar1_value, bar2_value veya bar3_value olmalıdır.',
         markersDisabled: 'İşaretçiler devre dışı.',
         noMarkerConfigured: 'Bu durum için yapılandırılmış işaretçi yok.',
         markerApplied: 'İşaretçi uygulandı: {marker}',
         markerPresent: 'İşaretçi zaten mevcut: {marker}',
         langSet: 'Dil {locale} olarak ayarlandı.',
-        invalidLocale:
-          'Geçersiz yerel ayar. Desteklenen yerel ayarlar: {locales}.',
+        invalidLocale: 'Geçersiz yerel ayar. Desteklenen yerel ayarlar: {locales}.',
         otherDurationRequiresRounds:
           'Diğer süre, sayısal bir tur sayısı gerektirir; örneğin --duration 5 rounds.',
         invalidDuration:
           'Süre; Kaldırılana kadar, bir tur sonu seçeneği veya pozitif bir tur sayısı olmalıdır.',
         zeroHpNoConditions: "{name} 0 KP'ye ulaştı ve aktif durumu yok.",
-        zeroHpConditions:
-          "{name} 0 KP'ye ulaştı. Kaldırılacak durumları seçin:",
+        zeroHpConditions: "{name} 0 KP'ye ulaştı. Kaldırılacak durumları seçin:",
         removeAllBtn: '{name} için Tüm Durumları Kaldır',
         markIncapacitated: 'Etkisiz Olarak İşaretle',
         removeFromTurnOrder: 'Tur Sırasından Kaldır',
@@ -18298,24 +16708,18 @@ const ConditionTrackerMod = (() => {
           'Tur sırası değişti ve {count} takip edilen durum satırı artık yanlış yerde olabilir. Bunları atanmış tokenlarının arkasına taşımak için aşağıya tıklayın.',
         conditionsReordered:
           'Durum satırları atanmış tokenlarının arkasına yeniden konumlandırıldı.',
-        noTokensSelectedReport:
-          "--report-token'ı kullanmadan önce panoda en az bir jeton seçin.",
+        noTokensSelectedReport: "--report-token'ı kullanmadan önce panoda en az bir jeton seçin.",
         noConditionsAppliedTo: '{name} kendisine uygulanan etkin koşul yok.',
-        noConditionsAppliedBy:
-          '{name} diğerlerine uygulanan etkin koşula sahip değil.',
+        noConditionsAppliedBy: '{name} diğerlerine uygulanan etkin koşula sahip değil.',
         noSavedEffects: '{name} için kayıtlı efekt yok.',
-        noTokenSelectedSaved:
-          "--saved'i kullanmadan önce panoda bir jeton seçin.",
+        noTokenSelectedSaved: "--saved'i kullanmadan önce panoda bir jeton seçin.",
         savedEffectAdded: '{name} için kayıtlı efekt eklendi.',
         savedEffectUpdated: 'Kaydedilen efekt güncellendi.',
         savedEffectRemoved: 'Kaydedilen efekt kaldırıldı.',
         savedEffectNotFound: 'Kaydedilen efekt bulunamadı.',
-        savedInvalidVisibility:
-          'Geçersiz görünürlük. Herkese açık, maskeli veya gm kullanın.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
-        savedPromotedPublic:
-          "Efekt Turn Tracker'a herkese açık olarak eklendi.",
+        savedInvalidVisibility: 'Geçersiz görünürlük. Herkese açık, maskeli veya gm kullanın.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+        savedPromotedPublic: "Efekt Turn Tracker'a herkese açık olarak eklendi.",
         savedPromotedMasked:
           "Efekt Turn Tracker'a maskeli olarak eklendi — oyuncular şunu görür: {publicLabel}.",
         savedPromotedGm:
@@ -18370,15 +16774,12 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Sınıflandırma Tanılaması',
         showHeading: 'Token Sınıflandırma Ayrıntıları',
         resultHeading: 'Geçersiz Kılma Uygulandı',
-        noSelection:
-          '--classify kullanmadan önce tahtada en az bir token seçin.',
-        invalidType:
-          'Geçersiz sınıflandırma türü: {type}. pc, npc, ignored veya auto kullanın.',
+        noSelection: '--classify kullanmadan önce tahtada en az bir token seçin.',
+        invalidType: 'Geçersiz sınıflandırma türü: {type}. pc, npc, ignored veya auto kullanın.',
         set: '{name} → {type} (kapsam: {scope})',
         cleared:
           '{name} geçersiz kılma temizlendi (kapsam: {scope}) — otomatik algılama geri yüklendi.',
-        setTokenFallback:
-          '{name} → {type} (token geçersiz kılma — bağlı karakter sayfası yok).',
+        setTokenFallback: '{name} → {type} (token geçersiz kılma — bağlı karakter sayfası yok).',
         clearedTokenFallback:
           '{name} token geçersiz kılma temizlendi — otomatik algılama geri yüklendi.',
         fieldToken: 'Jeton',
@@ -18435,27 +16836,12 @@ const ConditionTrackerMod = (() => {
         colDesc: 'Açıklama',
         rows: [
           ['--çabuk', 'Etkileşimli adım adım sihirbaz arayüzü'],
-          [
-            '--çoklu hedef',
-            'Bir durumu aynı anda birden fazla hedef tokena uygula',
-          ],
+          ['--çoklu hedef', 'Bir durumu aynı anda birden fazla hedef tokena uygula'],
           ['--menü', 'Ana menüyü göster (kaldırma menüsü için remove ekle)'],
-          [
-            '--kaynak X --hedef Y --koşul Z',
-            'Sihirbaz olmadan doğrudan durum uygula',
-          ],
-          [
-            '--duration &lt;değer&gt;',
-            'Doğrudan uygulama için süre (örn. 2 rounds)',
-          ],
-          [
-            '--other &lt;metin&gt;',
-            'Büyü / Yetenek / Diğer etki türleri için özel metin',
-          ],
-          [
-            '--remove &lt;durum-kimliği&gt;',
-            'Belirli bir durumu benzersiz kimliğiyle kaldır',
-          ],
+          ['--kaynak X --hedef Y --koşul Z', 'Sihirbaz olmadan doğrudan durum uygula'],
+          ['--duration &lt;değer&gt;', 'Doğrudan uygulama için süre (örn. 2 rounds)'],
+          ['--other &lt;metin&gt;', 'Büyü / Yetenek / Diğer etki türleri için özel metin'],
+          ['--remove &lt;durum-kimliği&gt;', 'Belirli bir durumu benzersiz kimliğiyle kaldır'],
           [
             '--config &lt;seçenek&gt; &lt;değer&gt;',
             'Yapılandırma ayarlarını düzenle (aşağıdaki Yapılandırma bölümüne bakın)',
@@ -18464,18 +16850,12 @@ const ConditionTrackerMod = (() => {
             '--prompt --konuPromptBypass doğru|yanlış',
             "Bu komut için subjectPromptBypass'ı geçersiz kıl (--subject-prompt-bypass da desteklenir)",
           ],
-          [
-            '--Temizlemek',
-            'Durumu uzlaştır — sahipsiz koşulları ve Tur Takibi satırlarını kaldır',
-          ],
+          ['--Temizlemek', 'Durumu uzlaştır — sahipsiz koşulları ve Tur Takibi satırlarını kaldır'],
           [
             '--yeniden sipariş koşulları',
             'Tur sırasındaki koşul satırlarını atanmış tokenlarının arkasına manuel olarak yeniden konumlandır',
           ],
-          [
-            '--makroyu yeniden yükle',
-            'GM makrolarını yeniden oluştur veya güncelle',
-          ],
+          ['--makroyu yeniden yükle', 'GM makrolarını yeniden oluştur veya güncelle'],
           [
             '--yeniden yükleme bildirisi',
             'Yerelleştirilmiş yardım el ilanını yeniden oluştur veya güncelle',
@@ -18512,10 +16892,7 @@ const ConditionTrackerMod = (() => {
         colType: 'Tür',
         colNotes: 'Notlar',
         rows: [
-          [
-            '🔮 Büyü',
-            'Adlandırılmış bir büyü etkisini takip edin — büyü adı sorulacak',
-          ],
+          ['🔮 Büyü', 'Adlandırılmış bir büyü etkisini takip edin — büyü adı sorulacak'],
           [
             '🎯 Yetenek',
             'Adlandırılmış bir sınıf veya ırk yeteneğini takip edin — yetenek adı sorulacak',
@@ -18524,10 +16901,7 @@ const ConditionTrackerMod = (() => {
             '🍀 Avantaj',
             'Bir tokenden diğerine verilen avantajı kaydedin; inisiyatifte kaynakla gruplandırılır',
           ],
-          [
-            '⬇️ Dezavantaj',
-            'Uygulanan dezavantajı kaydedin; inisiyatifte kaynakla gruplandırılır',
-          ],
+          ['⬇️ Dezavantaj', 'Uygulanan dezavantajı kaydedin; inisiyatifte kaynakla gruplandırılır'],
           ['📝 Diğer', 'Serbest biçimli özel etiket — bir açıklama sorulacak'],
         ],
       },
@@ -18550,10 +16924,7 @@ const ConditionTrackerMod = (() => {
             'Kaynağın sonraki turunun sonu',
             'Kaynak tokenın inisiyatifteki sonraki turu sona erdiğinde sona erer',
           ],
-          [
-            '1 / 2 / 3 / 10 tur',
-            'Sabit geri sayım; çapa token tur sonunda bir azalma',
-          ],
+          ['1 / 2 / 3 / 10 tur', 'Sabit geri sayım; çapa token tur sonunda bir azalma'],
         ],
       },
       savedEffects: {
@@ -18563,10 +16934,7 @@ const ConditionTrackerMod = (() => {
         visibility: {
           heading: 'Görünürlük Modları',
           rows: [
-            [
-              'halk',
-              "Tam efekt etiketi Turn Tracker'da ve genel sohbette görülebilir.",
-            ],
+            ['halk', "Tam efekt etiketi Turn Tracker'da ve genel sohbette görülebilir."],
             [
               'maskeli',
               "Oyunculara belirsiz bir genel etiket gösterilir; tüm ayrıntılar yalnızca GM'ye aittir.",
@@ -18582,10 +16950,7 @@ const ConditionTrackerMod = (() => {
           intro:
             "Tüm --saved komutları yalnızca GM'ye özgüdür. --saved veya --saved eklentisini çalıştırmadan önce bir belirteç seçin.",
           rows: [
-            [
-              '!koşul-takipçi --kaydedildi',
-              'Seçilen jeton için kayıtlı efektleri görüntüleyin.',
-            ],
+            ['!koşul-takipçi --kaydedildi', 'Seçilen jeton için kayıtlı efektleri görüntüleyin.'],
             [
               '!koşul-izleyici --kaydedilmiş ekleme',
               'Kaydedilmiş efekt ekleme sihirbazını başlatın.',
@@ -18637,16 +17002,8 @@ const ConditionTrackerMod = (() => {
               'Karakter ct_mod_actor_type özelliği (--classify --scope character)',
               'pc / npc / göz ardı edildi',
             ],
-            [
-              '3',
-              'Bağlantısız token — karakter sayfası yok',
-              'görmezden gelindi',
-            ],
-            [
-              '4',
-              'Oyun sistemi adaptörü (npc / is_npc özelliği)',
-              'bilgisayar / npc',
-            ],
+            ['3', 'Bağlantısız token — karakter sayfası yok', 'görmezden gelindi'],
+            ['4', 'Oyun sistemi adaptörü (npc / is_npc özelliği)', 'bilgisayar / npc'],
             [
               '5',
               'Genel NPC özellik taraması (npc, is_npc, npcflag, sheet_type, character_type)',
@@ -18664,10 +17021,7 @@ const ConditionTrackerMod = (() => {
               'bilgisayar',
               'Oyuncu karakteri — sihirbazda ve algılamada her zaman OY olarak dahil edilir',
             ],
-            [
-              'NPC',
-              'Oyuncu olmayan karakter — her zaman OYD olarak dahil edilir',
-            ],
+            ['NPC', 'Oyuncu olmayan karakter — her zaman OYD olarak dahil edilir'],
             [
               'görmezden gelindi',
               'Hiçbir zaman gösterilmez veya takip edilmez — sihirbazın token seçicisinden hariç tutulur',
@@ -18680,17 +17034,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Sınıflandırma Komutları',
-          intro:
-            '--classify komutlarını çalıştırmadan önce bir veya daha fazla token seçin.',
+          intro: '--classify komutlarını çalıştırmadan önce bir veya daha fazla token seçin.',
           rows: [
             [
               "!durum-takipçi --PC'yi sınıflandır",
               'Seçili tokenları OY olarak işaretler (varsayılan kapsam: karakter).',
             ],
-            [
-              "!koşul-izleyici --npc'yi sınıflandır",
-              'Seçili tokenları OYD olarak işaretler.',
-            ],
+            ["!koşul-izleyici --npc'yi sınıflandır", 'Seçili tokenları OYD olarak işaretler.'],
             [
               '!koşul-izleyici --sınıflandırma göz ardı edildi',
               'Seçili tokenları tüm takipten hariç tutar.',
@@ -19030,41 +17380,33 @@ const ConditionTrackerMod = (() => {
         macroReinstalled:
           'Макроси {wizard}, {multiTarget}, {reportToken}, {saved} і {classify} перевстановлено для всіх поточних GM-гравців.',
         handoutReinstalled: 'Довідник {handout} перевстановлено.',
-        duplicate:
-          "Такий самий набір джерела, суб'єкта, цілі, стану й тексту вже активний.",
+        duplicate: "Такий самий набір джерела, суб'єкта, цілі, стану й тексту вже активний.",
         noTargets: 'Для застосування до кількох цілей не вказано токени.',
-        noSelection:
-          'Виберіть принаймні один токен на мапі перед використанням --multi-target.',
+        noSelection: 'Виберіть принаймні один токен на мапі перед використанням --multi-target.',
         invalidIds: 'У поточному виборі не знайдено дійсних ID токенів.',
         reSelectTokens:
           'Жоден із початково вибраних токенів не знайдено. Виберіть токени знову й повторіть.',
         conditionNotFound: 'ID стану не знайдено.',
         gmOnly: 'Команди Condition Tracker доступні лише GM.',
-        commandFailed:
-          'Команду не вдалося безпечно виконати. Перевірте консоль API.',
+        commandFailed: 'Команду не вдалося безпечно виконати. Перевірте консоль API.',
         sourceTokenNotFound: 'Токен-джерело не знайдено.',
         targetTokenNotFound: 'Токен-ціль не знайдено.',
         subjectTokenNotFound: "Токен-суб'єкт не знайдено.",
-        invalidCondition:
-          'Стан має бути одним із попередньо визначених станів або Other.',
+        invalidCondition: 'Стан має бути одним із попередньо визначених станів або Other.',
         subjectOnlyCustom:
           '--subject дійсний лише для Spell, Ability, Advantage, Disadvantage та Other.',
-        subjectBypassInvalid:
-          '--subjectPromptBypass очікує true або false, якщо значення вказано.',
+        subjectBypassInvalid: '--subjectPromptBypass очікує true або false, якщо значення вказано.',
         customDetailsRequired:
           'Для {condition} потрібні подробиці. Використайте --other, щоб їх указати.',
-        markerConfigFormat:
-          'Формат налаштування маркера: --config marker Grappled=grab',
+        markerConfigFormat: 'Формат налаштування маркера: --config marker Grappled=grab',
         markerPredefinedRequired:
           'Для налаштування маркера потрібна назва попередньо визначеного стану.',
-        markerNameRequired:
-          'Для налаштування маркера потрібна непорожня назва маркера.',
+        markerNameRequired: 'Для налаштування маркера потрібна непорожня назва маркера.',
         markerSet: 'Маркер {condition} встановлено на {marker}.',
         healthBarSet: "Панель здоров'я встановлено на {bar}.",
         boolSet: '{key} встановлено на {value}.',
         expectedBoolean: 'Очікується true або false.',
-        invalidHealthBar:
-          "Панель здоров'я має бути bar1_value, bar2_value або bar3_value.",
+        invalidHealthBar: "Панель здоров'я має бути bar1_value, bar2_value або bar3_value.",
         markersDisabled: 'Маркери вимкнено.',
         noMarkerConfigured: 'Для цього стану маркер не налаштовано.',
         markerApplied: 'Маркер застосовано: {marker}',
@@ -19089,8 +17431,7 @@ const ConditionTrackerMod = (() => {
         tokenMoved: '{name} переміщено на шар мапи.',
         tokenNotFound: 'Токен не знайдено.',
         noActiveConditions: '{name} не має активних станів для видалення.',
-        deadNoConditions:
-          '{name} позначено як мертвого. Активних станів не було.',
+        deadNoConditions: '{name} позначено як мертвого. Активних станів не було.',
         scriptReady: '{name} активний, ви використовуєте версію {version}.',
         reachedZeroHp: '{name} досяг 0 HP',
         manuallyRemoved: 'це було видалено вручну',
@@ -19098,25 +17439,19 @@ const ConditionTrackerMod = (() => {
         markedAsDead: '{name} позначено як мертвого',
         conditionReorder:
           'Порядок ходів змінився, і {count} відстежуваний рядок/рядків умов може бути тепер не на місці. Натисніть нижче, щоб відновити їх після призначених токенів.',
-        conditionsReordered:
-          'Рядки умов були переміщені після призначених токенів.',
+        conditionsReordered: 'Рядки умов були переміщені після призначених токенів.',
         noTokensSelectedReport:
           'Виберіть принаймні один маркер на дошці перед використанням --report-token.',
-        noConditionsAppliedTo:
-          '{name} не має активних умов, застосованих до нього.',
-        noConditionsAppliedBy:
-          '{name} не має активних умов, застосованих до інших.',
+        noConditionsAppliedTo: '{name} не має активних умов, застосованих до нього.',
+        noConditionsAppliedBy: '{name} не має активних умов, застосованих до інших.',
         noSavedEffects: 'Немає збережених ефектів для {name}.',
-        noTokenSelectedSaved:
-          'Виберіть маркер на дошці перед використанням --saved.',
+        noTokenSelectedSaved: 'Виберіть маркер на дошці перед використанням --saved.',
         savedEffectAdded: 'Збережений ефект додано для {name}.',
         savedEffectUpdated: 'Збережений ефект оновлено.',
         savedEffectRemoved: 'Збережений ефект видалено.',
         savedEffectNotFound: 'Збережений ефект не знайдено.',
-        savedInvalidVisibility:
-          'Недійсна видимість. Використовуйте public, masked або gm.',
-        savedConditionRequired:
-          'Condition type is required. Use --condition <type>.',
+        savedInvalidVisibility: 'Недійсна видимість. Використовуйте public, masked або gm.',
+        savedConditionRequired: 'Condition type is required. Use --condition <type>.',
         savedPromotedPublic: 'Ефект додано до Turn Tracker як публічний.',
         savedPromotedMasked:
           'Ефект додано до Turn Tracker як замаскований — гравці бачать: {publicLabel}.',
@@ -19172,8 +17507,7 @@ const ConditionTrackerMod = (() => {
         showTitle: 'Діагностика Класифікації',
         showHeading: 'Деталі Класифікації Токена',
         resultHeading: 'Перевизначення Застосовано',
-        noSelection:
-          'Виберіть принаймні один токен на полі перед використанням --classify.',
+        noSelection: 'Виберіть принаймні один токен на полі перед використанням --classify.',
         invalidType:
           'Недійсний тип класифікації: {type}. Використовуйте pc, npc, ignored або auto.',
         set: '{name} → {type} (область: {scope})',
@@ -19195,8 +17529,7 @@ const ConditionTrackerMod = (() => {
         unusedMarkers: 'Невикористані маркери',
       },
       apply: {
-        turnAppended:
-          'Цілі не було в порядку ходів; рядок стану додано в кінець.',
+        turnAppended: 'Цілі не було в порядку ходів; рядок стану додано в кінець.',
         turnInserted: 'Рядок стану вставлено під токеном цілі.',
       },
     },
@@ -19239,26 +17572,11 @@ const ConditionTrackerMod = (() => {
         rows: [
           ['-- підказка', 'Інтерактивний покроковий майстер'],
           ['--багатоцільовий', 'Застосувати стан до кількох цілей одночасно'],
-          [
-            '-- меню',
-            'Показати головне меню (додайте remove для меню видалення)',
-          ],
-          [
-            '--джерело X --ціль Y --умова Z',
-            'Застосувати стан напряму без майстра',
-          ],
-          [
-            '--duration <значення>',
-            'Тривалість для прямого застосування (наприклад, 2 rounds)',
-          ],
-          [
-            '--other <текст>',
-            'Користувацький текст для ефектів Spell / Ability / Other',
-          ],
-          [
-            '--remove <ідентифікатор умови>',
-            'Видалити конкретний стан за його унікальним ID',
-          ],
+          ['-- меню', 'Показати головне меню (додайте remove для меню видалення)'],
+          ['--джерело X --ціль Y --умова Z', 'Застосувати стан напряму без майстра'],
+          ['--duration <значення>', 'Тривалість для прямого застосування (наприклад, 2 rounds)'],
+          ['--other <текст>', 'Користувацький текст для ефектів Spell / Ability / Other'],
+          ['--remove <ідентифікатор умови>', 'Видалити конкретний стан за його унікальним ID'],
           [
             '--config <параметр> <значення>',
             'Змінити налаштування (див. розділ Налаштування нижче)',
@@ -19267,19 +17585,13 @@ const ConditionTrackerMod = (() => {
             '--prompt --subjectPromptBypass true|false',
             'Перевизначити subjectPromptBypass лише для цієї команди (також підтримує --subject-prompt-bypass)',
           ],
-          [
-            '--прибирання',
-            'Узгодити стан — видалити осиротілі стани й рядки Turn Tracker',
-          ],
+          ['--прибирання', 'Узгодити стан — видалити осиротілі стани й рядки Turn Tracker'],
           [
             '--reorder-умови',
             'Вручну переставити рядки умов після відповідних токенів у черзі ходу',
           ],
           ['--reinstall-macro', 'Повторно створити або оновити GM-макроси'],
-          [
-            '--reinstall-handout',
-            'Повторно створити або оновити локалізований довідник',
-          ],
+          ['--reinstall-handout', 'Повторно створити або оновити локалізований довідник'],
           [
             '--report-token',
             'Прошепотіть звіт про умови лише GM для кожного вибраного токена (умови, застосовані до нього та ним)',
@@ -19312,10 +17624,7 @@ const ConditionTrackerMod = (() => {
         colType: 'Тип',
         colNotes: 'Примітки',
         rows: [
-          [
-            '🔮 Заклинання',
-            'Відстежувати ефект названого закляття — буде запитано назву закляття',
-          ],
+          ['🔮 Заклинання', 'Відстежувати ефект названого закляття — буде запитано назву закляття'],
           [
             '🎯 Здатність',
             'Відстежувати названу класову або расову здібність — буде запитано назву здібності',
@@ -19324,10 +17633,7 @@ const ConditionTrackerMod = (() => {
             '🍀 Перевага',
             'Записати перевагу від одного токена проти іншого; групується з джерелом в ініціативі',
           ],
-          [
-            '⬇️ Недолік',
-            'Записати перешкоду; групується з джерелом в ініціативі',
-          ],
+          ['⬇️ Недолік', 'Записати перешкоду; групується з джерелом в ініціативі'],
           ['📝 Інше', 'Довільна користувацька мітка — буде запитано опис'],
         ],
       },
@@ -19338,10 +17644,7 @@ const ConditionTrackerMod = (() => {
         colOption: 'Опція',
         colBehaviour: 'Поведінка',
         rows: [
-          [
-            'До зняття',
-            'Постійно — потрібно видалити вручну через меню або --remove',
-          ],
+          ['До зняття', 'Постійно — потрібно видалити вручну через меню або --remove'],
           [
             'Кінець наступного ходу цілі',
             'Завершується, коли закінчується наступний хід токена-цілі',
@@ -19386,18 +17689,12 @@ const ConditionTrackerMod = (() => {
               '!condition-tracker --збережено',
               'Переглянути збережені ефекти для вибраного маркера.',
             ],
-            [
-              '!condition-tracker --saved add',
-              'Запустіть майстер додавання збережених ефектів.',
-            ],
+            ['!condition-tracker --saved add', 'Запустіть майстер додавання збережених ефектів.'],
             [
               '!condition-tracker --saved edit <id>',
               'Редагувати мітки або видимість наявного збереженого ефекту.',
             ],
-            [
-              '!condition-tracker --saved remove <id>',
-              'Назавжди видалити збережений ефект.',
-            ],
+            ['!condition-tracker --saved remove <id>', 'Назавжди видалити збережений ефект.'],
             [
               '!condition-tracker --saved promote <id> --visibility public|masked|gm',
               'Скопіюйте збережений ефект у Turn Tracker (загальнодоступний або замаскований) або підтвердьте, що він відстежується лише GM.',
@@ -19452,10 +17749,7 @@ const ConditionTrackerMod = (() => {
           colType: 'Тип',
           colMeaning: 'Значення',
           rows: [
-            [
-              'шт',
-              'Ігровий персонаж — завжди включається як ГП у майстрі та визначенні',
-            ],
+            ['шт', 'Ігровий персонаж — завжди включається як ГП у майстрі та визначенні'],
             ['npc', 'Неігровий персонаж — завжди включається як НПС'],
             [
               'ігнорується',
@@ -19469,17 +17763,13 @@ const ConditionTrackerMod = (() => {
         },
         commands: {
           heading: 'Команди Класифікації',
-          intro:
-            'Виберіть один або кілька токенів перед виконанням команд --classify.',
+          intro: 'Виберіть один або кілька токенів перед виконанням команд --classify.',
           rows: [
             [
               '!condition-tracker --класифікувати ПК',
               'Позначити вибрані токени як ГП (область за замовчуванням: персонаж).',
             ],
-            [
-              '!condition-tracker --classify npc',
-              'Позначити вибрані токени як НПС.',
-            ],
+            ['!condition-tracker --classify npc', 'Позначити вибрані токени як НПС.'],
             [
               '!condition-tracker --classify ігнорується',
               'Виключити вибрані токени з усього відстеження.',
@@ -19536,11 +17826,7 @@ const ConditionTrackerMod = (() => {
             'bar1_value / bar2_value / bar3_value',
             'Панель токена для відстеження; коли вона падає до 0, GM отримує запит на очищення станів',
           ],
-          [
-            'language',
-            'en-US / fr / de / es / pt-BR / ko',
-            'Мова повідомлень чату та довідника',
-          ],
+          ['language', 'en-US / fr / de / es / pt-BR / ko', 'Мова повідомлень чату та довідника'],
           [
             'marker',
             '&lt;Condition&gt;=&lt;marker name&gt;',
@@ -19582,8 +17868,7 @@ const ConditionTrackerMod = (() => {
       remove: {
         custom: '{target} більше не під дією {effect}.',
         advantage: '{source} більше не має переваги проти {target}{subject}.',
-        disadvantage:
-          '{source} більше не має перешкоди проти {target}{subject}.',
+        disadvantage: '{source} більше не має перешкоди проти {target}{subject}.',
         noBy: '{target} більше не {past}.',
         self: '{target} більше не {past}.',
         standard: '{target} більше не {past} від {source}.',
@@ -19646,13 +17931,11 @@ const ConditionTrackerMod = (() => {
 
     const normalized = s.toLowerCase();
     const supportedLocale = Array.from(VALID_LOCALES).find(
-      (locale) => locale.toLowerCase() === normalized,
+      (locale) => locale.toLowerCase() === normalized
     );
     return (
       supportedLocale ||
-      Object.entries(LOCALE_ALIASES).find(
-        ([alias]) => alias.toLowerCase() === normalized,
-      )?.[1] ||
+      Object.entries(LOCALE_ALIASES).find(([alias]) => alias.toLowerCase() === normalized)?.[1] ||
       ''
     );
   }
@@ -19675,9 +17958,7 @@ const ConditionTrackerMod = (() => {
    */
   function getLocaleDefinition(locale) {
     const lang = getLocale(locale);
-    return (
-      LOCALE_DEFINITIONS.find((definition) => definition.code === lang) || null
-    );
+    return LOCALE_DEFINITIONS.find((definition) => definition.code === lang) || null;
   }
 
   /**
@@ -19697,12 +17978,10 @@ const ConditionTrackerMod = (() => {
     }
 
     const lang = getLocale(displayLocale);
-    let localizedName =
-      TRANSLATIONS[lang]?.languageNames?.[definition.code] || '';
+    let localizedName = TRANSLATIONS[lang]?.languageNames?.[definition.code] || '';
     try {
       localizedName =
-        localizedName ||
-        new Intl.DisplayNames([lang], { type: 'language' }).of(definition.code);
+        localizedName || new Intl.DisplayNames([lang], { type: 'language' }).of(definition.code);
     } catch (error) {
       if (!localizedName) {
         throw error;
@@ -19728,8 +18007,7 @@ const ConditionTrackerMod = (() => {
   function isRtlLocale(locale) {
     const lang = getLocale(locale);
     return LOCALE_DEFINITIONS.some(
-      (definition) =>
-        definition.code === lang && definition.direction === 'rtl',
+      (definition) => definition.code === lang && definition.direction === 'rtl'
     );
   }
 
@@ -19770,9 +18048,7 @@ const ConditionTrackerMod = (() => {
 
     if (typeof value !== 'string') return key;
 
-    return value.replaceAll(/\{(\w+)\}/g, (_, k) =>
-      k in vars ? String(vars[k]) : `{${k}}`,
-    );
+    return value.replaceAll(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
   }
 
   /**
@@ -19826,7 +18102,7 @@ const ConditionTrackerMod = (() => {
         'Paralyzed',
         'Petrified',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -19944,13 +18220,7 @@ const ConditionTrackerMod = (() => {
       Disadvantage: 'broken-heart',
     }),
 
-    CUSTOM_EFFECT_TYPES: Object.freeze([
-      'Spell',
-      'Ability',
-      'Advantage',
-      'Disadvantage',
-      'Other',
-    ]),
+    CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Advantage', 'Disadvantage', 'Other']),
     CUSTOM_EFFECT_LABELS: Object.freeze({}),
   });
 
@@ -19976,7 +18246,7 @@ const ConditionTrackerMod = (() => {
         'Stunned',
         'Unconscious',
         'Weakened',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -20123,7 +18393,7 @@ const ConditionTrackerMod = (() => {
         'Staggered',
         'Stunned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -20355,7 +18625,7 @@ const ConditionTrackerMod = (() => {
         'Staggered',
         'Stunned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -20613,7 +18883,7 @@ const ConditionTrackerMod = (() => {
         'Unconscious',
         'Undetected',
         'Wounded',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -20874,7 +19144,7 @@ const ConditionTrackerMod = (() => {
         'Staggered',
         'Stunned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21123,7 +19393,7 @@ const ConditionTrackerMod = (() => {
         'Stunned',
         'Vulnerable',
         'Weakened',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21215,7 +19485,7 @@ const ConditionTrackerMod = (() => {
         'Petrified',
         'Poisoned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21310,7 +19580,7 @@ const ConditionTrackerMod = (() => {
         'Petrified',
         'Poisoned',
         'Stunned',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21395,7 +19665,7 @@ const ConditionTrackerMod = (() => {
         'Paralyzed',
         'Poisoned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21486,7 +19756,7 @@ const ConditionTrackerMod = (() => {
         'Slowed',
         'Stunned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21617,7 +19887,7 @@ const ConditionTrackerMod = (() => {
         'Poisoned',
         'Prone',
         'Stunned',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21709,7 +19979,7 @@ const ConditionTrackerMod = (() => {
         'Seriously Wounded',
         'Temporary Insanity',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21815,7 +20085,7 @@ const ConditionTrackerMod = (() => {
         'Seriously Wounded',
         'Temporary Insanity',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21884,9 +20154,7 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Vaesen',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Broken', 'Dying', 'Frightened', 'Injured'].sort((a, b) =>
-        a.localeCompare(b),
-      ),
+      ['Broken', 'Dying', 'Frightened', 'Injured'].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21931,9 +20199,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Mothership RPG',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Bleeding', 'Dead', 'Dying', 'Panicking', 'Unconscious', 'Wounded'].sort(
-        (a, b) => a.localeCompare(b),
-      ),
+      ['Bleeding', 'Dead', 'Dying', 'Panicking', 'Unconscious', 'Wounded'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -21995,14 +20263,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Genesys',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Disoriented',
-        'Ensnared',
-        'Immobilized',
-        'Prone',
-        'Staggered',
-        'Strained',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Disoriented', 'Ensnared', 'Immobilized', 'Prone', 'Staggered', 'Strained'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22082,7 +20345,7 @@ const ConditionTrackerMod = (() => {
         'Isolated',
         'Panicked',
         'Poisoned',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22174,7 +20437,7 @@ const ConditionTrackerMod = (() => {
         'Paralyzed',
         'Torpor',
         'Wounded',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22248,9 +20511,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Werewolf: The Apocalypse',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Frenzied', 'Injured', 'Knocked Down', 'Paralyzed', 'Wounded'].sort(
-        (a, b) => a.localeCompare(b),
-      ),
+      ['Frenzied', 'Injured', 'Knocked Down', 'Paralyzed', 'Wounded'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22303,13 +20566,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Mage: The Ascension',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Blinded',
-        'Controlled',
-        'Paradox',
-        'Unconscious',
-        'Willpower Spent',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Blinded', 'Controlled', 'Paradox', 'Unconscious', 'Willpower Spent'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22366,14 +20625,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Hunter: The Reckoning',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Blinded',
-        'Controlled',
-        'Frightened',
-        'Injured',
-        'Paralyzed',
-        'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Blinded', 'Controlled', 'Frightened', 'Injured', 'Paralyzed', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22432,14 +20686,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Changeling: The Dreaming',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Bedlam',
-        'Blinded',
-        'Chimera-Touched',
-        'Dazed',
-        'Paralyzed',
-        'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Bedlam', 'Blinded', 'Chimera-Touched', 'Dazed', 'Paralyzed', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22507,7 +20756,7 @@ const ConditionTrackerMod = (() => {
         'Paralyzed',
         'Stunned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22593,7 +20842,7 @@ const ConditionTrackerMod = (() => {
         'Seriously Wounded',
         'Stunned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22652,9 +20901,7 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Traveller',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Bleeding', 'Incapacitated', 'Stunned', 'Unconscious'].sort((a, b) =>
-        a.localeCompare(b),
-      ),
+      ['Bleeding', 'Incapacitated', 'Stunned', 'Unconscious'].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22705,15 +20952,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Stars Without Number',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Blinded',
-        'Dazed',
-        'Deafened',
-        'Diseased',
-        'Incapacitated',
-        'Paralyzed',
-        'Poisoned',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Blinded', 'Dazed', 'Deafened', 'Diseased', 'Incapacitated', 'Paralyzed', 'Poisoned'].sort(
+        (a, b) => a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22785,9 +21026,7 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Alien RPG',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Broken', 'Dying', 'Panicking', 'Unconscious'].sort((a, b) =>
-        a.localeCompare(b),
-      ),
+      ['Broken', 'Dying', 'Panicking', 'Unconscious'].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22839,14 +21078,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Star Wars RPG (FFG)',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Disoriented',
-        'Ensnared',
-        'Immobilized',
-        'Prone',
-        'Staggered',
-        'Strained',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Disoriented', 'Ensnared', 'Immobilized', 'Prone', 'Staggered', 'Strained'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22915,9 +21149,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'GURPS',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Berserk', 'Confused', 'Dazed', 'Dying', 'Stunned', 'Unconscious'].sort(
-        (a, b) => a.localeCompare(b),
-      ),
+      ['Berserk', 'Confused', 'Dazed', 'Dying', 'Stunned', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -22996,7 +21230,7 @@ const ConditionTrackerMod = (() => {
         'Shaken',
         'Stunned',
         'Vulnerable',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23089,15 +21323,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Basic Role-Playing',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Bleeding',
-        'Dying',
-        'Fatigued',
-        'Insane',
-        'Poisoned',
-        'Unconscious',
-        'Wounded',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Bleeding', 'Dying', 'Fatigued', 'Insane', 'Poisoned', 'Unconscious', 'Wounded'].sort(
+        (a, b) => a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23178,14 +21406,9 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Hero System',
 
     STANDARD_CONDITIONS: Object.freeze(
-      [
-        'Blinded',
-        'Confused',
-        'Dazed',
-        'Entangled',
-        'Stunned',
-        'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ['Blinded', 'Confused', 'Dazed', 'Entangled', 'Stunned', 'Unconscious'].sort((a, b) =>
+        a.localeCompare(b)
+      )
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23239,7 +21462,7 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Cypher System',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Dazed', 'Debilitated', 'Impaired'].sort((a, b) => a.localeCompare(b)),
+      ['Dazed', 'Debilitated', 'Impaired'].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23281,9 +21504,7 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Knave',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Blinded', 'Frightened', 'Paralyzed', 'Poisoned'].sort((a, b) =>
-        a.localeCompare(b),
-      ),
+      ['Blinded', 'Frightened', 'Paralyzed', 'Poisoned'].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23332,9 +21553,7 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Into the Odd',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Blinded', 'Deprived', 'Stunned', 'Unconscious'].sort((a, b) =>
-        a.localeCompare(b),
-      ),
+      ['Blinded', 'Deprived', 'Stunned', 'Unconscious'].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23372,9 +21591,7 @@ const ConditionTrackerMod = (() => {
     SYSTEM_NAME: 'Cairn',
 
     STANDARD_CONDITIONS: Object.freeze(
-      ['Blinded', 'Deprived', 'Panicked', 'Unconscious'].sort((a, b) =>
-        a.localeCompare(b),
-      ),
+      ['Blinded', 'Deprived', 'Panicked', 'Unconscious'].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23429,7 +21646,7 @@ const ConditionTrackerMod = (() => {
         'Stunned',
         'Unconscious',
         'Wounded',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23534,7 +21751,7 @@ const ConditionTrackerMod = (() => {
         'Poisoned',
         'Stunned',
         'Unconscious',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23641,7 +21858,7 @@ const ConditionTrackerMod = (() => {
         'Prone',
         'Stunned',
         'Surprised',
-      ].sort((a, b) => a.localeCompare(b)),
+      ].sort((a, b) => a.localeCompare(b))
     ),
 
     CONDITION_DATA: Object.freeze({
@@ -23884,9 +22101,7 @@ const ConditionTrackerMod = (() => {
     { id: 'generic', name: 'Generic / Other', profile: genericProfile },
   ]);
 
-  const VALID_GAME_SYSTEMS = Object.freeze(
-    new Set(GAME_SYSTEM_DEFINITIONS.map((def) => def.id)),
-  );
+  const VALID_GAME_SYSTEMS = Object.freeze(new Set(GAME_SYSTEM_DEFINITIONS.map((def) => def.id)));
 
   GAME_SYSTEM_DEFINITIONS.map((def) => `${def.id} — ${def.name}`).join(' / ');
 
@@ -24169,13 +22384,8 @@ const ConditionTrackerMod = (() => {
     return {
       gameSystem: systemId,
       useMarkers:
-        typeof nextConfig.useMarkers === 'boolean'
-          ? nextConfig.useMarkers
-          : defaults.useMarkers,
-      useIcons:
-        typeof nextConfig.useIcons === 'boolean'
-          ? nextConfig.useIcons
-          : defaults.useIcons,
+        typeof nextConfig.useMarkers === 'boolean' ? nextConfig.useMarkers : defaults.useMarkers,
+      useIcons: typeof nextConfig.useIcons === 'boolean' ? nextConfig.useIcons : defaults.useIcons,
       subjectPromptBypass:
         typeof nextConfig.subjectPromptBypass === 'boolean'
           ? nextConfig.subjectPromptBypass
@@ -24236,18 +22446,15 @@ const ConditionTrackerMod = (() => {
       nextConfig.markers = { ...profile.DEFAULT_MARKERS };
     }
 
-    nextConfig.useMarkers = parseBooleanOption(
-      options.useMarkers,
-      config.useMarkers,
-    );
+    nextConfig.useMarkers = parseBooleanOption(options.useMarkers, config.useMarkers);
     nextConfig.useIcons = parseBooleanOption(options.useIcons, config.useIcons);
     nextConfig.subjectPromptBypass = parseBooleanOption(
       options.subjectPromptBypass,
-      config.subjectPromptBypass,
+      config.subjectPromptBypass
     );
     nextConfig.suppressPublicChat = parseBooleanOption(
       options.suppressPublicChat,
-      config.suppressPublicChat,
+      config.suppressPublicChat
     );
 
     if (VALID_HEALTH_BARS.includes(options.healthBar)) {
@@ -24265,7 +22472,7 @@ const ConditionTrackerMod = (() => {
       const markerValue = getMarkerOption(options, condition);
       nextMarkers[condition] = parseMarkerOption(
         markerValue,
-        nextMarkers[condition] || profile.DEFAULT_MARKERS[condition],
+        nextMarkers[condition] || profile.DEFAULT_MARKERS[condition]
       );
     });
     nextConfig.markers = nextMarkers;
@@ -24337,11 +22544,7 @@ const ConditionTrackerMod = (() => {
       return undefined;
     }
 
-    const keyVariants = [
-      `marker${condition}`,
-      `marker.${condition}`,
-      `markers.${condition}`,
-    ];
+    const keyVariants = [`marker${condition}`, `marker.${condition}`, `markers.${condition}`];
 
     for (const key of keyVariants) {
       if (Object.hasOwn(options, key)) {
@@ -24441,10 +22644,7 @@ const ConditionTrackerMod = (() => {
    * @returns {object|null} The matching condition or null.
    */
   function findActiveCondition(conditionId) {
-    return (
-      filterActiveConditions((condition) => condition.id === conditionId)[0] ||
-      null
-    );
+    return filterActiveConditions((condition) => condition.id === conditionId)[0] || null;
   }
 
   /**
@@ -24489,9 +22689,7 @@ const ConditionTrackerMod = (() => {
    * @returns {object[]} Matching active conditions.
    */
   function getActiveByTarget(targetTokenId) {
-    return filterActiveConditions(
-      (condition) => condition.targetTokenId === targetTokenId,
-    );
+    return filterActiveConditions((condition) => condition.targetTokenId === targetTokenId);
   }
 
   /**
@@ -24501,9 +22699,7 @@ const ConditionTrackerMod = (() => {
    * @returns {object[]} Matching active conditions.
    */
   function getActiveBySource(sourceTokenId) {
-    return filterActiveConditions(
-      (condition) => condition.sourceTokenId === sourceTokenId,
-    );
+    return filterActiveConditions((condition) => condition.sourceTokenId === sourceTokenId);
   }
 
   /**
@@ -24559,12 +22755,7 @@ const ConditionTrackerMod = (() => {
    * @param {string[]} [misplacedConditionIds] Condition ids currently misplaced in the turn order.
    * @returns {void}
    */
-  function updateTurnRuntime(
-    firstTurnId,
-    signature,
-    tokenIds,
-    misplacedConditionIds,
-  ) {
+  function updateTurnRuntime(firstTurnId, signature, tokenIds, misplacedConditionIds) {
     const runtime = ensureState().runtime;
     runtime.previousFirstTurnId = firstTurnId || '';
     runtime.previousTurnSignature = signature || '';
@@ -24634,9 +22825,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string} Inline CSS direction and alignment.
    */
   function getDirectionStyle$1(locale) {
-    return isRtlLocale(locale)
-      ? 'direction:rtl;text-align:right'
-      : 'direction:ltr;text-align:left';
+    return isRtlLocale(locale) ? 'direction:rtl;text-align:right' : 'direction:ltr;text-align:left';
   }
 
   /**
@@ -24738,7 +22927,7 @@ const ConditionTrackerMod = (() => {
       lines,
       CHAT_HEADER_WARNING_STYLE,
       `⚠️ ${escapeHtml(t('ui.title.warning', locale))}`,
-      locale,
+      locale
     );
   }
 
@@ -24753,7 +22942,7 @@ const ConditionTrackerMod = (() => {
       lines,
       CHAT_HEADER_ERROR_STYLE,
       `❌ ${escapeHtml(t('ui.title.error', locale))}`,
-      locale,
+      locale
     );
   }
 
@@ -24765,9 +22954,7 @@ const ConditionTrackerMod = (() => {
    * @returns {void}
    */
   function whisperWarning(playerId, body) {
-    whisperWithBox(playerId, body, (lines, locale) =>
-      buildWarningBox(lines, locale),
-    );
+    whisperWithBox(playerId, body, (lines, locale) => buildWarningBox(lines, locale));
   }
 
   /**
@@ -24778,9 +22965,7 @@ const ConditionTrackerMod = (() => {
    * @returns {void}
    */
   function whisperError(playerId, body) {
-    whisperWithBox(playerId, body, (lines, locale) =>
-      buildErrorBox(lines, locale),
-    );
+    whisperWithBox(playerId, body, (lines, locale) => buildErrorBox(lines, locale));
   }
 
   /**
@@ -24875,9 +23060,7 @@ const ConditionTrackerMod = (() => {
    * @returns {boolean} True when the line is trusted HTML.
    */
   function isTrustedHtmlLine(line) {
-    return (
-      Boolean(line) && typeof line === 'object' && hasValue(line.__trustedHtml)
-    );
+    return Boolean(line) && typeof line === 'object' && hasValue(line.__trustedHtml);
   }
 
   /**
@@ -24913,7 +23096,7 @@ const ConditionTrackerMod = (() => {
    */
   function buildButton(label, command) {
     return rawHtml(
-      `<a style="${CHAT_BUTTON_STYLE}" href="${escapeHtml(command)}">${escapeHtml(label)}</a>`,
+      `<a style="${CHAT_BUTTON_STYLE}" href="${escapeHtml(command)}">${escapeHtml(label)}</a>`
     );
   }
 
@@ -24924,10 +23107,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string} Button HTML.
    */
   function buildRemoveButton(condition) {
-    return buildButton(
-      `Remove: ${condition.displayText}`,
-      `${COMMAND} --remove ${condition.id}`,
-    );
+    return buildButton(`Remove: ${condition.displayText}`, `${COMMAND} --remove ${condition.id}`);
   }
 
   /**
@@ -24943,8 +23123,7 @@ const ConditionTrackerMod = (() => {
     const directionStyle = getDirectionStyle$1(locale);
     const headerCells = headers
       .map(
-        (header) =>
-          `<th style="${tableHeaderStyle}"><strong>${escapeHtml(header)}</strong></th>`,
+        (header) => `<th style="${tableHeaderStyle}"><strong>${escapeHtml(header)}</strong></th>`
       )
       .join('');
 
@@ -24954,14 +23133,14 @@ const ConditionTrackerMod = (() => {
           `<tr>${cells
             .map(
               (cell) =>
-                `<td style="padding:2px 4px;vertical-align:top;${directionStyle}">${getTrustedHtml(cell)}</td>`,
+                `<td style="padding:2px 4px;vertical-align:top;${directionStyle}">${getTrustedHtml(cell)}</td>`
             )
-            .join('')}</tr>`,
+            .join('')}</tr>`
       )
       .join('');
 
     return rawHtml(
-      `<table style="width:100%;border-collapse:collapse;${directionStyle}"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`,
+      `<table style="width:100%;border-collapse:collapse;${directionStyle}"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`
     );
   }
 
@@ -24973,9 +23152,7 @@ const ConditionTrackerMod = (() => {
    */
   function getWhisperTarget(playerId) {
     const player = getObj('player', playerId);
-    const displayName = player
-      ? toText(player.get('_displayname')).replaceAll('"', '')
-      : '';
+    const displayName = player ? toText(player.get('_displayname')).replaceAll('"', '') : '';
     if (displayName) {
       return displayName;
     }
@@ -25108,9 +23285,7 @@ const ConditionTrackerMod = (() => {
     }
 
     if (isAdvantageType(details.condition)) {
-      const subject = toText(details.subjectName)
-        ? ` (${details.subjectName})`
-        : '';
+      const subject = toText(details.subjectName) ? ` (${details.subjectName})` : '';
       const tplKey =
         details.condition === CONDITION_DISADVANTAGE
           ? 'templates.display.disadvantage'
@@ -25185,9 +23360,7 @@ const ConditionTrackerMod = (() => {
     }
 
     if (isAdvantageType(details.condition)) {
-      const subject = toText(details.subjectName)
-        ? ` (${escapeHtml(details.subjectName)})`
-        : '';
+      const subject = toText(details.subjectName) ? ` (${escapeHtml(details.subjectName)})` : '';
       const tplKey =
         details.condition === CONDITION_DISADVANTAGE
           ? 'templates.apply.disadvantage'
@@ -25265,8 +23438,7 @@ const ConditionTrackerMod = (() => {
     }
 
     const localData = getConditionLocalData(condition.condition, locale);
-    const data =
-      localData || activeProfile().CONDITION_DATA[condition.condition];
+    const data = localData || activeProfile().CONDITION_DATA[condition.condition];
 
     if (data?.noBy) {
       return (
@@ -25325,9 +23497,7 @@ const ConditionTrackerMod = (() => {
    * @returns {boolean} True for advantage-style effects.
    */
   function isAdvantageType(condition) {
-    return (
-      condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE
-    );
+    return condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE;
   }
 
   /**
@@ -25339,9 +23509,7 @@ const ConditionTrackerMod = (() => {
   function isSelfTarget(details) {
     const sourceTokenId = toText(details.sourceTokenId);
     const targetTokenId = toText(details.targetTokenId);
-    return Boolean(
-      sourceTokenId && targetTokenId && sourceTokenId === targetTokenId,
-    );
+    return Boolean(sourceTokenId && targetTokenId && sourceTokenId === targetTokenId);
   }
 
   /**
@@ -25387,38 +23555,22 @@ const ConditionTrackerMod = (() => {
       });
     }
 
-    if (
-      key === 'end of target next turn' ||
-      key === "end of target's next turn"
-    ) {
+    if (key === 'end of target next turn' || key === "end of target's next turn") {
       return validDuration(
-        createTurnEndDuration(
-          context.targetTokenId,
-          context.currentTurnTokenId,
-        ),
+        createTurnEndDuration(context.targetTokenId, context.currentTurnTokenId)
       );
     }
 
-    if (
-      key === 'end of source next turn' ||
-      key === "end of source's next turn"
-    ) {
+    if (key === 'end of source next turn' || key === "end of source's next turn") {
       return validDuration(
-        createTurnEndDuration(
-          context.sourceTokenId,
-          context.currentTurnTokenId,
-        ),
+        createTurnEndDuration(context.sourceTokenId, context.currentTurnTokenId)
       );
     }
 
     const rounds = parseRoundCount(key);
     if (rounds > 0) {
       return validDuration(
-        createRoundDuration(
-          rounds,
-          context.targetTokenId,
-          context.currentTurnTokenId,
-        ),
+        createRoundDuration(rounds, context.targetTokenId, context.currentTurnTokenId)
       );
     }
 
@@ -25979,12 +24131,7 @@ const ConditionTrackerMod = (() => {
     }
 
     return {
-      index: findAfterExistingTargetConditions(
-        rows,
-        targetIndex + 1,
-        targetTokenId,
-        anchorLookup,
-      ),
+      index: findAfterExistingTargetConditions(rows, targetIndex + 1, targetTokenId, anchorLookup),
       appended: false,
     };
   }
@@ -25998,18 +24145,10 @@ const ConditionTrackerMod = (() => {
    * @param {Map<string, string>} [anchorLookup] Optional condition-id to anchor-token lookup.
    * @returns {number} Insert index.
    */
-  function findAfterExistingTargetConditions(
-    rows,
-    startIndex,
-    anchorTokenId,
-    anchorLookup,
-  ) {
+  function findAfterExistingTargetConditions(rows, startIndex, anchorTokenId, anchorLookup) {
     const lookup = anchorLookup || getConditionAnchorLookup();
     let index = startIndex;
-    while (
-      index < rows.length &&
-      isConditionRowForTarget(rows[index], anchorTokenId, lookup)
-    ) {
+    while (index < rows.length && isConditionRowForTarget(rows[index], anchorTokenId, lookup)) {
       index += 1;
     }
 
@@ -26227,7 +24366,7 @@ const ConditionTrackerMod = (() => {
           toText(row?.pr),
           toText(row?.formula),
           toText(row?._ct),
-        ].join('|'),
+        ].join('|')
       )
       .join('\n');
   }
@@ -26298,9 +24437,7 @@ const ConditionTrackerMod = (() => {
   function findMisplacedConditionIds() {
     const rows = getTurnOrder();
     const anchorLookup = getConditionAnchorLookup();
-    const tokenIdSet = new Set(
-      rows.map((r) => getTokenRowId(r)).filter(Boolean),
-    );
+    const tokenIdSet = new Set(rows.map((r) => getTokenRowId(r)).filter(Boolean));
     const misplaced = [];
     let currentTokenId = null;
 
@@ -26341,11 +24478,7 @@ const ConditionTrackerMod = (() => {
 
     for (const condition of activeConditions) {
       const anchorTokenId = getConditionAnchorTokenId(condition);
-      const insertIndex = getInsertIndex(
-        workingRows,
-        anchorTokenId,
-        anchorLookup,
-      );
+      const insertIndex = getInsertIndex(workingRows, anchorTokenId, anchorLookup);
       workingRows.splice(insertIndex.index, 0, createConditionRow(condition));
     }
 
@@ -26412,21 +24545,12 @@ const ConditionTrackerMod = (() => {
     if (options.publicAnnounce) {
       announceHtml(buildRemovalMessage(condition, config.useIcons, locale));
       if (options.extraLocale && options.extraLocale !== locale) {
-        announceHtml(
-          buildRemovalMessage(condition, config.useIcons, options.extraLocale),
-        );
+        announceHtml(buildRemovalMessage(condition, config.useIcons, options.extraLocale));
       }
     }
 
     if (options.whisperResult) {
-      whisperRemoval(
-        options.playerId,
-        condition,
-        rowRemoved,
-        markerResult,
-        options.reason,
-        locale,
-      );
+      whisperRemoval(options.playerId, condition, rowRemoved, markerResult, options.reason, locale);
     }
 
     return { removed: true, condition, rowRemoved, markerResult };
@@ -26443,14 +24567,7 @@ const ConditionTrackerMod = (() => {
    * @param {string} [locale] Output locale.
    * @returns {void}
    */
-  function whisperRemoval(
-    playerId,
-    condition,
-    rowRemoved,
-    markerResult,
-    reason,
-    locale,
-  ) {
+  function whisperRemoval(playerId, condition, rowRemoved, markerResult, reason, locale) {
     const reasonText = reason || t('ui.removal.manualReason', locale);
     let markerSummary = t('ui.removal.notConfigured', locale);
     if (markerResult.marker) {
@@ -26467,19 +24584,14 @@ const ConditionTrackerMod = (() => {
       htmlTable(
         [t('ui.col.field', locale), t('ui.col.result', locale)],
         [
-          [
-            t('ui.removal.conditionField', locale),
-            escapeHtml(condition.displayText),
-          ],
+          [t('ui.removal.conditionField', locale), escapeHtml(condition.displayText)],
           [t('ui.removal.reasonField', locale), escapeHtml(reasonText)],
           [
             t('ui.removal.turnRowField', locale),
-            rowRemoved
-              ? t('ui.removal.rowRemoved', locale)
-              : t('ui.removal.rowMissing', locale),
+            rowRemoved ? t('ui.removal.rowRemoved', locale) : t('ui.removal.rowMissing', locale),
           ],
           [t('ui.removal.markerField', locale), markerSummary],
-        ],
+        ]
       ),
     ]);
   }
@@ -26497,12 +24609,7 @@ const ConditionTrackerMod = (() => {
 
   /** Valid types accepted by --classify (excludes unknown which is auto-detected only). */
   const VALID_ACTOR_CLASSIFY_TYPES = Object.freeze(
-    new Set([
-      ACTOR_TYPE_PC,
-      ACTOR_TYPE_NPC,
-      ACTOR_TYPE_IGNORED,
-      ACTOR_TYPE_AUTO,
-    ]),
+    new Set([ACTOR_TYPE_PC, ACTOR_TYPE_NPC, ACTOR_TYPE_IGNORED, ACTOR_TYPE_AUTO])
   );
 
   /** Character attribute name used for explicit character-level overrides. */
@@ -26522,19 +24629,9 @@ const ConditionTrackerMod = (() => {
   };
 
   /** Common NPC indicator attribute names checked when no adapter matches. */
-  const GENERIC_NPC_ATTRS = [
-    'npc',
-    'is_npc',
-    'npcflag',
-    'sheet_type',
-    'character_type',
-  ];
+  const GENERIC_NPC_ATTRS = ['npc', 'is_npc', 'npcflag', 'sheet_type', 'character_type'];
 
-  const FINAL_TYPES = new Set([
-    ACTOR_TYPE_PC,
-    ACTOR_TYPE_NPC,
-    ACTOR_TYPE_IGNORED,
-  ]);
+  const FINAL_TYPES = new Set([ACTOR_TYPE_PC, ACTOR_TYPE_NPC, ACTOR_TYPE_IGNORED]);
 
   /**
    * Returns true when value is a storable final classification.
@@ -26664,9 +24761,7 @@ const ConditionTrackerMod = (() => {
     });
     if (attrs.length === 0) return null;
 
-    return attrs[0].get('current') === adapter.npcValue
-      ? ACTOR_TYPE_NPC
-      : ACTOR_TYPE_PC;
+    return attrs[0].get('current') === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
   }
 
   /**
@@ -26687,12 +24782,7 @@ const ConditionTrackerMod = (() => {
 
       const val = toText(attrs[0].get('current')).toLowerCase();
       if (val === '1' || val === 'true' || val === 'npc') return ACTOR_TYPE_NPC;
-      if (
-        val === '0' ||
-        val === 'false' ||
-        val === 'pc' ||
-        val === 'character'
-      ) {
+      if (val === '0' || val === 'false' || val === 'pc' || val === 'character') {
         return ACTOR_TYPE_PC;
       }
     }
@@ -26861,12 +24951,7 @@ const ConditionTrackerMod = (() => {
           reason: `${attrName}=${val}`,
         };
       }
-      if (
-        val === '0' ||
-        val === 'false' ||
-        val === 'pc' ||
-        val === 'character'
-      ) {
+      if (val === '0' || val === 'false' || val === 'pc' || val === 'character') {
         return {
           type: ACTOR_TYPE_PC,
           source: 'generic attribute',
@@ -27037,7 +25122,7 @@ const ConditionTrackerMod = (() => {
       return invalid(
         t('ui.msg.invalidLocale', locale, {
           locales: SUPPORTED_LOCALE_LIST,
-        }),
+        })
       );
     }
     return { valid: true, value: text };
@@ -27074,8 +25159,7 @@ const ConditionTrackerMod = (() => {
       const sourceExists = tokenExists(condition.sourceTokenId);
       const targetExists = tokenExists(condition.targetTokenId);
       const rowExists = conditionRowExists(condition.id);
-      const targetInTurnOrder =
-        !combatActive || tokenRowIds.has(condition.targetTokenId);
+      const targetInTurnOrder = !combatActive || tokenRowIds.has(condition.targetTokenId);
 
       if (sourceExists && targetExists && rowExists && targetInTurnOrder) {
         kept.push(condition);
@@ -27103,7 +25187,7 @@ const ConditionTrackerMod = (() => {
       staleEntries,
       orphanedRows + missingRows,
       unusedMarkers,
-      locale,
+      locale
     );
 
     return {
@@ -27164,7 +25248,7 @@ const ConditionTrackerMod = (() => {
     staleEntries,
     orphanedRows,
     unusedMarkers,
-    locale,
+    locale
   ) {
     whisper(playerId, t('ui.title.cleanup', locale), [
       rawHtml(`<strong>${t('ui.heading.summary', locale)}</strong>`),
@@ -27175,7 +25259,7 @@ const ConditionTrackerMod = (() => {
           [t('ui.cleanup.stale', locale), String(staleEntries)],
           [t('ui.cleanup.orphanedRows', locale), String(orphanedRows)],
           [t('ui.cleanup.unusedMarkers', locale), String(unusedMarkers)],
-        ],
+        ]
       ),
     ]);
   }
@@ -27196,9 +25280,7 @@ const ConditionTrackerMod = (() => {
   function installMacro() {
     const gmIds = getGmIds();
     if (!gmIds.length) {
-      log(
-        `${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`,
-      );
+      log(`${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`);
       return;
     }
 
@@ -27209,16 +25291,11 @@ const ConditionTrackerMod = (() => {
 
     for (const macroDef of MACRO_DEFINITIONS) {
       const macrosByOwner = groupMacrosByOwner(
-        queryObjects({ _type: 'macro', name: macroDef.name }),
+        queryObjects({ _type: 'macro', name: macroDef.name })
       );
 
       for (const gmId of gmIds) {
-        const result = syncGmMacro(
-          gmId,
-          macrosByOwner.get(gmId) || [],
-          gmId,
-          macroDef,
-        );
+        const result = syncGmMacro(gmId, macrosByOwner.get(gmId) || [], gmId, macroDef);
         createdCount += result.created;
         updatedCount += result.updated;
         removedCount += result.removed;
@@ -27311,16 +25388,11 @@ const ConditionTrackerMod = (() => {
    * @returns {void}
    */
   function logInstallResult(createdCount, updatedCount, removedCount) {
-    const cleanupNote =
-      removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : '';
+    const cleanupNote = removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : '';
     if (createdCount > 0) {
-      log(
-        `${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`,
-      );
+      log(`${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`);
     } else {
-      log(
-        `${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`,
-      );
+      log(`${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`);
     }
   }
 
@@ -27339,15 +25411,13 @@ const ConditionTrackerMod = (() => {
     header:
       'background:linear-gradient(135deg,#5B21B6 0%,#FF4D6D 100%);padding:18px 24px;border-radius:6px;margin-bottom:24px;text-align:center;',
     h1: "color:#FFFFFF;margin:0;font-size:1.6em;font-family:'Georgia',serif;letter-spacing:1px;",
-    subtitle:
-      'color:#E9D5FF;margin:6px 0 0;font-size:0.85em;letter-spacing:0.5px;',
+    subtitle: 'color:#E9D5FF;margin:6px 0 0;font-size:0.85em;letter-spacing:0.5px;',
     h2: "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:24px;",
     h2first:
       "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:0;",
     body: 'color:#B8AFCF;line-height:1.6;margin-top:0;',
     intro: 'color:#B8AFCF;font-size:0.9em;margin-top:0;',
-    table:
-      'width:100%;border-collapse:collapse;font-size:0.9em;margin-bottom:8px;',
+    table: 'width:100%;border-collapse:collapse;font-size:0.9em;margin-bottom:8px;',
     tableSmall: 'width:100%;border-collapse:collapse;font-size:0.85em;',
     thRow: 'background-color:#1E40AF;',
     th: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;',
@@ -27387,9 +25457,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string} Inline CSS for table headers.
    */
   function getThStyle(locale) {
-    return isRtlLocale(locale)
-      ? STYLE.th.replace('text-align:left', 'text-align:right')
-      : STYLE.th;
+    return isRtlLocale(locale) ? STYLE.th.replace('text-align:left', 'text-align:right') : STYLE.th;
   }
 
   /**
@@ -27460,7 +25528,7 @@ const ConditionTrackerMod = (() => {
       const bg = row(i % 2 === 0);
       rows.push(
         `<tr><td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(l)}</td>` +
-          `<td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(r)}</td></tr>`,
+          `<td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(r)}</td></tr>`
       );
     }
 
@@ -27589,7 +25657,7 @@ const ConditionTrackerMod = (() => {
       ],
       rows,
       ['24%', '76%'],
-      locale,
+      locale
     );
   }
 
@@ -27813,10 +25881,7 @@ const ConditionTrackerMod = (() => {
       dup.remove();
     }
 
-    const cleanupNote =
-      duplicates.length > 0
-        ? ` Removed ${duplicates.length} duplicate(s).`
-        : '';
+    const cleanupNote = duplicates.length > 0 ? ` Removed ${duplicates.length} duplicate(s).` : '';
     log(`${SCRIPT_NAME}: Help handout updated.${cleanupNote}`);
   }
 
@@ -27871,9 +25936,7 @@ const ConditionTrackerMod = (() => {
       sourceTokenId: fields.sourceTokenId || '',
       sourceCharacterId: fields.sourceCharacterId || '',
       subjectTokenId: fields.subjectTokenId || '',
-      duration: isRecord(fields.duration)
-        ? fields.duration
-        : { type: DURATION_UNTIL_REMOVED },
+      duration: isRecord(fields.duration) ? fields.duration : { type: DURATION_UNTIL_REMOVED },
       publicLabel: fields.publicLabel || '',
       gmLabel: fields.gmLabel || fields.other || '',
       snooze: null,
@@ -28039,9 +26102,7 @@ const ConditionTrackerMod = (() => {
    * @returns {object} Trusted HTML line.
    */
   function heading$1(text) {
-    return rawHtml(
-      `<div style="${SECTION_HEADING_STYLE$1}">${escapeHtml(text)}</div>`,
-    );
+    return rawHtml(`<div style="${SECTION_HEADING_STYLE$1}">${escapeHtml(text)}</div>`);
   }
 
   /**
@@ -28186,13 +26247,7 @@ const ConditionTrackerMod = (() => {
         const scope = toText(args.scope);
         if (scope && VALID_SNOOZE_SCOPES.has(scope)) {
           const count = Number(toText(args.rounds)) || 0;
-          executeSavedSnooze(
-            playerId,
-            id,
-            scope,
-            count,
-            getTurnKeyFromArgs(args),
-          );
+          executeSavedSnooze(playerId, id, scope, count, getTurnKeyFromArgs(args));
         } else {
           showSavedSnoozeMenu(playerId, id);
         }
@@ -28303,11 +26358,9 @@ const ConditionTrackerMod = (() => {
   function buildEffectCard(effect, locale) {
     const label = effectGmLabel(effect);
     const badge = visibilityBadge(effect.visibility, locale);
-    const snoozeInfo = effect.snooze
-      ? ` (${t('ui.saved.snoozed', locale)})`
-      : '';
+    const snoozeInfo = effect.snooze ? ` (${t('ui.saved.snoozed', locale)})` : '';
     const titleLine = rawHtml(
-      `<strong>${escapeHtml(label)}</strong> <em>${escapeHtml(badge)}${escapeHtml(snoozeInfo)}</em>`,
+      `<strong>${escapeHtml(label)}</strong> <em>${escapeHtml(badge)}${escapeHtml(snoozeInfo)}</em>`
     );
 
     const editCmd = buildCmd([`--saved edit ${effect.id}`]);
@@ -28321,7 +26374,7 @@ const ConditionTrackerMod = (() => {
         buildButton(t('ui.btn.editSaved', locale), editCmd).__trustedHtml,
         buildButton(t('ui.btn.removeSaved', locale), removeCmd).__trustedHtml,
         buildButton(t('ui.btn.snoozeSaved', locale), snoozeCmd).__trustedHtml,
-      ].join(' '),
+      ].join(' ')
     );
 
     return [titleLine, buttons];
@@ -28349,9 +26402,7 @@ const ConditionTrackerMod = (() => {
     const tokenIdFromArg = toText(args.token);
     const tokenId =
       tokenIdFromArg ||
-      (Array.isArray(msg.selected) && msg.selected.length > 0
-        ? toText(msg.selected[0]._id)
-        : '');
+      (Array.isArray(msg.selected) && msg.selected.length > 0 ? toText(msg.selected[0]._id) : '');
 
     if (!tokenId) {
       whisperWarning(playerId, t('ui.msg.noTokenSelectedSaved', locale));
@@ -28363,9 +26414,7 @@ const ConditionTrackerMod = (() => {
     // All fields supplied — persist the effect
     if (
       conditionRaw &&
-      (toText(args.visibility) ||
-        toText(args.other) ||
-        toText(args['gm-label']))
+      (toText(args.visibility) || toText(args.other) || toText(args['gm-label']))
     ) {
       executeSavedAdd(playerId, args, tokenId);
       return;
@@ -28394,26 +26443,17 @@ const ConditionTrackerMod = (() => {
     const profile = getSystemProfile(config.gameSystem);
 
     const standardButtons = profile.STANDARD_CONDITIONS.map((c) =>
-      buildButton(
-        c,
-        buildCmd([`--saved add --token ${tokenId} --condition ${c}`]),
-      ),
+      buildButton(c, buildCmd([`--saved add --token ${tokenId} --condition ${c}`]))
     );
 
     const customButtons = profile.CUSTOM_EFFECT_TYPES.map((c) =>
-      buildButton(
-        c,
-        buildCmd([`--saved add --token ${tokenId} --condition ${c}`]),
-      ),
+      buildButton(c, buildCmd([`--saved add --token ${tokenId} --condition ${c}`]))
     );
 
     const tableRows = buildTwoColumnRows$1(standardButtons, customButtons);
 
     whisper(playerId, t('ui.title.savedAdd', locale), [
-      htmlTable(
-        [t('ui.col.conditions', locale), t('ui.col.customEffects', locale)],
-        tableRows,
-      ),
+      htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows),
     ]);
   }
 
@@ -28463,15 +26503,15 @@ const ConditionTrackerMod = (() => {
       heading$1(t('ui.heading.visibility', locale)),
       buildButton(
         `${t('ui.saved.visibility.public', locale)} — ${t('ui.msg.visibilityPublicHint', locale)}`,
-        publicCmd,
+        publicCmd
       ),
       buildButton(
         `${t('ui.saved.visibility.masked', locale)} — ${t('ui.msg.visibilityMaskedHint', locale)}`,
-        maskedCmd,
+        maskedCmd
       ),
       buildButton(
         `${t('ui.saved.visibility.gm', locale)} — ${t('ui.msg.visibilityGmHint', locale)}`,
-        gmCmd,
+        gmCmd
       ),
     ]);
   }
@@ -28508,9 +26548,7 @@ const ConditionTrackerMod = (() => {
 
     const sourceTokenId = toText(args.source);
     const sourceToken = sourceTokenId ? getGraphicToken(sourceTokenId) : null;
-    const sourceCharacterId = sourceToken
-      ? toText(sourceToken.get('represents'))
-      : '';
+    const sourceCharacterId = sourceToken ? toText(sourceToken.get('represents')) : '';
 
     const effect = createSavedEffect({
       visibility,
@@ -28531,7 +26569,7 @@ const ConditionTrackerMod = (() => {
     whisper(
       playerId,
       t('ui.title.savedEffects', locale),
-      t('ui.msg.savedEffectAdded', locale, { name: tokenName }),
+      t('ui.msg.savedEffectAdded', locale, { name: tokenName })
     );
   }
 
@@ -28566,10 +26604,8 @@ const ConditionTrackerMod = (() => {
 
     if (hasUpdate) {
       const updates = {};
-      if (args['gm-label'] !== undefined)
-        updates.gmLabel = toText(args['gm-label']);
-      if (args['public-label'] !== undefined)
-        updates.publicLabel = toText(args['public-label']);
+      if (args['gm-label'] !== undefined) updates.gmLabel = toText(args['gm-label']);
+      if (args['public-label'] !== undefined) updates.publicLabel = toText(args['public-label']);
       if (args.other !== undefined) updates.other = toText(args.other);
       if (args.visibility !== undefined) {
         const v = toText(args.visibility);
@@ -28581,11 +26617,7 @@ const ConditionTrackerMod = (() => {
         }
       }
       updateSavedEffect(effectId, updates);
-      whisper(
-        playerId,
-        t('ui.title.savedEdit', locale),
-        t('ui.msg.savedEffectUpdated', locale),
-      );
+      whisper(playerId, t('ui.title.savedEdit', locale), t('ui.msg.savedEffectUpdated', locale));
       return;
     }
 
@@ -28617,9 +26649,7 @@ const ConditionTrackerMod = (() => {
     const visMaskedCmd = buildCmd([
       `--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_MASKED}`,
     ]);
-    const visGmCmd = buildCmd([
-      `--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_GM}`,
-    ]);
+    const visGmCmd = buildCmd([`--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_GM}`]);
 
     whisper(playerId, t('ui.title.savedEdit', locale), [
       heading$1(effectGmLabel(effect)),
@@ -28627,23 +26657,17 @@ const ConditionTrackerMod = (() => {
         [t('ui.col.field', locale), t('ui.col.value', locale)],
         [
           [t('ui.saved.field.gmLabel', locale), code$1(effect.gmLabel || '')],
-          [
-            t('ui.saved.field.publicLabel', locale),
-            code$1(effect.publicLabel || ''),
-          ],
+          [t('ui.saved.field.publicLabel', locale), code$1(effect.publicLabel || '')],
           [
             t('ui.saved.field.visibility', locale),
             code$1(visibilityLabel(effect.visibility, locale)),
           ],
-        ],
+        ]
       ),
       rawHtml('<br>'),
       heading$1(t('ui.heading.editActions', locale)),
       buildButton(`${t('ui.saved.field.gmLabel', locale)}: ?{…}`, gmLabelCmd),
-      buildButton(
-        `${t('ui.saved.field.publicLabel', locale)}: ?{…}`,
-        publicLabelCmd,
-      ),
+      buildButton(`${t('ui.saved.field.publicLabel', locale)}: ?{…}`, publicLabelCmd),
       rawHtml('<br>'),
       heading$1(t('ui.heading.visibility', locale)),
       buildButton(t('ui.saved.visibility.public', locale), visPublicCmd),
@@ -28659,10 +26683,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string} Escaped text.
    */
   function escapeQueryDefault(text) {
-    return toText(text)
-      .replaceAll('|', '')
-      .replaceAll('}', '')
-      .replaceAll('{', '');
+    return toText(text).replaceAll('|', '').replaceAll('}', '').replaceAll('{', '');
   }
 
   // ---------------------------------------------------------------------------
@@ -28683,11 +26704,7 @@ const ConditionTrackerMod = (() => {
       whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
       return;
     }
-    whisper(
-      playerId,
-      t('ui.title.savedRemoved', locale),
-      t('ui.msg.savedEffectRemoved', locale),
-    );
+    whisper(playerId, t('ui.title.savedRemoved', locale), t('ui.msg.savedEffectRemoved', locale));
   }
 
   // ---------------------------------------------------------------------------
@@ -28715,9 +26732,7 @@ const ConditionTrackerMod = (() => {
     const maskedCmd = buildCmd([
       `--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_MASKED}`,
     ]);
-    const gmCmd = buildCmd([
-      `--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_GM}`,
-    ]);
+    const gmCmd = buildCmd([`--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_GM}`]);
 
     whisper(playerId, t('ui.title.savedPromoted', locale), [
       heading$1(effectGmLabel(effect)),
@@ -28752,11 +26767,7 @@ const ConditionTrackerMod = (() => {
     if (visibility === SAVED_VISIBILITY_GM) {
       // No Turn Tracker row — remind GM via the reminder system
       updateSavedEffect(effectId, { visibility: SAVED_VISIBILITY_GM });
-      whisper(
-        playerId,
-        t('ui.title.savedPromoted', locale),
-        t('ui.msg.savedPromotedGm', locale),
-      );
+      whisper(playerId, t('ui.title.savedPromoted', locale), t('ui.msg.savedPromotedGm', locale));
       return;
     }
 
@@ -28807,9 +26818,7 @@ const ConditionTrackerMod = (() => {
 
     const config = getConfig();
     const targetName = getTokenName(targetToken);
-    const sourceToken = effect.sourceTokenId
-      ? getGraphicToken(effect.sourceTokenId)
-      : null;
+    const sourceToken = effect.sourceTokenId ? getGraphicToken(effect.sourceTokenId) : null;
     const sourceName = sourceToken ? getTokenName(sourceToken) : targetName;
 
     const displayText =
@@ -28869,22 +26878,10 @@ const ConditionTrackerMod = (() => {
     whisper(playerId, t('ui.title.savedSnoozed', locale), [
       heading$1(effectGmLabel(effect)),
       heading$1(t('ui.heading.snoozeOptions', locale)),
-      buildButton(
-        t('ui.saved.snooze.thisTurn', locale),
-        snoozeCmd(SAVED_SNOOZE_TURN, 0),
-      ),
-      buildButton(
-        t('ui.saved.snooze.oneRound', locale),
-        snoozeCmd(SAVED_SNOOZE_ROUNDS, 1),
-      ),
-      buildButton(
-        t('ui.saved.snooze.threeRounds', locale),
-        snoozeCmd(SAVED_SNOOZE_ROUNDS, 3),
-      ),
-      buildButton(
-        t('ui.saved.snooze.thisCombat', locale),
-        snoozeCmd(SAVED_SNOOZE_COMBAT, 0),
-      ),
+      buildButton(t('ui.saved.snooze.thisTurn', locale), snoozeCmd(SAVED_SNOOZE_TURN, 0)),
+      buildButton(t('ui.saved.snooze.oneRound', locale), snoozeCmd(SAVED_SNOOZE_ROUNDS, 1)),
+      buildButton(t('ui.saved.snooze.threeRounds', locale), snoozeCmd(SAVED_SNOOZE_ROUNDS, 3)),
+      buildButton(t('ui.saved.snooze.thisCombat', locale), snoozeCmd(SAVED_SNOOZE_COMBAT, 0)),
       buildButton(t('ui.btn.clearSnooze', locale), clearCmd),
     ]);
   }
@@ -28931,7 +26928,7 @@ const ConditionTrackerMod = (() => {
     whisper(
       playerId,
       t('ui.title.savedSnoozed', locale),
-      t('ui.msg.savedSnoozed', locale, { scope: scopeLabel }),
+      t('ui.msg.savedSnoozed', locale, { scope: scopeLabel })
     );
   }
 
@@ -28953,7 +26950,7 @@ const ConditionTrackerMod = (() => {
     whisper(
       playerId,
       t('ui.title.savedSnoozeCleared', locale),
-      t('ui.msg.savedSnoozeCleared', locale),
+      t('ui.msg.savedSnoozeCleared', locale)
     );
   }
 
@@ -29047,11 +27044,7 @@ const ConditionTrackerMod = (() => {
 
     const bodyLines = buildReminderCard(remindable, tokenName, locale);
     const primaryGmId = gmIds[0];
-    whisper(
-      primaryGmId,
-      t('ui.title.hiddenEffects', locale, { name: tokenName }),
-      bodyLines,
-    );
+    whisper(primaryGmId, t('ui.title.hiddenEffects', locale, { name: tokenName }), bodyLines);
   }
 
   /**
@@ -29063,9 +27056,7 @@ const ConditionTrackerMod = (() => {
    * @returns {(string|object)[]} Body lines.
    */
   function buildReminderCard(effects, tokenName, locale) {
-    const lines = [
-      t('ui.msg.hiddenEffectsReminder', locale, { name: tokenName }),
-    ];
+    const lines = [t('ui.msg.hiddenEffectsReminder', locale, { name: tokenName })];
 
     for (const effect of effects) {
       lines.push(rawHtml('<br>'));
@@ -29079,26 +27070,16 @@ const ConditionTrackerMod = (() => {
       ];
 
       if (effect.visibility === SAVED_VISIBILITY_MASKED && effect.publicLabel) {
-        rows.push([
-          t('ui.saved.field.publicLabel', locale),
-          escapeHtml(effect.publicLabel),
-        ]);
+        rows.push([t('ui.saved.field.publicLabel', locale), escapeHtml(effect.publicLabel)]);
       }
 
       if (effect.sourceTokenId) {
         const srcToken = getGraphicToken(effect.sourceTokenId);
-        const srcName = srcToken
-          ? getTokenName(srcToken)
-          : effect.sourceTokenId;
+        const srcName = srcToken ? getTokenName(srcToken) : effect.sourceTokenId;
         rows.push([t('ui.saved.field.source', locale), escapeHtml(srcName)]);
       }
 
-      lines.push(
-        htmlTable(
-          [t('ui.col.field', locale), t('ui.col.details', locale)],
-          rows,
-        ),
-      );
+      lines.push(htmlTable([t('ui.col.field', locale), t('ui.col.details', locale)], rows));
 
       const promoteCmd = buildCmd([`--saved promote ${effect.id}`]);
       const editCmd = buildCmd([`--saved edit ${effect.id}`]);
@@ -29108,15 +27089,12 @@ const ConditionTrackerMod = (() => {
       lines.push(
         rawHtml(
           [
-            buildButton(t('ui.btn.promoteSaved', locale), promoteCmd)
-              .__trustedHtml,
+            buildButton(t('ui.btn.promoteSaved', locale), promoteCmd).__trustedHtml,
             buildButton(t('ui.btn.editSaved', locale), editCmd).__trustedHtml,
-            buildButton(t('ui.btn.removeSaved', locale), removeCmd)
-              .__trustedHtml,
-            buildButton(t('ui.btn.snoozeSaved', locale), snoozeCmd)
-              .__trustedHtml,
-          ].join(' '),
-        ),
+            buildButton(t('ui.btn.removeSaved', locale), removeCmd).__trustedHtml,
+            buildButton(t('ui.btn.snoozeSaved', locale), snoozeCmd).__trustedHtml,
+          ].join(' ')
+        )
       );
     }
 
@@ -29169,9 +27147,7 @@ const ConditionTrackerMod = (() => {
    * @returns {object} Trusted HTML line.
    */
   function heading(text) {
-    return rawHtml(
-      `<div style="${SECTION_HEADING_STYLE}">${escapeHtml(text)}</div>`,
-    );
+    return rawHtml(`<div style="${SECTION_HEADING_STYLE}">${escapeHtml(text)}</div>`);
   }
 
   /**
@@ -29191,10 +27167,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string} Text ready for the chat escaping pipeline.
    */
   function decodeHelpText(value) {
-    return toText(value)
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>')
-      .replaceAll('&amp;', '&');
+    return toText(value).replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
   }
 
   /**
@@ -29245,17 +27218,13 @@ const ConditionTrackerMod = (() => {
    * @returns {string} Human-readable locale label.
    */
   function localeDisplayName(localeCode) {
-    const locale = LOCALE_DEFINITIONS.find(
-      (definition) => definition.code === localeCode,
-    );
+    const locale = LOCALE_DEFINITIONS.find((definition) => definition.code === localeCode);
     if (!locale) {
       return localeCode;
     }
 
     const nativeName =
-      locale.nativeName && locale.nativeName !== locale.name
-        ? ` (${locale.nativeName})`
-        : '';
+      locale.nativeName && locale.nativeName !== locale.name ? ` (${locale.nativeName})` : '';
     return `${locale.name}${nativeName} [${locale.code}]`;
   }
 
@@ -29277,10 +27246,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string[][]} Trusted HTML table rows.
    */
   function localeTableRows() {
-    return LOCALE_DEFINITIONS.map((locale) => [
-      code(locale.code),
-      localeLabel(locale),
-    ]);
+    return LOCALE_DEFINITIONS.map((locale) => [code(locale.code), localeLabel(locale)]);
   }
 
   /**
@@ -29292,10 +27258,7 @@ const ConditionTrackerMod = (() => {
    * @returns {object} Trusted HTML button.
    */
   function buildTokenChoiceButton(token, args, slot) {
-    return buildButton(
-      token.name,
-      buildWizardBase({ ...args, [slot]: token.id }),
-    );
+    return buildButton(token.name, buildWizardBase({ ...args, [slot]: token.id }));
   }
 
   /**
@@ -29328,10 +27291,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string[][]} Escaped HTML rows.
    */
   function toEscapedHandoutTableRows(rows) {
-    return rows.map(([a, b]) => [
-      code(decodeHelpText(a)),
-      escapeHtml(decodeHelpText(b)),
-    ]);
+    return rows.map(([a, b]) => [code(decodeHelpText(a)), escapeHtml(decodeHelpText(b))]);
   }
 
   /**
@@ -29434,9 +27394,7 @@ const ConditionTrackerMod = (() => {
    */
   function getTokensFromPage() {
     const pageId = Campaign().get('playerpageid');
-    return queryObjects({ _type: 'graphic', _pageid: pageId })
-      .map(tokenToEntry)
-      .filter(Boolean);
+    return queryObjects({ _type: 'graphic', _pageid: pageId }).map(tokenToEntry).filter(Boolean);
   }
 
   /**
@@ -29451,8 +27409,7 @@ const ConditionTrackerMod = (() => {
    */
   function getPageTokens() {
     const fromTurnOrder = getTokensFromTurnOrder();
-    const entries =
-      fromTurnOrder.length > 0 ? fromTurnOrder : getTokensFromPage();
+    const entries = fromTurnOrder.length > 0 ? fromTurnOrder : getTokensFromPage();
     return entries.sort((a, b) => a.name.localeCompare(b.name));
   }
 
@@ -29573,17 +27530,15 @@ const ConditionTrackerMod = (() => {
     const body = [];
     if (description) {
       body.push(
-        rawHtml(
-          `<div style="font-style:italic;margin:2px 0 4px;">${escapeHtml(description)}</div>`,
-        ),
+        rawHtml(`<div style="font-style:italic;margin:2px 0 4px;">${escapeHtml(description)}</div>`)
       );
     }
     if (slot === 'subject') {
       body.push(
         buildButton(
           t('ui.wizard.noneBtn', locale),
-          buildWizardBase({ ...args, subject: SUBJECT_NONE }),
-        ),
+          buildWizardBase({ ...args, subject: SUBJECT_NONE })
+        )
       );
     }
     if (slot === 'target') {
@@ -29592,17 +27547,12 @@ const ConditionTrackerMod = (() => {
         body.push(
           buildButton(
             t('ui.wizard.noneOrSourceBtn', locale),
-            buildWizardBase({ ...args, target: sourceId }),
-          ),
+            buildWizardBase({ ...args, target: sourceId })
+          )
         );
       }
     }
-    body.push(
-      htmlTable(
-        [t('ui.col.players', locale), t('ui.col.npcs', locale)],
-        tableRows,
-      ),
-    );
+    body.push(htmlTable([t('ui.col.players', locale), t('ui.col.npcs', locale)], tableRows));
     whisper(playerId, title, body);
   }
 
@@ -29640,14 +27590,12 @@ const ConditionTrackerMod = (() => {
       'selected-ids': '',
     });
     const tokenListHtml = resolved
-      .map(
-        (tok) => `<div style="padding:1px 0;">• ${escapeHtml(tok.name)}</div>`,
-      )
+      .map((tok) => `<div style="padding:1px 0;">• ${escapeHtml(tok.name)}</div>`)
       .join('');
 
     whisper(playerId, t('ui.wizard.confirmTargetTitle', locale), [
       rawHtml(
-        `<div style="margin-bottom:4px;font-style:italic;">${escapeHtml(t('ui.wizard.confirmIntro', locale))}</div>`,
+        `<div style="margin-bottom:4px;font-style:italic;">${escapeHtml(t('ui.wizard.confirmIntro', locale))}</div>`
       ),
       rawHtml(tokenListHtml),
       buildButton(t('ui.wizard.confirmBtn', locale), confirmCmd),
@@ -29671,26 +27619,17 @@ const ConditionTrackerMod = (() => {
     const base = buildWizardBase(args);
 
     const standardButtons = profile.STANDARD_CONDITIONS.map((c) =>
-      buildButton(
-        getConditionDisplayName(c, profile, locale),
-        `${base} --condition ${c}`,
-      ),
+      buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`)
     );
 
     const customButtons = profile.CUSTOM_EFFECT_TYPES.map((c) =>
-      buildButton(
-        getConditionDisplayName(c, profile, locale),
-        `${base} --condition ${c}`,
-      ),
+      buildButton(getConditionDisplayName(c, profile, locale), `${base} --condition ${c}`)
     );
 
     const tableRows = buildTwoColumnRows(standardButtons, customButtons);
 
     whisper(playerId, t('ui.wizard.selectCondition', locale), [
-      htmlTable(
-        [t('ui.col.conditions', locale), t('ui.col.customEffects', locale)],
-        tableRows,
-      ),
+      htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows),
     ]);
   }
 
@@ -29729,22 +27668,17 @@ const ConditionTrackerMod = (() => {
     const customCmd = buildDurationCommand(args, `?{${customPrompt}|} rounds`);
 
     const leftButtons = leftOptions.map(({ dur, label }) =>
-      buildButton(label, buildDurationCommand(args, dur)),
+      buildButton(label, buildDurationCommand(args, dur))
     );
     const rightButtons = [
-      ...rightOptions.map(({ dur, label }) =>
-        buildButton(label, buildDurationCommand(args, dur)),
-      ),
+      ...rightOptions.map(({ dur, label }) => buildButton(label, buildDurationCommand(args, dur))),
       buildButton(t('ui.dur.custom', locale), customCmd),
     ];
 
     const tableRows = buildTwoColumnRows(leftButtons, rightButtons);
 
     whisper(playerId, t('ui.wizard.selectDuration', locale), [
-      htmlTable(
-        [t('ui.col.permanentTurnEnd', locale), t('ui.col.rounds', locale)],
-        tableRows,
-      ),
+      htmlTable([t('ui.col.permanentTurnEnd', locale), t('ui.col.rounds', locale)], tableRows),
     ]);
   }
 
@@ -29848,18 +27782,15 @@ const ConditionTrackerMod = (() => {
     const config = getConfig();
     const subjectBypassForCommand = resolveSubjectPromptBypassOverride(
       args,
-      config.subjectPromptBypass,
+      config.subjectPromptBypass
     );
     if (!subjectBypassForCommand.valid) {
       whisperWarning(playerId, subjectBypassForCommand.message);
       return;
     }
 
-    const shouldBypassSubject =
-      subjectBypassForCommand.value && isCustomEffectType(canonical);
-    const wizardArgs = shouldBypassSubject
-      ? { ...args, subject: SUBJECT_NONE }
-      : args;
+    const shouldBypassSubject = subjectBypassForCommand.value && isCustomEffectType(canonical);
+    const wizardArgs = shouldBypassSubject ? { ...args, subject: SUBJECT_NONE } : args;
 
     const sourceId = toText(wizardArgs.source);
     const subjectRaw = toText(wizardArgs.subject);
@@ -29884,7 +27815,7 @@ const ConditionTrackerMod = (() => {
         t('ui.wizard.selectSubject', locale),
         wizardArgs,
         'subject',
-        t('ui.wizard.subjectDesc', locale),
+        t('ui.wizard.subjectDesc', locale)
       );
       return;
     }
@@ -29895,7 +27826,7 @@ const ConditionTrackerMod = (() => {
         t('ui.wizard.selectSource', locale),
         wizardArgs,
         'source',
-        t('ui.wizard.sourceDesc', locale),
+        t('ui.wizard.sourceDesc', locale)
       );
       return;
     }
@@ -29914,13 +27845,12 @@ const ConditionTrackerMod = (() => {
         t('ui.wizard.selectTarget', locale),
         wizardArgs,
         'target',
-        t('ui.wizard.targetDesc', locale),
+        t('ui.wizard.targetDesc', locale)
       );
       return;
     }
 
-    const resolvedArgs =
-      subjectRaw === SUBJECT_NONE ? { ...wizardArgs, subject: '' } : wizardArgs;
+    const resolvedArgs = subjectRaw === SUBJECT_NONE ? { ...wizardArgs, subject: '' } : wizardArgs;
 
     showEffectDetailStep(playerId, resolvedArgs, canonical);
   }
@@ -29936,8 +27866,7 @@ const ConditionTrackerMod = (() => {
    * @returns {{valid: boolean, value?: boolean, message?: string}} Resolution result.
    */
   function resolveSubjectPromptBypassOverride(args, configDefault) {
-    const overrideRaw =
-      args.subjectPromptBypass ?? args['subject-prompt-bypass'];
+    const overrideRaw = args.subjectPromptBypass ?? args['subject-prompt-bypass'];
     if (overrideRaw === undefined) {
       return { valid: true, value: configDefault };
     }
@@ -29972,10 +27901,7 @@ const ConditionTrackerMod = (() => {
       ensureState();
       routeCommand(msg, parseCommand(msg.content));
     } catch (error) {
-      whisperError(
-        msg.playerid,
-        t('ui.msg.commandFailed', getConfig().language),
-      );
+      whisperError(msg.playerid, t('ui.msg.commandFailed', getConfig().language));
       log(`${SCRIPT_NAME} error: ${error.message}`);
     }
   }
@@ -29987,9 +27913,7 @@ const ConditionTrackerMod = (() => {
    * @returns {boolean} True for Condition Tracker API messages.
    */
   function isConditionTrackerMessage(msg) {
-    return Boolean(
-      msg && msg.type === 'api' && toText(msg.content).startsWith(COMMAND),
-    );
+    return Boolean(msg && msg.type === 'api' && toText(msg.content).startsWith(COMMAND));
   }
 
   /**
@@ -30104,10 +28028,7 @@ const ConditionTrackerMod = (() => {
       return;
     }
     if (args['zero-hp-remove-from-turn']) {
-      handleZeroHpRemoveFromTurnOrder(
-        playerId,
-        args['zero-hp-remove-from-turn'],
-      );
+      handleZeroHpRemoveFromTurnOrder(playerId, args['zero-hp-remove-from-turn']);
       return;
     }
     if (args['zero-hp-to-map']) {
@@ -30180,25 +28101,15 @@ const ConditionTrackerMod = (() => {
         validation.subjectName || '',
         validation.targetToken.id,
         validation.condition,
-        validation.customText,
+        validation.customText
       )
     ) {
       whisperWarning(playerId, t('ui.msg.duplicate', locale));
       return null;
     }
 
-    const condition = buildConditionRecord(
-      validation,
-      config,
-      durationResult.duration,
-      locale,
-    );
-    const markerNotice = applyConfiguredMarker(
-      validation.targetToken,
-      condition,
-      config,
-      locale,
-    );
+    const condition = buildConditionRecord(validation, config, durationResult.duration, locale);
+    const markerNotice = applyConfiguredMarker(validation.targetToken, condition, config, locale);
     return { condition, markerNotice, locale, extraLocale };
   }
 
@@ -30266,13 +28177,7 @@ const ConditionTrackerMod = (() => {
     if (extraLocale !== locale) {
       announceHtml(buildApplyMessage(condition, extraLocale));
     }
-    whisperApplySummary(
-      playerId,
-      condition,
-      insertResult.appended,
-      markerNotice,
-      locale,
-    );
+    whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale);
   }
 
   /**
@@ -30361,14 +28266,12 @@ const ConditionTrackerMod = (() => {
     subjectName,
     targetTokenId,
     condition,
-    customText,
+    customText
   ) {
     return someActiveCondition((activeCondition) => {
       const sameSource = activeCondition.sourceTokenId === sourceTokenId;
-      const sameSubject =
-        (activeCondition.subjectTokenId || '') === (subjectTokenId || '');
-      const sameSubjectName =
-        (activeCondition.subjectName || '') === (subjectName || '');
+      const sameSubject = (activeCondition.subjectTokenId || '') === (subjectTokenId || '');
+      const sameSubjectName = (activeCondition.subjectName || '') === (subjectName || '');
       const sameTarget = activeCondition.targetTokenId === targetTokenId;
       const sameCondition = activeCondition.condition === condition;
       const sameCustomText = activeCondition.customText === customText;
@@ -30420,13 +28323,7 @@ const ConditionTrackerMod = (() => {
    * @param {string} locale Output locale.
    * @returns {string} Human-readable result line.
    */
-  function applyClassifyOverride(
-    token,
-    tokenName,
-    classifyValue,
-    scope,
-    locale,
-  ) {
+  function applyClassifyOverride(token, tokenName, classifyValue, scope, locale) {
     const tokenId = token.id;
     const characterId = toText(token.get('represents'));
     const name = escapeHtml(tokenName);
@@ -30493,15 +28390,12 @@ const ConditionTrackerMod = (() => {
         htmlTable(
           [t('ui.col.field', locale), t('ui.col.value', locale)],
           [
-            [
-              t('ui.classify.fieldToken', locale),
-              escapeHtml(tokenName || tokenId),
-            ],
+            [t('ui.classify.fieldToken', locale), escapeHtml(tokenName || tokenId)],
             [t('ui.classify.fieldType', locale), escapeHtml(detail.type)],
             [t('ui.classify.fieldSource', locale), escapeHtml(detail.source)],
             [t('ui.classify.fieldReason', locale), escapeHtml(detail.reason)],
-          ],
-        ),
+          ]
+        )
       );
       found += 1;
     }
@@ -30539,10 +28433,7 @@ const ConditionTrackerMod = (() => {
     }
 
     if (!VALID_ACTOR_CLASSIFY_TYPES.has(classifyRaw)) {
-      whisperWarning(
-        msg.playerid,
-        t('ui.classify.invalidType', locale, { type: classifyRaw }),
-      );
+      whisperWarning(msg.playerid, t('ui.classify.invalidType', locale, { type: classifyRaw }));
       return;
     }
 
@@ -30555,13 +28446,7 @@ const ConditionTrackerMod = (() => {
       if (!token) continue;
 
       const tokenName = getTokenDisplayName(token);
-      const line = applyClassifyOverride(
-        token,
-        tokenName,
-        classifyRaw,
-        scope,
-        locale,
-      );
+      const line = applyClassifyOverride(token, tokenName, classifyRaw, scope, locale);
       resultLines.push(line);
     }
 
@@ -30654,7 +28539,7 @@ const ConditionTrackerMod = (() => {
     whisper(
       playerId,
       t('ui.title.configTracker', defaultConfig.language),
-      t('ui.msg.configReset', defaultConfig.language),
+      t('ui.msg.configReset', defaultConfig.language)
     );
   }
 
@@ -30676,7 +28561,7 @@ const ConditionTrackerMod = (() => {
             t('handout.availableLocales.colLocale', locale),
             t('handout.availableLocales.colLanguage', locale),
           ],
-          localeTableRows(),
+          localeTableRows()
         ),
       ]);
       return;
@@ -30690,7 +28575,7 @@ const ConditionTrackerMod = (() => {
       t('ui.msg.langSet', result.value, {
         locale: localeDisplayName(result.value),
       }),
-      result.value,
+      result.value
     );
 
     installHandout(result.value);
@@ -30711,7 +28596,7 @@ const ConditionTrackerMod = (() => {
         t('ui.msg.invalidGameSystem', locale),
         htmlTable(
           [t('ui.col.option', locale), t('ui.col.description', locale)],
-          gameSystemTableRows(),
+          gameSystemTableRows()
         ),
       ]);
       return;
@@ -30725,7 +28610,7 @@ const ConditionTrackerMod = (() => {
         cfg.gameSystem = result.value;
         cfg.markers = { ...profile.DEFAULT_MARKERS };
       },
-      t('ui.msg.gameSystemSet', config.language, { system: result.value }),
+      t('ui.msg.gameSystemSet', config.language, { system: result.value })
     );
     installHandout(getConfig().language);
   }
@@ -30739,10 +28624,7 @@ const ConditionTrackerMod = (() => {
    * @returns {string[][]} Two-column table rows: [[id, name], ...].
    */
   function gameSystemTableRows() {
-    return GAME_SYSTEM_DEFINITIONS.map((def) => [
-      code(def.id),
-      escapeHtml(def.name),
-    ]);
+    return GAME_SYSTEM_DEFINITIONS.map((def) => [code(def.id), escapeHtml(def.name)]);
   }
 
   /**
@@ -30762,7 +28644,7 @@ const ConditionTrackerMod = (() => {
 
     const result = validateMarkerConfig(
       value.slice(0, separatorIndex),
-      value.slice(separatorIndex + 1),
+      value.slice(separatorIndex + 1)
     );
     if (!result.valid) {
       whisperWarning(playerId, result.message);
@@ -30777,7 +28659,7 @@ const ConditionTrackerMod = (() => {
       t('ui.msg.markerSet', locale, {
         condition: result.condition,
         marker: result.marker,
-      }),
+      })
     );
   }
 
@@ -30819,7 +28701,7 @@ const ConditionTrackerMod = (() => {
       (config) => {
         config[key] = result.value;
       },
-      t('ui.msg.boolSet', locale, { key, value: String(result.value) }),
+      t('ui.msg.boolSet', locale, { key, value: String(result.value) })
     );
   }
 
@@ -30843,7 +28725,7 @@ const ConditionTrackerMod = (() => {
       (config) => {
         config.healthBar = result.value;
       },
-      t('ui.msg.healthBarSet', locale, { bar: result.value }),
+      t('ui.msg.healthBarSet', locale, { bar: result.value })
     );
   }
 
@@ -30878,51 +28760,21 @@ const ConditionTrackerMod = (() => {
       htmlTable(
         [t('ui.col.command', locale), t('ui.col.result', locale)],
         [
-          [
-            code(cmdPrompt),
-            buildButton(t('ui.btn.openWizard', locale), cmdPrompt),
-          ],
-          [
-            code(cmdMultiTarget),
-            buildButton(t('ui.btn.openMultiTarget', locale), cmdMultiTarget),
-          ],
-          [
-            code(cmdReportToken),
-            buildButton(t('ui.btn.reportToken', locale), cmdReportToken),
-          ],
-          [
-            code(cmdSaved),
-            buildButton(t('ui.btn.savedEffects', locale), cmdSaved),
-          ],
-          [
-            code(cmdRemoveMenu),
-            buildButton(t('ui.btn.openRemovalList', locale), cmdRemoveMenu),
-          ],
-          [
-            code(cmdConfig),
-            buildButton(t('ui.btn.showConfig', locale), cmdConfig),
-          ],
-          [
-            code(cmdCleanup),
-            buildButton(t('ui.btn.runCleanup', locale), cmdCleanup),
-          ],
-          [
-            code(cmdReorder),
-            buildButton(t('ui.btn.reorderConditions', locale), cmdReorder),
-          ],
-          [
-            code(cmdReinstall),
-            buildButton(t('ui.btn.reinstallMacro', locale), cmdReinstall),
-          ],
+          [code(cmdPrompt), buildButton(t('ui.btn.openWizard', locale), cmdPrompt)],
+          [code(cmdMultiTarget), buildButton(t('ui.btn.openMultiTarget', locale), cmdMultiTarget)],
+          [code(cmdReportToken), buildButton(t('ui.btn.reportToken', locale), cmdReportToken)],
+          [code(cmdSaved), buildButton(t('ui.btn.savedEffects', locale), cmdSaved)],
+          [code(cmdRemoveMenu), buildButton(t('ui.btn.openRemovalList', locale), cmdRemoveMenu)],
+          [code(cmdConfig), buildButton(t('ui.btn.showConfig', locale), cmdConfig)],
+          [code(cmdCleanup), buildButton(t('ui.btn.runCleanup', locale), cmdCleanup)],
+          [code(cmdReorder), buildButton(t('ui.btn.reorderConditions', locale), cmdReorder)],
+          [code(cmdReinstall), buildButton(t('ui.btn.reinstallMacro', locale), cmdReinstall)],
           [
             code(cmdReinstallHandout),
-            buildButton(
-              t('ui.btn.reinstallHandout', locale),
-              cmdReinstallHandout,
-            ),
+            buildButton(t('ui.btn.reinstallHandout', locale), cmdReinstallHandout),
           ],
           [code(cmdHelp), buildButton(t('ui.btn.showHelp', locale), cmdHelp)],
-        ],
+        ]
       ),
     ]);
   }
@@ -30937,11 +28789,7 @@ const ConditionTrackerMod = (() => {
     const locale = getConfig().language;
     const active = ensureState().active;
     if (active.length === 0) {
-      whisper(
-        playerId,
-        t('ui.title.removalMenu', locale),
-        t('ui.msg.noActive', locale),
-      );
+      whisper(playerId, t('ui.title.removalMenu', locale), t('ui.msg.noActive', locale));
       return;
     }
 
@@ -30963,21 +28811,14 @@ const ConditionTrackerMod = (() => {
     const config = getConfig();
     const locale = config.language;
     const profile = getSystemProfile(config.gameSystem);
-    const allConditions = [
-      ...profile.STANDARD_CONDITIONS,
-      ...profile.CUSTOM_EFFECT_TYPES,
-    ];
+    const allConditions = [...profile.STANDARD_CONDITIONS, ...profile.CUSTOM_EFFECT_TYPES];
     const markerRows = allConditions.map((condition) => [
       escapeHtml(getConditionDisplayName(condition, profile, locale)),
       code(config.markers[condition] || '(none)'),
     ]);
 
-    const systemDef = GAME_SYSTEM_DEFINITIONS.find(
-      (d) => d.id === config.gameSystem,
-    );
-    const systemLabel = systemDef
-      ? `${config.gameSystem} — ${systemDef.name}`
-      : config.gameSystem;
+    const systemDef = GAME_SYSTEM_DEFINITIONS.find((d) => d.id === config.gameSystem);
+    const systemLabel = systemDef ? `${config.gameSystem} — ${systemDef.name}` : config.gameSystem;
 
     whisper(playerId, t('ui.title.config', locale), [
       heading(t('ui.heading.settings', locale)),
@@ -30991,14 +28832,11 @@ const ConditionTrackerMod = (() => {
           ['suppressPublicChat', code(String(config.suppressPublicChat))],
           ['healthBar', code(config.healthBar)],
           ['language', code(config.language)],
-        ],
+        ]
       ),
       sectionSpacer(),
       heading(t('ui.heading.markerMappings', locale)),
-      htmlTable(
-        [t('ui.col.condition', locale), t('ui.col.marker', locale)],
-        markerRows,
-      ),
+      htmlTable([t('ui.col.condition', locale), t('ui.col.marker', locale)], markerRows),
     ]);
   }
 
@@ -31010,15 +28848,11 @@ const ConditionTrackerMod = (() => {
    */
   function showHelp(playerId) {
     const locale = getConfig().language;
-    const commandRows = /** @type {string[][]} */ (
-      tRaw('handout.commandsRef.rows', locale) || []
-    );
+    const commandRows = /** @type {string[][]} */ (tRaw('handout.commandsRef.rows', locale) || []);
     const quickStartRows = /** @type {string[][]} */ (
       tRaw('handout.quickStart.rows', locale) || []
     );
-    const configRows = /** @type {string[][]} */ (
-      tRaw('handout.configuration.rows', locale) || []
-    );
+    const configRows = /** @type {string[][]} */ (tRaw('handout.configuration.rows', locale) || []);
 
     const configTableRows = configRows.map(([option, values, description]) => [
       code(decodeHelpText(option)),
@@ -31037,16 +28871,13 @@ const ConditionTrackerMod = (() => {
             escapeHtml(t('handout.overview.heading', locale)),
             escapeHtml(decodeHelpText(t('handout.overview.body', locale))),
           ],
-        ],
+        ]
       ),
       sectionSpacer(),
       heading(t('ui.heading.commandOptions', locale)),
       htmlTable(
-        [
-          t('handout.commandsRef.colFlag', locale),
-          t('handout.commandsRef.colDesc', locale),
-        ],
-        toEscapedHandoutTableRows(commandRows),
+        [t('handout.commandsRef.colFlag', locale), t('handout.commandsRef.colDesc', locale)],
+        toEscapedHandoutTableRows(commandRows)
       ),
       sectionSpacer(),
       heading(t('handout.configuration.heading', locale)),
@@ -31056,17 +28887,14 @@ const ConditionTrackerMod = (() => {
           t('handout.configuration.colValues', locale),
           t('handout.configuration.colDesc', locale),
         ],
-        configTableRows,
+        configTableRows
       ),
       sectionSpacer(),
       heading(t('handout.gameSystems.heading', locale)),
       t('handout.gameSystems.intro', locale),
       htmlTable(
-        [
-          t('handout.gameSystems.colId', locale),
-          t('handout.gameSystems.colName', locale),
-        ],
-        gameSystemTableRows(),
+        [t('handout.gameSystems.colId', locale), t('handout.gameSystems.colName', locale)],
+        gameSystemTableRows()
       ),
       sectionSpacer(),
       heading(t('handout.availableLocales.heading', locale)),
@@ -31076,16 +28904,13 @@ const ConditionTrackerMod = (() => {
           t('handout.availableLocales.colLocale', locale),
           t('handout.availableLocales.colLanguage', locale),
         ],
-        localeTableRows(),
+        localeTableRows()
       ),
       sectionSpacer(),
       heading(t('ui.heading.examples', locale)),
       htmlTable(
-        [
-          t('handout.quickStart.colCommand', locale),
-          t('handout.quickStart.colDesc', locale),
-        ],
-        toEscapedHandoutTableRows(quickStartRows),
+        [t('handout.quickStart.colCommand', locale), t('handout.quickStart.colDesc', locale)],
+        toEscapedHandoutTableRows(quickStartRows)
       ),
       sectionSpacer(),
     ]);
@@ -31101,31 +28926,20 @@ const ConditionTrackerMod = (() => {
    * @param {string} [locale] Output locale.
    * @returns {void}
    */
-  function whisperApplySummary(
-    playerId,
-    condition,
-    appended,
-    markerNotice,
-    locale,
-  ) {
+  function whisperApplySummary(playerId, condition, appended, markerNotice, locale) {
     whisper(playerId, t('ui.title.applied', locale), [
       heading(t('ui.heading.result', locale)),
       htmlTable(
         [t('ui.col.field', locale), t('ui.col.value', locale)],
         [
-          [
-            t('ui.removal.conditionField', locale),
-            escapeHtml(condition.displayText),
-          ],
+          [t('ui.removal.conditionField', locale), escapeHtml(condition.displayText)],
           [
             t('ui.title.turnOrder', locale),
-            appended
-              ? t('ui.apply.turnAppended', locale)
-              : t('ui.apply.turnInserted', locale),
+            appended ? t('ui.apply.turnAppended', locale) : t('ui.apply.turnInserted', locale),
           ],
           [t('ui.removal.markerField', locale), escapeHtml(markerNotice)],
           ['Duration', escapeHtml(formatDuration(condition.duration, locale))],
-        ],
+        ]
       ),
     ]);
   }
@@ -31144,17 +28958,13 @@ const ConditionTrackerMod = (() => {
    */
   function buildTokenReportSections(tokenId, tokenName, locale) {
     const appliedTo = getActiveByTarget(tokenId);
-    const appliedBy = getActiveBySource(tokenId).filter(
-      (c) => c.targetTokenId !== tokenId,
-    );
+    const appliedBy = getActiveBySource(tokenId).filter((c) => c.targetTokenId !== tokenId);
 
     const lines = [heading(tokenName)];
 
     lines.push(heading(t('ui.heading.appliedTo', locale)));
     if (appliedTo.length === 0) {
-      lines.push(
-        t('ui.msg.noConditionsAppliedTo', locale, { name: tokenName }),
-      );
+      lines.push(t('ui.msg.noConditionsAppliedTo', locale, { name: tokenName }));
     } else {
       lines.push(
         htmlTable(
@@ -31163,16 +28973,14 @@ const ConditionTrackerMod = (() => {
             escapeHtml(c.displayText),
             escapeHtml(formatDuration(c.duration, locale)),
             buildButton('🗑', `${COMMAND} --remove ${c.id}`),
-          ]),
-        ),
+          ])
+        )
       );
     }
 
     lines.push(heading(t('ui.heading.appliedBy', locale)));
     if (appliedBy.length === 0) {
-      lines.push(
-        t('ui.msg.noConditionsAppliedBy', locale, { name: tokenName }),
-      );
+      lines.push(t('ui.msg.noConditionsAppliedBy', locale, { name: tokenName }));
     } else {
       lines.push(
         htmlTable(
@@ -31181,25 +28989,19 @@ const ConditionTrackerMod = (() => {
             escapeHtml(c.displayText),
             escapeHtml(formatDuration(c.duration, locale)),
             buildButton('🗑', `${COMMAND} --remove ${c.id}`),
-          ]),
-        ),
+          ])
+        )
       );
     }
 
     const savedEffects = getSavedEffectsForToken(tokenId);
-    lines.push(
-      heading(t('ui.heading.savedEffectsFor', locale, { name: tokenName })),
-    );
+    lines.push(heading(t('ui.heading.savedEffectsFor', locale, { name: tokenName })));
     if (savedEffects.length === 0) {
       lines.push(t('ui.msg.noSavedEffects', locale, { name: tokenName }));
     } else {
       lines.push(
         htmlTable(
-          [
-            t('ui.saved.field.gmLabel', locale),
-            t('ui.saved.field.visibility', locale),
-            '',
-          ],
+          [t('ui.saved.field.gmLabel', locale), t('ui.saved.field.visibility', locale), ''],
           savedEffects.map((effect) => {
             const label = effect.gmLabel || effect.condition || '';
             const snoozedLabel = effect.snooze
@@ -31210,8 +29012,8 @@ const ConditionTrackerMod = (() => {
               escapeHtml(t(`ui.saved.visibility.${effect.visibility}`, locale)),
               buildButton('🗑', `${COMMAND} --saved remove ${effect.id}`),
             ];
-          }),
-        ),
+          })
+        )
       );
     }
 
@@ -31305,7 +29107,7 @@ const ConditionTrackerMod = (() => {
         t('ui.msg.zeroHpNoConditions', locale, { name: targetName }),
         buildButton(
           t('ui.msg.removeFromTurnOrder', locale),
-          `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`,
+          `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`
         ),
       ]);
       return;
@@ -31316,7 +29118,7 @@ const ConditionTrackerMod = (() => {
       ...active.map((condition) => buildRemoveButton(condition)),
       buildButton(
         t('ui.msg.removeAllBtn', locale, { name: targetName }),
-        `${COMMAND} --zero-hp-remove-all ${tokenId}`,
+        `${COMMAND} --zero-hp-remove-all ${tokenId}`
       ),
     ];
 
@@ -31324,15 +29126,15 @@ const ConditionTrackerMod = (() => {
       lines.push(
         buildButton(
           t('ui.msg.markIncapacitated', locale),
-          `${COMMAND} --zero-hp-incapacitated ${tokenId}`,
-        ),
+          `${COMMAND} --zero-hp-incapacitated ${tokenId}`
+        )
       );
     } else {
       lines.push(
         buildButton(
           t('ui.msg.removeFromTurnOrder', locale),
-          `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`,
-        ),
+          `${COMMAND} --zero-hp-remove-from-turn ${tokenId}`
+        )
       );
     }
 
@@ -31411,7 +29213,7 @@ const ConditionTrackerMod = (() => {
         t('ui.msg.moveTokenPrompt', locale, { name: targetName }),
         buildButton(
           t('ui.msg.moveTokenBtn', locale, { name: targetName }),
-          `${COMMAND} --zero-hp-to-map ${tokenId}`,
+          `${COMMAND} --zero-hp-to-map ${tokenId}`
         ),
       ]);
     }
@@ -31487,10 +29289,7 @@ const ConditionTrackerMod = (() => {
     const tokenName = getTokenName(token);
 
     if (isDuplicate(tokenId, '', '', tokenId, 'Incapacitated', '')) {
-      whisperWarning(
-        playerId,
-        t('ui.msg.alreadyIncapacitated', locale, { name: tokenName }),
-      );
+      whisperWarning(playerId, t('ui.msg.alreadyIncapacitated', locale, { name: tokenName }));
       return;
     }
 
@@ -31502,29 +29301,13 @@ const ConditionTrackerMod = (() => {
       customText: '',
     };
     const duration = { type: DURATION_UNTIL_REMOVED };
-    const condition = buildConditionRecord(
-      validation,
-      config,
-      duration,
-      locale,
-    );
-    const markerNotice = applyConfiguredMarker(
-      token,
-      condition,
-      config,
-      locale,
-    );
+    const condition = buildConditionRecord(validation, config, duration, locale);
+    const markerNotice = applyConfiguredMarker(token, condition, config, locale);
     addActiveCondition(condition);
     const insertResult = insertConditionRow(condition);
 
     announceHtml(buildApplyMessage(condition, locale));
-    whisperApplySummary(
-      playerId,
-      condition,
-      insertResult.appended,
-      markerNotice,
-      locale,
-    );
+    whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale);
   }
 
   /**
@@ -31539,7 +29322,7 @@ const ConditionTrackerMod = (() => {
     whisper(
       playerId,
       t('ui.title.conditionReorder', locale),
-      t('ui.msg.conditionsReordered', locale),
+      t('ui.msg.conditionsReordered', locale)
     );
   }
 
@@ -31561,7 +29344,7 @@ const ConditionTrackerMod = (() => {
         reportToken: MACRO_NAME_REPORT_TOKEN,
         saved: MACRO_NAME_SAVED,
         classify: MACRO_NAME_CLASSIFY,
-      }),
+      })
     );
   }
 
@@ -31577,7 +29360,7 @@ const ConditionTrackerMod = (() => {
     whisper(
       playerId,
       t('ui.title.handoutReinstalled', locale),
-      t('ui.msg.handoutReinstalled', locale, { handout: HANDOUT_NAME }),
+      t('ui.msg.handoutReinstalled', locale, { handout: HANDOUT_NAME })
     );
   }
 
@@ -31594,13 +29377,11 @@ const ConditionTrackerMod = (() => {
       getCurrentTurnTokenId(),
       getTurnSignature(),
       getTokenRowIds(),
-      findMisplacedConditionIds(),
+      findMisplacedConditionIds()
     );
     installMacro();
     installHandout(getConfig().language);
-    log(
-      `-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} [Updated: ${SCRIPT_LAST_UPDATED}] <=-`,
-    );
+    log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} [Updated: ${SCRIPT_LAST_UPDATED}] <=-`);
 
     const locale = getConfig().language;
     const gmIds = getGmPlayerIds();
@@ -31611,7 +29392,7 @@ const ConditionTrackerMod = (() => {
         t('ui.msg.scriptReady', locale, {
           name: SCRIPT_NAME,
           version: SCRIPT_VERSION,
-        }),
+        })
       );
       showMenu(gmId);
     }
@@ -31632,10 +29413,7 @@ const ConditionTrackerMod = (() => {
           .map((s) => s.trim())
           .filter(Boolean);
         const currMarkers = getTokenMarkers(token);
-        if (
-          containsMarker(currMarkers, 'dead') &&
-          !containsMarker(prevMarkers, 'dead')
-        ) {
+        if (containsMarker(currMarkers, 'dead') && !containsMarker(prevMarkers, 'dead')) {
           const targetName = getTokenName(token);
           promptZeroHpConditionRemoval(token, targetName, isPlayerToken(token));
           return;
@@ -31684,9 +29462,7 @@ const ConditionTrackerMod = (() => {
       removeSavedEffectsForToken(tokenId);
 
       const { matched: removed, unmatched: kept } = partitionActiveConditions(
-        (condition) =>
-          condition.sourceTokenId === tokenId ||
-          condition.targetTokenId === tokenId,
+        (condition) => condition.sourceTokenId === tokenId || condition.targetTokenId === tokenId
       );
 
       if (removed.length === 0) {
@@ -31718,25 +29494,19 @@ const ConditionTrackerMod = (() => {
 
       const previousFirstTurnId = trackerState.runtime.previousFirstTurnId;
       const previousTokenIds = trackerState.runtime.previousTokenIds || [];
-      const previousMisplacedIds =
-        trackerState.runtime.previousMisplacedConditionIds || [];
+      const previousMisplacedIds = trackerState.runtime.previousMisplacedConditionIds || [];
       const currentFirstTurnId = getCurrentTurnTokenId();
       const currentTokenIds = getTokenRowIds();
       reconcileActiveConditionsWithTurnOrder();
       const currentMisplacedIds = findMisplacedConditionIds();
-      updateTurnRuntime(
-        currentFirstTurnId,
-        currentSignature,
-        currentTokenIds,
-        currentMisplacedIds,
-      );
+      updateTurnRuntime(currentFirstTurnId, currentSignature, currentTokenIds, currentMisplacedIds);
 
       if (
         shouldPromptConditionReorder(
           previousTokenIds,
           currentTokenIds,
           previousMisplacedIds,
-          currentMisplacedIds,
+          currentMisplacedIds
         )
       ) {
         promptConditionReorder(getPrimaryGmId(), currentMisplacedIds.length);
@@ -31751,8 +29521,7 @@ const ConditionTrackerMod = (() => {
         return;
       }
 
-      const { expired, decremented } =
-        collectExpiredConditions(previousFirstTurnId);
+      const { expired, decremented } = collectExpiredConditions(previousFirstTurnId);
       for (const condition of decremented) {
         updateConditionRow(condition);
       }
@@ -31763,11 +29532,7 @@ const ConditionTrackerMod = (() => {
         const topToken = getGraphicToken(currentFirstTurnId);
         if (topToken) {
           const topTokenName = getTokenName(topToken);
-          processSavedEffectReminders(
-            currentFirstTurnId,
-            topTokenName,
-            currentSignature,
-          );
+          processSavedEffectReminders(currentFirstTurnId, topTokenName, currentSignature);
         }
       }
     } catch (error) {
@@ -31789,16 +29554,14 @@ const ConditionTrackerMod = (() => {
     previousTokenIds,
     currentTokenIds,
     previousMisplacedIds,
-    currentMisplacedIds,
+    currentMisplacedIds
   ) {
     if (currentMisplacedIds.length === 0) {
       return false;
     }
 
     const previousMisplacedSet = new Set(previousMisplacedIds);
-    const newlyMisplaced = currentMisplacedIds.some(
-      (id) => !previousMisplacedSet.has(id),
-    );
+    const newlyMisplaced = currentMisplacedIds.some((id) => !previousMisplacedSet.has(id));
     if (!newlyMisplaced) {
       return false;
     }
@@ -31852,10 +29615,7 @@ const ConditionTrackerMod = (() => {
     const locale = getConfig().language;
     whisper(gmId, t('ui.title.conditionReorder', locale), [
       t('ui.msg.conditionReorder', locale, { count }),
-      buildButton(
-        t('ui.btn.reorderConditions', locale),
-        `${COMMAND} --reorder-conditions`,
-      ),
+      buildButton(t('ui.btn.reorderConditions', locale), `${COMMAND} --reorder-conditions`),
     ]);
   }
 
@@ -31866,8 +29626,8 @@ const ConditionTrackerMod = (() => {
    */
   function reconcileActiveConditionsWithTurnOrder() {
     const rowConditionIds = getConditionRowIdSet();
-    const { matched: kept, unmatched: removed } = partitionActiveConditions(
-      (condition) => rowConditionIds.has(condition.id),
+    const { matched: kept, unmatched: removed } = partitionActiveConditions((condition) =>
+      rowConditionIds.has(condition.id)
     );
 
     if (removed.length === 0) {

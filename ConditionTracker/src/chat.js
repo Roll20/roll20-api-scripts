@@ -10,63 +10,63 @@ import {
   COMMAND,
   LOGO_URL_256,
   SCRIPT_NAME,
-} from "./constants.js";
-import { isRtlLocale, t } from "./i18n.js";
-import { getConfig } from "./state.js";
-import { escapeHtml, getGmPlayerIds, toText } from "./utils.js";
+} from './constants.js';
+import { isRtlLocale, t } from './i18n.js';
+import { getConfig } from './state.js';
+import { escapeHtml, getGmPlayerIds, toText } from './utils.js';
 
-const DEFAULT_WHISPER_TARGET = "gm";
+const DEFAULT_WHISPER_TARGET = 'gm';
 
 const CHAT_CARD_STYLE = [
-  "width:100%",
-  "border-radius:4px",
+  'width:100%',
+  'border-radius:4px',
   `box-shadow:1px 1px 1px ${COLOR_TEXT_DIM_SILVER}`,
-  "text-align:left",
-  "vertical-align:middle",
-  "margin:0px auto",
+  'text-align:left',
+  'vertical-align:middle',
+  'margin:0px auto',
   `border:1px solid ${COLOR_BG_SOFT_BLACK}`,
   `color:${COLOR_TEXT_ARCANE_SILVER}`,
   `background-image:-webkit-linear-gradient(-45deg,${COLOR_ACCENT_DARK} 0%,${COLOR_ACCENT_LIGHT} 100%)`,
-  "overflow:hidden",
-].join(";");
+  'overflow:hidden',
+].join(';');
 
 const CHAT_HEADER_STYLE = [
   `background:${COLOR_HEADER_LIGHT}`,
   `color:${COLOR_HEADER_DARK}`,
-  "padding:2px 5px",
+  'padding:2px 5px',
   `border-bottom:1px solid ${COLOR_BG_SOFT_BLACK}`,
-  "font-variant:small-caps",
-  "font-weight:bold",
-  "text-align:center",
-].join(";");
+  'font-variant:small-caps',
+  'font-weight:bold',
+  'text-align:center',
+].join(';');
 
-const CHAT_CONTENT_STYLE = "padding:3px 8px";
+const CHAT_CONTENT_STYLE = 'padding:3px 8px';
 
 const TABLE_HEADER_STYLE = [
-  "text-align:left",
-  "padding:2px 4px",
+  'text-align:left',
+  'padding:2px 4px',
   `border-bottom:1px solid ${COLOR_TEXT_ARCANE_SILVER}`,
-].join(";");
+].join(';');
 
 const CHAT_BUTTON_STYLE = [
   `background:${COLOR_ACCENT_DARK}`,
   `color:${COLOR_TEXT_WHITE}`,
-  "padding:2px 6px",
-  "border-radius:4px",
-  "text-decoration:none",
-].join(";");
+  'padding:2px 6px',
+  'border-radius:4px',
+  'text-decoration:none',
+].join(';');
 
-const CHAT_HEADER_SCRIPT_READY = "Script Ready";
+const CHAT_HEADER_SCRIPT_READY = 'Script Ready';
 
 const CHAT_HEADER_WARNING_STYLE = [
-  "background:#FEF3C7",
-  "color:#92400E",
-  "padding:2px 5px",
-  "border-bottom:1px solid #92400E",
-  "font-variant:small-caps",
-  "font-weight:bold",
-  "text-align:center",
-].join(";");
+  'background:#FEF3C7',
+  'color:#92400E',
+  'padding:2px 5px',
+  'border-bottom:1px solid #92400E',
+  'font-variant:small-caps',
+  'font-weight:bold',
+  'text-align:center',
+].join(';');
 
 /**
  * Builds inline text direction styles for the active chat locale.
@@ -75,9 +75,7 @@ const CHAT_HEADER_WARNING_STYLE = [
  * @returns {string} Inline CSS direction and alignment.
  */
 function getDirectionStyle(locale) {
-  return isRtlLocale(locale)
-    ? "direction:rtl;text-align:right"
-    : "direction:ltr;text-align:left";
+  return isRtlLocale(locale) ? 'direction:rtl;text-align:right' : 'direction:ltr;text-align:left';
 }
 
 /**
@@ -88,19 +86,19 @@ function getDirectionStyle(locale) {
  */
 function getTableHeaderStyle(locale) {
   return isRtlLocale(locale)
-    ? TABLE_HEADER_STYLE.replace("text-align:left", "text-align:right")
+    ? TABLE_HEADER_STYLE.replace('text-align:left', 'text-align:right')
     : TABLE_HEADER_STYLE;
 }
 
 const CHAT_HEADER_ERROR_STYLE = [
-  "background:#FEE2E2",
-  "color:#991B1B",
-  "padding:2px 5px",
-  "border-bottom:1px solid #991B1B",
-  "font-variant:small-caps",
-  "font-weight:bold",
-  "text-align:center",
-].join(";");
+  'background:#FEE2E2',
+  'color:#991B1B',
+  'padding:2px 5px',
+  'border-bottom:1px solid #991B1B',
+  'font-variant:small-caps',
+  'font-weight:bold',
+  'text-align:center',
+].join(';');
 
 /**
  * Marks a string as trusted HTML for controlled chat rendering.
@@ -174,7 +172,7 @@ export function buildBox(title, lines) {
   const locale = getConfig().language;
   const headerLabel =
     toText(title) === CHAT_HEADER_SCRIPT_READY ||
-    toText(title) === t("ui.title.scriptReady", locale)
+    toText(title) === t('ui.title.scriptReady', locale)
       ? `😎 ${safeTitle} 😎`
       : `ℹ️ ${safeTitle}`;
   return buildStyledBox(lines, CHAT_HEADER_STYLE, headerLabel, locale);
@@ -190,8 +188,8 @@ function buildWarningBox(lines, locale) {
   return buildStyledBox(
     lines,
     CHAT_HEADER_WARNING_STYLE,
-    `⚠️ ${escapeHtml(t("ui.title.warning", locale))}`,
-    locale,
+    `⚠️ ${escapeHtml(t('ui.title.warning', locale))}`,
+    locale
   );
 }
 
@@ -205,8 +203,8 @@ function buildErrorBox(lines, locale) {
   return buildStyledBox(
     lines,
     CHAT_HEADER_ERROR_STYLE,
-    `❌ ${escapeHtml(t("ui.title.error", locale))}`,
-    locale,
+    `❌ ${escapeHtml(t('ui.title.error', locale))}`,
+    locale
   );
 }
 
@@ -218,9 +216,7 @@ function buildErrorBox(lines, locale) {
  * @returns {void}
  */
 export function whisperWarning(playerId, body) {
-  whisperWithBox(playerId, body, (lines, locale) =>
-    buildWarningBox(lines, locale),
-  );
+  whisperWithBox(playerId, body, (lines, locale) => buildWarningBox(lines, locale));
 }
 
 /**
@@ -231,9 +227,7 @@ export function whisperWarning(playerId, body) {
  * @returns {void}
  */
 export function whisperError(playerId, body) {
-  whisperWithBox(playerId, body, (lines, locale) =>
-    buildErrorBox(lines, locale),
-  );
+  whisperWithBox(playerId, body, (lines, locale) => buildErrorBox(lines, locale));
 }
 
 /**
@@ -304,7 +298,7 @@ function buildBody(lines) {
     parts.push(`<div>${content}</div>`);
   }
 
-  return parts.join("");
+  return parts.join('');
 }
 
 /**
@@ -328,9 +322,7 @@ function formatChatLine(line) {
  * @returns {boolean} True when the line is trusted HTML.
  */
 function isTrustedHtmlLine(line) {
-  return (
-    Boolean(line) && typeof line === "object" && hasValue(line.__trustedHtml)
-  );
+  return Boolean(line) && typeof line === 'object' && hasValue(line.__trustedHtml);
 }
 
 /**
@@ -340,9 +332,9 @@ function isTrustedHtmlLine(line) {
  * @returns {string} Trusted HTML.
  */
 function getTrustedHtml(line) {
-  if (line === null || line === undefined) return "";
-  if (typeof line === "object") {
-    return hasValue(line.__trustedHtml) ? String(line.__trustedHtml) : "";
+  if (line === null || line === undefined) return '';
+  if (typeof line === 'object') {
+    return hasValue(line.__trustedHtml) ? String(line.__trustedHtml) : '';
   }
   return String(line);
 }
@@ -366,7 +358,7 @@ function hasValue(value) {
  */
 export function buildButton(label, command) {
   return rawHtml(
-    `<a style="${CHAT_BUTTON_STYLE}" href="${escapeHtml(command)}">${escapeHtml(label)}</a>`,
+    `<a style="${CHAT_BUTTON_STYLE}" href="${escapeHtml(command)}">${escapeHtml(label)}</a>`
   );
 }
 
@@ -377,10 +369,7 @@ export function buildButton(label, command) {
  * @returns {string} Button HTML.
  */
 export function buildRemoveButton(condition) {
-  return buildButton(
-    `Remove: ${condition.displayText}`,
-    `${COMMAND} --remove ${condition.id}`,
-  );
+  return buildButton(`Remove: ${condition.displayText}`, `${COMMAND} --remove ${condition.id}`);
 }
 
 /**
@@ -395,11 +384,8 @@ export function htmlTable(headers, rows) {
   const tableHeaderStyle = getTableHeaderStyle(locale);
   const directionStyle = getDirectionStyle(locale);
   const headerCells = headers
-    .map(
-      (header) =>
-        `<th style="${tableHeaderStyle}"><strong>${escapeHtml(header)}</strong></th>`,
-    )
-    .join("");
+    .map((header) => `<th style="${tableHeaderStyle}"><strong>${escapeHtml(header)}</strong></th>`)
+    .join('');
 
   const bodyRows = rows
     .map(
@@ -407,14 +393,14 @@ export function htmlTable(headers, rows) {
         `<tr>${cells
           .map(
             (cell) =>
-              `<td style="padding:2px 4px;vertical-align:top;${directionStyle}">${getTrustedHtml(cell)}</td>`,
+              `<td style="padding:2px 4px;vertical-align:top;${directionStyle}">${getTrustedHtml(cell)}</td>`
           )
-          .join("")}</tr>`,
+          .join('')}</tr>`
     )
-    .join("");
+    .join('');
 
   return rawHtml(
-    `<table style="width:100%;border-collapse:collapse;${directionStyle}"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`,
+    `<table style="width:100%;border-collapse:collapse;${directionStyle}"><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`
   );
 }
 
@@ -425,10 +411,8 @@ export function htmlTable(headers, rows) {
  * @returns {string} Display name suitable for /w.
  */
 function getWhisperTarget(playerId) {
-  const player = getObj("player", playerId);
-  const displayName = player
-    ? toText(player.get("_displayname")).replaceAll('"', "")
-    : "";
+  const player = getObj('player', playerId);
+  const displayName = player ? toText(player.get('_displayname')).replaceAll('"', '') : '';
   if (displayName) {
     return displayName;
   }

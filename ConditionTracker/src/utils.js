@@ -16,7 +16,7 @@ export function hasValue(value) {
  */
 export function toText(value) {
   if (!hasValue(value)) {
-    return "";
+    return '';
   }
 
   return String(value).trim();
@@ -30,11 +30,11 @@ export function toText(value) {
  */
 export function escapeHtml(value) {
   return toText(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 /**
@@ -55,7 +55,7 @@ export function normalizeKey(value) {
 export function createId() {
   const randomPart = Math.floor(Math.random() * 0x100000000)
     .toString(36)
-    .padStart(7, "0");
+    .padStart(7, '0');
   return `ct_${Date.now().toString(36)}_${randomPart}`;
 }
 
@@ -66,12 +66,12 @@ export function createId() {
  * @returns {string} The token name or a fallback label.
  */
 export function getTokenName(token) {
-  const name = token?.get ? toText(token.get("name")) : "";
+  const name = token?.get ? toText(token.get('name')) : '';
   if (name) {
     return name;
   }
 
-  return "Unnamed Token";
+  return 'Unnamed Token';
 }
 
 /**
@@ -83,7 +83,7 @@ export function getTokenName(token) {
  */
 export function parseJson(text, fallback) {
   try {
-    return JSON.parse(text || "");
+    return JSON.parse(text || '');
   } catch (error) {
     log(`Failed to parse JSON: ${error.message}`);
     return fallback;
@@ -97,7 +97,7 @@ export function parseJson(text, fallback) {
  * @returns {boolean} True for plain object-like values.
  */
 export function isRecord(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**
@@ -117,7 +117,7 @@ export function queryObjects(criteria) {
  * @returns {Graphic|null} Roll20 token object.
  */
 export function getGraphicToken(tokenId) {
-  return getObj("graphic", toText(tokenId)) || null;
+  return getObj('graphic', toText(tokenId)) || null;
 }
 
 /**
@@ -136,7 +136,7 @@ export function tokenExists(tokenId) {
  * @returns {object[]} Roll20 player objects.
  */
 export function getPlayers() {
-  return queryObjects({ _type: "player" });
+  return queryObjects({ _type: 'player' });
 }
 
 /**
@@ -149,7 +149,7 @@ export function getGmPlayerIds() {
   const players = getPlayers();
 
   for (const player of players) {
-    const playerId = toText(player.get("_id"));
+    const playerId = toText(player.get('_id'));
     if (playerId && playerIsGM(playerId)) {
       gmIds.push(playerId);
     }

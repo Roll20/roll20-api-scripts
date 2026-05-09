@@ -1,10 +1,8 @@
-import { readFileSync, writeFileSync, readdirSync } from "fs";
-import { join } from "path";
+import { readFileSync, writeFileSync, readdirSync } from 'fs';
+import { join } from 'path';
 
-const localeDir = "src/locales/locale";
-const files = readdirSync(localeDir).filter(
-  (f) => f !== "en-US.js" && f.endsWith(".js"),
-);
+const localeDir = 'src/locales/locale';
+const files = readdirSync(localeDir).filter((f) => f !== 'en-US.js' && f.endsWith('.js'));
 
 const newBtnKeys = `      savedEffects: "Saved Effects",
       addSavedEffect: "Add Saved Effect",
@@ -119,56 +117,59 @@ let successCount = 0;
 
 for (const file of files) {
   const filePath = join(localeDir, file);
-  let content = readFileSync(filePath, "utf8");
+  let content = readFileSync(filePath, 'utf8');
   let modified = false;
 
   // 1. ui.btn keys after 'reportToken:' line
-  if (content.includes("reportToken:") && !content.includes("savedEffects: \"Saved Effects\"")) {
+  if (content.includes('reportToken:') && !content.includes('savedEffects: "Saved Effects"')) {
     content = content.replace(/(reportToken:[^\n]+\n)/, `$1${newBtnKeys}\n`);
     modified = true;
   }
 
   // 2. ui.title keys after 'tokenReport:' line
-  if (content.includes("tokenReport:") && !content.includes("savedAdd:")) {
+  if (content.includes('tokenReport:') && !content.includes('savedAdd:')) {
     content = content.replace(/(tokenReport:[^\n]+\n)/, `$1${newTitleKeys}\n`);
     modified = true;
   }
 
   // 3. ui.heading keys after 'appliedBy:' line
-  if (content.includes("appliedBy:") && !content.includes("savedEffectsFor:")) {
+  if (content.includes('appliedBy:') && !content.includes('savedEffectsFor:')) {
     content = content.replace(/(appliedBy:[^\n]+\n)/, `$1${newHeadingKeys}\n`);
     modified = true;
   }
 
   // 4. ui.msg keys after 'noConditionsAppliedBy' line
-  if (content.includes("noConditionsAppliedBy") && !content.includes("noSavedEffects:")) {
+  if (content.includes('noConditionsAppliedBy') && !content.includes('noSavedEffects:')) {
     content = content.replace(/(noConditionsAppliedBy:[^\n]+\n)/, `$1${newMsgKeys}\n`);
     modified = true;
   }
 
   // 5. ui.saved block before 'cleanup:'
-  if (content.includes("    cleanup: {") && !content.includes("saved: {")) {
-    content = content.replace("    cleanup: {", `${newSavedBlock}\n    cleanup: {`);
+  if (content.includes('    cleanup: {') && !content.includes('saved: {')) {
+    content = content.replace('    cleanup: {', `${newSavedBlock}\n    cleanup: {`);
     modified = true;
   }
 
   // 6. Update macroReinstalled to include {saved}
-  if (content.includes("macroReinstalled:") && !content.includes("{saved}")) {
+  if (content.includes('macroReinstalled:') && !content.includes('{saved}')) {
     content = content.replace(
       /(macroReinstalled:\s*")[^"]+(")/,
-      `$1The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.$2`,
+      `$1The {wizard}, {multiTarget}, {reportToken}, and {saved} macros have been reinstalled for all current GM players.$2`
     );
     modified = true;
   }
 
   // 7. handout.savedEffects before 'configuration:'
-  if (content.includes("    configuration: {") && !content.includes("savedEffects: {")) {
-    content = content.replace("    configuration: {", `${newHandoutSection}\n    configuration: {`);
+  if (content.includes('    configuration: {') && !content.includes('savedEffects: {')) {
+    content = content.replace('    configuration: {', `${newHandoutSection}\n    configuration: {`);
     modified = true;
   }
 
   // 8. commandsRef rows before '--lang' row (using &lt; variant)
-  if ((content.includes("--lang") || content.includes("--help")) && !content.includes('"--saved"')) {
+  if (
+    (content.includes('--lang') || content.includes('--help')) &&
+    !content.includes('"--saved"')
+  ) {
     // Try to insert before --lang row
     if (content.includes('"--lang')) {
       content = content.replace(/(\s*\[\"--lang)/, `\n${newCmdRefRows}$1`);
@@ -179,16 +180,16 @@ for (const file of files) {
   }
 
   // 9. quickStart row before '--menu' row
-  if (content.includes("!condition-tracker --menu") && !content.includes("!condition-tracker --saved")) {
-    content = content.replace(
-      /(\s*\[\"!condition-tracker --menu)/,
-      `\n${newQuickStartRow}$1`,
-    );
+  if (
+    content.includes('!condition-tracker --menu') &&
+    !content.includes('!condition-tracker --saved')
+  ) {
+    content = content.replace(/(\s*\[\"!condition-tracker --menu)/, `\n${newQuickStartRow}$1`);
     modified = true;
   }
 
   if (modified) {
-    writeFileSync(filePath, content, "utf8");
+    writeFileSync(filePath, content, 'utf8');
     successCount++;
     console.log(`Updated: ${file}`);
   } else {

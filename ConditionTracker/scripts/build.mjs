@@ -1,12 +1,10 @@
-import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { rollup, watch } from "rollup";
-import config from "../rollup.config.js";
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { rollup, watch } from 'rollup';
+import config from '../rollup.config.js';
 
-const metadata = JSON.parse(
-  readFileSync(new URL("../script.json", import.meta.url), "utf8"),
-);
-const isWatchMode = process.argv.includes("--watch");
+const metadata = JSON.parse(readFileSync(new URL('../script.json', import.meta.url), 'utf8'));
+const isWatchMode = process.argv.includes('--watch');
 
 /**
  * Copies the generated bundle into the versioned release folder.
@@ -27,17 +25,13 @@ function copyVersionedOutput() {
  */
 async function buildOnce() {
   const bundle = await rollup(config);
-  const outputs = Array.isArray(config.output)
-    ? config.output
-    : [config.output];
+  const outputs = Array.isArray(config.output) ? config.output : [config.output];
   for (const output of outputs) {
     await bundle.write(output);
   }
   await bundle.close();
   copyVersionedOutput();
-  console.log(
-    `Built ${metadata.script} and ${metadata.version}/${metadata.script}`,
-  );
+  console.log(`Built ${metadata.script} and ${metadata.version}/${metadata.script}`);
 }
 
 /**
@@ -47,13 +41,13 @@ async function buildOnce() {
  */
 function watchBuild() {
   const watcher = watch(config);
-  watcher.on("event", (event) => {
-    if (event.code === "ERROR") {
+  watcher.on('event', (event) => {
+    if (event.code === 'ERROR') {
       console.error(event.error);
       return;
     }
 
-    if (event.code === "END") {
+    if (event.code === 'END') {
       copyVersionedOutput();
       console.log(`Rebuilt ${metadata.script}`);
     }

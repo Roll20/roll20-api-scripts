@@ -12,7 +12,7 @@ import {
   SAVED_VISIBILITY_PUBLIC,
   VALID_SAVED_VISIBILITIES,
   VALID_SNOOZE_SCOPES,
-} from "./constants.js";
+} from './constants.js';
 import {
   addSavedEffect,
   createSavedEffect,
@@ -20,7 +20,7 @@ import {
   getSavedEffectsForToken,
   removeSavedEffect,
   updateSavedEffect,
-} from "./savedEffects.js";
+} from './savedEffects.js';
 import {
   buildButton,
   htmlTable,
@@ -29,8 +29,8 @@ import {
   whisperError,
   whisperGms,
   whisperWarning,
-} from "./chat.js";
-import { t } from "./i18n.js";
+} from './chat.js';
+import { t } from './i18n.js';
 import {
   createId,
   escapeHtml,
@@ -38,12 +38,12 @@ import {
   getGmPlayerIds,
   getTokenName,
   toText,
-} from "./utils.js";
-import { addActiveCondition, getConfig } from "./state.js";
-import { isCustomTextCondition } from "./conditions.js";
-import { getSystemProfile } from "./systems/index.js";
-import { applyMarker } from "./markers.js";
-import { insertConditionRow } from "./turnOrder.js";
+} from './utils.js';
+import { addActiveCondition, getConfig } from './state.js';
+import { isCustomTextCondition } from './conditions.js';
+import { getSystemProfile } from './systems/index.js';
+import { applyMarker } from './markers.js';
+import { insertConditionRow } from './turnOrder.js';
 
 const SECTION_HEADING_STYLE = [
   `background:${COLOR_HEADER_LIGHT}`,
@@ -57,7 +57,7 @@ const SECTION_HEADING_STYLE = [
   `font-weight:bold`,
   `padding:3px 6px`,
   `margin:2px 0`,
-].join(";");
+].join(';');
 
 /**
  * Builds an in-card section heading.
@@ -66,9 +66,7 @@ const SECTION_HEADING_STYLE = [
  * @returns {object} Trusted HTML line.
  */
 function heading(text) {
-  return rawHtml(
-    `<div style="${SECTION_HEADING_STYLE}">${escapeHtml(text)}</div>`,
-  );
+  return rawHtml(`<div style="${SECTION_HEADING_STYLE}">${escapeHtml(text)}</div>`);
 }
 
 /**
@@ -88,7 +86,7 @@ function code(text) {
  * @returns {string} Joined command string.
  */
 function buildCmd(parts) {
-  return [COMMAND, ...parts].join(" ");
+  return [COMMAND, ...parts].join(' ');
 }
 
 /**
@@ -101,9 +99,9 @@ function buildCmd(parts) {
  * @returns {{ sub: string, id: string }} Subcommand name and optional id.
  */
 function parseSavedSub(savedValue) {
-  if (savedValue === true || !savedValue) return { sub: "view", id: "" };
+  if (savedValue === true || !savedValue) return { sub: 'view', id: '' };
   const parts = toText(savedValue).split(/\s+/);
-  return { sub: parts[0] || "view", id: parts.slice(1).join(" ") };
+  return { sub: parts[0] || 'view', id: parts.slice(1).join(' ') };
 }
 
 /**
@@ -169,31 +167,31 @@ export function handleSaved(msg, args) {
   const locale = getConfig().language;
 
   switch (sub) {
-    case "add":
+    case 'add':
       handleSavedAdd(playerId, msg, args);
       return;
 
-    case "edit": {
+    case 'edit': {
       if (!id) {
-        whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+        whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
         return;
       }
       handleSavedEdit(playerId, id, args);
       return;
     }
 
-    case "remove": {
+    case 'remove': {
       if (!id) {
-        whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+        whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
         return;
       }
       executeSavedRemove(playerId, id);
       return;
     }
 
-    case "promote": {
+    case 'promote': {
       if (!id) {
-        whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+        whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
         return;
       }
       const visibility = toText(args.visibility);
@@ -205,9 +203,9 @@ export function handleSaved(msg, args) {
       return;
     }
 
-    case "snooze": {
+    case 'snooze': {
       if (!id) {
-        whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+        whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
         return;
       }
       const scope = toText(args.scope);
@@ -220,16 +218,16 @@ export function handleSaved(msg, args) {
       return;
     }
 
-    case "snooze-clear": {
+    case 'snooze-clear': {
       if (!id) {
-        whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+        whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
         return;
       }
       executeSnoozeClear(playerId, id);
       return;
     }
 
-    case "view":
+    case 'view':
     default:
       showSavedMenuForMessage(playerId, msg);
   }
@@ -242,7 +240,7 @@ export function handleSaved(msg, args) {
  * @returns {string} Turn key.
  */
 function getTurnKeyFromArgs(args) {
-  return toText(args["turn-key"]);
+  return toText(args['turn-key']);
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +260,7 @@ function showSavedMenuForMessage(playerId, msg) {
   const locale = getConfig().language;
   const tokenId = resolveTargetToken(msg);
   if (!tokenId) {
-    whisperWarning(playerId, t("ui.msg.noTokenSelectedSaved", locale));
+    whisperWarning(playerId, t('ui.msg.noTokenSelectedSaved', locale));
     return;
   }
   const token = getGraphicToken(tokenId);
@@ -279,9 +277,9 @@ function showSavedMenuForMessage(playerId, msg) {
 function resolveTargetToken(msg) {
   const selected = Array.isArray(msg.selected) ? msg.selected : [];
   if (selected.length > 0) {
-    return toText(selected[0]._id) || "";
+    return toText(selected[0]._id) || '';
   }
-  return toText(msg._args?.token || "");
+  return toText(msg._args?.token || '');
 }
 
 /**
@@ -298,20 +296,20 @@ export function showSavedMenu(playerId, tokenId, tokenName) {
   const addCmd = buildCmd([`--saved add --token ${tokenId}`]);
 
   const body = [
-    heading(t("ui.heading.savedEffectsFor", locale, { name: tokenName })),
-    buildButton(t("ui.btn.addSavedEffect", locale), addCmd),
+    heading(t('ui.heading.savedEffectsFor', locale, { name: tokenName })),
+    buildButton(t('ui.btn.addSavedEffect', locale), addCmd),
   ];
 
   if (effects.length === 0) {
-    body.push(t("ui.msg.noSavedEffects", locale, { name: tokenName }));
+    body.push(t('ui.msg.noSavedEffects', locale, { name: tokenName }));
   } else {
     for (const effect of effects) {
-      body.push(rawHtml("<br>"));
+      body.push(rawHtml('<br>'));
       body.push(...buildEffectCard(effect, locale));
     }
   }
 
-  whisper(playerId, t("ui.title.savedEffects", locale), body);
+  whisper(playerId, t('ui.title.savedEffects', locale), body);
 }
 
 /**
@@ -324,11 +322,9 @@ export function showSavedMenu(playerId, tokenId, tokenName) {
 function buildEffectCard(effect, locale) {
   const label = effectGmLabel(effect);
   const badge = visibilityBadge(effect.visibility, locale);
-  const snoozeInfo = effect.snooze
-    ? ` (${t("ui.saved.snoozed", locale)})`
-    : "";
+  const snoozeInfo = effect.snooze ? ` (${t('ui.saved.snoozed', locale)})` : '';
   const titleLine = rawHtml(
-    `<strong>${escapeHtml(label)}</strong> <em>${escapeHtml(badge)}${escapeHtml(snoozeInfo)}</em>`,
+    `<strong>${escapeHtml(label)}</strong> <em>${escapeHtml(badge)}${escapeHtml(snoozeInfo)}</em>`
   );
 
   const editCmd = buildCmd([`--saved edit ${effect.id}`]);
@@ -338,11 +334,11 @@ function buildEffectCard(effect, locale) {
 
   const buttons = rawHtml(
     [
-      buildButton(t("ui.btn.promoteSaved", locale), promoteCmd).__trustedHtml,
-      buildButton(t("ui.btn.editSaved", locale), editCmd).__trustedHtml,
-      buildButton(t("ui.btn.removeSaved", locale), removeCmd).__trustedHtml,
-      buildButton(t("ui.btn.snoozeSaved", locale), snoozeCmd).__trustedHtml,
-    ].join(" "),
+      buildButton(t('ui.btn.promoteSaved', locale), promoteCmd).__trustedHtml,
+      buildButton(t('ui.btn.editSaved', locale), editCmd).__trustedHtml,
+      buildButton(t('ui.btn.removeSaved', locale), removeCmd).__trustedHtml,
+      buildButton(t('ui.btn.snoozeSaved', locale), snoozeCmd).__trustedHtml,
+    ].join(' ')
   );
 
   return [titleLine, buttons];
@@ -369,19 +365,18 @@ function handleSavedAdd(playerId, msg, args) {
   // Resolve target token: prefer --token arg, then selected token
   const tokenIdFromArg = toText(args.token);
   const tokenId =
-    tokenIdFromArg || (Array.isArray(msg.selected) && msg.selected.length > 0
-      ? toText(msg.selected[0]._id)
-      : "");
+    tokenIdFromArg ||
+    (Array.isArray(msg.selected) && msg.selected.length > 0 ? toText(msg.selected[0]._id) : '');
 
   if (!tokenId) {
-    whisperWarning(playerId, t("ui.msg.noTokenSelectedSaved", locale));
+    whisperWarning(playerId, t('ui.msg.noTokenSelectedSaved', locale));
     return;
   }
 
   const conditionRaw = toText(args.condition);
 
   // All fields supplied — persist the effect
-  if (conditionRaw && (toText(args.visibility) || toText(args.other) || toText(args["gm-label"]))) {
+  if (conditionRaw && (toText(args.visibility) || toText(args.other) || toText(args['gm-label']))) {
     executeSavedAdd(playerId, args, tokenId);
     return;
   }
@@ -409,26 +404,17 @@ function showSavedConditionStep(playerId, tokenId, locale) {
   const profile = getSystemProfile(config.gameSystem);
 
   const standardButtons = profile.STANDARD_CONDITIONS.map((c) =>
-    buildButton(
-      c,
-      buildCmd([`--saved add --token ${tokenId} --condition ${c}`]),
-    ),
+    buildButton(c, buildCmd([`--saved add --token ${tokenId} --condition ${c}`]))
   );
 
   const customButtons = profile.CUSTOM_EFFECT_TYPES.map((c) =>
-    buildButton(
-      c,
-      buildCmd([`--saved add --token ${tokenId} --condition ${c}`]),
-    ),
+    buildButton(c, buildCmd([`--saved add --token ${tokenId} --condition ${c}`]))
   );
 
   const tableRows = buildTwoColumnRows(standardButtons, customButtons);
 
-  whisper(playerId, t("ui.title.savedAdd", locale), [
-    htmlTable(
-      [t("ui.col.conditions", locale), t("ui.col.customEffects", locale)],
-      tableRows,
-    ),
+  whisper(playerId, t('ui.title.savedAdd', locale), [
+    htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows),
   ]);
 }
 
@@ -446,7 +432,7 @@ function showSavedAddDetailsStep(playerId, tokenId, condition, locale) {
   const needsText = isCustomTextCondition(condition);
 
   const otherPart = needsText
-    ? `--other ?{${t("ui.saved.prompt.enterGmLabel", locale)}|}`
+    ? `--other ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`
     : `--other ""`;
 
   const publicCmd = buildCmd([
@@ -454,7 +440,7 @@ function showSavedAddDetailsStep(playerId, tokenId, condition, locale) {
     `--condition ${condition}`,
     `--visibility public`,
     otherPart,
-    `--gm-label ?{${t("ui.saved.prompt.enterGmLabel", locale)}|}`,
+    `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`,
   ]);
 
   const maskedCmd = buildCmd([
@@ -462,8 +448,8 @@ function showSavedAddDetailsStep(playerId, tokenId, condition, locale) {
     `--condition ${condition}`,
     `--visibility masked`,
     otherPart,
-    `--gm-label ?{${t("ui.saved.prompt.enterGmLabel", locale)}|}`,
-    `--public-label ?{${t("ui.saved.prompt.enterPublicLabel", locale)}|}`,
+    `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`,
+    `--public-label ?{${t('ui.saved.prompt.enterPublicLabel', locale)}|}`,
   ]);
 
   const gmCmd = buildCmd([
@@ -471,22 +457,22 @@ function showSavedAddDetailsStep(playerId, tokenId, condition, locale) {
     `--condition ${condition}`,
     `--visibility gm`,
     otherPart,
-    `--gm-label ?{${t("ui.saved.prompt.enterGmLabel", locale)}|}`,
+    `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|}`,
   ]);
 
-  whisper(playerId, t("ui.title.savedAdd", locale), [
-    heading(t("ui.heading.visibility", locale)),
+  whisper(playerId, t('ui.title.savedAdd', locale), [
+    heading(t('ui.heading.visibility', locale)),
     buildButton(
-      `${t("ui.saved.visibility.public", locale)} — ${t("ui.msg.visibilityPublicHint", locale)}`,
-      publicCmd,
+      `${t('ui.saved.visibility.public', locale)} — ${t('ui.msg.visibilityPublicHint', locale)}`,
+      publicCmd
     ),
     buildButton(
-      `${t("ui.saved.visibility.masked", locale)} — ${t("ui.msg.visibilityMaskedHint", locale)}`,
-      maskedCmd,
+      `${t('ui.saved.visibility.masked', locale)} — ${t('ui.msg.visibilityMaskedHint', locale)}`,
+      maskedCmd
     ),
     buildButton(
-      `${t("ui.saved.visibility.gm", locale)} — ${t("ui.msg.visibilityGmHint", locale)}`,
-      gmCmd,
+      `${t('ui.saved.visibility.gm', locale)} — ${t('ui.msg.visibilityGmHint', locale)}`,
+      gmCmd
     ),
   ]);
 }
@@ -504,26 +490,26 @@ function executeSavedAdd(playerId, args, tokenId) {
   const condition = toText(args.condition);
 
   if (!condition) {
-    whisperWarning(playerId, t("ui.msg.savedConditionRequired", locale));
+    whisperWarning(playerId, t('ui.msg.savedConditionRequired', locale));
     return;
   }
 
   const visibility = toText(args.visibility) || SAVED_VISIBILITY_GM;
   if (!VALID_SAVED_VISIBILITIES.has(visibility)) {
-    whisperWarning(playerId, t("ui.msg.savedInvalidVisibility", locale));
+    whisperWarning(playerId, t('ui.msg.savedInvalidVisibility', locale));
     return;
   }
 
   const other = toText(args.other);
-  const gmLabel = toText(args["gm-label"]) || other || condition;
-  const publicLabel = toText(args["public-label"]) || gmLabel;
+  const gmLabel = toText(args['gm-label']) || other || condition;
+  const publicLabel = toText(args['public-label']) || gmLabel;
 
   const token = getGraphicToken(tokenId);
-  const targetCharacterId = token ? toText(token.get("represents")) : "";
+  const targetCharacterId = token ? toText(token.get('represents')) : '';
 
   const sourceTokenId = toText(args.source);
   const sourceToken = sourceTokenId ? getGraphicToken(sourceTokenId) : null;
-  const sourceCharacterId = sourceToken ? toText(sourceToken.get("represents")) : "";
+  const sourceCharacterId = sourceToken ? toText(sourceToken.get('represents')) : '';
 
   const effect = createSavedEffect({
     visibility,
@@ -543,8 +529,8 @@ function executeSavedAdd(playerId, args, tokenId) {
   const tokenName = token ? getTokenName(token) : tokenId;
   whisper(
     playerId,
-    t("ui.title.savedEffects", locale),
-    t("ui.msg.savedEffectAdded", locale, { name: tokenName }),
+    t('ui.title.savedEffects', locale),
+    t('ui.msg.savedEffectAdded', locale, { name: tokenName })
   );
 }
 
@@ -567,38 +553,32 @@ function handleSavedEdit(playerId, effectId, args) {
   const locale = getConfig().language;
   const effect = findSavedEffect(effectId);
   if (!effect) {
-    whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
     return;
   }
 
   const hasUpdate =
-    args["gm-label"] !== undefined ||
-    args["public-label"] !== undefined ||
+    args['gm-label'] !== undefined ||
+    args['public-label'] !== undefined ||
     args.visibility !== undefined ||
     args.other !== undefined;
 
   if (hasUpdate) {
     const updates = {};
-    if (args["gm-label"] !== undefined)
-      updates.gmLabel = toText(args["gm-label"]);
-    if (args["public-label"] !== undefined)
-      updates.publicLabel = toText(args["public-label"]);
+    if (args['gm-label'] !== undefined) updates.gmLabel = toText(args['gm-label']);
+    if (args['public-label'] !== undefined) updates.publicLabel = toText(args['public-label']);
     if (args.other !== undefined) updates.other = toText(args.other);
     if (args.visibility !== undefined) {
       const v = toText(args.visibility);
       if (VALID_SAVED_VISIBILITIES.has(v)) {
         updates.visibility = v;
       } else {
-        whisperWarning(playerId, t("ui.msg.savedInvalidVisibility", locale));
+        whisperWarning(playerId, t('ui.msg.savedInvalidVisibility', locale));
         return;
       }
     }
     updateSavedEffect(effectId, updates);
-    whisper(
-      playerId,
-      t("ui.title.savedEdit", locale),
-      t("ui.msg.savedEffectUpdated", locale),
-    );
+    whisper(playerId, t('ui.title.savedEdit', locale), t('ui.msg.savedEffectUpdated', locale));
     return;
   }
 
@@ -616,12 +596,12 @@ function handleSavedEdit(playerId, effectId, args) {
 function showSavedEditMenu(playerId, effect, locale) {
   const gmLabelCmd = buildCmd([
     `--saved edit ${effect.id}`,
-    `--gm-label ?{${t("ui.saved.prompt.enterGmLabel", locale)}|${escapeQueryDefault(effect.gmLabel)}}`,
+    `--gm-label ?{${t('ui.saved.prompt.enterGmLabel', locale)}|${escapeQueryDefault(effect.gmLabel)}}`,
   ]);
 
   const publicLabelCmd = buildCmd([
     `--saved edit ${effect.id}`,
-    `--public-label ?{${t("ui.saved.prompt.enterPublicLabel", locale)}|${escapeQueryDefault(effect.publicLabel)}}`,
+    `--public-label ?{${t('ui.saved.prompt.enterPublicLabel', locale)}|${escapeQueryDefault(effect.publicLabel)}}`,
   ]);
 
   const visPublicCmd = buildCmd([
@@ -630,44 +610,27 @@ function showSavedEditMenu(playerId, effect, locale) {
   const visMaskedCmd = buildCmd([
     `--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_MASKED}`,
   ]);
-  const visGmCmd = buildCmd([
-    `--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_GM}`,
-  ]);
+  const visGmCmd = buildCmd([`--saved edit ${effect.id} --visibility ${SAVED_VISIBILITY_GM}`]);
 
-  whisper(playerId, t("ui.title.savedEdit", locale), [
+  whisper(playerId, t('ui.title.savedEdit', locale), [
     heading(effectGmLabel(effect)),
     htmlTable(
-      [t("ui.col.field", locale), t("ui.col.value", locale)],
+      [t('ui.col.field', locale), t('ui.col.value', locale)],
       [
-        [
-          t("ui.saved.field.gmLabel", locale),
-          code(effect.gmLabel || ""),
-        ],
-        [
-          t("ui.saved.field.publicLabel", locale),
-          code(effect.publicLabel || ""),
-        ],
-        [
-          t("ui.saved.field.visibility", locale),
-          code(visibilityLabel(effect.visibility, locale)),
-        ],
-      ],
+        [t('ui.saved.field.gmLabel', locale), code(effect.gmLabel || '')],
+        [t('ui.saved.field.publicLabel', locale), code(effect.publicLabel || '')],
+        [t('ui.saved.field.visibility', locale), code(visibilityLabel(effect.visibility, locale))],
+      ]
     ),
-    rawHtml("<br>"),
-    heading(t("ui.heading.editActions", locale)),
-    buildButton(
-      `${t("ui.saved.field.gmLabel", locale)}: ?{…}`,
-      gmLabelCmd,
-    ),
-    buildButton(
-      `${t("ui.saved.field.publicLabel", locale)}: ?{…}`,
-      publicLabelCmd,
-    ),
-    rawHtml("<br>"),
-    heading(t("ui.heading.visibility", locale)),
-    buildButton(t("ui.saved.visibility.public", locale), visPublicCmd),
-    buildButton(t("ui.saved.visibility.masked", locale), visMaskedCmd),
-    buildButton(t("ui.saved.visibility.gm", locale), visGmCmd),
+    rawHtml('<br>'),
+    heading(t('ui.heading.editActions', locale)),
+    buildButton(`${t('ui.saved.field.gmLabel', locale)}: ?{…}`, gmLabelCmd),
+    buildButton(`${t('ui.saved.field.publicLabel', locale)}: ?{…}`, publicLabelCmd),
+    rawHtml('<br>'),
+    heading(t('ui.heading.visibility', locale)),
+    buildButton(t('ui.saved.visibility.public', locale), visPublicCmd),
+    buildButton(t('ui.saved.visibility.masked', locale), visMaskedCmd),
+    buildButton(t('ui.saved.visibility.gm', locale), visGmCmd),
   ]);
 }
 
@@ -678,7 +641,7 @@ function showSavedEditMenu(playerId, effect, locale) {
  * @returns {string} Escaped text.
  */
 function escapeQueryDefault(text) {
-  return toText(text).replaceAll("|", "").replaceAll("}", "").replaceAll("{", "");
+  return toText(text).replaceAll('|', '').replaceAll('}', '').replaceAll('{', '');
 }
 
 // ---------------------------------------------------------------------------
@@ -696,14 +659,10 @@ function executeSavedRemove(playerId, effectId) {
   const locale = getConfig().language;
   const removed = removeSavedEffect(effectId);
   if (!removed) {
-    whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
     return;
   }
-  whisper(
-    playerId,
-    t("ui.title.savedRemoved", locale),
-    t("ui.msg.savedEffectRemoved", locale),
-  );
+  whisper(playerId, t('ui.title.savedRemoved', locale), t('ui.msg.savedEffectRemoved', locale));
 }
 
 // ---------------------------------------------------------------------------
@@ -721,7 +680,7 @@ function showSavedPromoteMenu(playerId, effectId) {
   const locale = getConfig().language;
   const effect = findSavedEffect(effectId);
   if (!effect) {
-    whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
     return;
   }
 
@@ -731,16 +690,14 @@ function showSavedPromoteMenu(playerId, effectId) {
   const maskedCmd = buildCmd([
     `--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_MASKED}`,
   ]);
-  const gmCmd = buildCmd([
-    `--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_GM}`,
-  ]);
+  const gmCmd = buildCmd([`--saved promote ${effectId} --visibility ${SAVED_VISIBILITY_GM}`]);
 
-  whisper(playerId, t("ui.title.savedPromoted", locale), [
+  whisper(playerId, t('ui.title.savedPromoted', locale), [
     heading(effectGmLabel(effect)),
-    heading(t("ui.heading.promoteOptions", locale)),
-    buildButton(t("ui.saved.visibility.public", locale), publicCmd),
-    buildButton(t("ui.saved.visibility.masked", locale), maskedCmd),
-    buildButton(t("ui.saved.visibility.gm", locale), gmCmd),
+    heading(t('ui.heading.promoteOptions', locale)),
+    buildButton(t('ui.saved.visibility.public', locale), publicCmd),
+    buildButton(t('ui.saved.visibility.masked', locale), maskedCmd),
+    buildButton(t('ui.saved.visibility.gm', locale), gmCmd),
   ]);
 }
 
@@ -761,25 +718,21 @@ function executeSavedPromote(playerId, effectId, visibility, _args) {
   const locale = getConfig().language;
   const effect = findSavedEffect(effectId);
   if (!effect) {
-    whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
     return;
   }
 
   if (visibility === SAVED_VISIBILITY_GM) {
     // No Turn Tracker row — remind GM via the reminder system
     updateSavedEffect(effectId, { visibility: SAVED_VISIBILITY_GM });
-    whisper(
-      playerId,
-      t("ui.title.savedPromoted", locale),
-      t("ui.msg.savedPromotedGm", locale),
-    );
+    whisper(playerId, t('ui.title.savedPromoted', locale), t('ui.msg.savedPromotedGm', locale));
     return;
   }
 
   // Build a condition record and insert it into the Turn Tracker
   const condition = buildActiveConditionFromSaved(effect, visibility);
   if (!condition) {
-    whisperError(playerId, t("ui.msg.tokenNotFound", locale));
+    whisperError(playerId, t('ui.msg.tokenNotFound', locale));
     return;
   }
 
@@ -797,16 +750,14 @@ function executeSavedPromote(playerId, effectId, visibility, _args) {
 
   const msg =
     visibility === SAVED_VISIBILITY_MASKED
-      ? t("ui.msg.savedPromotedMasked", locale, {
+      ? t('ui.msg.savedPromotedMasked', locale, {
           publicLabel: escapeHtml(effectPublicLabel(effect)),
         })
-      : t("ui.msg.savedPromotedPublic", locale);
+      : t('ui.msg.savedPromotedPublic', locale);
 
-  whisper(playerId, t("ui.title.savedPromoted", locale), [
+  whisper(playerId, t('ui.title.savedPromoted', locale), [
     msg,
-    insertResult.appended
-      ? t("ui.apply.turnAppended", locale)
-      : t("ui.apply.turnInserted", locale),
+    insertResult.appended ? t('ui.apply.turnAppended', locale) : t('ui.apply.turnInserted', locale),
   ]);
 }
 
@@ -823,9 +774,7 @@ function buildActiveConditionFromSaved(effect, visibility) {
 
   const config = getConfig();
   const targetName = getTokenName(targetToken);
-  const sourceToken = effect.sourceTokenId
-    ? getGraphicToken(effect.sourceTokenId)
-    : null;
+  const sourceToken = effect.sourceTokenId ? getGraphicToken(effect.sourceTokenId) : null;
   const sourceName = sourceToken ? getTokenName(sourceToken) : targetName;
 
   const displayText =
@@ -833,20 +782,20 @@ function buildActiveConditionFromSaved(effect, visibility) {
       ? effect.publicLabel
       : effectGmLabel(effect);
 
-  const marker = toText(config.markers[effect.condition]) || "";
+  const marker = toText(config.markers[effect.condition]) || '';
 
   const id = createId();
 
   return {
     id,
     sourceTokenId: effect.sourceTokenId || effect.targetTokenId,
-    subjectTokenId: effect.subjectTokenId || "",
+    subjectTokenId: effect.subjectTokenId || '',
     targetTokenId: effect.targetTokenId,
     sourceName,
-    subjectName: "",
+    subjectName: '',
     targetName,
     condition: effect.condition,
-    customText: effect.other || "",
+    customText: effect.other || '',
     displayText,
     marker,
     turnOrderCustomId: id,
@@ -870,7 +819,7 @@ function showSavedSnoozeMenu(playerId, effectId) {
   const locale = getConfig().language;
   const effect = findSavedEffect(effectId);
   if (!effect) {
-    whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
     return;
   }
 
@@ -882,26 +831,14 @@ function showSavedSnoozeMenu(playerId, effectId) {
 
   const clearCmd = buildCmd([`--saved snooze-clear ${effectId}`]);
 
-  whisper(playerId, t("ui.title.savedSnoozed", locale), [
+  whisper(playerId, t('ui.title.savedSnoozed', locale), [
     heading(effectGmLabel(effect)),
-    heading(t("ui.heading.snoozeOptions", locale)),
-    buildButton(
-      t("ui.saved.snooze.thisTurn", locale),
-      snoozeCmd(SAVED_SNOOZE_TURN, 0),
-    ),
-    buildButton(
-      t("ui.saved.snooze.oneRound", locale),
-      snoozeCmd(SAVED_SNOOZE_ROUNDS, 1),
-    ),
-    buildButton(
-      t("ui.saved.snooze.threeRounds", locale),
-      snoozeCmd(SAVED_SNOOZE_ROUNDS, 3),
-    ),
-    buildButton(
-      t("ui.saved.snooze.thisCombat", locale),
-      snoozeCmd(SAVED_SNOOZE_COMBAT, 0),
-    ),
-    buildButton(t("ui.btn.clearSnooze", locale), clearCmd),
+    heading(t('ui.heading.snoozeOptions', locale)),
+    buildButton(t('ui.saved.snooze.thisTurn', locale), snoozeCmd(SAVED_SNOOZE_TURN, 0)),
+    buildButton(t('ui.saved.snooze.oneRound', locale), snoozeCmd(SAVED_SNOOZE_ROUNDS, 1)),
+    buildButton(t('ui.saved.snooze.threeRounds', locale), snoozeCmd(SAVED_SNOOZE_ROUNDS, 3)),
+    buildButton(t('ui.saved.snooze.thisCombat', locale), snoozeCmd(SAVED_SNOOZE_COMBAT, 0)),
+    buildButton(t('ui.btn.clearSnooze', locale), clearCmd),
   ]);
 }
 
@@ -919,13 +856,13 @@ function executeSavedSnooze(playerId, effectId, scope, rounds, turnKey) {
   const locale = getConfig().language;
   const effect = findSavedEffect(effectId);
   if (!effect) {
-    whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
     return;
   }
 
   let snooze;
   if (scope === SAVED_SNOOZE_TURN) {
-    snooze = { scope: SAVED_SNOOZE_TURN, snoozedOnTurnKey: turnKey || "" };
+    snooze = { scope: SAVED_SNOOZE_TURN, snoozedOnTurnKey: turnKey || '' };
   } else if (scope === SAVED_SNOOZE_ROUNDS) {
     snooze = { scope: SAVED_SNOOZE_ROUNDS, roundsRemaining: rounds > 0 ? rounds : 1 };
   } else {
@@ -934,16 +871,17 @@ function executeSavedSnooze(playerId, effectId, scope, rounds, turnKey) {
 
   updateSavedEffect(effectId, { snooze });
 
-  const scopeLabel = scope === SAVED_SNOOZE_ROUNDS
-    ? t("ui.saved.snooze.rounds", locale, { n: snooze.roundsRemaining })
-    : scope === SAVED_SNOOZE_TURN
-      ? t("ui.saved.snooze.thisTurn", locale)
-      : t("ui.saved.snooze.thisCombat", locale);
+  const scopeLabel =
+    scope === SAVED_SNOOZE_ROUNDS
+      ? t('ui.saved.snooze.rounds', locale, { n: snooze.roundsRemaining })
+      : scope === SAVED_SNOOZE_TURN
+        ? t('ui.saved.snooze.thisTurn', locale)
+        : t('ui.saved.snooze.thisCombat', locale);
 
   whisper(
     playerId,
-    t("ui.title.savedSnoozed", locale),
-    t("ui.msg.savedSnoozed", locale, { scope: scopeLabel }),
+    t('ui.title.savedSnoozed', locale),
+    t('ui.msg.savedSnoozed', locale, { scope: scopeLabel })
   );
 }
 
@@ -958,14 +896,14 @@ function executeSnoozeClear(playerId, effectId) {
   const locale = getConfig().language;
   const effect = findSavedEffect(effectId);
   if (!effect) {
-    whisperWarning(playerId, t("ui.msg.savedEffectNotFound", locale));
+    whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
     return;
   }
   updateSavedEffect(effectId, { snooze: null });
   whisper(
     playerId,
-    t("ui.title.savedSnoozeCleared", locale),
-    t("ui.msg.savedSnoozeCleared", locale),
+    t('ui.title.savedSnoozeCleared', locale),
+    t('ui.msg.savedSnoozeCleared', locale)
   );
 }
 
@@ -1059,11 +997,7 @@ export function processSavedEffectReminders(tokenId, tokenName, turnKey) {
 
   const bodyLines = buildReminderCard(remindable, tokenName, locale);
   const primaryGmId = gmIds[0];
-  whisper(
-    primaryGmId,
-    t("ui.title.hiddenEffects", locale, { name: tokenName }),
-    bodyLines,
-  );
+  whisper(primaryGmId, t('ui.title.hiddenEffects', locale, { name: tokenName }), bodyLines);
 }
 
 /**
@@ -1075,35 +1009,30 @@ export function processSavedEffectReminders(tokenId, tokenName, turnKey) {
  * @returns {(string|object)[]} Body lines.
  */
 function buildReminderCard(effects, tokenName, locale) {
-  const lines = [
-    t("ui.msg.hiddenEffectsReminder", locale, { name: tokenName }),
-  ];
+  const lines = [t('ui.msg.hiddenEffectsReminder', locale, { name: tokenName })];
 
   for (const effect of effects) {
-    lines.push(rawHtml("<br>"));
+    lines.push(rawHtml('<br>'));
     lines.push(heading(effectGmLabel(effect)));
 
     const rows = [
       [
-        t("ui.saved.field.visibility", locale),
+        t('ui.saved.field.visibility', locale),
         escapeHtml(visibilityLabel(effect.visibility, locale)),
       ],
     ];
 
     if (effect.visibility === SAVED_VISIBILITY_MASKED && effect.publicLabel) {
-      rows.push([
-        t("ui.saved.field.publicLabel", locale),
-        escapeHtml(effect.publicLabel),
-      ]);
+      rows.push([t('ui.saved.field.publicLabel', locale), escapeHtml(effect.publicLabel)]);
     }
 
     if (effect.sourceTokenId) {
       const srcToken = getGraphicToken(effect.sourceTokenId);
       const srcName = srcToken ? getTokenName(srcToken) : effect.sourceTokenId;
-      rows.push([t("ui.saved.field.source", locale), escapeHtml(srcName)]);
+      rows.push([t('ui.saved.field.source', locale), escapeHtml(srcName)]);
     }
 
-    lines.push(htmlTable([t("ui.col.field", locale), t("ui.col.details", locale)], rows));
+    lines.push(htmlTable([t('ui.col.field', locale), t('ui.col.details', locale)], rows));
 
     const promoteCmd = buildCmd([`--saved promote ${effect.id}`]);
     const editCmd = buildCmd([`--saved edit ${effect.id}`]);
@@ -1113,12 +1042,12 @@ function buildReminderCard(effects, tokenName, locale) {
     lines.push(
       rawHtml(
         [
-          buildButton(t("ui.btn.promoteSaved", locale), promoteCmd).__trustedHtml,
-          buildButton(t("ui.btn.editSaved", locale), editCmd).__trustedHtml,
-          buildButton(t("ui.btn.removeSaved", locale), removeCmd).__trustedHtml,
-          buildButton(t("ui.btn.snoozeSaved", locale), snoozeCmd).__trustedHtml,
-        ].join(" "),
-      ),
+          buildButton(t('ui.btn.promoteSaved', locale), promoteCmd).__trustedHtml,
+          buildButton(t('ui.btn.editSaved', locale), editCmd).__trustedHtml,
+          buildButton(t('ui.btn.removeSaved', locale), removeCmd).__trustedHtml,
+          buildButton(t('ui.btn.snoozeSaved', locale), snoozeCmd).__trustedHtml,
+        ].join(' ')
+      )
     );
   }
 
@@ -1141,8 +1070,8 @@ function buildTwoColumnRows(leftButtons, rightButtons) {
   const tableRows = [];
   for (let i = 0; i < maxRows; i += 1) {
     tableRows.push([
-      i < leftButtons.length ? leftButtons[i] : "",
-      i < rightButtons.length ? rightButtons[i] : "",
+      i < leftButtons.length ? leftButtons[i] : '',
+      i < rightButtons.length ? rightButtons[i] : '',
     ]);
   }
   return tableRows;

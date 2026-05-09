@@ -14,7 +14,7 @@ export const ACTOR_TYPE_AUTO = 'auto';
 
 /** Valid types accepted by --classify (excludes unknown which is auto-detected only). */
 export const VALID_ACTOR_CLASSIFY_TYPES = Object.freeze(
-  new Set([ACTOR_TYPE_PC, ACTOR_TYPE_NPC, ACTOR_TYPE_IGNORED, ACTOR_TYPE_AUTO]),
+  new Set([ACTOR_TYPE_PC, ACTOR_TYPE_NPC, ACTOR_TYPE_IGNORED, ACTOR_TYPE_AUTO])
 );
 
 /** Character attribute name used for explicit character-level overrides. */
@@ -25,12 +25,12 @@ export const ACTOR_OVERRIDE_ATTR = 'ct_mod_actor_type';
  * npcAttr: attribute name; npcValue: value that indicates NPC.
  */
 const SHEET_ADAPTERS = {
-  dnd5e:        { npcAttr: 'npc',      npcValue: '1' },
-  dnd4e:        { npcAttr: 'npc',      npcValue: '1' },
-  dnd35:        { npcAttr: 'npc',      npcValue: '1' },
-  pathfinder1e: { npcAttr: 'is_npc',   npcValue: '1' },
-  pathfinder2e: { npcAttr: 'npc',      npcValue: '1' },
-  starfinder:   { npcAttr: 'npc',      npcValue: '1' },
+  dnd5e: { npcAttr: 'npc', npcValue: '1' },
+  dnd4e: { npcAttr: 'npc', npcValue: '1' },
+  dnd35: { npcAttr: 'npc', npcValue: '1' },
+  pathfinder1e: { npcAttr: 'is_npc', npcValue: '1' },
+  pathfinder2e: { npcAttr: 'npc', npcValue: '1' },
+  starfinder: { npcAttr: 'npc', npcValue: '1' },
 };
 
 /** Common NPC indicator attribute names checked when no adapter matches. */
@@ -166,9 +166,7 @@ function classifyWithAdapter(characterId, systemId) {
   });
   if (attrs.length === 0) return null;
 
-  return attrs[0].get('current') === adapter.npcValue
-    ? ACTOR_TYPE_NPC
-    : ACTOR_TYPE_PC;
+  return attrs[0].get('current') === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
 }
 
 /**

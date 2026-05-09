@@ -1,5 +1,5 @@
-import { COMMAND } from "./constants.js";
-import { toText } from "./utils.js";
+import { COMMAND } from './constants.js';
+import { toText } from './utils.js';
 
 /**
  * Parses an API chat message into command arguments.
@@ -21,8 +21,8 @@ export function parseCommand(content) {
  */
 export function tokenize(text) {
   const tokens = [];
-  let current = "";
-  let quote = "";
+  let current = '';
+  let quote = '';
 
   for (let index = 0; index < text.length; index += 1) {
     const character = text.charAt(index);
@@ -33,7 +33,7 @@ export function tokenize(text) {
 
     if (!quote && /\s/.test(character)) {
       pushToken(tokens, current);
-      current = "";
+      current = '';
       continue;
     }
 
@@ -56,7 +56,7 @@ export function collectFlags(tokens) {
 
   while (index < tokens.length) {
     const token = tokens[index];
-    if (!token.startsWith("--")) {
+    if (!token.startsWith('--')) {
       index += 1;
       continue;
     }
@@ -65,12 +65,12 @@ export function collectFlags(tokens) {
     const valueTokens = [];
     index += 1;
 
-    while (index < tokens.length && !tokens[index].startsWith("--")) {
+    while (index < tokens.length && !tokens[index].startsWith('--')) {
       valueTokens.push(tokens[index]);
       index += 1;
     }
 
-    args[key] = valueTokens.length > 0 ? valueTokens.join(" ") : true;
+    args[key] = valueTokens.length > 0 ? valueTokens.join(' ') : true;
   }
 
   return args;
@@ -99,7 +99,7 @@ export function updateQuote(activeQuote, character) {
   }
 
   if (activeQuote === character) {
-    return "";
+    return '';
   }
 
   return activeQuote;

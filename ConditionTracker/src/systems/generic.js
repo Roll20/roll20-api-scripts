@@ -6,18 +6,23 @@
  * @type {import('./index.js').GameSystemProfile}
  */
 export const genericProfile = Object.freeze({
-  SYSTEM_ID: "generic",
-  SYSTEM_NAME: "Generic / Other",
+  SYSTEM_ID: 'generic',
+  SYSTEM_NAME: 'Generic / Other',
 
   STANDARD_CONDITIONS: Object.freeze([]),
 
   CONDITION_DATA: Object.freeze({
-    Spell: { past: "affected by a spell", verb: "casts a spell on", icon: "[Spl]", emoji: "🔮" },
-    Ability: { past: "affected by an ability", verb: "uses an ability on", icon: "[Abl]", emoji: "🎯" },
+    Spell: { past: 'affected by a spell', verb: 'casts a spell on', icon: '[Spl]', emoji: '🔮' },
+    Ability: {
+      past: 'affected by an ability',
+      verb: 'uses an ability on',
+      icon: '[Abl]',
+      emoji: '🎯',
+    },
   }),
 
   DEFAULT_MARKERS: Object.freeze({}),
 
-  CUSTOM_EFFECT_TYPES: Object.freeze(["Spell", "Ability", "Other"]),
+  CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
   CUSTOM_EFFECT_LABELS: Object.freeze({}),
 });

@@ -4,9 +4,9 @@ import {
   DURATION_UNTIL_REMOVED,
   EMPTY_TURN_ORDER,
   TURN_ORDER_PREFIX,
-} from "./constants.js";
-import { ensureState } from "./state.js";
-import { parseJson, toText } from "./utils.js";
+} from './constants.js';
+import { ensureState } from './state.js';
+import { parseJson, toText } from './utils.js';
 
 /**
  * Gets the current Campaign turn order as an array.
@@ -15,7 +15,7 @@ import { parseJson, toText } from "./utils.js";
  */
 export function getTurnOrder() {
   const campaign = Campaign();
-  const rows = parseJson(campaign.get("turnorder") || EMPTY_TURN_ORDER, []);
+  const rows = parseJson(campaign.get('turnorder') || EMPTY_TURN_ORDER, []);
   return Array.isArray(rows) ? rows : [];
 }
 
@@ -26,7 +26,7 @@ export function getTurnOrder() {
  * @returns {void}
  */
 export function setTurnOrder(rows) {
-  Campaign().set("turnorder", JSON.stringify(rows));
+  Campaign().set('turnorder', JSON.stringify(rows));
 }
 
 /**
@@ -37,7 +37,7 @@ export function setTurnOrder(rows) {
 export function getCurrentTurnTokenId() {
   const rows = getTurnOrder();
   if (rows.length === 0) {
-    return "";
+    return '';
   }
 
   return getTokenRowId(rows[0]);
@@ -51,7 +51,7 @@ export function getCurrentTurnTokenId() {
  */
 function buildTurnOrderPr(duration) {
   if (!duration || duration.type === DURATION_UNTIL_REMOVED) {
-    return "";
+    return '';
   }
   return String(duration.remaining);
 }
@@ -64,7 +64,7 @@ function buildTurnOrderPr(duration) {
  */
 export function createConditionRow(condition) {
   return {
-    id: "-1",
+    id: '-1',
     pr: buildTurnOrderPr(condition.duration),
     custom: condition.displayText,
     _ct: condition.id,
@@ -184,12 +184,7 @@ export function getInsertIndex(rows, targetTokenId, anchorLookup) {
   }
 
   return {
-    index: findAfterExistingTargetConditions(
-      rows,
-      targetIndex + 1,
-      targetTokenId,
-      anchorLookup,
-    ),
+    index: findAfterExistingTargetConditions(rows, targetIndex + 1, targetTokenId, anchorLookup),
     appended: false,
   };
 }
@@ -203,18 +198,10 @@ export function getInsertIndex(rows, targetTokenId, anchorLookup) {
  * @param {Map<string, string>} [anchorLookup] Optional condition-id to anchor-token lookup.
  * @returns {number} Insert index.
  */
-export function findAfterExistingTargetConditions(
-  rows,
-  startIndex,
-  anchorTokenId,
-  anchorLookup,
-) {
+export function findAfterExistingTargetConditions(rows, startIndex, anchorTokenId, anchorLookup) {
   const lookup = anchorLookup || getConditionAnchorLookup();
   let index = startIndex;
-  while (
-    index < rows.length &&
-    isConditionRowForTarget(rows[index], anchorTokenId, lookup)
-  ) {
+  while (index < rows.length && isConditionRowForTarget(rows[index], anchorTokenId, lookup)) {
     index += 1;
   }
 
@@ -394,7 +381,7 @@ export function getConditionIdFromRow(row) {
     return formula.slice(TURN_ORDER_PREFIX.length);
   }
 
-  return "";
+  return '';
 }
 
 /**
@@ -405,8 +392,8 @@ export function getConditionIdFromRow(row) {
  */
 export function getTokenRowId(row) {
   const id = toText(row && row.id);
-  if (!id || id === "-1") {
-    return "";
+  if (!id || id === '-1') {
+    return '';
   }
 
   return id;
@@ -420,7 +407,7 @@ export function getTokenRowId(row) {
 export function getTurnSignature() {
   const rows = getTurnOrder();
   if (rows.length === 0) {
-    return "";
+    return '';
   }
 
   // Track all row fields that can affect condition bookkeeping.
@@ -432,9 +419,9 @@ export function getTurnSignature() {
         toText(row?.pr),
         toText(row?.formula),
         toText(row?._ct),
-      ].join("|"),
+      ].join('|')
     )
-    .join("\n");
+    .join('\n');
 }
 
 /**
@@ -456,7 +443,7 @@ export function migrateTurnOrderRows() {
         row._ct = conditionId;
       }
       // Roll20 expects formula to be numeric/math; clear legacy metadata values.
-      row.formula = "";
+      row.formula = '';
       changed = true;
     }
   }
@@ -515,11 +502,7 @@ export function findMisplacedConditionIds() {
       const conditionId = getConditionIdFromRow(row);
       if (conditionId) {
         const expectedAnchor = anchorLookup.get(conditionId);
-        if (
-          expectedAnchor &&
-          tokenIdSet.has(expectedAnchor) &&
-          expectedAnchor !== currentTokenId
-        ) {
+        if (expectedAnchor && tokenIdSet.has(expectedAnchor) && expectedAnchor !== currentTokenId) {
           misplaced.push(conditionId);
         }
       }
@@ -544,11 +527,7 @@ export function reorderAllConditionRows() {
 
   for (const condition of activeConditions) {
     const anchorTokenId = getConditionAnchorTokenId(condition);
-    const insertIndex = getInsertIndex(
-      workingRows,
-      anchorTokenId,
-      anchorLookup,
-    );
+    const insertIndex = getInsertIndex(workingRows, anchorTokenId, anchorLookup);
     workingRows.splice(insertIndex.index, 0, createConditionRow(condition));
   }
 

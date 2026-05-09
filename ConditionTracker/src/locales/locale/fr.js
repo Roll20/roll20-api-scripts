@@ -1,777 +1,739 @@
 const TRANSLATION = {
   conditions: {
     Grappled: {
-      past: "agrippé",
-      verb: "agrippe"
+      past: 'agrippé',
+      verb: 'agrippe',
     },
     Restrained: {
-      past: "entravé",
-      verb: "entrave"
+      past: 'entravé',
+      verb: 'entrave',
     },
     Prone: {
-      past: "mis à terre",
-      verb: "met",
-      suffix: "à terre"
+      past: 'mis à terre',
+      verb: 'met',
+      suffix: 'à terre',
     },
     Poisoned: {
-      past: "empoisonné",
-      verb: "empoisonne"
+      past: 'empoisonné',
+      verb: 'empoisonne',
     },
     Stunned: {
-      past: "étourdi",
-      verb: "étourdit"
+      past: 'étourdi',
+      verb: 'étourdit',
     },
     Blinded: {
-      past: "aveuglé",
-      verb: "aveugle"
+      past: 'aveuglé',
+      verb: 'aveugle',
     },
     Charmed: {
-      past: "charmé",
-      verb: "charme"
+      past: 'charmé',
+      verb: 'charme',
     },
     Frightened: {
-      past: "effrayé",
-      verb: "effraie"
+      past: 'effrayé',
+      verb: 'effraie',
     },
     Incapacitated: {
-      past: "incapacité",
-      verb: "incapacite"
+      past: 'incapacité',
+      verb: 'incapacite',
     },
     Invisible: {
-      past: "invisible",
-      verb: "rend",
-      suffix: "invisible"
+      past: 'invisible',
+      verb: 'rend',
+      suffix: 'invisible',
     },
     Paralyzed: {
-      past: "paralysé",
-      verb: "paralyse"
+      past: 'paralysé',
+      verb: 'paralyse',
     },
     Petrified: {
-      past: "pétrifié",
-      verb: "pétrifie"
+      past: 'pétrifié',
+      verb: 'pétrifie',
     },
     Unconscious: {
-      past: "inconscient",
-      verb: "rend",
-      suffix: "inconscient"
+      past: 'inconscient',
+      verb: 'rend',
+      suffix: 'inconscient',
     },
     Spell: {
-      past: "affecté par un sort",
-      verb: "lance un sort sur"
+      past: 'affecté par un sort',
+      verb: 'lance un sort sur',
     },
     Ability: {
-      past: "affecté par une capacité",
-      verb: "utilise une capacité sur"
+      past: 'affecté par une capacité',
+      verb: 'utilise une capacité sur',
     },
     Advantage: {
-      past: "a l’avantage",
-      verb: "accorde l’avantage à",
-      noBy: true
+      past: 'a l’avantage',
+      verb: 'accorde l’avantage à',
+      noBy: true,
     },
     Disadvantage: {
-      past: "a le désavantage",
-      verb: "impose le désavantage à",
-      noBy: true
-    }
+      past: 'a le désavantage',
+      verb: 'impose le désavantage à',
+      noBy: true,
+    },
   },
   condNames: {
-    Grappled: "Agrippé",
-    Restrained: "Entravé",
-    Prone: "À terre",
-    Poisoned: "Empoisonné",
-    Stunned: "Étourdi",
-    Blinded: "Aveuglé",
-    Charmed: "Charmé",
-    Frightened: "Effrayé",
-    Incapacitated: "Incapacité",
-    Invisible: "Invisible",
-    Paralyzed: "Paralysé",
-    Petrified: "Pétrifié",
-    Unconscious: "Inconscient",
-    Spell: "Sort",
-    Ability: "Capacité",
-    Advantage: "Avantage",
-    Disadvantage: "Désavantage",
-    Other: "Autre"
+    Grappled: 'Agrippé',
+    Restrained: 'Entravé',
+    Prone: 'À terre',
+    Poisoned: 'Empoisonné',
+    Stunned: 'Étourdi',
+    Blinded: 'Aveuglé',
+    Charmed: 'Charmé',
+    Frightened: 'Effrayé',
+    Incapacitated: 'Incapacité',
+    Invisible: 'Invisible',
+    Paralyzed: 'Paralysé',
+    Petrified: 'Pétrifié',
+    Unconscious: 'Inconscient',
+    Spell: 'Sort',
+    Ability: 'Capacité',
+    Advantage: 'Avantage',
+    Disadvantage: 'Désavantage',
+    Other: 'Autre',
   },
   templates: {
     display: {
-      custom: "{emoji} {target} affecté par {effect} ({source})",
-      advantage: "{emoji} {source} a l’avantage contre {target}{subject}",
-      disadvantage: "{emoji} {source} a le désavantage contre {target}{subject}",
-      noBy: "{emoji} {target} {past} ({source})",
-      self: "{target} est {past}",
-      standard: "{emoji} {target} {past} par {source}"
+      custom: '{emoji} {target} affecté par {effect} ({source})',
+      advantage: '{emoji} {source} a l’avantage contre {target}{subject}',
+      disadvantage: '{emoji} {source} a le désavantage contre {target}{subject}',
+      noBy: '{emoji} {target} {past} ({source})',
+      self: '{target} est {past}',
+      standard: '{emoji} {target} {past} par {source}',
     },
     apply: {
-      custom: "{source} applique {effect} à {target}.",
-      advantage: "{source} a l’avantage contre {target}{subject}.",
-      disadvantage: "{source} a le désavantage contre {target}{subject}.",
-      self: "{target} est {past}.",
-      withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}."
+      custom: '{source} applique {effect} à {target}.',
+      advantage: '{source} a l’avantage contre {target}{subject}.',
+      disadvantage: '{source} a le désavantage contre {target}{subject}.',
+      self: '{target} est {past}.',
+      withSuffix: '{source} {verb} {target} {suffix}.',
+      standard: '{source} {verb} {target}.',
     },
     remove: {
-      custom: "{target} n’est plus affecté par {effect}.",
-      advantage: "{source} n’a plus l’avantage contre {target}{subject}.",
-      disadvantage: "{source} n’a plus le désavantage contre {target}{subject}.",
-      noBy: "{target} n’est plus {past}.",
-      self: "{target} n’est plus {past}.",
-      standard: "{target} n’est plus {past} par {source}."
-    }
+      custom: '{target} n’est plus affecté par {effect}.',
+      advantage: '{source} n’a plus l’avantage contre {target}{subject}.',
+      disadvantage: '{source} n’a plus le désavantage contre {target}{subject}.',
+      noBy: '{target} n’est plus {past}.',
+      self: '{target} n’est plus {past}.',
+      standard: '{target} n’est plus {past} par {source}.',
+    },
   },
   ui: {
     wizard: {
-      selectCondition: "Sélectionner une condition",
-      selectSource: "Sélectionner le jeton source",
-      selectTarget: "Sélectionner le jeton cible",
-      selectSubject: "Sélectionner le sujet",
-      selectDuration: "Sélectionner la durée",
-      confirmTargetTitle: "Confirmer la liste de cibles",
-      applyEffectTitle: "Appliquer l’effet {condition}",
-      noTokens: "Aucun jeton nommé trouvé sur la page active.",
-      confirmIntro: "Les jetons suivants recevront la condition :",
-      confirmBtn: "Confirmer la liste de cibles",
-      enterDetails: "Saisir les détails de l’effet",
-      noneBtn: "Aucun",
-      noneOrSourceBtn: "Aucun ou appliquer à la source",
-      subjectDesc: "Sélectionnez qui ou quoi délivre l’effet.",
-      sourceDesc: "Sélectionnez la créature qui crée ou génère la condition ou l’effet.",
-      targetDesc: "Sélectionnez la créature qui recevra la condition ou l’effet.",
-      otherText: "Texte de condition personnalisé",
-      effectDetails: "Détails de {condition}"
+      selectCondition: 'Sélectionner une condition',
+      selectSource: 'Sélectionner le jeton source',
+      selectTarget: 'Sélectionner le jeton cible',
+      selectSubject: 'Sélectionner le sujet',
+      selectDuration: 'Sélectionner la durée',
+      confirmTargetTitle: 'Confirmer la liste de cibles',
+      applyEffectTitle: 'Appliquer l’effet {condition}',
+      noTokens: 'Aucun jeton nommé trouvé sur la page active.',
+      confirmIntro: 'Les jetons suivants recevront la condition :',
+      confirmBtn: 'Confirmer la liste de cibles',
+      enterDetails: 'Saisir les détails de l’effet',
+      noneBtn: 'Aucun',
+      noneOrSourceBtn: 'Aucun ou appliquer à la source',
+      subjectDesc: 'Sélectionnez qui ou quoi délivre l’effet.',
+      sourceDesc: 'Sélectionnez la créature qui crée ou génère la condition ou l’effet.',
+      targetDesc: 'Sélectionnez la créature qui recevra la condition ou l’effet.',
+      otherText: 'Texte de condition personnalisé',
+      effectDetails: 'Détails de {condition}',
     },
     col: {
-      players: "Joueurs",
-      npcs: "PNJ",
-      conditions: "Conditions",
-      customEffects: "Effets personnalisés",
-      permanentTurnEnd: "Permanent / Fin de tour",
-      rounds: "Tours",
-      command: "Commande",
-      result: "Résultat",
-      field: "Champ",
-      value: "Valeur",
-      option: "Option",
-      condition: "Condition",
-      marker: "Marqueur",
-      item: "Élément",
-      removed: "Supprimé",
-      details: "Détails",
-      description: "Description",
-      scenario: "Scénario",
-      gameSystem: "Système de jeu",
-      duration: "Durée"
+      players: 'Joueurs',
+      npcs: 'PNJ',
+      conditions: 'Conditions',
+      customEffects: 'Effets personnalisés',
+      permanentTurnEnd: 'Permanent / Fin de tour',
+      rounds: 'Tours',
+      command: 'Commande',
+      result: 'Résultat',
+      field: 'Champ',
+      value: 'Valeur',
+      option: 'Option',
+      condition: 'Condition',
+      marker: 'Marqueur',
+      item: 'Élément',
+      removed: 'Supprimé',
+      details: 'Détails',
+      description: 'Description',
+      scenario: 'Scénario',
+      gameSystem: 'Système de jeu',
+      duration: 'Durée',
     },
     dur: {
-      untilRemoved: "Jusqu’à suppression",
-      endOfTargetTurn: "Fin du prochain tour de la cible",
-      endOfSourceTurn: "Fin du prochain tour de la source",
-      round1: "1 tour",
-      round2: "2 tours",
-      round3: "3 tours",
-      round10: "10 tours",
-      custom: "Personnalisé",
-      customPrompt: "Nombre de rounds",
-      untilRemovedDisplay: "Jusqu’à suppression",
-      turnsRemaining: "{n} fin(s) de tour restante(s)"
+      untilRemoved: 'Jusqu’à suppression',
+      endOfTargetTurn: 'Fin du prochain tour de la cible',
+      endOfSourceTurn: 'Fin du prochain tour de la source',
+      round1: '1 tour',
+      round2: '2 tours',
+      round3: '3 tours',
+      round10: '10 tours',
+      custom: 'Personnalisé',
+      customPrompt: 'Nombre de rounds',
+      untilRemovedDisplay: 'Jusqu’à suppression',
+      turnsRemaining: '{n} fin(s) de tour restante(s)',
     },
     btn: {
-      openWizard: "Ouvrir l’assistant",
-      openMultiTarget: "Ouvrir l’assistant multi-cibles",
-      openRemovalList: "Ouvrir la liste de suppression",
-      showConfig: "Afficher la configuration",
-      runCleanup: "Lancer le nettoyage",
-      reinstallMacro: "Réinstaller la macro",
-      reinstallHandout: "Réinstaller le livret",
-      showHelp: "Afficher l’aide",
-      reorderConditions: "Réorganiser les lignes de condition",
-      reportToken: "Conditions des jetons de rapport",
-      savedEffects: "Effets enregistrés",
-      addSavedEffect: "Ajouter un effet enregistré",
-      editSaved: "Modifier",
-      removeSaved: "Retirer",
-      promoteSaved: "Ajouter au suivi des virages",
-      snoozeSaved: "Somnoler",
-      clearSnooze: "Effacer la répétition"
+      openWizard: 'Ouvrir l’assistant',
+      openMultiTarget: 'Ouvrir l’assistant multi-cibles',
+      openRemovalList: 'Ouvrir la liste de suppression',
+      showConfig: 'Afficher la configuration',
+      runCleanup: 'Lancer le nettoyage',
+      reinstallMacro: 'Réinstaller la macro',
+      reinstallHandout: 'Réinstaller le livret',
+      showHelp: 'Afficher l’aide',
+      reorderConditions: 'Réorganiser les lignes de condition',
+      reportToken: 'Conditions des jetons de rapport',
+      savedEffects: 'Effets enregistrés',
+      addSavedEffect: 'Ajouter un effet enregistré',
+      editSaved: 'Modifier',
+      removeSaved: 'Retirer',
+      promoteSaved: 'Ajouter au suivi des virages',
+      snoozeSaved: 'Somnoler',
+      clearSnooze: 'Effacer la répétition',
     },
     title: {
-      menu: "Menu",
-      removalMenu: "Suppression — Condition Tracker",
-      config: "Configuration",
-      configTracker: "Configuration — Condition Tracker",
-      help: "Aide",
-      applied: "Appliqué",
-      removed: "Condition supprimée",
-      cleanup: "Nettoyage terminé",
-      macroReinstalled: "Macro réinstallée",
-      handoutReinstalled: "Livret réinstallé",
-      warning: "Avertissement",
-      error: "Erreur",
-      turnOrder: "Ordre d’initiative",
-      noConditions: "Aucune condition",
-      tokenMoved: "Jeton déplacé",
-      markedDead: "Marqué comme mort",
-      zeroHp: "{name} — 0 PV",
-      moveToken: "{name} — Déplacer le jeton ?",
-      scriptReady: "Script prêt",
-      conditionReorder: "Ordre de tour modifié",
+      menu: 'Menu',
+      removalMenu: 'Suppression — Condition Tracker',
+      config: 'Configuration',
+      configTracker: 'Configuration — Condition Tracker',
+      help: 'Aide',
+      applied: 'Appliqué',
+      removed: 'Condition supprimée',
+      cleanup: 'Nettoyage terminé',
+      macroReinstalled: 'Macro réinstallée',
+      handoutReinstalled: 'Livret réinstallé',
+      warning: 'Avertissement',
+      error: 'Erreur',
+      turnOrder: 'Ordre d’initiative',
+      noConditions: 'Aucune condition',
+      tokenMoved: 'Jeton déplacé',
+      markedDead: 'Marqué comme mort',
+      zeroHp: '{name} — 0 PV',
+      moveToken: '{name} — Déplacer le jeton ?',
+      scriptReady: 'Script prêt',
+      conditionReorder: 'Ordre de tour modifié',
       tokenReport: "Rapport sur l'état des jetons",
-      savedEffects: "Effets enregistrés",
-      savedAdd: "Ajouter un effet enregistré",
+      savedEffects: 'Effets enregistrés',
+      savedAdd: 'Ajouter un effet enregistré',
       savedEdit: "Modifier l'effet enregistré",
-      savedRemoved: "Effet enregistré supprimé",
-      savedPromoted: "Ajouter au suivi des virages",
-      savedSnoozed: "Rappel mis en attente",
-      savedSnoozeCleared: "Snooze effacé",
-      hiddenEffects: "Effets cachés — {name}"
+      savedRemoved: 'Effet enregistré supprimé',
+      savedPromoted: 'Ajouter au suivi des virages',
+      savedSnoozed: 'Rappel mis en attente',
+      savedSnoozeCleared: 'Snooze effacé',
+      hiddenEffects: 'Effets cachés — {name}',
     },
     heading: {
-      quickActions: "Actions rapides",
-      settings: "Paramètres",
-      markerMappings: "Correspondances des marqueurs",
-      result: "Résultat",
-      info: "Informations",
-      commandOptions: "Options de commande",
-      promptUi: "Interface de l’assistant",
-      examples: "Exemples",
-      summary: "Résumé",
-      appliedTo: "Conditions applicables à",
-      appliedBy: "Conditions appliquées par",
-      savedEffectsFor: "Effets enregistrés pour {name}",
-      visibility: "Visibilité",
-      snoozeOptions: "Rappel de répétition",
-      promoteOptions: "Promouvoir Turn Tracker",
-      editActions: "Modifier les actions"
+      quickActions: 'Actions rapides',
+      settings: 'Paramètres',
+      markerMappings: 'Correspondances des marqueurs',
+      result: 'Résultat',
+      info: 'Informations',
+      commandOptions: 'Options de commande',
+      promptUi: 'Interface de l’assistant',
+      examples: 'Exemples',
+      summary: 'Résumé',
+      appliedTo: 'Conditions applicables à',
+      appliedBy: 'Conditions appliquées par',
+      savedEffectsFor: 'Effets enregistrés pour {name}',
+      visibility: 'Visibilité',
+      snoozeOptions: 'Rappel de répétition',
+      promoteOptions: 'Promouvoir Turn Tracker',
+      editActions: 'Modifier les actions',
     },
     msg: {
-      noActive: "Aucune condition active n’est suivie.",
-      configReset: "Configuration réinitialisée aux valeurs par défaut.",
-      unknownConfig: "Option de configuration inconnue. Utilisez --config pour voir les paramètres disponibles.",
-      macroReinstalled: "Les macros {wizard}, {multiTarget}, {reportToken}, {saved} et {classify} ont été réinstallées pour tous les MJ actifs.",
-      handoutReinstalled: "Le livret d’aide {handout} a été réinstallé.",
-      duplicate: "Cette combinaison source, sujet, cible, condition et texte personnalisé est déjà active.",
-      noTargets: "Aucun jeton cible spécifié pour l’application multi-cibles.",
-      noSelection: "Sélectionnez au moins un jeton sur le plateau avant d’utiliser --multi-target.",
-      invalidIds: "Aucun identifiant de jeton valide trouvé dans la sélection actuelle.",
-      reSelectTokens: "Aucun des jetons initialement sélectionnés n’a pu être trouvé. Veuillez resélectionner les jetons et réessayer.",
-      conditionNotFound: "Identifiant de condition introuvable.",
-      gmOnly: "Les commandes de Condition Tracker sont réservées au MJ.",
-      commandFailed: "La commande n’a pas pu être exécutée. Vérifiez la console API pour plus de détails.",
-      sourceTokenNotFound: "Le jeton source est introuvable.",
-      targetTokenNotFound: "Le jeton cible est introuvable.",
-      subjectTokenNotFound: "Le jeton sujet est introuvable.",
-      invalidCondition: "La condition doit être une condition prédéfinie ou Autre.",
-      subjectOnlyCustom: "--subject est uniquement valide pour Sort, Capacité, Avantage, Désavantage et Autre.",
-      subjectBypassInvalid: "--subjectPromptBypass attend true ou false si une valeur est fournie.",
-      customDetailsRequired: "Les détails de {condition} sont requis. Utilisez --other pour les fournir.",
-      markerConfigFormat: "Format de configuration du marqueur : --config marker Grappled=grab",
-      markerPredefinedRequired: "La configuration du marqueur requiert un nom de condition prédéfini.",
-      markerNameRequired: "La configuration du marqueur requiert un nom de marqueur non vide.",
-      markerSet: "Marqueur de {condition} défini sur {marker}.",
-      healthBarSet: "Barre de santé définie sur {bar}.",
-      boolSet: "{key} défini sur {value}.",
-      expectedBoolean: "true ou false est attendu.",
-      invalidHealthBar: "La barre de santé doit être bar1_value, bar2_value ou bar3_value.",
-      markersDisabled: "Les marqueurs sont désactivés.",
-      noMarkerConfigured: "Aucun marqueur n’est configuré pour cette condition.",
-      markerApplied: "Marqueur appliqué : {marker}",
-      markerPresent: "Marqueur déjà présent : {marker}",
-      langSet: "Langue définie sur {locale}.",
-      invalidLocale: "Locale invalide. Locales disponibles : {locales}.",
-      otherDurationRequiresRounds: "La durée Autre requiert un nombre de rounds, par exemple --duration 5 rounds.",
-      invalidDuration: "La durée doit être Jusqu’à suppression, une option de fin de tour ou un nombre de rounds positif.",
-      zeroHpNoConditions: "{name} a atteint 0 PV et n’a aucune condition active.",
-      zeroHpConditions: "{name} a atteint 0 PV. Choisissez les conditions à supprimer :",
-      removeAllBtn: "Supprimer toutes les conditions de {name}",
-      markIncapacitated: "Marquer comme Incapacité",
-      removeFromTurnOrder: "Retirer de l’ordre d’initiative",
-      alreadyIncapacitated: "{name} est déjà Incapacité.",
-      tokenRemovedFromTurn: "{name} a été retiré de l’ordre d’initiative.",
-      tokenNotInTurn: "{name} n’a pas été trouvé dans l’ordre d’initiative.",
-      moveTokenPrompt: "Déplacer {name} vers le calque carte pour qu’il reste visible sans interférer avec les autres jetons ?",
-      moveTokenBtn: "Déplacer {name} vers le calque carte",
-      tokenMoved: "{name} a été déplacé vers le calque carte.",
-      tokenNotFound: "Jeton introuvable.",
-      noActiveConditions: "{name} n’a aucune condition active à supprimer.",
-      deadNoConditions: "{name} a été marqué comme mort. Aucune condition n’était active.",
-      scriptReady: "{name} est actif et vous utilisez la version {version}.",
-      reachedZeroHp: "{name} a atteint 0 PV",
-      manuallyRemoved: "suppression manuelle",
-      durationExpired: "sa durée a expiré",
-      markedAsDead: "{name} a été marqué comme mort",
-      conditionReorder: "L'ordre de tour a changé et {count} ligne(s) de condition suivie(s) peut être mal placée. Cliquez ci-dessous pour les restaurer après leurs tokens assignés.",
-      conditionsReordered: "Les lignes de condition ont été repositionnées après leurs tokens assignés.",
-      noTokensSelectedReport: "Sélectionnez au moins un jeton sur le tableau avant d'utiliser --report-token.",
+      noActive: 'Aucune condition active n’est suivie.',
+      configReset: 'Configuration réinitialisée aux valeurs par défaut.',
+      unknownConfig:
+        'Option de configuration inconnue. Utilisez --config pour voir les paramètres disponibles.',
+      macroReinstalled:
+        'Les macros {wizard}, {multiTarget}, {reportToken}, {saved} et {classify} ont été réinstallées pour tous les MJ actifs.',
+      handoutReinstalled: 'Le livret d’aide {handout} a été réinstallé.',
+      duplicate:
+        'Cette combinaison source, sujet, cible, condition et texte personnalisé est déjà active.',
+      noTargets: 'Aucun jeton cible spécifié pour l’application multi-cibles.',
+      noSelection: 'Sélectionnez au moins un jeton sur le plateau avant d’utiliser --multi-target.',
+      invalidIds: 'Aucun identifiant de jeton valide trouvé dans la sélection actuelle.',
+      reSelectTokens:
+        'Aucun des jetons initialement sélectionnés n’a pu être trouvé. Veuillez resélectionner les jetons et réessayer.',
+      conditionNotFound: 'Identifiant de condition introuvable.',
+      gmOnly: 'Les commandes de Condition Tracker sont réservées au MJ.',
+      commandFailed:
+        'La commande n’a pas pu être exécutée. Vérifiez la console API pour plus de détails.',
+      sourceTokenNotFound: 'Le jeton source est introuvable.',
+      targetTokenNotFound: 'Le jeton cible est introuvable.',
+      subjectTokenNotFound: 'Le jeton sujet est introuvable.',
+      invalidCondition: 'La condition doit être une condition prédéfinie ou Autre.',
+      subjectOnlyCustom:
+        '--subject est uniquement valide pour Sort, Capacité, Avantage, Désavantage et Autre.',
+      subjectBypassInvalid: '--subjectPromptBypass attend true ou false si une valeur est fournie.',
+      customDetailsRequired:
+        'Les détails de {condition} sont requis. Utilisez --other pour les fournir.',
+      markerConfigFormat: 'Format de configuration du marqueur : --config marker Grappled=grab',
+      markerPredefinedRequired:
+        'La configuration du marqueur requiert un nom de condition prédéfini.',
+      markerNameRequired: 'La configuration du marqueur requiert un nom de marqueur non vide.',
+      markerSet: 'Marqueur de {condition} défini sur {marker}.',
+      healthBarSet: 'Barre de santé définie sur {bar}.',
+      boolSet: '{key} défini sur {value}.',
+      expectedBoolean: 'true ou false est attendu.',
+      invalidHealthBar: 'La barre de santé doit être bar1_value, bar2_value ou bar3_value.',
+      markersDisabled: 'Les marqueurs sont désactivés.',
+      noMarkerConfigured: 'Aucun marqueur n’est configuré pour cette condition.',
+      markerApplied: 'Marqueur appliqué : {marker}',
+      markerPresent: 'Marqueur déjà présent : {marker}',
+      langSet: 'Langue définie sur {locale}.',
+      invalidLocale: 'Locale invalide. Locales disponibles : {locales}.',
+      otherDurationRequiresRounds:
+        'La durée Autre requiert un nombre de rounds, par exemple --duration 5 rounds.',
+      invalidDuration:
+        'La durée doit être Jusqu’à suppression, une option de fin de tour ou un nombre de rounds positif.',
+      zeroHpNoConditions: '{name} a atteint 0 PV et n’a aucune condition active.',
+      zeroHpConditions: '{name} a atteint 0 PV. Choisissez les conditions à supprimer :',
+      removeAllBtn: 'Supprimer toutes les conditions de {name}',
+      markIncapacitated: 'Marquer comme Incapacité',
+      removeFromTurnOrder: 'Retirer de l’ordre d’initiative',
+      alreadyIncapacitated: '{name} est déjà Incapacité.',
+      tokenRemovedFromTurn: '{name} a été retiré de l’ordre d’initiative.',
+      tokenNotInTurn: '{name} n’a pas été trouvé dans l’ordre d’initiative.',
+      moveTokenPrompt:
+        'Déplacer {name} vers le calque carte pour qu’il reste visible sans interférer avec les autres jetons ?',
+      moveTokenBtn: 'Déplacer {name} vers le calque carte',
+      tokenMoved: '{name} a été déplacé vers le calque carte.',
+      tokenNotFound: 'Jeton introuvable.',
+      noActiveConditions: '{name} n’a aucune condition active à supprimer.',
+      deadNoConditions: '{name} a été marqué comme mort. Aucune condition n’était active.',
+      scriptReady: '{name} est actif et vous utilisez la version {version}.',
+      reachedZeroHp: '{name} a atteint 0 PV',
+      manuallyRemoved: 'suppression manuelle',
+      durationExpired: 'sa durée a expiré',
+      markedAsDead: '{name} a été marqué comme mort',
+      conditionReorder:
+        "L'ordre de tour a changé et {count} ligne(s) de condition suivie(s) peut être mal placée. Cliquez ci-dessous pour les restaurer après leurs tokens assignés.",
+      conditionsReordered:
+        'Les lignes de condition ont été repositionnées après leurs tokens assignés.',
+      noTokensSelectedReport:
+        "Sélectionnez au moins un jeton sur le tableau avant d'utiliser --report-token.",
       noConditionsAppliedTo: "{name} n'est soumis à aucune condition active.",
       noConditionsAppliedBy: "{name} n'a aucune condition active appliquée aux autres.",
       noSavedEffects: "Aucun effet enregistré n'est stocké pour {name}.",
       noTokenSelectedSaved: "Sélectionnez un jeton sur le tableau avant d'utiliser --saved.",
-      savedEffectAdded: "Effet enregistré ajouté pour {name}.",
-      savedEffectUpdated: "Effet enregistré mis à jour.",
-      savedEffectRemoved: "Effet enregistré supprimé.",
-      savedEffectNotFound: "Effet enregistré introuvable.",
-      savedInvalidVisibility: "Visibilité invalide. Utilisez public, masqué ou gm.",
-      savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effet ajouté à Turn Tracker en tant que public.",
-      savedPromotedMasked: "Effet ajouté à Turn Tracker comme masqué — les joueurs voient : {publicLabel}.",
-      savedPromotedGm: "L'effet est réservé au GM : aucune ligne Turn Tracker ne sera créée. Le système de rappel le fera apparaître lorsque ce jeton atteindra le haut de l'ordre du tour.",
-      savedSnoozed: "Rappel mis en attente : {scope}.",
-      savedSnoozeCleared: "Snooze effacé.",
-      hiddenEffectsReminder: "Les effets cachés sont actifs sur {name}.",
-      visibilityPublicHint: "étiquette complète visible par tous",
-      visibilityMaskedHint: "étiquette vague montrée aux joueurs",
-      visibilityGmHint: "GM murmure uniquement, pas de ligne Turn Tracker"
+      savedEffectAdded: 'Effet enregistré ajouté pour {name}.',
+      savedEffectUpdated: 'Effet enregistré mis à jour.',
+      savedEffectRemoved: 'Effet enregistré supprimé.',
+      savedEffectNotFound: 'Effet enregistré introuvable.',
+      savedInvalidVisibility: 'Visibilité invalide. Utilisez public, masqué ou gm.',
+      savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+      savedPromotedPublic: 'Effet ajouté à Turn Tracker en tant que public.',
+      savedPromotedMasked:
+        'Effet ajouté à Turn Tracker comme masqué — les joueurs voient : {publicLabel}.',
+      savedPromotedGm:
+        "L'effet est réservé au GM : aucune ligne Turn Tracker ne sera créée. Le système de rappel le fera apparaître lorsque ce jeton atteindra le haut de l'ordre du tour.",
+      savedSnoozed: 'Rappel mis en attente : {scope}.',
+      savedSnoozeCleared: 'Snooze effacé.',
+      hiddenEffectsReminder: 'Les effets cachés sont actifs sur {name}.',
+      visibilityPublicHint: 'étiquette complète visible par tous',
+      visibilityMaskedHint: 'étiquette vague montrée aux joueurs',
+      visibilityGmHint: 'GM murmure uniquement, pas de ligne Turn Tracker',
     },
     removal: {
-      conditionField: "Condition",
-      reasonField: "Raison",
-      turnRowField: "Ligne d’initiative",
-      markerField: "Marqueur",
-      notConfigured: "Non configuré",
-      markerRemoved: "Supprimé ({marker})",
-      markerRetained: "Conservé ({marker})",
-      rowRemoved: "Supprimé",
-      rowMissing: "Déjà absent",
-      manualReason: "Suppression manuelle"
+      conditionField: 'Condition',
+      reasonField: 'Raison',
+      turnRowField: 'Ligne d’initiative',
+      markerField: 'Marqueur',
+      notConfigured: 'Non configuré',
+      markerRemoved: 'Supprimé ({marker})',
+      markerRetained: 'Conservé ({marker})',
+      rowRemoved: 'Supprimé',
+      rowMissing: 'Déjà absent',
+      manualReason: 'Suppression manuelle',
     },
     saved: {
       visibility: {
-        public: "Publique",
-        masked: "Masqué",
-        gm: "GM seulement"
+        public: 'Publique',
+        masked: 'Masqué',
+        gm: 'GM seulement',
       },
       snooze: {
-        thisTurn: "Ce tour",
-        oneRound: "1 tour",
-        threeRounds: "3 tours",
-        thisCombat: "Ce combat",
-        rounds: "{n} tour(s)"
+        thisTurn: 'Ce tour',
+        oneRound: '1 tour',
+        threeRounds: '3 tours',
+        thisCombat: 'Ce combat',
+        rounds: '{n} tour(s)',
       },
       field: {
-        gmLabel: "Étiquette GM",
-        publicLabel: "Marque publique",
-        visibility: "Visibilité",
-        source: "Source",
-        condition: "Condition"
+        gmLabel: 'Étiquette GM',
+        publicLabel: 'Marque publique',
+        visibility: 'Visibilité',
+        source: 'Source',
+        condition: 'Condition',
       },
       prompt: {
         enterGmLabel: "Description complète de l'effet (GM uniquement)",
-        enterPublicLabel: "Étiquette vague montrée aux joueurs"
+        enterPublicLabel: 'Étiquette vague montrée aux joueurs',
       },
-      snoozed: "mis en veille"
+      snoozed: 'mis en veille',
     },
     classify: {
-      title: "Classification des Acteurs",
-      showTitle: "Diagnostic de Classification",
-      showHeading: "Détails de Classification du Token",
-      resultHeading: "Substitution Appliquée",
+      title: 'Classification des Acteurs',
+      showTitle: 'Diagnostic de Classification',
+      showHeading: 'Détails de Classification du Token',
+      resultHeading: 'Substitution Appliquée',
       noSelection: "Sélectionne au moins un token sur le plateau avant d'utiliser --classify.",
-      invalidType: "Type de classification invalide : {type}. Utilise pc, npc, ignored ou auto.",
-      set: "{name} → {type} (portée : {scope})",
-      cleared: "{name} substitution supprimée (portée : {scope}) — détection automatique restaurée.",
-      setTokenFallback: "{name} → {type} (substitution de token — aucune fiche de personnage liée).",
-      clearedTokenFallback: "{name} substitution de token supprimée — détection automatique restaurée.",
-      fieldToken: "Jeton",
-      fieldType: "Classification",
-      fieldSource: "Source",
-      fieldReason: "Raison"
+      invalidType: 'Type de classification invalide : {type}. Utilise pc, npc, ignored ou auto.',
+      set: '{name} → {type} (portée : {scope})',
+      cleared:
+        '{name} substitution supprimée (portée : {scope}) — détection automatique restaurée.',
+      setTokenFallback:
+        '{name} → {type} (substitution de token — aucune fiche de personnage liée).',
+      clearedTokenFallback:
+        '{name} substitution de token supprimée — détection automatique restaurée.',
+      fieldToken: 'Jeton',
+      fieldType: 'Classification',
+      fieldSource: 'Source',
+      fieldReason: 'Raison',
     },
     cleanup: {
-      orphaned: "Entrées de condition orphelines",
-      stale: "Entrées de condition obsolètes",
-      orphanedRows: "Lignes d’initiative orphelines",
-      unusedMarkers: "Marqueurs inutilisés"
+      orphaned: 'Entrées de condition orphelines',
+      stale: 'Entrées de condition obsolètes',
+      orphanedRows: 'Lignes d’initiative orphelines',
+      unusedMarkers: 'Marqueurs inutilisés',
     },
     apply: {
-      turnAppended: "La cible n’était pas dans l’ordre d’initiative ; la ligne de condition a été ajoutée.",
-      turnInserted: "Ligne de condition insérée sous le jeton cible."
-    }
+      turnAppended:
+        'La cible n’était pas dans l’ordre d’initiative ; la ligne de condition a été ajoutée.',
+      turnInserted: 'Ligne de condition insérée sous le jeton cible.',
+    },
   },
   handout: {
-    versionLabel: "Version",
-    subtitle: "Gestionnaire d’états D&D 5e",
-    footerNote: "Ce livret est créé et mis à jour automatiquement à chaque chargement du script.",
+    versionLabel: 'Version',
+    subtitle: 'Gestionnaire d’états D&D 5e',
+    footerNote: 'Ce livret est créé et mis à jour automatiquement à chaque chargement du script.',
     overview: {
-      heading: "Présentation",
-      body: "Condition Tracker gère les conditions de statut D&D 5e et les effets personnalisés sous forme de lignes dans le suivi d’initiative Roll20. Appliquez des conditions aux jetons, suivez les durées par ordre d’initiative et supprimez automatiquement les effets expirés à la fin d’un tour. Toutes les commandes sont réservées au MJ."
+      heading: 'Présentation',
+      body: 'Condition Tracker gère les conditions de statut D&D 5e et les effets personnalisés sous forme de lignes dans le suivi d’initiative Roll20. Appliquez des conditions aux jetons, suivez les durées par ordre d’initiative et supprimez automatiquement les effets expirés à la fin d’un tour. Toutes les commandes sont réservées au MJ.',
     },
     quickStart: {
-      heading: "Démarrage rapide",
-      colCommand: "Commande",
-      colDesc: "Description",
+      heading: 'Démarrage rapide',
+      colCommand: 'Commande',
+      colDesc: 'Description',
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Assistant pas à pas — choisissez condition, jetons et durée de façon interactive. Disponible aussi via la macro ConditionTrackerWizard."
+          '!condition-tracker --prompt',
+          'Assistant pas à pas — choisissez condition, jetons et durée de façon interactive. Disponible aussi via la macro ConditionTrackerWizard.',
         ],
         [
-          "!condition-tracker --multi-target",
-          "Appliquer une condition à plusieurs jetons simultanément. Disponible aussi via la macro ConditionTrackerMultiTarget."
+          '!condition-tracker --multi-target',
+          'Appliquer une condition à plusieurs jetons simultanément. Disponible aussi via la macro ConditionTrackerMultiTarget.',
         ],
         [
-          "!condition-tracker --report-token",
-          "Sélectionnez d'abord un ou plusieurs jetons, puis exécutez cette commande pour obtenir un murmure GM répertoriant toutes les conditions appliquées à et par chaque jeton sélectionné. Également disponible sous forme de macro ConditionTrackerReportToken."
+          '!condition-tracker --report-token',
+          "Sélectionnez d'abord un ou plusieurs jetons, puis exécutez cette commande pour obtenir un murmure GM répertoriant toutes les conditions appliquées à et par chaque jeton sélectionné. Également disponible sous forme de macro ConditionTrackerReportToken.",
         ],
         [
-          "!condition-tracker --menu",
-          "Ouvrir le menu principal pour appliquer, consulter ou supprimer des conditions."
-        ]
-      ]
+          '!condition-tracker --menu',
+          'Ouvrir le menu principal pour appliquer, consulter ou supprimer des conditions.',
+        ],
+      ],
     },
     commandsRef: {
-      heading: "Référence des commandes",
-      colFlag: "Option",
-      colDesc: "Description",
+      heading: 'Référence des commandes',
+      colFlag: 'Option',
+      colDesc: 'Description',
       rows: [
+        ['--rapide', 'Interface de l’assistant pas à pas'],
+        ['--multi-cible', 'Appliquer une condition à plusieurs jetons cibles'],
+        ['--menu', 'Afficher le menu principal (ajouter remove pour le menu de suppression)'],
         [
-          "--rapide",
-          "Interface de l’assistant pas à pas"
+          '--source X --cible Y --condition Z',
+          'Appliquer une condition directement sans l’assistant',
+        ],
+        ['--duration &lt;valeur&gt;', 'Durée pour une application directe (ex. 2 rounds)'],
+        ['--other &lt;texte&gt;', 'Texte personnalisé pour les types Sort / Capacité / Autre'],
+        [
+          '--remove &lt;id-condition&gt;',
+          'Supprimer une condition spécifique par son identifiant unique',
+        ],
+        ['--config &lt;option&gt; &lt;valeur&gt;', 'Modifier les paramètres de configuration'],
+        [
+          '--prompt --subjectPromptBypass vrai|faux',
+          'Remplacer subjectPromptBypass pour cette commande uniquement (prend aussi en charge --subject-prompt-bypass)',
+        ],
+        ['--nettoyage', 'Nettoyer l’état — supprimer les conditions et lignes orphelines'],
+        [
+          '--conditions de réapprovisionnement',
+          'Repositionner manuellement les lignes de condition après leurs jetons assignés dans l’ordre d’initiative',
+        ],
+        ['--réinstaller-macro', 'Recréer ou mettre à jour les macros MJ'],
+        ['--réinstaller-document', 'Recréer ou mettre à jour le livret d’aide localisé'],
+        [
+          '--jeton de rapport',
+          'Chuchotez un rapport de condition réservé au GM pour chaque jeton sélectionné (conditions appliquées à et par celui-ci)',
         ],
         [
-          "--multi-cible",
-          "Appliquer une condition à plusieurs jetons cibles"
+          '--lang &lt;locale&gt;',
+          'Afficher les messages de cette commande dans une locale supplémentaire (mode bilingue)',
         ],
         [
-          "--menu",
-          "Afficher le menu principal (ajouter remove pour le menu de suppression)"
+          '--classify pc|npc|ignored',
+          'Remplacer le type d’acteur pour les tokens sélectionnés — sélectionner d’abord les tokens. La portée par défaut est le personnage (écrit l’attribut ct_mod_actor_type) ; ajouter --scope token pour stocker dans l’état du script',
         ],
         [
-          "--source X --cible Y --condition Z",
-          "Appliquer une condition directement sans l’assistant"
+          '--classify auto',
+          'Supprimer la substitution du type d’acteur et restaurer la détection automatique pour les tokens sélectionnés',
         ],
         [
-          "--duration &lt;valeur&gt;",
-          "Durée pour une application directe (ex. 2 rounds)"
+          '--classify show',
+          'Chuchoter un diagnostic de classification pour chaque token sélectionné — montre le type détecté, la source de détection et la raison',
         ],
-        [
-          "--other &lt;texte&gt;",
-          "Texte personnalisé pour les types Sort / Capacité / Autre"
-        ],
-        [
-          "--remove &lt;id-condition&gt;",
-          "Supprimer une condition spécifique par son identifiant unique"
-        ],
-        [
-          "--config &lt;option&gt; &lt;valeur&gt;",
-          "Modifier les paramètres de configuration"
-        ],
-        [
-          "--prompt --subjectPromptBypass vrai|faux",
-          "Remplacer subjectPromptBypass pour cette commande uniquement (prend aussi en charge --subject-prompt-bypass)"
-        ],
-        [
-          "--nettoyage",
-          "Nettoyer l’état — supprimer les conditions et lignes orphelines"
-        ],
-        [
-          "--conditions de réapprovisionnement",
-          "Repositionner manuellement les lignes de condition après leurs jetons assignés dans l’ordre d’initiative"
-        ],
-        [
-          "--réinstaller-macro",
-          "Recréer ou mettre à jour les macros MJ"
-        ],
-        [
-          "--réinstaller-document",
-          "Recréer ou mettre à jour le livret d’aide localisé"
-        ],
-        [
-          "--jeton de rapport",
-          "Chuchotez un rapport de condition réservé au GM pour chaque jeton sélectionné (conditions appliquées à et par celui-ci)"
-        ],
-        [
-          "--lang &lt;locale&gt;",
-          "Afficher les messages de cette commande dans une locale supplémentaire (mode bilingue)"
-        ],
-        [
-          "--classify pc|npc|ignored",
-          "Remplacer le type d’acteur pour les tokens sélectionnés — sélectionner d’abord les tokens. La portée par défaut est le personnage (écrit l’attribut ct_mod_actor_type) ; ajouter --scope token pour stocker dans l’état du script"
-        ],
-        [
-          "--classify auto",
-          "Supprimer la substitution du type d’acteur et restaurer la détection automatique pour les tokens sélectionnés"
-        ],
-        [
-          "--classify show",
-          "Chuchoter un diagnostic de classification pour chaque token sélectionné — montre le type détecté, la source de détection et la raison"
-        ],
-        [
-          "--help",
-          "Afficher une carte d’aide rapide dans le chat"
-        ]
-      ]
+        ['--help', 'Afficher une carte d’aide rapide dans le chat'],
+      ],
     },
     standardConditions: {
-      heading: "Conditions standard (D&D 5e)",
-      colCondition: "Condition"
+      heading: 'Conditions standard (D&D 5e)',
+      colCondition: 'Condition',
     },
     customEffects: {
-      heading: "Types d’effets personnalisés",
-      colType: "Taper",
-      colNotes: "Remarques",
+      heading: 'Types d’effets personnalisés',
+      colType: 'Taper',
+      colNotes: 'Remarques',
       rows: [
+        ['🔮 Sort', 'Suivre un effet de sort nommé — vous serez invité à saisir le nom du sort'],
         [
-          "🔮 Sort",
-          "Suivre un effet de sort nommé — vous serez invité à saisir le nom du sort"
+          '🎯 Capacité',
+          'Suivre une capacité de classe ou raciale — vous serez invité à saisir le nom',
         ],
         [
-          "🎯 Capacité",
-          "Suivre une capacité de classe ou raciale — vous serez invité à saisir le nom"
+          '🍀 Avantage',
+          'Enregistrer un avantage accordé d’un jeton à un autre ; groupé avec la source dans l’initiative',
         ],
         [
-          "🍀 Avantage",
-          "Enregistrer un avantage accordé d’un jeton à un autre ; groupé avec la source dans l’initiative"
+          '⬇️ Désavantage',
+          'Enregistrer un désavantage imposé ; groupé avec la source dans l’initiative',
         ],
-        [
-          "⬇️ Désavantage",
-          "Enregistrer un désavantage imposé ; groupé avec la source dans l’initiative"
-        ],
-        [
-          "📝 Autre",
-          "Étiquette personnalisée libre — vous serez invité à saisir une description"
-        ]
-      ]
+        ['📝 Autre', 'Étiquette personnalisée libre — vous serez invité à saisir une description'],
+      ],
     },
     durationOptions: {
-      heading: "Options de durée",
-      intro: "Le compteur restant est affiché dans la colonne pr du suivi d’initiative et décrémente à la fin du tour du jeton ancre.",
-      colOption: "Option",
-      colBehaviour: "Comportement",
+      heading: 'Options de durée',
+      intro:
+        'Le compteur restant est affiché dans la colonne pr du suivi d’initiative et décrémente à la fin du tour du jeton ancre.',
+      colOption: 'Option',
+      colBehaviour: 'Comportement',
       rows: [
         [
-          "Jusqu’à suppression",
-          "Permanent — doit être supprimé manuellement via le menu ou --remove"
+          'Jusqu’à suppression',
+          'Permanent — doit être supprimé manuellement via le menu ou --remove',
         ],
         [
-          "Fin du prochain tour de la cible",
-          "Expire à la fin du prochain tour du jeton cible dans l’initiative"
+          'Fin du prochain tour de la cible',
+          'Expire à la fin du prochain tour du jeton cible dans l’initiative',
         ],
         [
-          "Fin du prochain tour de la source",
-          "Expire à la fin du prochain tour du jeton source dans l’initiative"
+          'Fin du prochain tour de la source',
+          'Expire à la fin du prochain tour du jeton source dans l’initiative',
         ],
-        [
-          "1/2/3/10 tours",
-          "Compte à rebours fixe ; un décrément par fin de tour du jeton ancre"
-        ]
-      ]
+        ['1/2/3/10 tours', 'Compte à rebours fixe ; un décrément par fin de tour du jeton ancre'],
+      ],
     },
     savedEffects: {
-      heading: "Effets enregistrés",
-      intro: "Les effets enregistrés vous permettent de stocker des conditions à long terme en dehors du Turn Tracker : malédictions, maladies, poisons, affaiblissements cachés et autres conditions hors combat. Ils persistent dans l'état de script et peuvent éventuellement être copiés dans le Turn Tracker lorsque le combat commence.",
+      heading: 'Effets enregistrés',
+      intro:
+        "Les effets enregistrés vous permettent de stocker des conditions à long terme en dehors du Turn Tracker : malédictions, maladies, poisons, affaiblissements cachés et autres conditions hors combat. Ils persistent dans l'état de script et peuvent éventuellement être copiés dans le Turn Tracker lorsque le combat commence.",
       visibility: {
-        heading: "Modes de visibilité",
+        heading: 'Modes de visibilité',
         rows: [
           [
-            "publique",
-            "L’étiquette d’effet complet est visible dans Turn Tracker et dans le chat public."
+            'publique',
+            'L’étiquette d’effet complet est visible dans Turn Tracker et dans le chat public.',
           ],
           [
-            "masqué",
-            "Une vague étiquette publique est montrée aux joueurs ; tous les détails sont réservés au GM."
+            'masqué',
+            'Une vague étiquette publique est montrée aux joueurs ; tous les détails sont réservés au GM.',
           ],
           [
-            "gm",
-            "Aucune ligne Turn Tracker. Tous les détails sont stockés dans l'état et chuchotés au MJ lorsque le jeton concerné atteint le sommet de l'initiative."
-          ]
-        ]
+            'gm',
+            "Aucune ligne Turn Tracker. Tous les détails sont stockés dans l'état et chuchotés au MJ lorsque le jeton concerné atteint le sommet de l'initiative.",
+          ],
+        ],
       },
       commands: {
         heading: "Commandes d'effets enregistrés",
-        intro: "Toutes les commandes --saved sont réservées à GM. Sélectionnez un jeton avant d'exécuter --saved ou --saved add.",
+        intro:
+          "Toutes les commandes --saved sont réservées à GM. Sélectionnez un jeton avant d'exécuter --saved ou --saved add.",
         rows: [
           [
-            "!condition-tracker --sauvé",
-            "Afficher les effets enregistrés pour le jeton sélectionné."
+            '!condition-tracker --sauvé',
+            'Afficher les effets enregistrés pour le jeton sélectionné.',
           ],
           [
-            "!condition-tracker --ajout enregistré",
-            "Lancez l'assistant d'ajout d'effet enregistré."
+            '!condition-tracker --ajout enregistré',
+            "Lancez l'assistant d'ajout d'effet enregistré.",
           ],
           [
-            "!condition-tracker --saved edit <id>",
-            "Modifiez les étiquettes ou la visibilité d'un effet enregistré existant."
+            '!condition-tracker --saved edit <id>',
+            "Modifiez les étiquettes ou la visibilité d'un effet enregistré existant.",
           ],
           [
-            "!condition-tracker --saved remove <id>",
-            "Supprimer définitivement un effet enregistré."
+            '!condition-tracker --saved remove <id>',
+            'Supprimer définitivement un effet enregistré.',
           ],
           [
-            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
-            "Copiez un effet enregistré dans le Turn Tracker (public ou masqué) ou confirmez qu'il est suivi uniquement par GM."
+            '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+            "Copiez un effet enregistré dans le Turn Tracker (public ou masqué) ou confirmez qu'il est suivi uniquement par GM.",
           ],
           [
-            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
-            "Répétez un rappel de MJ pour ce tour, N rounds ou ce combat."
+            '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+            'Répétez un rappel de MJ pour ce tour, N rounds ou ce combat.',
           ],
           [
-            "!condition-tracker --saved snooze-clear <id>",
-            "Supprimez une répétition active pour que les rappels reprennent immédiatement."
-          ]
-        ]
+            '!condition-tracker --saved snooze-clear <id>',
+            'Supprimez une répétition active pour que les rappels reprennent immédiatement.',
+          ],
+        ],
       },
       reminders: {
-        heading: "Rappels du directeur général",
-        body: "Lorsqu'un jeton avec un GM ou des effets masqués enregistrés atteint le haut du Turn Tracker, le GM reçoit un murmure répertoriant les effets cachés avec des boutons d'action. Les rappels en double au cours du même tour sont supprimés. Utilisez les boutons Snooze pour supprimer les rappels pour un tour, un certain nombre de rounds ou pour le reste du combat en cours."
-      }
+        heading: 'Rappels du directeur général',
+        body: "Lorsqu'un jeton avec un GM ou des effets masqués enregistrés atteint le haut du Turn Tracker, le GM reçoit un murmure répertoriant les effets cachés avec des boutons d'action. Les rappels en double au cours du même tour sont supprimés. Utilisez les boutons Snooze pour supprimer les rappels pour un tour, un certain nombre de rounds ou pour le reste du combat en cours.",
+      },
     },
     actorClassification: {
-      heading: "Classification des Acteurs",
-      intro: "Condition Tracker détermine automatiquement si chaque token est un PJ, PNJ ou un objet ignoré (épingles de carte, décors, gabarits de sort). Les tokens non liés sont ignorés par défaut. Utilise --classify pour remplacer la détection automatique pour n'importe quel token.",
+      heading: 'Classification des Acteurs',
+      intro:
+        "Condition Tracker détermine automatiquement si chaque token est un PJ, PNJ ou un objet ignoré (épingles de carte, décors, gabarits de sort). Les tokens non liés sont ignorés par défaut. Utilise --classify pour remplacer la détection automatique pour n'importe quel token.",
       detectionOrder: {
-        heading: "Ordre de Détection",
-        colStep: "Étape",
-        colCheck: "Vérification",
-        colResult: "Résultat",
+        heading: 'Ordre de Détection',
+        colStep: 'Étape',
+        colCheck: 'Vérification',
+        colResult: 'Résultat',
         rows: [
+          ['1', "Substitution d'état du token (--classify --scope token)", 'pc / npc / ignoré'],
           [
-            "1",
-            "Substitution d'état du token (--classify --scope token)",
-            "pc / npc / ignoré"
+            '2',
+            'Attribut ct_mod_actor_type du personnage (--classify --scope character)',
+            'pc / npc / ignoré',
           ],
+          ['3', 'Token non lié — aucune fiche de personnage', 'ignoré'],
+          ['4', 'Adaptateur de système de jeu (attribut npc / is_npc)', 'PC / PNJ'],
           [
-            "2",
-            "Attribut ct_mod_actor_type du personnage (--classify --scope character)",
-            "pc / npc / ignoré"
-          ],
-          [
-            "3",
-            "Token non lié — aucune fiche de personnage",
-            "ignoré"
-          ],
-          [
-            "4",
-            "Adaptateur de système de jeu (attribut npc / is_npc)",
-            "PC / PNJ"
-          ],
-          [
-            "5",
+            '5',
             "Scan d'attributs NPC génériques (npc, is_npc, npcflag, sheet_type, character_type)",
-            "PC / PNJ"
+            'PC / PNJ',
           ],
-          [
-            "6",
-            "Repli controlledby du personnage",
-            "PC / PNJ"
-          ]
-        ]
+          ['6', 'Repli controlledby du personnage', 'PC / PNJ'],
+        ],
       },
       types: {
-        heading: "Types de Classification",
-        colType: "Taper",
-        colMeaning: "Signification",
+        heading: 'Types de Classification',
+        colType: 'Taper',
+        colMeaning: 'Signification',
         rows: [
           [
-            "ordinateur",
-            "Personnage joueur — toujours inclus comme PJ dans l'assistant et la détection"
+            'ordinateur',
+            "Personnage joueur — toujours inclus comme PJ dans l'assistant et la détection",
           ],
+          ['PNJ', 'Personnage non joueur — toujours inclus comme PNJ'],
+          ['ignoré', "Jamais affiché ni suivi — exclu du sélecteur de tokens de l'assistant"],
           [
-            "PNJ",
-            "Personnage non joueur — toujours inclus comme PNJ"
+            'inconnu',
+            "Détection automatique uniquement ; type indéterminé (traité comme PNJ dans l'assistant)",
           ],
-          [
-            "ignoré",
-            "Jamais affiché ni suivi — exclu du sélecteur de tokens de l'assistant"
-          ],
-          [
-            "inconnu",
-            "Détection automatique uniquement ; type indéterminé (traité comme PNJ dans l'assistant)"
-          ]
-        ]
+        ],
       },
       commands: {
-        heading: "Commandes de Classification",
+        heading: 'Commandes de Classification',
         intro: "Sélectionne un ou plusieurs tokens avant d'exécuter les commandes --classify.",
         rows: [
           [
-            "!condition-tracker --classify pc",
-            "Marquer les tokens sélectionnés comme PJ (portée personnage par défaut)."
+            '!condition-tracker --classify pc',
+            'Marquer les tokens sélectionnés comme PJ (portée personnage par défaut).',
+          ],
+          ['!condition-tracker --classify npc', 'Marquer les tokens sélectionnés comme PNJ.'],
+          [
+            '!condition-tracker --classify ignoré',
+            'Exclure les tokens sélectionnés de tout suivi.',
           ],
           [
-            "!condition-tracker --classify npc",
-            "Marquer les tokens sélectionnés comme PNJ."
+            '!condition-tracker --classifier automatiquement',
+            'Supprimer la substitution — restaurer la détection automatique.',
           ],
           [
-            "!condition-tracker --classify ignoré",
-            "Exclure les tokens sélectionnés de tout suivi."
+            '!condition-tracker --classify afficher',
+            'Afficher le diagnostic de classification (type, source, raison) pour chaque token sélectionné.',
           ],
           [
-            "!condition-tracker --classifier automatiquement",
-            "Supprimer la substitution — restaurer la détection automatique."
+            '!condition-tracker --classify pc --scope jeton',
+            "Substitution au niveau du token dans l'état du script — utile pour les tokens non liés.",
           ],
           [
-            "!condition-tracker --classify afficher",
-            "Afficher le diagnostic de classification (type, source, raison) pour chaque token sélectionné."
+            '!condition-tracker --classify pc --scope caractère',
+            "Substitution au niveau du personnage dans l'attribut ct_mod_actor_type — s'applique à tous les tokens partageant la même fiche.",
           ],
-          [
-            "!condition-tracker --classify pc --scope jeton",
-            "Substitution au niveau du token dans l'état du script — utile pour les tokens non liés."
-          ],
-          [
-            "!condition-tracker --classify pc --scope caractère",
-            "Substitution au niveau du personnage dans l'attribut ct_mod_actor_type — s'applique à tous les tokens partageant la même fiche."
-          ]
-        ]
-      }
+        ],
+      },
     },
     configuration: {
-      heading: "Configuration",
-      intro: "Utilisez !condition-tracker --config &lt;option&gt; &lt;valeur&gt; ou le bouton Config dans le menu principal.",
-      colOption: "Option",
-      colValues: "Valeurs",
-      colDesc: "Description",
+      heading: 'Configuration',
+      intro:
+        'Utilisez !condition-tracker --config &lt;option&gt; &lt;valeur&gt; ou le bouton Config dans le menu principal.',
+      colOption: 'Option',
+      colValues: 'Valeurs',
+      colDesc: 'Description',
       rows: [
         [
-          "useMarkers",
-          "true / false",
-          "Appliquer des marqueurs de statut Roll20 aux jetons lors de l’ajout d’une condition"
+          'useMarkers',
+          'true / false',
+          'Appliquer des marqueurs de statut Roll20 aux jetons lors de l’ajout d’une condition',
         ],
         [
-          "useIcons",
-          "vrai / faux",
-          "Afficher des codes d’icônes courts (ex. [G]) dans les lignes du suivi d’initiative"
+          'useIcons',
+          'vrai / faux',
+          'Afficher des codes d’icônes courts (ex. [G]) dans les lignes du suivi d’initiative',
         ],
         [
-          "subjectPromptBypass",
-          "vrai / faux",
-          "Ignorer l’étape sujet optionnelle pour les effets Sort / Capacité / Autre"
+          'subjectPromptBypass',
+          'vrai / faux',
+          'Ignorer l’étape sujet optionnelle pour les effets Sort / Capacité / Autre',
         ],
         [
-          "suppressPublicChat",
-          "vrai / faux",
-          "Supprimer toutes les annonces publiques de chat (messages d’application et de suppression). Les chuchotements du MJ ne sont pas affectés."
+          'suppressPublicChat',
+          'vrai / faux',
+          'Supprimer toutes les annonces publiques de chat (messages d’application et de suppression). Les chuchotements du MJ ne sont pas affectés.',
         ],
         [
-          "healthBar",
-          "bar1_value / bar2_value / bar3_value",
-          "Barre à surveiller ; quand elle atteint 0 le MJ est invité à nettoyer les conditions"
+          'healthBar',
+          'bar1_value / bar2_value / bar3_value',
+          'Barre à surveiller ; quand elle atteint 0 le MJ est invité à nettoyer les conditions',
         ],
         [
-          "language",
-          "en-US / fr / de / es / pt-BR / ko",
-          "Langue des messages de chat et du livret d’aide"
+          'language',
+          'en-US / fr / de / es / pt-BR / ko',
+          'Langue des messages de chat et du livret d’aide',
         ],
         [
-          "marker",
-          "&lt;Condition&gt;=&lt;nom du marqueur&gt;",
-          "Remplacer le marqueur utilisé pour une condition spécifique (ex. marker Grappled=grab)"
-        ]
-      ]
+          'marker',
+          '&lt;Condition&gt;=&lt;nom du marqueur&gt;',
+          'Remplacer le marqueur utilisé pour une condition spécifique (ex. marker Grappled=grab)',
+        ],
+      ],
     },
     defaultMarkers: {
-      heading: "Marqueurs de statut par défaut",
-      colCondition: "Condition",
-      colMarker: "Nom du marqueur"
+      heading: 'Marqueurs de statut par défaut',
+      colCondition: 'Condition',
+      colMarker: 'Nom du marqueur',
     },
     availableLocales: {
-      heading: "Traductions disponibles",
-      intro: "Utilisez l'option de configuration language pour définir les messages de chat et le livret d'aide sur n'importe quelle locale prise en charge. Les alias courts sont également acceptés pour en, zh et pt.",
-      colLocale: "Lieu",
-      colLanguage: "Langue",
-      colFile: "Fichier de traduction"
-    }
-  }
+      heading: 'Traductions disponibles',
+      intro:
+        "Utilisez l'option de configuration language pour définir les messages de chat et le livret d'aide sur n'importe quelle locale prise en charge. Les alias courts sont également acceptés pour en, zh et pt.",
+      colLocale: 'Lieu',
+      colLanguage: 'Langue',
+      colFile: 'Fichier de traduction',
+    },
+  },
 };
 
 export default TRANSLATION;

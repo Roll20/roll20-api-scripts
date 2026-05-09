@@ -1,16 +1,7 @@
-import {
-  DEFAULT_LOCALE,
-  SCRIPT_VERSION,
-  STATE_KEY,
-  VALID_HEALTH_BARS,
-} from "./constants.js";
-import { normalizeLocale } from "./i18n.js";
-import {
-  DEFAULT_GAME_SYSTEM,
-  VALID_GAME_SYSTEMS,
-  getSystemProfile,
-} from "./systems/index.js";
-import { isRecord } from "./utils.js";
+import { DEFAULT_LOCALE, SCRIPT_VERSION, STATE_KEY, VALID_HEALTH_BARS } from './constants.js';
+import { normalizeLocale } from './i18n.js';
+import { DEFAULT_GAME_SYSTEM, VALID_GAME_SYSTEMS, getSystemProfile } from './systems/index.js';
+import { isRecord } from './utils.js';
 
 const GLOBAL_CONFIG_KEY = STATE_KEY.toLowerCase();
 
@@ -41,8 +32,8 @@ export function createDefaultConfig(gameSystem = DEFAULT_GAME_SYSTEM) {
  */
 export function createRuntimeState() {
   return {
-    previousFirstTurnId: "",
-    previousTurnSignature: "",
+    previousFirstTurnId: '',
+    previousTurnSignature: '',
     previousTokenIds: [],
     previousMisplacedConditionIds: [],
   };
@@ -119,19 +110,14 @@ export function mergeConfig(config) {
   return {
     gameSystem: systemId,
     useMarkers:
-      typeof nextConfig.useMarkers === "boolean"
-        ? nextConfig.useMarkers
-        : defaults.useMarkers,
-    useIcons:
-      typeof nextConfig.useIcons === "boolean"
-        ? nextConfig.useIcons
-        : defaults.useIcons,
+      typeof nextConfig.useMarkers === 'boolean' ? nextConfig.useMarkers : defaults.useMarkers,
+    useIcons: typeof nextConfig.useIcons === 'boolean' ? nextConfig.useIcons : defaults.useIcons,
     subjectPromptBypass:
-      typeof nextConfig.subjectPromptBypass === "boolean"
+      typeof nextConfig.subjectPromptBypass === 'boolean'
         ? nextConfig.subjectPromptBypass
         : defaults.subjectPromptBypass,
     suppressPublicChat:
-      typeof nextConfig.suppressPublicChat === "boolean"
+      typeof nextConfig.suppressPublicChat === 'boolean'
         ? nextConfig.suppressPublicChat
         : defaults.suppressPublicChat,
     healthBar: VALID_HEALTH_BARS.includes(nextConfig.healthBar)
@@ -186,18 +172,15 @@ export function applyGlobalConfig() {
     nextConfig.markers = { ...profile.DEFAULT_MARKERS };
   }
 
-  nextConfig.useMarkers = parseBooleanOption(
-    options.useMarkers,
-    config.useMarkers,
-  );
+  nextConfig.useMarkers = parseBooleanOption(options.useMarkers, config.useMarkers);
   nextConfig.useIcons = parseBooleanOption(options.useIcons, config.useIcons);
   nextConfig.subjectPromptBypass = parseBooleanOption(
     options.subjectPromptBypass,
-    config.subjectPromptBypass,
+    config.subjectPromptBypass
   );
   nextConfig.suppressPublicChat = parseBooleanOption(
     options.suppressPublicChat,
-    config.suppressPublicChat,
+    config.suppressPublicChat
   );
 
   if (VALID_HEALTH_BARS.includes(options.healthBar)) {
@@ -215,7 +198,7 @@ export function applyGlobalConfig() {
     const markerValue = getMarkerOption(options, condition);
     nextMarkers[condition] = parseMarkerOption(
       markerValue,
-      nextMarkers[condition] || profile.DEFAULT_MARKERS[condition],
+      nextMarkers[condition] || profile.DEFAULT_MARKERS[condition]
     );
   });
   nextConfig.markers = nextMarkers;
@@ -253,7 +236,7 @@ function getGlobalConfigOptions() {
  * @returns {boolean} Parsed boolean option.
  */
 function parseBooleanOption(value, fallback) {
-  if (typeof value === "boolean") {
+  if (typeof value === 'boolean') {
     return value;
   }
 
@@ -262,11 +245,11 @@ function parseBooleanOption(value, fallback) {
   }
 
   const normalized = String(value).trim().toLowerCase();
-  if (["true", "1", "checked", "on", "yes"].includes(normalized)) {
+  if (['true', '1', 'checked', 'on', 'yes'].includes(normalized)) {
     return true;
   }
 
-  if (["false", "0", "", "off", "no"].includes(normalized)) {
+  if (['false', '0', '', 'off', 'no'].includes(normalized)) {
     return false;
   }
 
@@ -287,11 +270,7 @@ function getMarkerOption(options, condition) {
     return undefined;
   }
 
-  const keyVariants = [
-    `marker${condition}`,
-    `marker.${condition}`,
-    `markers.${condition}`,
-  ];
+  const keyVariants = [`marker${condition}`, `marker.${condition}`, `markers.${condition}`];
 
   for (const key of keyVariants) {
     if (Object.hasOwn(options, key)) {
@@ -310,7 +289,7 @@ function getMarkerOption(options, condition) {
  * @returns {string} Parsed marker name.
  */
 function parseMarkerOption(value, fallback) {
-  if (typeof value !== "string") {
+  if (typeof value !== 'string') {
     return fallback;
   }
 
@@ -391,10 +370,7 @@ export function partitionActiveConditions(predicate) {
  * @returns {object|null} The matching condition or null.
  */
 export function findActiveCondition(conditionId) {
-  return (
-    filterActiveConditions((condition) => condition.id === conditionId)[0] ||
-    null
-  );
+  return filterActiveConditions((condition) => condition.id === conditionId)[0] || null;
 }
 
 /**
@@ -439,9 +415,7 @@ export function removeActiveCondition(conditionId) {
  * @returns {object[]} Matching active conditions.
  */
 export function getActiveByTarget(targetTokenId) {
-  return filterActiveConditions(
-    (condition) => condition.targetTokenId === targetTokenId,
-  );
+  return filterActiveConditions((condition) => condition.targetTokenId === targetTokenId);
 }
 
 /**
@@ -451,9 +425,7 @@ export function getActiveByTarget(targetTokenId) {
  * @returns {object[]} Matching active conditions.
  */
 export function getActiveBySource(sourceTokenId) {
-  return filterActiveConditions(
-    (condition) => condition.sourceTokenId === sourceTokenId,
-  );
+  return filterActiveConditions((condition) => condition.sourceTokenId === sourceTokenId);
 }
 
 /**
@@ -509,15 +481,10 @@ export function clearActorTokenOverride(tokenId) {
  * @param {string[]} [misplacedConditionIds] Condition ids currently misplaced in the turn order.
  * @returns {void}
  */
-export function updateTurnRuntime(
-  firstTurnId,
-  signature,
-  tokenIds,
-  misplacedConditionIds,
-) {
+export function updateTurnRuntime(firstTurnId, signature, tokenIds, misplacedConditionIds) {
   const runtime = ensureState().runtime;
-  runtime.previousFirstTurnId = firstTurnId || "";
-  runtime.previousTurnSignature = signature || "";
+  runtime.previousFirstTurnId = firstTurnId || '';
+  runtime.previousTurnSignature = signature || '';
   runtime.previousTokenIds = Array.isArray(tokenIds) ? tokenIds : [];
   runtime.previousMisplacedConditionIds = Array.isArray(misplacedConditionIds)
     ? misplacedConditionIds

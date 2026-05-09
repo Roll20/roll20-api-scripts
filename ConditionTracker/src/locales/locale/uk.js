@@ -1,804 +1,734 @@
 const TRANSLATION = {
   conditions: {
     Grappled: {
-      past: "схоплений",
-      verb: "схоплює"
+      past: 'схоплений',
+      verb: 'схоплює',
     },
     Restrained: {
-      past: "стриманий",
-      verb: "стримує"
+      past: 'стриманий',
+      verb: 'стримує',
     },
     Prone: {
-      past: "збитий з ніг",
-      verb: "збиває",
-      suffix: "з ніг"
+      past: 'збитий з ніг',
+      verb: 'збиває',
+      suffix: 'з ніг',
     },
     Poisoned: {
-      past: "отруєний",
-      verb: "отруює"
+      past: 'отруєний',
+      verb: 'отруює',
     },
     Stunned: {
-      past: "приголомшений",
-      verb: "приголомшує"
+      past: 'приголомшений',
+      verb: 'приголомшує',
     },
     Blinded: {
-      past: "осліплений",
-      verb: "осліплює"
+      past: 'осліплений',
+      verb: 'осліплює',
     },
     Charmed: {
-      past: "зачарований",
-      verb: "зачаровує"
+      past: 'зачарований',
+      verb: 'зачаровує',
     },
     Frightened: {
-      past: "наляканий",
-      verb: "лякає"
+      past: 'наляканий',
+      verb: 'лякає',
     },
     Incapacitated: {
-      past: "недієздатний",
-      verb: "робить",
-      suffix: "недієздатним"
+      past: 'недієздатний',
+      verb: 'робить',
+      suffix: 'недієздатним',
     },
     Invisible: {
-      past: "невидимий",
-      verb: "робить",
-      suffix: "невидимим"
+      past: 'невидимий',
+      verb: 'робить',
+      suffix: 'невидимим',
     },
     Paralyzed: {
-      past: "паралізований",
-      verb: "паралізує"
+      past: 'паралізований',
+      verb: 'паралізує',
     },
     Petrified: {
       past: "скам'янілий",
-      verb: "скам'яніює"
+      verb: "скам'яніює",
     },
     Unconscious: {
-      past: "непритомний",
-      verb: "позбавляє",
-      suffix: "свідомості"
+      past: 'непритомний',
+      verb: 'позбавляє',
+      suffix: 'свідомості',
     },
     Spell: {
-      past: "під дією закляття",
-      verb: "накладає закляття на"
+      past: 'під дією закляття',
+      verb: 'накладає закляття на',
     },
     Ability: {
-      past: "під дією здібності",
-      verb: "використовує здібність на"
+      past: 'під дією здібності',
+      verb: 'використовує здібність на',
     },
     Advantage: {
-      past: "має перевагу",
-      verb: "надає перевагу",
-      noBy: true
+      past: 'має перевагу',
+      verb: 'надає перевагу',
+      noBy: true,
     },
     Disadvantage: {
-      past: "має перешкоду",
-      verb: "накладає перешкоду",
-      noBy: true
-    }
+      past: 'має перешкоду',
+      verb: 'накладає перешкоду',
+      noBy: true,
+    },
   },
   condNames: {
-    Grappled: "Схоплений",
-    Restrained: "Стриманий",
-    Prone: "Долілиць",
-    Poisoned: "Отруєний",
-    Stunned: "Приголомшений",
-    Blinded: "Осліплений",
-    Charmed: "Зачарований",
-    Frightened: "Наляканий",
-    Incapacitated: "Недієздатний",
-    Invisible: "Невидимий",
-    Paralyzed: "Паралізований",
+    Grappled: 'Схоплений',
+    Restrained: 'Стриманий',
+    Prone: 'Долілиць',
+    Poisoned: 'Отруєний',
+    Stunned: 'Приголомшений',
+    Blinded: 'Осліплений',
+    Charmed: 'Зачарований',
+    Frightened: 'Наляканий',
+    Incapacitated: 'Недієздатний',
+    Invisible: 'Невидимий',
+    Paralyzed: 'Паралізований',
     Petrified: "Скам'янілий",
-    Unconscious: "Непритомний",
-    Spell: "Закляття",
-    Ability: "Здібність",
-    Advantage: "Перевага",
-    Disadvantage: "Перешкода",
-    Other: "Інше"
+    Unconscious: 'Непритомний',
+    Spell: 'Закляття',
+    Ability: 'Здібність',
+    Advantage: 'Перевага',
+    Disadvantage: 'Перешкода',
+    Other: 'Інше',
   },
   languageNames: {
-    af: "африкаанс",
-    ca: "каталонська",
-    "zh-TW": "китайська (Тайвань)",
-    cs: "чеська",
-    da: "данська",
-    nl: "нідерландська",
-    "en-US": "англійська (Сполучені Штати)",
-    fi: "фінська",
-    fr: "французька",
-    de: "німецька",
-    el: "грецька",
-    he: "іврит",
-    hu: "угорська",
-    it: "італійська",
-    ja: "японська",
-    ko: "корейська",
-    pl: "польська",
-    "pt-PT": "португальська (Португалія)",
-    "pt-BR": "португальська (Бразилія)",
-    ru: "російська",
-    es: "іспанська",
-    sv: "шведська",
-    tr: "турецька",
-    uk: "українська"
+    af: 'африкаанс',
+    ca: 'каталонська',
+    'zh-TW': 'китайська (Тайвань)',
+    cs: 'чеська',
+    da: 'данська',
+    nl: 'нідерландська',
+    'en-US': 'англійська (Сполучені Штати)',
+    fi: 'фінська',
+    fr: 'французька',
+    de: 'німецька',
+    el: 'грецька',
+    he: 'іврит',
+    hu: 'угорська',
+    it: 'італійська',
+    ja: 'японська',
+    ko: 'корейська',
+    pl: 'польська',
+    'pt-PT': 'португальська (Португалія)',
+    'pt-BR': 'португальська (Бразилія)',
+    ru: 'російська',
+    es: 'іспанська',
+    sv: 'шведська',
+    tr: 'турецька',
+    uk: 'українська',
   },
   ui: {
     choice: {
-      selectCondition: "Виберіть стан",
-      selectSource: "Виберіть токен-джерело",
-      selectTarget: "Виберіть токен-ціль",
+      selectCondition: 'Виберіть стан',
+      selectSource: 'Виберіть токен-джерело',
+      selectTarget: 'Виберіть токен-ціль',
       selectSubject: "Виберіть суб'єкт",
-      selectDuration: "Виберіть тривалість",
-      confirmTargetTitle: "Підтвердьте список цілей",
-      applyEffectTitle: "Застосувати ефект {condition}",
-      noTokens: "На активній сторінці не знайдено іменованих токенів.",
-      confirmIntro: "Ці токени отримають стан:",
-      confirmBtn: "Підтвердити список цілей",
-      enterDetails: "Введіть подробиці ефекту",
-      noneBtn: "Немає",
-      noneOrSourceBtn: "Немає або застосувати до джерела",
-      subjectDesc: "Виберіть, хто або що спричиняє ефект.",
-      sourceDesc: "Виберіть істоту, яка створює стан або ефект.",
-      targetDesc: "Виберіть істоту, яка отримає стан або ефект.",
-      otherText: "Текст іншого стану",
-      effectDetails: "Подробиці {condition}"
+      selectDuration: 'Виберіть тривалість',
+      confirmTargetTitle: 'Підтвердьте список цілей',
+      applyEffectTitle: 'Застосувати ефект {condition}',
+      noTokens: 'На активній сторінці не знайдено іменованих токенів.',
+      confirmIntro: 'Ці токени отримають стан:',
+      confirmBtn: 'Підтвердити список цілей',
+      enterDetails: 'Введіть подробиці ефекту',
+      noneBtn: 'Немає',
+      noneOrSourceBtn: 'Немає або застосувати до джерела',
+      subjectDesc: 'Виберіть, хто або що спричиняє ефект.',
+      sourceDesc: 'Виберіть істоту, яка створює стан або ефект.',
+      targetDesc: 'Виберіть істоту, яка отримає стан або ефект.',
+      otherText: 'Текст іншого стану',
+      effectDetails: 'Подробиці {condition}',
     },
     col: {
-      players: "Гравці",
-      npcs: "NPC",
-      conditions: "Стани",
-      customEffects: "Користувацькі ефекти",
-      permanentTurnEnd: "Постійно / кінець ходу",
-      rounds: "Раунди",
-      command: "Команда",
-      result: "Результат",
-      field: "Поле",
-      value: "Значення",
-      option: "Опція",
-      condition: "Стан",
-      marker: "Маркер",
-      item: "Елемент",
-      removed: "Видалено",
-      details: "Подробиці",
-      description: "Опис",
-      scenario: "Сценарій",
-      gameSystem: "Система гри",
-      duration: "Тривалість"
+      players: 'Гравці',
+      npcs: 'NPC',
+      conditions: 'Стани',
+      customEffects: 'Користувацькі ефекти',
+      permanentTurnEnd: 'Постійно / кінець ходу',
+      rounds: 'Раунди',
+      command: 'Команда',
+      result: 'Результат',
+      field: 'Поле',
+      value: 'Значення',
+      option: 'Опція',
+      condition: 'Стан',
+      marker: 'Маркер',
+      item: 'Елемент',
+      removed: 'Видалено',
+      details: 'Подробиці',
+      description: 'Опис',
+      scenario: 'Сценарій',
+      gameSystem: 'Система гри',
+      duration: 'Тривалість',
     },
     dur: {
-      untilRemoved: "Доки не видалено",
-      endOfTargetTurn: "Кінець наступного ходу цілі",
-      endOfSourceTurn: "Кінець наступного ходу джерела",
-      round1: "1 раунд",
-      round2: "2 раунди",
-      round3: "3 раунди",
-      round10: "10 раундів",
-      custom: "Власне",
-      customPrompt: "Кількість раундів",
-      untilRemovedDisplay: "Доки не видалено",
-      turnsRemaining: "Залишилось відстежуваних завершень ходу: {n}"
+      untilRemoved: 'Доки не видалено',
+      endOfTargetTurn: 'Кінець наступного ходу цілі',
+      endOfSourceTurn: 'Кінець наступного ходу джерела',
+      round1: '1 раунд',
+      round2: '2 раунди',
+      round3: '3 раунди',
+      round10: '10 раундів',
+      custom: 'Власне',
+      customPrompt: 'Кількість раундів',
+      untilRemovedDisplay: 'Доки не видалено',
+      turnsRemaining: 'Залишилось відстежуваних завершень ходу: {n}',
     },
     btn: {
-      openWizard: "Відкрити майстер",
-      openMultiTarget: "Майстер кількох цілей",
-      openRemovalList: "Відкрити список видалення",
-      showConfig: "Показати налаштування",
-      runCleanup: "Запустити очищення",
-      reinstallMacro: "Перевстановити макрос",
-      reinstallHandout: "Перевстановити довідник",
-      showHelp: "Показати довідку",
-      reorderConditions: "Переупорядкувати рядки умов",
-      reportToken: "Повідомити про умови маркера",
-      savedEffects: "Збережені ефекти",
-      addSavedEffect: "Додати збережений ефект",
-      editSaved: "Редагувати",
-      removeSaved: "видалити",
-      promoteSaved: "Додати до Turn Tracker",
-      snoozeSaved: "Відкласти",
-      clearSnooze: "Очистити відкладення"
+      openWizard: 'Відкрити майстер',
+      openMultiTarget: 'Майстер кількох цілей',
+      openRemovalList: 'Відкрити список видалення',
+      showConfig: 'Показати налаштування',
+      runCleanup: 'Запустити очищення',
+      reinstallMacro: 'Перевстановити макрос',
+      reinstallHandout: 'Перевстановити довідник',
+      showHelp: 'Показати довідку',
+      reorderConditions: 'Переупорядкувати рядки умов',
+      reportToken: 'Повідомити про умови маркера',
+      savedEffects: 'Збережені ефекти',
+      addSavedEffect: 'Додати збережений ефект',
+      editSaved: 'Редагувати',
+      removeSaved: 'видалити',
+      promoteSaved: 'Додати до Turn Tracker',
+      snoozeSaved: 'Відкласти',
+      clearSnooze: 'Очистити відкладення',
     },
     title: {
-      menu: "Меню",
-      removalMenu: "Видалення Condition Tracker",
-      config: "Налаштування",
-      configTracker: "Налаштування Condition Tracker",
-      help: "Довідка",
-      applied: "Застосовано",
-      removed: "Стан видалено",
-      cleanup: "Очищення завершено",
-      macroReinstalled: "Макрос перевстановлено",
-      handoutReinstalled: "Довідник перевстановлено",
-      warning: "Попередження",
-      error: "Помилка",
-      turnOrder: "Порядок ходів",
-      noConditions: "Немає станів",
-      tokenMoved: "Токен переміщено",
-      markedDead: "Позначено як мертвого",
-      zeroHp: "{name} — 0 HP",
-      moveToken: "{name} — перемістити токен?",
-      scriptReady: "Скрипт готовий",
-      conditionReorder: "Порядок ходів змінено",
-      tokenReport: "Звіт про стан маркера",
-      savedEffects: "Збережені ефекти",
-      savedAdd: "Додати збережений ефект",
-      savedEdit: "Редагувати збережений ефект",
-      savedRemoved: "Збережений ефект видалено",
-      savedPromoted: "Додати до Turn Tracker",
-      savedSnoozed: "Нагадування відкладено",
-      savedSnoozeCleared: "Відкладення видалено",
-      hiddenEffects: "Приховані ефекти — {name}"
+      menu: 'Меню',
+      removalMenu: 'Видалення Condition Tracker',
+      config: 'Налаштування',
+      configTracker: 'Налаштування Condition Tracker',
+      help: 'Довідка',
+      applied: 'Застосовано',
+      removed: 'Стан видалено',
+      cleanup: 'Очищення завершено',
+      macroReinstalled: 'Макрос перевстановлено',
+      handoutReinstalled: 'Довідник перевстановлено',
+      warning: 'Попередження',
+      error: 'Помилка',
+      turnOrder: 'Порядок ходів',
+      noConditions: 'Немає станів',
+      tokenMoved: 'Токен переміщено',
+      markedDead: 'Позначено як мертвого',
+      zeroHp: '{name} — 0 HP',
+      moveToken: '{name} — перемістити токен?',
+      scriptReady: 'Скрипт готовий',
+      conditionReorder: 'Порядок ходів змінено',
+      tokenReport: 'Звіт про стан маркера',
+      savedEffects: 'Збережені ефекти',
+      savedAdd: 'Додати збережений ефект',
+      savedEdit: 'Редагувати збережений ефект',
+      savedRemoved: 'Збережений ефект видалено',
+      savedPromoted: 'Додати до Turn Tracker',
+      savedSnoozed: 'Нагадування відкладено',
+      savedSnoozeCleared: 'Відкладення видалено',
+      hiddenEffects: 'Приховані ефекти — {name}',
     },
     heading: {
-      quickActions: "Швидкі дії",
-      settings: "Налаштування",
-      markerMappings: "Відповідність маркерів",
-      result: "Результат",
-      info: "Інформація",
-      commandOptions: "Параметри команд",
-      promptUi: "Інтерфейс майстра",
-      examples: "Приклади",
-      summary: "Підсумок",
-      appliedTo: "Умови, що застосовуються до",
-      appliedBy: "Умови, застосовані",
-      savedEffectsFor: "Збережені ефекти для {name}",
-      visibility: "Видимість",
-      snoozeOptions: "Відкласти нагадування",
-      promoteOptions: "Підвищити до Turn Tracker",
-      editActions: "Редагувати дії"
+      quickActions: 'Швидкі дії',
+      settings: 'Налаштування',
+      markerMappings: 'Відповідність маркерів',
+      result: 'Результат',
+      info: 'Інформація',
+      commandOptions: 'Параметри команд',
+      promptUi: 'Інтерфейс майстра',
+      examples: 'Приклади',
+      summary: 'Підсумок',
+      appliedTo: 'Умови, що застосовуються до',
+      appliedBy: 'Умови, застосовані',
+      savedEffectsFor: 'Збережені ефекти для {name}',
+      visibility: 'Видимість',
+      snoozeOptions: 'Відкласти нагадування',
+      promoteOptions: 'Підвищити до Turn Tracker',
+      editActions: 'Редагувати дії',
     },
     msg: {
-      noActive: "Активні стани не відстежуються.",
-      configReset: "Налаштування скинуто до стандартних значень моду.",
-      unknownConfig: "Невідома опція налаштування. Використайте --config, щоб переглянути підтримувані налаштування.",
-      macroReinstalled: "Макроси {wizard}, {multiTarget}, {reportToken}, {saved} і {classify} перевстановлено для всіх поточних GM-гравців.",
-      handoutReinstalled: "Довідник {handout} перевстановлено.",
+      noActive: 'Активні стани не відстежуються.',
+      configReset: 'Налаштування скинуто до стандартних значень моду.',
+      unknownConfig:
+        'Невідома опція налаштування. Використайте --config, щоб переглянути підтримувані налаштування.',
+      macroReinstalled:
+        'Макроси {wizard}, {multiTarget}, {reportToken}, {saved} і {classify} перевстановлено для всіх поточних GM-гравців.',
+      handoutReinstalled: 'Довідник {handout} перевстановлено.',
       duplicate: "Такий самий набір джерела, суб'єкта, цілі, стану й тексту вже активний.",
-      noTargets: "Для застосування до кількох цілей не вказано токени.",
-      noSelection: "Виберіть принаймні один токен на мапі перед використанням --multi-target.",
-      invalidIds: "У поточному виборі не знайдено дійсних ID токенів.",
-      reSelectTokens: "Жоден із початково вибраних токенів не знайдено. Виберіть токени знову й повторіть.",
-      conditionNotFound: "ID стану не знайдено.",
-      gmOnly: "Команди Condition Tracker доступні лише GM.",
-      commandFailed: "Команду не вдалося безпечно виконати. Перевірте консоль API.",
-      sourceTokenNotFound: "Токен-джерело не знайдено.",
-      targetTokenNotFound: "Токен-ціль не знайдено.",
+      noTargets: 'Для застосування до кількох цілей не вказано токени.',
+      noSelection: 'Виберіть принаймні один токен на мапі перед використанням --multi-target.',
+      invalidIds: 'У поточному виборі не знайдено дійсних ID токенів.',
+      reSelectTokens:
+        'Жоден із початково вибраних токенів не знайдено. Виберіть токени знову й повторіть.',
+      conditionNotFound: 'ID стану не знайдено.',
+      gmOnly: 'Команди Condition Tracker доступні лише GM.',
+      commandFailed: 'Команду не вдалося безпечно виконати. Перевірте консоль API.',
+      sourceTokenNotFound: 'Токен-джерело не знайдено.',
+      targetTokenNotFound: 'Токен-ціль не знайдено.',
       subjectTokenNotFound: "Токен-суб'єкт не знайдено.",
-      invalidCondition: "Стан має бути одним із попередньо визначених станів або Other.",
-      subjectOnlyCustom: "--subject дійсний лише для Spell, Ability, Advantage, Disadvantage та Other.",
-      subjectBypassInvalid: "--subjectPromptBypass очікує true або false, якщо значення вказано.",
-      customDetailsRequired: "Для {condition} потрібні подробиці. Використайте --other, щоб їх указати.",
-      markerConfigFormat: "Формат налаштування маркера: --config marker Grappled=grab",
-      markerPredefinedRequired: "Для налаштування маркера потрібна назва попередньо визначеного стану.",
-      markerNameRequired: "Для налаштування маркера потрібна непорожня назва маркера.",
-      markerSet: "Маркер {condition} встановлено на {marker}.",
+      invalidCondition: 'Стан має бути одним із попередньо визначених станів або Other.',
+      subjectOnlyCustom:
+        '--subject дійсний лише для Spell, Ability, Advantage, Disadvantage та Other.',
+      subjectBypassInvalid: '--subjectPromptBypass очікує true або false, якщо значення вказано.',
+      customDetailsRequired:
+        'Для {condition} потрібні подробиці. Використайте --other, щоб їх указати.',
+      markerConfigFormat: 'Формат налаштування маркера: --config marker Grappled=grab',
+      markerPredefinedRequired:
+        'Для налаштування маркера потрібна назва попередньо визначеного стану.',
+      markerNameRequired: 'Для налаштування маркера потрібна непорожня назва маркера.',
+      markerSet: 'Маркер {condition} встановлено на {marker}.',
       healthBarSet: "Панель здоров'я встановлено на {bar}.",
-      boolSet: "{key} встановлено на {value}.",
-      expectedBoolean: "Очікується true або false.",
+      boolSet: '{key} встановлено на {value}.',
+      expectedBoolean: 'Очікується true або false.',
       invalidHealthBar: "Панель здоров'я має бути bar1_value, bar2_value або bar3_value.",
-      markersDisabled: "Маркери вимкнено.",
-      noMarkerConfigured: "Для цього стану маркер не налаштовано.",
-      markerApplied: "Маркер застосовано: {marker}",
-      markerPresent: "Маркер уже присутній: {marker}",
-      langSet: "Мову встановлено: {locale}.",
-      invalidLocale: "Недійсна локаль. Підтримувані локалі: {locales}.",
-      otherDurationRequiresRounds: "Інша тривалість потребує числової кількості раундів, наприклад --duration 5 rounds.",
-      invalidDuration: "Тривалість має бути 'доки не видалено', опцією кінця ходу або додатною кількістю раундів.",
-      zeroHpNoConditions: "{name} досяг 0 HP і не має активних станів.",
-      zeroHpConditions: "{name} досяг 0 HP. Виберіть стани для видалення:",
-      removeAllBtn: "Видалити всі стани для {name}",
-      markIncapacitated: "Позначити як недієздатного",
-      removeFromTurnOrder: "Видалити з порядку ходів",
-      alreadyIncapacitated: "{name} уже недієздатний.",
-      tokenRemovedFromTurn: "{name} видалено з порядку ходів.",
-      tokenNotInTurn: "{name} не знайдено в порядку ходів.",
-      moveTokenPrompt: "Перемістити {name} на шар мапи, щоб він залишався видимим і не заважав іншим токенам?",
-      moveTokenBtn: "Перемістити {name} на шар мапи",
-      tokenMoved: "{name} переміщено на шар мапи.",
-      tokenNotFound: "Токен не знайдено.",
-      noActiveConditions: "{name} не має активних станів для видалення.",
-      deadNoConditions: "{name} позначено як мертвого. Активних станів не було.",
-      scriptReady: "{name} активний, ви використовуєте версію {version}.",
-      reachedZeroHp: "{name} досяг 0 HP",
-      manuallyRemoved: "це було видалено вручну",
-      durationExpired: "тривалість завершилася",
-      markedAsDead: "{name} позначено як мертвого",
-      conditionReorder: "Порядок ходів змінився, і {count} відстежуваний рядок/рядків умов може бути тепер не на місці. Натисніть нижче, щоб відновити їх після призначених токенів.",
-      conditionsReordered: "Рядки умов були переміщені після призначених токенів.",
-      noTokensSelectedReport: "Виберіть принаймні один маркер на дошці перед використанням --report-token.",
-      noConditionsAppliedTo: "{name} не має активних умов, застосованих до нього.",
-      noConditionsAppliedBy: "{name} не має активних умов, застосованих до інших.",
-      noSavedEffects: "Немає збережених ефектів для {name}.",
-      noTokenSelectedSaved: "Виберіть маркер на дошці перед використанням --saved.",
-      savedEffectAdded: "Збережений ефект додано для {name}.",
-      savedEffectUpdated: "Збережений ефект оновлено.",
-      savedEffectRemoved: "Збережений ефект видалено.",
-      savedEffectNotFound: "Збережений ефект не знайдено.",
-      savedInvalidVisibility: "Недійсна видимість. Використовуйте public, masked або gm.",
-      savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Ефект додано до Turn Tracker як публічний.",
-      savedPromotedMasked: "Ефект додано до Turn Tracker як замаскований — гравці бачать: {publicLabel}.",
-      savedPromotedGm: "Ефект лише для GM — рядок Turn Tracker не створюватиметься. Система нагадувань виведе його, коли цей жетон досягне верхньої частини порядку ходу.",
-      savedSnoozed: "Нагадування відкладено: {scope}.",
-      savedSnoozeCleared: "Відкладення видалено.",
-      hiddenEffectsReminder: "Приховані ефекти активні на {name}.",
-      visibilityPublicHint: "повна мітка, видима для всіх",
-      visibilityMaskedHint: "нечітка мітка, показана гравцям",
-      visibilityGmHint: "Тільки шепіт GM, без рядка Turn Tracker"
+      markersDisabled: 'Маркери вимкнено.',
+      noMarkerConfigured: 'Для цього стану маркер не налаштовано.',
+      markerApplied: 'Маркер застосовано: {marker}',
+      markerPresent: 'Маркер уже присутній: {marker}',
+      langSet: 'Мову встановлено: {locale}.',
+      invalidLocale: 'Недійсна локаль. Підтримувані локалі: {locales}.',
+      otherDurationRequiresRounds:
+        'Інша тривалість потребує числової кількості раундів, наприклад --duration 5 rounds.',
+      invalidDuration:
+        "Тривалість має бути 'доки не видалено', опцією кінця ходу або додатною кількістю раундів.",
+      zeroHpNoConditions: '{name} досяг 0 HP і не має активних станів.',
+      zeroHpConditions: '{name} досяг 0 HP. Виберіть стани для видалення:',
+      removeAllBtn: 'Видалити всі стани для {name}',
+      markIncapacitated: 'Позначити як недієздатного',
+      removeFromTurnOrder: 'Видалити з порядку ходів',
+      alreadyIncapacitated: '{name} уже недієздатний.',
+      tokenRemovedFromTurn: '{name} видалено з порядку ходів.',
+      tokenNotInTurn: '{name} не знайдено в порядку ходів.',
+      moveTokenPrompt:
+        'Перемістити {name} на шар мапи, щоб він залишався видимим і не заважав іншим токенам?',
+      moveTokenBtn: 'Перемістити {name} на шар мапи',
+      tokenMoved: '{name} переміщено на шар мапи.',
+      tokenNotFound: 'Токен не знайдено.',
+      noActiveConditions: '{name} не має активних станів для видалення.',
+      deadNoConditions: '{name} позначено як мертвого. Активних станів не було.',
+      scriptReady: '{name} активний, ви використовуєте версію {version}.',
+      reachedZeroHp: '{name} досяг 0 HP',
+      manuallyRemoved: 'це було видалено вручну',
+      durationExpired: 'тривалість завершилася',
+      markedAsDead: '{name} позначено як мертвого',
+      conditionReorder:
+        'Порядок ходів змінився, і {count} відстежуваний рядок/рядків умов може бути тепер не на місці. Натисніть нижче, щоб відновити їх після призначених токенів.',
+      conditionsReordered: 'Рядки умов були переміщені після призначених токенів.',
+      noTokensSelectedReport:
+        'Виберіть принаймні один маркер на дошці перед використанням --report-token.',
+      noConditionsAppliedTo: '{name} не має активних умов, застосованих до нього.',
+      noConditionsAppliedBy: '{name} не має активних умов, застосованих до інших.',
+      noSavedEffects: 'Немає збережених ефектів для {name}.',
+      noTokenSelectedSaved: 'Виберіть маркер на дошці перед використанням --saved.',
+      savedEffectAdded: 'Збережений ефект додано для {name}.',
+      savedEffectUpdated: 'Збережений ефект оновлено.',
+      savedEffectRemoved: 'Збережений ефект видалено.',
+      savedEffectNotFound: 'Збережений ефект не знайдено.',
+      savedInvalidVisibility: 'Недійсна видимість. Використовуйте public, masked або gm.',
+      savedConditionRequired: 'Condition type is required. Use --condition <type>.',
+      savedPromotedPublic: 'Ефект додано до Turn Tracker як публічний.',
+      savedPromotedMasked:
+        'Ефект додано до Turn Tracker як замаскований — гравці бачать: {publicLabel}.',
+      savedPromotedGm:
+        'Ефект лише для GM — рядок Turn Tracker не створюватиметься. Система нагадувань виведе його, коли цей жетон досягне верхньої частини порядку ходу.',
+      savedSnoozed: 'Нагадування відкладено: {scope}.',
+      savedSnoozeCleared: 'Відкладення видалено.',
+      hiddenEffectsReminder: 'Приховані ефекти активні на {name}.',
+      visibilityPublicHint: 'повна мітка, видима для всіх',
+      visibilityMaskedHint: 'нечітка мітка, показана гравцям',
+      visibilityGmHint: 'Тільки шепіт GM, без рядка Turn Tracker',
     },
     removal: {
-      conditionField: "Стан",
-      reasonField: "Причина",
-      turnRowField: "Рядок трекера ходів",
-      markerField: "Маркер",
-      notConfigured: "Не налаштовано",
-      markerRemoved: "Видалено ({marker})",
-      markerRetained: "Збережено ({marker})",
-      rowRemoved: "Видалено",
-      rowMissing: "Уже відсутній",
-      manualReason: "Ручне видалення"
+      conditionField: 'Стан',
+      reasonField: 'Причина',
+      turnRowField: 'Рядок трекера ходів',
+      markerField: 'Маркер',
+      notConfigured: 'Не налаштовано',
+      markerRemoved: 'Видалено ({marker})',
+      markerRetained: 'Збережено ({marker})',
+      rowRemoved: 'Видалено',
+      rowMissing: 'Уже відсутній',
+      manualReason: 'Ручне видалення',
     },
     saved: {
       visibility: {
-        public: "Громадський",
-        masked: "Маскований",
-        gm: "Тільки GM"
+        public: 'Громадський',
+        masked: 'Маскований',
+        gm: 'Тільки GM',
       },
       snooze: {
-        thisTurn: "Цей поворот",
-        oneRound: "1 раунд",
-        threeRounds: "3 раунди",
-        thisCombat: "Цей Combat",
-        rounds: "{n} раунд(ів)"
+        thisTurn: 'Цей поворот',
+        oneRound: '1 раунд',
+        threeRounds: '3 раунди',
+        thisCombat: 'Цей Combat',
+        rounds: '{n} раунд(ів)',
       },
       field: {
-        gmLabel: "Етикетка GM",
-        publicLabel: "Публічний ярлик",
-        visibility: "Видимість",
-        source: "Джерело",
-        condition: "Хвороба"
+        gmLabel: 'Етикетка GM',
+        publicLabel: 'Публічний ярлик',
+        visibility: 'Видимість',
+        source: 'Джерело',
+        condition: 'Хвороба',
       },
       prompt: {
-        enterGmLabel: "Повний опис ефекту (лише GM)",
-        enterPublicLabel: "Розпливчаста мітка, показана гравцям"
+        enterGmLabel: 'Повний опис ефекту (лише GM)',
+        enterPublicLabel: 'Розпливчаста мітка, показана гравцям',
       },
-      snoozed: "дрімав"
+      snoozed: 'дрімав',
     },
     classify: {
-      title: "Класифікація Акторів",
-      showTitle: "Діагностика Класифікації",
-      showHeading: "Деталі Класифікації Токена",
-      resultHeading: "Перевизначення Застосовано",
-      noSelection: "Виберіть принаймні один токен на полі перед використанням --classify.",
-      invalidType: "Недійсний тип класифікації: {type}. Використовуйте pc, npc, ignored або auto.",
-      set: "{name} → {type} (область: {scope})",
-      cleared: "{name} перевизначення скинуто (область: {scope}) — автоматичне визначення відновлено.",
+      title: 'Класифікація Акторів',
+      showTitle: 'Діагностика Класифікації',
+      showHeading: 'Деталі Класифікації Токена',
+      resultHeading: 'Перевизначення Застосовано',
+      noSelection: 'Виберіть принаймні один токен на полі перед використанням --classify.',
+      invalidType: 'Недійсний тип класифікації: {type}. Використовуйте pc, npc, ignored або auto.',
+      set: '{name} → {type} (область: {scope})',
+      cleared:
+        '{name} перевизначення скинуто (область: {scope}) — автоматичне визначення відновлено.',
       setTokenFallback: "{name} → {type} (перевизначення токена — аркуш персонажа не прив'язаний).",
-      clearedTokenFallback: "{name} перевизначення токена скинуто — автоматичне визначення відновлено.",
-      fieldToken: "Токен",
-      fieldType: "Класифікація",
-      fieldSource: "Джерело",
-      fieldReason: "Причина"
+      clearedTokenFallback:
+        '{name} перевизначення токена скинуто — автоматичне визначення відновлено.',
+      fieldToken: 'Токен',
+      fieldType: 'Класифікація',
+      fieldSource: 'Джерело',
+      fieldReason: 'Причина',
     },
     cleanup: {
-      orphaned: "Осиротілі записи станів",
-      stale: "Застарілі записи станів",
-      orphanedRows: "Осиротілі рядки трекера ходів",
-      unusedMarkers: "Невикористані маркери"
+      orphaned: 'Осиротілі записи станів',
+      stale: 'Застарілі записи станів',
+      orphanedRows: 'Осиротілі рядки трекера ходів',
+      unusedMarkers: 'Невикористані маркери',
     },
     apply: {
-      turnAppended: "Цілі не було в порядку ходів; рядок стану додано в кінець.",
-      turnInserted: "Рядок стану вставлено під токеном цілі."
-    }
+      turnAppended: 'Цілі не було в порядку ходів; рядок стану додано в кінець.',
+      turnInserted: 'Рядок стану вставлено під токеном цілі.',
+    },
   },
   handout: {
-    versionLabel: "Версія",
-    subtitle: "Менеджер станів D&D 5e",
-    footerNote: "Цей довідник автоматично створюється й оновлюється під час кожного запуску скрипта.",
+    versionLabel: 'Версія',
+    subtitle: 'Менеджер станів D&D 5e',
+    footerNote:
+      'Цей довідник автоматично створюється й оновлюється під час кожного запуску скрипта.',
     overview: {
-      heading: "Огляд",
-      body: "Condition Tracker керує станами D&D 5e і користувацькими ефектами як підписаними рядками в Roll20 Turn Tracker. Застосовуйте стани до токенів, відстежуйте тривалість за порядком ініціативи та автоматично видаляйте ефекти, термін яких завершився. Усі команди доступні лише GM і можуть запускатися з чату або встановлених макросів."
+      heading: 'Огляд',
+      body: 'Condition Tracker керує станами D&D 5e і користувацькими ефектами як підписаними рядками в Roll20 Turn Tracker. Застосовуйте стани до токенів, відстежуйте тривалість за порядком ініціативи та автоматично видаляйте ефекти, термін яких завершився. Усі команди доступні лише GM і можуть запускатися з чату або встановлених макросів.',
     },
     quickStart: {
-      heading: "Швидкий старт",
-      colCommand: "Команда",
-      colDesc: "Опис",
+      heading: 'Швидкий старт',
+      colCommand: 'Команда',
+      colDesc: 'Опис',
       rows: [
         [
-          "!condition-tracker --prompt",
-          "Покроковий майстер — виберіть стан, токени й тривалість інтерактивно. Також доступний як макрос ConditionTrackerWizard."
+          '!condition-tracker --prompt',
+          'Покроковий майстер — виберіть стан, токени й тривалість інтерактивно. Також доступний як макрос ConditionTrackerWizard.',
         ],
         [
-          "!condition-tracker --багатоцільовий",
-          "Застосувати один стан до кількох токенів одночасно. Також доступний як макрос ConditionTrackerMultiTarget."
+          '!condition-tracker --багатоцільовий',
+          'Застосувати один стан до кількох токенів одночасно. Також доступний як макрос ConditionTrackerMultiTarget.',
         ],
         [
-          "!condition-tracker --report-token",
-          "Спочатку виберіть один або кілька токенів, а потім запустіть цю команду, щоб отримати шепіт GM із переліком усіх умов, застосованих до кожного вибраного токена. Також доступний як макрос ConditionTrackerReportToken."
+          '!condition-tracker --report-token',
+          'Спочатку виберіть один або кілька токенів, а потім запустіть цю команду, щоб отримати шепіт GM із переліком усіх умов, застосованих до кожного вибраного токена. Також доступний як макрос ConditionTrackerReportToken.',
         ],
         [
-          "!condition-tracker --menu",
-          "Відкрити головне меню керування з кнопками застосування, перегляду або видалення станів."
-        ]
-      ]
+          '!condition-tracker --menu',
+          'Відкрити головне меню керування з кнопками застосування, перегляду або видалення станів.',
+        ],
+      ],
     },
     commandsRef: {
-      heading: "Довідник команд",
-      colFlag: "Параметр",
-      colDesc: "Опис",
+      heading: 'Довідник команд',
+      colFlag: 'Параметр',
+      colDesc: 'Опис',
       rows: [
+        ['-- підказка', 'Інтерактивний покроковий майстер'],
+        ['--багатоцільовий', 'Застосувати стан до кількох цілей одночасно'],
+        ['-- меню', 'Показати головне меню (додайте remove для меню видалення)'],
+        ['--джерело X --ціль Y --умова Z', 'Застосувати стан напряму без майстра'],
+        ['--duration <значення>', 'Тривалість для прямого застосування (наприклад, 2 rounds)'],
+        ['--other <текст>', 'Користувацький текст для ефектів Spell / Ability / Other'],
+        ['--remove <ідентифікатор умови>', 'Видалити конкретний стан за його унікальним ID'],
+        ['--config <параметр> <значення>', 'Змінити налаштування (див. розділ Налаштування нижче)'],
         [
-          "-- підказка",
-          "Інтерактивний покроковий майстер"
+          '--prompt --subjectPromptBypass true|false',
+          'Перевизначити subjectPromptBypass лише для цієї команди (також підтримує --subject-prompt-bypass)',
+        ],
+        ['--прибирання', 'Узгодити стан — видалити осиротілі стани й рядки Turn Tracker'],
+        ['--reorder-умови', 'Вручну переставити рядки умов після відповідних токенів у черзі ходу'],
+        ['--reinstall-macro', 'Повторно створити або оновити GM-макроси'],
+        ['--reinstall-handout', 'Повторно створити або оновити локалізований довідник'],
+        [
+          '--report-token',
+          'Прошепотіть звіт про умови лише GM для кожного вибраного токена (умови, застосовані до нього та ним)',
         ],
         [
-          "--багатоцільовий",
-          "Застосувати стан до кількох цілей одночасно"
+          '--lang &lt;locale&gt;',
+          'Вивести повідомлення цієї команди додатковою локаллю (двомовний режим)',
         ],
         [
-          "-- меню",
-          "Показати головне меню (додайте remove для меню видалення)"
+          '--classify pc|npc|ignored',
+          'Перевизначити тип актора для вибраних токенів — спочатку виберіть токен(и). Область за замовчуванням — персонаж (записує атрибут ct_mod_actor_type); додайте --scope token для збереження в стані скрипта',
         ],
         [
-          "--джерело X --ціль Y --умова Z",
-          "Застосувати стан напряму без майстра"
+          '--classify auto',
+          'Видалити перевизначення типу актора та відновити автоматичне визначення для вибраних токенів',
         ],
         [
-          "--duration <значення>",
-          "Тривалість для прямого застосування (наприклад, 2 rounds)"
+          '--classify show',
+          'Прошептати діагностику класифікації для кожного вибраного токена — показує визначений тип, джерело визначення та причину',
         ],
-        [
-          "--other <текст>",
-          "Користувацький текст для ефектів Spell / Ability / Other"
-        ],
-        [
-          "--remove <ідентифікатор умови>",
-          "Видалити конкретний стан за його унікальним ID"
-        ],
-        [
-          "--config <параметр> <значення>",
-          "Змінити налаштування (див. розділ Налаштування нижче)"
-        ],
-        [
-          "--prompt --subjectPromptBypass true|false",
-          "Перевизначити subjectPromptBypass лише для цієї команди (також підтримує --subject-prompt-bypass)"
-        ],
-        [
-          "--прибирання",
-          "Узгодити стан — видалити осиротілі стани й рядки Turn Tracker"
-        ],
-        [
-          "--reorder-умови",
-          "Вручну переставити рядки умов після відповідних токенів у черзі ходу"
-        ],
-        [
-          "--reinstall-macro",
-          "Повторно створити або оновити GM-макроси"
-        ],
-        [
-          "--reinstall-handout",
-          "Повторно створити або оновити локалізований довідник"
-        ],
-        [
-          "--report-token",
-          "Прошепотіть звіт про умови лише GM для кожного вибраного токена (умови, застосовані до нього та ним)"
-        ],
-        [
-          "--lang &lt;locale&gt;",
-          "Вивести повідомлення цієї команди додатковою локаллю (двомовний режим)"
-        ],
-        [
-          "--classify pc|npc|ignored",
-          "Перевизначити тип актора для вибраних токенів — спочатку виберіть токен(и). Область за замовчуванням — персонаж (записує атрибут ct_mod_actor_type); додайте --scope token для збереження в стані скрипта"
-        ],
-        [
-          "--classify auto",
-          "Видалити перевизначення типу актора та відновити автоматичне визначення для вибраних токенів"
-        ],
-        [
-          "--classify show",
-          "Прошептати діагностику класифікації для кожного вибраного токена — показує визначений тип, джерело визначення та причину"
-        ],
-        [
-          "--help",
-          "Показати коротку картку довідки в чаті"
-        ]
-      ]
+        ['--help', 'Показати коротку картку довідки в чаті'],
+      ],
     },
     standardConditions: {
-      heading: "Стандартні стани (D&amp;D 5e)",
-      colCondition: "Стан"
+      heading: 'Стандартні стани (D&amp;D 5e)',
+      colCondition: 'Стан',
     },
     customEffects: {
-      heading: "Користувацькі типи ефектів",
-      colType: "Тип",
-      colNotes: "Примітки",
+      heading: 'Користувацькі типи ефектів',
+      colType: 'Тип',
+      colNotes: 'Примітки',
       rows: [
+        ['🔮 Заклинання', 'Відстежувати ефект названого закляття — буде запитано назву закляття'],
         [
-          "🔮 Заклинання",
-          "Відстежувати ефект названого закляття — буде запитано назву закляття"
+          '🎯 Здатність',
+          'Відстежувати названу класову або расову здібність — буде запитано назву здібності',
         ],
         [
-          "🎯 Здатність",
-          "Відстежувати названу класову або расову здібність — буде запитано назву здібності"
+          '🍀 Перевага',
+          'Записати перевагу від одного токена проти іншого; групується з джерелом в ініціативі',
         ],
-        [
-          "🍀 Перевага",
-          "Записати перевагу від одного токена проти іншого; групується з джерелом в ініціативі"
-        ],
-        [
-          "⬇️ Недолік",
-          "Записати перешкоду; групується з джерелом в ініціативі"
-        ],
-        [
-          "📝 Інше",
-          "Довільна користувацька мітка — буде запитано опис"
-        ]
-      ]
+        ['⬇️ Недолік', 'Записати перешкоду; групується з джерелом в ініціативі'],
+        ['📝 Інше', 'Довільна користувацька мітка — буде запитано опис'],
+      ],
     },
     durationOptions: {
-      heading: "Опції тривалості",
-      intro: "Залишок показується в колонці pr трекера ходів і зменшується, коли завершується хід опорного токена.",
-      colOption: "Опція",
-      colBehaviour: "Поведінка",
+      heading: 'Опції тривалості',
+      intro:
+        'Залишок показується в колонці pr трекера ходів і зменшується, коли завершується хід опорного токена.',
+      colOption: 'Опція',
+      colBehaviour: 'Поведінка',
       rows: [
+        ['До зняття', 'Постійно — потрібно видалити вручну через меню або --remove'],
         [
-          "До зняття",
-          "Постійно — потрібно видалити вручну через меню або --remove"
+          'Кінець наступного ходу цілі',
+          'Завершується, коли закінчується наступний хід токена-цілі',
         ],
         [
-          "Кінець наступного ходу цілі",
-          "Завершується, коли закінчується наступний хід токена-цілі"
+          'Кінець наступного ходу джерела',
+          'Завершується, коли закінчується наступний хід токена-джерела',
         ],
         [
-          "Кінець наступного ходу джерела",
-          "Завершується, коли закінчується наступний хід токена-джерела"
+          '1/2/3/10 раундів',
+          'Фіксований відлік; одне зменшення на завершення ходу опорного токена',
         ],
-        [
-          "1/2/3/10 раундів",
-          "Фіксований відлік; одне зменшення на завершення ходу опорного токена"
-        ]
-      ]
+      ],
     },
     savedEffects: {
-      heading: "Збережені ефекти",
-      intro: "Збережені ефекти дають змогу зберігати довгострокові умови за межами відстеження ходів — прокляття, хвороби, отрути, приховані негативні ефекти та інші небойові умови. Вони зберігаються в стані сценарію і можуть бути додатково скопійовані в Turn Tracker, коли починається бій.",
+      heading: 'Збережені ефекти',
+      intro:
+        'Збережені ефекти дають змогу зберігати довгострокові умови за межами відстеження ходів — прокляття, хвороби, отрути, приховані негативні ефекти та інші небойові умови. Вони зберігаються в стані сценарію і можуть бути додатково скопійовані в Turn Tracker, коли починається бій.',
       visibility: {
-        heading: "Режими видимості",
+        heading: 'Режими видимості',
         rows: [
+          ['громадськість', 'Повна мітка ефекту відображається в Turn Tracker і публічному чаті.'],
           [
-            "громадськість",
-            "Повна мітка ефекту відображається в Turn Tracker і публічному чаті."
+            'замаскований',
+            'Гравцям показується розпливчаста загальнодоступна мітка; повна інформація лише для GM.',
           ],
           [
-            "замаскований",
-            "Гравцям показується розпливчаста загальнодоступна мітка; повна інформація лише для GM."
+            'gm',
+            'Немає рядка Turn Tracker. Повна інформація зберігається в стані та повідомляється GM, коли уражений токен досягає вершини ініціативи.',
           ],
-          [
-            "gm",
-            "Немає рядка Turn Tracker. Повна інформація зберігається в стані та повідомляється GM, коли уражений токен досягає вершини ініціативи."
-          ]
-        ]
+        ],
       },
       commands: {
-        heading: "Збережені команди ефектів",
-        intro: "Усі команди --saved призначені лише для GM. Виберіть маркер перед запуском --saved або --saved add.",
+        heading: 'Збережені команди ефектів',
+        intro:
+          'Усі команди --saved призначені лише для GM. Виберіть маркер перед запуском --saved або --saved add.',
         rows: [
+          ['!condition-tracker --збережено', 'Переглянути збережені ефекти для вибраного маркера.'],
+          ['!condition-tracker --saved add', 'Запустіть майстер додавання збережених ефектів.'],
           [
-            "!condition-tracker --збережено",
-            "Переглянути збережені ефекти для вибраного маркера."
+            '!condition-tracker --saved edit <id>',
+            'Редагувати мітки або видимість наявного збереженого ефекту.',
+          ],
+          ['!condition-tracker --saved remove <id>', 'Назавжди видалити збережений ефект.'],
+          [
+            '!condition-tracker --saved promote <id> --visibility public|masked|gm',
+            'Скопіюйте збережений ефект у Turn Tracker (загальнодоступний або замаскований) або підтвердьте, що він відстежується лише GM.',
           ],
           [
-            "!condition-tracker --saved add",
-            "Запустіть майстер додавання збережених ефектів."
+            '!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>',
+            'Відкласти нагадування GM для цього ходу, N раундів або цього бою.',
           ],
           [
-            "!condition-tracker --saved edit <id>",
-            "Редагувати мітки або видимість наявного збереженого ефекту."
+            '!condition-tracker --saved snooze-clear <id>',
+            'Скасуйте активну затримку, щоб нагадування відновилися негайно.',
           ],
-          [
-            "!condition-tracker --saved remove <id>",
-            "Назавжди видалити збережений ефект."
-          ],
-          [
-            "!condition-tracker --saved promote <id> --visibility public|masked|gm",
-            "Скопіюйте збережений ефект у Turn Tracker (загальнодоступний або замаскований) або підтвердьте, що він відстежується лише GM."
-          ],
-          [
-            "!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>",
-            "Відкласти нагадування GM для цього ходу, N раундів або цього бою."
-          ],
-          [
-            "!condition-tracker --saved snooze-clear <id>",
-            "Скасуйте активну затримку, щоб нагадування відновилися негайно."
-          ]
-        ]
+        ],
       },
       reminders: {
-        heading: "Нагадування GM",
-        body: "Коли жетон із gm або замаскованими збереженими ефектами досягає верхньої частини Turn Tracker, GM отримує шепіт із переліком прихованих ефектів із кнопками дій. Подвійні нагадування в межах однієї черги блокуються. Використовуйте кнопки «Відкласти», щоб прибрати нагадування про хід, кількість раундів або залишок поточного бою."
-      }
+        heading: 'Нагадування GM',
+        body: 'Коли жетон із gm або замаскованими збереженими ефектами досягає верхньої частини Turn Tracker, GM отримує шепіт із переліком прихованих ефектів із кнопками дій. Подвійні нагадування в межах однієї черги блокуються. Використовуйте кнопки «Відкласти», щоб прибрати нагадування про хід, кількість раундів або залишок поточного бою.',
+      },
     },
     actorClassification: {
-      heading: "Класифікація Акторів",
-      intro: "Condition Tracker автоматично визначає, чи є кожен токен ГП, НПС або ігнорованим об'єктом (шпильки карти, декорації, шаблони заклинань). Незв'язані токени ігноруються за замовчуванням. Використовуйте --classify для перевизначення автоматичного визначення для будь-якого токена.",
+      heading: 'Класифікація Акторів',
+      intro:
+        "Condition Tracker автоматично визначає, чи є кожен токен ГП, НПС або ігнорованим об'єктом (шпильки карти, декорації, шаблони заклинань). Незв'язані токени ігноруються за замовчуванням. Використовуйте --classify для перевизначення автоматичного визначення для будь-якого токена.",
       detectionOrder: {
-        heading: "Порядок Визначення",
-        colStep: "Крок",
-        colCheck: "Перевірка",
-        colResult: "Результат",
+        heading: 'Порядок Визначення',
+        colStep: 'Крок',
+        colCheck: 'Перевірка',
+        colResult: 'Результат',
         rows: [
+          ['1', 'Перевизначення стану токена (--classify --scope token)', 'pc / npc / ігнорується'],
           [
-            "1",
-            "Перевизначення стану токена (--classify --scope token)",
-            "pc / npc / ігнорується"
+            '2',
+            'Атрибут ct_mod_actor_type персонажа (--classify --scope character)',
+            'pc / npc / ігнорується',
           ],
+          ['3', "Незв'язаний токен — немає аркуша персонажа", 'ігнорується'],
+          ['4', 'Адаптер ігрової системи (атрибут npc / is_npc)', 'pc / npc'],
           [
-            "2",
-            "Атрибут ct_mod_actor_type персонажа (--classify --scope character)",
-            "pc / npc / ігнорується"
+            '5',
+            'Сканування загальних атрибутів НПС (npc, is_npc, npcflag, sheet_type, character_type)',
+            'pc / npc',
           ],
-          [
-            "3",
-            "Незв'язаний токен — немає аркуша персонажа",
-            "ігнорується"
-          ],
-          [
-            "4",
-            "Адаптер ігрової системи (атрибут npc / is_npc)",
-            "pc / npc"
-          ],
-          [
-            "5",
-            "Сканування загальних атрибутів НПС (npc, is_npc, npcflag, sheet_type, character_type)",
-            "pc / npc"
-          ],
-          [
-            "6",
-            "Запасний варіант controlledby персонажа",
-            "pc / npc"
-          ]
-        ]
+          ['6', 'Запасний варіант controlledby персонажа', 'pc / npc'],
+        ],
       },
       types: {
-        heading: "Типи Класифікації",
-        colType: "Тип",
-        colMeaning: "Значення",
+        heading: 'Типи Класифікації',
+        colType: 'Тип',
+        colMeaning: 'Значення',
         rows: [
+          ['шт', 'Ігровий персонаж — завжди включається як ГП у майстрі та визначенні'],
+          ['npc', 'Неігровий персонаж — завжди включається як НПС'],
           [
-            "шт",
-            "Ігровий персонаж — завжди включається як ГП у майстрі та визначенні"
+            'ігнорується',
+            'Ніколи не відображається і не відстежується — виключений з вибору токенів майстра',
           ],
           [
-            "npc",
-            "Неігровий персонаж — завжди включається як НПС"
+            'невідомий',
+            'Тільки автоматичне визначення; тип не вдалося визначити (обробляється як НПС у майстрі)',
           ],
-          [
-            "ігнорується",
-            "Ніколи не відображається і не відстежується — виключений з вибору токенів майстра"
-          ],
-          [
-            "невідомий",
-            "Тільки автоматичне визначення; тип не вдалося визначити (обробляється як НПС у майстрі)"
-          ]
-        ]
+        ],
       },
       commands: {
-        heading: "Команди Класифікації",
-        intro: "Виберіть один або кілька токенів перед виконанням команд --classify.",
+        heading: 'Команди Класифікації',
+        intro: 'Виберіть один або кілька токенів перед виконанням команд --classify.',
         rows: [
           [
-            "!condition-tracker --класифікувати ПК",
-            "Позначити вибрані токени як ГП (область за замовчуванням: персонаж)."
+            '!condition-tracker --класифікувати ПК',
+            'Позначити вибрані токени як ГП (область за замовчуванням: персонаж).',
+          ],
+          ['!condition-tracker --classify npc', 'Позначити вибрані токени як НПС.'],
+          [
+            '!condition-tracker --classify ігнорується',
+            'Виключити вибрані токени з усього відстеження.',
           ],
           [
-            "!condition-tracker --classify npc",
-            "Позначити вибрані токени як НПС."
+            '!condition-tracker --classify auto',
+            'Видалити перевизначення — відновити автоматичне визначення.',
           ],
           [
-            "!condition-tracker --classify ігнорується",
-            "Виключити вибрані токени з усього відстеження."
+            '!condition-tracker --класифікувати шоу',
+            'Показати діагностику класифікації (тип, джерело, причина) для кожного вибраного токена.',
           ],
           [
-            "!condition-tracker --classify auto",
-            "Видалити перевизначення — відновити автоматичне визначення."
+            '!condition-tracker --classify pc --scope token',
+            "Перевизначення рівня токена в стані скрипта — корисно для незв'язаних токенів.",
           ],
           [
-            "!condition-tracker --класифікувати шоу",
-            "Показати діагностику класифікації (тип, джерело, причина) для кожного вибраного токена."
+            '!condition-tracker --classify pc --scope символ',
+            'Перевизначення рівня персонажа в атрибут ct_mod_actor_type — застосовується до всіх токенів з тим самим аркушем персонажа.',
           ],
-          [
-            "!condition-tracker --classify pc --scope token",
-            "Перевизначення рівня токена в стані скрипта — корисно для незв'язаних токенів."
-          ],
-          [
-            "!condition-tracker --classify pc --scope символ",
-            "Перевизначення рівня персонажа в атрибут ct_mod_actor_type — застосовується до всіх токенів з тим самим аркушем персонажа."
-          ]
-        ]
-      }
+        ],
+      },
     },
     configuration: {
-      heading: "Налаштування",
-      intro: "Використайте !condition-tracker --config &lt;option&gt; &lt;value&gt; або кнопку Налаштування в головному меню.",
-      colOption: "Опція",
-      colValues: "Значення",
-      colDesc: "Опис",
+      heading: 'Налаштування',
+      intro:
+        'Використайте !condition-tracker --config &lt;option&gt; &lt;value&gt; або кнопку Налаштування в головному меню.',
+      colOption: 'Опція',
+      colValues: 'Значення',
+      colDesc: 'Опис',
       rows: [
         [
-          "useMarkers",
-          "true / false",
-          "Застосовувати статус-маркери Roll20 до токенів, коли додається стан"
+          'useMarkers',
+          'true / false',
+          'Застосовувати статус-маркери Roll20 до токенів, коли додається стан',
         ],
         [
-          "useIcons",
-          "правда/неправда",
-          "Показувати короткі коди іконок (наприклад, [G]) замість emoji в рядках Turn Tracker"
+          'useIcons',
+          'правда/неправда',
+          'Показувати короткі коди іконок (наприклад, [G]) замість emoji в рядках Turn Tracker',
         ],
         [
-          "subjectPromptBypass",
-          "правда/неправда",
-          "Пропускати необов'язковий крок вибору суб'єкта для ефектів Spell / Ability / Other"
+          'subjectPromptBypass',
+          'правда/неправда',
+          "Пропускати необов'язковий крок вибору суб'єкта для ефектів Spell / Ability / Other",
         ],
         [
-          "suppressPublicChat",
-          "правда/неправда",
-          "Придушити всі публічні повідомлення чату (повідомлення про застосування та видалення). Шепіт GM не зачіпається."
+          'suppressPublicChat',
+          'правда/неправда',
+          'Придушити всі публічні повідомлення чату (повідомлення про застосування та видалення). Шепіт GM не зачіпається.',
         ],
         [
-          "healthBar",
-          "bar1_value / bar2_value / bar3_value",
-          "Панель токена для відстеження; коли вона падає до 0, GM отримує запит на очищення станів"
+          'healthBar',
+          'bar1_value / bar2_value / bar3_value',
+          'Панель токена для відстеження; коли вона падає до 0, GM отримує запит на очищення станів',
         ],
+        ['language', 'en-US / fr / de / es / pt-BR / ko', 'Мова повідомлень чату та довідника'],
         [
-          "language",
-          "en-US / fr / de / es / pt-BR / ko",
-          "Мова повідомлень чату та довідника"
+          'marker',
+          '&lt;Condition&gt;=&lt;marker name&gt;',
+          'Перевизначити статус-маркер для конкретного стану (наприклад, marker Grappled=grab)',
         ],
-        [
-          "marker",
-          "&lt;Condition&gt;=&lt;marker name&gt;",
-          "Перевизначити статус-маркер для конкретного стану (наприклад, marker Grappled=grab)"
-        ]
-      ]
+      ],
     },
     defaultMarkers: {
-      heading: "Стандартні статус-маркери",
-      colCondition: "Стан",
-      colMarker: "Назва маркера"
+      heading: 'Стандартні статус-маркери',
+      colCondition: 'Стан',
+      colMarker: 'Назва маркера',
     },
     availableLocales: {
-      heading: "Доступні переклади",
-      intro: "Використайте опцію language, щоб установити повідомлення чату й довідник на будь-яку підтримувану локаль. Також приймаються короткі псевдоніми en, zh і pt.",
-      colLocale: "Локаль",
-      colLanguage: "Мова",
-      colFile: "Файл перекладу"
-    }
+      heading: 'Доступні переклади',
+      intro:
+        'Використайте опцію language, щоб установити повідомлення чату й довідник на будь-яку підтримувану локаль. Також приймаються короткі псевдоніми en, zh і pt.',
+      colLocale: 'Локаль',
+      colLanguage: 'Мова',
+      colFile: 'Файл перекладу',
+    },
   },
   templates: {
     display: {
-      custom: "{emoji} {target} під дією {effect} ({source})",
-      advantage: "{emoji} {source} має перевагу проти {target}{subject}",
-      disadvantage: "{emoji} {source} має перешкоду проти {target}{subject}",
-      noBy: "{emoji} {target} {past} ({source})",
-      self: "{target} {past}",
-      standard: "{emoji} {target} {past} від {source}"
+      custom: '{emoji} {target} під дією {effect} ({source})',
+      advantage: '{emoji} {source} має перевагу проти {target}{subject}',
+      disadvantage: '{emoji} {source} має перешкоду проти {target}{subject}',
+      noBy: '{emoji} {target} {past} ({source})',
+      self: '{target} {past}',
+      standard: '{emoji} {target} {past} від {source}',
     },
     apply: {
-      custom: "{source} застосовує {effect} до {target}.",
-      advantage: "{source} має перевагу проти {target}{subject}.",
-      disadvantage: "{source} має перешкоду проти {target}{subject}.",
-      self: "{target} {past}.",
-      withSuffix: "{source} {verb} {target} {suffix}.",
-      standard: "{source} {verb} {target}."
+      custom: '{source} застосовує {effect} до {target}.',
+      advantage: '{source} має перевагу проти {target}{subject}.',
+      disadvantage: '{source} має перешкоду проти {target}{subject}.',
+      self: '{target} {past}.',
+      withSuffix: '{source} {verb} {target} {suffix}.',
+      standard: '{source} {verb} {target}.',
     },
     remove: {
-      custom: "{target} більше не під дією {effect}.",
-      advantage: "{source} більше не має переваги проти {target}{subject}.",
-      disadvantage: "{source} більше не має перешкоди проти {target}{subject}.",
-      noBy: "{target} більше не {past}.",
-      self: "{target} більше не {past}.",
-      standard: "{target} більше не {past} від {source}."
-    }
-  }
+      custom: '{target} більше не під дією {effect}.',
+      advantage: '{source} більше не має переваги проти {target}{subject}.',
+      disadvantage: '{source} більше не має перешкоди проти {target}{subject}.',
+      noBy: '{target} більше не {past}.',
+      self: '{target} більше не {past}.',
+      standard: '{target} більше не {past} від {source}.',
+    },
+  },
 };
 
 export default TRANSLATION;

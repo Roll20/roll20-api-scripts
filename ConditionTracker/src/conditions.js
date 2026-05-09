@@ -3,11 +3,11 @@ import {
   CANONICAL_TEXT_CONDITIONS,
   CONDITION_ADVANTAGE,
   CONDITION_DISADVANTAGE,
-} from "./constants.js";
-import { getConditionLocalData, t } from "./i18n.js";
-import { getConfig } from "./state.js";
-import { getSystemProfile } from "./systems/index.js";
-import { escapeHtml, normalizeKey, toText } from "./utils.js";
+} from './constants.js';
+import { getConditionLocalData, t } from './i18n.js';
+import { getConfig } from './state.js';
+import { getSystemProfile } from './systems/index.js';
+import { escapeHtml, normalizeKey, toText } from './utils.js';
 
 /**
  * Returns the system profile for the currently configured game system.
@@ -61,7 +61,7 @@ export function getCanonicalCondition(value) {
     }
   }
 
-  return "";
+  return '';
 }
 
 /**
@@ -104,7 +104,7 @@ function getLocalizedPast(condition, locale) {
  */
 export function getConditionEmoji(condition) {
   const data = activeProfile().CONDITION_DATA[condition];
-  return data ? data.emoji : "✨";
+  return data ? data.emoji : '✨';
 }
 
 /**
@@ -125,7 +125,7 @@ export function buildDisplayText(details, locale) {
   const emoji = getConditionEmoji(details.condition);
 
   if (isCustomTextCondition(details.condition)) {
-    return t("templates.display.custom", locale, {
+    return t('templates.display.custom', locale, {
       emoji,
       target: details.targetName,
       effect: details.customText,
@@ -134,13 +134,11 @@ export function buildDisplayText(details, locale) {
   }
 
   if (isAdvantageType(details.condition)) {
-    const subject = toText(details.subjectName)
-      ? ` (${details.subjectName})`
-      : "";
+    const subject = toText(details.subjectName) ? ` (${details.subjectName})` : '';
     const tplKey =
       details.condition === CONDITION_DISADVANTAGE
-        ? "templates.display.disadvantage"
-        : "templates.display.advantage";
+        ? 'templates.display.disadvantage'
+        : 'templates.display.advantage';
     return t(tplKey, locale, {
       emoji,
       source: details.sourceName,
@@ -153,7 +151,7 @@ export function buildDisplayText(details, locale) {
   const data = localData || activeProfile().CONDITION_DATA[details.condition];
 
   if (data?.noBy) {
-    return t("templates.display.noBy", locale, {
+    return t('templates.display.noBy', locale, {
       emoji,
       target: details.targetName,
       past: data.past,
@@ -162,14 +160,14 @@ export function buildDisplayText(details, locale) {
   }
 
   if (details.isSelfTarget) {
-    return t("templates.display.self", locale, {
+    return t('templates.display.self', locale, {
       emoji,
       target: details.targetName,
       past: getLocalizedPast(details.condition, locale),
     });
   }
 
-  return t("templates.display.standard", locale, {
+  return t('templates.display.standard', locale, {
     emoji,
     target: details.targetName,
     past: getLocalizedPast(details.condition, locale),
@@ -202,7 +200,7 @@ export function buildApplyMessage(details, locale) {
   if (isCustomTextCondition(details.condition)) {
     return (
       prefix +
-      t("templates.apply.custom", locale, {
+      t('templates.apply.custom', locale, {
         source: src,
         effect: effectSpan(details.customText),
         target: tgt,
@@ -211,13 +209,11 @@ export function buildApplyMessage(details, locale) {
   }
 
   if (isAdvantageType(details.condition)) {
-    const subject = toText(details.subjectName)
-      ? ` (${escapeHtml(details.subjectName)})`
-      : "";
+    const subject = toText(details.subjectName) ? ` (${escapeHtml(details.subjectName)})` : '';
     const tplKey =
       details.condition === CONDITION_DISADVANTAGE
-        ? "templates.apply.disadvantage"
-        : "templates.apply.advantage";
+        ? 'templates.apply.disadvantage'
+        : 'templates.apply.advantage';
     return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
   }
 
@@ -227,7 +223,7 @@ export function buildApplyMessage(details, locale) {
   if (isSelfTarget(details)) {
     return (
       prefix +
-      t("templates.apply.self", locale, {
+      t('templates.apply.self', locale, {
         target: tgt,
         past: escapeHtml(getLocalizedPast(details.condition, locale)),
       })
@@ -237,7 +233,7 @@ export function buildApplyMessage(details, locale) {
   if (data?.suffix) {
     return (
       prefix +
-      t("templates.apply.withSuffix", locale, {
+      t('templates.apply.withSuffix', locale, {
         source: src,
         verb: escapeHtml(data.verb),
         target: tgt,
@@ -248,9 +244,9 @@ export function buildApplyMessage(details, locale) {
 
   return (
     prefix +
-    t("templates.apply.standard", locale, {
+    t('templates.apply.standard', locale, {
       source: src,
-      verb: escapeHtml(data?.verb || "affects"),
+      verb: escapeHtml(data?.verb || 'affects'),
       target: tgt,
     })
   );
@@ -272,7 +268,7 @@ export function buildRemovalMessage(condition, useIcons, locale) {
   if (isCustomTextCondition(condition.condition)) {
     return (
       prefix +
-      t("templates.remove.custom", locale, {
+      t('templates.remove.custom', locale, {
         target: tgt,
         effect: effectSpan(condition.customText),
       })
@@ -280,13 +276,11 @@ export function buildRemovalMessage(condition, useIcons, locale) {
   }
 
   if (isAdvantageType(condition.condition)) {
-    const subject = toText(condition.subjectName)
-      ? ` (${escapeHtml(condition.subjectName)})`
-      : "";
+    const subject = toText(condition.subjectName) ? ` (${escapeHtml(condition.subjectName)})` : '';
     const tplKey =
       condition.condition === CONDITION_DISADVANTAGE
-        ? "templates.remove.disadvantage"
-        : "templates.remove.advantage";
+        ? 'templates.remove.disadvantage'
+        : 'templates.remove.advantage';
     return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
   }
 
@@ -296,7 +290,7 @@ export function buildRemovalMessage(condition, useIcons, locale) {
   if (data?.noBy) {
     return (
       prefix +
-      t("templates.remove.noBy", locale, {
+      t('templates.remove.noBy', locale, {
         target: tgt,
         past: escapeHtml(data.past),
       })
@@ -306,7 +300,7 @@ export function buildRemovalMessage(condition, useIcons, locale) {
   if (isSelfTarget(condition)) {
     return (
       prefix +
-      t("templates.remove.self", locale, {
+      t('templates.remove.self', locale, {
         target: tgt,
         past: escapeHtml(getLocalizedPast(condition.condition, locale)),
       })
@@ -315,7 +309,7 @@ export function buildRemovalMessage(condition, useIcons, locale) {
 
   return (
     prefix +
-    t("templates.remove.standard", locale, {
+    t('templates.remove.standard', locale, {
       target: tgt,
       past: escapeHtml(getLocalizedPast(condition.condition, locale)),
       source: src,
@@ -332,12 +326,12 @@ export function buildRemovalMessage(condition, useIcons, locale) {
  */
 function buildIconPrefix(condition, useIcons) {
   if (!useIcons) {
-    return "";
+    return '';
   }
 
   const data = activeProfile().CONDITION_DATA[condition];
   if (!data) {
-    return "[*] ";
+    return '[*] ';
   }
 
   return `${data.icon} `;
@@ -350,9 +344,7 @@ function buildIconPrefix(condition, useIcons) {
  * @returns {boolean} True for advantage-style effects.
  */
 function isAdvantageType(condition) {
-  return (
-    condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE
-  );
+  return condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE;
 }
 
 /**
@@ -364,9 +356,7 @@ function isAdvantageType(condition) {
 function isSelfTarget(details) {
   const sourceTokenId = toText(details.sourceTokenId);
   const targetTokenId = toText(details.targetTokenId);
-  return Boolean(
-    sourceTokenId && targetTokenId && sourceTokenId === targetTokenId,
-  );
+  return Boolean(sourceTokenId && targetTokenId && sourceTokenId === targetTokenId);
 }
 
 /**
