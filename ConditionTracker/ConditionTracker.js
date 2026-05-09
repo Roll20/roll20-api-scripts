@@ -5,7 +5,7 @@
  * Name: Condition Tracker
  * Script: ConditionTracker.js
  * Version: 1.1.0.beta-3.2
- * Built: 2026-05-09T08:08:13.037Z
+ * Built: 2026-05-09T08:17:51.849Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -260,7 +260,7 @@ const ConditionTrackerMod = (() => {
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0.beta-3.2';
-  const SCRIPT_LAST_UPDATED = '2026-05-09T08:08:13.037Z';
+  const SCRIPT_LAST_UPDATED = '2026-05-09T08:17:51.849Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -30099,10 +30099,13 @@ const ConditionTrackerMod = (() => {
     const controlledBy = toText(character.get('controlledby'));
     if (!controlledBy) return ACTOR_TYPE_NPC;
 
+    // If controlled by 'all', it's player-controlled (PC)
+    if (controlledBy === 'all') return ACTOR_TYPE_PC;
+
     const isPlayerControlled = controlledBy
       .split(',')
       .map((id) => id.trim())
-      .filter((id) => id && id !== 'all')
+      .filter((id) => id)
       .some((id) => !playerIsGM(id));
 
     return isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
@@ -30266,10 +30269,18 @@ const ConditionTrackerMod = (() => {
 
     const controlledBy = toText(character.get('controlledby'));
     if (controlledBy) {
+      // If controlled by 'all', it's player-controlled (PC)
+      if (controlledBy === 'all') {
+        return {
+          type: ACTOR_TYPE_PC,
+          source: 'controlledby fallback',
+          reason: `character.controlledby = "${controlledBy}"`,
+        };
+      }
       const playerIds = controlledBy
         .split(',')
         .map((id) => id.trim())
-        .filter((id) => id && id !== 'all');
+        .filter((id) => id);
       const isPlayerControlled = playerIds.some((id) => !playerIsGM(id));
       const type = isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
       return {

@@ -205,10 +205,13 @@ function classifyWithControlledBy(character) {
   const controlledBy = toText(character.get('controlledby'));
   if (!controlledBy) return ACTOR_TYPE_NPC;
 
+  // If controlled by 'all', it's player-controlled (PC)
+  if (controlledBy === 'all') return ACTOR_TYPE_PC;
+
   const isPlayerControlled = controlledBy
     .split(',')
     .map((id) => id.trim())
-    .filter((id) => id && id !== 'all')
+    .filter((id) => id)
     .some((id) => !playerIsGM(id));
 
   return isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
@@ -355,10 +358,18 @@ export function classifyTokenDetail(token, tokenName) {
 
   const controlledBy = toText(character.get('controlledby'));
   if (controlledBy) {
+    // If controlled by 'all', it's player-controlled (PC)
+    if (controlledBy === 'all') {
+      return {
+        type: ACTOR_TYPE_PC,
+        source: 'controlledby fallback',
+        reason: `character.controlledby = "${controlledBy}"`,
+      };
+    }
     const playerIds = controlledBy
       .split(',')
       .map((id) => id.trim())
-      .filter((id) => id && id !== 'all');
+      .filter((id) => id);
     const isPlayerControlled = playerIds.some((id) => !playerIsGM(id));
     const type = isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
     return {
