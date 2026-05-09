@@ -2,28 +2,7 @@
 
 All notable changes to **Condition Tracker** will be documented in this file.
 
-## [1.1.0.beta-3.2] - 2026-05-08
-
-### Added
-
-- **Actor Classification System**: Cross-system token classification engine that reliably identifies PCs, NPCs, and ignored tokens in a deterministic order.
-  - Detection order: token-level state override → character `ct_mod_actor_type` attribute → unlinked-token eligibility check → game-system sheet adapter → generic NPC attribute scan → `controlledby` fallback.
-  - Unlinked tokens (map pins, spell templates, scenery) are classified as `ignored` by default and excluded from the wizard token picker.
-  - Game-system adapters for `dnd5e`, `dnd4e`, `dnd35`, `pathfinder1e`, `pathfinder2e`, and `starfinder` read the sheet's native NPC attribute for automatic detection.
-  - Generic NPC attribute scan checks `npc`, `is_npc`, `npcflag`, `sheet_type`, and `character_type` as a fallback for unsupported sheets.
-- **`--classify` command**: Explicitly override a token's actor type for selected tokens.
-  - `!condition-tracker --classify pc|npc|ignored` — mark selected tokens permanently.
-  - `!condition-tracker --classify auto` — remove the override and restore automatic detection.
-  - `!condition-tracker --classify show` — diagnostic whisper showing classification, source, and reason for each selected token.
-  - `--scope character` (default) — writes the override to the character's `ct_mod_actor_type` attribute; persists across all tokens that share the character sheet.
-  - `--scope token` — writes a token-level override to script state; useful for unlinked tokens or per-token overrides on shared sheets.
-
-### Changed
-
-- `isPlayerToken()` now delegates entirely to the new `classifyToken()` engine, applying override and adapter logic consistently everywhere the function is called (wizard token picker, zero-HP cleanup prompts, token-change events).
-- The wizard token picker now excludes `ignored` tokens. Previously, unlinked tokens with names appeared in the NPC column; they are now hidden unless explicitly classified as `pc` or `npc`.
-
-## [1.1.0] - 2026-05-06
+## [1.1.0] - 2026-05-09
 
 ### Added
 
@@ -37,6 +16,22 @@ All notable changes to **Condition Tracker** will be documented in this file.
 - **`ConditionTrackerSaved` macro**: Auto-installed for all GM players alongside the wizard, multi-target, and report-token macros.
 - **Token-deletion cleanup**: Removing a token from the board now prunes all associated saved effects in addition to active tracked conditions.
 - **Full locale support**: All 24 supported languages updated with new translation keys for the saved-effects UI, commands, and help handout.
+- **Actor Classification System**: Cross-system token classification engine that reliably identifies PCs, NPCs, and ignored tokens in a deterministic order.
+  - Detection order: token-level state override → character `ct_mod_actor_type` attribute → unlinked-token eligibility check → game-system sheet adapter → generic NPC attribute scan → `controlledby` fallback.
+  - Unlinked tokens (map pins, spell templates, scenery) are classified as `ignored` by default and excluded from the wizard token picker.
+  - Game-system adapters for `dnd5e`, `dnd4e`, `dnd35`, `pathfinder1e`, `pathfinder2e`, and `starfinder` read the sheet's native NPC attribute for automatic detection.
+  - Generic NPC attribute scan checks `npc`, `is_npc`, `npcflag`, `sheet_type`, and `character_type` as a fallback for unsupported sheets.
+- **`!condition-tracker --classify` command**: Explicitly override a token's actor type for selected tokens.
+  - `--classify pc|npc|ignored` — mark selected tokens permanently.
+  - `--classify auto` — remove the override and restore automatic detection.
+  - `--classify show` — diagnostic whisper showing classification, source, and reason for each selected token.
+  - `--scope character` (default) — writes the override to the character's `ct_mod_actor_type` attribute; persists across all tokens that share the character sheet.
+  - `--scope token` — writes a token-level override to script state; useful for unlinked tokens or per-token overrides on shared sheets.
+
+### Changed
+
+- `isPlayerToken()` now delegates entirely to the new `classifyToken()` engine, applying override and adapter logic consistently everywhere the function is called (wizard token picker, zero-HP cleanup prompts, token-change events).
+- The wizard token picker now excludes `ignored` tokens. Previously, unlinked tokens with names appeared in the NPC column; they are now hidden unless explicitly classified as `pc` or `npc`.
 
 ## [1.0.0] - 2026-04-30
 
