@@ -5,7 +5,7 @@
  * Name: Condition Tracker
  * Script: ConditionTracker.js
  * Version: 1.1.0.beta-3.2
- * Built: 2026-05-09T08:25:44.905Z
+ * Built: 2026-05-09T08:44:19.629Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -260,7 +260,7 @@ const ConditionTrackerMod = (() => {
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0.beta-3.2';
-  const SCRIPT_LAST_UPDATED = '2026-05-09T08:25:44.905Z';
+  const SCRIPT_LAST_UPDATED = '2026-05-09T08:44:19.629Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -30023,14 +30023,20 @@ const ConditionTrackerMod = (() => {
   /**
    * Returns true when a token is eligible for automatic classification.
    *
-   * Unlinked tokens (no represents value) default to ignored unless explicitly
-   * overridden, so they are ineligible for automatic detection.
+   * Tokens on the objects layer (map pins, scenery, spell templates) are always
+   * ignored. Unlinked tokens (no represents value) also default to ignored unless
+   * explicitly overridden.
    *
    * @param {object} token Roll20 graphic token.
    * @returns {boolean} True when eligible.
    */
   function isAutoEligibleToken(token) {
     if (!token) return false;
+
+    // Exclude objects layer (for map pins, scenery, spell templates, etc.)
+    const layer = toText(token.get?.('_layer'));
+    if (layer === 'objects') return false;
+
     return Boolean(toText(token.get?.('represents')));
   }
 

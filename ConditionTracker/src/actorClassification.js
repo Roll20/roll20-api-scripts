@@ -136,14 +136,20 @@ export function getExplicitClassification(token) {
 /**
  * Returns true when a token is eligible for automatic classification.
  *
- * Unlinked tokens (no represents value) default to ignored unless explicitly
- * overridden, so they are ineligible for automatic detection.
+ * Tokens on the objects layer (map pins, scenery, spell templates) are always
+ * ignored. Unlinked tokens (no represents value) also default to ignored unless
+ * explicitly overridden.
  *
  * @param {object} token Roll20 graphic token.
  * @returns {boolean} True when eligible.
  */
 export function isAutoEligibleToken(token) {
   if (!token) return false;
+
+  // Exclude objects layer (for map pins, scenery, spell templates, etc.)
+  const layer = toText(token.get?.('_layer'));
+  if (layer === 'objects') return false;
+
   return Boolean(toText(token.get?.('represents')));
 }
 
