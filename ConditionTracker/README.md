@@ -284,6 +284,15 @@ Condition Tracker supports the same language set shown in Roll20 account creatio
 
 The in-game help card and generated handout include an available-translations list with accessible flag images and language names shown in the currently configured language where available. Invalid locale warnings use the same two-column locale table.
 
+### Translation Workflow
+
+Use the scripts in the `ConditionTracker` folder to manage locale files:
+
+- `npm run sync-locales` updates only the missing strings in each locale.
+- `npm run regenerate-locales` re-translates every string and accepts either `-- --locale=<code>` or a positional locale like `npm run regenerate-locales uk` to target one locale.
+
+These commands write directly to `src/locales/locale/<locale>.js`, format the files, and are no longer part of the build step.
+
 ### Correcting Translations
 
 If a translation is incorrect, update the relevant file in `src/locales/locale/<locale>.js`.

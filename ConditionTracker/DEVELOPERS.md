@@ -53,6 +53,8 @@ npm run watch
 
 The build bundles `src/index.js` and writes both root and versioned output files.
 
+The build does not regenerate locale files. Run `npm run sync-locales` for incremental locale updates or `npm run regenerate-locales` to retranslate everything, optionally with `-- --locale=<code>` or a positional locale argument (for example `npm run regenerate-locales uk`).
+
 Format source and docs:
 
 ```bash
@@ -72,16 +74,17 @@ npm run format
 
 When adding or editing translations:
 
-1. Update the relevant file under `src/locales/locale/`.
-2. Keep translation keys aligned with `src/locales/locale/en-US.js`, which is the fallback when a key is missing.
-3. For incorrect translated output, edit the matching section:
+1. If the locale is incomplete, run `npm run sync-locales` first. Use `npm run regenerate-locales` when you want every string refreshed, or target one locale with `-- --locale=<code>` or a positional locale argument.
+2. Update the relevant file under `src/locales/locale/`.
+3. Keep translation keys aligned with `src/locales/locale/en-US.js`, which is the fallback when a key is missing.
+4. For incorrect translated output, edit the matching section:
    - `conditions`, `condNames`, and `templates` for Turn Tracker text and apply/remove announcements.
    - `ui` for chat cards, menus, buttons, warnings, config, and help messages.
    - `handout` for the generated help handout and help-card tables that reuse handout content.
    - `languageNames` for the available-translations list when that locale is active.
-4. Update `src/locales/metadata.js` only if the locale list, aliases, text direction, flag label, or translation file path changes.
-5. Run `npm run format` and `npm run build`.
-6. In Roll20, verify `!condition-tracker --config language <locale>`, `!condition-tracker --help`, and `!condition-tracker --reinstall-handout`.
+5. Update `src/locales/metadata.js` only if the locale list, aliases, text direction, flag label, or translation file path changes.
+6. Run `npm run format` and `npm run build`.
+7. In Roll20, verify `!condition-tracker --config language <locale>`, `!condition-tracker --help`, and `!condition-tracker --reinstall-handout`.
 
 ## Saved Effects Architecture
 
