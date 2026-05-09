@@ -5,7 +5,7 @@
  * Name: Condition Tracker
  * Script: ConditionTracker.js
  * Version: 1.1.0.beta-3.2
- * Built: 2026-05-09T08:17:51.849Z
+ * Built: 2026-05-09T08:25:44.905Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -260,7 +260,7 @@ const ConditionTrackerMod = (() => {
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0.beta-3.2';
-  const SCRIPT_LAST_UPDATED = '2026-05-09T08:17:51.849Z';
+  const SCRIPT_LAST_UPDATED = '2026-05-09T08:25:44.905Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -30053,7 +30053,7 @@ const ConditionTrackerMod = (() => {
     });
     if (attrs.length === 0) return null;
 
-    return attrs[0].get('current') === adapter.npcValue
+    return String(attrs[0].get('current')) === adapter.npcValue
       ? ACTOR_TYPE_NPC
       : ACTOR_TYPE_PC;
   }
@@ -30228,7 +30228,8 @@ const ConditionTrackerMod = (() => {
       });
       if (attrs.length > 0) {
         const val = attrs[0].get('current');
-        const type = val === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
+        const type =
+          String(val) === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
         return {
           type,
           source: 'game-system adapter',

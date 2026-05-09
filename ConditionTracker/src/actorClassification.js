@@ -166,7 +166,7 @@ function classifyWithAdapter(characterId, systemId) {
   });
   if (attrs.length === 0) return null;
 
-  return attrs[0].get('current') === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
+  return String(attrs[0].get('current')) === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
 }
 
 /**
@@ -330,7 +330,7 @@ export function classifyTokenDetail(token, tokenName) {
     });
     if (attrs.length > 0) {
       const val = attrs[0].get('current');
-      const type = val === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
+      const type = String(val) === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
       return {
         type,
         source: 'game-system adapter',
