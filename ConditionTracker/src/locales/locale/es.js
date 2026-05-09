@@ -368,6 +368,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "No se encontró la ficha de origen.",
       targetTokenNotFound: "No se encontró la ficha objetivo.",
       subjectTokenNotFound: "No se encontró la ficha del sujeto.",
+      tokenRefNotFound:
+        '{role} token "{value}" no se pudo encontrar por ID, nombre de token o nombre de personaje.',
+      tokenRefAmbiguous:
+        'El token {role} "{value}" coincidió con varios tokens: {matches}. Utilice una identificación de token o un nombre más específico para eliminar la ambigüedad.',
       invalidGameSystem:
         "Sistema de juego no válido. Utilice --config sistema de juego &lt;id&gt;. Sistemas compatibles:",
       gameSystemSet:
@@ -566,6 +570,43 @@ const TRANSLATION = {
         [
           "!rastreador de condiciones --menu",
           "Abra el menú de administración principal con botones para aplicar, revisar o eliminar condiciones.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Ejemplos de macros para condiciones comunes",
+      intro:
+        "Estas son macros iniciales que puede pegar en una acción simbólica o en una macro de chat y luego expandirlas según sea necesario. La coincidencia de nombres no distingue entre mayúsculas y minúsculas; Se prefieren nombres exactos y luego coincidencias parciales únicas.",
+      colMacro: "Macro",
+      colEvent: "Evento común",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Agarrado",
+          "Agarre o agarre un objetivo y deje que el asistente le solicite el origen, el objetivo y la duración.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Propenso",
+          "Derriba una ficha propensa con la condición ya seleccionada.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Envenenado",
+          "Preseleccione Envenenado para efectos de veneno, peligros o ataques tóxicos.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Aturdido",
+          "Preseleccione Aturdido para aturdimientos, efectos de choque y efectos de control duro.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Cegado",
+          "Preseleccione Cegado para efectos de flash, oscuridad, humo o que afecten la vista.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Jefe Goblin" --condition Agarrado --duration 1 ronda',
+          "Aplicación directa utilizando nombres exactos de tokens/caracteres (no distingue entre mayúsculas y minúsculas).",
+        ],
+        [
+          "!condition-tracker --source gala --target jefe --condition boca abajo --duration 1 ronda",
+          "Aplicación directa utilizando nombres parciales únicos; Si varios tokens coinciden, el mod solicita un nombre o identificación de token más específico.",
         ],
       ],
     },

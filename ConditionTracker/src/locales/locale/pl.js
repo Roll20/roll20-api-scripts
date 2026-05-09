@@ -369,6 +369,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Nie można było znaleźć żetonu źródła.",
       targetTokenNotFound: "Nie można było znaleźć żetonu celu.",
       subjectTokenNotFound: "Nie można było znaleźć żetonu podmiotu.",
+      tokenRefNotFound:
+        "Nie można znaleźć tokena {role} „{value}” według identyfikatora, nazwy tokena lub nazwy postaci.",
+      tokenRefAmbiguous:
+        "Token {role} „{value}” pasuje do wielu tokenów: {matches}. Aby ujednoznacznić, użyj identyfikatora tokena lub bardziej szczegółowej nazwy.",
       invalidGameSystem:
         "Nieprawidłowy system gry. Użyj --config systemu gier &lt;id&gt;. Obsługiwane systemy:",
       gameSystemSet:
@@ -566,6 +570,43 @@ const TRANSLATION = {
         [
           "! moduł śledzenia stanu --menu",
           "Otwórz główne menu zarządzania z przyciskami umożliwiającymi zastosowanie, przejrzenie lub usunięcie warunków.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Przykłady makro dla typowych warunków",
+      intro:
+        "Są to makra startowe, które możesz wkleić do akcji tokena lub makra czatu, a następnie rozwinąć w razie potrzeby. Dopasowywanie nazw nie uwzględnia wielkości liter; preferowane są dokładne nazwy, a następnie unikalne dopasowania częściowe.",
+      colMacro: "Makro",
+      colEvent: "Wspólne wydarzenie",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Chwycony",
+          "Chwyć lub chwyć cel i pozwól kreatorowi zapytać o źródło, cel i czas trwania.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Podatny",
+          "Powal żeton z już wybranym warunkiem.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Zatruty",
+          "Wybierz opcję Zatruty, aby wyświetlić efekty trucizny, zagrożenia lub ataki toksyczne.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Oszołomiony",
+          "Wybierz wstępnie opcję Ogłuszenie, aby uzyskać ogłuszenia, efekty szoku i efekty twardej kontroli.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Zaślepiony",
+          "Wybierz opcję Ślepy, aby uzyskać efekt błysku, ciemności, dymu lub pogorszenia wzroku.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Boss Goblina" --condition Chwycony --duration 1 runda',
+          "Zastosuj bezpośrednio, używając dokładnych nazw tokenów/znaków (wielkość liter nie ma znaczenia).",
+        ],
+        [
+          "!condition-tracker --source gala --target szef --condition Skłonny --duration 1 runda",
+          "Zastosuj bezpośrednio, używając unikalnych nazw częściowych; jeśli pasuje wiele tokenów, mod pyta o bardziej szczegółową nazwę lub identyfikator tokena.",
         ],
       ],
     },

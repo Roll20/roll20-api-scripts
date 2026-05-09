@@ -368,6 +368,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "시전자 토큰을 찾을 수 없습니다.",
       targetTokenNotFound: "대상 토큰을 찾을 수 없습니다.",
       subjectTokenNotFound: "주체 토큰을 찾을 수 없습니다.",
+      tokenRefNotFound:
+        '{role} 토큰 "{value}"을(를) ID, 토큰 이름, 캐릭터 이름으로 찾을 수 없습니다.',
+      tokenRefAmbiguous:
+        '{role} 토큰 "{value}"이(가) 여러 토큰과 일치했습니다: {matches}. 명확하게 하려면 토큰 ID 또는 보다 구체적인 이름을 사용하십시오.',
       invalidGameSystem:
         "잘못된 게임 시스템입니다. --config 게임 시스템 &lt;id&gt;을 사용하세요. 지원되는 시스템:",
       gameSystemSet:
@@ -562,6 +566,43 @@ const TRANSLATION = {
         [
           "!조건 추적기 --menu",
           "조건을 적용, 검토, 제거할 수 있는 버튼이 있는 기본 관리 메뉴를 엽니다.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "일반적인 조건에 대한 매크로 예",
+      intro:
+        "이는 토큰 작업이나 채팅 매크로에 붙여넣은 다음 필요에 따라 확장할 수 있는 시작 매크로입니다. 이름 일치는 대소문자를 구분하지 않습니다. 정확한 이름이 선호되고 고유한 부분 일치가 선호됩니다.",
+      colMacro: "매크로",
+      colEvent: "상사",
+      rows: [
+        [
+          "!조건 추적기 --prompt --condition 그래플됨",
+          "대상을 붙잡거나 잡고 마법사가 소스, 대상 및 지속 시간을 묻는 메시지를 표시하도록 합니다.",
+        ],
+        [
+          "!상태 추적기 --prompt --condition 엎드린 자세",
+          "이미 선택된 조건으로 엎드린 토큰을 노크합니다.",
+        ],
+        [
+          "!조건 추적기 --prompt --condition 중독됨",
+          "독 효과, 위험 또는 독성 공격에 대해 중독을 미리 선택합니다.",
+        ],
+        [
+          "!조건 추적기 --prompt --condition 기절",
+          "기절, 충격 효과 및 하드 제어 효과를 위해 기절을 미리 선택하세요.",
+        ],
+        [
+          "!조건 추적기 --prompt --condition 블라인드",
+          "플래시, 어둠, 연기 또는 시각 장애 효과에 대해 실명을 사전 선택합니다.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "고블린 보스" --condition 그래플링 --duration 1 라운드',
+          "정확한 토큰/문자 이름을 사용하여 직접 적용합니다(대소문자를 구분하지 않음).",
+        ],
+        [
+          "!상태 추적기 --source 갈라 --target 보스 --condition 엎드리기 --duration 1 라운드",
+          "고유한 부분 이름을 사용하여 직접 적용합니다. 여러 토큰이 일치하면 모드는 보다 구체적인 이름이나 토큰 ID를 요청합니다.",
         ],
       ],
     },

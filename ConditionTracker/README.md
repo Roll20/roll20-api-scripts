@@ -15,7 +15,7 @@
 - Tracks durations including until removed, end of target/source next turn, and numeric round counts.
 - Provides GM-only chat menus, a removal menu, configuration commands, and cleanup tools.
 - Automatically prunes conditions when a source or target token is deleted.
-- Creates or updates the `ConditionTrackerWizard`, `ConditionTrackerMultiTarget`, `ConditionTrackerReportToken`, and `ConditionTrackerSaved` GM macros on install.
+- Creates or updates the `ConditionTrackerWizard`, `ConditionTrackerMultiTarget`, `ConditionTrackerReportToken`, `ConditionTrackerSaved`, and `ConditionTrackerClassify` GM macros on install.
 - Multi-language output with localized chat, wizard, help, and handout content. Set with `--config language` or use `--lang` for per-command bilingual output.
 - Uses a modular source tree and Rollup build to generate a paste-ready Roll20 script.
 
@@ -54,7 +54,7 @@ All commands are GM-only except `--help`.
 - `!condition-tracker --prompt`
 - `!condition-tracker --multi-target`
 - `!condition-tracker --prompt --condition <condition> --duration <duration>`
-- `!condition-tracker --source <token_id> --target <token_id> --condition <condition> --other <text> --duration <duration>`
+- `!condition-tracker --source <token_ref> --target <token_ref> --condition <condition> --other <text> --duration <duration>`
 - `!condition-tracker --lang <locale>`
 - `!condition-tracker --remove <condition_id>`
 - `!condition-tracker --cleanup`
@@ -118,18 +118,42 @@ The main menu (`!condition-tracker --menu`) contains an **Open Wizard** button t
 
 ## Macro Usage
 
-Roll20 Mods cannot create true native dialogs, so Condition Tracker uses macros and chat menus. On install, the mod creates or updates four GM macros:
+Roll20 Mods cannot create true native dialogs, so Condition Tracker uses macros and chat menus. On install, the mod creates or updates five GM macros:
 
 - **`ConditionTrackerWizard`** (`!condition-tracker --prompt`) — launches the step-by-step condition wizard. No token selection required beforehand.
 - **`ConditionTrackerMultiTarget`** (`!condition-tracker --multi-target`) — select one or more tokens on the board first, then run the macro. The wizard applies the chosen condition to all selected tokens at once.
 - **`ConditionTrackerReportToken`** (`!condition-tracker --report-token`) — select one or more tokens first, then run to get a GM whisper listing all conditions applied to and by each selected token.
 - **`ConditionTrackerSaved`** (`!condition-tracker --saved`) — select a token first, then run to view/manage saved long-term effects for that token.
+- **`ConditionTrackerClassify`** (`!condition-tracker --classify show`) — opens actor classification diagnostics for selected tokens.
 
-If any macro is missing, use `!condition-tracker --reinstall-macro` to recreate all four for all current GM players.
+If any macro is missing, use `!condition-tracker --reinstall-macro` to recreate all five for all current GM players.
 
 If the help handout is missing, duplicated, or out of date, use `!condition-tracker --reinstall-handout` to recreate/update the localized handout.
 
 Run `ConditionTrackerWizard` to launch the wizard. If `Other` is selected, provide non-empty custom text. The mod ignores `--other` for standard conditions.
+
+## Name Matching for Source/Target/Subject
+
+Direct apply arguments like `--source`, `--target`, and `--subject` support token references by:
+
+- token id
+- exact token name
+- exact linked character name
+- unique partial token/character name
+
+Matching behavior:
+
+- Matching is case-insensitive.
+- Exact matches are checked first.
+- If there is no exact match, partial matches are checked.
+- If multiple tokens match, the command stops and asks for a more specific value (or a token id).
+
+Examples:
+
+```text
+!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Grappled --duration 1 round
+!condition-tracker --source gala --target boss --condition Prone --duration 1 round
+```
 
 ## Output Examples
 

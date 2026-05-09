@@ -16,9 +16,9 @@ This checklist validates `ConditionTracker.js` in a live Roll20 VTT game before 
    - Expected: API console logs readiness and GMs receive a ready whisper.
 2. Run `!condition-tracker --help`.
    - Expected: Help is whispered, no token selection is required, and the available translations table is present without a translation-file column.
-3. Confirm all four macros exist: `ConditionTrackerWizard`, `ConditionTrackerMultiTarget`, `ConditionTrackerReportToken`, and `ConditionTrackerSaved`.
+3. Confirm all five macros exist: `ConditionTrackerWizard`, `ConditionTrackerMultiTarget`, `ConditionTrackerReportToken`, `ConditionTrackerSaved`, and `ConditionTrackerClassify`.
 4. Run `!condition-tracker --reinstall-macro`.
-   - Expected: All four macros are recreated and a confirmation whisper is sent to the GM.
+   - Expected: All five macros are recreated and a confirmation whisper is sent to the GM.
 5. Confirm the localized help handout exists and opens.
    - Expected: A single `Condition Tracker — Help & Reference` handout is present and reflects the current configured language.
 6. Run `!condition-tracker --reinstall-handout`.

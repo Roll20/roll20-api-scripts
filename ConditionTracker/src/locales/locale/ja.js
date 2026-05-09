@@ -365,6 +365,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "ソーストークンが見つかりません。",
       targetTokenNotFound: "ターゲットトークンが見つかりません。",
       subjectTokenNotFound: "対象トークンが見つかりません。",
+      tokenRefNotFound:
+        "{role} トークン「{value}」が ID、トークン名、またはキャラクター名で見つかりませんでした。",
+      tokenRefAmbiguous:
+        "{role} トークン「{value}」は複数のトークン {matches} と一致しました。曖昧さを避けるには、トークン ID またはより具体的な名前を使用します。",
       invalidGameSystem:
         "無効なゲームシステムです。 --config ゲームシステム &lt;id&gt; を使用してください。サポートされているシステム:",
       gameSystemSet:
@@ -564,6 +568,43 @@ const TRANSLATION = {
         [
           "!条件トラッカー --menu",
           "条件を適用、確認、または削除するボタンのあるメイン管理メニューを開きます。",
+        ],
+      ],
+    },
+    examples: {
+      heading: "一般的な条件のマクロの例",
+      intro:
+        "これらは、トークン アクションまたはチャット マクロに貼り付けて、必要に応じて展開できるスターター マクロです。名前の一致では大文字と小文字が区別されません。正確な名前が優先され、次に一意の部分一致が優先されます。",
+      colMacro: "マクロ",
+      colEvent: "コモンイベント",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition 組み付いた",
+          "ターゲットを掴むか掴むと、ウィザードにソース、ターゲット、および継続時間の入力を求めるプロンプトが表示されます。",
+        ],
+        [
+          "!condition-tracker --prompt --condition 傾向あり",
+          "すでに選択されている条件でトークンをノックする傾向があります。",
+        ],
+        [
+          "!condition-tracker --prompt --condition 中毒",
+          "毒の効果、危険、または有毒な攻撃については、「毒」を事前に選択します。",
+        ],
+        [
+          "!condition-tracker --prompt --condition 唖然としました",
+          "スタン、ショック効果、およびハードコントロール効果については、「Stunned」を事前に選択します。",
+        ],
+        [
+          "!condition-tracker --prompt --condition 盲目",
+          "フラッシュ、暗闇、煙、または視力を損なう効果を得るには、「Blinded」を事前に選択します。",
+        ],
+        [
+          '!condition-tracker --source "ガラハッド卿" --target "ゴブリンのボス" --condition 組み付き --duration 1 ラウンド',
+          "正確なトークン/文字名 (大文字と小文字は区別されません) を使用して直接適用します。",
+        ],
+        [
+          "!コンディショントラッカー --source ガラ --target ボス --condition プローン --duration 1 ラウンド",
+          "一意の部分名を使用して直接適用します。複数のトークンが一致する場合、MOD はより具体的な名前またはトークン ID を要求します。",
         ],
       ],
     },

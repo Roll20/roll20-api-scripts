@@ -1,7 +1,5 @@
-import { HANDOUT_NAME, LOGO_URL_512, SCRIPT_NAME, SCRIPT_VERSION } from './constants.js';
-import { getConfig } from './state.js';
-import { GAME_SYSTEM_DEFINITIONS, getSystemProfile } from './systems/index.js';
 import { getConditionDisplayName } from './conditions.js';
+import { HANDOUT_NAME, LOGO_URL_512, SCRIPT_NAME, SCRIPT_VERSION } from './constants.js';
 import {
   getLocale,
   getLocalizedLanguageName,
@@ -10,6 +8,8 @@ import {
   t,
   tRaw,
 } from './i18n.js';
+import { getConfig } from './state.js';
+import { GAME_SYSTEM_DEFINITIONS, getSystemProfile } from './systems/index.js';
 import { escapeHtml, queryObjects } from './utils.js';
 
 const STYLE = {
@@ -213,6 +213,21 @@ function buildQuickStartTable(colCommand, colDesc, rows) {
     })
     .join('');
   return `<table style="${STYLE.table}"><tbody>${bodyRows}</tbody></table>`;
+}
+
+/**
+ * Builds the examples table for common macro patterns.
+ *
+ * @param {(key: string) => string} hs Handout string lookup.
+ * @param {(key: string) => *} hr Handout raw value lookup.
+ * @param {string} locale Locale code.
+ * @returns {string} Examples section HTML.
+ */
+function buildExamplesSection(hs, hr, locale) {
+  const rows = hr('examples.rows');
+  return `<h2 style="${STYLE.h2}">${hs('examples.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('examples.intro')}</p>
+    ${buildTable([hs('examples.colMacro'), hs('examples.colEvent')], rows, ['52%', '48%'], locale)}`;
 }
 
 /**
@@ -431,6 +446,8 @@ function buildHandoutHtml(locale) {
     <h2 style="${STYLE.h2}">${hs('quickStart.heading')}</h2>
     ${buildQuickStartTable(hs('quickStart.colCommand'), hs('quickStart.colDesc'), hr('quickStart.rows'))}`;
 
+  const examples = buildExamplesSection(hs, hr, lang);
+
   const commandsRef = buildCommandsReferenceSection(hs, hr, lang);
 
   const standardConds = `
@@ -468,7 +485,7 @@ function buildHandoutHtml(locale) {
       <h1 style="${STYLE.h1}">${SCRIPT_NAME}</h1>
       <p style="${STYLE.subtitle}">${hs('versionLabel')} ${version} &nbsp;•&nbsp; ${hs('subtitle')}</p>
     </div>
-    ${overview}${quickStart}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
+    ${overview}${quickStart}${examples}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
   </div>`;
 }
 

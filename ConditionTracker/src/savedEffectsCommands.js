@@ -1,8 +1,10 @@
+import { buildButton, htmlTable, rawHtml, whisper, whisperError, whisperWarning } from './chat.js';
+import { isCustomTextCondition } from './conditions.js';
 import {
-  COMMAND,
   COLOR_BG_SOFT_BLACK,
   COLOR_HEADER_DARK,
   COLOR_HEADER_LIGHT,
+  COMMAND,
   DURATION_UNTIL_REMOVED,
   SAVED_SNOOZE_COMBAT,
   SAVED_SNOOZE_ROUNDS,
@@ -13,6 +15,8 @@ import {
   VALID_SAVED_VISIBILITIES,
   VALID_SNOOZE_SCOPES,
 } from './constants.js';
+import { t } from './i18n.js';
+import { applyMarker } from './markers.js';
 import {
   addSavedEffect,
   createSavedEffect,
@@ -21,29 +25,17 @@ import {
   removeSavedEffect,
   updateSavedEffect,
 } from './savedEffects.js';
-import {
-  buildButton,
-  htmlTable,
-  rawHtml,
-  whisper,
-  whisperError,
-  whisperGms,
-  whisperWarning,
-} from './chat.js';
-import { t } from './i18n.js';
+import { addActiveCondition, getConfig } from './state.js';
+import { getSystemProfile } from './systems/index.js';
+import { insertConditionRow } from './turnOrder.js';
 import {
   createId,
   escapeHtml,
-  getGraphicToken,
   getGmPlayerIds,
+  getGraphicToken,
   getTokenName,
   toText,
 } from './utils.js';
-import { addActiveCondition, getConfig } from './state.js';
-import { isCustomTextCondition } from './conditions.js';
-import { getSystemProfile } from './systems/index.js';
-import { applyMarker } from './markers.js';
-import { insertConditionRow } from './turnOrder.js';
 
 const SECTION_HEADING_STYLE = [
   `background:${COLOR_HEADER_LIGHT}`,
@@ -823,6 +815,13 @@ function showSavedSnoozeMenu(playerId, effectId) {
     return;
   }
 
+  /**
+   * Builds a saved-effect snooze command.
+   *
+   * @param {'turn'|'rounds'|'combat'} scope Snooze scope.
+   * @param {number} rounds Round count used for rounds scope.
+   * @returns {string} Roll20 command text.
+   */
   const snoozeCmd = (scope, rounds) => {
     const parts = [`--saved snooze ${effectId} --scope ${scope}`];
     if (rounds) parts.push(`--rounds ${rounds}`);

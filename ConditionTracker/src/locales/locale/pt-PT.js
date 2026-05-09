@@ -367,6 +367,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Ficha de origem não encontrada.",
       targetTokenNotFound: "Ficha alvo não encontrada.",
       subjectTokenNotFound: "Ficha do sujeito não encontrada.",
+      tokenRefNotFound:
+        '{role} token "{value}" não foi encontrado pelo id, nome do token ou nome da personagem.',
+      tokenRefAmbiguous:
+        'O token {role} "{value}" correspondeu a vários tokens: {matches}. Utilize um ID de token ou um nome mais específico para desambiguar.',
       invalidGameSystem:
         "Sistema de jogo inválido. Utilize --config gameSystem &lt;id&gt;. Sistemas suportados:",
       gameSystemSet:
@@ -564,6 +568,43 @@ const TRANSLATION = {
         [
           "!condition tracker --menu",
           "Abra o menu principal de gestão com botões para aplicar, rever ou remover condições.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Exemplos macro para condições comuns",
+      intro:
+        "Estas são macros iniciais que pode colar numa ação de token ou macro de chat e depois expandir conforme necessário. A correspondência de nomes não distingue maiúsculas de minúsculas; nomes exatos são preferidos e, em seguida, correspondências parciais exclusivas.",
+      colMacro: "macro",
+      colEvent: "Evento Comum",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Agarrado",
+          "Lute ou agarre um alvo e deixe que o assistente solicite a origem, o alvo e a duração.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Propenso",
+          "Derrube um token com a condição já selecionada.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Envenenado",
+          "Pré-selecione Envenenado para efeitos de veneno, perigos ou ataques tóxicos.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Atordoado",
+          "Pré-selecione Atordoado para atordoamentos, efeitos de choque e efeitos de controlo rígido.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Cego",
+          "Pré-selecione Cego para flash, escuridão, fumo ou efeitos que prejudiquem a visão.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Chefe Goblin" --condition Agarrou --duration 1 ronda',
+          "Aplicação direta utilizando nomes exatos de token/caracter (sem distinção entre maiúsculas e minúsculas).",
+        ],
+        [
+          "!condition-tracker --source gala --target chefe --condition Pronado --duration 1 ronda",
+          "Aplicação direta utilizando nomes parciais únicos; se vários tokens corresponderem, o mod irá solicitar um nome ou ID de token mais específico.",
         ],
       ],
     },

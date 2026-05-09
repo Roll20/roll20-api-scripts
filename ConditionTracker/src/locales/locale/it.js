@@ -368,6 +368,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Token sorgente non trovato.",
       targetTokenNotFound: "Token bersaglio non trovato.",
       subjectTokenNotFound: "Token soggetto non trovato.",
+      tokenRefNotFound:
+        'Impossibile trovare il token {role} "{value}" in base all\'ID, al nome del token o al nome del personaggio.',
+      tokenRefAmbiguous:
+        '{role} token "{value}" corrispondeva a più token: {matches}. Utilizza un ID token o un nome più specifico per chiarire le ambiguità.',
       invalidGameSystem:
         "Sistema di gioco non valido. Utilizza --config gameSystem &lt;id&gt;. Sistemi supportati:",
       gameSystemSet:
@@ -566,6 +570,43 @@ const TRANSLATION = {
         [
           "!contatore di condizioni --menu",
           "Apri il menu di gestione principale con i pulsanti per applicare, rivedere o rimuovere le condizioni.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Esempi di macro per condizioni comuni",
+      intro:
+        "Si tratta di macro iniziali che puoi incollare in un'azione token o in una macro di chat e quindi espandere secondo necessità. La corrispondenza dei nomi non fa distinzione tra maiuscole e minuscole; sono preferiti i nomi esatti, quindi le corrispondenze parziali univoche.",
+      colMacro: "Macro",
+      colEvent: "Evento comune",
+      rows: [
+        [
+          "!condizionatore di condizioni --prompt --condition Afferrato",
+          "Afferra o afferra un bersaglio e lascia che la procedura guidata richieda la fonte, il bersaglio e la durata.",
+        ],
+        [
+          "!condizionatore di condizioni --prompt --condition Disteso",
+          "Metti a terra un gettone con la condizione già selezionata.",
+        ],
+        [
+          "!condizionatore di condizioni --prompt --condition Avvelenato",
+          "Preseleziona Avvelenato per effetti velenosi, pericoli o attacchi tossici.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Stordito",
+          "Preseleziona Stordito per stordimenti, effetti shock ed effetti di controllo rigido.",
+        ],
+        [
+          "!condizionatore di condizioni --prompt --condition Accecato",
+          "Preseleziona Accecato per effetti di flash, oscurità, fumo o problemi alla vista.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Afferrato --duration 1 round',
+          "Applicazione diretta utilizzando nomi token/caratteri esatti (senza distinzione tra maiuscole e minuscole).",
+        ],
+        [
+          "!condition-tracker --source gala --target capo --condition Disteso --duration 1 round",
+          "Applicazione diretta utilizzando nomi parziali univoci; se più token corrispondono, la mod richiede un nome o un ID token più specifico.",
         ],
       ],
     },

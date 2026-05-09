@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.1.0.beta-3.2
- * Built: 2026-05-09T08:44:19.629Z
+ * Version: 1.1.0.beta-3.3
+ * Built: 2026-05-09T22:18:49.200Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -259,8 +259,8 @@ const ConditionTrackerMod = (() => {
   ).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.1.0.beta-3.2';
-  const SCRIPT_LAST_UPDATED = '2026-05-09T08:44:19.629Z';
+  const SCRIPT_VERSION = '1.1.0.beta-3.3';
+  const SCRIPT_LAST_UPDATED = '2026-05-09T22:18:49.200Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -6346,6 +6346,10 @@ const ConditionTrackerMod = (() => {
         sourceTokenNotFound: 'Source token could not be found.',
         targetTokenNotFound: 'Target token could not be found.',
         subjectTokenNotFound: 'Subject token could not be found.',
+        tokenRefNotFound:
+          '{role} token "{value}" could not be found by id, token name, or character name.',
+        tokenRefAmbiguous:
+          '{role} token "{value}" matched multiple tokens: {matches}. Use a token id or a more specific name to disambiguate.',
         invalidGameSystem:
           'Invalid game system. Use --config gameSystem &lt;id&gt;. Supported systems:',
         gameSystemSet:
@@ -6546,6 +6550,43 @@ const ConditionTrackerMod = (() => {
           ],
         ],
       },
+      examples: {
+        heading: 'Macro Examples for Common Conditions',
+        intro:
+          'These are starter macros you can paste into a token action or chat macro and then expand as needed. Name matching is case-insensitive; exact names are preferred, then unique partial matches.',
+        colMacro: 'Macro',
+        colEvent: 'Common Event',
+        rows: [
+          [
+            '!condition-tracker --prompt --condition Grappled',
+            'Grapple or grab a target and let the wizard prompt for source, target, and duration.',
+          ],
+          [
+            '!condition-tracker --prompt --condition Prone',
+            'Knock a token prone with the condition already selected.',
+          ],
+          [
+            '!condition-tracker --prompt --condition Poisoned',
+            'Preselect Poisoned for poison effects, hazards, or toxic attacks.',
+          ],
+          [
+            '!condition-tracker --prompt --condition Stunned',
+            'Preselect Stunned for stuns, shock effects, and hard control effects.',
+          ],
+          [
+            '!condition-tracker --prompt --condition Blinded',
+            'Preselect Blinded for flash, darkness, smoke, or sight-impairing effects.',
+          ],
+          [
+            '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Grappled --duration 1 round',
+            'Direct apply using exact token/character names (case-insensitive).',
+          ],
+          [
+            '!condition-tracker --source gala --target boss --condition Prone --duration 1 round',
+            'Direct apply using unique partial names; if multiple tokens match, the mod asks for a more specific name or token id.',
+          ],
+        ],
+      },
       commandsRef: {
         heading: 'Commands Reference',
         colFlag: 'Flag',
@@ -6559,7 +6600,7 @@ const ConditionTrackerMod = (() => {
           ['--menu', 'Show main menu (add remove for removal menu)'],
           [
             '--source X --target Y --condition Z',
-            'Apply a condition directly without the wizard',
+            'Apply a condition directly without the wizard (X/Y can be token id, token name, or linked character name; matching is case-insensitive with unique partial-name support)',
           ],
           [
             '--duration &lt;value&gt;',
@@ -28372,6 +28413,438 @@ const ConditionTrackerMod = (() => {
     return DEFAULT_WHISPER_TARGET;
   }
 
+  /** @type {'pc'} */
+  const ACTOR_TYPE_PC = 'pc';
+  /** @type {'npc'} */
+  const ACTOR_TYPE_NPC = 'npc';
+  /** @type {'ignored'} */
+  const ACTOR_TYPE_IGNORED = 'ignored';
+  /** @type {'unknown'} */
+  const ACTOR_TYPE_UNKNOWN = 'unknown';
+  /** @type {'auto'} */
+  const ACTOR_TYPE_AUTO = 'auto';
+
+  /** Valid types accepted by --classify (excludes unknown which is auto-detected only). */
+  const VALID_ACTOR_CLASSIFY_TYPES = Object.freeze(
+    new Set([
+      ACTOR_TYPE_PC,
+      ACTOR_TYPE_NPC,
+      ACTOR_TYPE_IGNORED,
+      ACTOR_TYPE_AUTO,
+    ]),
+  );
+
+  /** Character attribute name used for explicit character-level overrides. */
+  const ACTOR_OVERRIDE_ATTR = 'ct_mod_actor_type';
+
+  /**
+   * NPC detection adapters keyed by game system id.
+   * npcAttr: attribute name; npcValue: value that indicates NPC.
+   */
+  const SHEET_ADAPTERS = {
+    dnd5e: { npcAttr: 'npc', npcValue: '1' },
+    dnd4e: { npcAttr: 'npc', npcValue: '1' },
+    dnd35: { npcAttr: 'npc', npcValue: '1' },
+    pathfinder1e: { npcAttr: 'is_npc', npcValue: '1' },
+    pathfinder2e: { npcAttr: 'npc', npcValue: '1' },
+    starfinder: { npcAttr: 'npc', npcValue: '1' },
+  };
+
+  /** Common NPC indicator attribute names checked when no adapter matches. */
+  const GENERIC_NPC_ATTRS = [
+    'npc',
+    'is_npc',
+    'npcflag',
+    'sheet_type',
+    'character_type',
+  ];
+
+  const FINAL_TYPES = new Set([
+    ACTOR_TYPE_PC,
+    ACTOR_TYPE_NPC,
+    ACTOR_TYPE_IGNORED,
+  ]);
+
+  /**
+   * Returns true when value is a storable final classification.
+   *
+   * @param {*} value Value to test.
+   * @returns {boolean} True for pc, npc, or ignored.
+   */
+  function isFinalType(value) {
+    return FINAL_TYPES.has(String(value || '').toLowerCase());
+  }
+
+  /**
+   * Returns the current value of the ct_mod_actor_type attribute for a character,
+   * or null when the attribute is absent or set to auto.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @returns {string|null} pc, npc, ignored, or null.
+   */
+  function getCharacterOverrideAttr(characterId) {
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: ACTOR_OVERRIDE_ATTR,
+    });
+    if (attrs.length === 0) return null;
+    const value = toText(attrs[0].get('current')).toLowerCase();
+    if (value === ACTOR_TYPE_AUTO) return null;
+    return isFinalType(value) ? value : null;
+  }
+
+  /**
+   * Creates or updates the ct_mod_actor_type attribute on a character.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @param {string} type Actor type value to store (pc, npc, ignored, or auto).
+   * @returns {void}
+   */
+  function setCharacterOverrideAttr(characterId, type) {
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: ACTOR_OVERRIDE_ATTR,
+    });
+    if (attrs.length > 0) {
+      attrs[0].set('current', type);
+    } else {
+      createObj('attribute', {
+        _characterid: characterId,
+        name: ACTOR_OVERRIDE_ATTR,
+        current: type,
+      });
+    }
+  }
+
+  /**
+   * Removes the ct_mod_actor_type attribute from a character (resets to auto).
+   *
+   * @param {string} characterId Roll20 character id.
+   * @returns {void}
+   */
+  function clearCharacterOverrideAttr(characterId) {
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: ACTOR_OVERRIDE_ATTR,
+    });
+    for (const attr of attrs) {
+      attr.remove();
+    }
+  }
+
+  /**
+   * Returns the explicit classification for a token from overrides, or null when
+   * no override is set.
+   *
+   * Checks token-level state override first (Step 1), then the character's
+   * ct_mod_actor_type attribute (Step 2).
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {string|null} pc, npc, ignored, or null.
+   */
+  function getExplicitClassification(token) {
+    if (!token) return null;
+
+    const tokenId = token.id;
+    if (!tokenId) return null;
+
+    const tokenOverride = getActorTokenOverride(tokenId);
+    if (tokenOverride) return tokenOverride;
+
+    const characterId = toText(token.get?.('represents'));
+    if (!characterId) return null;
+
+    return getCharacterOverrideAttr(characterId);
+  }
+
+  /**
+   * Returns true when a token is eligible for automatic classification.
+   *
+   * In Roll20's API, 'objects' is the token layer where character tokens live.
+   * Tokens on other layers (map, gmlayer, walls) are excluded. Unlinked tokens
+   * (no represents value) also default to ignored unless explicitly overridden.
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {boolean} True when eligible.
+   */
+  function isAutoEligibleToken(token) {
+    if (!token) return false;
+
+    // Only classify tokens on the token layer ('objects'); exclude map tiles,
+    // GM-layer graphics, and dynamic-lighting walls.
+    const layer = toText(token.get?.('_layer'));
+    if (layer && layer !== 'objects') return false;
+
+    return Boolean(toText(token.get?.('represents')));
+  }
+
+  /**
+   * Checks the game-system adapter attribute for the configured system.
+   * Returns pc, npc, or null when the attribute is absent.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @param {string} systemId Active game system id.
+   * @returns {string|null} pc, npc, or null.
+   */
+  function classifyWithAdapter(characterId, systemId) {
+    const adapter = SHEET_ADAPTERS[systemId];
+    if (!adapter) return null;
+
+    const attrs = queryObjects({
+      _type: 'attribute',
+      _characterid: characterId,
+      name: adapter.npcAttr,
+    });
+    if (attrs.length === 0) return null;
+
+    return String(attrs[0].get('current')) === adapter.npcValue
+      ? ACTOR_TYPE_NPC
+      : ACTOR_TYPE_PC;
+  }
+
+  /**
+   * Checks a list of common NPC indicator attributes as a system-agnostic fallback.
+   * Returns pc, npc, or null when no matching attribute is found.
+   *
+   * @param {string} characterId Roll20 character id.
+   * @returns {string|null} pc, npc, or null.
+   */
+  function classifyWithGenericAttrs(characterId) {
+    for (const attrName of GENERIC_NPC_ATTRS) {
+      const attrs = queryObjects({
+        _type: 'attribute',
+        _characterid: characterId,
+        name: attrName,
+      });
+      if (attrs.length === 0) continue;
+
+      const val = toText(attrs[0].get('current')).toLowerCase();
+      if (val === '1' || val === 'true' || val === 'npc') return ACTOR_TYPE_NPC;
+      if (
+        val === '0' ||
+        val === 'false' ||
+        val === 'pc' ||
+        val === 'character'
+      ) {
+        return ACTOR_TYPE_PC;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Uses the character's controlledby field as a last resort.
+   * Returns pc when a non-GM player controls the character, npc otherwise.
+   *
+   * @param {object} character Roll20 character object.
+   * @returns {string} pc or npc.
+   */
+  function classifyWithControlledBy(character) {
+    const controlledBy = toText(character.get('controlledby'));
+    if (!controlledBy) return ACTOR_TYPE_NPC;
+
+    // If controlled by 'all', it's player-controlled (PC)
+    if (controlledBy === 'all') return ACTOR_TYPE_PC;
+
+    const isPlayerControlled = controlledBy
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id)
+      .some((id) => !playerIsGM(id));
+
+    return isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
+  }
+
+  /**
+   * Automatically classifies a linked token using adapter then generic then
+   * controlledby detection in order.
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {string} pc, npc, ignored, or unknown.
+   */
+  function classifyAutomatically(token) {
+    const characterId = toText(token.get?.('represents'));
+    if (!characterId) return ACTOR_TYPE_IGNORED;
+
+    const character = getObj('character', characterId);
+    if (!character) return ACTOR_TYPE_UNKNOWN;
+
+    const systemId = getConfig().gameSystem;
+
+    const adapterResult = classifyWithAdapter(characterId, systemId);
+    if (adapterResult) return adapterResult;
+
+    const genericResult = classifyWithGenericAttrs(characterId);
+    if (genericResult) return genericResult;
+
+    return classifyWithControlledBy(character);
+  }
+
+  /**
+   * Classifies a token as pc, npc, ignored, or unknown.
+   *
+   * Detection order:
+   *   1. Token-level state override
+   *   2. Character ct_mod_actor_type attribute
+   *   3. Automatic eligibility (unlinked → ignored)
+   *   4. Game-system adapter attribute
+   *   5. Generic NPC attribute scan
+   *   6. controlledby fallback
+   *
+   * @param {object} token Roll20 graphic token.
+   * @returns {'pc'|'npc'|'ignored'|'unknown'} Actor classification.
+   */
+  function classifyToken(token) {
+    const explicit = getExplicitClassification(token);
+    if (explicit) return explicit;
+
+    if (!isAutoEligibleToken(token)) return ACTOR_TYPE_IGNORED;
+
+    return classifyAutomatically(token);
+  }
+
+  /**
+   * Returns classification details for the --classify show diagnostic.
+   *
+   * @param {object} token Roll20 graphic token.
+   * @param {string} tokenName Human-readable token name.
+   * @returns {{type: string, source: string, reason: string}} Classification detail.
+   */
+  function classifyTokenDetail(token, tokenName) {
+    if (!token) {
+      return {
+        type: ACTOR_TYPE_IGNORED,
+        source: 'eligibility',
+        reason: 'no token object',
+      };
+    }
+
+    const tokenId = token.id;
+    const name = tokenName || tokenId;
+
+    const tokenOverride = getActorTokenOverride(tokenId);
+    if (tokenOverride) {
+      return {
+        type: tokenOverride,
+        source: 'token override',
+        reason: `state override for token ${name}`,
+      };
+    }
+
+    const characterId = toText(token.get?.('represents'));
+
+    if (characterId) {
+      const charOverride = getCharacterOverrideAttr(characterId);
+      if (charOverride) {
+        return {
+          type: charOverride,
+          source: 'character override',
+          reason: `${ACTOR_OVERRIDE_ATTR} attribute on character`,
+        };
+      }
+    }
+
+    if (!characterId) {
+      return {
+        type: ACTOR_TYPE_IGNORED,
+        source: 'eligibility',
+        reason: 'unlinked token — no character sheet',
+      };
+    }
+
+    const character = getObj('character', characterId);
+    if (!character) {
+      return {
+        type: ACTOR_TYPE_UNKNOWN,
+        source: 'eligibility',
+        reason: 'character record not found',
+      };
+    }
+
+    const systemId = getConfig().gameSystem;
+    const adapter = SHEET_ADAPTERS[systemId];
+
+    if (adapter) {
+      const attrs = queryObjects({
+        _type: 'attribute',
+        _characterid: characterId,
+        name: adapter.npcAttr,
+      });
+      if (attrs.length > 0) {
+        const val = attrs[0].get('current');
+        const type =
+          String(val) === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
+        return {
+          type,
+          source: 'game-system adapter',
+          reason: `${adapter.npcAttr}=${val} (${systemId})`,
+        };
+      }
+    }
+
+    for (const attrName of GENERIC_NPC_ATTRS) {
+      const attrs = queryObjects({
+        _type: 'attribute',
+        _characterid: characterId,
+        name: attrName,
+      });
+      if (attrs.length === 0) continue;
+
+      const val = toText(attrs[0].get('current')).toLowerCase();
+      if (val === '1' || val === 'true' || val === 'npc') {
+        return {
+          type: ACTOR_TYPE_NPC,
+          source: 'generic attribute',
+          reason: `${attrName}=${val}`,
+        };
+      }
+      if (
+        val === '0' ||
+        val === 'false' ||
+        val === 'pc' ||
+        val === 'character'
+      ) {
+        return {
+          type: ACTOR_TYPE_PC,
+          source: 'generic attribute',
+          reason: `${attrName}=${val}`,
+        };
+      }
+    }
+
+    const controlledBy = toText(character.get('controlledby'));
+    if (controlledBy) {
+      // If controlled by 'all', it's player-controlled (PC)
+      if (controlledBy === 'all') {
+        return {
+          type: ACTOR_TYPE_PC,
+          source: 'controlledby fallback',
+          reason: `character.controlledby = "${controlledBy}"`,
+        };
+      }
+      const playerIds = controlledBy
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id);
+      const isPlayerControlled = playerIds.some((id) => !playerIsGM(id));
+      const type = isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
+      return {
+        type,
+        source: 'controlledby fallback',
+        reason: `character.controlledby = "${controlledBy}"`,
+      };
+    }
+
+    return {
+      type: ACTOR_TYPE_NPC,
+      source: 'final fallback',
+      reason: 'linked token, no detection data found',
+    };
+  }
+
   /**
    * Returns the system profile for the currently configured game system.
    *
@@ -29873,593 +30346,6 @@ const ConditionTrackerMod = (() => {
     ]);
   }
 
-  /** @type {'pc'} */
-  const ACTOR_TYPE_PC = 'pc';
-  /** @type {'npc'} */
-  const ACTOR_TYPE_NPC = 'npc';
-  /** @type {'ignored'} */
-  const ACTOR_TYPE_IGNORED = 'ignored';
-  /** @type {'unknown'} */
-  const ACTOR_TYPE_UNKNOWN = 'unknown';
-  /** @type {'auto'} */
-  const ACTOR_TYPE_AUTO = 'auto';
-
-  /** Valid types accepted by --classify (excludes unknown which is auto-detected only). */
-  const VALID_ACTOR_CLASSIFY_TYPES = Object.freeze(
-    new Set([
-      ACTOR_TYPE_PC,
-      ACTOR_TYPE_NPC,
-      ACTOR_TYPE_IGNORED,
-      ACTOR_TYPE_AUTO,
-    ]),
-  );
-
-  /** Character attribute name used for explicit character-level overrides. */
-  const ACTOR_OVERRIDE_ATTR = 'ct_mod_actor_type';
-
-  /**
-   * NPC detection adapters keyed by game system id.
-   * npcAttr: attribute name; npcValue: value that indicates NPC.
-   */
-  const SHEET_ADAPTERS = {
-    dnd5e: { npcAttr: 'npc', npcValue: '1' },
-    dnd4e: { npcAttr: 'npc', npcValue: '1' },
-    dnd35: { npcAttr: 'npc', npcValue: '1' },
-    pathfinder1e: { npcAttr: 'is_npc', npcValue: '1' },
-    pathfinder2e: { npcAttr: 'npc', npcValue: '1' },
-    starfinder: { npcAttr: 'npc', npcValue: '1' },
-  };
-
-  /** Common NPC indicator attribute names checked when no adapter matches. */
-  const GENERIC_NPC_ATTRS = [
-    'npc',
-    'is_npc',
-    'npcflag',
-    'sheet_type',
-    'character_type',
-  ];
-
-  const FINAL_TYPES = new Set([
-    ACTOR_TYPE_PC,
-    ACTOR_TYPE_NPC,
-    ACTOR_TYPE_IGNORED,
-  ]);
-
-  /**
-   * Returns true when value is a storable final classification.
-   *
-   * @param {*} value Value to test.
-   * @returns {boolean} True for pc, npc, or ignored.
-   */
-  function isFinalType(value) {
-    return FINAL_TYPES.has(String(value || '').toLowerCase());
-  }
-
-  /**
-   * Returns the current value of the ct_mod_actor_type attribute for a character,
-   * or null when the attribute is absent or set to auto.
-   *
-   * @param {string} characterId Roll20 character id.
-   * @returns {string|null} pc, npc, ignored, or null.
-   */
-  function getCharacterOverrideAttr(characterId) {
-    const attrs = queryObjects({
-      _type: 'attribute',
-      _characterid: characterId,
-      name: ACTOR_OVERRIDE_ATTR,
-    });
-    if (attrs.length === 0) return null;
-    const value = toText(attrs[0].get('current')).toLowerCase();
-    if (value === ACTOR_TYPE_AUTO) return null;
-    return isFinalType(value) ? value : null;
-  }
-
-  /**
-   * Creates or updates the ct_mod_actor_type attribute on a character.
-   *
-   * @param {string} characterId Roll20 character id.
-   * @param {string} type Actor type value to store (pc, npc, ignored, or auto).
-   * @returns {void}
-   */
-  function setCharacterOverrideAttr(characterId, type) {
-    const attrs = queryObjects({
-      _type: 'attribute',
-      _characterid: characterId,
-      name: ACTOR_OVERRIDE_ATTR,
-    });
-    if (attrs.length > 0) {
-      attrs[0].set('current', type);
-    } else {
-      createObj('attribute', {
-        _characterid: characterId,
-        name: ACTOR_OVERRIDE_ATTR,
-        current: type,
-      });
-    }
-  }
-
-  /**
-   * Removes the ct_mod_actor_type attribute from a character (resets to auto).
-   *
-   * @param {string} characterId Roll20 character id.
-   * @returns {void}
-   */
-  function clearCharacterOverrideAttr(characterId) {
-    const attrs = queryObjects({
-      _type: 'attribute',
-      _characterid: characterId,
-      name: ACTOR_OVERRIDE_ATTR,
-    });
-    for (const attr of attrs) {
-      attr.remove();
-    }
-  }
-
-  /**
-   * Returns the explicit classification for a token from overrides, or null when
-   * no override is set.
-   *
-   * Checks token-level state override first (Step 1), then the character's
-   * ct_mod_actor_type attribute (Step 2).
-   *
-   * @param {object} token Roll20 graphic token.
-   * @returns {string|null} pc, npc, ignored, or null.
-   */
-  function getExplicitClassification(token) {
-    if (!token) return null;
-
-    const tokenId = token.id;
-    if (!tokenId) return null;
-
-    const tokenOverride = getActorTokenOverride(tokenId);
-    if (tokenOverride) return tokenOverride;
-
-    const characterId = toText(token.get?.('represents'));
-    if (!characterId) return null;
-
-    return getCharacterOverrideAttr(characterId);
-  }
-
-  /**
-   * Returns true when a token is eligible for automatic classification.
-   *
-   * Tokens on the objects layer (map pins, scenery, spell templates) are always
-   * ignored. Unlinked tokens (no represents value) also default to ignored unless
-   * explicitly overridden.
-   *
-   * @param {object} token Roll20 graphic token.
-   * @returns {boolean} True when eligible.
-   */
-  function isAutoEligibleToken(token) {
-    if (!token) return false;
-
-    // Exclude objects layer (for map pins, scenery, spell templates, etc.)
-    const layer = toText(token.get?.('_layer'));
-    if (layer === 'objects') return false;
-
-    return Boolean(toText(token.get?.('represents')));
-  }
-
-  /**
-   * Checks the game-system adapter attribute for the configured system.
-   * Returns pc, npc, or null when the attribute is absent.
-   *
-   * @param {string} characterId Roll20 character id.
-   * @param {string} systemId Active game system id.
-   * @returns {string|null} pc, npc, or null.
-   */
-  function classifyWithAdapter(characterId, systemId) {
-    const adapter = SHEET_ADAPTERS[systemId];
-    if (!adapter) return null;
-
-    const attrs = queryObjects({
-      _type: 'attribute',
-      _characterid: characterId,
-      name: adapter.npcAttr,
-    });
-    if (attrs.length === 0) return null;
-
-    return String(attrs[0].get('current')) === adapter.npcValue
-      ? ACTOR_TYPE_NPC
-      : ACTOR_TYPE_PC;
-  }
-
-  /**
-   * Checks a list of common NPC indicator attributes as a system-agnostic fallback.
-   * Returns pc, npc, or null when no matching attribute is found.
-   *
-   * @param {string} characterId Roll20 character id.
-   * @returns {string|null} pc, npc, or null.
-   */
-  function classifyWithGenericAttrs(characterId) {
-    for (const attrName of GENERIC_NPC_ATTRS) {
-      const attrs = queryObjects({
-        _type: 'attribute',
-        _characterid: characterId,
-        name: attrName,
-      });
-      if (attrs.length === 0) continue;
-
-      const val = toText(attrs[0].get('current')).toLowerCase();
-      if (val === '1' || val === 'true' || val === 'npc') return ACTOR_TYPE_NPC;
-      if (
-        val === '0' ||
-        val === 'false' ||
-        val === 'pc' ||
-        val === 'character'
-      ) {
-        return ACTOR_TYPE_PC;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Uses the character's controlledby field as a last resort.
-   * Returns pc when a non-GM player controls the character, npc otherwise.
-   *
-   * @param {object} character Roll20 character object.
-   * @returns {string} pc or npc.
-   */
-  function classifyWithControlledBy(character) {
-    const controlledBy = toText(character.get('controlledby'));
-    if (!controlledBy) return ACTOR_TYPE_NPC;
-
-    // If controlled by 'all', it's player-controlled (PC)
-    if (controlledBy === 'all') return ACTOR_TYPE_PC;
-
-    const isPlayerControlled = controlledBy
-      .split(',')
-      .map((id) => id.trim())
-      .filter((id) => id)
-      .some((id) => !playerIsGM(id));
-
-    return isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
-  }
-
-  /**
-   * Automatically classifies a linked token using adapter then generic then
-   * controlledby detection in order.
-   *
-   * @param {object} token Roll20 graphic token.
-   * @returns {string} pc, npc, ignored, or unknown.
-   */
-  function classifyAutomatically(token) {
-    const characterId = toText(token.get?.('represents'));
-    if (!characterId) return ACTOR_TYPE_IGNORED;
-
-    const character = getObj('character', characterId);
-    if (!character) return ACTOR_TYPE_UNKNOWN;
-
-    const systemId = getConfig().gameSystem;
-
-    const adapterResult = classifyWithAdapter(characterId, systemId);
-    if (adapterResult) return adapterResult;
-
-    const genericResult = classifyWithGenericAttrs(characterId);
-    if (genericResult) return genericResult;
-
-    return classifyWithControlledBy(character);
-  }
-
-  /**
-   * Classifies a token as pc, npc, ignored, or unknown.
-   *
-   * Detection order:
-   *   1. Token-level state override
-   *   2. Character ct_mod_actor_type attribute
-   *   3. Automatic eligibility (unlinked → ignored)
-   *   4. Game-system adapter attribute
-   *   5. Generic NPC attribute scan
-   *   6. controlledby fallback
-   *
-   * @param {object} token Roll20 graphic token.
-   * @returns {'pc'|'npc'|'ignored'|'unknown'} Actor classification.
-   */
-  function classifyToken(token) {
-    const explicit = getExplicitClassification(token);
-    if (explicit) return explicit;
-
-    if (!isAutoEligibleToken(token)) return ACTOR_TYPE_IGNORED;
-
-    return classifyAutomatically(token);
-  }
-
-  /**
-   * Returns classification details for the --classify show diagnostic.
-   *
-   * @param {object} token Roll20 graphic token.
-   * @param {string} tokenName Human-readable token name.
-   * @returns {{type: string, source: string, reason: string}} Classification detail.
-   */
-  function classifyTokenDetail(token, tokenName) {
-    if (!token) {
-      return {
-        type: ACTOR_TYPE_IGNORED,
-        source: 'eligibility',
-        reason: 'no token object',
-      };
-    }
-
-    const tokenId = token.id;
-    const name = tokenName || tokenId;
-
-    const tokenOverride = getActorTokenOverride(tokenId);
-    if (tokenOverride) {
-      return {
-        type: tokenOverride,
-        source: 'token override',
-        reason: `state override for token ${name}`,
-      };
-    }
-
-    const characterId = toText(token.get?.('represents'));
-
-    if (characterId) {
-      const charOverride = getCharacterOverrideAttr(characterId);
-      if (charOverride) {
-        return {
-          type: charOverride,
-          source: 'character override',
-          reason: `${ACTOR_OVERRIDE_ATTR} attribute on character`,
-        };
-      }
-    }
-
-    if (!characterId) {
-      return {
-        type: ACTOR_TYPE_IGNORED,
-        source: 'eligibility',
-        reason: 'unlinked token — no character sheet',
-      };
-    }
-
-    const character = getObj('character', characterId);
-    if (!character) {
-      return {
-        type: ACTOR_TYPE_UNKNOWN,
-        source: 'eligibility',
-        reason: 'character record not found',
-      };
-    }
-
-    const systemId = getConfig().gameSystem;
-    const adapter = SHEET_ADAPTERS[systemId];
-
-    if (adapter) {
-      const attrs = queryObjects({
-        _type: 'attribute',
-        _characterid: characterId,
-        name: adapter.npcAttr,
-      });
-      if (attrs.length > 0) {
-        const val = attrs[0].get('current');
-        const type =
-          String(val) === adapter.npcValue ? ACTOR_TYPE_NPC : ACTOR_TYPE_PC;
-        return {
-          type,
-          source: 'game-system adapter',
-          reason: `${adapter.npcAttr}=${val} (${systemId})`,
-        };
-      }
-    }
-
-    for (const attrName of GENERIC_NPC_ATTRS) {
-      const attrs = queryObjects({
-        _type: 'attribute',
-        _characterid: characterId,
-        name: attrName,
-      });
-      if (attrs.length === 0) continue;
-
-      const val = toText(attrs[0].get('current')).toLowerCase();
-      if (val === '1' || val === 'true' || val === 'npc') {
-        return {
-          type: ACTOR_TYPE_NPC,
-          source: 'generic attribute',
-          reason: `${attrName}=${val}`,
-        };
-      }
-      if (
-        val === '0' ||
-        val === 'false' ||
-        val === 'pc' ||
-        val === 'character'
-      ) {
-        return {
-          type: ACTOR_TYPE_PC,
-          source: 'generic attribute',
-          reason: `${attrName}=${val}`,
-        };
-      }
-    }
-
-    const controlledBy = toText(character.get('controlledby'));
-    if (controlledBy) {
-      // If controlled by 'all', it's player-controlled (PC)
-      if (controlledBy === 'all') {
-        return {
-          type: ACTOR_TYPE_PC,
-          source: 'controlledby fallback',
-          reason: `character.controlledby = "${controlledBy}"`,
-        };
-      }
-      const playerIds = controlledBy
-        .split(',')
-        .map((id) => id.trim())
-        .filter((id) => id);
-      const isPlayerControlled = playerIds.some((id) => !playerIsGM(id));
-      const type = isPlayerControlled ? ACTOR_TYPE_PC : ACTOR_TYPE_NPC;
-      return {
-        type,
-        source: 'controlledby fallback',
-        reason: `character.controlledby = "${controlledBy}"`,
-      };
-    }
-
-    return {
-      type: ACTOR_TYPE_NPC,
-      source: 'final fallback',
-      reason: 'linked token, no detection data found',
-    };
-  }
-
-  /**
-   * Returns true when a chat sender is a GM.
-   *
-   * @param {object} msg Roll20 chat message.
-   * @returns {boolean} True for GM senders.
-   */
-  function isGmMessage(msg) {
-    return Boolean(msg && playerIsGM(msg.playerid));
-  }
-
-  /**
-   * Resolves and validates token-based apply arguments.
-   *
-   * @param {object} args Parsed command arguments.
-   * @returns {object} Validation result.
-   */
-  function validateApplyArgs(args) {
-    const locale = getConfig().language;
-    const sourceToken = getGraphicToken(args.source);
-    if (!sourceToken) {
-      return invalid(t('ui.msg.sourceTokenNotFound', locale));
-    }
-
-    const condition = getCanonicalCondition(args.condition);
-    if (!condition) {
-      return invalid(t('ui.msg.invalidCondition', locale));
-    }
-
-    const subjectRaw = toText(args.subject);
-    const subjectId = subjectRaw === '__none__' ? '' : subjectRaw;
-    if (subjectId && !isCustomEffectType(condition)) {
-      return invalid(t('ui.msg.subjectOnlyCustom', locale));
-    }
-
-    const subjectToken = subjectId ? getGraphicToken(subjectId) : null;
-    if (subjectId && !subjectToken) {
-      return invalid(t('ui.msg.subjectTokenNotFound', locale));
-    }
-
-    const targetId = toText(args.target);
-    const targetToken = getGraphicToken(targetId);
-    if (!targetToken) {
-      return invalid(t('ui.msg.targetTokenNotFound', locale));
-    }
-
-    const customText = toText(args.other);
-    if (isCustomTextCondition(condition) && !customText) {
-      return invalid(t('ui.msg.customDetailsRequired', locale, { condition }));
-    }
-
-    return {
-      valid: true,
-      sourceToken,
-      subjectToken,
-      targetToken,
-      condition,
-      customText: isCustomTextCondition(condition) ? customText : '',
-    };
-  }
-
-  /**
-   * Validates a marker configuration value.
-   *
-   * @param {string} condition Condition label.
-   * @param {string} marker Marker name or tag.
-   * @returns {object} Validation result.
-   */
-  function validateMarkerConfig(condition, marker) {
-    const locale = getConfig().language;
-    const canonical = getCanonicalCondition(condition);
-    if (!canonical || canonical === CONDITION_OTHER) {
-      return invalid(t('ui.msg.markerPredefinedRequired', locale));
-    }
-
-    if (!toText(marker)) {
-      return invalid(t('ui.msg.markerNameRequired', locale));
-    }
-
-    return { valid: true, condition: canonical, marker: toText(marker) };
-  }
-
-  /**
-   * Validates a boolean configuration value.
-   *
-   * @param {string} value Boolean text.
-   * @returns {object} Validation result.
-   */
-  function validateBoolean(value) {
-    const locale = getConfig().language;
-    const text = toText(value).toLowerCase();
-    if (!BOOLEAN_TEXT.has(text)) {
-      return invalid(t('ui.msg.expectedBoolean', locale));
-    }
-
-    return { valid: true, value: text === 'true' };
-  }
-
-  /**
-   * Validates a health bar setting.
-   *
-   * @param {string} value Health bar property.
-   * @returns {object} Validation result.
-   */
-  function validateHealthBar(value) {
-    const locale = getConfig().language;
-    const text = toText(value);
-    if (!VALID_HEALTH_BARS.includes(text)) {
-      return invalid(t('ui.msg.invalidHealthBar', locale));
-    }
-
-    return { valid: true, value: text };
-  }
-
-  /**
-   * Validates a game system id.
-   *
-   * @param {string} value Game system id string.
-   * @returns {object} Validation result.
-   */
-  function validateGameSystem(value) {
-    const text = toText(value).trim();
-    if (!VALID_GAME_SYSTEMS.has(text)) {
-      return invalid(t('ui.msg.invalidGameSystem', getConfig().language));
-    }
-    return { valid: true, value: text };
-  }
-
-  /**
-   * Validates a locale string.
-   *
-   * @param {string} value Locale string.
-   * @returns {object} Validation result.
-   */
-  function validateLocale(value) {
-    const locale = getConfig().language;
-    const text = normalizeLocale(value);
-    if (!text) {
-      return invalid(
-        t('ui.msg.invalidLocale', locale, {
-          locales: SUPPORTED_LOCALE_LIST,
-        }),
-      );
-    }
-    return { valid: true, value: text };
-  }
-
-  /**
-   * Creates an invalid validation result.
-   *
-   * @param {string} message Error message.
-   * @returns {object} Invalid result.
-   */
-  function invalid(message) {
-    return { valid: false, message };
-  }
-
   /**
    * Performs manual cleanup and reconciliation.
    *
@@ -30585,203 +30471,6 @@ const ConditionTrackerMod = (() => {
         ],
       ),
     ]);
-  }
-
-  const MACRO_DEFINITIONS = [
-    { name: MACRO_NAME, body: DEFAULT_MACRO_BODY },
-    { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
-    { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
-    { name: MACRO_NAME_SAVED, body: DEFAULT_SAVED_MACRO_BODY },
-    { name: MACRO_NAME_CLASSIFY, body: DEFAULT_CLASSIFY_MACRO_BODY },
-  ];
-
-  /**
-   * Installs or updates all GM-facing macros for all current GMs.
-   *
-   * @returns {void}
-   */
-  function installMacro() {
-    const gmIds = getGmIds();
-    if (!gmIds.length) {
-      log(
-        `${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`,
-      );
-      return;
-    }
-
-    const gmIdSet = new Set(gmIds);
-    let createdCount = 0;
-    let updatedCount = 0;
-    let removedCount = 0;
-
-    for (const macroDef of MACRO_DEFINITIONS) {
-      const macrosByOwner = groupMacrosByOwner(
-        queryObjects({ _type: 'macro', name: macroDef.name }),
-      );
-      let macroCreatedCount = 0;
-      let macroUpdatedCount = 0;
-      let macroRemovedCount = 0;
-
-      for (const gmId of gmIds) {
-        const result = syncGmMacro(
-          gmId,
-          macrosByOwner.get(gmId) || [],
-          gmId,
-          macroDef,
-        );
-        createdCount += result.created;
-        updatedCount += result.updated;
-        removedCount += result.removed;
-        macroCreatedCount += result.created;
-        macroUpdatedCount += result.updated;
-        macroRemovedCount += result.removed;
-      }
-
-      const orphanedCount = removeOrphanedMacros(macrosByOwner, gmIdSet);
-      removedCount += orphanedCount;
-      macroRemovedCount += orphanedCount;
-
-      logMacroSyncResult(
-        macroDef.name,
-        macroCreatedCount,
-        macroUpdatedCount,
-        macroRemovedCount,
-      );
-    }
-
-    logInstallResult(createdCount, updatedCount, removedCount);
-  }
-
-  /**
-   * Groups existing macros by their owner player id.
-   *
-   * @param {object[]} macros Roll20 macro objects.
-   * @returns {Map<string, object[]>} Macros keyed by owner player id.
-   */
-  function groupMacrosByOwner(macros) {
-    const byOwner = new Map();
-    for (const macro of macros) {
-      const ownerId = macro.get('playerid') || '';
-      if (!byOwner.has(ownerId)) {
-        byOwner.set(ownerId, []);
-      }
-      byOwner.get(ownerId).push(macro);
-    }
-    return byOwner;
-  }
-
-  /**
-   * Creates or updates one named macro for a GM, removing any duplicates.
-   *
-   * @param {string} gmId GM player id.
-   * @param {object[]} ownerMacros Existing macros owned by this GM for this definition.
-   * @param {string} visibleTo Comma-separated GM ids for visibility.
-   * @param {{name: string, body: string}} macroDef Macro name and action body.
-   * @returns {{created: number, updated: number, removed: number}} Counts.
-   */
-  function syncGmMacro(gmId, ownerMacros, visibleTo, macroDef) {
-    if (ownerMacros.length === 0) {
-      createObj('macro', {
-        playerid: gmId,
-        name: macroDef.name,
-        action: macroDef.body,
-        visibleto: visibleTo,
-        istokenaction: false,
-      });
-      return { created: 1, updated: 0, removed: 0 };
-    }
-
-    const [primaryMacro, ...duplicates] = ownerMacros;
-    primaryMacro.set({
-      action: macroDef.body,
-      visibleto: visibleTo,
-      istokenaction: false,
-    });
-
-    for (const duplicate of duplicates) {
-      duplicate.remove();
-    }
-
-    return { created: 0, updated: 1, removed: duplicates.length };
-  }
-
-  /**
-   * Removes macros owned by players who are no longer GMs.
-   *
-   * @param {Map<string, object[]>} macrosByOwner Macros keyed by owner player id.
-   * @param {Set<string>} gmIdSet Current GM player ids.
-   * @returns {number} Number of macros removed.
-   */
-  function removeOrphanedMacros(macrosByOwner, gmIdSet) {
-    let removed = 0;
-    for (const [ownerId, orphans] of macrosByOwner) {
-      if (gmIdSet.has(ownerId)) continue;
-      for (const orphan of orphans) {
-        orphan.remove();
-        removed += 1;
-      }
-    }
-    return removed;
-  }
-
-  /**
-   * Logs the result of a macro install/update pass.
-   *
-   * @param {number} createdCount Macros created.
-   * @param {number} updatedCount Macros updated.
-   * @param {number} removedCount Macros removed.
-   * @returns {void}
-   */
-  function logInstallResult(createdCount, updatedCount, removedCount) {
-    const cleanupNote =
-      removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : '';
-    if (createdCount > 0) {
-      log(
-        `${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`,
-      );
-    } else {
-      log(
-        `${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`,
-      );
-    }
-  }
-
-  /**
-   * Logs the result of syncing one macro definition across all current GMs.
-   *
-   * @param {string} macroName Macro name.
-   * @param {number} createdCount Macros created.
-   * @param {number} updatedCount Macros updated.
-   * @param {number} removedCount Macros removed.
-   * @returns {void}
-   */
-  function logMacroSyncResult(
-    macroName,
-    createdCount,
-    updatedCount,
-    removedCount,
-  ) {
-    const cleanupNote =
-      removedCount > 0 ? ` Removed ${removedCount} duplicate(s).` : '';
-    if (createdCount > 0) {
-      log(
-        `${SCRIPT_NAME}: Macro ${macroName} installed (created ${createdCount}, updated ${updatedCount}).${cleanupNote}`,
-      );
-      return;
-    }
-
-    log(
-      `${SCRIPT_NAME}: Macro ${macroName} updated (updated ${updatedCount}).${cleanupNote}`,
-    );
-  }
-
-  /**
-   * Returns all current GM player ids.
-   *
-   * @returns {string[]} GM player ids.
-   */
-  function getGmIds() {
-    return getGmPlayerIds();
   }
 
   const STYLE = {
@@ -30979,6 +30668,21 @@ const ConditionTrackerMod = (() => {
       })
       .join('');
     return `<table style="${STYLE.table}"><tbody>${bodyRows}</tbody></table>`;
+  }
+
+  /**
+   * Builds the examples table for common macro patterns.
+   *
+   * @param {(key: string) => string} hs Handout string lookup.
+   * @param {(key: string) => *} hr Handout raw value lookup.
+   * @param {string} locale Locale code.
+   * @returns {string} Examples section HTML.
+   */
+  function buildExamplesSection(hs, hr, locale) {
+    const rows = hr('examples.rows');
+    return `<h2 style="${STYLE.h2}">${hs('examples.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('examples.intro')}</p>
+    ${buildTable([hs('examples.colMacro'), hs('examples.colEvent')], rows, ['52%', '48%'], locale)}`;
   }
 
   /**
@@ -31197,6 +30901,8 @@ const ConditionTrackerMod = (() => {
     <h2 style="${STYLE.h2}">${hs('quickStart.heading')}</h2>
     ${buildQuickStartTable(hs('quickStart.colCommand'), hs('quickStart.colDesc'), hr('quickStart.rows'))}`;
 
+    const examples = buildExamplesSection(hs, hr, lang);
+
     const commandsRef = buildCommandsReferenceSection(hs, hr, lang);
 
     const standardConds = `
@@ -31234,7 +30940,7 @@ const ConditionTrackerMod = (() => {
       <h1 style="${STYLE.h1}">${SCRIPT_NAME}</h1>
       <p style="${STYLE.subtitle}">${hs('versionLabel')} ${version} &nbsp;•&nbsp; ${hs('subtitle')}</p>
     </div>
-    ${overview}${quickStart}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
+    ${overview}${quickStart}${examples}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
   </div>`;
   }
 
@@ -31269,6 +30975,203 @@ const ConditionTrackerMod = (() => {
         ? ` Removed ${duplicates.length} duplicate(s).`
         : '';
     log(`${SCRIPT_NAME}: Help handout updated.${cleanupNote}`);
+  }
+
+  const MACRO_DEFINITIONS = [
+    { name: MACRO_NAME, body: DEFAULT_MACRO_BODY },
+    { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
+    { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
+    { name: MACRO_NAME_SAVED, body: DEFAULT_SAVED_MACRO_BODY },
+    { name: MACRO_NAME_CLASSIFY, body: DEFAULT_CLASSIFY_MACRO_BODY },
+  ];
+
+  /**
+   * Installs or updates all GM-facing macros for all current GMs.
+   *
+   * @returns {void}
+   */
+  function installMacro() {
+    const gmIds = getGmIds();
+    if (!gmIds.length) {
+      log(
+        `${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`,
+      );
+      return;
+    }
+
+    const gmIdSet = new Set(gmIds);
+    let createdCount = 0;
+    let updatedCount = 0;
+    let removedCount = 0;
+
+    for (const macroDef of MACRO_DEFINITIONS) {
+      const macrosByOwner = groupMacrosByOwner(
+        queryObjects({ _type: 'macro', name: macroDef.name }),
+      );
+      let macroCreatedCount = 0;
+      let macroUpdatedCount = 0;
+      let macroRemovedCount = 0;
+
+      for (const gmId of gmIds) {
+        const result = syncGmMacro(
+          gmId,
+          macrosByOwner.get(gmId) || [],
+          gmId,
+          macroDef,
+        );
+        createdCount += result.created;
+        updatedCount += result.updated;
+        removedCount += result.removed;
+        macroCreatedCount += result.created;
+        macroUpdatedCount += result.updated;
+        macroRemovedCount += result.removed;
+      }
+
+      const orphanedCount = removeOrphanedMacros(macrosByOwner, gmIdSet);
+      removedCount += orphanedCount;
+      macroRemovedCount += orphanedCount;
+
+      logMacroSyncResult(
+        macroDef.name,
+        macroCreatedCount,
+        macroUpdatedCount,
+        macroRemovedCount,
+      );
+    }
+
+    logInstallResult(createdCount, updatedCount, removedCount);
+  }
+
+  /**
+   * Groups existing macros by their owner player id.
+   *
+   * @param {object[]} macros Roll20 macro objects.
+   * @returns {Map<string, object[]>} Macros keyed by owner player id.
+   */
+  function groupMacrosByOwner(macros) {
+    const byOwner = new Map();
+    for (const macro of macros) {
+      const ownerId = macro.get('playerid') || '';
+      if (!byOwner.has(ownerId)) {
+        byOwner.set(ownerId, []);
+      }
+      byOwner.get(ownerId).push(macro);
+    }
+    return byOwner;
+  }
+
+  /**
+   * Creates or updates one named macro for a GM, removing any duplicates.
+   *
+   * @param {string} gmId GM player id.
+   * @param {object[]} ownerMacros Existing macros owned by this GM for this definition.
+   * @param {string} visibleTo Comma-separated GM ids for visibility.
+   * @param {{name: string, body: string}} macroDef Macro name and action body.
+   * @returns {{created: number, updated: number, removed: number}} Counts.
+   */
+  function syncGmMacro(gmId, ownerMacros, visibleTo, macroDef) {
+    if (ownerMacros.length === 0) {
+      createObj('macro', {
+        playerid: gmId,
+        name: macroDef.name,
+        action: macroDef.body,
+        visibleto: visibleTo,
+        istokenaction: false,
+      });
+      return { created: 1, updated: 0, removed: 0 };
+    }
+
+    const [primaryMacro, ...duplicates] = ownerMacros;
+    primaryMacro.set({
+      action: macroDef.body,
+      visibleto: visibleTo,
+      istokenaction: false,
+    });
+
+    for (const duplicate of duplicates) {
+      duplicate.remove();
+    }
+
+    return { created: 0, updated: 1, removed: duplicates.length };
+  }
+
+  /**
+   * Removes macros owned by players who are no longer GMs.
+   *
+   * @param {Map<string, object[]>} macrosByOwner Macros keyed by owner player id.
+   * @param {Set<string>} gmIdSet Current GM player ids.
+   * @returns {number} Number of macros removed.
+   */
+  function removeOrphanedMacros(macrosByOwner, gmIdSet) {
+    let removed = 0;
+    for (const [ownerId, orphans] of macrosByOwner) {
+      if (gmIdSet.has(ownerId)) continue;
+      for (const orphan of orphans) {
+        orphan.remove();
+        removed += 1;
+      }
+    }
+    return removed;
+  }
+
+  /**
+   * Logs the result of a macro install/update pass.
+   *
+   * @param {number} createdCount Macros created.
+   * @param {number} updatedCount Macros updated.
+   * @param {number} removedCount Macros removed.
+   * @returns {void}
+   */
+  function logInstallResult(createdCount, updatedCount, removedCount) {
+    const cleanupNote =
+      removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : '';
+    if (createdCount > 0) {
+      log(
+        `${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`,
+      );
+    } else {
+      log(
+        `${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`,
+      );
+    }
+  }
+
+  /**
+   * Logs the result of syncing one macro definition across all current GMs.
+   *
+   * @param {string} macroName Macro name.
+   * @param {number} createdCount Macros created.
+   * @param {number} updatedCount Macros updated.
+   * @param {number} removedCount Macros removed.
+   * @returns {void}
+   */
+  function logMacroSyncResult(
+    macroName,
+    createdCount,
+    updatedCount,
+    removedCount,
+  ) {
+    const cleanupNote =
+      removedCount > 0 ? ` Removed ${removedCount} duplicate(s).` : '';
+    if (createdCount > 0) {
+      log(
+        `${SCRIPT_NAME}: Macro ${macroName} installed (created ${createdCount}, updated ${updatedCount}).${cleanupNote}`,
+      );
+      return;
+    }
+
+    log(
+      `${SCRIPT_NAME}: Macro ${macroName} updated (updated ${updatedCount}).${cleanupNote}`,
+    );
+  }
+
+  /**
+   * Returns all current GM player ids.
+   *
+   * @returns {string[]} GM player ids.
+   */
+  function getGmIds() {
+    return getGmPlayerIds();
   }
 
   /**
@@ -32309,6 +32212,13 @@ const ConditionTrackerMod = (() => {
       return;
     }
 
+    /**
+     * Builds a saved-effect snooze command.
+     *
+     * @param {'turn'|'rounds'|'combat'} scope Snooze scope.
+     * @param {number} rounds Round count used for rounds scope.
+     * @returns {string} Roll20 command text.
+     */
     const snoozeCmd = (scope, rounds) => {
       const parts = [`--saved snooze ${effectId} --scope ${scope}`];
       if (rounds) parts.push(`--rounds ${rounds}`);
@@ -32597,6 +32507,408 @@ const ConditionTrackerMod = (() => {
     return tableRows;
   }
 
+  /**
+   * Returns true when a value looks like a Roll20 object id.
+   *
+   * Roll20 ids are URL-safe tokens that commonly start with '-'. This heuristic
+   * intentionally prefers avoiding false positives for normal creature names.
+   *
+   * @param {string} value Candidate reference text.
+   * @returns {boolean} True when the value looks like an id.
+   */
+  function looksLikeRoll20Id(value) {
+    const text = toText(value);
+    return /^-[A-Za-z0-9_-]{8,}$/.test(text);
+  }
+
+  /**
+   * Returns a token's display name, preferring token name and falling back to
+   * linked character name when available.
+   *
+   * @param {Graphic} token Roll20 token.
+   * @returns {string} Display name or empty string.
+   */
+  function getTokenDisplayName$1(token) {
+    const tokenName = toText(token?.get?.('name'));
+    if (tokenName) return tokenName;
+
+    const characterId = toText(token?.get?.('represents'));
+    if (!characterId) return '';
+
+    const character = getObj('character', characterId);
+    return character ? toText(character.get('name')) : '';
+  }
+
+  /**
+   * Returns a token's linked character name, or an empty string.
+   *
+   * @param {Graphic} token Roll20 token.
+   * @returns {string} Character name.
+   */
+  function getLinkedCharacterName(token) {
+    const characterId = toText(token?.get?.('represents'));
+    if (!characterId) return '';
+    const character = getObj('character', characterId);
+    return character ? toText(character.get('name')) : '';
+  }
+
+  /**
+   * Returns token candidates from active play context.
+   *
+   * Default behavior searches player page + current turn order. When allPages is
+   * true, searches all token graphics as a fallback for name-based lookup.
+   *
+   * @param {boolean} [allPages] Whether to include all token pages.
+   * @returns {Graphic[]} Candidate tokens.
+   */
+  function getCandidateTokens(allPages = false) {
+    const seen = new Set();
+    const candidates = [];
+
+    /**
+     * Adds a token to the candidate list once.
+     *
+     * @param {Graphic|null|undefined} token Candidate token.
+     * @returns {void}
+     */
+    const pushIfToken = (token) => {
+      if (!token || seen.has(token.id)) return;
+      seen.add(token.id);
+      candidates.push(token);
+    };
+
+    if (allPages) {
+      for (const token of queryObjects({
+        _type: 'graphic',
+        _subtype: 'token',
+      })) {
+        pushIfToken(token);
+      }
+      return candidates;
+    }
+
+    const playerPageId = toText(Campaign().get('playerpageid'));
+    if (playerPageId) {
+      for (const token of queryObjects({
+        _type: 'graphic',
+        _subtype: 'token',
+        _pageid: playerPageId,
+      })) {
+        pushIfToken(token);
+      }
+    }
+
+    const turnOrder = JSON.parse(toText(Campaign().get('turnorder')) || '[]');
+    for (const row of Array.isArray(turnOrder) ? turnOrder : []) {
+      const tokenId = toText(row?.id);
+      if (!tokenId || tokenId === '-1') continue;
+      pushIfToken(getGraphicToken(tokenId));
+    }
+
+    return candidates;
+  }
+
+  /**
+   * Resolves a token reference by id, exact name, or partial name.
+   *
+   * Matching is case-insensitive. Exact token/character-name matches take
+   * precedence over partial matches.
+   *
+   * @param {*} rawRef User-provided token ref.
+   * @param {'source'|'target'|'subject'} role Token role for messages.
+   * @param {string} locale Output locale.
+   * @returns {{valid: boolean, token?: Graphic, message?: string}}
+   */
+  function resolveTokenReference(rawRef, role, locale) {
+    const ref = toText(rawRef);
+    const byId = getGraphicToken(ref);
+    if (byId) {
+      return { valid: true, token: byId };
+    }
+
+    // If the user provided something that looks like an id, do not
+    // run name matching. Treat it as an id-only lookup failure.
+    if (looksLikeRoll20Id(ref)) {
+      return {
+        valid: false,
+        message: t(`ui.msg.${role}TokenNotFound`, locale),
+      };
+    }
+
+    const key = normalizeKey(ref);
+    if (!key) {
+      return {
+        valid: false,
+        message: t(`ui.msg.${role}TokenNotFound`, locale),
+      };
+    }
+
+    let candidates = getCandidateTokens();
+    const exactMatches = candidates.filter((token) => {
+      const tokenName = normalizeKey(token.get('name'));
+      const charName = normalizeKey(getLinkedCharacterName(token));
+      return tokenName === key || charName === key;
+    });
+
+    if (exactMatches.length === 1) {
+      return { valid: true, token: exactMatches[0] };
+    }
+
+    if (exactMatches.length > 1) {
+      const listed = exactMatches
+        .slice(0, 6)
+        .map(
+          (token) =>
+            `${getTokenDisplayName$1(token) || token.id} [${token.id}]`,
+        )
+        .join(', ');
+      return {
+        valid: false,
+        message: t('ui.msg.tokenRefAmbiguous', locale, {
+          role,
+          value: ref,
+          matches: listed,
+        }),
+      };
+    }
+
+    let partialMatches = candidates.filter((token) => {
+      const tokenName = normalizeKey(token.get('name'));
+      const charName = normalizeKey(getLinkedCharacterName(token));
+      return tokenName.includes(key) || charName.includes(key);
+    });
+
+    // If the active-context search finds nothing, broaden to all token pages.
+    if (exactMatches.length === 0 && partialMatches.length === 0) {
+      candidates = getCandidateTokens(true);
+
+      const globalExactMatches = candidates.filter((token) => {
+        const tokenName = normalizeKey(token.get('name'));
+        const charName = normalizeKey(getLinkedCharacterName(token));
+        return tokenName === key || charName === key;
+      });
+
+      if (globalExactMatches.length === 1) {
+        return { valid: true, token: globalExactMatches[0] };
+      }
+
+      if (globalExactMatches.length > 1) {
+        const listed = globalExactMatches
+          .slice(0, 6)
+          .map(
+            (token) =>
+              `${getTokenDisplayName$1(token) || token.id} [${token.id}]`,
+          )
+          .join(', ');
+        return {
+          valid: false,
+          message: t('ui.msg.tokenRefAmbiguous', locale, {
+            role,
+            value: ref,
+            matches: listed,
+          }),
+        };
+      }
+
+      partialMatches = candidates.filter((token) => {
+        const tokenName = normalizeKey(token.get('name'));
+        const charName = normalizeKey(getLinkedCharacterName(token));
+        return tokenName.includes(key) || charName.includes(key);
+      });
+    }
+
+    if (partialMatches.length === 0) {
+      return {
+        valid: false,
+        message: t('ui.msg.tokenRefNotFound', locale, {
+          role,
+          value: ref,
+        }),
+      };
+    }
+
+    if (partialMatches.length > 1) {
+      const listed = partialMatches
+        .slice(0, 6)
+        .map(
+          (token) =>
+            `${getTokenDisplayName$1(token) || token.id} [${token.id}]`,
+        )
+        .join(', ');
+      return {
+        valid: false,
+        message: t('ui.msg.tokenRefAmbiguous', locale, {
+          role,
+          value: ref,
+          matches: listed,
+        }),
+      };
+    }
+
+    return { valid: true, token: partialMatches[0] };
+  }
+
+  /**
+   * Returns true when a chat sender is a GM.
+   *
+   * @param {object} msg Roll20 chat message.
+   * @returns {boolean} True for GM senders.
+   */
+  function isGmMessage(msg) {
+    return Boolean(msg && playerIsGM(msg.playerid));
+  }
+
+  /**
+   * Resolves and validates token-based apply arguments.
+   *
+   * @param {object} args Parsed command arguments.
+   * @returns {object} Validation result.
+   */
+  function validateApplyArgs(args) {
+    const locale = getConfig().language;
+    const sourceResult = resolveTokenReference(args.source, 'source', locale);
+    if (!sourceResult.valid) {
+      return invalid(sourceResult.message);
+    }
+    const sourceToken = sourceResult.token;
+
+    const condition = getCanonicalCondition(args.condition);
+    if (!condition) {
+      return invalid(t('ui.msg.invalidCondition', locale));
+    }
+
+    const subjectRaw = toText(args.subject);
+    const subjectId = subjectRaw === '__none__' ? '' : subjectRaw;
+    if (subjectId && !isCustomEffectType(condition)) {
+      return invalid(t('ui.msg.subjectOnlyCustom', locale));
+    }
+
+    let subjectToken = null;
+    if (subjectId) {
+      const subjectResult = resolveTokenReference(subjectId, 'subject', locale);
+      if (!subjectResult.valid) {
+        return invalid(subjectResult.message);
+      }
+      subjectToken = subjectResult.token;
+    }
+
+    const targetResult = resolveTokenReference(args.target, 'target', locale);
+    if (!targetResult.valid) {
+      return invalid(targetResult.message);
+    }
+    const targetToken = targetResult.token;
+
+    const customText = toText(args.other);
+    if (isCustomTextCondition(condition) && !customText) {
+      return invalid(t('ui.msg.customDetailsRequired', locale, { condition }));
+    }
+
+    return {
+      valid: true,
+      sourceToken,
+      subjectToken,
+      targetToken,
+      condition,
+      customText: isCustomTextCondition(condition) ? customText : '',
+    };
+  }
+
+  /**
+   * Validates a marker configuration value.
+   *
+   * @param {string} condition Condition label.
+   * @param {string} marker Marker name or tag.
+   * @returns {object} Validation result.
+   */
+  function validateMarkerConfig(condition, marker) {
+    const locale = getConfig().language;
+    const canonical = getCanonicalCondition(condition);
+    if (!canonical || canonical === CONDITION_OTHER) {
+      return invalid(t('ui.msg.markerPredefinedRequired', locale));
+    }
+
+    if (!toText(marker)) {
+      return invalid(t('ui.msg.markerNameRequired', locale));
+    }
+
+    return { valid: true, condition: canonical, marker: toText(marker) };
+  }
+
+  /**
+   * Validates a boolean configuration value.
+   *
+   * @param {string} value Boolean text.
+   * @returns {object} Validation result.
+   */
+  function validateBoolean(value) {
+    const locale = getConfig().language;
+    const text = toText(value).toLowerCase();
+    if (!BOOLEAN_TEXT.has(text)) {
+      return invalid(t('ui.msg.expectedBoolean', locale));
+    }
+
+    return { valid: true, value: text === 'true' };
+  }
+
+  /**
+   * Validates a health bar setting.
+   *
+   * @param {string} value Health bar property.
+   * @returns {object} Validation result.
+   */
+  function validateHealthBar(value) {
+    const locale = getConfig().language;
+    const text = toText(value);
+    if (!VALID_HEALTH_BARS.includes(text)) {
+      return invalid(t('ui.msg.invalidHealthBar', locale));
+    }
+
+    return { valid: true, value: text };
+  }
+
+  /**
+   * Validates a game system id.
+   *
+   * @param {string} value Game system id string.
+   * @returns {object} Validation result.
+   */
+  function validateGameSystem(value) {
+    const text = toText(value).trim();
+    if (!VALID_GAME_SYSTEMS.has(text)) {
+      return invalid(t('ui.msg.invalidGameSystem', getConfig().language));
+    }
+    return { valid: true, value: text };
+  }
+
+  /**
+   * Validates a locale string.
+   *
+   * @param {string} value Locale string.
+   * @returns {object} Validation result.
+   */
+  function validateLocale(value) {
+    const locale = getConfig().language;
+    const text = normalizeLocale(value);
+    if (!text) {
+      return invalid(
+        t('ui.msg.invalidLocale', locale, {
+          locales: SUPPORTED_LOCALE_LIST,
+        }),
+      );
+    }
+    return { valid: true, value: text };
+  }
+
+  /**
+   * Creates an invalid validation result.
+   *
+   * @param {string} message Error message.
+   * @returns {object} Invalid result.
+   */
+  function invalid(message) {
+    return { valid: false, message };
+  }
+
   const SUBJECT_NONE = '__none__';
 
   const SECTION_HEADING_STYLE = [
@@ -32824,38 +33136,6 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Returns true when a token's configured HP bar is explicitly set to zero or
-   * below. Tokens with no value on the bar (empty string) are not considered
-   * dead and return false.
-   *
-   * @param {object} token Roll20 graphic object.
-   * @returns {boolean} True when the token has zero or negative HP.
-   */
-  function hasZeroHp(token) {
-    const bar = getConfig().healthBar;
-    const raw = token.get(bar);
-    if (raw === '' || raw === null || raw === undefined) return false;
-    const value = Number(raw);
-    return Number.isFinite(value) && value <= 0;
-  }
-
-  /**
-   * Converts one Roll20 graphic token into a token entry, or null when the
-   * token has no resolvable name, has zero HP, or is classified as ignored.
-   *
-   * @param {object} token Roll20 graphic object.
-   * @returns {{id: string, name: string, isPlayer: boolean}|null} Token entry.
-   */
-  function tokenToEntry(token) {
-    if (hasZeroHp(token)) return null;
-    const actorType = classifyToken(token);
-    if (actorType === ACTOR_TYPE_IGNORED) return null;
-    const name = getTokenDisplayName(token);
-    if (!name) return null;
-    return { id: token.id, name, isPlayer: actorType === ACTOR_TYPE_PC };
-  }
-
-  /**
    * Returns token entries sourced from the current turn order.
    *
    * Custom text rows (id "-1") are ignored. Tokens that no longer exist or
@@ -32872,10 +33152,30 @@ const ConditionTrackerMod = (() => {
       seen.add(tokenId);
       const token = getGraphicToken(tokenId);
       if (!token) continue;
-      const entry = tokenToEntry(token);
+      const entry = tokenToPromptEntry(token);
       if (entry) entries.push(entry);
     }
     return entries;
+  }
+
+  /**
+   * Returns a prompt-friendly token entry.
+   *
+   * Unlike the combat list, this keeps named tokens even if they are zero HP or
+   * unlinked. Only excludes tokens not on the main token layer ('objects') or
+   * explicitly classified as ignored via --classify.
+   *
+   * @param {object} token Roll20 graphic object.
+   * @returns {{id: string, name: string, isPlayer: boolean}|null} Token entry.
+   */
+  function tokenToPromptEntry(token) {
+    const layer = toText(token.get?.('_layer'));
+    if (layer && layer !== 'objects') return null;
+    if (getExplicitClassification(token) === ACTOR_TYPE_IGNORED) return null;
+    const name = getTokenDisplayName(token);
+    if (!name) return null;
+    const actorType = classifyToken(token);
+    return { id: token.id, name, isPlayer: actorType === ACTOR_TYPE_PC };
   }
 
   /**
@@ -32885,8 +33185,25 @@ const ConditionTrackerMod = (() => {
    */
   function getTokensFromPage() {
     const pageId = Campaign().get('playerpageid');
-    return queryObjects({ _type: 'graphic', _pageid: pageId })
-      .map(tokenToEntry)
+    return queryObjects({
+      _type: 'graphic',
+      _subtype: 'token',
+      _pageid: pageId,
+    })
+      .map(tokenToPromptEntry)
+      .filter(Boolean);
+  }
+
+  /**
+   * Returns token entries from all pages as a broad fallback.
+   *
+   * Used when the active page/turn-order context has no named tokens to show.
+   *
+   * @returns {{id: string, name: string, isPlayer: boolean}[]} Token entries.
+   */
+  function getTokensFromAllPages() {
+    return queryObjects({ _type: 'graphic', _subtype: 'token' })
+      .map(tokenToPromptEntry)
       .filter(Boolean);
   }
 
@@ -32902,8 +33219,9 @@ const ConditionTrackerMod = (() => {
    */
   function getPageTokens() {
     const fromTurnOrder = getTokensFromTurnOrder();
-    const entries =
+    const fromPage =
       fromTurnOrder.length > 0 ? fromTurnOrder : getTokensFromPage();
+    const entries = fromPage.length > 0 ? fromPage : getTokensFromAllPages();
     return entries.sort((a, b) => a.name.localeCompare(b.name));
   }
 
@@ -32939,6 +33257,31 @@ const ConditionTrackerMod = (() => {
     if (durationRaw) parts.push(`--duration ${durationRaw}`);
     if (langRaw) parts.push(`--lang ${langRaw}`);
     return buildCommand(parts);
+  }
+
+  /**
+   * Resolves a wizard token argument to an id when possible.
+   *
+   * Token names are accepted for prompt flow so the wizard can continue using
+   * the same resolver as direct apply.
+   *
+   * @param {string} rawRef User-provided token reference.
+   * @param {'source'|'target'|'subject'} role Token role for messages.
+   * @returns {{valid: boolean, value: string, message?: string}} Resolution result.
+   */
+  function resolveWizardTokenArg(rawRef, role) {
+    const ref = toText(rawRef);
+    if (!ref || ref === SUBJECT_NONE) {
+      return { valid: true, value: '' };
+    }
+
+    const locale = getConfig().language;
+    const result = resolveTokenReference(ref, role, locale);
+    if (!result.valid) {
+      return { valid: false, value: ref, message: result.message };
+    }
+
+    return { valid: true, value: result.token.id };
   }
 
   /**
@@ -33312,8 +33655,33 @@ const ConditionTrackerMod = (() => {
       ? { ...args, subject: SUBJECT_NONE }
       : args;
 
-    const sourceId = toText(wizardArgs.source);
-    const subjectRaw = toText(wizardArgs.subject);
+    const sourceResult = resolveWizardTokenArg(wizardArgs.source, 'source');
+    if (!sourceResult.valid) {
+      whisperWarning(playerId, sourceResult.message);
+      return;
+    }
+
+    const subjectResult = resolveWizardTokenArg(wizardArgs.subject, 'subject');
+    if (!subjectResult.valid) {
+      whisperWarning(playerId, subjectResult.message);
+      return;
+    }
+
+    const targetResult = resolveWizardTokenArg(wizardArgs.target, 'target');
+    if (!targetResult.valid) {
+      whisperWarning(playerId, targetResult.message);
+      return;
+    }
+
+    const resolvedWizardArgs = {
+      ...wizardArgs,
+      source: sourceResult.value,
+      subject: subjectResult.value || wizardArgs.subject,
+      target: targetResult.value,
+    };
+
+    const sourceId = toText(resolvedWizardArgs.source);
+    const subjectRaw = toText(resolvedWizardArgs.subject);
     const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
 
     const locale = getConfig().language;
@@ -33324,7 +33692,7 @@ const ConditionTrackerMod = (() => {
     }
 
     if (!canonical) {
-      showConditionStep(playerId, wizardArgs);
+      showConditionStep(playerId, resolvedWizardArgs);
       return;
     }
 
@@ -33333,7 +33701,7 @@ const ConditionTrackerMod = (() => {
       showTokenStep(
         playerId,
         t('ui.wizard.selectSubject', locale),
-        wizardArgs,
+        resolvedWizardArgs,
         'subject',
         t('ui.wizard.subjectDesc', locale),
       );
@@ -33344,26 +33712,26 @@ const ConditionTrackerMod = (() => {
       showTokenStep(
         playerId,
         t('ui.wizard.selectSource', locale),
-        wizardArgs,
+        resolvedWizardArgs,
         'source',
         t('ui.wizard.sourceDesc', locale),
       );
       return;
     }
 
-    const targetId = toText(wizardArgs.target);
-    const targetsRaw = toText(wizardArgs.targets);
+    const targetId = toText(resolvedWizardArgs.target);
+    const targetsRaw = toText(resolvedWizardArgs.targets);
 
     if (!targetId && !targetsRaw) {
-      const selectedIdsRaw = toText(wizardArgs['selected-ids']);
+      const selectedIdsRaw = toText(resolvedWizardArgs['selected-ids']);
       if (selectedIdsRaw) {
-        showMultiTargetStep(playerId, wizardArgs);
+        showMultiTargetStep(playerId, resolvedWizardArgs);
         return;
       }
       showTokenStep(
         playerId,
         t('ui.wizard.selectTarget', locale),
-        wizardArgs,
+        resolvedWizardArgs,
         'target',
         t('ui.wizard.targetDesc', locale),
       );
@@ -33371,7 +33739,9 @@ const ConditionTrackerMod = (() => {
     }
 
     const resolvedArgs =
-      subjectRaw === SUBJECT_NONE ? { ...wizardArgs, subject: '' } : wizardArgs;
+      subjectRaw === SUBJECT_NONE
+        ? { ...resolvedWizardArgs, subject: '' }
+        : resolvedWizardArgs;
 
     showEffectDetailStep(playerId, resolvedArgs, canonical);
   }
@@ -34469,8 +34839,8 @@ const ConditionTrackerMod = (() => {
     const commandRows = /** @type {string[][]} */ (
       tRaw('handout.commandsRef.rows', locale) || []
     );
-    const quickStartRows = /** @type {string[][]} */ (
-      tRaw('handout.quickStart.rows', locale) || []
+    const exampleRows = /** @type {string[][]} */ (
+      tRaw('handout.examples.rows', locale) || []
     );
     const configRows = /** @type {string[][]} */ (
       tRaw('handout.configuration.rows', locale) || []
@@ -34494,6 +34864,16 @@ const ConditionTrackerMod = (() => {
             escapeHtml(decodeHelpText(t('handout.overview.body', locale))),
           ],
         ],
+      ),
+      sectionSpacer(),
+      heading(t('ui.heading.examples', locale)),
+      t('handout.examples.intro', locale),
+      htmlTable(
+        [
+          t('handout.examples.colMacro', locale),
+          t('handout.examples.colEvent', locale),
+        ],
+        toEscapedHandoutTableRows(exampleRows),
       ),
       sectionSpacer(),
       heading(t('ui.heading.commandOptions', locale)),

@@ -364,6 +364,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Kaynak token bulunamadı.",
       targetTokenNotFound: "Hedef token bulunamadı.",
       subjectTokenNotFound: "Özne token bulunamadı.",
+      tokenRefNotFound:
+        '{role} belirteci "{value}" kimliğe, belirteç adına veya karakter adına göre bulunamadı.',
+      tokenRefAmbiguous:
+        '{role} jetonu "{value}" birden fazla jetonla eşleşti: {matches}. Belirsizliği ortadan kaldırmak için bir belirteç kimliği veya daha spesifik bir ad kullanın.',
       invalidGameSystem:
         "Geçersiz oyun sistemi. --config gameSystem &lt;id&gt; kullanın. Desteklenen sistemler:",
       gameSystemSet:
@@ -557,6 +561,43 @@ const TRANSLATION = {
         [
           "!koşul-izleyici --menu",
           "Koşulları uygulamak, incelemek veya kaldırmak için düğmelerin bulunduğu ana yönetim menüsünü açın.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Ortak Koşullar İçin Makro Örnekler",
+      intro:
+        "Bunlar, bir belirteç eylemine veya sohbet makrosuna yapıştırabileceğiniz ve ardından gerektiği gibi genişletebileceğiniz başlangıç ​​makrolarıdır. Ad eşleştirme büyük/küçük harfe duyarlı değildir; tam adlar tercih edilir, ardından benzersiz kısmi eşleşmeler tercih edilir.",
+      colMacro: "Makro",
+      colEvent: "Ortak Etkinlik",
+      rows: [
+        [
+          "!koşul-izleyici --prompt --condition Kıskanç",
+          "Bir hedefi yakalayın veya yakalayın ve sihirbazın kaynak, hedef ve süreyi belirtmesine izin verin.",
+        ],
+        [
+          "!koşul-izleyici --prompt --condition Yüzüstü",
+          "Halihazırda seçilmiş olan koşulla eğilimli bir jetonu vurun.",
+        ],
+        [
+          "!durum izleyici --prompt --condition Zehirlendi",
+          "Zehir etkileri, tehlikeler veya zehirli saldırılar için Zehirli'yi önceden seçin.",
+        ],
+        [
+          "!koşul-izleyici --prompt --condition Şaşkın",
+          "Sersemletme, şok efektleri ve sert kontrol efektleri için Sersemletilmiş'i önceden seçin.",
+        ],
+        [
+          "!koşul izleyici --prompt --condition Kör",
+          "Flaş, karanlık, duman veya görmeyi engelleyen efektler için Kör'ü önceden seçin.",
+        ],
+        [
+          '!koşul-izleyici --source "Sir Galahad" --target "Goblin Patron" --condition Yakalanmış --duration 1 tur',
+          "Tam belirteç/karakter adlarını (büyük/küçük harfe duyarlı) kullanarak doğrudan uygulayın.",
+        ],
+        [
+          "!koşul izleyici --source gala --target patron --condition Yüzüstü --duration 1 tur",
+          "Benzersiz kısmi adları kullanarak doğrudan uygulayın; birden fazla jeton eşleşirse mod daha spesifik bir ad veya jeton kimliği ister.",
         ],
       ],
     },

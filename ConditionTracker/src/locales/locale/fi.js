@@ -364,6 +364,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Lähde-tokenia ei löydy.",
       targetTokenNotFound: "Kohde-tokenia ei löydy.",
       subjectTokenNotFound: "Kohde-tokenia ei löydy.",
+      tokenRefNotFound:
+        '{role} tunnusta "{value}" ei löytynyt tunnuksen, tunnuksen tai merkin nimen perusteella.',
+      tokenRefAmbiguous:
+        '{role} tunnus "{value}" vastasi useita tunnuksia: {matches}. Käytä tunnustunnusta tai tarkempaa nimeä yksiselitteisyyteen.',
       invalidGameSystem:
         "Virheellinen pelijärjestelmä. Käytä --config-pelijärjestelmää &lt;id&gt;. Tuetut järjestelmät:",
       gameSystemSet:
@@ -559,6 +563,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Avaa päähallintavalikko painikkeilla ehtojen soveltamista, tarkistamista tai poistamista varten.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Yleisten olosuhteiden makroesimerkkejä",
+      intro:
+        "Nämä ovat aloitusmakroja, jotka voit liittää merkkitoimintoon tai chat-makroon ja laajentaa sitten tarpeen mukaan. Nimien vastaavuudessa kirjainkoolla ei ole merkitystä; tarkat nimet ovat suositeltavia, sitten yksilölliset osittaiset osumat.",
+      colMacro: "Makro",
+      colEvent: "Yhteinen Tapahtuma",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Painisko",
+          "Tartu tai tartu kohteeseen ja anna ohjatun toiminnon kysyä lähdettä, kohdetta ja kestoa.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Alhainen",
+          "Koputa merkkiin, jonka ehto on jo valittuna.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Myrkytetty",
+          "Esivalitse Myrkytys myrkyllisten vaikutusten, vaarojen tai myrkyllisten hyökkäysten varalta.",
+        ],
+        [
+          "!condition-tracker --prompt --condition järkyttynyt",
+          "Esivalitse Tainnutus tainnutusta, shokkitehosteita ja kovia ohjaustehosteita varten.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Sokea",
+          "Esivalitse sokea salama, pimeys, savu tai näköä heikentävät tehosteet.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Painisko --duration 1 kierros',
+          "Käytä suoraan käyttämällä tarkkoja tunnuksen/merkkien nimiä (kirjainkoolla ei ole merkitystä).",
+        ],
+        [
+          "!condition-tracker --source gaala --target pomo --condition Makaa --duration 1 kierros",
+          "Käytä suoraan käyttämällä ainutlaatuisia osittaisia ​​nimiä; Jos useat tunnukset täsmäävät, modi pyytää tarkempaa nimeä tai tunnuksen.",
         ],
       ],
     },

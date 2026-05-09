@@ -368,6 +368,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Le jeton source est introuvable.",
       targetTokenNotFound: "Le jeton cible est introuvable.",
       subjectTokenNotFound: "Le jeton sujet est introuvable.",
+      tokenRefNotFound:
+        'Le jeton {role} "{value}" n\'a pas pu être trouvé par identifiant, nom de jeton ou nom de personnage.',
+      tokenRefAmbiguous:
+        "Le jeton {role} « {value} » correspond à plusieurs jetons : {matches}. Utilisez un identifiant de jeton ou un nom plus spécifique pour lever l'ambiguïté.",
       invalidGameSystem:
         "Système de jeu invalide. Utilisez --config gameSystem &lt;id&gt;. Systèmes pris en charge :",
       gameSystemSet:
@@ -566,6 +570,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Ouvrez le menu de gestion principal avec des boutons pour appliquer, réviser ou supprimer des conditions.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Exemples de macros pour des conditions courantes",
+      intro:
+        "Il s'agit de macros de démarrage que vous pouvez coller dans une action de jeton ou une macro de discussion, puis les développer si nécessaire. La correspondance des noms n'est pas sensible à la casse ; Les noms exacts sont préférés, puis les correspondances partielles uniques.",
+      colMacro: "Macro",
+      colEvent: "Événement commun",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Grappiné",
+          "Attrapez ou saisissez une cible et laissez l'assistant vous demander la source, la cible et la durée.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Couché",
+          "Frappez un jeton à terre avec la condition déjà sélectionnée.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Empoisonné",
+          "Présélectionnez Empoisonné pour les effets de poison, les dangers ou les attaques toxiques.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Étourdi",
+          "Présélectionnez Étourdi pour les étourdissements, les effets de choc et les effets de contrôle strict.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Aveuglé",
+          "Présélectionnez Aveuglé pour les effets de flash, d'obscurité, de fumée ou de déficience visuelle.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Grappled --duration 1 round',
+          "Application directe en utilisant les noms exacts de jetons/caractères (insensible à la casse).",
+        ],
+        [
+          "!condition-tracker --source gala --target boss --condition Couché --duration 1 tour",
+          "Application directe en utilisant des noms partiels uniques ; si plusieurs jetons correspondent, le mod demande un nom ou un identifiant de jeton plus spécifique.",
         ],
       ],
     },

@@ -358,6 +358,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "找不到來源 Token。",
       targetTokenNotFound: "找不到目標 Token。",
       subjectTokenNotFound: "找不到主體 Token。",
+      tokenRefNotFound:
+        "無法透過 ID、令牌名稱或角色名稱找到 {role} 令牌「{value}」。",
+      tokenRefAmbiguous:
+        '{role} token "{value}" matched multiple tokens: {matches}. Use a token id or a more specific name to disambiguate.',
       invalidGameSystem:
         "遊戲系統無效。使用 --config 遊戲系統 &lt;id&gt;。支援的系統：",
       gameSystemSet: "遊戲系統設定為 {system}。標記已重設為系統預設值。",
@@ -555,6 +559,43 @@ const TRANSLATION = {
         [
           "!條件追蹤器 --menu",
           "開啟主管理選單，其中包含套用、檢視或刪除條件的按鈕。",
+        ],
+      ],
+    },
+    examples: {
+      heading: "常見條件的巨集範例",
+      intro:
+        "這些是入門宏，您可以將其貼上到令牌操作或聊天宏中，然後根據需要進行擴展。名稱匹配不區分大小寫；首選確切的名稱，然後是唯一的部分匹配。",
+      colMacro: "宏",
+      colEvent: "常見事件",
+      rows: [
+        [
+          "!條件追蹤器 --prompt --condition 已抓住",
+          "抓住或抓住目標，然後讓嚮導提示輸入來源、目標和持續時間。",
+        ],
+        [
+          "!狀況追蹤器 --prompt --condition 俯臥",
+          "在已選擇的條件下敲擊一個易於攻擊的令牌。",
+        ],
+        [
+          "!狀況追蹤器 --prompt --condition 中毒",
+          "為中毒效果、危險或有毒攻擊預先選擇「中毒」。",
+        ],
+        [
+          "!條件追蹤器 --prompt --condition 驚呆了",
+          "預選眩暈可達到眩暈、衝擊效果和硬體控制效果。",
+        ],
+        [
+          "!條件追蹤器 --prompt --condition 盲態",
+          "預選「致盲」以獲得閃光、黑暗、煙霧或視力障礙效果。",
+        ],
+        [
+          '!狀況追蹤器 --source "加拉哈德爵士" --target "哥布林 Boss" --condition 被擒抱 --duration 1 輪',
+          "使用精確的令牌/字元名稱直接套用（不區分大小寫）。",
+        ],
+        [
+          "!狀況追蹤器 --source gala --target boss --condition 俯臥 --duration 1 輪",
+          "使用唯一的部分名稱直接申請；如果多個令牌匹配，mod 會要求更具體的名稱或令牌 ID。",
         ],
       ],
     },

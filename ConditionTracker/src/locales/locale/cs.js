@@ -363,6 +363,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Zdrojový žeton nebylo možné nalézt.",
       targetTokenNotFound: "Cílový žeton nebylo možné nalézt.",
       subjectTokenNotFound: "Žeton subjektu nebylo možné nalézt.",
+      tokenRefNotFound:
+        "Token {role} „{value}“ nelze nalézt podle ID, názvu tokenu nebo názvu znaku.",
+      tokenRefAmbiguous:
+        "Token {role} „{value}“ odpovídá několika tokenům: {matches}. K odlišení použijte ID tokenu nebo konkrétnější název.",
       invalidGameSystem:
         "Neplatný herní systém. Použijte --config herní systém &lt;id&gt;. Podporované systémy:",
       gameSystemSet:
@@ -557,6 +561,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Otevřete hlavní nabídku správy s tlačítky pro použití, kontrolu nebo odstranění podmínek.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Příklady maker pro běžné podmínky",
+      intro:
+        "Jedná se o úvodní makra, která můžete vložit do tokenové akce nebo makra chatu a poté rozbalit podle potřeby. Shoda jmen nerozlišuje velká a malá písmena; upřednostňují se přesné názvy, pak jedinečné dílčí shody.",
+      colMacro: "Makro",
+      colEvent: "Společná událost",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Uvíznutý",
+          "Uchopte nebo uchopte cíl a nechte průvodce požádat o zdroj, cíl a dobu trvání.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Náklonnost",
+          "Zaklepejte na token náchylný s již vybranou podmínkou.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Otráven",
+          "Předvolte Poisoned pro jedovaté účinky, nebezpečí nebo toxické útoky.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Ohromený",
+          "Předvolba Stunned pro omráčení, šokové efekty a efekty tvrdého ovládání.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Zaslepeno",
+          "Předvolte Blinded pro blesk, tmu, kouř nebo efekty zhoršující zrak.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Šéf goblinů" --condition Uchopený --duration 1 kolo',
+          "Přímé použití pomocí přesných názvů tokenů/znaků (nerozlišují se malá a velká písmena).",
+        ],
+        [
+          "!condition-tracker --source gala --target šéf --condition na břiše --duration 1 kolo",
+          "Přímé použití pomocí jedinečných dílčích názvů; pokud se shoduje více tokenů, mod se zeptá na konkrétnější název nebo ID tokenu.",
         ],
       ],
     },

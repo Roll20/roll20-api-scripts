@@ -10,6 +10,7 @@ All notable changes to **Condition Tracker** will be documented in this file.
 - **Three visibility modes for saved effects**: `public` (full label visible in Turn Tracker and chat), `masked` (vague public label shown to players; full details whispered to GM), and `gm` (no Turn Tracker row; GM-whisper only when affected token reaches the top of initiative).
 - **`!condition-tracker --saved` commands**: `--saved` (view list), `--saved add` (guided wizard), `--saved edit <id>`, `--saved remove <id>`, `--saved promote <id> --visibility public|masked|gm`, `--saved snooze <id> --scope turn|rounds|combat --rounds <n>`, `--saved snooze-clear <id>`.
 - **`!condition-tracker --report-token` command**: Added GM-only per-token condition reporting for selected tokens, including conditions applied to and conditions sourced by each token.
+- **Name-based token references in direct apply commands**: `--source`, `--target`, and `--subject` now accept token ids, exact token names, exact linked character names, and unique partial name matches.
 - **GM reminder system**: When a token with `gm` or `masked` saved effects reaches the top of the Turn Tracker, the GM receives a whispered reminder listing hidden effects with inline action buttons. Duplicate reminders within the same turn are suppressed via a stable turn-key.
 - **Snooze controls**: Suppress GM reminders for this turn, 1 round, 3 rounds, or the remainder of the current combat. Combat snoozes are automatically cleared when the Turn Tracker empties.
 - **Saved promotion**: Copies (does not move) a saved effect into the Turn Tracker. Public and masked entries create visible tracker rows; GM-only entries confirm stored tracking without creating a row.
@@ -30,6 +31,9 @@ All notable changes to **Condition Tracker** will be documented in this file.
 
 ### Changed
 
+- Name resolution for direct token references is now case-insensitive and exact-match-first, with partial matching used as a fallback.
+- Ambiguous name matches now return a clear guidance message listing candidate tokens and recommending a more specific name or token id.
+- Help and handout content now include copy-ready examples for name-based direct apply usage.
 - `isPlayerToken()` now delegates entirely to the new `classifyToken()` engine, applying override and adapter logic consistently everywhere the function is called (wizard token picker, zero-HP cleanup prompts, token-change events).
 - The wizard token picker now excludes `ignored` tokens. Previously, unlinked tokens with names appeared in the NPC column; they are now hidden unless explicitly classified as `pc` or `npc`.
 

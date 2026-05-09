@@ -369,6 +369,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "A forrás token nem található.",
       targetTokenNotFound: "A célpont token nem található.",
       subjectTokenNotFound: "Az alany token nem található.",
+      tokenRefNotFound:
+        'A {role} "{value}" token nem található azonosító, tokennév vagy karakternév alapján.',
+      tokenRefAmbiguous:
+        'A {role} "{value}" token több tokennek felelt meg: {matches}. Használjon token azonosítót vagy pontosabb nevet az egyértelművé tételhez.',
       invalidGameSystem:
         "Érvénytelen játékrendszer. A --config játékrendszer &lt;id&gt; használata. Támogatott rendszerek:",
       gameSystemSet:
@@ -568,6 +572,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Nyissa meg a fő kezelési menüt gombokkal a feltételek alkalmazásához, áttekintéséhez vagy eltávolításához.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Makrópéldák a gyakori feltételekhez",
+      intro:
+        "Ezek kezdő makrók, amelyeket beilleszthet egy token műveletbe vagy csevegési makróba, majd szükség szerint bővítheti. A névegyeztetés nem érzékeny a kis- és nagybetűkre; a pontos nevek előnyben részesítendők, majd az egyedi részleges egyezések.",
+      colMacro: "Makró",
+      colEvent: "Közös esemény",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Grappled",
+          "Fogjon meg vagy ragadjon meg egy célt, és hagyja, hogy a varázsló bekérje a forrást, a célt és az időtartamot.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Hajlamos",
+          "Koppintson a már kiválasztott feltétellel hajlamos tokenre.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Mérgezett",
+          "Válassza a Mérgezett lehetőséget mérgező hatások, veszélyek vagy mérgező támadások esetén.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Megdöbbenve",
+          "A kábításhoz, sokkhatásokhoz és kemény vezérlési effektusokhoz válassza ki a Döbbent lehetőséget.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Vak",
+          "Válassza a Vak lehetőséget a vaku, sötétség, füst vagy látást rontó hatások esetén.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Megbirkózott --duration 1 kör',
+          "Közvetlen alkalmazás pontos token/karakternevek használatával (a kis- és nagybetűk megkülönböztetése).",
+        ],
+        [
+          "!condition-tracker --source gála --target főnök --condition Hason --duration 1 forduló",
+          "Közvetlen alkalmazás egyedi résznevek használatával; ha több token egyezik, a mod konkrétabb nevet vagy token azonosítót kér.",
         ],
       ],
     },

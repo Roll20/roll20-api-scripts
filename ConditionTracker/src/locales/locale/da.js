@@ -366,6 +366,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Kildetoken kunne ikke findes.",
       targetTokenNotFound: "Måltoken kunne ikke findes.",
       subjectTokenNotFound: "Subjekttoken kunne ikke findes.",
+      tokenRefNotFound:
+        '{role} token "{value}" kunne ikke findes af id, tokennavn eller tegnnavn.',
+      tokenRefAmbiguous:
+        '{role} token "{value}" matchede flere tokens: {matches}. Brug et token-id eller et mere specifikt navn til at tvetydige.',
       invalidGameSystem:
         "Ugyldigt spilsystem. Brug --config gameSystem &lt;id&gt;. Understøttede systemer:",
       gameSystemSet:
@@ -560,6 +564,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Åbn hovedmenuen til administration med knapper for at anvende, gennemgå eller fjerne betingelser.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Makroeksempler for almindelige betingelser",
+      intro:
+        "Disse er startmakroer, du kan indsætte i en token-handlings- eller chatmakro og derefter udvide efter behov. Navnematching skelner mellem store og små bogstaver; eksakte navne foretrækkes, derefter unikke delvise matches.",
+      colMacro: "Makro",
+      colEvent: "Fælles begivenhed",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Gribet",
+          "Grib eller tag fat i et mål, og lad guiden bede om kilde, mål og varighed.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Tilbøjelig",
+          "Slå en token tilbøjelig med tilstanden allerede valgt.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Forgiftet",
+          "Forvælg Forgiftet for giftvirkninger, farer eller giftige angreb.",
+        ],
+        [
+          "!condition-tracker --prompt --condition bedøvet",
+          "Forvælg Bedøvet for bedøvelse, stødeffekter og hårde kontroleffekter.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Blændet",
+          "Forvælg Blind for blitz, mørke, røg eller synsforstyrrende effekter.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Gribt --duration 1 runde',
+          "Anvend direkte med nøjagtige token-/tegnnavne (der skelnes mellem store og små bogstaver).",
+        ],
+        [
+          "!condition-tracker --source galla --target boss --condition Tilbøjelig --duration 1 runde",
+          "Anvend direkte med unikke delnavne; hvis flere tokens matcher, beder mod'et om et mere specifikt navn eller token-id.",
         ],
       ],
     },

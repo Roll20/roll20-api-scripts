@@ -387,6 +387,10 @@ const TRANSLATION = {
       sourceTokenNotFound: 'Source token could not be found.',
       targetTokenNotFound: 'Target token could not be found.',
       subjectTokenNotFound: 'Subject token could not be found.',
+      tokenRefNotFound:
+        '{role} token "{value}" could not be found by id, token name, or character name.',
+      tokenRefAmbiguous:
+        '{role} token "{value}" matched multiple tokens: {matches}. Use a token id or a more specific name to disambiguate.',
       invalidGameSystem:
         'Invalid game system. Use --config gameSystem &lt;id&gt;. Supported systems:',
       gameSystemSet: 'Game system set to {system}. Markers have been reset to system defaults.',
@@ -562,6 +566,43 @@ const TRANSLATION = {
         ],
       ],
     },
+    examples: {
+      heading: 'Macro Examples for Common Conditions',
+      intro:
+        'These are starter macros you can paste into a token action or chat macro and then expand as needed. Name matching is case-insensitive; exact names are preferred, then unique partial matches.',
+      colMacro: 'Macro',
+      colEvent: 'Common Event',
+      rows: [
+        [
+          '!condition-tracker --prompt --condition Grappled',
+          'Grapple or grab a target and let the wizard prompt for source, target, and duration.',
+        ],
+        [
+          '!condition-tracker --prompt --condition Prone',
+          'Knock a token prone with the condition already selected.',
+        ],
+        [
+          '!condition-tracker --prompt --condition Poisoned',
+          'Preselect Poisoned for poison effects, hazards, or toxic attacks.',
+        ],
+        [
+          '!condition-tracker --prompt --condition Stunned',
+          'Preselect Stunned for stuns, shock effects, and hard control effects.',
+        ],
+        [
+          '!condition-tracker --prompt --condition Blinded',
+          'Preselect Blinded for flash, darkness, smoke, or sight-impairing effects.',
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Grappled --duration 1 round',
+          'Direct apply using exact token/character names (case-insensitive).',
+        ],
+        [
+          '!condition-tracker --source gala --target boss --condition Prone --duration 1 round',
+          'Direct apply using unique partial names; if multiple tokens match, the mod asks for a more specific name or token id.',
+        ],
+      ],
+    },
     commandsRef: {
       heading: 'Commands Reference',
       colFlag: 'Flag',
@@ -570,7 +611,10 @@ const TRANSLATION = {
         ['--prompt', 'Interactive step-by-step wizard UI'],
         ['--multi-target', 'Apply a condition to multiple target tokens at once'],
         ['--menu', 'Show main menu (add remove for removal menu)'],
-        ['--source X --target Y --condition Z', 'Apply a condition directly without the wizard'],
+        [
+          '--source X --target Y --condition Z',
+          'Apply a condition directly without the wizard (X/Y can be token id, token name, or linked character name; matching is case-insensitive with unique partial-name support)',
+        ],
         ['--duration &lt;value&gt;', 'Duration for a direct apply (e.g. 2 rounds)'],
         ['--other &lt;text&gt;', 'Custom text for Spell / Ability / Other effect types'],
         ['--remove &lt;condition-id&gt;', 'Remove a specific condition by its unique ID'],

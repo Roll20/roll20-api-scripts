@@ -256,7 +256,7 @@ const TRANSLATION = {
       marker: "Marker",
       item: "Eintrag",
       removed: "Entfernt",
-      details: "Details",
+      details: "Einzelheiten",
       description: "Beschreibung",
       scenario: "Szenario",
       gameSystem: "Spielsystem",
@@ -366,6 +366,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Quell-Token konnte nicht gefunden werden.",
       targetTokenNotFound: "Ziel-Token konnte nicht gefunden werden.",
       subjectTokenNotFound: "Subjekt-Token konnte nicht gefunden werden.",
+      tokenRefNotFound:
+        "{role} Token „{value}“ konnte nicht anhand der ID, des Token-Namens oder des Charakternamens gefunden werden.",
+      tokenRefAmbiguous:
+        "{role} Token „{value}“ stimmte mit mehreren Token überein: {matches}. Verwenden Sie zur eindeutigen Unterscheidung eine Token-ID oder einen spezifischeren Namen.",
       invalidGameSystem:
         "Ungültiges Spielsystem. Verwenden Sie --config gameSystem &lt;id&gt;. Unterstützte Systeme:",
       gameSystemSet:
@@ -566,6 +570,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Öffnen Sie das Hauptverwaltungsmenü mit Schaltflächen zum Anwenden, Überprüfen oder Entfernen von Bedingungen.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Makrobeispiele für allgemeine Bedingungen",
+      intro:
+        "Dies sind Starter-Makros, die Sie in eine Token-Aktion oder ein Chat-Makro einfügen und dann nach Bedarf erweitern können. Bei der Namensübereinstimmung wird die Groß-/Kleinschreibung nicht beachtet. Genaue Namen werden bevorzugt, dann eindeutige Teilübereinstimmungen.",
+      colMacro: "Makro",
+      colEvent: "Gemeinsames Ereignis",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Gekämpft",
+          "Greifen oder ergreifen Sie ein Ziel und lassen Sie den Assistenten nach Quelle, Ziel und Dauer fragen.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Prone",
+          "Klopfe einen Token in den Boden, wobei die Bedingung bereits ausgewählt ist.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Vergiftet",
+          "Wählen Sie „Vergiftet“ vorab für Gifteffekte, Gefahren oder toxische Angriffe aus.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Betäubt",
+          "Wählen Sie „Betäubt“ vorab für Betäubungen, Schockeffekte und harte Kontrolleffekte aus.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Geblendet",
+          "Wählen Sie „Blinded“ für Blitz, Dunkelheit, Rauch oder sehbehindernde Effekte.",
+        ],
+        [
+          "!condition-tracker --source „Sir Galahad“ --target „Goblin-Boss“ --condition Gekämpft --duration 1 Runde",
+          "Direkte Anwendung unter Verwendung exakter Token-/Zeichennamen (ohne Berücksichtigung der Groß- und Kleinschreibung).",
+        ],
+        [
+          "!condition-tracker --source Gala --target Boss --condition Liegend --duration 1 Runde",
+          "Direkte Anwendung mit eindeutigen Teilnamen; Wenn mehrere Token übereinstimmen, fragt der Mod nach einem spezifischeren Namen oder einer spezifischeren Token-ID.",
         ],
       ],
     },

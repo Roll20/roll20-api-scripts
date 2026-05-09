@@ -367,6 +367,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Bron-token kon nie gevind word nie.",
       targetTokenNotFound: "Teikentoken kon nie gevind word nie.",
       subjectTokenNotFound: "Onderwerp-token kon nie gevind word nie.",
+      tokenRefNotFound:
+        '{role} teken "{value}" kon nie gevind word deur id, tekennaam of karakternaam nie.',
+      tokenRefAmbiguous:
+        "{role} teken \"{value}\" pas by veelvuldige tekens: {matches}. Gebruik 'n teken-ID of 'n meer spesifieke naam om te ondubbelsinnig.",
       invalidGameSystem:
         "Ongeldige speletjiestelsel. Gebruik --config spelstelsel &lt;id&gt;. Ondersteunde stelsels:",
       gameSystemSet:
@@ -565,6 +569,43 @@ const TRANSLATION = {
         [
           "!toestand-spoorsnyer --menu",
           "Maak die hoofbestuurkieslys oop met knoppies om voorwaardes toe te pas, te hersien of te verwyder.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Makrovoorbeelde vir algemene toestande",
+      intro:
+        "Dit is aanvangsmakro's wat jy in 'n tekenaksie- of kletsmakro kan plak en dan uitbrei soos nodig. Naampassing is hoofletter-onsensitief; presiese name word verkies, dan unieke gedeeltelike passings.",
+      colMacro: "Makro",
+      colEvent: "Algemene gebeurtenis",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Gegryp",
+          "Gryp of gryp 'n teiken en laat die towenaar vra vir bron, teiken en duur.",
+        ],
+        [
+          "!toestand-spoorsnyer --prompt --condition geneig",
+          "Klop 'n teken wat geneig is met die toestand wat reeds gekies is.",
+        ],
+        [
+          "!toestand-spoorsnyer --prompt --condition Vergiftig",
+          "Kies vooraf vergiftig vir gifeffekte, gevare of giftige aanvalle.",
+        ],
+        [
+          "!condition-tracker --prompt --condition verstom",
+          "Kies vooraf verstom vir stuns, skok-effekte en harde beheer-effekte.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Verblind",
+          "Kies vooraf verblind vir flits-, donkerte-, rook- of siggestremde effekte.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Gegryp --duration 1 rondte',
+          "Pas direk toe met presiese teken-/karaktername (hoofletter-onsensitief).",
+        ],
+        [
+          "!condition-tracker --source gala --target baas --condition Geneë --duration 1 rondte",
+          "Direkte toepassing deur unieke gedeeltelike name; as veelvuldige tokens ooreenstem, vra die mod vir 'n meer spesifieke naam of token-ID.",
         ],
       ],
     },

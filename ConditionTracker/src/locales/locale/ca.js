@@ -366,6 +366,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "No s'ha trobat el testimoni origen.",
       targetTokenNotFound: "No s'ha trobat el testimoni destinatari.",
       subjectTokenNotFound: "No s'ha trobat el testimoni subjecte.",
+      tokenRefNotFound:
+        'No s\'ha pogut trobar el testimoni {role} "{value}" per identificador, nom de testimoni o nom de caràcter.',
+      tokenRefAmbiguous:
+        'El testimoni {role} "{value}" coincideix amb diversos testimonis: {matches}. Utilitzeu un identificador de testimoni o un nom més específic per desambiguar.',
       invalidGameSystem:
         "Sistema de joc no vàlid. Utilitza el sistema de joc --config &lt;id&gt;. Sistemes suportats:",
       gameSystemSet:
@@ -565,6 +569,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Obriu el menú de gestió principal amb botons per aplicar, revisar o eliminar condicions.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Exemples de macro per a condicions habituals",
+      intro:
+        "Aquestes són macros d'inici que podeu enganxar en una macro d'acció de testimoni o de xat i, a continuació, ampliar segons sigui necessari. La concordança de noms no distingeix entre majúscules i minúscules; es prefereixen els noms exactes, després les coincidències parcials úniques.",
+      colMacro: "Macro",
+      colEvent: "Esdeveniment Comú",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Grappled",
+          "Agafeu o agafeu un objectiu i deixeu que l'assistent demani la font, l'objectiu i la durada.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Propens",
+          "Toqueu un token propens amb la condició ja seleccionada.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Enverinat",
+          "Preseleccioneu Enverinat per a efectes de verí, perills o atacs tòxics.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Sorpresa",
+          "Preseleccioneu Stunned per a aturdir, efectes de xoc i efectes de control dur.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Cec",
+          "Preseleccioneu Cec per a efectes de flaix, foscor, fum o alteracions de la visió.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Grappled --duration 1 ronda',
+          "Aplicació directa utilitzant noms exactes de testimoni/caràcter (no distingeix entre majúscules i minúscules).",
+        ],
+        [
+          "!condition-tracker --source gala --target cap --condition Prone --duration 1 ronda",
+          "Aplicació directa amb noms parcials únics; si coincideixen múltiples fitxes, el mod demana un nom o identificador més específic.",
         ],
       ],
     },

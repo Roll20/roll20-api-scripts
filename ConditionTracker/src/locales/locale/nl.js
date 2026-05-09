@@ -365,6 +365,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Brontoken kon niet worden gevonden.",
       targetTokenNotFound: "Doeltoken kon niet worden gevonden.",
       subjectTokenNotFound: "Onderwerptoken kon niet worden gevonden.",
+      tokenRefNotFound:
+        '{role} token "{value}" kan niet worden gevonden op basis van ID, tokennaam of tekennaam.',
+      tokenRefAmbiguous:
+        '{role} token "{value}" kwam overeen met meerdere tokens: {matches}. Gebruik een token-ID of een specifiekere naam om het ondubbelzinnig te maken.',
       invalidGameSystem:
         "Ongeldig spelsysteem. Gebruik --config gamesysteem &lt;id&gt;. Ondersteunde systemen:",
       gameSystemSet:
@@ -565,6 +569,43 @@ const TRANSLATION = {
         [
           "!conditietracker --menu",
           "Open het hoofdbeheermenu met knoppen om voorwaarden toe te passen, te bekijken of te verwijderen.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Macrovoorbeelden voor veelvoorkomende omstandigheden",
+      intro:
+        "Dit zijn startersmacro's die u in een tokenactie of chatmacro kunt plakken en vervolgens indien nodig kunt uitbreiden. Naammatching is hoofdlettergevoelig; exacte namen hebben de voorkeur, daarna unieke gedeeltelijke overeenkomsten.",
+      colMacro: "Macro",
+      colEvent: "Gemeenschappelijk evenement",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Vastgegrepen",
+          "Grijp of grijp een doel en laat de wizard vragen naar bron, doel en duur.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Gevoelig",
+          "Klop een token gevoelig met de voorwaarde al geselecteerd.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Vergiftigd",
+          "Selecteer Vergiftigd voor gifeffecten, gevaren of giftige aanvallen.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Verbijsterd",
+          "Selecteer Stunned vooraf voor verdovingen, schokeffecten en harde controle-effecten.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Geblindeerd",
+          "Selecteer Verblind voor flits-, duisternis-, rook- of zichtbeperkende effecten.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Vastgegrepen --duration 1 ronde',
+          "Direct toepassen met exacte token-/tekennamen (niet hoofdlettergevoelig).",
+        ],
+        [
+          "!condition-tracker --source gala --target baas --condition Buiklig --duration 1 ronde",
+          "Direct toepassen met unieke deelnamen; als meerdere tokens overeenkomen, vraagt ​​de mod om een ​​specifiekere naam of token-ID.",
         ],
       ],
     },

@@ -365,6 +365,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "Källtoken kunde inte hittas.",
       targetTokenNotFound: "Måltoken kunde inte hittas.",
       subjectTokenNotFound: "Subjekttoken kunde inte hittas.",
+      tokenRefNotFound:
+        '{role} token "{value}" kunde inte hittas av id, tokennamn eller teckennamn.',
+      tokenRefAmbiguous:
+        '{role} token "{value}" matchade flera tokens: {matches}. Använd ett token-id eller ett mer specifikt namn för att disambiguera.',
       invalidGameSystem:
         "Ogiltigt spelsystem. Använd --config gameSystem &lt;id&gt;. System som stöds:",
       gameSystemSet:
@@ -561,6 +565,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "Öppna huvudmenyn för hantering med knappar för att tillämpa, granska eller ta bort villkor.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "Makroexempel för vanliga villkor",
+      intro:
+        "Det här är startmakron som du kan klistra in i en symbolisk handling eller chattmakro och sedan utöka efter behov. Namnmatchning är skiftlägesokänslig; exakta namn föredras, sedan unika partiella matchningar.",
+      colMacro: "Makro",
+      colEvent: "Vanligt evenemang",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition Gripad",
+          "Gripa eller ta tag i ett mål och låt guiden fråga efter källa, mål och varaktighet.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Benägen",
+          "Knacka på en token benägen med tillståndet redan valt.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Förgiftad",
+          "Förval förgiftad för gifteffekter, faror eller giftiga attacker.",
+        ],
+        [
+          "!condition-tracker --prompt --condition bedövad",
+          "Förvälj Bedövad för bedövning, stöteffekter och hårdkontrolleffekter.",
+        ],
+        [
+          "!condition-tracker --prompt --condition Blindad",
+          "Förval Blindad för blixt, mörker, rök eller synförsämrande effekter.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition Greppad --duration 1 omgång',
+          "Ansök direkt med exakta token-/teckennamn (okänsligt för skiftlägen).",
+        ],
+        [
+          "!condition-tracker --source gala --target boss --condition Prone --duration 1 omgång",
+          "Ansök direkt med unika delnamn; om flera tokens matchar, ber modden om ett mer specifikt namn eller token-id.",
         ],
       ],
     },

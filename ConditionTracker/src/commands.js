@@ -1,31 +1,14 @@
 import {
-  COMMAND,
-  COMMAND_CLASSIFY,
-  COMMAND_REPORT_TOKEN,
-  COMMAND_SAVED,
-  COLOR_BG_SOFT_BLACK,
-  COLOR_HEADER_DARK,
-  COLOR_HEADER_LIGHT,
-  DURATION_OPTIONS,
-  DURATION_UNTIL_REMOVED,
-  MACRO_NAME,
-  MACRO_NAME_MULTI_TARGET,
-  MACRO_NAME_REPORT_TOKEN,
-  MACRO_NAME_SAVED,
-  MACRO_NAME_CLASSIFY,
-  HANDOUT_NAME,
-  MENU_REMOVE,
-  SCRIPT_NAME,
-  SCRIPT_VERSION,
-} from './constants.js';
-import {
-  buildApplyMessage,
-  buildDisplayText,
-  getCanonicalCondition,
-  getConditionDisplayName,
-  isCustomEffectType,
-  isCustomTextCondition,
-} from './conditions.js';
+  ACTOR_TYPE_AUTO,
+  ACTOR_TYPE_IGNORED,
+  ACTOR_TYPE_PC,
+  VALID_ACTOR_CLASSIFY_TYPES,
+  classifyToken,
+  classifyTokenDetail,
+  clearCharacterOverrideAttr,
+  getExplicitClassification,
+  setCharacterOverrideAttr,
+} from './actorClassification.js';
 import {
   announceHtml,
   buildButton,
@@ -37,6 +20,34 @@ import {
   whisperGms,
   whisperWarning,
 } from './chat.js';
+import {
+  buildApplyMessage,
+  buildDisplayText,
+  getCanonicalCondition,
+  getConditionDisplayName,
+  isCustomEffectType,
+  isCustomTextCondition,
+} from './conditions.js';
+import {
+  COLOR_BG_SOFT_BLACK,
+  COLOR_HEADER_DARK,
+  COLOR_HEADER_LIGHT,
+  COMMAND,
+  COMMAND_CLASSIFY,
+  COMMAND_REPORT_TOKEN,
+  COMMAND_SAVED,
+  DURATION_OPTIONS,
+  DURATION_UNTIL_REMOVED,
+  HANDOUT_NAME,
+  MACRO_NAME,
+  MACRO_NAME_CLASSIFY,
+  MACRO_NAME_MULTI_TARGET,
+  MACRO_NAME_REPORT_TOKEN,
+  MACRO_NAME_SAVED,
+  MENU_REMOVE,
+  SCRIPT_NAME,
+  SCRIPT_VERSION,
+} from './constants.js';
 import { parseDuration } from './durations.js';
 import { applyMarker } from './markers.js';
 import { parseCommand } from './parser.js';
@@ -47,61 +58,48 @@ import {
   createDefaultConfig,
   ensureState,
   findActiveCondition,
-  someActiveCondition,
-  getConfig,
   getActiveBySource,
   getActiveByTarget,
+  getConfig,
   setActorTokenOverride,
   setConfig,
+  someActiveCondition,
 } from './state.js';
-import {
-  ACTOR_TYPE_AUTO,
-  ACTOR_TYPE_IGNORED,
-  ACTOR_TYPE_PC,
-  VALID_ACTOR_CLASSIFY_TYPES,
-  classifyToken,
-  classifyTokenDetail,
-  clearCharacterOverrideAttr,
-  setCharacterOverrideAttr,
-} from './actorClassification.js';
 
-import {
-  GAME_SYSTEM_DEFINITIONS,
-  VALID_GAME_SYSTEM_LIST,
-  getSystemProfile,
-} from './systems/index.js';
-import {
-  escapeHtml,
-  getGraphicToken,
-  getTokenName,
-  createId,
-  queryObjects,
-  toText,
-} from './utils.js';
+import { runCleanup } from './cleanup.js';
+import { installHandout } from './handout.js';
+import { LOCALE_DEFINITIONS, getLocale, getLocalizedLanguageName, t, tRaw } from './i18n.js';
+import { installMacro } from './macros.js';
+import { getSavedEffectsForToken } from './savedEffects.js';
+import { handleSaved } from './savedEffectsCommands.js';
+import { GAME_SYSTEM_DEFINITIONS, getSystemProfile } from './systems/index.js';
 import {
   getCurrentTurnTokenId,
-  getTurnOrder,
   getTokenRowId,
+  getTurnOrder,
   insertConditionRow,
   insertConditionRows,
   removeTokenRow,
   reorderAllConditionRows,
 } from './turnOrder.js';
 import {
+  createId,
+  escapeHtml,
+  getGraphicToken,
+  getTokenName,
+  queryObjects,
+  toText,
+} from './utils.js';
+import {
+  isGmMessage,
+  resolveTokenReference,
   validateApplyArgs,
   validateBoolean,
   validateGameSystem,
   validateHealthBar,
   validateLocale,
   validateMarkerConfig,
-  isGmMessage,
 } from './validation.js';
-import { runCleanup } from './cleanup.js';
-import { installMacro } from './macros.js';
-import { installHandout } from './handout.js';
-import { handleSaved } from './savedEffectsCommands.js';
-import { getSavedEffectsForToken } from './savedEffects.js';
-import { getLocale, getLocalizedLanguageName, LOCALE_DEFINITIONS, t, tRaw } from './i18n.js';
 
 const SUBJECT_NONE = '__none__';
 
@@ -360,10 +358,30 @@ function getTokensFromTurnOrder() {
     seen.add(tokenId);
     const token = getGraphicToken(tokenId);
     if (!token) continue;
-    const entry = tokenToEntry(token);
+    const entry = tokenToPromptEntry(token);
     if (entry) entries.push(entry);
   }
   return entries;
+}
+
+/**
+ * Returns a prompt-friendly token entry.
+ *
+ * Unlike the combat list, this keeps named tokens even if they are zero HP or
+ * unlinked. Only excludes tokens not on the main token layer ('objects') or
+ * explicitly classified as ignored via --classify.
+ *
+ * @param {object} token Roll20 graphic object.
+ * @returns {{id: string, name: string, isPlayer: boolean}|null} Token entry.
+ */
+function tokenToPromptEntry(token) {
+  const layer = toText(token.get?.('_layer'));
+  if (layer && layer !== 'objects') return null;
+  if (getExplicitClassification(token) === ACTOR_TYPE_IGNORED) return null;
+  const name = getTokenDisplayName(token);
+  if (!name) return null;
+  const actorType = classifyToken(token);
+  return { id: token.id, name, isPlayer: actorType === ACTOR_TYPE_PC };
 }
 
 /**
@@ -373,7 +391,22 @@ function getTokensFromTurnOrder() {
  */
 function getTokensFromPage() {
   const pageId = Campaign().get('playerpageid');
-  return queryObjects({ _type: 'graphic', _pageid: pageId }).map(tokenToEntry).filter(Boolean);
+  return queryObjects({ _type: 'graphic', _subtype: 'token', _pageid: pageId })
+    .map(tokenToPromptEntry)
+    .filter(Boolean);
+}
+
+/**
+ * Returns token entries from all pages as a broad fallback.
+ *
+ * Used when the active page/turn-order context has no named tokens to show.
+ *
+ * @returns {{id: string, name: string, isPlayer: boolean}[]} Token entries.
+ */
+function getTokensFromAllPages() {
+  return queryObjects({ _type: 'graphic', _subtype: 'token' })
+    .map(tokenToPromptEntry)
+    .filter(Boolean);
 }
 
 /**
@@ -388,7 +421,8 @@ function getTokensFromPage() {
  */
 function getPageTokens() {
   const fromTurnOrder = getTokensFromTurnOrder();
-  const entries = fromTurnOrder.length > 0 ? fromTurnOrder : getTokensFromPage();
+  const fromPage = fromTurnOrder.length > 0 ? fromTurnOrder : getTokensFromPage();
+  const entries = fromPage.length > 0 ? fromPage : getTokensFromAllPages();
   return entries.sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -424,6 +458,31 @@ function buildWizardBase(args) {
   if (durationRaw) parts.push(`--duration ${durationRaw}`);
   if (langRaw) parts.push(`--lang ${langRaw}`);
   return buildCommand(parts);
+}
+
+/**
+ * Resolves a wizard token argument to an id when possible.
+ *
+ * Token names are accepted for prompt flow so the wizard can continue using
+ * the same resolver as direct apply.
+ *
+ * @param {string} rawRef User-provided token reference.
+ * @param {'source'|'target'|'subject'} role Token role for messages.
+ * @returns {{valid: boolean, value: string, message?: string}} Resolution result.
+ */
+function resolveWizardTokenArg(rawRef, role) {
+  const ref = toText(rawRef);
+  if (!ref || ref === SUBJECT_NONE) {
+    return { valid: true, value: '' };
+  }
+
+  const locale = getConfig().language;
+  const result = resolveTokenReference(ref, role, locale);
+  if (!result.valid) {
+    return { valid: false, value: ref, message: result.message };
+  }
+
+  return { valid: true, value: result.token.id };
 }
 
 /**
@@ -769,8 +828,33 @@ export function showPromptUi(playerId, args) {
   const shouldBypassSubject = subjectBypassForCommand.value && isCustomEffectType(canonical);
   const wizardArgs = shouldBypassSubject ? { ...args, subject: SUBJECT_NONE } : args;
 
-  const sourceId = toText(wizardArgs.source);
-  const subjectRaw = toText(wizardArgs.subject);
+  const sourceResult = resolveWizardTokenArg(wizardArgs.source, 'source');
+  if (!sourceResult.valid) {
+    whisperWarning(playerId, sourceResult.message);
+    return;
+  }
+
+  const subjectResult = resolveWizardTokenArg(wizardArgs.subject, 'subject');
+  if (!subjectResult.valid) {
+    whisperWarning(playerId, subjectResult.message);
+    return;
+  }
+
+  const targetResult = resolveWizardTokenArg(wizardArgs.target, 'target');
+  if (!targetResult.valid) {
+    whisperWarning(playerId, targetResult.message);
+    return;
+  }
+
+  const resolvedWizardArgs = {
+    ...wizardArgs,
+    source: sourceResult.value,
+    subject: subjectResult.value || wizardArgs.subject,
+    target: targetResult.value,
+  };
+
+  const sourceId = toText(resolvedWizardArgs.source);
+  const subjectRaw = toText(resolvedWizardArgs.subject);
   const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
 
   const locale = getConfig().language;
@@ -781,7 +865,7 @@ export function showPromptUi(playerId, args) {
   }
 
   if (!canonical) {
-    showConditionStep(playerId, wizardArgs);
+    showConditionStep(playerId, resolvedWizardArgs);
     return;
   }
 
@@ -790,7 +874,7 @@ export function showPromptUi(playerId, args) {
     showTokenStep(
       playerId,
       t('ui.wizard.selectSubject', locale),
-      wizardArgs,
+      resolvedWizardArgs,
       'subject',
       t('ui.wizard.subjectDesc', locale)
     );
@@ -801,33 +885,34 @@ export function showPromptUi(playerId, args) {
     showTokenStep(
       playerId,
       t('ui.wizard.selectSource', locale),
-      wizardArgs,
+      resolvedWizardArgs,
       'source',
       t('ui.wizard.sourceDesc', locale)
     );
     return;
   }
 
-  const targetId = toText(wizardArgs.target);
-  const targetsRaw = toText(wizardArgs.targets);
+  const targetId = toText(resolvedWizardArgs.target);
+  const targetsRaw = toText(resolvedWizardArgs.targets);
 
   if (!targetId && !targetsRaw) {
-    const selectedIdsRaw = toText(wizardArgs['selected-ids']);
+    const selectedIdsRaw = toText(resolvedWizardArgs['selected-ids']);
     if (selectedIdsRaw) {
-      showMultiTargetStep(playerId, wizardArgs);
+      showMultiTargetStep(playerId, resolvedWizardArgs);
       return;
     }
     showTokenStep(
       playerId,
       t('ui.wizard.selectTarget', locale),
-      wizardArgs,
+      resolvedWizardArgs,
       'target',
       t('ui.wizard.targetDesc', locale)
     );
     return;
   }
 
-  const resolvedArgs = subjectRaw === SUBJECT_NONE ? { ...wizardArgs, subject: '' } : wizardArgs;
+  const resolvedArgs =
+    subjectRaw === SUBJECT_NONE ? { ...resolvedWizardArgs, subject: '' } : resolvedWizardArgs;
 
   showEffectDetailStep(playerId, resolvedArgs, canonical);
 }
@@ -1813,7 +1898,7 @@ export function showConfig(playerId) {
 export function showHelp(playerId) {
   const locale = getConfig().language;
   const commandRows = /** @type {string[][]} */ (tRaw('handout.commandsRef.rows', locale) || []);
-  const quickStartRows = /** @type {string[][]} */ (tRaw('handout.quickStart.rows', locale) || []);
+  const exampleRows = /** @type {string[][]} */ (tRaw('handout.examples.rows', locale) || []);
   const configRows = /** @type {string[][]} */ (tRaw('handout.configuration.rows', locale) || []);
 
   const configTableRows = configRows.map(([option, values, description]) => [
@@ -1834,6 +1919,13 @@ export function showHelp(playerId) {
           escapeHtml(decodeHelpText(t('handout.overview.body', locale))),
         ],
       ]
+    ),
+    sectionSpacer(),
+    heading(t('ui.heading.examples', locale)),
+    t('handout.examples.intro', locale),
+    htmlTable(
+      [t('handout.examples.colMacro', locale), t('handout.examples.colEvent', locale)],
+      toEscapedHandoutTableRows(exampleRows)
     ),
     sectionSpacer(),
     heading(t('ui.heading.commandOptions', locale)),

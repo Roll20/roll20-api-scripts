@@ -361,6 +361,10 @@ const TRANSLATION = {
       sourceTokenNotFound: "אסימון המקור לא נמצא.",
       targetTokenNotFound: "אסימון היעד לא נמצא.",
       subjectTokenNotFound: "אסימון הנושא לא נמצא.",
+      tokenRefNotFound:
+        'לא ניתן למצוא את האסימון {role} "{value}" לפי מזהה, שם אסימון או שם תו.',
+      tokenRefAmbiguous:
+        '{role} האסימון "{value}" התאים למספר אסימונים: {matches}. השתמש במזהה אסימון או בשם ספציפי יותר כדי להבדיל.',
       invalidGameSystem:
         "מערכת משחק לא חוקית. השתמש ב---config gameSystem &lt;id&gt;. מערכות נתמכות:",
       gameSystemSet:
@@ -542,6 +546,43 @@ const TRANSLATION = {
         [
           "!condition-tracker --menu",
           "פתח את תפריט הניהול הראשי עם לחצנים כדי להחיל, לסקור או להסיר תנאים.",
+        ],
+      ],
+    },
+    examples: {
+      heading: "דוגמאות מאקרו לתנאים נפוצים",
+      intro:
+        "אלו פקודות מאקרו מתחילות שתוכלו להדביק בפעולה אסימון או במאקרו צ'אט ואז להרחיב לפי הצורך. התאמת שמות אינה תלוית רישיות; שמות מדויקים מועדפים, ולאחר מכן התאמות חלקיות ייחודיות.",
+      colMacro: "מאקרו",
+      colEvent: "אירוע משותף",
+      rows: [
+        [
+          "!condition-tracker --prompt --condition נאבק",
+          "התמודד או תפוס מטרה ואפשר לאשף לבקש מקור, יעד ומשך זמן.",
+        ],
+        [
+          "!condition-tracker --prompt --condition נוטה",
+          "דפוק אסימון נוטה כשהמצב כבר נבחר.",
+        ],
+        [
+          "!condition-tracker --prompt --condition מורעל",
+          "בחר מראש מורעל עבור השפעות רעל, סכנות או התקפות רעילות.",
+        ],
+        [
+          "!condition-tracker --prompt --condition המום",
+          "בחר מראש בהלם עבור הלם, אפקטי הלם ואפקטים של שליטה קשה.",
+        ],
+        [
+          "!condition-tracker --prompt --condition עיוור",
+          "בחירה מראש ב-Blinded עבור הבזק, חושך, עשן או אפקטים פוגעניים בראייה.",
+        ],
+        [
+          '!condition-tracker --source "Sir Galahad" --target "Goblin Boss" --condition נאבק --duration סיבוב אחד',
+          "החלה ישירה באמצעות שמות אסימון/תווים מדויקים (לא תלוי רישיות).",
+        ],
+        [
+          "!condition-tracker --source חגיגי --target בוס --condition נוטה --duration סיבוב אחד",
+          "החלה ישירה באמצעות שמות חלקיים ייחודיים; אם מספר אסימונים תואמים, המוד מבקש שם או מזהה אסימון ספציפי יותר.",
         ],
       ],
     },
