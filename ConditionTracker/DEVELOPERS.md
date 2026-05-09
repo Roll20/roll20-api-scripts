@@ -150,3 +150,254 @@ If behavior changes for a release:
 3. Update `CHANGELOG.md`.
 4. Run `npm run build`.
 5. Confirm output appears in the new version folder.
+
+## Source File Guide
+
+### Core Module: `src/index.js`
+
+**Entry point** for the entire script. Handles:
+- `checkInstall()` — Initializes state, macros, turn order tracking on script load
+- `handleInput(msg)` — Main message dispatcher; routes chat commands to handlers
+- `handleTurnOrderChange(msg)` — Manages Turn Tracker synchronization, duration decrement, saved effect reminders
+- `handleTokenDestroy(msg)` — Cleanup when tokens are deleted
+- `handleCampaignChange(msg)` — Responds to campaign object changes (e.g., player joins)
+
+Orchestrates integration across all other modules.
+
+### Actor Classification: `src/actorClassification.js`
+
+Determines token type (pc, npc, ignored, unknown) for condition tracking purposes.
+
+**Key exports:**
+- `classifyToken(token)` — Main classification function; applies detection in priority order
+- `getExplicitClassification(token)` — Checks state and character overrides
+- `classifyAutomatically(token)` — Runs adapter → generic → controlledby detection
+- `classifyTokenDetail(token, tokenName)` — Returns detailed diagnosis for `--classify show`
+- `setCharacterOverrideAttr()` / `clearCharacterOverrideAttr()` — Manage `ct_mod_actor_type` character attribute
+
+**Detection order:**
+1. Token-level state override
+2. Character `ct_mod_actor_type` attribute
+3. Automatic eligibility (ignores objects layer and unlinked tokens)
+4. Game-system adapter (e.g., dnd5e `npc` attribute)
+5. Generic NPC attributes (fallback scan for common attribute names)
+6. Character `controlledby` field
+
+### Chat Output: `src/chat.js`
+
+Formats and sends chat messages to players and GMs.
+
+**Utilities:**
+- `whisper(playerId, title, body)` — Private message to a player
+- `whisperGms(title, body)` — Private message to all GMs
+- `whisperWarning()`, `whisperError()` — Styled error/warning messages
+- `announce(message)`, `announceHtml(html)` — Public chat messages
+- `buildBox(title, lines)` — Styled box for lists and tables
+- `buildButton(label, command)` — Generates clickable chat buttons
+- `htmlTable(headers, rows)` — Generates formatted HTML tables
+
+Handles color theming, HTML escaping, and Roll20 chat API.
+
+### Command Routing & Menus: `src/commands.js`
+
+Implements all `!condition-tracker` sub-commands and user-facing menus.
+
+**Major handlers:**
+- `routeCommand(msg, args)` — Parses command and dispatches to handlers
+- `handleCondition()` — Add/remove/toggle conditions via `--apply`, `--remove`, `--condition`
+- `handleConfig()` — Settings menu via `--config`
+- `handleClassify()` — Actor classification wizard via `--classify`
+- `handleMarkers()` — Marker mapping UI via `--markers`
+- `showMenu(playerId)` — Main action menu with wizard shortcuts
+- `removeExpiredConditions()` — Called each new turn to clean up duration-expired effects
+
+Also handles one-click macro installation and token list generation for wizards.
+
+### Conditions: `src/conditions.js`
+
+Condition type definitions, system profiles, and condition metadata.
+
+**Key exports:**
+- `getConditionLocalData(condition)` — Translations and display properties
+- `isCustomEffectType(condition)` — Checks if condition is a custom/free-form type
+- `buildRemovalMessage(token, conditions)` — Formats removal announcement
+- `buildConditionRecord(args)` — Creates a condition object for the Turn Tracker
+
+Contains logic for condition aliases, templates, and system-specific condition lists.
+
+### Configuration & State: `src/state.js`
+
+Manages script state and persistent configuration.
+
+**State structure:**
+```
+state.ConditionTracker = {
+  gameSystem,           // Active game system id
+  language,             // Active locale code
+  globalconfig,         // User settings (markers, health bars, etc.)
+  activeConditions,     // Turn order conditions by token id
+  savedEffects,         // Saved effect records by token id
+  tokenOverrides,       // Actor type overrides by token id
+  turnRuntime,          // Runtime state (current turn, turn key, etc.)
+}
+```
+
+**Key exports:**
+- `getConfig()` — Returns current game system and locale
+- `getActiveConditions()` — Returns all Turn Tracker conditions
+- `getActorTokenOverride(tokenId)` — Retrieves token-level actor type override
+- `ensureState()` — Initializes state on first run
+- `applyGlobalConfig(obj)` — Applies user settings from one-click config
+
+### Duration Tracking: `src/durations.js`
+
+Interprets and decrements condition durations.
+
+**Duration types:**
+- `turn-end` — Expires at end of current turn
+- `rounds` — Counts down each new turn (supports fractions)
+- `indefinite` — Persists until manually removed
+
+Exports `decrementDuration(duration)` for each Turn Tracker tick.
+
+### Help & Installation: `src/handout.js`
+
+Generates and manages the built-in help handout.
+
+**Functions:**
+- `installHandout()` — Creates or updates the help handout in the campaign
+- `buildHandoutContent()` — Generates HTML from locale strings
+
+Driven by `npm run regenerate-locales` for locale updates.
+
+### Localization: `src/i18n.js`
+
+Translation system and locale management.
+
+**Key exports:**
+- `t(key, locale, substitutions)` — Translation lookup with optional substitutions
+- `normalizeLocale(code)` — Resolves locale aliases
+- `getConditionLocalData(condition)` — Returns translated condition metadata
+
+Imports locale modules from `src/locales/locale/<code>.js` on demand. Supports fallback to en-US when keys are missing.
+
+### Macros: `src/macros.js`
+
+Installs quick-action macros for players.
+
+**Default macros:**
+- `ConditionTrackerMenu` — Opens main menu
+- `ConditionTrackerSaved` — Opens saved effects menu for current token
+
+Macro definitions stored in `MACRO_DEFINITIONS` object.
+
+### Status Markers: `src/markers.js`
+
+Manages token status markers (icons) that display conditions visually.
+
+**Key exports:**
+- `getTokenMarkers(token)` — Fetches all markers currently on a token
+- `containsMarker(markers, marker)` — Checks if marker is in use
+- `removeMarkerIfUnused(token, marker)` — Removes marker only if no conditions use it
+
+Handles marker-to-condition mappings and prevents accidental marker removal.
+
+### Parsing: `src/parser.js`
+
+Parses chat message text and command arguments.
+
+**Exports:**
+- `parseArgs(text)` — Converts command text to args object with support for `--key value` syntax
+- `extractConditionSpec(text)` — Extracts condition name and parameters from freeform input
+
+Handles quoted values, multi-word values, and partial key matching.
+
+### Condition Removal: `src/removal.js`
+
+Handles removal announcements and bulk cleanup.
+
+**Functions:**
+- `promptZeroHpConditionRemoval(playerId, tokenId, tokenName)` — Asks player which conditions to remove when token drops to 0 HP
+- `removeCondition(targetTokenId, condition, sourceTokenId)` — Removes a single condition and announces removal
+
+Formats removal messages and handles both public and private announcements.
+
+### Saved Effects: `src/savedEffects.js`
+
+State layer for persistent/between-combat effects.
+
+**Key exports:**
+- `createSavedEffect(data)` — Creates a new saved effect record
+- `getSavedEffectsForToken(tokenId)` — Retrieves all saved effects for a token
+- `addSavedEffect()`, `updateSavedEffect()`, `removeSavedEffect()` — CRUD operations
+- `clearCombatSnoozes()` — Called when Turn Tracker empties to reset snooze counters
+
+Manages visibility (public/masked/gm) and snooze scope (turn/rounds/combat).
+
+### Saved Effects UI: `src/savedEffectsCommands.js`
+
+Command and UI layer for saved effects feature.
+
+**Key handlers:**
+- `handleSaved(msg, args)` — Main dispatcher for `--saved` sub-commands
+- `showSavedMenu(playerId, tokenId)` — Lists saved effects with action buttons
+- `processSavedEffectReminders(tokenId, turnKey)` — Checks snooze conditions and reminds GM
+
+Integrates with Turn Tracker tick events and coordinate with `src/savedEffects.js` for data access.
+
+### Turn Order Management: `src/turnOrder.js`
+
+Manages condition rows in the Roll20 Turn Tracker (initiative list).
+
+**Key exports:**
+- `getTurnOrder()` — Fetches current Turn Tracker rows
+- `updateConditionRow(rowId, updates)` — Modifies a Turn Tracker row
+- `removeConditionRows(conditionIds)` — Removes condition rows
+- `getCurrentTurnTokenId()` — Gets the token id of the top Turn Tracker row
+- `migrateTurnOrderRows()` — Called on startup to clean up stale rows from previous runs
+
+Handles row id parsing, condition anchoring (to source or target), and row bookkeeping.
+
+### Utilities: `src/utils.js`
+
+General-purpose helper functions.
+
+**Key exports:**
+- `toText(value)` — Coerces values to string safely (handles undefined, null, objects)
+- `normalizeKey(text)` — Normalizes text for case-insensitive matching
+- `queryObjects(criteria)` — Wrapper around Roll20 `findObjs()`
+- `getGraphicToken(tokenId)` — Fetches a graphic token by id
+- `getTokenName(token)` — Returns display name for a token
+- `getGmPlayerIds()` — Returns all GM player ids
+- `escapeHtml(text)` — HTML-safe escaping
+
+Reduces repetitive Roll20 API patterns.
+
+### Input Validation: `src/validation.js`
+
+Validates user input for commands and config.
+
+**Validators:**
+- `validateCondition(input, characterId)` — Checks if condition name is valid
+- `validateDuration(input)` — Validates duration syntax and ranges
+- `validateOther(input)` — Validates free-form description length
+- `validateConfig(key, value)` — Validates config setting values (health bar, language, etc.)
+
+Returns error messages when validation fails.
+
+### Game Systems: `src/systems/`
+
+System-specific profiles for different game systems.
+
+**Each system profile includes:**
+- NPC detection attribute names
+- Condition definitions and templates
+- System-specific UI defaults
+- Translations keyed to system id
+
+**Profiles included:**
+- `dnd5e.js` — D&D 5e via Shaped Sheet and Roll20 Official
+- `pathfinder2e.js` — Pathfinder 2e
+- Plus others for dnd4e, starfinder, cypher, etc.
+
+Loaded on demand via `getSystemProfile(systemId)` in `conditions.js`.
