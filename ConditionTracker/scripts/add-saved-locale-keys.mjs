@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 const localeDir = 'src/locales/locale';
 const files = readdirSync(localeDir).filter((f) => f !== 'en-US.js' && f.endsWith('.js'));
@@ -172,9 +172,9 @@ for (const file of files) {
   ) {
     // Try to insert before --lang row
     if (content.includes('"--lang')) {
-      content = content.replace(/(\s*\[\"--lang)/, `\n${newCmdRefRows}$1`);
+      content = content.replace(/(\s*\["--lang)/, `\n${newCmdRefRows}$1`);
     } else if (content.includes('"--help"')) {
-      content = content.replace(/(\s*\[\"--help")/, `\n${newCmdRefRows}$1`);
+      content = content.replace(/(\s*\["--help")/, `\n${newCmdRefRows}$1`);
     }
     modified = true;
   }
@@ -184,7 +184,7 @@ for (const file of files) {
     content.includes('!condition-tracker --menu') &&
     !content.includes('!condition-tracker --saved')
   ) {
-    content = content.replace(/(\s*\[\"!condition-tracker --menu)/, `\n${newQuickStartRow}$1`);
+    content = content.replace(/(\s*\["!condition-tracker --menu)/, `\n${newQuickStartRow}$1`);
     modified = true;
   }
 

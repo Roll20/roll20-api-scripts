@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 const localeDir = 'src/locales/locale';
 const files = readdirSync(localeDir).filter((f) => f !== 'en-US.js' && f.endsWith('.js'));
