@@ -281,7 +281,7 @@ const TRANSLATION = {
       openRemovalList: "Åbn fjernelsesliste",
       showConfig: "Vis konfiguration",
       runCleanup: "Kør oprydning",
-      reinstallMacro: "Geninstaller makro",
+      reinstallMacros: "Geninstaller makro",
       reinstallHandout: "Geninstaller handout",
       showHelp: "Vis hjælp",
       reorderConditions: "Omarranger tilstandsrækker",

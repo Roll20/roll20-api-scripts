@@ -283,7 +283,7 @@ const TRANSLATION = {
       openRemovalList: "Άνοιγμα Λίστας Αφαίρεσης",
       showConfig: "Εμφάνιση Ρυθμίσεων",
       runCleanup: "Εκτέλεση Εκκαθάρισης",
-      reinstallMacro: "Επανεγκατάσταση Macro",
+      reinstallMacros: "Επανεγκατάσταση Macro",
       reinstallHandout: "Επανεγκατάσταση Handout",
       showHelp: "Εμφάνιση Βοήθειας",
       reorderConditions: "Αναδιάταξη Σειρών Κατάστασης",

@@ -282,7 +282,7 @@ const TRANSLATION = {
       openRemovalList: "Otwórz listę usuwania",
       showConfig: "Pokaż konfigurację",
       runCleanup: "Uruchom czyszczenie",
-      reinstallMacro: "Zainstaluj ponownie makro",
+      reinstallMacros: "Zainstaluj ponownie makro",
       reinstallHandout: "Zainstaluj ponownie handout",
       showHelp: "Pokaż pomoc",
       reorderConditions: "Zmień kolejność wierszy stanów",

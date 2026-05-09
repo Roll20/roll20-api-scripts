@@ -278,7 +278,7 @@ const TRANSLATION = {
       openRemovalList: "削除リストを開く",
       showConfig: "設定を表示",
       runCleanup: "クリーンアップを実行",
-      reinstallMacro: "マクロを再インストール",
+      reinstallMacros: "マクロを再インストール",
       reinstallHandout: "ハンドアウトを再インストール",
       showHelp: "ヘルプを表示",
       reorderConditions: "状態行を並び替え",

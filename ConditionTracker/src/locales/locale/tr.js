@@ -280,7 +280,7 @@ const TRANSLATION = {
       openRemovalList: "Kaldırma Listesini Aç",
       showConfig: "Yapılandırmayı Göster",
       runCleanup: "Temizliği Çalıştır",
-      reinstallMacro: "Makroyu Yeniden Yükle",
+      reinstallMacros: "Makroyu Yeniden Yükle",
       reinstallHandout: "El İlanını Yeniden Yükle",
       showHelp: "Yardımı Göster",
       reorderConditions: "Durum Satırlarını Yeniden Sırala",

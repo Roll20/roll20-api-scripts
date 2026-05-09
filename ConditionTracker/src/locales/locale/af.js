@@ -281,7 +281,7 @@ const TRANSLATION = {
       openRemovalList: "Maak Verwyderlys Oop",
       showConfig: "Wys Konfigurasie",
       runCleanup: "Voer Opruiming Uit",
-      reinstallMacro: "Herinstalleer Makro",
+      reinstallMacros: "Herinstalleer Makro",
       reinstallHandout: "Herinstalleer Handout",
       showHelp: "Wys Hulp",
       reorderConditions: "Herrangskik Toestandrye",

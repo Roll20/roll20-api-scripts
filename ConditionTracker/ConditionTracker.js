@@ -5,7 +5,7 @@
  * Name: Condition Tracker
  * Script: ConditionTracker.js
  * Version: 1.1.0.beta-3.2
- * Built: 2026-05-09T07:44:21.967Z
+ * Built: 2026-05-09T08:08:13.037Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -260,7 +260,7 @@ const ConditionTrackerMod = (() => {
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0.beta-3.2';
-  const SCRIPT_LAST_UPDATED = '2026-05-09T07:44:21.967Z';
+  const SCRIPT_LAST_UPDATED = '2026-05-09T08:08:13.037Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -640,7 +640,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Maak Verwyderlys Oop',
         showConfig: 'Wys Konfigurasie',
         runCleanup: 'Voer Opruiming Uit',
-        reinstallMacro: 'Herinstalleer Makro',
+        reinstallMacros: 'Herinstalleer Makro',
         reinstallHandout: 'Herinstalleer Handout',
         showHelp: 'Wys Hulp',
         reorderConditions: 'Herrangskik Toestandrye',
@@ -1587,7 +1587,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: "Obre la llista d'eliminació",
         showConfig: 'Mostra la configuració',
         runCleanup: 'Executa la neteja',
-        reinstallMacro: 'Reinstal·la la macro',
+        reinstallMacros: 'Reinstal·la la macro',
         reinstallHandout: 'Reinstal·la el fullet',
         showHelp: "Mostra l'ajuda",
         reorderConditions: 'Reordena les files de condicions',
@@ -2539,7 +2539,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: '開啟移除列表',
         showConfig: '顯示設定',
         runCleanup: '執行清理',
-        reinstallMacro: '重新安裝巨集',
+        reinstallMacros: '重新安裝巨集',
         reinstallHandout: '重新安裝講義',
         showHelp: '顯示說明',
         reorderConditions: '重新排列狀態列',
@@ -3407,7 +3407,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Otevřít seznam odebrání',
         showConfig: 'Zobrazit konfiguraci',
         runCleanup: 'Spustit vyčištění',
-        reinstallMacro: 'Přeinstalovat makro',
+        reinstallMacros: 'Přeinstalovat makro',
         reinstallHandout: 'Přeinstalovat příručku',
         showHelp: 'Zobrazit nápovědu',
         reorderConditions: 'Přeuspořádat řádky stavů',
@@ -4346,7 +4346,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Åbn fjernelsesliste',
         showConfig: 'Vis konfiguration',
         runCleanup: 'Kør oprydning',
-        reinstallMacro: 'Geninstaller makro',
+        reinstallMacros: 'Geninstaller makro',
         reinstallHandout: 'Geninstaller handout',
         showHelp: 'Vis hjælp',
         reorderConditions: 'Omarranger tilstandsrækker',
@@ -5288,7 +5288,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Open Verwijderlijst',
         showConfig: 'Toon Configuratie',
         runCleanup: 'Voer Opruiming Uit',
-        reinstallMacro: 'Macro Herinstalleren',
+        reinstallMacros: 'Macro Herinstalleren',
         reinstallHandout: 'Handout Herinstalleren',
         showHelp: 'Toon Help',
         reorderConditions: 'Conditierijen Herordenen',
@@ -6261,7 +6261,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Open Removal List',
         showConfig: 'Show Config',
         runCleanup: 'Run Cleanup',
-        reinstallMacro: 'Reinstall Macro',
+        reinstallMacros: 'Reinstall Macros',
         reinstallHandout: 'Reinstall Handout',
         showHelp: 'Show Help',
         reorderConditions: 'Reorder Condition Rows',
@@ -7203,7 +7203,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Avaa poistolistaus',
         showConfig: 'Näytä asetukset',
         runCleanup: 'Suorita siivous',
-        reinstallMacro: 'Asenna makro uudelleen',
+        reinstallMacros: 'Asenna makro uudelleen',
         reinstallHandout: 'Asenna handout uudelleen',
         showHelp: 'Näytä ohje',
         reorderConditions: 'Järjestä tilarivit uudelleen',
@@ -8150,7 +8150,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Ouvrir la liste de suppression',
         showConfig: 'Afficher la configuration',
         runCleanup: 'Lancer le nettoyage',
-        reinstallMacro: 'Réinstaller la macro',
+        reinstallMacros: 'Réinstaller la macro',
         reinstallHandout: 'Réinstaller le livret',
         showHelp: 'Afficher l’aide',
         reorderConditions: 'Réorganiser les lignes de condition',
@@ -9104,7 +9104,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Entfernungsliste öffnen',
         showConfig: 'Konfiguration anzeigen',
         runCleanup: 'Bereinigung starten',
-        reinstallMacro: 'Makro neu installieren',
+        reinstallMacros: 'Makro neu installieren',
         reinstallHandout: 'Handout neu installieren',
         showHelp: 'Hilfe anzeigen',
         reorderConditions: 'Bedingungszeilen neu anordnen',
@@ -10056,7 +10056,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Άνοιγμα Λίστας Αφαίρεσης',
         showConfig: 'Εμφάνιση Ρυθμίσεων',
         runCleanup: 'Εκτέλεση Εκκαθάρισης',
-        reinstallMacro: 'Επανεγκατάσταση Macro',
+        reinstallMacros: 'Επανεγκατάσταση Macro',
         reinstallHandout: 'Επανεγκατάσταση Handout',
         showHelp: 'Εμφάνιση Βοήθειας',
         reorderConditions: 'Αναδιάταξη Σειρών Κατάστασης',
@@ -11005,7 +11005,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'פתח רשימת הסרה',
         showConfig: 'הצג הגדרות',
         runCleanup: 'הרץ ניקוי',
-        reinstallMacro: 'התקן מאקרו מחדש',
+        reinstallMacros: 'התקן מאקרו מחדש',
         reinstallHandout: 'התקן דף עזרה מחדש',
         showHelp: 'הצג עזרה',
         reorderConditions: 'סדר מחדש שורות תנאי',
@@ -11852,7 +11852,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Eltávolítási lista megnyitása',
         showConfig: 'Beállítások megjelenítése',
         runCleanup: 'Tisztítás futtatása',
-        reinstallMacro: 'Makró újratelepítése',
+        reinstallMacros: 'Makró újratelepítése',
         reinstallHandout: 'Handout újratelepítése',
         showHelp: 'Súgó megjelenítése',
         reorderConditions: 'Állapotsorok átrendezése',
@@ -12810,7 +12810,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Apri lista rimozione',
         showConfig: 'Mostra configurazione',
         runCleanup: 'Esegui pulizia',
-        reinstallMacro: 'Reinstalla macro',
+        reinstallMacros: 'Reinstalla macro',
         reinstallHandout: 'Reinstalla documento',
         showHelp: 'Mostra aiuto',
         reorderConditions: 'Riordina righe condizioni',
@@ -13770,7 +13770,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: '削除リストを開く',
         showConfig: '設定を表示',
         runCleanup: 'クリーンアップを実行',
-        reinstallMacro: 'マクロを再インストール',
+        reinstallMacros: 'マクロを再インストール',
         reinstallHandout: 'ハンドアウトを再インストール',
         showHelp: 'ヘルプを表示',
         reorderConditions: '状態行を並び替え',
@@ -14719,7 +14719,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: '제거 목록 열기',
         showConfig: '설정 표시',
         runCleanup: '정리 실행',
-        reinstallMacro: '매크로 재설치',
+        reinstallMacros: '매크로 재설치',
         reinstallHandout: '유인물 재설치',
         showHelp: '도움말 표시',
         reorderConditions: '조건 행 재정렬',
@@ -15637,7 +15637,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Otwórz listę usuwania',
         showConfig: 'Pokaż konfigurację',
         runCleanup: 'Uruchom czyszczenie',
-        reinstallMacro: 'Zainstaluj ponownie makro',
+        reinstallMacros: 'Zainstaluj ponownie makro',
         reinstallHandout: 'Zainstaluj ponownie handout',
         showHelp: 'Pokaż pomoc',
         reorderConditions: 'Zmień kolejność wierszy stanów',
@@ -16579,7 +16579,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Abrir lista de remoção',
         showConfig: 'Mostrar configuração',
         runCleanup: 'Executar limpeza',
-        reinstallMacro: 'Reinstalar macro',
+        reinstallMacros: 'Reinstalar macro',
         reinstallHandout: 'Reinstalar documento',
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condições',
@@ -17533,7 +17533,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Abrir lista de remoção',
         showConfig: 'Mostrar configuração',
         runCleanup: 'Executar limpeza',
-        reinstallMacro: 'Reinstalar macro',
+        reinstallMacros: 'Reinstalar macro',
         reinstallHandout: 'Reinstalar livreto',
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condição',
@@ -18478,7 +18478,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Открыть список удаления',
         showConfig: 'Показать конфигурацию',
         runCleanup: 'Запустить очистку',
-        reinstallMacro: 'Переустановить макрос',
+        reinstallMacros: 'Переустановить макрос',
         reinstallHandout: 'Переустановить хэндаут',
         showHelp: 'Показать справку',
         reorderConditions: 'Переупорядочить строки состояний',
@@ -19427,7 +19427,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Abrir lista de eliminación',
         showConfig: 'Mostrar configuración',
         runCleanup: 'Ejecutar limpieza',
-        reinstallMacro: 'Reinstalar macro',
+        reinstallMacros: 'Reinstalar macro',
         reinstallHandout: 'Reinstalar folleto',
         showHelp: 'Mostrar ayuda',
         reorderConditions: 'Reordenar filas de condición',
@@ -20386,7 +20386,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Öppna borttagningslista',
         showConfig: 'Visa konfiguration',
         runCleanup: 'Kör rensning',
-        reinstallMacro: 'Installera om makro',
+        reinstallMacros: 'Installera om makro',
         reinstallHandout: 'Installera om handout',
         showHelp: 'Visa hjälp',
         reorderConditions: 'Ordna om tillståndsrader',
@@ -21329,7 +21329,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Kaldırma Listesini Aç',
         showConfig: 'Yapılandırmayı Göster',
         runCleanup: 'Temizliği Çalıştır',
-        reinstallMacro: 'Makroyu Yeniden Yükle',
+        reinstallMacros: 'Makroyu Yeniden Yükle',
         reinstallHandout: 'El İlanını Yeniden Yükle',
         showHelp: 'Yardımı Göster',
         reorderConditions: 'Durum Satırlarını Yeniden Sırala',
@@ -22279,7 +22279,7 @@ const ConditionTrackerMod = (() => {
         openRemovalList: 'Відкрити список видалення',
         showConfig: 'Показати налаштування',
         runCleanup: 'Запустити очищення',
-        reinstallMacro: 'Перевстановити макрос',
+        reinstallMacros: 'Перевстановити макрос',
         reinstallHandout: 'Перевстановити довідник',
         showHelp: 'Показати довідку',
         reorderConditions: 'Переупорядкувати рядки умов',
@@ -34296,6 +34296,7 @@ const ConditionTrackerMod = (() => {
 
     const cmdPrompt = `${COMMAND} --prompt`;
     const cmdMultiTarget = `${COMMAND} --multi-target`;
+    const cmdClassify = `${COMMAND_CLASSIFY} show`;
     const cmdReportToken = COMMAND_REPORT_TOKEN;
     const cmdSaved = COMMAND_SAVED;
     const cmdRemoveMenu = `${COMMAND} --menu remove`;
@@ -34318,6 +34319,10 @@ const ConditionTrackerMod = (() => {
           [
             code(cmdMultiTarget),
             buildButton(t('ui.btn.openMultiTarget', locale), cmdMultiTarget),
+          ],
+          [
+            code(cmdClassify),
+            buildButton(t('ui.classify.title', locale), cmdClassify),
           ],
           [
             code(cmdReportToken),
@@ -34345,7 +34350,7 @@ const ConditionTrackerMod = (() => {
           ],
           [
             code(cmdReinstall),
-            buildButton(t('ui.btn.reinstallMacro', locale), cmdReinstall),
+            buildButton(t('ui.btn.reinstallMacros', locale), cmdReinstall),
           ],
           [
             code(cmdReinstallHandout),

@@ -278,7 +278,7 @@ const TRANSLATION = {
       openRemovalList: "Otevřít seznam odebrání",
       showConfig: "Zobrazit konfiguraci",
       runCleanup: "Spustit vyčištění",
-      reinstallMacro: "Přeinstalovat makro",
+      reinstallMacros: "Přeinstalovat makro",
       reinstallHandout: "Přeinstalovat příručku",
       showHelp: "Zobrazit nápovědu",
       reorderConditions: "Přeuspořádat řádky stavů",

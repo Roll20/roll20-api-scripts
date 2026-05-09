@@ -282,7 +282,7 @@ const TRANSLATION = {
       openRemovalList: "Eltávolítási lista megnyitása",
       showConfig: "Beállítások megjelenítése",
       runCleanup: "Tisztítás futtatása",
-      reinstallMacro: "Makró újratelepítése",
+      reinstallMacros: "Makró újratelepítése",
       reinstallHandout: "Handout újratelepítése",
       showHelp: "Súgó megjelenítése",
       reorderConditions: "Állapotsorok átrendezése",

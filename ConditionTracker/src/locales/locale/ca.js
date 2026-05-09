@@ -279,7 +279,7 @@ const TRANSLATION = {
       openRemovalList: "Obre la llista d'eliminació",
       showConfig: "Mostra la configuració",
       runCleanup: "Executa la neteja",
-      reinstallMacro: "Reinstal·la la macro",
+      reinstallMacros: "Reinstal·la la macro",
       reinstallHandout: "Reinstal·la el fullet",
       showHelp: "Mostra l'ajuda",
       reorderConditions: "Reordena les files de condicions",

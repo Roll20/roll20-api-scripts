@@ -1,5 +1,6 @@
 import {
   COMMAND,
+  COMMAND_CLASSIFY,
   COMMAND_REPORT_TOKEN,
   COMMAND_SAVED,
   COLOR_BG_SOFT_BLACK,
@@ -1706,6 +1707,7 @@ export function showMenu(playerId, menu) {
 
   const cmdPrompt = `${COMMAND} --prompt`;
   const cmdMultiTarget = `${COMMAND} --multi-target`;
+  const cmdClassify = `${COMMAND_CLASSIFY} show`;
   const cmdReportToken = COMMAND_REPORT_TOKEN;
   const cmdSaved = COMMAND_SAVED;
   const cmdRemoveMenu = `${COMMAND} --menu remove`;
@@ -1723,13 +1725,14 @@ export function showMenu(playerId, menu) {
       [
         [code(cmdPrompt), buildButton(t('ui.btn.openWizard', locale), cmdPrompt)],
         [code(cmdMultiTarget), buildButton(t('ui.btn.openMultiTarget', locale), cmdMultiTarget)],
+        [code(cmdClassify), buildButton(t('ui.classify.title', locale), cmdClassify)],
         [code(cmdReportToken), buildButton(t('ui.btn.reportToken', locale), cmdReportToken)],
         [code(cmdSaved), buildButton(t('ui.btn.savedEffects', locale), cmdSaved)],
         [code(cmdRemoveMenu), buildButton(t('ui.btn.openRemovalList', locale), cmdRemoveMenu)],
         [code(cmdConfig), buildButton(t('ui.btn.showConfig', locale), cmdConfig)],
         [code(cmdCleanup), buildButton(t('ui.btn.runCleanup', locale), cmdCleanup)],
         [code(cmdReorder), buildButton(t('ui.btn.reorderConditions', locale), cmdReorder)],
-        [code(cmdReinstall), buildButton(t('ui.btn.reinstallMacro', locale), cmdReinstall)],
+        [code(cmdReinstall), buildButton(t('ui.btn.reinstallMacros', locale), cmdReinstall)],
         [
           code(cmdReinstallHandout),
           buildButton(t('ui.btn.reinstallHandout', locale), cmdReinstallHandout),

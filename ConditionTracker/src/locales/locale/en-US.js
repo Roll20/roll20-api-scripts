@@ -304,7 +304,7 @@ const TRANSLATION = {
       openRemovalList: 'Open Removal List',
       showConfig: 'Show Config',
       runCleanup: 'Run Cleanup',
-      reinstallMacro: 'Reinstall Macro',
+      reinstallMacros: 'Reinstall Macros',
       reinstallHandout: 'Reinstall Handout',
       showHelp: 'Show Help',
       reorderConditions: 'Reorder Condition Rows',

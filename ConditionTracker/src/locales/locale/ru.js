@@ -281,7 +281,7 @@ const TRANSLATION = {
       openRemovalList: "Открыть список удаления",
       showConfig: "Показать конфигурацию",
       runCleanup: "Запустить очистку",
-      reinstallMacro: "Переустановить макрос",
+      reinstallMacros: "Переустановить макрос",
       reinstallHandout: "Переустановить хэндаут",
       showHelp: "Показать справку",
       reorderConditions: "Переупорядочить строки состояний",

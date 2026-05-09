@@ -280,7 +280,7 @@ const TRANSLATION = {
       openRemovalList: "Abrir lista de remoção",
       showConfig: "Mostrar configuração",
       runCleanup: "Executar limpeza",
-      reinstallMacro: "Reinstalar macro",
+      reinstallMacros: "Reinstalar macro",
       reinstallHandout: "Reinstalar documento",
       showHelp: "Mostrar ajuda",
       reorderConditions: "Reordenar linhas de condições",

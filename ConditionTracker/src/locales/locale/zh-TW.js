@@ -278,7 +278,7 @@ const TRANSLATION = {
       openRemovalList: "開啟移除列表",
       showConfig: "顯示設定",
       runCleanup: "執行清理",
-      reinstallMacro: "重新安裝巨集",
+      reinstallMacros: "重新安裝巨集",
       reinstallHandout: "重新安裝講義",
       showHelp: "顯示說明",
       reorderConditions: "重新排列狀態列",

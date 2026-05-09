@@ -278,7 +278,7 @@ const TRANSLATION = {
       openRemovalList: "פתח רשימת הסרה",
       showConfig: "הצג הגדרות",
       runCleanup: "הרץ ניקוי",
-      reinstallMacro: "התקן מאקרו מחדש",
+      reinstallMacros: "התקן מאקרו מחדש",
       reinstallHandout: "התקן דף עזרה מחדש",
       showHelp: "הצג עזרה",
       reorderConditions: "סדר מחדש שורות תנאי",

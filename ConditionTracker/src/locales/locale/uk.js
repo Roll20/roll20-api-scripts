@@ -279,7 +279,7 @@ const TRANSLATION = {
       openRemovalList: "Відкрити список видалення",
       showConfig: "Показати налаштування",
       runCleanup: "Запустити очищення",
-      reinstallMacro: "Перевстановити макрос",
+      reinstallMacros: "Перевстановити макрос",
       reinstallHandout: "Перевстановити довідник",
       showHelp: "Показати довідку",
       reorderConditions: "Переупорядкувати рядки умов",

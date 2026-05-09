@@ -279,7 +279,7 @@ const TRANSLATION = {
       openRemovalList: "Avaa poistolistaus",
       showConfig: "Näytä asetukset",
       runCleanup: "Suorita siivous",
-      reinstallMacro: "Asenna makro uudelleen",
+      reinstallMacros: "Asenna makro uudelleen",
       reinstallHandout: "Asenna handout uudelleen",
       showHelp: "Näytä ohje",
       reorderConditions: "Järjestä tilarivit uudelleen",

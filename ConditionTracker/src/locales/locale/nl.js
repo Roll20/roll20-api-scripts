@@ -280,7 +280,7 @@ const TRANSLATION = {
       openRemovalList: "Open Verwijderlijst",
       showConfig: "Toon Configuratie",
       runCleanup: "Voer Opruiming Uit",
-      reinstallMacro: "Macro Herinstalleren",
+      reinstallMacros: "Macro Herinstalleren",
       reinstallHandout: "Handout Herinstalleren",
       showHelp: "Toon Help",
       reorderConditions: "Conditierijen Herordenen",

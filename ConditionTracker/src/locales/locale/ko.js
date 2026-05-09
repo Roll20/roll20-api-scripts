@@ -283,7 +283,7 @@ const TRANSLATION = {
       openRemovalList: "제거 목록 열기",
       showConfig: "설정 표시",
       runCleanup: "정리 실행",
-      reinstallMacro: "매크로 재설치",
+      reinstallMacros: "매크로 재설치",
       reinstallHandout: "유인물 재설치",
       showHelp: "도움말 표시",
       reorderConditions: "조건 행 재정렬",

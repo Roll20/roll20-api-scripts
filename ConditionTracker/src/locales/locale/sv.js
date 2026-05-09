@@ -280,7 +280,7 @@ const TRANSLATION = {
       openRemovalList: "Öppna borttagningslista",
       showConfig: "Visa konfiguration",
       runCleanup: "Kör rensning",
-      reinstallMacro: "Installera om makro",
+      reinstallMacros: "Installera om makro",
       reinstallHandout: "Installera om handout",
       showHelp: "Visa hjälp",
       reorderConditions: "Ordna om tillståndsrader",
