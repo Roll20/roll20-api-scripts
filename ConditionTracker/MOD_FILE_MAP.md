@@ -28,7 +28,7 @@ Scope notes:
 | `.gitattributes`    | Repository-local line-ending policy for generated and source text files.           |
 | `.gitignore`        | Ignore rules for local build artifacts and dependencies.                           |
 | `script.json`       | Roll20 One-Click metadata: script version, options, permissions, and dependencies. |
-| `package.json`      | NPM metadata and scripts (`build`, `watch`, `format`).                             |
+| `package.json`      | NPM metadata and scripts (`prebuild`, `build`, `watch`, `format`, `set-version`).  |
 | `package-lock.json` | Locked dependency graph for reproducible installs.                                 |
 | `rollup.config.js`  | Build config for bundling, metadata injection, and generated output formatting.    |
 
@@ -38,14 +38,17 @@ Scope notes:
 | ------------------------------- | ---------------------------------------------------------------------------- |
 | `ConditionTracker.js`           | Generated bundle for Roll20 API sandbox deployment.                          |
 | `<version>/ConditionTracker.js` | Versioned generated bundle output (for example `1.0.0/ConditionTracker.js`). |
+| `compare.cjs`                   | Local comparison helper for diffing generated bundles and metadata objects.  |
 
 ## Build Scripts
 
-| File                                | Purpose                                                                                      |
-| ----------------------------------- | -------------------------------------------------------------------------------------------- |
-| `scripts/build.mjs`                 | Build runner that executes Rollup and writes root plus versioned output artifacts.           |
-| `scripts/add-saved-locale-keys.mjs` | Migration/helper script used to seed saved-effects translation keys across locale files.     |
-| `scripts/fix-applied-by-value.mjs`  | Follow-up helper script used to repair locale rows after scripted translation-key insertion. |
+| File                                | Purpose                                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `scripts/build.mjs`                 | Build runner that executes Rollup and writes root plus versioned output artifacts.              |
+| `scripts/bump-version.mjs`          | Version helper that either auto-bumps the trailing numeric segment or sets an explicit version. |
+| `scripts/add-saved-locale-keys.mjs` | Migration/helper script used to seed saved-effects translation keys across locale files.        |
+| `scripts/fix-applied-by-value.mjs`  | Follow-up helper script used to repair locale rows after scripted translation-key insertion.    |
+| `scripts/sync-locales.mjs`          | Locale parity/pruning tool for keeping translated files aligned with the English source.        |
 
 ## Source Modules (`src`)
 
