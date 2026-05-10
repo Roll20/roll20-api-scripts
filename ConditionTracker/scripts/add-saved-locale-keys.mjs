@@ -1,117 +1,125 @@
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const localeDir = 'src/locales/locale';
 const files = readdirSync(localeDir).filter((f) => f !== 'en-US.js' && f.endsWith('.js'));
 
-const newBtnKeys = `      savedEffects: "Saved Effects",
-      addSavedEffect: "Add Saved Effect",
-      editSaved: "Edit",
-      removeSaved: "Remove",
-      promoteSaved: "Add to Turn Tracker",
-      snoozeSaved: "Snooze",
-      clearSnooze: "Clear Snooze",`;
+// Indentation constants
+const INDENT_2 = '  ';
+const INDENT_4 = INDENT_2 + INDENT_2;
+const INDENT_6 = INDENT_4 + INDENT_2;
+const INDENT_8 = INDENT_6 + INDENT_2;
+const INDENT_10 = INDENT_8 + INDENT_2;
+const INDENT_12 = INDENT_10 + INDENT_2;
 
-const newTitleKeys = `      savedEffects: "Saved Effects",
-      savedAdd: "Add Saved Effect",
-      savedEdit: "Edit Saved Effect",
-      savedRemoved: "Saved Effect Removed",
-      savedPromoted: "Add to Turn Tracker",
-      savedSnoozed: "Reminder Snoozed",
-      savedSnoozeCleared: "Snooze Cleared",
-      hiddenEffects: "Hidden Effects — {name}",`;
+const newBtnKeys = `${INDENT_6}savedEffects: "Saved Effects",
+${INDENT_6}addSavedEffect: "Add Saved Effect",
+${INDENT_6}editSaved: "Edit",
+${INDENT_6}removeSaved: "Remove",
+${INDENT_6}promoteSaved: "Add to Turn Tracker",
+${INDENT_6}snoozeSaved: "Snooze",
+${INDENT_6}clearSnooze: "Clear Snooze",`;
 
-const newHeadingKeys = `      savedEffectsFor: "Saved Effects for {name}",
-      visibility: "Visibility",
-      snoozeOptions: "Snooze Reminder",
-      promoteOptions: "Promote to Turn Tracker",
-      editActions: "Edit Actions",`;
+const newTitleKeys = `${INDENT_6}savedEffects: "Saved Effects",
+${INDENT_6}savedAdd: "Add Saved Effect",
+${INDENT_6}savedEdit: "Edit Saved Effect",
+${INDENT_6}savedRemoved: "Saved Effect Removed",
+${INDENT_6}savedPromoted: "Add to Turn Tracker",
+${INDENT_6}savedSnoozed: "Reminder Snoozed",
+${INDENT_6}savedSnoozeCleared: "Snooze Cleared",
+${INDENT_6}hiddenEffects: "Hidden Effects — {name}",`;
 
-const newMsgKeys = `      noSavedEffects: "No saved effects stored for {name}.",
-      noTokenSelectedSaved: "Select a token on the board before using --saved.",
-      savedEffectAdded: "Saved effect added for {name}.",
-      savedEffectUpdated: "Saved effect updated.",
-      savedEffectRemoved: "Saved effect removed.",
-      savedEffectNotFound: "Saved effect not found.",
-      savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
-      savedConditionRequired: "Condition type is required. Use --condition <type>.",
-      savedPromotedPublic: "Effect added to Turn Tracker as public.",
-      savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
-      savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
-      savedSnoozed: "Reminder snoozed: {scope}.",
-      savedSnoozeCleared: "Snooze cleared.",
-      hiddenEffectsReminder: "Hidden effects are active on {name}.",
-      visibilityPublicHint: "full label visible to all",
-      visibilityMaskedHint: "vague label shown to players",
-      visibilityGmHint: "GM whisper only, no Turn Tracker row",`;
+const newHeadingKeys = `${INDENT_6}savedEffectsFor: "Saved Effects for {name}",
+${INDENT_6}visibility: "Visibility",
+${INDENT_6}snoozeOptions: "Snooze Reminder",
+${INDENT_6}promoteOptions: "Promote to Turn Tracker",
+${INDENT_6}editActions: "Edit Actions",`;
 
-const newSavedBlock = `    saved: {
-      visibility: {
-        public: "Public",
-        masked: "Masked",
-        gm: "GM Only",
-      },
-      snooze: {
-        thisTurn: "This Turn",
-        oneRound: "1 Round",
-        threeRounds: "3 Rounds",
-        thisCombat: "This Combat",
-        rounds: "{n} round(s)",
-      },
-      field: {
-        gmLabel: "GM Label",
-        publicLabel: "Public Label",
-        visibility: "Visibility",
-        source: "Source",
-        condition: "Condition",
-      },
-      prompt: {
-        enterGmLabel: "Full effect description (GM only)",
-        enterPublicLabel: "Vague label shown to players",
-      },
-      snoozed: "snoozed",
-    },`;
+const newMsgKeys = `${INDENT_6}noSavedEffects: "No saved effects stored for {name}.",
+${INDENT_6}noTokenSelectedSaved: "Select a token on the board before using --saved.",
+${INDENT_6}savedEffectAdded: "Saved effect added for {name}.",
+${INDENT_6}savedEffectUpdated: "Saved effect updated.",
+${INDENT_6}savedEffectRemoved: "Saved effect removed.",
+${INDENT_6}savedEffectNotFound: "Saved effect not found.",
+${INDENT_6}savedInvalidVisibility: "Invalid visibility. Use public, masked, or gm.",
+${INDENT_6}savedConditionRequired: "Condition type is required. Use --condition <type>.",
+${INDENT_6}savedPromotedPublic: "Effect added to Turn Tracker as public.",
+${INDENT_6}savedPromotedMasked: "Effect added to Turn Tracker as masked — players see: {publicLabel}.",
+${INDENT_6}savedPromotedGm: "Effect is GM-only — no Turn Tracker row will be created. The reminder system will surface it when this token reaches the top of the turn order.",
+${INDENT_6}savedSnoozed: "Reminder snoozed: {scope}.",
+${INDENT_6}savedSnoozeCleared: "Snooze cleared.",
+${INDENT_6}hiddenEffectsReminder: "Hidden effects are active on {name}.",
+${INDENT_6}visibilityPublicHint: "full label visible to all",
+${INDENT_6}visibilityMaskedHint: "vague label shown to players",
+${INDENT_6}visibilityGmHint: "GM whisper only, no Turn Tracker row",`;
 
-const newHandoutSection = `    savedEffects: {
-      heading: "Saved Effects",
-      intro:
-        "Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
-      visibility: {
-        heading: "Visibility Modes",
-        rows: [
-          ["public", "Full effect label is visible in the Turn Tracker and public chat."],
-          ["masked", "A vague public label is shown to players; full details are GM-only."],
-          ["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
-        ],
-      },
-      commands: {
-        heading: "Saved Effects Commands",
-        intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
-        rows: [
-          ["!condition-tracker --saved", "View saved effects for the selected token."],
-          ["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
-          ["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
-          ["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
-          ["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
-          ["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
-          ["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
-        ],
-      },
-      reminders: {
-        heading: "GM Reminders",
-        body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
-      },
-    },`;
+const newSavedBlock = `${INDENT_4}saved: {
+${INDENT_6}visibility: {
+${INDENT_8}public: "Public",
+${INDENT_8}masked: "Masked",
+${INDENT_8}gm: "GM Only",
+${INDENT_6}},
+${INDENT_6}snooze: {
+${INDENT_8}thisTurn: "This Turn",
+${INDENT_8}oneRound: "1 Round",
+${INDENT_8}threeRounds: "3 Rounds",
+${INDENT_8}thisCombat: "This Combat",
+${INDENT_8}rounds: "{n} round(s)",
+${INDENT_6}},
+${INDENT_6}field: {
+${INDENT_8}gmLabel: "GM Label",
+${INDENT_8}publicLabel: "Public Label",
+${INDENT_8}visibility: "Visibility",
+${INDENT_8}source: "Source",
+${INDENT_8}condition: "Condition",
+${INDENT_6}},
+${INDENT_6}prompt: {
+${INDENT_8}enterGmLabel: "Full effect description (GM only)",
+${INDENT_8}enterPublicLabel: "Vague label shown to players",
+${INDENT_6}},
+${INDENT_6}snoozed: "snoozed",
+${INDENT_4}},`;
 
-const newCmdRefRows = `        ["--saved", "View saved long-term effects for the selected token (select token first)"],
-        ["--saved add", "Add a saved effect (curse, disease, etc.) to the selected token"],
-        ["--saved edit <id>", "Edit an existing saved effect by id"],
-        ["--saved remove <id>", "Remove a saved effect by id"],
-        ["--saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active"],
-        ["--saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a saved-effect reminder for the current turn, N rounds, or this combat"],
-        ["--saved snooze-clear <id>", "Clear an active snooze on a saved effect"],`;
+const newHandoutSection = `${INDENT_4}savedEffects: {
+${INDENT_6}heading: "Saved Effects",
+${INDENT_6}intro:
+${INDENT_8}"Saved effects let you store long-term conditions outside the Turn Tracker — curses, diseases, poisons, hidden debuffs, and other non-combat conditions. They persist in script state and can be optionally copied into the Turn Tracker when combat begins.",
+${INDENT_6}visibility: {
+${INDENT_8}heading: "Visibility Modes",
+${INDENT_8}rows: [
+${INDENT_10}["public", "Full effect label is visible in the Turn Tracker and public chat."],
+${INDENT_10}["masked", "A vague public label is shown to players; full details are GM-only."],
+${INDENT_10}["gm", "No Turn Tracker row. Full details are stored in state and whispered to the GM when the affected token reaches the top of initiative."],
+${INDENT_8}],
+${INDENT_6}},
+${INDENT_6}commands: {
+${INDENT_8}heading: "Saved Effects Commands",
+${INDENT_8}intro: "All --saved commands are GM-only. Select a token before running --saved or --saved add.",
+${INDENT_8}rows: [
+${INDENT_10}["!condition-tracker --saved", "View saved effects for the selected token."],
+${INDENT_10}["!condition-tracker --saved add", "Launch the add-saved-effect wizard."],
+${INDENT_10}["!condition-tracker --saved edit <id>", "Edit labels or visibility for an existing saved effect."],
+${INDENT_10}["!condition-tracker --saved remove <id>", "Permanently remove a saved effect."],
+${INDENT_10}["!condition-tracker --saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public or masked) or confirm it is GM-only tracked."],
+${INDENT_10}["!condition-tracker --saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a GM reminder for this turn, N rounds, or this combat."],
+${INDENT_10}["!condition-tracker --saved snooze-clear <id>", "Clear an active snooze so reminders resume immediately."],
+${INDENT_8}],
+${INDENT_6}},
+${INDENT_6}reminders: {
+${INDENT_8}heading: "GM Reminders",
+${INDENT_8}body: "When a token with gm or masked saved effects reaches the top of the Turn Tracker, the GM receives a whisper listing the hidden effects with action buttons. Duplicate reminders within the same turn are suppressed. Use the Snooze buttons to suppress reminders for a turn, a number of rounds, or for the remainder of the current combat.",
+${INDENT_6}},
+${INDENT_4}},`;
 
-const newQuickStartRow = `        ["!condition-tracker --saved", "Select a token first, then run this command to view and manage saved long-term effects (curses, diseases, hidden debuffs, etc.) for that token. Also available as the ConditionTrackerSaved macro."],`;
+const newCmdRefRows = `${INDENT_8}["--saved", "View saved long-term effects for the selected token (select token first)"],
+${INDENT_8}["--saved add", "Add a saved effect (curse, disease, etc.) to the selected token"],
+${INDENT_8}["--saved edit <id>", "Edit an existing saved effect by id"],
+${INDENT_8}["--saved remove <id>", "Remove a saved effect by id"],
+${INDENT_8}["--saved promote <id> --visibility public|masked|gm", "Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active"],
+${INDENT_8}["--saved snooze <id> --scope turn|rounds|combat --rounds <n>", "Snooze a saved-effect reminder for the current turn, N rounds, or this combat"],
+${INDENT_8}["--saved snooze-clear <id>", "Clear an active snooze on a saved effect"],`;
+
+const newQuickStartRow = `${INDENT_8}["!condition-tracker --saved", "Select a token first, then run this command to view and manage saved long-term effects (curses, diseases, hidden debuffs, etc.) for that token. Also available as the ConditionTrackerSaved macro."],`;
 
 let successCount = 0;
 
