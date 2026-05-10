@@ -53,7 +53,14 @@ npm run watch
 
 The build bundles `src/index.js` and writes both root and versioned output files.
 
-The build does not regenerate locale files. Run `npm run sync-locales` for incremental locale updates or `npm run regenerate-locales` to retranslate everything, optionally with `-- --locale=<code>` or a positional locale argument (for example `npm run regenerate-locales uk`).
+The build does not regenerate locale files. Run `npm run sync-locales` for incremental locale updates or `npm run regenerate-locales` to retranslate everything. Both commands support targeting a single locale with `-- --locale=<code>` or a positional locale argument (for example `npm run sync-locales -- --locale=es` or `npm run regenerate-locales uk`).
+
+Both commands prompt for confirmation before making translation requests. Use `-- --yes` (or `-y`) to skip the prompt in automated/non-interactive runs.
+
+Estimated timing shown before confirmation:
+
+- Sync mode: usually several minutes. Estimated minimum is `4 x number of targeted locales`; estimated maximum is `7 x targeted locales that still need translation`.
+- Regenerate mode: `30-60` minutes per targeted locale.
 
 Format source and docs:
 

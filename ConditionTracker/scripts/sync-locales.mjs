@@ -1,8 +1,9 @@
-import { readdirSync, statSync, writeFileSync } from 'node:fs';
 import console from 'node:console';
+import { readdirSync, statSync, writeFileSync } from 'node:fs';
 import https from 'node:https';
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
+import { createInterface } from 'node:readline/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import prettier from 'prettier';
 
@@ -444,15 +445,31 @@ async function processLocale(localeCode, source, localeData, cache, config, forc
  * Processes locales in order of most strings needing translation first,
  * then oldest by last-modified date, so interrupted runs make the most progress.
  *
- * @returns {Promise<void>} Resolves after all locale files have been synchronized and written.
+ * @param {string} [localeFilter] Optional locale code to limit sync to a single locale.
+ * @returns {Promise<void>} Resolves after all targeted locale files have been synchronized and written.
  */
-export async function syncLocales() {
-  const files = readdirSync(LOCALE_DIR)
-    .filter((file) => file.endsWith('.js'))
-    .map((file) => file.replace(/\.js$/u, ''));
+export async function syncLocales(localeFilter) {
+  const files = getLocaleCodes();
+
+  if (localeFilter === SOURCE_LOCALE) {
+    console.error(
+      `[sync-locales] ${SOURCE_LOCALE} is the source locale and cannot be synchronized.`
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   const source = await loadLocale(SOURCE_LOCALE);
-  const targetLocaleCodes = files.filter((code) => code !== SOURCE_LOCALE);
+  let targetLocaleCodes = files.filter((code) => code !== SOURCE_LOCALE);
+
+  if (localeFilter) {
+    targetLocaleCodes = targetLocaleCodes.filter((code) => code === localeFilter);
+    if (targetLocaleCodes.length === 0) {
+      console.error(`[sync-locales] No locale found matching: ${localeFilter}`);
+      process.exitCode = 1;
+      return;
+    }
+  }
 
   // Pre-scan all locales to determine priority ordering without making any HTTP requests
   const localeMetadata = await Promise.all(
@@ -492,7 +509,9 @@ export async function regenerateLocales(localeFilter) {
     .map((file) => file.replace(/\.js$/u, ''));
 
   if (localeFilter === SOURCE_LOCALE) {
-    console.error(`[sync-locales] ${SOURCE_LOCALE} is the source locale and cannot be regenerated.`);
+    console.error(
+      `[sync-locales] ${SOURCE_LOCALE} is the source locale and cannot be regenerated.`
+    );
     process.exitCode = 1;
     return;
   }
@@ -525,16 +544,18 @@ export async function regenerateLocales(localeFilter) {
  * @returns {string | undefined} Parsed locale filter.
  */
 function parseLocaleFilter(args) {
+  const isFlag = (arg) => arg.startsWith('-');
   const localeEq = args.find((arg) => arg.startsWith('--locale='))?.split('=')[1];
   const localeFlagIndex = args.indexOf('--locale');
   const localeNext =
-    localeFlagIndex !== -1 && args[localeFlagIndex + 1] && !args[localeFlagIndex + 1].startsWith('--')
+    localeFlagIndex !== -1 && args[localeFlagIndex + 1] && !isFlag(args[localeFlagIndex + 1])
       ? args[localeFlagIndex + 1]
       : undefined;
-  const positional = args.find((arg) => arg !== '--regenerate' && !arg.startsWith('--'));
+  const positional = args.find((arg) => arg !== '--regenerate' && !isFlag(arg));
 
   const candidates = [localeEq, localeNext, positional].filter(
-    (value, index, values) => typeof value === 'string' && value.length > 0 && values.indexOf(value) === index
+    (value, index, values) =>
+      typeof value === 'string' && value.length > 0 && values.indexOf(value) === index
   );
 
   if (localeFlagIndex !== -1 && !localeNext && !localeEq) {
@@ -555,6 +576,97 @@ function parseLocaleFilter(args) {
 }
 
 /**
+ * Collects locale codes from the locale directory (without `.js` extension).
+ *
+ * @returns {string[]} Locale codes discovered under `src/locales/locale`.
+ */
+function getLocaleCodes() {
+  return readdirSync(LOCALE_DIR)
+    .filter((file) => file.endsWith('.js'))
+    .map((file) => file.replace(/\.js$/u, ''));
+}
+
+/**
+ * Builds a sync timing estimate used for pre-run warnings.
+ *
+ * Estimated formula requested by maintainers:
+ * - minimum: 4 minutes x locale count
+ * - maximum: 7 minutes x locales needing translation
+ *
+ * @param {string} [localeFilter] Optional locale code to limit estimate scope.
+ * @returns {Promise<{ totalLocales: number, localesNeedingTranslation: number, estimatedMinMinutes: number, estimatedMaxMinutes: number } | null>}
+ */
+async function estimateSyncTiming(localeFilter) {
+  const files = getLocaleCodes();
+  const source = await loadLocale(SOURCE_LOCALE);
+  let targetLocaleCodes = files.filter((code) => code !== SOURCE_LOCALE);
+
+  if (localeFilter) {
+    if (localeFilter === SOURCE_LOCALE) {
+      console.error(
+        `[sync-locales] ${SOURCE_LOCALE} is the source locale and cannot be synchronized.`
+      );
+      process.exitCode = 1;
+      return null;
+    }
+
+    targetLocaleCodes = targetLocaleCodes.filter((code) => code === localeFilter);
+    if (targetLocaleCodes.length === 0) {
+      console.error(`[sync-locales] No locale found matching: ${localeFilter}`);
+      process.exitCode = 1;
+      return null;
+    }
+  }
+
+  const localeMetadata = await Promise.all(
+    targetLocaleCodes.map(async (localeCode) => {
+      const localeData = await loadLocale(localeCode);
+      const needsTranslation = countTranslationNeeds(source, localeData);
+      return { localeCode, needsTranslation };
+    })
+  );
+
+  const localesNeedingTranslation = localeMetadata.filter(
+    ({ needsTranslation }) => needsTranslation > 0
+  ).length;
+
+  return {
+    totalLocales: targetLocaleCodes.length,
+    localesNeedingTranslation,
+    estimatedMinMinutes: targetLocaleCodes.length * 4,
+    estimatedMaxMinutes: localesNeedingTranslation * 7,
+  };
+}
+
+/**
+ * Prompts the user to confirm whether the run should proceed.
+ *
+ * @param {string[]} args CLI arguments excluding node and script paths.
+ * @param {string} message Prompt message shown before confirmation.
+ * @returns {Promise<boolean>} True when user confirms, otherwise false.
+ */
+async function confirmProceed(args, message) {
+  if (args.includes('--yes') || args.includes('-y')) {
+    return true;
+  }
+
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    console.warn(
+      '[sync-locales] Non-interactive terminal detected; proceeding without confirmation.'
+    );
+    return true;
+  }
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question(`${message}\n[sync-locales] Proceed? (y/N): `);
+    return ['y', 'yes'].includes(answer.trim().toLowerCase());
+  } finally {
+    rl.close();
+  }
+}
+
+/**
  * If this module is executed directly, run syncLocales or regenerateLocales based on CLI flags.
  * Flags:
  *   --regenerate     Force re-translation of all strings (uses longer timeouts).
@@ -570,8 +682,40 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
 
   if (isRegenerate) {
+    const localeCodes = getLocaleCodes().filter((code) => code !== SOURCE_LOCALE);
+    const targetCount = localeFilter ? 1 : localeCodes.length;
+    const targetLabel = localeFilter ? `${localeFilter}` : `${targetCount} locales`;
+    const totalMin = targetCount * 30;
+    const totalMax = targetCount * 60;
+
+    const shouldProceed = await confirmProceed(
+      args,
+      `[sync-locales] Regenerate mode selected for ${targetLabel}. This can take 30-60 minutes per locale (about ${totalMin}-${totalMax} minutes total).`
+    );
+
+    if (!shouldProceed) {
+      console.info('[sync-locales] Cancelled by user.');
+      process.exit(0);
+    }
+  } else {
+    const syncEstimate = await estimateSyncTiming(localeFilter);
+    if (!syncEstimate) {
+      process.exit(process.exitCode || 1);
+    }
+    const shouldProceed = await confirmProceed(
+      args,
+      `[sync-locales] Sync mode selected. This usually takes several minutes. Estimated minimum: about ${syncEstimate.estimatedMinMinutes} minutes (4 x ${syncEstimate.totalLocales} locales). Estimated maximum: about ${syncEstimate.estimatedMaxMinutes} minutes (7 x ${syncEstimate.localesNeedingTranslation} locales needing translation).`
+    );
+
+    if (!shouldProceed) {
+      console.info('[sync-locales] Cancelled by user.');
+      process.exit(0);
+    }
+  }
+
+  if (isRegenerate) {
     await regenerateLocales(localeFilter);
   } else {
-    await syncLocales();
+    await syncLocales(localeFilter);
   }
 }
