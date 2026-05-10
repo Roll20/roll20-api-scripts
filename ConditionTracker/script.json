@@ -1,7 +1,7 @@
 {
   "name": "Condition Tracker",
   "script": "ConditionTracker.js",
-  "version": "1.1.0.beta-3.3",
+  "version": "1.1.0.beta-3.5",
   "previousversions": [],
   "description": "Track token conditions and custom effects as separate Roll20 Turn Tracker rows.",
   "authors": "MidNiteShadow7",
@@ -80,6 +80,12 @@
       "type": "checkbox",
       "value": "true",
       "description": "Suppress all public chat announcements when conditions are applied or removed. GM whispers are unaffected. Default: disabled."
+    },
+    {
+      "name": "enablePostApplyMacroButtons",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Show macro-creation buttons in the GM whisper after applying conditions, allowing one-click macro generation for repeated apply actions. Default: disabled."
     },
     {
       "name": "healthBar",
@@ -232,7 +238,7 @@
     "graphic.bar1_value": "read",
     "graphic.bar2_value": "read",
     "graphic.bar3_value": "read",
-    "graphic.layer": "write",
+    "graphic.layer": "read,write",
     "graphic.name": "read",
     "graphic.represents": "read",
     "graphic.controlledby": "read",
