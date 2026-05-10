@@ -5,7 +5,7 @@
  * Name: Condition Tracker
  * Script: ConditionTracker.js
  * Version: 1.1.0.beta-3.5
- * Built: 2026-05-10T11:18:57.202Z
+ * Built: 2026-05-10T18:42:48.368Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -256,7 +256,7 @@ const ConditionTrackerMod = (() => {
 
   const SCRIPT_NAME = 'Condition Tracker';
   const SCRIPT_VERSION = '1.1.0.beta-3.5';
-  const SCRIPT_LAST_UPDATED = '2026-05-10T11:18:57.202Z';
+  const SCRIPT_LAST_UPDATED = '2026-05-10T18:42:48.368Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -31167,71 +31167,153 @@ const ConditionTrackerMod = (() => {
     const playerId = msg.playerid;
     const locale = getConfig().language;
 
+    dispatchSavedSubcommand({
+      sub,
+      id,
+      playerId,
+      msg,
+      args,
+      locale,
+    });
+  }
+
+  /**
+   * Dispatches a parsed --saved subcommand.
+   *
+   * @param {object} context Dispatch context.
+   * @param {string} context.sub Parsed subcommand.
+   * @param {string} context.id Parsed saved-effect id.
+   * @param {string} context.playerId GM player id.
+   * @param {object} context.msg Roll20 chat message.
+   * @param {object} context.args Parsed command arguments.
+   * @param {string} context.locale Locale code.
+   * @returns {void}
+   */
+  function dispatchSavedSubcommand({ sub, id, playerId, msg, args, locale }) {
     switch (sub) {
       case 'add':
         handleSavedAdd(playerId, msg, args);
         return;
 
-      case 'edit': {
-        if (!id) {
-          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
-          return;
-        }
-        handleSavedEdit(playerId, id, args);
+      case 'edit':
+        executeSavedEditSubcommand(playerId, id, args, locale);
         return;
-      }
 
-      case 'remove': {
-        if (!id) {
-          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
-          return;
-        }
-        executeSavedRemove(playerId, id);
+      case 'remove':
+        executeSavedRemoveSubcommand(playerId, id, locale);
         return;
-      }
 
-      case 'promote': {
-        if (!id) {
-          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
-          return;
-        }
-        const visibility = toText(args.visibility);
-        if (visibility && VALID_SAVED_VISIBILITIES.has(visibility)) {
-          executeSavedPromote(playerId, id, visibility);
-        } else {
-          showSavedPromoteMenu(playerId, id);
-        }
+      case 'promote':
+        executeSavedPromoteSubcommand(playerId, id, args, locale);
         return;
-      }
 
-      case 'snooze': {
-        if (!id) {
-          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
-          return;
-        }
-        const scope = toText(args.scope);
-        if (scope && VALID_SNOOZE_SCOPES.has(scope)) {
-          const count = Number(toText(args.rounds)) || 0;
-          executeSavedSnooze(playerId, id, scope, count, getTurnKeyFromArgs(args));
-        } else {
-          showSavedSnoozeMenu(playerId, id);
-        }
+      case 'snooze':
+        executeSavedSnoozeSubcommand(playerId, id, args, locale);
         return;
-      }
 
-      case 'snooze-clear': {
-        if (!id) {
-          whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
-          return;
-        }
-        executeSnoozeClear(playerId, id);
+      case 'snooze-clear':
+        executeSavedSnoozeClearSubcommand(playerId, id, locale);
         return;
-      }
 
       case 'view':
       default:
         showSavedMenuForMessage(playerId, msg);
     }
+  }
+
+  /**
+   * Executes --saved edit.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} id Saved-effect id.
+   * @param {object} args Parsed command arguments.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function executeSavedEditSubcommand(playerId, id, args, locale) {
+    if (!ensureSavedId(playerId, id, locale)) return;
+    handleSavedEdit(playerId, id, args);
+  }
+
+  /**
+   * Executes --saved remove.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} id Saved-effect id.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function executeSavedRemoveSubcommand(playerId, id, locale) {
+    if (!ensureSavedId(playerId, id, locale)) return;
+    executeSavedRemove(playerId, id);
+  }
+
+  /**
+   * Executes --saved promote.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} id Saved-effect id.
+   * @param {object} args Parsed command arguments.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function executeSavedPromoteSubcommand(playerId, id, args, locale) {
+    if (!ensureSavedId(playerId, id, locale)) return;
+    const visibility = toText(args.visibility);
+    if (visibility && VALID_SAVED_VISIBILITIES.has(visibility)) {
+      executeSavedPromote(playerId, id, visibility);
+      return;
+    }
+    showSavedPromoteMenu(playerId, id);
+  }
+
+  /**
+   * Executes --saved snooze.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} id Saved-effect id.
+   * @param {object} args Parsed command arguments.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function executeSavedSnoozeSubcommand(playerId, id, args, locale) {
+    if (!ensureSavedId(playerId, id, locale)) return;
+    const scope = toText(args.scope);
+    if (scope && VALID_SNOOZE_SCOPES.has(scope)) {
+      const count = Number(toText(args.rounds)) || 0;
+      executeSavedSnooze(playerId, id, scope, count, getTurnKeyFromArgs(args));
+      return;
+    }
+    showSavedSnoozeMenu(playerId, id);
+  }
+
+  /**
+   * Executes --saved snooze-clear.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} id Saved-effect id.
+   * @param {string} locale Locale code.
+   * @returns {void}
+   */
+  function executeSavedSnoozeClearSubcommand(playerId, id, locale) {
+    if (!ensureSavedId(playerId, id, locale)) return;
+    executeSnoozeClear(playerId, id);
+  }
+
+  /**
+   * Ensures a saved-effect id is present before id-based actions.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} id Saved-effect id.
+   * @param {string} locale Locale code.
+   * @returns {boolean} True when id is present.
+   */
+  function ensureSavedId(playerId, id, locale) {
+    if (!id) {
+      whisperWarning(playerId, t('ui.msg.savedEffectNotFound', locale));
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -31305,8 +31387,7 @@ const ConditionTrackerMod = (() => {
       body.push(t('ui.msg.noSavedEffects', locale, { name: tokenName }));
     } else {
       for (const effect of effects) {
-        body.push(rawHtml('<br>'));
-        body.push(...buildEffectCard(effect, locale));
+        body.push(rawHtml('<br>'), ...buildEffectCard(effect, locale));
       }
     }
 
@@ -31890,12 +31971,16 @@ const ConditionTrackerMod = (() => {
 
     updateSavedEffect(effectId, { snooze });
 
-    const scopeLabel =
-      scope === SAVED_SNOOZE_ROUNDS
-        ? t('ui.saved.snooze.rounds', locale, { n: snooze.roundsRemaining })
-        : scope === SAVED_SNOOZE_TURN
-          ? t('ui.saved.snooze.thisTurn', locale)
-          : t('ui.saved.snooze.thisCombat', locale);
+    let scopeLabel;
+    if (scope === SAVED_SNOOZE_ROUNDS) {
+      scopeLabel = t('ui.saved.snooze.rounds', locale, {
+        n: snooze.roundsRemaining,
+      });
+    } else if (scope === SAVED_SNOOZE_TURN) {
+      scopeLabel = t('ui.saved.snooze.thisTurn', locale);
+    } else {
+      scopeLabel = t('ui.saved.snooze.thisCombat', locale);
+    }
 
     whisper(
       playerId,
@@ -32031,8 +32116,7 @@ const ConditionTrackerMod = (() => {
     const lines = [t('ui.msg.hiddenEffectsReminder', locale, { name: tokenName })];
 
     for (const effect of effects) {
-      lines.push(rawHtml('<br>'));
-      lines.push(heading$1(effectGmLabel(effect)));
+      lines.push(rawHtml('<br>'), heading$1(effectGmLabel(effect)));
 
       const rows = [
         [
