@@ -270,14 +270,15 @@ function syncArray(sourceArray, targetValue, stats, translationTasks, syncEntry)
 }
 
 /**
- * Synchronizes object keys recursively and preserves locale-only keys.
+ * Synchronizes object keys recursively against the source schema.
+ * Keys present in the target but absent from the source are pruned (counted in stats.pruned).
  *
  * @param {Record<string, unknown>} sourceObject Source object from `en-US`.
  * @param {unknown} targetValue Current locale value for the same object path.
- * @param {{ missing: number, translated: number }} stats Mutable counters for reporting sync actions.
+ * @param {{ missing: number, translated: number, pruned: number }} stats Mutable counters for reporting sync actions.
  * @param {Array<{ set: (value: string) => void, text: string }>} translationTasks Deferred translation tasks collected during traversal.
- * @param {(sourceValue: unknown, targetValue: unknown, stats: { missing: number, translated: number }, translationTasks: Array<{ set: (value: string) => void, text: string }>) => unknown} syncEntry Recursive sync function used for nested values.
- * @returns {Record<string, unknown>} Synchronized object with locale-only keys preserved.
+ * @param {(sourceValue: unknown, targetValue: unknown, stats: { missing: number, translated: number, pruned: number }, translationTasks: Array<{ set: (value: string) => void, text: string }>) => unknown} syncEntry Recursive sync function used for nested values.
+ * @returns {Record<string, unknown>} Synchronized object with schema-only keys retained.
  */
 function syncObject(sourceObject, targetValue, stats, translationTasks, syncEntry) {
   const targetObject =
@@ -296,7 +297,7 @@ function syncObject(sourceObject, targetValue, stats, translationTasks, syncEntr
 
   for (const key of Object.keys(targetObject)) {
     if (!(key in synced)) {
-      synced[key] = targetObject[key];
+      stats.pruned += 1;
     }
   }
 
@@ -411,11 +412,11 @@ async function writeLocale(localeCode, localeData) {
  * @returns {Promise<void>}
  */
 async function processLocale(localeCode, source, localeData, cache, config, forceRetranslate) {
-  const stats = { missing: 0, translated: 0, forceRetranslate };
+  const stats = { missing: 0, translated: 0, pruned: 0, forceRetranslate };
   const translationTasks = [];
   const syncedDraft = syncValue(source, localeData, stats, translationTasks);
 
-  if (translationTasks.length === 0) {
+  if (translationTasks.length === 0 && stats.pruned === 0) {
     console.info(`[sync-locales] ${localeCode}: up to date`);
     return;
   }
@@ -435,8 +436,9 @@ async function processLocale(localeCode, source, localeData, cache, config, forc
   const synced = finalizeValue(syncedDraft);
   await writeLocale(localeCode, synced);
 
+  const prunedNote = stats.pruned > 0 ? `, pruned ${stats.pruned}` : '';
   console.info(
-    `[sync-locales] ${localeCode}: missing ${stats.missing}, translated ${stats.translated}`
+    `[sync-locales] ${localeCode}: missing ${stats.missing}, translated ${stats.translated}${prunedNote}`
   );
 }
 
