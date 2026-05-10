@@ -17,12 +17,17 @@ function bumpTrailingNumber(version) {
   return version.replace(/(\d+)$/, (_, n) => String(Number(n) + 1));
 }
 
+const explicitVersion = process.argv[2];
 const previous = script.version;
-script.version = bumpTrailingNumber(previous);
+script.version = explicitVersion ?? bumpTrailingNumber(previous);
 
 writeFileSync(pkgUrl, JSON.stringify(script, null, 2) + '\n');
 execSync(`npx prettier --write "${pkgUrl.pathname.replace(/^\/([A-Z]:)/, '$1')}"`, {
   stdio: 'inherit',
 });
 
-console.log(`Version bumped: ${previous} → ${script.version}`);
+if (explicitVersion) {
+  console.log(`Version set: ${previous} → ${script.version}`);
+} else {
+  console.log(`Version bumped: ${previous} → ${script.version}`);
+}

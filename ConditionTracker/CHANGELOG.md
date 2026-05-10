@@ -2,7 +2,7 @@
 
 All notable changes to **Condition Tracker** will be documented in this file.
 
-## [1.1.0] - 2026-05-09
+## [1.1.0] - 2026-05-10
 
 ### Added
 
@@ -10,11 +10,12 @@ All notable changes to **Condition Tracker** will be documented in this file.
 - **Three visibility modes for saved effects**: `public` (full label visible in Turn Tracker and chat), `masked` (vague public label shown to players; full details whispered to GM), and `gm` (no Turn Tracker row; GM-whisper only when affected token reaches the top of initiative).
 - **`!condition-tracker --saved` commands**: `--saved` (view list), `--saved add` (guided wizard), `--saved edit <id>`, `--saved remove <id>`, `--saved promote <id> --visibility public|masked|gm`, `--saved snooze <id> --scope turn|rounds|combat --rounds <n>`, `--saved snooze-clear <id>`.
 - **`!condition-tracker --report-token` command**: Added GM-only per-token condition reporting for selected tokens, including conditions applied to and conditions sourced by each token.
+- **Multi-system condition profiles**: Added game-system-driven condition lists and default marker mappings with `gameSystem` configuration support (including `dnd5e`, `dnd4e`, `dnd35`, `pathfinder1e`, `pathfinder2e`, `starfinder`, and many additional systems).
 - **Name-based token references in direct apply commands**: `--source`, `--target`, and `--subject` now accept token ids, exact token names, exact linked character names, and unique partial name matches.
 - **GM reminder system**: When a token with `gm` or `masked` saved effects reaches the top of the Turn Tracker, the GM receives a whispered reminder listing hidden effects with inline action buttons. Duplicate reminders within the same turn are suppressed via a stable turn-key.
 - **Snooze controls**: Suppress GM reminders for this turn, 1 round, 3 rounds, or the remainder of the current combat. Combat snoozes are automatically cleared when the Turn Tracker empties.
 - **Saved promotion**: Copies (does not move) a saved effect into the Turn Tracker. Public and masked entries create visible tracker rows; GM-only entries confirm stored tracking without creating a row.
-- **`ConditionTrackerSaved` macro**: Auto-installed for all GM players alongside the wizard, multi-target, and report-token macros.
+- **`ConditionTrackerSaved` and `ConditionTrackerClassify` macros**: Auto-installed for all GM players alongside the wizard, multi-target, and report-token macros.
 - **Token-deletion cleanup**: Removing a token from the board now prunes all associated saved effects in addition to active tracked conditions.
 - **Full locale support**: All 24 supported languages updated with new translation keys for the saved-effects UI, commands, and help handout.
 - **Actor Classification System**: Cross-system token classification engine that reliably identifies PCs, NPCs, and ignored tokens in a deterministic order.
@@ -36,6 +37,14 @@ All notable changes to **Condition Tracker** will be documented in this file.
 - Help and handout content now include copy-ready examples for name-based direct apply usage.
 - `isPlayerToken()` now delegates entirely to the new `classifyToken()` engine, applying override and adapter logic consistently everywhere the function is called (wizard token picker, zero-HP cleanup prompts, token-change events).
 - The wizard token picker now excludes `ignored` tokens. Previously, unlinked tokens with names appeared in the NPC column; they are now hidden unless explicitly classified as `pc` or `npc`.
+- Added `enablePostApplyMacroButtons` configuration support to optionally show macro-creation action buttons in post-apply GM whispers.
+
+### Developer
+
+- Build pipeline now runs a `prebuild` version bump step (`scripts/bump-version.mjs`) that auto-increments the trailing numeric segment in `script.json` (e.g. `1.1.0.beta-3.4` → `1.1.0.beta-3.5`; plain semver falls back to patch increment). To set an explicit version use `npm run set-version -- <version>` and then build via `node scripts/build.mjs` to skip the auto-bump.
+- `scripts/build.mjs` now synchronizes `package.json` version to `script.json` before bundling, keeping package metadata aligned with release metadata.
+- Build output formatting is now integrated into the build step: the primary generated bundle is formatted once with Prettier, then copied into the versioned release folder.
+- Watch-mode rebuilds now use the same post-build formatting and versioned-copy behavior for consistent generated artifacts.
 
 ## [1.0.0] - 2026-04-30
 

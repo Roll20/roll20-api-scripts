@@ -7,6 +7,7 @@
   "scripts": {
     "prebuild": "node scripts/bump-version.mjs",
     "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
     "watch": "node scripts/build.mjs --watch",
     "format": "prettier --write \"ConditionTracker.js\" \"rollup.config.js\" \"src/**/*.js\" \"*.md\" \"scripts/**/*.mjs\"",
     "sync-locales": "node scripts/sync-locales.mjs",

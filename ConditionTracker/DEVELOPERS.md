@@ -45,11 +45,26 @@ One-time build:
 npm run build
 ```
 
+Each `npm run build` automatically increments the trailing numeric segment of the version in `script.json` before bundling (e.g. `1.1.0.beta-3.5` → `1.1.0.beta-3.6`). To build without bumping the version, invoke the build script directly:
+
+```bash
+node scripts/build.mjs
+```
+
+To set a specific version before building:
+
+```bash
+npm run set-version -- 1.1.0
+node scripts/build.mjs
+```
+
 Watch mode:
 
 ```bash
 npm run watch
 ```
+
+Watch mode does **not** auto-bump the version.
 
 The build bundles `src/index.js` and writes both root and versioned output files.
 
@@ -152,11 +167,10 @@ Handles all `--saved` sub-commands and the GM reminder system.
 
 If behavior changes for a release:
 
-1. Update `script.json` version.
-2. Update `package.json` version.
-3. Update `CHANGELOG.md`.
-4. Run `npm run build`.
-5. Confirm output appears in the new version folder.
+1. Set the target version: `npm run set-version -- <version>` (updates `script.json` and `package.json` together).
+2. Update `CHANGELOG.md`.
+3. Run `node scripts/build.mjs` (bypasses the auto-bump so the version you set is used).
+4. Confirm output appears in the new version folder.
 
 ## Source File Guide
 
