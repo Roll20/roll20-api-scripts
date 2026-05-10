@@ -81,7 +81,7 @@ npm run format
 
 When adding or editing translations:
 
-1. If the locale is incomplete, run `npm run sync-locales` first. Use `npm run regenerate-locales` when you want every string refreshed, or target one locale with `-- --locale=<code>` or a positional locale argument.
+1. If the locale is incomplete, run `npm run sync-locales` first. Use `npm run regenerate-locales` when you want every string refreshed, or target one locale with `-- --locale=<code>` or a positional locale argument. Add `-- --yes` if you need to skip the confirmation prompt.
 2. Update the relevant file under `src/locales/locale/`.
 3. Keep translation keys aligned with `src/locales/locale/en-US.js`, which is the fallback when a key is missing.
 4. For incorrect translated output, edit the matching section:
@@ -212,6 +212,7 @@ Implements all `!condition-tracker` command handling and menu/wizard rendering.
 - `handleConfig()` / `handleClassify()` — configuration and actor classification controls
 - `showPromptUi()` / `showMenu()` / `showHelp()` — GM chat UI entry points
 - `handleReportToken()` — per-token condition/source report
+- `handleCreateMacroLast()` — creates a GM macro from the last successful apply payload; triggered by the **Create Macro** buttons in the apply confirmation whisper when `enablePostApplyMacroButtons` is enabled
 - `removeExpiredConditions()` — turn-based expiry cleanup
 
 Also contains zero-HP action handlers and reinstall command handlers for macros/handout.

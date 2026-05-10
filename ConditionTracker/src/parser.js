@@ -1,6 +1,41 @@
 import { COMMAND } from './constants.js';
 import { toText } from './utils.js';
 
+const WHISPER_PREFIX = /^\/w\s+(?:"[^"]+"|'[^']+'|\S+)\s*$/i;
+
+/**
+ * Extracts the Condition Tracker command segment from raw chat content.
+ *
+ * Supports direct API commands and whisper-wrapped commands (for example
+ * `/w gm !condition-tracker ...`) so button clicks from whispers and macro
+ * executions still route through the parser.
+ *
+ * @param {string} content Raw chat content.
+ * @returns {string} Full command text starting with the namespace, or empty string.
+ */
+export function extractConditionTrackerCommand(content) {
+  const text = toText(content).trim();
+  if (!text) {
+    return '';
+  }
+
+  if (text.startsWith(COMMAND)) {
+    return text;
+  }
+
+  const commandIndex = text.indexOf(COMMAND);
+  if (commandIndex < 0) {
+    return '';
+  }
+
+  const prefix = text.slice(0, commandIndex).trim();
+  if (!WHISPER_PREFIX.test(prefix)) {
+    return '';
+  }
+
+  return text.slice(commandIndex).trim();
+}
+
 /**
  * Parses an API chat message into command arguments.
  *
@@ -8,7 +43,8 @@ import { toText } from './utils.js';
  * @returns {object} Parsed command details.
  */
 export function parseCommand(content) {
-  const body = toText(content).slice(COMMAND.length).trim();
+  const command = extractConditionTrackerCommand(content);
+  const body = command ? command.slice(COMMAND.length).trim() : '';
   const tokens = tokenize(body);
   return collectFlags(tokens);
 }

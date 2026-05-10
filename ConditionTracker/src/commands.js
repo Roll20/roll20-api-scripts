@@ -50,7 +50,7 @@ import {
 } from './constants.js';
 import { parseDuration } from './durations.js';
 import { applyMarker } from './markers.js';
-import { parseCommand } from './parser.js';
+import { extractConditionTrackerCommand, parseCommand } from './parser.js';
 import { removeConditionById } from './removal.js';
 import {
   addActiveCondition,
@@ -61,15 +61,17 @@ import {
   getActiveBySource,
   getActiveByTarget,
   getConfig,
+  getLastApplyPayload,
   setActorTokenOverride,
   setConfig,
+  setLastApplyPayload,
   someActiveCondition,
 } from './state.js';
 
 import { runCleanup } from './cleanup.js';
 import { installHandout } from './handout.js';
 import { LOCALE_DEFINITIONS, getLocale, getLocalizedLanguageName, t, tRaw } from './i18n.js';
-import { installMacro } from './macros.js';
+import { getGmVisibleTo, installMacro } from './macros.js';
 import { getSavedEffectsForToken } from './savedEffects.js';
 import { handleSaved } from './savedEffectsCommands.js';
 import { GAME_SYSTEM_DEFINITIONS, getSystemProfile } from './systems/index.js';
@@ -815,106 +817,126 @@ function showEffectDetailStep(playerId, args, canonical) {
 export function showPromptUi(playerId, args) {
   const conditionRaw = toText(args.condition);
   const canonical = conditionRaw ? getCanonicalCondition(conditionRaw) : '';
+  const resolved = resolvePromptWizardArgs(args, canonical);
+  if (!resolved.valid) {
+    whisperWarning(playerId, resolved.message);
+    return;
+  }
+
+  const resolvedWizardArgs = resolved.args;
+  const locale = getConfig().language;
+
+  if (!isSubjectAllowed(toText(resolvedWizardArgs.subject), canonical)) {
+    whisperWarning(playerId, t('ui.msg.subjectOnlyCustom', locale));
+    return;
+  }
+
+  if (showPromptStep(playerId, resolvedWizardArgs, canonical, locale)) return;
+
+  const subjectRaw = toText(resolvedWizardArgs.subject);
+  const resolvedArgs =
+    subjectRaw === SUBJECT_NONE ? { ...resolvedWizardArgs, subject: '' } : resolvedWizardArgs;
+
+  showEffectDetailStep(playerId, resolvedArgs, canonical);
+}
+
+/**
+ * Resolves wizard command arguments and token references.
+ *
+ * @param {object} args Parsed command arguments.
+ * @param {string} canonical Canonical condition label.
+ * @returns {{valid:boolean,args?:object,message?:string}} Resolution result.
+ */
+function resolvePromptWizardArgs(args, canonical) {
   const config = getConfig();
   const subjectBypassForCommand = resolveSubjectPromptBypassOverride(
     args,
     config.subjectPromptBypass
   );
   if (!subjectBypassForCommand.valid) {
-    whisperWarning(playerId, subjectBypassForCommand.message);
-    return;
+    return { valid: false, message: subjectBypassForCommand.message };
   }
 
   const shouldBypassSubject = subjectBypassForCommand.value && isCustomEffectType(canonical);
   const wizardArgs = shouldBypassSubject ? { ...args, subject: SUBJECT_NONE } : args;
 
   const sourceResult = resolveWizardTokenArg(wizardArgs.source, 'source');
-  if (!sourceResult.valid) {
-    whisperWarning(playerId, sourceResult.message);
-    return;
-  }
+  if (!sourceResult.valid) return sourceResult;
 
   const subjectResult = resolveWizardTokenArg(wizardArgs.subject, 'subject');
-  if (!subjectResult.valid) {
-    whisperWarning(playerId, subjectResult.message);
-    return;
-  }
+  if (!subjectResult.valid) return subjectResult;
 
   const targetResult = resolveWizardTokenArg(wizardArgs.target, 'target');
-  if (!targetResult.valid) {
-    whisperWarning(playerId, targetResult.message);
-    return;
-  }
+  if (!targetResult.valid) return targetResult;
 
-  const resolvedWizardArgs = {
-    ...wizardArgs,
-    source: sourceResult.value,
-    subject: subjectResult.value || wizardArgs.subject,
-    target: targetResult.value,
+  return {
+    valid: true,
+    args: {
+      ...wizardArgs,
+      source: sourceResult.value,
+      subject: subjectResult.value || wizardArgs.subject,
+      target: targetResult.value,
+    },
   };
+}
 
-  const sourceId = toText(resolvedWizardArgs.source);
-  const subjectRaw = toText(resolvedWizardArgs.subject);
-  const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
-
-  const locale = getConfig().language;
-
-  if (!isSubjectAllowed(toText(wizardArgs.subject), canonical)) {
-    whisperWarning(playerId, t('ui.msg.subjectOnlyCustom', locale));
-    return;
-  }
-
+/**
+ * Shows the next wizard step if core inputs are still missing.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object} args Resolved wizard args.
+ * @param {string} canonical Canonical condition label.
+ * @param {string} locale Locale code.
+ * @returns {boolean} True when a wizard step was rendered.
+ */
+function showPromptStep(playerId, args, canonical, locale) {
   if (!canonical) {
-    showConditionStep(playerId, resolvedWizardArgs);
-    return;
+    showConditionStep(playerId, args);
+    return true;
   }
 
+  const subjectRaw = toText(args.subject);
+  const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
   const subjectChosen = Boolean(subjectId) || subjectRaw === SUBJECT_NONE;
   if (isCustomEffectType(canonical) && !subjectChosen) {
     showTokenStep(
       playerId,
       t('ui.wizard.selectSubject', locale),
-      resolvedWizardArgs,
+      args,
       'subject',
       t('ui.wizard.subjectDesc', locale)
     );
-    return;
+    return true;
   }
 
-  if (!sourceId) {
+  if (!toText(args.source)) {
     showTokenStep(
       playerId,
       t('ui.wizard.selectSource', locale),
-      resolvedWizardArgs,
+      args,
       'source',
       t('ui.wizard.sourceDesc', locale)
     );
-    return;
+    return true;
   }
 
-  const targetId = toText(resolvedWizardArgs.target);
-  const targetsRaw = toText(resolvedWizardArgs.targets);
-
-  if (!targetId && !targetsRaw) {
-    const selectedIdsRaw = toText(resolvedWizardArgs['selected-ids']);
-    if (selectedIdsRaw) {
-      showMultiTargetStep(playerId, resolvedWizardArgs);
-      return;
-    }
-    showTokenStep(
-      playerId,
-      t('ui.wizard.selectTarget', locale),
-      resolvedWizardArgs,
-      'target',
-      t('ui.wizard.targetDesc', locale)
-    );
-    return;
+  if (toText(args.target) || toText(args.targets)) {
+    return false;
   }
 
-  const resolvedArgs =
-    subjectRaw === SUBJECT_NONE ? { ...resolvedWizardArgs, subject: '' } : resolvedWizardArgs;
+  if (toText(args['selected-ids'])) {
+    showMultiTargetStep(playerId, args);
+    return true;
+  }
 
-  showEffectDetailStep(playerId, resolvedArgs, canonical);
+  showTokenStep(
+    playerId,
+    t('ui.wizard.selectTarget', locale),
+    args,
+    'target',
+    t('ui.wizard.targetDesc', locale)
+  );
+  return true;
 }
 
 /**
@@ -975,7 +997,7 @@ export function handleInput(msg) {
  * @returns {boolean} True for Condition Tracker API messages.
  */
 export function isConditionTrackerMessage(msg) {
-  return Boolean(msg && msg.type === 'api' && toText(msg.content).startsWith(COMMAND));
+  return Boolean(msg && msg.type === 'api' && extractConditionTrackerCommand(msg.content));
 }
 
 /**
@@ -996,77 +1018,103 @@ export function routeCommand(msg, args) {
     return;
   }
 
-  if (args['multi-target'] !== undefined) {
-    handleMultiTargetTrigger(msg);
-    return;
-  }
-
-  if (args.prompt !== undefined) {
-    showPromptUi(msg.playerid, args);
-    return;
-  }
-
-  if (args.menu) {
-    showMenu(msg.playerid, args.menu);
-    return;
-  }
-
-  if (args.remove) {
-    handleRemove(msg.playerid, args.remove);
-    return;
-  }
-
-  if (args.cleanup) {
-    runCleanup(msg.playerid);
-    return;
-  }
-
-  if (args['reorder-conditions'] !== undefined) {
-    handleReorderConditions(msg.playerid);
-    return;
-  }
-
-  if (args['reinstall-macro']) {
-    handleReinstallMacro(msg.playerid);
-    return;
-  }
-
-  if (args['reinstall-handout']) {
-    handleReinstallHandout(msg.playerid);
-    return;
-  }
-
-  if (args['report-token'] !== undefined) {
-    handleReportToken(msg);
-    return;
-  }
-
-  if (args.saved !== undefined) {
-    handleSaved(msg, args);
-    return;
-  }
-
-  if (args.classify !== undefined) {
-    handleClassify(msg, args);
-    return;
-  }
-
-  if (args.config) {
-    handleConfig(msg.playerid, args.config);
-    return;
-  }
-
-  if (args.targets) {
-    handleMultiApply(msg.playerid, args);
-    return;
-  }
-
-  if (args.source || args.target || args.subject || args.condition) {
-    handleApply(msg.playerid, args);
-    return;
-  }
+  if (!prepareSelectedTargetArg(msg, args)) return;
+  if (routePrimaryCommand(msg, args)) return;
 
   routeZeroHpCommand(msg.playerid, args);
+}
+
+/**
+ * Resolves --selected-target into args.target from current token selection.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {object} args Parsed command arguments.
+ * @returns {boolean} True when routing can continue.
+ */
+function prepareSelectedTargetArg(msg, args) {
+  if (args['selected-target'] === undefined) return true;
+
+  const locale = getConfig().language;
+  const selected = Array.isArray(msg.selected) ? msg.selected : [];
+  const targetId = toText(selected[0]?._id);
+  if (!targetId) {
+    whisperWarning(msg.playerid, t('ui.msg.noSelection', locale));
+    return false;
+  }
+
+  args.target = targetId;
+  return true;
+}
+
+/**
+ * Routes non-zero-HP commands.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {object} args Parsed command arguments.
+ * @returns {boolean} True when a command handler ran.
+ */
+function routePrimaryCommand(msg, args) {
+  if (args['multi-target'] !== undefined) {
+    handleMultiTargetTrigger(msg);
+    return true;
+  }
+  if (args.prompt !== undefined) {
+    showPromptUi(msg.playerid, args);
+    return true;
+  }
+  if (args.menu) {
+    showMenu(msg.playerid, args.menu);
+    return true;
+  }
+  if (args.remove) {
+    handleRemove(msg.playerid, args.remove);
+    return true;
+  }
+  if (args.cleanup) {
+    runCleanup(msg.playerid);
+    return true;
+  }
+  if (args['reorder-conditions'] !== undefined) {
+    handleReorderConditions(msg.playerid);
+    return true;
+  }
+  if (args['reinstall-macro']) {
+    handleReinstallMacro(msg.playerid);
+    return true;
+  }
+  if (args['reinstall-handout']) {
+    handleReinstallHandout(msg.playerid);
+    return true;
+  }
+  if (args['report-token'] !== undefined) {
+    handleReportToken(msg);
+    return true;
+  }
+  if (args.saved !== undefined) {
+    handleSaved(msg, args);
+    return true;
+  }
+  if (args.classify !== undefined) {
+    handleClassify(msg, args);
+    return true;
+  }
+  if (args['create-macro-last'] !== undefined) {
+    handleCreateMacroLast(msg.playerid, args);
+    return true;
+  }
+  if (args.config) {
+    handleConfig(msg.playerid, args.config);
+    return true;
+  }
+  if (args.targets) {
+    handleMultiApply(msg.playerid, args);
+    return true;
+  }
+  if (args.source || args.target || args.subject || args.condition) {
+    handleApply(msg.playerid, args);
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -1210,6 +1258,17 @@ export function handleMultiApply(playerId, args) {
 
   const insertResults = insertConditionRows(prepared.map((p) => p.condition));
 
+  setLastApplyPayload(playerId, {
+    authorId: playerId,
+    sourceArg: prepared[0].condition.sourceTokenId,
+    targetArg: '',
+    targetsArg: prepared.map((p) => p.condition.targetTokenId).join(','),
+    conditionArg: prepared[0].condition.condition,
+    durationArg: toText(args.duration),
+    otherArg: toText(args.other),
+    langArg: toText(args.lang),
+  });
+
   for (let i = 0; i < prepared.length; i++) {
     const { condition, markerNotice, locale, extraLocale } = prepared[i];
     const { appended } = insertResults[i];
@@ -1217,7 +1276,7 @@ export function handleMultiApply(playerId, args) {
     if (extraLocale !== locale) {
       announceHtml(buildApplyMessage(condition, extraLocale));
     }
-    whisperApplySummary(playerId, condition, appended, markerNotice, locale);
+    whisperApplySummary(playerId, condition, appended, markerNotice, locale, null);
   }
 }
 
@@ -1236,11 +1295,24 @@ export function handleApply(playerId, args) {
   addActiveCondition(condition);
   const insertResult = insertConditionRow(condition);
 
+  setLastApplyPayload(playerId, {
+    authorId: playerId,
+    sourceArg: condition.sourceTokenId,
+    targetArg: condition.targetTokenId,
+    targetsArg: '',
+    conditionArg: condition.condition,
+    durationArg: toText(args.duration),
+    otherArg: toText(args.other),
+    langArg: toText(args.lang),
+  });
+
+  const macroMode = toText(args['macro-mode']).toLowerCase();
+  const mode = macroMode === 'selected' || macroMode === 'all' ? macroMode : null;
   announceHtml(buildApplyMessage(condition, locale));
   if (extraLocale !== locale) {
     announceHtml(buildApplyMessage(condition, extraLocale));
   }
-  whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale);
+  whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale, mode);
 }
 
 /**
@@ -1550,6 +1622,11 @@ export function handleConfig(playerId, configText) {
     return;
   }
 
+  if (option === 'enablePostApplyMacroButtons') {
+    updateBooleanConfig(playerId, 'enablePostApplyMacroButtons', value);
+    return;
+  }
+
   if (option === 'healthBar') {
     updateHealthBarConfig(playerId, value);
     return;
@@ -1784,7 +1861,8 @@ export function updateHealthBarConfig(playerId, value) {
  * @returns {void}
  */
 export function showMenu(playerId, menu) {
-  const locale = getConfig().language;
+  const config = getConfig();
+  const locale = config.language;
   if (menu === MENU_REMOVE) {
     showRemovalMenu(playerId);
     return;
@@ -1823,6 +1901,22 @@ export function showMenu(playerId, menu) {
           buildButton(t('ui.btn.reinstallHandout', locale), cmdReinstallHandout),
         ],
         [code(cmdHelp), buildButton(t('ui.btn.showHelp', locale), cmdHelp)],
+      ]
+    ),
+    sectionSpacer(),
+    heading(t('ui.heading.settings', locale)),
+    htmlTable(
+      [t('ui.col.option', locale), t('ui.col.value', locale)],
+      [
+        [
+          'enablePostApplyMacroButtons',
+          buildButton(
+            config.enablePostApplyMacroButtons
+              ? t('ui.btn.macroButtonsDisable', locale)
+              : t('ui.btn.macroButtonsEnable', locale),
+            `${COMMAND} --config enablePostApplyMacroButtons ${!config.enablePostApplyMacroButtons}`
+          ),
+        ],
       ]
     ),
   ]);
@@ -1879,6 +1973,7 @@ export function showConfig(playerId) {
         ['useIcons', code(String(config.useIcons))],
         ['subjectPromptBypass', code(String(config.subjectPromptBypass))],
         ['suppressPublicChat', code(String(config.suppressPublicChat))],
+        ['enablePostApplyMacroButtons', code(String(config.enablePostApplyMacroButtons))],
         ['healthBar', code(config.healthBar)],
         ['language', code(config.language)],
       ]
@@ -1900,6 +1995,7 @@ export function showHelp(playerId) {
   const commandRows = /** @type {string[][]} */ (tRaw('handout.commandsRef.rows', locale) || []);
   const exampleRows = /** @type {string[][]} */ (tRaw('handout.examples.rows', locale) || []);
   const configRows = /** @type {string[][]} */ (tRaw('handout.configuration.rows', locale) || []);
+  const quickStartRows = /** @type {string[][]} */ (tRaw('handout.quickStart.rows', locale) || []);
 
   const configTableRows = configRows.map(([option, values, description]) => [
     code(decodeHelpText(option)),
@@ -1961,13 +2057,170 @@ export function showHelp(playerId) {
       localeTableRows()
     ),
     sectionSpacer(),
-    heading(t('ui.heading.examples', locale)),
+    heading(t('handout.quickStart.heading', locale)),
     htmlTable(
       [t('handout.quickStart.colCommand', locale), t('handout.quickStart.colDesc', locale)],
       toEscapedHandoutTableRows(quickStartRows)
     ),
     sectionSpacer(),
   ]);
+}
+
+/**
+ * Tries baseName first, then baseName_2, baseName_3, etc.
+ *
+ * @param {string} baseName Requested macro name.
+ * @param {string} playerId GM player id.
+ * @returns {string} Unique macro name.
+ */
+function resolveUniqueMacroName(baseName, playerId) {
+  const existingMacros = queryObjects({ _type: 'macro', playerid: playerId });
+  const existingNames = new Set(existingMacros.map((m) => m.get('name')));
+
+  if (!existingNames.has(baseName)) {
+    return baseName;
+  }
+
+  let suffix = 2;
+  while (existingNames.has(`${baseName} (${suffix})`)) {
+    suffix += 1;
+  }
+  return `${baseName} (${suffix})`;
+}
+
+/**
+ * Builds the create-macro command with a localized Roll20 query prompt.
+ *
+ * @param {'all'|'selected'} mode Macro creation mode.
+ * @param {string} locale Locale code.
+ * @returns {string} Roll20 API command.
+ */
+function buildCreateMacroCommand(mode, locale) {
+  return `${COMMAND} --create-macro-last ${mode} --macro-name ?{${t('ui.msg.macroNamePrompt', locale)}|}`;
+}
+
+/**
+ * Creates a macro from the last-apply payload for the invoking GM.
+ *
+ * Mode 'all' replays the exact same targets; mode 'selected' substitutes
+ * @{selected|token_id} so the macro runs on whoever is currently selected.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object} args Parsed command arguments.
+ * @returns {void}
+ */
+function handleCreateMacroLast(playerId, args) {
+  const locale = getConfig().language;
+  const mode = toText(args['create-macro-last']).toLowerCase();
+  const macroName = toText(args['macro-name']).trim();
+
+  const payload = getLastApplyPayload(playerId);
+  if (!payload || payload.authorId !== playerId) {
+    whisperWarning(playerId, t('ui.msg.macroMissingLastAction', locale));
+    return;
+  }
+
+  if (!payload.sourceArg || !payload.conditionArg) {
+    whisperWarning(playerId, t('ui.msg.macroMissingRequiredData', locale));
+    return;
+  }
+
+  if (!macroName) {
+    whisperWarning(playerId, t('ui.msg.macroInvalidName', locale));
+    return;
+  }
+
+  const parts = buildMacroParts(payload, mode);
+
+  const resolvedName = resolveUniqueMacroName(macroName, playerId);
+  const macroAction = buildCommand(parts);
+
+  let created = false;
+  try {
+    createObj('macro', {
+      playerid: playerId,
+      name: resolvedName,
+      action: macroAction,
+      visibleto: getGmVisibleTo(),
+      istokenaction: false,
+    });
+    created = true;
+  } catch (error) {
+    log(`${SCRIPT_NAME} macro creation error: ${error.message}`);
+  }
+
+  if (!created) {
+    whisper(
+      playerId,
+      t('ui.title.macroCreateFailed', locale),
+      t('ui.msg.macroCreateFailed', locale, { reason: 'macro-create-failed' })
+    );
+    return;
+  }
+
+  const otherModeCmd =
+    mode === 'selected'
+      ? buildCreateMacroCommand('all', locale)
+      : buildCreateMacroCommand('selected', locale);
+
+  const otherModeBtn = buildOtherMacroModeButton(mode, payload, locale, otherModeCmd);
+
+  whisper(playerId, t('ui.title.macroCreated', locale), [
+    t('ui.msg.macroCreated', locale, { macroName: resolvedName }),
+    buildButton(t('ui.btn.runMacroNow', locale), macroAction),
+    otherModeBtn,
+  ]);
+}
+
+/**
+ * Builds macro command arguments from a last-apply payload.
+ *
+ * @param {object} payload Last apply payload.
+ * @param {string} mode Macro creation mode.
+ * @returns {string[]} Command argument parts.
+ */
+function buildMacroParts(payload, mode) {
+  let targetPart = '--selected-target';
+  if (mode !== 'selected') {
+    if (payload.targetsArg) {
+      targetPart = `--targets ${payload.targetsArg}`;
+    } else {
+      targetPart = `--target ${payload.targetArg}`;
+    }
+  }
+
+  return [
+    `--source ${payload.sourceArg}`,
+    targetPart,
+    `--condition ${payload.conditionArg}`,
+    `--macro-mode ${mode}`,
+    ...(payload.durationArg ? [`--duration ${payload.durationArg}`] : []),
+    ...(payload.otherArg ? [`--other ${payload.otherArg}`] : []),
+    ...(payload.langArg ? [`--lang ${payload.langArg}`] : []),
+  ];
+}
+
+/**
+ * Builds the opposite-mode macro button after successful macro creation.
+ *
+ * @param {string} mode Current macro mode.
+ * @param {object} payload Last apply payload.
+ * @param {string} locale Locale code.
+ * @param {string} otherModeCmd Command for the alternate mode.
+ * @returns {string} Button HTML.
+ */
+function buildOtherMacroModeButton(mode, payload, locale, otherModeCmd) {
+  if (mode !== 'selected') {
+    return buildButton(t('ui.btn.createMacroSelectedTarget', locale), otherModeCmd);
+  }
+
+  const firstTargetId = payload.targetArg || (payload.targetsArg || '').split(',')[0];
+  const firstToken = firstTargetId ? getGraphicToken(firstTargetId) : null;
+  const targetNameHint = firstToken ? getTokenName(firstToken) : '';
+  return buildButton(
+    t('ui.btn.createMacroSameTargets', locale, { targetName: targetNameHint || firstTargetId }),
+    otherModeCmd
+  );
 }
 
 /**
@@ -1978,10 +2231,18 @@ export function showHelp(playerId) {
  * @param {boolean} appended Whether the row was appended.
  * @param {string} markerNotice Marker notice.
  * @param {string} [locale] Output locale.
+ * @param {'all'|'selected'|null} [mode] Macro mode: 'selected' or 'all' suppresses the matching button; null shows both.
  * @returns {void}
  */
-export function whisperApplySummary(playerId, condition, appended, markerNotice, locale) {
-  whisper(playerId, t('ui.title.applied', locale), [
+export function whisperApplySummary(
+  playerId,
+  condition,
+  appended,
+  markerNotice,
+  locale,
+  mode = null
+) {
+  const body = [
     heading(t('ui.heading.result', locale)),
     htmlTable(
       [t('ui.col.field', locale), t('ui.col.value', locale)],
@@ -1995,7 +2256,35 @@ export function whisperApplySummary(playerId, condition, appended, markerNotice,
         ['Duration', escapeHtml(formatDuration(condition.duration, locale))],
       ]
     ),
-  ]);
+  ];
+
+  const config = getConfig();
+  if (config.enablePostApplyMacroButtons) {
+    const payload = getLastApplyPayload(playerId);
+    if (payload && payload.authorId === playerId) {
+      const allCmd = buildCreateMacroCommand('all', locale);
+      const selectedCmd = buildCreateMacroCommand('selected', locale);
+      const buttons = [];
+      if (mode !== 'all') {
+        buttons.push(
+          buildButton(
+            t('ui.btn.createMacroSameTargets', locale, {
+              targetName: condition.targetName || condition.targetTokenId,
+            }),
+            allCmd
+          )
+        );
+      }
+      if (mode !== 'selected') {
+        buttons.push(buildButton(t('ui.btn.createMacroSelectedTarget', locale), selectedCmd));
+      }
+      if (buttons.length > 0) {
+        body.push(heading(t('ui.heading.macroActions', locale)), ...buttons);
+      }
+    }
+  }
+
+  whisper(playerId, t('ui.title.applied', locale), body);
 }
 
 /**
@@ -2361,7 +2650,7 @@ export function handleZeroHpIncapacitated(playerId, tokenId) {
   const insertResult = insertConditionRow(condition);
 
   announceHtml(buildApplyMessage(condition, locale));
-  whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale);
+  whisperApplySummary(playerId, condition, insertResult.appended, markerNotice, locale, null);
 }
 
 /**

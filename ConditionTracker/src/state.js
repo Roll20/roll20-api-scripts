@@ -19,6 +19,7 @@ export function createDefaultConfig(gameSystem = DEFAULT_GAME_SYSTEM) {
     useIcons: false,
     subjectPromptBypass: false,
     suppressPublicChat: false,
+    enablePostApplyMacroButtons: false,
     healthBar: VALID_HEALTH_BARS[0],
     language: DEFAULT_LOCALE,
     markers: { ...profile.DEFAULT_MARKERS },
@@ -36,6 +37,7 @@ export function createRuntimeState() {
     previousTurnSignature: '',
     previousTokenIds: [],
     previousMisplacedConditionIds: [],
+    lastApplyPayloads: {},
   };
 }
 
@@ -120,6 +122,10 @@ export function mergeConfig(config) {
       typeof nextConfig.suppressPublicChat === 'boolean'
         ? nextConfig.suppressPublicChat
         : defaults.suppressPublicChat,
+    enablePostApplyMacroButtons:
+      typeof nextConfig.enablePostApplyMacroButtons === 'boolean'
+        ? nextConfig.enablePostApplyMacroButtons
+        : defaults.enablePostApplyMacroButtons,
     healthBar: VALID_HEALTH_BARS.includes(nextConfig.healthBar)
       ? nextConfig.healthBar
       : defaults.healthBar,
@@ -181,6 +187,10 @@ export function applyGlobalConfig() {
   nextConfig.suppressPublicChat = parseBooleanOption(
     options.suppressPublicChat,
     config.suppressPublicChat
+  );
+  nextConfig.enablePostApplyMacroButtons = parseBooleanOption(
+    options.enablePostApplyMacroButtons,
+    config.enablePostApplyMacroButtons
   );
 
   if (VALID_HEALTH_BARS.includes(options.healthBar)) {
@@ -470,6 +480,34 @@ export function clearActorTokenOverride(tokenId) {
   if (isRecord(trackerState.actorOverrides?.tokens)) {
     delete trackerState.actorOverrides.tokens[tokenId];
   }
+}
+
+/**
+ * Returns the last-apply payload for a GM, or null when absent.
+ *
+ * @param {string} playerId GM player id.
+ * @returns {object|null} Last-apply payload or null.
+ */
+export function getLastApplyPayload(playerId) {
+  const runtime = ensureState().runtime;
+  if (!isRecord(runtime.lastApplyPayloads)) return null;
+  const payload = runtime.lastApplyPayloads[playerId];
+  return isRecord(payload) ? payload : null;
+}
+
+/**
+ * Stores the last-apply payload for a GM.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object} payload Payload to store.
+ * @returns {void}
+ */
+export function setLastApplyPayload(playerId, payload) {
+  const runtime = ensureState().runtime;
+  if (!isRecord(runtime.lastApplyPayloads)) {
+    runtime.lastApplyPayloads = {};
+  }
+  runtime.lastApplyPayloads[playerId] = isRecord(payload) ? payload : null;
 }
 
 /**

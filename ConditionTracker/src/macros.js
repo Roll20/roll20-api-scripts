@@ -1,14 +1,14 @@
 import {
+  DEFAULT_CLASSIFY_MACRO_BODY,
   DEFAULT_MACRO_BODY,
   DEFAULT_MULTI_TARGET_MACRO_BODY,
   DEFAULT_REPORT_TOKEN_MACRO_BODY,
   DEFAULT_SAVED_MACRO_BODY,
-  DEFAULT_CLASSIFY_MACRO_BODY,
   MACRO_NAME,
+  MACRO_NAME_CLASSIFY,
   MACRO_NAME_MULTI_TARGET,
   MACRO_NAME_REPORT_TOKEN,
   MACRO_NAME_SAVED,
-  MACRO_NAME_CLASSIFY,
   SCRIPT_NAME,
 } from './constants.js';
 import { getGmPlayerIds, queryObjects } from './utils.js';
@@ -165,22 +165,13 @@ function logInstallResult(createdCount, updatedCount, removedCount) {
 function logMacroSyncResult(macroName, createdCount, updatedCount, removedCount) {
   const cleanupNote = removedCount > 0 ? ` Removed ${removedCount} duplicate(s).` : '';
   if (createdCount > 0) {
-    log(`${SCRIPT_NAME}: Macro ${macroName} installed (created ${createdCount}, updated ${updatedCount}).${cleanupNote}`);
+    log(
+      `${SCRIPT_NAME}: Macro ${macroName} installed (created ${createdCount}, updated ${updatedCount}).${cleanupNote}`
+    );
     return;
   }
 
   log(`${SCRIPT_NAME}: Macro ${macroName} updated (updated ${updatedCount}).${cleanupNote}`);
-}
-
-/**
- * Returns true when at least one Condition Tracker macro exists.
- *
- * @returns {boolean} True when present.
- */
-export function macroExists() {
-  return MACRO_DEFINITIONS.some(
-    (def) => queryObjects({ _type: 'macro', name: def.name }).length > 0
-  );
 }
 
 /**

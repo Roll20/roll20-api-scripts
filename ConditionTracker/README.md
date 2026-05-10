@@ -76,6 +76,7 @@ All commands are GM-only except `--help`.
 - `!condition-tracker --config icons true|false`
 - `!condition-tracker --config subjectPromptBypass true|false`
 - `!condition-tracker --config suppressPublicChat true|false`
+- `!condition-tracker --config enablePostApplyMacroButtons true|false`
 - `!condition-tracker --config healthBar bar1_value|bar2_value|bar3_value`
 - `!condition-tracker --config language <locale>`
 - `!condition-tracker --config reset`
@@ -196,18 +197,26 @@ Condition Tracker stores configuration in `state.ConditionTracker.config`.
 
 Use `!condition-tracker --config reset` to restore all configurable settings and marker mappings back to the mod defaults.
 
-| Option                | Values                                     | Description                                                                                                                                                            |
-| --------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gameSystem`          | System id (e.g. `dnd5e`, `pathfinder2e`)   | Set the active game system. Changes the condition list and resets markers to system defaults. See [Supported Game Systems](#supported-game-systems) for all valid ids. |
-| `useMarkers`          | `true` / `false`                           | Apply Roll20 status markers to tokens when a condition is added                                                                                                        |
-| `useIcons`            | `true` / `false`                           | Show short icon codes (e.g. `[G]`) instead of emoji in Turn Tracker rows                                                                                               |
-| `subjectPromptBypass` | `true` / `false`                           | Skip the optional subject-token step for Spell / Ability / Other effects                                                                                               |
-| `suppressPublicChat`  | `true` / `false`                           | Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected.                                                                        |
-| `healthBar`           | `bar1_value` / `bar2_value` / `bar3_value` | Token bar to watch; when it reaches 0 the GM is prompted to clean up conditions                                                                                        |
-| `language`            | Any supported locale                       | Output language for chat messages and the help handout                                                                                                                 |
-| `marker`              | `<Condition>=<marker name>`                | Override the status marker for a specific condition (e.g. `marker Grappled=grab`)                                                                                      |
+| Option                        | Values                                     | Description                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gameSystem`                  | System id (e.g. `dnd5e`, `pathfinder2e`)   | Set the active game system. Changes the condition list and resets markers to system defaults. See [Supported Game Systems](#supported-game-systems) for all valid ids.                                                                                                                              |
+| `useMarkers`                  | `true` / `false`                           | Apply Roll20 status markers to tokens when a condition is added                                                                                                                                                                                                                                     |
+| `useIcons`                    | `true` / `false`                           | Show short icon codes (e.g. `[G]`) instead of emoji in Turn Tracker rows                                                                                                                                                                                                                            |
+| `subjectPromptBypass`         | `true` / `false`                           | Skip the optional subject-token step for Spell / Ability / Other effects                                                                                                                                                                                                                            |
+| `suppressPublicChat`          | `true` / `false`                           | Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected.                                                                                                                                                                                                     |
+| `enablePostApplyMacroButtons` | `true` / `false`                           | Show **Create Macro** buttons in the apply confirmation whisper. When enabled, two buttons appear after each successful apply: **Create Macro (Target: ...)** replays the exact same target list, and **Create Macro (Selected Target)** applies to the currently selected token. Default: `false`. |
+| `healthBar`                   | `bar1_value` / `bar2_value` / `bar3_value` | Token bar to watch; when it reaches 0 the GM is prompted to clean up conditions                                                                                                                                                                                                                     |
+| `language`                    | Any supported locale                       | Output language for chat messages and the help handout                                                                                                                                                                                                                                              |
+| `marker`                      | `<Condition>=<marker name>`                | Override the status marker for a specific condition (e.g. `marker Grappled=grab`)                                                                                                                                                                                                                   |
 
 `subjectPromptBypass` defaults to `false`. Set `!condition-tracker --config subjectPromptBypass true` to skip the Subject prompt for custom effects and force Subject to None. For one-off runs, use `--subjectPromptBypass true|false` directly on the command.
+
+`enablePostApplyMacroButtons` defaults to `false`. When enabled, each apply confirmation whisper includes two **Create Macro** buttons. Clicking either prompts for a macro name, then creates a GM-owned macro:
+
+- **Create Macro (Target: ...)** — replays the exact same source and target token(s) as the original apply.
+- **Create Macro (Selected Target)** — applies to whoever is currently selected (`@{selected|token_id}`), letting one macro work on any token.
+
+If the requested name is already in use, the macro is created with an incremental suffix: `Name`, `Name (2)`, `Name (3)`, and so on. The confirmation whisper shows the final resolved name and a **Run Macro Now** button to execute the action immediately without reopening Collections.
 
 Changing `gameSystem` also resets all token marker mappings to the new system's defaults. Active conditions are preserved.
 

@@ -316,6 +316,11 @@ const TRANSLATION = {
       promoteSaved: 'Add to Turn Tracker',
       snoozeSaved: 'Snooze',
       clearSnooze: 'Clear Snooze',
+      createMacroSameTargets: 'Create Macro (Target: {targetName})',
+      createMacroSelectedTarget: 'Create Macro (Selected Target)',
+      runMacroNow: 'Run Macro Now',
+      macroButtonsEnable: 'Enable Macro Buttons',
+      macroButtonsDisable: 'Disable Macro Buttons',
     },
     title: {
       menu: 'Menu',
@@ -347,6 +352,8 @@ const TRANSLATION = {
       savedSnoozed: 'Reminder Snoozed',
       savedSnoozeCleared: 'Snooze Cleared',
       hiddenEffects: 'Hidden Effects — {name}',
+      macroCreated: 'Macro Created',
+      macroCreateFailed: 'Macro Creation Failed',
     },
     heading: {
       quickActions: 'Quick Actions',
@@ -365,6 +372,7 @@ const TRANSLATION = {
       snoozeOptions: 'Snooze Reminder',
       promoteOptions: 'Promote to Turn Tracker',
       editActions: 'Edit Actions',
+      macroActions: 'Macro Actions',
     },
     msg: {
       noActive: 'No active conditions are tracked.',
@@ -461,6 +469,12 @@ const TRANSLATION = {
       visibilityPublicHint: 'full label visible to all',
       visibilityMaskedHint: 'vague label shown to players',
       visibilityGmHint: 'GM whisper only, no Turn Tracker row',
+      macroNamePrompt: 'Macro Name',
+      macroCreated: 'Macro created: {macroName}',
+      macroCreateFailed: 'Macro creation failed: {reason}',
+      macroMissingLastAction: 'No recent apply action found. Apply a condition first.',
+      macroInvalidName: 'Macro name cannot be empty.',
+      macroMissingRequiredData: 'Missing required data to create macro.',
     },
     removal: {
       conditionField: 'Condition',
@@ -852,6 +866,11 @@ const TRANSLATION = {
           'suppressPublicChat',
           'true / false',
           'Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected.',
+        ],
+        [
+          'enablePostApplyMacroButtons',
+          'true / false',
+          'Show Create Macro buttons in the apply confirmation whisper. When enabled, two buttons appear after each successful apply: one to create a macro that replays the same targets, and one that applies to the currently selected token.',
         ],
         [
           'healthBar',

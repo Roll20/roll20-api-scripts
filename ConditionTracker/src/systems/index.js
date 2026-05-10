@@ -1,44 +1,44 @@
-import { dnd5eProfile } from './dnd5e.js';
-import { dnd4eProfile } from './dnd4e.js';
+import { thirteenthAgeProfile } from './13thage.js';
+import { alienRpgProfile } from './alienrpg.js';
+import { bfrpgProfile } from './bfrpg.js';
+import { brpProfile } from './brp.js';
+import { cairnProfile } from './cairn.js';
+import { callOfCthulhuProfile } from './callofcthulhu.js';
+import { cortexPrimeProfile } from './cortexprime.js';
+import { ctdProfile } from './ctd.js';
+import { cyberpunkRedProfile } from './cyberpunkred.js';
+import { cypherSystemProfile } from './cyphersystem.js';
+import { dccProfile } from './dcc.js';
+import { deltaGreenProfile } from './deltagreen.js';
 import { dnd35Profile } from './dnd35.js';
+import { dnd4eProfile } from './dnd4e.js';
+import { dnd5eProfile } from './dnd5e.js';
+import { genericProfile } from './generic.js';
+import { genesysProfile } from './genesys.js';
+import { gurpsProfile } from './gurps.js';
+import { heroSystemProfile } from './herosystem.js';
+import { htrProfile } from './htr.js';
+import { intoTheOddProfile } from './intotheodd.js';
+import { knaveProfile } from './knave.js';
+import { mothershipProfile } from './mothership.js';
+import { mtaProfile } from './mta.js';
+import { oseProfile } from './ose.js';
 import { pathfinder1eProfile } from './pathfinder1e.js';
 import { pathfinder2eProfile } from './pathfinder2e.js';
-import { starfinderProfile } from './starfinder.js';
-import { thirteenthAgeProfile } from './13thage.js';
-import { dccProfile } from './dcc.js';
-import { oseProfile } from './ose.js';
-import { bfrpgProfile } from './bfrpg.js';
-import { sotdlProfile } from './sotdl.js';
-import { wwnProfile } from './wwn.js';
-import { callOfCthulhuProfile } from './callofcthulhu.js';
-import { deltaGreenProfile } from './deltagreen.js';
-import { vaesenProfile } from './vaesen.js';
-import { mothershipProfile } from './mothership.js';
-import { genesysProfile } from './genesys.js';
-import { cortexPrimeProfile } from './cortexprime.js';
-import { vtmProfile } from './vtm.js';
-import { wtaProfile } from './wta.js';
-import { mtaProfile } from './mta.js';
-import { htrProfile } from './htr.js';
-import { ctdProfile } from './ctd.js';
-import { shadowrunProfile } from './shadowrun.js';
-import { cyberpunkRedProfile } from './cyberpunkred.js';
-import { travellerProfile } from './traveller.js';
-import { starsWithoutNumberProfile } from './swn.js';
-import { alienRpgProfile } from './alienrpg.js';
-import { starWarsFfgProfile } from './starwarsffg.js';
-import { gurpsProfile } from './gurps.js';
 import { savageWorldsProfile } from './savageworlds.js';
-import { brpProfile } from './brp.js';
-import { heroSystemProfile } from './herosystem.js';
-import { cypherSystemProfile } from './cyphersystem.js';
-import { knaveProfile } from './knave.js';
-import { intoTheOddProfile } from './intotheodd.js';
-import { cairnProfile } from './cairn.js';
+import { shadowrunProfile } from './shadowrun.js';
+import { sotdlProfile } from './sotdl.js';
+import { starfinderProfile } from './starfinder.js';
+import { starWarsFfgProfile } from './starwarsffg.js';
+import { starsWithoutNumberProfile } from './swn.js';
+import { travellerProfile } from './traveller.js';
+import { vaesenProfile } from './vaesen.js';
+import { vtmProfile } from './vtm.js';
+import { wfrp4eProfile } from './wfrp4e.js';
 import { wh40kProfile } from './wh40k.js';
 import { whaosProfile } from './whaos.js';
-import { wfrp4eProfile } from './wfrp4e.js';
-import { genericProfile } from './generic.js';
+import { wtaProfile } from './wta.js';
+import { wwnProfile } from './wwn.js';
 
 /**
  * @typedef {object} ConditionData
@@ -121,10 +121,6 @@ export const GAME_SYSTEM_DEFINITIONS = Object.freeze([
 export const VALID_GAME_SYSTEMS = Object.freeze(
   new Set(GAME_SYSTEM_DEFINITIONS.map((def) => def.id))
 );
-
-export const VALID_GAME_SYSTEM_LIST = GAME_SYSTEM_DEFINITIONS.map(
-  (def) => `${def.id} — ${def.name}`
-).join(' / ');
 
 /**
  * Returns the system profile for the given system id.
