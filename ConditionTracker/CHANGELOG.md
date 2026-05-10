@@ -6,24 +6,24 @@ All notable changes to **Condition Tracker** will be documented in this file.
 
 ### Added
 
-- **Persistent Effects System (Saved Effects)**: Store long-term conditions (curses, diseases, poisons, hidden debuffs) in script state outside the Turn Tracker. Saved effects persist across sessions and can be optionally promoted into the Turn Tracker when combat begins.
+- **Persistent Effects System (Saved Effects)**: Store long-term conditions (curses, diseases, poisons, hidden debuffs) in script state outside the Turn Tracker. Saved effects persist across sessions and can be optionally promoted into the Turn Tracker when combat begins ([#7](https://github.com/steverobertsuk/roll20-api-scripts/issues/7), [#14](https://github.com/steverobertsuk/roll20-api-scripts/issues/14)).
   - **Three visibility modes**: `public` (full label visible in Turn Tracker and chat), `masked` (vague public label shown to players; full details whispered to GM), and `gm` (no Turn Tracker row; GM-whisper only when affected token reaches the top of initiative).
   - **`!condition-tracker --saved` commands**: `--saved` (view list), `--saved add` (guided wizard), `--saved edit <id>`, `--saved remove <id>`, `--saved promote <id> --visibility public|masked|gm`, `--saved snooze <id> --scope turn|rounds|combat --rounds <n>`, `--saved snooze-clear <id>`.
   - **GM reminder system**: When a token with `gm` or `masked` saved effects reaches the top of the Turn Tracker, the GM receives a whispered reminder listing hidden effects with inline action buttons. Duplicate reminders within the same turn are suppressed via a stable turn-key.
   - **Snooze controls**: Suppress GM reminders for this turn, 1 round, 3 rounds, or the remainder of the current combat. Combat snoozes are automatically cleared when the Turn Tracker empties.
   - **Saved promotion**: Copies (does not move) a saved effect into the Turn Tracker. Public and masked entries create visible tracker rows; GM-only entries confirm stored tracking without creating a row.
   - **Token-deletion cleanup**: Removing a token from the board now prunes all associated saved effects in addition to active tracked conditions.
-  - **Full locale support**: All 24 supported languages updated with new translation keys for the saved-effects UI, commands, and help handout.
-- **`!condition-tracker --report-token` command**: Added GM-only per-token condition reporting for selected tokens, including conditions applied to and conditions sourced by each token.
-- **Multi-system condition profiles**: Added game-system-driven condition lists and default marker mappings with `gameSystem` configuration support (including `dnd5e`, `dnd4e`, `dnd35`, `pathfinder1e`, `pathfinder2e`, `starfinder`, and many additional systems).
-- **Name-based token references in direct apply commands**: `--source`, `--target`, and `--subject` now accept token ids, exact token names, exact linked character names, and unique partial name matches.
-- **`ConditionTrackerSaved` and `ConditionTrackerClassify` macros**: Auto-installed for all GM players alongside the wizard, multi-target, and report-token macros.
-- **Actor Classification System**: Cross-system token classification engine that reliably identifies PCs, NPCs, and ignored tokens in a deterministic order.
+- **Full locale support**: All 24 supported languages updated with new translation keys across the 1.1.0 feature set, including saved effects UI, commands, and help handout.
+- **`!condition-tracker --report-token` command**: Added GM-only per-token condition reporting for selected tokens, including conditions applied to and conditions sourced by each token ([#8](https://github.com/steverobertsuk/roll20-api-scripts/issues/8)).
+- **Multi-system condition profiles**: Added game-system-driven condition lists and default marker mappings with `gameSystem` configuration support (including `dnd5e`, `dnd4e`, `dnd35`, `pathfinder1e`, `pathfinder2e`, `starfinder`, and many additional systems) ([#9](https://github.com/steverobertsuk/roll20-api-scripts/issues/9)).
+- **Name-based token references in direct apply commands**: `--source`, `--target`, and `--subject` now accept token ids, exact token names, exact linked character names, and unique partial name matches ([#10](https://github.com/steverobertsuk/roll20-api-scripts/issues/10)).
+- **`ConditionTrackerSaved` and `ConditionTrackerClassify` macros**: Auto-installed for all GM players alongside the wizard, multi-target, and report-token macros ([#12](https://github.com/steverobertsuk/roll20-api-scripts/issues/12)).
+- **Actor Classification System**: Cross-system token classification engine that reliably identifies PCs, NPCs, and ignored tokens in a deterministic order ([#11](https://github.com/steverobertsuk/roll20-api-scripts/issues/11)).
   - Detection order: token-level state override → character `ct_mod_actor_type` attribute → unlinked-token eligibility check → game-system sheet adapter → generic NPC attribute scan → `controlledby` fallback.
   - Unlinked tokens (map pins, spell templates, scenery) are classified as `ignored` by default and excluded from the wizard token picker.
   - Game-system adapters for `dnd5e`, `dnd4e`, `dnd35`, `pathfinder1e`, `pathfinder2e`, and `starfinder` read the sheet's native NPC attribute for automatic detection.
   - Generic NPC attribute scan checks `npc`, `is_npc`, `npcflag`, `sheet_type`, and `character_type` as a fallback for unsupported sheets.
-- **`!condition-tracker --classify` command**: Explicitly override a token's actor type for selected tokens.
+- **`!condition-tracker --classify` command**: Explicitly override a token's actor type for selected tokens ([#13](https://github.com/steverobertsuk/roll20-api-scripts/issues/13)).
   - `--classify pc|npc|ignored` — mark selected tokens permanently.
   - `--classify auto` — remove the override and restore automatic detection.
   - `--classify show` — diagnostic whisper showing classification, source, and reason for each selected token.
