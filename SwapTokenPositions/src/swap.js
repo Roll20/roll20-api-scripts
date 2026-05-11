@@ -1,6 +1,108 @@
-import { SILENT_MANAGEMENT_FLAGS } from "./constants.js";
-import { spawnPointFx, spawnTravelFx } from "./effects.js";
-import { getSafeTokenName, whisperSender, whisperSenderError } from "./messages.js";
+import { SILENT_MANAGEMENT_FLAGS } from './constants.js';
+import { spawnPointFx, spawnTravelFx } from './effects.js';
+import { getSafeTokenName, whisperSender, whisperSenderError } from './messages.js';
+
+/**
+ * Resolves a token object by its Roll20 graphic ID.
+ *
+ * @param {string} id Token graphic ID.
+ * @returns {object|null} Token object or null when not found.
+ */
+function resolveTokenById(id) {
+  return getObj('graphic', id) ?? null;
+}
+
+/**
+ * Finds all graphic tokens with a given name on a specific page.
+ *
+ * @param {string} name Token name to search for.
+ * @param {string} pageId Page to search on.
+ * @returns {object[]} Array of matching token objects.
+ */
+function resolveTokensByName(name, pageId) {
+  return findObjs({ type: 'graphic', pageid: pageId, name }).filter(
+    (t) => t.get('subtype') === 'token'
+  );
+}
+
+/**
+ * Resolves a token from an input string by ID first, then by name on the active page.
+ *
+ * @param {string} input Token ID or name to resolve.
+ * @param {string} pageId Active page ID to scope name lookups.
+ * @returns {{token:(object|null), error:(string|null)}} Resolved token or a targeted error message.
+ */
+function resolveTokenInput(input, pageId) {
+  const byId = resolveTokenById(input);
+  if (byId) {
+    return { token: byId, error: null };
+  }
+
+  const byName = resolveTokensByName(input, pageId);
+  if (byName.length === 1) {
+    return { token: byName[0], error: null };
+  }
+  if (byName.length > 1) {
+    return {
+      token: null,
+      error: `Multiple tokens named "${input}" were found on the active page. Use the token ID instead to avoid ambiguity.`,
+    };
+  }
+  return {
+    token: null,
+    error: `No token found with ID or name "${input}" on the active page.`,
+  };
+}
+
+/**
+ * Resolves and validates a pair of explicitly specified tokens for swapping.
+ *
+ * Resolution order per input: token ID first, then token name on the active page.
+ * Fails with a targeted error on ambiguous names, missing tokens, same-token pairs, or cross-page pairs.
+ *
+ * @param {string} token1Input ID or name for the first token.
+ * @param {string} token2Input ID or name for the second token.
+ * @param {object} msg Roll20 chat message object.
+ * @returns {Array<object>|null} Two token objects or null when resolution fails.
+ */
+export function resolveExplicitTokenPair(token1Input, token2Input, msg) {
+  const pageId = Campaign().get('playerpageid');
+
+  const result1 = resolveTokenInput(token1Input, pageId);
+  if (result1.error) {
+    whisperSenderError(msg, result1.error, 'Token Not Found');
+    return null;
+  }
+
+  const result2 = resolveTokenInput(token2Input, pageId);
+  if (result2.error) {
+    whisperSenderError(msg, result2.error, 'Token Not Found');
+    return null;
+  }
+
+  const token1 = result1.token;
+  const token2 = result2.token;
+
+  if (token1.get('_id') === token2.get('_id')) {
+    whisperSenderError(
+      msg,
+      'Both <code>--token1</code> and <code>--token2</code> resolved to the same token. Please provide two distinct tokens.',
+      'Selection Error'
+    );
+    return null;
+  }
+
+  if (token1.get('pageid') !== token2.get('pageid')) {
+    whisperSenderError(
+      msg,
+      'Both tokens must be on the same page to perform a swap.',
+      'Selection Error'
+    );
+    return null;
+  }
+
+  return [token1, token2];
+}
 
 /**
  * Validates selection and resolves the two tokens targeted for swapping.
@@ -17,25 +119,25 @@ export function getSelectedTokens(msg) {
       whisperSenderError(
         msg,
         `Please select exactly two tokens to perform a swap. (Currently selected: ${selectedCount})`,
-        "Selection Error",
+        'Selection Error'
       );
     }
     return null;
   }
 
-  const token1 = getObj("graphic", msg.selected[0]._id);
-  const token2 = getObj("graphic", msg.selected[1]._id);
+  const token1 = getObj('graphic', msg.selected[0]._id);
+  const token2 = getObj('graphic', msg.selected[1]._id);
 
   if (!token1 || !token2) {
-    whisperSenderError(msg, "One or both selected tokens could not be found.");
+    whisperSenderError(msg, 'One or both selected tokens could not be found.');
     return null;
   }
 
-  if (token1.get("pageid") !== token2.get("pageid")) {
+  if (token1.get('pageid') !== token2.get('pageid')) {
     whisperSenderError(
       msg,
-      "Please select two tokens on the same page to perform a swap.",
-      "Selection Error",
+      'Please select two tokens on the same page to perform a swap.',
+      'Selection Error'
     );
     return null;
   }
@@ -54,10 +156,10 @@ export function getSelectedTokens(msg) {
  */
 function hasVerifiedSwapPosition(token1, token2, pos1, pos2) {
   return (
-    token1.get("left") === pos2.left &&
-    token1.get("top") === pos2.top &&
-    token2.get("left") === pos1.left &&
-    token2.get("top") === pos1.top
+    token1.get('left') === pos2.left &&
+    token1.get('top') === pos2.top &&
+    token2.get('left') === pos1.left &&
+    token2.get('top') === pos1.top
   );
 }
 
@@ -69,8 +171,8 @@ function hasVerifiedSwapPosition(token1, token2, pos1, pos2) {
  * @returns {{token1:object, token2:object}|null} Live tokens or null when missing.
  */
 function getLiveTokenPair(token1Id, token2Id) {
-  const token1 = getObj("graphic", token1Id);
-  const token2 = getObj("graphic", token2Id);
+  const token1 = getObj('graphic', token1Id);
+  const token2 = getObj('graphic', token2Id);
   if (!token1 || !token2) {
     return null;
   }
@@ -89,8 +191,8 @@ function withLiveTokens(context, callback) {
   if (!livePair) {
     whisperSenderError(
       context.msg,
-      "Swap cancelled because one or both tokens are no longer available.",
-      "Swap Cancelled",
+      'Swap cancelled because one or both tokens are no longer available.',
+      'Swap Cancelled'
     );
     return false;
   }
@@ -136,7 +238,7 @@ function scheduleDestinationFx(pos1, pos2, destinationFx, delayMs) {
  * @returns {void}
  */
 function sustainTravelFx(pos1, pos2, travelFx, durationMs, onComplete) {
-  if (travelFx === "none") {
+  if (travelFx === 'none') {
     onComplete();
     return;
   }
@@ -180,8 +282,8 @@ function animateTravel(token1, token2, pos1, pos2, durationMs, msg, onComplete) 
     return;
   }
 
-  const token1Id = token1.get("_id");
-  const token2Id = token2.get("_id");
+  const token1Id = token1.get('_id');
+  const token2Id = token2.get('_id');
   // Roll20 can coalesce very frequent token updates. Use paced, fixed steps so
   // travel visibly spans the configured duration.
   const maxTickMs = 120;
@@ -230,22 +332,16 @@ function animateTravel(token1, token2, pos1, pos2, durationMs, msg, onComplete) 
  * @param {Function} [onFailed] Optional callback executed when verification fails.
  * @returns {void}
  */
-export function performSwap(
-  token1,
-  token2,
-  pos1,
-  pos2,
-  msg,
-  onVerified,
-  onFailed,
-) {
-  const token1Id = token1.get("_id");
-  const token2Id = token2.get("_id");
+export function performSwap(token1, token2, pos1, pos2, msg, onVerified, onFailed) {
+  const token1Id = token1.get('_id');
+  const token2Id = token2.get('_id');
 
-  if (!withLiveTokens({ token1Id, token2Id, msg }, ({ token1: liveToken1, token2: liveToken2 }) => {
-    liveToken1.set({ left: pos2.left, top: pos2.top });
-    liveToken2.set({ left: pos1.left, top: pos1.top });
-  })) {
+  if (
+    !withLiveTokens({ token1Id, token2Id, msg }, ({ token1: liveToken1, token2: liveToken2 }) => {
+      liveToken1.set({ left: pos2.left, top: pos2.top });
+      liveToken2.set({ left: pos1.left, top: pos1.top });
+    })
+  ) {
     return;
   }
 
@@ -258,24 +354,24 @@ export function performSwap(
     if (!livePair) {
       whisperSenderError(
         msg,
-        "Swap cancelled because one or both tokens are no longer available.",
-        "Swap Cancelled",
+        'Swap cancelled because one or both tokens are no longer available.',
+        'Swap Cancelled'
       );
-      if (typeof onFailed === "function") {
+      if (typeof onFailed === 'function') {
         onFailed();
       }
       return;
     }
 
     if (hasVerifiedSwapPosition(livePair.token1, livePair.token2, pos1, pos2)) {
-      const token1Name = getSafeTokenName(livePair.token1, "Token 1");
-      const token2Name = getSafeTokenName(livePair.token2, "Token 2");
+      const token1Name = getSafeTokenName(livePair.token1, 'Token 1');
+      const token2Name = getSafeTokenName(livePair.token2, 'Token 2');
       whisperSender(
         msg,
         `<strong>Swap Successful!</strong><br>${token1Name} ↔ ${token2Name}`,
-        "Success",
+        'Success'
       );
-      if (typeof onVerified === "function") {
+      if (typeof onVerified === 'function') {
         onVerified();
       }
       return;
@@ -283,8 +379,8 @@ export function performSwap(
 
     attempt += 1;
     if (attempt >= maxVerificationAttempts) {
-      whisperSenderError(msg, "Token swap failed verification.");
-      if (typeof onFailed === "function") {
+      whisperSenderError(msg, 'Token swap failed verification.');
+      if (typeof onFailed === 'function') {
         onFailed();
       }
       return;
@@ -348,11 +444,11 @@ function runInvisibleTravelPhase(context) {
   } = context;
   const hideRenderBufferMs = 80;
   const revealRenderBufferMs = 120;
-  const token1Id = token1.get("_id");
-  const token2Id = token2.get("_id");
+  const token1Id = token1.get('_id');
+  const token2Id = token2.get('_id');
 
-  const layer1 = token1.get("layer");
-  const layer2 = token2.get("layer");
+  const layer1 = token1.get('layer');
+  const layer2 = token2.get('layer');
 
   const revealThenFx = () => {
     withLiveTokens({ token1Id, token2Id, msg }, ({ token1: liveToken1, token2: liveToken2 }) => {
@@ -369,12 +465,12 @@ function runInvisibleTravelPhase(context) {
       liveToken1.set({ left: pos2.left, top: pos2.top });
       liveToken2.set({ left: pos1.left, top: pos1.top });
 
-      const token1Name = getSafeTokenName(liveToken1, "Token 1");
-      const token2Name = getSafeTokenName(liveToken2, "Token 2");
+      const token1Name = getSafeTokenName(liveToken1, 'Token 1');
+      const token2Name = getSafeTokenName(liveToken2, 'Token 2');
       whisperSender(
         msg,
         `<strong>Swap Successful!</strong><br>${token1Name} ↔ ${token2Name}`,
-        "Success",
+        'Success'
       );
 
       if (msBeforeDestinationFx > 0) {
@@ -389,8 +485,8 @@ function runInvisibleTravelPhase(context) {
   // position-change flash, unlike baseOpacity which Roll20 ignores on move renders.
   if (
     !withLiveTokens({ token1Id, token2Id, msg }, ({ token1: liveToken1, token2: liveToken2 }) => {
-      liveToken1.set({ layer: "gmlayer" });
-      liveToken2.set({ layer: "gmlayer" });
+      liveToken1.set({ layer: 'gmlayer' });
+      liveToken2.set({ layer: 'gmlayer' });
     })
   ) {
     return;
@@ -436,7 +532,7 @@ export function executeSwapPipeline(config, token1, token2, pos1, pos2, msg) {
   const msTravelTime = travelTime * 1000;
   const msSwapDelay = swapDelay * 1000;
   const msBeforeDestinationFx = (destinationDelay + destinationTime) * 1000;
-  const useInvisibleTravel = travelMode === "invisible";
+  const useInvisibleTravel = travelMode === 'invisible';
 
   spawnPointFx(pos1.left, pos1.top, originFx, pos1.page);
   spawnPointFx(pos2.left, pos2.top, originFx, pos2.page);

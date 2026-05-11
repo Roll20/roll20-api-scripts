@@ -231,6 +231,56 @@ Run these as GM unless otherwise specified.
    - Action: `!swap-tokens --save` (GM).
    - Expected: `Nothing to Save` message.
 
+## Explicit Token Targeting (`--token1` / `--token2`)
+
+1. **Swap by token ID**
+   - Action: `!swap-tokens --token1 <id1> --token2 <id2>` using the IDs of two tokens on the active page.
+   - Expected:
+     - Tokens swap positions.
+     - Sender receives `Swap Successful!` message.
+
+2. **Swap by unique token name**
+   - Action: `!swap-tokens --token1 "Goblin A" --token2 "Goblin B"` where each name matches exactly one token on the active page.
+   - Expected:
+     - Tokens swap positions.
+     - Sender receives `Swap Successful!` message.
+
+3. **Mixed ID and name input**
+   - Action: `!swap-tokens --token1 <id1> --token2 "Token Name"` using an ID for one and a unique name for the other.
+   - Expected: Swap succeeds normally.
+
+4. **Only one explicit flag provided**
+   - Action: `!swap-tokens --token1 <id>` with no `--token2`.
+   - Expected: Sender receives `Invalid Input` error explaining both flags must be provided together.
+
+5. **Ambiguous name match**
+   - Action: `!swap-tokens --token1 "Goblin" --token2 <id>` where "Goblin" matches more than one token on the active page.
+   - Expected: Sender receives `Token Not Found` error advising use of a token ID.
+
+6. **Name not found on active page**
+   - Action: `!swap-tokens --token1 "NoSuchToken" --token2 <id>`.
+   - Expected: Sender receives `Token Not Found` error for the unresolved name.
+
+7. **Invalid ID provided**
+   - Action: `!swap-tokens --token1 invalid-id --token2 <id>` where `invalid-id` does not match any token or name.
+   - Expected: Sender receives `Token Not Found` error.
+
+8. **Cross-page explicit pair**
+   - Action: `!swap-tokens --token1 <id on page A> --token2 <id on page B>`.
+   - Expected: Sender receives `Selection Error` about same-page requirement.
+
+9. **Explicit targeting with preset**
+   - Action: `!swap-tokens --token1 <id1> --token2 <id2> --preset portal`.
+   - Expected: Swap proceeds with portal FX pipeline applied.
+
+10. **Missing flag value**
+    - Action: `!swap-tokens --token1 --token2 <id>` (no value after `--token1`).
+    - Expected: Sender receives `Invalid Input` error asking for values for both flags.
+
+11. **Same token provided for both flags**
+    - Action: `!swap-tokens --token1 <id> --token2 <id>` using the same token ID for both, or two names that resolve to the same token.
+    - Expected: Sender receives `Selection Error` explaining both inputs resolved to the same token.
+
 ## Regression and Stability Checks
 
 1. Run 10+ swaps in sequence with mixed presets and overrides.

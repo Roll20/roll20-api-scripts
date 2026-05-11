@@ -1,7 +1,7 @@
 {
   "name": "SwapTokenPositions",
   "script": "SwapTokenPositions.js",
-  "version": "2.0.0",
+  "version": "2.1.0.beta.2",
   "description": "Allows GMs and players to quickly swap the positions of two selected tokens on the same page using a staged FX pipeline (origin, travel, destination), presets, and persistent defaults.\r\n\r\nFor instructions see the *Help: SwapTokenPositions* Handout in game, or run `!swap-tokens --help` in game, or visit [SwapTokenPositions Forum Thread](https://app.roll20.net/forum/post/xxxxxxxx/swap-token-positions-api-script).",
   "authors": "MidNiteShadow7",
   "roll20userid": "16506286",
@@ -177,10 +177,16 @@
   "modifies": {
     "state.SwapTokenPositions": "read,write",
     "graphic.left": "read,write",
-    "graphic.top": "read,write"
+    "graphic.top": "read,write",
+    "graphic.pageid": "read",
+    "graphic.layer": "read,write",
+    "graphic.name": "read",
+    "graphic.subtype": "read",
+    "Campaign.playerpageid": "read"
   },
   "conflicts": [],
   "previousversions": [
-    "1.0.0"
+    "1.0.0",
+    "2.0.0"
   ]
 }

@@ -6,13 +6,21 @@ import {
   FLAG_SHOW_SETTINGS,
   FLAG_CHECK_SETTINGS,
   FLAG_RESET_SETTINGS,
+  FLAG_TOKEN1,
+  FLAG_TOKEN2,
   MANAGEMENT_FLAGS,
-} from "./constants.js";
-import { buildSwapConfig } from "./config.js";
-import { showHelp } from "./help.js";
-import { whisperGMError, whisperGMSuccess, whisperSenderError, whisperSender } from "./messages.js";
-import { resetSettings, showSettings, validateSettings } from "./state.js";
-import { executeSwapPipeline, getSelectedTokens, performSwap } from "./swap.js";
+} from './constants.js';
+import { buildSwapConfig } from './config.js';
+import { showHelp } from './help.js';
+import { whisperGMError, whisperGMSuccess, whisperSenderError, whisperSender } from './messages.js';
+import { parseFreeStringFlag } from './parsers.js';
+import { resetSettings, showSettings, validateSettings } from './state.js';
+import {
+  executeSwapPipeline,
+  getSelectedTokens,
+  performSwap,
+  resolveExplicitTokenPair,
+} from './swap.js';
 
 /**
  * Creates a shared SwapTokens macro for the game when one does not already exist.
@@ -21,28 +29,28 @@ import { executeSwapPipeline, getSelectedTokens, performSwap } from "./swap.js";
  * @returns {void}
  */
 export function installMacro(msgObj) {
-  const macroName = "SwapTokens";
-  const existing = findObjs({ type: "macro", name: macroName });
+  const macroName = 'SwapTokens';
+  const existing = findObjs({ type: 'macro', name: macroName });
 
   if (existing.length > 0) {
     whisperSenderError(
       msgObj,
       `A macro named '<strong>${macroName}</strong>' already exists.`,
-      "Macro Exists",
+      'Macro Exists'
     );
     return;
   }
 
-  createObj("macro", {
+  createObj('macro', {
     name: macroName,
-    action: "!swap-tokens",
+    action: '!swap-tokens',
     playerid: msgObj.playerid,
-    isvisibleto: "all",
+    isvisibleto: 'all',
   });
 
   whisperGMSuccess(
     `Global macro '<strong>${macroName}</strong>' has been created and is visible to all players.`,
-    "Macro Installed",
+    'Macro Installed'
   );
 }
 
@@ -63,8 +71,8 @@ export function handleManagementCommands(msg, isGM) {
   if (!isGM && hasManagementFlag) {
     whisperSenderError(
       msg,
-      "You do not have permission to use script management flags.",
-      "Access Denied",
+      'You do not have permission to use script management flags.',
+      'Access Denied'
     );
     return true;
   }
@@ -104,61 +112,100 @@ export function processPersistence(msg, isGM, tracker, config) {
   }
 
   if (!isGM) {
-    whisperSenderError(
-      msg,
-      "You do not have permission to set game defaults.",
-      "Access Denied",
-    );
+    whisperSenderError(msg, 'You do not have permission to set game defaults.', 'Access Denied');
     return false;
   }
 
   if (tracker.valid > 0 && tracker.invalid === 0) {
     Object.assign(state.SwapTokenPositions, config);
-    whisperGMSuccess("New defaults saved to persistent state.", "Configuration");
+    whisperGMSuccess('New defaults saved to persistent state.', 'Configuration');
     showSettings();
   } else if (tracker.invalid > 0) {
-    whisperGMError("Settings not saved due to invalid parameters.", "Save Failed");
+    whisperGMError('Settings not saved due to invalid parameters.', 'Save Failed');
   } else {
     whisperGMError(
-      "No settings were provided to save. Please include flags like <code>--origin-fx</code> or <code>--preset</code> along with <code>--save</code>.",
-      "Nothing to Save",
+      'No settings were provided to save. Please include flags like <code>--origin-fx</code> or <code>--preset</code> along with <code>--save</code>.',
+      'Nothing to Save'
     );
   }
   return true;
 }
 
 /**
+ * Resolves the token pair for the swap from explicit flags or selection.
+ *
+ * Returns null and emits an error whisper when resolution fails.
+ *
+ * @param {object} msg Roll20 chat message object.
+ * @returns {Array<object>|null} Two token objects or null on failure.
+ */
+function resolveSwapTokens(msg) {
+  const hasToken1 = FLAG_TOKEN1.test(msg.content);
+  const hasToken2 = FLAG_TOKEN2.test(msg.content);
+
+  if (!hasToken1 && !hasToken2) {
+    return getSelectedTokens(msg);
+  }
+
+  if (hasToken1 !== hasToken2) {
+    whisperSenderError(
+      msg,
+      'Both <code>--token1</code> and <code>--token2</code> must be provided together. Omit both flags to use selection mode instead.',
+      'Invalid Input'
+    );
+    return null;
+  }
+
+  const input1 = parseFreeStringFlag(msg.content, FLAG_TOKEN1);
+  const input2 = parseFreeStringFlag(msg.content, FLAG_TOKEN2);
+  if (!input1.found || !input2.found) {
+    whisperSenderError(
+      msg,
+      'Please provide a value for both <code>--token1</code> and <code>--token2</code>.',
+      'Invalid Input'
+    );
+    return null;
+  }
+
+  return resolveExplicitTokenPair(input1.value, input2.value, msg);
+}
+
+/**
  * Main API command handler for !swap-tokens.
+ *
+ * Supports two token input modes:
+ * - Selection mode: exactly two tokens selected, no token flags.
+ * - Explicit mode: both --token1 and --token2 provided (ID or name).
  *
  * @param {object} msg Roll20 chat message object.
  * @returns {void}
  */
 export function handleSwapTokens(msg) {
-  if (msg.type !== "api" || !/^!swap-tokens\b/i.test(msg.content)) {
+  if (msg.type !== 'api' || !/^!swap-tokens\b/i.test(msg.content)) {
     return;
   }
 
   const isGM = playerIsGM(msg.playerid);
-  const tokens = getSelectedTokens(msg);
 
   if (handleManagementCommands(msg, isGM)) {
     return;
   }
 
+  const tokens = resolveSwapTokens(msg);
   if (!tokens) {
     return;
   }
 
   const [token1, token2] = tokens;
   const pos1 = {
-    left: token1.get("left"),
-    top: token1.get("top"),
-    page: token1.get("pageid"),
+    left: token1.get('left'),
+    top: token1.get('top'),
+    page: token1.get('pageid'),
   };
   const pos2 = {
-    left: token2.get("left"),
-    top: token2.get("top"),
-    page: token2.get("pageid"),
+    left: token2.get('left'),
+    top: token2.get('top'),
+    page: token2.get('pageid'),
   };
 
   if (FLAG_INSTANT.test(msg.content)) {
@@ -181,14 +228,12 @@ export function handleSwapTokens(msg) {
       `<strong>Travel Time:</strong> ${config.travelTime}s`,
       `<strong>Swap Delay:</strong> ${config.swapDelay}s`,
       `<strong>Destination Delay:</strong> ${config.destinationDelay}s`,
-    ].join("<br>");
-    whisperSender(msg, overrideDetails, "Override Active", "left");
+    ].join('<br>');
+    whisperSender(msg, overrideDetails, 'Override Active', 'left');
   }
 
   const hasNoFx =
-    config.originFx === "none" &&
-    config.travelFx === "none" &&
-    config.destinationFx === "none";
+    config.originFx === 'none' && config.travelFx === 'none' && config.destinationFx === 'none';
   const hasNoTiming =
     config.originTime === 0 &&
     config.travelTime === 0 &&
