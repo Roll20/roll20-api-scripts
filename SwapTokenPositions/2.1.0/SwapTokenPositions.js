@@ -4,14 +4,14 @@
  * ------------------------------------------------
  * Name: SwapTokenPositions
  * Script: SwapTokenPositions.js
- * Built: 2026-05-11T21:48:21.265Z
+ * Built: 2026-05-12T02:44:02.983Z
  */
 const SwapTokenPositionsMod = (() => {
   'use strict';
 
   const SCRIPT_NAME = 'SwapTokenPositions';
-  const SWAP_TOKEN_POSITIONS_VERSION = '2.1.0.beta.2';
-  const SWAP_TOKEN_POSITIONS_LAST_UPDATED = '11 May 2026';
+  const SWAP_TOKEN_POSITIONS_VERSION = '2.1.0.beta.3';
+  const SWAP_TOKEN_POSITIONS_LAST_UPDATED = '12 May 2026';
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
   const COLOR_TEXT_DIM_SILVER = '#B8AFCF';
@@ -49,6 +49,12 @@ const SwapTokenPositionsMod = (() => {
   ];
 
   const ALLOWED_TRAVEL_MODES = ['normal', 'invisible'];
+
+  const ALLOWED_TOKEN_INPUT_ACCESS_MODES = [
+    'gm-only',
+    'all-players',
+    'selected-users',
+  ];
 
   const ALLOWED_POINT_FX = [
     'none',
@@ -191,6 +197,8 @@ const SwapTokenPositionsMod = (() => {
     swapDelay: 0,
     destinationDelay: 0,
     travelMode: 'normal',
+    tokenInputAccess: 'gm-only',
+    tokenInputUsers: [],
   };
 
   const FLAG_HELP = /--help\b/i;
@@ -220,11 +228,19 @@ const SwapTokenPositionsMod = (() => {
   const FLAG_TOKEN1 = /--token1\b/i;
   const FLAG_TOKEN2 = /--token2\b/i;
 
+  const FLAG_TOKEN_INPUT_ACCESS = /--token-input-access\b/i;
+  const FLAG_TOKEN_INPUT_USERS_REMOVE = /--token-input-users-remove\b/i;
+  // Negative lookahead prevents matching --token-input-users-remove.
+  const FLAG_TOKEN_INPUT_USERS = /--token-input-users(?!-)/i;
+
   const MANAGEMENT_FLAGS = [
     FLAG_SHOW_SETTINGS,
     FLAG_CHECK_SETTINGS,
     FLAG_RESET_SETTINGS,
     FLAG_INSTALL_MACRO,
+    FLAG_TOKEN_INPUT_ACCESS,
+    FLAG_TOKEN_INPUT_USERS_REMOVE,
+    FLAG_TOKEN_INPUT_USERS,
   ];
 
   const SILENT_MANAGEMENT_FLAGS = [
@@ -233,6 +249,9 @@ const SwapTokenPositionsMod = (() => {
     FLAG_CHECK_SETTINGS,
     FLAG_RESET_SETTINGS,
     FLAG_INSTALL_MACRO,
+    FLAG_TOKEN_INPUT_ACCESS,
+    FLAG_TOKEN_INPUT_USERS_REMOVE,
+    FLAG_TOKEN_INPUT_USERS,
   ];
 
   /**
@@ -434,6 +453,39 @@ const SwapTokenPositionsMod = (() => {
       SCRIPT_NAME,
       `/w GM ${generateStyledErrorMessage(text, header, align)}`,
     );
+  }
+
+  /**
+   * Parses a comma-separated list flag, supporting quoted and bare entries.
+   *
+   * Each member may be single-quoted, double-quoted, or bare (no commas within).
+   * Empty members and whitespace-only entries are filtered silently.
+   *
+   * @param {string} content Full command content.
+   * @param {RegExp} flagRegex Regex for the flag name.
+   * @returns {{found:boolean, values:string[]}} Parse result.
+   */
+  function parseCommaListFlag(content, flagRegex) {
+    const match = new RegExp(
+      String.raw`${flagRegex.source}\s+(.+?)(?=\s+--|$)`,
+      'i',
+    ).exec(content);
+    if (!match) {
+      return { found: false, values: [] };
+    }
+
+    const values = [];
+    for (const part of match[1].trim().split(',')) {
+      const trimmed = part
+        .trim()
+        .replace(/^(['"])(.*)\1$/, '$2')
+        .trim();
+      if (trimmed) {
+        values.push(trimmed);
+      }
+    }
+
+    return { found: true, values };
   }
 
   /**
@@ -659,6 +711,12 @@ const SwapTokenPositionsMod = (() => {
    */
   function showSettings() {
     const settings = getSettings();
+
+    const userListLine =
+      settings.tokenInputAccess === 'selected-users'
+        ? `<strong>Token Input Users:</strong> ${formatTokenInputUsers(settings.tokenInputUsers)}<br>`
+        : '';
+
     const settingsMsg = [
       `<strong>Origin FX:</strong> ${settings.originFx}<br>`,
       `<strong>Travel FX:</strong> ${settings.travelFx}<br>`,
@@ -669,8 +727,28 @@ const SwapTokenPositionsMod = (() => {
       `<strong>Destination Time:</strong> ${settings.destinationTime}s<br>`,
       `<strong>Swap Delay:</strong> ${settings.swapDelay}s<br>`,
       `<strong>Destination Delay:</strong> ${settings.destinationDelay}s<br>`,
+      `<strong>Token Input Access:</strong> ${settings.tokenInputAccess}<br>`,
+      userListLine,
     ].join('');
     whisperGM(settingsMsg, 'Persistent Settings', 'left');
+  }
+
+  /**
+   * Formats a list of player IDs as human-readable names with ID fallback.
+   *
+   * @param {string[]} ids Player ID array from persistent state.
+   * @returns {string} Comma-separated display names, or "(none)" when empty.
+   */
+  function formatTokenInputUsers(ids) {
+    if (!ids || ids.length === 0) {
+      return '(none)';
+    }
+    return ids
+      .map((id) => {
+        const player = getObj('player', id);
+        return player ? `${player.get('_displayname')} (${id})` : id;
+      })
+      .join(', ');
   }
 
   /**
@@ -696,6 +774,20 @@ const SwapTokenPositionsMod = (() => {
   function validateSettings(silentOnSuccess = false) {
     const settings = getSettings();
     const errors = [];
+
+    if (!ALLOWED_TOKEN_INPUT_ACCESS_MODES.includes(settings.tokenInputAccess)) {
+      errors.push(
+        `Token Input Access '${settings.tokenInputAccess}' is no longer valid.`,
+      );
+    }
+    if (
+      !Array.isArray(settings.tokenInputUsers) ||
+      settings.tokenInputUsers.some(
+        (entry) => typeof entry !== 'string' || entry.length === 0,
+      )
+    ) {
+      errors.push('Token Input Users contains invalid entries.');
+    }
 
     if (!ALLOWED_POINT_FX.includes(settings.originFx)) {
       errors.push(`Origin FX '${settings.originFx}' is no longer valid.`);
@@ -1043,6 +1135,13 @@ const SwapTokenPositionsMod = (() => {
       '<code>--show-settings</code> &mdash; View current persistent defaults.<br>',
       '<code>--reset-settings</code> &mdash; Restore all factory defaults.<br>',
       "<code>--install-macro</code> &mdash; Create a global 'SwapTokens' macro.<br>",
+      '<br><strong>Explicit Token Access Control (GM Only):</strong><br>',
+      '<em>Controls who may use <code>--token1</code> and <code>--token2</code>. Takes effect immediately.</em><br>',
+      '<code>--token-input-access &lt;mode&gt;</code> &mdash; Set access mode. Valid: <code>gm-only</code> (default), <code>all-players</code>, <code>selected-users</code>.<br>',
+      '<code>--token-input-users &lt;id|name,...&gt;</code> &mdash; Replace the allow-list (used with <code>selected-users</code> mode).<br>',
+      '<code>--token-input-users-remove &lt;id|name,...&gt;</code> &mdash; Remove specific players from the allow-list.<br>',
+      '<em>Names containing spaces must be quoted. Comma-separated entries are supported.</em><br>',
+      '<em>The GM is always permitted regardless of access mode.</em><br>',
       '<br><strong>Examples:</strong><br>',
       '<code>!swap-tokens</code><br>',
       '<code>!swap-tokens --preset portal</code><br>',
@@ -1053,6 +1152,10 @@ const SwapTokenPositionsMod = (() => {
       '<code>!swap-tokens --token1 -Kabc123 --token2 -Kdef456</code><br>',
       '<code>!swap-tokens --token1 "Goblin A" --token2 "Goblin B"</code><br>',
       '<code>!swap-tokens --token1 -Kabc123 --token2 "Goblin B" --preset portal</code><br>',
+      '<code>!swap-tokens --token-input-access all-players</code><br>',
+      '<code>!swap-tokens --token-input-access selected-users</code><br>',
+      '<code>!swap-tokens --token-input-users "Alice","Bob"</code><br>',
+      '<code>!swap-tokens --token-input-users-remove Alice</code><br>',
     ].join('');
 
     whisperSender(msgObj, helpMsg, 'SwapTokenPositions Help', 'left');
@@ -1707,6 +1810,57 @@ const SwapTokenPositionsMod = (() => {
   }
 
   /**
+   * Resolves an array of player ID or display-name inputs to canonical player IDs.
+   *
+   * Resolution order per entry: exact player ID first, then case-insensitive display name.
+   * Emits an error whisper and returns null on ambiguous or unknown entries.
+   * Deduplicates resolved IDs silently.
+   *
+   * @param {string[]} entries Raw player ID or display-name strings.
+   * @param {object} msg Roll20 chat message object.
+   * @returns {string[]|null} Canonical player ID array, or null on error.
+   */
+  function resolvePlayerList(entries, msg) {
+    const allPlayers = findObjs({ type: 'player' });
+    const resolved = new Set();
+
+    for (const entry of entries) {
+      const byId = getObj('player', entry);
+      if (byId) {
+        resolved.add(byId.get('_id'));
+        continue;
+      }
+
+      const lower = entry.toLowerCase();
+      const byName = allPlayers.filter(
+        (p) => p.get('_displayname').toLowerCase() === lower,
+      );
+
+      if (byName.length > 1) {
+        whisperSenderError(
+          msg,
+          `Multiple players share the display name "${entry}". Use the player ID instead.`,
+          'Ambiguous Name',
+        );
+        return null;
+      }
+
+      if (byName.length === 0) {
+        whisperSenderError(
+          msg,
+          `No player found with ID or name "${entry}".`,
+          'Unknown Player',
+        );
+        return null;
+      }
+
+      resolved.add(byName[0].get('_id'));
+    }
+
+    return [...resolved];
+  }
+
+  /**
    * Creates a shared SwapTokens macro for the game when one does not already exist.
    *
    * @param {object} msgObj Roll20 chat message object.
@@ -1780,7 +1934,125 @@ const SwapTokenPositionsMod = (() => {
       return true;
     }
 
+    // Check remove before set — FLAG_TOKEN_INPUT_USERS would otherwise match the remove variant.
+    if (FLAG_TOKEN_INPUT_ACCESS.test(msg.content)) {
+      handleTokenInputAccess(msg);
+      return true;
+    }
+    if (FLAG_TOKEN_INPUT_USERS_REMOVE.test(msg.content)) {
+      handleTokenInputUsersRemove(msg);
+      return true;
+    }
+    if (FLAG_TOKEN_INPUT_USERS.test(msg.content)) {
+      handleTokenInputUsersSet(msg);
+      return true;
+    }
+
     return false;
+  }
+
+  /**
+   * Sets the persistent token-input access mode.
+   *
+   * @param {object} msg Roll20 chat message object.
+   * @returns {void}
+   */
+  function handleTokenInputAccess(msg) {
+    const result = parseStringFlag(
+      msg.content,
+      FLAG_TOKEN_INPUT_ACCESS,
+      ALLOWED_TOKEN_INPUT_ACCESS_MODES,
+    );
+    if (result.valid) {
+      state.SwapTokenPositions.tokenInputAccess = result.value;
+      whisperGMSuccess(
+        `Token input access set to <strong>${result.value}</strong>.`,
+        'Access Updated',
+      );
+    } else {
+      whisperSenderError(
+        msg,
+        `Invalid access mode: '${result.value}'.<br><br>Valid: ${ALLOWED_TOKEN_INPUT_ACCESS_MODES.join(', ')}`,
+        'Invalid Input',
+      );
+    }
+  }
+
+  /**
+   * Removes specific players from the token-input allow-list.
+   *
+   * @param {object} msg Roll20 chat message object.
+   * @returns {void}
+   */
+  function handleTokenInputUsersRemove(msg) {
+    const listResult = parseCommaListFlag(
+      msg.content,
+      FLAG_TOKEN_INPUT_USERS_REMOVE,
+    );
+    if (!listResult.found || listResult.values.length === 0) {
+      whisperSenderError(
+        msg,
+        'Please provide at least one player ID or name to remove.',
+        'Invalid Input',
+      );
+      return;
+    }
+    const toRemove = resolvePlayerList(listResult.values, msg);
+    if (!toRemove) {
+      return;
+    }
+    const removeSet = new Set(toRemove);
+    state.SwapTokenPositions.tokenInputUsers =
+      state.SwapTokenPositions.tokenInputUsers.filter(
+        (id) => !removeSet.has(id),
+      );
+    const removedNames = toRemove.map(
+      (id) => getObj('player', id)?.get('_displayname') ?? id,
+    );
+    whisperGMSuccess(
+      `Removed from allow-list: <strong>${removedNames.join(', ')}</strong>.`,
+      'Users Removed',
+    );
+    if (
+      state.SwapTokenPositions.tokenInputAccess === 'selected-users' &&
+      state.SwapTokenPositions.tokenInputUsers.length === 0
+    ) {
+      whisperGM(
+        'The allow-list is now empty. While mode is <code>selected-users</code>, only the GM can use explicit token targeting.',
+        'Allow-List Empty',
+      );
+    }
+  }
+
+  /**
+   * Replaces the token-input allow-list with a new set of resolved players.
+   *
+   * @param {object} msg Roll20 chat message object.
+   * @returns {void}
+   */
+  function handleTokenInputUsersSet(msg) {
+    const listResult = parseCommaListFlag(msg.content, FLAG_TOKEN_INPUT_USERS);
+    if (!listResult.found || listResult.values.length === 0) {
+      whisperSenderError(
+        msg,
+        'Please provide at least one player ID or name.',
+        'Invalid Input',
+      );
+      return;
+    }
+    const resolved = resolvePlayerList(listResult.values, msg);
+    if (!resolved) {
+      return;
+    }
+    state.SwapTokenPositions.tokenInputUsers = resolved;
+    const names = resolved.map((id) => {
+      const player = getObj('player', id);
+      return player ? `${player.get('_displayname')} (${id})` : id;
+    });
+    whisperGMSuccess(
+      `Allow-list updated. Users: <strong>${names.join(', ')}</strong>.`,
+      'Users Updated',
+    );
   }
 
   /**
@@ -1833,9 +2105,10 @@ const SwapTokenPositionsMod = (() => {
    * Returns null and emits an error whisper when resolution fails.
    *
    * @param {object} msg Roll20 chat message object.
+   * @param {boolean} isGM Whether the sender is a GM.
    * @returns {Array<object>|null} Two token objects or null on failure.
    */
-  function resolveSwapTokens(msg) {
+  function resolveSwapTokens(msg, isGM) {
     const hasToken1 = FLAG_TOKEN1.test(msg.content);
     const hasToken2 = FLAG_TOKEN2.test(msg.content);
 
@@ -1848,6 +2121,28 @@ const SwapTokenPositionsMod = (() => {
         msg,
         'Both <code>--token1</code> and <code>--token2</code> must be provided together. Omit both flags to use selection mode instead.',
         'Invalid Input',
+      );
+      return null;
+    }
+
+    const { tokenInputAccess, tokenInputUsers } = getSettings();
+    if (tokenInputAccess === 'gm-only' && !isGM) {
+      whisperSenderError(
+        msg,
+        'Explicit token targeting is restricted to the GM.',
+        'Access Denied',
+      );
+      return null;
+    }
+    if (
+      tokenInputAccess === 'selected-users' &&
+      !isGM &&
+      !tokenInputUsers.includes(msg.playerid)
+    ) {
+      whisperSenderError(
+        msg,
+        'You are not on the explicit token targeting allow-list.',
+        'Access Denied',
       );
       return null;
     }
@@ -1887,7 +2182,7 @@ const SwapTokenPositionsMod = (() => {
       return;
     }
 
-    const tokens = resolveSwapTokens(msg);
+    const tokens = resolveSwapTokens(msg, isGM);
     if (!tokens) {
       return;
     }

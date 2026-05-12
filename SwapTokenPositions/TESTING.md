@@ -200,7 +200,7 @@ Run these as GM unless otherwise specified.
      - Second run reports `Macro Exists`.
 
 5. Non-GM permission checks
-   - Action: As player, run `--show-settings`, `--check-settings`, `--reset-settings`, and `--install-macro`.
+   - Action: As player, run `--show-settings`, `--check-settings`, `--reset-settings`, `--install-macro`, `--token-input-access all-players`, `--token-input-users Alice`, and `--token-input-users-remove Alice`.
    - Expected: `Access Denied` message for each.
 
 6. Player `--save` permission check
@@ -281,6 +281,67 @@ Run these as GM unless otherwise specified.
     - Action: `!swap-tokens --token1 <id> --token2 <id>` using the same token ID for both, or two names that resolve to the same token.
     - Expected: Sender receives `Selection Error` explaining both inputs resolved to the same token.
 
+## Explicit Token Access Control
+
+Run all steps as GM unless otherwise specified.
+
+1. **Default mode is `gm-only`**
+   - Action: As player, run `!swap-tokens --token1 <id1> --token2 <id2>`.
+   - Expected: `Access Denied` whisper to the player.
+
+2. **Set mode to `all-players`**
+   - Action (GM): `!swap-tokens --token-input-access all-players`
+   - Expected: `Access Updated` success whisper to GM.
+   - Action (player): `!swap-tokens --token1 <id1> --token2 <id2>`
+   - Expected: Swap succeeds.
+
+3. **Set mode to `selected-users` with valid allow-list**
+   - Action (GM): `!swap-tokens --token-input-access selected-users`
+   - Action (GM): `!swap-tokens --token-input-users "PlayerName"` using the test player's display name.
+   - Expected: `Users Updated` success with resolved name and ID.
+   - Action (allowed player): `!swap-tokens --token1 <id1> --token2 <id2>`
+   - Expected: Swap succeeds.
+   - Action (non-listed player): `!swap-tokens --token1 <id1> --token2 <id2>`
+   - Expected: `Access Denied` whisper.
+
+4. **Remove a player from the allow-list**
+   - Action (GM): `!swap-tokens --token-input-users-remove "PlayerName"`
+   - Expected: `Users Removed` success whisper.
+   - Action (removed player): `!swap-tokens --token1 <id1> --token2 <id2>`
+   - Expected: `Access Denied` whisper.
+
+5. **Empty allow-list warning**
+   - Action (GM): Remove the last player from the allow-list while mode is `selected-users`.
+   - Expected: `Users Removed` success and an `Allow-List Empty` warning whisper.
+
+6. **Resolve by player ID**
+   - Action (GM): `!swap-tokens --token-input-users <player-id>` using a valid Roll20 player ID.
+   - Expected: `Users Updated` with the resolved player's display name.
+
+7. **Unknown player name**
+   - Action (GM): `!swap-tokens --token-input-users "NoSuchPlayer"`
+   - Expected: `Unknown Player` error; allow-list unchanged.
+
+8. **Ambiguous player name**
+   - Action: If two test accounts share a display name, attempt to add by that name.
+   - Expected: `Ambiguous Name` error; allow-list unchanged.
+
+9. **Invalid access mode value**
+   - Action (GM): `!swap-tokens --token-input-access invalid-mode`
+   - Expected: `Invalid Input` error listing valid modes; access mode unchanged.
+
+10. **Settings display**
+    - Action (GM): `!swap-tokens --show-settings`
+    - Expected: `Token Input Access` and (when mode is `selected-users`) `Token Input Users` lines are present with current values.
+
+11. **GM always allowed**
+    - Action (GM): With mode set to `gm-only` or `selected-users`, run `!swap-tokens --token1 <id1> --token2 <id2>`.
+    - Expected: Swap succeeds regardless of allow-list.
+
+12. **Access settings survive sandbox restart**
+    - Action: Configure a non-default mode, restart sandbox.
+    - Expected: `--show-settings` reflects the saved access configuration.
+
 ## Regression and Stability Checks
 
 1. Run 10+ swaps in sequence with mixed presets and overrides.
@@ -319,3 +380,5 @@ All tests pass when:
 3. Deprecated flags emit warnings and remain backward compatible.
 4. Invalid inputs produce clear feedback without script failure.
 5. Persistence (`--save`, restart, reset) is correct and stable.
+6. Explicit token access control enforces mode correctly for GM and players.
+7. Allow-list management (add, remove, resolve by name/ID) works as expected.

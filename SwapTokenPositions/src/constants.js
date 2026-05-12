@@ -42,6 +42,8 @@ export const ALLOWED_TRAVEL_FX = [
 
 export const ALLOWED_TRAVEL_MODES = ['normal', 'invisible'];
 
+export const ALLOWED_TOKEN_INPUT_ACCESS_MODES = ['gm-only', 'all-players', 'selected-users'];
+
 export const ALLOWED_POINT_FX = [
   'none',
   'nova-magic',
@@ -183,6 +185,8 @@ export const FACTORY_DEFAULTS = {
   swapDelay: 0,
   destinationDelay: 0,
   travelMode: 'normal',
+  tokenInputAccess: 'gm-only',
+  tokenInputUsers: [],
 };
 
 export const FLAG_HELP = /--help\b/i;
@@ -212,11 +216,19 @@ export const FLAG_LEGACY_MODE = /--mode\b/i;
 export const FLAG_TOKEN1 = /--token1\b/i;
 export const FLAG_TOKEN2 = /--token2\b/i;
 
+export const FLAG_TOKEN_INPUT_ACCESS = /--token-input-access\b/i;
+export const FLAG_TOKEN_INPUT_USERS_REMOVE = /--token-input-users-remove\b/i;
+// Negative lookahead prevents matching --token-input-users-remove.
+export const FLAG_TOKEN_INPUT_USERS = /--token-input-users(?!-)/i;
+
 export const MANAGEMENT_FLAGS = [
   FLAG_SHOW_SETTINGS,
   FLAG_CHECK_SETTINGS,
   FLAG_RESET_SETTINGS,
   FLAG_INSTALL_MACRO,
+  FLAG_TOKEN_INPUT_ACCESS,
+  FLAG_TOKEN_INPUT_USERS_REMOVE,
+  FLAG_TOKEN_INPUT_USERS,
 ];
 
 export const SILENT_MANAGEMENT_FLAGS = [
@@ -225,4 +237,7 @@ export const SILENT_MANAGEMENT_FLAGS = [
   FLAG_CHECK_SETTINGS,
   FLAG_RESET_SETTINGS,
   FLAG_INSTALL_MACRO,
+  FLAG_TOKEN_INPUT_ACCESS,
+  FLAG_TOKEN_INPUT_USERS_REMOVE,
+  FLAG_TOKEN_INPUT_USERS,
 ];

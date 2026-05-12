@@ -6,6 +6,7 @@
 
 - **Seamless Swapping**: Select exactly two tokens on the same page and run `!swap-tokens` to switch their positions.
 - **Explicit Token Targeting**: Target tokens directly by ID or name using `--token1` and `--token2` — no selection required, ideal for macros.
+- **Explicit Token Access Control**: GMs can restrict `--token1`/`--token2` usage to GM-only, all players, or a named allow-list.
 - **Staged Animation Pipeline**:
   - `origin`: Point FX at starting positions.
   - `travel`: Beam FX and optional travel visibility behavior.
@@ -112,6 +113,28 @@ Swaps two specific tokens without requiring them to be selected. Both flags must
 - `--check-settings`: Validates current persistent defaults and reports issues.
 - `--reset-settings`: Restores the script to its factory defaults.
 - `--install-macro`: Automatically creates a global "SwapTokens" macro in your campaign.
+
+### Explicit Token Access Control (GM Only)
+
+These commands take effect immediately — `--save` is not required.
+
+- `--token-input-access <mode>`: Sets who may use `--token1` and `--token2`.
+  - `gm-only` (default): Only the GM can use explicit token targeting.
+  - `all-players`: Any player can use explicit token targeting.
+  - `selected-users`: Only players on the allow-list (and the GM) can use explicit token targeting.
+- `--token-input-users <id|name,...>`: Replaces the allow-list with the specified players (comma-separated, quoted names supported).
+- `--token-input-users-remove <id|name,...>`: Removes specific players from the allow-list.
+
+The GM is always permitted regardless of the configured mode.
+
+**Examples:**
+
+```
+!swap-tokens --token-input-access all-players
+!swap-tokens --token-input-access selected-users
+!swap-tokens --token-input-users "Alice","Bob"
+!swap-tokens --token-input-users-remove Alice
+```
 
 ### Deprecated Flags
 

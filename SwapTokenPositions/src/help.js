@@ -57,6 +57,13 @@ export function showHelp(msgObj) {
     '<code>--show-settings</code> &mdash; View current persistent defaults.<br>',
     '<code>--reset-settings</code> &mdash; Restore all factory defaults.<br>',
     "<code>--install-macro</code> &mdash; Create a global 'SwapTokens' macro.<br>",
+    '<br><strong>Explicit Token Access Control (GM Only):</strong><br>',
+    '<em>Controls who may use <code>--token1</code> and <code>--token2</code>. Takes effect immediately.</em><br>',
+    '<code>--token-input-access &lt;mode&gt;</code> &mdash; Set access mode. Valid: <code>gm-only</code> (default), <code>all-players</code>, <code>selected-users</code>.<br>',
+    '<code>--token-input-users &lt;id|name,...&gt;</code> &mdash; Replace the allow-list (used with <code>selected-users</code> mode).<br>',
+    '<code>--token-input-users-remove &lt;id|name,...&gt;</code> &mdash; Remove specific players from the allow-list.<br>',
+    '<em>Names containing spaces must be quoted. Comma-separated entries are supported.</em><br>',
+    '<em>The GM is always permitted regardless of access mode.</em><br>',
     '<br><strong>Examples:</strong><br>',
     '<code>!swap-tokens</code><br>',
     '<code>!swap-tokens --preset portal</code><br>',
@@ -67,6 +74,10 @@ export function showHelp(msgObj) {
     '<code>!swap-tokens --token1 -Kabc123 --token2 -Kdef456</code><br>',
     '<code>!swap-tokens --token1 "Goblin A" --token2 "Goblin B"</code><br>',
     '<code>!swap-tokens --token1 -Kabc123 --token2 "Goblin B" --preset portal</code><br>',
+    '<code>!swap-tokens --token-input-access all-players</code><br>',
+    '<code>!swap-tokens --token-input-access selected-users</code><br>',
+    '<code>!swap-tokens --token-input-users "Alice","Bob"</code><br>',
+    '<code>!swap-tokens --token-input-users-remove Alice</code><br>',
   ].join('');
 
   whisperSender(msgObj, helpMsg, 'SwapTokenPositions Help', 'left');

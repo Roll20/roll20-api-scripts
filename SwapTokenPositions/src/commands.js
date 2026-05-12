@@ -1,4 +1,5 @@
 import {
+  ALLOWED_TOKEN_INPUT_ACCESS_MODES,
   FLAG_HELP,
   FLAG_INSTANT,
   FLAG_INSTALL_MACRO,
@@ -8,19 +9,73 @@ import {
   FLAG_RESET_SETTINGS,
   FLAG_TOKEN1,
   FLAG_TOKEN2,
+  FLAG_TOKEN_INPUT_ACCESS,
+  FLAG_TOKEN_INPUT_USERS,
+  FLAG_TOKEN_INPUT_USERS_REMOVE,
   MANAGEMENT_FLAGS,
 } from './constants.js';
 import { buildSwapConfig } from './config.js';
 import { showHelp } from './help.js';
-import { whisperGMError, whisperGMSuccess, whisperSenderError, whisperSender } from './messages.js';
-import { parseFreeStringFlag } from './parsers.js';
-import { resetSettings, showSettings, validateSettings } from './state.js';
+import {
+  whisperGM,
+  whisperGMError,
+  whisperGMSuccess,
+  whisperSenderError,
+  whisperSender,
+} from './messages.js';
+import { parseCommaListFlag, parseFreeStringFlag, parseStringFlag } from './parsers.js';
+import { getSettings, resetSettings, showSettings, validateSettings } from './state.js';
 import {
   executeSwapPipeline,
   getSelectedTokens,
   performSwap,
   resolveExplicitTokenPair,
 } from './swap.js';
+
+/**
+ * Resolves an array of player ID or display-name inputs to canonical player IDs.
+ *
+ * Resolution order per entry: exact player ID first, then case-insensitive display name.
+ * Emits an error whisper and returns null on ambiguous or unknown entries.
+ * Deduplicates resolved IDs silently.
+ *
+ * @param {string[]} entries Raw player ID or display-name strings.
+ * @param {object} msg Roll20 chat message object.
+ * @returns {string[]|null} Canonical player ID array, or null on error.
+ */
+function resolvePlayerList(entries, msg) {
+  const allPlayers = findObjs({ type: 'player' });
+  const resolved = new Set();
+
+  for (const entry of entries) {
+    const byId = getObj('player', entry);
+    if (byId) {
+      resolved.add(byId.get('_id'));
+      continue;
+    }
+
+    const lower = entry.toLowerCase();
+    const byName = allPlayers.filter((p) => p.get('_displayname').toLowerCase() === lower);
+
+    if (byName.length > 1) {
+      whisperSenderError(
+        msg,
+        `Multiple players share the display name "${entry}". Use the player ID instead.`,
+        'Ambiguous Name'
+      );
+      return null;
+    }
+
+    if (byName.length === 0) {
+      whisperSenderError(msg, `No player found with ID or name "${entry}".`, 'Unknown Player');
+      return null;
+    }
+
+    resolved.add(byName[0].get('_id'));
+  }
+
+  return [...resolved];
+}
 
 /**
  * Creates a shared SwapTokens macro for the game when one does not already exist.
@@ -94,7 +149,107 @@ export function handleManagementCommands(msg, isGM) {
     return true;
   }
 
+  // Check remove before set — FLAG_TOKEN_INPUT_USERS would otherwise match the remove variant.
+  if (FLAG_TOKEN_INPUT_ACCESS.test(msg.content)) {
+    handleTokenInputAccess(msg);
+    return true;
+  }
+  if (FLAG_TOKEN_INPUT_USERS_REMOVE.test(msg.content)) {
+    handleTokenInputUsersRemove(msg);
+    return true;
+  }
+  if (FLAG_TOKEN_INPUT_USERS.test(msg.content)) {
+    handleTokenInputUsersSet(msg);
+    return true;
+  }
+
   return false;
+}
+
+/**
+ * Sets the persistent token-input access mode.
+ *
+ * @param {object} msg Roll20 chat message object.
+ * @returns {void}
+ */
+function handleTokenInputAccess(msg) {
+  const result = parseStringFlag(msg.content, FLAG_TOKEN_INPUT_ACCESS, ALLOWED_TOKEN_INPUT_ACCESS_MODES);
+  if (result.valid) {
+    state.SwapTokenPositions.tokenInputAccess = result.value;
+    whisperGMSuccess(
+      `Token input access set to <strong>${result.value}</strong>.`,
+      'Access Updated'
+    );
+  } else {
+    whisperSenderError(
+      msg,
+      `Invalid access mode: '${result.value}'.<br><br>Valid: ${ALLOWED_TOKEN_INPUT_ACCESS_MODES.join(', ')}`,
+      'Invalid Input'
+    );
+  }
+}
+
+/**
+ * Removes specific players from the token-input allow-list.
+ *
+ * @param {object} msg Roll20 chat message object.
+ * @returns {void}
+ */
+function handleTokenInputUsersRemove(msg) {
+  const listResult = parseCommaListFlag(msg.content, FLAG_TOKEN_INPUT_USERS_REMOVE);
+  if (!listResult.found || listResult.values.length === 0) {
+    whisperSenderError(msg, 'Please provide at least one player ID or name to remove.', 'Invalid Input');
+    return;
+  }
+  const toRemove = resolvePlayerList(listResult.values, msg);
+  if (!toRemove) {
+    return;
+  }
+  const removeSet = new Set(toRemove);
+  state.SwapTokenPositions.tokenInputUsers = state.SwapTokenPositions.tokenInputUsers.filter(
+    (id) => !removeSet.has(id)
+  );
+  const removedNames = toRemove.map((id) => getObj('player', id)?.get('_displayname') ?? id);
+  whisperGMSuccess(
+    `Removed from allow-list: <strong>${removedNames.join(', ')}</strong>.`,
+    'Users Removed'
+  );
+  if (
+    state.SwapTokenPositions.tokenInputAccess === 'selected-users' &&
+    state.SwapTokenPositions.tokenInputUsers.length === 0
+  ) {
+    whisperGM(
+      'The allow-list is now empty. While mode is <code>selected-users</code>, only the GM can use explicit token targeting.',
+      'Allow-List Empty'
+    );
+  }
+}
+
+/**
+ * Replaces the token-input allow-list with a new set of resolved players.
+ *
+ * @param {object} msg Roll20 chat message object.
+ * @returns {void}
+ */
+function handleTokenInputUsersSet(msg) {
+  const listResult = parseCommaListFlag(msg.content, FLAG_TOKEN_INPUT_USERS);
+  if (!listResult.found || listResult.values.length === 0) {
+    whisperSenderError(msg, 'Please provide at least one player ID or name.', 'Invalid Input');
+    return;
+  }
+  const resolved = resolvePlayerList(listResult.values, msg);
+  if (!resolved) {
+    return;
+  }
+  state.SwapTokenPositions.tokenInputUsers = resolved;
+  const names = resolved.map((id) => {
+    const player = getObj('player', id);
+    return player ? `${player.get('_displayname')} (${id})` : id;
+  });
+  whisperGMSuccess(
+    `Allow-list updated. Users: <strong>${names.join(', ')}</strong>.`,
+    'Users Updated'
+  );
 }
 
 /**
@@ -137,9 +292,10 @@ export function processPersistence(msg, isGM, tracker, config) {
  * Returns null and emits an error whisper when resolution fails.
  *
  * @param {object} msg Roll20 chat message object.
+ * @param {boolean} isGM Whether the sender is a GM.
  * @returns {Array<object>|null} Two token objects or null on failure.
  */
-function resolveSwapTokens(msg) {
+function resolveSwapTokens(msg, isGM) {
   const hasToken1 = FLAG_TOKEN1.test(msg.content);
   const hasToken2 = FLAG_TOKEN2.test(msg.content);
 
@@ -152,6 +308,20 @@ function resolveSwapTokens(msg) {
       msg,
       'Both <code>--token1</code> and <code>--token2</code> must be provided together. Omit both flags to use selection mode instead.',
       'Invalid Input'
+    );
+    return null;
+  }
+
+  const { tokenInputAccess, tokenInputUsers } = getSettings();
+  if (tokenInputAccess === 'gm-only' && !isGM) {
+    whisperSenderError(msg, 'Explicit token targeting is restricted to the GM.', 'Access Denied');
+    return null;
+  }
+  if (tokenInputAccess === 'selected-users' && !isGM && !tokenInputUsers.includes(msg.playerid)) {
+    whisperSenderError(
+      msg,
+      'You are not on the explicit token targeting allow-list.',
+      'Access Denied'
     );
     return null;
   }
@@ -191,7 +361,7 @@ export function handleSwapTokens(msg) {
     return;
   }
 
-  const tokens = resolveSwapTokens(msg);
+  const tokens = resolveSwapTokens(msg, isGM);
   if (!tokens) {
     return;
   }

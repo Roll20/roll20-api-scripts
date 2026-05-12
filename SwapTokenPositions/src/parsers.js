@@ -1,6 +1,36 @@
 import { whisperSenderError } from './messages.js';
 
 /**
+ * Parses a comma-separated list flag, supporting quoted and bare entries.
+ *
+ * Each member may be single-quoted, double-quoted, or bare (no commas within).
+ * Empty members and whitespace-only entries are filtered silently.
+ *
+ * @param {string} content Full command content.
+ * @param {RegExp} flagRegex Regex for the flag name.
+ * @returns {{found:boolean, values:string[]}} Parse result.
+ */
+export function parseCommaListFlag(content, flagRegex) {
+  const match = new RegExp(String.raw`${flagRegex.source}\s+(.+?)(?=\s+--|$)`, 'i').exec(content);
+  if (!match) {
+    return { found: false, values: [] };
+  }
+
+  const values = [];
+  for (const part of match[1].trim().split(',')) {
+    const trimmed = part
+      .trim()
+      .replace(/^(['"])(.*)\1$/, '$2')
+      .trim();
+    if (trimmed) {
+      values.push(trimmed);
+    }
+  }
+
+  return { found: true, values };
+}
+
+/**
  * Parses a string flag whose value may be quoted (allowing spaces) or unquoted.
  *
  * Supports single-quoted, double-quoted, and bare (no-whitespace) values.
