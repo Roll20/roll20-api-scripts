@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.1.0.beta-3.6
- * Built: 2026-05-13T21:32:15.751Z
+ * Version: 1.1.0.beta-3.9
+ * Built: 2026-05-13T22:51:44.527Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -255,8 +255,8 @@ const ConditionTrackerMod = (() => {
   const SUPPORTED_LOCALE_LIST = SUPPORTED_LOCALES.map((code) => LOCALE_LABELS[code]).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.1.0.beta-3.6';
-  const SCRIPT_LAST_UPDATED = '2026-05-13T21:32:15.751Z';
+  const SCRIPT_VERSION = '1.1.0.beta-3.9';
+  const SCRIPT_LAST_UPDATED = '2026-05-13T22:51:44.527Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -380,12 +380,10 @@ const ConditionTrackerMod = (() => {
       Frightened: {
         past: 'banggemaak',
         verb: 'maak',
-        suffix: 'bang',
       },
       Incapacitated: {
         past: 'onbekwaam',
         verb: 'maak',
-        suffix: 'onbekwaam',
       },
       Invisible: {
         past: 'onsigbaar',
@@ -633,13 +631,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Wys Hulp',
         reorderConditions: 'Herrangskik Toestandrye',
         reportToken: 'Rapporteer Token Voorwaardes',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Duidelike merker',
         savedEffects: 'Gestoorde effekte',
         addSavedEffect: 'Voeg gestoorde effek by',
         editSaved: 'Wysig',
@@ -658,6 +650,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — Verwydering',
         config: 'Konfigurasie',
         configTracker: 'Condition Tracker — Konfigurasie',
+        markerPicker: 'Kies merker: {condition}',
         help: 'Hulp',
         applied: 'Toegepas',
         removed: 'Toestand Verwyder',
@@ -746,6 +739,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: "Merkerkonfigurasie vereis 'n vooraf bepaalde toestandnaam.",
         markerNameRequired: "Merkerkonfigurasie vereis 'n nie-leë merkernaam.",
         markerSet: '{condition}-merker gestel op {marker}.',
+        markerCleared: '{condition} merker is skoongemaak.',
+        noMarkersFound: 'Geen tekenmerkers is in hierdie veldtog beskikbaar nie.',
+        markerPickerCurrent: 'Huidig: {marker}',
+        markerPickerNone: 'Huidig: geen',
         healthBarSet: 'Gesondheidsstaaf gestel op {bar}.',
         boolSet: '{key} gestel op {value}.',
         expectedBoolean: 'true of false verwag.',
@@ -1569,13 +1566,7 @@ const ConditionTrackerMod = (() => {
         showHelp: "Mostra l'ajuda",
         reorderConditions: 'Reordena les files de condicions',
         reportToken: 'Informa de les condicions del testimoni',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Esborra el marcador',
         savedEffects: 'Efectes guardats',
         addSavedEffect: "Afegeix l'efecte desat",
         editSaved: 'Edita',
@@ -1594,6 +1585,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Eliminació — Condition Tracker',
         config: 'Configuració',
         configTracker: 'Configuració — Condition Tracker',
+        markerPicker: 'Marcador de selecció: {condition}',
         help: 'Ajuda',
         applied: 'Aplicat',
         removed: 'Condició eliminada',
@@ -1685,6 +1677,10 @@ const ConditionTrackerMod = (() => {
           'La configuració del marcador requereix un nom de condició predefinit.',
         markerNameRequired: 'La configuració del marcador requereix un nom de marcador no buit.',
         markerSet: "El marcador de {condition} s'ha establert a {marker}.",
+        markerCleared: "S'ha esborrat el marcador {condition}.",
+        noMarkersFound: 'No hi ha cap marcador disponible en aquesta campanya.',
+        markerPickerCurrent: 'Actual: {marker}',
+        markerPickerNone: 'Actual: cap',
         healthBarSet: "La barra de salut s'ha establert a {bar}.",
         boolSet: "{key} s'ha establert a {value}.",
         expectedBoolean: "S'esperava true o false.",
@@ -2529,13 +2525,7 @@ const ConditionTrackerMod = (() => {
         showHelp: '顯示說明',
         reorderConditions: '重新排列狀態列',
         reportToken: '報告令牌條件',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ 清晰標記',
         savedEffects: '保存的效果',
         addSavedEffect: '加入已儲存的效果',
         editSaved: '編輯',
@@ -2554,6 +2544,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker 移除',
         config: '設定',
         configTracker: 'Condition Tracker 設定',
+        markerPicker: '選擇標記：{condition}',
         help: '說明',
         applied: '已套用',
         removed: '狀態已移除',
@@ -2632,6 +2623,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: '標記設定需要預先定義的狀態名稱。',
         markerNameRequired: '標記設定需要非空白的標記名稱。',
         markerSet: '{condition} 標記已設定為 {marker}。',
+        markerCleared: '{condition} marker cleared.',
+        noMarkersFound: '此活動中沒有可用的令牌標記。',
+        markerPickerCurrent: '目前：{marker}',
+        markerPickerNone: '目前：無',
         healthBarSet: '生命值欄位已設定為 {bar}。',
         boolSet: '{key} 已設定為 {value}。',
         expectedBoolean: '應為 true 或 false。',
@@ -2758,26 +2753,6 @@ const ConditionTrackerMod = (() => {
         turnAppended: '目標不在回合順序中；狀態列已附加。',
         turnInserted: '狀態列已插入目標 Token 下方。',
       },
-      choice: {
-        selectCondition: '選擇狀態',
-        selectSource: '選擇來源 Token',
-        selectTarget: '選擇目標 Token',
-        selectSubject: '選擇主體',
-        selectDuration: '選擇持續時間',
-        confirmTargetTitle: '確認目標列表',
-        applyEffectTitle: '套用 {condition} 效果',
-        noTokens: '目前頁面沒有找到已命名的 Token。',
-        confirmIntro: '下列 Token 將受到此狀態影響：',
-        confirmBtn: '確認目標列表',
-        enterDetails: '輸入效果詳細資料',
-        noneBtn: '無',
-        noneOrSourceBtn: '無或套用至來源',
-        subjectDesc: '選擇由誰或什麼造成此效果。',
-        sourceDesc: '選擇產生此狀態或效果的生物。',
-        targetDesc: '選擇要受到此狀態或效果影響的生物。',
-        otherText: '其他狀態文字',
-        effectDetails: '{condition} 詳細資料',
-      },
     },
     handout: {
       versionLabel: '版本',
@@ -2886,19 +2861,6 @@ const ConditionTrackerMod = (() => {
             '--saved promote <id> --visibility public|masked|gm',
             'Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active',
           ],
-          [
-            '--saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-            'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
-          ],
-          ['--saved snooze-clear <id>', 'Clear an active snooze on a saved effect'],
-          ['--lang <語言環境>', '以額外語言環境輸出此指令訊息（雙語模式）'],
-          [
-            '--分類 pc|npc|忽略',
-            '覆寫選取 Token 的角色類型 — 請先選取 Token。預設範圍為角色（寫入 ct_mod_actor_type 屬性）；加上 --scope token 可改為儲存在腳本狀態中',
-          ],
-          ['--將汽車分類', '移除角色類型覆寫，恢復選取 Token 的自動偵測'],
-          ['--分類顯示', '對每個選取的 Token 傳送分類診斷密語 — 顯示偵測到的類型、偵測來源與原因'],
-          [' - 幫助', '在聊天中顯示簡短說明卡'],
         ],
       },
       standardConditions: {
@@ -3093,32 +3055,6 @@ const ConditionTrackerMod = (() => {
         colLanguage: '語言',
         colFile: '翻譯檔案',
       },
-    },
-    languageNames: {
-      af: '南非荷蘭文',
-      ca: '加泰蘭文',
-      'zh-TW': '中文（台灣）',
-      cs: '捷克文',
-      da: '丹麥文',
-      nl: '荷蘭文',
-      'en-US': '英文（美國）',
-      fi: '芬蘭文',
-      fr: '法文',
-      de: '德文',
-      el: '希臘文',
-      he: '希伯來文',
-      hu: '匈牙利文',
-      it: '義大利文',
-      ja: '日文',
-      ko: '韓文',
-      pl: '波蘭文',
-      'pt-PT': '葡萄牙文（葡萄牙）',
-      'pt-BR': '葡萄牙文（巴西）',
-      ru: '俄文',
-      es: '西班牙文',
-      sv: '瑞典文',
-      tr: '土耳其文',
-      uk: '烏克蘭文',
     },
   };
 
@@ -3407,13 +3343,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Zobrazit nápovědu',
         reorderConditions: 'Přeuspořádat řádky stavů',
         reportToken: 'Podmínky tokenu hlášení',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Clear Marker',
         savedEffects: 'Uložené efekty',
         addSavedEffect: 'Přidat uložený efekt',
         editSaved: 'Upravit',
@@ -3432,6 +3362,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Odebrání stavů',
         config: 'Konfigurace',
         configTracker: 'Konfigurace Condition Trackeru',
+        markerPicker: 'Značka výběru: {condition}',
         help: 'Nápověda',
         applied: 'Uplatněno',
         removed: 'Stav odebrán',
@@ -3519,6 +3450,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'Konfigurace značky vyžaduje předdefinovaný název stavu.',
         markerNameRequired: 'Konfigurace značky vyžaduje neprázdný název značky.',
         markerSet: 'Značka {condition} nastavena na {marker}.',
+        markerCleared: 'Značka {condition} vymazána.',
+        noMarkersFound: 'V této kampani nejsou k dispozici žádné značky tokenů.',
+        markerPickerCurrent: 'Aktuální: {marker}',
+        markerPickerNone: 'Aktuální: žádný',
         healthBarSet: 'Lišta zdraví nastavena na {bar}.',
         boolSet: '{key} nastaveno na {value}.',
         expectedBoolean: 'Očekáváno true nebo false.',
@@ -4330,13 +4265,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Vis hjælp',
         reorderConditions: 'Omarranger tilstandsrækker',
         reportToken: 'Rapporter Token-betingelser',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Klar markør',
         savedEffects: 'Gemte effekter',
         addSavedEffect: 'Tilføj gemt effekt',
         editSaved: 'Redigere',
@@ -4355,6 +4284,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — fjernelse',
         config: 'Konfiguration',
         configTracker: 'Condition Tracker — konfiguration',
+        markerPicker: 'Vælg markør: {condition}',
         help: 'Hjælp',
         applied: 'Anvendt',
         removed: 'Tilstand fjernet',
@@ -4442,6 +4372,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'Markørkonfiguration kræver et foruddefineret tilstandsnavn.',
         markerNameRequired: 'Markørkonfiguration kræver et ikke-tomt markørnavn.',
         markerSet: '{condition}-markør sat til {marker}.',
+        markerCleared: '{condition} markør ryddet.',
+        noMarkersFound: 'Ingen token-markører er tilgængelige i denne kampagne.',
+        markerPickerCurrent: 'Nuværende: {marker}',
+        markerPickerNone: 'Aktuel: ingen',
         healthBarSet: 'Helsebjælke sat til {bar}.',
         boolSet: '{key} sat til {value}.',
         expectedBoolean: 'Forventede true eller false.',
@@ -5010,7 +4944,6 @@ const ConditionTrackerMod = (() => {
       Frightened: {
         past: 'bang',
         verb: 'maakt',
-        suffix: 'bang',
       },
       Incapacitated: {
         past: 'uitgeschakeld',
@@ -5262,13 +5195,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Toon Help',
         reorderConditions: 'Conditierijen Herordenen',
         reportToken: 'Tokenvoorwaarden rapporteren',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Duidelijke markering',
         savedEffects: 'Opgeslagen effecten',
         addSavedEffect: 'Opgeslagen effect toevoegen',
         editSaved: 'Bewerking',
@@ -5287,6 +5214,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — Verwijdering',
         config: 'Configuratie',
         configTracker: 'Condition Tracker — Configuratie',
+        markerPicker: 'Kiesmarkering: {condition}',
         help: 'Hulp',
         applied: 'Toegepast',
         removed: 'Conditie Verwijderd',
@@ -5377,6 +5305,10 @@ const ConditionTrackerMod = (() => {
           'Markeringsconfiguratie vereist een voorgedefinieerde conditienaam.',
         markerNameRequired: 'Markeringsconfiguratie vereist een niet-lege markeringsnaam.',
         markerSet: '{condition}-markering ingesteld op {marker}.',
+        markerCleared: '{condition} markering gewist.',
+        noMarkersFound: 'Er zijn geen tokenmarkeringen beschikbaar in deze campagne.',
+        markerPickerCurrent: 'Huidig: {marker}',
+        markerPickerNone: 'Huidig: geen',
         healthBarSet: 'Gezondheidsbalk ingesteld op {bar}.',
         boolSet: '{key} ingesteld op {value}.',
         expectedBoolean: 'true of false verwacht.',
@@ -6239,6 +6171,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Show Help',
         reorderConditions: 'Reorder Condition Rows',
         reportToken: 'Report Token Conditions',
+        clearMarker: '✕ Clear Marker',
         savedEffects: 'Saved Effects',
         addSavedEffect: 'Add Saved Effect',
         editSaved: 'Edit',
@@ -6257,6 +6190,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker removal',
         config: 'Config',
         configTracker: 'Condition Tracker config',
+        markerPicker: 'Pick Marker: {condition}',
         help: 'Help',
         applied: 'Applied',
         removed: 'Condition Removed',
@@ -6342,6 +6276,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'Marker configuration requires a predefined condition name.',
         markerNameRequired: 'Marker configuration requires a non-empty marker name.',
         markerSet: '{condition} marker set to {marker}.',
+        markerCleared: '{condition} marker cleared.',
+        noMarkersFound: 'No token markers are available in this campaign.',
+        markerPickerCurrent: 'Current: {marker}',
+        markerPickerNone: 'Current: none',
         healthBarSet: 'Health bar set to {bar}.',
         boolSet: '{key} set to {value}.',
         expectedBoolean: 'Expected true or false.',
@@ -7133,13 +7071,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Näytä ohje',
         reorderConditions: 'Järjestä tilarivit uudelleen',
         reportToken: 'Ilmoita Tokenin ehdot',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Selkeä merkki',
         savedEffects: 'Tallennetut tehosteet',
         addSavedEffect: 'Lisää tallennettu tehoste',
         editSaved: 'Muokata',
@@ -7158,6 +7090,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — poisto',
         config: 'Asetukset',
         configTracker: 'Condition Tracker — asetukset',
+        markerPicker: 'Poimintamerkki: {condition}',
         help: 'Ohje',
         applied: 'Sovellettu',
         removed: 'Tila poistettu',
@@ -7242,6 +7175,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'Merkkimääritys edellyttää ennalta määritettyä tilanimeä.',
         markerNameRequired: 'Merkkimääritys edellyttää ei-tyhjää merkin nimeä.',
         markerSet: 'Tilan {condition} merkiksi asetettu {marker}.',
+        markerCleared: '{condition}-merkki tyhjennetty.',
+        noMarkersFound: 'Tässä kampanjassa ei ole käytettävissä merkkimerkkejä.',
+        markerPickerCurrent: 'Nykyinen: {marker}',
+        markerPickerNone: 'Nykyinen: ei yhtään',
         healthBarSet: 'Elämäpalkki asetettu: {bar}.',
         boolSet: '{key} asetettu arvoon {value}.',
         expectedBoolean: 'Odotettiin true tai false.',
@@ -8059,13 +7996,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Afficher l’aide',
         reorderConditions: 'Réorganiser les lignes de condition',
         reportToken: 'Conditions des jetons de rapport',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Marqueur clair',
         savedEffects: 'Effets enregistrés',
         addSavedEffect: 'Ajouter un effet enregistré',
         editSaved: 'Modifier',
@@ -8084,6 +8015,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Suppression — Condition Tracker',
         config: 'Configuration',
         configTracker: 'Configuration — Condition Tracker',
+        markerPicker: 'Marqueur de sélection : {condition}',
         help: 'Aide',
         applied: 'Appliqué',
         removed: 'Condition supprimée',
@@ -8174,6 +8106,10 @@ const ConditionTrackerMod = (() => {
           'La configuration du marqueur requiert un nom de condition prédéfini.',
         markerNameRequired: 'La configuration du marqueur requiert un nom de marqueur non vide.',
         markerSet: 'Marqueur de {condition} défini sur {marker}.',
+        markerCleared: 'Le marqueur {condition} a été effacé.',
+        noMarkersFound: "Aucun marqueur de jeton n'est disponible dans cette campagne.",
+        markerPickerCurrent: 'Actuel : {marker}',
+        markerPickerNone: 'Actuel : aucun',
         healthBarSet: 'Barre de santé définie sur {bar}.',
         boolSet: '{key} défini sur {value}.',
         expectedBoolean: 'true ou false est attendu.',
@@ -9017,13 +8953,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Hilfe anzeigen',
         reorderConditions: 'Bedingungszeilen neu anordnen',
         reportToken: 'Token-Bedingungen melden',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Markierung löschen',
         savedEffects: 'Gespeicherte Effekte',
         addSavedEffect: 'Gespeicherten Effekt hinzufügen',
         editSaved: 'Bearbeiten',
@@ -9042,6 +8972,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — Entfernen',
         config: 'Konfiguration',
         configTracker: 'Condition Tracker — Konfiguration',
+        markerPicker: 'Auswahlmarkierung: {condition}',
         help: 'Hilfe',
         applied: 'Angewendet',
         removed: 'Zustand entfernt',
@@ -9132,6 +9063,10 @@ const ConditionTrackerMod = (() => {
           'Die Marker-Konfiguration erfordert einen vordefinierten Zustandsnamen.',
         markerNameRequired: 'Die Marker-Konfiguration erfordert einen nicht-leeren Markernamen.',
         markerSet: 'Marker für {condition} auf {marker} gesetzt.',
+        markerCleared: '{condition} Markierung gelöscht.',
+        noMarkersFound: 'In dieser Kampagne sind keine Token-Marker verfügbar.',
+        markerPickerCurrent: 'Aktuell: {marker}',
+        markerPickerNone: 'Aktuell: keine',
         healthBarSet: 'Gesundheitsleiste auf {bar} gesetzt.',
         boolSet: '{key} auf {value} gesetzt.',
         expectedBoolean: 'true oder false erwartet.',
@@ -9723,7 +9658,6 @@ const ConditionTrackerMod = (() => {
       Incapacitated: {
         past: 'ανίκανος',
         verb: 'καθιστά',
-        suffix: 'ανίκανο',
       },
       Invisible: {
         past: 'αόρατος',
@@ -9971,13 +9905,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Εμφάνιση Βοήθειας',
         reorderConditions: 'Αναδιάταξη Σειρών Κατάστασης',
         reportToken: 'Αναφορά Προϋποθέσεων Token',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Διαγραφή δείκτη',
         savedEffects: 'Αποθηκευμένα εφέ',
         addSavedEffect: 'Προσθήκη Αποθηκευμένου Εφέ',
         editSaved: 'Εκδίδω',
@@ -9996,6 +9924,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — Αφαίρεση',
         config: 'Ρυθμίσεις',
         configTracker: 'Condition Tracker — Ρυθμίσεις',
+        markerPicker: 'Επιλογή δείκτη: {condition}',
         help: 'Βοήθεια',
         applied: 'Εφαρμόστηκε',
         removed: 'Κατάσταση Αφαιρέθηκε',
@@ -10085,6 +10014,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'Η ρύθμιση δείκτη απαιτεί προκαθορισμένο όνομα κατάστασης.',
         markerNameRequired: 'Η ρύθμιση δείκτη απαιτεί μη κενό όνομα δείκτη.',
         markerSet: 'Ο δείκτης για {condition} ορίστηκε σε {marker}.',
+        markerCleared: 'Ο δείκτης {condition} διαγράφηκε.',
+        noMarkersFound: 'Δεν υπάρχουν διαθέσιμοι δείκτες διακριτικών σε αυτήν την καμπάνια.',
+        markerPickerCurrent: 'Τρέχον: {marker}',
+        markerPickerNone: 'Τρέχον: κανένα',
         healthBarSet: 'Η μπάρα υγείας ορίστηκε σε {bar}.',
         boolSet: 'Το {key} ορίστηκε σε {value}.',
         expectedBoolean: 'Αναμένεται true ή false.',
@@ -10929,13 +10862,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'הצג עזרה',
         reorderConditions: 'סדר מחדש שורות תנאי',
         reportToken: 'דיווח על תנאי אסימון',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ סמן ברור',
         savedEffects: 'אפקטים שמורים',
         addSavedEffect: 'הוסף אפקט שמור',
         editSaved: 'לַעֲרוֹך',
@@ -10954,6 +10881,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'הסרת מצבים',
         config: 'הגדרות',
         configTracker: 'הגדרות Condition Tracker',
+        markerPicker: 'סמן בחירה: {condition}',
         help: 'עזרה',
         applied: 'הוחל',
         removed: 'מצב הוסר',
@@ -11033,6 +10961,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'הגדרת סמן דורשת שם מצב מוגדר מראש.',
         markerNameRequired: 'הגדרת סמן דורשת שם סמן שאינו ריק.',
         markerSet: 'הסמן של {condition} הוגדר ל־{marker}.',
+        markerCleared: 'הסמן {condition} נוקה.',
+        noMarkersFound: 'אין סמני אסימונים זמינים במסע פרסום זה.',
+        markerPickerCurrent: 'נוכחי: {marker}',
+        markerPickerNone: 'נוכחי: אין',
         healthBarSet: 'סרגל הבריאות הוגדר ל־{bar}.',
         boolSet: '{key} הוגדר ל־{value}.',
         expectedBoolean: 'נדרש true או false.',
@@ -11270,22 +11202,6 @@ const ConditionTrackerMod = (() => {
             '--saved promote <id> --visibility public|masked|gm',
             'Copy a saved effect into the Turn Tracker (public/masked) or mark it as GM-only active',
           ],
-          [
-            '--saved snooze <id> --scope turn|rounds|combat --rounds <n>',
-            'Snooze a saved-effect reminder for the current turn, N rounds, or this combat',
-          ],
-          ['--saved snooze-clear <id>', 'Clear an active snooze on a saved effect'],
-          ['--lang <locale>', 'פלט נוסף באזור שפה אחר'],
-          [
-            '--סיווג pc|npc|התעלם',
-            'עקוף את סוג השחקן עבור אסימונים נבחרים — בחר תחילה אסימון(ים). ברירת המחדל של התחום היא דמות (כותב תכונת ct_mod_actor_type); הוסף --scope token לשמירה בסטטוס הסקריפט',
-          ],
-          ['--לסווג אוטומטי', 'הסר את עקיפת סוג השחקן ושחזר זיהוי אוטומטי עבור אסימונים נבחרים'],
-          [
-            '--לסווג מופע',
-            'לחוש אבחון סיווג עבור כל אסימון נבחר — מציג את הסוג שזוהה, מקור הזיהוי והסיבה',
-          ],
-          ['--עֶזרָה', 'הצגת כרטיס עזרה קצר בצ׳אט'],
         ],
       },
       standardConditions: {
@@ -11767,13 +11683,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Súgó megjelenítése',
         reorderConditions: 'Állapotsorok átrendezése',
         reportToken: 'Jelentés Token feltételek',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Clear Marker',
         savedEffects: 'Mentett effektusok',
         addSavedEffect: 'Mentett effektus hozzáadása',
         editSaved: 'Szerkesztés',
@@ -11792,6 +11702,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — eltávolítás',
         config: 'Beállítások',
         configTracker: 'Condition Tracker — beállítások',
+        markerPicker: 'Pick Marker: {condition}',
         help: 'Súgó',
         applied: 'Alkalmazva',
         removed: 'Állapot eltávolítva',
@@ -11880,6 +11791,10 @@ const ConditionTrackerMod = (() => {
           'A jelölő konfigurálásához előre meghatározott állapotnév szükséges.',
         markerNameRequired: 'A jelölő konfigurálásához nem üres jelölőnév szükséges.',
         markerSet: 'A(z) {condition} jelölője {marker} értékre állítva.',
+        markerCleared: '{condition} jelölő törölve.',
+        noMarkersFound: 'Ebben a kampányban nem érhetők el tokenjelzők.',
+        markerPickerCurrent: 'Jelenlegi: {marker}',
+        markerPickerNone: 'Jelenlegi: nincs',
         healthBarSet: 'Az életerő sáv {bar} értékre állítva.',
         boolSet: 'A(z) {key} {value} értékre állítva.',
         expectedBoolean: 'True vagy false értéket várunk.',
@@ -12724,13 +12639,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostra aiuto',
         reorderConditions: 'Riordina righe condizioni',
         reportToken: 'Segnala le condizioni dei token',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Cancella indicatore',
         savedEffects: 'Effetti salvati',
         addSavedEffect: 'Aggiungi effetto salvato',
         editSaved: 'Modificare',
@@ -12749,6 +12658,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Rimozione — Condition Tracker',
         config: 'Configurazione',
         configTracker: 'Configurazione — Condition Tracker',
+        markerPicker: 'Indicatore di prelievo: {condition}',
         help: 'Aiuto',
         applied: 'Applicato',
         removed: 'Condizione rimossa',
@@ -12841,6 +12751,10 @@ const ConditionTrackerMod = (() => {
         markerNameRequired:
           "La configurazione dell'indicatore richiede un nome di indicatore non vuoto.",
         markerSet: 'Indicatore di {condition} impostato su {marker}.',
+        markerCleared: 'Indicatore {condition} cancellato.',
+        noMarkersFound: 'Nessun indicatore di token disponibile in questa campagna.',
+        markerPickerCurrent: 'Attuale: {marker}',
+        markerPickerNone: 'Attuale: nessuno',
         healthBarSet: 'Barra della salute impostata su {bar}.',
         boolSet: '{key} impostato su {value}.',
         expectedBoolean: 'Previsto true o false.',
@@ -13697,13 +13611,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'ヘルプを表示',
         reorderConditions: '状態行を並び替え',
         reportToken: 'レポートトークンの条件',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ クリアマーカー',
         savedEffects: '保存されたエフェクト',
         addSavedEffect: '保存したエフェクトを追加',
         editSaved: '編集',
@@ -13722,6 +13630,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — 削除',
         config: '設定',
         configTracker: 'Condition Tracker 設定',
+        markerPicker: 'マーカーを選択: {condition}',
         help: 'ヘルプ',
         applied: '適用済み',
         removed: '状態削除済み',
@@ -13809,6 +13718,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'マーカー設定には事前定義された状態名が必要です。',
         markerNameRequired: 'マーカー設定には空でないマーカー名が必要です。',
         markerSet: '{condition}のマーカーを{marker}に設定しました。',
+        markerCleared: '{condition} マーカーがクリアされました。',
+        noMarkersFound: 'このキャンペーンではトークン マーカーは使用できません。',
+        markerPickerCurrent: '現在: {marker}',
+        markerPickerNone: '現在: なし',
         healthBarSet: 'ヘルスバーを{bar}に設定しました。',
         boolSet: '{key}を{value}に設定しました。',
         expectedBoolean: 'trueまたはfalseが必要です。',
@@ -14617,13 +14530,7 @@ const ConditionTrackerMod = (() => {
         showHelp: '도움말 표시',
         reorderConditions: '조건 행 재정렬',
         reportToken: '보고서 토큰 조건',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ 마커 지우기',
         savedEffects: '저장된 효과',
         addSavedEffect: '저장된 효과 추가',
         editSaved: '편집하다',
@@ -14642,6 +14549,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: '상태 추적기 제거',
         config: '설정',
         configTracker: '상태 추적기 설정',
+        markerPicker: '마커 선택: {condition}',
         help: '도움말',
         applied: '적용됨',
         removed: '상태 제거됨',
@@ -14728,6 +14636,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: '마커 설정에는 미리 정의된 상태 이름이 필요합니다.',
         markerNameRequired: '마커 설정에는 비어 있지 않은 마커 이름이 필요합니다.',
         markerSet: '{condition} 마커가 {marker} 로 설정되었습니다.',
+        markerCleared: '{condition} 마커가 지워졌습니다.',
+        noMarkersFound: '이 캠페인에서는 토큰 마커를 사용할 수 없습니다.',
+        markerPickerCurrent: '현재: {marker}',
+        markerPickerNone: '현재: 없음',
         healthBarSet: '체력 바가 {bar} 로 설정되었습니다.',
         boolSet: '{key} 이(가) {value} 로 설정되었습니다.',
         expectedBoolean: 'true 또는 false를 기대했습니다.',
@@ -14950,7 +14862,7 @@ const ConditionTrackerMod = (() => {
           ['--remove <조건 ID>', '고유 ID로 특정 상태 제거'],
           ['--config &lt;옵션&gt; &lt;값&gt;', '구성 설정 조정 (아래 설정 섹션 참조)'],
           [
-            '--prompt --subjectPromptBypass true|false',
+            '--prompt --subjectPromptBypass 참|거짓',
             '이 명령어에 대해서만 subjectPromptBypass 재정의 (--subject-prompt-bypass 도 지원)',
           ],
           ['--대청소', '상태 조정 — 연결이 끊긴 상태 및 턴 추적기 행 제거'],
@@ -15513,13 +15425,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Pokaż pomoc',
         reorderConditions: 'Zmień kolejność wierszy stanów',
         reportToken: 'Zgłoś warunki tokena',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Wyczyść znacznik',
         savedEffects: 'Zapisane efekty',
         addSavedEffect: 'Dodaj zapisany efekt',
         editSaved: 'Redagować',
@@ -15538,6 +15444,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Usuwanie stanów',
         config: 'Konfiguracja',
         configTracker: 'Konfiguracja Condition Trackera',
+        markerPicker: 'Wybierz znacznik: {condition}',
         help: 'Pomoc',
         applied: 'Zastosowano',
         removed: 'Stan usunięty',
@@ -15625,6 +15532,10 @@ const ConditionTrackerMod = (() => {
           'Konfiguracja znacznika wymaga wstępnie zdefiniowanej nazwy stanu.',
         markerNameRequired: 'Konfiguracja znacznika wymaga niepustej nazwy znacznika.',
         markerSet: 'Znacznik {condition} ustawiony na {marker}.',
+        markerCleared: 'Znacznik {condition} został usunięty.',
+        noMarkersFound: 'W tej kampanii nie są dostępne żadne znaczniki tokenów.',
+        markerPickerCurrent: 'Obecne: {marker}',
+        markerPickerNone: 'Prąd: brak',
         healthBarSet: 'Pasek zdrowia ustawiony na {bar}.',
         boolSet: '{key} ustawione na {value}.',
         expectedBoolean: 'Oczekiwano true lub false.',
@@ -16457,13 +16368,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condições',
         reportToken: 'Reportar condições de token',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Marcador claro',
         savedEffects: 'Efeitos salvos',
         addSavedEffect: 'Adicionar efeito salvo',
         editSaved: 'Editar',
@@ -16482,6 +16387,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Remoção — Condition Tracker',
         config: 'Configuração',
         configTracker: 'Configuração — Condition Tracker',
+        markerPicker: 'Marcador de seleção: {condition}',
         help: 'Ajuda',
         applied: 'Aplicado',
         removed: 'Condição removida',
@@ -16573,6 +16479,10 @@ const ConditionTrackerMod = (() => {
           'A configuração do marcador requer um nome de condição predefinido.',
         markerNameRequired: 'A configuração do marcador requer um nome de marcador não vazio.',
         markerSet: 'Marcador de {condition} definido para {marker}.',
+        markerCleared: 'Marcador {condition} apagado.',
+        noMarkersFound: 'Nenhum marcador de token está disponível nesta campanha.',
+        markerPickerCurrent: 'Atual: {marker}',
+        markerPickerNone: 'Atual: nenhum',
         healthBarSet: 'Barra de saúde definida para {bar}.',
         boolSet: '{key} definido para {value}.',
         expectedBoolean: 'Esperado true ou false.',
@@ -17370,7 +17280,6 @@ const ConditionTrackerMod = (() => {
         targetDesc: 'Selecione a criatura que receberá a condição ou efeito.',
         otherText: 'Texto de condição personalizada',
         effectDetails: 'Detalhes de {condition}',
-        reinstallHandout: 'Reinstalar livreto',
       },
       col: {
         players: 'Jogadores',
@@ -17418,13 +17327,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostrar ajuda',
         reorderConditions: 'Reordenar linhas de condição',
         reportToken: 'Reportar condições de token',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Marcador claro',
         savedEffects: 'Efeitos salvos',
         addSavedEffect: 'Adicionar efeito salvo',
         editSaved: 'Editar',
@@ -17443,6 +17346,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Remoção — Condition Tracker',
         config: 'Configuração',
         configTracker: 'Configuração — Condition Tracker',
+        markerPicker: 'Marcador de seleção: {condition}',
         help: 'Ajuda',
         applied: 'Aplicado',
         removed: 'Condição removida',
@@ -17532,6 +17436,10 @@ const ConditionTrackerMod = (() => {
           'A configuração do marcador requer um nome de condição predefinido.',
         markerNameRequired: 'A configuração do marcador requer um nome de marcador não vazio.',
         markerSet: 'Marcador de {condition} definido como {marker}.',
+        markerCleared: 'Marcador {condition} apagado.',
+        noMarkersFound: 'Nenhum marcador de token está disponível nesta campanha.',
+        markerPickerCurrent: 'Atual: {marker}',
+        markerPickerNone: 'Atual: nenhum',
         healthBarSet: 'Barra de saúde definida como {bar}.',
         boolSet: '{key} definido como {value}.',
         expectedBoolean: 'Era esperado true ou false.',
@@ -18113,7 +18021,6 @@ const ConditionTrackerMod = (() => {
       Incapacitated: {
         past: 'недееспособен',
         verb: 'делает',
-        suffix: 'недееспособным',
       },
       Invisible: {
         past: 'невидим',
@@ -18361,13 +18268,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Показать справку',
         reorderConditions: 'Переупорядочить строки состояний',
         reportToken: 'Сообщить о состоянии токена',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Очистить маркер',
         savedEffects: 'Сохраненные эффекты',
         addSavedEffect: 'Добавить сохраненный эффект',
         editSaved: 'Редактировать',
@@ -18386,6 +18287,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Удаление состояний',
         config: 'Конфигурация',
         configTracker: 'Конфигурация Condition Tracker',
+        markerPicker: 'Выберите маркер: {condition}',
         help: 'Справка',
         applied: 'Применено',
         removed: 'Состояние удалено',
@@ -18473,6 +18375,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'Конфигурация маркера требует предопределённого имени состояния.',
         markerNameRequired: 'Конфигурация маркера требует непустого имени маркера.',
         markerSet: 'Маркер {condition} установлен на {marker}.',
+        markerCleared: 'Маркер {condition} удален.',
+        noMarkersFound: 'В этой кампании нет маркеров жетонов.',
+        markerPickerCurrent: 'Текущее: {marker}',
+        markerPickerNone: 'Текущий: нет',
         healthBarSet: 'Полоса здоровья установлена на {bar}.',
         boolSet: '{key} установлено на {value}.',
         expectedBoolean: 'Ожидалось true или false.',
@@ -19324,13 +19230,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Mostrar ayuda',
         reorderConditions: 'Reordenar filas de condición',
         reportToken: 'Informe de condiciones del token',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Marcador claro',
         savedEffects: 'Efectos guardados',
         addSavedEffect: 'Agregar efecto guardado',
         editSaved: 'Editar',
@@ -19343,13 +19243,13 @@ const ConditionTrackerMod = (() => {
         runMacroNow: 'Ejecutar macro ahora',
         macroButtonsEnable: 'Habilitar botones de macro',
         macroButtonsDisable: 'Deshabilitar botones de macros',
-        reinstallMacro: 'Reinstalar macro',
       },
       title: {
         menu: 'Menú',
         removalMenu: 'Eliminación — Condition Tracker',
         config: 'Configuración',
         configTracker: 'Configuración — Condition Tracker',
+        markerPicker: 'Marcador de selección: {condition}',
         help: 'Ayuda',
         applied: 'Aplicado',
         removed: 'Condición eliminada',
@@ -19440,6 +19340,10 @@ const ConditionTrackerMod = (() => {
         markerNameRequired:
           'La configuración del marcador requiere un nombre de marcador no vacío.',
         markerSet: 'Marcador de {condition} establecido en {marker}.',
+        markerCleared: 'Marcador {condition} borrado.',
+        noMarkersFound: 'No hay marcadores de tokens disponibles en esta campaña.',
+        markerPickerCurrent: 'Actual: {marker}',
+        markerPickerNone: 'Actual: ninguno',
         healthBarSet: 'Barra de salud establecida en {bar}.',
         boolSet: '{key} establecido en {value}.',
         expectedBoolean: 'Se esperaba true o false.',
@@ -20284,13 +20188,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Visa hjälp',
         reorderConditions: 'Ordna om tillståndsrader',
         reportToken: 'Rapportera tokenvillkor',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Tydlig markör',
         savedEffects: 'Sparade effekter',
         addSavedEffect: 'Lägg till sparad effekt',
         editSaved: 'Redigera',
@@ -20309,6 +20207,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — borttagning',
         config: 'Konfiguration',
         configTracker: 'Condition Tracker — konfiguration',
+        markerPicker: 'Välj markör: {condition}',
         help: 'Hjälp',
         applied: 'Applicerad',
         removed: 'Tillstånd borttaget',
@@ -20397,6 +20296,10 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: 'Markörskonfiguration kräver ett fördefinierat tillståndsnamn.',
         markerNameRequired: 'Markörskonfiguration kräver ett icke-tomt markörnamn.',
         markerSet: '{condition}-markör inställd på {marker}.',
+        markerCleared: '{condition} markören rensad.',
+        noMarkersFound: 'Inga tokenmarkörer är tillgängliga i denna kampanj.',
+        markerPickerCurrent: 'Aktuell: {marker}',
+        markerPickerNone: 'Aktuell: ingen',
         healthBarSet: 'Hälsomätare inställd på {bar}.',
         boolSet: '{key} inställd på {value}.',
         expectedBoolean: 'Förväntade true eller false.',
@@ -21203,13 +21106,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Yardımı Göster',
         reorderConditions: 'Durum Satırlarını Yeniden Sırala',
         reportToken: 'Jeton Koşullarını Bildirin',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ İşaretçiyi Temizle',
         savedEffects: 'Kaydedilen Efektler',
         addSavedEffect: 'Kayıtlı Efekt Ekle',
         editSaved: 'Düzenlemek',
@@ -21228,6 +21125,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Condition Tracker — Kaldırma',
         config: 'Yapılandırma',
         configTracker: 'Condition Tracker yapılandırması',
+        markerPicker: 'Seçim İşaretçisi: {condition}',
         help: 'Yardım',
         applied: 'Uygulandı',
         removed: 'Durum Kaldırıldı',
@@ -21316,6 +21214,10 @@ const ConditionTrackerMod = (() => {
           'İşaretçi yapılandırması önceden tanımlanmış bir durum adı gerektirir.',
         markerNameRequired: 'İşaretçi yapılandırması boş olmayan bir işaretçi adı gerektirir.',
         markerSet: '{condition} işaretçisi {marker} olarak ayarlandı.',
+        markerCleared: '{condition} işaretçisi temizlendi.',
+        noMarkersFound: 'Bu kampanyada jeton işaretçisi yok.',
+        markerPickerCurrent: 'Güncel: {marker}',
+        markerPickerNone: 'Güncel: yok',
         healthBarSet: 'Sağlık çubuğu {bar} olarak ayarlandı.',
         boolSet: '{key}, {value} olarak ayarlandı.',
         expectedBoolean: 'true veya false bekleniyor.',
@@ -21905,7 +21807,6 @@ const ConditionTrackerMod = (() => {
       Incapacitated: {
         past: 'недієздатний',
         verb: 'робить',
-        suffix: 'недієздатним',
       },
       Invisible: {
         past: 'невидимий',
@@ -22153,13 +22054,7 @@ const ConditionTrackerMod = (() => {
         showHelp: 'Показати довідку',
         reorderConditions: 'Переупорядкувати рядки умов',
         reportToken: 'Повідомити про умови маркера',
-        savedEffects: 'Saved Effects',
-        addSavedEffect: 'Add Saved Effect',
-        editSaved: 'Edit',
-        removeSaved: 'Remove',
-        promoteSaved: 'Add to Turn Tracker',
-        snoozeSaved: 'Snooze',
-        clearSnooze: 'Clear Snooze',
+        clearMarker: '✕ Очистити маркер',
         savedEffects: 'Збережені ефекти',
         addSavedEffect: 'Додати збережений ефект',
         editSaved: 'Редагувати',
@@ -22178,6 +22073,7 @@ const ConditionTrackerMod = (() => {
         removalMenu: 'Видалення Condition Tracker',
         config: 'Налаштування',
         configTracker: 'Налаштування Condition Tracker',
+        markerPicker: 'Маркер вибору: {condition}',
         help: 'Довідка',
         applied: 'Застосовано',
         removed: 'Стан видалено',
@@ -22264,6 +22160,10 @@ const ConditionTrackerMod = (() => {
           'Для налаштування маркера потрібна назва попередньо визначеного стану.',
         markerNameRequired: 'Для налаштування маркера потрібна непорожня назва маркера.',
         markerSet: 'Маркер {condition} встановлено на {marker}.',
+        markerCleared: 'Маркер {condition} видалено.',
+        noMarkersFound: 'У цій кампанії відсутні маркери маркерів.',
+        markerPickerCurrent: 'Поточний: {marker}',
+        markerPickerNone: 'Поточний: немає',
         healthBarSet: "Панель здоров'я встановлено на {bar}.",
         boolSet: '{key} встановлено на {value}.',
         expectedBoolean: 'Очікується true або false.',
@@ -22399,26 +22299,6 @@ const ConditionTrackerMod = (() => {
       apply: {
         turnAppended: 'Цілі не було в порядку ходів; рядок стану додано в кінець.',
         turnInserted: 'Рядок стану вставлено під токеном цілі.',
-      },
-      choice: {
-        selectCondition: 'Виберіть стан',
-        selectSource: 'Виберіть токен-джерело',
-        selectTarget: 'Виберіть токен-ціль',
-        selectSubject: "Виберіть суб'єкт",
-        selectDuration: 'Виберіть тривалість',
-        confirmTargetTitle: 'Підтвердьте список цілей',
-        applyEffectTitle: 'Застосувати ефект {condition}',
-        noTokens: 'На активній сторінці не знайдено іменованих токенів.',
-        confirmIntro: 'Ці токени отримають стан:',
-        confirmBtn: 'Підтвердити список цілей',
-        enterDetails: 'Введіть подробиці ефекту',
-        noneBtn: 'Немає',
-        noneOrSourceBtn: 'Немає або застосувати до джерела',
-        subjectDesc: 'Виберіть, хто або що спричиняє ефект.',
-        sourceDesc: 'Виберіть істоту, яка створює стан або ефект.',
-        targetDesc: 'Виберіть істоту, яка отримає стан або ефект.',
-        otherText: 'Текст іншого стану',
-        effectDetails: 'Подробиці {condition}',
       },
     },
     handout: {
@@ -22821,32 +22701,6 @@ const ConditionTrackerMod = (() => {
         colLanguage: 'Мова',
         colFile: 'Файл перекладу',
       },
-    },
-    languageNames: {
-      af: 'африкаанс',
-      ca: 'каталонська',
-      'zh-TW': 'китайська (Тайвань)',
-      cs: 'чеська',
-      da: 'данська',
-      nl: 'нідерландська',
-      'en-US': 'англійська (Сполучені Штати)',
-      fi: 'фінська',
-      fr: 'французька',
-      de: 'німецька',
-      el: 'грецька',
-      he: 'іврит',
-      hu: 'угорська',
-      it: 'італійська',
-      ja: 'японська',
-      ko: 'корейська',
-      pl: 'польська',
-      'pt-PT': 'португальська (Португалія)',
-      'pt-BR': 'португальська (Бразилія)',
-      ru: 'російська',
-      es: 'іспанська',
-      sv: 'шведська',
-      tr: 'турецька',
-      uk: 'українська',
     },
   };
 
@@ -29253,6 +29107,28 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
+   * Returns all token markers available in the campaign.
+   *
+   * Each entry has at minimum: name, tag, url, set_id.
+   * Default markers have an empty set_id; marketplace markers have a numeric one.
+   *
+   * @returns {Array<{id: number, name: string, tag: string, url: string, set_id: string}>}
+   */
+  function getCampaignTokenMarkers() {
+    try {
+      const raw = toText(Campaign().get('token_markers'));
+      if (!raw) {
+        return [];
+      }
+      const markers = JSON.parse(raw);
+      return Array.isArray(markers) ? markers : [];
+    } catch (error) {
+      log(`getCampaignTokenMarkers error: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
    * Resolves a marker name to its full Roll20 tag.
    *
    * Roll20 custom (marketplace) markers must be referenced as "name::id" when
@@ -29273,21 +29149,8 @@ const ConditionTrackerMod = (() => {
       return text;
     }
 
-    try {
-      const raw = toText(Campaign().get('token_markers'));
-      if (!raw) {
-        return text;
-      }
-      const markers = JSON.parse(raw);
-      if (!Array.isArray(markers)) {
-        return text;
-      }
-      const found = markers.find((m) => m.name === text);
-      return found ? toText(found.tag) || text : text;
-    } catch (error) {
-      log(`resolveMarkerTag error: ${error.message}`);
-      return text;
-    }
+    const found = getCampaignTokenMarkers().find((m) => m.name === text);
+    return found ? toText(found.tag) || text : text;
   }
 
   const WHISPER_PREFIX = /^\/w\s+(?:"[^"]+"|'[^']+'|\S+)\s*$/i;
@@ -34100,6 +33963,16 @@ const ConditionTrackerMod = (() => {
       return;
     }
 
+    if (option === 'marker-pick') {
+      showMarkerPicker(playerId, value);
+      return;
+    }
+
+    if (option === 'marker-clear') {
+      clearMarkerConfig(playerId, value);
+      return;
+    }
+
     if (option === 'useMarkers') {
       updateBooleanConfig(playerId, 'useMarkers', value);
       return;
@@ -34284,6 +34157,93 @@ const ConditionTrackerMod = (() => {
         condition: result.condition,
         marker: resolvedMarker,
       })
+    );
+  }
+
+  /**
+   * Shows an icon picker card for selecting a token marker for a condition.
+   *
+   * Each marker is rendered as a clickable icon button that sends the
+   * `--config marker` command to set that marker for the condition.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} condition Raw condition name from the command.
+   * @returns {void}
+   */
+  function showMarkerPicker(playerId, condition) {
+    const locale = getConfig().language;
+    const canonical = getCanonicalCondition(condition);
+    if (!canonical || isCustomEffectType(canonical)) {
+      whisperWarning(playerId, t('ui.msg.markerPredefinedRequired', locale));
+      return;
+    }
+
+    const allMarkers = getCampaignTokenMarkers();
+    const iconMarkers = allMarkers.filter((m) => toText(m.url));
+
+    if (iconMarkers.length === 0) {
+      whisperWarning(playerId, t('ui.msg.noMarkersFound', locale));
+      return;
+    }
+
+    const currentMarker = getConfig().markers[canonical] || '';
+
+    const ICON_BTN_BASE = [
+      'display:inline-block',
+      'margin:1px',
+      'padding:2px',
+      'border-radius:3px',
+      `background:${COLOR_ACCENT_DARK}`,
+      'vertical-align:middle',
+      'line-height:0',
+    ].join(';');
+
+    const ICON_BTN_SELECTED = `${ICON_BTN_BASE};outline:2px solid ${COLOR_ACCENT_LIGHT}`;
+
+    const iconButtons = iconMarkers.map((m) => {
+      const isSelected = m.tag === currentMarker || m.name === currentMarker;
+      const btnStyle = isSelected ? ICON_BTN_SELECTED : ICON_BTN_BASE;
+      const cmd = `${COMMAND} --config marker ${canonical}=${m.name}`;
+      return (
+        `<a href="${escapeHtml(cmd)}" style="${btnStyle}" title="${escapeHtml(m.name)}">` +
+        `<img src="${escapeHtml(m.url)}" width="28" height="28" /></a>`
+      );
+    });
+
+    const currentLabel = currentMarker
+      ? t('ui.msg.markerPickerCurrent', locale, { marker: currentMarker })
+      : t('ui.msg.markerPickerNone', locale);
+
+    const clearCmd = `${COMMAND} --config marker-clear ${canonical}`;
+
+    whisper(playerId, t('ui.title.markerPicker', locale, { condition: canonical }), [
+      currentLabel,
+      buildButton(t('ui.btn.clearMarker', locale), clearCmd),
+      rawHtml(`<div style="margin-top:4px;line-height:0;">${iconButtons.join('')}</div>`),
+    ]);
+  }
+
+  /**
+   * Clears the marker mapping for a condition.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} condition Raw condition name from the command.
+   * @returns {void}
+   */
+  function clearMarkerConfig(playerId, condition) {
+    const locale = getConfig().language;
+    const canonical = getCanonicalCondition(condition);
+    if (!canonical || isCustomEffectType(canonical)) {
+      whisperWarning(playerId, t('ui.msg.markerPredefinedRequired', locale));
+      return;
+    }
+
+    applyConfigUpdate(
+      playerId,
+      (config) => {
+        delete config.markers[canonical];
+      },
+      t('ui.msg.markerCleared', locale, { condition: canonical })
     );
   }
 

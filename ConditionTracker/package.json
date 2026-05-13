@@ -1,6 +1,6 @@
 {
   "name": "condition-tracker-roll20",
-  "version": "1.1.0.beta-3.6",
+  "version": "1.1.0.beta-3.9",
   "description": "Roll20 API Mod for tracking token conditions and custom effects in the Turn Tracker.",
   "private": true,
   "type": "module",

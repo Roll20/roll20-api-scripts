@@ -29,6 +29,8 @@ import {
   isCustomTextCondition,
 } from './conditions.js';
 import {
+  COLOR_ACCENT_DARK,
+  COLOR_ACCENT_LIGHT,
   COLOR_BG_SOFT_BLACK,
   COLOR_HEADER_DARK,
   COLOR_HEADER_LIGHT,
@@ -49,7 +51,7 @@ import {
   SCRIPT_VERSION,
 } from './constants.js';
 import { parseDuration } from './durations.js';
-import { applyMarker, resolveMarkerTag } from './markers.js';
+import { applyMarker, getCampaignTokenMarkers, resolveMarkerTag } from './markers.js';
 import { extractConditionTrackerCommand, parseCommand } from './parser.js';
 import { removeConditionById } from './removal.js';
 import {
@@ -1602,6 +1604,16 @@ export function handleConfig(playerId, configText) {
     return;
   }
 
+  if (option === 'marker-pick') {
+    showMarkerPicker(playerId, value);
+    return;
+  }
+
+  if (option === 'marker-clear') {
+    clearMarkerConfig(playerId, value);
+    return;
+  }
+
   if (option === 'useMarkers') {
     updateBooleanConfig(playerId, 'useMarkers', value);
     return;
@@ -1786,6 +1798,93 @@ export function updateMarkerConfig(playerId, value) {
       condition: result.condition,
       marker: resolvedMarker,
     })
+  );
+}
+
+/**
+ * Shows an icon picker card for selecting a token marker for a condition.
+ *
+ * Each marker is rendered as a clickable icon button that sends the
+ * `--config marker` command to set that marker for the condition.
+ *
+ * @param {string} playerId GM player id.
+ * @param {string} condition Raw condition name from the command.
+ * @returns {void}
+ */
+export function showMarkerPicker(playerId, condition) {
+  const locale = getConfig().language;
+  const canonical = getCanonicalCondition(condition);
+  if (!canonical || isCustomEffectType(canonical)) {
+    whisperWarning(playerId, t('ui.msg.markerPredefinedRequired', locale));
+    return;
+  }
+
+  const allMarkers = getCampaignTokenMarkers();
+  const iconMarkers = allMarkers.filter((m) => toText(m.url));
+
+  if (iconMarkers.length === 0) {
+    whisperWarning(playerId, t('ui.msg.noMarkersFound', locale));
+    return;
+  }
+
+  const currentMarker = getConfig().markers[canonical] || '';
+
+  const ICON_BTN_BASE = [
+    'display:inline-block',
+    'margin:1px',
+    'padding:2px',
+    'border-radius:3px',
+    `background:${COLOR_ACCENT_DARK}`,
+    'vertical-align:middle',
+    'line-height:0',
+  ].join(';');
+
+  const ICON_BTN_SELECTED = `${ICON_BTN_BASE};outline:2px solid ${COLOR_ACCENT_LIGHT}`;
+
+  const iconButtons = iconMarkers.map((m) => {
+    const isSelected = m.tag === currentMarker || m.name === currentMarker;
+    const btnStyle = isSelected ? ICON_BTN_SELECTED : ICON_BTN_BASE;
+    const cmd = `${COMMAND} --config marker ${canonical}=${m.name}`;
+    return (
+      `<a href="${escapeHtml(cmd)}" style="${btnStyle}" title="${escapeHtml(m.name)}">` +
+      `<img src="${escapeHtml(m.url)}" width="28" height="28" /></a>`
+    );
+  });
+
+  const currentLabel = currentMarker
+    ? t('ui.msg.markerPickerCurrent', locale, { marker: currentMarker })
+    : t('ui.msg.markerPickerNone', locale);
+
+  const clearCmd = `${COMMAND} --config marker-clear ${canonical}`;
+
+  whisper(playerId, t('ui.title.markerPicker', locale, { condition: canonical }), [
+    currentLabel,
+    buildButton(t('ui.btn.clearMarker', locale), clearCmd),
+    rawHtml(`<div style="margin-top:4px;line-height:0;">${iconButtons.join('')}</div>`),
+  ]);
+}
+
+/**
+ * Clears the marker mapping for a condition.
+ *
+ * @param {string} playerId GM player id.
+ * @param {string} condition Raw condition name from the command.
+ * @returns {void}
+ */
+export function clearMarkerConfig(playerId, condition) {
+  const locale = getConfig().language;
+  const canonical = getCanonicalCondition(condition);
+  if (!canonical || isCustomEffectType(canonical)) {
+    whisperWarning(playerId, t('ui.msg.markerPredefinedRequired', locale));
+    return;
+  }
+
+  applyConfigUpdate(
+    playerId,
+    (config) => {
+      delete config.markers[canonical];
+    },
+    t('ui.msg.markerCleared', locale, { condition: canonical })
   );
 }
 

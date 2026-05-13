@@ -172,6 +172,28 @@ export function getMarkerBase(marker) {
 }
 
 /**
+ * Returns all token markers available in the campaign.
+ *
+ * Each entry has at minimum: name, tag, url, set_id.
+ * Default markers have an empty set_id; marketplace markers have a numeric one.
+ *
+ * @returns {Array<{id: number, name: string, tag: string, url: string, set_id: string}>}
+ */
+export function getCampaignTokenMarkers() {
+  try {
+    const raw = toText(Campaign().get('token_markers'));
+    if (!raw) {
+      return [];
+    }
+    const markers = JSON.parse(raw);
+    return Array.isArray(markers) ? markers : [];
+  } catch (error) {
+    log(`getCampaignTokenMarkers error: ${error.message}`);
+    return [];
+  }
+}
+
+/**
  * Resolves a marker name to its full Roll20 tag.
  *
  * Roll20 custom (marketplace) markers must be referenced as "name::id" when
@@ -192,19 +214,6 @@ export function resolveMarkerTag(name) {
     return text;
   }
 
-  try {
-    const raw = toText(Campaign().get('token_markers'));
-    if (!raw) {
-      return text;
-    }
-    const markers = JSON.parse(raw);
-    if (!Array.isArray(markers)) {
-      return text;
-    }
-    const found = markers.find((m) => m.name === text);
-    return found ? toText(found.tag) || text : text;
-  } catch (error) {
-    log(`resolveMarkerTag error: ${error.message}`);
-    return text;
-  }
+  const found = getCampaignTokenMarkers().find((m) => m.name === text);
+  return found ? toText(found.tag) || text : text;
 }
