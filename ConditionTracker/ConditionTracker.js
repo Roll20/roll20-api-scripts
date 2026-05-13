@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.1.0.beta-3.5
- * Built: 2026-05-10T18:42:48.368Z
+ * Version: 1.1.0.beta-3.6
+ * Built: 2026-05-13T21:32:15.751Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -255,8 +255,8 @@ const ConditionTrackerMod = (() => {
   const SUPPORTED_LOCALE_LIST = SUPPORTED_LOCALES.map((code) => LOCALE_LABELS[code]).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.1.0.beta-3.5';
-  const SCRIPT_LAST_UPDATED = '2026-05-10T18:42:48.368Z';
+  const SCRIPT_VERSION = '1.1.0.beta-3.6';
+  const SCRIPT_LAST_UPDATED = '2026-05-13T21:32:15.751Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -29242,13 +29242,52 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Returns the marker name without a numeric badge suffix.
+   * Returns the marker name without a numeric badge suffix or a custom-marker
+   * set id (the "::id" suffix Roll20 appends to marketplace marker tags).
    *
    * @param {string} marker Marker text.
    * @returns {string} Marker base.
    */
   function getMarkerBase(marker) {
-    return toText(marker).split('@')[0];
+    return toText(marker).split('@')[0].split('::')[0];
+  }
+
+  /**
+   * Resolves a marker name to its full Roll20 tag.
+   *
+   * Roll20 custom (marketplace) markers must be referenced as "name::id" when
+   * setting statusmarkers on a token. Default markers use just the name. This
+   * function looks up the correct tag via Campaign().get('token_markers') so
+   * the caller never has to worry about the difference.
+   *
+   * If the name already contains "::" it is returned unchanged. If no match is
+   * found in the campaign data the original name is returned as a fallback.
+   *
+   * @param {string} name Marker name as the user provided it.
+   * @returns {string} Full marker tag (e.g. "005-Unconscious::12345"), or the
+   *   original name when no campaign match is found.
+   */
+  function resolveMarkerTag(name) {
+    const text = toText(name);
+    if (!text || text.includes('::')) {
+      return text;
+    }
+
+    try {
+      const raw = toText(Campaign().get('token_markers'));
+      if (!raw) {
+        return text;
+      }
+      const markers = JSON.parse(raw);
+      if (!Array.isArray(markers)) {
+        return text;
+      }
+      const found = markers.find((m) => m.name === text);
+      return found ? toText(found.tag) || text : text;
+    } catch (error) {
+      log(`resolveMarkerTag error: ${error.message}`);
+      return text;
+    }
   }
 
   const WHISPER_PREFIX = /^\/w\s+(?:"[^"]+"|'[^']+'|\S+)\s*$/i;
@@ -34234,14 +34273,16 @@ const ConditionTrackerMod = (() => {
       return;
     }
 
+    const resolvedMarker = resolveMarkerTag(result.marker);
+
     applyConfigUpdate(
       playerId,
       (config) => {
-        config.markers[result.condition] = result.marker;
+        config.markers[result.condition] = resolvedMarker;
       },
       t('ui.msg.markerSet', locale, {
         condition: result.condition,
-        marker: result.marker,
+        marker: resolvedMarker,
       })
     );
   }

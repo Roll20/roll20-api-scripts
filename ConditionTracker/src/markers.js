@@ -161,11 +161,50 @@ export function removeMarkerFromList(markers, marker) {
 }
 
 /**
- * Returns the marker name without a numeric badge suffix.
+ * Returns the marker name without a numeric badge suffix or a custom-marker
+ * set id (the "::id" suffix Roll20 appends to marketplace marker tags).
  *
  * @param {string} marker Marker text.
  * @returns {string} Marker base.
  */
 export function getMarkerBase(marker) {
-  return toText(marker).split('@')[0];
+  return toText(marker).split('@')[0].split('::')[0];
+}
+
+/**
+ * Resolves a marker name to its full Roll20 tag.
+ *
+ * Roll20 custom (marketplace) markers must be referenced as "name::id" when
+ * setting statusmarkers on a token. Default markers use just the name. This
+ * function looks up the correct tag via Campaign().get('token_markers') so
+ * the caller never has to worry about the difference.
+ *
+ * If the name already contains "::" it is returned unchanged. If no match is
+ * found in the campaign data the original name is returned as a fallback.
+ *
+ * @param {string} name Marker name as the user provided it.
+ * @returns {string} Full marker tag (e.g. "005-Unconscious::12345"), or the
+ *   original name when no campaign match is found.
+ */
+export function resolveMarkerTag(name) {
+  const text = toText(name);
+  if (!text || text.includes('::')) {
+    return text;
+  }
+
+  try {
+    const raw = toText(Campaign().get('token_markers'));
+    if (!raw) {
+      return text;
+    }
+    const markers = JSON.parse(raw);
+    if (!Array.isArray(markers)) {
+      return text;
+    }
+    const found = markers.find((m) => m.name === text);
+    return found ? toText(found.tag) || text : text;
+  } catch (error) {
+    log(`resolveMarkerTag error: ${error.message}`);
+    return text;
+  }
 }

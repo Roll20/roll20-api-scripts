@@ -49,7 +49,7 @@ import {
   SCRIPT_VERSION,
 } from './constants.js';
 import { parseDuration } from './durations.js';
-import { applyMarker } from './markers.js';
+import { applyMarker, resolveMarkerTag } from './markers.js';
 import { extractConditionTrackerCommand, parseCommand } from './parser.js';
 import { removeConditionById } from './removal.js';
 import {
@@ -1775,14 +1775,16 @@ export function updateMarkerConfig(playerId, value) {
     return;
   }
 
+  const resolvedMarker = resolveMarkerTag(result.marker);
+
   applyConfigUpdate(
     playerId,
     (config) => {
-      config.markers[result.condition] = result.marker;
+      config.markers[result.condition] = resolvedMarker;
     },
     t('ui.msg.markerSet', locale, {
       condition: result.condition,
-      marker: result.marker,
+      marker: resolvedMarker,
     })
   );
 }
