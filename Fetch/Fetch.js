@@ -1,10 +1,10 @@
 /*
 =========================================================
-Name			:	Fetch
-GitHub			:	https://github.com/TimRohr22/Cauldron/tree/master/Fetch
-Roll20 Contact  :	timmaugh
-Version			:   2.1.2
-Last Update		:	6 OCT 2025
+Name            :   Fetch
+GitHub          :   https://github.com/TimRohr22/Cauldron/tree/master/Fetch
+Roll20 Contact  :   timmaugh
+Version         :   2.2.0
+Last Update	    :   12 MAY 2026
 =========================================================
 */
 var API_Meta = API_Meta || {};
@@ -13,12 +13,12 @@ API_Meta.Fetch = { offset: Number.MAX_SAFE_INTEGER, lineCount: -1 };
 
 const Fetch = (() => { //eslint-disable-line no-unused-vars
     const apiproject = 'Fetch';
-    const version = '2.1.2';
+    const version = '2.2.0';
     const apilogo = 'https://i.imgur.com/jeIkjvS.png';
     const apilogoalt = 'https://i.imgur.com/boYO3cf.png';
     const schemaVersion = 0.2;
     API_Meta[apiproject].version = version;
-    const vd = new Date(1759763868181);
+    const vd = new Date(1770641544905);
     const versionInfo = () => {
         log(`\u0166\u0166 ${apiproject} v${API_Meta[apiproject].version}, ${vd.getFullYear()}/${vd.getMonth() + 1}/${vd.getDate()} \u0166\u0166 -- offset ${API_Meta[apiproject].offset}`);
         if (!state.hasOwnProperty(apiproject) || state[apiproject].version !== schemaVersion) { //eslint-disable-line no-prototype-builtins
@@ -139,6 +139,15 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }, ret);
         return ret;
     };
+    const simpleObj = (o) => {
+        if (typeof o === 'undefined') { return o; }
+        let obj = JSON.parse(JSON.stringify(o));
+        if (!Object.keys(obj).length) { return obj; }
+        return Object.keys(obj).reduce((m, k) => {
+            if (/^_/.test(k) && !m.hasOwnProperty(k.slice(1))) { m[k.slice(1)] = m[k]; }
+            return m;
+        }, obj);
+    };
 
     // ==================================================
     //		PRESENTATION
@@ -157,7 +166,8 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             'background-color': theme.primaryColor,
             'color': 'white',
             'font-size': '1.2em',
-            'padding-left': '4px'
+            'padding-left': '4px',
+            'font-weight': 'bold'
         },
         msgbody: {
             'color': theme.primaryTextColor,
@@ -190,6 +200,26 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         },
         inlineEmphasis: {
             'font-weight': 'bold'
+        },
+        tblOddRow: {
+            'background-color': '#d3d3d3'
+        },
+        button: {
+            'background-color': '#3c3c3c',
+            'color': '#ededed',
+            'border-radius': '5px',
+            'border-width': '0px',
+            'margin': '0px 2px',
+            'line-height': '12px',
+            'font-size': '12px',
+            'text-align': 'center',
+            'width': '54px',
+            'height': '12px',
+            'vertical-align': 'middle',
+            'text-decoration': 'none'
+        },
+        textright: {
+            'text-align': 'right'
         }
     }
     const msgbox = ({
@@ -208,38 +238,38 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
     };
 
     const getWhisperTo = (who) => who.toLowerCase() === 'api' ? 'gm' : who.replace(/\s\(gm\)$/i, '');
-    const handleConfig = msg => {
-        if (msg.type !== 'api' || !/^!fetchconfig/.test(msg.content)) return;
-        let recipient = getWhisperTo(msg.who);
-        if (!playerIsGM(msg.playerid)) {
-            msgbox({ title: 'GM Rights Required', msg: 'You must be a GM to perform that operation', whisperto: recipient });
-            return;
-        }
-        let cfgrx = /^(\+|-)(playerscanids)$/i;
-        let res;
-        let cfgTrack = {};
-        let message;
-        if (/^!fetchconfig\s+[^\s]/.test(msg.content)) {
-            msg.content.split(/\s+/).slice(1).forEach(a => {
-                res = cfgrx.exec(a);
-                if (!res) return;
-                if (res[2].toLowerCase() === 'playerscanids') {
-                    manageState.set('playerscanids', (res[1] === '+'));
-                    cfgTrack[res[2]] = res[1];
-                }
-            });
-            let changes = Object.keys(cfgTrack).map(k => `${html.span(k, localCSS.inlineEmphasis)}: ${cfgTrack[k] === '+' ? 'enabled' : 'disabled'}`).join('<br>');
-            msgbox({ title: `Fetch Config Changed`, msg: `You have made the following changes to the Fetch configuration:<br>${changes}`, whisperto: recipient });
-        } else {
-            cfgTrack.playerscanids = `${html.span('playerscanids', localCSS.inlineEmphasis)}: ${manageState.get('playerscanids') ? 'enabled' : 'disabled'}`;
-            message = `Fetch is currently configured as follows:<br>${cfgTrack.playerscanids}`;
-            msgbox({ title: 'Fetch Configuration', msg: message, whisperto: recipient });
-        }
-    };
 
     // ==================================================
     //		PROCESS
     // ==================================================
+    class StatusBlock {
+        constructor({ token: token = {}, msgId: msgId = generateUUID() } = {}) {
+            this.token = token;
+            this.msgId = msgId;
+            this.statuses = (decomposeStatuses(token.statusmarkers) || []).reduce((m, s) => {
+                m[s.name] = m[s.name] || [];
+                m[s.name].push(Object.assign({}, s, { is: 'yes' }));
+                let shortTag = s.tag.split(/::/)[0];
+                if (shortTag !== s.name) {
+                    m[shortTag] = m[shortTag] || [];
+                    m[shortTag].push(Object.assign({}, s, { is: 'yes' }));
+                }
+                return m;
+            }, {});
+        }
+    }
+    class nullObj {
+        constructor() {
+            this.get = function () { return undefined; }
+        }
+    }
+    class AggAttr {
+        constructor() {
+            this.get = function (r) { return this[r]; }
+        }
+    }
+
+    const tokenStatuses = {};
 
     const repeatingOrdinal = (character_id, section = '', attr_name = '') => {
         if (!section && !attr_name) return;
@@ -281,37 +311,35 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }
         return { tokens: tokens };
     };
+    const decomposeStatuses = (list = '') => {
+        return list.split(/\s*,\s*/g).filter(s => s.length)
+            .reduce((m, s) => {
+                let origst = libTokenMarkers.getStatus(s.slice(0, /(@\d+$|:)/.test(s) ? /(@\d+$|:)/.exec(s).index : s.length));
+                let st = _.clone(origst);
+                if (!st) return m;
+                st.type = 'marker';
+                st.num = /^.+@0*(\d+)/.test(s) ? /^.+@0*(\d+)/.exec(s)[1] : '';
+                st.html = origst.getHTML();
+                st.url = st.url || '';
+                m.push(st);
+                return m;
+            }, []);
+    };
+    const isMarker = prop => (getMarker({ query: /(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(prop)[1] }) || {}).hasOwnProperty('name');
+    const getFirstGM = () => simpleObj(findObjs({ type: 'player' }).filter(p => playerIsGM(p.id))[0]);
 
-    const getSheetItem = (res, pid, char) => {
-        // expects result of the getFirst() function, a rx result with a type property
-        // r.type === 'sheetitem'
+    // ===== DATA RETRIEVAL =============================
+    const getSheetItem = (searchObj, notes) => {
         const itemTypeLib = {
             '@': 'attribute',
             '*': 'attribute',
             '%': 'ability'
-        }
-        let c = char || getChar(res.groups.character, pid);
-        if (!c) return;
-        c.id = c.id || c._id;
-        // standard sheet items
-        if (['@', '%'].includes(res.groups.type)) {
-            return findObjs({ type: itemTypeLib[res.groups.type], characterid: c.id })
-                .filter(a => a.get('name') === res.groups.item)[0];
-        }
-        // if we're still here, we're looking for a repeating item
-        // test if they used a full form with an ID or a $0 form
-        if (res.groups.type === '*' && res.groups.reference && res.groups.reference.length) {
-            let rowid = /\$\d+/.test(res.groups.reference) ? repeatingOrdinal(c.id, res.groups.section)[/\$(\d+)/.exec(res.groups.reference)[1]] : res.groups.reference;
-            return rowid ? findObjs({ type: itemTypeLib[res.groups.type], characterid: c.id })
-                .filter(a => a.get('name') === `repeating_${res.groups.section}_${rowid}_${res.groups.valuesuffix}`)[0] : rowid;
-        }
-        // if we're still here, they used a pattern match
-        let p = parsePattern(res.groups.pattern);
-        if (!p.tokens.length) {
-            log(p.error || 'No pattern detected for repeating sheet item.');
-            return;
-        }
-
+        };
+        const internalTestLib = {
+            'int': (v) => +v === +v && parseInt(parseFloat(v, 10), 10) == v,
+            'num': (v) => +v === +v,
+            'tru': (v) => v == true
+        };
         let filterLib = {
             '=': (a) => a.contents[0] == a.contents[1], // eslint-disable-line eqeqeq
             '!=': (a) => a.contents[0] != a.contents[1],// eslint-disable-line eqeqeq
@@ -323,69 +351,234 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             '<=': (a) => (internalTestLib.num(a.contents[0]) ? Number(a.contents[0]) : a.contents[0]) <= (internalTestLib.num(a.contents[1]) ? Number(a.contents[1]) : a.contents[1])
         }
 
-        p.tests = [];
-        let reprx = new RegExp(`^repeating_${res.groups.section}_(?<repID>[^_]*?)_(?<suffix>.+)$`);
-        let repres;
-        let o = findObjs({ type: itemTypeLib[res.groups.type], characterid: c.id })
-            .filter(a => reprx.test(a.get('name')));
-        o.forEach(a => {
-            reprx.lastIndex = 0;
-            repres = reprx.exec(a.get('name'));
-            a.name = a.get('name');
-            a.repID = repres.groups.repID;
-            a.suffix = repres.groups.suffix;
-        });
+        let c = searchObj.source; // || getChar({ query: res.groups.character, msg: searchObj.msg });
+        // if (!c) return;
 
-        let viable = [];
-        p.tokens.forEach(s => {
-            viable = [];
-            o.forEach(a => {
-                if (a.suffix.toLowerCase() === s.contents[0].toLowerCase()) {
-                    if (filterLib[s.type]({ contents: [a.get(s.retrieve), s.contents[1]] })) viable.push(a.repID);
-                }
-            });
-            p.tests.push(viable);
-        });
-        // we should have the same number of tests as we do testable conditions
-        if (p.tests.length !== p.tokens.length) {
-            log(`EXITING: TEST COUNTS DON'T MATCH`);
-            return;
+        // standard sheet items
+        if (['@', '%'].includes(searchObj.symbol)) {
+            return findObjs({ type: itemTypeLib[searchObj.symbol], characterid: c.id })
+                .filter(a => a.get('name') === searchObj.item)[0];
         }
-        viable = p.tests.reduce((m, v) => m.filter(repID => v.includes(repID)));
-        if (viable.length) {
-            let retObj = findObjs({ type: itemTypeLib[res.groups.type], characterid: c.id })
-                .filter(a => a.get('name') === `repeating_${res.groups.section}_${viable[0]}_${res.groups.valuesuffix}`)[0];
-            return retObj;
+
+        // if we're still here, we're looking for a repeating item
+        if (searchObj.symbol === '*') {
+            let rowid;
+            let entries = repeatingOrdinal(c.id, searchObj.section);
+            let retrieve = 'current';
+
+            if (searchObj.pattern && searchObj.pattern.length) {
+                let p = parsePattern(searchObj.pattern);
+                if (!p.tokens.length) {
+                    notes.push(p.error || 'No pattern detected for repeating sheet item.');
+                    return;
+                }
+
+                p.tests = [];
+                let reprx = new RegExp(`^repeating_${searchObj.section}_(?<repID>[^_]*?)_(?<suffix>.+)$`);
+                let repres;
+                let o = findObjs({ type: itemTypeLib[searchObj.symbol], characterid: c.id })
+                    .filter(a => reprx.test(a.get('name')));
+                o.forEach(a => {
+                    reprx.lastIndex = 0;
+                    repres = reprx.exec(a.get('name'));
+                    a.name = a.get('name');
+                    a.repID = repres.groups.repID;
+                    a.suffix = repres.groups.suffix;
+                });
+
+                let viable = [];
+                p.tokens.forEach(s => {
+                    viable = [];
+                    o.forEach(a => {
+                        if (a.suffix.toLowerCase() === s.contents[0].toLowerCase()) {
+                            if (filterLib[s.type]({ contents: [a.get(s.retrieve), s.contents[1]] })) viable.push(a.repID);
+                        }
+                    });
+                    p.tests.push(viable);
+                });
+                // we should have the same number of tests as we do testable conditions
+                if (p.tests.length !== p.tokens.length) {
+                    notes.push(`EXITING: TEST COUNTS DON'T MATCH`);
+                    return;
+                }
+                viable = p.tests.reduce((m, v) => m.filter(repID => v.includes(repID)));
+                if (viable.length) {
+                    let retObj = findObjs({ type: itemTypeLib[searchObj.symbol], characterid: c.id })
+                        .filter(a => a.get('name') === `repeating_${searchObj.section}_${viable[0]}_${searchObj.valuesuffix}`)[0];
+                    return retObj;
+                }
+            } else if (searchObj.reference && searchObj.reference.length) {
+                if (/\$\d+/.test(searchObj.reference) ||
+                    /\$[nN]/.test(searchObj.reference) ||
+                    /1[dD][wW](?:[eE][iI][gG][hH][tT])?(?:\?(?<weightattr>.+?))?/.test(searchObj.reference)) {
+
+                    if (/\$\d+/.test(searchObj.reference)) {
+                        rowid = entries[/\$(\d+)/.exec(searchObj.reference)[1]];
+                    } else if (/\$[nN]/.test(searchObj.reference)) {
+                        rowid = entries[entries.length - 1];
+                    } else if (/1[dD][wW](?:[eE][iI][gG][hH][tT])?(?:\?(?<weightattr>.+))?/.test(searchObj.reference)) {
+                        let weightAttr = /1[dD][wW](?:[eE][iI][gG][hH][tT])?(?:\?(?<weightattr>.+))?/.exec(searchObj.reference).groups.weightattr;
+                        retrieve = 'current';
+                        if (weightAttr && /\?/i.test(weightAttr)) {
+                            let weightedParts = /([^\?]*)\?(.*)$/.exec(weightAttr);
+                            retrieve = weightedParts[2] && weightedParts[2].toLowerCase() === 'max' ? 'max' : 'current';
+                            weightAttr = weightedParts[1];
+                        }
+                        let weightrx = new RegExp(`^repeating_${escapeRegExp(searchObj.section || '')}_[^_]+_${escapeRegExp(weightAttr || '')}$`);
+                        if (weightAttr && !findObjs({ type: itemTypeLib[searchObj.symbol], characterid: c.id })
+                            .filter(a => weightrx.test(a.get('name'))).length) {
+                            notes.push(`Weight attribute provided doesn't exist on this repeating list.`);
+                        } else if (weightAttr) {
+                            entries = entries.map(e => {
+                                let objWeightAttr = (findObjs({ type: itemTypeLib[searchObj.symbol], characterid: c.id })
+                                    .filter(a => a.get('name') === `repeating_${searchObj.section}_${e}_${weightAttr}`)[0] ||
+                                    { get: () => '0' });
+
+                                return {
+                                    rowid: e,
+                                    weight: Math.max(0, parseInt(objWeightAttr.get(retrieve)) || 0)
+                                }
+                            }).reduce((m, v) => {
+                                m = [...m, ...new Array(v.weight).fill().map(e => v.rowid)];
+                                return m;
+                            }, []);
+                        }
+                        rowid = entries[randomInteger(entries.length) - 1];
+                    }
+                } else {
+                    rowid = searchObj.reference;
+                }
+                return rowid
+                    ? findObjs({ type: itemTypeLib[searchObj.symbol], characterid: c.id })
+                        .filter(a => a.get('name') === `repeating_${searchObj.section}_${rowid}_${searchObj.valuesuffix}`)[0]
+                    : rowid;
+            } else if (searchObj.aggregate && searchObj.aggregate.length) {
+                let aggParts = searchObj.aggregate.split('?');
+                let aggAttrs;
+                let aggrx;
+                let initialAttr;
+                let tgtName = '';
+                let delim = ',';
+                let data = '';
+
+                switch (aggParts[0].toLowerCase()) {
+                    case 'avg':
+                        aggrx = new RegExp(`^repeating_${searchObj.section}_(${entries.join('|')})_${searchObj.valuesuffix}$`);
+                        aggAttrs = findObjs({ type: 'attribute', characterid: c.id })
+                            .filter(a => aggrx.test(a.get('name')));
+
+                        return aggAttrs.reduce((m, a, i, attrs) => {
+                            m.current = (m.current || 0) + parseInt(a.get('current') || 0);
+                            m.max = (m.max || 0) + parseInt(a.get('max') || 0);
+                            if (i === attrs.length - 1) {
+                                m.current = parseInt((m.current / i) * 100) / 100;
+                                m.max = parseInt((m.max / i) * 100) / 100;
+                            }
+                            return m;
+                        }, new AggAttr());
+                    // break;
+                    case 'sum':
+                        aggrx = new RegExp(`^repeating_${searchObj.section}_(${entries.join('|')})_${searchObj.valuesuffix}$`);
+                        aggAttrs = findObjs({ type: 'attribute', characterid: c.id })
+                            .filter(a => aggrx.test(a.get('name')));
+
+                        return aggAttrs.reduce((m, a, i, attrs) => {
+                            m.current = (m.current || 0) + parseInt(a.get('current') || 0);
+                            m.max = (m.max || 0) + parseInt(a.get('max') || 0);
+                            return m;
+                        }, new AggAttr());
+                    // break;
+                    case 'min':
+                    case 'max':
+                        if (aggParts.length === 1) { return; } // no attr provided to aggregate on
+                        aggrx = new RegExp(`^repeating_${searchObj.section}_(${entries.join('|')})_${aggParts[1]}$`);
+                        aggAttrs = findObjs({ type: 'attribute', characterid: c.id })
+                            .filter(a => aggrx.test(a.get('name')));
+                        if (!aggAttrs.length) { return; }
+                        retrieve = aggParts.length === 3 && aggParts[2].toLowerCase() === 'max' ? 'max' : 'current';
+                        initialAttr = aggAttrs.reduce((m, a, i, attrs) => {
+                            return (
+                                (aggParts[0].toLowerCase() === 'min' && parseFloat(m.get(retrieve)) <= parseFloat(a.get(retrieve)))
+                                || (aggParts[0].toLowerCase() === 'max' && parseFloat(m.get(retrieve)) >= parseFloat(a.get(retrieve)))
+                            )
+                                ? m
+                                : a;
+                        });
+
+                        tgtName = initialAttr.get('name').replace(/^(repeating_[^_]+_[^_]+_).+$/i, (m, g1) => `${g1}${searchObj.valuesuffix}`);
+                        return findObjs({ type: 'attribute', characterid: c.id })
+                            .filter(a => a.get('name') === tgtName)[0];
+                    // break;
+                    case 'vals':
+                    case 'uniq':
+                    case 'ids':
+                        // *(char.list.vals?delim.subAttr.max)
+                        // *(char.list.uniq?delim.subAttr.max)
+                        // *(char.list.ids?delim.subAttr.max)
+                        if (aggParts.length > 1) {
+                            delim = aggParts[1];
+                        }
+                        aggrx = new RegExp(`^repeating_${searchObj.section}_(${entries.join('|')})_${searchObj.valuesuffix}$`);
+                        aggAttrs = findObjs({ type: 'attribute', characterid: c.id })
+                            .filter(a => aggrx.test(a.get('name')));
+                        initialAttr = new AggAttr();
+                        data = aggParts[0].toLowerCase() === 'ids'
+                            ? aggAttrs.map(a => a.id)
+                            : aggAttrs.map(a => `${a.get(searchObj.valtype || 'current')}`);
+
+                        if (aggParts[0].toLowerCase() === 'uniq') { data = [...new Set(data)]; }
+                        initialAttr.current = data.join(delim);
+                        return initialAttr;
+                    // break;
+                    case 'rowids':
+                        if (aggParts.length > 1) {
+                            delim = aggParts[1];
+                        }
+                        initialAttr = new AggAttr();
+                        initialAttr.current = entries.join(delim);
+                        return initialAttr;
+                    // break;
+                }
+            }
         }
     };
-    const getSheetItemVal = (res, pid, char) => {
-        // expects the result of a rx with groups
+    const getSheetItemVal = (searchObj, notes) => {
         let val = '',
             retrieve = '',
             o = {};
         // determine what to test; also what to retrieve if another value isn't specified
-        if (['@', '*'].includes(res.groups.type) && res.groups.valtype !== 'max') {
+        if (['@', '*'].includes(searchObj.symbol) && (searchObj.valtype || '').toLowerCase() !== 'max') {
             retrieve = 'current';
-        } else if (['@', '*'].includes(res.groups.type)) {
+        } else if (['@', '*'].includes(searchObj.symbol)) {
             retrieve = 'max';
         } else {
             retrieve = 'action';
         }
         // determine if a different retrievable info is requested
-        if (res.groups.type === '*' && res.groups.valtype === 'name$') {
-            retrieve = 'name$';
-        } else if (res.groups.type === '*' && res.groups.valtype === 'row$') {
-            retrieve = 'row$';
-        } else if (res.groups.valtype === 'rowid') {
-            retrieve = 'rowid';
-        } else if (res.groups.valtype === 'name') {
-            retrieve = 'name';
-        } else if (res.groups.valtype === 'id') {
-            retrieve = 'id';
+        if (searchObj.symbol === '*') {
+            switch ((searchObj.valtype || '').toLowerCase()) {
+                case 'name$':
+                    retrieve = 'name$';
+                    break;
+                case 'row$':
+                    retrieve = 'row$';
+                    break;
+                case 'rowid':
+                    retrieve = 'rowid';
+                    break;
+                case 'name':
+                    retrieve = 'name';
+                    break;
+                case 'id':
+                    retrieve = 'id';
+                    break;
+                default:
+            }
         }
         // go get the item
-        o = getSheetItem(res, pid, char);
+        o = getSheetItem(searchObj, notes);
         if (!o) {
+            notes.push(`No sheet object found.`);
             return;
         } else {
             if (['name', 'action', 'current', 'max', 'id'].includes(retrieve)) {
@@ -412,26 +605,6 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }
         return val;
     };
-
-    const getChar = (query, pid) => { // find a character where query is an identifying piece of information (id, name, or token id)
-        let character;
-        if (typeof query !== 'string') return character;
-        let qrx = new RegExp(escapeRegExp(query), 'i');
-        let charsIControl = findObjs({ type: 'character' });
-        charsIControl = playerIsGM(pid) || manageState.get('playerscanids') ? charsIControl : charsIControl.filter(c => {
-            return c.get('controlledby').split(',').reduce((m, p) => {
-                return m || p === 'all' || p === pid;
-            }, false)
-        });
-        character = charsIControl.filter(c => c.id === query)[0] ||
-            charsIControl.filter(c => c.id === (getObj('graphic', query) || { get: () => { return '' } }).get('represents'))[0] ||
-            charsIControl.filter(c => c.get('name') === query)[0] ||
-            charsIControl.filter(c => {
-                qrx.lastIndex = 0;
-                return qrx.test(c.get('name'));
-            })[0];
-        return character;
-    };
     const getPageForPlayer = (playerid) => {
         let player = getObj('player', playerid);
         if (playerIsGM(playerid)) {
@@ -450,41 +623,105 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             m[p.id] = getPageForPlayer(p.id)
             return m;
         }, {});
-    const getCampaign = () => {
-        let c = simpleObj(Campaign());
-        let p = getPagesForAllPlayers();
-
-        c.sheetname = Campaign().sheetName;
-        c.nodeversion = Campaign().nodeVersion;
-
-        c.currentpages = Object.keys(p).map(k => `${k}:${p[k]}`).join(',');
-        c.currentpagesname = Object.keys(p).map(k => `${getObjName(k,'player')}:${getObjName(p[k],'page')}`).join(',');
-        return c;
+    const getPageIDForPlayer = (pid) => {
+        return (pid && playerIsGM(pid))
+            ? (getObj('player', pid).get('_lastpage') || Campaign().get('playerpageid'))
+            : Campaign().get('playerpageid');
     };
-    const getPlayer = (query) => {
-        let player = findObjs({ type: 'player', id: query })[0] ||
-            findObjs({ type: 'player' }).filter(p => { return [query.toLowerCase(), query.replace(/\s\(gm\)$/i, '').toLowerCase()].includes(p.get('_displayname').toLowerCase()); })[0];
-
-        if (player && player.id) {
-            player = simpleObj(player);
-            player.currentpage = getPageForPlayer(player._id);
+    const getTrackerVal = (token) => {
+        let retval = {};
+        let to = JSON.parse(Campaign().get('turnorder') || '[]');
+        let mto = to.map(t => t.id);
+        if (mto.includes(token.id)) {
+            retval.tracker = to.filter(t => t.id === token.id)[0].pr;
+            retval.tracker_offset = mto.indexOf(token.id);
         }
-        return player;
+        return retval;
     };
-    const getPage = (query) => {
-        return findObjs({ type: 'page', id: query })[0] ||
-            findObjs({ type: 'page' }).filter(p => { return p.get('name') === query; })[0];
+    const getObjName = (key, type) => {
+        let o;
+        switch (type) {
+            case 'playerlist':
+                o = key.split(/\s*,\s*/)
+                    .map(k => k === 'all' ? k : getObj('player', k))
+                    .filter(c => c)
+                    .map(c => c === 'all' ? c : c.get('displayname'))
+                    .join(', ');
+                return o.length ? o : undefined;
+            case 'player':
+                o = getObjOrNull(type, key);
+                return o ? o.displayname : undefined;
+            case 'deck':
+                o = getObjOrNull(type, getObjOrNull('card', key).id);
+                return o ? o.name : undefined;
+            case 'unknown':
+                o = getObjOrNull(type, key);
+                return getObjName(o.id, o.type);
+            case 'attribute':
+            case 'card':
+            case 'character':
+            case 'handout':
+            case 'page':
+            default:
+                o = getObjOrNull(type, key);
+                return o ? o.name : undefined;
+        }
     };
-    const getHandout = (query, pid) => {
+    const getControlledByList = (o) => {
+        if (!o.represents || !o.represents.length) return o.controlledby;
+        let c = getObj('character', o.represents);
+        if (c) return c.get('controlledby');
+    };
+
+    // ===== OBJECT RETRIEVAL ===========================
+    const getCard = ({ query: query = '' } = {}) => {
+        let card = findObjs({ type: 'card', id: query })[0] ||
+            findObjs({ type: 'card', name: query })[0] ||
+            findObjs({ id: (findObjs({ type: 'graphic', subtype: 'card', id: query })[0] || { get: () => '' }).get('cardid') })[0];
+        return simpleObj(card);
+    };
+    const getChar = ({ query: query = '', msg: msg } = {}) => {
+        let character;
+        if (typeof query !== 'string') return character;
+        let qrx = new RegExp(escapeRegExp(query), 'i');
+        let charsIControl = findObjs({ type: 'character' });
+        charsIControl = playerIsGM(msg.playerid) || manageState.get('playerscanids') ? charsIControl : charsIControl.filter(c => {
+            return c.get('controlledby').split(',').reduce((m, p) => {
+                return m || p === 'all' || p === msg.playerid;
+            }, false)
+        });
+        character = charsIControl.filter(c => c.id === query)[0] ||
+            charsIControl.filter(c => c.id === (getObj('graphic', query) || { get: () => { return '' } }).get('represents'))[0] ||
+            charsIControl.filter(c => c.get('name') === query)[0] ||
+            charsIControl.filter(c => {
+                qrx.lastIndex = 0;
+                return qrx.test(c.get('name'));
+            })[0];
+        return simpleObj(character);
+    };
+    const getCustFx = ({ query: query = '' } = {}) => {
+        let cfx = findObjs({ type: 'custfx', id: query })[0] ||
+            findObjs({ type: 'custfx' }).filter(p => { return p.get('name') === query; })[0];
+
+        if (!cfx) { return; }
+        return { ...simpleObj(cfx), ...cfx.get('definition') };
+
+    };
+    const getDeck = ({ query: query = '' } = {}) => {
+        let deck = findObjs({ type: 'deck', id: query })[0] ||
+            findObjs({ type: 'deck' }).filter(p => { return p.get('name') === query; })[0];
+        return simpleObj(deck);
+    };
+    const getHandout = ({ query: query = '', msg: msg } = {}) => {
         let handout;
         if (typeof query !== 'string') return handout;
         let qrx = new RegExp(escapeRegExp(query), 'i');
 
         let handoutsIControl = findObjs({ type: 'handout' });
 
-        handoutsIControl = playerIsGM(pid) || manageState.get('playerscanids') ? handoutsIControl : handoutsIControl.filter(ho => {
+        handoutsIControl = playerIsGM(msg.playerid) || manageState.get('playerscanids') ? handoutsIControl : handoutsIControl.filter(ho => {
             return [...ho.get('inplayerjournals').split(','), ...ho.get('controlledby').split(',')].reduce((m, p) => {
-                return m || p === 'all' || p === pid;
+                return m || p === 'all' || p === msg.playerid;
             }, false)
         });
         handout = handoutsIControl.filter(ho => ho.id === query)[0] ||
@@ -493,62 +730,57 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 qrx.lastIndex = 0;
                 return qrx.test(ho.get('name'));
             })[0];
-        return handout;
+        return simpleObj(handout);
     };
-    const getTag = (oid, otype, query, pid) => {
-        let obj = getObjOrNull(otype, oid);
-        if (!obj.id) {
-            if (otype === 'character') {
-                obj = getChar(oid, pid);
-            } else if (otype === 'handout') {
-                obj = getHandout(oid, pid);
-            }
-        }
-        let tags = JSON.parse(obj.get('tags') || JSON.stringify([]));
-        if (!tags.length || !tags.map(t=>t.toLowerCase()).includes(query.toLowerCase())) {
-            return { is: 'no', count: 0 };
-        } else {
-            return { is: 'yes', count: tags.filter(t => t === query).length };
-        }
-    };
+    const getMacro = ({ query: query = '' } = {}) => {
+        let macro = findObjs({ type: 'macro', id: query })[0] ||
+            findObjs({ type: 'macro' })
+                .filter(p => { return query === p.get('name'); })[0];
 
-    const decomposeStatuses = (list = '') => {
-        return list.split(/\s*,\s*/g).filter(s => s.length)
-            .reduce((m, s) => {
-                let origst = libTokenMarkers.getStatus(s.slice(0, /(@\d+$|:)/.test(s) ? /(@\d+$|:)/.exec(s).index : s.length));
-                let st = _.clone(origst);
-                if (!st) return m;
-                st.num = /^.+@0*(\d+)/.test(s) ? /^.+@0*(\d+)/.exec(s)[1] : '';
-                st.html = origst.getHTML();
-                st.url = st.url || '';
-                m.push(st);
-                return m;
-            }, []);
-    };
-    class StatusBlock {
-        constructor({ token: token = {}, msgId: msgId = generateUUID() } = {}) {
-            this.token = token;
-            this.msgId = msgId;
-            this.statuses = (decomposeStatuses(token.statusmarkers) || []).reduce((m, s) => {
-                m[s.name] = m[s.name] || [];
-                m[s.name].push(Object.assign({}, s, { is: 'yes' }));
-                let shortTag = s.tag.split(/::/)[0];
-                if (shortTag !== s.name) {
-                    m[shortTag] = m[shortTag] || [];
-                    m[shortTag].push(Object.assign({}, s, { is: 'yes' }));
-                }
-                return m;
-            }, {});
+        if (macro && macro.id) {
+            macro = simpleObj(macro);
         }
+        return macro;
     }
+    const getMarker = ({ query: query = '' } = {}) => {
+        if (libTokenMarkers.getStatus(query).getTag().length) return decomposeStatuses(query)[0];
+    };
+    const getPage = ({ query: query = '' } = {}) => {
+        if (query.toLowerCase() === 'ribbon') {
+            return simpleObj(findObjs({ type: 'page', id: Campaign().get('playerspecificpages') })[0]);
+        }
+        return simpleObj(findObjs({ type: 'page', id: query })[0] ||
+            findObjs({ type: 'page' }).filter(p => { return p.get('name') === query; })[0]);
+    };
+    const getPin = ({ query: query = '', msg: msg } = {}) => {
+        if (typeof query !== 'string') return;
+        let pinsICanSee = playerIsGM(msg.playerid) || manageState.get('playerscanids')
+            ? findObjs({ type: 'pin' })
+            : findObjs({ type: 'pin' }).filter(p => p.get('visibleTo') === 'all');
+        return simpleObj(pinsICanSee.filter(p => p.id === query)[0] ||
+            pinsICanSee.filter(p => p.get('title').length
+                ? p.get('title')
+                : p.get('subLink').length
+                    ? p.get('subLink')
+                    : getObjName(p.get('link'), p.get('linkType')) || getObjName(p.get('link'), 'unknown') === query
+            )[0]);
 
-    const tokenStatuses = {};
-    const getStatus = (t, pgid, query, msgId) => {
+    };
+    const getPlayer = ({ query: query = '' } = {}) => {
+        let player = findObjs({ type: 'player', id: query })[0] ||
+            findObjs({ type: 'player' })
+                .filter(p => { return [query.toLowerCase(), query.replace(/\s\(gm\)$/i, '').toLowerCase()].includes(p.get('_displayname').toLowerCase()); })[0];
+
+        if (player && player.id) {
+            player = simpleObj(player);
+        }
+        return player;
+    };
+    const getStatus = ({ source: source = '', query: query = '', msg: msg = {}, msgId: msgId = generateUUID() } = {}) => {
         let token, rxret, status, index, modindex, statusblock;
-        token = getToken(t, pgid);
+        token = typeof source === 'string' ? getGraphic({ query: source, msg: msg/*, pageid: getPageForPlayer(msg.playerid) */ }) : source;
         if (!token) return;
         token = simpleObj(token);
-        if (token && !token.hasOwnProperty('id')) token.id = token._id; 
         if (!tokenStatuses.hasOwnProperty(token.id) || tokenStatuses[token.id].msgId !== msgId) {
             tokenStatuses[token.id] = new StatusBlock({ token: token, msgId: msgId });
         }
@@ -562,8 +794,9 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             modindex = Number(index);
         }
         statusblock = tokenStatuses[token.id].statuses[status];
+        let retval = { type: 'status', is: 'no', count: '0' };
         if (!statusblock || !statusblock.length) {
-            return { is: 'no', count: '0' };
+            return retval;
         };
         switch (index) {
             case 'all':
@@ -575,7 +808,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                     m.is = 'yes';
                     m.count = m.count || statusblock.length;
                     return m;
-                }, {});
+                }, retval);
             case 'all+':
                 return statusblock.reduce((m, sm) => {
                     m.num = `${Number(m.num || 0) + Number(sm.num)}`;
@@ -585,46 +818,23 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                     m.is = 'yes';
                     m.count = m.count || statusblock.length;
                     return m;
-                }, {});
+                }, retval);
             default:
                 if (statusblock.length >= modindex) {
-                    return Object.assign({}, statusblock[modindex - 1], { count: index ? '1' : statusblock.length });
+                    return Object.assign(retval, statusblock[modindex - 1], { count: index ? '1' : statusblock.length, type: 'status' });
                 } else {
-                    return { is: 'no', 'count': '0' };
+                    return retval;
                 }
         }
     };
-    const getMarker = (query) => {
-        if (libTokenMarkers.getStatus(query).getTag().length) return decomposeStatuses(query)[0];
-    };
-
-    const getPageID = (pid) => {
-        return (pid && playerIsGM(pid)) ? (getObj('player', pid).get('_lastpage') || Campaign().get('playerpageid')) : Campaign().get('playerpageid');
-    };
-    const getTrackerVal = (token) => {
-        let retval = {};
-        let to = JSON.parse(Campaign().get('turnorder') || '[]');
-        let mto = to.map(t => t.id);
-        if (mto.includes(token.id)) {
-            retval.tracker = to.filter(t => t.id === token.id)[0].pr;
-            retval.tracker_offset = mto.indexOf(token.id);
-        }
-        return retval;
-    };
-    const getCard = (info) => {
-        let card = findObjs({ type: 'card', id: info })[0] ||
-            findObjs({ type: 'card', name: info })[0] ||
-            findObjs({ id: (findObjs({ type: 'graphic', subtype: 'card', id: info })[0] || { get: () => '' }).get('cardid') })[0];
-        return card;
-    };
-    const getTable = (query, pid) => {
+    const getRollableTable = ({ query: query = '', msg: msg } = {}) => {
         let table;
         if (typeof query !== 'string') return table;
         let qrx = new RegExp(escapeRegExp(query), 'i');
 
         let tablesIControl = findObjs({ type: 'rollabletable' });
 
-        tablesIControl = playerIsGM(pid) || manageState.get('playerscanids') ? tablesIControl : tablesIControl.filter(tbl => tbl.get('showplayers'));
+        tablesIControl = playerIsGM(msg.playerid) || manageState.get('playerscanids') ? tablesIControl : tablesIControl.filter(tbl => tbl.get('showplayers'));
         table = tablesIControl.filter(tbl => tbl.id === query)[0] ||
             tablesIControl.filter(tbl => tbl.get('name') === query)[0] ||
             tablesIControl.filter(tbl => {
@@ -633,27 +843,35 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             })[0];
         if (table && table.id) {
             table = simpleObj(table);
-            let items = findObjs({ type: 'tableitem', rollabletableid: table.id });
-            table.totalweight = items.reduce((m, v) => m += v.get('weight'), 0);
         }
-        return table;
+        return simpleObj(table);
     };
-    const getTableItems = (query, tbl, pid) => {
+    const getTableItems = ({ query: query = '', tbl: tbl = '', msg: msg } = {}) => {
+        let item = getObjOrNull('tableitem', query);
         let table;
-        if (typeof tbl === 'string') {
-            table = getTable(tbl, pid);
+        if (tbl) {
+            table = typeof tbl === 'string'
+                ? getRollableTable({ query: tbl, msg: msg })
+                : tbl;
         } else {
-            table = tbl;
+            if (item) {
+                table = getRollableTable({ query: item.rollabletableid, msg: msg });
+            }
         }
-        if (table && table.id) {
-            let allitems = findObjs({ type: 'tableitem', rollabletableid: table.id });
-            let item = allitems.filter(ti => ti.id === query)[0] ||
-                allitems.filter(ti => ti.get('name') === query)[0];
+        if (item && item.id) {
+            if (item.rollabletableid === table.id) {
+                return item;
+            }
+        } else if (table && table.id) {
+            let allitems = findObjs({ type: 'tableitem', rollabletableid: table.id })
+                .map(item => simpleObj(item));
+            item = allitems.filter(ti => ti.id === query)[0] ||
+                allitems.filter(ti => ti.name === query)[0];
 
             if (item && item.id) { return item; }
 
             let weightedItems = allitems.reduce((m, v) => {
-                m = [...m, ...new Array(v.get('weight')).fill().map(e => v)];
+                m = [...m, ...new Array(v.weight).fill().map(e => v)];
                 return m;
             }, []);
             let index;
@@ -668,23 +886,42 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 } else if (index > weightedItems.length) {
                     index = weightedItems.length;
                 }
-                return weightedItems[index-1];
+                return weightedItems[index - 1];
             }
         }
 
     };
-    const getToken = (info, pgid = '') => {
+    const getTag = ({ oid: oid = '', otype: otype = '', query: query = '', pid: pid = '' } = {}) => {
+        let obj = getObjOrNull(otype, oid);
+        if (!obj.id) {
+            if (otype === 'character') {
+                obj = getChar({ query: oid, msg: { playerid: pid } });
+            } else if (otype === 'handout') {
+                obj = getHandout({ query: oid, msg: { playerid: pid } });
+            }
+        }
+        let tags = JSON.parse(obj.tags || JSON.stringify([]));
+        if (!tags.length || !tags.map(t => t.toLowerCase()).includes(query.toLowerCase())) {
+            return { type: 'tag', is: 'no', count: 0 };
+        } else {
+            return { type: 'tag', is: 'yes', count: tags.filter(t => t === query).length };
+        }
+    };
+    const getGraphic = ({ query: query = '', msg: msg, pageid: pgid = '' } = {}) => {
         let lightvals = {
             base: {},
             assign: {}
         };
-        let token = findObjs({ type: 'graphic', subtype: 'token', id: info })[0] ||
-            findObjs({ type: 'graphic', subtype: 'card', id: info })[0] ||
-            findObjs({ type: 'graphic', subtype: 'token', name: info, pageid: pgid })[0] ||
+        if (!pgid.length && msg) {
+            pgid = getPageForPlayer(msg.playerid);
+        }
+        let token = findObjs({ type: 'graphic', subtype: 'token', id: query })[0] ||
+            findObjs({ type: 'graphic', subtype: 'card', id: query })[0] ||
+            findObjs({ type: 'graphic', subtype: 'token', name: query, pageid: pgid })[0] ||
             findObjs({ type: 'graphic', subtype: 'token', pageid: pgid })
-                .filter(t => t.get('represents').length && findObjs({ type: 'character', id: t.get('represents') })[0].get('name') === info)[0];
+                .filter(t => t.get('represents').length && findObjs({ type: 'character', id: t.get('represents') })[0].get('name') === query)[0];
         if (!token) {
-            let tokensOfName = findObjs({ type: 'graphic', subtype: 'token', name: info });
+            let tokensOfName = findObjs({ type: 'graphic', subtype: 'token', name: query });
             if (tokensOfName.length === 1) {
                 token = tokensOfName[0];
             }
@@ -695,549 +932,529 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
                 lightvals.assign.checklight_isbright = lightvals.base.bright ? 'true' : 'false';
                 lightvals.assign.checklight_total = lightvals.base.total
             }
-            token = Object.assign(simpleObj(token), getTrackerVal(token),lightvals.assign);
+            token = Object.assign(
+                simpleObj(token),
+                getTrackerVal(token),
+                lightvals.assign,
+                {
+                    centerx: Math.round(token.get('left') + (token.get('width') / 2)),
+                    centery: Math.round(token.get('top') + (token.get('height') / 2))
+                }
+            );
         }
-        return token;
+        return simpleObj(token);
     };
-    class nullObj {
-        constructor() {
-            this.get = function () { return undefined; }
+    const getObjOrNull = (type, id) => {
+        return simpleObj(getObj(type, id) || new nullObj());
+    };
+    const getFirstOrNull = (type) => {
+        return simpleObj(findObjs({ type: type })[0] || new nullObj());
+    };
+
+    const getFetchObject = (options = {}) => {
+        let lib = {
+            campaign: () => simpleObj(Campaign()),
+            card: () => getCard(options),
+            character: () => getChar(options),
+            custfx: () => getCustFx(options),
+            deck: () => getDeck(options),
+            // door
+            handout: () => getHandout(options),
+            graphic: () => getGraphic(options),
+            macro: () => getMacro(options),
+            marker: () => getMarker(options),
+            page: () => getPage(options),
+            // path
+            // pathv2
+            pin: () => getPin(options),
+            player: () => getPlayer(options),
+            rollabletable: () => getRollableTable(options),
+            //status: () => getStatus(options),
+            tableitem: () => getTableItems(options),
+            //tag: () => getTag(options),
+            //text
+            //window
+            default: () => simpleObj(findObjs({ id: options.query })[0])
+        };
+        return (lib[options.type] || lib.default)();
+    };
+
+    const getFirstObjectOfType = (type = '') => {
+        let o = getFirstOrNull(type);
+        let lib = {
+            campaign: () => Campaign(),
+            // card
+            character: () => getChar({ query: o.id, msg: { playerid: getFirstGM().id } }),
+            custfx: () => getCustFx({ query: o.id }),
+            // deck
+            // door
+            handout: () => getHandout({ query: o.id, msg: { playerid: getFirstGM().id } }),
+            graphic: () => getGraphic({ query: o.id, pageid: o.pageid }),
+            // macro
+            marker: () => getMarker({ query: JSON.parse(Campaign().get('token_markers'))[0].tag }),
+            page: () => getPage({ query: o.id }),
+            // path
+            // pathv2
+            pin: () => getPin({ query: o.id, msg: { playerid: getFirstGM().id } }),
+            // player
+            rollabletable: () => getRollableTable({ query: o.id, msg: { playerid: getFirstGM().id } }),
+            status: () => {
+                let source = findObjs({ type: 'graphic' }).filter(g => g.get('statusmarkers').length)[0];
+                if (!source || !source.id) { return; }
+                let query = source.get('statusmarkers').split(/\s*,\s*/)[0].split(/::/)[0];
+                let m = { playerid: getFirstGM().id };
+                return getStatus({ source, query, msg: m });
+            },
+            tableitem: () => {
+                return getTableItems({ query: o.id,/* tbl: o.rollabletableid,*/ msg: { playerid: getFirstGM().id } })
+            },
+            tag: () => {
+                let o = findObjs({ type: 'character' }).filter(c => c.get('tags').length)[0] ||
+                    findObjs({ type: 'handout' }).filter(h => h.get('tags').length)[0];
+                return o
+                    ? getTag({ oid: o.id, otype: o.get('type'), query: o.get('tags')[0], pid: getFirstGM().id })
+                    : { is: 'no', count: 0 };
+
+            },
+            // text
+            //window
+            default: () => getFirstOrNull(type)
+        };
+        return (lib[type] || lib.default)();
+    };
+
+    // ===== PROP CONTAINERS ============================
+    const abilityProps = {
+        nicks: {
+        },
+        compProps: {}
+    }
+    const attributeProps = {
+        nicks: {
+            istokenaction: ['tokenaction']
+        },
+        compProps: {}
+    }
+    const campaignProps = { // @(campaign.<prop>)
+        nicks: {
+            id: ['campaign_id'],
+            type: ['campaign_type'],
+            playerpageid: ['pageid', 'page_id', 'playerpageid', 'playerpage_id'],
+            token_markers: ['markers']
+        },
+        compProps: {
+            currentpages: { nicks: [], val: (o) => ((p = getPagesForAllPlayers()) => Object.keys(p).map(k => `${k}:${p[k]}`).join(','))() },
+            currentpagesname: { nicks: [], val: (o) => ((p = getPagesForAllPlayers()) => Object.keys(p).map(k => `${getObjName(k, 'player')}:${getObjName(p[k], 'page')}`).join(','))() },
+            pagename: { nicks: ['page_name', 'playerpagename', 'playerpage_name'], val: o => getObjName(o.playerpageid, 'page') },
+            playerspecificpages: { nicks: [], val: (o) => Object.keys(o.playerspecificpages).map(k => `${k}:${o.playerspecificpages[k]}`).join(',') },
+            playerspecificpagesname: { nicks: ['playerspecificpages_name'], val: (o) => Object.keys(o.playerspecificpages).map(k => `${getObjName(k, 'player')}:${getObjName(o.playerspecificpages[k], 'page')}`).join(',') },
         }
     }
-    const getObjOrNull = (type, id) => {
-        return (getObj(type, id) || new nullObj());
-    };
-    const getObjName = (key, type) => {
-        let o;
-        switch (type) {
-            case 'playerlist':
-                o = key.split(/\s*,\s*/)
-                    .map(k => k === 'all' ? k : getObj('player', k))
-                    .filter(c => c)
-                    .map(c => c === 'all' ? c : c.get('displayname'))
-                    .join(', ');
-                return o.length ? o : undefined;
-            case 'player':
-                o = getObj(type, key);
-                return o ? o.get('displayname') : undefined;
-            case 'deck':
-                o = getObjOrNull(type, getObjOrNull('card', key));
-                return o ? o.get('name') : undefined;
-            case 'card':
-            case 'page':
-            case 'attribute':
-            case 'character':
-            default:
-                o = getObj(type, key);
-                return o ? o.get('name') : undefined;
-        }
-    };
-    const getControlledByList = (s, d) => {
-        if (!s.represents || !s.represents.length) return d && d.length ? d : s.controlledby;
-        let c = getObj('character', s.represents);
-        if (c) return c.get('controlledby');
-    };
-    const tokenProps = {
-        id: { refersto: '_id', dataval: (d) => d },
-        tid: { refersto: '_id', dataval: (d) => d },
-        token_id: { refersto: '_id', dataval: (d) => d },
-        token_name: { refersto: 'name', dataval: (d) => d },
-        page_id: { refersto: '_pageid', dataval: (d) => d },
-        pageid: { refersto: '_pageid', dataval: (d) => d },
-        pid: { refersto: '_pageid', dataval: (d) => d },
-        token_page_id: { refersto: '_pageid', dataval: (d) => d },
-        token_pageid: { refersto: '_pageid', dataval: (d) => d },
-        token_pid: { refersto: '_pageid', dataval: (d) => d },
-        page: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
-        sub: { refersto: '_subtype', dataval: (d) => d },
-        subtype: { refersto: '_subtype', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        token_type: { refersto: '_type', dataval: (d) => d },
-        adv_fow_view_distance: { refersto: 'adv_fow_view_distance', dataval: (d) => d },
-        aura1: { refersto: 'aura1_color', dataval: (d) => d },
-        aura1_color: { refersto: 'aura1_color', dataval: (d) => d },
-        aura1_radius: { refersto: 'aura1_radius', dataval: (d) => d },
-        radius1: { refersto: 'aura1_radius', dataval: (d) => d },
-        aura1_square: { refersto: 'aura1_square', dataval: (d) => d },
-        square1: { refersto: 'aura1_square', dataval: (d) => d },
-        aura2: { refersto: 'aura2_color', dataval: (d) => d },
-        aura2_color: { refersto: 'aura2_color', dataval: (d) => d },
-        aura2_radius: { refersto: 'aura2_radius', dataval: (d) => d },
-        radius2: { refersto: 'aura2_radius', dataval: (d) => d },
-        aura2_square: { refersto: 'aura2_square', dataval: (d) => d },
-        square2: { refersto: 'aura2_square', dataval: (d) => d },
-        bar_location: { refersto: 'bar_location', dataval: (d) => d },
-        bar_loc: { refersto: 'bar_location', dataval: (d) => d },
-        bar1_link: { refersto: 'bar1_link', dataval: (d) => d },
-        link1: { refersto: 'bar1_link', dataval: (d) => d },
-        bar1_name: { refersto: 'bar1_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        name1: { refersto: 'bar1_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        bar1_max: { refersto: 'bar1_max', dataval: (d) => d },
-        max1: { refersto: 'bar1_max', dataval: (d) => d },
-        bar1: { refersto: 'bar1_value', dataval: (d) => d },
-        bar1_current: { refersto: 'bar1_value', dataval: (d) => d },
-        bar1_value: { refersto: 'bar1_value', dataval: (d) => d },
-        bar2_link: { refersto: 'bar2_link', dataval: (d) => d },
-        link2: { refersto: 'bar2_link', dataval: (d) => d },
-        bar2_name: { refersto: 'bar2_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        name2: { refersto: 'bar2_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        bar2_max: { refersto: 'bar2_max', dataval: (d) => d },
-        max2: { refersto: 'bar2_max', dataval: (d) => d },
-        bar2: { refersto: 'bar2_value', dataval: (d) => d },
-        bar2_current: { refersto: 'bar2_value', dataval: (d) => d },
-        bar2_value: { refersto: 'bar2_value', dataval: (d) => d },
-        bar3_link: { refersto: 'bar3_link', dataval: (d) => d },
-        link3: { refersto: 'bar3_link', dataval: (d) => d },
-        bar3_name: { refersto: 'bar3_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        name3: { refersto: 'bar3_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        bar3_max: { refersto: 'bar3_max', dataval: (d) => d },
-        max3: { refersto: 'bar3_max', dataval: (d) => d },
-        bar3: { refersto: 'bar3_value', dataval: (d) => d },
-        bar3_current: { refersto: 'bar3_value', dataval: (d) => d },
-        bar3_value: { refersto: 'bar3_value', dataval: (d) => d },
-        bar4_link: { refersto: 'bar4_link', dataval: (d) => d },
-        link4: { refersto: 'bar4_link', dataval: (d) => d },
-        bar4_name: { refersto: 'bar4_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        name4: { refersto: 'bar4_link', dataval: d => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute') },
-        bar4_max: { refersto: 'bar4_max', dataval: (d) => d },
-        max4: { refersto: 'bar4_max', dataval: (d) => d },
-        bar4: { refersto: 'bar4_value', dataval: (d) => d },
-        bar4_current: { refersto: 'bar4_value', dataval: (d) => d },
-        bar4_value: { refersto: 'bar4_value', dataval: (d) => d },
-        bright_light_distance: { refersto: 'bright_light_distance', dataval: (d) => d },
-        cardid: { refersto: '_cardid', dataval: (d) => d },
-        cid: { refersto: '_cardid', dataval: (d) => d },
-        card_back: { refersto: '_cardid', dataval: (d) => getObjOrNull('card', d).get('card_back') },
-        cardname: { refersto: '_cardid', dataval: (d) => getObjName(d, 'card') },
-
-        checklight_isbright: { refersto: 'checklight_isbright', dataval: (d) => d },
-        checklight_total: { refersto: 'checklight_total', dataval: (d) => d },
-
-        compact_bar: { refersto: 'compact_bar', dataval: (d) => d },
-        currentside: { refersto: 'currentSide', dataval: (d) => d },
-        curside: { refersto: 'currentSide', dataval: (d) => d },
-        side: { refersto: 'currentSide', dataval: (d) => d },
-        deckid: { refersto: '_cardid', dataval: (d) => getObjOrNull('card', d).get('deckid') },
-        deckname: { refersto: '_cardid', dataval: (d) => getObjOrNull('deck', getObjOrNull('card', d).get('deckid')).get('name') },
-        player: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        token_cby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
-        token_controlledby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
-        token_cby_names: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_controlledby_names: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_cby_name: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        token_controlledby_name: { refersto: 'controlledby', dataval: (d, s) => getObjName(getControlledByList(s, d), 'playerlist') },
-        dim_light_opacity: { refersto: 'dim_light_opacity', dataval: (d) => d },
-        directional_bright_light_center: { refersto: 'directional_bright_light_center', dataval: (d) => d },
-        directional_bright_light_total: { refersto: 'directional_bright_light_total', dataval: (d) => d },
-        directional_low_light_center: { refersto: 'directional_low_light_center', dataval: (d) => d },
-        directional_low_light_total: { refersto: 'directional_low_light_total', dataval: (d) => d },
-        emits_bright: { refersto: 'emits_bright_light', dataval: (d) => d },
-        emits_bright_light: { refersto: 'emits_bright_light', dataval: (d) => d },
-        emits_low: { refersto: 'emits_low_light', dataval: (d) => d },
-        emits_low_light: { refersto: 'emits_low_light', dataval: (d) => d },
-        fliph: { refersto: 'fliph', dataval: (d) => d },
-        flipv: { refersto: 'flipv', dataval: (d) => d },
-        gmnotes: { refersto: 'gmnotes', dataval: (d) => unescape(d) },
-        has_bright_light_vision: { refersto: 'has_bright_light_vision', dataval: (d) => d },
-        has_directional_bright_light: { refersto: 'has_directional_bright_light', dataval: (d) => d },
-        has_directional_low_light: { refersto: 'has_directional_low_light', dataval: (d) => d },
-        has_limit_field_of_night_vision: { refersto: 'has_limit_field_of_night_vision', dataval: (d) => d },
-        has_limit_field_of_vision: { refersto: 'has_limit_field_of_vision', dataval: (d) => d },
-        has_night_vision: { refersto: 'has_night_vision', dataval: (d) => d },
-        has_nv: { refersto: 'has_night_vision', dataval: (d) => d },
-        nv_has: { refersto: 'has_night_vision', dataval: (d) => d },
-        height: { refersto: 'height', dataval: (d) => d },
-        img: { refersto: 'imgsrc', dataval: (d) => `<img src="${d}">` },
-        imgsrc: { refersto: 'imgsrc', dataval: (d) => d },
-        imgsrc_short: { refersto: 'imgsrc', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
-        drawing: { refersto: 'isdrawing', dataval: (d) => d },
-        isdrawing: { refersto: 'isdrawing', dataval: (d) => d },
-        lastmove: { refersto: 'lastmove', dataval: (d) => d },
-        lastx: { refersto: 'lastmove', dataval: d => d.split(/\s*,\s*/)[0] || '' },
-        lasty: { refersto: 'lastmove', dataval: d => d.split(/\s*,\s*/)[1] || '' },
-        layer: { refersto: 'layer', dataval: (d) => d },
-        left: { refersto: 'left', dataval: (d) => d },
-        light_angle: { refersto: 'light_angle', dataval: (d) => d },
-        light_dimradius: { refersto: 'light_dimradius', dataval: (d) => d },
-        light_hassight: { refersto: 'light_hassight', dataval: (d) => d },
-        light_losangle: { refersto: 'light_losangle', dataval: (d) => d },
-        light_multiplier: { refersto: 'light_multiplier', dataval: (d) => d },
-        light_otherplayers: { refersto: 'light_otherplayers', dataval: (d) => d },
-        light_radius: { refersto: 'light_radius', dataval: (d) => d },
-        light_sensitivity_multiplier: { refersto: 'light_sensitivity_multiplier', dataval: (d) => d },
-        light_sensitivity_mult: { refersto: 'light_sensitivity_multiplier', dataval: (d) => d },
-        limit_field_of_night_vision_center: { refersto: 'limit_field_of_night_vision_center', dataval: (d) => d },
-        limit_field_of_night_vision_total: { refersto: 'limit_field_of_night_vision_total', dataval: (d) => d },
-        limit_field_of_vision_center: { refersto: 'limit_field_of_vision_center', dataval: (d) => d },
-        limit_field_of_vision_total: { refersto: 'limit_field_of_vision_total', dataval: (d) => d },
-        low_light_distance: { refersto: 'low_light_distance', dataval: (d) => d },
-        night_vision_distance: { refersto: 'night_vision_distance', dataval: (d) => d },
-        nv_dist: { refersto: 'night_vision_distance', dataval: (d) => d },
-        nv_distance: { refersto: 'night_vision_distance', dataval: (d) => d },
-        night_vision_effect: { refersto: 'night_vision_effect', dataval: (d) => d },
-        nv_effect: { refersto: 'night_vision_effect', dataval: (d) => d },
-        night_vision_tint: { refersto: 'night_vision_tint', dataval: (d) => d },
-        nv_tint: { refersto: 'night_vision_tint', dataval: (d) => d },
-        playersedit_aura1: { refersto: 'playersedit_aura1', dataval: (d) => d },
-        playersedit_aura2: { refersto: 'playersedit_aura2', dataval: (d) => d },
-        playersedit_bar1: { refersto: 'playersedit_bar1', dataval: (d) => d },
-        playersedit_bar2: { refersto: 'playersedit_bar2', dataval: (d) => d },
-        playersedit_bar3: { refersto: 'playersedit_bar3', dataval: (d) => d },
-        playersedit_name: { refersto: 'playersedit_name', dataval: (d) => d },
-        represents: { refersto: 'represents', dataval: (d) => d },
-        reps: { refersto: 'represents', dataval: (d) => d },
-        represents_name: { refersto: 'represents', dataval: d => getObjName(d, 'character') },
-        reps_name: { refersto: 'represents', dataval: d => getObjName(d, 'character') },
-        rotation: { refersto: 'rotation', dataval: (d) => d },
-        showname: { refersto: 'showname', dataval: (d) => d },
-        showplayers_aura1: { refersto: 'showplayers_aura1', dataval: (d) => d },
-        showplayers_aura2: { refersto: 'showplayers_aura2', dataval: (d) => d },
-        showplayers_bar1: { refersto: 'showplayers_bar1', dataval: (d) => d },
-        showplayers_bar2: { refersto: 'showplayers_bar2', dataval: (d) => d },
-        showplayers_bar3: { refersto: 'showplayers_bar3', dataval: (d) => d },
-        showplayers_name: { refersto: 'showplayers_name', dataval: (d) => d },
-        show_tooltip: { refersto: 'show_tooltip', dataval: (d) => d },
-        sides: { refersto: 'sides', dataval: (d) => d },
-        sides_short: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).map(side => decodeURIComponent(side).slice(0, Math.max(side.indexOf(`?`), 0) || side.length)).join(`|`)},
-        sidecount: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).length },
-        sidescount: { refersto: 'sides', dataval: (d) => ('' || d).split(`|`).length },
-        markers: { refersto: 'statusmarkers', dataval: (d) => d },
-        statusmarkers: { refersto: 'statusmarkers', dataval: (d) => d },
-        tint: { refersto: 'tint_color', dataval: (d) => d },
-        tint_color: { refersto: 'tint_color', dataval: (d) => d },
-        tooltip: { refersto: 'tooltip', dataval: (d) => d },
-        top: { refersto: 'top', dataval: (d) => d },
-        tracker: { refersto: 'tracker', dataval: (d) => d },
-        tracker_offset: { refersto: 'tracker_offset', dataval: (d) => d },
-        width: { refersto: 'width', dataval: (d) => d }
-    };
-    const charProps = {
-        char_id: { refersto: '_id', dataval: (d) => d },
-        character_id: { refersto: '_id', dataval: (d) => d },
-        char_name: { refersto: 'name', dataval: (d) => d },
-        character_name: { refersto: 'name', dataval: (d) => d },
-        char_type: { refersto: '_type', dataval: (d) => d },
-        character_type: { refersto: '_type', dataval: (d) => d },
-        avatar: { refersto: 'avatar', dataval: (d) => d },
-        char_img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
-        character_img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
-        archived: { refersto: 'archived', dataval: (d) => d },
-        inplayerjournals: { refersto: 'inplayerjournals', dataval: (d) => d },
-        inplayerjournals_name: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
-        inplayerjournals_names: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
-        character_controlledby: { refersto: 'controlledby', dataval: (d) => d },
-        character_cby: { refersto: 'controlledby', dataval: (d) => d },
-        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        char_cby: { refersto: 'controlledby', dataval: (d) => d },
-        char_controlledby: { refersto: 'controlledby', dataval: (d) => d },
-        character_controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        character_cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        char_cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        char_controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        character_controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        character_cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        char_cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        char_controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        defaulttoken: { refersto: '_defaulttoken', dataval: (d) => d },
-        tags: { refersto: 'tags', dataval: (d) => JSON.parse(d).join(',') }
-    };
-    const playerProps = { // $(player.player_color)
-        player_id: { refersto: '_id', dataval: (d) => d },
-        player_name: { refersto: '_displayname', dataval: (d) => d },
-        displayname: { refersto: '_displayname', dataval: (d) => d },
-        display_name: { refersto: '_displayname', dataval: (d) => d },
-        player_type: { refersto: '_type', dataval: (d) => d },
-        color: { refersto: 'color', dataval: (d) => d },
-        lastpage: { refersto: '_lastpage', dataval: (d) => d },
-        last_page: { refersto: '_lastpage', dataval: (d) => d },
-        lastpagename: { refersto: '_lastpage', dataval: (d) => getObjName(d, 'page') },
-        last_page_name: { refersto: '_lastpage', dataval: (d) => getObjName(d, 'page') },
-        current_page: { refersto: 'currentpage', dataval: (d) => d },
-        currentpage: { refersto: 'currentpage', dataval: (d) => d },
-        currentpagename: { refersto: 'currentpage', dataval: (d) => getObjName(d, 'page') },
-        current_page_name: { refersto: 'currentpage', dataval: (d) => getObjName(d, 'page') },
-        macrobar: { refersto: '_macrobar', dataval: (d) => d },
-        online: { refersto: '_online', dataval: (d) => d },
-        roll20id: { refersto: '_d20userid', dataval: (d) => d },
-        roll20_id: { refersto: '_d20userid', dataval: (d) => d },
-        r20id: { refersto: '_d20userid', dataval: (d) => d },
-        r20_id: { refersto: '_d20userid', dataval: (d) => d },
-        showmacrobar: { refersto: 'showmacrobar', dataval: (d) => d },
-        show_macrobar: { refersto: 'showmacrobar', dataval: (d) => d },
-        speakingas: { refersto: 'speakingas', dataval: (d) => d },
-        speaking_as: { refersto: 'speakingas', dataval: (d) => d },
-        userid: { refersto: '_d20userid', dataval: (d) => d },
-        user_id: { refersto: '_d20userid', dataval: (d) => d }
-    };
-    const pageProps = { // @(page.pagename)
-        page_id: { refersto: '_id', dataval: (d) => d },
-        page_name: { refersto: 'name', dataval: (d) => d },
-        page_type: { refersto: '_type', dataval: (d) => d },
-        adv_fow_enabled: { refersto: 'adv_fow_enabled', dataval: (d) => d },
-        adv_fow_dim_reveals: { refersto: 'adv_fow_dim_reveals', dataval: (d) => d },
-        adv_fow_show_grid: { refersto: 'adv_fow_show_grid', dataval: (d) => d },
-        archived: { refersto: 'archived', dataval: (d) => d },
-        background_color: { refersto: 'background_color', dataval: (d) => d },
-        bg_color: { refersto: 'background_color', dataval: (d) => d },
-        daylight_mode_enabled: { refersto: 'daylight_mode_enabled', dataval: (d) => d },
-        daylightmodeopacity: { refersto: 'daylightModeOpacity', dataval: (d) => d },
-        daylight_mode_opacity: { refersto: 'daylightModeOpacity', dataval: (d) => d },
-        diagonaltype: { refersto: 'diagonaltype', dataval: (d) => d },
-        diagonal_type: { refersto: 'diagonaltype', dataval: (d) => d },
-        diagonal: { refersto: 'diagonaltype', dataval: (d) => d },
-        dynamic_lighting_enabled: { refersto: 'dynamic_lighting_enabled', dataval: (d) => d },
-        explorer_mode: { refersto: 'explorer_mode', dataval: (d) => d },
-        fogopacity: { refersto: 'fog_opacity', dataval: (d) => d },
-        fog_opacity: { refersto: 'fog_opacity', dataval: (d) => d },
-        force_lighting_refresh: { refersto: 'force_lighting_refresh', dataval: (d) => d },
-        gridcolor: { refersto: 'gridcolor', dataval: (d) => d },
-        grid_color: { refersto: 'gridcolor', dataval: (d) => d },
-        grid_labels: { refersto: 'gridlabels', dataval: (d) => d },
-        gridlabels: { refersto: 'gridlabels', dataval: (d) => d },
-        gridopacity: { refersto: 'grid_opacity', dataval: (d) => d },
-        grid_opacity: { refersto: 'grid_opacity', dataval: (d) => d },
-        gridtype: { refersto: 'grid_type', dataval: (d) => d },
-        grid_type: { refersto: 'grid_type', dataval: (d) => d },
-        height: { refersto: 'height', dataval: (d) => d },
-        jukeboxtrigger: { refersto: 'jukeboxtrigger', dataval: (d) => d },
-        jukebox_trigger: { refersto: 'jukeboxtrigger', dataval: (d) => d },
-        lightupdatedrop: { refersto: 'lightupdatedrop', dataval: (d) => d },
-        lightenforcelos: { refersto: 'lightenforcelos', dataval: (d) => d },
-        lightrestrictmove: { refersto: 'lightrestrictmove', dataval: (d) => d },
-        lightglobalillum: { refersto: 'lightglobalillum', dataval: (d) => d },
-        path: { refersto: 'path', dataval: (d) => d },
-        placement: { refersto: 'placement', dataval: (d) => d },
-        scale_number: { refersto: 'scale_number', dataval: (d) => d },
-        scale_units: { refersto: 'scale_units', dataval: (d) => d },
-        showdarkness: { refersto: 'showdarkness', dataval: (d) => d },
-        show_darkness: { refersto: 'showdarkness', dataval: (d) => d },
-        showgrid: { refersto: 'showgrid', dataval: (d) => d },
-        show_grid: { refersto: 'showgrid', dataval: (d) => d },
-        showlighting: { refersto: 'showlighting', dataval: (d) => d },
-        show_lighting: { refersto: 'showlighting', dataval: (d) => d },
-        snapping_increment: { refersto: 'snapping_increment', dataval: (d) => d },
-        use_auto_wrapper: { refersto: 'useAutoWrapper', dataval: (d) => d },
-        width: { refersto: 'width', dataval: (d) => d },
-        wrapper: { refersto: 'wrapperColor', dataval: (d) => d },
-        wrapper_auto_color: { refersto: 'wrapperAutoColor', dataval: (d) => d },
-        wrapper_color: { refersto: 'wrapperColor', dataval: (d) => d },
-        zorder: { refersto: '_zorder', dataval: (d) => d }
-    };
-    const campaignProps = { // @(campaign.prop)
-        campaign_id: { refersto: '_id', dataval: (d) => d },
-        campaign_type: { refersto: '_type', dataval: (d) => d },
-        id: { refersto: '_id', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        turnorder: { refersto: 'turnorder', dataval: (d) => d },
-        initiativepage: { refersto: 'initiativepage', dataval: (d) => d },
-        nodeversion: { refersto: 'nodeversion', dataval: (d) => d },
-        sandboxversion: { refersto: 'sandboxVersion', dataval: (d) => d },
-        pageid: { refersto: 'playerpageid', dataval: (d) => d },
-        page_id: { refersto: 'playerpageid', dataval: (d) => d },
-        playerpageid: { refersto: 'playerpageid', dataval: (d) => d },
-        playerpage_id: { refersto: 'playerpageid', dataval: (d) => d },
-        pagename: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
-        page_name: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
-        playerpagename: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
-        playerpage_name: { refersto: 'playerpageid', dataval: (d) => getObjName(d, 'page') },
-        playerspecificpages: { refersto: 'playerspecificpages', dataval: (d) => Object.keys(d).map(k => `${k}:${d[k]}`).join(',') },
-        playerspecificpagesname: { refersto: 'playerspecificpages', dataval: (d) => Object.keys(d).map(k => `${getObjName(k, 'player')}:${getObjName(d[k], 'page')}`).join(',') },
-        playerspecificpages_name: { refersto: 'playerspecificpages', dataval: (d) => Object.keys(d).map(k => `${getObjName(k, 'player')}:${getObjName(d[k], 'page')}`).join(',') },
-        currentpages: { refersto: 'currentpages', dataval: (d) => d },
-        currentpagesname: { refersto: 'currentpagesname', dataval: (d) => d },
-        sheetname: { refersto: 'sheetname', dataval: (d) => d },
-        journalfolder: { refersto: '_journalfolder', dataval: (d) => d },
-        jukeboxfolder: { refersto: '_jukeboxfolder', dataval: (d) => d },
-        jukeboxplaylistplaying: { refersto: '_jukeboxplaylistplaying', dataval: (d) => d },
-        token_markers: { refersto: '_token_markers', dataval: (d) => d },
-        markers: { refersto: '_token_markers', dataval: (d) => d }
-    };
-    const markerProps = { // derived from the Campaign object
-        marker_id: { refersto: 'tag', dataval: (d) => d },
-        marker_name: { refersto: 'name', dataval: (d) => d },
-        tag: { refersto: 'tag', dataval: (d) => d },
-        url: { refersto: 'url', dataval: (d) => d },
-        html: { refersto: 'html', dataval: (d) => d }
-    };
-    const statusProps = { // derived from a Token object
-        status_id: { refersto: 'tag', dataval: (d) => d },
-        status_name: { refersto: 'name', dataval: (d) => d },
-        num: { refersto: 'num', dataval: (d) => d },
-        number: { refersto: 'num', dataval: (d) => d },
-        value: { refersto: 'num', dataval: (d) => d },
-        val: { refersto: 'num', dataval: (d) => d },
-        html: { refersto: 'html', dataval: (d) => d },
-        tag: { refersto: 'tag', dataval: (d) => d },
-        url: { refersto: 'url', dataval: (d) => d },
-        is: { refersto: 'is', dataval: (d) => d },
-        count: { refersto: 'count', dataval: (d) => d }
-    };
-    const tagProps = {
-        count: { refersto: 'count', dataval: (d) => d },
-        is: { refersto: 'is', dataval: (d) => d }
-    };
-    const textProps = {
-        id: { refersto: '_id', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        color: { refersto: 'color', dataval: (d) => d },
-        cby: { refersto: 'controlledby', dataval: (d) => d },
-        controlledby: { refersto: 'controlledby', dataval: (d) => d },
-        cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        font_family: { refersto: 'font_family', dataval: (d) => d },
-        font_size: { refersto: 'font_size', dataval: (d) => d },
-        height: { refersto: 'height', dataval: (d) => d },
-        layer: { refersto: 'layer', dataval: (d) => d },
-        left: { refersto: 'left', dataval: (d) => d },
-        page_id: { refersto: '_pageid', dataval: (d) => d },
-        pageid: { refersto: '_pageid', dataval: (d) => d },
-        pid: { refersto: '_pageid', dataval: (d) => d },
-        page: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
-        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        rotation: { refersto: 'rotation', dataval: (d) => d },
-        text: { refersto: 'text', dataval: (d) => d },
-        top: { refersto: 'top', dataval: (d) => d },
-        width: { refersto: 'width', dataval: (d) => d }
-    };
-    const pathProps = {
-        id: { refersto: '_id', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        cby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
-        controlledby: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d) },
-        cby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        cby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        fill: { refersto: 'fill', dataval: (d) => d },
-        height: { refersto: 'height', dataval: (d) => d },
-        layer: { refersto: 'layer', dataval: (d) => d },
-        left: { refersto: 'left', dataval: (d) => d },
-        page_id: { refersto: '_pageid', dataval: (d) => d },
-        pageid: { refersto: '_pageid', dataval: (d) => d },
-        pid: { refersto: '_pageid', dataval: (d) => d },
-        page: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
-        page_name: { refersto: '_pageid', dataval: d => getObjName(d, 'page') },
-        path: { refersto: 'path', dataval: (d) => d },
-        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', dataval: (d, s) => getControlledByList(s, d).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-        rotation: { refersto: 'rotation', dataval: (d) => d },
-        scalex: { refersto: 'scaleX', dataval: (d) => d },
-        scaley: { refersto: 'scaleY', dataval: (d) => d },
-        stroke: { refersto: 'stroke', dataval: (d) => d },
-        stroke_width: { refersto: 'stroke_width', dataval: (d) => d },
-        top: { refersto: 'top', dataval: (d) => d },
-        width: { refersto: 'width', dataval: (d) => d }
-    };
     const cardProps = {
-        id: { refersto: '_id', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        deckid: { refersto: '_deckid', dataval: (d) => d },
-        name: { refersto: 'name', dataval: (d) => d },
-        avatar: { refersto: 'avatar', dataval: (d) => d },
-        img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
-        imgsrc: { refersto: 'avatar', dataval: (d) => d },
-        imgsrc_short: { refersto: 'avatar', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
-        card_back: { refersto: 'card_back', dataval: (d) => d },
-        is_removed: { refersto: 'is_removed', dataval: (d) => d },
-        tooltip: { refersto: 'tooltip', dataval: (d) => d }
-    };
-    const handoutProps = {
-        id: { refersto: '_id', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        name: { refersto: 'name', dataval: (d) => d },
-        archived: { refersto: 'archived', dataval: (d) => d },
-
-        avatar: { refersto: 'avatar', dataval: (d) => d },
-        img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
-        imgsrc: { refersto: 'avatar', dataval: (d) => d },
-        imgsrc_short: { refersto: 'avatar', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
-
-        controlledby: { refersto: 'controlledby', dataval: (d) => d },
-        controlledby_name: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        controlledby_names: { refersto: 'controlledby', dataval: (d) => getObjName(d, 'playerlist') },
-        player: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
-        player_name: { refersto: 'controlledby', dataval: (d) => d.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
-
-        inplayerjournals: { refersto: 'inplayerjournals', dataval: (d) => d },
-        inplayerjournals_name: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
-        inplayerjournals_names: { refersto: 'inplayerjournals', dataval: (d) => getObjName(d, 'playerlist') },
-        tags: { refersto: 'tags', dataval: (d) => JSON.parse(d).join(',') }
-    };
-    const tableProps = {
-        id: { refersto: '_id', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        name: { refersto: 'name', dataval: (d) => d },
-        showplayers: { refersto: 'showplayers', dataval: (d) => d },
-        totalweight: { refersto: 'totalweight', dataval: (d) => d }
-    };
-    const tableItemProps = {
-        id: { refersto: '_id', dataval: (d) => d },
-        type: { refersto: '_type', dataval: (d) => d },
-        name: { refersto: 'name', dataval: (d) => d },
-
-        avatar: { refersto: 'avatar', dataval: (d) => d },
-        img: { refersto: 'avatar', dataval: (d) => `<img src="${d}">` },
-        imgsrc: { refersto: 'avatar', dataval: (d) => d },
-        imgsrc_short: { refersto: 'avatar', dataval: (d) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length) },
-
-        weight: { refersto: 'weight', dataval: (d) => d }
-    };
-    const deckProps = {
-
-    };
-
-    const condensereturn = (funcret, status, notes) => {
-        funcret.runloop = (status.includes('changed') || status.includes('unresolved'));
-        if (status.length) {
-            funcret.status = status.reduce((m, v) => {
-                switch (m) {
-                    case 'unchanged':
-                        m = v;
-                        break;
-                    case 'changed':
-                        m = v === 'unresolved' ? v : m;
-                        break;
-                    case 'unresolved':
-                        break;
-                }
-                return m;
-            });
+        nicks: {
+            avatar: ['imgsrc']
+        },
+        compProps: {
+            img: { nicks: [], val: (o) => `<img src="${o.avatar}">` },
+            imgsrc_short: { nicks: [], val: (o) => ((d = o.avatar) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length))() }
         }
-        funcret.notes = notes.join('<br>');
-        return funcret;
+    }
+    const charProps = (() => {
+        let nicks = {
+            id: ['char_id', 'character_id'],
+            type: ['char_type', 'character_type'],
+            name: ['char_name', 'character_name'],
+
+            controlledby: ['character_controlledby', 'character_cby', 'char_cby', 'char_controlledby', 'cby'],
+        };
+        let ccbyNicks = ['controlledby_names', 'controlledby_name', 'cby_name', 'cby_names', 'character_controlledby_names', 'character_cby_name', 'character_cby_names', 'char_cby_name', 'char_cby_names', 'char_controlledby_name', 'char_controlledby_names'];
+        let compProps = {
+            character_img: { nicks: ['char_img', 'character_image', 'char_image'], val: (o) => `<img src="${(o.avatar)}">` },
+            character_controlledby_name: { nicks: ccbyNicks, val: (o) => getObjName(o.controlledby, 'playerlist') },
+            inplayerjournals_name: { nicks: ['inplayerjournals_names'], val: (o) => getObjName(o.inplayerjournals, 'playerlist') },
+            player: { nicks: [], val: (o) => o.controlledby.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+            player_name: { nicks: [], val: (o) => o.controlledby.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+            tags: { nicks: [], val: (o) => JSON.parse(o.tags).join(',') }
+        };
+        return { nicks, compProps };
+    })();
+    const custfxProps = {
+        nicks: {
+            definition: ['def'],
+            startcolour: ['startcolor'],
+            endcolour: ['endcolor'],
+            startcolourrandom: ['startcolorrandom'],
+            endcolourrandom: ['endcolorrandom']
+        },
+        compProps: {}
+    }
+    const deckProps = {
+        nicks: {
+            avatar: ['imgsrc']
+        },
+        compProps: {
+            img: { nicks: [], val: (o) => `<img src="${o.avatar}">` },
+            imgsrc_short: { nicks: [], val: (o) => ((d = o.avatar) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length))() }
+        }
+    }
+    const doorProps = {
+        nicks: {
+            color: ['colour']
+        },
+        compProps: {
+            path: { nicks: [], val: (o) => JSON.stringify(o.path) }
+        }
+    }
+    const graphicProps = {
+        nicks: {
+            id: ['tid', 'token_id'],
+            name: ['token_name'],
+            type: ['token_type'],
+            aura1_color: ['aura1'],
+            aura1_radius: ['radius1'],
+            aura1_square: ['square1'],
+            aura2_color: ['aura2'],
+            aura2_radius: ['radius2'],
+            aura2_square: ['square2'],
+            bar_location: ['bar_loc'],
+            bar1_link: ['link1'],
+            bar1_max: ['max1'],
+            bar1_value: ['bar1', 'bar1_current'],
+            bar2_link: ['link2'],
+            bar2_max: ['max2'],
+            bar2_value: ['bar2', 'bar2_current'],
+            bar3_link: ['link3'],
+            bar3_max: ['max3'],
+            bar3_value: ['bar3', 'bar3_current'],
+            bar4_link: ['link4'],
+            bar4_max: ['max4'],
+            bar4_value: ['bar4', 'bar4_current'],
+            cardid: ['cid'],
+            currentside: ['curside', 'side'],
+            emits_bright_light: ['emits_bright'],
+            emits_low_light: ['emits_low'],
+            has_night_vision: ['nv_has', 'has_nv'],
+            isdrawing: ['drawing'],
+            light_sensitivity_multiplier: ['light_sensitivity_mult'],
+            night_vision_distance: ['nv_dist', 'nv_distance'],
+            night_vision_effect: ['nv_effect'],
+            night_vision_tint: ['nv_tint'],
+            pageid: ['page_id', 'pid', 'token_page_id', 'token_pageid', 'token_pid'],
+            represents: ['reps'],
+            statusmarkers: ['markers'],
+            subtype: ['sub'],
+            tint_color: ['tint'],
+        },
+        compProps: {
+            page: { nicks: ['page_name'], val: (o) => getObjName(o.pageid, 'page') },
+            bar1_name: { nicks: ['name1'], val: (o) => ((d = o.bar1_link) => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute'))() },
+            bar2_name: { nicks: ['name2'], val: (o) => ((d = o.bar2_link) => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute'))() },
+            bar3_name: { nicks: ['name3'], val: (o) => ((d = o.bar3_link) => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute'))() },
+            bar4_name: { nicks: ['name4'], val: (o) => ((d = o.bar4_link) => /^sheetattr_/.test(d) ? d.replace(/^sheetattr_/, '') : getObjName(d, 'attribute'))() },
+            cardback: { nicks: ['card_back'], val: (o) => getObjOrNull('card', o.cardid).card_back },
+            cardname: { nicks: ['card_name'], val: (o) => getObjName(o.cardid, 'card') },
+            deckid: { nicks: [], val: (o) => getObjOrNull('card', o.cardid).deckid },
+            deckname: { nicks: [], val: (o) => getObjName('deck', getObjOrNull('card', o.cardid).deckid) },
+
+            gmnotes: { nicks: [], val: (o) => unescape(o.gmnotes) },
+            img: { nicks: [], val: (o) => `<img src="${o.imgsrc}">` },
+            imgsrc_short: { nicks: [], val: (o) => ((d = o.imgsrc) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length))() },
+            lastx: { nicks: [], val: (o) => o.lastmove.split(/\s*,\s*/)[0] || '' },
+            lasty: { nicks: [], val: (o) => o.lastmove.split(/\s*,\s*/)[1] || '' },
+            player: { nicks: [], val: (o) => getControlledByList(o).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+            player_name: { nicks: [], val: (o) => getControlledByList(o).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+            represents_name: { nicks: ['reps_name'], val: (o) => getObjName(o.represents, 'character') },
+
+            controlledby: { nicks: ['cby', 'token_cby', 'token_controlledby'], val: (o) => getControlledByList(o) },
+            token_cby_names: { nicks: ['controlledby_names', 'controlledby_name', 'cby_names', 'cby_name', 'token_controlledby_names', 'token_cby_name', 'token_controlledby_name'], val: (o) => getObjName(getControlledByList(o), 'playerlist') },
+
+            sides_short: { nicks: [], val: (o) => (o.sides || '').split(`|`).map(side => decodeURIComponent(side).slice(0, Math.max(side.indexOf(`?`), 0) || side.length)).join(`|`) },
+            sidecount: { nicks: ['sidescount'], val: (o) => (o.sides || '').split(`|`).length }
+        },
+
+    }
+    const handoutProps = {
+        nicks: {
+            avatar: ['imgsrc']
+        },
+        compProps: {
+            controlledby_name: { nicks: ['controlledby_name', 'cby_name'], val: (o) => getObjName(o.controlledby, 'playerlist') },
+            img: { nicks: [], val: (o) => `<img src="${o.avatar}">` },
+            imgsrc_short: { nicks: [], val: (o) => ((d = o.avatar) => d.slice(0, Math.max(d.indexOf(`?`), 0) || d.length))() },
+            inplayerjournals_name: { nicks: ['inplayerjournals_names'], val: (o) => getObjName(o.inplayerjournals, 'playerlist') },
+            player: { nicks: [], val: (o) => o.controlledby.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+            player_name: { nicks: [], val: (o) => o.controlledby.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+            tags: { nicks: [], val: (o) => JSON.parse(o.tags).join(',') }
+        }
+    }
+    const macroProps = {
+        nicks: {
+            istokenaction: ['tokenaction']
+        },
+        compProps: {}
+    }
+    const markerProps = { // derived from the Campaign object
+        nicks: {
+            tag: ['marker_id'],
+            name: ['marker_name']
+        },
+        compProps: {}
+    }
+    const pageProps = { // @(page.<page ref>.<prop>)
+        nicks: {
+            id: ['page_id'],
+            name: ['page_name'],
+            type: ['page_type'],
+            background_color: ['bg_color'],
+            daylightmodeopacity: ['daylight_mode_opacity'],
+            diagonaltype: ['diagonal_type', 'diagonal'],
+            fog_opacity: ['fogopacity'],
+            gridcolor: ['grid_color'],
+            gridlabel: ['grid_label'],
+            grid_opacity: ['gridopacity'],
+            grid_type: ['gridtype'],
+            jukebox_trigger: ['jukeboxtrigger'],
+            showdarkness: ['show_darkness'],
+            showgrid: ['show_grid'],
+            showlighting: ['show_lighting'],
+            snapping_increment: ['snappingincrement']
+        },
+        compProps: {}
+    }
+    const pathProps = {
+        nicks: {
+            pageid: ['page_id', 'pid'],
+            stroke_width: ['strokewidth']
+        },
+        compProps: {
+            controlledby: { nicks: ['cby'], val: (o) => getControlledByList(o) },
+            controlledby_names: { nicks: ['controlledby_name', 'cby_name', 'cby_names'], val: (o) => getObjName(getControlledByList(o), 'playerlist') },
+            page: { nicks: ['page_name'], val: (o) => getObjName(o.pageid, 'page') },
+            player: { nicks: [], val: (o) => o.controlledby.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+            player_name: { nicks: [], val: (o) => getControlledByList(o).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] }
+        }
+    }
+    const pathv2Props = {
+        nicks: {
+            pageid: ['page_id', 'pid'],
+            stroke_width: ['strokewidth']
+        },
+        compProps: {
+            controlledby: { nicks: ['cby'], val: (o) => getControlledByList(o) },
+            controlledby_names: { nicks: ['controlledby_name', 'cby_name', 'cby_names'], val: (o) => getObjName(getControlledByList(o), 'playerlist') },
+            page: { nicks: ['page_name'], val: (o) => getObjName(o.pageid, 'page') },
+            player: { nicks: [], val: (o) => o.controlledby.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+            player_name: { nicks: [], val: (o) => getControlledByList(o).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] }
+        }
+    }
+    const pinProps = (() => {
+        const nicks = {
+            title: ['name']
+        };
+        const permission = (obj, prop, msg) => {
+            if (playerIsGM(msg.playerid)) return true;
+            if (obj.tooltipVisibleTo !== 'all') return false;
+            switch (prop.toLowerCase()) {
+                case 'image':
+                    return true;
+                case 'notes':
+                    return obj.notesVisibleTo === 'all';
+                case 'gmnotes':
+                    return obj.gmNotesVisibleTo === 'all';
+                case 'title':
+                case 'name':
+                    return obj.nameplateVisibleTo === 'all';
+            }
+        };
+        const compProps = {
+            gmnotes: {
+                nicks: [],
+                val: (o, msg) => permission(o, 'gmnotes', msg)
+                    ? o.gmnotes
+                    : undefined
+            },
+            image: {
+                nicks: ['img'],
+                val: (o, msg) => permission(o, 'image', msg)
+                    ? ((u = o.tooltipImage.length ? o.tooltipImage : getObjOrNull(o.linkType, o.link).avatar || '') => u.length ? `<img src="${u}">` : undefined)()
+                    : undefined
+            },
+            linkname: { nicks: [], val: (o) => getObjName(o.link, o.linkType) || getObjName(o.link, 'unknown') },
+            name: {
+                nicks: ['title'],
+                val: (o, msg) => permission(o, 'name', msg)
+                    ? o.title.length
+                        ? o.title
+                        : o.subLink.length
+                            ? o.subLink
+                            : getObjName(o.link, o.linkType) || getObjName(o.link, 'unknown')
+                    : undefined
+            },
+            notes: {
+                nicks: [],
+                val: (o, msg) => permission(o, 'notes', msg)
+                    ? o.notes
+                    : undefined
+            },
+            page: { nicks: ['page_name'], val: (o) => getObjName(o.pageid, 'page') }
+        };
+        return { nicks, compProps };
+    })();
+    const playerProps = { // @(player.<player ref>.<prop>)
+        nicks: {
+            id: ['player_id'],
+            displayname: ['name', 'player_name', 'display_name'],
+            type: ['player_type'],
+            d20userid: ['roll20id', 'roll20_id', 'r20id', 'r20_id', 'userid', 'user_id'],
+            lastpage: ['last_page'],
+            showmacrobar: ['show_macrobar'],
+            speakingas: ['speaking_as']
+        },
+        compProps: {
+            currentpage: { nicks: ['current_page'], val: (o) => getPageForPlayer(o.id) },
+            currentpagename: { nicks: ['current_page_name', 'page_name'], val: (o) => getObjName(getPageForPlayer(o.id), 'page') },
+            isgm: { nicks: [], val: (o) => playerIsGM(o) },
+            lastpagename: { nicks: ['last_page_name'], val: (o) => getObjName(o.lastpage, 'page') }
+        }
+    }
+    const rollabletableProps = {
+        nicks: {},
+        compProps: {
+            totalweight: { nicks: [], val: (o) => findObjs({ type: 'tableitem', rollabletableid: o.id }).reduce((m, v) => m += v.get('weight'), 0) }
+        }
+    }
+    const statusProps = { // derived from a token object
+        nicks: {
+            tag: ['id', 'status_id'],
+            name: ['status_name'],
+            num: ['number', 'value', 'val']
+        },
+        compProps: {
+
+        }
+    }
+    const tableitemProps = {
+        nicks: {
+            avatar: ['imgsrc']
+        },
+        compProps: {
+            img: { nicks: [], val: (o) => `<img src="${o.avatar}">` },
+            imgsrc_short: { nicks: [], val: (o) => o.avatar.slice(0, Math.max(o.avatar.indexOf(`?`), 0) || o.avatar.length) }
+        }
+    }
+    const tagProps = {
+        nicks: {
+
+        },
+        compProps: {
+
+        }
+    }
+    const textProps = {
+        nicks: {
+            controlledby: ['cby'],
+            pageid: ['page_id', 'pid']
+
+        },
+        compProps: {
+            controlledby_names: { nicks: ['cby_names', 'cby_name', 'controlledby_name'], val: (o) => getObjName(o.controlledby, 'playerlist') },
+            page: { nicks: ['page_name'], val: (o) => getObjName(o.pageid, 'page') },
+            player: { nicks: [], val: (o) => o.controlledby.split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all' && getObj('player', a))[0] },
+            player_name: { nicks: [], val: (o) => getControlledByList(o).split(/\s*,\s*/).filter(a => a.toLowerCase() !== 'all').map(a => getObjName(a, 'player')).filter(a => a)[0] },
+        },
+
+    }
+    const windowProps = {
+        nicks: {
+            pageid: ['pid', 'page_id']
+        },
+        compProps: {
+            page: { nicks: ['page_name'], val: (o) => getObjName(o.pageid, 'page') }
+        }
+    }
+
+    const customPropsByType = {
+        ability: abilityProps,
+        attribute: attributeProps,
+        campaign: campaignProps,
+        card: cardProps,
+        character: charProps,
+        custfx: custfxProps,
+        deck: deckProps,
+        door: doorProps,
+        graphic: graphicProps,
+        handout: handoutProps,
+        marker: markerProps,
+        macro: macroProps,
+        page: pageProps,
+        path: pathProps,
+        pathv2: pathv2Props,
+        pin: pinProps,
+        player: playerProps,
+        rollabletable: rollabletableProps,
+        status: statusProps,
+        tableitem: tableitemProps,
+        tag: tagProps,
+        text: textProps,
+        window: windowProps
     };
-
-    const trackerrx = /^tracker(\[(?<filter>[^\]]+)]){0,1}((?<operator>\+|-)(?<offset>\d+)){0,1}$/i;
-    const rptgitemrx = /(?<type>(?:\*))\((?<character>[^|.]+?)[|.](?<section>[^\s.|]+?)[|.](?:\[\s*(?<pattern>.+?)\s*]|(?<reference>\$\d+|[a-zA-Z0-9_-]{20}))\s*[|.](?<valuesuffix>[^[\s).]+?)(?:[|.](?<valtype>[^\s.[)]+?)){0,1}(?:\[(?<default>[^\]]*?)]){0,1}\s*\)/gi;
-    //const rptgitemrx = /(?<type>(?:\*))\((?<character>[^|.]+?)[|.](?<section>[^\s.|]+?)[|.]\[\s*(?<pattern>.+?)\s*]\s*[|.](?<valuesuffix>[^[\s).]+?)(?:[|.](?<valtype>[^\s.[)]+?)){0,1}(?:\[(?<default>[^\]]*?)]){0,1}\s*\)/gi;
-    const macrorx = /#\((?<item>[^\s.[)]+?)(?:\[(?<default>[^\]]*?)]){0,1}\s*\)/gi;
-    const multirx = /(?<type>(?:@|%))\((?<obj>tracker(?:\[[^\]]+]){0,1}(?:(?:\+|-)\d+){0,1}|[^@*%#|.]+?)[|.](?<prop>[^@*%#\s.[|]+?)(?:[|.](?<identikey>[^@*%#.|[]+?)(?:[|.](?<subprop>[^[@*%#]+?)){0,1}){0,1}(?:\[(?<default>[^@*%#\]]*?)]){0,1}\s*\)/gi;
-
-    const testConstructs = c => {
-        return [multirx, rptgitemrx, macrorx].reduce((m, r) => {
-            m = m || r.test(c);
-            r.lastIndex = 0;
+    const buildPropsForType = (query) => {
+        let o = getFirstObjectOfType(query.toLowerCase());
+        if (!o || !o.id) { return; }
+        let nicks = customPropsByType[query.toLowerCase()]?.nicks || {};
+        let compProps = customPropsByType[query.toLowerCase()]?.compProps || {};
+        let props = Object.keys(o).reduce((m, p) => { // roll20 object props
+            m[p.toLowerCase()] = (o) => o[p];
             return m;
-        }, false);
+        }, {});
+        Object.keys(nicks || {}).forEach(p => { // aliases for roll20 object props
+            nicks[p].forEach(n => {
+                props[n] = (o) => o[p];
+            });
+        });
+        Object.keys(compProps || {}).forEach(p => { // custom props
+            [p, ...compProps[p].nicks].forEach(n => {
+                props[n] = compProps[p].val;
+            });
+        });
+        return props;
     };
-    const simpleObj = (o) => {
-        if (typeof o === 'undefined') { return o; }
-        let obj = JSON.parse(JSON.stringify(o));
-        if (!Object.keys(obj).length) { return obj; }
-        return Object.keys(obj).reduce((m, k) => {
-            if (/^_/.test(k) && !m.hasOwnProperty(k.slice(1))) { m[k.slice(1)] = m[k]; }
-            return m;
-        }, obj);
+    let knownObjectTypes = [];
+    let propContainers = {};
+    const commitProps = t => {
+        knownObjectTypes.push(t);
+        propContainers[t] = buildPropsForType(t);
+    };
+    const buildPropContainers = () => {
+        [...new Set(getAllObjs().map(o => o.get('type')))]
+            .filter(t => !knownObjectTypes.includes(t))
+            .forEach(t => {
+                commitProps(t);
+            });
+        Object.keys(customPropsByType) // props for non-R20 objects like tags, status, and markers
+            .filter(k => !knownObjectTypes.includes(k))
+            .forEach(k => {
+                propContainers[k] = buildPropsForType(k);
+            });
     };
 
+    // ==================================================
+    //		EVENT HANDLERS
+    // ==================================================
     const handleInput = (msg, msgstate = {}) => {
+        const trackerrx = /^tracker(\[(?<filter>[^\]]+)]){0,1}((?<operator>\+|-)(?<offset>\d+)){0,1}$/i;
+        const rptgitemrx = /(?<type>(?:\*))\((?<character>[^|.]+?)[|.](?<section>[^\s.|]+?)[|.](?:\[\s*(?<pattern>.+?)\s*]|(?<reference>\$(?:\d+|[nN])|1[dD][wW](?:[eE][iI][gG][hH][tT])?(?:\?.+?)?|[a-zA-Z0-9_-]{20})|(?<aggregate>(?:min|max|avg|sum|vals|uniq|rowids|ids)(?:\?.+?)?))\s*[|.](?<valuesuffix>[^[\s).]+?)(?:[|.](?<valtype>[^\s.[)]+?)){0,1}(?:\[(?<default>[^\]]*?)]){0,1}\s*\)/gi;
+        // const rptgitemrx = /(?<type>(?:\*))\((?<character>[^|.]+?)[|.](?<section>[^\s.|]+?)[|.](?:\[\s*(?<pattern>.+?)\s*]|(?<reference>\$\d+|[a-zA-Z0-9_-]{20}))\s*[|.](?<valuesuffix>[^[\s).]+?)(?:[|.](?<valtype>[^\s.[)]+?)){0,1}(?:\[(?<default>[^\]]*?)]){0,1}\s*\)/gi;
+
+        const macrorx = /#\((?<item>[^\s.[)]+?)(?:\[(?<default>[^\]]*?)]){0,1}\s*\)/gi;
+        const multirx = /(?<type>(?:@|%))\((?<obj>tracker(?:\[[^\]]+]){0,1}(?:(?:\+|-)\d+){0,1}|[^@*%#|.]+?)[|.](?<prop>[^@*%#.[|]+?)(?:[|.](?<identikey>[^@*%#.|[]+?)(?:[|.](?<subprop>[^[@*%#]+?)){0,1}){0,1}(?:\[(?<default>[^@*%#\]]*?)]){0,1}\s*\)/gi;
+        const testConstructs = c => {
+            return [multirx, rptgitemrx, macrorx].reduce((m, r) => {
+                m = m || r.test(c);
+                r.lastIndex = 0;
+                return m;
+            }, false);
+        };
         let funcret = { runloop: false, status: 'unchanged', notes: '' };
         if (msg.type !== 'api' || !testConstructs(msg.content)) return funcret;
         if (!Object.keys(msgstate).length && scriptisplugin) return funcret;
@@ -1250,373 +1467,298 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
             'ribbon': (t) => t._pageid === Campaign().get('playerpageid'),
             'gm': () => true
         };
-        const propContainers = {
-            token: tokenProps,
-            character: charProps,
-            page: pageProps,
-            campaign: campaignProps,
-            marker: markerProps,
-            player: playerProps,
-            status: statusProps,
-            text: textProps,
-            path: pathProps,
-            tag: tagProps,
-            card: cardProps,
-            handout: handoutProps,
-            rollabletable: tableProps,
-            tableitem: tableItemProps
-        };
-        const getPropertyValue = (source, objtype, item, def = '') => {
-            let propObj = propContainers[objtype.toLowerCase()];
-            let retval = def;
-            if (!source) {
-                notes.push(`Unable to find a source for property named ${item}. Using default value.`);
-            } else if (!Object.keys(propObj).includes(item.toLowerCase())) {
-                notes.push(`Unable to find a ${objtype.toLowerCase()} property named ${item}. Using default value.`);
-            } else {
-                retval = propObj[item.toLowerCase()].dataval(source[propObj[item.toLowerCase()].refersto],source);
-                if (typeof retval === 'undefined') {
-                    notes.push(`Unable to find ${objtype.toLowerCase()} value for ${item}. Using default value.`);
-                    retval = def;
-                }
-            }
-            return retval;
-        };
-        const getCharacterAttribute = (source, type, prop, valtype, def = '') => {
-            let retval = def;
-            if (!source) {
-                notes.push(`Unable to find a character with the given criteria. Using default value.`);
-            } else {
-                retval = getSheetItemVal({ groups: { type: type, character: source.id, item: prop, valtype: valtype } }, msg.playerid, source);
-                if (typeof retval === 'undefined') {
-                    notes.push(`Unable to find ${type === '@' ? 'attribute' : 'ability'} named ${prop} for ${source.name}. Using default value.`);
-                    retval = def;
-                }
-            }
-            return retval;
-        };
-        while (testConstructs(msg.content)) {
-            msg.content = msg.content.replace(multirx, (m, type, obj, prop, identikey, subprop, def = '') => {
-                let offset = 0,
-                    trackres,
-                    pgfilter = 'page',
-                    selsource,
-                    presource,
-                    source,
-                    retval = def,
-                    reverse = false,
-                    to;
-                if (trackerrx.test(obj)) { // if it is a tracker call, it could have an offset, so we detect that first
-                    trackres = trackerrx.exec(obj);
-                    offset = parseInt(trackres.groups.offset || '0');
-                    if (trackres.groups.operator === '-') reverse = true;
-                    if (playerIsGM(msg.playerid)) pgfilter = trackres.groups.filter || 'page';
-                    obj = `tracker`;
-                    trackres.lastIndex = 0;
-                }
-                if (obj.toLowerCase() === 'speaker') { // if it's a speaker call, determine if player or character, and adjust appropriately
-                    presource = simpleObj(getChar(msg.who, msg.playerid));
-                    if (presource && presource.name) {
-                        obj = presource.name;
-                    } else {
-                        presource = simpleObj(getPlayer(msg.who));
-                        if (presource && presource._displayname) {
-                            obj = 'player';
-                            subprop = identikey;
-                            identikey = prop;
-                            prop = presource._displayname;
+        const getPropertyValue = (searchObj, typeList = []) => {
+            let retval;
+            let propObj;
+            let newSource;
+
+            if (!Object.keys(propContainers[searchObj.source.type] || {}).length) { commitProps(searchObj.source.type); }
+
+            if (typeList.includes(searchObj.source.type)) { return searchObj.retval; }
+
+            typeList.push(searchObj.source.type);
+            let newProp1;
+
+            switch (searchObj.source.type) {
+                case 'character':
+                    if (searchObj.prop1.toLowerCase() === 'status' || // token status
+                        (searchObj.prop1.toLowerCase() === 'is' && searchObj.prop2 && isMarker(searchObj.prop2)) || // token status
+                        (Object.keys(propContainers.graphic || {}).includes(searchObj.prop1)
+                            && searchObj.type !== 'speaker'
+                            && !Object.keys(propContainers.character).includes(searchObj.prop1)
+                        ) // token property
+                    ) { // any of these cases means we should get a token, if possible
+                        newSource = getGraphic({ query: searchObj.source.name, msg: searchObj.msg, /*pid: getPageIDForPlayer(searchObj.msg.playerid) */ });
+                        if (!newSource) {
+                            notes.push(`No token can be found for that character. Using default value.`);
                         } else {
-                            notes.push(`Unable to find the speaker`);
+                            retval = getPropertyValue({ ...searchObj, ...{ source: newSource } }, typeList);
+                        }
+                    } else if (searchObj.prop1.toLowerCase() === 'is') { // looking for tag (status would have been already caught)
+                        if (searchObj.prop2) {
+                            newSource = getTag({ oid: searchObj.source.id, otype: 'character', query: searchObj.prop2, pid: searchObj.msg.playerid });
+                            retval = propContainers.tag.is(newSource, searchObj.msg);
+                        }
+                        // } else if (Object.keys(propContainers.graphic).includes(searchObj.prop1)) { // token property taken care of, above
+                    } else if (Object.keys(propContainers.character || {}).includes(searchObj.prop1)) { // character property
+                        retval = propContainers.character[searchObj.prop1](searchObj.source, searchObj.msg);
+                    } else { // potentially character attribute
+                        retval = getCharacterAttribute(searchObj);
+                    }
+                    break;
+                case 'graphic':
+                    if (searchObj.prop1.toLowerCase() === 'status' || // token status
+                        (searchObj.prop1.toLowerCase() === 'is' && searchObj.prop2 && isMarker(searchObj.prop2))) {
+                        newSource = getStatus({ source: searchObj.source, query: searchObj.prop2, msg: searchObj.msg });
+                        newProp1 = 'val';
+                        if (searchObj.prop3 === 'is' || searchObj.prop1 === 'is') {
+                            newProp1 = 'is';
+                        } else if (searchObj.prop3 && searchObj.prop3.length) {
+                            newProp1 = searchObj.prop3;
+                        }
+                        retval = getPropertyValue({ ...searchObj, ...{ source: newSource, prop1: newProp1 } }, typeList);
+                    } else if (Object.keys(propContainers.graphic || {}).includes(searchObj.prop1)) {
+                        retval = propContainers.graphic[searchObj.prop1](searchObj.source, searchObj.msg);
+                    } else {
+                        if (searchObj.source.subtype === 'card') { // card subtype, could be type:card
+                            if (!searchObj.source.cardid || !searchObj.source.cardid.length) {
+                                notes.push(`Not a recongized token property, but no card object can be found for that card graphic. Using default value.`);
+                            } else {
+                                newSource = getCard({ query: searchObj.source.cardid });
+                                if (!newSource) {
+                                    notes.push(`No card object can be found for that card graphic. Using default value.`);
+                                } else {
+                                    retval = getPropertyValue({ ...searchObj, ...{ source: newSource } }, typeList);
+                                }
+                            }
+                        } else { // token subtype, could be character
+                            if (!searchObj.source.represents || !searchObj.source.represents.length) {
+                                notes.push(`Not a recongized token property, and no character is associated with that token. Using default value.`);
+                            } else {
+                                newSource = getChar({ query: searchObj.source.represents, msg: searchObj.msg });
+                                if (!newSource) {
+                                    notes.push(`Not a recongized token property, but the associated character cannot be found. Using default value.`);
+                                } else {
+                                    retval = getPropertyValue({ ...searchObj, ...{ source: newSource } }, typeList);
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 'rollabletable':
+                    if (Object.keys(propContainers.rollabletable || {}).includes(searchObj.prop1)) {
+                        retval = propContainers.rollabletable[searchObj.prop1](searchObj.source, searchObj.msg);
+                    } else {
+                        newSource = getTableItems({ query: searchObj.prop1, tbl: searchObj.source, msg: searchObj.msg });
+                        if (!newSource) {
+                            notes.push(`Not a recognized item in that table. Using default value.`);
+                        } else {
+                            retval = propContainers.tableitem[!(searchObj.prop2 && searchObj.prop2.length) ? 'name' : searchObj.prop2](newSource, searchObj.msg);
+                        }
+                    }
+                    break;
+                case 'handout':
+                    if (searchObj.prop1.toLowerCase() === 'is') { // looking for tag
+                        if (searchObj.prop2) {
+                            newSource = getTag({ oid: searchObj.source.id, otype: 'handout', query: searchObj.prop2, pid: searchObj.msg.playerid });
+                            retval = propContainers.tag.is(newSource, searchObj.msg);
+                        }
+                    } else if (Object.keys(propContainers.character || {}).includes(searchObj.prop1)) { // handout property
+                        retval = propContainers.character[searchObj.prop1](searchObj.source, searchObj.msg);
+                    }
+                    break;
+                default:
+                    propObj = propContainers[searchObj.source.type];
+                    if (!Object.keys(propObj || {}).includes(searchObj.prop1.toLowerCase())) {
+                        notes.push(`Unable to find a ${searchObj.type.toLowerCase()} property named ${searchObj.prop1}. Using default value.`);
+                    } else {
+                        retval = propObj[searchObj.prop1.toLowerCase()](searchObj.source, searchObj.msg);
+                        if (typeof retval === 'undefined') {
+                            notes.push(`Unable to find ${searchObj.type.toLowerCase()} value for ${searchObj.prop1}. Using default value.`);
+                            retval = searchObj.retval;
+                        }
+                    }
+
+            }
+
+            return typeof retval !== 'undefined' ? retval : searchObj.retval;
+        };
+
+        const getCharacterAttribute = (searchObj) => {
+            let retval = getSheetItemVal({ ...searchObj, ...{ item: searchObj.prop1, valtype: searchObj.prop2 } }, notes);
+            if (typeof retval === 'undefined') {
+                notes.push(`Unable to find ${searchObj.symbol === '@' ? 'attribute' : 'ability'} named ${searchObj.prop1} for ${searchObj.source.name}. Using default value.`);
+                retval = searchObj.retval;
+            }
+            return retval;
+        };
+
+        const assignFromSpecialIdentifier = (searchObj) => {
+            let offset = 0,
+                trackres,
+                pgfilter = 'page',
+                presource,
+                reverse = false;
+            if (trackerrx.test(searchObj.init.obj)) { // if it is a tracker call, it could have an offset, so we detect that first
+                trackres = trackerrx.exec(searchObj.init.obj);
+                offset = parseInt(trackres.groups.offset || '0');
+                if (trackres.groups.operator === '-') reverse = true;
+                if (playerIsGM(searchObj.msg.playerid)) pgfilter = trackres.groups.filter || 'page';
+                searchObj.type = `tracker`;
+                let to = JSON.parse(Campaign().get('turnorder') || '[]').filter(filterObj[pgfilter] || filterObj['page']);
+                if (!to.length || to[0].id === '-1') {
+                    notes.push(`No tracker token for ${searchObj.m}. Using default value.`);
+                } else {
+                    presource = to[(reverse ? to.length - (offset % to.length) : offset % to.length) % to.length];
+                    searchObj.source = getGraphic({ query: presource.id, pageid: presource._pageid });
+                }
+            } else if (searchObj.init.obj.toLowerCase() === 'speaker') { // if it's a speaker call, determine if player or character, and adjust appropriately
+                presource = getChar({ query: msg.who, msg: searchObj.msg });
+                if (presource && presource.name) {
+                    searchObj.type = 'speaker';
+                    searchObj.source = presource;
+                } else {
+                    presource = getPlayer({ query: msg.who, msg: searchObj.msg });
+                    if (presource && presource.displayname) {
+                        searchObj.type = 'speaker';
+                        searchObj.source = presource;
+                    } else {
+                        notes.push(`Unable to find the speaker`);
+                    }
+                }
+            } else if (searchObj.init.obj.toLowerCase() === 'selected') {
+                if (!searchObj.msg.selected || !searchObj.msg.selected.length) { // selected but no token => default
+                    notes.push(`No token selected for ${searchObj.m}. Using default value.`);
+                } else {
+                    presource = simpleObj(findObjs({ id: searchObj.msg.selected[0]._id })[0]);
+                    if (!Object.keys(propContainers || {}).includes(presource.type.toLowerCase())) {
+                        commitProps(presource.type);
+                    }
+                    searchObj.source = getFetchObject({ type: presource.type, query: presource.id, msg: searchObj.msg });
+                    searchObj.type = 'selected';
+                }
+            }
+        };
+
+        while (testConstructs(msg.content)) {
+            msg.content = msg.content.replace(multirx, (m, symbol, obj, prop, identikey, subprop, def = '') => {
+                let presource,
+                    retval = def,
+                    searchObj = {
+                        source: {},
+                        type: '',
+                        symbol: symbol,
+                        prop1: prop,
+                        prop2: identikey,
+                        prop3: subprop,
+                        retval: def,
+                        init: {
+                            m: m,
+                            obj: obj,
+                            prop: prop,
+                            identikey: identikey,
+                            subprop: subprop,
+                            def: def
+                        },
+                        msg: msg
+                    };
+                if (obj.toLowerCase() === 'table') { searchObj.type = 'rollabletable'; obj = 'rollabletable'; }
+                if (trackerrx.test(obj) || ['selected', 'speaker'].includes(obj.toLowerCase())) {
+                    assignFromSpecialIdentifier(searchObj);
+                } else if ([...knownObjectTypes, 'marker'].includes(obj.toLowerCase()) || (findObjs({ type: obj.toLowerCase() })[0] || {}).hasOwnProperty('id')) { // fetch call using object type
+                    searchObj.source = getFetchObject({ type: obj.toLowerCase(), query: prop, msg: msg });
+                    searchObj.type = obj.toLowerCase();
+                    searchObj.prop1 = searchObj.type === 'marker' ? identikey || 'html' : identikey;
+                    searchObj.prop2 = subprop;
+                    searchObj.prop3 = undefined;
+                    //retval = getPropertyValue(source, obj, identikey, def);
+                } else if (((presource = findObjs({ id: obj })[0]) || {}).hasOwnProperty('id')) { // object ID
+                    searchObj.source = getFetchObject({ type: presource.get('type'), query: presource.id, msg: msg });
+                    searchObj.type = 'id';
+                } else { // all others (names, etc.)
+                    if (/([^[]+)\[([^\]]+)\]/.test(obj)) {
+                        let pageData = /([^[]+)\[([^\]]+)\]/.exec(obj);
+                        presource = getGraphic({ query: pageData[1], msg: searchObj.msg, pageid: (getPage({ query: pageData[2] }) || {}).id }); //getGraphic
+                    } else {
+                        presource = getGraphic({ query: obj, msg: searchObj.msg/*, pageid: getPageIDForPlayer(msg.playerid) */ }); //getGraphic
+                    }
+                    if (presource && presource.name) {
+                        searchObj.type = 'name';
+                        searchObj.source = presource;
+                    } else {
+                        presource = getChar({ query: obj, msg: searchObj.msg }); //getChar
+                        if (presource && presource.name) {
+                            searchObj.type = 'name';
+                            searchObj.source = presource;
+                        } else {
+                            notes.push(`Unable to find a game object named ${obj}. Using default value.`);
                         }
                     }
                 }
-                switch (obj.toLowerCase()) {
-                    case 'player':
-                        source = getPlayer(prop);
-                        retval = getPropertyValue(source, obj, identikey, def);
-                        break;
-                    case 'page':
-                        source = simpleObj(getPage(prop));
-                        retval = getPropertyValue(source, obj, identikey, def);
-                        break;
-                    case 'marker':
-                        source = simpleObj(getMarker(prop));
-                        retval = getPropertyValue(source, obj, (identikey || 'html'), def);
-                        break;
-                    case 'card':
-                        source = simpleObj(getCard(prop));
-                        retval = getPropertyValue(source, obj, identikey, def);
-                        break;
-                    case 'campaign':
-                        source = getCampaign();
-                        retval = getPropertyValue(source, obj, prop, def);
-                        break;
-                    case 'handout':
-                        presource = simpleObj(getHandout(prop) || {});
-                        if (identikey.toLowerCase() === 'is') { // handout with is
-                            if (subprop) {
-                                source = getTag(presource._id, 'handout', subprop, msg.playerid);
-                                retval = getPropertyValue(source, 'tag', identikey, def);
-                            }
-                        } else {
-                            source = presource;
-                            retval = getPropertyValue(source, obj, identikey, def);
-                        }
-                        break;
-                    case 'table':
-                        presource = simpleObj(getTable(prop, msg.playerid));
-                        if (presource && presource.id) {
-                            if (presource.hasOwnProperty(identikey)) {
-                                retval = getPropertyValue(presource, 'rollabletable', identikey, def);
-                            } else {
-                                source = simpleObj(getTableItems(identikey, presource));
-                                retval = getPropertyValue(source, 'tableitem', (subprop || 'name'), def);
-                            }
-                        }
-                        break;
-                    case 'selected':
-                        if (!msg.selected) { // selected but no token => default
-                            notes.push(`No token selected for ${m}. Using default value.`);
-                            retval = def;
-                        } else {
-                            selsource = simpleObj(findObjs({ id: msg.selected[0]._id })[0]);
-                            if (['text', 'path'].includes(selsource.type)) { // text objects and paths
-                                retval = getPropertyValue(selsource, selsource.type, prop, def);
-                            } else { // graphics/tokens/cards
-                                if (Object.keys(tokenProps).includes(prop.toLowerCase())) { // selected with token prop
-                                    source = simpleObj(getToken(msg.selected[0]._id));
-                                    retval = getPropertyValue(source, 'token', prop, def);
-                                } else if (prop.toLowerCase() === 'status') { // selected with status
-                                    if (identikey &&
-                                        (getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey)[1]) || {}).name &&
-                                        Object.keys(statusProps).includes((subprop || 'value').toLowerCase())
-                                    ) {
-                                        presource = simpleObj(getToken(msg.selected[0]._id, getPageID(msg.playerid)));
-                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                        if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
-                                            tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                        }
-                                        source = getStatus(msg.selected[0]._id, getPageID(msg.playerid), identikey, msgId);
-                                        retval = getPropertyValue(source, prop, (subprop || 'value'), def);
-                                    }
-                                }/* else if (prop.toLowerCase() === 'tagged') { // selected with tagged
-                                    if (identikey && Object.keys(tagProps).includes((subprop || 'is').toLowerCase())) {
-                                        presource = simpleObj(getToken(msg.selected[0]._id));
-                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                        if (presource.represents) {
-                                            source = getTag(presource.id, 'character', identikey, msg.playerid);
-                                            retval = getPropertyValue(source, 'tag', (subprop || 'is'), def);
-                                        }
-                                    }
-                                }*/ else if (prop.toLowerCase() === 'is') { // selected with is
-                                    if (identikey) {
-                                        if ((getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey)[1]) || {}).name) { // is with status
-                                            presource = simpleObj(getToken(msg.selected[0]._id, getPageID(msg.playerid)));
-                                            if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                            if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
-                                                tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                            }
-                                            source = getStatus(msg.selected[0]._id, getPageID(msg.playerid), identikey, msgId);
-                                            retval = getPropertyValue(source, 'status', 'is', def);
-                                        } else { // is with tag
-                                            presource = simpleObj(getToken(msg.selected[0]._id));
-                                            if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                            if (presource.represents) {
-                                                source = getTag(presource.id, 'character', identikey, msg.playerid);
-                                                retval = getPropertyValue(source, 'tag', 'is', def);
-                                            }
-                                        }
-                                    }
-                                } else { // selected with character prop/attribute/ability
-                                    source = simpleObj(getChar(msg.selected[0]._id, msg.playerid));
-                                    if (Object.keys(charProps).includes(prop.toLowerCase())) { // selected + character prop
-                                        retval = getPropertyValue(source, 'character', prop, def);
-                                    } else { // selected + character attribute or ability
-                                        retval = getCharacterAttribute(source, type, prop, identikey, def);
-                                    }
-                                }
-                            }
-                        }
 
-                        break;
-                    case 'tracker':
-                        to = JSON.parse(Campaign().get('turnorder') || '[]').filter(filterObj[pgfilter] || filterObj['page']);
-                        if (!to.length || to[0].id === '-1') {
-                            notes.push(`No tracker token for ${m}. Using default value.`);
-                            retval = def;
-                        } else {
-                            presource = to[(reverse ? to.length - (offset % to.length) : offset % to.length) % to.length];
-                            if (Object.keys(tokenProps).includes(prop.toLowerCase())) {                   // tracker + token property
-                                source = simpleObj(getToken(presource.id, presource._pageid));
-                                retval = getPropertyValue(source, 'token', prop, def);
-                            } else if (prop.toLowerCase() === 'status') { // tracker with status
-                                if (identikey &&
-                                    (getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey)[1]) || {}).name &&
-                                    Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
-                                    presource = simpleObj(getToken(presource.id, presource._pageid));
-                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id; 
-                                    if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) { 
-                                        tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                    }
-                                    source = getStatus(presource.id, getPageID(msg.playerid), identikey, msgId);
-                                    retval = getPropertyValue(source, prop, (subprop || 'value'), def);
-                                }
-                            }/* else if (prop.toLowerCase() === 'tagged') { // tracker with tagged
-                                if (identikey && Object.keys(tagProps).includes((subprop || 'is').toLowerCase())) {
-                                    presource = simpleObj(getToken(presource.id, presource._pageid));
-                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                    if (presource.represents) {
-                                        source = getTag(presource.id, 'character', identikey, msg.playerid);
-                                        retval = getPropertyValue(source, 'tag', (subprop || 'is'), def);
-                                    }
-                                }
-                            }*/ else if (prop.toLowerCase() === 'is') { // tracker with is
-                                if (identikey) {
-                                    if ((getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey)[1]) || {}).name) { // is with status
-                                        presource = simpleObj(getToken(presource.id, presource._pageid));
-                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                        if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {
-                                            tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                        }
-                                        source = getStatus(msg.selected[0]._id, getPageID(msg.playerid), identikey, msgId);
-                                        retval = getPropertyValue(source, 'status', 'is', def);
-                                    } else { // is with tag
-                                        presource = simpleObj(getToken(presource.id, presource._pageid));
-                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                        if (presource.represents) {
-                                            source = getTag(presource.id, 'character', identikey, msg.playerid);
-                                            retval = getPropertyValue(source, 'tag', 'is', def);
-                                        }
-                                    }
-                                }
-                            } else {                                                        // tracker with character prop/attribute/ability
-                                source = simpleObj(getChar(presource.id, msg.playerid));
-                                if (Object.keys(charProps).includes(prop.toLowerCase())) {  // tracker + character prop
-                                    retval = getPropertyValue(simpleObj(source), 'character', prop, def);
-                                } else {  //tracker + character attribute/ability
-                                    retval = getCharacterAttribute(source, type, prop, identikey, def);
-                                }
-                            }
-                        }
-                        break;
-                    default: // all others -- could be token name, token id, character name, or character id
-                        selsource = simpleObj(findObjs({ id: obj })[0] || {});
-                        if (selsource.type && ['text', 'path'].includes(selsource.type)) { // text objects and paths
-                            retval = getPropertyValue(selsource, selsource.type, prop, def);
-                        } else { // graphics/tokens/cards/status/character
-                            if (Object.keys(tokenProps).includes(prop.toLowerCase())) {        // token property
-                                source = simpleObj(getToken(obj, getPageID(msg.playerid)));
-                                retval = getPropertyValue(source, 'token', prop, def);
-                            } else if (prop.toLowerCase() === 'status') { // status
-                                if (identikey &&
-                                    (getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey)[1]) || {}).name &&
-                                    Object.keys(statusProps).includes((subprop || 'value').toLowerCase())) {
-                                    presource = simpleObj(getToken(obj, getPageID(msg.playerid)));
-                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                    if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {
-                                        tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                    }
-                                    source = getStatus(obj, getPageID(msg.playerid), identikey, msgId);
-                                    retval = getPropertyValue(source, prop, (subprop || 'value'), def);
-                                }
-                            }/* else if (prop.toLowerCase() === 'tagged') { // tagged
-                                if (identikey && Object.keys(tagProps).includes((subprop || 'is').toLowerCase())) {
-                                    presource = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));
-                                    if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                    if (presource) {
-                                        source = getTag(presource.id, 'character', identikey, msg.playerid);
-                                        retval = getPropertyValue(source, 'tag', (subprop || 'is'), def);
-                                    }
-                                }
-                            }*/ else if (prop.toLowerCase() === 'is') { // is
-                                if (identikey) {
-                                    if ((getMarker(/(?<marker>.+?)(?:\?(?<index>\d+|all\+?))?$/.exec(identikey)[1]) || {}).name) { // is with status
-                                        presource = simpleObj(getToken(obj, getPageID(msg.playerid)));
-                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                        if (!tokenStatuses.hasOwnProperty(presource.id) || tokenStatuses[presource.id].msgId !== msgId) {// eslint-disable-line no-prototype-builtins
-                                            tokenStatuses[presource.id] = new StatusBlock({ token: presource, msgId: msgId });
-                                        }
-                                        source = getStatus(obj, getPageID(msg.playerid), identikey, msgId);
-                                        retval = getPropertyValue(source, 'status', 'is', def);
-                                    } else { // is with tag
-                                        presource = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));
-                                        if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id;
-                                        if (presource) {
-                                            source = getTag(presource.id, 'character', identikey, msg.playerid);
-                                            retval = getPropertyValue(source, 'tag', 'is', def);
-                                        }
-                                    }
-                                }
-                            } else { // character property or attribute or ability
-                                source = simpleObj(getChar(obj, msg.playerid) || getChar((simpleObj(getToken(obj, getPageID(msg.playerid))) || {}).represents, msg.playerid));
-                                if (Object.keys(charProps).includes(prop.toLowerCase())) { // character property
-                                    retval = getPropertyValue(simpleObj(source), 'character', prop, def);
-                                } else {                                                  // character attribute/ability
-                                    retval = getCharacterAttribute(source, type, prop, identikey, def);
-                                }
-                            }
-                        }
-                        break;
+                if (!searchObj.source || !Object.keys(searchObj.source || {}).length) {
+                    retval = searchObj.retval;
+                } else {
+                    retval = getPropertyValue(searchObj);
                 }
-                status.push('changed');
+
+                if (retval) status.push('changed');
                 return retval;
             });
 
             // REPEATING SHEET ITEMS
-            msg.content = msg.content.replace(rptgitemrx, (m, type, obj, section, pattern, reference, valuesuffix, valtype, def = '') => {
-                let bsel = false;
-                let offset = 0,
-                    trackres,
-                    pgfilter = 'page',
-                    presource,
-                    source,
-                    retval,
-                    reverse = false,
-                    to;
-                if (trackerrx.test(obj)) { // if it is a tracker call, it could have an offset, so we detect that first
-                    trackres = trackerrx.exec(obj);
-                    offset = parseInt(trackres.groups.offset || '0');
-                    if (trackres.groups.operator === '-') reverse = true;
-                    if (playerIsGM(msg.playerid)) pgfilter = trackres.groups.filter || 'page';
-                    obj = `tracker`;
-                    trackres.lastIndex = 0;
-                }
-                switch (obj.toLowerCase()) {
-                    case 'selected':
-                        if (!msg.selected) {
-                            notes.push(`No token selected for ${m}. Using default value.`);
-                            bsel = true;
-                            retval = def;
-                        } else {
-                            source = getChar(msg.selected[0]._id, msg.playerid);
-                        }
-                        break;
-                    case 'speaker':
-                        source = getChar(msg.who, msg.playerid);
-                        break;
-                    case 'tracker':
-                        to = JSON.parse(Campaign().get('turnorder') || '[]').filter(filterObj[pgfilter] || filterObj['page']);
-                        if (!to.length || to[0].id === '-1') {
-                            notes.push(`No tracker token for ${m}. Using default value.`);
-                            retval = def;
-                        } else {
-                            presource = to[(reverse ? to.length - (offset % to.length) : offset % to.length) % to.length];
-                            if (presource && !presource.hasOwnProperty('id')) presource.id = presource._id; 
-                            source = simpleObj(getChar(presource.id, msg.playerid));
-                        }
-                        break;
-                    default:
-                        source = getChar(obj, msg.playerid);
+            msg.content = msg.content.replace(rptgitemrx, (m, symbol, obj, section, pattern, reference, aggregate, valuesuffix, valtype, def = '') => {
+                let retval,
+                    searchObj = {
+                        source: {},
+                        type: '',
+                        symbol: symbol,
+                        obj: obj,
+                        section: section,
+                        pattern: pattern,
+                        reference: reference,
+                        aggregate: aggregate,
+                        valuesuffix: valuesuffix,
+                        valtype: valtype,
+                        retval: def,
+                        init: {
+                            m: m,
+                            type: symbol,
+                            obj: obj,
+                            section: section,
+                            pattern: pattern,
+                            reference: reference,
+                            valuesuffix: valuesuffix,
+                            valtype: valtype,
+                            def: def
+                        },
+                        msg: msg
+                    };
+                if (trackerrx.test(obj) || ['selected', 'speaker'].includes(obj.toLowerCase())) {
+                    assignFromSpecialIdentifier(searchObj);
+                    if (searchObj.source && searchObj.source.type === 'graphic') {
+                        searchObj.source = getChar({ query: searchObj.source.represents, msg });
+                    }
+                } else {
+                    searchObj.source = getChar({ query: obj, msg: searchObj.msg });
+                    if ((findObjs({ id: obj })[0] || {}).hasOwnProperty('id')) { // object ID
+                        searchObj.type = 'id';
+                    } else { // all others (names, etc.)
+                        searchObj.type = 'name'
+                    }
                 }
 
-                if (!source) {
-                    if (!bsel) notes.push(`Unable to find character for ${m}. Using default value.`); //track note only if we haven't already tracked no selected
-                    retval = def;
+                if (!searchObj.source || !Object.keys(searchObj.source || {}).length) {
+                    retval = searchObj.retval;
+                    notes.push(`Unable to find character for ${m}. Using default value.`); //track note only if we haven't already tracked no selected
                 } else {
-                    retval = getSheetItemVal({ groups: { type: type, character: source.id, section: section, pattern: pattern, reference: reference, valuesuffix: valuesuffix, valtype: valtype } }, msg.playerid, source);
+                    if (!Object.keys(propContainers[searchObj.source.type] || {}).length) { commitProps(searchObj.source.type); }
+                    if (!Object.keys(propContainers.attribute || {}).length) { commitProps('attribute'); }
+
+                    retval = getSheetItemVal(searchObj, notes);
                     if (typeof retval === 'undefined') {
                         notes.push(`Unable to find repeating item for ${m}. Using default value.`);
-                        retval = def;
+                        retval = searchObj.retval;
                     }
                 }
                 if (retval) status.push('changed');
@@ -1641,6 +1783,109 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         return condensereturn(funcret, status, notes);
     };
 
+    const handleConfig = msg => {
+        if (msg.type !== 'api' || !/^!fetchconfig/.test(msg.content)) return;
+        let recipient = getWhisperTo(msg.who);
+        if (!playerIsGM(msg.playerid)) {
+            msgbox({ title: 'GM Rights Required', msg: 'You must be a GM to perform that operation', whisperto: recipient });
+            return;
+        }
+        let cfgrx = /^(\+|-)(playerscanids)$/i;
+        let res;
+        let cfgTrack = {};
+        let message;
+        if (/^!fetchconfig\s+[^\s]/.test(msg.content)) {
+            msg.content.split(/\s+/).slice(1).forEach(a => {
+                res = cfgrx.exec(a);
+                if (!res) return;
+                if (res[2].toLowerCase() === 'playerscanids') {
+                    manageState.set('playerscanids', (res[1] === '+'));
+                    cfgTrack[res[2]] = res[1];
+                }
+            });
+            let changes = Object.keys(cfgTrack).map(k => `${html.span(k, localCSS.inlineEmphasis)}: ${cfgTrack[k] === '+' ? 'enabled' : 'disabled'}`).join('<br>');
+            msgbox({ title: `Fetch Config Changed`, msg: `You have made the following changes to the Fetch configuration:<br>${changes}`, whisperto: recipient });
+        } else {
+            cfgTrack.playerscanids = `${html.span('playerscanids', localCSS.inlineEmphasis)}: ${manageState.get('playerscanids') ? 'enabled' : 'disabled'}`;
+            message = `Fetch is currently configured as follows:<br>${cfgTrack.playerscanids}`;
+            msgbox({ title: 'Fetch Configuration', msg: message, whisperto: recipient });
+        }
+    };
+
+    const handlePropReport = msg => {
+        /*
+        !fetchprops
+        !fetchprops --type=<type>        
+        */
+        if (!(msg.type === "api" && /^!fetchprops/i.test(msg.content))) return;
+        if (/^!fetchprops-rebuild/i.test(msg.content)) {
+            buildPropContainers();
+        }
+        let contents = [];
+        let rptArgs = {
+            type: '',
+            ref: '',
+            object: undefined
+        };
+        const propNicks = (type) => {
+            let nicks = [...Object.entries(customPropsByType[type]?.compProps || {}).map(e => [e[0], ...e[1].nicks]),
+            ...Object.entries(customPropsByType[type]?.nicks || {}).map(e => [e[0], ...e[1]])];
+            let filterProps = nicks.reduce((m, p) => {
+                m = [...m, ...p];
+                return m;
+            }, []);
+            let remainingProps = Object.keys(propContainers[type] || {}).filter(p => !filterProps.includes(p));
+            remainingProps.filter(k => !/^_/.test(k)).forEach(k => { nicks.push([k]); });
+            remainingProps.filter(k => /^_/.test(k)).forEach(k => { nicks.find(n => n.includes(k.slice(1))).unshift(k); });
+            return nicks.map(props => props.sort()).sort((a, b) => a[0] > b[0] ? 1 : -1);
+        }
+
+        let [handle, args] = ((apriori = msg.content.split(/\s+--/)) => { return [apriori[0], apriori.slice(1)]; })();
+
+        let typesWithProps = Object.keys(propContainers || {});
+        let tbl = '';
+
+        args.filter(a => /^([^#\|=:]+)(?:#|\||=|:)(.+)$/.test(a)).forEach(a => {
+            let argParts = a.split(/^([^#\|=:]+)(?:#|\||=|:)(.+)$/).slice(1, 3);
+            if (argParts[0].toLowerCase() === 'type' && typesWithProps.includes(argParts[1].toLowerCase())) {
+                rptArgs.type = argParts[1].toLowerCase();
+            } else if (argParts[0].toLowerCase() === 'for') {
+                rptArgs.ref = argParts[1];
+            }
+        });
+        let btnRebuild = Messenger.Button({ type: '!', label: 'Rebuild', elem: `!fetchprops-rebuild${rptArgs.type && rptArgs.type.length ? ' --type=' + rptArgs.type : ''}`, css: localCSS.button });
+        let tblFooter = html.table(html.tr(html.td(btnRebuild, localCSS.textright)));
+        if (!args.length || !rptArgs.type) { // handle only
+            tbl = html.table(
+                typesWithProps.filter(t => propContainers[t]).sort().map((k, i) => html.tr(
+                    html.td(k) +
+                    html.td(Object.keys(propContainers[k] || {}).length) +
+                    html.td(Messenger.Button({ type: '!', label: 'Props', elem: `!fetchprops --type=${k}`, css: localCSS.button }), localCSS.textright),
+                    i % 2 === 1 ? localCSS.tblOddRow : {}
+                )).join('')
+            );
+            msgbox({ title: `Fetch Props for Each Type`, whisperto: getWhisperTo(msg.who), msg: tbl, headercss: localCSS.msgheader, btn: tblFooter });
+        } else { // handle with type
+            let nicks = propNicks(rptArgs.type);
+            tbl = html.table(
+                nicks.map((props, i) => html.tr(
+                    html.td(props.join('<br>')),
+                    i % 2 === 1 ? localCSS.tblOddRow : {}
+                )).join('')
+            );
+            msgbox({ title: `Fetch Props for ${rptArgs.type}`, whisperto: getWhisperTo(msg.who), msg: tbl, headercss: localCSS.msgheader, btn: tblFooter });
+            /*
+            nicks.forEach(props => {
+                contents.push(`${props.join('%NEWLINE%')}= `); // ${Messenger.HE(propContainers[rptArgs.type][props[0]](rptArgs.object))}`);
+            });
+            defaultReport(rptArgs.type, contents);
+            /* */
+        }
+    };
+
+    // ==================================================
+    //		DEPENDENCIES
+    // ==================================================
     const checkDependencies = (deps) => {
         /* pass array of objects like
             { name: 'ModName', version: '#.#.#' || '', mod: ModName || undefined, checks: [ [ExposedItem, type], [ExposedItem, type] ] }
@@ -1710,11 +1955,37 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         return true;
     };
 
-
+    // ==================================================
+    //		METASCRIPT FUNCTIONALITY
+    // ==================================================
+    const condensereturn = (funcret, status, notes) => {
+        funcret.runloop = (status.includes('changed') || status.includes('unresolved'));
+        if (status.length) {
+            funcret.status = status.reduce((m, v) => {
+                switch (m) {
+                    case 'unchanged':
+                        m = v;
+                        break;
+                    case 'changed':
+                        m = v === 'unresolved' ? v : m;
+                        break;
+                    case 'unresolved':
+                        break;
+                }
+                return m;
+            });
+        }
+        funcret.notes = notes.join('<br>');
+        return funcret;
+    };
     let scriptisplugin = false;
     // const fetch = async (m, s) => await handleInput(m, s);
     const fetch = (m, s) => handleInput(m, s);
     on('chat:message', handleInput);
+
+    // ==================================================
+    //		INITIALIZATION
+    // ==================================================
     on('ready', () => {
         versionInfo();
         logsig();
@@ -1722,7 +1993,7 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         let reqs = [
             {
                 name: 'checkLightLevel',
-//                version: `1.0.0.b3`,
+                //                version: `1.0.0.b3`,
                 mod: typeof checkLightLevel !== 'undefined' ? checkLightLevel : undefined,
                 checks: [['isLitBy', 'function']],
                 optional: true
@@ -1744,8 +2015,10 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         html = Messenger.Html();
         css = Messenger.Css();
         HE = Messenger.HE;
+        buildPropContainers();
 
         on('chat:message', handleConfig);
+        on('chat:message', handlePropReport);
 
         scriptisplugin = (typeof ZeroFrame !== `undefined`);
         if (typeof ZeroFrame !== 'undefined') {
@@ -1753,6 +2026,9 @@ const Fetch = (() => { //eslint-disable-line no-unused-vars
         }
     });
     return {
+        KnownObjectTypes: knownObjectTypes,
+        PropContainers: propContainers,
+        CustomPropsByType: customPropsByType
     };
 })();
 { try { throw new Error(''); } catch (e) { API_Meta.Fetch.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.Fetch.offset); } }

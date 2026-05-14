@@ -1,10 +1,12 @@
 {
   "name": "Aura/Tint HealthColors",
   "script": "HealthColors.js",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "previousversions": [
+    "2.1.0",
     "2.0.1",
     "2.0.0",
+    "1.7.1",
     "1.6.1",
     "1.6.0",
     "1.5.1",
@@ -15,8 +17,8 @@
     "1.2.0"
   ],
   "description": "Script to set health indicator on tokens via aura or tint, based on a bars value. Be sure to set the bar your health is tied to in the menu: API menu command !AURA",
-  "authors": "DXWarlock, MidNiteShadow7",
-  "roll20userid": "262130, 16506286",
+  "authors": "DXWarlock, Surok, MidNiteShadow7",
+  "roll20userid": "262130, 335573, 16506286",
   "dependencies": [],
   "modifies": {
     "custfx": "read,write",

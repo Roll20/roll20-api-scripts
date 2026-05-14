@@ -1,0 +1,207 @@
+{
+  "name": "Condition Tracker",
+  "script": "ConditionTracker.js",
+  "version": "1.0.0",
+  "previousversions": [],
+  "description": "Track token conditions and custom effects as separate Roll20 Turn Tracker rows.",
+  "authors": "MidNiteShadow7",
+  "roll20userid": "16506286",
+  "useroptions": [
+    {
+      "name": "useMarkers",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Apply Roll20 status markers to tokens when a condition is added. Default: enabled."
+    },
+    {
+      "name": "useIcons",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Show short icon codes such as [G] instead of emoji in Turn Tracker rows. Default: disabled."
+    },
+    {
+      "name": "subjectPromptBypass",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Skip the optional subject-token step for Spell, Ability, and Other effects. Default: disabled."
+    },
+    {
+      "name": "healthBar",
+      "type": "select",
+      "options": [
+        "bar1_value",
+        "bar2_value",
+        "bar3_value"
+      ],
+      "default": "bar1_value",
+      "description": "Token bar to watch for 0 HP cleanup prompts. Default: bar1_value."
+    },
+    {
+      "name": "language",
+      "type": "select",
+      "options": [
+        "af",
+        "ca",
+        "zh-TW",
+        "cs",
+        "da",
+        "nl",
+        "en-US",
+        "fi",
+        "fr",
+        "de",
+        "el",
+        "he",
+        "hu",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-PT",
+        "pt-BR",
+        "ru",
+        "es",
+        "sv",
+        "tr",
+        "uk"
+      ],
+      "default": "en-US",
+      "description": "Output language for chat messages and the generated help handout. Supports Roll20 account languages; aliases en, zh, and pt are accepted in chat commands. Default: en-US."
+    },
+    {
+      "name": "markerGrappled",
+      "type": "text",
+      "default": "grab",
+      "description": "Status marker tag used for Grappled. Default: grab."
+    },
+    {
+      "name": "markerRestrained",
+      "type": "text",
+      "default": "padlock",
+      "description": "Status marker tag used for Restrained. Default: padlock."
+    },
+    {
+      "name": "markerProne",
+      "type": "text",
+      "default": "back-pain",
+      "description": "Status marker tag used for Prone. Default: back-pain."
+    },
+    {
+      "name": "markerPoisoned",
+      "type": "text",
+      "default": "chemical-bolt",
+      "description": "Status marker tag used for Poisoned. Default: chemical-bolt."
+    },
+    {
+      "name": "markerStunned",
+      "type": "text",
+      "default": "pummeled",
+      "description": "Status marker tag used for Stunned. Default: pummeled."
+    },
+    {
+      "name": "markerBlinded",
+      "type": "text",
+      "default": "bleeding-eye",
+      "description": "Status marker tag used for Blinded. Default: bleeding-eye."
+    },
+    {
+      "name": "markerCharmed",
+      "type": "text",
+      "default": "chained-heart",
+      "description": "Status marker tag used for Charmed. Default: chained-heart."
+    },
+    {
+      "name": "markerFrightened",
+      "type": "text",
+      "default": "screaming",
+      "description": "Status marker tag used for Frightened. Default: screaming."
+    },
+    {
+      "name": "markerIncapacitated",
+      "type": "text",
+      "default": "interdiction",
+      "description": "Status marker tag used for Incapacitated. Default: interdiction."
+    },
+    {
+      "name": "markerInvisible",
+      "type": "text",
+      "default": "ninja-mask",
+      "description": "Status marker tag used for Invisible. Default: ninja-mask."
+    },
+    {
+      "name": "markerParalyzed",
+      "type": "text",
+      "default": "frozen-orb",
+      "description": "Status marker tag used for Paralyzed. Default: frozen-orb."
+    },
+    {
+      "name": "markerPetrified",
+      "type": "text",
+      "default": "fossil",
+      "description": "Status marker tag used for Petrified. Default: fossil."
+    },
+    {
+      "name": "markerUnconscious",
+      "type": "text",
+      "default": "sleepy",
+      "description": "Status marker tag used for Unconscious. Default: sleepy."
+    },
+    {
+      "name": "markerSpell",
+      "type": "text",
+      "default": "lightning-helix",
+      "description": "Status marker tag used for Spell effects. Default: lightning-helix."
+    },
+    {
+      "name": "markerAbility",
+      "type": "text",
+      "default": "fist",
+      "description": "Status marker tag used for Ability effects. Default: fist."
+    },
+    {
+      "name": "markerAdvantage",
+      "type": "text",
+      "default": "three-leaves",
+      "description": "Status marker tag used for Advantage effects. Default: three-leaves."
+    },
+    {
+      "name": "markerDisadvantage",
+      "type": "text",
+      "default": "broken-heart",
+      "description": "Status marker tag used for Disadvantage effects. Default: broken-heart."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "Campaign.turnorder": "read,write",
+    "Campaign.playerpageid": "read",
+    "graphic._pageid": "read",
+    "graphic.subtype": "read",
+    "graphic.statusmarkers": "read,write",
+    "graphic.bar1_value": "read",
+    "graphic.bar2_value": "read",
+    "graphic.bar3_value": "read",
+    "graphic.layer": "write",
+    "graphic.name": "read",
+    "graphic.represents": "read",
+    "graphic.controlledby": "read",
+    "character.name": "read",
+    "character.controlledby": "read",
+    "attribute._characterid": "read",
+    "attribute.name": "read",
+    "attribute.current": "read",
+    "macro.name": "read,write",
+    "macro.playerid": "read,write",
+    "macro.action": "write",
+    "macro.visibleto": "write",
+    "macro.istokenaction": "write",
+    "handout.name": "read,write",
+    "handout.notes": "write",
+    "handout.inplayerjournals": "write",
+    "handout.controlledby": "write",
+    "player._id": "read",
+    "player._displayname": "read"
+  },
+  "conflicts": []
+}

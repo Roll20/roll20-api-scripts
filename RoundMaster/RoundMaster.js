@@ -149,14 +149,20 @@ API_Meta.RoundMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                    parameter passed to evaluate.
  * v5.065  17/02/2026 Fixed issue with stench of decay. Added status move when individual players
  *                    change page differently from the ribbon.
+ * v5.066  11/05/2026 Fixed issue with many areas of effect using maths for range or dimentions.
+ *                    Trapped ghost token ids, informing GM of error.  Preserved caster id when asting
+ *                    AREA effect spells. Use character ID when ending effects on a deleted token. If
+ *                    a player is not present, redirect their messages to the GM. Added ^^tcid^^ field tag 
+ *                    for effects which usually results in same as ^^tid^^ unless token is deleted with
+ *                    running --set-mods status, then it resolves to ^^cid^^,^^tid^^.
  **/
  
 var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 	'use strict'; 
-	var version = 5.065,
+	var version = 5.066,
 		author = 'Ken L. & RED',
 		pending = null;
-	const lastUpdate = 1777318205;
+	const lastUpdate = 1778520704;
 	
 	var RW_StateEnum = Object.freeze({
 		ACTIVE: 0,
@@ -366,7 +372,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Incite-Rage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --charid ^^cid^^ --fb-from Effects --fb-header ^^cname^^ is Raging! --thac0-base|-2 --strengthdmg||2 --fb-content ^^cname^^\'s Thac0 has been improved by 2 and any damage will have +2 added'},
 						{name:'Increasing-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+[[{{18-@{^^cname^^|strength}},{1}}kl1]]|strength|silent --change-attr ^^tid^^|+[[{{18-@{^^cname^^|constitution}},{1}}kl1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Strength_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
 						{name:'Increasing-Weakness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|[[{{3-@{^^cname^^|strength}},{-1}}kh1]]|strength|silent --change-attr ^^tid^^|[[{{3-@{^^cname^^|constitution}},{-1}}kh1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Weakness_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
-						{name:'Infested-with-Vermin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tid^^|del|Infested by Vermin|||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Oooo... That\'s better! The itching and scratching seem to have stopped}}'},
+						{name:'Infested-with-Vermin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tcid^^|del|Infested by Vermin|||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Oooo... That\'s better! The itching and scratching seem to have stopped}}'},
 						{name:'Infested-with-Vermin-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tid^^|fix|Infested by Vermin|+51||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Your robe seems to be infested with biting insects - fleas, mosquitos, ants, and other sorts. You can\'t stop itching \\amp scratching, to the extent that you are only 50% effective!}}'},
 						{name:'Infravision-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off has_night_vision\n/w "^^cname^^" "Who turned out the lights?" ^^tname^^ no longer has night vision.'},
 						{name:'Infravision-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --on has_night_vision --set night_distance|60\n/w "^^cname^^" ^^tname^^ has gained 60ft infravision, which brightens up their night!'},
@@ -525,7 +531,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Shrieker-Shriek-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Shriek Ends|Do you wish to [roll for attracting monsters](!rounds ~&#45;target-nosave caster&#124;^^tid^^&#124;Shriek-Attract-Monster&#124;99&#124;0&#124;Have any monsters been attracted?&#124;death-zone) each round?'},
 						{name:'Shriek-Attract-Monster-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Monsters Attracted?|[Roll d100](!&#13;&#47;w gm &#91;&#91;&#63;{Monsters attracted if get over 50%&#124;1d100}&#93;&#93;) to see if monsters were attracted - 50% chance each round. You can [stop rolling each round](!rounds ~&#45;removetargetstatus ^^tid^^&#124;Shriek-Attract-Monster) whenever you want to.'},
 						{name:'Shriek-Attract-Monster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Monsters Attracted?|[Roll d100](!&#13;&#47;w gm &#91;&#91;&#63;{Monsters attracted if get over 50%&#124;1d100}&#93;&#93;) to see if monsters were attracted - 50% chance each round. You can [stop rolling each round](!rounds ~&#45;removetargetstatus ^^tid^^&#124;Shriek-Attract-Monster) whenever you want to.'},
-						{name:'Slow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell||Slow\n!init --setmods ^^tid^^|del|Slow|||silent\n!magic --message c|^^tid^^|No Longer Slowed|^^tname^^ is moving at their normal speed again, and their AC and attacks have returned to normal'},
+						{name:'Slow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell||Slow\n!init --setmods ^^tid^^|del|Slow|||silent\n!magic --message c|^^tid^^|No Longer Slowed|^^tname^^ is moving at their normal speed again, and their AC and attacks have returned to normal'},
 //						'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|-[[4+[[abs([[{{@{^^cname^^|norm_dexdefense}},{0}}kl1]])]]]] ^^token_thac0^^|-4\n!setattr --silent --name ^^cname^^ --dexreact|@{^^cname^^|norm_dexreact} --dexmissile|@{^^cname^^|norm_dexmissile} --dexdefense|@{^^cname^^|norm_dexdefense}\n!init --setmods ^^tid^^|del|Slow|0|1|silent\n/w "^^cname^^" ^^tname^^ is moving at their normal speed again, and their AC and attacks have returned to normal'},
 						{name:'Slow-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|AC|Slow|+:-4 --set-mods ^^tid^^|add|No DexMods|Slow|+:v(0@{^^cname^^|dexdefense},0) --set-mods ^^tid^^|add|Thac0|Slow|thac0+:-4\n!init --setmods ^^tid^^|both|Slow|=2|=0.5|silent\n!magic --message c|^^tid^^|Slowed|^^tname^^ is moving in slow motion, with worse AC and attacks'},
 //						'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_ac^^|+[[4+[[abs([[{{@{^^cname^^|dexdefense}},{0}}kl1]])]]]] ^^token_thac0^^|+4\n!setattr --silent --name ^^cname^^ --norm_dexreact|@{^^cname^^|dexreact} --norm_dexmissile|@{^^cname^^|dexmissile} --norm_dexdefense|@{^^cname^^|dexdefense} --dexreact|[[{{@{^^cname^^|dexreact}},{0}}kl1]] --dexmissile|[[{{@{^^cname^^|dexmissile}},{0}}kl1]] --dexdefense|[[{{@{^^cname^^|dexdefense}},{0}}kh1]]\n!init --setmods ^^tid^^|both|Slow|=2|=0.5|silent\n/w "^^cname^^" ^^tname^^ is moving in slow motion, with worse AC and attacks '},
@@ -595,28 +601,28 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 					controlledby:'all',
 					root:'effects-db',
 					avatar:'https://files.d20.io/images/2795868/caxnSIYW0gsdv4kOmO294w/max.png?1390102911',
-					version:7.11,
+					version:7.12,
 					db:[{name:'3min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 3min-Geyser|-1|[[1d10]]|0|3min Geyser blows'},
 						{name:'5min-geyser-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtotracker 5min-Geyser|-1|[[1d10]]|0|5min Geyser blows'},
-						{name:'AE-Aerial-Combat-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Aerial Combat|Air Elemental|thac0\n!magic --message ^^tid^^|^^cname^^ finishes Aerial Combat|No longer has bonus to-hit or damage'},
+						{name:'AE-Aerial-Combat-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Aerial Combat|Air Elemental|thac0\n!magic --message ^^tid^^|^^cname^^ finishes Aerial Combat|No longer has bonus to-hit or damage'},
 						{name:'AE-Aerial-Combat-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Aerial Combat|Air Elemental|thac0+:+1,dmg+:+4\n!magic --message ^^tid^^|^^cname^^ is undertaking Aerial Combat|Gains +1 bonus to-hit and +4 bonus to damage'},
-						{name:'Advantage-All-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell||Manual Advantage\n!magic --message ^^tid^^|All GM Set Advantages|^^tname^^ is no longer gaining Advantages set by the GM. Other sources of Advantage will still apply.'},
+						{name:'Advantage-All-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell||Manual Advantage\n!magic --message ^^tid^^|All GM Set Advantages|^^tname^^ is no longer gaining Advantages set by the GM. Other sources of Advantage will still apply.'},
 						{name:'Advantage-All-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|disadvantage-all|silent\n!attk --set-mods ^^tid^^|add|All|Manual Advantage|adall:+1\n!magic --message ^^tid^^|All GM Set Advantages|^^tname^^ is gaining Advantage on melee \\amp ranged attack rolls, damage rolls, saving throws, attribute checks, and rogue skill checks'},
-						{name:'Advantage-Attributes-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Attributes|Manual Advantage\n!magic --message ^^tid^^|Attribute Check Advantage|^^tname^^ is no longer gaining Advantage set by the GM on attribute checks. Other sources of Advantage will still apply.'},
+						{name:'Advantage-Attributes-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Attributes|Manual Advantage\n!magic --message ^^tid^^|Attribute Check Advantage|^^tname^^ is no longer gaining Advantage set by the GM on attribute checks. Other sources of Advantage will still apply.'},
 						{name:'Advantage-Attributes-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|disadvantage-attributes|silent\n!attk --set-mods ^^tid^^|add|Attributes|Manual Advantage|adatr:+1\n!magic --message ^^tid^^|Attribute Checks Advantage|^^tname^^ is gaining Advantage on melee attack rolls'},
-						{name:'Advantage-Damage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Damage|Manual Advantage\n!magic --message ^^tid^^|Damage Roll Advantage|^^tname^^ is no longer gaining Advantage set by the GM on damage rolls. Other sources of Advantage will still apply.'},
+						{name:'Advantage-Damage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Damage|Manual Advantage\n!magic --message ^^tid^^|Damage Roll Advantage|^^tname^^ is no longer gaining Advantage set by the GM on damage rolls. Other sources of Advantage will still apply.'},
 						{name:'Advantage-Damage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|disadvantage-damage|silent\n!attk --set-mods ^^tid^^|add|Damage|Manual Advantage|addam:+1\n!magic --message ^^tid^^|Damage Roll Advantage|^^tname^^ is gaining Advantage on damage rolls'},
-						{name:'Advantage-Melee-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Melee|Manual Advantage\n!magic --message ^^tid^^|Melee Attack Advantage|^^tname^^ is no longer gaining Advantage set by the GM on melee attack rolls. Other sources of Advantage will still apply.'},
+						{name:'Advantage-Melee-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Melee|Manual Advantage\n!magic --message ^^tid^^|Melee Attack Advantage|^^tname^^ is no longer gaining Advantage set by the GM on melee attack rolls. Other sources of Advantage will still apply.'},
 						{name:'Advantage-Melee-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|disadvantage-melee|silent\n!attk --set-mods ^^tid^^|add|Melee|Manual Advantage|admwa:+1\n!magic --message ^^tid^^|Melee Attack Advantage|^^tname^^ is gaining Advantage on melee attack rolls'},
-						{name:'Advantage-Ranged-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Ranged|Manual Advantage\n!magic --message ^^tid^^|Ranged Attack Advantage|^^tname^^ is no longer gaining Advantage set by the GM on ranged attack rolls. Other sources of Advantage will still apply.'},
+						{name:'Advantage-Ranged-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Ranged|Manual Advantage\n!magic --message ^^tid^^|Ranged Attack Advantage|^^tname^^ is no longer gaining Advantage set by the GM on ranged attack rolls. Other sources of Advantage will still apply.'},
 						{name:'Advantage-Ranged-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|disadvantage-ranged|silent\n!attk --set-mods ^^tid^^|add|Ranged|Manual Advantage|adrwa:+1\n!magic --message ^^tid^^|Melee Attack Advantage|^^tname^^ is gaining Advantage on ranged attack rolls'},
-						{name:'Advantage-Rogue-Skills-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Rogue Skills|Manual Advantage\n!magic --message ^^tid^^|Rogue Skill Advantage|^^tname^^ is no longer gaining Advantage set by the GM on rogue skill checks. Other sources of Advantage will still apply.'},
+						{name:'Advantage-Rogue-Skills-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Rogue Skills|Manual Advantage\n!magic --message ^^tid^^|Rogue Skill Advantage|^^tname^^ is no longer gaining Advantage set by the GM on rogue skill checks. Other sources of Advantage will still apply.'},
 						{name:'Advantage-Rogue-Skills-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|disadvantage-rogue|silent\n!attk --set-mods ^^tid^^|add|Rogue Skills|Manual Advantage|adrog:+1\n!magic --message ^^tid^^|Rogue Skill Check Advantage|^^tname^^ is gaining Advantage on rogue skill checks'},
-						{name:'Advantage-Saves-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Saves|Manual Advantage\n!magic --message ^^tid^^|Saving Throw Advantage|^^tname^^ is no longer gaining Advantage set by the GM on saving throws. Other sources of Advantage will still apply.'},
+						{name:'Advantage-Saves-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Saves|Manual Advantage\n!magic --message ^^tid^^|Saving Throw Advantage|^^tname^^ is no longer gaining Advantage set by the GM on saving throws. Other sources of Advantage will still apply.'},
 						{name:'Advantage-Saves-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|disadvantage-saves|silent\n!attk --set-mods ^^tid^^|add|Saves|Manual Advantage|adsav:+1\n!magic --message ^^tid^^|Saving Throw Advantage|^^tname^^ is gaining Advantage on saving throws'},
 						{name:'Affected-by-Chill-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --strengthhit||+0.5\n!magic --message ^^tid^^|Chill Touch|^^tname^^ will regain their attack effectiveness'},
 						{name:'Affected-by-Chill-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --charid ^^cid^^ --strengthhit||-0.5\n!magic --message ^^tid^^|Chill Touch|^^tname^^ will suffer an impact to their attack success for *every other* chill touch'},
-						{name:'Aid-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^\'s *Aid* has come to an end, and Thac0, saves \\amp HP return to normal\n!attk --set-mods ^^tid^^|delspell|Aid|Aid'},
+						{name:'Aid-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^\'s *Aid* has come to an end, and Thac0, saves \\amp HP return to normal\n!attk --set-mods ^^tcid^^|delspell|Aid|Aid'},
 						{name:'Aid-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ gains *Aid* from a Priest\'s god, improving Thac0, saves and HP\n!attk --set-mods ^^tid^^|add|Thac0 bonus|Aid|thac0+:+1||^^duration^^ --set-mods ^^tid^^|add|HP bonus|Aid|hp+:[[1d8]]||^^duration^^ --set-mods ^^tid^^|fea=spe|Fear|Aid|svfea:+1||^^duration^^'},
 						{name:'Armour-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-acmod ^^tid^^|DelSpell|Armour Spell|Armour Spell\n/w "^^cname^^" ^^tname^^\'s AC has returned to normal as the Armour spell has ended.'},
 						{name:'Armour-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-acmod ^^tid^^|Add|Armour Spell|Armour Spell|ac:6,rules:-Shield Spell¦-Protection Ring\n/w "^^cname^^" ^^tname^^\'s AC has been made AC6 (adjusted by deterity to AC[[6+@{^^cname^^|dexdefense}]]) by the Armour spell. Once taken [[8+@{^^cname^^|level-class2}]]HP, end the spell using the [End Armour](!rounds --removetargetstatus ^^tid^^|armour) button'},
@@ -627,17 +633,17 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Attk2-Interval-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg2|\'\'|@{^^cname^^|monsterdmg2}'},
 						{name:'Attk3-Interval-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg3|@{^^cname^^|monsterdmg3|max}'},
 						{name:'Attk3-Interval-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --monsterdmg3|\'\'|@{^^cname^^|monsterdmg3}'},
-						{name:'Bad-Luck-1-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delSpell|Bad Luck|Bad Luck\n!magic --message p|^^tid^^|^^cname^^\'s Luck Has Changed|^^cname^^ is no longer suffering from bad luck, and attack rolls and saving throws have returned to normal.'},
+						{name:'Bad-Luck-1-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delSpell|Bad Luck|Bad Luck\n!magic --message p|^^tid^^|^^cname^^\'s Luck Has Changed|^^cname^^ is no longer suffering from bad luck, and attack rolls and saving throws have returned to normal.'},
 						{name:'Bad-Luck-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Bad Luck|Bad Luck|svall:-1,thac0+:-1\n!magic --message p|^^tid^^|^^cname^^ is Suffering Bad Luck|^^cname^^ starts to suffer bad luck on attack rolls and saving throws. An automatic penalty of -1 is applied to both.'},
 						{name:'Banshee-Wail-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --ignore-selected --ids ^^tid^^ --set statusmarkers|dead tint_color|rgb(1.0,1.0,1.0)\n!setattr --fb-header ^^tname^^ Has Died --fb-content Making _CHARNAME_ as dead --charid ^^cid^^ --check-for-mibag|[[@{^^cname^^|check-for-mibag}%2]]\n!rounds --removetargetstatus ^^tid^^|ALL'},
-						{name:'Barkskin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|not magic|Barkskin\n/w "^^cname^^" ^^cname^^\'s AC and saves return to normal as Barkskin fades'},
+						{name:'Barkskin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|not magic|Barkskin\n/w "^^cname^^" ^^cname^^\'s AC and saves return to normal as Barkskin fades'},
 						{name:'Barkskin-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Barkskin|Barkskin|ac:[[6-floor(@{^^cname^^|casting-level}/4)]],svpar:+1,svpoi:+1,svdea:+1,svrod:+1,svsta:+1 svwan:+1,svpol:+1,svpet:+1,svbre:+1||^^duration^^\n/w "^^cname^^" ^^cname^^\'s saves and AC might have improved as they get Barkskin'},
-						{name:'Bestow-Curse-51-75-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Curse 51-75|Bestow Curse\n!magic --message w|^^tid^^|Cursed|^^cname^^ is no longer cursed: penalty of 4 to thac0 \\amp saves has been reversed'},
+						{name:'Bestow-Curse-51-75-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Curse 51-75|Bestow Curse\n!magic --message w|^^tid^^|Cursed|^^cname^^ is no longer cursed: penalty of 4 to thac0 \\amp saves has been reversed'},
 						{name:'Bestow-Curse-51-75-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Curse 51-75|Bestow Curse|thac0+:-4,svall:-4||^^duration^^\n!magic --message w|^^tid^^|Cursed|^^tname^^ is cursed: Thac0 and saves suffer a penalty of 4'},
 						{name:'Bigbys-Fist-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blankweapon ^^tid^^|Bigbys-Clenched-Fist|silent'},
-						{name:'Bless-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^\'s Bless has expired and their Thac0 has returned to normal\n!attk --set-mods ^^tid^^|delspell|Fear|Bless'},
+						{name:'Bless-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^\'s Bless has expired and their Thac0 has returned to normal\n!attk --set-mods ^^tcid^^|delspell|Fear|Bless'},
 						{name:'Bless-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^ has been blessed and their Thac0 and saves have improved\n!attk --set-mods ^^tid^^|Add|Bless|Bless|thac0+:1||6 --set-savemod ^^tid^^|fea=spe|Fear|Bless|svfea:+1||6'},
-						{name:'Blindness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Blindness|-2||silent\n!attk --set-mods ^^tid^^|delspell|Blindness|Blindness\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
+						{name:'Blindness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Blindness|-2||silent\n!attk --set-mods ^^tcid^^|delspell|Blindness|Blindness\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
 						{name:'Blindness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Blindness|+2||silent\n!attk --set-mods ^^tid^^|add|Blindness|Blindness|thac0+:-4,+:-4,svall:-4\n/w "^^cname^^" ^^tname^^ has been blinded and suffers 4 penalty to attacks, saves \\amp AC, and 2 penalty to initiative'},
 						{name:'Blood-Frenzy-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|both|Blood Frenzy|+2|-2|silent\n/w "^^cname^^" ^^cname^^ is back to normal'},
 						{name:'Blood-Frenzy-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|both|Blood Frenzy|-2|+2|silent\n/w "^^cname^^" Being in a *blood frenzy*, ^^cname^^ moves twice as fast and has twice the number of attacks'},
@@ -652,23 +658,23 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Bluerot-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w gm \\amp{template:default}{{name=^^tname^^\'s Bluerot}}{{If ^^tname^^\'s *bluerot* has been cured, [click here](!rounds --deltargetstatus ^^tid^^|bluerot_feeling-a-bit-sick). This is only curable during the initial 2hr period. After that, only rest \\amp recuperation (i.e. long rests) can cure the infection, though HP can be regained by normal means.}}'},
 						{name:'Bolas-Entanglement-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" Have you made a successful strength check? [Yes](!rounds --removetargetstatus ^^tid^^|Bolas Entanglement)'},
 						{name:'Bombardier-Stun-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|Deafness|2d4*10|-10|Still deaf while recovering from stunning|interdiction'},
-						{name:'Boots-of-Dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Boots of Dancing|^^cname^^\'s feet have stopped dancing (for the moment?). AC and Saves penalties are reversed\n!attk --set-mods ^^tid^^|delspell|Boots of Dancing|Boots of Dancing'},
+						{name:'Boots-of-Dancing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Boots of Dancing|^^cname^^\'s feet have stopped dancing (for the moment?). AC and Saves penalties are reversed\n!attk --set-mods ^^tcid^^|delspell|Boots of Dancing|Boots of Dancing'},
 						{name:'Boots-of-Dancing-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Boots of Dancing|^^cname^^\'s feet have started to dance, but not in a helpful way. AC penalty of 4, and Saving Throws at penalty of 6.\n!attk --set-mods ^^tid^^|add|AC \\amp Save Penalty|Boots of Dancing|+:-4,svall:-6'},
 						{name:'Boots-of-Flying-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-charges ^^tid^^|-1|Boots-of-Flying||recharging'},
 						{name:'Bravery-1-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+4|1|480'},
 						{name:'Bravery-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+3|1|480'},
 						{name:'Bravery-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+2|1|480'},
 						{name:'Bravery-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Fear|Bravery|svfea:+1|1|480'},
-						{name:'CO-Heat-vs-Creature-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Heat vs Creature|Chromatic Orb\n!magic --message ^^tid^^|Chromatic Orb|^^tname^^ is no longer hot and their Thac0 and AC return to normal'},
+						{name:'CO-Heat-vs-Creature-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Heat vs Creature|Chromatic Orb\n!magic --message ^^tid^^|Chromatic Orb|^^tname^^ is no longer hot and their Thac0 and AC return to normal'},
 						{name:'CO-Heat-vs-Creature-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Heat vs Creature|Chromatic Orb|thac0+:-1,+:-1\n!magic --message ^^tid^^|Chromatic Orb Heat|^^tname^^ is weakened by heat and suffers a penalty of 1 to Thac0 and AC'},
 						{name:'CO-Heat-vs-PC-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+1|strength --change-attr ^^tid^^|+1|dexterity\n/w "^^cname^^" \\amp{template:default}{{name=Suffering from Heat}}{{^^cname^^ is no longer hot, and strength and dexterity no longer suffer a heat penalty}}'},
 						{name:'CO-Heat-vs-PC-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|-1|strength --change-attr ^^tid^^|-1|dexterity\n/w "^^cname^^" \\amp{template:default}{{name=Suffering from Heat}}{{^^cname^^ is suffering from overheating, and strength and dexterity are both impacted by a penalty}}'},
 						{name:'Candle-of-Invocation-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2\n/w "^^cname^^" ^^tname^^ is no longer benefiting from the patronage of the gods of his alignment, and loses the temporarily 2 levels.'},
 						{name:'Candle-of-Invocation-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|2\n/w "^^cname^^" ^^tname^^ is benefiting from the patronage of the gods of his alignment, and is temporarily 2 levels higher.'},
 						{name:'Candle-of-Invocation-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-charges ^^tid^^|-1|candle-of-invocation'},
-						{name:'Chant-ally-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Ally|Chant\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
+						{name:'Chant-ally-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Ally|Chant\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
 						{name:'Chant-ally-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Ally|Chant|dmg+:1,thac0+:1,svsav:+1|||\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ are improved by *Chant*'},
-						{name:'Chant-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Foe|Chant\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
+						{name:'Chant-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Foe|Chant\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ returns to normal as *Chant* ends'},
 						{name:'Chant-foe-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Foe|Chant|dmg+:-1,thac0+:-1,svsav:-1\n/w "^^cname^^" The saves, attacks \\amp damage done by ^^tname^^ are hindered by *Chant*'},
 						{name:'Chill-Touch-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blank-weapon ^^tid^^|Chill-Touch|silent'},
 						{name:'Cloud-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
@@ -703,42 +709,42 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Death-Kiss-Tentacle-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" If ripped away from victim, tentacle teeth cause an additional [[1d6]] damage'},
 						{name:'Death-Kiss-Tentacle-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|-2\n/w "^^cname^^" ^^tname^^ has automatically lost [[2]]HP as blood is drained by an attached Death Kiss tentacle (perhaps one of several)'},
 						{name:'Delayed-blast-fireball-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Delayed Blast Fireball}}{{The fireball finally explodes. Click [Explode](!rounds --aoe \\amp#64;{target|Select Fireball Seed|token_id}|circle|feet|0|40||fire|true) and select the fireball seed you placed earlier, then click [Damage](!\\amp#13;\\amp#47;r [[([[({10, @{^^cname^^|mu-casting-level} }kl1)]] + [[([[({10, @{^^cname^^|mu-casting-level} }kl1)]]d6)]])]] damage from delayed-blast fireball) to see how much damage it does}}'},
-						{name:'Disadvantage-All-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell||Manual Disadvantage\n!magic --message ^^tid^^|All GM Set Disadvantages|^^tname^^ is no longer suffering disadvantages set by the GM. Other sources of disadvantage will still apply.'},
+						{name:'Disadvantage-All-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell||Manual Disadvantage\n!magic --message ^^tid^^|All GM Set Disadvantages|^^tname^^ is no longer suffering disadvantages set by the GM. Other sources of disadvantage will still apply.'},
 						{name:'Disadvantage-All-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|advantage-all|silent\n!attk --set-mods ^^tid^^|add|All|Manual Disadvantage|adall:-1\n!magic --message ^^tid^^|All GM Set Disadvantages|^^tname^^ is suffering disadvantage on melee \\amp ranged attack rolls, damage rolls, saving throws, attribute checks, and rogue skill checks'},
-						{name:'Disadvantage-Attributes-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Attributes|Manual Disadvantage\n!magic --message ^^tid^^|Attribute Check Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on attribute checks. Other sources of disadvantage will still apply.'},
+						{name:'Disadvantage-Attributes-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Attributes|Manual Disadvantage\n!magic --message ^^tid^^|Attribute Check Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on attribute checks. Other sources of disadvantage will still apply.'},
 						{name:'Disadvantage-Attributes-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|advantage-attributes|silent\n!attk --set-mods ^^tid^^|add|Attributes|Manual Disadvantage|adatr:-1\n!magic --message ^^tid^^|Attribute Checks Disadvantage|^^tname^^ is suffering disadvantage on melee attack rolls'},
-						{name:'Disadvantage-Damage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Damage|Manual Disadvantage\n!magic --message ^^tid^^|Damage Roll Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on damage rolls. Other sources of disadvantage will still apply.'},
+						{name:'Disadvantage-Damage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Damage|Manual Disadvantage\n!magic --message ^^tid^^|Damage Roll Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on damage rolls. Other sources of disadvantage will still apply.'},
 						{name:'Disadvantage-Damage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|advantage-damage|silent\n!attk --set-mods ^^tid^^|add|Damage|Manual Disadvantage|addam:-1\n!magic --message ^^tid^^|Damage Roll Disadvantage|^^tname^^ is suffering disadvantage on damage rolls'},
-						{name:'Disadvantage-Melee-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Melee|Manual Disadvantage\n!magic --message ^^tid^^|Melee Attack Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on melee attack rolls. Other sources of disadvantage will still apply.'},
+						{name:'Disadvantage-Melee-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Melee|Manual Disadvantage\n!magic --message ^^tid^^|Melee Attack Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on melee attack rolls. Other sources of disadvantage will still apply.'},
 						{name:'Disadvantage-Melee-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|advantage-melee|silent\n!attk --set-mods ^^tid^^|add|Melee|Manual Disadvantage|admwa:-1\n!magic --message ^^tid^^|Melee Attack Disadvantage|^^tname^^ is suffering disadvantage on melee attack rolls'},
-						{name:'Disadvantage-Ranged-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Ranged|Manual Disadvantage\n!magic --message ^^tid^^|Ranged Attack Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on ranged attack rolls. Other sources of disadvantage will still apply.'},
+						{name:'Disadvantage-Ranged-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Ranged|Manual Disadvantage\n!magic --message ^^tid^^|Ranged Attack Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on ranged attack rolls. Other sources of disadvantage will still apply.'},
 						{name:'Disadvantage-Ranged-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|advantage-ranged|silent\n!attk --set-mods ^^tid^^|add|Ranged|Manual Disadvantage|adrwa:-1\n!magic --message ^^tid^^|Melee Attack Disadvantage|^^tname^^ is suffering disadvantage on ranged attack rolls'},
-						{name:'Disadvantage-Rogue-Skills-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Rogue Skills|Manual Disadvantage\n!magic --message ^^tid^^|Rogue Skill Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on rogue skill checks. Other sources of disadvantage will still apply.'},
+						{name:'Disadvantage-Rogue-Skills-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Rogue Skills|Manual Disadvantage\n!magic --message ^^tid^^|Rogue Skill Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on rogue skill checks. Other sources of disadvantage will still apply.'},
 						{name:'Disadvantage-Rogue-Skills-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|advantage-rogue|silent\n!attk --set-mods ^^tid^^|add|Rogue Skills|Manual Disadvantage|adrog:-1\n!magic --message ^^tid^^|Rogue Skill Check Disadvantage|^^tname^^ is suffering disadvantage on rogue skill checks'},
-						{name:'Disadvantage-Saves-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Saves|Manual Disadvantage\n!magic --message ^^tid^^|Saving Throw Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on saving throws. Other sources of disadvantage will still apply.'},
+						{name:'Disadvantage-Saves-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Saves|Manual Disadvantage\n!magic --message ^^tid^^|Saving Throw Disadvantage|^^tname^^ is no longer suffering disadvantage set by the GM on saving throws. Other sources of disadvantage will still apply.'},
 						{name:'Disadvantage-Saves-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removetargetstatus ^^tid^^|advantage-saves|silent\n!attk --set-mods ^^tid^^|add|Saves|Manual Disadvantage|adsav:-1\n!magic --message ^^tid^^|Saving Throw Disadvantage|^^tname^^ is suffering disadvantage on saving throws'},
 						{name:'Divine-Favour-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^\'s Divine Favour has run its course, and their Thac0 returns to normal\n!token-mod --api-as ^^pid^^ {{\n --ignore-selected\n --ids ^^tid^^\n --set ^^token_thac0^^|+4\n}}'},
 						{name:'Divine-Favour-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ has been granted a Divine Favour and their Thac0 has improved by 4!\n!attk --set-mods ^^tid^^|add|Divine Favour|Divine Favour|thac0+:4'},
 						{name:'Djinni-Whirlwind-building-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|Djinni-Whirlwind|99|0|Whirlwind now usable as transport or as a weapon|lightning-helix\n!magic --message ^^tid^^|Djinni Whirlwind|The whirlwind has now built to full speed and is usable as transport or as a weapon'},
-						{name:'Dragon-Fear-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Fear|Dragon Fear\n!magic --message ^^tid^^|^^tname^^ is no longer afraid|^^tname^^ has overcome their fear. Their attack and damage rolls are no longer affected by it.'},
+						{name:'Dragon-Fear-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Fear|Dragon Fear\n!magic --message ^^tid^^|^^tname^^ is no longer afraid|^^tname^^ has overcome their fear. Their attack and damage rolls are no longer affected by it.'},
 						{name:'Dragon-Fear-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Fear|Dragon Fear|dmg+:-2,thac0+:-2\n!magic --message ^^tid^^|^^tname^^ is afraid!|^^tname^^ has seen the dragon and is afraid! ^^tname^^ suffers -2 penalty to both attack and damage rolls'},
 						{name:'Drowned-Master-Life-Drain-longrest',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Tentacle|Drowned Master\n!magic --message ^^tid^^|Drowned Master Life Drain|After a Long Rest, ^^tname^^ regains their life force and their maximum possible hit points return to normal. However, this does not restore their health and they must still be cured normally.'},
 						{name:'Drowned-Master-Life-Drain-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|mod|Tentacle|Drowned Master|hpm+;-^^duration^^\n!rounds --target-nosave caster|^^tid^^|Bluerot|\\lt(60*1d4)|-1|Infected with bluerot|radioactive\n/w ^^cname^^ \\amp{template:default}{{name=Life Drain}}{{desc=The tentacle hit has drained some of your life force and your maximum possible hit points have been reduced by ^^duration^^. You have also contracted *bluerot*.}}'},
-						{name:'Earache-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic ^^tid^^|Pipes of Pain|^^tname^^ is no longer suffering from the sound of the Pipes of Pain\n!attk| --set-mods ^^tid^^|delspell|pain|Pipes of Pain'},
+						{name:'Earache-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic ^^tid^^|Pipes of Pain|^^tname^^ is no longer suffering from the sound of the Pipes of Pain\n!attk| --set-mods ^^tcid^^|delspell|pain|Pipes of Pain'},
 						{name:'Earache-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Earache|Pipes of Pain|thac0+:-2,svall:-2\n!magic ^^tid^^|Pipes of Pain|^^tname^^ is still suffering from the sound of the Pipes of Pain, with -2 on attack and saving throw rolls. A *forget* or *remove curse* is required to end this effect.\n'},
 						{name:'Eating-Heroes-Feast-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Heroes Feast|720|-1|Blessed, +1 to attk, immune to poison, fear, hopelessness, panic|angel-outfit'},
 						{name:'Enchanted-by-Scabbard-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|@{^^cname^^|Scabbard-Weapon}|Melee|+:-1 --quiet-modweap ^^tid^^|@{^^cname^^|Scabbard-Weapon}|Dmg|+:-1 \n/w "^^cname^^" \\amp{template:default}{{name=Scabbard of Enchanting}}{{=^^tname^^, @{^^cname^^|Scabbard-Weapon} has now lost its additional enchantment from the Scabbard. [Sheath it again](!rounds --target caster|^^tid^^|Scabbard-of-Enchanting|10|-1|Enchanting a Sheathed weapon|stopwatch\\amp#13;!attk --weapon ^^tid^^|Sheath weapon in Scabbard of Enchanting - take new one in hand)}}'},
-						{name:'Encumbrance-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Unencumbered|Encumbrance'},
+						{name:'Encumbrance-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|DelSpell|Unencumbered|Encumbrance'},
 						{name:'Encumbrance-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Unencumbered|Encumbrance --set-mods ^^tid^^|Add|@{^^cname^^|movweightlabel}|Encumbrance|+:-@{^^cname^^|movweightlabel|max}'},
-						{name:'Enfeeble-monster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Enfeeble Monster|Enfeeble Monster\nThe monster has recovered from being enfeebled'},
+						{name:'Enfeeble-monster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Enfeeble Monster|Enfeeble Monster\nThe monster has recovered from being enfeebled'},
 						{name:'Enfeeble-monster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Enfeeble Monster|Enfeeble Monster|thac0+:-2\nThe monster has been enfeebled'},
-						{name:'Enraged-by-Scarab-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Scarab Rage|Scarab of Enraging Enemies\n/w gm ^^tname^^ thac0, damage \\amp AC return to normal'},
+						{name:'Enraged-by-Scarab-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|DelSpell|Scarab Rage|Scarab of Enraging Enemies\n/w gm ^^tname^^ thac0, damage \\amp AC return to normal'},
 						{name:'Enraged-by-Scarab-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Scarab Rage|Scarab of Enraging Enemies|thac0+:1,dmg+:2,+:3\n/w gm ^^tname^^ thac0 -1, dmg +2, AC -3'},
-						{name:'Exhausted-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Exhausted|Rage\n!magic --message ^^tid^^|^^tname^^\'s Rage|^^tname^^ has recovered from Exhaustion'},
+						{name:'Exhausted-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Exhausted|Rage\n!magic --message ^^tid^^|^^tname^^\'s Rage|^^tname^^ has recovered from Exhaustion'},
 						{name:'Exhausted-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Exhausted|Rage|thac0+:-2,+:-2,dmg+:-2\n!magic --message p|^^tid^^|^^tname^^ is now Exhausted|Having raged, ^^tname^^ is now exhausted and suffers -2 penalties to attacks, damage and AC for a turn'},
-						{name:'Faerie-fire-darkness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Darkness|Faerie Fire\n^^tname^^ has lost that glow and is now harder to aim at'},
+						{name:'Faerie-fire-darkness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Darkness|Faerie Fire\n^^tname^^ has lost that glow and is now harder to aim at'},
 						{name:'Faerie-fire-darkness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Darkness|Faerie Fire|+:-2\n^^tname^^ is surrounded by Faerie Fire, and becomes much easier to hit'},
-						{name:'Faerie-fire-twilight-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Twilight|Faerie Fire\n^^tname^^ has lost that glow and is now harder to aim at'},
+						{name:'Faerie-fire-twilight-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Twilight|Faerie Fire\n^^tname^^ has lost that glow and is now harder to aim at'},
 						{name:'Faerie-fire-twilight-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Twilight|Faerie Fire|+:-1\n^^tname^^ is surrounded by Faerie Fire, and becomes easier to hit'},
 						{name:'Fear-of-SeaHag-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|*2|strength'},
 						{name:'Fear-of-SeaHag-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|/2|strength'},
@@ -747,9 +753,9 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Flame-walk-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|delspell|Magic Fire|Flame-walk'},
 						{name:'Flame-walk-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|mfi=spe|Magic Fire|Flame-walk|svmfi:+2||^^duration^^'},
 						{name:'Flaming-oil-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set layer|gmlayer '},
-						{name:'Follow-the-Standard-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Follow the Standard|Follow the Standard'},
+						{name:'Follow-the-Standard-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Follow the Standard|Follow the Standard'},
 						{name:'Follow-the-Standard-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Follow the Standard|Follow the Standard|thac0+:1'},
-						{name:'Foresight-caster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Foresight|Foresight\n/w "^^cname^^" ^^tname^^\'s AC has changed as a result of losing *foresight*'},
+						{name:'Foresight-caster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Foresight|Foresight\n/w "^^cname^^" ^^tname^^\'s AC has changed as a result of losing *foresight*'},
 						{name:'Foresight-caster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Foresight|Foresight|thac0+:2\n/w "^^cname^^" ^^tname^^\'s AC has been improved by *foresight*\n'},
 						{name:'Frost-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
 						{name:'Frost-Giant-Strength-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|21|@{^^cname^^|strength}\n/w "^^cname^^" ^^cname^^ gains enormous strength'},
@@ -763,14 +769,14 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Glitterdust-glitter-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Blindness|[[1d4+1]]|-1|Blinded by Glitterdust, -4 on attk, save \\amp AC|bleeding-eye\n/w "^^cname^^" As well as being blinded, ^^tname^^ is also covered in glitter until it fades'},
 						{name:'Green-Slime-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w ^^cname^^ \\amp{template:default}{{name=Green Slime}}{{desc=The green slime has eaten through the metal or wood that it landed on. If there is flesh underneath it will start [infecting it](!rounds --target caster|^^tid^^|Green Slime on Flesh|1d4|-1|Green Slime is infecting flesh|skull).}}'},
 						{name:'Green-Slime-on-Flesh-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:default}{{name=Green Slime}}{{desc=^^cname^^ has succumbed to the infection by green slime and is reduced to 0HP}}'},
-						{name:'Hairy-Spider-Poison-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Poison|Hairy Spider\n!magic --change-attr ^^tid^^|+3|dexterity|silent'},
+						{name:'Hairy-Spider-Poison-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Poison|Hairy Spider\n!magic --change-attr ^^tid^^|+3|dexterity|silent'},
 						{name:'Hairy-Spider-Poison-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Poison|Hairy Spider|+:-1,thac0+:-1\n!magic --change-attr ^^tid^^|-3|dexterity|silent'},
 						{name:'Harp-Suggestion-Recharging',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-rest ^^tid^^|Harp-of-Charming|1|Suggestion'},
 						{name:'Harpy-Charm-Touch-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removeglobalstatus Harpy Touch_Harpy Touch_^^tid^^'},
 						{name:'Harpy-Song-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --removeglobalstatus Harpy Song_Harpy Song_^^tid^^'},
 						{name:'Haste-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|del|Haste|0|1|silent\n/w "^^cname^^" One year older, ^^cname^^ is back to normal'},
 						{name:'Haste-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|both|Haste|=-2|=2|silent\n/w "^^cname^^" Being *Hasted*, ^^cname^^ moves twice as fast and has twice the number of attacks\n'},
-						{name:'Heroes-Feast-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" The effects of Heroes Feast have worn off, and ^^tname^^ returns to normal\n!attk --set-mods ^^tid^^|delspell|Immune|Heroes Feast'},
+						{name:'Heroes-Feast-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" The effects of Heroes Feast have worn off, and ^^tname^^ returns to normal\n!attk --set-mods ^^tcid^^|delspell|Immune|Heroes Feast'},
 						{name:'Heroes-Feast-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-savemod ^^tid^^|fea=spe|Immune to fear|Heroes Feast|svfea:+0|||!magic ~~message ^^tid^^|Immunity|^^tname^^ is *immune* to fear thanks to having a *Heroes Feast* --set-savemod ^^tid^^|add|Immune to poison|Heroes Feast|svpoi:+0|||!magic ~~message ^^tid^^|Immunity|^^tname^^ is *immune* to poison thanks to having a *Heroes Feast* --set-mods ^^tid^^|Improved attacks|Heroes Feast|thac0+:1\n/w "^^cname^^" Having eaten a Heroes Feast, ^^tname^^ gains benefits to attacks as well as other bonuses'},
 						{name:'Heway-poison-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Water Poisoned by Heway}}{{Save=Save vs. Poison at +2 bonus}}{{Succeed=Take 15HP damage}}{{Fail=30HP damage \\amp paralysed for 1d6 hours}}\n/w gm \\amp{template:default}{{name=Heway Poison Paralysation}}{{=If creature failed to save, press [Paralysed](!rounds --target-nosave caster|^^tid^^|Paralysis|\\amp#91;[60*1d6]\\amp#93;|-1|Paralysed by water poisoned by a Heway snake|padlock) to add a status marker}}'},
 						{name:'Hill-Giant-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!resetattr --silent --name ^^cname^^ --strength\n/w "^^cname^^" ^^cname^^ returns to their normal strength'},
@@ -778,26 +784,26 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Incendiary-Cloud-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!delattr --silent --charid ^^cid^^ --incendiary-count'},
 						{name:'Incendiary-Cloud-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --incendiary-count|-2|10'},
 						{name:'Incendiary-Cloud-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Incendiary Cloud}}{{This round, the cloud does @{^^cname^^|mu-casting-level}d[[({ [[({ @{^^cname^^|incendiary-count}, @{^^cname^^|incendiary-count|max} }kl1)]], 0}kh1)]]HP [incendiary damage](!\\amp#13;\\amp#47;r @{^^cname^^|mu-casting-level}d[[({ [[({ @{^^cname^^|incendiary-count}, @{^^cname^^|incendiary-count|max} }kl1)]], 0}kh1 )]] incendiary damage). Click button to make the roll}}\n!modattr --silent --charid ^^cid^^ --incendiary-count|+2|-2'},
-						{name:'Incite-Rage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Rage|Rage'},
+						{name:'Incite-Rage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|DelSpell|Rage|Rage'},
 						{name:'Incite-Rage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Rage|Rage|thac0+:2,dmg+:2'},
 						{name:'Increasing-Strength-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+[[{{18-@{^^cname^^|strength}},{1}}kl1]]|strength|silent --change-attr ^^tid^^|+[[{{18-@{^^cname^^|constitution}},{1}}kl1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Strength_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
 						{name:'Increasing-Weakness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|[[{{3-@{^^cname^^|strength}},{-1}}kh1]]|strength|silent --change-attr ^^tid^^|[[{{3-@{^^cname^^|constitution}},{-1}}kh1]]|constitution|silent\n!rounds --target-nosave caster|^^tid^^|Increasing-Weakness_Ring-Effect|100|-10|The ring is having an unknown effect|spanner'},
-						{name:'Infested-with-Vermin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tid^^|del|Infested by Vermin|||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Oooo... That\'s better! The itching and scratching seem to have stopped}}'},
+						{name:'Infested-with-Vermin-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tcid^^|del|Infested by Vermin|||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Oooo... That\'s better! The itching and scratching seem to have stopped}}'},
 						{name:'Infested-with-Vermin-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --set-mods ^^tid^^|fix|Infested by Vermin|+51||silent\n/w "^^cname^^" \\amp{template:default}{{name=Itching \\amp Scratching}}{{Your robe seems to be infested with biting insects - fleas, mosquitos, ants, and other sorts. You can\'t stop itching \\amp scratching, to the extent that you are only 50% effective!}}'},
 						{name:'Infravision-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off has_night_vision\n/w "^^cname^^" "Who turned out the lights?" ^^tname^^ no longer has night vision.'},
 						{name:'Infravision-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --on has_night_vision --set night_distance|60\n/w "^^cname^^" ^^tname^^ has gained 60ft infravision, which brightens up their night!'},
 						{name:'Ink-Recharge-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --rest ^^tid^^|long|power|Necrotic-Ink --message ^^tid^^|Necrotic Ink|The creature\'s ink reserves have refilled and it can now spit necrotic ink again'},
-						{name:'Invisibility-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Invisibility|Invisibility\n/w "^^cname^^" Becoming visible means ^^tname^^\'s AC and saves return to normal'},
+						{name:'Invisibility-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Invisibility|Invisibility\n/w "^^cname^^" Becoming visible means ^^tname^^\'s AC and saves return to normal'},
 						{name:'Invisibility-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Invisibility|Invisibility|svsav:+4,+:4\n/w "^^cname^^" Being invisible improves ^^tname^^\'s AC and saves by 4'},
-						{name:'Invulnerability-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Invulnerability|Potion of Invulnerability\n/w "^^cname^^" ^^tname^^ is no longer invulnerable-ish'},
+						{name:'Invulnerability-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Invulnerability|Potion of Invulnerability\n/w "^^cname^^" ^^tname^^ is no longer invulnerable-ish'},
 						{name:'Invulnerability-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Invulnerability|Potion of Invulnerability|svsav:+2,+:2\n/w "^^cname^^" \\amp{template:default}{{name=Potion of Invulnerability}}{{^^tname^^ becomes invulnerable to normal attacks from many creatures (but not all, and not magical attacks), and in any case gains a benefit of 2 on AC and saves}}'},
 						{name:'Irritate-Rash-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target single|^^tid^^|^^tid^^|Rash|99|0|Broken out in Rash all over, Charisma \\amp Dexterity reducing|radioactive'},
-						{name:'Irritation-Itch-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Irritation-Squirm|3|-1|Twisting \\amp squirming penalties attk 2 \\amp AC 4|screaming\n!attk --set-mods ^^tid^^|add|Squirming|Irritation|thac0+:-2,+:-2\n/w "^^cname^^" As a consequence of not spending a round itching, ^^tname^^ squirms and twists in discomfort with consequential impact on AC and Thac0'},
+						{name:'Irritation-Itch-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Irritation-Squirm|3|-1|Twisting \\amp squirming penalties attk 2 \\amp AC 4|screaming\n!attk --set-mods ^^tcid^^|add|Squirming|Irritation|thac0+:-2,+:-2\n/w "^^cname^^" As a consequence of not spending a round itching, ^^tname^^ squirms and twists in discomfort with consequential impact on AC and Thac0'},
 						{name:'Irritation-Itch-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w gm \\amp{template:default}{{name=Irritation Itch}}{{Has ^^tname^^ stopped to scratch the itch? [Yes](!rounds --deltargetstatus ^^tid^^|Irritation-Itch)}}'},
 						{name:'Irritation-Rash-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Irritation Disease|99|-1|Covered in an ugly rash: Chr -1pd for 4 days; Dex -1 after 1wk|radioactive\n/w ^^cname^^ ^^tname^^ has caught some type of disease which affects Charisma (-1 per day for 4 days) and potentially Dexterity (-1 after 1 week) - apply all effects manually'},
-						{name:'Irritation-Squirm-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Squirming|Irritation\n/w "^^cname^^" The itch receeds, and ^^tname^^\'s AC and Thac0 return to normal'},
+						{name:'Irritation-Squirm-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Squirming|Irritation\n/w "^^cname^^" The itch receeds, and ^^tname^^\'s AC and Thac0 return to normal'},
 						{name:'Light-duration-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w gm **Delete the light spell token** - the light spell has ended'},
-						{name:'Light-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Blinded|Light\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, saves and AC'},
+						{name:'Light-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Blinded|Light\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, saves and AC'},
 						{name:'Light-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Blinded|Light|svall:-4,+:-4,thac0+:-4||^^duration^^\n/w "^^cname^^" ^^tname^^ has been blinded by light and suffers 4 penalty to attacks \\amp AC \\amp saves'},
 						{name:'Lightbringer-mace-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --off emits_bright_light emits_low_light\n/w "^^cname^^" ^^cname^^ has commanded his mace to go dark'},
 						{name:'Lightbringer-mace-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --on emits_bright_light emits_low_light --set bright_light_distance|15 low_light_distance|15\n/w "^^cname^^" ^^cname^^\'s mace now shines as bright as a torch.'},
@@ -813,17 +819,17 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Mooring-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template|default}{{name=Mooring period ended!}}{{desc=Your ship had better have already left harbour, otherwise the Harbour Master will charge you a fine!}}'},
 						{name:'Mooring-longrest',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Mooring|-1|0|Mooring Fee paid for ^^duration^^ more days|flying-flag'},
 						{name:'Mooring-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:default}{{name=Mooring Up}}{{desc=Mooring fee has been paid for ^^duration^^ days. Make sure you either depart before then or pay to extend your stay.}}'},
-						{name:'Nauseous-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Del|Nauseous|Ghast Stench\n/w "^^cname^^" ^^tname^^ is no longer feeling nauseous, so is no longer subject to a penalty of 2 on attacks'},
+						{name:'Nauseous-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|Del|Nauseous|Ghast Stench\n/w "^^cname^^" ^^tname^^ is no longer feeling nauseous, so is no longer subject to a penalty of 2 on attacks'},
 						{name:'Nauseous-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Nauseous|Ghast Stench|thac0+:-2\n/w "^^cname^^" ^^tname^^ is feeling very nauseous and is now at a -2 penalty to hit on attacks'},
-						{name:'Nausia-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell||Something You Ate'},
+						{name:'Nausia-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell||Something You Ate'},
 						{name:'Nausia-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Nausia|Something You Ate|admwa:-1,adrwa:-1,adsav:-1,adatr:-1,adrog:-1'},
-						{name:'Necrotic-Ink-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Blindness|-2||silent\n!attk --set-mods ^^tid^^|delspell|Blindness|Blindness\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
+						{name:'Necrotic-Ink-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mod|Blindness|-2||silent\n!attk --set-mods ^^tcid^^|delspell|Blindness|Blindness\n/w "^^cname^^" ^^tname^^ has recovered from blindness and no longer suffers from penalties to attacks, AC and initiative'},
 						{name:'Necrotic-Ink-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target-nosave caster|^^tid^^|Bluerot|(60*1d4)|-1|Infected with bluerot|radioative\n!init --setmods ^^tid^^|mod|Blindness|+2||silent\n!attk --set-mods ^^tid^^|add|Blindness|Blindness|thac0+:-4,+:-4,svall:-4\n/w "^^cname^^" ^^tname^^ has been blinded and suffers 4 penalty to attacks, saves \\amp AC, and 2 penalty to initiative'},
-						{name:'Numbed-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mult|Numbed by cold||1|silent\n!attk --set-mods ^^tid^^|delspell|Numbed|Numbed by Cold\n/w ^^cname^^ ^^tname^^ has warmed up somewhat and can now move and attack more like normal'},
+						{name:'Numbed-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mult|Numbed by cold||1|silent\n!attk --set-mods ^^tcid^^|delspell|Numbed|Numbed by Cold\n/w ^^cname^^ ^^tname^^ has warmed up somewhat and can now move and attack more like normal'},
 						{name:'Numbed-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!init --setmods ^^tid^^|mult|Numbed by cold||=0.5|silent\n!attk --set-mods ^^tid^^|add|Numbed|Numbed by Cold|thac0+:-2\n/w ^^cname^^ ^^tname^^ has been numbed by cold and is moving slower and finding it more difficult to hit things...'},
 						{name:'Oil-fire-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Oil Fire Damage Round 2}}{{Damage=^^tname^^ takes another [1d6](!\\amp#13;\\amp#47;roll 1d6)HP of fire damage from the burning oil}}'},
 						{name:'Oil-of-Fumbling-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" \\amp{template:default}{{name=Oil of Fumbling}}{{desc=Anything ^^tname^^ holds seems incredibly slippery! ^^tname^^ has a 50% chance of dropping anything held, including weapons, spell components, scroll being read, the sandwich they are about to take a bite out of...}}{{desc1=Roll [d6](!\\amp#13;\\amp#47;r 1d6cf\\lt3cs\\gt4) to check if ^^tname^^ drops what they are holding}}'},
-						{name:'Ottos-irresistable-dance-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|dancing|Ottos Irresistable Dance\n/w ^^cname^^ \\amp{template:default}{{name=Otto\'s Irresistable Dance}}{{^^tname^^ has enjoyed dancing, but it\'s now time to stop. You can take a shield in-hand again if you want}}'},
+						{name:'Ottos-irresistable-dance-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|dancing|Ottos Irresistable Dance\n/w ^^cname^^ \\amp{template:default}{{name=Otto\'s Irresistable Dance}}{{^^tname^^ has enjoyed dancing, but it\'s now time to stop. You can take a shield in-hand again if you want}}'},
 						{name:'Ottos-irresistable-dance-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|dancing|Ottos Irresistable Dance|svall:=-20,thac0+:-4\n/w ^^cname^^ \\amp{template:default}{{name=Otto\'s Irresistable Dance}}{{Section=^^tname^^ has an irresistable urge to dance! If you have any shields in-hand, drop them now as they have no effect while dancing}}'},
 						{name:'Pacman-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --mi-charges ^^tid^^|-1|Pacman --message ^^tid^^|Pacman|Have you [finished using Pacman](!rounds ~~removetargetstatus ^^tid^^¦Pacman)?'},
 						{name:'Philter-of-Persuasiveness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --fb-public --fb-header ^^tname^^ Returns to Normal --fb-content ^^tname^^\'s persuasiveness has returned to _CUR0_ --chareact|-5'},
@@ -861,9 +867,9 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Potion-of-Heroism-3-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|3|[[3d10+1]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+3]] Fighter'},
 						{name:'Potion-of-Heroism-4-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-4|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
 						{name:'Potion-of-Heroism-4-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|4|[[4d10]]|fighter --message public|^^tid^^|Potion of Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+4]] Fighter'},
-						{name:'Prayer-ally-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Ally|Prayer\n/w "^^cname^^" ^^tname^^ loses the benefit of *Prayer*'},
+						{name:'Prayer-ally-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Ally|Prayer\n/w "^^cname^^" ^^tname^^ loses the benefit of *Prayer*'},
 						{name:'Prayer-ally-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Ally|Prayer|thac0+:1,dmg+:1,svsav:+1||^^duration^^\n/w "^^cname^^" ^^tname^^ gains the benefit of *Prayer*, with improved saves, attacks and damage'},
-						{name:'Prayer-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Foe|Prayer\n/w "^^cname^^" ^^tname^^ loses the impact of *Prayer*'},
+						{name:'Prayer-foe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Foe|Prayer\n/w "^^cname^^" ^^tname^^ loses the impact of *Prayer*'},
 						{name:'Prayer-foe-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Foe|Prayer|thac0+:-1,dmg+:-1,svsav:-1||^^duration^^\n/w "^^cname^^" ^^tname^^ bears the penalties of *Prayer*, with worse saves, attacks and damage'},
 						{name:'Produce-Flame-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blank-weapon ^^tid^^|Produce Flame|silent'},
 						{name:'Prot-from-Evil-10ft-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set aura1_radius| '},
@@ -904,7 +910,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Quarterstaff-of-Dancing-inhand',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Quarterstaff-of-Dancing|4|-1|Quarterstaff not yet dancing so keep using it|stopwatch'},
 						{name:'Quarterstaff-of-Dancing-sheath',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --deltargetstatus ^^tid^^|Quarterstaff-of-Dancing'},
 						{name:'Quarterstaff-of-Dancing-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --quiet-modweap ^^tid^^|quarterstaff-of-dancing|melee|+:+1 --quiet-modweap ^^tid^^|quarterstaff-of-dancing|dmg|+:+1\nUpdating the quarterstaff +1 to attk \\amp dmg'},
-						{name:'Rage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|DelSpell|Rage|Rage\n!rounds --addtargetstatus ^^tid^^|Exhausted|10|-1|Exhausted - 2 worse on attk,dmg,ac|radioactive'},
+						{name:'Rage-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|DelSpell|Rage|Rage\n!rounds --addtargetstatus ^^tid^^|Exhausted|10|-1|Exhausted - 2 worse on attk,dmg,ac|radioactive'},
 						{name:'Rage-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|Add|Rage|Rage|thac0+:2,+:2,dmg+:2,hpt+:15 --set-savemod ^^tid^^|rag=spe|Spell vs Rage|Rage|svrag:+0|||!magic ~~message ^^tid^^|Immunities|Rage makes ^^tname^^ immune to *Sleep, Charm, Fear, Confusion, Level Drain, Maze, Stun, Imprisonment, Feeblemind* and *Hold* spells.'},
 						{name:'Ray-of-Enfeeblement-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|@{^^cname^^|strength|max}\n/w "^^cname^^" ^^tname^^ has recovered from enfeeblement'},
 						{name:'Ray-of-Enfeeblement-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --name ^^cname^^ --strength|5|@{^^cname^^|strength}\n/w "^^cname^^" ^^tname^^ has been enfeebled, with impact on strength affecting hits and damage!\n'},
@@ -916,7 +922,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Ring-of-Blinking-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^ has stopped bkinking and their ring needs to recharge for 1 hour before it can be used again\n!rounds --target caster|^^tid^^|Ring-of-Blinking-recharge|60|-1|Ring of Blinking is recharging|stopwatch'},
 						{name:'Ring-of-Blinking-recharge-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^tname^^\'s Ring of Blinking has recharged and can now be used again\n!magic --mi-charges ^^tid^^|0|Ring-of-Blinking|1\n'},
 						{name:'RoSC-Hypnotized-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|RoSC-Save2Attk|99|0|Make a saving throw vs. spell to attack or be hypnotized again|interdiction'},
-						{name:'Rod-of-Flailing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic ^^tid^^|^^tname^^\'s Rod of Flailing charge is expended|^^tname^^ looses their +4 bonus to AC and saving throws\n!attk --set-mods ^^tid^^|del|Rod of Flailing|Rod of Flailing'},
+						{name:'Rod-of-Flailing-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic ^^tid^^|^^tname^^\'s Rod of Flailing charge is expended|^^tname^^ looses their +4 bonus to AC and saving throws\n!attk --set-mods ^^tcid^^|del|Rod of Flailing|Rod of Flailing'},
 						{name:'Rod-of-Flailing-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|^^tname^^ uses a Rod of Flailing charge|^^tname^^ gains a +4 bonus to AC and saving throws\n!attk --set-mods ^^tid^^|add|Rod of Flailing|Rod of Flailing|svsav:+4,+:4'},
 						{name:'Rope-of-Constriction-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --hp|-[[2d6]] --fb-header Rope of Constriction --fb-content The rope tightens around ^^tname^^\'s neck! ^^tname^^ has taken _TCUR0_ points of constriction damage.'},
 						{name:'Rope-of-Constriction-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --charid ^^cid^^ --hp|-[[2d6]] --fb-header Rope of Constriction --fb-content The rope tightens even more around ^^tname^^\'s neck! ^^tname^^ has taken another _TCUR0_ points of constriction damage.'},
@@ -935,7 +941,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Scintillating-Colours-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --Scintillating-AC|0'},
 						{name:'Scintillating-Robe-AC-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!round --target-nosave caster|^^tid^^|Scintillating-Robe|99|0|Robe is still scintillating|bolt-shield'},
 						{name:'Scintillating-Robe-AC-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|mod|Colours Building|Robe of Scintillating Colours|+:1'},
-						{name:'Scintillating-Robe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Colours Building|Robe of Scintillating Colours\n!magic --message ^^tid^^|Robe of Scintillating Colours|The robe stops scintillating and ^^tname^^\'s armour class reduces'},
+						{name:'Scintillating-Robe-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Colours Building|Robe of Scintillating Colours\n!magic --message ^^tid^^|Robe of Scintillating Colours|The robe stops scintillating and ^^tname^^\'s armour class reduces'},
 						{name:'Scroll-of-Weakness-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|*2|Strength|false'},
 						{name:'Scroll-of-Weakness-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|/2|Strength|false'},
 						{name:'SeaHag-Gaze-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w ^^cname^^ \\amp{template:undefined}{{title=SeaHag Gaze}}{{desc=^^cname^^ has failed to save against the Sea Hag\'s baleful gaze and now must determine their fate. [Roll d100](!\\amp#13\\amp#47w ^^cname^^ Rolled [[1d100]] on d100) and select either [25 or less](!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set ^^token_hp^^|0\n!magic --message ^^tid^^|^^tname^^ has Died of Fright|The gaze of the Sea Hag has struck terror into the heart of ^^tname^^, stopping their heart and they immediately drop dead\n!rounds --removetargetstatus ^^tid^^|SeaHag-Gaze) or [26 or more](!magic --message ^^tid^^|^^tname^^ is Paralysed with Fear|The gaze of the sea hag strikes paralysing fear into ^^tname^^, who remains rooted to the spot unable to move for up to three days!) as the result.}}'},
@@ -946,19 +952,19 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Severe-Debilitating-Disease-longrest',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Severe-Debilitating-Disease_Feeling-a-bit-sick|60|-1|Feeling weaker|radioactive\n!magic --change-attr ^^tid^^|-4|strength --message c|^^tid^^|Feeling Weaker|Oh dear... ^^tname^^\'s strength seems to be slipping away due to disease. --message gm|^^tid^^|^^tname^^\'s Serious Disease|^^tname^^ is feeling even weaker. As GM you can just let the decline continue, or [Stop Decline]\\lpar;!rounds \\amp;#45;-deltargetstatus ^^tid^^\\amp;#124;Severe-Debilitating-Disease_Feeling-a-bit-sick \\amp#13;!magic \\amp;#45;-message s\\amp;#124;^^tid^^\\amp;#124;Stopped Decline\\amp;#124;^^tname^^ is no longer loosing strength\\rpar; of strength, or [Cure Disease]\\lpar;!rounds \\amp;#45;-deltargetstatus ^^tid^^\\amp;#124;Severe-Debilitating-Disease_Feeling-a-bit-sick \\amp#13;!magic \\amp;#45;-change-attr ^^tid^^\\amp;#124;+100\\amp;#124;strength \\amp;#45;-message s\\amp;#124;^^tid^^\\amp;#124;Cured of Disease\\amp;#124;Feeling much better. Strength restored\\rpar; which restores strength immediately back to what it was.'},
 						{name:'Shadow-Drain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+1|strength'},
 						{name:'Shadow-Drain-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|-1|strength'},
-						{name:'Shield-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Shield Spell|Shield Spell\n!setattr --silent --charid ^^cid^^ --armortype|\n/w "^^cname^^" ^^tname^^ loses their magic shield'},
+						{name:'Shield-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Shield Spell|Shield Spell\n!setattr --silent --charid ^^cid^^ --armortype|\n/w "^^cname^^" ^^tname^^ loses their magic shield'},
 						{name:'Shield-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Shield Spell|Shield Spell|ac:4,rules:-Armour Spell||^^duration^^\n!setattr --silent --charid ^^cid^^ --armortype|\'Shield Spell - Immune to magic missiles, front is AC2 vs hand hurled missiles, AC3 vs small device propelled missiles, AC4 vs all other attacks.\'\n/w "^^cname^^" ^^tname^^ is shielded by magic.'},
 						{name:'Shriek-Attract-Monster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Monsters Attracted?|[Roll d100](!\\amp#13;\\amp#47;w gm \\amp#91;\\amp#91;\\amp#63;{Monsters attracted if get over 50%\\amp#124;1d100}\\amp#93;\\amp#93;) to see if monsters were attracted - 50% chance each round. You can [stop rolling each round](!rounds ~\\amp#45;removetargetstatus ^^tid^^\\amp#124;Shriek-Attract-Monster) whenever you want to.'},
 						{name:'Shriek-Attract-Monster-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Monsters Attracted?|[Roll d100](!\\amp#13;\\amp#47;w gm \\amp#91;\\amp#91;\\amp#63;{Monsters attracted if get over 50%\\amp#124;1d100}\\amp#93;\\amp#93;) to see if monsters were attracted - 50% chance each round. You can [stop rolling each round](!rounds ~\\amp#45;removetargetstatus ^^tid^^\\amp#124;Shriek-Attract-Monster) whenever you want to.'},
 						{name:'Shrieker-Shriek-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Shriek Ends|Do you wish to [roll for attracting monsters](!rounds ~\\amp#45;target-nosave caster\\amp#124;^^tid^^\\amp#124;Shriek-Attract-Monster\\amp#124;99\\amp#124;0\\amp#124;Have any monsters been attracted?\\amp#124;death-zone) each round?'},
-						{name:'Slow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell||Slow\n!init --setmods ^^tid^^|del|Slow|||silent\n!magic --message c|^^tid^^|No Longer Slowed|^^tname^^ is moving at their normal speed again, and their AC and attacks have returned to normal'},
+						{name:'Slow-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell||Slow\n!init --setmods ^^tid^^|del|Slow|||silent\n!magic --message c|^^tid^^|No Longer Slowed|^^tname^^ is moving at their normal speed again, and their AC and attacks have returned to normal'},
 						{name:'Slow-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|AC|Slow|+:-4 --set-mods ^^tid^^|add|No DexMods|Slow|+:v(0@{^^cname^^|dexdefense},0) --set-mods ^^tid^^|add|Thac0|Slow|thac0+:-4\n!init --setmods ^^tid^^|both|Slow|=2|=0.5|silent\n!magic --message c|^^tid^^|Slowed|^^tname^^ is moving in slow motion, with worse AC and attacks'},
 						{name:'Snake-Poison-3-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w "^^cname^^" ^^cname^^ takes [[2d4]]hp of damage from the poison injected by the snake that bit them.\n/w gm ^^cname^^ takes [[2d4]]hp of damage from the poison injected by the snake that bit them.'},
 						{name:'Something-wrong-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|GS-Acid-dmg|99|0|Take acid damage to feet|tread'},
-						{name:'Spectral-hand-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Improved Touch|Spectral Hand\n!magic --message ^^tid^^|^^tname^^\'s Spectral Hand fades away|They can no longer cast L1-4 touch spells at a distance, and Thac0 returns to normal'},
+						{name:'Spectral-hand-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Improved Touch|Spectral Hand\n!magic --message ^^tid^^|^^tname^^\'s Spectral Hand fades away|They can no longer cast L1-4 touch spells at a distance, and Thac0 returns to normal'},
 						{name:'Spectral-hand-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Improved Touch|Spectral Hand|thac0+:2\n!magic --message ^^tid^^|^^tname^^ uses Spectral Hand|By doing so, they can cast L1-4 touch spells at a distance at +2, so Thac0 has improved'},
 						{name:'Spiritual-Hammer-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --blank-weapon ^^tid^^|Spiritual-Hammer|silent'},
-						{name:'Stench-of-Decay-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Nauseous|Stench of Decay\n!magic --message s|^^tid^^|Recovered from Nausea|While the stench and sights remain, ^^tname^^ has become used to them and gegains their composure. The penalties to attacks and AC are lifted.'},
+						{name:'Stench-of-Decay-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Nauseous|Stench of Decay\n!magic --message s|^^tid^^|Recovered from Nausea|While the stench and sights remain, ^^tname^^ has become used to them and gegains their composure. The penalties to attacks and AC are lifted.'},
 						{name:'Stench-of-Decay-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Nauseous|Stench of Decay|thac0+:-1,ac+:-1\n!magic --message s|^^tid^^|Disgusting Decay|The stench or just the sight of decay has made ^^tname^^ nauseous, which makes attacks more difficult (+1 penalty to Thac0) and AC worse due to slower dodging (+1 penalty to AC)'},
 						{name:'Stirge-Drain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Draining Blood|^^tname^^ has drunk its fill and drops away to rest'},
 						{name:'Stirge-Drain-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message ^^tid^^|Draining Blood|^^tname^^ is draining blood. [Click here to roll 1d4](!magic ~\\amp#45;message ^^tid^^\\amp#124;Draining Blood\\amp#124;^^tname^^ Drains \\amp#94;\\amp#94;5\\amp#94;\\amp#94;HP of blood from its victim. Tell the player of the victim to deduct them\\amp#124;!rounds ~\\amp#126;target-nosave caster\\amp#166;^^tid^^\\amp#166;stirge-drain\\amp#166;-\\amp#94;\\amp#94;5\\amp#94;\\amp#94;\\amp#166;0\\amp#166;Draining blood each round\\amp#166;broken-heart\\amp#124;\\amp#91;\\amp#91;\\amp#63;{^^tname^^ drains how much blood?\\amp#124;1d4}\\amp#93;\\amp#93;) and tell the victim the result'},
@@ -978,7 +984,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Strength-Drain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --strength|@{^^cname^^|strength|max}\n/w "^^cname^^" ^^tname^^ is feeling somewhat stronger, back to their normal self... perhaps...'},
 						{name:'Stun-Dart-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --target caster|^^tid^^|slow|4|-1|Slowly recovering from the effects of the Stun Dart gas, penalty of 4 to attks \\amp AC, slower initiative \\amp no dex bonuses|snail'},
 						{name:'Suffocating-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'\\amp{template:default}{{title=^^cname^^ Suffocates}}{{desc="argh! i can\'t breathe..." ^^cname^^ dies of suffocation by the Rug of Smothering}}'},
-						{name:'Sunlight-1-toHit-Penalty-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|To-Hit penalty|Sunlight'},
+						{name:'Sunlight-1-toHit-Penalty-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|To-Hit penalty|Sunlight'},
 						{name:'Sunlight-1-toHit-Penalty-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|To-Hit penalty|Sunlight|thac0+:-1'},
 						{name:'Super-heroism-2-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-2|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
 						{name:'Super-heroism-2-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|2|[[1d10+4]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+2]] Fighter'},
@@ -990,23 +996,23 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						{name:'Super-heroism-5-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|5|[[4d10+1]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+5]] Fighter'},
 						{name:'Super-heroism-6-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --level-change ^^tid^^|-6|[[{ {(@{^^cname^^|hp}-@{^^cname^^|pot-heroism-hp})},{0}}kh1]]|fighter --message public|^^tid^^|Potion of Super Heroism|^^tname^^ loses their improved abilities as a fighter, and returns to their normal self'},
 						{name:'Super-heroism-6-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --silent --pot-heroism-hp|@{^^cname^^|hp}\n!magic --level-change ^^tid^^|6|[[5d10]]|fighter --message public|^^tid^^|Potion of Super Heroism|With a masterful fighting career, ^^tname^^ drinks a potion and is now suddenly a Level [[@{^^cname^^|level-class1}+6]] Fighter'},
-						{name:'Swallowed-by-Behir-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Swallowed by Behir|Tell the player controlling ^^tname^^ that ^^tname^^ looses a final [[@{^^cname^^|Behir-digest^^tid^^}]] hit points this round and dies if they hit 0HP. ^^tname^^ will also receive an additional -1 mod to damage automatically. They will continue to be digested unless they [Escape](!rounds ~~deltargetstatus ^^tid^^¦Being Digested\\amp#13;!attk ~~set-mods ^^tid^^¦delspell¦Swallowed¦Behir)\n!attk --set-mods ^^tid^^|mod|Swallowed|Behir|dmg+:-1\n!rounds --addtargetstatus ^^tid^^|Being Digested|120|-1|Your dead body is being rapidly digested by the Behir|skull'},
+						{name:'Swallowed-by-Behir-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Swallowed by Behir|Tell the player controlling ^^tname^^ that ^^tname^^ looses a final [[@{^^cname^^|Behir-digest^^tid^^}]] hit points this round and dies if they hit 0HP. ^^tname^^ will also receive an additional -1 mod to damage automatically. They will continue to be digested unless they [Escape](!rounds ~~deltargetstatus ^^tid^^¦Being Digested\\amp#13;!attk ~~set-mods ^^tid^^¦delspell¦Swallowed¦Behir)\n!attk --set-mods ^^tcid^^|mod|Swallowed|Behir|dmg+:-1\n!rounds --addtargetstatus ^^tid^^|Being Digested|120|-1|Your dead body is being rapidly digested by the Behir|skull'},
 						{name:'Swallowed-by-Behir-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --charid ^^cid^^ --Behir-digest^^tid^^|[[ceil(100*^^hp^^/6)/100]]\n!magic --message gm|^^tid^^|Swallowed by Behir|Tell the player controlling ^^tname^^ that ^^tname^^ looses [[ceil(100*^^hp^^/6)/100]] hit points this round. ^^tname^^ will also receive a -1 mod to damage automatically.\n!attk --set-mods ^^tid^^|add|Swallowed|Behir|dmg+:-1'},
 						{name:'Swallowed-by-Behir-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --message gm|^^tid^^|Swallowed by Behir|Tell the player controlling ^^tname^^ that ^^tname^^ looses another [[@{^^cname^^|Behir-digest^^tid^^}]] hit points this round. ^^tname^^ will also receive an additional -1 mod to damage automatically.\\nIf ^^tname^^ escapes click [Escaped](!rounds ~~deltargetstatus ^^tid^^¦Swallowed by Behir\\amp#13;!attk ~~set-mods ^^tid^^¦delspell¦Swallowed¦Behir)\n!attk --set-mods ^^tid^^|mod|Swallowed|Behir|dmg+:-1'},
-						{name:'Symbol-Pain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|del|Pain|Symbol\n!magic --change-attr ^^tid^^|+2|dexterity|silent\n/w "^^cname^^" ^^tname^^ is no longer wracked with pain and the penalties to attacks and dexterity are lifted'},
+						{name:'Symbol-Pain-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|del|Pain|Symbol\n!magic --change-attr ^^tid^^|+2|dexterity|silent\n/w "^^cname^^" ^^tname^^ is no longer wracked with pain and the penalties to attacks and dexterity are lifted'},
 						{name:'Symbol-Pain-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Pain|Symbol|thac0+:-4\n!magic --change-attr ^^tid^^|-2|dexterity|silent\n/w "^^cname^^" ^^tname^^ is wracked with pain and suffers a -4 penalty to attacks and -2 penalty to dexterity'},
 						{name:'Tashas-UHL-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strength|2\n/w "^^cname^^" ^^cname^^ stops laughing and regains strength'},
-						{name:'Tashas-UHL-monster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Laughing|Tashas UHL\n/w "^^cname^^" The monster regains strength as they stop laughing'},
+						{name:'Tashas-UHL-monster-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Laughing|Tashas UHL\n/w "^^cname^^" The monster regains strength as they stop laughing'},
 						{name:'Tashas-UHL-monster-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Laughing|Tashas UHL|thac0:-2\n/w "^^cname^^" The monster loses strength as they laugh so hard!'},
 						{name:'Tashas-UHL-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!modattr --silent --name ^^cname^^ --strength|-2\n/w "^^cname^^" ^^cname^^ loses strength as they laugh so hard!'},
 						{name:'Thunderclap-stun-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!rounds --addtargetstatus ^^tid^^|Deafness|[[1d2]]|-1|No longer stunned, but still deafened by the thunderclap|interdiction\n/w gm ^^tname^^ is no longer stunned by the thunderclap, but is still deafened from it'},
 						{name:'Underwater-infravision-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set night_distance|-60'},
 						{name:'Underwater-infravision-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!token-mod --api-as ^^pid^^ --ignore-selected --ids ^^tid^^ --set night_vision|yes night_distance|+60'},
-						{name:'VT-bonus-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attr --set-mods ^^tid^^|delspell|Bonus HP|Vampiric Touch\n!magic --message ^^tid^^|^^tname^^ looses their vampiric hit point bonus|^^tname^^\'s HP may reduce as the effects of the Vampiric Touch spell fade away'},
+						{name:'VT-bonus-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attr --set-mods ^^tcid^^|delspell|Bonus HP|Vampiric Touch\n!magic --message ^^tid^^|^^tname^^ looses their vampiric hit point bonus|^^tname^^\'s HP may reduce as the effects of the Vampiric Touch spell fade away'},
 						{name:'Vine-Crush-turn',type:'',ct:'0',charge:'uncharged',cost:'0',body:'/w ^^cname^^ \\amp{template:default}{{name=Assassin Vine Crush}}{{desc=Either do more [crushing damage](!\\amp#13;\\amp#47;w ^^cname^^ Another [[3d6]]HP crushing damage inflicted) or [release this victim](!rounds --removetargetstatus ^^tid^^|Vine Crush) so you can attack another.\nVictim must make a Strength check at -3 to [escape](!rounds --removetargetstatus ^^tid^^|Vine Crush).}}'},
 						{name:'Water-trap-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!roll20AM --audio,play|Glasses breaking\n!roll20AM --audio,play|breaking-window\n!token-mod --api-as ^^pid^^ --ignore-selected --ids @{^^cname^^|water-id} --set layer|objects\n/w gm Read Rm26 notes on Breaking Glass for full description of effects'},
 						{name:'Weak-Ring-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!setattr --silent --charid ^^cid^^ --strength|[[{{[[@{^^cname^^|strength}-1]]},{3}}kh1]] --constitution|[[{{[[@{^^cname^^|constitution}-1]]},{3}}kh1]]\n!rounds --target caster|^^tid^^|^^tid^^|Weak Ring|100|-10||blank'},
-						{name:'Weakened-Creature-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|delspell|Attacks|Weakness||||silent\n!magic --message s|^^tid^^|No Longer Weak|^^tname^^ seems to have regained their strength'},
+						{name:'Weakened-Creature-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tcid^^|delspell|Attacks|Weakness||||silent\n!magic --message s|^^tid^^|No Longer Weak|^^tname^^ seems to have regained their strength'},
 						{name:'Weakened-Creature-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!attk --set-mods ^^tid^^|add|Attacks|Weakness|thac0+:-3,dmg+:-1|||silent\n!magic --message s|^^tid^^|Weak!|^^tname^^ suddenly feels much weaker! They have an attack penalty of -3 and a damage penalty of -1'},
 						{name:'Weakened-Humanoid-end',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|+20|strength --message s|^^tid^^|No Longer Weak|^^cname^^ seems to have regained their strength'},
 						{name:'Weakened-Humanoid-start',type:'',ct:'0',charge:'uncharged',cost:'0',body:'!magic --change-attr ^^tid^^|=3|strength --message s|^^tid^^|Weak!|^^cname^^ suddenly feels much weaker! You have a strength of 3, an attack penalty of -3 and a damage penalty of -1'},
@@ -1945,6 +1951,33 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 	}; 
 	
 	/*
+	 * Check the id returned for a targeted token is real
+	 */
+	
+	const checkObjectExists = function( id ) {
+		let errMsg = '';
+		let objType = '';
+		let objs = [getObj('graphic',id)];
+		if (_.isUndefined(objs[0])) {
+			objs = findObjs({_id:id});
+		};
+		if (!_.isUndefined(objs) && !_.isUndefined(objs[0])) {
+			objType = objs[0].get('_type');
+		};
+		
+		if (_.isUndefined(objs) || !objs.length) {
+			errMsg = 'does not refer to any object in this campaign';
+		} else if (!_.isUndefined(objType) && objType !== 'graphic') {
+			errMsg = 'is not a token_id but instead refers to a '+objs[0].get('_type');
+		}
+//		log('checkObjectExists: errMsg = '+errMsg+', objType = '+objType);
+		if (errMsg && errMsg.length) {
+			sendError(`<div>Object ID invalid.  The object ID returned by @{target|token_id} was ${id} which ${errMsg}. You may find every token returns the same token_id when you use @{target|token_id}. As far as I am aware this is a Roll20 bug. Please <a class="showtip tipsy" title="Richard @ Damery's profile on Roll20." style="color:blue; text-decoration: underline;" href="https://app.roll20.net/users/6497708/richard-at-damery">send me this information</a></div>`);
+		}
+		return;
+	}
+	
+	/*
 	 * Determine if the token is controlled by a player
 	 */
 
@@ -2174,7 +2207,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 				return '';
 			} else {
 				if (!(/[eiou]/i.test(orig[1]))) v = '('+orig[1]+')';
-//				log('rounds evalAttr: arg = '+arg+', orig = '+orig+', v = '+v);
 				v = v.replace(/;/g,',')
 					 .replace(/\[\[/g,'(')
 					 .replace(/\]\]/g,')')
@@ -2228,8 +2260,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 	 
 	var grantTokenAccess = function( playerId, pageId, grant=false, objList={} ) {
 		
-//		log('grantTokenAccess: called. playerId = '+playerId+', pageId = '+pageId+', grant = '+grant);
-		
 		if (playerIsGM(playerId)) return;
 		if (_.isUndefined(objList.sighted)) objList.sighted = [];
 		if (_.isUndefined(objList.blind)) objList.blind = [];
@@ -2244,7 +2274,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 				if (!controllers.length && sight) obj.set('has_bright_light_vision',false);
 				if (sight) objList.sighted.push(obj);
 				else objList.blind.push(obj);
-//				log('grantTokenAccess: listing '+obj.get('name'));
 				return true;
 			});
 			_.each( tempList, obj => {
@@ -2252,7 +2281,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 				let controllers = charObj.get('controlledby');
 				if (controllers.includes(playerId)) return;
 				charObj.set('controlledby',controllers+','+playerId);
-//				log('grantTokenAccess: granting access to '+charObj.get('name')+' for '+playerId);
 			});
 		} else {
 			_.each( objList.sighted, obj => {
@@ -2260,13 +2288,11 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 				charObj.set('controlledby',charObj.get('controlledby').split(',').filter((pid) => pid !== playerId).join(','));
 				obj.set('has_bright_light_vision',true);
 				obj.set('left',(1+obj.get('left')));
-//				log('grantTokenAccess: sighting '+obj.get('name'));
 			});
 			_.each( objList.blind, obj => {
 				let charObj = getObj('character',obj.get('represents'));
 				charObj.set('controlledby',charObj.get('controlledby').split(',').filter((pid) => pid !== playerId).join(','));
 				obj.set('left',(1+obj.get('left')));
-//				log('grantTokenAccess: removing control from '+obj.get('name'));
 			});
 			objList = undefined;
 		};
@@ -3803,14 +3829,16 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 		if (!args[5]) {
 		    args[5]='';
 		}
+		let targetID = args.shift().trim();
 
-		var target = getObj('graphic', args.shift().trim());
+		var target = getObj('graphic', targetID);
 		
 		if (!target) {
 			log('doAddTargetStatus: invalid target - args = '+args);
 		    // RED v3.002 If dealing with an effect triggered by anyone
 		    // deleting a token with effects on it, the token may
 		    // legitimately no longer exist
+			checkObjectExists(targetID);
 		    return;
 		}
 //		args = args.join('|');
@@ -3999,7 +4027,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 			let parsedSpec = parseStr(saveSpec).replace(/;/g,':');
 			let save = [...('['+parsedSpec+']').matchAll(reCheck)];
 			let isResist = reResist.test(parsedSpec) && !reSave.test(parsedSpec); 
-//			log('doAddStatus: saveSpec = '+parsedSpec+', reResist test = '+reResist.test(parsedSpec)+', reSave test = '+reSave.test(parsedSpec)+', isResist = '+isResist);
 			_.each(selection,function(e) {
 				curToken = getObj('graphic', e._id);
 				if (!curToken || curToken.get('_subtype') !== 'token' || curToken.get('isdrawing')) {
@@ -4169,7 +4196,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 					// Remove markers
 					return imgContent;
 				} catch (e) {
-//					log('AttackMaster buildMonsterAttkMacros: JavaScript '+e.name+': '+e.message+' while processing monster '+charName);
 					sendDebug('AttackMaster buildMonsterAttkMacros: JavaScript '+e.name+': '+e.message+' while processing monster '+charName);
 					sendCatchError('AttackMaster',msg_orig[senderId],e);
 					errFlag = true;
@@ -5626,7 +5652,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 		if (question) {
 			content = '&{template:'+fields.defaultTemplate+'}{{name=Confirm AOE placement}}'
 					+ '{{AOE='+(range==0 ? ('Range is 0.') : ('Move the crosshair '+(range > 0 ? 'within the range depicted by the green area, then' : 'within the range, then')))
-					+ '<br>[Confirm](!rounds '+(movable ? '--movable-aoe' : '--aoe')+' '+args.join('|')+') Area of Effect placement}}'
+					+ '<br>[Confirm](!rounds '+(movable ? '--movable-aoe' : '--aoe')+' '+parseStr(args.join('|')).replace(/\)/g,'\\rpar;')+') Area of Effect placement}}'
 					+ (['ARC180','ARC90','BOLT','CONE'].includes(shape)?'{{Direction=Turn the cross hair so the arrow points in the direction of the effect}}':'')
 					+ (['RECTANGLE','SQUARE'].includes(shape)?'{{Orientation=Turn the cross hair so the arrow aligns with the orientation of the effect}}':'')
 					+ (['WALL'].includes(shape)?'{{Orientation=Turn the cross hair so the arrow points the way the wall is facing}}':'')
@@ -5701,7 +5727,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 					rotation: chRotation,
 					represents: charID,
 			});
-//			setTimeout( () => toBack(crossHair), 1000);
+			setTimeout( () => toBack(crossHair), 1000);
 			
 			casterID = args[8];
 			args = args.slice(9);
@@ -6374,13 +6400,16 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 			tokenName,
 			argString,
 			content;
+			
+//		log('doTarget: curToken is '+(_.isUndefined(curToken) ? 'undefined' : 'a token'));
 		
 		if (!curToken) {
 			sendDebug('doTarget: invalid tokenID parameter');
+			checkObjectExists( tokenID );
 			sendError('Invalid roundMaster parameters');
 			return;
 		}
-		if (!['CASTER','TARGET','SINGLE','AREA','ATTACK','MULTI'].includes(command.toUpperCase())) {
+		if (!['CASTER','TARGET','SINGLE','AREA','ATTACK','MULTI'].includes(command)) {
 			sendError('Invalid targeting command: must be CASTER, SINGLE, ATTACK, AREA or MULTI');
 			return;
 		}
@@ -6421,11 +6450,11 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 
 		args = argString.split('|');
 		if (command == 'AREA') {
-			tokenID = args.shift();
+			let targetToken = args.shift();
 			content = '&{template:'+fields.defaultTemplate+'}{{name=Target Area-Effect Spell}}'
 					+ '{{[Select another target](!rounds --target'+(checkSave ? '-save' : (asGM ? '-nosave' : ''))+' '+command+'|'+tokenID+'|&#64;{target|Select Next Target|token_id}|'+args.join('|')+') or just do something else}}';
 			sendResponse( senderId, content );
-			args.unshift(tokenID);
+			args.unshift(targetToken);
 		}
 
 		return;
@@ -6939,6 +6968,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 								 .replace( /\^\^tname\^\^/gi , tname )
 								 .replace( /\^\^cid\^\^/gi , cid )
 								 .replace( /\^\^tid\^\^/gi , tid )
+								 .replace( /\^\^tcid\^\^/gi , tid )
 								 .replace( /\^\^bar1_current\^\^/gi , bar1 )
 								 .replace( /\^\^bar2_current\^\^/gi , bar2 )
 								 .replace( /\^\^bar3_current\^\^/gi , bar3 )
@@ -6991,18 +7021,20 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 	 * is invalid.
 	 */
 	var sendResponse = function(pid,msg,as,img) {
-		if (!pid || !msg) 
-			{return null;}
+		if (!msg) 
+		{return null;}
+		else if (!pid) {
+			sendFeedback(msg);
+			return;
+		}
 		var player = getObj('player',pid),
 			to; 
-		if (player) {
+		if (player && player.get('online') == true) {
 			to = '/w "' + player.get('_displayname') + '" ';
 		} else {
 			// RED: v3.003 softened the treatment of invalid playerIDs
 			// RED: as a bug in the Transmogrifier seems to create these
 			// throw('could not find player: ' + to);
-			sendDebug('sendResponse: invalid pid passed');
-			sendError('Could not find player: ' + pid);
 			to = '/w gm ';
 		}
 		var content = to
@@ -7382,7 +7414,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 						//temp cmd
 						let obj = getObj('graphic',arg[0]);
 						if (obj) {
-//							log('setsight: setting '+obj.get('name')+' light_hassight to '+(arg[1].toLowerCase() === 'true'))
 							obj.set('has_bright_light_vision',(arg[1].toLowerCase() === 'true'));
 						} else {
 							log('setsight: invalid object id');
@@ -7428,7 +7459,6 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
     		return;
 		}
 		if (msg.type === 'api' && !_.isUndefined(undoList[senderId])) {
-//			log('roundMaster handleChatMessage: removing token access for '+senderId);
 			undoList[senderId] = grantTokenAccess( senderId, null, false, undoList[senderId] );
 		}
 
@@ -7668,7 +7698,7 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 									represents: oldRepresents
 							}), function(t) {return t.id != oldID});
 			};
-
+			
 			if (newToken) {
 				// If found a match, just add the effect markers and effects
 				newEffects = getStatusEffects(newToken);
@@ -7723,7 +7753,8 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 								macroBody = macroBody.replace( /\^\^cname\^\^/gi , cname )
 													 .replace( /\^\^tname\^\^/gi , oldName )
 													 .replace( /\^\^cid\^\^/gi , oldRepresents )
-													 .replace( /\^\^tid\^\^/gi , oldID )
+													 .replace( /\^\^tid\^\^/gi , oldRepresents )
+													 .replace( /\^\^tcid\^\^/gi , oldRepresents+','+oldID )
 													 .replace( /\^\^bar1_current\^\^/gi , bar1 )
 													 .replace( /\^\^bar2_current\^\^/gi , bar2 )
 													 .replace( /\^\^bar3_current\^\^/gi , bar3 )
@@ -7741,7 +7772,13 @@ var RoundMaster = (function() {		// eslint-disable-line no-unused-vars
 													 .replace( /\^\^token_hp_max\^\^/gi , hpField.max );
 								sendDebug('handleDestroyToken: macroBody is ' + macroBody );
 								sendChat('',macroBody,null,{noarchive:!flags.archive, use3d:false});
-								
+								let pid = charCS.get('controlledby').split(',')[0];
+								let delMsg = `All ${oldName} tokens have been deleted, so all effects caused by the status of ${oldName} have been removed from ${cname}`;
+								if (pid) {
+									sendResponse(pid,delMsg);
+								} else {
+									sendFeedback(delMsg);
+								}
 							}
 						}
 					}
