@@ -1403,3 +1403,7 @@ TokenReference:
 Wiki:
   - "Wiki"
   - "Utility"
+
+ConditionTracker:
+  - "ConditionTracker"
+  - "Utility"

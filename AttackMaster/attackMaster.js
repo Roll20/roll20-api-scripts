@@ -126,11 +126,13 @@ API_Meta.AttackMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  * v5.3.0  23/12/2025  Updated attrLookup() and resolveData() to use objects for optional parameters.
  *                     Added magic resistance to saving throw processing. Added managing mods to moves.
  *                     Fix to One Hander fighting style.
+ * v5.3.1  12/05/2026  Correted behaviour of mods when a token is deleted to be same as RoundMaster
+ *                     effects & statuses. Fixed doSetMods() to cater for deleting mob tokens with running mods.
  */
  
 var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict'; 
-	var version = '5.3.0',
+	var version = '5.3.1',
 		author = 'Richard @ Damery',
 		pending = null;
     const lastUpdate = 1777318205;
@@ -1779,28 +1781,23 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				field = styleFieldMap[key][1];
 				switch (key.toLowerCase()) {
 				case 'oneh':
-//					log('implementStyle: checking oneHander style, handedness = '+InHandTable.tableLookup( fields.InHand_handedness, row ));
 					if (oneHanded || InHandTable.tableLookup( fields.InHand_handedness, row ) == 1) {
 						implementStyle( charCS, row, weapon, oneHanded, '['+val.replace(/=/g,':').replace(/\|/g,',')+']');
 					}
 					break;
 				case 'twoh':
-//					log('implementStyle: checking twoHander style, handedness = '+InHandTable.tableLookup( fields.InHand_handedness, row ));
 					if (InHandTable.tableLookup( fields.InHand_handedness, row ) != 1) {
-//						log('implementStyle: matches twoHander style, recurrsive call to implementStyle with benefits = '+'['+val.replace(/=/g,':').replace(/\|/g,',')+']');
 						implementStyle( charCS, row, weapon, oneHanded, '['+val.replace(/=/g,':').replace(/\|/g,',')+']');
 					}
 					break;
 				case 'dmg':
 				case 'dmgsm':
 				case 'dmgl':
-//					log('implementStyle: checking damage benefit');
 					if (!dmgTable) dmgTable = getTable( charCS, fieldGroups.DMG );
 					for (let r=dmgTable.table[1]; !_.isUndefined(dmgTable.tableLookup( fields.Dmg_name, r, false )); r++) {
 						rowWeap = dmgTable.tableLookup( fields.Dmg_miName, r );
 						if (rowWeap.dbName() == weapon) {
 							dmgTable.tableSet( field, r, val );
-//							log('implementStyle: found '+weapon+' has damage benefit so setting '+field[0]+' to '+val);
 						}
 					}
 					break;
@@ -1809,12 +1806,10 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				case 'mwadj':
 				case 'mwch':
 				case 'mwcm':
-//					log('implementStyle: checking melee benefits');
 					if (!meleeTable) meleeTable = getTable( charCS, fieldGroups.MELEE );
 					for (let r=meleeTable.table[1]; !_.isUndefined(meleeTable.tableLookup( fields.MW_name, r, false )); r++) {
 						rowWeap = meleeTable.tableLookup( fields.MW_miName, r );
 						if (rowWeap.dbName() == weapon) {
-//							log('implementStyle: found benefit for weapon '+weapon+', setting '+field[0]+' to '+val);
 							meleeTable.tableSet( field, r, val );
 						}
 					}
@@ -3021,9 +3016,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				totalFlag = false;
 
 			for (let i=0; i<Math.min(itemSpecs.length,itemData.length); i++) {
-//				log('assessItem: assessing data itemData['+i+'][0] = '+itemData[i][0]);
 				acData = parseData( itemData[i][0], reACSpecs, true, charCS, itemTrueName );
-//				log('assessItem: acData.name = '+acData.name+', acData = '+_.pairs(acData));
 				if (!acData.name.length) continue;
 				acSavData = parseData( itemData[i][0], reSaveSpecs, true, charCS, itemTrueName );
 				acRules = acData.rules.toLowerCase().replace(/[_\s]/g,'').split('|').map(r => r.replace(/\-/g,(match,i,s)=>(i>0?'':match)));
@@ -3036,8 +3029,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				if ((isMod && acData.ac.length) || itemClass.includes('armor') || itemClass.includes('armour')) itemClass = 'armour';
 				if (itemClass.includes('shield')) itemClass = 'shield';
 				if (itemClass.includes('helm')) itemClass = 'helm';
-				
-//				log('assessItem: isMod = '+isMod+', itemClass = '+itemClass);
 				
 				if (!isMod && !state.attackMaster.weapRules.allowArmour && !classAllowedItem(charCS, itemName, itemType, itemSuperType, 'ac')) {
 					armourMsg.push(itemName+' is not of a usable type');
@@ -3084,7 +3075,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 						armourMsg.push(itemName+' is overridden by another item');
 						diff = undefined;
 					}
-//					log('assessItem: diff = '+diff);
 					if (!_.isUndefined(diff)) {
 						itemCursed = (itemCharge || '').includes('cursed');
 						classCursed = acValues[itemClass] && (acValues[itemClass].charge || '').includes('cursed');
@@ -3101,7 +3091,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 							}
 							
 							acValues[itemClass] = {name:itemName, trueName:itemTrueName, row:i, specs:itemSpecs[i], charge:(itemCharge || ''), data:acData, savAvg:(_.reduce(acSavData, (t,v) => t+(v || 0), 0) / _.size(acSavData))};
-//							log('assessItem: set acValues['+itemClass+'] to have name '+itemName+' data '+_.pairs(acData));
 							
 							if (itemClass === 'armour') {
 								acValues.armour.magic = parseInt(acData.adj||0)!==0;
@@ -3121,7 +3110,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 									armourMsg.push(item.name+' cannot be used alongside '+itemName);
 									return true;
 								}
-//								log('assessItem: not omitting '+iClass+': '+item.name);
 								return false;	
 							});
 						}
@@ -3150,19 +3138,14 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		Items = getTableGroupField( charCS, Items, fieldGroups.MI, 'trueType' );
 		while (!_.isUndefined(itemName = tableGroupLookup( Items, 'name', ++i, false ))) {
 			itemTrueName = tableGroupLookup( Items, 'trueName', i ) || itemName;
-//			log('scanForModifiers: item '+itemName+', trueName = '+itemTrueName);
 			if (itemName.length && itemName != '-') {
 				itemCharge = (tableGroupLookup( Items, 'trueType', i ) || tableGroupLookup( Items, 'type', i ) || '').toLowerCase();
 				itemDef = abilityLookup( fields.MagicItemDB, itemTrueName, charCS, true );
-//				log('scanForModifiers: item '+itemName+', itemCharge = '+itemCharge+', def = '+!!itemDef.obj);
 				if (itemDef.obj) {
 					let miIndex, miRowID, miTable;
 					[miIndex,miTable,miRowID] = tableGroupIndex( Items, i );
 					itemSpecs = itemDef.specs(/}}\s*Specs\s*=(.*?(?:armou?r|shield|helm|barding|protection|modifiers).*?){{/im) || [];
-//					itemSpecs = itemDef.specs(/}}\s*Specs\s*=(.*?){{/im) || [];
 					itemData = resolveData( itemTrueName, fields.MagicItemDB, reItemData, charCS, reACSpecs, {row:miIndex, rowID:miRowID} ).raw;
-//					log('scanForModifiers: item '+itemName+', itemData = '+itemData);
-//					log('scanForModifiers: item '+itemName+', which when parsed = '+_.pairs(parseData(itemData[0],reSpellSpecs)));
 					assessItem( itemName, itemTrueName, itemCharge, itemSpecs, itemData );
 				}
 			}
@@ -3231,17 +3214,12 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			let modName = Mods.tableLookup( fields.Mods_name, modRow ),
 				modSpell = Mods.tableLookup( fields.Mods_spellName, modRow );
 				
-//			log('scanForModifiers: invalid ID = '+(modTokenID.length && modTokenID !== tokenID)+', ('+scanType+' !== '+modType+') = '+(scanType && modType !== scanType)+', invalid name '+modName+' = '+(!modName.length || modName === '-'));
-
 			if ((modTokenID.length && modTokenID !== tokenID) || (scanType && modType !== scanType) || !modName.length || modName === '-') continue;
 			let modSpecs = [...('['+modName+',Modifiers|'+modName+',0H,'+modSpell+']').matchAll(reSpecsAll)],
 				modData = [...('[a:'+modName+',st:'+modSpell+','+specs+']').matchAll(reDataAll)];
 
-//			log('scanForModifiers: dealing with mod table entry modName = '+modName+', modSpell = '+modSpell+', specs = '+specs+', so modSpecs = '+modSpecs+', modData = '+modData);
-				
 			assessItem( modName, modSpell, 'uncharged', modSpecs, modData );
 		};
-//		log('scanForModifiers: msgs = '+armourMsg);
 		return {acValues: acValues, msgs: armourMsg, dexFlag: !noDex};
 	}
 	
@@ -3266,26 +3244,20 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 		const charCS = ResTab.character;
 		const resistDataArray = String(data.mr || '').split('|');
-//		log('scanForResistance: data.mr = '+data.mr+', resistDataArray = '+resistDataArray);
 		for (const resistDef of resistDataArray) {
 			let resistData = (resistDef || '').match(reResistData) || (resistDef || '').match(reModResistData);
-//			log('scanForResistance: resistDef = '+resistDef+', first resistData = '+resistData);
 			if (resistData && resistData.length === 3) resistData = ['','all',resistData[1],0,resistData[2],''];
-//			log('scanForResistance: resistDef = '+resistDef+', second resistData = '+resistData);
 			if (resistData && resistData.length) {
 				const setFlag = resistData[4][0] === '=';
 				if (setFlag) resistData[4] = resistData[4].slice(1);
 				const mathFlag = isNaN(resistData[4][0]);
 				resistData[3] = parseInt(evalAttr(resistData[3])) || 0;
-//				log('scanForResistance: '+resistData[1]+'.toLowerCase() === innate = '+(resistData[1].toLowerCase() === 'innate'));
 				if (resistData[1].toLowerCase() === 'innate') {
 					setAttr( charCS, fields.MagicResist, Math.max( (parseInt(resistData[3]) || 0), (parseInt(attrLookup( charCS, fields.MagicResist )) || 0)));
 					setAttr( charCS, fields.MagicModResist, (setFlag ? resistData[4] : parseInt(evalAttr( 'f('+attrLookup( charCS, fields.MagicModResist )+(!mathFlag ? '+' : '')+resistData[4]+')' ))));
 				};
 				let resRows;
-//				log('scanForResistance: '+resistData[1]+'.toLowerCase() === all = '+(resistData[1].toLowerCase() === 'all'));
 				if (resistData[1].toLowerCase() === 'all' || resistData[1].toLowerCase() === 'innate') {
-//					log('scanForResistance: '+resistData[2]+'.toLowerCase().includes(all) = '+(resistData[2].toLowerCase().includes('all')));
 					if (resistData[2].toLowerCase().includes('all')) {
 						resRows = ResTab.tableFindAll( fields.Resist_name, /^[^\-]/i );
 					} else {
@@ -3293,10 +3265,8 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 					}
 				} else {
 					let resRow = ResTab.tableFind( fields.Resist_name, resistData[1], false );
-//					log('scanForResistance: search for '+resistData[1]+' found row '+resRow);
 					resRows = !_.isUndefined(resRow) ? [resRow] : [];
 				}
-//				log('scanForResistance: resRows = '+resRows);
 				const prefix = ResTab.fieldGroup;
 				let values = initValues( prefix );
 				if (!!resRows && resRows.length) {
@@ -3312,10 +3282,8 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 							newMod = parseInt(evalAttr(resMod+(!mathFlag ? '+' : '')+resistData[4]));
 						};
 						ResTab = ResTab.tableSet( fields.Resist_mod, row, newMod );
-//						log('scanForResistance: setting row '+row+' to be max of old '+resVal+' new of '+resistData[3]+', and mod to '+newMod);
 					};
 				} else if (resistData[1] !== 'all') {
-//					log('scanForModifiers: creating new line with '+resistData);
 					resRows = ResTab.tableFind( fields.Resist_name, '-', false );
 					values = values.valLine( prefix, 'name', resistData[1] || 'Undefined' )
 								  .valLine( prefix, 'tag', resistData[2] || '' )
@@ -3813,8 +3781,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 						  dmgPosAdj		= (abilityType == Attk.TARGET ? ((slashWeap?1:0)+(pierceWeap?1:0)+(bludgeonWeap?1:0)) : 0),
 						  advExplain	= (!attkImpact && !dmgImpact) ? '' : advantageDiceRolls( macro, attkAdvantage, dmgAdvantage, dmgPosAdj );
 						  
-//					log('buildMWattkMacros: attkAdvantage = '+attkAdvantage+', dmgAdvantage = '+dmgAdvantage+', attkImpact = '+attkImpact+', dmgImpact = '+dmgImpact);
-
 					let	toHitRoll = attkRoll,
 						dmgSMroll = dmgSM,
 						dmgLroll  = dmgL,
@@ -4140,8 +4106,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				  targetADtxt	= (attkADtxt ? 'Attack '+attkADtxt : '') + (attkADtxt && dmgADtxt ? ' and ' : '') + (dmgADtxt ? 'Damage'+dmgADtxt : ''),
 				  dmgPosAdj		= (abilityType == Attk.TARGET ? ((slashWeap?1:0)+(pierceWeap?1:0)+(bludgeonWeap?1:0)) : 0),
 				  advExplain 	= (!attkImpact && !dmgImpact) ? '' : advantageDiceRolls( attkMacro, attkAdvantage, dmgAdvantage, dmgPosAdj );
-
-//			log('buildRWattkMacros: allAdvantage = '+allAdvantage+', attkAdvantage = '+attkAdvantage+', dmgAdvantage = '+dmgAdvantage);
 
 			if (attkType == Attk.ROLL) {
 				toHitRoll = `?{Roll To-Hit Dice|${attkRoll}}`;
@@ -5270,7 +5234,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			removeLink = ((isGM && isMod) ? (' _Remove_(!attk --set-mods '+tokenID+'|del|'+e.name+'|'+e.trueName+'|thac0|||verbose)') : ''),
 			objType = (modObj.obj ? getShownType( modObj, e.row ) : e.specs[4].replace(/\|/g,'/')).dispName();
 
-//			log('makeModsDisplay: e.name = '+e.name+', thac0adj = '+thac0Adj+', hpAdj = '+hpAdj+', objType = '+objType);
 			if (thac0Adj) thac0Mods += '{{<'+(rowNo++)+'>'+objType+'='+e.name.dispName()+(!(/[+-]\d+?/.test(e.name)) ? ((thac0Adj >= 0 ? ' +' : ' ') + thac0Adj) : '') + removeLink +'}}';
 			if (dmgAdj) dmgMods += '{{<'+(rowNo++)+'>'+objType+' ='+e.name.dispName()+(!(/[+-]\d+?/.test(e.name)) ? ((dmgAdj >= 0 ? ' +' : ' ') + dmgAdj) : '') + removeLink +'}}';
 			if (hpAdj) hpMods += '{{<'+(rowNo++)+'>'+objType+'  ='+e.name.dispName()+(!(/[+-]\d+?/.test(e.name)) ? ((hpAdj >= 0 ? ' +' : ' ') + hpAdj) : '') + removeLink+'}}';
@@ -5504,7 +5467,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		content += '{{Section6=Resulting Movement}}'
 				+  '{{Section7=Move = [['+Math.ceil(parseFloat(String(attrLookup( charCS, fields.Move, {def:false} )) || String(attrLookup( charCS, fields.baseMove, {def:false} )) || '0'))+']]}}';
 
-//		log('makeMoveDisplay: content = '+content);
 		sendResponse( charCS, content, senderId );
 		return;
 	}
@@ -6109,8 +6071,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			  silent = ((args[5] || '').toUpperCase() == 'SILENT'),
 			  charCS = getCharacter(tokenID);
 			  
-//		log('handleAmmoChange: called');
-			  
 		let	ammoMIname = ammoName,
 			useAmmoQty = false,
 			ammoIndex,
@@ -6213,7 +6173,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		} else {
 			sendWait(senderId,0,'Attk handleAmmoChange');
 		}
-//		log('handleAmmoChange: recalculating move');
 		sendAPI( fields.magicMaster+' --check-move '+tokenID+'|silent', senderId );
 		return;
 	};	
@@ -6295,7 +6254,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				}
 			} else if (!selection.includes(':')) {
 				[index,miTable,rowID] = isNaN(r) ? tableGroupFind( Items, 'trueName', selection ) : tableGroupIndex( Items, r );  // toLowerCase
-//				log('handleChangeWeapon: r:'+r+', c:'+c+', isNaN(r):'+isNaN(r));
 				if (isNaN(index)) throw new Error('handleChangeWeapon: Can\'t find weapon '+selection);
 				r = indexTableGroup( Items, miTable, index );
 			};
@@ -6306,8 +6264,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 
 			// See if any hands are currently lent to anyone else
 			
-//			lentLeftID = (attrLookup( charCS, fields.Equip_lendLeft ) || '');
-//			lentRightID = (attrLookup( charCS, fields.Equip_lendRight ) || '');
 			const lentBothID = (attrLookup( charCS, fields.Equip_lendBoth ) || '');
 
 			// Find the weapon items
@@ -6383,7 +6339,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			// And reverse any previously lent hands
 			
 			if (lentBothID.length) {
-//				log('handleChangeWeapon: reversing leant hands');
 				setAttr( charCS, fields.Equip_lendBoth, '' );
 				setAttr( charCS, fields.Equip_lentHands, 0 );
 				sendAPI('!attk --lend-a-hand '+tokenID+'|'+lentBothID+'|'+lentHands+'|'+BT.BOTH, null, 'attk handleChangeWeapon');
@@ -7730,7 +7685,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * of rounds or HP damage taken).
 	 */
 	 
-	async function doCheckMods( args, senderId, selected, silent=false, forceMod=false ) {
+	async function doCheckMods( args, senderId, selected, silent=false, forceMod=false ) {		// val
 
 		try {
 			if (!args) args=[];
@@ -7773,7 +7728,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 			ResistTab = checkRaceResistance( ResistTab, senderId );
 				
 			_.each( modValues, (e,k) => {
-//				log('doCheckMods: assessing '+k+' item '+e.data.name);
 				thac0Mod += parseInt(e.data.thac0adj) || 0;
 				dmgMod += parseInt(e.data.dmgadj) || 0;
 				adAll += parseInt(e.data.adall) || 0;
@@ -7788,7 +7742,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 					mathMove = '+*-/'.includes(e.data.move[0]);
 					movMod = moveIsFixed ? (fixedMove ? Math.max(movMod,(parseFloat(e.data.move.slice(1))||0)) : movMod) : (fixedMove ? e.data.move.slice(1) : (movMod+(!mathMove ? '+' : '')+e.data.move));
 					moveIsFixed = moveIsFixed || fixedMove;
-//					log('doCheckMods: type '+k+', name '+e.data.name+', e.data.move = '+e.data.move+', move = '+move+', movMod = '+movMod);
 				};
 				ResistTab = scanForResistance( ResistTab, e.data );
 			});
@@ -7812,12 +7765,10 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 					curToken.set((currentThac0Field.barName+'_max'),'');
 				}
 			};
-//			log('doCheckMods: saving movMod = '+movMod);
 			setAttr( charCS, fields.MoveMod, movMod );
 			setAttr( charCS, [fields.Magical_hitAdj[0]+tokenID,fields.Magical_hitAdj[1],fields.Magical_hitAdj[2],fields.Magical_hitAdj[3]], thac0Mod );
 			setAttr( charCS, [fields.Magical_dmgAdj[0]+tokenID,fields.Magical_dmgAdj[1],fields.Magical_dmgAdj[2],fields.Magical_dmgAdj[3]], dmgMod );
 			setAttr( charCS, [fields.Magical_advantages[0]+tokenID,fields.Magical_advantages[1],fields.Magical_advantages[2],fields.Magical_advantages[3]], `${adMW}/${adRW}/${adDmg}/${adSave}/${adAttr}/${adRogue}`);
-//			log('doCheckMods: Magical_advantages = '+attrLookup( charCS, [fields.Magical_advantages[0]+tokenID,fields.Magical_advantages[1],fields.Magical_advantages[2],fields.Magical_advantages[3]] ));
 
 			if ((silentCmd !== 'quiet') && (!silent || newThac0 !== currentThac0)) {
 				makeModsDisplay( args, senderId, (baseThac0 - thac0Mod), currentHP, modValues, modMsgs );
@@ -8142,18 +8093,26 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 
 	const doSetMod = function( args, selected, senderId, silent=true ) {
 		
-		let selToken;
+		let selToken,
+			delToken = '';
 		if (!args) args = [];
 		if (!args[0] && selected && selected.length) {
 			args[0] = selToken = selected[0]._id;
 		} else if (!args[0]) {
 			sendError('No token selected');
 			return;
-		} else if (!getObj('character',args[0]) && selected && selected.length) {
-			selToken = selected[0]._id;
 		} else {
-			selToken = args[0];
-		}
+			let ids = args[0].split(',');
+			if (ids.length > 1) {
+				selToken = ids[0];
+				delToken = ids[1];
+				args[0] = delToken;
+			} else if (!getObj('character',args[0]) && selected && selected.length) {
+				selToken = selected[0]._id;
+			} else {
+				selToken = args[0];
+			}
+		};
 		
 		let tokenID = args[0],
 			cmd = (args[1] || '').toLowerCase(),
@@ -8175,19 +8134,19 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (targetCmd.toLowerCase() === 'verbose') targetCmd = '';
 			
 		if (silent) sendWait( senderId, 0, 'Attk doSetMod' );
-			
+		
 		if (!charCS || !cmd) {
 			sendError('Invalid AttackMaster command syntax');
 			return;
 		}
 		if (!curToken) {
-			tokenID = '';
+			tokenID = delToken;
 		} else {
 			linkedToken = (fieldIndex >= 0 && curToken.get('bar'+(fieldIndex+1)+'_link').length);
 		};
 		
 		let Mods = getTable( charCS, fieldGroups.MODS ),
-			tokenRows = Mods.tableFindAll( fields.Mods_tokenID, [tokenID,charCS.id,''] ),
+			tokenRows = Mods.tableFindAll( fields.Mods_tokenID, [(tokenID || charCS.id),''] ),
 			type = /(?:sv[a-z0-9]{3}[;:]|save)/i.test(spec) ? 'save' : 
 				   /(?:mr[a-z0-9]{3}[;:])/i.test(spec) ? 'resist' : 
 					(spec.includes('thac0') ? 'thac0' : 
@@ -8257,7 +8216,7 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 					hpMaxVal = (parseInt(specVals.hpmax) || 0),
 					hpChange = (parseInt(specVals.hpadj) || 0) + (parseInt(specVals.hptemp) || 0) + (parseInt(specVals.hpperm) || 0) + hpMaxVal;
 					
-				if (hpChange) {
+				if (hpChange && curToken) {
 					if (!linkedToken && hpField && hpField.name && hpField.barName.startsWith('bar')) {
 						if (specVals.hpmax) {
 							curToken.set(hpMaxField.barName+'_max',(hpMaxField.val + hpMaxVal));
@@ -8321,11 +8280,12 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 				
 			};
 		}
-		const playerConfig = getSetPlayerConfig( senderId );
-		if (updated || mrUpdate || thac0Update || dmgUpdate || advUpdate || hpUpdate || moveUpdate) doCheckMods( [selToken,((silent || ['save','resist','ac'].includes(modType))?'quiet':'')], senderId, [] );
-		if ((updated || saveUpdate) && (!playerConfig || !playerConfig.manualCheckSaves)) setTimeout( () => handleCheckSaves( [selToken,'',((silent || modType !== 'save') ? 'nomenu' : '')], senderId, selected, (silent || modType !== 'save') ), 250);
-		if (updated || acUpdate) setTimeout( () => doCheckAC( [selToken,((silent || modType !== 'ac')?'quiet':'')], senderId, [] ), 500);
-
+		if (!delToken) {
+			const playerConfig = getSetPlayerConfig( senderId );
+			if (updated || mrUpdate || thac0Update || dmgUpdate || advUpdate || hpUpdate || moveUpdate) doCheckMods( [selToken,((silent || ['save','resist','ac'].includes(modType))?'quiet':'')], senderId, [] );
+			if ((updated || saveUpdate) && (!playerConfig || !playerConfig.manualCheckSaves)) setTimeout( () => handleCheckSaves( [selToken,'',((silent || modType !== 'save') ? 'nomenu' : '')], senderId, selected, (silent || modType !== 'save') ), 250);
+			if (updated || acUpdate) setTimeout( () => doCheckAC( [selToken,((silent || modType !== 'ac')?'quiet':'')], senderId, [] ), 500);
+		};
 		return;
 	};
 	
@@ -9317,8 +9277,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 		if (msg.type !='api' || args.indexOf('!attk') !== 0)
 			{return;}
 
-//		log('attk chat: called, cmd = '+args);
-			
 		args = args.split(' --');
 		let senderMod = args.shift().split(' ');
 		if (senderMod.length > 1) senderId = fixSenderId( [senderMod[1]], selected, senderId );
@@ -9398,19 +9356,48 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 	
 	/*
 	 * When a token is removed from a page, also remove any associated 
-	 * entries in the Mods table.
+	 * entries in the Mods table, unless an identical token exists
+	 * to move the mods to that is not a mob token.
 	 */
 	 
 	const handleDelToken = function(obj) {
 		
 		try {
-			const charCS = getCharacter(obj.id);
+			const charCS = getCharacter(obj.id),
+				  oldName = obj.get('name');
 			if (!charCS) return;
+			let newToken = _.find( findObjs({ 
+								_pageid: Campaign().get('playerpageid'),
+								_type: 'graphic', 
+								name: oldName,
+								represents: charCS.id
+						}), function(t) {return t.id != obj.id});
+			if (!newToken) {
+				newToken = _.find( findObjs({ 
+									_type: 'graphic', 
+									name: oldName,
+									represents: charCS.id
+							}), function(t) {return t.id != obj.id});
+			};
+			if (newToken) {
+				let hpField = getTokenValue(newToken,fields.Token_HP,fields.HP,null,fields.Thac0_base).name;
+				if (!hpField || hpField.startsWith('bar')) newToken = undefined;
+			}
+			
 			let Mods = getTable( charCS, fieldGroups.MODS );
-			for (let i=Mods.table[1]; i<Mods.sortKeys.length; i++) {
-				const tokenID = Mods.tableLookup( fields.Mods_tokenID, i );
-				if (tokenID && tokenID === obj.id) {
-					Mods = Mods.delTableRow(i);
+			if (!newToken) {
+				for (let i=Mods.table[1]; i<Mods.sortKeys.length; i++) {
+					const tokenID = Mods.tableLookup( fields.Mods_tokenID, i );
+					if (tokenID && tokenID === obj.id) {
+						Mods = Mods.delTableRow(i);
+					};
+				};
+			} else {
+				let modRows = Mods.tableFindAll( fields.Mods_tokenID, obj.id );
+				if (modRows && modRows.length) {
+					for (const row of modRows) {
+						Mods.tableSet( fields.Mods_tokenID, row, newToken.id );
+					};
 				};
 			};
 		} catch (e) {
@@ -9447,7 +9434,6 @@ var attackMaster = (function() {	// eslint-disable-line no-unused-vars
 					ModsTable = getTable( charCS, fieldGroups.MODS );
 					for (const tokenObj of tokensByRepresents[cid]) {
 						if (!tokenObj) continue;
-//						log('handlePageChange: moving mods for '+tokenObj.get('name'));
 						ModsTable = moveMods(tokenObj,charCS,ModsTable);
 					}
 				}

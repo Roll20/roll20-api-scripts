@@ -32,36 +32,43 @@
 ### The Configuration Menu
 
 Type `!aura` in the chat to open the interactive configuration menu. From here, you can toggle all features and adjust percentages.
-When a command changes a setting, HealthColors posts a single read-only settings snapshot to game chat (instead of duplicating menu output).
+When a command changes a setting, HealthColors re-whispers the interactive GM menu so you can continue adjusting without re-typing `!aura`. Use `!aura settings` to post a read-only public snapshot to game chat on demand.
 
 ### Command Reference
 
-| Command                     | Description                                                                        |
-| :-------------------------- | :--------------------------------------------------------------------------------- |
-| `!aura`                     | Opens the main configuration menu.                                                 |
-| `!aura settings`            | Outputs the current HealthColors settings snapshot to game chat.                   |
-| `!aura forceall`            | Forces a visual sync for every token on the current map.                           |
-| `!aura on/off`              | Enables or disables the script globally.                                           |
-| `!aura tint`                | Toggles between **Aura 1** mode and **Tint** mode.                                 |
-| `!aura palette <name>`      | Sets the health palette (`default` or `colorblind`) and auto-refreshes all tokens. |
-| `!aura size <n>`            | Sets Aura 1 radius in feet from token edge (e.g., `!aura size 0.35`).              |
-| `!aura a1shape <shape>`     | Sets Aura 1 display shape (`Circle`, `Square`).                                    |
-| `!aura a1tint <hex>`        | Sets Aura 1 display tint color (e.g., `!aura a1tint 00FF00`).                      |
-| `!aura a2size <n>`          | Sets Aura 2 display radius (e.g., `!aura a2size 5`).                               |
-| `!aura a2shape <shape>`     | Sets Aura 2 display shape (`Square`, `Circle`).                                    |
-| `!aura a2tint <hex>`        | Sets Aura 2 display tint color (e.g., `!aura a2tint 806600`).                      |
-| `!aura bar <1/2/3>`         | Sets which token bar represents health and immediately forces a full token sync.   |
-| `!aura pc / !aura npc`      | Toggles health tracking for PCs or NPCs.                                           |
-| `!aura perc <PC> <NPC>`     | Sets the health percentage at which the aura appears (e.g., `!aura perc 100 100`). |
-| `!aura dead / !aura deadPC` | Toggles the automatic "Dead" status marker.                                        |
-| `!aura fx`                  | Toggles particle effects for damage and healing.                                   |
-| `!aura heal <hex>`          | Sets the color of healing particle effects (e.g., `!aura heal FDDC5C`).            |
-| `!aura hurt <hex>`          | Sets the color of damage particle effects (e.g., `!aura hurt FF0000`).             |
-| `!aura reset`               | Resets the script's state to factory defaults.                                     |
-| `!aura reset-fx`            | Rebuilds `-DefaultHeal` and `-DefaultHurt` custom FX objects.                      |
-| `!aura reset-all`           | Restores all settings to `DEFAULTS`, rebuilds default FX, and force-syncs tokens.  |
+| Command                     | Description                                                                                                                   |
+| :-------------------------- | :---------------------------------------------------------------------------------------------------------------------------- |
+| `!aura`                     | Opens the main configuration menu.                                                                                            |
+| `!aura settings`            | Outputs the current HealthColors settings snapshot to game chat.                                                              |
+| `!aura forceall`            | Forces a visual sync for every token on the current map.                                                                      |
+| `!aura on/off`              | Enables or disables the script globally.                                                                                      |
+| `!aura tint`                | Toggles between **Aura 1** mode and **Tint** mode.                                                                            |
+| `!aura palette <name>`      | Sets the health palette (`default` or `colorblind`) and auto-refreshes all tokens.                                            |
+| `!aura size <n>`            | Sets Aura 1 radius in feet from token edge (e.g., `!aura size 0.35`).                                                         |
+| `!aura a1shape <shape>`     | Sets Aura 1 display shape (`Circle`, `Square`).                                                                               |
+| `!aura a1tint <hex>`        | Sets Aura 1 display tint color (e.g., `!aura a1tint 00FF00`).                                                                 |
+| `!aura a2size <n>`          | Sets Aura 2 display radius (e.g., `!aura a2size 5`).                                                                          |
+| `!aura a2shape <shape>`     | Sets Aura 2 display shape (`Square`, `Circle`).                                                                               |
+| `!aura a2tint <hex>`        | Sets Aura 2 display tint color (e.g., `!aura a2tint 806600`).                                                                 |
+| `!aura bar <1/2/3>`                  | Sets which token bar represents health and immediately forces a full token sync.                                              |
+| `!aura pc / !aura npc`               | Toggles health tracking for PCs or NPCs.                                                                                      |
+| `!aura perc <PC> <NPC>`              | Sets aura/tint visibility threshold: `0` disables, `1-99` shows at or below that HP%, `100` always visible for living tokens. |
+| `!aura dead / !aura deadPC`          | Toggles the automatic "Dead" status marker.                                                                                   |
+| `!aura gmpc <Yes/No/Off>`            | Sets GM visibility of PC token nameplates (`Yes` = always show, `No` = always hide, `Off` = use Roll20 default).             |
+| `!aura gmnpc <Yes/No/Off>`           | Sets GM visibility of NPC token nameplates (`Yes` = always show, `No` = always hide, `Off` = use Roll20 default).            |
+| `!aura pcpc <Yes/No/Off>`            | Sets player visibility of PC token nameplates (`Yes` = always show, `No` = always hide, `Off` = use Roll20 default).         |
+| `!aura pcnpc <Yes/No/Off>`           | Sets player visibility of NPC token nameplates (`Yes` = always show, `No` = always hide, `Off` = use Roll20 default).        |
+| `!aura oneoff`                       | Toggles health tracking for tokens that are not linked to a character sheet.                                                  |
+| `!aura update`                       | Forces a health-color update on all currently selected tokens.                                                                |
+| `!aura fx`                           | Toggles particle effects for damage and healing.                                                                              |
+| `!aura heal <hex>`                   | Sets the color of healing particle effects (e.g., `!aura heal FDDC5C`).                                                       |
+| `!aura hurt <hex>`                   | Sets the color of damage particle effects (e.g., `!aura hurt FF0000`).                                                        |
+| `!aura deadfx <trackname>`           | Sets a jukebox track to play when a token dies (e.g., `!aura deadfx Funeral`), or `None` to disable.                        |
+| `!aura reset`                        | Resets the script's state to factory defaults.                                                                                |
+| `!aura reset-fx`                     | Rebuilds `-DefaultHeal` and `-DefaultHurt` custom FX objects.                                                                 |
+| `!aura reset-all`                    | Restores all settings to `DEFAULTS`, rebuilds default FX, and force-syncs tokens.                                             |
 
-### Health Palettes
+### HealthColor Palettes
 
 - `default`: High = Green, Mid = Yellow, Low = Red, Dead = Black.
 - `colorblind`: High = Cyan, Mid = Orange, Low = Magenta, Dead = Black.
@@ -84,4 +91,5 @@ When a command changes a setting, HealthColors posts a single read-only settings
 ## Credits
 
 Original Author: DXWarlock
+Version 1.7.1 edit by Surok
 Refactored and Modernized for v2 by MidNiteShadow7
