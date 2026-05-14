@@ -1,26 +1,67 @@
 {
   "name": "SwapTokenPositions",
   "script": "SwapTokenPositions.js",
-  "version": "1.0.0",
-  "description": "Allows GMs and players to quickly swap the positions of two selected tokens on the same page.\r\n\r\nFor instructions see the *Help: SwapTokenPositions* Handout in game, or run `!swap-tokens --help` in game, or visit [SwapTokenPositions Forum Thread](https://app.roll20.net/forum/post/xxxxxxxx/swap-token-positions-api-script).",
+  "version": "2.0.0",
+  "description": "Allows GMs and players to quickly swap the positions of two selected tokens on the same page using a staged FX pipeline (origin, travel, destination), presets, and persistent defaults.\r\n\r\nFor instructions see the *Help: SwapTokenPositions* Handout in game, or run `!swap-tokens --help` in game, or visit [SwapTokenPositions Forum Thread](https://app.roll20.net/forum/post/xxxxxxxx/swap-token-positions-api-script).",
   "authors": "MidNiteShadow7",
   "roll20userid": "16506286",
   "useroptions": [
     {
-      "name": "duration",
-      "type": "number",
-      "default": "2",
-      "description": "The duration of the animation in seconds (1-10)."
-    },
-    {
-      "name": "mode",
+      "name": "origin-fx",
       "type": "select",
-      "options": ["beams", "transport"],
-      "default": "transport",
-      "description": "The animation style to use."
+      "options": [
+        "none",
+        "nova-magic",
+        "nova-acid",
+        "nova-charm",
+        "nova-fire",
+        "nova-frost",
+        "nova-holy",
+        "nova-death",
+        "burst-magic",
+        "burst-acid",
+        "burst-charm",
+        "burst-fire",
+        "burst-frost",
+        "burst-holy",
+        "burst-death",
+        "burst-energy",
+        "burst-smoke",
+        "explode-magic",
+        "explode-acid",
+        "explode-charm",
+        "explode-fire",
+        "explode-frost",
+        "explode-holy",
+        "explode-death",
+        "burn-magic",
+        "burn-acid",
+        "burn-charm",
+        "burn-fire",
+        "burn-frost",
+        "burn-holy",
+        "burn-death",
+        "splatter-magic",
+        "splatter-acid",
+        "splatter-charm",
+        "splatter-fire",
+        "splatter-frost",
+        "splatter-holy",
+        "splatter-death",
+        "splatter-dark",
+        "glow-magic",
+        "glow-acid",
+        "glow-charm",
+        "glow-fire",
+        "glow-frost",
+        "glow-holy",
+        "glow-death"
+      ],
+      "default": "none",
+      "description": "Point FX used at both origin positions before travel stage."
     },
     {
-      "name": "beam-fx",
+      "name": "travel-fx",
       "type": "select",
       "options": [
         "none",
@@ -30,29 +71,106 @@
         "beam-fire",
         "beam-frost",
         "beam-holy",
-        "beam-death"
+        "beam-death",
+        "beam-energy",
+        "beam-lightning"
       ],
-      "default": "beam-magic",
-      "description": "The default beam FX type."
+      "default": "none",
+      "description": "Beam FX used during travel stage between the two positions."
     },
     {
-      "name": "burst-fx",
+      "name": "destination-fx",
       "type": "select",
       "options": [
         "none",
-        "burst-holy",
+        "nova-magic",
+        "nova-acid",
+        "nova-charm",
+        "nova-fire",
+        "nova-frost",
+        "nova-holy",
+        "nova-death",
         "burst-magic",
-        "burst-fire",
         "burst-acid",
+        "burst-charm",
+        "burst-fire",
         "burst-frost",
+        "burst-holy",
+        "burst-death",
+        "burst-energy",
         "burst-smoke",
+        "explode-magic",
+        "explode-acid",
+        "explode-charm",
         "explode-fire",
+        "explode-frost",
         "explode-holy",
+        "explode-death",
+        "burn-magic",
+        "burn-acid",
+        "burn-charm",
         "burn-fire",
-        "burn-holy"
+        "burn-frost",
+        "burn-holy",
+        "burn-death",
+        "splatter-magic",
+        "splatter-acid",
+        "splatter-charm",
+        "splatter-fire",
+        "splatter-frost",
+        "splatter-holy",
+        "splatter-death",
+        "splatter-dark",
+        "glow-magic",
+        "glow-acid",
+        "glow-charm",
+        "glow-fire",
+        "glow-frost",
+        "glow-holy",
+        "glow-death"
       ],
-      "default": "burst-magic",
-      "description": "The default burst FX type."
+      "default": "none",
+      "description": "Point FX used at both destination positions after swap."
+    },
+    {
+      "name": "origin-time",
+      "type": "number",
+      "default": "0",
+      "description": "Seconds to wait after origin FX before continuing (0-10)."
+    },
+    {
+      "name": "travel-time",
+      "type": "number",
+      "default": "0",
+      "description": "Travel animation duration in seconds (0-10)."
+    },
+    {
+      "name": "travel-mode",
+      "type": "select",
+      "options": [
+        "normal",
+        "invisible"
+      ],
+      "default": "normal",
+      "description": "Controls whether tokens remain visible during travel stage."
+    },
+    {
+      "name": "destination-time",
+      "type": "number",
+      "default": "0",
+      "description": "Additional wait before destination FX is shown in seconds (0-10)."
+    },
+    {
+      "name": "swap-delay",
+      "type": "number",
+      "default": "0",
+      "description": "Additional delay between origin and travel stages in seconds (0-10)."
+    },
+    {
+      "name": "destination-delay",
+      "type": "number",
+      "default": "0",
+      "description": "Additional delay before destination FX is shown in seconds (0-10)."
     }
   ],
   "dependencies": [],
@@ -62,5 +180,7 @@
     "graphic.top": "read,write"
   },
   "conflicts": [],
-  "previousversions": []
+  "previousversions": [
+    "1.0.0"
+  ]
 }

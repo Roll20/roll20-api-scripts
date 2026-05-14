@@ -1,0 +1,336 @@
+<div style="font-family: 'Georgia', serif; background-color: #0A0A12; color: #E6DFFF; padding: 24px; border-radius: 8px;">
+
+  <!-- Header -->
+  <div style="background: linear-gradient(135deg, #5B21B6 0%, #FF4D6D 100%); padding: 18px 24px; border-radius: 6px; margin-bottom: 24px; text-align: center;">
+    <div style="font-size: 2em; margin-bottom: 4px;">⚔️</div>
+    <h1 style="color: #FFFFFF; margin: 0; font-size: 1.6em; font-family: 'Georgia', serif; letter-spacing: 1px;">Condition Tracker</h1>
+    <p style="color: #E9D5FF; margin: 6px 0 0; font-size: 0.85em; letter-spacing: 0.5px;">Version {{VERSION}} &nbsp;•&nbsp; D&amp;D 5e Status Effect Manager</p>
+  </div>
+
+  <!-- Overview -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 0;">Overview</h2>
+  <p style="color: #B8AFCF; line-height: 1.6; margin-top: 0;">
+    Condition Tracker manages D&amp;D 5e status conditions and custom effects as labelled rows in the Roll20 Turn Tracker.
+    Apply conditions to tokens, track durations by initiative order, and automatically remove expired effects when a turn ends.
+    All commands are GM-only and can be triggered from chat or via the installed macros.
+  </p>
+
+  <!-- Quick Start -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 20px;">Quick Start</h2>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.9em; margin-bottom: 8px;">
+    <tbody>
+      <tr>
+        <td style="padding: 7px 10px; background-color: #12122a; border-radius: 4px; font-family: monospace; color: #E9D5FF; white-space: nowrap; width: 45%;">!condition-tracker --prompt</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Step-by-step wizard — pick condition, tokens &amp; duration interactively. Also available as the <strong style="color: #E6DFFF;">ConditionTrackerWizard</strong> macro.</td>
+      </tr>
+      <tr><td colspan="2" style="padding: 3px;"></td></tr>
+      <tr>
+        <td style="padding: 7px 10px; background-color: #12122a; border-radius: 4px; font-family: monospace; color: #E9D5FF; white-space: nowrap;">!condition-tracker --multi-target</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Apply one condition to several tokens simultaneously. Also available as the <strong style="color: #E6DFFF;">ConditionTrackerMultiTarget</strong> macro.</td>
+      </tr>
+      <tr><td colspan="2" style="padding: 3px;"></td></tr>
+      <tr>
+        <td style="padding: 7px 10px; background-color: #12122a; border-radius: 4px; font-family: monospace; color: #E9D5FF; white-space: nowrap;">!condition-tracker --menu</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Open the main management menu with buttons to apply, review, or remove conditions.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Commands Reference -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 24px;">Commands Reference</h2>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+    <thead>
+      <tr style="background-color: #1E40AF;">
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold; width: 42%;">Flag</th>
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold;">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--prompt</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Interactive step-by-step wizard UI</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--multi-target</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Apply a condition to multiple target tokens at once</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--menu</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Show main menu (add <code style="background-color: #1a1a2e; padding: 1px 4px; border-radius: 2px;">remove</code> for removal menu)</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--source X --target Y --condition Z</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Apply a condition directly without the wizard</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--duration &lt;value&gt;</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Duration for a direct apply (e.g. <code style="background-color: #1a1a2e; padding: 1px 4px; border-radius: 2px;">2 rounds</code>)</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--other &lt;text&gt;</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Custom text for Spell / Ability / Other effect types</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--remove &lt;condition-id&gt;</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Remove a specific condition by its unique ID</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--config &lt;option&gt; &lt;value&gt;</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Adjust configuration settings (see Config section below)</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--cleanup</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Reconcile state — remove orphaned conditions and Turn Tracker rows</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--reorder-conditions</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Manually reposition condition rows after their assigned tokens in the Turn Tracker</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--reinstall-macro</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Recreate or update the GM macros</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">--help</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Show a brief help card in chat</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Standard Conditions -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 24px;">Standard Conditions (D&amp;D 5e)</h2>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+    <thead>
+      <tr style="background-color: #1E40AF;">
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold; width: 50%;">Condition</th>
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold;">Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">🙈 Blinded</td>
+        <td style="padding: 7px 10px; color: #E6DFFF;">🪨 Petrified</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">😍 Charmed</td>
+        <td style="padding: 7px 10px; color: #E6DFFF;">☠️ Poisoned</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">😱 Frightened</td>
+        <td style="padding: 7px 10px; color: #E6DFFF;">🛌 Prone</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">🤛 Grappled</td>
+        <td style="padding: 7px 10px; color: #E6DFFF;">🔒 Restrained</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">🚫 Incapacitated</td>
+        <td style="padding: 7px 10px; color: #E6DFFF;">😵 Stunned</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">🥷 Invisible</td>
+        <td style="padding: 7px 10px; color: #E6DFFF;">💤 Unconscious</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">❄️ Paralyzed</td>
+        <td style="padding: 7px 10px;"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Custom Effects -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 24px;">Custom Effect Types</h2>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+    <thead>
+      <tr style="background-color: #1E40AF;">
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold; width: 30%;">Type</th>
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold;">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">🔮 Spell</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Track a named spell effect — you will be prompted for the spell name</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">🎯 Ability</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Track a named class or racial ability — you will be prompted for the ability name</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">🍀 Advantage</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Record advantage granted from one token to another; grouped with the source in initiative</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">⬇️ Disadvantage</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Record disadvantage imposed; grouped with the source in initiative</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">📝 Other</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Freeform custom label — you will be prompted for a description</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Duration Options -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 24px;">Duration Options</h2>
+  <p style="color: #B8AFCF; font-size: 0.9em; margin-top: 0;">The remaining count is shown in the Turn Tracker <em>pr</em> column and decrements when the anchor token's turn ends.</p>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+    <thead>
+      <tr style="background-color: #1E40AF;">
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold; width: 40%;">Option</th>
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold;">Behaviour</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">Until removed</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Permanent — must be removed manually via the menu or <code style="background-color: #1a1a2e; padding: 1px 4px; border-radius: 2px;">--remove</code></td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">End of target's next turn</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Expires when the <strong style="color: #E6DFFF;">target</strong> token's next turn ends in initiative</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">End of source's next turn</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Expires when the <strong style="color: #E6DFFF;">source</strong> token's next turn ends in initiative</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 7px 10px; color: #E6DFFF;">1 / 2 / 3 / 10 rounds</td>
+        <td style="padding: 7px 10px; color: #B8AFCF;">Fixed countdown; one decrement per anchor-token turn-end</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Configuration -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 24px;">Configuration</h2>
+  <p style="color: #B8AFCF; font-size: 0.9em; margin-top: 0;">
+    Use <code style="background-color: #1a1a2e; padding: 2px 6px; border-radius: 3px; color: #E9D5FF;">!condition-tracker --config &lt;option&gt; &lt;value&gt;</code> or the <strong style="color: #E6DFFF;">Config</strong> button in the main menu.
+  </p>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+    <thead>
+      <tr style="background-color: #1E40AF;">
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold; width: 30%;">Option</th>
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold; width: 25%;">Values</th>
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold;">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">useMarkers</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">true / false</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Apply Roll20 status markers to tokens when a condition is added</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">useIcons</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">true / false</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Show short icon codes (e.g. [G]) instead of emoji in Turn Tracker rows</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">subjectPromptBypass</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">true / false</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Skip the optional subject-token step for Spell / Ability / Other effects</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">healthBar</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">bar1_value<br>bar2_value<br>bar3_value</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Token bar to watch; when it drops to 0 the GM is prompted to clean up conditions</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; font-family: monospace; color: #E9D5FF;">markers.&lt;Condition&gt;</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">&lt;marker name&gt;</td>
+        <td style="padding: 6px 10px; color: #B8AFCF;">Override the status marker used for a specific condition (e.g. <code style="background-color: #1a1a2e; padding: 1px 4px; border-radius: 2px;">markers.Grappled grab</code>)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Default Markers -->
+  <h2 style="color: #FF4D6D; font-family: 'Georgia', serif; border-bottom: 1px solid #5B21B6; padding-bottom: 6px; margin-top: 24px;">Default Status Markers</h2>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+    <thead>
+      <tr style="background-color: #1E40AF;">
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold; width: 50%;">Condition</th>
+        <th style="padding: 7px 10px; text-align: left; color: #E9D5FF; font-weight: bold;">Marker Name</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🤛 Grappled</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">grab</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🔒 Restrained</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">padlock</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🛌 Prone</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">back-pain</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">☠️ Poisoned</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">chemical-bolt</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">😵 Stunned</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">pummeled</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🙈 Blinded</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">bleeding-eye</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">😍 Charmed</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">chained-heart</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">😱 Frightened</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">screaming</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🚫 Incapacitated</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">interdiction</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🥷 Invisible</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">ninja-mask</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">❄️ Paralyzed</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">frozen-orb</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🪨 Petrified</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">fossil</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">💤 Unconscious</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">sleepy</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🔮 Spell</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">lightning-helix</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🎯 Ability</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">fist</td>
+      </tr>
+      <tr style="background-color: #0e0e22;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">🍀 Advantage</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">three-leaves</td>
+      </tr>
+      <tr style="background-color: #12122a;">
+        <td style="padding: 6px 10px; color: #E6DFFF;">⬇️ Disadvantage</td>
+        <td style="padding: 6px 10px; font-family: monospace; color: #B8AFCF;">broken-heart</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <div style="margin-top: 28px; padding-top: 14px; border-top: 1px solid #5B21B6; text-align: center; color: #B8AFCF; font-size: 0.8em;">
+    <p style="margin: 0; line-height: 1.8;">
+      Condition Tracker {{VERSION}}
+      &nbsp;•&nbsp;
+      This handout is automatically created and updated each time the script loads.
+    </p>
+  </div>
+
+</div>
