@@ -924,6 +924,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           "Remplacer le marqueur d'état utilisé pour une condition spécifique (par exemple, marqueur Grappled=grab)",
         ],
+        [
+          'sélection de marqueurs',
+          '&lt;Condition&gt;',
+          "Ouvrez un sélecteur de marqueur visuel pour la condition donnée. Affiche tous les marqueurs de jetons de campagne sous forme de boutons d'icônes cliquables : cliquez sur un bouton pour définir ce marqueur pour la condition.",
+        ],
+        [
+          'marqueur-clair',
+          '&lt;Condition&gt;',
+          "Effacez le marqueur d'état configuré pour la condition donnée, en restaurant les paramètres par défaut du système ou en le laissant non défini.",
+        ],
       ],
     },
     gameSystems: {

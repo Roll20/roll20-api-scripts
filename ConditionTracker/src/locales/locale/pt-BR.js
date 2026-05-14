@@ -908,6 +908,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Substituir o marcador de status usado para uma condição específica (por exemplo, marcador Grappled=grab)',
         ],
+        [
+          'escolha de marcador',
+          '&lt;Condition&gt;',
+          'Abra um seletor de marcador visual para a condição especificada. Exibe todos os marcadores de token de campanha como botões de ícone clicáveis ​​— clique em um botão para definir esse marcador para a condição.',
+        ],
+        [
+          'marcador claro',
+          '&lt;Condition&gt;',
+          'Limpe o marcador de status configurado para a condição determinada, restaurando o padrão do sistema ou deixando-o indefinido.',
+        ],
       ],
     },
     gameSystems: {

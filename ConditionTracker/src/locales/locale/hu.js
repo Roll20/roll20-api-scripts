@@ -923,6 +923,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Egy adott állapothoz használt állapotjelző felülbírálása (pl. Grappled=grab marker)',
         ],
+        [
+          'marker-pick',
+          '&lt;Condition&gt;',
+          'Nyisson meg egy vizuális markerválasztót az adott állapothoz. Az összes kampánytoken-jelölőt kattintható ikongombként jeleníti meg – kattintson egy gombra a feltételhez tartozó jelölő beállításához.',
+        ],
+        [
+          'marker-clear',
+          '&lt;Condition&gt;',
+          'Törölje az adott állapothoz tartozó konfigurált állapotjelzőt, állítsa vissza a rendszer alapértelmezett értékét vagy hagyja beállítatlanul.',
+        ],
       ],
     },
     gameSystems: {

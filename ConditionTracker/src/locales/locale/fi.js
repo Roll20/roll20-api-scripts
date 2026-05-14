@@ -889,6 +889,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Ohita tietyn ehdon tilamerkki (esim. marker Grappled=grab)',
         ],
+        [
+          'merkki-poimi',
+          '&lt;Condition&gt;',
+          'Avaa visuaalinen merkkivalitsin tietylle ehdolle. Näyttää kaikki kampanjan tunnusmerkit napsautettavina kuvakepainikkeina – napsauta painiketta asettaaksesi kyseisen merkin ehtoon.',
+        ],
+        [
+          'merkintä selvä',
+          '&lt;Condition&gt;',
+          'Tyhjennä määritetyn tilamerkintä tietylle tilalle, palauta järjestelmän oletusarvo tai jätä se määrittämättä.',
+        ],
       ],
     },
     gameSystems: {

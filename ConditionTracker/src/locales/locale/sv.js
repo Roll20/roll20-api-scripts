@@ -885,6 +885,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Åsidosätt statusmarkören som används för ett specifikt tillstånd (t.ex. markör Grappled=grab)',
         ],
+        [
+          'markör-plocka',
+          '&lt;Condition&gt;',
+          'Öppna en visuell markörväljare för det givna villkoret. Visar alla kampanjtokenmarkörer som klickbara ikonknappar – klicka på en knapp för att ställa in den markören för villkoret.',
+        ],
+        [
+          'markör-klar',
+          '&lt;Condition&gt;',
+          'Rensa den konfigurerade statusmarkören för det givna tillståndet, återställ systemets standardvärde eller lämna det oinställt.',
+        ],
       ],
     },
     gameSystems: {

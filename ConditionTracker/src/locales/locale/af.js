@@ -901,6 +901,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           "Ignoreer die statusmerker wat vir 'n spesifieke toestand gebruik word (bv. merker Grappled=grab)",
         ],
+        [
+          'merker-kies',
+          '&lt;Condition&gt;',
+          "Maak 'n visuele merkerkieser oop vir die gegewe toestand. Wys alle veldtogtokenmerkers as klikbare ikoonknoppies - klik 'n knoppie om daardie merker vir die toestand te stel.",
+        ],
+        [
+          'merker-duidelik',
+          '&lt;Condition&gt;',
+          'Vee die gekonfigureerde statusmerker vir die gegewe toestand uit, herstel die stelselstandaard of laat dit ongesteld.',
+        ],
       ],
     },
     gameSystems: {

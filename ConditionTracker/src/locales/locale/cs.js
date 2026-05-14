@@ -885,6 +885,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Přepsat stavovou značku použitou pro konkrétní stav (např. značka Grappled=grab)',
         ],
+        [
+          'marker-pick',
+          '&lt;Condition&gt;',
+          'Otevřete vizuální výběr značek pro danou podmínku. Zobrazí všechny značky tokenů kampaně jako tlačítka ikon, na která lze kliknout – kliknutím na tlačítko nastavíte značku pro podmínku.',
+        ],
+        [
+          'marker-clear',
+          '&lt;Condition&gt;',
+          'Vymažte nakonfigurovanou značku stavu pro danou podmínku, obnovte výchozí nastavení systému nebo ji nechte nenastavenou.',
+        ],
       ],
     },
     gameSystems: {

@@ -912,6 +912,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Zastąp znacznik stanu używany dla określonego warunku (np. znacznik Grappled=chwyt)',
         ],
+        [
+          'wybór znacznika',
+          '&lt;Condition&gt;',
+          'Otwórz selektor znaczników wizualnych dla danego warunku. Wyświetla wszystkie znaczniki tokenów kampanii w postaci klikalnych ikon przycisków — kliknij przycisk, aby ustawić ten znacznik dla warunku.',
+        ],
+        [
+          'znacznik wyraźny',
+          '&lt;Condition&gt;',
+          'Usuń skonfigurowany znacznik stanu dla danego warunku, przywracając ustawienia domyślne systemu lub pozostawiając je nieustawione.',
+        ],
       ],
     },
     gameSystems: {

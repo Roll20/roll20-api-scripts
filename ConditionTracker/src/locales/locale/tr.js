@@ -918,6 +918,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Belirli bir durum için kullanılan durum işaretleyicisini geçersiz kılın (ör. işaretleyici Grappled=grab)',
         ],
+        [
+          'işaretleyici seçimi',
+          '&lt;Condition&gt;',
+          'Verilen koşul için görsel bir işaretleyici seçici açın. Tüm kampanya belirteç işaretleyicilerini tıklanabilir simge düğmeleri olarak görüntüler; koşula ilişkin işaretleyiciyi ayarlamak için bir düğmeyi tıklayın.',
+        ],
+        [
+          'işaretleyici açık',
+          '&lt;Condition&gt;',
+          'Verilen koşul için yapılandırılmış durum işaretleyicisini temizleyin, sistem varsayılanını geri yükleyin veya ayarlanmadan bırakın.',
+        ],
       ],
     },
     gameSystems: {

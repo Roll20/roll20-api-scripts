@@ -921,6 +921,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           "Substituïu el marcador d'estat utilitzat per a una condició específica (p. ex., marcador Grappled=agafar)",
         ],
+        [
+          'escollida de marcadors',
+          '&lt;Condition&gt;',
+          "Obriu un selector de marcadors visuals per a la condició donada. Mostra tots els marcadors de testimoni de campanya com a botons d'icona que es poden fer clic: feu clic a un botó per establir aquest marcador per a la condició.",
+        ],
+        [
+          'marcador-clar',
+          '&lt;Condition&gt;',
+          "Netegeu el marcador d'estat configurat per a la condició donada, restaurant el valor predeterminat del sistema o deixant-lo sense configurar.",
+        ],
       ],
     },
     gameSystems: {

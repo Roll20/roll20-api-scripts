@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.1.0.beta-3.9
- * Built: 2026-05-13T22:51:44.527Z
+ * Version: 1.1.0.beta-3.10
+ * Built: 2026-05-13T23:03:01.323Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -255,8 +255,8 @@ const ConditionTrackerMod = (() => {
   const SUPPORTED_LOCALE_LIST = SUPPORTED_LOCALES.map((code) => LOCALE_LABELS[code]).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.1.0.beta-3.9';
-  const SCRIPT_LAST_UPDATED = '2026-05-13T22:51:44.527Z';
+  const SCRIPT_VERSION = '1.1.0.beta-3.10';
+  const SCRIPT_LAST_UPDATED = '2026-05-13T23:03:01.323Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -6759,6 +6759,16 @@ const ConditionTrackerMod = (() => {
             'marker',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Override the status marker used for a specific condition (e.g. marker Grappled=grab)',
+          ],
+          [
+            'marker-pick',
+            '&lt;Condition&gt;',
+            'Open a visual marker picker for the given condition. Displays all campaign token markers as clickable icon buttons — click a button to set that marker for the condition.',
+          ],
+          [
+            'marker-clear',
+            '&lt;Condition&gt;',
+            'Clear the configured status marker for the given condition, restoring the system default or leaving it unset.',
           ],
         ],
       },

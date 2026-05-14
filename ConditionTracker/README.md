@@ -71,6 +71,8 @@ All commands are GM-only except `--help`.
 - `!condition-tracker --saved snooze-clear <saved_id>`
 - `!condition-tracker --config`
 - `!condition-tracker --config marker Grappled=grab`
+- `!condition-tracker --config marker-pick <condition>`
+- `!condition-tracker --config marker-clear <condition>`
 - `!condition-tracker --config gameSystem <id>`
 - `!condition-tracker --config useMarkers true|false`
 - `!condition-tracker --config icons true|false`
@@ -208,6 +210,8 @@ Use `!condition-tracker --config reset` to restore all configurable settings and
 | `healthBar`                   | `bar1_value` / `bar2_value` / `bar3_value` | Token bar to watch; when it reaches 0 the GM is prompted to clean up conditions                                                                                                                                                                                                                     |
 | `language`                    | Any supported locale                       | Output language for chat messages and the help handout                                                                                                                                                                                                                                              |
 | `marker`                      | `<Condition>=<marker name>`                | Override the status marker for a specific condition (e.g. `marker Grappled=grab`)                                                                                                                                                                                                                   |
+| `marker-pick`                 | `<Condition>`                              | Open a visual marker picker for the given condition. Displays all campaign token markers as clickable icon buttons — click a button to set that marker for the condition.                                                                                                                           |
+| `marker-clear`                | `<Condition>`                              | Clear the configured status marker for the given condition, restoring the system default or leaving it unset.                                                                                                                                                                                       |
 
 `subjectPromptBypass` defaults to `false`. Set `!condition-tracker --config subjectPromptBypass true` to skip the Subject prompt for custom effects and force Subject to None. For one-off runs, use `--subjectPromptBypass true|false` directly on the command.
 
@@ -353,7 +357,9 @@ Default marker mappings:
 - Petrified: `fossil`
 - Unconscious: `sleepy`
 
-Custom markers must already exist in the Roll20 game. Roll20 exposes token markers as marker names/tags; Condition Tracker stores the value you configure and applies it to `statusmarkers`.
+Custom markers must already exist in the Roll20 game. Roll20 exposes token markers as marker names/tags; Condition Tracker stores the resolved tag and applies it to `statusmarkers`.
+
+Use `!condition-tracker --config marker-pick <condition>` to browse all campaign markers as a visual icon grid — clicking any button sets the marker for that condition directly. Use `!condition-tracker --config marker-clear <condition>` to remove a custom mapping and restore the system default (or leave it unset). Marketplace markers with `name::id` tag formats are handled automatically.
 
 ## Duration Notes
 

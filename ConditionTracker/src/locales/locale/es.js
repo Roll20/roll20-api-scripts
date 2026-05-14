@@ -919,6 +919,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Anular el marcador de estado utilizado para una condición específica (por ejemplo, marcador Grappled=grab)',
         ],
+        [
+          'selección de marcador',
+          '&lt;Condition&gt;',
+          'Abra un selector de marcador visual para la condición dada. Muestra todos los marcadores de tokens de campaña como botones de íconos en los que se puede hacer clic; haga clic en un botón para configurar ese marcador para la condición.',
+        ],
+        [
+          'marcador claro',
+          '&lt;Condition&gt;',
+          'Borre el marcador de estado configurado para la condición dada, restaurando el sistema predeterminado o dejándolo sin configurar.',
+        ],
       ],
     },
     gameSystems: {

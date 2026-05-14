@@ -914,6 +914,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Überschreiben Sie die Statusmarkierung, die für eine bestimmte Bedingung verwendet wird (z. B. Markierung Grappled=grab)',
         ],
+        [
+          'Marker-Pick',
+          '&lt;Condition&gt;',
+          'Öffnen Sie eine visuelle Markierungsauswahl für die angegebene Bedingung. Zeigt alle Kampagnen-Token-Markierungen als anklickbare Symbolschaltflächen an. Klicken Sie auf eine Schaltfläche, um diese Markierung für die Bedingung festzulegen.',
+        ],
+        [
+          'markierungsfrei',
+          '&lt;Condition&gt;',
+          'Löschen Sie die konfigurierte Statusmarkierung für die gegebene Bedingung, stellen Sie den Systemstandard wieder her oder lassen Sie ihn nicht gesetzt.',
+        ],
       ],
     },
     gameSystems: {

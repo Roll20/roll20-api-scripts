@@ -918,6 +918,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Overschrijf de statusmarkering die voor een specifieke aandoening wordt gebruikt (bijvoorbeeld markering Grappled=grab)',
         ],
+        [
+          'marker-keuze',
+          '&lt;Condition&gt;',
+          'Open een visuele markerkiezer voor de gegeven voorwaarde. Geeft alle campagnetokenmarkeringen weer als klikbare pictogramknoppen. Klik op een knop om die markering voor de voorwaarde in te stellen.',
+        ],
+        [
+          'marker-duidelijk',
+          '&lt;Condition&gt;',
+          'Wis de geconfigureerde statusmarkering voor de gegeven toestand, herstel de systeemstandaard of laat deze uitgeschakeld.',
+        ],
       ],
     },
     gameSystems: {

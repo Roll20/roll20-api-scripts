@@ -934,6 +934,16 @@ const TRANSLATION = {
           '__CT_PLACE SUPPORTO_0__=__CT_PLACE SUPPORTO_1__',
           "Sostituisci l'indicatore di stato utilizzato per una condizione specifica (ad esempio indicatore Grappled=afferra)",
         ],
+        [
+          'scelta del marcatore',
+          '&lt;Condition&gt;',
+          "Aprire un selettore di indicatori visivi per la condizione specificata. Visualizza tutti gli indicatori dei token della campagna come pulsanti icona selezionabili: fai clic su un pulsante per impostare l'indicatore per la condizione.",
+        ],
+        [
+          'marcatore-clear',
+          '&lt;Condition&gt;',
+          "Cancella l'indicatore di stato configurato per una determinata condizione, ripristinando le impostazioni predefinite del sistema o lasciandolo non impostato.",
+        ],
       ],
     },
     gameSystems: {

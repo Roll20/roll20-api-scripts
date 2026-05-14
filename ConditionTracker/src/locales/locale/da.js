@@ -893,6 +893,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Tilsidesæt den statusmarkør, der bruges til en specifik tilstand (f.eks. markør Gribt=greb)',
         ],
+        [
+          'markør-pluk',
+          '&lt;Condition&gt;',
+          'Åbn en visuel markørvælger for den givne tilstand. Viser alle kampagnetoken-markører som klikbare ikonknapper - klik på en knap for at indstille denne markør for betingelsen.',
+        ],
+        [
+          'markør-klar',
+          '&lt;Condition&gt;',
+          'Ryd den konfigurerede statusmarkør for den givne tilstand, gendan systemets standard eller lad den være deaktiveret.',
+        ],
       ],
     },
     gameSystems: {

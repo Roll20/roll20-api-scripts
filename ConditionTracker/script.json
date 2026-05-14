@@ -1,7 +1,7 @@
 {
   "name": "Condition Tracker",
   "script": "ConditionTracker.js",
-  "version": "1.1.0.beta-3.9",
+  "version": "1.1.0.beta-3.10",
   "previousversions": [],
   "description": "Track token conditions and custom effects as separate Roll20 Turn Tracker rows.",
   "authors": "MidNiteShadow7",

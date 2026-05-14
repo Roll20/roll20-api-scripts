@@ -893,6 +893,16 @@ const TRANSLATION = {
           '&lt;Condition&gt;=&lt;marker name&gt;',
           'Override the status marker used for a specific condition (e.g. marker Grappled=grab)',
         ],
+        [
+          'marker-pick',
+          '&lt;Condition&gt;',
+          'Open a visual marker picker for the given condition. Displays all campaign token markers as clickable icon buttons — click a button to set that marker for the condition.',
+        ],
+        [
+          'marker-clear',
+          '&lt;Condition&gt;',
+          'Clear the configured status marker for the given condition, restoring the system default or leaving it unset.',
+        ],
       ],
     },
     gameSystems: {
