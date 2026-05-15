@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.1.0.beta-3.10
- * Built: 2026-05-13T23:03:01.323Z
+ * Version: 1.1.0
+ * Built: 2026-05-15T00:43:28.799Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -255,8 +255,8 @@ const ConditionTrackerMod = (() => {
   const SUPPORTED_LOCALE_LIST = SUPPORTED_LOCALES.map((code) => LOCALE_LABELS[code]).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.1.0.beta-3.10';
-  const SCRIPT_LAST_UPDATED = '2026-05-13T23:03:01.323Z';
+  const SCRIPT_VERSION = '1.1.0';
+  const SCRIPT_LAST_UPDATED = '2026-05-15T00:43:28.799Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -1255,6 +1255,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             "Ignoreer die statusmerker wat vir 'n spesifieke toestand gebruik word (bv. merker Grappled=grab)",
           ],
+          [
+            'merker-kies',
+            '&lt;Condition&gt;',
+            "Maak 'n visuele merkerkieser oop vir die gegewe toestand. Wys alle veldtogtokenmerkers as klikbare ikoonknoppies - klik 'n knoppie om daardie merker vir die toestand te stel.",
+          ],
+          [
+            'merker-duidelik',
+            '&lt;Condition&gt;',
+            'Vee die gekonfigureerde statusmerker vir die gegewe toestand uit, herstel die stelselstandaard of laat dit ongesteld.',
+          ],
         ],
       },
       gameSystems: {
@@ -2214,6 +2224,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             "Substituïu el marcador d'estat utilitzat per a una condició específica (p. ex., marcador Grappled=agafar)",
           ],
+          [
+            'escollida de marcadors',
+            '&lt;Condition&gt;',
+            "Obriu un selector de marcadors visuals per a la condició donada. Mostra tots els marcadors de testimoni de campanya com a botons d'icona que es poden fer clic: feu clic a un botó per establir aquest marcador per a la condició.",
+          ],
+          [
+            'marcador-clar',
+            '&lt;Condition&gt;',
+            "Netegeu el marcador d'estat configurat per a la condició donada, restaurant el valor predeterminat del sistema o deixant-lo sense configurar.",
+          ],
         ],
       },
       gameSystems: {
@@ -2623,7 +2643,7 @@ const ConditionTrackerMod = (() => {
         markerPredefinedRequired: '標記設定需要預先定義的狀態名稱。',
         markerNameRequired: '標記設定需要非空白的標記名稱。',
         markerSet: '{condition} 標記已設定為 {marker}。',
-        markerCleared: '{condition} marker cleared.',
+        markerCleared: '{condition} 標記已清除。',
         noMarkersFound: '此活動中沒有可用的令牌標記。',
         markerPickerCurrent: '目前：{marker}',
         markerPickerNone: '目前：無',
@@ -3031,6 +3051,16 @@ const ConditionTrackerMod = (() => {
             '標記',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             '覆蓋用於特定條件的狀態標記（例如標記 Grappled=grab）',
+          ],
+          [
+            '標記選取',
+            '&lt;Condition&gt;',
+            '開啟給定條件的視覺標記選擇器。將所有行銷活動令牌標記顯示為可點選的圖示按鈕 - 點擊按鈕即可設定條件的標記。',
+          ],
+          [
+            '標記清除',
+            '&lt;Condition&gt;',
+            '清除給定條件的已配置狀態標記，恢復系統預設值或保留其未設定狀態。',
           ],
         ],
       },
@@ -3953,6 +3983,16 @@ const ConditionTrackerMod = (() => {
             'značka',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Přepsat stavovou značku použitou pro konkrétní stav (např. značka Grappled=grab)',
+          ],
+          [
+            'marker-pick',
+            '&lt;Condition&gt;',
+            'Otevřete vizuální výběr značek pro danou podmínku. Zobrazí všechny značky tokenů kampaně jako tlačítka ikon, na která lze kliknout – kliknutím na tlačítko nastavíte značku pro podmínku.',
+          ],
+          [
+            'marker-clear',
+            '&lt;Condition&gt;',
+            'Vymažte nakonfigurovanou značku stavu pro danou podmínku, obnovte výchozí nastavení systému nebo ji nechte nenastavenou.',
           ],
         ],
       },
@@ -4883,6 +4923,16 @@ const ConditionTrackerMod = (() => {
             'markør',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Tilsidesæt den statusmarkør, der bruges til en specifik tilstand (f.eks. markør Gribt=greb)',
+          ],
+          [
+            'markør-pluk',
+            '&lt;Condition&gt;',
+            'Åbn en visuel markørvælger for den givne tilstand. Viser alle kampagnetoken-markører som klikbare ikonknapper - klik på en knap for at indstille denne markør for betingelsen.',
+          ],
+          [
+            'markør-klar',
+            '&lt;Condition&gt;',
+            'Ryd den konfigurerede statusmarkør for den givne tilstand, gendan systemets standard eller lad den være deaktiveret.',
           ],
         ],
       },
@@ -5833,6 +5883,16 @@ const ConditionTrackerMod = (() => {
             'markering',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Overschrijf de statusmarkering die voor een specifieke aandoening wordt gebruikt (bijvoorbeeld markering Grappled=grab)',
+          ],
+          [
+            'marker-keuze',
+            '&lt;Condition&gt;',
+            'Open een visuele markerkiezer voor de gegeven voorwaarde. Geeft alle campagnetokenmarkeringen weer als klikbare pictogramknoppen. Klik op een knop om die markering voor de voorwaarde in te stellen.',
+          ],
+          [
+            'marker-duidelijk',
+            '&lt;Condition&gt;',
+            'Wis de geconfigureerde statusmarkering voor de gegeven toestand, herstel de systeemstandaard of laat deze uitgeschakeld.',
           ],
         ],
       },
@@ -7695,6 +7755,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Ohita tietyn ehdon tilamerkki (esim. marker Grappled=grab)',
           ],
+          [
+            'merkki-poimi',
+            '&lt;Condition&gt;',
+            'Avaa visuaalinen merkkivalitsin tietylle ehdolle. Näyttää kaikki kampanjan tunnusmerkit napsautettavina kuvakepainikkeina – napsauta painiketta asettaaksesi kyseisen merkin ehtoon.',
+          ],
+          [
+            'merkintä selvä',
+            '&lt;Condition&gt;',
+            'Tyhjennä määritetyn tilamerkintä tietylle tilalle, palauta järjestelmän oletusarvo tai jätä se määrittämättä.',
+          ],
         ],
       },
       gameSystems: {
@@ -8652,6 +8722,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             "Remplacer le marqueur d'état utilisé pour une condition spécifique (par exemple, marqueur Grappled=grab)",
           ],
+          [
+            'sélection de marqueurs',
+            '&lt;Condition&gt;',
+            "Ouvrez un sélecteur de marqueur visuel pour la condition donnée. Affiche tous les marqueurs de jetons de campagne sous forme de boutons d'icônes cliquables : cliquez sur un bouton pour définir ce marqueur pour la condition.",
+          ],
+          [
+            'marqueur-clair',
+            '&lt;Condition&gt;',
+            "Effacez le marqueur d'état configuré pour la condition donnée, en restaurant les paramètres par défaut du système ou en le laissant non défini.",
+          ],
         ],
       },
       gameSystems: {
@@ -9603,6 +9683,16 @@ const ConditionTrackerMod = (() => {
             'Marker',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Überschreiben Sie die Statusmarkierung, die für eine bestimmte Bedingung verwendet wird (z. B. Markierung Grappled=grab)',
+          ],
+          [
+            'Marker-Pick',
+            '&lt;Condition&gt;',
+            'Öffnen Sie eine visuelle Markierungsauswahl für die angegebene Bedingung. Zeigt alle Kampagnen-Token-Markierungen als anklickbare Symbolschaltflächen an. Klicken Sie auf eine Schaltfläche, um diese Markierung für die Bedingung festzulegen.',
+          ],
+          [
+            'markierungsfrei',
+            '&lt;Condition&gt;',
+            'Löschen Sie die konfigurierte Statusmarkierung für die gegebene Bedingung, stellen Sie den Systemstandard wieder her oder lassen Sie ihn nicht gesetzt.',
           ],
         ],
       },
@@ -10561,6 +10651,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Παράκαμψη του δείκτη κατάστασης που χρησιμοποιείται για μια συγκεκριμένη συνθήκη (π.χ. δείκτης Grappled=grab)',
           ],
+          [
+            'μαρκαδόρος-επιλογή',
+            '&lt;Condition&gt;',
+            'Ανοίξτε έναν οπτικό επιλογέα δείκτη για τη δεδομένη συνθήκη. Εμφανίζει όλους τους δείκτες διακριτικών καμπάνιας ως κουμπιά εικονιδίων με δυνατότητα κλικ — κάντε κλικ σε ένα κουμπί για να ορίσετε αυτόν τον δείκτη για την κατάσταση.',
+          ],
+          [
+            'σαφής δείκτης',
+            '&lt;Condition&gt;',
+            'Διαγράψτε τον διαμορφωμένο δείκτη κατάστασης για τη δεδομένη συνθήκη, επαναφέροντας την προεπιλογή του συστήματος ή αφήνοντάς τον ακαθόριστο.',
+          ],
         ],
       },
       gameSystems: {
@@ -11380,6 +11480,16 @@ const ConditionTrackerMod = (() => {
             'סַמָן',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'לעקוף את סמן הסטטוס המשמש לתנאי מסוים (למשל, סמן גרפל=תפוס)',
+          ],
+          [
+            'סמן-בחירת',
+            '&lt;Condition&gt;',
+            'פתח בורר סמנים חזותיים עבור המצב הנתון. מציג את כל סמני האסימון של מסע הפרסום כלחצני סמל הניתנים ללחיצה - לחץ על לחצן כדי להגדיר את הסמן עבור התנאי.',
+          ],
+          [
+            'סמן נקי',
+            '&lt;Condition&gt;',
+            'נקה את סמן המצב המוגדר עבור המצב הנתון, שחזר את ברירת המחדל של המערכת או השארת אותה לא מוגדרת.',
           ],
         ],
       },
@@ -12337,6 +12447,16 @@ const ConditionTrackerMod = (() => {
             'jelző',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Egy adott állapothoz használt állapotjelző felülbírálása (pl. Grappled=grab marker)',
+          ],
+          [
+            'marker-pick',
+            '&lt;Condition&gt;',
+            'Nyisson meg egy vizuális markerválasztót az adott állapothoz. Az összes kampánytoken-jelölőt kattintható ikongombként jeleníti meg – kattintson egy gombra a feltételhez tartozó jelölő beállításához.',
+          ],
+          [
+            'marker-clear',
+            '&lt;Condition&gt;',
+            'Törölje az adott állapothoz tartozó konfigurált állapotjelzőt, állítsa vissza a rendszer alapértelmezett értékét vagy hagyja beállítatlanul.',
           ],
         ],
       },
@@ -13310,6 +13430,16 @@ const ConditionTrackerMod = (() => {
             '__CT_PLACE SUPPORTO_0__=__CT_PLACE SUPPORTO_1__',
             "Sostituisci l'indicatore di stato utilizzato per una condizione specifica (ad esempio indicatore Grappled=afferra)",
           ],
+          [
+            'scelta del marcatore',
+            '&lt;Condition&gt;',
+            "Aprire un selettore di indicatori visivi per la condizione specificata. Visualizza tutti gli indicatori dei token della campagna come pulsanti icona selezionabili: fai clic su un pulsante per impostare l'indicatore per la condizione.",
+          ],
+          [
+            'marcatore-clear',
+            '&lt;Condition&gt;',
+            "Cancella l'indicatore di stato configurato per una determinata condizione, ripristinando le impostazioni predefinite del sistema o lasciandolo non impostato.",
+          ],
         ],
       },
       gameSystems: {
@@ -14229,6 +14359,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             '特定の条件に使用されるステータス マーカーをオーバーライドします (例: マーカー Grappled=grab)',
           ],
+          [
+            'マーカーピック',
+            '&lt;Condition&gt;',
+            '指定された条件のビジュアル マーカー ピッカーを開きます。すべてのキャンペーン トークン マーカーをクリック可能なアイコン ボタンとして表示します。ボタンをクリックすると、そのマーカーが条件に設定されます。',
+          ],
+          [
+            'マーカークリア',
+            '&lt;Condition&gt;',
+            '特定の条件に対して構成されたステータス マーカーをクリアし、システムのデフォルトに戻すか、未設定のままにします。',
+          ],
         ],
       },
       gameSystems: {
@@ -15122,6 +15262,16 @@ const ConditionTrackerMod = (() => {
             '채점자',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             '특정 조건에 사용되는 상태 마커를 재정의합니다(예: Grappled=grab 마커).',
+          ],
+          [
+            '마커 선택',
+            '&lt;Condition&gt;',
+            '주어진 조건에 대한 시각적 마커 선택기를 엽니다. 모든 캠페인 토큰 마커를 클릭 가능한 아이콘 버튼으로 표시합니다. 조건에 해당 마커를 설정하려면 버튼을 클릭하세요.',
+          ],
+          [
+            '마커 클리어',
+            '&lt;Condition&gt;',
+            '주어진 조건에 대해 구성된 상태 마커를 지우고 시스템 기본값을 복원하거나 설정되지 않은 상태로 둡니다.',
           ],
         ],
       },
@@ -16066,6 +16216,16 @@ const ConditionTrackerMod = (() => {
             'znacznik',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Zastąp znacznik stanu używany dla określonego warunku (np. znacznik Grappled=chwyt)',
+          ],
+          [
+            'wybór znacznika',
+            '&lt;Condition&gt;',
+            'Otwórz selektor znaczników wizualnych dla danego warunku. Wyświetla wszystkie znaczniki tokenów kampanii w postaci klikalnych ikon przycisków — kliknij przycisk, aby ustawić ten znacznik dla warunku.',
+          ],
+          [
+            'znacznik wyraźny',
+            '&lt;Condition&gt;',
+            'Usuń skonfigurowany znacznik stanu dla danego warunku, przywracając ustawienia domyślne systemu lub pozostawiając je nieustawione.',
           ],
         ],
       },
@@ -17026,6 +17186,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Substituir o marcador de estado utilizado para uma condição específica (por exemplo, marcador Grappled=grab)',
           ],
+          [
+            'escolha de marcador',
+            '&lt;Condition&gt;',
+            'Abra um seletor de marcadores visuais para a condição especificada. Apresenta todos os marcadores de token de campanha como botões de ícone clicáveis ​​— clique num botão para definir esse marcador para a condição.',
+          ],
+          [
+            'marcador claro',
+            '&lt;Condition&gt;',
+            'Limpe o marcador de estado configurado para a condição determinada, restaurando o padrão do sistema ou deixando-o indefinido.',
+          ],
         ],
       },
       gameSystems: {
@@ -17966,6 +18136,16 @@ const ConditionTrackerMod = (() => {
             'marcador',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Substituir o marcador de status usado para uma condição específica (por exemplo, marcador Grappled=grab)',
+          ],
+          [
+            'escolha de marcador',
+            '&lt;Condition&gt;',
+            'Abra um seletor de marcador visual para a condição especificada. Exibe todos os marcadores de token de campanha como botões de ícone clicáveis ​​— clique em um botão para definir esse marcador para a condição.',
+          ],
+          [
+            'marcador claro',
+            '&lt;Condition&gt;',
+            'Limpe o marcador de status configurado para a condição determinada, restaurando o padrão do sistema ou deixando-o indefinido.',
           ],
         ],
       },
@@ -18929,6 +19109,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Переопределить маркер статуса, используемый для определенного состояния (например, маркер Захвачен = захват)',
           ],
+          [
+            'выбор маркера',
+            '&lt;Condition&gt;',
+            'Откройте средство выбора визуального маркера для данного условия. Отображает все маркеры токенов кампании в виде интерактивных кнопок со значками — нажмите кнопку, чтобы установить этот маркер для условия.',
+          ],
+          [
+            'маркер-очистить',
+            '&lt;Condition&gt;',
+            'Очистите настроенный маркер состояния для данного условия, восстановив системные настройки по умолчанию или оставив их неустановленными.',
+          ],
         ],
       },
       gameSystems: {
@@ -19887,6 +20077,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Anular el marcador de estado utilizado para una condición específica (por ejemplo, marcador Grappled=grab)',
           ],
+          [
+            'selección de marcador',
+            '&lt;Condition&gt;',
+            'Abra un selector de marcador visual para la condición dada. Muestra todos los marcadores de tokens de campaña como botones de íconos en los que se puede hacer clic; haga clic en un botón para configurar ese marcador para la condición.',
+          ],
+          [
+            'marcador claro',
+            '&lt;Condition&gt;',
+            'Borre el marcador de estado configurado para la condición dada, restaurando el sistema predeterminado o dejándolo sin configurar.',
+          ],
         ],
       },
       gameSystems: {
@@ -20804,6 +21004,16 @@ const ConditionTrackerMod = (() => {
             'markör',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Åsidosätt statusmarkören som används för ett specifikt tillstånd (t.ex. markör Grappled=grab)',
+          ],
+          [
+            'markör-plocka',
+            '&lt;Condition&gt;',
+            'Öppna en visuell markörväljare för det givna villkoret. Visar alla kampanjtokenmarkörer som klickbara ikonknappar – klicka på en knapp för att ställa in den markören för villkoret.',
+          ],
+          [
+            'markör-klar',
+            '&lt;Condition&gt;',
+            'Rensa den konfigurerade statusmarkören för det givna tillståndet, återställ systemets standardvärde eller lämna det oinställt.',
           ],
         ],
       },
@@ -21753,6 +21963,16 @@ const ConditionTrackerMod = (() => {
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Belirli bir durum için kullanılan durum işaretleyicisini geçersiz kılın (ör. işaretleyici Grappled=grab)',
           ],
+          [
+            'işaretleyici seçimi',
+            '&lt;Condition&gt;',
+            'Verilen koşul için görsel bir işaretleyici seçici açın. Tüm kampanya belirteç işaretleyicilerini tıklanabilir simge düğmeleri olarak görüntüler; koşula ilişkin işaretleyiciyi ayarlamak için bir düğmeyi tıklayın.',
+          ],
+          [
+            'işaretleyici açık',
+            '&lt;Condition&gt;',
+            'Verilen koşul için yapılandırılmış durum işaretleyicisini temizleyin, sistem varsayılanını geri yükleyin veya ayarlanmadan bırakın.',
+          ],
         ],
       },
       gameSystems: {
@@ -22687,6 +22907,16 @@ const ConditionTrackerMod = (() => {
             'маркер',
             '&lt;Condition&gt;=&lt;marker name&gt;',
             'Замінити маркер статусу, який використовується для певної умови (наприклад, маркер Grappled=grab)',
+          ],
+          [
+            'маркер-підбірка',
+            '&lt;Condition&gt;',
+            'Відкрийте засіб вибору візуального маркера для заданої умови. Відображає всі маркери маркерів кампанії як кнопки зі значками, які можна натиснути — натисніть кнопку, щоб встановити цей маркер для умови.',
+          ],
+          [
+            'маркер-чистий',
+            '&lt;Condition&gt;',
+            'Очистіть налаштований маркер статусу для даної умови, відновивши системне значення за замовчуванням або залишивши його невстановленим.',
           ],
         ],
       },
