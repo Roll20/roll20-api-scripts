@@ -1,0 +1,11 @@
+{
+  "name": "TokenReference",
+  "script": "TokenReference.js",
+  "version": "1.0.0",
+  "description": "Displays a styled reference card in chat for tokens on a designated page, including image, character link, and formatted GM notes. ",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}

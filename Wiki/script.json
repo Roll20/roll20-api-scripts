@@ -1,0 +1,14 @@
+{
+  "name": "Wiki",
+  "script": "Wiki.js",
+  "version": "1.0.0",
+  "description": "A unified interface for browsing Roll20 handouts and map pins with navigation, filtering, and history tracking.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "modifies": {
+    "handout": "read,write"
+  },
+  "dependencies": [],
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}

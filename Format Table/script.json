@@ -1,0 +1,14 @@
+{
+  "name": "Format Table",
+  "script": "FormatTable.js",
+  "version": "1.0.0",
+  "description": "Displays a chat menu for auto-formatting handout tables with a variety of presets resembling those used by popular game systems. Supports 5.5e, 5e, DnD 3, Invisible, Minimal, OSR, Pathfinder 2, Roll20 Default, Wikitable",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "modifies": {
+   "handout": "read,write"
+  },
+  "dependencies": [],
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}
