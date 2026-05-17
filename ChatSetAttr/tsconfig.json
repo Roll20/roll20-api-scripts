@@ -9,6 +9,8 @@
     "skipLibCheck": true,
     "sourceMap": false,
     "jsx": "react",
-    "jsxFactory": "h",
+    "jsxFactory": "h"
   },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/env.d.ts", "rollup.config.ts", "vitest.setup.ts"],
+  "exclude": ["node_modules", "src/__tests__/**", "**/*.test.ts", "**/*.spec.ts", "**/*.mock.ts"]
 }

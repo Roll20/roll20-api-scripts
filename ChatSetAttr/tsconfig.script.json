@@ -1,10 +1,21 @@
 {
-  "extends": "tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "jsx": "react",
+    "jsxFactory": "h"
+  },
   "include": ["src", "rollup.config.ts"],
   "exclude": [
     "node_modules",
+    "src/__tests__/**",
     "**/*.test.ts",
     "**/*.spec.ts",
-    "**/*.mock.ts",
+    "**/*.mock.ts"
   ]
 }

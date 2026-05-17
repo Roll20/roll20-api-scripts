@@ -1,9 +1,10 @@
 {
-  "extends": "tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["vitest/globals", "node", "vitest.setup.ts"]
+    "types": ["vitest/globals", "node", "@roll20/api-types"]
   },
   "include": [
+    "src/env.d.ts",
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.mock.ts",

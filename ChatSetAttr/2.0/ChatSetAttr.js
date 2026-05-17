@@ -1556,7 +1556,7 @@ var ChatSetAttr = (function (exports) {
             throw new Error(`Player with ID ${playerID} not found.`);
         }
         const isGM = playerIsGM(playerID);
-        const config = state.ChatSetAttr?.config || {};
+        const config = getConfig();
         const playersCanModify = config.playersCanModify || false;
         const canModify = isGM || playersCanModify;
         setPermissions(playerID, isGM, canModify);
@@ -1576,6 +1576,9 @@ var ChatSetAttr = (function (exports) {
         }
         const isGM = playerIsGM(playerID);
         if (isGM) {
+            return true;
+        }
+        if (getConfig().playersCanModify) {
             return true;
         }
         const character = getObj("character", target);
@@ -1800,10 +1803,10 @@ var ChatSetAttr = (function (exports) {
         const errors = [];
         const messages = [];
         const { noCreate = false } = {};
-        const { setWithWorker = false } = getConfig() || {};
+        const { useWorkers = true } = getConfig() || {};
         const setOptions = {
             noCreate,
-            setWithWorker,
+            setWithWorker: useWorkers,
         };
         for (const target in results) {
             for (const name in results[target]) {
@@ -1813,7 +1816,6 @@ var ChatSetAttr = (function (exports) {
                 if (isSetting) {
                     const value = results[target][name] ?? "";
                     try {
-                        console.log("Setting attribute", actualName, "on target", target, "to", value, "with type", type);
                         await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
                     }
                     catch (error) {
@@ -1904,7 +1906,7 @@ var ChatSetAttr = (function (exports) {
         sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from);
     }
     function errorOut(errorText, playerid, errors) {
-        errors.push("No valid targets found.");
+        errors.push(errorText);
         sendErrors(playerid, "Errors", errors);
         clearTimer("chatsetattr");
     }
@@ -1942,6 +1944,8 @@ var ChatSetAttr = (function (exports) {
             const debugVersion = msg.content.startsWith("!setattrs-debugversion");
             if (debugVersion) {
                 log("ChatSetAttr: Debug - setting version to 1.10.");
+                if (!state.ChatSetAttr)
+                    state.ChatSetAttr = {};
                 state.ChatSetAttr.version = "1.10";
                 return;
             }
@@ -1952,6 +1956,9 @@ var ChatSetAttr = (function (exports) {
             }
             const isConfigMessage = checkConfigMessage(msg.content);
             if (isConfigMessage) {
+                if (!playerIsGM(msg.playerid)) {
+                    return;
+                }
                 handleConfigCommand(msg.content);
                 return;
             }
@@ -2040,7 +2047,7 @@ var ChatSetAttr = (function (exports) {
             currentVersion = "1.10";
         }
         log(`ChatSetAttr: Normalized current version: ${currentVersion}`);
-        checkForUpdates(currentVersion);
+        checkForUpdates(String(currentVersion));
     }
     function checkForUpdates(currentVersion) {
         for (const version of VERSION_HISTORY) {

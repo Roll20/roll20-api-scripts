@@ -4,12 +4,19 @@ import del from "rollup-plugin-delete";
 import injectPlugin from "@rollup/plugin-inject";
 import jsonPlugin from "@rollup/plugin-json";
 import json from "./script.json" with { type: "json" };
-import path from "path/win32";
+import path from "path";
 
 const authors = Array.isArray(json.authors) ? json.authors.join(", ") : json.authors;
 
 export default defineConfig({
   input: "src/index.ts",
+
+  onwarn(warning, defaultHandler) {
+    // Known-safe patterns for this Roll20 bundle (see Rollup troubleshooting).
+    if (warning.code === "CIRCULAR_DEPENDENCY") return;
+    if (warning.code === "EVAL") return;
+    defaultHandler(warning);
+  },
 
   output: [
     {
@@ -34,6 +41,6 @@ export default defineConfig({
     injectPlugin({
       "h": [path.resolve("src/utils/chat.ts"), "h"],
     }),
-    typescript(),
+    typescript({ tsconfig: "tsconfig.script.json" }),
   ]
 });

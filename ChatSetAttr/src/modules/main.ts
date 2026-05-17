@@ -1,4 +1,3 @@
-import { error } from "console";
 import scriptJson from "../../script.json" assert { type: "json" };
 import type { Attribute, AttributeRecord } from "../types";
 import { getAttributes } from "./attributes";
@@ -110,7 +109,7 @@ async function acceptMessage(msg: Roll20ChatMessage) {
 };
 
 function errorOut(errorText: string, playerid: string, errors: string[]) {
-  errors.push("No valid targets found.");
+  errors.push(errorText);
   sendErrors(playerid, "Errors", errors);
   clearTimer("chatsetattr");
 }
@@ -154,6 +153,7 @@ export function registerHandlers() {
     const debugVersion = msg.content.startsWith("!setattrs-debugversion");
     if (debugVersion) {
       log("ChatSetAttr: Debug - setting version to 1.10.");
+      if (!state.ChatSetAttr) state.ChatSetAttr = {};
       state.ChatSetAttr.version = "1.10";
       return;
     }
@@ -164,6 +164,9 @@ export function registerHandlers() {
     }
     const isConfigMessage = checkConfigMessage(msg.content);
     if (isConfigMessage) {
+      if (!playerIsGM(msg.playerid)) {
+        return;
+      }
       handleConfigCommand(msg.content);
       return;
     }

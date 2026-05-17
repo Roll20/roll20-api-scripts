@@ -1,3 +1,5 @@
+import { getConfig } from "./config";
+
 const permissions = {
   playerID: "",
   isGM: false,
@@ -7,10 +9,15 @@ const permissions = {
 export function checkPermissions(playerID: string) {
   const player = getObj("player", playerID);
   if (!player) {
+    if('API' === playerID) {
+      // allow API full access
+      setPermissions(playerID,true,true);
+      return;
+    }
     throw new Error(`Player with ID ${playerID} not found.`);
   }
   const isGM = playerIsGM(playerID);
-  const config = state.ChatSetAttr?.config || {};
+  const config = getConfig();
   const playersCanModify = config.playersCanModify || false;
   const canModify = isGM || playersCanModify;
 
@@ -34,6 +41,9 @@ export function checkPermissionForTarget(playerID: string, target: string): bool
   }
   const isGM = playerIsGM(playerID);
   if (isGM) {
+    return true;
+  }
+  if (getConfig().playersCanModify) {
     return true;
   }
   const character = getObj("character", target);

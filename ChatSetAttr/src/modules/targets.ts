@@ -26,7 +26,7 @@ function generateSelectedTargets(message: Roll20ChatMessage, type: Target) {
       continue;
     }
 
-    const inParty = character.get("inParty");
+    const inParty = (character.get as (key: string) => unknown)("inParty");
     if (type === "sel-noparty" && inParty) {
       continue;
     }
@@ -132,7 +132,10 @@ function generatePartyTargets() {
     };
   }
 
-  const characters = findObjs({ _type: "character", inParty: true });
+  const characters = findObjs(
+    { _type: "character", inParty: true } as
+      Partial<CharacterProperties> & { _type: "character"; inParty?: boolean },
+  );
   for (const character of characters) {
     const characterID = character.id;
     targets.push(characterID);

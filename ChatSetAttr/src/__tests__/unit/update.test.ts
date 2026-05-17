@@ -22,7 +22,7 @@ const mockGetConfig = vi.mocked(getConfig);
 describe("updates", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetConfig.mockReturnValue({ setWithWorker: false });
+    mockGetConfig.mockReturnValue({ useWorkers: false });
   });
 
   describe("Setting Attributes", () => {
@@ -461,7 +461,7 @@ describe("updates", () => {
     });
 
     it("should use setWithWorker from config", async () => {
-      mockGetConfig.mockReturnValue({ setWithWorker: true });
+      mockGetConfig.mockReturnValue({ useWorkers: true });
 
       const results: Record<string, AttributeRecord> = {
         "char1": { "strength": 15 },
@@ -481,7 +481,7 @@ describe("updates", () => {
     });
 
     it("should combine options and config", async () => {
-      mockGetConfig.mockReturnValue({ setWithWorker: true });
+      mockGetConfig.mockReturnValue({ useWorkers: true });
 
       const results: Record<string, AttributeRecord> = {
         "char1": { "strength": 15 },
@@ -948,7 +948,7 @@ describe("updates", () => {
 
   describe("configuration handling", () => {
     it("should use setWithWorker from config", async () => {
-      mockGetConfig.mockReturnValue({ setWithWorker: true });
+      mockGetConfig.mockReturnValue({ useWorkers: true });
 
       const results: Record<string, AttributeRecord> = {
         "char1": { "strength": 15 },
@@ -983,7 +983,7 @@ describe("updates", () => {
         "strength",
         15,
         "current",
-        { noCreate: false, setWithWorker: false }
+        { noCreate: false, setWithWorker: true }
       );
     });
   });

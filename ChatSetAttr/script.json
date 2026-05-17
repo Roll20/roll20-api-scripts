@@ -30,7 +30,8 @@
         }
     ],
     "dependencies": [
-        "APISmartAttributes"
+        "libSmartAttributes",
+        "libUUID"
     ],
     "modifies": {
         "state.ChatSetAttr": "read,write",

@@ -26,7 +26,7 @@ export function update() {
   }
 
   log(`ChatSetAttr: Normalized current version: ${currentVersion}`);
-  checkForUpdates(currentVersion);
+  checkForUpdates(String(currentVersion));
 };
 
 export function checkForUpdates(currentVersion: string): void {

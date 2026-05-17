@@ -11,12 +11,9 @@ import { h, s } from "./src/utils/chat";
 
 // region Global Declarations
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  var state: Record<string, any>;
   var executeCommand: typeof simulateChatMessage;
   var triggerEvent: typeof mockTriggerEvent;
   var _: typeof underscore;
-  var libSmartAttributes: typeof SA;
 };
 
 // region Libraries
@@ -62,7 +59,7 @@ global.sendChat = vi.fn();
 global.libSmartAttributes = SA;
 global.libUUID = {
   generateRowID: vi.fn(() => "unique-rowid-1234"),
-  generatelibUUID: vi.fn(() => "unique-libUUID-5678")
+  generateUUID: vi.fn(() => "unique-libUUID-5678"),
 };
 
 // region JSX Helpers

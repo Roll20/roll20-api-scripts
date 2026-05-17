@@ -3,7 +3,7 @@ import { checkForUpdates } from "../../modules/versioning";
 import { v2_0 } from "../../versions/2.0.0";
 import { getConfig, setConfig } from "../../modules/config";
 
-vi.mock("../../versions/version2", () => {
+vi.mock("../../versions/2.0.0", () => {
   return {
     v2_0: {
       appliesTo: "<=1.10",
