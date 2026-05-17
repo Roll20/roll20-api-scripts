@@ -9,9 +9,9 @@
 - **Palette-Based Color Shifting**: Automatically transitions across a 3-stop health gradient with a dedicated dead color at 0 HP.
 - **Built-In Palettes**: Choose between `default` and `colorblind` palettes for clearer table visibility.
 - **Aura & Tint Modes**: Choose between a glowing health ring (Aura 1) or a full token color overlay (Tint).
-- **Aura 1 Exclusive Management**: The script only manages Aura 1. You are free to manually use Aura 2 for range indicators, light sources, or status markers without script interference.
+- **Exclusive Mode Management**: The script manages either Aura 1 (aura mode) or the token tint (tint mode) — never both simultaneously. In tint mode, Aura 1 is left untouched alongside Aura 2, freeing both rings for manual use as range indicators, light sources, or status markers.
 - **Aura 1 & Aura 2 Details in Output**: Settings output includes Aura 1 Shape/Tint and Aura 2 Radius/Shape/Tint rows using state-backed defaults for clear reference.
-- **Manual Overrides**: Visual updates are only triggered when health values change. You can manually adjust colors or radii in the token settings, and they will "stick" until the next time the token takes damage or heals.
+- **Manual Overrides**: In aura mode, Aura 1 is re-synced to the health color on each HP change but is otherwise left alone. In tint mode, Aura 1 is never touched by the script, so manual aura settings persist permanently alongside the health tint.
 - **Blood & Heal FX**: Spawns custom particle effects when tokens are hurt or healed.
 - **Automated Dead Status**: Automatically applies a configurable status marker (default: Red X) when a token reaching 0 HP.
 - **NPC vs PC Config**: Separate settings for players and NPCs, including nameplate visibility and health tracking toggles.
@@ -80,7 +80,7 @@ When a command changes a setting, HealthColors re-whispers the interactive GM me
 ## Tips & Troubleshooting
 
 - **Aura Visibility**: Aura 1 radius is measured in feet from the token edge. The default is `0.35`, which can appear subtle on some maps. Increase it (e.g., `3.0`) if you want a more obvious health ring.
-- **Manual Changes**: If you manually change a token's aura color or radius in the Roll20 dialog, it will stay that way as long as the token's health doesn't change. Once health is updated, the script will re-sync the visuals to the calculated health color.
+- **Manual Changes**: In aura mode, any manual changes to Aura 1 color or radius will be overwritten the next time the token's health changes. In tint mode, Aura 1 is never touched by the script, so manual aura settings persist permanently.
 - **Palette Changes**: Switching palettes from the menu or with `!aura palette ...` immediately runs a full refresh of tokens (equivalent to a force update).
 - **One-Off Tokens**: You can toggle "One-Offs" in the settings to enable health tracking for tokens that are not linked to a character sheet.
 - **FX Rendering Variance**: Some Roll20 sandbox/client combinations can render `spawnFxWithDefinition` colors inaccurately. HealthColors uses a fallback that updates default custom FX objects and spawns by FX ID to keep heal/hurt colors consistent.

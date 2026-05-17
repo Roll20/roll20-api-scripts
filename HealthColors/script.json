@@ -1,8 +1,9 @@
 {
   "name": "Aura/Tint HealthColors",
   "script": "HealthColors.js",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "previousversions": [
+    "2.1.1",
     "2.1.0",
     "2.0.1",
     "2.0.0",
