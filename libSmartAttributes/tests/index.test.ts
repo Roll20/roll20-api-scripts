@@ -2,19 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import SmartAttributes from "../src/index";
 
 // Mock Roll20 API functions
-const mockFindObjs = vi.fn();
 const mockGetSheetItem = vi.fn();
 const mockSetSheetItem = vi.fn();
 const mockLog = vi.fn();
 
-// Mock attribute object
-const createMockAttribute = (value: unknown) => ({
-  get: vi.fn().mockReturnValue(value),
-  set: vi.fn().mockReturnValue(value)
-});
 
 // Setup global mocks
-vi.stubGlobal("findObjs", mockFindObjs);
 vi.stubGlobal("getSheetItem", mockGetSheetItem);
 vi.stubGlobal("setSheetItem", mockSetSheetItem);
 vi.stubGlobal("log", mockLog);
@@ -28,44 +21,16 @@ describe("SmartAttributes", () => {
     const characterId = "char123";
     const attributeName = "strength";
 
-    it("should return legacy attribute current value when legacy attribute exists", async () => {
-      const mockAttr = createMockAttribute("15");
-      mockFindObjs.mockReturnValue([mockAttr]);
-
-      const result = await SmartAttributes.getAttribute(characterId, attributeName);
-
-      expect(mockFindObjs).toHaveBeenCalledWith({
-        _type: "attribute",
-        _characterid: characterId,
-        name: attributeName
-      });
-      expect(mockAttr.get).toHaveBeenCalledWith("current");
-      expect(result).toBe("15");
-    });
-
-    it("should return legacy attribute max value when type is specified", async () => {
-      const mockAttr = createMockAttribute("20");
-      mockFindObjs.mockReturnValue([mockAttr]);
-
-      const result = await SmartAttributes.getAttribute(characterId, attributeName, "max");
-
-      expect(mockAttr.get).toHaveBeenCalledWith("max");
-      expect(result).toBe("20");
-    });
-
     it("should return beacon computed attribute when no legacy attribute exists", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce("beacon-value");
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
-      expect(mockFindObjs).toHaveBeenCalled();
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
       expect(result).toBe("beacon-value");
     });
 
     it("should return user attribute when no legacy or beacon attribute exists", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(null).mockResolvedValueOnce("user-value");
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
@@ -76,7 +41,6 @@ describe("SmartAttributes", () => {
     });
 
     it("should log and return undefined when no attribute is found", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValue(null);
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
@@ -86,7 +50,6 @@ describe("SmartAttributes", () => {
     });
 
     it("should handle falsy beacon values correctly", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(0); // 0 is now treated as valid
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
@@ -97,7 +60,6 @@ describe("SmartAttributes", () => {
     });
 
     it("should handle empty string beacon values correctly", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(""); // '' is now treated as valid
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
@@ -113,49 +75,19 @@ describe("SmartAttributes", () => {
     const attributeName = "strength";
     const value = "18";
 
-    it("should set legacy attribute current value when legacy attribute exists", async () => {
-      const mockAttr = createMockAttribute("15");
-      mockAttr.set.mockReturnValue(value); // Mock set to return the new value
-      mockFindObjs.mockReturnValue([mockAttr]);
-
-      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
-
-      expect(mockFindObjs).toHaveBeenCalledWith({
-        _type: "attribute",
-        _characterid: characterId,
-        name: attributeName
-      });
-      expect(mockAttr.set).toHaveBeenCalledWith({ current: value });
-      expect(result).toBeUndefined();
-    });
-
-    it("should set legacy attribute max value when type is specified", async () => {
-      const mockAttr = createMockAttribute("20");
-      mockAttr.set.mockReturnValue(value); // Mock set to return the new value
-      mockFindObjs.mockReturnValue([mockAttr]);
-
-      const result = await SmartAttributes.setAttribute(characterId, attributeName, value, "max");
-
-      expect(mockAttr.set).toHaveBeenCalledWith({ max: value });
-      expect(result).toBeUndefined();
-    });
-
     it("should set beacon computed attribute when no legacy attribute but beacon exists", async () => {
-      mockFindObjs.mockReturnValue([]);
-      mockGetSheetItem.mockResolvedValue("existing-beacon-value");
       mockSetSheetItem.mockResolvedValue("updated-value");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
-      expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, value);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, value, "current", {allowThrow: true});
       expect(result).toBeUndefined();
     });
 
     it("should default to user attribute when no legacy or beacon attribute exists", async () => {
-      mockFindObjs.mockReturnValue([]);
-      mockGetSheetItem.mockResolvedValue(null);
-      mockSetSheetItem.mockResolvedValue("user-value");
+      mockSetSheetItem
+        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockResolvedValue("user-value");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
@@ -165,35 +97,39 @@ describe("SmartAttributes", () => {
 
     it("should handle complex values correctly", async () => {
       const complexValue = { nested: { value: 42 } };
-      mockFindObjs.mockReturnValue([]);
-      mockGetSheetItem.mockResolvedValue(null);
-      mockSetSheetItem.mockResolvedValue(complexValue);
+      mockSetSheetItem
+        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockResolvedValue(complexValue);
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, complexValue);
 
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, complexValue, "current", {allowThrow:true});
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, complexValue, "current");
       expect(result).toBeUndefined();
     });
 
     it("should handle null and undefined values", async () => {
-      mockFindObjs.mockReturnValue([]);
-      mockGetSheetItem.mockResolvedValue(null);
       mockSetSheetItem.mockResolvedValue(null);
+      mockSetSheetItem
+        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockResolvedValue(null);
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, null);
 
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, null, "current",{allowThrow:true});
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, null, "current");
       expect(result).toBeUndefined();
     });
 
     it("should handle falsy beacon values correctly for setting", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValue(0); // 0 is now treated as valid existing beacon value
       mockSetSheetItem.mockResolvedValue("updated");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, value);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, value,"current",{allowThrow:true});
       expect(result).toBeUndefined();
     });
   });
@@ -203,7 +139,6 @@ describe("SmartAttributes", () => {
     const attributeName = "test-attr";
 
     it("should handle user attribute when beacon returns null", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(null).mockResolvedValueOnce("user-value");
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
@@ -213,17 +148,7 @@ describe("SmartAttributes", () => {
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, "current");
     });
 
-    it("should handle numeric values in attributes", async () => {
-      const mockAttr = createMockAttribute(42);
-      mockFindObjs.mockReturnValue([mockAttr]);
-
-      const result = await SmartAttributes.getAttribute(characterId, attributeName);
-
-      expect(result).toBe(42);
-    });
-
     it("should handle boolean values in attributes", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValueOnce(false); // Test with false to show falsy values are valid
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
@@ -236,22 +161,7 @@ describe("SmartAttributes", () => {
     const characterId = "char123";
     const attributeName = "hp";
 
-    it("should handle complete workflow from get to set with legacy attributes", async () => {
-      const mockAttr = createMockAttribute("10");
-      mockFindObjs.mockReturnValue([mockAttr]);
-
-      // Get current value
-      const currentValue = await SmartAttributes.getAttribute(characterId, attributeName);
-      expect(currentValue).toBe("10");
-
-      // Set new value
-      mockAttr.set.mockReturnValue("15");
-      const result = await SmartAttributes.setAttribute(characterId, attributeName, "15");
-      expect(result).toBeUndefined();
-    });
-
     it("should handle complete workflow from get to set with beacon attributes", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValue("beacon-10");
       mockSetSheetItem.mockResolvedValue("beacon-15");
 
@@ -265,9 +175,10 @@ describe("SmartAttributes", () => {
     });
 
     it("should handle get returning undefined but set still working", async () => {
-      mockFindObjs.mockReturnValue([]);
       mockGetSheetItem.mockResolvedValue(null);
-      mockSetSheetItem.mockResolvedValue("new-value");
+      mockSetSheetItem
+        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockResolvedValue("new-value");
 
       // Get returns undefined
       const currentValue = await SmartAttributes.getAttribute(characterId, attributeName);
@@ -276,6 +187,9 @@ describe("SmartAttributes", () => {
       // But set still works by creating user attribute
       const result = await SmartAttributes.setAttribute(characterId, attributeName, "new-value");
       expect(result).toBeUndefined();
+
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "new-value", "current",{allowThrow:true});
       expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, "new-value", "current");
     });
   });

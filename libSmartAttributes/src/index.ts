@@ -1,25 +1,14 @@
-type AttributeType = "current" | "max";
+type AttributeType = "current" | "max" ;
 
 async function getAttribute(
   characterId: string,
   name: string,
   type: AttributeType = "current"
 ) {
-  // Try for legacy attribute first
-  const legacyAttr = findObjs({
-    _type: "attribute",
-    _characterid: characterId,
-    name: name,
-  })[0];
-
-  if (legacyAttr) {
-    return legacyAttr.get(type);
-  }
-
-  // Then try for the beacon computed
-  const beaconAttr = await getSheetItem(characterId, name, type);
-  if (beaconAttr !== null && beaconAttr !== undefined) {
-    return beaconAttr;
+  // Try for a legacy attribute or beacon computed
+  const attr = await getSheetItem(characterId, name, type);
+  if (attr !== null && attr !== undefined) {
+    return attr;
   }
 
   // Then try for the user attribute
@@ -33,7 +22,6 @@ async function getAttribute(
 };
 
 type SetOptions = {
-  setWithWorker?: boolean;
   noCreate?: boolean;
 };
 
@@ -44,28 +32,12 @@ async function setAttribute(
   type: AttributeType = "current",
   options?: SetOptions
 ) {
-  // Try for legacy attribute first
-  const legacyAttr = findObjs({
-    _type: "attribute",
-    _characterid: characterId,
-    name: name,
-  })[0];
 
-  if (legacyAttr && options?.setWithWorker) {
-    legacyAttr.setWithWorker({ [type]: value });
+  try {
+    await setSheetItem(characterId, name, value, type, {allowThrow: true});
     return;
-  }
-
-  else if (legacyAttr) {
-    legacyAttr.set({ [type]: value });
-    return;
-  }
-
-  // Then try for the beacon computed
-  const beaconAttr = await getSheetItem(characterId, name, type);
-  if (beaconAttr !== null && beaconAttr !== undefined) {
-    setSheetItem(characterId, name, value);
-    return;
+  } catch {
+    // throw will happen on beacon sheets if the computed doesn't exist or is read-only
   }
 
   // Guard against creating user attributes if noCreate is set
