@@ -5,6 +5,7 @@
   "description": "Provides a graphical interface for editing images inside Roll20 handouts, including layout, styling, and attributes without manual HTML editing.",
   "authors": "Keith Curtis",
   "roll20userid": "162065",
+  "patreon": "https://www.patreon.com/c/KeithCurtis",
   "modifies": {
     "handout": "read,write"
   },
