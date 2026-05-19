@@ -2,7 +2,7 @@
 
 All notable changes to the **SwapTokenPositions** script will be documented in this file.
 
-## [2.1.0] - 2026-05-12
+## [2.1.0] - 2026-05-19 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/4)
 
 ### Added
 

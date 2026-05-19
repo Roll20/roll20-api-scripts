@@ -4,14 +4,14 @@
  * ------------------------------------------------
  * Name: SwapTokenPositions
  * Script: SwapTokenPositions.js
- * Built: 2026-05-12T02:44:02.983Z
+ * Built: 2026-05-19T19:15:31.630Z
  */
 const SwapTokenPositionsMod = (() => {
   'use strict';
 
   const SCRIPT_NAME = 'SwapTokenPositions';
-  const SWAP_TOKEN_POSITIONS_VERSION = '2.1.0.beta.3';
-  const SWAP_TOKEN_POSITIONS_LAST_UPDATED = '12 May 2026';
+  const SWAP_TOKEN_POSITIONS_VERSION = '2.1.0';
+  const SWAP_TOKEN_POSITIONS_LAST_UPDATED = '19 May 2026';
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
   const COLOR_TEXT_DIM_SILVER = '#B8AFCF';
