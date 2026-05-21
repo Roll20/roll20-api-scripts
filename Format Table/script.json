@@ -5,6 +5,7 @@
   "description": "Displays a chat menu for auto-formatting handout tables with a variety of presets resembling those used by popular game systems. Supports 5.5e, 5e, DnD 3, Invisible, Minimal, OSR, Pathfinder 2, Roll20 Default, Wikitable",
   "authors": "Keith Curtis",
   "roll20userid": "162065",
+  "patreon": "https://www.patreon.com/c/KeithCurtis",
   "modifies": {
    "handout": "read,write"
   },
