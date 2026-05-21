@@ -554,6 +554,9 @@ declare function getAllObjs(): Roll20Object<AnyRoll20Object>[];
  */
 declare function getAttrByName(character_id: string, attribute_name: string, value_type?: "current" | "max"): string;
 
+type SheetItemOptions = { allowThrow?: boolean };
+type SheetItemValueTYpe = "current" | "max";
+
 /**
  * Gets the value of a sheet item for a character (beacon sheets)
  * @param character_id The ID of the character
@@ -570,7 +573,7 @@ declare function getAttrByName(character_id: string, attribute_name: string, val
  * @example Get a character's maximum hit points
  * const maxHp = await getSheetItem("-KxUZ0wYG9gDCGukimEE", "hp", "max");
  */
-declare function getSheetItem(character_id: string, item_name: string, value_type?: "current" | "max"): Promise<string | undefined>;
+declare function getSheetItem(character_id: string, item_name: string, value_type?: SheetItemValueType | SheetItemOptions, options?: SheetItemOptions): Promise<string | undefined>;
 
 /**
  * Sets the value of a sheet item for a character (beacon sheets)
@@ -589,7 +592,7 @@ declare function getSheetItem(character_id: string, item_name: string, value_typ
  * @example Set a character's maximum hit points
  * await setSheetItem("-KxUZ0wYG9gDCGukimEE", "hp", 20, "max");
  */
-declare function setSheetItem(character_id: string, item_name: string, value: any, value_type?: "current" | "max"): Promise<boolean>;
+declare function setSheetItem(character_id: string, item_name: string, value: any, value_type?: SheetItemValueType | SheetItemOptions, options?: SheetItemOptions): Promise<boolean>;
 
 /**
  * Logs a message to the API console on the Script Editor page
