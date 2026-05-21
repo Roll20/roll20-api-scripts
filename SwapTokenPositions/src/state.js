@@ -1,5 +1,6 @@
 import {
   ALLOWED_POINT_FX,
+  ALLOWED_TOKEN_INPUT_ACCESS_MODES,
   ALLOWED_TRAVEL_FX,
   ALLOWED_TRAVEL_MODES,
   DELAY_MAX,
@@ -42,6 +43,12 @@ export function getSettings() {
  */
 export function showSettings() {
   const settings = getSettings();
+
+  const userListLine =
+    settings.tokenInputAccess === 'selected-users'
+      ? `<strong>Token Input Users:</strong> ${formatTokenInputUsers(settings.tokenInputUsers)}<br>`
+      : '';
+
   const settingsMsg = [
     `<strong>Origin FX:</strong> ${settings.originFx}<br>`,
     `<strong>Travel FX:</strong> ${settings.travelFx}<br>`,
@@ -52,8 +59,28 @@ export function showSettings() {
     `<strong>Destination Time:</strong> ${settings.destinationTime}s<br>`,
     `<strong>Swap Delay:</strong> ${settings.swapDelay}s<br>`,
     `<strong>Destination Delay:</strong> ${settings.destinationDelay}s<br>`,
-  ].join("");
-  whisperGM(settingsMsg, "Persistent Settings", "left");
+    `<strong>Token Input Access:</strong> ${settings.tokenInputAccess}<br>`,
+    userListLine,
+  ].join('');
+  whisperGM(settingsMsg, 'Persistent Settings', 'left');
+}
+
+/**
+ * Formats a list of player IDs as human-readable names with ID fallback.
+ *
+ * @param {string[]} ids Player ID array from persistent state.
+ * @returns {string} Comma-separated display names, or "(none)" when empty.
+ */
+function formatTokenInputUsers(ids) {
+  if (!ids || ids.length === 0) {
+    return '(none)';
+  }
+  return ids
+    .map((id) => {
+      const player = getObj('player', id);
+      return player ? `${player.get('_displayname')} (${id})` : id;
+    })
+    .join(', ');
 }
 
 /**
@@ -79,6 +106,16 @@ export function resetSettings() {
 export function validateSettings(silentOnSuccess = false) {
   const settings = getSettings();
   const errors = [];
+
+  if (!ALLOWED_TOKEN_INPUT_ACCESS_MODES.includes(settings.tokenInputAccess)) {
+    errors.push(`Token Input Access '${settings.tokenInputAccess}' is no longer valid.`);
+  }
+  if (
+    !Array.isArray(settings.tokenInputUsers) ||
+    settings.tokenInputUsers.some((entry) => typeof entry !== 'string' || entry.length === 0)
+  ) {
+    errors.push('Token Input Users contains invalid entries.');
+  }
 
   if (!ALLOWED_POINT_FX.includes(settings.originFx)) {
     errors.push(`Origin FX '${settings.originFx}' is no longer valid.`);

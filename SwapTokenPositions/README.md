@@ -5,6 +5,8 @@
 ## Features
 
 - **Seamless Swapping**: Select exactly two tokens on the same page and run `!swap-tokens` to switch their positions.
+- **Explicit Token Targeting**: Target tokens directly by ID or name using `--token1` and `--token2` — no selection required, ideal for macros.
+- **Explicit Token Access Control**: GMs can restrict `--token1`/`--token2` usage to GM-only, all players, or a named allow-list.
 - **Staged Animation Pipeline**:
   - `origin`: Point FX at starting positions.
   - `travel`: Beam FX and optional travel visibility behavior.
@@ -44,10 +46,42 @@ The v2 series keeps the same core command (`!swap-tokens`) but changes how anima
 `!swap-tokens`
 Swaps the two currently selected tokens using the default settings.
 
+### Explicit Token Targeting (Macro-Friendly)
+
+`!swap-tokens --token1 <id|name> --token2 <id|name>`
+Swaps two specific tokens without requiring them to be selected. Both flags must be provided together.
+
+**Token resolution order (per flag):**
+
+1. Resolve as a token ID.
+2. If not found, resolve as a token name on the active page.
+
+**Rules:**
+
+- Quoted names support spaces: `--token1 "Goblin A"`
+- When a name matches multiple tokens on the active page, the command fails with an ambiguity error. Use the token ID instead.
+- Cross-page pairs are rejected the same as cross-page selections.
+- Providing only `--token1` or only `--token2` is an error.
+
+**Examples:**
+
+- `!swap-tokens --token1 -Kabc123 --token2 -Kdef456` — swap by token ID
+- `!swap-tokens --token1 "Goblin A" --token2 "Goblin B"` — swap by unique name
+- `!swap-tokens --token1 -Kabc123 --token2 "Goblin B"` — mixed ID and name
+- `!swap-tokens --token1 "Goblin A" --token2 "Goblin B" --preset portal` — explicit targeting with FX
+
+**Advanced macro example:**
+
+```
+!swap-tokens --token1 @{selected|token_id} --token2 @{target|token_id} --preset portal
+```
+
 ### Acceptable Parameters for Customization (Available to Everyone)
 
 - `--help`: Displays the help menu.
 - `--instant`: Skips all FX and timing and swaps immediately.
+- `--token1 <id|name>`: First token for explicit targeting (must be paired with `--token2`).
+- `--token2 <id|name>`: Second token for explicit targeting (must be paired with `--token1`).
 - `--preset <value>`: Applies a preset.
   - Values: `portal`, `lightning`, `shadow`, `fire`, `magic`, `transport`, `none`
 - `--origin-fx <value>`: Point FX at both origin positions.
@@ -79,6 +113,28 @@ Swaps the two currently selected tokens using the default settings.
 - `--check-settings`: Validates current persistent defaults and reports issues.
 - `--reset-settings`: Restores the script to its factory defaults.
 - `--install-macro`: Automatically creates a global "SwapTokens" macro in your campaign.
+
+### Explicit Token Access Control (GM Only)
+
+These commands take effect immediately — `--save` is not required.
+
+- `--token-input-access <mode>`: Sets who may use `--token1` and `--token2`.
+  - `gm-only` (default): Only the GM can use explicit token targeting.
+  - `all-players`: Any player can use explicit token targeting.
+  - `selected-users`: Only players on the allow-list (and the GM) can use explicit token targeting.
+- `--token-input-users <id|name,...>`: Replaces the allow-list with the specified players (comma-separated, quoted names supported).
+- `--token-input-users-remove <id|name,...>`: Removes specific players from the allow-list.
+
+The GM is always permitted regardless of the configured mode.
+
+**Examples:**
+
+```
+!swap-tokens --token-input-access all-players
+!swap-tokens --token-input-access selected-users
+!swap-tokens --token-input-users "Alice","Bob"
+!swap-tokens --token-input-users-remove Alice
+```
 
 ### Deprecated Flags
 
