@@ -1,10 +1,10 @@
-import { buildRemovalMessage } from "./conditions.js";
-import { announceHtml, htmlTable, whisper } from "./chat.js";
-import { escapeHtml } from "./utils.js";
-import { t } from "./i18n.js";
-import { removeMarkerIfUnused } from "./markers.js";
-import { getConfig, removeActiveCondition } from "./state.js";
-import { removeConditionRow } from "./turnOrder.js";
+import { buildRemovalMessage } from './conditions.js';
+import { announceHtml, htmlTable, whisper } from './chat.js';
+import { escapeHtml } from './utils.js';
+import { t } from './i18n.js';
+import { removeMarkerIfUnused } from './markers.js';
+import { getConfig, removeActiveCondition } from './state.js';
+import { removeConditionRow } from './turnOrder.js';
 
 /**
  * Removes a condition and emits the requested feedback.
@@ -24,7 +24,7 @@ export function removeConditionById(conditionId, options) {
   if (!condition) {
     return {
       removed: false,
-      message: t("ui.msg.conditionNotFound", getConfig().language),
+      message: t('ui.msg.conditionNotFound', getConfig().language),
     };
   }
 
@@ -36,21 +36,12 @@ export function removeConditionById(conditionId, options) {
   if (options.publicAnnounce) {
     announceHtml(buildRemovalMessage(condition, config.useIcons, locale));
     if (options.extraLocale && options.extraLocale !== locale) {
-      announceHtml(
-        buildRemovalMessage(condition, config.useIcons, options.extraLocale),
-      );
+      announceHtml(buildRemovalMessage(condition, config.useIcons, options.extraLocale));
     }
   }
 
   if (options.whisperResult) {
-    whisperRemoval(
-      options.playerId,
-      condition,
-      rowRemoved,
-      markerResult,
-      options.reason,
-      locale,
-    );
+    whisperRemoval(options.playerId, condition, rowRemoved, markerResult, options.reason, locale);
   }
 
   return { removed: true, condition, rowRemoved, markerResult };
@@ -67,43 +58,31 @@ export function removeConditionById(conditionId, options) {
  * @param {string} [locale] Output locale.
  * @returns {void}
  */
-export function whisperRemoval(
-  playerId,
-  condition,
-  rowRemoved,
-  markerResult,
-  reason,
-  locale,
-) {
-  const reasonText = reason || t("ui.removal.manualReason", locale);
-  let markerSummary = t("ui.removal.notConfigured", locale);
+export function whisperRemoval(playerId, condition, rowRemoved, markerResult, reason, locale) {
+  const reasonText = reason || t('ui.removal.manualReason', locale);
+  let markerSummary = t('ui.removal.notConfigured', locale);
   if (markerResult.marker) {
     markerSummary = markerResult.removed
-      ? t("ui.removal.markerRemoved", locale, {
+      ? t('ui.removal.markerRemoved', locale, {
           marker: escapeHtml(markerResult.marker),
         })
-      : t("ui.removal.markerRetained", locale, {
+      : t('ui.removal.markerRetained', locale, {
           marker: escapeHtml(markerResult.marker),
         });
   }
 
-  whisper(playerId, t("ui.title.removed", locale), [
+  whisper(playerId, t('ui.title.removed', locale), [
     htmlTable(
-      [t("ui.col.field", locale), t("ui.col.result", locale)],
+      [t('ui.col.field', locale), t('ui.col.result', locale)],
       [
+        [t('ui.removal.conditionField', locale), escapeHtml(condition.displayText)],
+        [t('ui.removal.reasonField', locale), escapeHtml(reasonText)],
         [
-          t("ui.removal.conditionField", locale),
-          escapeHtml(condition.displayText),
+          t('ui.removal.turnRowField', locale),
+          rowRemoved ? t('ui.removal.rowRemoved', locale) : t('ui.removal.rowMissing', locale),
         ],
-        [t("ui.removal.reasonField", locale), escapeHtml(reasonText)],
-        [
-          t("ui.removal.turnRowField", locale),
-          rowRemoved
-            ? t("ui.removal.rowRemoved", locale)
-            : t("ui.removal.rowMissing", locale),
-        ],
-        [t("ui.removal.markerField", locale), markerSummary],
-      ],
+        [t('ui.removal.markerField', locale), markerSummary],
+      ]
     ),
   ]);
 }

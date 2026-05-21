@@ -1,15 +1,24 @@
 import {
+  DEFAULT_CLASSIFY_MACRO_BODY,
   DEFAULT_MACRO_BODY,
   DEFAULT_MULTI_TARGET_MACRO_BODY,
+  DEFAULT_REPORT_TOKEN_MACRO_BODY,
+  DEFAULT_SAVED_MACRO_BODY,
   MACRO_NAME,
+  MACRO_NAME_CLASSIFY,
   MACRO_NAME_MULTI_TARGET,
+  MACRO_NAME_REPORT_TOKEN,
+  MACRO_NAME_SAVED,
   SCRIPT_NAME,
-} from "./constants.js";
-import { getGmPlayerIds, queryObjects } from "./utils.js";
+} from './constants.js';
+import { getGmPlayerIds, queryObjects } from './utils.js';
 
 const MACRO_DEFINITIONS = [
   { name: MACRO_NAME, body: DEFAULT_MACRO_BODY },
   { name: MACRO_NAME_MULTI_TARGET, body: DEFAULT_MULTI_TARGET_MACRO_BODY },
+  { name: MACRO_NAME_REPORT_TOKEN, body: DEFAULT_REPORT_TOKEN_MACRO_BODY },
+  { name: MACRO_NAME_SAVED, body: DEFAULT_SAVED_MACRO_BODY },
+  { name: MACRO_NAME_CLASSIFY, body: DEFAULT_CLASSIFY_MACRO_BODY },
 ];
 
 /**
@@ -20,9 +29,7 @@ const MACRO_DEFINITIONS = [
 export function installMacro() {
   const gmIds = getGmIds();
   if (!gmIds.length) {
-    log(
-      `${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`,
-    );
+    log(`${SCRIPT_NAME} macro install skipped: no GM player id is currently available.`);
     return;
   }
 
@@ -32,23 +39,26 @@ export function installMacro() {
   let removedCount = 0;
 
   for (const macroDef of MACRO_DEFINITIONS) {
-    const macrosByOwner = groupMacrosByOwner(
-      queryObjects({ _type: "macro", name: macroDef.name }),
-    );
+    const macrosByOwner = groupMacrosByOwner(queryObjects({ _type: 'macro', name: macroDef.name }));
+    let macroCreatedCount = 0;
+    let macroUpdatedCount = 0;
+    let macroRemovedCount = 0;
 
     for (const gmId of gmIds) {
-      const result = syncGmMacro(
-        gmId,
-        macrosByOwner.get(gmId) || [],
-        gmId,
-        macroDef,
-      );
+      const result = syncGmMacro(gmId, macrosByOwner.get(gmId) || [], gmId, macroDef);
       createdCount += result.created;
       updatedCount += result.updated;
       removedCount += result.removed;
+      macroCreatedCount += result.created;
+      macroUpdatedCount += result.updated;
+      macroRemovedCount += result.removed;
     }
 
-    removedCount += removeOrphanedMacros(macrosByOwner, gmIdSet);
+    const orphanedCount = removeOrphanedMacros(macrosByOwner, gmIdSet);
+    removedCount += orphanedCount;
+    macroRemovedCount += orphanedCount;
+
+    logMacroSyncResult(macroDef.name, macroCreatedCount, macroUpdatedCount, macroRemovedCount);
   }
 
   logInstallResult(createdCount, updatedCount, removedCount);
@@ -63,7 +73,7 @@ export function installMacro() {
 function groupMacrosByOwner(macros) {
   const byOwner = new Map();
   for (const macro of macros) {
-    const ownerId = macro.get("playerid") || "";
+    const ownerId = macro.get('playerid') || '';
     if (!byOwner.has(ownerId)) {
       byOwner.set(ownerId, []);
     }
@@ -83,7 +93,7 @@ function groupMacrosByOwner(macros) {
  */
 function syncGmMacro(gmId, ownerMacros, visibleTo, macroDef) {
   if (ownerMacros.length === 0) {
-    createObj("macro", {
+    createObj('macro', {
       playerid: gmId,
       name: macroDef.name,
       action: macroDef.body,
@@ -135,28 +145,33 @@ function removeOrphanedMacros(macrosByOwner, gmIdSet) {
  * @returns {void}
  */
 function logInstallResult(createdCount, updatedCount, removedCount) {
-  const cleanupNote =
-    removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : "";
+  const cleanupNote = removedCount > 0 ? ` Cleaned up ${removedCount} duplicate macro(s).` : '';
   if (createdCount > 0) {
-    log(
-      `${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`,
-    );
+    log(`${SCRIPT_NAME}: Macros installed (created ${createdCount}).${cleanupNote}`);
   } else {
-    log(
-      `${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`,
-    );
+    log(`${SCRIPT_NAME}: Macros updated (updated ${updatedCount}).${cleanupNote}`);
   }
 }
 
 /**
- * Returns true when at least one Condition Tracker macro exists.
+ * Logs the result of syncing one macro definition across all current GMs.
  *
- * @returns {boolean} True when present.
+ * @param {string} macroName Macro name.
+ * @param {number} createdCount Macros created.
+ * @param {number} updatedCount Macros updated.
+ * @param {number} removedCount Macros removed.
+ * @returns {void}
  */
-export function macroExists() {
-  return MACRO_DEFINITIONS.some(
-    (def) => queryObjects({ _type: "macro", name: def.name }).length > 0,
-  );
+function logMacroSyncResult(macroName, createdCount, updatedCount, removedCount) {
+  const cleanupNote = removedCount > 0 ? ` Removed ${removedCount} duplicate(s).` : '';
+  if (createdCount > 0) {
+    log(
+      `${SCRIPT_NAME}: Macro ${macroName} installed (created ${createdCount}, updated ${updatedCount}).${cleanupNote}`
+    );
+    return;
+  }
+
+  log(`${SCRIPT_NAME}: Macro ${macroName} updated (updated ${updatedCount}).${cleanupNote}`);
 }
 
 /**
@@ -165,7 +180,7 @@ export function macroExists() {
  * @returns {string} Comma-separated GM player ids.
  */
 export function getGmVisibleTo() {
-  return getGmIds().join(",");
+  return getGmIds().join(',');
 }
 
 /**

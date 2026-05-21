@@ -1,0 +1,87 @@
+/** @type {import('./index.js').GameSystemProfile} */
+export const dnd4eProfile = Object.freeze({
+  SYSTEM_ID: 'dnd4e',
+  SYSTEM_NAME: 'D&D 4th Edition',
+
+  STANDARD_CONDITIONS: Object.freeze(
+    [
+      'Blinded',
+      'Dazed',
+      'Deafened',
+      'Dominated',
+      'Dying',
+      'Immobilized',
+      'Invisible',
+      'Marked',
+      'Petrified',
+      'Prone',
+      'Restrained',
+      'Slowed',
+      'Stunned',
+      'Unconscious',
+      'Weakened',
+    ].sort((a, b) => a.localeCompare(b))
+  ),
+
+  CONDITION_DATA: Object.freeze({
+    Blinded: { past: 'blinded', verb: 'blinds', icon: '[B]', emoji: '🙈' },
+    Dazed: { past: 'dazed', verb: 'dazes', icon: '[Dz]', emoji: '😵' },
+    Deafened: { past: 'deafened', verb: 'deafens', icon: '[Df]', emoji: '🙉' },
+    Dominated: { past: 'dominated', verb: 'dominates', icon: '[Dom]', emoji: '🧠' },
+    Dying: { past: 'dying', verb: 'knocks', suffix: 'dying', icon: '[Dy]', emoji: '💀' },
+    Immobilized: { past: 'immobilized', verb: 'immobilizes', icon: '[Imm]', emoji: '⛓️' },
+    Invisible: {
+      past: 'invisible',
+      verb: 'makes',
+      suffix: 'invisible',
+      icon: '[Inv]',
+      emoji: '🥷',
+    },
+    Marked: { past: 'marked', verb: 'marks', icon: '[Mk]', emoji: '🎯' },
+    Petrified: { past: 'petrified', verb: 'petrifies', icon: '[Pet]', emoji: '🪨' },
+    Prone: { past: 'knocked prone', verb: 'knocks', suffix: 'prone', icon: '[P]', emoji: '🛌' },
+    Restrained: { past: 'restrained', verb: 'restrains', icon: '[R]', emoji: '🔒' },
+    Slowed: { past: 'slowed', verb: 'slows', icon: '[Sl]', emoji: '🐢' },
+    Stunned: { past: 'stunned', verb: 'stuns', icon: '[Stn]', emoji: '😵‍💫' },
+    Unconscious: {
+      past: 'unconscious',
+      verb: 'knocks',
+      suffix: 'unconscious',
+      icon: '[U]',
+      emoji: '💤',
+    },
+    Weakened: { past: 'weakened', verb: 'weakens', icon: '[Wk]', emoji: '💪' },
+    // "Spell" canonical key — displayed as "Power" via CUSTOM_EFFECT_LABELS
+    Spell: { past: 'affected by a power', verb: 'uses a power on', icon: '[Pwr]', emoji: '🔮' },
+    Ability: {
+      past: 'affected by an ability',
+      verb: 'uses an ability on',
+      icon: '[Abl]',
+      emoji: '⚡',
+    },
+  }),
+
+  DEFAULT_MARKERS: Object.freeze({
+    Blinded: 'bleeding-eye',
+    Dazed: 'pummeled',
+    Deafened: 'edge-crack',
+    Dominated: 'chained-heart',
+    Dying: 'skull',
+    Immobilized: 'padlock',
+    Invisible: 'ninja-mask',
+    Marked: 'overdrive',
+    Petrified: 'fossil',
+    Prone: 'back-pain',
+    Restrained: 'grab',
+    Slowed: 'snail',
+    Stunned: 'frozen-orb',
+    Unconscious: 'sleepy',
+    Weakened: 'half-heart',
+    Spell: 'lightning-helix',
+    Ability: 'fist',
+  }),
+
+  CUSTOM_EFFECT_TYPES: Object.freeze(['Spell', 'Ability', 'Other']),
+  // "Spell" canonical key is labelled "Power" in D&D 4e
+  CUSTOM_EFFECT_LABELS: Object.freeze({ Spell: 'Power' }),
+});

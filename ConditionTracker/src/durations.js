@@ -1,11 +1,7 @@
-import {
-  DURATION_ROUNDS,
-  DURATION_TURN_END,
-  DURATION_UNTIL_REMOVED,
-} from "./constants.js";
-import { t } from "./i18n.js";
-import { getConfig } from "./state.js";
-import { normalizeKey, toText } from "./utils.js";
+import { DURATION_ROUNDS, DURATION_TURN_END, DURATION_UNTIL_REMOVED } from './constants.js';
+import { t } from './i18n.js';
+import { getConfig } from './state.js';
+import { normalizeKey, toText } from './utils.js';
 
 /**
  * Parses a duration label into a stored duration object.
@@ -19,10 +15,10 @@ import { normalizeKey, toText } from "./utils.js";
  */
 export function parseDuration(label, context) {
   const locale = getConfig().language;
-  const text = toText(label) || "Until removed";
+  const text = toText(label) || 'Until removed';
   const key = normalizeKey(text);
 
-  if (key === "until removed") {
+  if (key === 'until removed') {
     return validDuration({
       type: DURATION_UNTIL_REMOVED,
       remaining: null,
@@ -30,40 +26,26 @@ export function parseDuration(label, context) {
     });
   }
 
-  if (
-    key === "end of target next turn" ||
-    key === "end of target's next turn"
-  ) {
-    return validDuration(
-      createTurnEndDuration(context.targetTokenId, context.currentTurnTokenId),
-    );
+  if (key === 'end of target next turn' || key === "end of target's next turn") {
+    return validDuration(createTurnEndDuration(context.targetTokenId, context.currentTurnTokenId));
   }
 
-  if (
-    key === "end of source next turn" ||
-    key === "end of source's next turn"
-  ) {
-    return validDuration(
-      createTurnEndDuration(context.sourceTokenId, context.currentTurnTokenId),
-    );
+  if (key === 'end of source next turn' || key === "end of source's next turn") {
+    return validDuration(createTurnEndDuration(context.sourceTokenId, context.currentTurnTokenId));
   }
 
   const rounds = parseRoundCount(key);
   if (rounds > 0) {
     return validDuration(
-      createRoundDuration(
-        rounds,
-        context.targetTokenId,
-        context.currentTurnTokenId,
-      ),
+      createRoundDuration(rounds, context.targetTokenId, context.currentTurnTokenId)
     );
   }
 
-  if (key === "other") {
-    return invalidDuration(t("ui.msg.otherDurationRequiresRounds", locale));
+  if (key === 'other') {
+    return invalidDuration(t('ui.msg.otherDurationRequiresRounds', locale));
   }
 
-  return invalidDuration(t("ui.msg.invalidDuration", locale));
+  return invalidDuration(t('ui.msg.invalidDuration', locale));
 }
 
 /**

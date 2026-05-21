@@ -1,11 +1,5 @@
-import {
-  HANDOUT_NAME,
-  LOGO_URL_512,
-  SCRIPT_NAME,
-  SCRIPT_VERSION,
-  CONDITION_DATA,
-  DEFAULT_MARKERS,
-} from "./constants.js";
+import { getConditionDisplayName } from './conditions.js';
+import { HANDOUT_NAME, LOGO_URL_512, SCRIPT_NAME, SCRIPT_VERSION } from './constants.js';
 import {
   getLocale,
   getLocalizedLanguageName,
@@ -13,50 +7,44 @@ import {
   LOCALE_DEFINITIONS,
   t,
   tRaw,
-} from "./i18n.js";
-import { escapeHtml, queryObjects } from "./utils.js";
+} from './i18n.js';
+import { getConfig } from './state.js';
+import { GAME_SYSTEM_DEFINITIONS, getSystemProfile } from './systems/index.js';
+import { escapeHtml, queryObjects } from './utils.js';
 
 const STYLE = {
   outer:
     "font-family:'Georgia',serif;background-color:#0A0A12;color:#E6DFFF;padding:24px;border-radius:8px;",
   header:
-    "background:linear-gradient(135deg,#5B21B6 0%,#FF4D6D 100%);padding:18px 24px;border-radius:6px;margin-bottom:24px;text-align:center;",
+    'background:linear-gradient(135deg,#5B21B6 0%,#FF4D6D 100%);padding:18px 24px;border-radius:6px;margin-bottom:24px;text-align:center;',
   h1: "color:#FFFFFF;margin:0;font-size:1.6em;font-family:'Georgia',serif;letter-spacing:1px;",
-  subtitle:
-    "color:#E9D5FF;margin:6px 0 0;font-size:0.85em;letter-spacing:0.5px;",
+  subtitle: 'color:#E9D5FF;margin:6px 0 0;font-size:0.85em;letter-spacing:0.5px;',
   h2: "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:24px;",
   h2first:
     "color:#FF4D6D;font-family:'Georgia',serif;border-bottom:1px solid #5B21B6;padding-bottom:6px;margin-top:0;",
-  body: "color:#B8AFCF;line-height:1.6;margin-top:0;",
-  intro: "color:#B8AFCF;font-size:0.9em;margin-top:0;",
-  table:
-    "width:100%;border-collapse:collapse;font-size:0.9em;margin-bottom:8px;",
-  tableSmall: "width:100%;border-collapse:collapse;font-size:0.85em;",
-  thRow: "background-color:#1E40AF;",
-  th: "padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;",
-  thW42:
-    "padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:42%;",
-  thW30:
-    "padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:30%;",
-  thW50:
-    "padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:50%;",
-  thW40:
-    "padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:40%;",
-  tdA: "padding:7px 10px;background-color:#12122a;border-radius:4px;font-family:monospace;color:#E9D5FF;white-space:nowrap;width:45%;",
-  tdB: "padding:7px 10px;color:#B8AFCF;",
-  tdEven:
-    "padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:#12122a;",
-  tdOdd:
-    "padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:#0e0e22;",
-  tdDescEven: "padding:6px 10px;color:#B8AFCF;background-color:#12122a;",
-  tdDescOdd: "padding:6px 10px;color:#B8AFCF;background-color:#0e0e22;",
-  tdCondEven: "padding:7px 10px;color:#E6DFFF;background-color:#12122a;",
-  tdCondOdd: "padding:7px 10px;color:#E6DFFF;background-color:#0e0e22;",
-  spacer: "padding:3px;",
+  body: 'color:#B8AFCF;line-height:1.6;margin-top:0;',
+  intro: 'color:#B8AFCF;font-size:0.9em;margin-top:0;',
+  table: 'width:100%;border-collapse:collapse;font-size:0.9em;margin-bottom:8px;',
+  tableSmall: 'width:100%;border-collapse:collapse;font-size:0.85em;',
+  thRow: 'background-color:#1E40AF;',
+  th: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;',
+  thW42: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:42%;',
+  thW30: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:30%;',
+  thW50: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:50%;',
+  thW40: 'padding:7px 10px;text-align:left;color:#E9D5FF;font-weight:bold;width:40%;',
+  tdA: 'padding:7px 10px;background-color:#12122a;border-radius:4px;font-family:monospace;color:#E9D5FF;white-space:nowrap;width:45%;',
+  tdB: 'padding:7px 10px;color:#B8AFCF;',
+  tdEven: 'padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:#12122a;',
+  tdOdd: 'padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:#0e0e22;',
+  tdDescEven: 'padding:6px 10px;color:#B8AFCF;background-color:#12122a;',
+  tdDescOdd: 'padding:6px 10px;color:#B8AFCF;background-color:#0e0e22;',
+  tdCondEven: 'padding:7px 10px;color:#E6DFFF;background-color:#12122a;',
+  tdCondOdd: 'padding:7px 10px;color:#E6DFFF;background-color:#0e0e22;',
+  spacer: 'padding:3px;',
   footer:
-    "margin-top:28px;padding-top:14px;border-top:1px solid #5B21B6;text-align:center;color:#B8AFCF;font-size:0.8em;",
-  footerP: "margin:0;line-height:1.8;",
-  code: "background-color:#1a1a2e;padding:1px 4px;border-radius:2px;",
+    'margin-top:28px;padding-top:14px;border-top:1px solid #5B21B6;text-align:center;color:#B8AFCF;font-size:0.8em;',
+  footerP: 'margin:0;line-height:1.8;',
+  code: 'background-color:#1a1a2e;padding:1px 4px;border-radius:2px;',
 };
 
 /**
@@ -66,7 +54,7 @@ const STYLE = {
  * @returns {string} Hex color for the row background.
  */
 function row(even) {
-  return even ? "#12122a" : "#0e0e22";
+  return even ? '#12122a' : '#0e0e22';
 }
 
 /**
@@ -76,9 +64,7 @@ function row(even) {
  * @returns {string} Inline CSS direction and alignment.
  */
 function getDirectionStyle(locale) {
-  return isRtlLocale(locale)
-    ? "direction:rtl;text-align:right;"
-    : "direction:ltr;text-align:left;";
+  return isRtlLocale(locale) ? 'direction:rtl;text-align:right;' : 'direction:ltr;text-align:left;';
 }
 
 /**
@@ -88,9 +74,7 @@ function getDirectionStyle(locale) {
  * @returns {string} Inline CSS for table headers.
  */
 function getThStyle(locale) {
-  return isRtlLocale(locale)
-    ? STYLE.th.replace("text-align:left", "text-align:right")
-    : STYLE.th;
+  return isRtlLocale(locale) ? STYLE.th.replace('text-align:left', 'text-align:right') : STYLE.th;
 }
 
 /**
@@ -105,10 +89,10 @@ function getThStyle(locale) {
 function buildTable(headers, rows, widths, locale) {
   const thCells = headers
     .map((h, i) => {
-      const w = widths?.[i] ? `width:${widths[i]};` : "";
+      const w = widths?.[i] ? `width:${widths[i]};` : '';
       return `<th style="${getThStyle(locale)}${w}">${h}</th>`;
     })
-    .join("");
+    .join('');
   const bodyRows = rows
     .map((cells, ri) => {
       const bg = row(ri % 2 === 0);
@@ -120,78 +104,86 @@ function buildTable(headers, rows, widths, locale) {
             : `padding:6px 10px;color:#B8AFCF;background-color:${bg};`;
           return `<td style="${style}">${cell}</td>`;
         })
-        .join("");
+        .join('');
       return `<tr>${tds}</tr>`;
     })
-    .join("");
+    .join('');
   return `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">${thCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
 }
 
 /**
- * Builds the standard D&D conditions table.
+ * Builds the standard conditions table for the active game system.
  *
+ * @param {object} profile Active system profile.
  * @param {string} colLabel Header label for condition columns.
  * @param {string} locale Locale code.
  * @returns {string} Condition table HTML.
  */
-function buildConditionTable(colLabel, locale) {
-  const standardConditions = [
-    "Blinded",
-    "Charmed",
-    "Frightened",
-    "Grappled",
-    "Incapacitated",
-    "Invisible",
-    "Paralyzed",
-    "Petrified",
-    "Poisoned",
-    "Prone",
-    "Restrained",
-    "Stunned",
-    "Unconscious",
-  ];
-  const left = standardConditions.slice(0, 7);
-  const right = standardConditions.slice(7);
+function buildConditionTable(profile, colLabel, locale) {
+  const conditions = profile.STANDARD_CONDITIONS;
+  if (conditions.length === 0) {
+    const bg = row(true);
+    const msg = escapeHtml(t('handout.standardConditions.none', locale));
+    return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
+  }
+  const half = Math.ceil(conditions.length / 2);
+  const left = conditions.slice(0, half);
+  const right = conditions.slice(half);
   const maxRows = Math.max(left.length, right.length);
   const rows = [];
   for (let i = 0; i < maxRows; i++) {
-    const l = left[i] ? `${CONDITION_DATA[left[i]].emoji} ${left[i]}` : "";
-    const r = right[i] ? `${CONDITION_DATA[right[i]].emoji} ${right[i]}` : "";
+    const lc = left[i];
+    const rc = right[i];
+    const lData = lc ? profile.CONDITION_DATA[lc] : null;
+    const rData = rc ? profile.CONDITION_DATA[rc] : null;
+    const l = lc
+      ? `${lData ? lData.emoji : '✨'} ${getConditionDisplayName(lc, profile, locale)}`
+      : '';
+    const r = rc
+      ? `${rData ? rData.emoji : '✨'} ${getConditionDisplayName(rc, profile, locale)}`
+      : '';
     const bg = row(i % 2 === 0);
     rows.push(
       `<tr><td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(l)}</td>` +
-        `<td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(r)}</td></tr>`,
+        `<td style="padding:7px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(r)}</td></tr>`
     );
   }
 
   const thStyle = `${getThStyle(locale)}width:50%;`;
   const safeLabel = escapeHtml(colLabel);
-  return `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}"><th style="${thStyle}">${safeLabel}</th><th style="${thStyle}">${safeLabel}</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+  return `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}"><th style="${thStyle}">${safeLabel}</th><th style="${thStyle}">${safeLabel}</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 
 /**
- * Builds the default status marker mapping table.
+ * Builds the default status marker mapping table for the active game system.
  *
+ * @param {object} profile Active system profile.
  * @param {string} colCondition Condition column label.
  * @param {string} colMarker Marker column label.
  * @param {string} locale Locale code.
  * @returns {string} Marker table HTML.
  */
-function buildMarkersTable(colCondition, colMarker, locale) {
-  const entries = Object.entries(DEFAULT_MARKERS);
+function buildMarkersTable(profile, colCondition, colMarker, locale) {
+  const entries = Object.entries(profile.DEFAULT_MARKERS);
+  if (entries.length === 0) {
+    const bg = row(true);
+    const msg = escapeHtml(t('handout.defaultMarkers.none', locale));
+    return `<table style="${STYLE.tableSmall}"><tbody><tr><td style="padding:7px 10px;color:#B8AFCF;background-color:${bg};" colspan="2">${msg}</td></tr></tbody></table>`;
+  }
   const rows = entries
     .map(([condition, marker], i) => {
-      const data = CONDITION_DATA[condition];
-      const emoji = data ? data.emoji : "";
+      const data = profile.CONDITION_DATA[condition];
+      const emoji = data ? data.emoji : '';
       const bg = row(i % 2 === 0);
+      const label = getConditionDisplayName(condition, profile, locale);
       return (
         `<tr>` +
-        `<td style="padding:6px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(emoji)} ${escapeHtml(condition)}</td>` +
+        `<td style="padding:6px 10px;color:#E6DFFF;background-color:${bg};">${escapeHtml(emoji)} ${escapeHtml(label)}</td>` +
         `<td style="padding:6px 10px;font-family:monospace;color:#B8AFCF;background-color:${bg};">${escapeHtml(marker)}</td>` +
         `</tr>`
       );
     })
-    .join("");
+    .join('');
   return (
     `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
     `<th style="${getThStyle(locale)}width:50%;">${escapeHtml(colCondition)}</th>` +
@@ -219,8 +211,23 @@ function buildQuickStartTable(colCommand, colDesc, rows) {
         `<tr><td colspan="2" style="${STYLE.spacer}"></td></tr>`
       );
     })
-    .join("");
+    .join('');
   return `<table style="${STYLE.table}"><tbody>${bodyRows}</tbody></table>`;
+}
+
+/**
+ * Builds the examples table for common macro patterns.
+ *
+ * @param {(key: string) => string} hs Handout string lookup.
+ * @param {(key: string) => *} hr Handout raw value lookup.
+ * @param {string} locale Locale code.
+ * @returns {string} Examples section HTML.
+ */
+function buildExamplesSection(hs, hr, locale) {
+  const rows = hr('examples.rows');
+  return `<h2 style="${STYLE.h2}">${hs('examples.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('examples.intro')}</p>
+    ${buildTable([hs('examples.colMacro'), hs('examples.colEvent')], rows, ['52%', '48%'], locale)}`;
 }
 
 /**
@@ -230,12 +237,12 @@ function buildQuickStartTable(colCommand, colDesc, rows) {
  * @returns {string} SVG asset URL or an empty string.
  */
 function flagAssetUrl(flag) {
-  const codepoints = Array.from(String(flag || "").trim())
+  const codepoints = Array.from(String(flag || '').trim())
     .map((character) => character.codePointAt(0).toString(16))
-    .join("-");
+    .join('-');
   return codepoints
     ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
-    : "";
+    : '';
 }
 
 /**
@@ -248,7 +255,7 @@ function buildLocaleFlag(locale) {
   const label = escapeHtml(locale.flagLabel || locale.name);
   const url = flagAssetUrl(locale.flag);
   if (!url) {
-    return "";
+    return '';
   }
   return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
 }
@@ -277,12 +284,12 @@ function buildLocalesTable(locale) {
   ]);
   return buildTable(
     [
-      t("handout.availableLocales.colLocale", locale),
-      t("handout.availableLocales.colLanguage", locale),
+      t('handout.availableLocales.colLocale', locale),
+      t('handout.availableLocales.colLanguage', locale),
     ],
     rows,
-    ["24%", "76%"],
-    locale,
+    ['24%', '76%'],
+    locale
   );
 }
 
@@ -295,9 +302,9 @@ function buildLocalesTable(locale) {
  * @returns {string} Section HTML.
  */
 function buildCommandsReferenceSection(hs, hr, locale) {
-  const rows = hr("commandsRef.rows");
-  return `<h2 style="${STYLE.h2}">${hs("commandsRef.heading")}</h2>
-    ${buildTable([hs("commandsRef.colFlag"), hs("commandsRef.colDesc")], rows, ["42%"], locale)}`;
+  const rows = hr('commandsRef.rows');
+  return `<h2 style="${STYLE.h2}">${hs('commandsRef.heading')}</h2>
+    ${buildTable([hs('commandsRef.colFlag'), hs('commandsRef.colDesc')], rows, ['42%'], locale)}`;
 }
 
 /**
@@ -309,9 +316,9 @@ function buildCommandsReferenceSection(hs, hr, locale) {
  * @returns {string} Section HTML.
  */
 function buildCustomEffectsSection(hs, hr, locale) {
-  const rows = hr("customEffects.rows");
-  return `<h2 style="${STYLE.h2}">${hs("customEffects.heading")}</h2>
-    ${buildTable([hs("customEffects.colType"), hs("customEffects.colNotes")], rows, ["30%"], locale)}`;
+  const rows = hr('customEffects.rows');
+  return `<h2 style="${STYLE.h2}">${hs('customEffects.heading')}</h2>
+    ${buildTable([hs('customEffects.colType'), hs('customEffects.colNotes')], rows, ['30%'], locale)}`;
 }
 
 /**
@@ -323,10 +330,10 @@ function buildCustomEffectsSection(hs, hr, locale) {
  * @returns {string} Section HTML.
  */
 function buildDurationOptionsSection(hs, hr, locale) {
-  const rows = hr("durationOptions.rows");
-  return `<h2 style="${STYLE.h2}">${hs("durationOptions.heading")}</h2>
-    <p style="${STYLE.intro}">${hs("durationOptions.intro")}</p>
-    ${buildTable([hs("durationOptions.colOption"), hs("durationOptions.colBehaviour")], rows, ["40%"], locale)}`;
+  const rows = hr('durationOptions.rows');
+  return `<h2 style="${STYLE.h2}">${hs('durationOptions.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('durationOptions.intro')}</p>
+    ${buildTable([hs('durationOptions.colOption'), hs('durationOptions.colBehaviour')], rows, ['40%'], locale)}`;
 }
 
 /**
@@ -338,7 +345,7 @@ function buildDurationOptionsSection(hs, hr, locale) {
  * @returns {string} Section HTML.
  */
 function buildConfigurationSection(hs, hr, locale) {
-  const rows = hr("configuration.rows");
+  const rows = hr('configuration.rows');
   const threeCol = rows
     .map(([opt, vals, desc], i) => {
       const bg = row(i % 2 === 0);
@@ -350,14 +357,14 @@ function buildConfigurationSection(hs, hr, locale) {
         `</tr>`
       );
     })
-    .join("");
+    .join('');
   return (
-    `<h2 style="${STYLE.h2}">${hs("configuration.heading")}</h2>
-    <p style="${STYLE.intro}">${hs("configuration.intro")}</p>
+    `<h2 style="${STYLE.h2}">${hs('configuration.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('configuration.intro')}</p>
     <table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
-    `<th style="${getThStyle(locale)}width:30%;">${hs("configuration.colOption")}</th>` +
-    `<th style="${getThStyle(locale)}width:25%;">${hs("configuration.colValues")}</th>` +
-    `<th style="${getThStyle(locale)}">${hs("configuration.colDesc")}</th>` +
+    `<th style="${getThStyle(locale)}width:30%;">${hs('configuration.colOption')}</th>` +
+    `<th style="${getThStyle(locale)}width:25%;">${hs('configuration.colValues')}</th>` +
+    `<th style="${getThStyle(locale)}">${hs('configuration.colDesc')}</th>` +
     `</tr></thead><tbody>${threeCol}</tbody></table>`
   );
 }
@@ -372,10 +379,34 @@ function buildConfigurationSection(hs, hr, locale) {
 function updateHandoutObject(handout, html) {
   handout.set({
     name: HANDOUT_NAME,
-    inplayerjournals: "",
-    controlledby: "",
+    inplayerjournals: '',
+    controlledby: '',
   });
-  handout.set("notes", html);
+  handout.set('notes', html);
+}
+
+/**
+ * Builds the supported game systems table.
+ *
+ * @param {string} locale Locale code.
+ * @returns {string} Game systems table HTML.
+ */
+function buildGameSystemsTable(locale) {
+  const rows = GAME_SYSTEM_DEFINITIONS.map((def, i) => {
+    const bg = row(i % 2 === 0);
+    return (
+      `<tr>` +
+      `<td style="padding:6px 10px;font-family:monospace;color:#E9D5FF;background-color:${bg};">${escapeHtml(def.id)}</td>` +
+      `<td style="padding:6px 10px;color:#B8AFCF;background-color:${bg};">${escapeHtml(def.name)}</td>` +
+      `</tr>`
+    );
+  }).join('');
+  return (
+    `<table style="${STYLE.tableSmall}"><thead><tr style="${STYLE.thRow}">` +
+    `<th style="${getThStyle(locale)}width:35%;">${escapeHtml(t('handout.gameSystems.colId', locale))}</th>` +
+    `<th style="${getThStyle(locale)}">${escapeHtml(t('handout.gameSystems.colName', locale))}</th>` +
+    `</tr></thead><tbody>${rows}</tbody></table>`
+  );
 }
 
 /**
@@ -388,13 +419,17 @@ function buildHandoutHtml(locale) {
   const lang = getLocale(locale);
   const version = SCRIPT_VERSION;
   const directionStyle = getDirectionStyle(lang);
+  const config = getConfig();
+  const profile = getSystemProfile(config.gameSystem);
+
   /**
-   * Looks up a handout string for the active locale.
+   * Looks up a handout string for the active locale, with optional interpolation vars.
    *
    * @param {string} key Handout translation key.
+   * @param {object} [vars] Interpolation variables.
    * @returns {string} Translated text.
    */
-  const hs = (key) => t(`handout.${key}`, lang);
+  const hs = (key, vars) => t(`handout.${key}`, lang, vars);
   /**
    * Looks up raw handout data for the active locale.
    *
@@ -404,46 +439,53 @@ function buildHandoutHtml(locale) {
   const hr = (key) => tRaw(`handout.${key}`, lang);
 
   const overview = `
-    <h2 style="${STYLE.h2first}">${hs("overview.heading")}</h2>
-    <p style="${STYLE.body}">${hs("overview.body")}</p>`;
+    <h2 style="${STYLE.h2first}">${hs('overview.heading')}</h2>
+    <p style="${STYLE.body}">${hs('overview.body')}</p>`;
 
   const quickStart = `
-    <h2 style="${STYLE.h2}">${hs("quickStart.heading")}</h2>
-    ${buildQuickStartTable(hs("quickStart.colCommand"), hs("quickStart.colDesc"), hr("quickStart.rows"))}`;
+    <h2 style="${STYLE.h2}">${hs('quickStart.heading')}</h2>
+    ${buildQuickStartTable(hs('quickStart.colCommand'), hs('quickStart.colDesc'), hr('quickStart.rows'))}`;
+
+  const examples = buildExamplesSection(hs, hr, lang);
 
   const commandsRef = buildCommandsReferenceSection(hs, hr, lang);
 
   const standardConds = `
-    <h2 style="${STYLE.h2}">${hs("standardConditions.heading")}</h2>
-    ${buildConditionTable(hs("standardConditions.colCondition"), lang)}`;
+    <h2 style="${STYLE.h2}">${hs('standardConditions.heading', { system: profile.SYSTEM_NAME })}</h2>
+    ${buildConditionTable(profile, hs('standardConditions.colCondition'), lang)}`;
 
   const customEffects = buildCustomEffectsSection(hs, hr, lang);
 
   const durationOpts = buildDurationOptionsSection(hs, hr, lang);
 
-  const config = buildConfigurationSection(hs, hr, lang);
+  const configSection = buildConfigurationSection(hs, hr, lang);
 
-  const markers = `
-    <h2 style="${STYLE.h2}">${hs("defaultMarkers.heading")}</h2>
-    ${buildMarkersTable(hs("defaultMarkers.colCondition"), hs("defaultMarkers.colMarker"), lang)}`;
+  const gameSystems = `
+    <h2 style="${STYLE.h2}">${hs('gameSystems.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('gameSystems.intro')}</p>
+    ${buildGameSystemsTable(lang)}`;
 
   const availableLocales = `
-    <h2 style="${STYLE.h2}">${hs("availableLocales.heading")}</h2>
-    <p style="${STYLE.intro}">${hs("availableLocales.intro")}</p>
+    <h2 style="${STYLE.h2}">${hs('availableLocales.heading')}</h2>
+    <p style="${STYLE.intro}">${hs('availableLocales.intro')}</p>
     ${buildLocalesTable(lang)}`;
+
+  const markers = `
+    <h2 style="${STYLE.h2}">${hs('defaultMarkers.heading')}</h2>
+    ${buildMarkersTable(profile, hs('defaultMarkers.colCondition'), hs('defaultMarkers.colMarker'), lang)}`;
 
   const footer = `
     <div style="${STYLE.footer}">
-      <p style="${STYLE.footerP}">${SCRIPT_NAME} ${version} &nbsp;•&nbsp; ${hs("footerNote")}</p>
+      <p style="${STYLE.footerP}">${SCRIPT_NAME} ${version} &nbsp;•&nbsp; ${hs('footerNote')}</p>
     </div>`;
 
   return `<div style="${STYLE.outer}${directionStyle}">
     <div style="${STYLE.header}">
       <img src="${LOGO_URL_512}" style="max-width:220px;height:auto;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;" alt="${SCRIPT_NAME} logo" title="${SCRIPT_NAME}" />
       <h1 style="${STYLE.h1}">${SCRIPT_NAME}</h1>
-      <p style="${STYLE.subtitle}">${hs("versionLabel")} ${version} &nbsp;•&nbsp; ${hs("subtitle")}</p>
+      <p style="${STYLE.subtitle}">${hs('versionLabel')} ${version} &nbsp;•&nbsp; ${hs('subtitle')}</p>
     </div>
-    ${overview}${quickStart}${commandsRef}${standardConds}${customEffects}${durationOpts}${config}${availableLocales}${markers}${footer}
+    ${overview}${quickStart}${examples}${commandsRef}${standardConds}${customEffects}${durationOpts}${configSection}${gameSystems}${availableLocales}${markers}${footer}
   </div>`;
 }
 
@@ -456,10 +498,10 @@ function buildHandoutHtml(locale) {
  */
 export function installHandout(locale) {
   const html = buildHandoutHtml(locale);
-  const existing = queryObjects({ _type: "handout", name: HANDOUT_NAME });
+  const existing = queryObjects({ _type: 'handout', name: HANDOUT_NAME });
 
   if (existing.length === 0) {
-    const handout = createObj("handout", {
+    const handout = createObj('handout', {
       name: HANDOUT_NAME,
     });
     updateHandoutObject(handout, html);
@@ -473,7 +515,6 @@ export function installHandout(locale) {
     dup.remove();
   }
 
-  const cleanupNote =
-    duplicates.length > 0 ? ` Removed ${duplicates.length} duplicate(s).` : "";
+  const cleanupNote = duplicates.length > 0 ? ` Removed ${duplicates.length} duplicate(s).` : '';
   log(`${SCRIPT_NAME}: Help handout updated.${cleanupNote}`);
 }

@@ -5,7 +5,7 @@ import {
   SUPPORTED_LOCALE_LIST,
   TRANSLATIONS,
   VALID_LOCALES,
-} from "./locales/index.js";
+} from './locales/index.js';
 
 export {
   DEFAULT_LOCALE,
@@ -14,12 +14,12 @@ export {
   SUPPORTED_LOCALE_LIST,
   SUPPORTED_LOCALES,
   VALID_LOCALES,
-} from "./locales/index.js";
+} from './locales/index.js';
 
 for (const translation of Object.values(TRANSLATIONS)) {
   const rows = translation?.handout?.configuration?.rows;
   const languageRow = Array.isArray(rows)
-    ? rows.find((row) => Array.isArray(row) && row[0] === "language")
+    ? rows.find((row) => Array.isArray(row) && row[0] === 'language')
     : null;
   if (languageRow) {
     languageRow[1] = SUPPORTED_LOCALE_LIST;
@@ -34,7 +34,7 @@ for (const translation of Object.values(TRANSLATIONS)) {
  * @returns {string} Canonical locale, or an empty string when unsupported.
  */
 export function normalizeLocale(lang) {
-  const s = typeof lang === "string" ? lang.trim() : "";
+  const s = typeof lang === 'string' ? lang.trim() : '';
   if (VALID_LOCALES.has(s)) {
     return s;
   }
@@ -44,14 +44,12 @@ export function normalizeLocale(lang) {
 
   const normalized = s.toLowerCase();
   const supportedLocale = Array.from(VALID_LOCALES).find(
-    (locale) => locale.toLowerCase() === normalized,
+    (locale) => locale.toLowerCase() === normalized
   );
   return (
     supportedLocale ||
-    Object.entries(LOCALE_ALIASES).find(
-      ([alias]) => alias.toLowerCase() === normalized,
-    )?.[1] ||
-    ""
+    Object.entries(LOCALE_ALIASES).find(([alias]) => alias.toLowerCase() === normalized)?.[1] ||
+    ''
   );
 }
 
@@ -73,9 +71,7 @@ export function getLocale(lang) {
  */
 function getLocaleDefinition(locale) {
   const lang = getLocale(locale);
-  return (
-    LOCALE_DEFINITIONS.find((definition) => definition.code === lang) || null
-  );
+  return LOCALE_DEFINITIONS.find((definition) => definition.code === lang) || null;
 }
 
 /**
@@ -95,12 +91,10 @@ export function getLocalizedLanguageName(locale, displayLocale) {
   }
 
   const lang = getLocale(displayLocale);
-  let localizedName =
-    TRANSLATIONS[lang]?.languageNames?.[definition.code] || "";
+  let localizedName = TRANSLATIONS[lang]?.languageNames?.[definition.code] || '';
   try {
     localizedName =
-      localizedName ||
-      new Intl.DisplayNames([lang], { type: "language" }).of(definition.code);
+      localizedName || new Intl.DisplayNames([lang], { type: 'language' }).of(definition.code);
   } catch (error) {
     if (!localizedName) {
       throw error;
@@ -113,7 +107,7 @@ export function getLocalizedLanguageName(locale, displayLocale) {
     definition.nativeName !== name &&
     definition.nativeName !== definition.name
       ? ` (${definition.nativeName})`
-      : "";
+      : '';
   return `${name}${nativeName}`;
 }
 
@@ -126,7 +120,7 @@ export function getLocalizedLanguageName(locale, displayLocale) {
 export function isRtlLocale(locale) {
   const lang = getLocale(locale);
   return LOCALE_DEFINITIONS.some(
-    (definition) => definition.code === lang && definition.direction === "rtl",
+    (definition) => definition.code === lang && definition.direction === 'rtl'
   );
 }
 
@@ -140,7 +134,7 @@ export function isRtlLocale(locale) {
 function getNestedValue(obj, parts) {
   let current = obj;
   for (const part of parts) {
-    if (current == null || typeof current !== "object") return undefined;
+    if (current == null || typeof current !== 'object') return undefined;
     current = current[part];
   }
   return current;
@@ -158,18 +152,16 @@ function getNestedValue(obj, parts) {
  */
 export function t(key, locale, vars = {}) {
   const lang = getLocale(locale);
-  const parts = key.split(".");
+  const parts = key.split('.');
   let value = getNestedValue(TRANSLATIONS[lang], parts);
 
   if (value === undefined && lang !== DEFAULT_LOCALE) {
     value = getNestedValue(TRANSLATIONS[DEFAULT_LOCALE], parts);
   }
 
-  if (typeof value !== "string") return key;
+  if (typeof value !== 'string') return key;
 
-  return value.replaceAll(/\{(\w+)\}/g, (_, k) =>
-    k in vars ? String(vars[k]) : `{${k}}`,
-  );
+  return value.replaceAll(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
 }
 
 /**
@@ -182,7 +174,7 @@ export function t(key, locale, vars = {}) {
  */
 export function tRaw(key, locale) {
   const lang = getLocale(locale);
-  const parts = key.split(".");
+  const parts = key.split('.');
   let value = getNestedValue(TRANSLATIONS[lang], parts);
   if (value === undefined && lang !== DEFAULT_LOCALE) {
     value = getNestedValue(TRANSLATIONS[DEFAULT_LOCALE], parts);
