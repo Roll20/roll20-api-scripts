@@ -5,18 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.1.2] – 2026-05-17 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/5)
+
+### Fixed
+
+- Fixed Aura 1 being reset to transparent/zero radius in tint mode when a token's HP changed. `clearAuras` was unconditionally zeroing `aura1_color` and `aura1_radius` even though HealthColors never writes to Aura 1 in tint mode, causing any manually-placed Aura 1 to be wiped on every health update. Aura 1 is now left untouched when tint mode is active. ([#17](https://github.com/steverobertsuk/roll20-api-scripts/issues/17))
+- Fixed incomplete token refresh when toggling between aura and tint modes. The previous approach ran a separate aura1 cleanup pass followed by the async drain queue, which could interleave with the `change:graphic` events the cleanup itself triggered. Replaced with a single `modeSwitch` drain queue that clears aura1 and re-evaluates each token in one atomic step per token, ensuring all tokens transition cleanly in both directions.
+
+---
+
 ## [2.1.1] – 2026-05-07 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/1)
 
 ### Added
+
 - Added version 1.7.1 (sourced from the Roll20 forums, never previously submitted to the GitHub repository) so it appears as a selectable previous version in the Roll20 Mod Script Console.
 
 ### Fixed
+
 - Fixed aura visibility threshold (`Percentage PC/NPC`): tokens at or above the configured HP threshold were incorrectly shown a green default aura instead of having the aura hidden. Changed comparison from `>=` to `>` and replaced `applyDefaultAura()` with `clearAuras()` in the above-threshold branch so the aura correctly disappears when a token's HP is not below the threshold. Also added a guard so a threshold of `0` clears the aura rather than treating it as "always show". ([#1](https://github.com/steverobertsuk/roll20-api-scripts/issues/1))
 - Fixed `!aura` settings menu after a change: clicking a button and submitting the dialog caused a non-interactive read-only panel (using `<span>` pills) to appear in public chat instead of re-displaying the interactive GM-whispered menu. Root cause was `handleInput` calling `showSettingsInGameChat()` on every setting change instead of `showMenu()`. The interactive GM menu is now always shown after a change; the read-only public snapshot remains available via the explicit `!aura settings` command. ([#3](https://github.com/steverobertsuk/roll20-api-scripts/issues/3), [#4](https://github.com/steverobertsuk/roll20-api-scripts/issues/4))
 - Fixed `!aura perc` not refreshing tokens already on the map: changing the HP threshold now immediately re-evaluates all existing tokens via `menuForceUpdate()`, so tokens that were visible under the old threshold are correctly cleared (or revealed) without requiring a token move.
 - Fixed "No FX with name" GM whisper appearing repeatedly when a character's `USEBLOOD` attribute is set to a custom custfx name that no longer exists in the campaign (e.g. after a campaign reset or character import). The error message now identifies the character by name so the GM knows which `USEBLOOD` attribute to correct. The script also falls back to `-DefaultHurt` so a visual effect still plays instead of silently doing nothing. ([#2](https://github.com/steverobertsuk/roll20-api-scripts/issues/2))
 
 ### Changed
+
 - Removed orphaned `applyDefaultAura` function — it was superseded by `clearAuras()` in the threshold fix but never deleted.
 - Removed unused `changedSetting` variable from `handleInput` — it was assigned in ~20 places but never read, as `showMenu()` was always called unconditionally at the end of the function.
 - Token refresh progress messages updated: sender changed from a hardcoded string to `SCRIPT_NAME`; text changed from `"Fixing N Tokens"` / `"Finished Fixing Tokens"` to `"Refreshing N Tokens"` / `"Finished Refreshing Tokens"`.
@@ -29,27 +41,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.1.0] – 2026-05-01
 
 ### Added
+
 - Added a palette system for health colors with `default` and `colorblind` options.
 - Added `!aura palette ?{Palette|default|colorblind}` command and matching menu control (palette switching forces existing tokens to refresh immediately).
 
 ### Changed
+
 - Switched health color mapping from a fixed red/green calculation to palette-based low/mid/high interpolation.
 - Added an explicit `dead` color stop to each palette and mapped exactly 0% HP to black (`#000000`).
 - Updated default `AuraSize` from `0.7` to `0.35` and aligned docs/menu wording to describe radius in feet from token edge.
 - Updated menu/settings output to include the active palette.
 
 ### Fixed
+
 - Fixed dead-state visuals at 0 HP so dead color behavior remains consistent.
 - Fixed missed updates when tokens are resized by treating width/height changes as a visual refresh trigger.
 
 ## [2.0.1] – 2026-04-20
 
 ### Fixed
+
 - Corrected behavior for tokens with health below zero to ensure the "dead" marker is applied consistently.
 - Clamped negative health values to zero for accurate color mapping and consistent visual feedback.
 - Refactored `applyAuraAndDead` to separate dead-marker logic from aura updates, ensuring proper handling of edge cases.
 
 ### Changed
+
 - Updated `percentToHex` to normalize input values, preventing invalid color calculations.
 - Improved code readability and maintainability by restructuring health percentage calculations.
 
@@ -60,6 +77,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Major modernization and stability refactor of the entire script, consolidating performance improvements, critical bug fixes, and new user control features. This version represents a complete overhaul from the v1.6.x series.
 
 ### Added
+
 - **Respect Manual Overrides** — the script now only updates visual properties (Aura 1) when a token's internal health bar actually changes. This allows for manual customization of colors, radii, and shapes via the token settings dialog without script interference during movement.
 - **Persistent Default Auras** — tokens at 100% health now default to a clean **Green** Aura 1 (at the configured `AuraSize`) to indicate stability.
 - **JSDoc Documentation** — every function is now fully documented with parameter types, return values, and behavioral descriptions to improve maintainability.
@@ -69,6 +87,7 @@ Major modernization and stability refactor of the entire script, consolidating p
 - **Aura Detail Commands** — added `!aura a1shape`, `!aura a1tint`, `!aura a2size`, `!aura a2shape`, and `!aura a2tint` to adjust displayed Aura 1/Aura 2 detail values from chat.
 
 ### Changed
+
 - **`_` (Underscore) dependency** — no longer required.
 - **`buttonColor` function** — legacy function completely removed after
   verifying no external or internal dependencies; superseded by `nameBtn`.
@@ -77,6 +96,7 @@ Major modernization and stability refactor of the entire script, consolidating p
 - **Schema version** — bumped to `1.1.0` to reflect incremental state/data migration changes in the v2.0.0 line.
 
 ### Fixed
+
 - Consistent casing for `checkInstall` and `handleToken` throughout.
 - Initialization of `OneOff` state key to prevent `undefined` collisions.
 - Corrected logic in `playDeath` to ensure jukebox tracks are properly stopped before restarting.
@@ -100,9 +120,11 @@ Major modernization and stability refactor of the entire script, consolidating p
 > **Note:** This version was sourced from a [Roll20 forum post](https://app.roll20.net/forum/permalink/12236299/) by [Surok](https://app.roll20.net/users/335573). It was never submitted to the Roll20 GitHub API scripts repository.
 
 ### Added
+
 - Added `LISTFX` command/button that displays a graphical menu listing custom FX objects with their IDs.
 
 ### Changed
+
 - Updated FX effects: damage/healing FX now use the simpler DeathTracker approach — damage uses the `HurtFX` type (default `splatter-blood`) and healing uses the `HealFX` type (default `glow-holy`).
 
 ---
