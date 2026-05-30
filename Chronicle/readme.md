@@ -2,12 +2,16 @@
 
 Chronicle is a comprehensive calendar and timeline management system for Roll20 campaigns.
 
+## Quick Demo
+
+Watch a walkthrough of Chronicle's features: https://youtu.be/Zb4M21NtP3Y
+
 ## Key Features
 
 - **Custom or Preset Calendars** — Create your own or load from five included presets (Gregorian, Forgotten Realms, Golarion, Greyhawk, Eberron)
 - **Event and Note Tracking** — Powerful tagging system for organizing and filtering campaign events
 - **Calendar View** — Interactive grid with date-by-date navigation and exploration
-- **Timeline Mode** — Chronological story review with tag and date-range filtering
+- **Timeline Mode** — Chronological campaign review with tag and date-range filtering
 - **Weather Generation** — Automatic realistic weather based on Köppen climate zones
 - **Moon Phases** — Multiple moons with automatic phase calculation for any date
 - **Send to Chat** — Announce dates and events directly to players
