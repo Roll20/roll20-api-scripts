@@ -1,19 +1,15 @@
-import { htmlTable, rawHtml, whisper } from "./chat.js";
-import { t } from "./i18n.js";
-import { removeMarkerIfUnused } from "./markers.js";
-import {
-  getActiveConditions,
-  getConfig,
-  setActiveConditions,
-} from "./state.js";
-import { tokenExists } from "./utils.js";
+import { htmlTable, rawHtml, whisper } from './chat.js';
+import { t } from './i18n.js';
+import { removeMarkerIfUnused } from './markers.js';
+import { getActiveConditions, getConfig, setActiveConditions } from './state.js';
+import { tokenExists } from './utils.js';
 import {
   conditionRowExists,
   getTurnOrder,
   getTokenRowId,
   removeConditionRows,
   removeOrphanedConditionRows,
-} from "./turnOrder.js";
+} from './turnOrder.js';
 
 /**
  * Performs manual cleanup and reconciliation.
@@ -36,8 +32,7 @@ export function runCleanup(playerId) {
     const sourceExists = tokenExists(condition.sourceTokenId);
     const targetExists = tokenExists(condition.targetTokenId);
     const rowExists = conditionRowExists(condition.id);
-    const targetInTurnOrder =
-      !combatActive || tokenRowIds.has(condition.targetTokenId);
+    const targetInTurnOrder = !combatActive || tokenRowIds.has(condition.targetTokenId);
 
     if (sourceExists && targetExists && rowExists && targetInTurnOrder) {
       kept.push(condition);
@@ -65,7 +60,7 @@ export function runCleanup(playerId) {
     staleEntries,
     orphanedRows + missingRows,
     unusedMarkers,
-    locale,
+    locale
   );
 
   return {
@@ -126,18 +121,18 @@ export function whisperCleanupSummary(
   staleEntries,
   orphanedRows,
   unusedMarkers,
-  locale,
+  locale
 ) {
-  whisper(playerId, t("ui.title.cleanup", locale), [
-    rawHtml(`<strong>${t("ui.heading.summary", locale)}</strong>`),
+  whisper(playerId, t('ui.title.cleanup', locale), [
+    rawHtml(`<strong>${t('ui.heading.summary', locale)}</strong>`),
     htmlTable(
-      [t("ui.col.item", locale), t("ui.col.removed", locale)],
+      [t('ui.col.item', locale), t('ui.col.removed', locale)],
       [
-        [t("ui.cleanup.orphaned", locale), String(orphanedEntries)],
-        [t("ui.cleanup.stale", locale), String(staleEntries)],
-        [t("ui.cleanup.orphanedRows", locale), String(orphanedRows)],
-        [t("ui.cleanup.unusedMarkers", locale), String(unusedMarkers)],
-      ],
+        [t('ui.cleanup.orphaned', locale), String(orphanedEntries)],
+        [t('ui.cleanup.stale', locale), String(staleEntries)],
+        [t('ui.cleanup.orphanedRows', locale), String(orphanedRows)],
+        [t('ui.cleanup.unusedMarkers', locale), String(unusedMarkers)],
+      ]
     ),
   ]);
 }

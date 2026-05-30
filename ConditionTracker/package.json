@@ -1,13 +1,17 @@
 {
   "name": "condition-tracker-roll20",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Roll20 API Mod for tracking token conditions and custom effects in the Turn Tracker.",
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "node scripts/bump-version.mjs",
     "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
     "watch": "node scripts/build.mjs --watch",
-    "format": "prettier --write \"ConditionTracker.js\" \"rollup.config.js\" \"src/**/*.js\" \"*.md\" \"scripts/**/*.mjs\""
+    "format": "prettier --write \"ConditionTracker.js\" \"rollup.config.js\" \"src/**/*.js\" \"*.md\" \"scripts/**/*.mjs\"",
+    "sync-locales": "node scripts/sync-locales.mjs",
+    "regenerate-locales": "node scripts/sync-locales.mjs --regenerate"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

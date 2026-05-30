@@ -1,4 +1,55 @@
-import { whisperSenderError } from "./messages.js";
+import { whisperSenderError } from './messages.js';
+
+/**
+ * Parses a comma-separated list flag, supporting quoted and bare entries.
+ *
+ * Each member may be single-quoted, double-quoted, or bare (no commas within).
+ * Empty members and whitespace-only entries are filtered silently.
+ *
+ * @param {string} content Full command content.
+ * @param {RegExp} flagRegex Regex for the flag name.
+ * @returns {{found:boolean, values:string[]}} Parse result.
+ */
+export function parseCommaListFlag(content, flagRegex) {
+  const match = new RegExp(String.raw`${flagRegex.source}\s+(.+?)(?=\s+--|$)`, 'i').exec(content);
+  if (!match) {
+    return { found: false, values: [] };
+  }
+
+  const values = [];
+  for (const part of match[1].trim().split(',')) {
+    const trimmed = part
+      .trim()
+      .replace(/^(['"])(.*)\1$/, '$2')
+      .trim();
+    if (trimmed) {
+      values.push(trimmed);
+    }
+  }
+
+  return { found: true, values };
+}
+
+/**
+ * Parses a string flag whose value may be quoted (allowing spaces) or unquoted.
+ *
+ * Supports single-quoted, double-quoted, and bare (no-whitespace) values.
+ *
+ * @param {string} content Full command content.
+ * @param {RegExp} flagRegex Regex for the flag name.
+ * @returns {{found:boolean, value:(string|null)}} Parse result.
+ */
+export function parseFreeStringFlag(content, flagRegex) {
+  const match = new RegExp(
+    String.raw`${flagRegex.source}\s+(?:"([^"]+)"|'([^']+)'|(\S+))`,
+    'i'
+  ).exec(content);
+  if (!match) {
+    return { found: false, value: null };
+  }
+  const value = (match[1] ?? match[2] ?? match[3]).trim();
+  return { found: true, value };
+}
 
 /**
  * Parses a string flag and validates it against an allowed set.
@@ -9,14 +60,14 @@ import { whisperSenderError } from "./messages.js";
  * @returns {{found:boolean, valid:boolean, value:(string|null)}} Parse result.
  */
 export function parseStringFlag(content, flagRegex, allowedValues) {
-  const match = new RegExp(String.raw`${flagRegex.source}\s+(\S+)`, "i").exec(content);
+  const match = new RegExp(String.raw`${flagRegex.source}\s+(\S+)`, 'i').exec(content);
   if (!match) {
     return { found: false, valid: false, value: null };
   }
   const normalized = match[1]
     .trim()
-    .replaceAll(/(^['"]|['"]$)/g, "")
-    .replaceAll(/[.,;]+$/g, "")
+    .replaceAll(/(^['"]|['"]$)/g, '')
+    .replaceAll(/[.,;]+$/g, '')
     .toLowerCase();
   if (allowedValues.includes(normalized)) {
     return { found: true, valid: true, value: normalized };
@@ -34,7 +85,7 @@ export function parseStringFlag(content, flagRegex, allowedValues) {
  * @returns {{found:boolean, valid:boolean, value:(number|null)}} Parse result.
  */
 export function parseFloatFlag(content, flagRegex, min, max) {
-  const match = new RegExp(String.raw`${flagRegex.source}\s+([\d.]+)`, "i").exec(content);
+  const match = new RegExp(String.raw`${flagRegex.source}\s+([\d.]+)`, 'i').exec(content);
   if (!match) {
     return { found: false, valid: false, value: null };
   }
@@ -62,7 +113,7 @@ export function applyStringFlagResult(result, key, config, updateTracker, msg, e
     updateTracker.valid++;
   } else {
     updateTracker.invalid++;
-    whisperSenderError(msg, errorMsg, "Invalid Input");
+    whisperSenderError(msg, errorMsg, 'Invalid Input');
   }
 }
 
@@ -87,7 +138,7 @@ export function applyNumericFlagResult(result, key, config, updateTracker, msg, 
     whisperSenderError(
       msg,
       `Invalid ${label}: must be between ${range.min} and ${range.max} seconds.`,
-      "Invalid Input",
+      'Invalid Input'
     );
   }
 }
@@ -108,7 +159,7 @@ export function processStringFlags(content, flagConfigs, config, updateTracker, 
     if (!result.found) {
       continue;
     }
-    const errorMsg = `Invalid ${label}: '${result.value}'.<br><br>Valid: ${allowed.join(", ")}`;
+    const errorMsg = `Invalid ${label}: '${result.value}'.<br><br>Valid: ${allowed.join(', ')}`;
     applyStringFlagResult(result, key, config, updateTracker, msg, errorMsg);
   }
 }

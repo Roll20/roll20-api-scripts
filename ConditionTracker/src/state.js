@@ -1,28 +1,28 @@
-import {
-  DEFAULT_LOCALE,
-  DEFAULT_MARKERS,
-  SCRIPT_VERSION,
-  STATE_KEY,
-  VALID_HEALTH_BARS,
-} from "./constants.js";
-import { normalizeLocale } from "./i18n.js";
-import { isRecord } from "./utils.js";
+import { DEFAULT_LOCALE, SCRIPT_VERSION, STATE_KEY, VALID_HEALTH_BARS } from './constants.js';
+import { normalizeLocale } from './i18n.js';
+import { DEFAULT_GAME_SYSTEM, VALID_GAME_SYSTEMS, getSystemProfile } from './systems/index.js';
+import { isRecord } from './utils.js';
 
 const GLOBAL_CONFIG_KEY = STATE_KEY.toLowerCase();
 
 /**
- * Creates a fresh default configuration object.
+ * Creates a fresh default configuration object for the given game system.
  *
+ * @param {string} [gameSystem] Game system id. Defaults to dnd5e.
  * @returns {object} Default configuration.
  */
-export function createDefaultConfig() {
+export function createDefaultConfig(gameSystem = DEFAULT_GAME_SYSTEM) {
+  const profile = getSystemProfile(gameSystem);
   return {
+    gameSystem,
     useMarkers: true,
     useIcons: false,
     subjectPromptBypass: false,
+    suppressPublicChat: false,
+    enablePostApplyMacroButtons: false,
     healthBar: VALID_HEALTH_BARS[0],
     language: DEFAULT_LOCALE,
-    markers: { ...DEFAULT_MARKERS },
+    markers: { ...profile.DEFAULT_MARKERS },
   };
 }
 
@@ -33,10 +33,11 @@ export function createDefaultConfig() {
  */
 export function createRuntimeState() {
   return {
-    previousFirstTurnId: "",
-    previousTurnSignature: "",
+    previousFirstTurnId: '',
+    previousTurnSignature: '',
     previousTokenIds: [],
     previousMisplacedConditionIds: [],
+    lastApplyPayloads: {},
   };
 }
 
@@ -78,33 +79,53 @@ export function ensureState() {
     trackerState.runtime = createRuntimeState();
   }
 
+  if (!isRecord(trackerState.savedEffects)) {
+    trackerState.savedEffects = {};
+  }
+
+  if (!isRecord(trackerState.actorOverrides)) {
+    trackerState.actorOverrides = { tokens: {} };
+  }
+
+  if (!isRecord(trackerState.actorOverrides.tokens)) {
+    trackerState.actorOverrides.tokens = {};
+  }
+
   return trackerState;
 }
 
 /**
  * Merges a possibly incomplete config object with defaults.
+ * Defaults (including markers) are derived from the config's game system.
  *
  * @param {object} config The current config.
  * @returns {object} A complete config.
  */
 export function mergeConfig(config) {
-  const defaults = createDefaultConfig();
   const nextConfig = isRecord(config) ? config : {};
+  const systemId = VALID_GAME_SYSTEMS.has(nextConfig.gameSystem)
+    ? nextConfig.gameSystem
+    : DEFAULT_GAME_SYSTEM;
+  const defaults = createDefaultConfig(systemId);
   const markers = isRecord(nextConfig.markers) ? nextConfig.markers : {};
 
   return {
+    gameSystem: systemId,
     useMarkers:
-      typeof nextConfig.useMarkers === "boolean"
-        ? nextConfig.useMarkers
-        : defaults.useMarkers,
-    useIcons:
-      typeof nextConfig.useIcons === "boolean"
-        ? nextConfig.useIcons
-        : defaults.useIcons,
+      typeof nextConfig.useMarkers === 'boolean' ? nextConfig.useMarkers : defaults.useMarkers,
+    useIcons: typeof nextConfig.useIcons === 'boolean' ? nextConfig.useIcons : defaults.useIcons,
     subjectPromptBypass:
-      typeof nextConfig.subjectPromptBypass === "boolean"
+      typeof nextConfig.subjectPromptBypass === 'boolean'
         ? nextConfig.subjectPromptBypass
         : defaults.subjectPromptBypass,
+    suppressPublicChat:
+      typeof nextConfig.suppressPublicChat === 'boolean'
+        ? nextConfig.suppressPublicChat
+        : defaults.suppressPublicChat,
+    enablePostApplyMacroButtons:
+      typeof nextConfig.enablePostApplyMacroButtons === 'boolean'
+        ? nextConfig.enablePostApplyMacroButtons
+        : defaults.enablePostApplyMacroButtons,
     healthBar: VALID_HEALTH_BARS.includes(nextConfig.healthBar)
       ? nextConfig.healthBar
       : defaults.healthBar,
@@ -151,14 +172,25 @@ export function applyGlobalConfig() {
   const config = getConfig();
   const nextConfig = { ...config };
 
-  nextConfig.useMarkers = parseBooleanOption(
-    options.useMarkers,
-    config.useMarkers,
-  );
+  if (VALID_GAME_SYSTEMS.has(options.gameSystem)) {
+    const profile = getSystemProfile(options.gameSystem);
+    nextConfig.gameSystem = options.gameSystem;
+    nextConfig.markers = { ...profile.DEFAULT_MARKERS };
+  }
+
+  nextConfig.useMarkers = parseBooleanOption(options.useMarkers, config.useMarkers);
   nextConfig.useIcons = parseBooleanOption(options.useIcons, config.useIcons);
   nextConfig.subjectPromptBypass = parseBooleanOption(
     options.subjectPromptBypass,
-    config.subjectPromptBypass,
+    config.subjectPromptBypass
+  );
+  nextConfig.suppressPublicChat = parseBooleanOption(
+    options.suppressPublicChat,
+    config.suppressPublicChat
+  );
+  nextConfig.enablePostApplyMacroButtons = parseBooleanOption(
+    options.enablePostApplyMacroButtons,
+    config.enablePostApplyMacroButtons
   );
 
   if (VALID_HEALTH_BARS.includes(options.healthBar)) {
@@ -170,12 +202,13 @@ export function applyGlobalConfig() {
     nextConfig.language = language;
   }
 
-  const nextMarkers = { ...config.markers };
-  Object.keys(DEFAULT_MARKERS).forEach((condition) => {
+  const profile = getSystemProfile(nextConfig.gameSystem);
+  const nextMarkers = { ...nextConfig.markers };
+  Object.keys(profile.DEFAULT_MARKERS).forEach((condition) => {
     const markerValue = getMarkerOption(options, condition);
     nextMarkers[condition] = parseMarkerOption(
       markerValue,
-      nextMarkers[condition] || DEFAULT_MARKERS[condition],
+      nextMarkers[condition] || profile.DEFAULT_MARKERS[condition]
     );
   });
   nextConfig.markers = nextMarkers;
@@ -213,7 +246,7 @@ function getGlobalConfigOptions() {
  * @returns {boolean} Parsed boolean option.
  */
 function parseBooleanOption(value, fallback) {
-  if (typeof value === "boolean") {
+  if (typeof value === 'boolean') {
     return value;
   }
 
@@ -222,11 +255,11 @@ function parseBooleanOption(value, fallback) {
   }
 
   const normalized = String(value).trim().toLowerCase();
-  if (["true", "1", "checked", "on", "yes"].includes(normalized)) {
+  if (['true', '1', 'checked', 'on', 'yes'].includes(normalized)) {
     return true;
   }
 
-  if (["false", "0", "", "off", "no"].includes(normalized)) {
+  if (['false', '0', '', 'off', 'no'].includes(normalized)) {
     return false;
   }
 
@@ -247,11 +280,7 @@ function getMarkerOption(options, condition) {
     return undefined;
   }
 
-  const keyVariants = [
-    `marker${condition}`,
-    `marker.${condition}`,
-    `markers.${condition}`,
-  ];
+  const keyVariants = [`marker${condition}`, `marker.${condition}`, `markers.${condition}`];
 
   for (const key of keyVariants) {
     if (Object.hasOwn(options, key)) {
@@ -270,7 +299,7 @@ function getMarkerOption(options, condition) {
  * @returns {string} Parsed marker name.
  */
 function parseMarkerOption(value, fallback) {
-  if (typeof value !== "string") {
+  if (typeof value !== 'string') {
     return fallback;
   }
 
@@ -351,10 +380,7 @@ export function partitionActiveConditions(predicate) {
  * @returns {object|null} The matching condition or null.
  */
 export function findActiveCondition(conditionId) {
-  return (
-    filterActiveConditions((condition) => condition.id === conditionId)[0] ||
-    null
-  );
+  return filterActiveConditions((condition) => condition.id === conditionId)[0] || null;
 }
 
 /**
@@ -399,9 +425,89 @@ export function removeActiveCondition(conditionId) {
  * @returns {object[]} Matching active conditions.
  */
 export function getActiveByTarget(targetTokenId) {
-  return filterActiveConditions(
-    (condition) => condition.targetTokenId === targetTokenId,
-  );
+  return filterActiveConditions((condition) => condition.targetTokenId === targetTokenId);
+}
+
+/**
+ * Returns all active conditions where a token is the source.
+ *
+ * @param {string} sourceTokenId The source token id.
+ * @returns {object[]} Matching active conditions.
+ */
+export function getActiveBySource(sourceTokenId) {
+  return filterActiveConditions((condition) => condition.sourceTokenId === sourceTokenId);
+}
+
+/**
+ * Returns the token-level actor override from state, or null when absent.
+ *
+ * @param {string} tokenId Roll20 graphic id.
+ * @returns {string|null} pc, npc, ignored, or null.
+ */
+export function getActorTokenOverride(tokenId) {
+  const overrides = ensureState().actorOverrides;
+  if (!isRecord(overrides?.tokens)) return null;
+  const value = overrides.tokens[tokenId];
+  return typeof value === 'string' ? value : null;
+}
+
+/**
+ * Stores a token-level actor type override in state.
+ *
+ * @param {string} tokenId Roll20 graphic id.
+ * @param {string} type Actor type to store (pc, npc, or ignored).
+ * @returns {void}
+ */
+export function setActorTokenOverride(tokenId, type) {
+  const trackerState = ensureState();
+  if (!isRecord(trackerState.actorOverrides)) {
+    trackerState.actorOverrides = { tokens: {} };
+  }
+  if (!isRecord(trackerState.actorOverrides.tokens)) {
+    trackerState.actorOverrides.tokens = {};
+  }
+  trackerState.actorOverrides.tokens[tokenId] = type;
+}
+
+/**
+ * Removes a token-level actor type override from state.
+ *
+ * @param {string} tokenId Roll20 graphic id.
+ * @returns {void}
+ */
+export function clearActorTokenOverride(tokenId) {
+  const trackerState = ensureState();
+  if (isRecord(trackerState.actorOverrides?.tokens)) {
+    delete trackerState.actorOverrides.tokens[tokenId];
+  }
+}
+
+/**
+ * Returns the last-apply payload for a GM, or null when absent.
+ *
+ * @param {string} playerId GM player id.
+ * @returns {object|null} Last-apply payload or null.
+ */
+export function getLastApplyPayload(playerId) {
+  const runtime = ensureState().runtime;
+  if (!isRecord(runtime.lastApplyPayloads)) return null;
+  const payload = runtime.lastApplyPayloads[playerId];
+  return isRecord(payload) ? payload : null;
+}
+
+/**
+ * Stores the last-apply payload for a GM.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object} payload Payload to store.
+ * @returns {void}
+ */
+export function setLastApplyPayload(playerId, payload) {
+  const runtime = ensureState().runtime;
+  if (!isRecord(runtime.lastApplyPayloads)) {
+    runtime.lastApplyPayloads = {};
+  }
+  runtime.lastApplyPayloads[playerId] = isRecord(payload) ? payload : null;
 }
 
 /**
@@ -413,15 +519,10 @@ export function getActiveByTarget(targetTokenId) {
  * @param {string[]} [misplacedConditionIds] Condition ids currently misplaced in the turn order.
  * @returns {void}
  */
-export function updateTurnRuntime(
-  firstTurnId,
-  signature,
-  tokenIds,
-  misplacedConditionIds,
-) {
+export function updateTurnRuntime(firstTurnId, signature, tokenIds, misplacedConditionIds) {
   const runtime = ensureState().runtime;
-  runtime.previousFirstTurnId = firstTurnId || "";
-  runtime.previousTurnSignature = signature || "";
+  runtime.previousFirstTurnId = firstTurnId || '';
+  runtime.previousTurnSignature = signature || '';
   runtime.previousTokenIds = Array.isArray(tokenIds) ? tokenIds : [];
   runtime.previousMisplacedConditionIds = Array.isArray(misplacedConditionIds)
     ? misplacedConditionIds

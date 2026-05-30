@@ -2,6 +2,30 @@
 
 All notable changes to the **SwapTokenPositions** script will be documented in this file.
 
+## [2.1.0] - 2026-05-19 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/4)
+
+### Added
+
+- Explicit token targeting via `--token1 <id|name>` and `--token2 <id|name>` flags.
+  - Both flags must be provided together; omitting one produces a clear usage error.
+  - Each input resolves by token ID first, then by token name on the active page.
+  - Ambiguous name matches (multiple tokens with the same name) are rejected with guidance to use a token ID.
+  - Cross-page explicit pairs are rejected the same as cross-page selection pairs.
+- `parseFreeStringFlag` parser utility to handle quoted (space-containing) and unquoted string values.
+- Explicit token access control via three new GM-only management commands (take effect immediately, no `--save` required):
+  - `--token-input-access <gm-only|all-players|selected-users>` — sets who may use `--token1` and `--token2`.
+  - `--token-input-users <id|name,...>` — replaces the allow-list with the specified players (resolved by ID then display name).
+  - `--token-input-users-remove <id|name,...>` — removes specific players from the allow-list.
+  - Default mode is `gm-only`. The GM is always permitted regardless of mode.
+  - `--show-settings` now includes `Token Input Access` and (in `selected-users` mode) `Token Input Users`.
+- `parseCommaListFlag` parser utility for comma-separated quoted and bare values.
+
+### Developer
+
+- Build process now automatically syncs `package.json` version from `script.json` on each build.
+- Build process now auto-increments the trailing build number on pre-release versions (e.g. `2.1.0.beta.0` → `2.1.0.beta.1`) so the version is always up to date after each `npm run build`. Release versions (`major.minor.patch`) are not auto-incremented.
+- Versioned archive folder now uses the base semver (`major.minor.patch`) rather than the full pre-release string, so pre-release builds update the same folder in place.
+
 ## [2.0.0] - 2026-04-24
 
 ### Added

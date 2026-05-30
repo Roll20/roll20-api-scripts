@@ -16,9 +16,9 @@ This checklist validates `ConditionTracker.js` in a live Roll20 VTT game before 
    - Expected: API console logs readiness and GMs receive a ready whisper.
 2. Run `!condition-tracker --help`.
    - Expected: Help is whispered, no token selection is required, and the available translations table is present without a translation-file column.
-3. Confirm both the `ConditionTrackerWizard` and `ConditionTrackerMultiTarget` macros exist.
+3. Confirm all five macros exist: `ConditionTrackerWizard`, `ConditionTrackerMultiTarget`, `ConditionTrackerReportToken`, `ConditionTrackerSaved`, and `ConditionTrackerClassify`.
 4. Run `!condition-tracker --reinstall-macro`.
-   - Expected: Both macros are recreated and a confirmation whisper is sent to the GM.
+   - Expected: All five macros are recreated and a confirmation whisper is sent to the GM.
 5. Confirm the localized help handout exists and opens.
    - Expected: A single `Condition Tracker — Help & Reference` handout is present and reflects the current configured language.
 6. Run `!condition-tracker --reinstall-handout`.
@@ -85,6 +85,33 @@ This checklist validates `ConditionTracker.js` in a live Roll20 VTT game before 
    - Expected: GM receives a confirmation card listing the selected tokens.
 3. Click **Confirm target list**, then choose a condition and duration.
    - Expected: The condition is applied to every token in the list, each with its own chat announcement and GM summary whisper.
+
+## Report Token
+
+1. Select one or more tokens with active conditions on the board.
+2. Run `!condition-tracker --report-token`.
+   - Expected: GM receives a whisper for each selected token listing conditions applied to that token and conditions sourced by that token.
+3. Run the same command with no token selected.
+   - Expected: GM receives a warning to select at least one token first.
+
+## Saved Effects
+
+1. Select a token and run `!condition-tracker --saved`.
+   - Expected: Saved-effects card opens for that token, with an **Add Saved Effect** action.
+2. Run `!condition-tracker --saved add` and create one `public`, one `masked`, and one `gm` effect.
+   - Expected: Each effect is stored and shown with the correct visibility label.
+3. Promote the `public` effect with `!condition-tracker --saved promote <id> --visibility public`.
+   - Expected: A visible Turn Tracker row is added and normal apply messaging appears.
+4. Promote the `masked` effect with `!condition-tracker --saved promote <id> --visibility masked`.
+   - Expected: A visible row uses the masked/public label while full details remain in GM-only summaries.
+5. Promote the `gm` effect with `!condition-tracker --saved promote <id> --visibility gm`.
+   - Expected: No Turn Tracker row is created; GM receives confirmation that GM-only tracking is active.
+6. Advance initiative until the affected token reaches top of order.
+   - Expected: GM reminder whisper appears for `gm`/`masked` effects with action buttons.
+7. Use snooze actions (turn, rounds, combat), then advance turns.
+   - Expected: Reminders are suppressed for the selected scope and resume when scope expires or snooze is cleared.
+8. Delete a token that has only saved effects and no active tracked conditions.
+   - Expected: Its saved effects are removed immediately.
 
 ## Config and Cleanup
 
