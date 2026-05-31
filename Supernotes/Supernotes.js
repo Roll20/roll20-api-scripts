@@ -1,7 +1,3 @@
-var API_Meta = API_Meta||{};
-API_Meta.Supernotes={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
-{try{throw new Error('');}catch(e){API_Meta.Supernotes.offset=(parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/,'$1'),10)-3);}}
-
 
 // Supernotes_Templates can be called by other scripts. At this point ScriptCards is the only One Click script that does this.
 let Supernotes_Templates = {
@@ -740,7 +736,7 @@ Re-Run Configuration
     }
 
 function cleanText(text,buttonStyle){
-                            text = ((undefined !== text) ? text.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonStyle + "href='$2'>$1</a>").replace(/<p>/gm, "").replace(/<\/p>/gm, "<BR>").replace("padding:5px'></div><div>", "padding:5px'>") : "");
+                            text = ((undefined !== text) ? text.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.webp\)|\.jpeg\))/gim, "<a " + buttonStyle + "href='$2'>$1</a>").replace(/<p>/gm, "").replace(/<\/p>/gm, "<BR>").replace("padding:5px'></div><div>", "padding:5px'>") : "");
                         text = text.replace('<a href=\"http://journal.roll20.net', '<a ' + buttonStyle + ' href=\"http://journal.roll20.net').replace('<a href=\"https://app.roll20.net', '<a ' + buttonStyle + ' href=\"https://app.roll20.net');
                         text = text.replace('<a href=\"http', '<a ' + buttonStyle + ' href=\"http');
                         text = text    // Convert real newline characters to <BR>
@@ -758,9 +754,10 @@ return text;
 
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
-    const version = '0.2.7';
+    const version = '0.2.8';
     log('Supernotes v' + version + ' is ready! --offset ' + API_Meta.Supernotes.offset + 'To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
-//Changelong
+//Changelog
+// 0.2.8 Added webp support
 // 0.2.7 Added Templates for 2024 sheet, Dark and Light
 // 0.2.6 Reworked and updated Help system to use handout. Fixed logic issue Card output.
 // 0.2.5 fixed trailing space problem in command line, fixed linebreak issue.
@@ -990,8 +987,8 @@ whisper= whisper.replace(/<\/span><BR>/i,"")
 
 
                     } else {
-                        playerButton = ((undefined !== playerButton) ? playerButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
-                        handoutButton = ((undefined !== handoutButton) ? handoutButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
+                        playerButton = ((undefined !== playerButton) ? playerButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.webp\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
+                        handoutButton = ((undefined !== handoutButton) ? handoutButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.webp\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
 whisper = ((whisper.length>0) ? "<div style =" + whisperStyle + ">" + whisper + "</div>" : "");
 //log ("whisper = " + whisper);
                         return sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + whisper + playerButton + handoutButton + '}}');
@@ -1542,5 +1539,3 @@ if (option === 'card') {
         }
     });
 });
-
-{ try { throw new Error(''); } catch (e) { API_Meta.Supernotes.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.Supernotes.offset); } }
