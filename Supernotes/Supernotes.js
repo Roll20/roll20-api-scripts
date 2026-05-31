@@ -755,7 +755,7 @@ return text;
     const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
 
     const version = '0.2.8';
-    log('Supernotes v' + version + ' is ready! --offset ' + API_Meta.Supernotes.offset + 'To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
+    log('Supernotes v' + version + ' is ready!To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
 //Changelog
 // 0.2.8 Added webp support
 // 0.2.7 Added Templates for 2024 sheet, Dark and Light
