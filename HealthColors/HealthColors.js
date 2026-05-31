@@ -1,5 +1,5 @@
 // ===========================
-// === HealthColors v2.1.3 ===
+// === HealthColors v2.1.4 ===
 // ===========================
 
 // AUTHORS:
@@ -13,10 +13,10 @@ const HealthColors = (() => {
   'use strict';
 
   // ————— CONSTANTS —————
-  const VERSION = '2.1.3';
+  const VERSION = '2.1.4';
   const SCRIPT_NAME = 'HealthColors';
   const SCHEMA_VERSION = '1.1.0';
-  const UPDATED = '2026-05-22 16:45 UTC';
+  const UPDATED = '2026-05-31 13:05 UTC';
 
   // ————— DEFAULTS —————
   /**
@@ -233,8 +233,7 @@ const HealthColors = (() => {
     const normalizedPct = Math.max(0, Number(pct) || 0);
     if (normalizedPct > 100) return '#0000FF';
     const paletteName = state?.HealthColors?.colorPalette || 'default';
-    const { high, mid, low, dead } =
-      COLOR_PALETTES[paletteName] || COLOR_PALETTES.default;
+    const { high, mid, low, dead } = COLOR_PALETTES[paletteName] || COLOR_PALETTES.default;
     const rgbToHex = (rgb) =>
       // eslint-disable-next-line no-bitwise
       `#${((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1)}`;
@@ -243,8 +242,7 @@ const HealthColors = (() => {
       return rgbToHex(dead);
     }
 
-    const t =
-      normalizedPct >= 50 ? (normalizedPct - 50) / 50 : normalizedPct / 50;
+    const t = normalizedPct >= 50 ? (normalizedPct - 50) / 50 : normalizedPct / 50;
     const from = normalizedPct >= 50 ? mid : low;
     const to = normalizedPct >= 50 ? high : mid;
     const r = Math.round(from[0] + (to[0] - from[0]) * t);
@@ -262,17 +260,14 @@ const HealthColors = (() => {
    */
   function hexToRgb(hex) {
     const cleanHex = (hex || '').replace('#', '').trim();
-    const parts = /^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(
-      cleanHex,
-    );
+    const parts = /^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(cleanHex);
     if (parts) {
       const rgb = parts.slice(1).map((d) => Number.parseInt(d, 16));
       rgb.push(1);
       return rgb;
     }
     // Log invalid hex attempts if they appear non-empty
-    if (cleanHex)
-      log(`${SCRIPT_NAME}: hexToRgb received invalid hex: "${hex}"`);
+    if (cleanHex) log(`${SCRIPT_NAME}: hexToRgb received invalid hex: "${hex}"`);
     return [0, 0, 0, 0];
   }
 
@@ -348,9 +343,7 @@ const HealthColors = (() => {
    */
   function normalizePercent(value, fallback) {
     const parsed = Number.parseInt(value, 10);
-    return Number.isInteger(parsed) && parsed >= 0 && parsed <= 100
-      ? parsed
-      : fallback;
+    return Number.isInteger(parsed) && parsed >= 0 && parsed <= 100 ? parsed : fallback;
   }
 
   /**
@@ -450,10 +443,7 @@ const HealthColors = (() => {
 
     return function (character) {
       let attr =
-        findObjs(
-          { type: 'attribute', name: attribute, characterid: character.id },
-          { caseInsensitive: true },
-        )[0] ||
+        findObjs({ type: 'attribute', name: attribute, characterid: character.id }, { caseInsensitive: true })[0] ||
         createObj('attribute', {
           name: attribute,
           characterid: character.id,
@@ -537,8 +527,7 @@ const HealthColors = (() => {
    * @param {string} trackname - Track name or comma-separated list of track names.
    */
   function playDeath(trackname) {
-    const list =
-      trackname.indexOf(',') > 0 ? trackname.split(',') : [trackname];
+    const list = trackname.indexOf(',') > 0 ? trackname.split(',') : [trackname];
     const resolvedName = list[Math.floor(Math.random() * list.length)]; // NOSONAR — random track selection, not security-sensitive
     const track = findObjs({ type: 'jukeboxtrack', title: resolvedName })[0];
     if (track) {
@@ -575,25 +564,10 @@ const HealthColors = (() => {
       }
       return undefined;
     };
-    const startKeys = [
-      'startColour',
-      'startColor',
-      'startcolour',
-      'startcolor',
-    ];
+    const startKeys = ['startColour', 'startColor', 'startcolour', 'startcolor'];
     const endKeys = ['endColour', 'endColor', 'endcolour', 'endcolor'];
-    const startRndKeys = [
-      'startColourRandom',
-      'startColorRandom',
-      'startcolourrandom',
-      'startcolorrandom',
-    ];
-    const endRndKeys = [
-      'endColourRandom',
-      'endColorRandom',
-      'endcolourrandom',
-      'endcolorrandom',
-    ];
+    const startRndKeys = ['startColourRandom', 'startColorRandom', 'startcolourrandom', 'startcolorrandom'];
+    const endRndKeys = ['endColourRandom', 'endColorRandom', 'endcolourrandom', 'endcolorrandom'];
     const startClr = pick(fx, startKeys) ?? pick(m, startKeys);
     const endClr = pick(fx, endKeys) ?? pick(m, endKeys);
     const startClrRnd = pick(fx, startRndKeys) ?? pick(m, startRndKeys);
@@ -671,24 +645,14 @@ const HealthColors = (() => {
       state.HealthColors = { schemaVersion: SCHEMA_VERSION, version: VERSION };
     }
     Object.keys(DEFAULTS).forEach((key) => {
-      if (state.HealthColors[key] === undefined)
-        state.HealthColors[key] = DEFAULTS[key];
+      if (state.HealthColors[key] === undefined) state.HealthColors[key] = DEFAULTS[key];
     });
-    state.HealthColors.colorPalette = normalizePalette(
-      state.HealthColors.colorPalette,
-      DEFAULTS.colorPalette,
-    );
+    state.HealthColors.colorPalette = normalizePalette(state.HealthColors.colorPalette, DEFAULTS.colorPalette);
     if (typeof TokenMod !== 'undefined' && TokenMod.ObserveTokenChange) {
       TokenMod.ObserveTokenChange(handleToken);
     }
-    const fxHurt = findObjs(
-      { _type: 'custfx', name: '-DefaultHurt' },
-      { caseInsensitive: true },
-    )[0];
-    const fxHeal = findObjs(
-      { _type: 'custfx', name: '-DefaultHeal' },
-      { caseInsensitive: true },
-    )[0];
+    const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
+    const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
     if (!fxHurt) {
       gmWhisper('Creating Default Hurt FX');
       createObj('custfx', {
@@ -716,9 +680,7 @@ const HealthColors = (() => {
    */
   function buildDefaultFxDefinition(isHeal, baseDef) {
     const def = { ...baseDef };
-    const rgb = hexToRgb(
-      isHeal ? state.HealthColors.HealFX : state.HealthColors.HurtFX,
-    );
+    const rgb = hexToRgb(isHeal ? state.HealthColors.HealFX : state.HealthColors.HurtFX);
     def.startColour = rgb;
     def.startColor = rgb;
     def.endColour = rgb;
@@ -757,14 +719,8 @@ const HealthColors = (() => {
    * change so runtime spawns can use stable pre-synced definitions.
    */
   function syncDefaultFxObjects() {
-    const fxHurt = findObjs(
-      { _type: 'custfx', name: '-DefaultHurt' },
-      { caseInsensitive: true },
-    )[0];
-    const fxHeal = findObjs(
-      { _type: 'custfx', name: '-DefaultHeal' },
-      { caseInsensitive: true },
-    )[0];
+    const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
+    const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
     if (fxHeal) {
       const base = getFxDefinition(fxHeal) || DEFAULT_HEAL_FX;
       fxHeal.set({ definition: buildDefaultFxDefinition(true, base) });
@@ -780,10 +736,9 @@ const HealthColors = (() => {
    * Useful when legacy/stale custfx definitions exist from older script versions.
    */
   function resetDefaultFxObjects() {
-    const existing = findObjs(
-      { _type: 'custfx' },
-      { caseInsensitive: true },
-    ).filter((fx) => /-Default(Hurt|Heal)/i.test(fx.get('name') || ''));
+    const existing = findObjs({ _type: 'custfx' }, { caseInsensitive: true }).filter((fx) =>
+      /-Default(Hurt|Heal)/i.test(fx.get('name') || ''),
+    );
     existing.forEach((fx) => fx.remove());
     gmWhisper('Recreating Default Hurt/Heal FX');
     checkInstall();
@@ -825,18 +780,13 @@ const HealthColors = (() => {
    */
   function getBarHealth(obj, prev, update) {
     const barUsed = state.HealthColors.auraBar;
-    if (obj.get(`${barUsed}_max`) === '' && obj.get(`${barUsed}_value`) === '')
-      return null;
+    if (obj.get(`${barUsed}_max`) === '' && obj.get(`${barUsed}_value`) === '') return null;
     const maxValue = Number.parseInt(obj.get(`${barUsed}_max`), 10);
     const curValue = Number.parseInt(obj.get(`${barUsed}_value`), 10);
     const prevValue = prev[`${barUsed}_value`];
     if (Number.isNaN(maxValue) || Number.isNaN(curValue)) return null;
-    if (update !== 'YES' && Number.isNaN(Number.parseInt(prevValue, 10)))
-      return null;
-    const percReal = Math.max(
-      0,
-      Math.min(Math.round((curValue / maxValue) * 100), 100),
-    );
+    if (update !== 'YES' && Number.isNaN(Number.parseInt(prevValue, 10))) return null;
+    const percReal = Math.max(0, Math.min(Math.round((curValue / maxValue) * 100), 100));
     const markerColor = percentToHex(percReal);
     return { maxValue, curValue, prevValue, percReal, markerColor };
   }
@@ -882,8 +832,7 @@ const HealthColors = (() => {
       return;
     }
     const deadSfx = state.HealthColors.auraDeadFX;
-    if (deadSfx !== 'None' && curValue !== Number(prevValue))
-      playDeath(deadSfx);
+    if (deadSfx !== 'None' && curValue !== Number(prevValue)) playDeath(deadSfx);
     obj.set('status_dead', true);
   }
 
@@ -931,10 +880,7 @@ const HealthColors = (() => {
     const fxArray = [];
 
     if (isHeal) {
-      const aFX = findObjs(
-        { _type: 'custfx', name: '-DefaultHeal' },
-        { caseInsensitive: true },
-      )[0];
+      const aFX = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
       const def = getFxDefinition(aFX);
 
       if (def) {
@@ -953,10 +899,7 @@ const HealthColors = (() => {
       return fxArray;
     }
 
-    const aFX = findObjs(
-      { _type: 'custfx', name: '-DefaultHurt' },
-      { caseInsensitive: true },
-    )[0];
+    const aFX = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
     const def = getFxDefinition(aFX);
 
     if (!def) return fxArray;
@@ -1007,26 +950,18 @@ const HealthColors = (() => {
         }
 
         fxNames.forEach((fxName) => {
-          const custom = findObjs(
-            { _type: 'custfx', name: fxName.trim() },
-            { caseInsensitive: true },
-          )[0];
+          const custom = findObjs({ _type: 'custfx', name: fxName.trim() }, { caseInsensitive: true })[0];
           const customDef = getFxDefinition(custom);
 
           if (customDef) {
             fxArray.push(customDef);
           } else {
             const who = label ? ` (character: "${label}")` : '';
-            log(
-              `${SCRIPT_NAME}: Custom FX "${fxName.trim()}"${who} not found — check the USEBLOOD attribute.`,
-            );
+            log(`${SCRIPT_NAME}: Custom FX "${fxName.trim()}"${who} not found — check the USEBLOOD attribute.`);
             gmWhisper(
               `Custom FX "${fxName.trim()}"${who} not found. Fix the USEBLOOD attribute on that character. Falling back to default hurt FX.`,
             );
-            const fallbackFx = findObjs(
-              { _type: 'custfx', name: '-DefaultHurt' },
-              { caseInsensitive: true },
-            )[0];
+            const fallbackFx = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
             const fallbackDef = getFxDefinition(fallbackFx);
             if (fallbackDef) fxArray.push(fallbackDef);
           }
@@ -1051,10 +986,7 @@ const HealthColors = (() => {
   function spawnDefaultFxById(obj, isHeal, useBlood) {
     if (!(useBlood === 'DEFAULT' || useBlood === undefined)) return false;
     const fxName = isHeal ? '-DefaultHeal' : '-DefaultHurt';
-    const aFX = findObjs(
-      { _type: 'custfx', name: fxName },
-      { caseInsensitive: true },
-    )[0];
+    const aFX = findObjs({ _type: 'custfx', name: fxName }, { caseInsensitive: true })[0];
     if (!aFX) return false;
 
     spawnFx(obj.get('left'), obj.get('top'), aFX.id, obj.get('pageid'));
@@ -1071,37 +1003,18 @@ const HealthColors = (() => {
    * @param {number}           maxValue   - Maximum bar value.
    * @param {string}           [update]   - Pass 'YES' to suppress FX on forced refreshes.
    */
-  function maybeSpawnFX(
-    obj,
-    oCharacter,
-    curValue,
-    prevValue,
-    maxValue,
-    update,
-  ) {
-    if (curValue === Number(prevValue) || prevValue === '' || update === 'YES')
-      return;
+  function maybeSpawnFX(obj, oCharacter, curValue, prevValue, maxValue, update) {
+    if (curValue === Number(prevValue) || prevValue === '' || update === 'YES') return;
     const useBlood = oCharacter ? lookupUseBlood(oCharacter) : undefined;
-    if (!state.HealthColors.FX || useBlood === 'OFF' || useBlood === 'NO')
-      return;
+    if (!state.HealthColors.FX || useBlood === 'OFF' || useBlood === 'NO') return;
     const isHeal = curValue > Number(prevValue);
     const amount = Math.abs(curValue - Number(prevValue));
     const scale = obj.get('height') / 70;
-    const hitSize =
-      Math.max(Math.min((amount / maxValue) * 4, 1), 0.2) *
-      (randomInt(60, 100) / 100);
-    const fxLabel =
-      (oCharacter && oCharacter.get('name')) || obj.get('name') || '';
+    const hitSize = Math.max(Math.min((amount / maxValue) * 4, 1), 0.2) * (randomInt(60, 100) / 100);
+    const fxLabel = (oCharacter && oCharacter.get('name')) || obj.get('name') || '';
     if (spawnDefaultFxById(obj, isHeal, useBlood)) return;
     buildFXList(isHeal, useBlood, fxLabel).forEach((fx) =>
-      spawnFX(
-        scale,
-        hitSize,
-        obj.get('left'),
-        obj.get('top'),
-        fx,
-        obj.get('pageid'),
-      ),
+      spawnFX(scale, hitSize, obj.get('left'), obj.get('top'), fx, obj.get('pageid')),
     );
   }
 
@@ -1120,13 +1033,8 @@ const HealthColors = (() => {
       log(`${SCRIPT_NAME} ${VERSION}: state missing, reverting to defaults`);
       checkInstall();
     }
-    if (
-      state.HealthColors.auraColorOn !== true ||
-      obj.get('layer') !== 'objects'
-    )
-      return;
-    if (obj.get('represents') === '' && state.HealthColors.OneOff !== true)
-      return;
+    if (state.HealthColors.auraColorOn !== true || obj.get('layer') !== 'objects') return;
+    if (obj.get('represents') === '' && state.HealthColors.OneOff !== true) return;
     const barUsed = state.HealthColors.auraBar;
     if (obj.get(`${barUsed}_max`) === '') {
       clearAuras(obj);
@@ -1137,13 +1045,11 @@ const HealthColors = (() => {
     if (!health) return;
 
     const { maxValue, curValue, prevValue } = health;
-    const sizeChanged =
-      prev.width !== obj.get('width') || prev.height !== obj.get('height');
+    const sizeChanged = prev.width !== obj.get('width') || prev.height !== obj.get('height');
 
     // Only proceed if health changed, token was resized, or this is a forced update.
     // The size check ensures aura is re-applied when a token is resized, even without an HP change.
-    if (curValue === Number(prevValue) && update !== 'YES' && !sizeChanged)
-      return;
+    if (curValue === Number(prevValue) && update !== 'YES' && !sizeChanged) return;
 
     const oCharacter = getObj('character', obj.get('represents'));
     const typeConfig = resolveTypeConfig(oCharacter);
@@ -1305,10 +1211,7 @@ const HealthColors = (() => {
    * @returns {string} A styled span element.
    */
   function boolPill(value) {
-    return makePill(
-      value ? 'Yes' : 'No',
-      value ? '' : 'background-color:#A84D4D',
-    );
+    return makePill(value ? 'Yes' : 'No', value ? '' : 'background-color:#A84D4D');
   }
 
   /**
@@ -1473,10 +1376,7 @@ const HealthColors = (() => {
     if (msg.type !== 'api' || !command.includes('!AURA')) return;
 
     if (!playerIsGM(msg.playerid)) {
-      sendChat(
-        SCRIPT_NAME,
-        `/w ${msg.who} you must be a GM to use this command!`,
-      );
+      sendChat(SCRIPT_NAME, `/w ${msg.who} you must be a GM to use this command!`);
       return;
     }
 
@@ -1543,9 +1443,7 @@ const HealthColors = (() => {
             gmWhisper(`Health bar set to ${s.auraBar}. Forcing sync...`);
             menuForceUpdate();
           } else {
-            gmWhisper(
-              `Invalid bar "${parts[2] || ''}". Use !aura bar 1, !aura bar 2, or !aura bar 3.`,
-            );
+            gmWhisper(`Invalid bar "${parts[2] || ''}". Use !aura bar 1, !aura bar 2, or !aura bar 3.`);
           }
           break;
         case 'PERC':
