@@ -16,7 +16,7 @@ const Chronicle = (() => {
   const lastUpdate = Math.floor(Date.now() / 1000);
   const schemaVersion = 0.1;
 
-  const DEBUG = true;
+  const DEBUG = false;
   const LOGGING = false;
 
   const HANDOUT_PREFIX = 'Chronicle';
@@ -397,11 +397,11 @@ const Chronicle = (() => {
         mapped[borderKey] = override.border;
       }
       
-      // Handle individual border properties
-      if (override.borderLeft) mapped['border-left'] = override.borderLeft;
-      if (override.borderTop) mapped['border-top'] = override.borderTop;
-      if (override.borderRight) mapped['border-right'] = override.borderRight;
-      if (override.borderBottom) mapped['border-bottom'] = override.borderBottom;
+      // Handle individual border properties (kebab-case)
+      if (override['border-left']) mapped['border-left'] = override['border-left'];
+      if (override['border-top']) mapped['border-top'] = override['border-top'];
+      if (override['border-right']) mapped['border-right'] = override['border-right'];
+      if (override['border-bottom']) mapped['border-bottom'] = override['border-bottom'];
 
       return Object.entries(mapped).map(([k, v]) => `${k}:${v}`).join('; ') + ';';
     };
@@ -881,6 +881,10 @@ const Chronicle = (() => {
   // Default Calendars
   // ==================================================
 
+  // ==================================================
+  // Default Calendars
+  // ==================================================
+
   const DefaultCalendars = {
 
     gregorian: () => {
@@ -1139,6 +1143,7 @@ const Chronicle = (() => {
     }
 
   };
+  
 
   // ==================================================
   // Parser
@@ -1396,19 +1401,27 @@ const Chronicle = (() => {
 
       let dayCount = 0;
 
-      // Add full years
-      for (let y = 1; y < dateRef.year; y++) {
-        dayCount += DateUtils.getDaysInYear(y, calendar);
-      }
-
-      // Add full months in current year
-      if (dateRef.month) {
-        for (let m = 1; m < dateRef.month; m++) {
-          dayCount += DateUtils.getDaysInMonth(m, dateRef.year, calendar);
+      // Count all complete years before the current year
+      if (dateRef.year > 0) {
+        // Positive years: count from year 1 to year-1
+        for (let y = 1; y < dateRef.year; y++) {
+          dayCount += DateUtils.getDaysInYear(y, calendar);
+        }
+      } else if (dateRef.year < 0) {
+        // Negative years: count backwards from year -1
+        for (let y = -1; y >= dateRef.year; y--) {
+          dayCount -= DateUtils.getDaysInYear(y, calendar);
         }
       }
+      // Year 0 is treated as day 0, no offset needed
 
-      // Add days in current month
+      // Add complete months in current year (always add, regardless of year sign)
+      for (let m = 1; m < dateRef.month; m++) {
+        const daysInMonth = DateUtils.getDaysInMonth(m, dateRef.year, calendar);
+        dayCount += daysInMonth;
+      }
+
+      // Add days in current month (always add, regardless of year sign)
       if (dateRef.day) {
         dayCount += dateRef.day;
       }
@@ -1520,40 +1533,54 @@ const Chronicle = (() => {
     // Calculate elapsed time between two dates
     // Returns object with {years, months, days, isNegative} for display
     getElapsedTime: (fromDate, toDate, calendar) => {
-      const fromAbsolute = DateUtils.toAbsoluteDay(fromDate, calendar);
-      const toAbsolute = DateUtils.toAbsoluteDay(toDate, calendar);
+      if (!calendar || !fromDate || !toDate) return { years: 0, months: 0, days: 0, isNegative: false };
+
+      // Determine direction (which date is earlier)
+      let isNegative = false;
+      let start = fromDate;
+      let end = toDate;
       
-      let totalDays = toAbsolute - fromAbsolute;
-      const isNegative = totalDays < 0;
-      totalDays = Math.abs(totalDays);
+      if (toDate.year < fromDate.year ||
+          (toDate.year === fromDate.year && toDate.month < fromDate.month) ||
+          (toDate.year === fromDate.year && toDate.month === fromDate.month && toDate.day < fromDate.day)) {
+        isNegative = true;
+        start = toDate;
+        end = fromDate;
+      }
       
-      // For events on first day of year, just return years
-      const isFirstOfYear = toDate.month === 1 && toDate.day === 1;
+      // Calculate the difference
+      let years = end.year - start.year;
+      let months = end.month - start.month;
+      let days = end.day - start.day;
       
-      if (isFirstOfYear && totalDays >= 365) {
-        const years = Math.floor(totalDays / 365);
+      // Adjust if days went negative
+      if (days < 0) {
+        months--;
+        if (start.month > 0 && start.month <= calendar.months.length) {
+          days += DateUtils.getDaysInMonth(start.month, start.year, calendar);
+        } else {
+          days += 30; // fallback
+        }
+      }
+      
+      // Adjust if months went negative
+      if (months < 0) {
+        years--;
+        months += calendar.months.length;
+      }
+      
+      // Special case: if both dates are first day of their respective years, show only years
+      if (start.day === 1 && start.month === 1 && end.day === 1 && end.month === 1) {
         return { years: years, months: 0, days: 0, isNegative: isNegative, isFirstOfYear: true };
       }
       
-      // Calculate years, months, days
-      let years = 0;
-      let months = 0;
-      let days = totalDays;
-      
-      // Calculate years
-      const daysInYear = DateUtils.getDaysInYear(fromDate.year, calendar);
-      if (days >= daysInYear) {
-        years = Math.floor(days / daysInYear);
-        days = days % daysInYear;
-      }
-      
-      // Calculate months (approximate - use average of 30 days)
-      if (days >= 30) {
-        months = Math.floor(days / 30);
-        days = days % 30;
-      }
-      
-      return { years: years, months: months, days: days, isNegative: isNegative, isFirstOfYear: false };
+      return { 
+        years: years, 
+        months: months, 
+        days: days, 
+        isNegative: isNegative,
+        isFirstOfYear: false
+      };
     }
 
   };
@@ -2546,7 +2573,6 @@ const Chronicle = (() => {
       html += '</p>';
       html += `<p><strong>Days in Year:</strong> ${calendar.daysInYear} `;
       html += Output.makeButton('Edit', `!chr --savedaysinyear ?{Days in Year|${calendar.daysInYear}}`, CSS_CURRENT.buttonSmall);
-      html += ` <i> Note: Do not include intercalery days, (those which do not receive a week day)</i>`;
       html += '</p>';
       html += `<p><strong>Days in Week:</strong> ${calendar.weeks.daysInWeek} `;
       html += Output.makeButton('Edit', `!chr --savedaysinweek ?{Days in Week|${calendar.weeks.daysInWeek}}`, CSS_CURRENT.buttonSmall);
