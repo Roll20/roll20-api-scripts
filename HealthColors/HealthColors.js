@@ -16,7 +16,7 @@ const HealthColors = (() => {
   const VERSION = '2.1.4';
   const SCRIPT_NAME = 'HealthColors';
   const SCHEMA_VERSION = '1.1.0';
-  const UPDATED = '2026-05-31 13:05 UTC';
+  const UPDATED = '2026-05-31 13:45 UTC';
 
   // ————— DEFAULTS —————
   /**
@@ -631,6 +631,23 @@ const HealthColors = (() => {
     return null;
   }
 
+  // ————— EVENT DEDUPE STATE —————
+
+  // Tokens recently handled via change:attribute — suppresses duplicate FX in change:graphic and TokenMod observers.
+  const recentAttrFires = new Set();
+
+  /**
+   * Shared token-change wrapper used by both Roll20 change:graphic and TokenMod.
+   * This keeps FX suppression consistent when a linked HP attribute update has
+   * already been processed through the attribute listener.
+   *
+   * @param {object} obj - Roll20 token graphic object.
+   * @param {object} prev - Previous token snapshot.
+   */
+  function handleTokenChange(obj, prev) {
+    handleToken(obj, prev, recentAttrFires.has(obj.id) ? 'YES' : undefined);
+  }
+
   // ————— STATE / INSTALL —————
   /**
    * Initializes or migrates persisted state, applies all default values, registers
@@ -649,7 +666,7 @@ const HealthColors = (() => {
     });
     state.HealthColors.colorPalette = normalizePalette(state.HealthColors.colorPalette, DEFAULTS.colorPalette);
     if (typeof TokenMod !== 'undefined' && TokenMod.ObserveTokenChange) {
-      TokenMod.ObserveTokenChange(handleToken);
+      TokenMod.ObserveTokenChange(handleTokenChange);
     }
     const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
     const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
@@ -822,9 +839,9 @@ const HealthColors = (() => {
    * Manages the dead-status marker and plays a death sound when a token reaches 0 HP.
    * Extracted from applyAuraAndDead to reduce nesting depth.
    *
-   * @param {object} obj       - Roll20 token graphic object.
-   * @param {number} curValue  - Current bar value.
-   * @param {number} prevValue - Previous bar value (may be a string).
+   * @param {object}        obj       - Roll20 token graphic object.
+   * @param {number}        curValue  - Current bar value.
+   * @param {number|string} prevValue - Previous bar value.
    */
   function applyDeadStatus(obj, curValue, prevValue) {
     if (curValue > 0) {
@@ -1182,7 +1199,7 @@ const HealthColors = (() => {
   /**
    * Builds a toggle-style button that shows red when the value is false/off.
    *
-   * @param {boolean} value - Current boolean state (true = on/green, false = off/red).
+   * @param {boolean} value - Current boolean state (true = on/default blue, false = off/red).
    * @param {string}  href  - Roll20 API command to execute on click.
    * @returns {string} An HTML anchor string.
    */
@@ -1206,7 +1223,8 @@ const HealthColors = (() => {
   }
 
   /**
-   * Read-only pill counterpart to toggleBtn: green background for true, red for false.
+   * Read-only pill counterpart to toggleBtn: default blue background for true, red for false.
+   *
    * @param {boolean} value - Current boolean state.
    * @returns {string} A styled span element.
    */
@@ -1408,11 +1426,10 @@ const HealthColors = (() => {
     if (TOGGLES[option]) {
       s[TOGGLES[option]] = !s[TOGGLES[option]];
     } else if (STRINGS[option]) {
-      const key = STRINGS[option];
-      if (key === 'auraDeadFX') {
-        s[key] = normalizeTrackName(parts[2], s[key]);
+      if (option === 'DEADFX') {
+        s[STRINGS[option]] = normalizeTrackName(parts.slice(2).join(' '), s[STRINGS[option]]);
       } else {
-        s[key] = normalizeYesNoOff(parts[2], s[key]);
+        s[STRINGS[option]] = normalizeYesNoOff(parts[2], s[STRINGS[option]]);
       }
     } else if (FLOATS[option]) {
       s[FLOATS[option]] = normalizePositiveNumber(parts[2], s[FLOATS[option]]);
@@ -1503,22 +1520,91 @@ const HealthColors = (() => {
   }
 
   // ————— EVENT HANDLERS —————
+
+  /**
+   * Processes one token when its linked HP attribute changes via an external script.
+   * Constructs a fakePrev with the old HP value so handleToken sees a real delta
+   * (enabling FX), then marks the token in recentAttrFires so any subsequent
+   * change:graphic for the same token skips redundant particle spawning.
+   *
+   * Waits 50 ms before acting so Roll20 has time to propagate the attribute change
+   * to the token bar. At fire time the live bar value is compared against the expected
+   * old and new values: if Roll20 already propagated it (liveVal === newVal) we skip
+   * the redundant set; if a concurrent change moved it to a third value we bail
+   * entirely to avoid overwriting that later change.
+   *
+   * @param {string}        barUsed - Configured health bar property name (e.g. 'bar1').
+   * @param {string|number} oldVal  - Previous attribute current value.
+   * @param {string|number} newVal  - New attribute current value; written to the token bar
+   *                                  only when Roll20 has not yet propagated it.
+   * @param {object}        token   - Roll20 token graphic object (snapshot at event time).
+   */
+  function applyAttrHpChange(barUsed, oldVal, newVal, token) {
+    const fakePrev = deepClone(token);
+    fakePrev[`${barUsed}_value`] = oldVal;
+
+    recentAttrFires.add(token.id);
+
+    setTimeout(() => {
+      const liveToken = getObj('graphic', token.id);
+      if (!liveToken) return;
+      const liveVal = Number(liveToken.get(`${barUsed}_value`));
+      const expectedOld = Number(oldVal);
+      const expectedNew = Number(newVal);
+      // A concurrent change resolved to a third value — bail to avoid overwriting it.
+      if (liveVal !== expectedNew && liveVal !== expectedOld) return;
+      if (liveVal === expectedOld) liveToken.set(`${barUsed}_value`, expectedNew);
+      handleToken(liveToken, fakePrev);
+    }, 50);
+
+    setTimeout(() => recentAttrFires.delete(token.id), 250);
+  }
+
+  /**
+   * Registers a change:attribute listener that catches HP changes made by scripts
+   * such as AlterBars that modify character attributes directly rather than the
+   * token bar. Those scripts fire change:attribute but may not fire change:graphic
+   * with a correct prev value, so we construct a fakePrev from attr's own prev.current
+   * and call handleToken ourselves with a real HP delta (enabling FX).
+   * The token ID is added to recentAttrFires so that if change:graphic fires
+   * afterwards it receives update='YES', skipping duplicate particle spawning.
+   */
+  function registerAttributeListener() {
+    on('change:attribute', (attr, prev) => {
+      const s = state.HealthColors;
+      if (!s?.auraColorOn) return;
+      const barUsed = s.auraBar;
+      const charId = attr.get('characterid');
+      if (!charId) return;
+      const oldVal = prev.current;
+      const newVal = attr.get('current');
+      if (oldVal === newVal) return;
+      findObjs({ type: 'graphic', represents: charId })
+        .filter((t) => t.get('layer') === 'objects' && t.get(`${barUsed}_link`) === attr.id)
+        .forEach((token) => applyAttrHpChange(barUsed, oldVal, newVal, token));
+    });
+  }
+
   /**
    * Registers all Roll20 event listeners for the script.
-   * - chat:message   → handleInput  (command processing)
-   * - change:graphic → handleToken  (live HP changes and token resizes)
-   * - add:token      → handleToken  (with 400ms delay to allow token data to settle)
+   * - chat:message     → handleInput       (command processing)
+   * - change:graphic   → handleTokenChange (live HP changes and token resizes; suppresses
+   *                                         FX when the attribute listener already fired)
+   * - change:attribute → registerAttributeListener (AlterBars / indirect HP changes)
+   * - add:graphic      → handleToken       (with 400ms delay to allow token data to settle)
    */
   function registerEventHandlers() {
     on('chat:message', handleInput);
-    on('change:graphic', handleToken);
-    on('add:token', (t) => {
+    on('change:graphic', handleTokenChange);
+    on('add:graphic', (t) => {
       setTimeout(() => {
         const token = getObj('graphic', t.id);
+        if (!token) return;
         const prev = deepClone(token);
         handleToken(token, prev, 'YES');
       }, 400);
     });
+    registerAttributeListener();
   }
 
   // ————— BOOTSTRAP —————
