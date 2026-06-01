@@ -1,6 +1,6 @@
 // =============================================================================
-// Sequence v0.1.0
-// Last Updated: 2025-05-31
+// Sequence v0.2.0
+// Last Updated: 2026-06-01
 // Author: Kenan Millet
 //
 // Description:
@@ -2312,7 +2312,12 @@ var Sequence = Sequence || (() => {
     // Playback Engine
     // =========================================================================
 
-    const PLAYBACK_FPS = 30;
+    const PLAYBACK_FPS_DEFAULT = 30;
+    const PLAYBACK_FPS = (() => {
+        const cfg = typeof globalconfig !== 'undefined' && globalconfig.sequence;
+        const val = cfg && parseInt(cfg['Playback FPS'], 10);
+        return (val && val > 0) ? val : PLAYBACK_FPS_DEFAULT;
+    })();
     const PLAYBACK_INTERVAL_MS = Math.round(1000 / PLAYBACK_FPS);
 
     /**
