@@ -2,3 +2,6 @@
 .idea
 **/node_modules
 **/coverage/**
+*.swp
+*.swo
+*.swn
