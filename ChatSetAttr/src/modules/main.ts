@@ -17,13 +17,18 @@ function broadcastHeader() {
   log(`${scriptJson.name} v${scriptJson.version} by ${scriptJson.authors.join(", ")} loaded.`);
 };
 
-function checkDependencies() {
+function checkDependencies(): boolean {
+  const errors: string[] = [];
   if (libSmartAttributes === undefined) {
-    throw new Error("libSmartAttributes is required but not found. Please ensure the libSmartAttributes script is installed.");
+    errors.push("libSmartAttributes is required but not found. Please ensure the libSmartAttributes script is installed.");
   }
   if (libUUID === undefined) {
-    throw new Error("libUUID is required but not found. Please ensure the libUUID script is installed.");
+    errors.push("libUUID is required but not found. Please ensure the libUUID script is installed.");
   }
+  if (errors.length > 0) {
+    sendErrors("gm", "Missing Dependencies", errors);
+  }
+  return errors.length === 0;
 };
 
 async function acceptMessage(msg: Roll20ChatMessage) {
@@ -47,17 +52,18 @@ async function acceptMessage(msg: Roll20ChatMessage) {
 
   // Check Config and Permissions
   const config = getConfig();
+  const isAPI = "API" === msg.playerid;
   const isGM = playerIsGM(msg.playerid);
 
-  if (options.evaluate && !isGM && !config.playersCanEvaluate) {
+  if (options.evaluate && !isAPI && !isGM && !config.playersCanEvaluate) {
     return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors);
   }
 
-  if (targeting.includes("party") && !isGM && !config.playersCanTargetParty) {
+  if (targeting.includes("party") && !isAPI && !isGM && !config.playersCanTargetParty) {
     return errorOut("You do not have permission to target the party.", msg.playerid, errors);
   }
 
-  if((operation === "modattr" || operation === "modbattr") && !isGM && !config.playersCanModify) {
+  if((operation === "modattr" || operation === "modbattr") && !isAPI && !isGM && !config.playersCanModify) {
     return errorOut("You do not have permission to modify attributes.", msg.playerid, errors);
   }
 
@@ -136,7 +142,9 @@ export function generateRequest(
 
 export function registerHandlers() {
   broadcastHeader();
-  checkDependencies();
+  if (!checkDependencies()) {
+    return;
+  }
 
   on("chat:message", (msg) => {
     if (msg.type !== "api") {
@@ -172,8 +180,9 @@ export function registerHandlers() {
     }
     const validMessage = validateMessage(msg.content);
     if (!validMessage) return;
-    checkPermissions(msg.playerid);
-    acceptMessage(msg);
+    if (checkPermissions(msg.playerid)) {
+      acceptMessage(msg);
+    }
   });
 };
 

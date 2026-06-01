@@ -39,16 +39,16 @@ describe("chat", () => {
       expect(result).toBe("John Doe");
     });
 
-    it("should return 'Unknown Player' when player does not exist", () => {
+    it("should return undefined when player does not exist", () => {
       mockGetObj.mockReturnValue(null);
 
       const result = getPlayerName("nonexistent");
 
       expect(mockGetObj).toHaveBeenCalledWith("player", "nonexistent");
-      expect(result).toBe("Unknown Player");
+      expect(result).toBeUndefined();
     });
 
-    it("should return 'Unknown Player' when player exists but has no display name", () => {
+    it("should return undefined when player exists but has no display name", () => {
       mockPlayer.get.mockReturnValue(null);
       mockGetObj.mockReturnValue(mockPlayer);
 
@@ -56,25 +56,25 @@ describe("chat", () => {
 
       expect(mockGetObj).toHaveBeenCalledWith("player", "player456");
       expect(mockPlayer.get).toHaveBeenCalledWith("_displayname");
-      expect(result).toBe("Unknown Player");
+      expect(result).toBeUndefined();
     });
 
-    it("should return 'Unknown Player' when player exists but display name is undefined", () => {
+    it("should return undefined when player exists but display name is undefined", () => {
       mockPlayer.get.mockReturnValue(undefined);
       mockGetObj.mockReturnValue(mockPlayer);
 
       const result = getPlayerName("player789");
 
-      expect(result).toBe("Unknown Player");
+      expect(result).toBeUndefined();
     });
 
-    it("should return empty string when player has empty display name", () => {
+    it("should return undefined when player has empty display name", () => {
       mockPlayer.get.mockReturnValue("");
       mockGetObj.mockReturnValue(mockPlayer);
 
       const result = getPlayerName("player101");
 
-      expect(result).toBe("");
+      expect(result).toBeUndefined();
     });
 
     it("should handle display names with special characters", () => {
@@ -139,14 +139,14 @@ describe("chat", () => {
       expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"Test Player\" formatted-chat-message");
     });
 
-    it("should handle unknown player correctly", () => {
+    it("should whisper to GM when player is unknown", () => {
       mockGetObj.mockReturnValue(null);
       const messages = ["Test message"];
 
       sendMessages("unknown-player", "Test Header", messages);
 
       expect(mockCreateChatMessage).toHaveBeenCalledWith("Test Header", messages);
-      expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"Unknown Player\" formatted-chat-message");
+      expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"GM\" formatted-chat-message");
     });
 
     it("should handle player names with quotes", () => {
@@ -220,14 +220,14 @@ describe("chat", () => {
       expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"Test Player\" formatted-error-message");
     });
 
-    it("should handle unknown player correctly", () => {
+    it("should whisper errors to GM when player is unknown", () => {
       mockGetObj.mockReturnValue(null);
       const errors = ["Test error"];
 
       sendErrors("unknown-player", "Error Header", errors);
 
       expect(mockCreateErrorMessage).toHaveBeenCalledWith("Error Header", errors);
-      expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"Unknown Player\" formatted-error-message");
+      expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"GM\" formatted-error-message");
     });
 
     it("should handle empty header", () => {

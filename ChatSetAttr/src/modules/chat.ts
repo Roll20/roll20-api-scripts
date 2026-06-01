@@ -3,11 +3,11 @@ import { createChatMessage, createErrorMessage } from "../templates/messages";
 import { createNotifyMessage } from "../templates/notification";
 import { buttonStyleBase } from "../templates/styles";
 import { createWelcomeMessage } from "../templates/welcome";
-import { s } from "../utils/chat";
+//import { s } from "../utils/chat";
 
-export function getPlayerName(playerID: string): string {
+export function getPlayerName(playerID: string): string | undefined {
   const player = getObj("player", playerID);
-  return player?.get("_displayname") ?? "Unknown Player";
+  return player?.get("_displayname") || undefined;
 };
 
 export function sendMessages(
@@ -17,7 +17,8 @@ export function sendMessages(
   from: string = "ChatSetAttr",
 ): void {
   const newMessage = createChatMessage(header, messages);
-  sendChat(from, `/w "${getPlayerName(playerID)}" ${newMessage}`);
+  const player = getPlayerName(playerID);
+  sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
 };
 
 export function sendErrors(
@@ -28,7 +29,8 @@ export function sendErrors(
 ): void {
   if (errors.length === 0) return;
   const newMessage = createErrorMessage(header, errors);
-  sendChat(from, `/w "${getPlayerName(playerID)}" ${newMessage}`);
+  const player = getPlayerName(playerID);
+  sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
 };
 
 export function sendDelayMessage(silent: boolean = false): void {

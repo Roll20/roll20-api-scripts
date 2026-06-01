@@ -1,10 +1,12 @@
 import { vi } from "vitest";
+import { resetBeaconAttributes } from "./beaconAttributes.mock";
 import { debugLog, debugWarn } from "./utility.mock";
 
 const allObjects: AnyRoll20Object[] = [];
 
 export function resetAllObjects(): void {
   allObjects.length = 0;
+  resetBeaconAttributes();
 }
 
 function createRandomId(): string {

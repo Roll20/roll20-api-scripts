@@ -6,15 +6,16 @@ const permissions = {
   canModify: false,
 };
 
-export function checkPermissions(playerID: string) {
+export function checkPermissions(playerID: string): boolean {
   const player = getObj("player", playerID);
   if (!player) {
-    if('API' === playerID) {
+    if("API" === playerID) {
       // allow API full access
       setPermissions(playerID,true,true);
-      return;
+      return true;
     }
-    throw new Error(`Player with ID ${playerID} not found.`);
+    log(`Player with ID ${playerID} not found.`);
+    return false;
   }
   const isGM = playerIsGM(playerID);
   const config = getConfig();
@@ -22,6 +23,7 @@ export function checkPermissions(playerID: string) {
   const canModify = isGM || playersCanModify;
 
   setPermissions(playerID, isGM, canModify);
+  return true;
 };
 
 export function setPermissions(playerID: string, isGM: boolean, canModify: boolean) {
@@ -35,6 +37,10 @@ export function getPermissions() {
 };
 
 export function checkPermissionForTarget(playerID: string, target: string): boolean {
+  const isAPI = "API" == playerID;
+  if (isAPI) {
+    return true;
+  }
   const player = getObj("player", playerID);
   if (!player) {
     return false;

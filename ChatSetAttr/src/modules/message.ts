@@ -37,11 +37,17 @@ export function extractMessageFromRollTemplate(msg: Roll20ChatMessage): string |
 };
 
 // #region Message Parsing
-function extractOperation(parts: string[]): Command {
-  if (parts.length === 0) throw new Error("Empty command");
+function extractOperation(parts: string[]): Command | undefined {
+  if (parts.length === 0) {
+    log("Empty Command.");
+    return;
+  }
   const command = parts.shift()!.slice(1); // remove the leading '!'
   const isValidCommand = isCommand(command);
-  if (!isValidCommand) throw new Error(`Invalid command: ${command}`);
+  if (!isValidCommand) {
+    log("Invalid Command.");
+    return;
+  }
   return command;
 };
 
@@ -69,6 +75,9 @@ function includesATarget(part: string): boolean {
 export function parseMessage(content: string) {
   const parts = splitMessage(content);
   let operation = extractOperation(parts);
+  if (!operation) {
+    return;
+  }
 
   const targeting: string[] = [];
   const options: OptionsRecord = {} as OptionsRecord;

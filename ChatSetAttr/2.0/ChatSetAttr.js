@@ -161,19 +161,22 @@ var ChatSetAttr = (function (exports) {
                 h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout"))));
     }
 
+    //import { s } from "../utils/chat";
     function getPlayerName(playerID) {
         const player = getObj("player", playerID);
-        return player?.get("_displayname") ?? "Unknown Player";
+        return player?.get("_displayname") || undefined;
     }
     function sendMessages(playerID, header, messages, from = "ChatSetAttr") {
         const newMessage = createChatMessage(header, messages);
-        sendChat(from, `/w "${getPlayerName(playerID)}" ${newMessage}`);
+        const player = getPlayerName(playerID);
+        sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
     }
     function sendErrors(playerID, header, errors, from = "ChatSetAttr") {
         if (errors.length === 0)
             return;
         const newMessage = createErrorMessage(header, errors);
-        sendChat(from, `/w "${getPlayerName(playerID)}" ${newMessage}`);
+        const player = getPlayerName(playerID);
+        sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
     }
     function sendDelayMessage(silent = false) {
         if (silent)
@@ -1285,12 +1288,16 @@ var ChatSetAttr = (function (exports) {
     }
     // #region Message Parsing
     function extractOperation(parts) {
-        if (parts.length === 0)
-            throw new Error("Empty command");
+        if (parts.length === 0) {
+            log("Empty Command.");
+            return;
+        }
         const command = parts.shift().slice(1); // remove the leading '!'
         const isValidCommand = isCommand(command);
-        if (!isValidCommand)
-            throw new Error(`Invalid command: ${command}`);
+        if (!isValidCommand) {
+            log("Invalid Command.");
+            return;
+        }
         return command;
     }
     function extractReferences(value) {
@@ -1317,6 +1324,9 @@ var ChatSetAttr = (function (exports) {
     function parseMessage(content) {
         const parts = splitMessage(content);
         let operation = extractOperation(parts);
+        if (!operation) {
+            return;
+        }
         const targeting = [];
         const options = {};
         const changes = [];
@@ -1553,13 +1563,20 @@ var ChatSetAttr = (function (exports) {
     function checkPermissions(playerID) {
         const player = getObj("player", playerID);
         if (!player) {
-            throw new Error(`Player with ID ${playerID} not found.`);
+            if ("API" === playerID) {
+                // allow API full access
+                setPermissions(playerID, true, true);
+                return true;
+            }
+            log(`Player with ID ${playerID} not found.`);
+            return false;
         }
         const isGM = playerIsGM(playerID);
         const config = getConfig();
         const playersCanModify = config.playersCanModify || false;
         const canModify = isGM || playersCanModify;
         setPermissions(playerID, isGM, canModify);
+        return true;
     }
     function setPermissions(playerID, isGM, canModify) {
         permissions.playerID = playerID;
@@ -1570,6 +1587,10 @@ var ChatSetAttr = (function (exports) {
         return { ...permissions };
     }
     function checkPermissionForTarget(playerID, target) {
+        const isAPI = "API" == playerID;
+        if (isAPI) {
+            return true;
+        }
         const player = getObj("player", playerID);
         if (!player) {
             return false;
@@ -1839,12 +1860,17 @@ var ChatSetAttr = (function (exports) {
         log(`${scriptJson.name} v${scriptJson.version} by ${scriptJson.authors.join(", ")} loaded.`);
     }
     function checkDependencies() {
+        const errors = [];
         if (libSmartAttributes === undefined) {
-            throw new Error("libSmartAttributes is required but not found. Please ensure the libSmartAttributes script is installed.");
+            errors.push("libSmartAttributes is required but not found. Please ensure the libSmartAttributes script is installed.");
         }
         if (libUUID === undefined) {
-            throw new Error("libUUID is required but not found. Please ensure the libUUID script is installed.");
+            errors.push("libUUID is required but not found. Please ensure the libUUID script is installed.");
         }
+        if (errors.length > 0) {
+            sendErrors("gm", "Missing Dependencies", errors);
+        }
+        return errors.length === 0;
     }
     async function acceptMessage(msg) {
         // State
@@ -1857,14 +1883,15 @@ var ChatSetAttr = (function (exports) {
         startTimer("chatsetattr", 8000, () => sendDelayMessage(options.silent));
         // Check Config and Permissions
         const config = getConfig();
+        const isAPI = "API" === msg.playerid;
         const isGM = playerIsGM(msg.playerid);
-        if (options.evaluate && !isGM && !config.playersCanEvaluate) {
+        if (options.evaluate && !isAPI && !isGM && !config.playersCanEvaluate) {
             return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors);
         }
-        if (targeting.includes("party") && !isGM && !config.playersCanTargetParty) {
+        if (targeting.includes("party") && !isAPI && !isGM && !config.playersCanTargetParty) {
             return errorOut("You do not have permission to target the party.", msg.playerid, errors);
         }
-        if ((operation === "modattr" || operation === "modbattr") && !isGM && !config.playersCanModify) {
+        if ((operation === "modattr" || operation === "modbattr") && !isAPI && !isGM && !config.playersCanModify) {
             return errorOut("You do not have permission to modify attributes.", msg.playerid, errors);
         }
         // Preprocess
@@ -1927,7 +1954,9 @@ var ChatSetAttr = (function (exports) {
     }
     function registerHandlers() {
         broadcastHeader();
-        checkDependencies();
+        if (!checkDependencies()) {
+            return;
+        }
         on("chat:message", (msg) => {
             if (msg.type !== "api") {
                 const inlineMessage = extractMessageFromRollTemplate(msg);
@@ -1965,8 +1994,9 @@ var ChatSetAttr = (function (exports) {
             const validMessage = validateMessage(msg.content);
             if (!validMessage)
                 return;
-            checkPermissions(msg.playerid);
-            acceptMessage(msg);
+            if (checkPermissions(msg.playerid)) {
+                acceptMessage(msg);
+            }
         });
     }
 
