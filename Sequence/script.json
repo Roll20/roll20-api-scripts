@@ -1,0 +1,30 @@
+{
+  "name": "Sequence",
+  "script": "Sequence.js",
+  "version": "0.2.0",
+  "previousversions": [],
+  "description": "# Sequence\n\nA general-purpose keyframe animation engine for Roll20 tokens. Record token movements and attribute changes in real time, then play them back on any token with smooth interpolation, easing, looping, speed control, and expression-driven values.\n\n## Features\n\n- **Record** — Move a token and change its attributes while Sequence captures each change as a timestamped keyframe.\n- **Playback** — Replay recordings on any token with smooth lerp interpolation between keyframes.\n- **Easing** — Per-attribute easing curves: `linear`, `sine`, `quad`, `cubic`, `expo`, `circle`, `power(n)`, `bezier(x1,y1,x2,y2)` (CSS cubic-bezier). Ease-in, ease-out, and ease-in-out all supported.\n- **Expressions** — Keyframe values can be expressions: `+rand(-140,140)`, `=clamp(prev+50,orig-200,orig+200)`, `=color.hsl(rand(0,360),100,50)`.\n- **Looping** — Loop indefinitely or N times, with `reset` (snap back) or `accumulate` (each cycle builds on the last) modes.\n- **Portable** — Recordings stored in `[Sequence] name` handouts. Copy a handout to another campaign to transfer an animation.\n- **Extensible** — External scripts can register custom attributes, expression functions, constants, and easing curves.\n\n## Quick Start\n\n1. Select a token and type `!sequence record my-animation`\n2. Move the token and change its attributes\n3. Type `!sequence stop` — the recording saves automatically\n4. Select any token and type `!sequence play my-animation`\n\n## Commands\n\n`!sequence record [name] [--attrs a,b,...]` — Start recording selected token(s)\n\n`!sequence stop` — Stop and save recording\n\n`!sequence pause` / `!sequence resume` — Pause/resume recording\n\n`!sequence play <name> [--loop] [--loops n] [--speed x] [--reverse] [--offset ms] [--only a,b] [--exclude a,b]` — Play a recording\n\n`!sequence preview <name>` — Play and auto-revert when finished\n\n`!sequence stop-play` / `!sequence pause-play` / `!sequence resume-play` — Control playback\n\n`!sequence list` — List all recordings\n\n`!sequence edit <name>` — Open the recording handout\n\n`!sequence delete <name>` — Delete a recording\n\n`!sequence add-attribute <name> <attr>` — Add an attribute column\n\n`!sequence remove-attribute <name> <attr>` — Remove an attribute column\n\n`!sequence add-row <name> <time>` — Add a blank keyframe row\n\n`!sequence sort <name>` — Sort keyframes by time\n\n`!sequence refresh <name>` — Regenerate handout from cache\n\n`!sequence man [topic]` — In-game help. Topics: `attr`, `func`, `vars`, `easing`, or any name\n\n`!sequence debug` — Show active sessions\n\n`!sequence dump-html <name>` — Print raw handout HTML to the API console\n\n`!sequence gen-dev-docs` — Generate the extension developer guide in your journal\n\n## Attributes\n\nAll standard graphic token properties are supported: `left`, `top`, `rotation`, `width`, `height`, `bar1_value`–`bar3_value`, auras, lighting, colors, booleans, and more. Run `!sequence man attr` in chat for the full list.\n\n## Extension API\n\nOther scripts can extend Sequence by listening for the `!sequence-ready` chat signal and calling:\n\n`Sequence.registerAttribute` / `Sequence.registerValueFunction` / `Sequence.registerTimingFunction` / `Sequence.registerPlaybackConstant` / `Sequence.registerEasing` / `Sequence.generateExtensionHandout`\n\nRun `!sequence gen-dev-docs` to generate the full extension developer guide.",
+  "authors": "Kenan Millet",
+  "roll20userid": "2614613",
+  "dependencies": [],
+  "modifies": {
+    "graphic": {
+      "left": "read/write",
+      "top": "read/write",
+      "rotation": "read/write",
+      "width": "read/write",
+      "height": "read/write",
+      "bar1_value": "read/write",
+      "bar2_value": "read/write",
+      "bar3_value": "read/write",
+      "tint_color": "read/write",
+      "aura1_color": "read/write",
+      "aura2_color": "read/write",
+      "layer": "read/write"
+    },
+    "handout": {
+      "notes": "read/write"
+    }
+  },
+  "conflicts": []
+}
