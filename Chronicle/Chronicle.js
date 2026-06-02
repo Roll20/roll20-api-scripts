@@ -2823,7 +2823,7 @@ const Chronicle = (() => {
         html += '<p><em>No climate set</em></p>';
       }
       html += Output.makeButton('Set Climate', 
-        `!chr --saveclimate ?{Latitude|tropical|subtropical|temperate|subarctic|polar}|?{Ocean Proximity|coastal|near_coastal|inland|continental}|?{Coast Type|west|east|none}|?{Elevation|lowland|highland|alpine}|?{Rainshadow|windward|leeward|neutral}`, 
+        `!chr --saveclimate ?{Latitude|tropical|subtropical|temperate|subarctic|polar}|?{Ocean Proximity|coastal|near_coastal|inland|continental}|?{Coast Type|west|east|none}|?{Elevation|lowland|highland|alpine}|?{Rainfall Pattern - If nearby mountains affect rainfall choose windward for the wetter side and leeward for the drier side otherwise choose neutral|windward|leeward|neutral}`, 
         CSS_CURRENT.button);
       
       // Temperature units toggle
