@@ -25,8 +25,13 @@ var libSmartAttributes = (function () {
             });
             return;
         }
-        catch {
+        catch (e) {
             // throw will happen on beacon sheets if the computed doesn't exist or is read-only
+            switch (e.type) {
+                // for read only computeds, we don't want to make a shadow "user." version.
+                case "COMPUTED_READONLY":
+                    return;
+            }
         }
         // Then default to a user attribute
         setSheetItem(characterId, `user.${name}`, value, type, {

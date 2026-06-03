@@ -26,6 +26,12 @@ type SetOptions = {
   noCreate?: boolean;
 };
 
+type SheetItemError = Error & {
+  type: string;
+  details?: Record<string, unknown>;
+};
+
+
 async function setAttribute(
   characterId: string,
   name: string,
@@ -41,8 +47,13 @@ async function setAttribute(
       withWorker: options?.setWithWorker === undefined ? true : options.setWithWorker
     });
     return;
-  } catch {
+  } catch (e) {
     // throw will happen on beacon sheets if the computed doesn't exist or is read-only
+    switch((e as SheetItemError).type){
+      // for read only computeds, we don't want to make a shadow "user." version.
+      case "COMPUTED_READONLY":
+        return;
+    }
   }
 
   // Then default to a user attribute
