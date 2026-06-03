@@ -10,6 +10,14 @@ type UpdateResult = {
   messages: string[];
 };
 
+export function buildSetAttributeOptions(overrides: { noCreate?: boolean; setWithWorker?: boolean } = {}) {
+  const { useWorkers = true } = getConfig() || {};
+  return {
+    noCreate: overrides.noCreate ?? false,
+    setWithWorker: overrides.setWithWorker ?? useWorkers,
+  };
+};
+
 export async function makeUpdate(
   operation: Command,
   results: Record<string, AttributeRecord>,
@@ -20,11 +28,7 @@ export async function makeUpdate(
   const messages: string[] = [];
 
   const { noCreate = false } = options || {};
-  const { useWorkers = true } = getConfig() || {};
-  const setOptions = {
-    noCreate,
-    setWithWorker: useWorkers,
-  };
+  const setOptions = buildSetAttributeOptions({ noCreate });
 
   for (const target in results) {
     for (const name in results[target]) {

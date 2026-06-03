@@ -22,6 +22,9 @@ const mocklibSmartAttributes = {
 // Setup global libSmartAttributes mock
 global.libSmartAttributes = mocklibSmartAttributes;
 
+/** Matches vitest.setup state (useWorkers: true) and buildSetAttributeOptions defaults */
+const defaultSetOptions = { noCreate: false, setWithWorker: true };
+
 describe("attributes module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -140,7 +143,7 @@ describe("attributes module", () => {
 
       await setSingleAttribute(target, "strength", 18, options);
 
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "strength", 18, "current", options);
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "strength", 18, "current", defaultSetOptions);
     });
 
     it("should set max attribute when isMax is true", async () => {
@@ -148,7 +151,7 @@ describe("attributes module", () => {
 
       await setSingleAttribute(target, "hp", 100, options, true);
 
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "hp", 100, "max", options);
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "hp", 100, "max", defaultSetOptions);
     });
 
     it("should handle string values", async () => {
@@ -156,7 +159,7 @@ describe("attributes module", () => {
 
       await setSingleAttribute(target, "name", "Test Character", options);
 
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "name", "Test Character", "current", options);
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "name", "Test Character", "current", defaultSetOptions);
     });
 
     it("should handle boolean values", async () => {
@@ -164,7 +167,7 @@ describe("attributes module", () => {
 
       await setSingleAttribute(target, "isDead", false, options);
 
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "isDead", false, "current", options);
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "isDead", false, "current", defaultSetOptions);
     });
 
     it("should handle numeric values", async () => {
@@ -172,7 +175,7 @@ describe("attributes module", () => {
 
       await setSingleAttribute(target, "level", 5, options);
 
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "level", 5, "current", options);
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "level", 5, "current", defaultSetOptions);
     });
   });
 
@@ -189,7 +192,7 @@ describe("attributes module", () => {
 
       await setAttributes(target, attributes, options);
 
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "strength", 18, "current", options);
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "strength", 18, "current", defaultSetOptions);
     });
 
     it("should set single attribute with max value", async () => {
@@ -201,7 +204,7 @@ describe("attributes module", () => {
 
       await setAttributes(target, attributes, options);
 
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "hp", 100, "max", options);
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "hp", 100, "max", defaultSetOptions);
     });
 
     it("should set both current and max values", async () => {
@@ -214,8 +217,8 @@ describe("attributes module", () => {
       await setAttributes(target, attributes, options);
 
       expect(mockSetAttribute).toHaveBeenCalledTimes(2);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(1, target, "hp", 75, "current", options);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(2, target, "hp", 100, "max", options);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(1, target, "hp", 75, "current", defaultSetOptions);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(2, target, "hp", 100, "max", defaultSetOptions);
     });
 
     it("should set multiple attributes", async () => {
@@ -230,10 +233,10 @@ describe("attributes module", () => {
       await setAttributes(target, attributes, options);
 
       expect(mockSetAttribute).toHaveBeenCalledTimes(4);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(1, target, "strength", 18, "current", options);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(2, target, "dexterity", 16, "current", options);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(3, target, "hp", 75, "current", options);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(4, target, "hp", 100, "max", options);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(1, target, "strength", 18, "current", defaultSetOptions);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(2, target, "dexterity", 16, "current", defaultSetOptions);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(3, target, "hp", 75, "current", defaultSetOptions);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(4, target, "hp", 100, "max", defaultSetOptions);
     });
 
     it("should handle different value types", async () => {
@@ -248,9 +251,9 @@ describe("attributes module", () => {
       await setAttributes(target, attributes, options);
 
       expect(mockSetAttribute).toHaveBeenCalledTimes(3);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(1, target, "name", "Test Character", "current", options);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(2, target, "level", 5, "current", options);
-      expect(mockSetAttribute).toHaveBeenNthCalledWith(3, target, "isDead", false, "current", options);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(1, target, "name", "Test Character", "current", defaultSetOptions);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(2, target, "level", 5, "current", defaultSetOptions);
+      expect(mockSetAttribute).toHaveBeenNthCalledWith(3, target, "isDead", false, "current", defaultSetOptions);
     });
 
     it("should throw error if attribute has no name", async () => {
@@ -421,7 +424,7 @@ describe("attributes module", () => {
 
       // Set attribute
       await setAttributes(target, [{ name: "strength", current: 18 }], {});
-      expect(mockSetAttribute).toHaveBeenCalledWith(target, "strength", 18, "current", {});
+      expect(mockSetAttribute).toHaveBeenCalledWith(target, "strength", 18, "current", defaultSetOptions);
 
       // Mock that attribute now exists
       mockGetAttribute.mockResolvedValue(18);

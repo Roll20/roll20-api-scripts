@@ -13,38 +13,6 @@ var ChatSetAttr = (function (exports) {
     	version: version,
     	authors: authors};
 
-    // #region Get Attributes
-    async function getSingleAttribute(target, attributeName) {
-        const isMax = attributeName.endsWith("_max");
-        const type = isMax ? "max" : "current";
-        if (isMax) {
-            attributeName = attributeName.slice(0, -4); // remove '_max'
-        }
-        try {
-            const attribute = await libSmartAttributes.getAttribute(target, attributeName, type);
-            return attribute;
-        }
-        catch {
-            return undefined;
-        }
-    }
-    async function getAttributes(target, attributeNames) {
-        const attributes = {};
-        if (Array.isArray(attributeNames)) {
-            for (const name of attributeNames) {
-                const cleanName = name.replace(/[^a-zA-Z0-9_]/g, "");
-                attributes[cleanName] = await getSingleAttribute(target, cleanName);
-            }
-        }
-        else {
-            for (const name in attributeNames) {
-                const cleanName = name.replace(/[^a-zA-Z0-9_]/g, "");
-                attributes[cleanName] = await getSingleAttribute(target, cleanName);
-            }
-        }
-        return attributes;
-    }
-
     // #region Style Helpers
     function convertCamelToKebab(camel) {
         return camel.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
@@ -90,6 +58,190 @@ var ChatSetAttr = (function (exports) {
         fontSize: "1.5em",
         marginBottom: "0.5em",
     };
+
+    const CONFIG_WRAPPER_STYLE = s(frameStyleBase);
+    const CONFIG_HEADER_STYLE = s(headerStyleBase);
+    const CONFIG_TABLE_STYLE = s({
+        width: "100%",
+        border: "none",
+        borderCollapse: "separate",
+        borderSpacing: "0 4px",
+    });
+    const CONFIG_ROW_STYLE = s({
+        marginBottom: "4px",
+    });
+    const CONFIG_BUTTON_STYLE_ON = s({
+        ...buttonStyleBase,
+        backgroundColor: "#16A34A",
+        color: "#FFFFFF",
+        fontWeight: "500",
+    });
+    const CONFIG_BUTTON_STYLE_OFF = s({
+        ...buttonStyleBase,
+        backgroundColor: "#DC2626",
+        color: "#FFFFFF",
+        fontWeight: "500",
+    });
+    const CONFIG_CLEAR_FIX_STYLE = s({
+        clear: "both",
+    });
+    function camelToKebabCase(str) {
+        return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+    }
+    function createConfigMessage() {
+        const config = getConfig();
+        const configEntries = Object.entries(config);
+        const relevantEntries = configEntries.filter(([key]) => key !== "version" && key !== "globalconfigCache" && key !== "flags");
+        return (h("div", { style: CONFIG_WRAPPER_STYLE },
+            h("div", { style: CONFIG_HEADER_STYLE }, "ChatSetAttr Configuration"),
+            h("div", null,
+                h("table", { style: CONFIG_TABLE_STYLE }, relevantEntries.map(([key, value]) => (h("tr", { style: CONFIG_ROW_STYLE },
+                    h("td", null,
+                        h("strong", null,
+                            key,
+                            ":")),
+                    h("td", null,
+                        h("a", { href: `!setattr-config --${camelToKebabCase(key)}`, style: value ? CONFIG_BUTTON_STYLE_ON : CONFIG_BUTTON_STYLE_OFF }, value ? "Enabled" : "Disabled")))))),
+                h("div", { style: CONFIG_CLEAR_FIX_STYLE }))));
+    }
+
+    const SCHEMA_VERSION = "2.0";
+    const DEFAULT_CONFIG = {
+        version: SCHEMA_VERSION,
+        globalconfigCache: {
+            lastsaved: 0
+        },
+        playersCanTargetParty: true,
+        playersCanModify: false,
+        playersCanEvaluate: false,
+        useWorkers: true,
+        flags: []
+    };
+    function getConfig() {
+        const stateConfig = state?.ChatSetAttr || {};
+        return {
+            ...DEFAULT_CONFIG,
+            ...stateConfig,
+        };
+    }
+    function setConfig(newConfig) {
+        const stateConfig = state.ChatSetAttr || {};
+        state.ChatSetAttr = {
+            ...stateConfig,
+            ...newConfig,
+            globalconfigCache: {
+                lastsaved: Date.now()
+            }
+        };
+    }
+    function hasFlag(flag) {
+        const config = getConfig();
+        return config.flags.includes(flag);
+    }
+    function setFlag(flag) {
+        const config = getConfig();
+        if (!hasFlag(flag)) {
+            config.flags.push(flag);
+            setConfig({ flags: config.flags });
+        }
+    }
+    function checkConfigMessage(message) {
+        return message.startsWith("!setattr-config");
+    }
+    const FLAG_MAP = {
+        "--players-can-modify": "playersCanModify",
+        "--players-can-evaluate": "playersCanEvaluate",
+        "--players-can-target-party": "playersCanTargetParty",
+        "--use-workers": "useWorkers",
+    };
+    function handleConfigCommand(message) {
+        message = message.replace("!setattr-config", "").trim();
+        const args = message.split(/\s+/);
+        const newConfig = {};
+        for (const arg of args) {
+            const cleanArg = arg.toLowerCase();
+            const flag = FLAG_MAP[cleanArg];
+            if (flag !== undefined) {
+                newConfig[flag] = !getConfig()[flag];
+                log(`Toggled config option: ${flag} to ${newConfig[flag]}`);
+            }
+        }
+        setConfig(newConfig);
+        const configMessage = createConfigMessage();
+        sendChat("ChatSetAttr", configMessage, undefined, { noarchive: true });
+    }
+
+    function buildSetAttributeOptions(overrides = {}) {
+        const { useWorkers = true } = getConfig() || {};
+        return {
+            noCreate: overrides.noCreate ?? false,
+            setWithWorker: overrides.setWithWorker ?? useWorkers,
+        };
+    }
+    async function makeUpdate(operation, results, options) {
+        const isSetting = operation !== "delattr";
+        const errors = [];
+        const messages = [];
+        const { noCreate = false } = options || {};
+        const setOptions = buildSetAttributeOptions({ noCreate });
+        for (const target in results) {
+            for (const name in results[target]) {
+                const isMax = name.endsWith("_max");
+                const type = isMax ? "max" : "current";
+                const actualName = isMax ? name.slice(0, -4) : name;
+                if (isSetting) {
+                    const value = results[target][name] ?? "";
+                    try {
+                        await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
+                    }
+                    catch (error) {
+                        errors.push(`Failed to set attribute '${name}' on target '${target}': ${String(error)}`);
+                    }
+                }
+                else {
+                    try {
+                        await libSmartAttributes.deleteAttribute(target, actualName, type);
+                    }
+                    catch (error) {
+                        errors.push(`Failed to delete attribute '${actualName}' on target '${target}': ${String(error)}`);
+                    }
+                }
+            }
+        }
+        return { errors, messages };
+    }
+
+    // #region Get Attributes
+    async function getSingleAttribute(target, attributeName) {
+        const isMax = attributeName.endsWith("_max");
+        const type = isMax ? "max" : "current";
+        if (isMax) {
+            attributeName = attributeName.slice(0, -4); // remove '_max'
+        }
+        try {
+            const attribute = await libSmartAttributes.getAttribute(target, attributeName, type);
+            return attribute;
+        }
+        catch {
+            return undefined;
+        }
+    }
+    async function getAttributes(target, attributeNames) {
+        const attributes = {};
+        if (Array.isArray(attributeNames)) {
+            for (const name of attributeNames) {
+                const cleanName = name.replace(/[^a-zA-Z0-9_]/g, "");
+                attributes[cleanName] = await getSingleAttribute(target, cleanName);
+            }
+        }
+        else {
+            for (const name in attributeNames) {
+                const cleanName = name.replace(/[^a-zA-Z0-9_]/g, "");
+                attributes[cleanName] = await getSingleAttribute(target, cleanName);
+            }
+        }
+        return attributes;
+    }
 
     const DELAY_WRAPPER_STYLE = s(frameStyleBase);
     const DELAY_HEADER_STYLE = s(headerStyleBase);
@@ -538,118 +690,6 @@ var ChatSetAttr = (function (exports) {
         if (isNaN(maxValue))
             return currentValue;
         return Math.max(Math.min(currentValue, maxValue), 0);
-    }
-
-    const CONFIG_WRAPPER_STYLE = s(frameStyleBase);
-    const CONFIG_HEADER_STYLE = s(headerStyleBase);
-    const CONFIG_TABLE_STYLE = s({
-        width: "100%",
-        border: "none",
-        borderCollapse: "separate",
-        borderSpacing: "0 4px",
-    });
-    const CONFIG_ROW_STYLE = s({
-        marginBottom: "4px",
-    });
-    const CONFIG_BUTTON_STYLE_ON = s({
-        ...buttonStyleBase,
-        backgroundColor: "#16A34A",
-        color: "#FFFFFF",
-        fontWeight: "500",
-    });
-    const CONFIG_BUTTON_STYLE_OFF = s({
-        ...buttonStyleBase,
-        backgroundColor: "#DC2626",
-        color: "#FFFFFF",
-        fontWeight: "500",
-    });
-    const CONFIG_CLEAR_FIX_STYLE = s({
-        clear: "both",
-    });
-    function camelToKebabCase(str) {
-        return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-    }
-    function createConfigMessage() {
-        const config = getConfig();
-        const configEntries = Object.entries(config);
-        const relevantEntries = configEntries.filter(([key]) => key !== "version" && key !== "globalconfigCache" && key !== "flags");
-        return (h("div", { style: CONFIG_WRAPPER_STYLE },
-            h("div", { style: CONFIG_HEADER_STYLE }, "ChatSetAttr Configuration"),
-            h("div", null,
-                h("table", { style: CONFIG_TABLE_STYLE }, relevantEntries.map(([key, value]) => (h("tr", { style: CONFIG_ROW_STYLE },
-                    h("td", null,
-                        h("strong", null,
-                            key,
-                            ":")),
-                    h("td", null,
-                        h("a", { href: `!setattr-config --${camelToKebabCase(key)}`, style: value ? CONFIG_BUTTON_STYLE_ON : CONFIG_BUTTON_STYLE_OFF }, value ? "Enabled" : "Disabled")))))),
-                h("div", { style: CONFIG_CLEAR_FIX_STYLE }))));
-    }
-
-    const SCHEMA_VERSION = "2.0";
-    const DEFAULT_CONFIG = {
-        version: SCHEMA_VERSION,
-        globalconfigCache: {
-            lastsaved: 0
-        },
-        playersCanTargetParty: true,
-        playersCanModify: false,
-        playersCanEvaluate: false,
-        useWorkers: true,
-        flags: []
-    };
-    function getConfig() {
-        const stateConfig = state?.ChatSetAttr || {};
-        return {
-            ...DEFAULT_CONFIG,
-            ...stateConfig,
-        };
-    }
-    function setConfig(newConfig) {
-        const stateConfig = state.ChatSetAttr || {};
-        state.ChatSetAttr = {
-            ...stateConfig,
-            ...newConfig,
-            globalconfigCache: {
-                lastsaved: Date.now()
-            }
-        };
-    }
-    function hasFlag(flag) {
-        const config = getConfig();
-        return config.flags.includes(flag);
-    }
-    function setFlag(flag) {
-        const config = getConfig();
-        if (!hasFlag(flag)) {
-            config.flags.push(flag);
-            setConfig({ flags: config.flags });
-        }
-    }
-    function checkConfigMessage(message) {
-        return message.startsWith("!setattr-config");
-    }
-    const FLAG_MAP = {
-        "--players-can-modify": "playersCanModify",
-        "--players-can-evaluate": "playersCanEvaluate",
-        "--players-can-target-party": "playersCanTargetParty",
-        "--use-workers": "useWorkers",
-    };
-    function handleConfigCommand(message) {
-        message = message.replace("!setattr-config", "").trim();
-        const args = message.split(/\s+/);
-        const newConfig = {};
-        for (const arg of args) {
-            const cleanArg = arg.toLowerCase();
-            const flag = FLAG_MAP[cleanArg];
-            if (flag !== undefined) {
-                newConfig[flag] = !getConfig()[flag];
-                log(`Toggled config option: ${flag} to ${newConfig[flag]}`);
-            }
-        }
-        setConfig(newConfig);
-        const configMessage = createConfigMessage();
-        sendChat("ChatSetAttr", configMessage, undefined, { noarchive: true });
     }
 
     function createHelpHandout(handoutID) {
@@ -1819,43 +1859,6 @@ var ChatSetAttr = (function (exports) {
         }
     }
 
-    async function makeUpdate(operation, results, options) {
-        const isSetting = operation !== "delattr";
-        const errors = [];
-        const messages = [];
-        const { noCreate = false } = {};
-        const { useWorkers = true } = getConfig() || {};
-        const setOptions = {
-            noCreate,
-            setWithWorker: useWorkers,
-        };
-        for (const target in results) {
-            for (const name in results[target]) {
-                const isMax = name.endsWith("_max");
-                const type = isMax ? "max" : "current";
-                const actualName = isMax ? name.slice(0, -4) : name;
-                if (isSetting) {
-                    const value = results[target][name] ?? "";
-                    try {
-                        await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
-                    }
-                    catch (error) {
-                        errors.push(`Failed to set attribute '${name}' on target '${target}': ${String(error)}`);
-                    }
-                }
-                else {
-                    try {
-                        await libSmartAttributes.deleteAttribute(target, actualName, type);
-                    }
-                    catch (error) {
-                        errors.push(`Failed to delete attribute '${actualName}' on target '${target}': ${String(error)}`);
-                    }
-                }
-            }
-        }
-        return { errors, messages };
-    }
-
     function broadcastHeader() {
         log(`${scriptJson.name} v${scriptJson.version} by ${scriptJson.authors.join(", ")} loaded.`);
     }
@@ -1919,7 +1922,7 @@ var ChatSetAttr = (function (exports) {
             messages.push(...response.messages);
             result[target] = response.result;
         }
-        const updateResult = await makeUpdate(operation, result);
+        const updateResult = await makeUpdate(operation, result, { noCreate: options.nocreate });
         clearTimer("chatsetattr");
         messages.push(...updateResult.messages);
         errors.push(...updateResult.errors);

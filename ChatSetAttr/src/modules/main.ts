@@ -99,7 +99,7 @@ async function acceptMessage(msg: Roll20ChatMessage) {
     result[target] = response.result;
   }
 
-  const updateResult = await makeUpdate(operation, result);
+  const updateResult = await makeUpdate(operation, result, { noCreate: options.nocreate });
 
   clearTimer("chatsetattr");
 

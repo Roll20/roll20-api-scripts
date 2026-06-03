@@ -1,4 +1,5 @@
 import type { Attribute, AttributeRecord, AttributeValue } from "../types";
+import { buildSetAttributeOptions } from "./updates";
 
 // #region Get Attributes
 async function getSingleAttribute(target: string, attributeName: string): Promise<AttributeValue> {
@@ -43,7 +44,11 @@ export async function setSingleAttribute(
   isMax?: boolean
 ): Promise<void> {
   const type = isMax ? "max" : "current";
-  await libSmartAttributes.setAttribute(target, attributeName, value, type, options);
+  const setOptions = buildSetAttributeOptions({
+    noCreate: options.noCreate,
+    setWithWorker: options.setWithWorker,
+  });
+  await libSmartAttributes.setAttribute(target, attributeName, value, type, setOptions);
 };
 
 export async function setAttributes(
