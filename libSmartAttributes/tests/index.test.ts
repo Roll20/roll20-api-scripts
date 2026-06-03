@@ -21,6 +21,13 @@ const sheetOpts = (overrides: {
   ...overrides,
 });
 
+/** Mimics setSheetItem errors from displayErrorMessage(..., true, errorType, details) */
+const sheetItemError = (type: string, message = "setSheetItem failed") => {
+  const err = new Error(message) as Error & { type: string; details?: Record<string, unknown> };
+  err.type = type;
+  return err;
+};
+
 describe("SmartAttributes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -125,6 +132,44 @@ describe("SmartAttributes", () => {
         sheetOpts({ allowThrow: false })
       );
       expect(result).toBeUndefined();
+    });
+
+    it("should not create user attribute when computed is read-only", async () => {
+      mockSetSheetItem.mockRejectedValueOnce(
+        sheetItemError("COMPUTED_READONLY", 'ERROR: Readonly Property "strength".')
+      );
+
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
+
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(1);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(
+        characterId,
+        attributeName,
+        value,
+        "current",
+        sheetOpts({ allowThrow: true })
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it("should still fall through to user attribute for non-readonly setSheetItem errors", async () => {
+      mockSetSheetItem
+        .mockRejectedValueOnce(
+          sheetItemError("COMPUTED_INVALID", 'ERROR: Property "strength" doesn\'t exist.')
+        )
+        .mockResolvedValue("user-value");
+
+      await SmartAttributes.setAttribute(characterId, attributeName, value);
+
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        2,
+        characterId,
+        `user.${attributeName}`,
+        value,
+        "current",
+        sheetOpts({ allowThrow: false })
+      );
     });
 
     it("should pass createAttr false when noCreate is set", async () => {
