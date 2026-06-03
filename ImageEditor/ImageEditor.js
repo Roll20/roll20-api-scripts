@@ -82,6 +82,7 @@ The <strong>Image Editor</strong> allows you to select any handout that contains
 <li>The Image Editor cannot be used to edit its own handout.</li>
 <li>Only images in the <strong>notes</strong> field of a handout are visible to the editor. Images in gmnotes are not shown.</li>
 <li>Style changes are written directly to the handout HTML. Always keep a backup of important handout content.</li>
+<li><strong>Large handouts:</strong> If the referenced handout contains a very large amount of content (many images, long text), keep it <strong>closed</strong> while making edits in the Image Editor. Having both handouts open simultaneously while saving changes can cause the browser to become unresponsive.</li>
 </ul>
 `;
  
@@ -110,6 +111,8 @@ The <strong>Image Editor</strong> allows you to select any handout that contains
     // ==================================================
     const Config = {
         editorName: 'Image Editor',
+        
+        largeHandoutWarningSize: 100000,
  
         properties: {
             width:           { type: 'size' },
@@ -655,6 +658,19 @@ The <strong>Image Editor</strong> allows you to select any handout that contains
  
             Utils.rebuildHandoutCache(() => {
                 handout.get('notes', notes => {
+                    
+                if (notes && notes.length > Config.largeHandoutWarningSize) {
+                    Utils.whisper(msg.who,
+                        `<div style="${CSS.launchBox}">` +
+                        `<div style="${CSS.launchTitle}" style="color:#ffaa44;">⚠ Large Handout Warning</div>` +
+                        `<div style="color:#ccc; font-size:12px;">The chosen handout is ${Math.round(notes.length/1000)}k characters. ` +
+                        `If you keep it open while editing, your browser may become unresponsive. ` +
+                        `It is recommended to <strong>close the referenced handout</strong> before making edits, ` +
+                        `then reopen it to review changes.</div>` +
+                        `</div>`
+                    );
+                }
+                    
                     const images = Parser.extractImages(notes);
                     if (!images.length) {
                         editor.set('notes',

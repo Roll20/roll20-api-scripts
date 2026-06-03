@@ -22,6 +22,7 @@ async function getAttribute(
 };
 
 type SetOptions = {
+  setWithWorker?: boolean;
   noCreate?: boolean;
 };
 
@@ -34,20 +35,22 @@ async function setAttribute(
 ) {
 
   try {
-    await setSheetItem(characterId, name, value, type, {allowThrow: true});
+    await setSheetItem(characterId, name, value, type, {
+      allowThrow: true,
+      createAttr: options?.noCreate === undefined ? true : !options.noCreate,
+      withWorker: options?.setWithWorker === undefined ? true : options.setWithWorker
+    });
     return;
   } catch {
     // throw will happen on beacon sheets if the computed doesn't exist or is read-only
   }
 
-  // Guard against creating user attributes if noCreate is set
-  if (options?.noCreate) {
-    log(`Attribute ${name} not found on character ${characterId}, and noCreate option is set. Skipping creation.`);
-    return;
-  }
-
   // Then default to a user attribute
-  setSheetItem(characterId, `user.${name}`, value, type);
+  setSheetItem(characterId, `user.${name}`, value, type, {
+    allowThrow: false,
+    createAttr: options?.noCreate === undefined ? true : !options.noCreate,
+    withWorker: options?.setWithWorker === undefined ? true : options.setWithWorker
+  });
   return;
 };
 
