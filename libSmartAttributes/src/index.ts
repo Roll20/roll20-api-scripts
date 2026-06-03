@@ -46,23 +46,27 @@ async function setAttribute(
       createAttr: options?.noCreate === undefined ? true : !options.noCreate,
       withWorker: options?.setWithWorker === undefined ? true : options.setWithWorker
     });
-    return;
+    return true;
   } catch (e) {
     // throw will happen on beacon sheets if the computed doesn't exist or is read-only
     switch((e as SheetItemError).type){
       // for read only computeds, we don't want to make a shadow "user." version.
       case "COMPUTED_READONLY":
-        return;
+        return false;
     }
   }
 
   // Then default to a user attribute
-  setSheetItem(characterId, `user.${name}`, value, type, {
-    allowThrow: false,
-    createAttr: options?.noCreate === undefined ? true : !options.noCreate,
-    withWorker: options?.setWithWorker === undefined ? true : options.setWithWorker
-  });
-  return;
+  try {
+    await setSheetItem(characterId, `user.${name}`, value, type, {
+      allowThrow: true,
+      createAttr: options?.noCreate === undefined ? true : !options.noCreate,
+      withWorker: options?.setWithWorker === undefined ? true : options.setWithWorker
+    });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 async function deleteAttribute(characterId: string, name: string, type: AttributeType = "current") {
@@ -75,27 +79,40 @@ async function deleteAttribute(characterId: string, name: string, type: Attribut
 
   if (legacyAttr) {
     legacyAttr.remove();
-    return;
+    return true;
   }
 
   // Then try for the beacon computed
   const beaconAttr = await getSheetItem(characterId, name, type);
   if (beaconAttr !== null && beaconAttr !== undefined) {
-    log(`Cannot delete beacon computed attribute ${name} on character ${characterId}. Setting to undefined instead`);
-    setSheetItem(characterId, name, undefined, type);
-    return;
+    // Cannot delete beacon computed attributes. Setting to undefined instead.
+    try {
+      await setSheetItem(characterId, name, undefined, type, { allowThrow: true });
+      return true;
+    } catch (e) {
+      switch((e as SheetItemError).type){
+        // for read only computeds, we don't want to fall through to a "user." version.
+        case "COMPUTED_READONLY":
+          return false;
+      }
+    }
   }
 
   // Then try for the user attribute
   const userAttr = await getSheetItem(characterId, `user.${name}`, type);
   if (userAttr !== null && userAttr !== undefined) {
-    log(`Deleting user attribute ${name} on character ${characterId}`);
-    setSheetItem(characterId, `user.${name}`, undefined, type);
-    return;
+    try {
+      await setSheetItem(characterId, `user.${name}`, undefined, type, {
+        allowThrow: true,
+        createAttr: false
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
-  log(`Attribute ${type} not found on character ${characterId}, nothing to delete`);
-  return;
+  return false;
 };
 
 export default {
