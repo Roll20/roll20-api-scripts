@@ -1,16 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import SmartAttributes from "../src/index";
 
-// Mock Roll20 API functions
 const mockGetSheetItem = vi.fn();
 const mockSetSheetItem = vi.fn();
 const mockLog = vi.fn();
 
-
-// Setup global mocks
 vi.stubGlobal("getSheetItem", mockGetSheetItem);
 vi.stubGlobal("setSheetItem", mockSetSheetItem);
 vi.stubGlobal("log", mockLog);
+
+/** Matches default setSheetItem options from setAttribute */
+const sheetOpts = (overrides: {
+  allowThrow?: boolean;
+  createAttr?: boolean;
+  withWorker?: boolean;
+} = {}) => ({
+  allowThrow: true,
+  createAttr: true,
+  withWorker: true,
+  ...overrides,
+});
 
 describe("SmartAttributes", () => {
   beforeEach(() => {
@@ -50,21 +59,21 @@ describe("SmartAttributes", () => {
     });
 
     it("should handle falsy beacon values correctly", async () => {
-      mockGetSheetItem.mockResolvedValueOnce(0); // 0 is now treated as valid
+      mockGetSheetItem.mockResolvedValueOnce(0);
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
-      expect(result).toBe(0); // 0 is returned as valid beacon value
+      expect(result).toBe(0);
       expect(mockGetSheetItem).toHaveBeenCalledTimes(1);
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
     });
 
     it("should handle empty string beacon values correctly", async () => {
-      mockGetSheetItem.mockResolvedValueOnce(""); // '' is now treated as valid
+      mockGetSheetItem.mockResolvedValueOnce("");
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
-      expect(result).toBe(""); // Empty string is returned as valid beacon value
+      expect(result).toBe("");
       expect(mockGetSheetItem).toHaveBeenCalledTimes(1);
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
     });
@@ -75,61 +84,158 @@ describe("SmartAttributes", () => {
     const attributeName = "strength";
     const value = "18";
 
-    it("should set beacon computed attribute when no legacy attribute but beacon exists", async () => {
+    it("should set beacon computed attribute when setSheetItem succeeds", async () => {
       mockSetSheetItem.mockResolvedValue("updated-value");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, value, "current", {allowThrow: true});
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(1);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(
+        characterId,
+        attributeName,
+        value,
+        "current",
+        sheetOpts({ allowThrow: true })
+      );
       expect(result).toBeUndefined();
     });
 
-    it("should default to user attribute when no legacy or beacon attribute exists", async () => {
+    it("should default to user attribute when primary setSheetItem throws", async () => {
       mockSetSheetItem
-        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockRejectedValueOnce(new Error("missing computed"))
         .mockResolvedValue("user-value");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, value, "current");
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        1,
+        characterId,
+        attributeName,
+        value,
+        "current",
+        sheetOpts({ allowThrow: true })
+      );
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        2,
+        characterId,
+        `user.${attributeName}`,
+        value,
+        "current",
+        sheetOpts({ allowThrow: false })
+      );
       expect(result).toBeUndefined();
+    });
+
+    it("should pass createAttr false when noCreate is set", async () => {
+      mockSetSheetItem.mockRejectedValueOnce(new Error("missing computed"));
+
+      await SmartAttributes.setAttribute(characterId, attributeName, value, "current", {
+        noCreate: true,
+      });
+
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        1,
+        characterId,
+        attributeName,
+        value,
+        "current",
+        sheetOpts({ allowThrow: true, createAttr: false })
+      );
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        2,
+        characterId,
+        `user.${attributeName}`,
+        value,
+        "current",
+        sheetOpts({ allowThrow: false, createAttr: false })
+      );
+    });
+
+    it("should pass withWorker false when setWithWorker is false", async () => {
+      mockSetSheetItem.mockResolvedValue("ok");
+
+      await SmartAttributes.setAttribute(characterId, attributeName, value, "current", {
+        setWithWorker: false,
+      });
+
+      expect(mockSetSheetItem).toHaveBeenCalledWith(
+        characterId,
+        attributeName,
+        value,
+        "current",
+        sheetOpts({ allowThrow: true, withWorker: false })
+      );
     });
 
     it("should handle complex values correctly", async () => {
       const complexValue = { nested: { value: 42 } };
       mockSetSheetItem
-        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockRejectedValueOnce(new Error("missing computed"))
         .mockResolvedValue(complexValue);
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, complexValue);
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, complexValue, "current", {allowThrow:true});
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, complexValue, "current");
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        1,
+        characterId,
+        attributeName,
+        complexValue,
+        "current",
+        sheetOpts({ allowThrow: true })
+      );
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        2,
+        characterId,
+        `user.${attributeName}`,
+        complexValue,
+        "current",
+        sheetOpts({ allowThrow: false })
+      );
       expect(result).toBeUndefined();
     });
 
     it("should handle null and undefined values", async () => {
-      mockSetSheetItem.mockResolvedValue(null);
       mockSetSheetItem
-        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockRejectedValueOnce(new Error("missing computed"))
         .mockResolvedValue(null);
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, null);
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, null, "current",{allowThrow:true});
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, null, "current");
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        1,
+        characterId,
+        attributeName,
+        null,
+        "current",
+        sheetOpts({ allowThrow: true })
+      );
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        2,
+        characterId,
+        `user.${attributeName}`,
+        null,
+        "current",
+        sheetOpts({ allowThrow: false })
+      );
       expect(result).toBeUndefined();
     });
 
-    it("should handle falsy beacon values correctly for setting", async () => {
-      mockGetSheetItem.mockResolvedValue(0); // 0 is now treated as valid existing beacon value
+    it("should succeed on first setSheetItem without fallback", async () => {
       mockSetSheetItem.mockResolvedValue("updated");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, value,"current",{allowThrow:true});
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(1);
+      expect(mockSetSheetItem).toHaveBeenCalledWith(
+        characterId,
+        attributeName,
+        value,
+        "current",
+        sheetOpts({ allowThrow: true })
+      );
       expect(result).toBeUndefined();
     });
   });
@@ -149,7 +255,7 @@ describe("SmartAttributes", () => {
     });
 
     it("should handle boolean values in attributes", async () => {
-      mockGetSheetItem.mockResolvedValueOnce(false); // Test with false to show falsy values are valid
+      mockGetSheetItem.mockResolvedValueOnce(false);
 
       const result = await SmartAttributes.getAttribute(characterId, attributeName);
 
@@ -165,11 +271,9 @@ describe("SmartAttributes", () => {
       mockGetSheetItem.mockResolvedValue("beacon-10");
       mockSetSheetItem.mockResolvedValue("beacon-15");
 
-      // Get current value
       const currentValue = await SmartAttributes.getAttribute(characterId, attributeName);
       expect(currentValue).toBe("beacon-10");
 
-      // Set new value
       const result = await SmartAttributes.setAttribute(characterId, attributeName, "beacon-15");
       expect(result).toBeUndefined();
     });
@@ -177,20 +281,32 @@ describe("SmartAttributes", () => {
     it("should handle get returning undefined but set still working", async () => {
       mockGetSheetItem.mockResolvedValue(null);
       mockSetSheetItem
-        .mockImplementationOnce(()=>{throw new Error("missing computed");})
+        .mockRejectedValueOnce(new Error("missing computed"))
         .mockResolvedValue("new-value");
 
-      // Get returns undefined
       const currentValue = await SmartAttributes.getAttribute(characterId, attributeName);
       expect(currentValue).toBeUndefined();
 
-      // But set still works by creating user attribute
       const result = await SmartAttributes.setAttribute(characterId, attributeName, "new-value");
       expect(result).toBeUndefined();
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "new-value", "current",{allowThrow:true});
-      expect(mockSetSheetItem).toHaveBeenCalledWith(characterId, `user.${attributeName}`, "new-value", "current");
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        1,
+        characterId,
+        attributeName,
+        "new-value",
+        "current",
+        sheetOpts({ allowThrow: true })
+      );
+      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
+        2,
+        characterId,
+        `user.${attributeName}`,
+        "new-value",
+        "current",
+        sheetOpts({ allowThrow: false })
+      );
     });
   });
 });

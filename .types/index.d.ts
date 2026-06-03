@@ -554,7 +554,11 @@ declare function getAllObjs(): Roll20Object<AnyRoll20Object>[];
  */
 declare function getAttrByName(character_id: string, attribute_name: string, value_type?: "current" | "max"): string;
 
-type SheetItemOptions = { allowThrow?: boolean };
+type SheetItemOptions = {
+  allowThrow?: boolean,
+  createAttr?: boolean,
+  withWorker?: boolean
+};
 type SheetItemValueTYpe = "current" | "max";
 
 /**
