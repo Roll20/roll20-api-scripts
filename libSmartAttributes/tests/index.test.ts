@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import SmartAttributes from "../src/index";
 
+const mockFindObjs = vi.fn();
 const mockGetSheetItem = vi.fn();
 const mockSetSheetItem = vi.fn();
 const mockLog = vi.fn();
 
+vi.stubGlobal("findObjs", mockFindObjs);
 vi.stubGlobal("getSheetItem", mockGetSheetItem);
 vi.stubGlobal("setSheetItem", mockSetSheetItem);
 vi.stubGlobal("log", mockLog);
@@ -31,6 +33,7 @@ const sheetItemError = (type: string, message = "setSheetItem failed") => {
 describe("SmartAttributes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFindObjs.mockReturnValue([]);
   });
 
   describe("getAttribute", () => {
@@ -91,7 +94,7 @@ describe("SmartAttributes", () => {
     const attributeName = "strength";
     const value = "18";
 
-    it("should set beacon computed attribute when setSheetItem succeeds", async () => {
+    it("should return true when setSheetItem succeeds on computed", async () => {
       mockSetSheetItem.mockResolvedValue("updated-value");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
@@ -104,10 +107,10 @@ describe("SmartAttributes", () => {
         "current",
         sheetOpts({ allowThrow: true })
       );
-      expect(result).toBeUndefined();
+      expect(result).toBe(true);
     });
 
-    it("should default to user attribute when primary setSheetItem throws", async () => {
+    it("should return true when falling through to user attribute", async () => {
       mockSetSheetItem
         .mockRejectedValueOnce(new Error("missing computed"))
         .mockResolvedValue("user-value");
@@ -129,12 +132,12 @@ describe("SmartAttributes", () => {
         `user.${attributeName}`,
         value,
         "current",
-        sheetOpts({ allowThrow: false })
+        sheetOpts({ allowThrow: true })
       );
-      expect(result).toBeUndefined();
+      expect(result).toBe(true);
     });
 
-    it("should not create user attribute when computed is read-only", async () => {
+    it("should return false and not create user attribute when computed is read-only", async () => {
       mockSetSheetItem.mockRejectedValueOnce(
         sheetItemError("COMPUTED_READONLY", 'ERROR: Readonly Property "strength".')
       );
@@ -149,17 +152,17 @@ describe("SmartAttributes", () => {
         "current",
         sheetOpts({ allowThrow: true })
       );
-      expect(result).toBeUndefined();
+      expect(result).toBe(false);
     });
 
-    it("should still fall through to user attribute for non-readonly setSheetItem errors", async () => {
+    it("should return true when falling through for non-readonly setSheetItem errors", async () => {
       mockSetSheetItem
         .mockRejectedValueOnce(
           sheetItemError("COMPUTED_INVALID", 'ERROR: Property "strength" doesn\'t exist.')
         )
         .mockResolvedValue("user-value");
 
-      await SmartAttributes.setAttribute(characterId, attributeName, value);
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
       expect(mockSetSheetItem).toHaveBeenNthCalledWith(
@@ -168,14 +171,28 @@ describe("SmartAttributes", () => {
         `user.${attributeName}`,
         value,
         "current",
-        sheetOpts({ allowThrow: false })
+        sheetOpts({ allowThrow: true })
       );
+      expect(result).toBe(true);
+    });
+
+    it("should return false when user attribute fallback also fails", async () => {
+      mockSetSheetItem
+        .mockRejectedValueOnce(new Error("missing computed"))
+        .mockRejectedValueOnce(new Error("user set failed"));
+
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
+
+      expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
+      expect(result).toBe(false);
     });
 
     it("should pass createAttr false when noCreate is set", async () => {
-      mockSetSheetItem.mockRejectedValueOnce(new Error("missing computed"));
+      mockSetSheetItem
+        .mockRejectedValueOnce(new Error("missing computed"))
+        .mockResolvedValue("user-value");
 
-      await SmartAttributes.setAttribute(characterId, attributeName, value, "current", {
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value, "current", {
         noCreate: true,
       });
 
@@ -193,14 +210,15 @@ describe("SmartAttributes", () => {
         `user.${attributeName}`,
         value,
         "current",
-        sheetOpts({ allowThrow: false, createAttr: false })
+        sheetOpts({ allowThrow: true, createAttr: false })
       );
+      expect(result).toBe(true);
     });
 
     it("should pass withWorker false when setWithWorker is false", async () => {
       mockSetSheetItem.mockResolvedValue("ok");
 
-      await SmartAttributes.setAttribute(characterId, attributeName, value, "current", {
+      const result = await SmartAttributes.setAttribute(characterId, attributeName, value, "current", {
         setWithWorker: false,
       });
 
@@ -211,9 +229,10 @@ describe("SmartAttributes", () => {
         "current",
         sheetOpts({ allowThrow: true, withWorker: false })
       );
+      expect(result).toBe(true);
     });
 
-    it("should handle complex values correctly", async () => {
+    it("should return true for complex values via user fallback", async () => {
       const complexValue = { nested: { value: 42 } };
       mockSetSheetItem
         .mockRejectedValueOnce(new Error("missing computed"))
@@ -222,26 +241,10 @@ describe("SmartAttributes", () => {
       const result = await SmartAttributes.setAttribute(characterId, attributeName, complexValue);
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
-      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
-        1,
-        characterId,
-        attributeName,
-        complexValue,
-        "current",
-        sheetOpts({ allowThrow: true })
-      );
-      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
-        2,
-        characterId,
-        `user.${attributeName}`,
-        complexValue,
-        "current",
-        sheetOpts({ allowThrow: false })
-      );
-      expect(result).toBeUndefined();
+      expect(result).toBe(true);
     });
 
-    it("should handle null and undefined values", async () => {
+    it("should return true when setting null via user fallback", async () => {
       mockSetSheetItem
         .mockRejectedValueOnce(new Error("missing computed"))
         .mockResolvedValue(null);
@@ -249,39 +252,105 @@ describe("SmartAttributes", () => {
       const result = await SmartAttributes.setAttribute(characterId, attributeName, null);
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
-      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
-        1,
-        characterId,
-        attributeName,
-        null,
-        "current",
-        sheetOpts({ allowThrow: true })
-      );
-      expect(mockSetSheetItem).toHaveBeenNthCalledWith(
-        2,
-        characterId,
-        `user.${attributeName}`,
-        null,
-        "current",
-        sheetOpts({ allowThrow: false })
-      );
-      expect(result).toBeUndefined();
+      expect(result).toBe(true);
+    });
+  });
+
+  describe("deleteAttribute", () => {
+    const characterId = "char123";
+    const attributeName = "strength";
+
+    it("should return true when removing a legacy attribute", async () => {
+      const mockRemove = vi.fn();
+      mockFindObjs.mockReturnValue([{ remove: mockRemove }]);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockFindObjs).toHaveBeenCalledWith({
+        _type: "attribute",
+        _characterid: characterId,
+        name: attributeName,
+      });
+      expect(mockRemove).toHaveBeenCalled();
+      expect(mockGetSheetItem).not.toHaveBeenCalled();
+      expect(result).toBe(true);
     });
 
-    it("should succeed on first setSheetItem without fallback", async () => {
-      mockSetSheetItem.mockResolvedValue("updated");
+    it("should return true when clearing a writable beacon computed", async () => {
+      mockGetSheetItem.mockResolvedValueOnce("10");
+      mockSetSheetItem.mockResolvedValue(true);
 
-      const result = await SmartAttributes.setAttribute(characterId, attributeName, value);
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
+      expect(mockSetSheetItem).toHaveBeenCalledWith(
+        characterId,
+        attributeName,
+        undefined,
+        "current",
+        { allowThrow: true }
+      );
+      expect(result).toBe(true);
+    });
+
+    it("should return false and not touch user attribute when beacon computed is read-only", async () => {
+      mockGetSheetItem.mockResolvedValueOnce("10");
+      mockSetSheetItem.mockRejectedValueOnce(
+        sheetItemError("COMPUTED_READONLY", 'ERROR: Readonly Property "strength".')
+      );
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(1);
       expect(mockSetSheetItem).toHaveBeenCalledWith(
         characterId,
         attributeName,
-        value,
+        undefined,
         "current",
-        sheetOpts({ allowThrow: true })
+        { allowThrow: true }
       );
-      expect(result).toBeUndefined();
+      expect(mockGetSheetItem).toHaveBeenCalledTimes(1);
+      expect(result).toBe(false);
+    });
+
+    it("should return true when deleting an existing user attribute", async () => {
+      mockGetSheetItem
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce("user-value");
+      mockSetSheetItem.mockResolvedValue(true);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockGetSheetItem).toHaveBeenNthCalledWith(1, characterId, attributeName, "current");
+      expect(mockGetSheetItem).toHaveBeenNthCalledWith(2, characterId, `user.${attributeName}`, "current");
+      expect(mockSetSheetItem).toHaveBeenCalledWith(
+        characterId,
+        `user.${attributeName}`,
+        undefined,
+        "current",
+        { allowThrow: true, createAttr: false }
+      );
+      expect(result).toBe(true);
+    });
+
+    it("should return false when no attribute exists", async () => {
+      mockGetSheetItem.mockResolvedValue(null);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockSetSheetItem).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+
+    it("should return false when user attribute delete fails", async () => {
+      mockGetSheetItem
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce("user-value");
+      mockSetSheetItem.mockRejectedValueOnce(new Error("delete failed"));
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(result).toBe(false);
     });
   });
 
@@ -320,10 +389,10 @@ describe("SmartAttributes", () => {
       expect(currentValue).toBe("beacon-10");
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, "beacon-15");
-      expect(result).toBeUndefined();
+      expect(result).toBe(true);
     });
 
-    it("should handle get returning undefined but set still working", async () => {
+    it("should return true when set falls through to user attribute", async () => {
       mockGetSheetItem.mockResolvedValue(null);
       mockSetSheetItem
         .mockRejectedValueOnce(new Error("missing computed"))
@@ -333,7 +402,7 @@ describe("SmartAttributes", () => {
       expect(currentValue).toBeUndefined();
 
       const result = await SmartAttributes.setAttribute(characterId, attributeName, "new-value");
-      expect(result).toBeUndefined();
+      expect(result).toBe(true);
 
       expect(mockSetSheetItem).toHaveBeenCalledTimes(2);
       expect(mockSetSheetItem).toHaveBeenNthCalledWith(
@@ -350,7 +419,7 @@ describe("SmartAttributes", () => {
         `user.${attributeName}`,
         "new-value",
         "current",
-        sheetOpts({ allowThrow: false })
+        sheetOpts({ allowThrow: true })
       );
     });
   });
