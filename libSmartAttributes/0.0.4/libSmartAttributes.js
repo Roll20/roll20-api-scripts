@@ -47,15 +47,22 @@ var libSmartAttributes = (function () {
         }
     }
     async function deleteAttribute(characterId, name, type = "current") {
-        // Try for legacy attribute first
-        const legacyAttr = findObjs({
-            _type: "attribute",
-            _characterid: characterId,
-            name: name,
-        })[0];
-        if (legacyAttr) {
-            legacyAttr.remove();
-            return true;
+        const character = getObj("character", characterId);
+        if (!character) {
+            return false;
+        }
+        if (character?.sheetEnvironment === "legacy") {
+            // Try for legacy attribute first
+            const legacyAttr = findObjs({
+                _type: "attribute",
+                _characterid: characterId,
+                name: name,
+            })[0];
+            if (legacyAttr) {
+                legacyAttr.remove();
+                return true;
+            }
+            return false;
         }
         // Then try for the beacon computed
         const beaconAttr = await getSheetItem(characterId, name, type);
