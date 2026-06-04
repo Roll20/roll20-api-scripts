@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import SmartAttributes from "../src/index";
 
 const mockFindObjs = vi.fn();
+const mockGetObj = vi.fn();
 const mockGetSheetItem = vi.fn();
 const mockSetSheetItem = vi.fn();
 const mockLog = vi.fn();
 
 vi.stubGlobal("findObjs", mockFindObjs);
+vi.stubGlobal("getObj", mockGetObj);
 vi.stubGlobal("getSheetItem", mockGetSheetItem);
 vi.stubGlobal("setSheetItem", mockSetSheetItem);
 vi.stubGlobal("log", mockLog);
@@ -34,6 +36,7 @@ describe("SmartAttributes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFindObjs.mockReturnValue([]);
+    mockGetObj.mockReturnValue({ sheetEnvironment: "beacon" });
   });
 
   describe("getAttribute", () => {
@@ -262,6 +265,7 @@ describe("SmartAttributes", () => {
 
     it("should return true when removing a legacy attribute", async () => {
       const mockRemove = vi.fn();
+      mockGetObj.mockReturnValue({ sheetEnvironment: "legacy" });
       mockFindObjs.mockReturnValue([{ remove: mockRemove }]);
 
       const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
@@ -274,6 +278,24 @@ describe("SmartAttributes", () => {
       expect(mockRemove).toHaveBeenCalled();
       expect(mockGetSheetItem).not.toHaveBeenCalled();
       expect(result).toBe(true);
+    });
+
+    it("should return false when legacy character has no matching attribute", async () => {
+      mockGetObj.mockReturnValue({ sheetEnvironment: "legacy" });
+      mockFindObjs.mockReturnValue([]);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockGetSheetItem).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+
+    it("should return false when character is not found", async () => {
+      mockGetObj.mockReturnValue(null);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(result).toBe(false);
     });
 
     it("should return true when clearing a writable beacon computed", async () => {

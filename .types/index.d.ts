@@ -218,7 +218,10 @@ type CharacterProperties = {
   _defaulttoken: string;
 };
 
-declare type Roll20Character = Prettify<Roll20Object<CharacterProperties>>;
+declare type Roll20Character = Prettify<Roll20Object<CharacterProperties> & {
+  /** Experimental: legacy Roll20 attributes vs Beacon sheet */
+  sheetEnvironment?: "legacy" | "beacon";
+}>;
 
 // Attribute type with proper properties
 type AttributeProperties = {
