@@ -1407,3 +1407,11 @@ Wiki:
 ConditionTracker:
   - "ConditionTracker"
   - "Utility"
+
+Chronicle:
+  - "Chronicle"
+  - "Utility"
+
+Trinkets&Trackers:
+  - "T&T - Trinkets and Trackers"
+  - "Utility"
