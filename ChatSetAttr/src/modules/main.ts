@@ -82,8 +82,12 @@ async function acceptMessage(msg: Roll20ChatMessage) {
   }
 
   // Execute
+  const priorValues: Record<string, AttributeRecord> = {};
+  const pendingMessages: Record<string, Record<string, string>> = {};
+
   for (const target of targets) {
     const attrs = await getAttributes(target, request);
+    priorValues[target] = attrs;
     const sectionNames = getAllSectionNames(changes);
     const repOrders = await getAllRepOrders(target, sectionNames);
     const modifications = processModifications(changes, attrs, options, repOrders);
@@ -95,16 +99,27 @@ async function acceptMessage(msg: Roll20ChatMessage) {
       continue;
     }
 
-    messages.push(...response.messages);
+    pendingMessages[target] = { ...pendingMessages[target], ...response.messagesByKey };
     result[target] = response.result;
   }
 
-  const updateResult = await makeUpdate(operation, result, { noCreate: options.nocreate });
+  const updateResult = await makeUpdate(operation, result, {
+    noCreate: options.nocreate,
+    priorValues,
+    operation,
+  });
 
   clearTimer("chatsetattr");
 
-  messages.push(...updateResult.messages);
   errors.push(...updateResult.errors);
+
+  for (const target in pendingMessages) {
+    for (const key in pendingMessages[target]) {
+      if (!updateResult.failed.includes(`${target}:${key}`)) {
+        messages.push(pendingMessages[target][key]);
+      }
+    }
+  }
 
   if (options.silent) return;
   sendErrors(msg.playerid, "Errors", errors, feedback?.from);

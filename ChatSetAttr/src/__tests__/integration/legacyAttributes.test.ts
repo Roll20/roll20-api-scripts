@@ -876,6 +876,29 @@ describe("ChatSetAttr Integration Tests", () => {
         ]);
       });
     });
+
+    it("should not notify observers when setAttribute returns false", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createObj("attribute", { _id: "attr1", _characterid: "char1", name: "ExistingAttr", current: "10" });
+      const mockObserver = vi.fn();
+
+      ChatSetAttr.registerObserver("change", mockObserver);
+      const setAttributeSpy = vi.spyOn(libSmartAttributes, "setAttribute").mockResolvedValue(false);
+
+      executeCommand("!setattr --charid char1 --ExistingAttr|20");
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes("Failed to set attribute 'ExistingAttr' on target 'char1'")
+        );
+        expect(errorCall).toBeDefined();
+      });
+
+      expect(mockObserver).not.toHaveBeenCalled();
+      setAttributeSpy.mockRestore();
+    });
   });
 
   describe("Repeating Sections", () => {

@@ -139,7 +139,7 @@ describe("attributes module", () => {
     const options = { replace: true };
 
     it("should set current attribute", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       await setSingleAttribute(target, "strength", 18, options);
 
@@ -147,7 +147,7 @@ describe("attributes module", () => {
     });
 
     it("should set max attribute when isMax is true", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       await setSingleAttribute(target, "hp", 100, options, true);
 
@@ -155,7 +155,7 @@ describe("attributes module", () => {
     });
 
     it("should handle string values", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       await setSingleAttribute(target, "name", "Test Character", options);
 
@@ -163,7 +163,7 @@ describe("attributes module", () => {
     });
 
     it("should handle boolean values", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       await setSingleAttribute(target, "isDead", false, options);
 
@@ -171,11 +171,18 @@ describe("attributes module", () => {
     });
 
     it("should handle numeric values", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       await setSingleAttribute(target, "level", 5, options);
 
       expect(mockSetAttribute).toHaveBeenCalledWith(target, "level", 5, "current", defaultSetOptions);
+    });
+
+    it("should throw when setAttribute returns false", async () => {
+      mockSetAttribute.mockResolvedValue(false);
+
+      await expect(setSingleAttribute(target, "strength", 18, options))
+        .rejects.toThrow("Failed to set attribute 'strength' on target 'character-123'.");
     });
   });
 
@@ -184,7 +191,7 @@ describe("attributes module", () => {
     const options = { replace: true, silent: false };
 
     it("should set single attribute with current value", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       const attributes: Attribute[] = [
         { name: "strength", current: 18 }
@@ -196,7 +203,7 @@ describe("attributes module", () => {
     });
 
     it("should set single attribute with max value", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       const attributes: Attribute[] = [
         { name: "hp", max: 100 }
@@ -208,7 +215,7 @@ describe("attributes module", () => {
     });
 
     it("should set both current and max values", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       const attributes: Attribute[] = [
         { name: "hp", current: 75, max: 100 }
@@ -222,7 +229,7 @@ describe("attributes module", () => {
     });
 
     it("should set multiple attributes", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       const attributes: Attribute[] = [
         { name: "strength", current: 18 },
@@ -240,7 +247,7 @@ describe("attributes module", () => {
     });
 
     it("should handle different value types", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
 
       const attributes: Attribute[] = [
         { name: "name", current: "Test Character" },
@@ -300,7 +307,7 @@ describe("attributes module", () => {
         callOrder.push(currentCall);
         // Simulate async delay
         await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
-        return undefined;
+        return true;
       });
 
       const attributes: Attribute[] = [
@@ -328,11 +335,11 @@ describe("attributes module", () => {
       expect(mockDeleteAttribute).toHaveBeenCalledWith(target, "oldAttribute");
     });
 
-    it("should handle delete failures", async () => {
-      mockDeleteAttribute.mockRejectedValue(new Error("Delete failed"));
+    it("should throw when deleteAttribute returns false", async () => {
+      mockDeleteAttribute.mockResolvedValue(false);
 
       await expect(deleteSingleAttribute(target, "nonexistent"))
-        .rejects.toThrow("Delete failed");
+        .rejects.toThrow("Failed to delete attribute 'nonexistent' on target 'character-123'.");
     });
   });
 
@@ -397,13 +404,11 @@ describe("attributes module", () => {
       expect(callOrder).toEqual([1, 2, 3]);
     });
 
-    it("should handle different return types from libSmartAttributes", async () => {
-      mockDeleteAttribute
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(undefined);
+    it("should throw when deleteAttribute returns false", async () => {
+      mockDeleteAttribute.mockResolvedValue(false);
 
-      await deleteAttributes(target, ["attr1", "attr2", "attr3"]);
+      await expect(deleteAttributes(target, ["attr1", "attr2", "attr3"]))
+        .rejects.toThrow("Failed to delete attribute 'attr1' on target 'character-123'.");
 
       expect(mockDeleteAttribute).toHaveBeenCalledTimes(3);
     });
@@ -415,7 +420,7 @@ describe("attributes module", () => {
     it("should handle a complete workflow", async () => {
       // Setup mocks
       mockGetAttribute.mockResolvedValue(undefined); // Attribute doesn't exist
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
       mockDeleteAttribute.mockResolvedValue(true);
 
       // Get attribute (should be undefined initially)
@@ -437,7 +442,7 @@ describe("attributes module", () => {
     });
 
     it("should handle batch operations efficiently", async () => {
-      mockSetAttribute.mockResolvedValue(undefined);
+      mockSetAttribute.mockResolvedValue(true);
       mockDeleteAttribute.mockResolvedValue(true);
 
       const attributes: Attribute[] = [

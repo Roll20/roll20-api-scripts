@@ -37,10 +37,10 @@ describe("commands", () => {
         strength: 15,
         dexterity: 12,
       });
-      expect(result.messages).toEqual([
-        "Set attribute 'strength' on ID: char1.",
-        "Set attribute 'dexterity' on ID: char1.",
-      ]);
+      expect(result.messagesByKey).toEqual({
+        strength: "Set attribute 'strength' on ID: char1.",
+        dexterity: "Set attribute 'dexterity' on ID: char1.",
+      });
       expect(result.errors).toEqual([]);
     });
 
@@ -56,10 +56,10 @@ describe("commands", () => {
         hp_max: 25,
         mp_max: 15,
       });
-      expect(result.messages).toEqual([
-        "Set attribute 'hp' on ID: char1.",
-        "Set attribute 'mp' on ID: char1.",
-      ]);
+      expect(result.messagesByKey).toEqual({
+        hp_max: "Set attribute 'hp' on ID: char1.",
+        mp_max: "Set attribute 'mp' on ID: char1.",
+      });
       expect(result.errors).toEqual([]);
     });
 
@@ -396,10 +396,10 @@ describe("commands", () => {
         tempattr: undefined,
         tempattr_max: undefined,
       });
-      expect(result.messages).toEqual([
-        "Deleted attribute 'oldattr' on ID: char1.",
-        "Deleted attribute 'tempattr' on ID: char1.",
-      ]);
+      expect(result.messagesByKey).toEqual({
+        oldattr: "Deleted attribute 'oldattr' on ID: char1.",
+        tempattr: "Deleted attribute 'tempattr' on ID: char1.",
+      });
       expect(result.errors).toEqual([]);
     });
 
@@ -423,7 +423,7 @@ describe("commands", () => {
       const result = await delattr(changes, "char1", [], false, feedbackMock);
 
       expect(result.result).toEqual({});
-      expect(result.messages).toEqual([]);
+      expect(result.messagesByKey).toEqual({});
       expect(result.errors).toEqual([]);
     });
   });

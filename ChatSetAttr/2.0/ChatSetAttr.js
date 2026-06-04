@@ -171,6 +171,20 @@ var ChatSetAttr = (function (exports) {
         sendChat("ChatSetAttr", configMessage, undefined, { noarchive: true });
     }
 
+    const observers = {};
+    function registerObserver(event, callback) {
+        if (!observers[event]) {
+            observers[event] = [];
+        }
+        observers[event].push(callback);
+    }
+    function notifyObservers(event, targetID, attributeName, newValue, oldValue) {
+        const callbacks = observers[event] || [];
+        callbacks.forEach(callback => {
+            callback(event, targetID, attributeName, newValue, oldValue);
+        });
+    }
+
     function buildSetAttributeOptions(overrides = {}) {
         const { useWorkers = true } = getConfig() || {};
         return {
@@ -178,37 +192,65 @@ var ChatSetAttr = (function (exports) {
             setWithWorker: overrides.setWithWorker ?? useWorkers,
         };
     }
+    function failureKey(target, name) {
+        return `${target}:${name}`;
+    }
+    function observerEvent(operation, priorValue, isDelete) {
+        if (operation === "setattr" && priorValue === undefined) {
+            return "add";
+        }
+        return "change";
+    }
     async function makeUpdate(operation, results, options) {
         const isSetting = operation !== "delattr";
         const errors = [];
         const messages = [];
-        const { noCreate = false } = options || {};
+        const failed = [];
+        const { noCreate = false, priorValues = {}, operation: op = operation } = options || {};
         const setOptions = buildSetAttributeOptions({ noCreate });
         for (const target in results) {
             for (const name in results[target]) {
                 const isMax = name.endsWith("_max");
                 const type = isMax ? "max" : "current";
                 const actualName = isMax ? name.slice(0, -4) : name;
+                const key = failureKey(target, name);
+                const priorValue = priorValues[target]?.[name];
+                const newValue = results[target][name];
                 if (isSetting) {
-                    const value = results[target][name] ?? "";
+                    const value = newValue ?? "";
                     try {
-                        await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
+                        const ok = await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
+                        if (!ok) {
+                            failed.push(key);
+                            errors.push(`Failed to set attribute '${name}' on target '${target}'.`);
+                            continue;
+                        }
+                        const event = observerEvent(op, priorValue, false);
+                        notifyObservers(event, target, name, newValue, priorValue);
                     }
                     catch (error) {
+                        failed.push(key);
                         errors.push(`Failed to set attribute '${name}' on target '${target}': ${String(error)}`);
                     }
                 }
                 else {
                     try {
-                        await libSmartAttributes.deleteAttribute(target, actualName, type);
+                        const ok = await libSmartAttributes.deleteAttribute(target, actualName, type);
+                        if (!ok) {
+                            failed.push(key);
+                            errors.push(`Failed to delete attribute '${actualName}' on target '${target}'.`);
+                            continue;
+                        }
+                        notifyObservers("destroy", target, name, newValue, priorValue);
                     }
                     catch (error) {
+                        failed.push(key);
                         errors.push(`Failed to delete attribute '${actualName}' on target '${target}': ${String(error)}`);
                     }
                 }
             }
         }
-        return { errors, messages };
+        return { errors, messages, failed };
     }
 
     // #region Get Attributes
@@ -393,25 +435,11 @@ var ChatSetAttr = (function (exports) {
         return `ID: ${targetID}`;
     }
 
-    const observers = {};
-    function registerObserver(event, callback) {
-        if (!observers[event]) {
-            observers[event] = [];
-        }
-        observers[event].push(callback);
-    }
-    function notifyObservers(event, targetID, attributeName, newValue, oldValue) {
-        const callbacks = observers[event] || [];
-        callbacks.forEach(callback => {
-            callback(event, targetID, attributeName, newValue, oldValue);
-        });
-    }
-
     // region Command Handlers
     async function setattr(changes, target, referenced = [], noCreate = false, feedback) {
         const result = {};
+        const messagesByKey = {};
         const errors = [];
-        const messages = [];
         const request = createRequestList(referenced, changes, false);
         const currentValues = await getCurrentValues(target, request, changes);
         const undefinedAttributes = extractUndefinedAttributes(currentValues);
@@ -424,31 +452,33 @@ var ChatSetAttr = (function (exports) {
                 errors.push(`Missing attribute ${name} not created for ${characterName}.`);
                 continue;
             }
-            const event = undefinedAttributes.includes(name) ? "add" : "change";
             if (current !== undefined) {
                 result[name] = current;
-                notifyObservers(event, target, name, result[name], currentValues?.[name] ?? undefined);
+                let newMessage = `Set attribute '${name}' on ${characterName}.`;
+                if (feedback.content) {
+                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
+                }
+                messagesByKey[name] = newMessage;
             }
             if (max !== undefined) {
                 result[`${name}_max`] = max;
-                notifyObservers(event, target, `${name}_max`, result[`${name}_max`], currentValues?.[`${name}_max`] ?? undefined);
+                let newMessage = `Set attribute '${name}' on ${characterName}.`;
+                if (feedback.content) {
+                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
+                }
+                messagesByKey[`${name}_max`] = newMessage;
             }
-            let newMessage = `Set attribute '${name}' on ${characterName}.`;
-            if (feedback.content) {
-                newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-            }
-            messages.push(newMessage);
         }
         return {
             result,
-            messages,
+            messagesByKey,
             errors,
         };
     }
     async function modattr(changes, target, referenced, noCreate = false, feedback) {
         const result = {};
+        const messagesByKey = {};
         const errors = [];
-        const messages = [];
         const currentValues = await getCurrentValues(target, referenced, changes);
         const undefinedAttributes = extractUndefinedAttributes(currentValues);
         const characterName = getCharName(target);
@@ -467,28 +497,31 @@ var ChatSetAttr = (function (exports) {
             }
             if (current !== undefined) {
                 result[name] = calculateModifiedValue(asNumber, current);
-                notifyObservers("change", target, name, result[name], currentValues[name]);
+                let newMessage = `Set attribute '${name}' on ${characterName}.`;
+                if (feedback.content) {
+                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
+                }
+                messagesByKey[name] = newMessage;
             }
             if (max !== undefined) {
                 result[`${name}_max`] = calculateModifiedValue(currentValues[`${name}_max`], max);
-                notifyObservers("change", target, `${name}_max`, result[`${name}_max`], currentValues[`${name}_max`]);
+                let newMessage = `Set attribute '${name}' on ${characterName}.`;
+                if (feedback.content) {
+                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
+                }
+                messagesByKey[`${name}_max`] = newMessage;
             }
-            let newMessage = `Set attribute '${name}' on ${characterName}.`;
-            if (feedback.content) {
-                newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-            }
-            messages.push(newMessage);
         }
         return {
             result,
-            messages,
+            messagesByKey,
             errors,
         };
     }
     async function modbattr(changes, target, referenced, noCreate = false, feedback) {
         const result = {};
+        const messagesByKey = {};
         const errors = [];
-        const messages = [];
         const request = createRequestList(referenced, changes, true);
         const currentValues = await getCurrentValues(target, request, changes);
         const undefinedAttributes = extractUndefinedAttributes(currentValues);
@@ -508,11 +541,9 @@ var ChatSetAttr = (function (exports) {
             }
             if (current !== undefined) {
                 result[name] = calculateModifiedValue(asNumber, current);
-                notifyObservers("change", target, name, result[name], currentValues[name]);
             }
             if (max !== undefined) {
                 result[`${name}_max`] = calculateModifiedValue(currentValues[`${name}_max`], max);
-                notifyObservers("change", target, `${name}_max`, result[`${name}_max`], currentValues[`${name}_max`]);
             }
             const newMax = result[`${name}_max`] ?? currentValues[`${name}_max`];
             if (newMax !== undefined) {
@@ -523,18 +554,23 @@ var ChatSetAttr = (function (exports) {
             if (feedback.content) {
                 newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
             }
-            messages.push(newMessage);
+            if (current !== undefined) {
+                messagesByKey[name] = newMessage;
+            }
+            if (max !== undefined) {
+                messagesByKey[`${name}_max`] = newMessage;
+            }
         }
         return {
             result,
-            messages,
+            messagesByKey,
             errors,
         };
     }
     async function resetattr(changes, target, referenced, noCreate = false, feedback) {
         const result = {};
+        const messagesByKey = {};
         const errors = [];
-        const messages = [];
         const request = createRequestList(referenced, changes, true);
         const currentValues = await getCurrentValues(target, request, changes);
         const undefinedAttributes = extractUndefinedAttributes(currentValues);
@@ -559,22 +595,21 @@ var ChatSetAttr = (function (exports) {
             else {
                 result[name] = 0;
             }
-            notifyObservers("change", target, name, result[name], currentValues[name]);
             let newMessage = `Reset attribute '${name}' on ${characterName}.`;
             if (feedback.content) {
                 newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
             }
-            messages.push(newMessage);
+            messagesByKey[name] = newMessage;
         }
         return {
             result,
-            messages,
+            messagesByKey,
             errors,
         };
     }
     async function delattr(changes, target, referenced, _, feedback) {
         const result = {};
-        const messages = [];
+        const messagesByKey = {};
         const currentValues = await getCurrentValues(target, referenced, changes);
         const characterName = getCharName(target);
         for (const change of changes) {
@@ -584,18 +619,17 @@ var ChatSetAttr = (function (exports) {
             result[name] = undefined;
             result[`${name}_max`] = undefined;
             let newMessage = `Deleted attribute '${name}' on ${characterName}.`;
-            notifyObservers("destroy", target, name, result[name], currentValues[name]);
-            if (currentValues[`${name}_max`] !== undefined) {
-                notifyObservers("destroy", target, `${name}_max`, result[`${name}_max`], currentValues[`${name}_max`]);
-            }
             if (feedback.content) {
                 newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
             }
-            messages.push(newMessage);
+            messagesByKey[name] = newMessage;
+            if (currentValues[`${name}_max`] !== undefined) {
+                messagesByKey[`${name}_max`] = newMessage;
+            }
         }
         return {
             result,
-            messages,
+            messagesByKey,
             errors: [],
         };
     }
@@ -1909,8 +1943,11 @@ var ChatSetAttr = (function (exports) {
             return errorOut(`Invalid operation: ${operation}`, msg.playerid, errors);
         }
         // Execute
+        const priorValues = {};
+        const pendingMessages = {};
         for (const target of targets) {
             const attrs = await getAttributes(target, request);
+            priorValues[target] = attrs;
             const sectionNames = getAllSectionNames(changes);
             const repOrders = await getAllRepOrders(target, sectionNames);
             const modifications = processModifications(changes, attrs, options, repOrders);
@@ -1919,13 +1956,23 @@ var ChatSetAttr = (function (exports) {
                 errors.push(...response.errors);
                 continue;
             }
-            messages.push(...response.messages);
+            pendingMessages[target] = { ...pendingMessages[target], ...response.messagesByKey };
             result[target] = response.result;
         }
-        const updateResult = await makeUpdate(operation, result, { noCreate: options.nocreate });
+        const updateResult = await makeUpdate(operation, result, {
+            noCreate: options.nocreate,
+            priorValues,
+            operation,
+        });
         clearTimer("chatsetattr");
-        messages.push(...updateResult.messages);
         errors.push(...updateResult.errors);
+        for (const target in pendingMessages) {
+            for (const key in pendingMessages[target]) {
+                if (!updateResult.failed.includes(`${target}:${key}`)) {
+                    messages.push(pendingMessages[target][key]);
+                }
+            }
+        }
         if (options.silent)
             return;
         sendErrors(msg.playerid, "Errors", errors, feedback?.from);

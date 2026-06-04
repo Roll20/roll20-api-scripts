@@ -1,13 +1,17 @@
-import { type AttributeRecord, type Command } from "../types";
+import { type AttributeRecord, type AttributeValue, type Command, type ObserverEvent } from "../types";
 import { getConfig } from "./config";
+import { notifyObservers } from "./observer";
 
 type UpdateOptions = {
   noCreate?: boolean;
+  priorValues?: Record<string, AttributeRecord>;
+  operation?: Command;
 };
 
-type UpdateResult = {
+export type UpdateResult = {
   errors: string[];
   messages: string[];
+  failed: string[];
 };
 
 export function buildSetAttributeOptions(overrides: { noCreate?: boolean; setWithWorker?: boolean } = {}) {
@@ -18,6 +22,20 @@ export function buildSetAttributeOptions(overrides: { noCreate?: boolean; setWit
   };
 };
 
+function failureKey(target: string, name: string): string {
+  return `${target}:${name}`;
+};
+
+function observerEvent(operation: Command, priorValue: AttributeValue | undefined, isDelete: boolean): ObserverEvent {
+  if (isDelete) {
+    return "destroy";
+  }
+  if (operation === "setattr" && priorValue === undefined) {
+    return "add";
+  }
+  return "change";
+};
+
 export async function makeUpdate(
   operation: Command,
   results: Record<string, AttributeRecord>,
@@ -26,8 +44,9 @@ export async function makeUpdate(
   const isSetting = operation !== "delattr";
   const errors: string[] = [];
   const messages: string[] = [];
+  const failed: string[] = [];
 
-  const { noCreate = false } = options || {};
+  const { noCreate = false, priorValues = {}, operation: op = operation } = options || {};
   const setOptions = buildSetAttributeOptions({ noCreate });
 
   for (const target in results) {
@@ -35,21 +54,39 @@ export async function makeUpdate(
       const isMax = name.endsWith("_max");
       const type = isMax ? "max" : "current";
       const actualName = isMax ? name.slice(0, -4) : name;
+      const key = failureKey(target, name);
+      const priorValue = priorValues[target]?.[name];
+      const newValue = results[target][name];
 
       if (isSetting) {
-        const value = results[target][name] ?? "";
+        const value = newValue ?? "";
 
         try {
-          await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
+          const ok = await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
+          if (!ok) {
+            failed.push(key);
+            errors.push(`Failed to set attribute '${name}' on target '${target}'.`);
+            continue;
+          }
+          const event = observerEvent(op, priorValue, false);
+          notifyObservers(event, target, name, newValue, priorValue);
         } catch (error: unknown) {
+          failed.push(key);
           errors.push(`Failed to set attribute '${name}' on target '${target}': ${String(error)}`);
         }
 
       } else {
 
         try {
-          await libSmartAttributes.deleteAttribute(target, actualName, type);
+          const ok = await libSmartAttributes.deleteAttribute(target, actualName, type);
+          if (!ok) {
+            failed.push(key);
+            errors.push(`Failed to delete attribute '${actualName}' on target '${target}'.`);
+            continue;
+          }
+          notifyObservers("destroy", target, name, newValue, priorValue);
         } catch (error: unknown) {
+          failed.push(key);
           errors.push(`Failed to delete attribute '${actualName}' on target '${target}': ${String(error)}`);
         }
 
@@ -57,5 +94,5 @@ export async function makeUpdate(
     }
   }
 
-  return { errors, messages };
+  return { errors, messages, failed };
 };

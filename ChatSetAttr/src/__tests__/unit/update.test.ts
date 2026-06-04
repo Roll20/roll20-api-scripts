@@ -7,6 +7,10 @@ vi.mock("../../modules/config", () => ({
   getConfig: vi.fn(),
 }));
 
+vi.mock("../../modules/observer", () => ({
+  notifyObservers: vi.fn(),
+}));
+
 // Mock libSmartAttributes global
 const mocklibSmartAttributes = {
   getAttribute: vi.fn(),
@@ -17,7 +21,9 @@ const mocklibSmartAttributes = {
 global.libSmartAttributes = mocklibSmartAttributes;
 
 import { getConfig } from "../../modules/config";
+import { notifyObservers } from "../../modules/observer";
 const mockGetConfig = vi.mocked(getConfig);
+const mockNotifyObservers = vi.mocked(notifyObservers);
 
 describe("updates", () => {
   beforeEach(() => {
@@ -34,7 +40,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -63,7 +69,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -94,7 +100,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -121,7 +127,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -153,7 +159,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -184,7 +190,7 @@ describe("updates", () => {
         "char3": { "wisdom": 14 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -209,7 +215,7 @@ describe("updates", () => {
       };
 
       mocklibSmartAttributes.setAttribute
-        .mockResolvedValueOnce(undefined) // success succeeds
+        .mockResolvedValueOnce(true) // success succeeds
         .mockRejectedValueOnce(new Error("Failed to set failure")); // failure fails
 
       const result = await makeUpdate("setattr", results);
@@ -230,9 +236,9 @@ describe("updates", () => {
       };
 
       mocklibSmartAttributes.setAttribute
-        .mockResolvedValueOnce(undefined) // success1
+        .mockResolvedValueOnce(true) // success1
         .mockRejectedValueOnce(new Error("Error 1")) // failure1
-        .mockResolvedValueOnce(undefined) // success2
+        .mockResolvedValueOnce(true) // success2
         .mockRejectedValueOnce(new Error("Error 2")); // failure2
 
       const result = await makeUpdate("setattr", results);
@@ -277,7 +283,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       const result = await makeUpdate("setattr", results);
 
@@ -312,7 +318,7 @@ describe("updates", () => {
         "char1": { "strength": 15, "hp_max": 25 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("modattr", results);
 
@@ -330,7 +336,7 @@ describe("updates", () => {
         "char1": { "dexterity": 12, "mp_max": 15 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("modbattr", results);
 
@@ -348,7 +354,7 @@ describe("updates", () => {
         "char1": { "wisdom": 14, "sp_max": 20 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("resetattr", results);
 
@@ -371,7 +377,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       await makeUpdate("delattr", results);
 
@@ -395,7 +401,7 @@ describe("updates", () => {
         "char3": { "oldAttr3": "value" },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       await makeUpdate("delattr", results);
 
@@ -411,7 +417,7 @@ describe("updates", () => {
       };
 
       mocklibSmartAttributes.deleteAttribute
-        .mockResolvedValueOnce(undefined) // attr1 succeeds
+        .mockResolvedValueOnce(true) // attr1 succeeds
         .mockRejectedValueOnce(new Error("Cannot delete attr2")); // attr2 fails
 
       const result = await makeUpdate("delattr", results);
@@ -422,13 +428,75 @@ describe("updates", () => {
     });
   });
 
+  describe("boolean return values and observers", () => {
+    it("should record error and failed key when setAttribute returns false", async () => {
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(false);
+
+      const result = await makeUpdate("setattr", { char1: { strength: 15 } });
+
+      expect(result.errors).toEqual([
+        "Failed to set attribute 'strength' on target 'char1'.",
+      ]);
+      expect(result.failed).toEqual(["char1:strength"]);
+      expect(mockNotifyObservers).not.toHaveBeenCalled();
+    });
+
+    it("should record error and failed key when deleteAttribute returns false", async () => {
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(false);
+
+      const result = await makeUpdate("delattr", { char1: { strength: undefined } });
+
+      expect(result.errors).toEqual([
+        "Failed to delete attribute 'strength' on target 'char1'.",
+      ]);
+      expect(result.failed).toEqual(["char1:strength"]);
+      expect(mockNotifyObservers).not.toHaveBeenCalled();
+    });
+
+    it("should notify observers on successful set with change event", async () => {
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
+      const priorValues = { char1: { strength: 10 } };
+
+      await makeUpdate("setattr", { char1: { strength: 15 } }, { priorValues, operation: "setattr" });
+
+      expect(mockNotifyObservers).toHaveBeenCalledWith("change", "char1", "strength", 15, 10);
+    });
+
+    it("should notify observers with add event when prior value is undefined", async () => {
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
+      const priorValues = { char1: {} };
+
+      await makeUpdate("setattr", { char1: { NewAttr: 42 } }, { priorValues, operation: "setattr" });
+
+      expect(mockNotifyObservers).toHaveBeenCalledWith("add", "char1", "NewAttr", 42, undefined);
+    });
+
+    it("should notify observers with destroy event on successful delete", async () => {
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
+      const priorValues = { char1: { strength: 10 } };
+
+      await makeUpdate("delattr", { char1: { strength: undefined } }, { priorValues });
+
+      expect(mockNotifyObservers).toHaveBeenCalledWith("destroy", "char1", "strength", undefined, 10);
+    });
+
+    it("should not notify observers when setAttribute returns false", async () => {
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(false);
+      const priorValues = { char1: { strength: 10 } };
+
+      await makeUpdate("setattr", { char1: { strength: 15 } }, { priorValues, operation: "setattr" });
+
+      expect(mockNotifyObservers).not.toHaveBeenCalled();
+    });
+  });
+
   describe("options handling", () => {
     it("should use default options when none provided", async () => {
       const results: Record<string, AttributeRecord> = {
         "char1": { "strength": 15 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -447,7 +515,7 @@ describe("updates", () => {
       };
       const options = { noCreate: true };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results, options);
 
@@ -467,7 +535,7 @@ describe("updates", () => {
         "char1": { "strength": 15 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -488,7 +556,7 @@ describe("updates", () => {
       };
       const options = { noCreate: true };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results, options);
 
@@ -538,9 +606,9 @@ describe("updates", () => {
       };
 
       mocklibSmartAttributes.setAttribute
-        .mockResolvedValueOnce(undefined) // success1
+        .mockResolvedValueOnce(true) // success1
         .mockRejectedValueOnce(new Error("Error 1")) // failure1
-        .mockResolvedValueOnce(undefined) // success2
+        .mockResolvedValueOnce(true) // success2
         .mockRejectedValueOnce(new Error("Error 2")); // failure2
 
       const result = await makeUpdate("setattr", results);
@@ -597,7 +665,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -626,7 +694,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -662,7 +730,7 @@ describe("updates", () => {
         "char1": { "strength": 15, "hp_max": 25 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("modattr", results);
 
@@ -680,7 +748,7 @@ describe("updates", () => {
         "char1": { "dexterity": 12, "mp_max": 15 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("modbattr", results);
 
@@ -698,7 +766,7 @@ describe("updates", () => {
         "char1": { "wisdom": 14, "sp_max": 20 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("resetattr", results);
 
@@ -721,7 +789,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       await makeUpdate("delattr", results);
 
@@ -746,7 +814,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       await makeUpdate("delattr", results);
 
@@ -770,7 +838,7 @@ describe("updates", () => {
         "char3": { "wisdom": 14 },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       await makeUpdate("delattr", results);
 
@@ -786,7 +854,7 @@ describe("updates", () => {
       };
 
       mocklibSmartAttributes.deleteAttribute
-        .mockResolvedValueOnce(undefined) // strength succeeds
+        .mockResolvedValueOnce(true) // strength succeeds
         .mockRejectedValueOnce(new Error("Failed to delete dexterity")); // dexterity fails
 
       const result = await makeUpdate("delattr", results);
@@ -807,7 +875,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       const result = await makeUpdate("delattr", results);
 
@@ -832,7 +900,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       await makeUpdate("delattr", results);
 
@@ -852,7 +920,7 @@ describe("updates", () => {
       };
 
       mocklibSmartAttributes.deleteAttribute
-        .mockResolvedValueOnce(undefined) // hp current succeeds
+        .mockResolvedValueOnce(true) // hp current succeeds
         .mockRejectedValueOnce(new Error("Max deletion failed")); // hp max fails
 
       const result = await makeUpdate("delattr", results);
@@ -872,7 +940,7 @@ describe("updates", () => {
         },
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       const result = await makeUpdate("delattr", results);
 
@@ -914,7 +982,7 @@ describe("updates", () => {
         ),
       };
 
-      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
       await makeUpdate("delattr", results);
 
@@ -954,7 +1022,7 @@ describe("updates", () => {
         "char1": { "strength": 15 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 
@@ -974,7 +1042,7 @@ describe("updates", () => {
         "char1": { "strength": 15 },
       };
 
-      mocklibSmartAttributes.setAttribute.mockResolvedValue(undefined);
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
 
       await makeUpdate("setattr", results);
 

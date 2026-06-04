@@ -2,11 +2,10 @@ import type { Command, Attribute, AttributeRecord, AttributeValue, FeedbackObjec
 import { getAttributes } from "./attributes";
 import { createFeedbackMessage } from "./feedback";
 import { getCharName } from "./helpers";
-import { notifyObservers } from "./observer";
 
 export type HandlerResponse = {
   result: AttributeRecord;
-  messages: string[];
+  messagesByKey: Record<string, string>;
   errors: string[];
 };
 
@@ -27,8 +26,8 @@ export async function setattr(
   feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
+  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
-  const messages: string[] = [];
 
   const request = createRequestList(referenced, changes, false);
   const currentValues = await getCurrentValues(target, request, changes);
@@ -42,43 +41,37 @@ export async function setattr(
       errors.push(`Missing attribute ${name} not created for ${characterName}.`);
       continue;
     }
-    const event = undefinedAttributes.includes(name) ? "add" : "change";
     if (current !== undefined) {
       result[name] = current;
-      notifyObservers(
-        event,
-        target,
-        name,
-        result[name],
-        currentValues?.[name] ?? undefined,
-      );
+      let newMessage = `Set attribute '${name}' on ${characterName}.`;
+      if (feedback.content) {
+        newMessage = createFeedbackMessage(
+          characterName,
+          feedback,
+          currentValues,
+          result,
+        );
+      }
+      messagesByKey[name] = newMessage;
     }
     if (max !== undefined) {
       result[`${name}_max`] = max;
-      notifyObservers(
-        event,
-        target,
-        `${name}_max`,
-        result[`${name}_max`],
-        currentValues?.[`${name}_max`] ?? undefined
-      );
+      let newMessage = `Set attribute '${name}' on ${characterName}.`;
+      if (feedback.content) {
+        newMessage = createFeedbackMessage(
+          characterName,
+          feedback,
+          currentValues,
+          result,
+        );
+      }
+      messagesByKey[`${name}_max`] = newMessage;
     }
-
-    let newMessage = `Set attribute '${name}' on ${characterName}.`;
-    if (feedback.content) {
-      newMessage = createFeedbackMessage(
-        characterName,
-        feedback,
-        currentValues,
-        result,
-      );
-    }
-    messages.push(newMessage);
   }
 
   return {
     result,
-    messages,
+    messagesByKey,
     errors,
   };
 
@@ -92,8 +85,8 @@ export async function modattr(
   feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
+  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
-  const messages: string[] = [];
 
   const currentValues = await getCurrentValues(target, referenced, changes);
   const undefinedAttributes = extractUndefinedAttributes(currentValues);
@@ -113,29 +106,35 @@ export async function modattr(
     }
     if (current !== undefined) {
       result[name] = calculateModifiedValue(asNumber, current);
-      notifyObservers("change", target, name, result[name], currentValues[name]);
+      let newMessage = `Set attribute '${name}' on ${characterName}.`;
+      if (feedback.content) {
+        newMessage = createFeedbackMessage(
+          characterName,
+          feedback,
+          currentValues,
+          result,
+        );
+      }
+      messagesByKey[name] = newMessage;
     }
     if (max !== undefined) {
       result[`${name}_max`] = calculateModifiedValue(currentValues[`${name}_max`], max);
-      notifyObservers("change", target, `${name}_max`, result[`${name}_max`], currentValues[`${name}_max`]);
+      let newMessage = `Set attribute '${name}' on ${characterName}.`;
+      if (feedback.content) {
+        newMessage = createFeedbackMessage(
+          characterName,
+          feedback,
+          currentValues,
+          result,
+        );
+      }
+      messagesByKey[`${name}_max`] = newMessage;
     }
-
-    let newMessage = `Set attribute '${name}' on ${characterName}.`;
-    if (feedback.content) {
-      newMessage = createFeedbackMessage(
-        characterName,
-        feedback,
-        currentValues,
-        result,
-      );
-    }
-
-    messages.push(newMessage);
   }
 
   return {
     result,
-    messages,
+    messagesByKey,
     errors,
   };
 };
@@ -148,8 +147,8 @@ export async function modbattr(
   feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
+  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
-  const messages: string[] = [];
 
   const request = createRequestList(referenced, changes, true);
   const currentValues = await getCurrentValues(target, request, changes);
@@ -170,11 +169,9 @@ export async function modbattr(
     }
     if (current !== undefined) {
       result[name] = calculateModifiedValue(asNumber, current);
-      notifyObservers("change", target, name, result[name], currentValues[name]);
     }
     if (max !== undefined) {
       result[`${name}_max`] = calculateModifiedValue(currentValues[`${name}_max`], max);
-      notifyObservers("change", target, `${name}_max`, result[`${name}_max`], currentValues[`${name}_max`]);
     }
     const newMax = result[`${name}_max`] ?? currentValues[`${name}_max`];
     if (newMax !== undefined) {
@@ -195,12 +192,17 @@ export async function modbattr(
       );
     }
 
-    messages.push(newMessage);
+    if (current !== undefined) {
+      messagesByKey[name] = newMessage;
+    }
+    if (max !== undefined) {
+      messagesByKey[`${name}_max`] = newMessage;
+    }
   }
 
   return {
     result,
-    messages,
+    messagesByKey,
     errors,
   };
 }
@@ -213,8 +215,8 @@ export async function resetattr(
   feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
+  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
-  const messages: string[] = [];
 
   const request = createRequestList(referenced, changes, true);
   const currentValues = await getCurrentValues(target, request, changes);
@@ -240,8 +242,6 @@ export async function resetattr(
       result[name] = 0;
     }
 
-    notifyObservers("change", target, name, result[name], currentValues[name]);
-
     let newMessage = `Reset attribute '${name}' on ${characterName}.`;
     if (feedback.content) {
       newMessage = createFeedbackMessage(
@@ -252,12 +252,12 @@ export async function resetattr(
       );
     }
 
-    messages.push(newMessage);
+    messagesByKey[name] = newMessage;
   }
 
   return {
     result,
-    messages,
+    messagesByKey,
     errors,
   };
 }
@@ -270,7 +270,7 @@ export async function delattr(
   feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
-  const messages: string[] = [];
+  const messagesByKey: Record<string, string> = {};
   const currentValues = await getCurrentValues(target, referenced, changes);
   const characterName = getCharName(target);
 
@@ -282,12 +282,6 @@ export async function delattr(
 
     let newMessage = `Deleted attribute '${name}' on ${characterName}.`;
 
-    notifyObservers("destroy", target, name, result[name], currentValues[name]);
-
-    if (currentValues[`${name}_max`] !== undefined) {
-      notifyObservers("destroy", target, `${name}_max`, result[`${name}_max`], currentValues[`${name}_max`]);
-    }
-
     if (feedback.content) {
       newMessage = createFeedbackMessage(
         characterName,
@@ -297,11 +291,15 @@ export async function delattr(
       );
     }
 
-    messages.push(newMessage);
+    messagesByKey[name] = newMessage;
+
+    if (currentValues[`${name}_max`] !== undefined) {
+      messagesByKey[`${name}_max`] = newMessage;
+    }
   }
   return {
     result,
-    messages,
+    messagesByKey,
     errors: [],
   };
 };

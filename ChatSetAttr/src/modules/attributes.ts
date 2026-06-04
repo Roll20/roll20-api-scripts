@@ -48,7 +48,10 @@ export async function setSingleAttribute(
     noCreate: options.noCreate,
     setWithWorker: options.setWithWorker,
   });
-  await libSmartAttributes.setAttribute(target, attributeName, value, type, setOptions);
+  const ok = await libSmartAttributes.setAttribute(target, attributeName, value, type, setOptions);
+  if (!ok) {
+    throw new Error(`Failed to set attribute '${attributeName}' on target '${target}'.`);
+  }
 };
 
 export async function setAttributes(
@@ -82,17 +85,19 @@ export async function deleteSingleAttribute(
   target: string,
   attributeName: string,
 ): Promise<void> {
-  await libSmartAttributes.deleteAttribute(target, attributeName);
+  const ok = await libSmartAttributes.deleteAttribute(target, attributeName);
+  if (!ok) {
+    throw new Error(`Failed to delete attribute '${attributeName}' on target '${target}'.`);
+  }
 };
 
 export async function deleteAttributes(
   target: string,
   attributeNames: string[],
 ): Promise<void> {
-  const promises: Promise<boolean | void>[] = [];
+  const promises: Promise<void>[] = [];
   for (const name of attributeNames) {
-    const promise = libSmartAttributes.deleteAttribute(target, name);
-    promises.push(promise);
+    promises.push(deleteSingleAttribute(target, name));
   }
   await Promise.all(promises);
 };
