@@ -74,8 +74,8 @@ async function deleteAttribute(characterId: string, name: string, type: Attribut
   if(!character) {
     return false;
   }
-  if( character?.sheetEnvironment === "legacy"){
-    // Try for legacy attribute first
+
+  if (character?.sheetEnvironment === "legacy") {
     const legacyAttr = findObjs({
       _type: "attribute",
       _characterid: characterId,
@@ -89,10 +89,9 @@ async function deleteAttribute(characterId: string, name: string, type: Attribut
     return false;
   }
 
-  // Then try for the beacon computed
+  // Beacon computeds cannot be deleted (no change to the computed value).
   const beaconAttr = await getSheetItem(characterId, name, type);
   if (beaconAttr !== null && beaconAttr !== undefined) {
-    // Cannot delete beacon computed attributes.
     return false;
   }
 
