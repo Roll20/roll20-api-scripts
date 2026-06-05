@@ -298,40 +298,14 @@ describe("SmartAttributes", () => {
       expect(result).toBe(false);
     });
 
-    it("should return true when clearing a writable beacon computed", async () => {
+    it("should return false when a beacon computed exists", async () => {
       mockGetSheetItem.mockResolvedValueOnce("10");
-      mockSetSheetItem.mockResolvedValue(true);
 
       const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
 
-      expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
-      expect(mockSetSheetItem).toHaveBeenCalledWith(
-        characterId,
-        attributeName,
-        undefined,
-        "current",
-        { allowThrow: true }
-      );
-      expect(result).toBe(true);
-    });
-
-    it("should return false and not touch user attribute when beacon computed is read-only", async () => {
-      mockGetSheetItem.mockResolvedValueOnce("10");
-      mockSetSheetItem.mockRejectedValueOnce(
-        sheetItemError("COMPUTED_READONLY", 'ERROR: Readonly Property "strength".')
-      );
-
-      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
-
-      expect(mockSetSheetItem).toHaveBeenCalledTimes(1);
-      expect(mockSetSheetItem).toHaveBeenCalledWith(
-        characterId,
-        attributeName,
-        undefined,
-        "current",
-        { allowThrow: true }
-      );
       expect(mockGetSheetItem).toHaveBeenCalledTimes(1);
+      expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
+      expect(mockSetSheetItem).not.toHaveBeenCalled();
       expect(result).toBe(false);
     });
 
