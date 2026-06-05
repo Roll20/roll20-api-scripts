@@ -67,18 +67,8 @@ var libSmartAttributes = (function () {
         // Then try for the beacon computed
         const beaconAttr = await getSheetItem(characterId, name, type);
         if (beaconAttr !== null && beaconAttr !== undefined) {
-            // Cannot delete beacon computed attributes. Setting to undefined instead.
-            try {
-                await setSheetItem(characterId, name, undefined, type, { allowThrow: true });
-                return true;
-            }
-            catch (e) {
-                switch (e.type) {
-                    // for read only computeds, we don't want to fall through to a "user." version.
-                    case "COMPUTED_READONLY":
-                        return false;
-                }
-            }
+            // Cannot delete beacon computed attributes.
+            return false;
         }
         // Then try for the user attribute
         const userAttr = await getSheetItem(characterId, `user.${name}`, type);
