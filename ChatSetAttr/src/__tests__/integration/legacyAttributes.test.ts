@@ -36,6 +36,13 @@ describe("ChatSetAttr Integration Tests", () => {
     resetAllCallbacks();
   });
 
+  /** libSmartAttributes.deleteAttribute uses legacy removal only when sheetEnvironment is legacy */
+  function createLegacyCharacter(properties: Record<string, unknown>) {
+    const character = createObj("character", properties);
+    Object.assign(character, { sheetEnvironment: "legacy" });
+    return character;
+  }
+
   describe("Attribute Setting Commands", () => {
     it("should set Strength to 15 for selected characters", async () => {
       // arrange
@@ -372,8 +379,8 @@ describe("ChatSetAttr Integration Tests", () => {
     it("should delete the gold attribute from all characters", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       vi.mocked(global.playerIsGM).mockReturnValue(true);
-      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
-      createObj("character", { _id: "char2", name: "Character 2", controlledby: player.id });
+      createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      createLegacyCharacter({ _id: "char2", name: "Character 2", controlledby: player.id });
       createObj("attribute", { _characterid: "char1", name: "gold", current: "100" });
       createObj("attribute", { _characterid: "char2", name: "gold", current: "200" });
       createObj("attribute", { _characterid: "char1", name: "silver", current: "50" });
@@ -455,7 +462,7 @@ describe("ChatSetAttr Integration Tests", () => {
 
     it("should delete attributes using the !del command syntax", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
-      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
       createObj("attribute", { _characterid: "char1", name: "ToDelete1", current: "10" });
       createObj("attribute", { _characterid: "char1", name: "ToDelete2", current: "20" });
       createObj("attribute", { _characterid: "char1", name: "ToKeep", current: "30" });
@@ -471,6 +478,25 @@ describe("ChatSetAttr Integration Tests", () => {
         expect(toDelete2).toBeUndefined();
         expect(toKeep).toBeDefined();
         expect(toKeep).toBe("30");
+      });
+    });
+
+    it("should not delete attributes exposed as beacon computeds", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createObj("attribute", { _characterid: "char1", name: "ComputedLike", current: "10" });
+
+      executeCommand("!delattr --charid char1 --ComputedLike");
+
+      await vi.waitFor(async () => {
+        const value = await libSmartAttributes.getAttribute("char1", "ComputedLike");
+        expect(value).toBe("10");
+
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes("Failed to delete attribute 'ComputedLike' on target 'char1'")
+        );
+        expect(errorCall).toBeDefined();
       });
     });
   });
@@ -855,7 +881,7 @@ describe("ChatSetAttr Integration Tests", () => {
 
     it("should observe attribute deletions with registered observers", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
-      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
       createObj("attribute", { _id: "attr1", _characterid: "char1", name: "DeleteMe", current: "10" });
       const mockObserver = vi.fn();
 
@@ -898,6 +924,27 @@ describe("ChatSetAttr Integration Tests", () => {
 
       expect(mockObserver).not.toHaveBeenCalled();
       setAttributeSpy.mockRestore();
+    });
+
+    it("should not notify observers when deleteAttribute fails on a computed", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createObj("attribute", { _id: "attr1", _characterid: "char1", name: "ComputedLike", current: "10" });
+      const mockObserver = vi.fn();
+
+      ChatSetAttr.registerObserver("destroy", mockObserver);
+
+      executeCommand("!delattr --charid char1 --ComputedLike");
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes("Failed to delete attribute 'ComputedLike' on target 'char1'")
+        );
+        expect(errorCall).toBeDefined();
+      });
+
+      expect(mockObserver).not.toHaveBeenCalled();
     });
   });
 
@@ -978,7 +1025,7 @@ describe("ChatSetAttr Integration Tests", () => {
 
     const createRepeatingObjects = () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
-      const character = createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      const character = createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
       const token = createObj("graphic", { _id: "token1", represents: character.id, _subtype: "token" });
 
       const firstWeaponNameAttr = createObj("attribute", {
