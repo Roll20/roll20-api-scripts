@@ -52,7 +52,6 @@ var libSmartAttributes = (function () {
             return false;
         }
         if (character?.sheetEnvironment === "legacy") {
-            // Try for legacy attribute first
             const legacyAttr = findObjs({
                 _type: "attribute",
                 _characterid: characterId,
@@ -64,10 +63,9 @@ var libSmartAttributes = (function () {
             }
             return false;
         }
-        // Then try for the beacon computed
+        // Beacon computeds cannot be deleted (no change to the computed value).
         const beaconAttr = await getSheetItem(characterId, name, type);
         if (beaconAttr !== null && beaconAttr !== undefined) {
-            // Cannot delete beacon computed attributes.
             return false;
         }
         // Then try for the user attribute

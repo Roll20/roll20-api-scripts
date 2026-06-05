@@ -298,14 +298,36 @@ describe("SmartAttributes", () => {
       expect(result).toBe(false);
     });
 
-    it("should return false when a beacon computed exists", async () => {
+    it("should return false when a beacon computed exists and no legacy attribute exists", async () => {
       mockGetSheetItem.mockResolvedValueOnce("10");
 
       const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
 
+      expect(mockFindObjs).toHaveBeenCalledTimes(0);
       expect(mockGetSheetItem).toHaveBeenCalledTimes(1);
       expect(mockGetSheetItem).toHaveBeenCalledWith(characterId, attributeName, "current");
       expect(mockSetSheetItem).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+
+    it("should return false for falsy beacon computed values without calling setSheetItem", async () => {
+      mockGetSheetItem.mockResolvedValueOnce(0);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockSetSheetItem).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+
+    it("should ignore legacy attribute on beacon character before checking computed", async () => {
+      const mockRemove = vi.fn();
+      mockGetObj.mockReturnValue({ sheetEnvironment: "beacon" });
+      mockFindObjs.mockReturnValue([{ remove: mockRemove }]);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockRemove).not.toHaveBeenCalled();
+      expect(mockGetSheetItem).toHaveBeenCalledTimes(2);
       expect(result).toBe(false);
     });
 
