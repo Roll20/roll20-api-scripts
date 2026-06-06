@@ -1,0 +1,49 @@
+{
+  "name": "Combat Encounter Director",
+  "script": "CombatEncounterDirector.js",
+  "version": "1.0.0",
+  "previousversions": [],
+  "description": "Gives Game Masters rapid control over combat encounters — scaling, boss tools, reinforcements, battlefield management, reporting, and encounter recovery.",
+  "authors": "MidNiteShadow7",
+  "roll20userid": "16506286",
+  "useroptions": [
+    {
+      "name": "hpBar",
+      "displayname": "HP Bar",
+      "type": "select",
+      "options": [
+        "bar1|Bar 1 (default)",
+        "bar2|Bar 2",
+        "bar3|Bar 3"
+      ],
+      "default": "bar1",
+      "description": "Which token bar tracks Hit Points."
+    },
+    {
+      "name": "acBar",
+      "displayname": "AC Bar",
+      "type": "select",
+      "options": [
+        "bar2|Bar 2 (default)",
+        "bar1|Bar 1",
+        "bar3|Bar 3",
+        "none|None"
+      ],
+      "default": "bar2",
+      "description": "Which token bar tracks Armour Class. Set to None to disable AC scaling."
+    },
+    {
+      "name": "language",
+      "displayname": "Language",
+      "type": "text",
+      "default": "en-US",
+      "description": "Language code for GM messages (e.g. en-US, fr, de, es, ja). Run !director config language to see all supported codes."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "tokens": "read,modify",
+    "handouts": "read,modify"
+  },
+  "conflicts": []
+}
