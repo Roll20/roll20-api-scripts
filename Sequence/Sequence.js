@@ -678,6 +678,7 @@ var Sequence = Sequence || (() => {
 
     const validateEasingExpr = (expr) => {
         if (!expr || !expr.trim()) return null;
+        if (expr.trim() === 'continuous') return null; // special keyword — not a curve
         const token = parseEasingToken(expr.trim());
         if (!token) return `Could not parse easing expression: "${expr}"`;
         if (!EASING[token.name]) return `Unknown easing curve: "${token.name}"`;
@@ -975,6 +976,7 @@ var Sequence = Sequence || (() => {
                     return node.apply(null, [_ctx].concat(args));
                 };
             }
+            if (node === null || typeof node !== 'object') return node;
             var wrapped = {};
             Object.keys(node).forEach(function(k) {
                 wrapped[k] = _wrapNode(node[k]);
@@ -1488,6 +1490,18 @@ var Sequence = Sequence || (() => {
         name: 'transparent', namespace: 'color', type: 'Color', contexts: ['value'],
         value: Color.transparent,
         description: 'Transparent (no tint)',
+    });
+
+    // ── Math constants ────────────────────────────────────────────────────────
+    registerPlaybackConstant(SCRIPT_NAME, {
+        name: 'PI', namespace: 'core', type: 'number',
+        value: Math.PI,
+        description: 'π (3.14159…)',
+    });
+    registerPlaybackConstant(SCRIPT_NAME, {
+        name: 'TAU', namespace: 'core', type: 'number',
+        value: Math.PI * 2,
+        description: '2π (6.28318…) — one full rotation in radians.',
     });
 
     // Pre-built query strings for handout dropdown buttons
@@ -2873,42 +2887,55 @@ var Sequence = Sequence || (() => {
                     // Resolve expression if needed to get the target value
                     let nextParsed = nextKf.deltas[attrName];
                     if (nextParsed && nextParsed.expr) {
+                        const srcEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
+                            ? kfs[prevIdx].easings[attrName]
+                            : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                        const isContinuous = srcEasing === 'continuous';
                         const orig = pb.initialState[attrName] !== undefined ? pb.initialState[attrName] : 0;
                         const prev = prevAbsState[attrName] !== undefined ? prevAbsState[attrName] : orig;
-                        // curr fetched lazily inside evalExpr via reg+obj
                         try {
                             const val = evalExpr(nextParsed.expr, orig, prev, undefined,
                                 { obj, reg, t: tNorm, cumulative: pb.cumulative || {} });
-                            nextParsed = nextParsed.mode === 'abs' ? { abs: val }
+                            let resolved = nextParsed.mode === 'abs' ? { abs: val }
                                 : nextParsed.mode === 'mul' ? { delta: val }
                                 : { delta: (nextParsed.sign || 1) * val };
-                            // Cache the resolved value so all ticks in this segment agree
-                            if (!pb.resolvedExprs) pb.resolvedExprs = {};
-                            const key = `${nextIdx}:${attrName}`;
-                            if (!(key in pb.resolvedExprs)) pb.resolvedExprs[key] = nextParsed;
-                            nextParsed = pb.resolvedExprs[key];
+                            if (isContinuous) {
+                                // Continuous: use resolved value directly, no lerp, no cache
+                                const shadow = makeShadow(prevAbsState);
+                                if ('abs' in resolved)        reg.set(shadow, resolved.abs);
+                                else if ('delta' in resolved) reg.apply(shadow, resolved.delta);
+                                interpolated = shadow._state[attrName];
+                            } else {
+                                // Cache the resolved value so all ticks in this segment agree
+                                if (!pb.resolvedExprs) pb.resolvedExprs = {};
+                                const key = `${nextIdx}:${attrName}`;
+                                if (!(key in pb.resolvedExprs)) pb.resolvedExprs[key] = resolved;
+                                nextParsed = pb.resolvedExprs[key];
+                            }
                         } catch(e) {
                             log(`${SCRIPT_NAME}: lerp expr error for ${attrName}: ${e.message}`);
                         }
                     }
-                    // Apply resolved delta to prevState shadow to get absolute nextVal
-                    const shadow = makeShadow(prevAbsState);
-                    if (nextParsed && 'abs' in nextParsed)        reg.set(shadow, nextParsed.abs);
-                    else if (nextParsed && 'delta' in nextParsed) reg.apply(shadow, nextParsed.delta);
-                    const nextVal    = shadow._state[attrName];
-                    const prevTime   = prevIdx >= 0
-                        ? (pb.resolvedTimes[prevIdx] !== undefined ? pb.resolvedTimes[prevIdx] : (typeof kfs[prevIdx].time === 'number' ? kfs[prevIdx].time : 0))
-                        : 0;
-                    const nextTime   = pb.resolvedTimes[nextIdx] !== undefined
-                        ? pb.resolvedTimes[nextIdx]
-                        : (typeof nextKf.time === 'number' ? nextKf.time : prevTime);
-                    const segDur     = nextTime - prevTime;
-                    const segElapsed = t - prevTime;
-                    const segT       = segDur > 0 ? segElapsed / segDur : 1;
-                    const srcEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
-                        ? kfs[prevIdx].easings[attrName]
-                        : (pb.currentEasings[attrName] || pb.easing || 'linear');
-                    interpolated = reg.lerp(prevVal, nextVal, getEasing(srcEasing)(segT));
+                    if (interpolated === undefined) {
+                        // Normal lerp path (non-continuous expressions or non-expression deltas)
+                        const shadow = makeShadow(prevAbsState);
+                        if (nextParsed && 'abs' in nextParsed)        reg.set(shadow, nextParsed.abs);
+                        else if (nextParsed && 'delta' in nextParsed) reg.apply(shadow, nextParsed.delta);
+                        const nextVal    = shadow._state[attrName];
+                        const prevTime   = prevIdx >= 0
+                            ? (pb.resolvedTimes[prevIdx] !== undefined ? pb.resolvedTimes[prevIdx] : (typeof kfs[prevIdx].time === 'number' ? kfs[prevIdx].time : 0))
+                            : 0;
+                        const nextTime   = pb.resolvedTimes[nextIdx] !== undefined
+                            ? pb.resolvedTimes[nextIdx]
+                            : (typeof nextKf.time === 'number' ? nextKf.time : prevTime);
+                        const segDur     = nextTime - prevTime;
+                        const segElapsed = t - prevTime;
+                        const segT       = segDur > 0 ? segElapsed / segDur : 1;
+                        const lerpEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
+                            ? kfs[prevIdx].easings[attrName]
+                            : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                        interpolated = reg.lerp(prevVal, nextVal, getEasing(lerpEasing)(segT));
+                    }
                 } else {
                     interpolated = prevVal;
                 }
