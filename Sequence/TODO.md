@@ -65,16 +65,16 @@ Either approach (or both) makes the system safe for virtual attributes without r
 
 ---
 
-## Planned: `t` Variable in Expressions (Orbit / Cycle Animations)
+## Done: `t` Variable in Expressions (Orbit / Cycle Animations)
 
-Add a normalized time variable `t` (0–1, representing elapsed fraction of the current loop cycle) to the expression scope so users can write orbit-style animations:
+Normalized time variable `t` (0–1, representing elapsed fraction of the current playback cycle) is available in value expressions:
 
 ```
-left: =orig_left + cos(t * 2 * PI) * distance
-top:  =orig_top  + sin(t * 2 * PI) * distance
+left: =orig + cos(t * 2 * PI) * 140
+top:  =orig + sin(t * 2 * PI) * 140
 ```
 
-Needed for `!sequence generate orbit` and MovementAnimations parity. TBD whether this lives in Sequence's expression scope or in Choreograph.
+`t` is 0 at the first frame, 1 at the last frame, and resets each loop cycle.
 
 ---
 

@@ -798,7 +798,7 @@ var Sequence = Sequence || (() => {
     const TIME_EXPR_SCOPE = {};
 
     // Top-level identifiers allowed in value expressions
-    const EXPR_ALLOWED_VARS  = new Set(['orig', 'original', 'prev', 'previous', 'curr', 'current']);
+    const EXPR_ALLOWED_VARS  = new Set(['orig', 'original', 'prev', 'previous', 'curr', 'current', 't']);
     const EXPR_ALLOWED_ROOTS = new Set([...EXPR_ALLOWED_VARS]);
     // Top-level identifiers allowed in time expressions (only prev)
     const TIME_ALLOWED_ROOTS = new Set(['prev', 'previous']);
@@ -945,13 +945,16 @@ var Sequence = Sequence || (() => {
             return _currCache;
         };
 
+        const _t = context && context.t !== undefined ? context.t : 0;
+
         const body = expr
             .replace(/\boriginal\b/g, '_orig')
             .replace(/\bprevious\b/g, '_prev')
             .replace(/\bcurrent\b/g,  '_getCurr()')
             .replace(/\borig\b/g,     '_orig')
             .replace(/\bprev\b/g,     '_prev')
-            .replace(/\bcurr\b/g,     '_getCurr()');
+            .replace(/\bcurr\b/g,     '_getCurr()')
+            .replace(/\bt\b/g,        '_t');
 
         const _ctx = {
             obj:        context ? context.obj : null,
@@ -2556,7 +2559,7 @@ var Sequence = Sequence || (() => {
      * @param {object} prevState     - running state before this keyframe (prev)
      * @param {object} liveObj       - Roll20 graphic object (curr)
      */
-    const resolveDeltas = (deltas, initialState, prevState, liveObj, cumulative) => {
+    const resolveDeltas = (deltas, initialState, prevState, liveObj, cumulative, t) => {
         const resolved = {};
         Object.entries(deltas || {}).forEach(([attrName, parsed]) => {
             if (!parsed || !parsed.expr) { resolved[attrName] = parsed; return; }
@@ -2569,7 +2572,7 @@ var Sequence = Sequence || (() => {
 
             try {
                 const val = evalExpr(parsed.expr, orig, prev, curr,
-                    { obj: liveObj, cumulative: cumulative || {} });
+                    { obj: liveObj, t: t || 0, cumulative: cumulative || {} });
                 if (parsed.mode === 'abs') {
                     resolved[attrName] = { abs: val };
                 } else if (parsed.mode === 'mul') {
@@ -2761,6 +2764,9 @@ var Sequence = Sequence || (() => {
             t = lastKfTime;
         }
 
+        // Normalized time (0-1) for expression scope
+        const tNorm = t / duration;
+
         let prevIdx = -1;
         let nextIdx = kfs.length;
         for (let i = 0; i < kfs.length; i++) {
@@ -2814,7 +2820,7 @@ var Sequence = Sequence || (() => {
                 const prevState = stateAt(i - 1);
                 const state     = stateAt(i);
                 // Resolve any expression deltas before applying
-                const resolvedDeltas = resolveDeltas(kf.deltas, pb.initialState, prevState, obj, pb.cumulative);
+                const resolvedDeltas = resolveDeltas(kf.deltas, pb.initialState, prevState, obj, pb.cumulative, tNorm);
                 // Re-apply with resolved deltas via shadow
                 const shadow = makeShadow(prevState);
                 Object.entries(resolvedDeltas || {}).forEach(([attrName, parsed]) => {
@@ -2872,7 +2878,7 @@ var Sequence = Sequence || (() => {
                         // curr fetched lazily inside evalExpr via reg+obj
                         try {
                             const val = evalExpr(nextParsed.expr, orig, prev, undefined,
-                                { obj, reg, cumulative: pb.cumulative || {} });
+                                { obj, reg, t: tNorm, cumulative: pb.cumulative || {} });
                             nextParsed = nextParsed.mode === 'abs' ? { abs: val }
                                 : nextParsed.mode === 'mul' ? { delta: val }
                                 : { delta: (nextParsed.sign || 1) * val };
