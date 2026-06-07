@@ -18,7 +18,6 @@
 //     Start recording on selected/listed objects.
 //     Flags:
 //       --attrs <a,b,...>   Only record the listed attributes (default: all)
-//       --create [n]        Also capture the next N object creations
 //
 //   !sequence stop [ignore-selected] [obj_id...]
 //     Stop recording and save automatically if a name was given.
@@ -1515,7 +1514,7 @@ var Sequence = Sequence || (() => {
         return `?{Easing|${entries.join('|')}}`;
     };
 
-    const TYPE_QUERY = '?{Type|change|command|create|destroy}';
+    const TYPE_QUERY = '?{Type|change|command}';
 
     const generateHandoutHtml = (name, recording, attrCols) => {
         const { objectType = 'graphic', duration = 0, notes = '' } = recording;
@@ -2042,10 +2041,10 @@ var Sequence = Sequence || (() => {
                     }
                 });
 
-                // Include command, create, destroy, and change rows with deltas
+                // Include command and change rows with deltas
                 // Also include blank change rows (user may have added them manually)
                 if (Object.keys(kf.deltas).length > 0 ||
-                    kf.type === 'command' || kf.type === 'create' || kf.type === 'destroy' ||
+                    kf.type === 'command' ||
                     kf.type === 'change') {
                     track.keyframes.push(kf);
                 }
@@ -3664,7 +3663,7 @@ var Sequence = Sequence || (() => {
                     replyError(msg, 'Usage: !sequence set-type <name> <time> <type>');
                     return;
                 }
-                const validTypes = ['change', 'command', 'create', 'destroy'];
+                const validTypes = ['change', 'command'];
                 if (!validTypes.includes(newType)) {
                     replyError(msg, `Invalid type "${newType}". Valid: ${validTypes.join(', ')}`);
                     return;
@@ -4225,7 +4224,7 @@ var Sequence = Sequence || (() => {
     // Guard against recursive handout change events when we write back
     const handoutWriting = new Set();
 
-    const VALID_TYPES = new Set(['change', 'command', 'create', 'destroy']);
+    const VALID_TYPES = new Set(['change', 'command']);
 
     /**
      * Validate a parsed recording. Returns an array of error strings.
@@ -4379,21 +4378,6 @@ var Sequence = Sequence || (() => {
                 });
             }
         });
-    };
-
-    const onDestroyObject = (obj) => {
-        const id      = obj.get('id');
-        const session = activeSessions[id];
-        if (session) {
-            session.keyframes.push({
-                time:    Date.now() - session.startTime,
-                type:    'destroy',
-                deltas:  {},
-                easings: {},
-            });
-            stopRecording(id);
-        }
-        stopPlayback(id);
     };
 
     // =========================================================================
@@ -5172,8 +5156,6 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                 .filter(Boolean)
         );
         watchProps.forEach(prop => on(`change:graphic:${prop}`, onObjectChanged));
-
-        on('destroy:graphic', onDestroyObject);
     };
 
     // =========================================================================
