@@ -70,11 +70,25 @@ Either approach (or both) makes the system safe for virtual attributes without r
 Normalized time variable `t` (0–1, representing elapsed fraction of the current playback cycle) is available in value expressions:
 
 ```
-left: =orig + cos(t * 2 * PI) * 140
-top:  =orig + sin(t * 2 * PI) * 140
+left: =orig + cos(t * TAU) * 140
+top:  =orig + sin(t * TAU) * 140
 ```
 
-`t` is 0 at the first frame, 1 at the last frame, and resets each loop cycle.
+`t` is 0 at the first frame, 1 at the last frame, and resets each loop cycle. Requires `continuous` easing on the segment.
+
+---
+
+## Done: `continuous` Easing, Function Memoization, and `freeze`
+
+**Continuous easing:** Setting a segment's easing to `continuous` causes the expression to re-evaluate every tick rather than evaluating once and lerping. This is required for `t`-based animations.
+
+**Function classification:** Functions can be registered with `continuous: true` (non-deterministic, e.g. `rand`, `randInt`, `pick`). In a non-continuous segment, these are memoized per call-site so they produce a stable value for the duration of the segment. In a continuous segment they re-evaluate freely each tick.
+
+**`freeze(value)`:** A special function that always memoizes its result per call-site, even in a continuous segment. Use to stabilize non-deterministic values: `=orig + freeze(rand(-50,50)) + cos(t * TAU) * 140` gives a stable random offset with continuous oscillation. Cache resets each loop cycle.
+
+**`PI` and `TAU` constants:** `PI` (π) and `TAU` (2π) are available in all expressions.
+
+**`_wrapNode` fix:** Primitives (numbers, booleans) in `EXPR_SCOPE` are now passed through correctly instead of being wrapped as empty objects.
 
 ---
 

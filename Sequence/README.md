@@ -91,6 +91,7 @@ Leave blank for linear. Type a curve name for ease-in, or `~name` for ease-out.
 | `power(3)` | Parametric ease-in |
 | `bezier(0.42,0,0.58,1)` | CSS ease-in-out |
 | `step` | Instant jump at end of segment |
+| `continuous` | Re-evaluate expression every tick (no lerp). Required for `t`-based animations. |
 
 For ease-in-out: add an empty row at the midpoint with `~curve` as the easing — this switches the curve for subsequent lerps without moving the token.
 
@@ -105,6 +106,7 @@ Available in value cell expressions:
 | `orig` / `original` | Attribute value at start of playback |
 | `prev` / `previous` | Accumulated value at the previous keyframe |
 | `curr` / `current` | Current live value on the token (lazy-fetched) |
+| `t` | Normalized time (0–1) within the current playback cycle. Requires `continuous` easing. |
 
 Available in time cell expressions:
 
@@ -112,13 +114,41 @@ Available in time cell expressions:
 |----------|---------|
 | `prev` | Previous resolved timestamp (ms) |
 
+## Constants
+
+| Constant | Value |
+|----------|-------|
+| `PI` | π (3.14159…) |
+| `TAU` | 2π (6.28318…) — one full rotation in radians |
+
+Color constants (`color.red`, `color.blue`, etc.) are also available — run `!sequence man vars` for the full list.
+
 ## Built-in Functions
 
-`rand(min, max)`, `randInt(min, max)`, `pick(a, b, ...)`, `clamp(v, lo, hi)`, `abs`, `round`, `floor`, `ceil`, `min`, `max`, `sqrt`, `pow`, `sin`, `cos`, `tan`, `log`, `exp`
+`rand(min, max)`, `randInt(min, max)`, `pick(a, b, ...)`, `freeze(value)`, `clamp(v, lo, hi)`, `abs`, `round`, `floor`, `ceil`, `min`, `max`, `sqrt`, `pow`, `sin`, `cos`, `tan`, `log`, `exp`
+
+**`freeze(value)`** — memoizes its result for the duration of the segment. Use in `continuous` easing to stabilize impure values:
+```
+=orig + freeze(rand(-50,50)) + cos(t * TAU) * 140
+```
+This gives a stable random offset with continuous oscillation. The frozen value resets each loop cycle.
+
+**Impure functions** (`rand`, `randInt`, `pick`) are automatically memoized in non-continuous segments (stable for the segment). In `continuous` segments they re-evaluate every tick — wrap in `freeze()` to stabilize.
 
 Color functions (value context only): `color.rgb(r,g,b)`, `color.hsl(h,s,l)`, `color.mix(a,b,t)`, `color.rotateHue(c,deg)`, `color.darken(c,amt)`, `color.lighten(c,amt)`, `color.saturate(c,amt)`
 
 Run `!sequence man func` in chat for the full list with descriptions and examples.
+
+## Continuous Animations
+
+For animations driven by mathematical functions rather than lerp between keyframes, use `continuous` easing with the `t` variable:
+
+| Time | left | left:easing |
+|------|------|-------------|
+| `=0` | | `continuous` |
+| `=3000` | `=orig + cos(t * TAU) * 140` | |
+
+Play with `--loop` for endless orbiting. `t` goes from 0→1 over the segment duration and resets each loop.
 
 ## Supported Attributes
 
