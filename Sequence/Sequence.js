@@ -5298,6 +5298,38 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                 },
             });
 
+            // Register example scenes
+            Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'scatter',
+                description: 'Tokens scatter outward with staggered animation playback.',
+                scene: {
+                    notes: 'Plays a recording on each token staggered by distance from center. Requires a Sequence recording named "scatter" (or change the command).',
+                    params: [
+                        { name: 'anim', type: 'text', default: 'scatter', description: 'Sequence recording name' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: '*', delay: 'stagger(rank("left"), 500)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Staggered playback' },
+                    ],
+                },
+            });
+
+            Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'wave',
+                description: 'Plays an animation in a wave across tokens sorted by position.',
+                scene: {
+                    notes: 'Spatial wave — tokens further right start later. Requires a Sequence recording.',
+                    params: [
+                        { name: 'anim', type: 'text', default: 'pulse', description: 'Sequence recording name' },
+                        { name: 'interval', type: 'number', default: '300', description: 'Ms between each token' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Wave' },
+                    ],
+                },
+            });
+
             log(`${SCRIPT_NAME}: registered with Choreograph`);
         };
 

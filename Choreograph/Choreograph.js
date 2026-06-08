@@ -45,6 +45,7 @@ var Choreograph = Choreograph || (() => {
     const EXT_PARAM_TYPES    = {}; // { 'typeName': { name, description, parse, validate } }
     const EXT_LIFECYCLE      = []; // [{ source, commands: [RegExp], start, stop, pause, resume }]
     const EXT_SYNC           = []; // [{ source, commands: [RegExp], waiting: fn }]
+    const EXT_EXAMPLES       = {}; // { 'name': { name, description, source, scene } }
 
     const validIdent = (s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
 
@@ -239,6 +240,24 @@ var Choreograph = Choreograph || (() => {
                 },
             });
         });
+    };
+
+    /**
+     * Register an example scene that can be generated via !choreograph example <name>.
+     * @param {string} sourceId - registering script name
+     * @param {object} struct - { name, description, scene }
+     *   scene: { notes, params, variables, rows } (same shape as parseScene output)
+     */
+    const registerExample = (sourceId, struct) => {
+        const src = sourceId || SCRIPT_NAME;
+        const { name, description = '', scene } = struct;
+        if (!name || !scene) {
+            log(`${SCRIPT_NAME}: [${src}] registerExample — missing name or scene`);
+            return false;
+        }
+        if (EXT_EXAMPLES[name]) return false; // no-op on duplicate
+        EXT_EXAMPLES[name] = { name, description, source: src, scene };
+        return true;
     };
 
     const generateExtensionHandout = (sourceId, opts = {}) => {
@@ -1712,6 +1731,53 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
+        // ---- example ----
+        if (cmd === 'example') {
+            const exName = args[0];
+            if (!exName || exName === 'list') {
+                const examples = Object.values(EXT_EXAMPLES);
+                if (examples.length === 0) {
+                    reply(msg, 'Examples', 'No examples registered.');
+                    return;
+                }
+                let out = `<b>${examples.length} example(s) available:</b><br>`;
+                examples.forEach(ex => {
+                    out += `• <b>${escHtml(ex.name)}</b>`;
+                    if (ex.description) out += ` — ${escHtml(ex.description)}`;
+                    out += ` <i>[${escHtml(ex.source)}]</i><br>`;
+                });
+                out += `<br>Use <code>${CMD_TOKEN} example &lt;name&gt;</code> to generate.`;
+                reply(msg, 'Examples', out);
+                return;
+            }
+
+            const ex = EXT_EXAMPLES[exName];
+            if (!ex) {
+                replyError(msg, `No example named "${exName}". Use ${CMD_TOKEN} example list.`);
+                return;
+            }
+
+            // Generate the scene handout
+            const sceneName = `example-${exName}`;
+            const scene = Object.assign({ name: sceneName }, ex.scene);
+            // Ensure cast param
+            if (!scene.params) scene.params = [];
+            if (!scene.params.find(p => p.name === 'cast')) {
+                scene.params.unshift({ name: 'cast', type: 'token[]', default: 'selected', description: 'Tokens to run the scene on (built-in)' });
+            }
+            if (!scene.variables) scene.variables = [];
+            if (!scene.rows) scene.rows = [];
+
+            const handout = scenes().getOrCreate(sceneName);
+            setHandoutNotes(handout, generateSceneHtml(sceneName, scene));
+            scenes().cache[sceneName] = scene;
+            reply(msg, 'Examples',
+                `Generated example scene "<b>${escHtml(sceneName)}</b>". `
+                + `<a href="http://journal.roll20.net/handout/${handout.get('id')}">[Open Handout]</a> `
+                + btnHtml('▶ Run', `${CMD_TOKEN} run ${sceneName}`));
+            return;
+        }
+
         // ---- status ----
         if (cmd === 'status') {
             const instances = Object.values(runningScenes);
@@ -2067,6 +2133,65 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
     const checkInstall = () => {
         state[SCRIPT_NAME] = state[SCRIPT_NAME] || {};
 
+        // ── Built-in example scenes ───────────────────────────────────────
+        registerExample(SCRIPT_NAME, {
+            name: 'shockwave',
+            description: 'Propagates an echo outward from the leftmost token like a shockwave.',
+            scene: {
+                notes: 'Tokens fire in order of distance from the leftmost token.',
+                params: [
+                    { name: 'speed', type: 'number', default: '0.2', description: 'Propagation speed (px/ms)' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'propagate(distance(actors()[0].get("left"), actors()[0].get("top")), speed)', commands: ['!choreograph echo Shockwave hit ${tokenName}!'], notes: 'Propagate from leftmost' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'roll-call',
+            description: 'Tokens announce themselves one by one, sorted left to right.',
+            scene: {
+                notes: 'A simple stagger demo — each token echoes its name in order.',
+                params: [],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), 800)', commands: ['!choreograph echo ${tokenName} reporting in!'], notes: '' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'countdown',
+            description: 'Recursive countdown — echoes a number, then calls itself with n-1.',
+            scene: {
+                notes: 'Demonstrates scene chaining and recursion with sync.',
+                params: [
+                    { name: 'n', type: 'number', default: '5', description: 'Countdown start' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: '0', commands: ['!choreograph echo ${n}...'], notes: 'Echo current count' },
+                    { filter: '*', delay: 'sync', commands: [], notes: 'Wait' },
+                    { filter: '*', delay: '500', commands: ['${n > 1 ? "!choreograph run " + self + " --n " + (n - 1) : "!choreograph echo Liftoff!"}'], notes: 'Recurse or finish' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'spotlight',
+            description: 'Each token gets a moment in the spotlight — fires one at a time with a pause between.',
+            scene: {
+                notes: 'Uses sync to wait between each token\'s turn.',
+                params: [],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${tokenName} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
+                ],
+            },
+        });
+
         // Register Choreograph with itself for child cascading
         registerLifecycleHook(SCRIPT_NAME, {
             commands: [/^!choreograph run /],
@@ -2245,6 +2370,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         registerConstant,
         registerLifecycleHook,
         registerSyncParticipant,
+        registerExample,
         generateExtensionHandout,
         // Introspection
         getFunction:      (name) => EXT_FUNCTIONS[name] || null,
