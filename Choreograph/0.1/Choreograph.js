@@ -1656,6 +1656,314 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
+        // ---- man ----
+        if (cmd === 'man') {
+            const topic = args[0] || '';
+
+            if (!topic) {
+                reply(msg, 'Man', '<b>Choreograph Help Topics:</b><br>'
+                    + '• <b>filters</b> — filter syntax<br>'
+                    + '• <b>delay</b> — delay expressions and functions<br>'
+                    + '• <b>commands</b> — command template syntax<br>'
+                    + '• <b>cast</b> — cast system<br>'
+                    + '• <b>sync</b> — sync system<br>'
+                    + '• <b>loop</b> — looping<br>'
+                    + '• <b>chain</b> — scene chaining and recursion<br>'
+                    + '• <b>params</b> — parameter types<br>'
+                    + '• <b>vars</b> — variables and scope<br>'
+                    + '• <b>api</b> — extension API<br>'
+                    + '• <b>func</b> — registered functions<br>'
+                    + '• <b>tokenvar</b> — registered token variables<br>'
+                    + '• <b>const</b> — registered constants<br>');
+                return;
+            }
+
+            const c = (t) => `<code>${t}</code>`;
+
+            if (topic === 'filters') {
+                reply(msg, 'Man', '<b>Filters</b><br>'
+                    + `${c('*')} all tokens<br>`
+                    + `${c('layer=X')} on layer X<br>`
+                    + `${c('name=X*')} name glob<br>`
+                    + `${c('id=-ABC')} specific ID<br>`
+                    + `${c('role=X')} cast role<br>`
+                    + `${c('status=X')} has status marker<br>`
+                    + `${c('!prefix')} negation<br>`
+                    + 'Space-separated = AND. Multiple rows = OR. Empty = no match.');
+                return;
+            }
+
+            if (topic === 'delay') {
+                reply(msg, 'Man', '<b>Delay Expressions</b><br>'
+                    + 'Return: number (ms), INF/SKIP, or sync.<br><br>'
+                    + '<b>Variables:</b> left, top, name, layer, width, height, count, INF, SKIP, self, tokenId, tokenName<br><br>'
+                    + '<b>Functions:</b><br>'
+                    + `${c('rank("attr")')} — sort position in filtered set<br>`
+                    + `${c('distance(x, y)')} — pixel distance (or ${c('distance(orig)')})<br>`
+                    + `${c('propagate(dist, speed)')} — dist / speed<br>`
+                    + `${c('stagger(rank, interval)')} — rank × interval<br>`
+                    + `${c('rand(min, max)')} — random number<br>`
+                    + `${c('randInt(min, max)')} — random integer<br>`
+                    + `${c('clamp(v, lo, hi)')} — clamp<br>`
+                    + `${c('actors(filter?)')} — tokens sorted by distance<br>`
+                    + `${c('actor_ids(filter?)')} — token IDs sorted by distance<br>`
+                    + '<br><b>Constants:</b> PI, TAU');
+                return;
+            }
+
+            if (topic === 'commands' || topic === 'templates') {
+                reply(msg, 'Man', '<b>Command Templates</b><br>'
+                    + `Use ${c('${expr}')} for substitutions. Evaluated as JS template literals.<br><br>`
+                    + `Example: ${c('!sequence play ${anim} ignore-selected ${tokenId}')}<br>`
+                    + `Conditional: ${c('${counter > 1 ? "!choreograph run " + self : ""}')}<br><br>`
+                    + 'All variables, params, computed variables, and functions are in scope.');
+                return;
+            }
+
+            if (topic === 'cast') {
+                reply(msg, 'Man', '<b>Cast System</b><br>'
+                    + `Stored in ${c('[Cast] <name>')} handouts with roles.<br><br>`
+                    + `${c('!choreograph cast add <name> [--role R]')} — add tokens<br>`
+                    + `${c('!choreograph cast remove <name> [--role R]')} — remove<br>`
+                    + `${c('!choreograph cast list')} / ${c('show')} / ${c('delete')}<br><br>`
+                    + `Use ${c('--cast <name>')} in run. Filter with ${c('role=X')}.`);
+                return;
+            }
+
+            if (topic === 'sync') {
+                reply(msg, 'Man', '<b>Sync</b><br>'
+                    + `Use ${c('sync')} as a delay value. Waits for all registered sync participants to signal completion before continuing.<br><br>`
+                    + 'Useful for gating recursion or phase transitions on animation completion.');
+                return;
+            }
+
+            if (topic === 'loop') {
+                reply(msg, 'Man', '<b>Looping</b><br>'
+                    + `${c('--loop')} — infinite, sync each cycle<br>`
+                    + `${c('--loop N')} — N times, immediate restart<br>`
+                    + `${c('--loop N --sync')} — N times, sync between cycles<br><br>`
+                    + 'Top-level only. Children cannot loop. Expressions re-evaluate each cycle.');
+                return;
+            }
+
+            if (topic === 'chain' || topic === 'recursion') {
+                reply(msg, 'Man', '<b>Scene Chaining</b><br>'
+                    + `${c('self')} resolves to current scene name.<br>`
+                    + `${c('--parent')} and ${c('--depth')} are auto-injected.<br>`
+                    + `At depth 0, child spawns are skipped.<br>`
+                    + `Children cannot use ${c('--loop')}.<br><br>`
+                    + `Example: ${c('!choreograph run ${self} --counter ${counter - 1}')}`);
+                return;
+            }
+
+            if (topic === 'params' || topic === 'parameters') {
+                reply(msg, 'Man', '<b>Parameter Types</b><br>'
+                    + 'number, text, boolean, token, path, sequence, scene, role<br>'
+                    + 'Append [] for arrays (e.g. token[], number[]).<br><br>'
+                    + `${c('cast')} is built-in (token[], default: selected).<br>`
+                    + 'Params without defaults are required at run time.');
+                return;
+            }
+
+            if (topic === 'vars' || topic === 'variables') {
+                reply(msg, 'Man', '<b>Variables</b><br>'
+                    + 'Defined in the Variables table (Variable | Expression).<br>'
+                    + 'Computed once per token before execution.<br>'
+                    + 'Later variables can reference earlier ones.<br>'
+                    + 'Available in all delay expressions and command templates.');
+                return;
+            }
+
+            if (topic === 'api' || topic === 'extension') {
+                reply(msg, 'Man', '<b>Extension API</b><br>'
+                    + `${c('Choreograph.registerFunction(src, struct)')}<br>`
+                    + `${c('Choreograph.registerTokenVariable(src, struct)')}<br>`
+                    + `${c('Choreograph.registerConstant(src, struct)')}<br>`
+                    + `${c('Choreograph.registerParameterType(src, struct)')}<br>`
+                    + `${c('Choreograph.registerLifecycleHook(src, struct)')}<br>`
+                    + `${c('Choreograph.registerSyncParticipant(src, struct)')}<br>`
+                    + `${c('Choreograph.generateExtensionHandout(src, opts)')}<br><br>`
+                    + 'Run !choreograph gen-dev-docs for the full developer guide.');
+                return;
+            }
+
+            if (topic === 'func' || topic === 'functions') {
+                const regs = Object.values(EXT_FUNCTIONS);
+                if (regs.length === 0) { reply(msg, 'Man', '<i>No functions registered.</i>'); return; }
+                let out = `<b>Registered Functions (${regs.length}):</b><br>`;
+                regs.forEach(r => {
+                    const ns = r.namespace === 'core' ? '' : `<b>${escHtml(r.namespace)}.</b>`;
+                    const argList = (r.args || []).map(a => a.name).join(', ');
+                    const purity = r.pure === false ? ' [unstable]' : '';
+                    out += `${ns}<b>${escHtml(r.name)}(${argList})</b> → <i>${escHtml(r.returns || 'any')}</i>${purity}<br>`;
+                    if (r.description) out += `${escHtml(r.description)}<br>`;
+                    out += '<br>';
+                });
+                reply(msg, 'Man', out);
+                return;
+            }
+
+            if (topic === 'tokenvar' || topic === 'tokenvars') {
+                const regs = Object.values(EXT_TOKEN_VARS);
+                if (regs.length === 0) { reply(msg, 'Man', '<i>No token variables registered.</i>'); return; }
+                let out = `<b>Registered Token Variables (${regs.length}):</b><br>`;
+                regs.forEach(r => {
+                    const ns = r.namespace === 'core' ? '' : `<b>${escHtml(r.namespace)}.</b>`;
+                    out += `${ns}<b>${escHtml(r.name)}</b>`;
+                    if (r.description) out += ` — ${escHtml(r.description)}`;
+                    out += '<br>';
+                });
+                reply(msg, 'Man', out);
+                return;
+            }
+
+            if (topic === 'const' || topic === 'constants') {
+                const regs = Object.values(EXT_CONSTANTS);
+                if (regs.length === 0) { reply(msg, 'Man', '<i>No constants registered.</i>'); return; }
+                let out = `<b>Registered Constants (${regs.length}):</b><br>`;
+                regs.forEach(r => {
+                    const ns = r.namespace === 'core' ? '' : `<b>${escHtml(r.namespace)}.</b>`;
+                    out += `${ns}<b>${escHtml(r.name)}</b> = <code>${escHtml(String(r.value))}</code>`;
+                    if (r.description) out += ` — ${escHtml(r.description)}`;
+                    out += '<br>';
+                });
+                reply(msg, 'Man', out);
+                return;
+            }
+
+            replyError(msg, `Unknown topic "${topic}". Use !choreograph man for a list.`);
+            return;
+        }
+
+        // ---- gen-dev-docs ----
+        if (cmd === 'gen-dev-docs') {
+            const handoutName = `Help: ${SCRIPT_NAME}/Extending Choreograph`;
+            let hh = findObjs({ type: 'handout', name: handoutName })[0];
+            if (!hh) {
+                hh = createObj('handout', { name: handoutName, inplayerjournals: 'all', archived: false });
+            }
+
+            const h = (n, t) => `<h${n}>${t}</h${n}>`;
+            const p = (t) => `<p>${t}</p>`;
+            const c = (t) => `<code>${t}</code>`;
+            const b = (t) => `<b>${t}</b>`;
+            const li = (t) => `<li>${t}</li>`;
+            const ul = (...items) => `<ul>${items.join('')}</ul>`;
+            const pre = (t) => `<pre>${t}</pre>`;
+
+            let html = '';
+            html += h(1, 'Extending Choreograph');
+            html += p('Guide for script developers adding custom functions, variables, and integrations to Choreograph.');
+
+            html += h(2, 'Signal Pattern');
+            html += p(`Choreograph emits ${c('!choreograph-ready')} on startup. Register in response:`);
+            html += pre(
+`on('chat:message', (msg) => {
+    if (msg.content === '!choreograph-ready') doRegister();
+});
+// Also register immediately if already loaded:
+if (typeof Choreograph !== 'undefined') doRegister();`);
+
+            html += h(2, 'registerFunction(sourceId, struct)');
+            html += p('Add a function to the delay/filter/command expression scope.');
+            html += pre(
+`Choreograph.registerFunction('MyScript', {
+    name: 'inRange',
+    namespace: 'mymod',
+    description: 'Check if token is within range of a point',
+    args: [{ name: 'range', type: 'number' }],
+    returns: 'boolean',
+    pure: true,  // default true; false for impure/stateful
+    fn: (token, filteredTokens, params, range) => {
+        // token = current Roll20 graphic
+        // filteredTokens = tokens passing the current row filter
+        // params = resolved scene parameters
+        return someCheck(token, range);
+    },
+});`);
+
+            html += h(2, 'registerTokenVariable(sourceId, struct)');
+            html += p('Add a per-token variable to the expression scope.');
+            html += pre(
+`Choreograph.registerTokenVariable('MyScript', {
+    name: 'hp',
+    namespace: 'dnd',
+    description: 'Current hit points from bar1',
+    fn: (token, ctx) => parseInt(token.get('bar1_value')) || 0,
+    // ctx: { tokens, params }
+});`);
+
+            html += h(2, 'registerConstant(sourceId, struct)');
+            html += p('Add a named constant to the expression scope.');
+            html += pre(
+`Choreograph.registerConstant('MyScript', {
+    name: 'GRID_SIZE',
+    namespace: 'mymod',
+    value: 70,
+    description: 'Grid square size in pixels',
+});`);
+
+            html += h(2, 'registerParameterType(sourceId, struct)');
+            html += p('Add a custom parameter type for scene handouts.');
+            html += pre(
+`Choreograph.registerParameterType('MyScript', {
+    name: 'character',
+    description: 'A Roll20 character by name or ID',
+    parse: (rawValue) => {
+        const char = findObjs({type:'character', name:rawValue})[0];
+        if (!char) throw new Error('Character not found: ' + rawValue);
+        return char;
+    },
+    validate: (rawValue) => null, // return error string or null
+});`);
+
+            html += h(2, 'registerLifecycleHook(sourceId, struct)');
+            html += p('React to scene lifecycle events. ' + c('commands') + ' filters which fired commands trigger your hooks.');
+            html += pre(
+`Choreograph.registerLifecycleHook('MyScript', {
+    commands: [/^!myscript\\b/],
+    start:  (ctx) => { /* Direct invocation with ctx.instanceId */ },
+    stop:   (ctx) => { /* ctx: { tokens, command, instanceId } */ },
+    pause:  (ctx) => { /* ... */ },
+    resume: (ctx) => { /* ... */ },
+});`);
+            html += p(`The ${c('start')} hook receives commands directly (bypassing sendChat) with full context. Use it to avoid parsing instanceId from the command string.`);
+
+            html += h(2, 'registerSyncParticipant(sourceId, struct)');
+            html += p('Participate in sync resolution. Only called when fired commands match your patterns.');
+            html += pre(
+`Choreograph.registerSyncParticipant('MyScript', {
+    commands: [/^!myscript\\b/],
+    waiting: (ctx) => {
+        // ctx: { tokens, commands, instanceId, done }
+        // Do async work, then call ctx.done()
+        setTimeout(() => ctx.done(), 1000);
+    },
+});`);
+            html += p(`${c('done()')} is idempotent — safe to call multiple times. Sync times out after 30s by default.`);
+
+            html += h(2, 'generateExtensionHandout(sourceId, opts)');
+            html += p('Generate a help handout documenting your registered items.');
+            html += pre(
+`Choreograph.generateExtensionHandout('MyScript', {
+    name: 'My Extension',
+    description: 'Adds DnD-specific features.',
+    sections: [{ namespace: 'dnd', description: '...' }],
+});`);
+
+            html += h(2, 'Introspection');
+            html += ul(
+                li(`${c('Choreograph.getFunction(key)')} — ${c("'namespace/name'")} or null`),
+                li(`${c('Choreograph.getVariable(key)')} — or null`),
+                li(`${c('Choreograph.getConstant(key)')} — or null`),
+                li(`${c('Choreograph.getParameterType(name)')} — or null`)
+            );
+
+            hh.set('notes', html);
+            reply(msg, 'Choreograph', `Generated ${b('Help: Choreograph/Extending Choreograph')} — check your journal.`);
+            return;
+        }
+
         // ---- echo (debug/test) ----
         if (cmd === 'echo') {
             const text = rest.join(' ');
