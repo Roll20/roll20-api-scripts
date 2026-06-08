@@ -44,6 +44,7 @@ var Choreograph = Choreograph || (() => {
     const EXT_CONSTANTS      = {}; // { 'namespace/name': { name, namespace, value, description, type } }
     const EXT_PARAM_TYPES    = {}; // { 'typeName': { name, description, parse, validate } }
     const EXT_LIFECYCLE      = []; // [{ source, stop, pause, resume }]
+    const EXT_SYNC           = []; // [{ source, waiting: fn }]
 
     const validIdent = (s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
 
@@ -144,6 +145,62 @@ var Choreograph = Choreograph || (() => {
             firedCommands.forEach(entry => {
                 fn({ tokens: entry.tokens, command: entry.command, instanceId: instance.id });
             });
+        });
+    };
+
+    const registerSyncParticipant = (sourceId, struct) => {
+        const src = sourceId || SCRIPT_NAME;
+        if (typeof struct.waiting !== 'function') {
+            log(`${SCRIPT_NAME}: [${src}] registerSyncParticipant — missing waiting function`);
+            return false;
+        }
+        EXT_SYNC.push(Object.assign({ source: src }, struct));
+        return true;
+    };
+
+    /**
+     * Fire sync — calls all registered sync participants and invokes onResolved
+     * when all have called done() or timeout expires.
+     */
+    const fireSync = (instance, onResolved, timeoutMs) => {
+        if (EXT_SYNC.length === 0) { onResolved(); return; }
+
+        let remaining = EXT_SYNC.length;
+        let resolved = false;
+
+        const checkDone = () => {
+            if (resolved) return;
+            remaining--;
+            if (remaining <= 0) {
+                resolved = true;
+                onResolved();
+            }
+        };
+
+        const timeout = setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                log(`${SCRIPT_NAME}: sync timeout (${timeoutMs}ms) — proceeding`);
+                onResolved();
+            }
+        }, timeoutMs || 30000);
+
+        const context = {
+            tokens:   (instance.firedCommands || []).flatMap(e => e.tokens),
+            commands: (instance.firedCommands || []).map(e => e.command),
+            instanceId: instance.id,
+        };
+
+        EXT_SYNC.forEach(participant => {
+            let called = false;
+            participant.waiting(Object.assign({}, context, {
+                done: () => {
+                    if (called) return;
+                    called = true;
+                    checkDone();
+                    if (resolved) clearTimeout(timeout);
+                },
+            }));
         });
     };
 
@@ -893,6 +950,12 @@ var Choreograph = Choreograph || (() => {
                 scope.tokenId   = token.get('id');
                 scope.tokenName = token.get('name') || '';
 
+                // Check for sync delay
+                if (row.delay.trim().toLowerCase() === 'sync') {
+                    queue.push({ time: -1, rowIndex, isSync: true });
+                    return;
+                }
+
                 const delay = evalDelay(row.delay, scope);
                 if (!isFinite(delay)) return; // INF/SKIP
 
@@ -920,46 +983,83 @@ var Choreograph = Choreograph || (() => {
         };
         runningScenes[instanceId] = instance;
 
-        // Execute queue — batch entries with same time into one setTimeout,
-        // and merge entries with same time AND same command into one sendChat
+        // Execute queue — split at sync points, chain chunks
         const sender = msg.who.split(' ')[0];
-        let i = 0;
-        while (i < queue.length) {
-            const batchTime = queue[i].time;
-            const batch = [];
-            while (i < queue.length && queue[i].time === batchTime) {
-                batch.push(queue[i]);
-                i++;
-            }
-            const timer = setTimeout(() => {
-                // Group by command string — same command merges token IDs
-                const byCommand = {};
-                batch.forEach(entry => {
-                    if (!byCommand[entry.command]) byCommand[entry.command] = [];
-                    byCommand[entry.command].push(entry.tokenId);
-                });
-                Object.entries(byCommand).forEach(([command, tokenIds]) => {
-                    const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
-                    sendChat(sender, command + selectSuffix);
-                    instance.firedCommands.push({
-                        tokens: tokenIds.map(id => getObj('graphic', id)).filter(Boolean),
-                        command,
-                    });
-                });
-            }, batchTime);
-            instance.timers.push(timer);
-        }
+        const syncTimeout = opts['sync-timeout'] ? parseInt(opts['sync-timeout'], 10) : 30000;
 
-        // Auto-cleanup when done
-        if (queue.length > 0) {
-            const maxTime = queue[queue.length - 1].time;
-            const cleanup = setTimeout(() => {
+        // Split queue into chunks separated by sync markers
+        const chunks = [[]];
+        queue.forEach(entry => {
+            if (entry.isSync) {
+                chunks.push([]); // start new chunk after sync
+            } else {
+                chunks[chunks.length - 1].push(entry);
+            }
+        });
+
+        // Execute one chunk, then fire sync and proceed to next
+        const executeChunk = (chunkIdx) => {
+            if (chunkIdx >= chunks.length) {
+                // All chunks done — cleanup
                 delete runningScenes[instanceId];
-            }, maxTime + 100);
-            instance.timers.push(cleanup);
-        } else {
-            delete runningScenes[instanceId];
-        }
+                return;
+            }
+            const chunk = chunks[chunkIdx];
+            if (chunk.length === 0) {
+                // Empty chunk (sync at start or consecutive syncs) — go to next
+                if (chunkIdx < chunks.length - 1) {
+                    fireSync(instance, () => executeChunk(chunkIdx + 1), syncTimeout);
+                } else {
+                    delete runningScenes[instanceId];
+                }
+                return;
+            }
+
+            instance.startTime = Date.now();
+            let i = 0;
+            while (i < chunk.length) {
+                const batchTime = chunk[i].time;
+                const batch = [];
+                while (i < chunk.length && chunk[i].time === batchTime) {
+                    batch.push(chunk[i]);
+                    i++;
+                }
+                const timer = setTimeout(() => {
+                    const byCommand = {};
+                    batch.forEach(entry => {
+                        if (!byCommand[entry.command]) byCommand[entry.command] = [];
+                        byCommand[entry.command].push(entry.tokenId);
+                    });
+                    Object.entries(byCommand).forEach(([command, tokenIds]) => {
+                        const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
+                        sendChat(sender, command + selectSuffix);
+                        instance.firedCommands.push({
+                            tokens: tokenIds.map(id => getObj('graphic', id)).filter(Boolean),
+                            command,
+                        });
+                    });
+                }, batchTime);
+                instance.timers.push(timer);
+            }
+
+            // After last entry in chunk fires, proceed to sync (or finish)
+            const maxTime = chunk[chunk.length - 1].time;
+            if (chunkIdx < chunks.length - 1) {
+                // There's a sync point after this chunk
+                const syncTimer = setTimeout(() => {
+                    fireSync(instance, () => executeChunk(chunkIdx + 1), syncTimeout);
+                }, maxTime + 1);
+                instance.timers.push(syncTimer);
+            } else {
+                // Last chunk — cleanup after it finishes
+                const cleanup = setTimeout(() => {
+                    delete runningScenes[instanceId];
+                }, maxTime + 100);
+                instance.timers.push(cleanup);
+            }
+        };
+
+        executeChunk(0);
 
         return instanceId;
     };
@@ -1435,6 +1535,7 @@ var Choreograph = Choreograph || (() => {
         registerParameterType,
         registerConstant,
         registerLifecycleHook,
+        registerSyncParticipant,
         generateExtensionHandout,
         // Introspection
         getFunction:      (name) => EXT_FUNCTIONS[name] || null,
