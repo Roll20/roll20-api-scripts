@@ -323,7 +323,7 @@ var Choreograph = Choreograph || (() => {
         const body      = text !== undefined ? text : tag;
         const prefix    = text !== undefined ? ` [${tag}]` : '';
         const recipient = getPlayerName(msg.playerid);
-        sendChat(`${SCRIPT_NAME}${prefix}`, `/w ${recipient} ${body}`,
+        sendChat(`${SCRIPT_NAME}${prefix}`, `/w "${recipient}" ${body}`,
             null, noarchive ? { noarchive: true } : undefined);
     };
 
@@ -785,13 +785,13 @@ var Choreograph = Choreograph || (() => {
      * Evaluate a single filter condition against a token.
      * Returns true if token matches.
      */
-    const evalFilterCondition = (condition, token, castData) => {
+    const evalFilterCondition = (condition, token, castData, scope) => {
         const c = condition.trim();
         if (!c || c === '*') return true;
 
         // Negation
         if (c.startsWith('!')) {
-            return !evalFilterCondition(c.slice(1), token, castData);
+            return !evalFilterCondition(c.slice(1), token, castData, scope);
         }
 
         // key=value patterns
@@ -821,17 +821,44 @@ var Choreograph = Choreograph || (() => {
             }
         }
 
+        // Expression fallback — evaluate as boolean if scope is available
+        if (scope) {
+            const result = evalDelay(c, scope);
+            return !!result && isFinite(result);
+        }
+
         return false;
     };
 
     /**
      * Evaluate a full filter string (space-separated AND conditions).
      */
-    const evalFilter = (filterStr, token, castData) => {
-        if (!filterStr.trim()) return false; // empty = no match
-        if (filterStr.trim() === '*') return true;
-        const conditions = filterStr.trim().split(/\s+/);
-        return conditions.every(c => evalFilterCondition(c, token, castData));
+    const evalFilter = (filterStr, token, castData, scope) => {
+        const trimmed = filterStr.trim();
+        if (!trimmed) return false; // empty = no match
+        if (trimmed === '*') return true;
+
+        // If the filter contains comparison/logical operators, treat as a single expression
+        if (/[<>!&|]/.test(trimmed) && !/^!?[a-z]+=/.test(trimmed)) {
+            // Expression filter — evaluate as boolean
+            if (scope) {
+                const decls = Object.keys(scope).map(k =>
+                    `var ${k} = __scope["${k}"];`
+                ).join(' ');
+                try {
+                    const __scope = scope;
+                    return !!eval(decls + '(' + trimmed + ')');
+                } catch(e) {
+                    log(`${SCRIPT_NAME}: filter expression error: ${e.message} (expr: "${trimmed}")`);
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Simple filters: space-separated AND conditions
+        const conditions = trimmed.split(/\s+/);
+        return conditions.every(c => evalFilterCondition(c, token, castData, scope));
     };
 
     // =========================================================================
@@ -865,6 +892,7 @@ var Choreograph = Choreograph || (() => {
             },
             propagate: (dist, speed) => dist / speed,
             stagger:   (rank, interval) => rank * interval,
+            wave:      (pos, wavelength, duration) => ((pos % wavelength) / wavelength) * (duration || wavelength),
             rank: (attr) => {
                 let sorted;
                 if (typeof attr === 'function') {
@@ -1077,7 +1105,12 @@ var Choreograph = Choreograph || (() => {
             }
 
             // Filter cast
-            const filtered = cast.filter(token => evalFilter(row.filter, token, castData));
+            const filtered = cast.filter(token => {
+                const filterScope = buildTokenScope(token, cast, resolvedParams);
+                Object.assign(filterScope, resolvedParams);
+                Object.assign(filterScope, tokenVars[token.get('id')] || {});
+                return evalFilter(row.filter, token, castData, filterScope);
+            });
             if (filtered.length === 0) return;
 
             // For each matching token, evaluate delay and build queue entry
@@ -1742,11 +1775,18 @@ var Choreograph = Choreograph || (() => {
                 }
                 let out = `<b>${examples.length} example(s) available:</b><br>`;
                 examples.forEach(ex => {
+                    const sceneName = `example-${ex.name}`;
+                    const exists = scenes().find(sceneName);
                     out += `• <b>${escHtml(ex.name)}</b>`;
                     if (ex.description) out += ` — ${escHtml(ex.description)}`;
-                    out += ` <i>[${escHtml(ex.source)}]</i><br>`;
+                    out += ` <i>[${escHtml(ex.source)}]</i> `;
+                    out += btnHtml(exists ? '🔄 Regen' : '+ Generate', `${CMD_TOKEN} example ${ex.name}`);
+                    if (exists) {
+                        out += btnHtml('▶ Run', `${CMD_TOKEN} run ${sceneName}`);
+                        out += ` <a href="http://journal.roll20.net/handout/${exists.get('id')}">[Open]</a>`;
+                    }
+                    out += `<br>`;
                 });
-                out += `<br>Use <code>${CMD_TOKEN} example &lt;name&gt;</code> to generate.`;
                 reply(msg, 'Examples', out);
                 return;
             }
@@ -2192,6 +2232,36 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${tokenName} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'elites-only',
+            description: 'Only tokens wider than 70px (large tokens) get the effect — demonstrates expression filters.',
+            scene: {
+                notes: 'Uses an expression filter: width > 70. Only large tokens fire.',
+                params: [],
+                variables: [],
+                rows: [
+                    { filter: 'width > 70', delay: '0', commands: ['!choreograph echo 🏆 ${tokenName} is an elite! (width=${width})'], notes: 'Expression filter' },
+                    { filter: 'width <= 70', delay: '0', commands: ['!choreograph echo 🐜 ${tokenName} is too small (width=${width})'], notes: 'Inverse' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'tidal-wave',
+            description: 'Tokens fire in a wave pattern based on horizontal position.',
+            scene: {
+                notes: 'Uses wave() for sinusoidal timing offset.',
+                params: [
+                    { name: 'wavelength', type: 'number', default: '500', description: 'Wave period in pixels' },
+                    { name: 'duration', type: 'number', default: '2000', description: 'Total wave duration in ms' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${tokenName} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
                 ],
             },
         });
