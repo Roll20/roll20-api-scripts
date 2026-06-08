@@ -109,16 +109,9 @@ Spin and hover are straightforward with current Sequence. Orbit requires the `t`
 
 ---
 
-## Known Issue: Expression Deltas Cannot Round-Trip Through Handout HTML
+## Done: Expression Deltas Round-Trip Through Handout HTML
 
-`generateHandoutHtml` cannot render `{ expr: ... }` deltas into handout cells —
-they appear as empty cells. When Roll20's `onHandoutChanged` fires, the parser
-reads empty cells and overwrites the cache, losing the expressions.
-
-**Impact:** Recordings using `continuous` easing with expressions (e.g. orbit)
-must be created programmatically (in-memory cache only) and cannot be
-hand-edited in handouts.
-
-**Fix needed:** Teach `generateHandoutHtml` to render expression deltas (e.g.
-display `=expr` in the cell) and teach `parseHandout` to parse them back into
-`{ expr, mode }` objects.
+`generateHandoutHtml` now renders `{ expr, mode }` deltas with appropriate
+prefixes (`=expr` for abs, `+expr` for add, `×expr` for mul). The existing
+parsers already handle reading them back. Continuous recordings can now be
+saved as handouts and hand-edited.
