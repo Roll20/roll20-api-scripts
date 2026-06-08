@@ -655,6 +655,15 @@ var Choreograph = Choreograph || (() => {
     let instanceCounter = 0;
     const genInstanceId = () => `${SCRIPT_NAME}-${++instanceCounter}-${Date.now()}`;
 
+    // Human-readable instance names
+    const adjectives = ['swift','bold','red','blue','dark','bright','wild','calm','iron','silver'];
+    const nouns = ['wolf','hawk','storm','flame','wave','frost','shadow','tide','spark','wind'];
+    const genInstanceName = () => {
+        const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const noun = nouns[Math.floor(Math.random() * nouns.length)];
+        return `${adj}-${noun}-${instanceCounter}`;
+    };
+
     const stopScene = (instanceId) => {
         const instance = runningScenes[instanceId];
         if (!instance) return;
@@ -842,6 +851,21 @@ var Choreograph = Choreograph || (() => {
             TAU:     Math.PI * 2,
         };
 
+        // actors(filter?) — returns tokens sorted by distance from current token
+        // actor_ids(filter?) — returns token ID strings
+        scope.actors = (filterStr) => {
+            const set = filterStr
+                ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
+                : filteredTokens;
+            const tx = token.get('left'), ty = token.get('top');
+            return [...set].sort((a, b) => {
+                const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                return da - db;
+            });
+        };
+        scope.actor_ids = (filterStr) => scope.actors(filterStr).map(t => t.get('id'));
+
         // Inject registered extension functions
         Object.values(EXT_FUNCTIONS).forEach(reg => {
             const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
@@ -1003,6 +1027,7 @@ var Choreograph = Choreograph || (() => {
         // Register running scene
         const instance = {
             id:       instanceId,
+            instanceName: genInstanceName(),
             name:     scene.name,
             queue,
             timers:   [],
@@ -1262,9 +1287,9 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'stop') {
             const name = args[0];
             if (name) {
-                // Stop all instances of this scene
+                // Stop by scene name or instance name
                 const matches = Object.entries(runningScenes)
-                    .filter(([, s]) => s.name === name);
+                    .filter(([, s]) => s.name === name || s.instanceName === name);
                 if (matches.length === 0) {
                     replyError(msg, `No running scene named "${name}".`);
                     return;
@@ -1286,7 +1311,7 @@ var Choreograph = Choreograph || (() => {
             const name = args[0];
             if (name) {
                 const matches = Object.entries(runningScenes)
-                    .filter(([, s]) => s.name === name && s.state === 'running');
+                    .filter(([, s]) => (s.name === name || s.instanceName === name) && s.state === 'running');
                 if (matches.length === 0) { replyError(msg, `No running scene named "${name}" to pause.`); return; }
                 matches.forEach(([id]) => pauseScene(id));
                 reply(msg, 'Choreograph', `Paused ${matches.length} instance(s) of "${escHtml(name)}".`);
@@ -1305,7 +1330,7 @@ var Choreograph = Choreograph || (() => {
             const name = args[0];
             if (name) {
                 const matches = Object.entries(runningScenes)
-                    .filter(([, s]) => s.name === name && s.state === 'paused');
+                    .filter(([, s]) => (s.name === name || s.instanceName === name) && s.state === 'paused');
                 if (matches.length === 0) { replyError(msg, `No paused scene named "${name}" to resume.`); return; }
                 matches.forEach(([id]) => resumeScene(id, msg));
                 reply(msg, 'Choreograph', `Resumed ${matches.length} instance(s) of "${escHtml(name)}".`);
@@ -1386,6 +1411,20 @@ var Choreograph = Choreograph || (() => {
                 const ids = Array.isArray(opts.id) ? opts.id : String(opts.id).split(/\s+/);
                 ids.forEach(id => { if (id) castIds.push(id); });
             }
+            if (flags.has('page')) {
+                let pageId;
+                if (typeof opts.page === 'string' && opts.page !== 'true') {
+                    pageId = opts.page;
+                } else {
+                    // Player: use their specific page if split, else ribbon page
+                    const psp = Campaign().get('playerspecificpages') || {};
+                    pageId = (!playerIsGM(msg.playerid) && psp[msg.playerid])
+                        ? psp[msg.playerid]
+                        : Campaign().get('playerpageid');
+                }
+                findObjs({ _type: 'graphic', _pageid: pageId })
+                    .forEach(t => castIds.push(t.get('id')));
+            }
             args.slice(1).forEach(a => {
                 if (/^-[A-Za-z0-9_-]+$/.test(a)) castIds.push(a);
             });
@@ -1437,7 +1476,7 @@ var Choreograph = Choreograph || (() => {
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
                     reply(msg, 'Choreograph',
                         `Running "${escHtml(name)}" on ${cast.length} token(s). `
-                        + `Instance: <code>${instanceId}</code>`);
+                        + `Instance: <b>${runningScenes[instanceId] ? runningScenes[instanceId].instanceName : instanceId}</b>`);
                 });
             };
 
@@ -1584,6 +1623,24 @@ var Choreograph = Choreograph || (() => {
             }
 
             replyError(msg, 'Usage: !choreograph cast <add|remove|list|show|delete> [name] [options]');
+            return;
+        }
+
+        // ---- status ----
+        if (cmd === 'status') {
+            const instances = Object.values(runningScenes);
+            if (instances.length === 0) {
+                reply(msg, 'Choreograph', 'No scenes running.');
+                return;
+            }
+            let out = `<b>${instances.length} running scene(s):</b><br>`;
+            instances.forEach(inst => {
+                const elapsed = Math.round((Date.now() - inst.startTime) / 1000);
+                out += `• <b>${escHtml(inst.instanceName)}</b> — ${escHtml(inst.name)} `
+                    + `[${inst.state}] ${elapsed}s `
+                    + `(${inst.cast.length} tokens)<br>`;
+            });
+            reply(msg, 'Choreograph', out);
             return;
         }
 
