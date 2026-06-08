@@ -1724,6 +1724,106 @@ var Choreograph = Choreograph || (() => {
             },
         });
 
+        // Generate Help: Choreograph handout
+        (() => {
+            const helpName = `Help: ${SCRIPT_NAME}`;
+            let hh = findObjs({ type: 'handout', name: helpName })[0];
+            if (!hh) {
+                hh = createObj('handout', { name: helpName, inplayerjournals: 'all', archived: false });
+            }
+
+            const h = (n, t) => `<h${n}>${t}</h${n}>`;
+            const p = (t) => `<p>${t}</p>`;
+            const c = (t) => `<code>${t}</code>`;
+            const b = (t) => `<b>${t}</b>`;
+            const li = (t) => `<li>${t}</li>`;
+            const ul = (...items) => `<ul>${items.join('')}</ul>`;
+
+            let html = '';
+            html += h(1, `${SCRIPT_NAME} v${SCRIPT_VERSION}`);
+            html += p('A meta-sequencer for Roll20 tokens. Define scenes in handouts — filter tokens, compute per-token timing, and fire commands at the right moments.');
+
+            html += h(2, 'Commands');
+            html += ul(
+                li(`${c('!choreograph run <name> [flags]')} — Execute a scene`),
+                li(`${c('!choreograph new <name>')} — Create blank scene`),
+                li(`${c('!choreograph list [query]')} — List scenes`),
+                li(`${c('!choreograph edit <name>')} — Open handout`),
+                li(`${c('!choreograph delete <name>')} — Delete scene`),
+                li(`${c('!choreograph stop [name]')} — Stop scene(s)`),
+                li(`${c('!choreograph pause [name]')} — Pause scene(s)`),
+                li(`${c('!choreograph resume [name]')} — Resume scene(s)`),
+                li(`${c('!choreograph status')} — Show running scenes`),
+                li(`${c('!choreograph refresh <name>')} — Regenerate handout`),
+                li(`${c('!choreograph cast <sub> ...')} — Manage casts`)
+            );
+
+            html += h(2, 'Run Flags');
+            html += ul(
+                li(`${c('--loop')} / ${c('--loop N')} / ${c('--loop N --sync')} — Looping`),
+                li(`${c('--page [id]')} — All tokens on a page`),
+                li(`${c('--id <ids>')} — Explicit token IDs`),
+                li(`${c('--cast <name>')} — Use a saved cast`),
+                li(`${c('ignore-selected')} — Skip selected tokens`),
+                li(`${c('--depth N')} — Max chaining depth (default: 10)`),
+                li(`${c('--<param> <value>')} — Bind scene parameters`)
+            );
+
+            html += h(2, 'Scene Handout');
+            html += p(`Scenes are stored in ${c('[Scene] <name>')} handouts with three tables:`);
+            html += ul(
+                li(`${b('Parameter Table')} (Name | Type | Default | Description) — scene inputs`),
+                li(`${b('Variables Table')} (Variable | Expression) — computed per-token before execution`),
+                li(`${b('Scene Table')} (Filter | Delay | Command | Notes) — the choreography`)
+            );
+
+            html += h(2, 'Filters');
+            html += ul(
+                li(`${c('*')} — all tokens`),
+                li(`${c('layer=X')} — on layer X`),
+                li(`${c('name=X*')} — name glob`),
+                li(`${c('id=-ABC')} — specific ID`),
+                li(`${c('role=X')} — cast role`),
+                li(`${c('status=X')} — has status marker`),
+                li(`${c('!prefix')} — negation`),
+                li('Space-separated = AND. Multiple rows = OR.')
+            );
+
+            html += h(2, 'Delay Expressions');
+            html += p('Evaluated per-token. Return ms, INF/SKIP, or sync.');
+            html += p(b('Variables:') + ' left, top, name, layer, width, height, count, INF, SKIP, self, tokenId, tokenName, plus all params and computed variables.');
+            html += p(b('Functions:') + ` rank("attr"), distance(x,y), propagate(dist,speed), stagger(rank,interval), rand(min,max), randInt(min,max), clamp(v,lo,hi), actors(filter?), actor_ids(filter?), plus math.`);
+            html += p(b('Constants:') + ' PI, TAU');
+
+            html += h(2, 'Command Templates');
+            html += p(`Use ${c('${expr}')} for substitutions. Evaluated as JS template literals.`);
+            html += p(`Example: ${c('!sequence play ${anim} ignore-selected ${tokenId}')}`);
+
+            html += h(2, 'Cast System');
+            html += p(`Casts are saved token groups in ${c('[Cast] <name>')} handouts with optional roles.`);
+            html += ul(
+                li(`${c('!choreograph cast add <name> [--role R]')} — add tokens`),
+                li(`${c('!choreograph cast remove <name> [--role R]')} — remove tokens`),
+                li(`${c('!choreograph cast list')} / ${c('show <name>')} / ${c('delete <name>')}`),
+                li(`Use ${c('--cast <name>')} in run, filter with ${c('role=X')}`)
+            );
+
+            html += h(2, 'Sync');
+            html += p(`Use ${c('sync')} as a delay value to wait for all registered sync participants before continuing.`);
+
+            html += h(2, 'Scene Chaining');
+            html += p(`Use ${c('self')} in commands to reference the current scene. Recursion is depth-limited (${c('--depth')}).`);
+
+            html += h(2, 'Looping');
+            html += ul(
+                li(`${c('--loop')} — infinite, sync each cycle`),
+                li(`${c('--loop N')} — N times, immediate restart`),
+                li(`${c('--loop N --sync')} — N times, sync between cycles`)
+            );
+
+            hh.set('notes', html);
+        })();
+
         log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
 
         // Signal extensions that Choreograph is ready
