@@ -1314,7 +1314,9 @@ var Choreograph = Choreograph || (() => {
                     .filter(([, s]) => (s.name === name || s.instanceName === name) && s.state === 'running');
                 if (matches.length === 0) { replyError(msg, `No running scene named "${name}" to pause.`); return; }
                 matches.forEach(([id]) => pauseScene(id));
-                reply(msg, 'Choreograph', `Paused ${matches.length} instance(s) of "${escHtml(name)}".`);
+                reply(msg, 'Choreograph', `Paused ${matches.length} instance(s) of "${escHtml(name)}". `
+                    + btnHtml('▶ Resume', `${CMD_TOKEN} resume ${name}`)
+                    + btnHtml('⏹ Stop', `${CMD_TOKEN} stop ${name}`));
             } else {
                 const running = Object.entries(runningScenes).filter(([, s]) => s.state === 'running');
                 running.forEach(([id]) => pauseScene(id));
@@ -1474,9 +1476,19 @@ var Choreograph = Choreograph || (() => {
                     };
 
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
-                    reply(msg, 'Choreograph',
-                        `Running "${escHtml(name)}" on ${cast.length} token(s). `
-                        + `Instance: <b>${runningScenes[instanceId] ? runningScenes[instanceId].instanceName : instanceId}</b>`);
+                    const inst = runningScenes[instanceId];
+                    const iName = inst ? inst.instanceName : instanceId;
+                    // Only show status card for user-initiated runs
+                    if (msg.playerid !== 'API') {
+                        let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
+                        card += `<b>${escHtml(name)}</b> — ${cast.length} token(s)<br>`;
+                        card += `Instance: <b>${escHtml(iName)}</b><br><br>`;
+                        card += btnHtml('⏸ Pause', `${CMD_TOKEN} pause ${iName}`);
+                        card += btnHtml('⏹ Stop', `${CMD_TOKEN} stop ${iName}`);
+                        card += btnHtml('🔄 Status', `${CMD_TOKEN} status`);
+                        card += `</div>`;
+                        reply(msg, 'Choreograph', card, true);
+                    }
                 });
             };
 
