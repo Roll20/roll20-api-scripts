@@ -969,7 +969,7 @@ var Choreograph = Choreograph || (() => {
                 scope.tokenName = token.get('name') || '';
                 scope.self      = scene.name;
                 scope.__parent  = instanceId;
-                scope.__depth   = Math.max(0, instance.depth - 1);
+                scope.__depth   = Math.max(0, ((runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10) - 1);
 
                 // Check for sync delay
                 if (row.delay.trim().toLowerCase() === 'sync') {
@@ -987,8 +987,18 @@ var Choreograph = Choreograph || (() => {
             });
         });
 
-        // Sort queue by time, break ties by rowIndex
-        queue.sort((a, b) => a.time - b.time || a.rowIndex - b.rowIndex);
+        // Split queue into chunks at sync markers (preserving row order), then sort each chunk
+        const chunks = [[]];
+        queue.sort((a, b) => a.rowIndex - b.rowIndex); // row order first
+        queue.forEach(entry => {
+            if (entry.isSync) {
+                chunks.push([]);
+            } else {
+                chunks[chunks.length - 1].push(entry);
+            }
+        });
+        // Sort each chunk by time, break ties by rowIndex
+        chunks.forEach(chunk => chunk.sort((a, b) => a.time - b.time || a.rowIndex - b.rowIndex));
 
         // Register running scene
         const instance = {
@@ -1043,19 +1053,9 @@ var Choreograph = Choreograph || (() => {
             }
         };
 
-        // Execute queue — split at sync points, chain chunks
+        // Execute chunks — chain with sync between them
         const sender = msg.who.split(' ')[0];
-        const syncTimeout = opts['sync-timeout'] ? parseInt(opts['sync-timeout'], 10) : 30000;
-
-        // Split queue into chunks separated by sync markers
-        const chunks = [[]];
-        queue.forEach(entry => {
-            if (entry.isSync) {
-                chunks.push([]); // start new chunk after sync
-            } else {
-                chunks[chunks.length - 1].push(entry);
-            }
-        });
+        const syncTimeout = (runtimeOpts && runtimeOpts.syncTimeout) ? runtimeOpts.syncTimeout : 30000;
 
         // Execute one chunk, then fire sync and proceed to next
         const executeChunk = (chunkIdx) => {
@@ -1431,6 +1431,7 @@ var Choreograph = Choreograph || (() => {
                     const runtimeOpts = {
                         parent: opts.parent || null,
                         depth:  opts.depth !== undefined ? parseInt(opts.depth, 10) : 10,
+                        syncTimeout: opts['sync-timeout'] ? parseInt(opts['sync-timeout'], 10) : 30000,
                     };
 
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
@@ -1589,7 +1590,8 @@ var Choreograph = Choreograph || (() => {
         // ---- echo (debug/test) ----
         if (cmd === 'echo') {
             const text = rest.join(' ');
-            reply(msg, 'Echo', text, true);
+            const ts = Date.now() % 100000; // last 5 digits for readability
+            reply(msg, 'Echo', `[${ts}ms] ${text}`, true);
             return;
         }
 
