@@ -41,7 +41,9 @@ var Choreograph = Choreograph || (() => {
 
     const EXT_FUNCTIONS      = {}; // { 'namespace/name': { name, namespace, fn, description, args, returns, pure } }
     const EXT_TOKEN_VARS     = {}; // { 'namespace/name': { name, namespace, fn, description } }
+    const EXT_CONSTANTS      = {}; // { 'namespace/name': { name, namespace, value, description, type } }
     const EXT_PARAM_TYPES    = {}; // { 'typeName': { name, description, parse, validate } }
+    const EXT_LIFECYCLE      = []; // [{ source, stop, pause, resume }]
 
     const validIdent = (s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
 
@@ -105,6 +107,93 @@ var Choreograph = Choreograph || (() => {
         }
         EXT_PARAM_TYPES[name] = Object.assign({ source: src, description: '', validate: null }, struct);
         return true;
+    };
+
+    const registerConstant = (sourceId, struct) => {
+        const src = sourceId || SCRIPT_NAME;
+        const { name, namespace = 'core', value } = struct;
+        if (!name || !validIdent(name)) {
+            log(`${SCRIPT_NAME}: [${src}] registerConstant — invalid name "${name}"`);
+            return false;
+        }
+        if (value === undefined) {
+            log(`${SCRIPT_NAME}: [${src}] registerConstant — "${name}" missing value`);
+            return false;
+        }
+        const key = `${namespace}/${name}`;
+        if (EXT_CONSTANTS[key]) {
+            const existing = EXT_CONSTANTS[key].source || SCRIPT_NAME;
+            if (existing !== src) log(`${SCRIPT_NAME}: [${src}] registerConstant — "${name}" already registered by [${existing}]`);
+            return false;
+        }
+        EXT_CONSTANTS[key] = Object.assign({ namespace, source: src, description: '', type: typeof value }, struct);
+        return true;
+    };
+
+    const registerLifecycleHook = (sourceId, struct) => {
+        const src = sourceId || SCRIPT_NAME;
+        EXT_LIFECYCLE.push(Object.assign({ source: src, stop: null, pause: null, resume: null }, struct));
+        return true;
+    };
+
+    const fireLifecycleHooks = (event, instance) => {
+        const firedCommands = instance.firedCommands || [];
+        EXT_LIFECYCLE.forEach(hook => {
+            const fn = hook[event];
+            if (typeof fn !== 'function') return;
+            firedCommands.forEach(entry => {
+                fn({ tokens: entry.tokens, command: entry.command, instanceId: instance.id });
+            });
+        });
+    };
+
+    const generateExtensionHandout = (sourceId, opts = {}) => {
+        const src = sourceId || SCRIPT_NAME;
+        const { name = src, description = '', sections = [] } = opts;
+        const handoutName = `Help: ${SCRIPT_NAME}/${name}`;
+        let hh = findObjs({ type: 'handout', name: handoutName })[0];
+        if (!hh) {
+            hh = createObj('handout', {
+                name:             handoutName,
+                inplayerjournals: 'all',
+                archived:         false,
+            });
+        }
+
+        let html = `<h1>${name}</h1>`;
+        if (description) html += `<p>${description}</p>`;
+
+        const fmtFn = (r) => {
+            const argList = (r.args || []).map(a => a.name).join(', ');
+            const ns = r.namespace === 'core' ? '' : `<b>${r.namespace}.</b>`;
+            return `<p><b>${ns}${r.name}(${argList})</b> → <i>${r.returns || 'any'}</i><br>${r.description || ''}</p>`;
+        };
+
+        sections.forEach(section => {
+            const ns = section.namespace;
+            html += `<h2>${ns}</h2>`;
+            if (section.description) html += `<p>${section.description}</p>`;
+
+            const fns = Object.values(EXT_FUNCTIONS).filter(r => r.namespace === ns);
+            const vars = Object.values(EXT_TOKEN_VARS).filter(r => r.namespace === ns);
+            const consts = Object.values(EXT_CONSTANTS).filter(r => r.namespace === ns);
+
+            if (fns.length) {
+                html += `<h3>Functions</h3>`;
+                fns.forEach(r => { html += fmtFn(r); });
+            }
+            if (vars.length) {
+                html += `<h3>Token Variables</h3>`;
+                vars.forEach(r => { html += `<p><b>${r.name}</b> — ${r.description || ''}</p>`; });
+            }
+            if (consts.length) {
+                html += `<h3>Constants</h3>`;
+                consts.forEach(r => { html += `<p><b>${r.name}</b> = <code>${r.value}</code> — ${r.description || ''}</p>`; });
+            }
+        });
+
+        hh.set('notes', html);
+        log(`${SCRIPT_NAME}: generated help handout "${handoutName}"`);
     };
 
     // =========================================================================
@@ -485,17 +574,72 @@ var Choreograph = Choreograph || (() => {
     // Running scenes
     // =========================================================================
 
-    // { instanceId: { name, queue, timers, cast, params, state } }
+    // { instanceId: { id, name, queue, timers, cast, params, state, startTime, firedCommands, remaining } }
     const runningScenes = {};
 
     let instanceCounter = 0;
     const genInstanceId = () => `${SCRIPT_NAME}-${++instanceCounter}-${Date.now()}`;
 
     const stopScene = (instanceId) => {
-        const scene = runningScenes[instanceId];
-        if (!scene) return;
-        (scene.timers || []).forEach(t => clearTimeout(t));
+        const instance = runningScenes[instanceId];
+        if (!instance) return;
+        (instance.timers || []).forEach(t => clearTimeout(t));
+        fireLifecycleHooks('stop', instance);
         delete runningScenes[instanceId];
+    };
+
+    const pauseScene = (instanceId) => {
+        const instance = runningScenes[instanceId];
+        if (!instance || instance.state === 'paused') return;
+        // Clear pending timers and save remaining queue entries with adjusted times
+        (instance.timers || []).forEach(t => clearTimeout(t));
+        instance.timers = [];
+        const elapsed = Date.now() - instance.startTime;
+        instance.remaining = (instance.remaining || instance.queue)
+            .filter(entry => entry.time > elapsed)
+            .map(entry => Object.assign({}, entry, { time: entry.time - elapsed }));
+        instance.pausedAt = Date.now();
+        instance.state = 'paused';
+        fireLifecycleHooks('pause', instance);
+    };
+
+    const resumeScene = (instanceId, msg) => {
+        const instance = runningScenes[instanceId];
+        if (!instance || instance.state !== 'paused') return;
+        instance.state = 'running';
+        instance.startTime = Date.now();
+        const sender = msg ? msg.who.split(' ')[0] : 'gm';
+        // Re-schedule remaining entries
+        let i = 0;
+        const queue = instance.remaining || [];
+        while (i < queue.length) {
+            const batchTime = queue[i].time;
+            const batch = [];
+            while (i < queue.length && queue[i].time === batchTime) {
+                batch.push(queue[i]);
+                i++;
+            }
+            const timer = setTimeout(() => {
+                const byCommand = {};
+                batch.forEach(entry => {
+                    if (!byCommand[entry.command]) byCommand[entry.command] = [];
+                    byCommand[entry.command].push(entry.tokenId);
+                });
+                Object.entries(byCommand).forEach(([command, tokenIds]) => {
+                    const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
+                    sendChat(sender, command + selectSuffix);
+                    // Track fired commands for lifecycle hooks
+                    instance.firedCommands = instance.firedCommands || [];
+                    instance.firedCommands.push({
+                        tokens: tokenIds.map(id => getObj('graphic', id)).filter(Boolean),
+                        command,
+                    });
+                });
+            }, batchTime);
+            instance.timers.push(timer);
+        }
+        instance.remaining = null;
+        fireLifecycleHooks('resume', instance);
     };
 
     const stopAll = () => {
@@ -635,6 +779,12 @@ var Choreograph = Choreograph || (() => {
             scope[name] = reg.fn(token, { tokens: filteredTokens, params });
         });
 
+        // Inject registered constants
+        Object.values(EXT_CONSTANTS).forEach(reg => {
+            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
+            scope[name] = reg.value;
+        });
+
         return scope;
     };
 
@@ -758,12 +908,15 @@ var Choreograph = Choreograph || (() => {
 
         // Register running scene
         const instance = {
-            name:   scene.name,
+            id:       instanceId,
+            name:     scene.name,
             queue,
-            timers: [],
+            timers:   [],
             cast,
-            params: resolvedParams,
-            state:  'running',
+            params:   resolvedParams,
+            state:    'running',
+            startTime: Date.now(),
+            firedCommands: [],
         };
         runningScenes[instanceId] = instance;
 
@@ -788,6 +941,10 @@ var Choreograph = Choreograph || (() => {
                 Object.entries(byCommand).forEach(([command, tokenIds]) => {
                     const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
                     sendChat(sender, command + selectSuffix);
+                    instance.firedCommands.push({
+                        tokens: tokenIds.map(id => getObj('graphic', id)).filter(Boolean),
+                        command,
+                    });
                 });
             }, batchTime);
             instance.timers.push(timer);
@@ -938,6 +1095,44 @@ var Choreograph = Choreograph || (() => {
                 reply(msg, 'Choreograph', count > 0
                     ? `Stopped ${count} running scene(s).`
                     : 'No scenes running.');
+            }
+            return;
+        }
+
+        // ---- pause ----
+        if (cmd === 'pause') {
+            const name = args[0];
+            if (name) {
+                const matches = Object.entries(runningScenes)
+                    .filter(([, s]) => s.name === name && s.state === 'running');
+                if (matches.length === 0) { replyError(msg, `No running scene named "${name}" to pause.`); return; }
+                matches.forEach(([id]) => pauseScene(id));
+                reply(msg, 'Choreograph', `Paused ${matches.length} instance(s) of "${escHtml(name)}".`);
+            } else {
+                const running = Object.entries(runningScenes).filter(([, s]) => s.state === 'running');
+                running.forEach(([id]) => pauseScene(id));
+                reply(msg, 'Choreograph', running.length > 0
+                    ? `Paused ${running.length} running scene(s).`
+                    : 'No scenes running to pause.');
+            }
+            return;
+        }
+
+        // ---- resume ----
+        if (cmd === 'resume') {
+            const name = args[0];
+            if (name) {
+                const matches = Object.entries(runningScenes)
+                    .filter(([, s]) => s.name === name && s.state === 'paused');
+                if (matches.length === 0) { replyError(msg, `No paused scene named "${name}" to resume.`); return; }
+                matches.forEach(([id]) => resumeScene(id, msg));
+                reply(msg, 'Choreograph', `Resumed ${matches.length} instance(s) of "${escHtml(name)}".`);
+            } else {
+                const paused = Object.entries(runningScenes).filter(([, s]) => s.state === 'paused');
+                paused.forEach(([id]) => resumeScene(id, msg));
+                reply(msg, 'Choreograph', paused.length > 0
+                    ? `Resumed ${paused.length} paused scene(s).`
+                    : 'No scenes paused to resume.');
             }
             return;
         }
@@ -1238,9 +1433,13 @@ var Choreograph = Choreograph || (() => {
         registerFunction,
         registerTokenVariable,
         registerParameterType,
+        registerConstant,
+        registerLifecycleHook,
+        generateExtensionHandout,
         // Introspection
         getFunction:      (name) => EXT_FUNCTIONS[name] || null,
         getVariable:      (name) => EXT_TOKEN_VARS[name] || null,
+        getConstant:      (name) => EXT_CONSTANTS[name] || null,
         getParameterType: (name) => EXT_PARAM_TYPES[name] || null,
     };
 })();
