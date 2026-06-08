@@ -452,7 +452,7 @@ var Choreograph = Choreograph || (() => {
         (scene.rows || []).forEach(row => {
             html += `<tr><td style="${STYLE.td}">${escHtml(row.filter)}</td>`;
             html += `<td style="${STYLE.td}">${escHtml(row.delay)}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(row.command)}</td>`;
+            html += `<td style="${STYLE.td}">${escHtml((row.commands || [row.command]).join('\n'))}</td>`;
             html += `<td style="${STYLE.td}">${escHtml(row.notes)}</td></tr>`;
         });
         html += `</table>`;
@@ -468,7 +468,7 @@ var Choreograph = Choreograph || (() => {
                 { name: 'cast', type: 'token[]', default: 'selected', description: 'Tokens to run the scene on (built-in)' },
             ],
             rows: [
-                { filter: '*', delay: '0', command: '', notes: 'Example row — add your command here' },
+                { filter: '*', delay: '0', commands: [], notes: 'Example row — add your command here' },
             ],
         };
         return generateSceneHtml(name, scene);
@@ -542,10 +542,12 @@ var Choreograph = Choreograph || (() => {
             let rowMatch;
             while ((rowMatch = rowRe.exec(tableHtml)) !== null) {
                 const cells = [];
+                const rawCells = [];
                 const tdRe = /<td[^>]*>([\s\S]*?)<\/td>/gi;
                 let tdMatch;
                 while ((tdMatch = tdRe.exec(rowMatch[1])) !== null) {
                     cells.push(stripTags(tdMatch[1]));
+                    rawCells.push(tdMatch[1]);
                 }
 
                 if (isParamTable && cells.length >= 2) {
@@ -561,11 +563,21 @@ var Choreograph = Choreograph || (() => {
                         expression: cells[1] || '',
                     });
                 } else if (isSceneTable && cells.length >= 2) {
+                    // Parse command cell: split on <p> boundaries for multi-command cells
+                    const rawCmd = rawCells[2] || '';
+                    const commands = rawCmd
+                        .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
+                        .replace(/<\/?p[^>]*>/gi, '')
+                        .replace(/<br[^>]*>/gi, '\n')
+                        .replace(/<[^>]+>/g, '')
+                        .split('\n')
+                        .map(s => s.trim())
+                        .filter(Boolean);
                     scene.rows.push({
-                        filter:  cells[0] || '',
-                        delay:   cells[1] || '0',
-                        command: cells[2] || '',
-                        notes:   cells[3] || '',
+                        filter:   cells[0] || '',
+                        delay:    cells[1] || '0',
+                        commands: commands,
+                        notes:    cells[3] || '',
                     });
                 }
             }
@@ -735,8 +747,12 @@ var Choreograph = Choreograph || (() => {
                     byCommand[entry.command].push(entry.tokenId);
                 });
                 Object.entries(byCommand).forEach(([command, tokenIds]) => {
-                    const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
-                    sendChat(sender, command + selectSuffix);
+                    if (command.startsWith('!')) {
+                        const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
+                        sendChat(sender, command + selectSuffix);
+                    } else {
+                        sendChat(sender, command);
+                    }
                     // Track fired commands for lifecycle hooks
                     instance.firedCommands = instance.firedCommands || [];
                     instance.firedCommands.push({
@@ -1029,10 +1045,12 @@ var Choreograph = Choreograph || (() => {
                 const delay = evalDelay(row.delay, scope);
                 if (!isFinite(delay)) return; // INF/SKIP
 
-                const command = evalCommand(row.command, scope);
-                if (!command) return;
-
-                queue.push({ time: delay, rowIndex, tokenId: scope.tokenId, command });
+                const commands = row.commands || [row.command];
+                commands.forEach(cmdTemplate => {
+                    const command = evalCommand(cmdTemplate, scope);
+                    if (!command) return;
+                    queue.push({ time: delay, rowIndex, tokenId: scope.tokenId, command });
+                });
             });
         });
 
@@ -1169,8 +1187,12 @@ var Choreograph = Choreograph || (() => {
 
                         // Fall back to sendChat if no start hook handled it
                         if (!handled) {
-                            const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
-                            sendChat(sender, finalCmd + selectSuffix);
+                            if (finalCmd.startsWith('!')) {
+                                const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
+                                sendChat(sender, finalCmd + selectSuffix);
+                            } else {
+                                sendChat(sender, finalCmd);
+                            }
                         }
 
                         instance.firedCommands.push({ tokens, command: finalCmd });
