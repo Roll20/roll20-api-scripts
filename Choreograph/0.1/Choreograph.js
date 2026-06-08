@@ -137,9 +137,24 @@ var Choreograph = Choreograph || (() => {
             log(`${SCRIPT_NAME}: [${src}] registerLifecycleHook — missing commands array`);
             return false;
         }
+        // Prevent duplicate registration from same source
+        if (EXT_LIFECYCLE.some(h => h.source === src)) return false;
         EXT_LIFECYCLE.push(Object.assign({ source: src, start: null, stop: null, pause: null, resume: null }, struct));
         return true;
     };
+
+    const buildHookContext = (instance, entry) => ({
+        type: 'api',
+        content: entry.command,
+        who: instance.who || 'gm',
+        playerid: instance.playerid || 'API',
+        selected: (entry.tokens || []).map(t => ({ _id: t.get('id'), _type: 'graphic' })),
+        sceneInfo: {
+            instanceId: instance.id,
+            sceneName: instance.name,
+            instanceName: instance.instanceName,
+        },
+    });
 
     const fireLifecycleHooks = (event, instance) => {
         const firedCommands = instance.firedCommands || [];
@@ -147,10 +162,9 @@ var Choreograph = Choreograph || (() => {
             const fn = hook[event];
             if (typeof fn !== 'function') return;
             firedCommands.forEach(entry => {
-                // Only fire if command matches this hook's registered patterns
                 const matches = hook.commands.some(rx => rx.test(entry.command));
                 if (!matches) return;
-                fn({ tokens: entry.tokens, command: entry.command, instanceId: instance.id });
+                fn(buildHookContext(instance, entry));
             });
         });
     };
@@ -165,6 +179,8 @@ var Choreograph = Choreograph || (() => {
             log(`${SCRIPT_NAME}: [${src}] registerSyncParticipant — missing commands array`);
             return false;
         }
+        // Prevent duplicate registration from same source
+        if (EXT_SYNC.some(p => p.source === src)) return false;
         EXT_SYNC.push(Object.assign({ source: src }, struct));
         return true;
     };
@@ -174,16 +190,23 @@ var Choreograph = Choreograph || (() => {
      * when all have called done() or timeout expires.
      */
     const fireSync = (instance, onResolved, timeoutMs) => {
-        const firedCommands = (instance.firedCommands || []).map(e => e.command);
+        const allEntries = (instance.firedCommands || []).map(entry => buildHookContext(instance, entry));
+        const sceneInfo = {
+            instanceId: instance.id,
+            sceneName: instance.name,
+            instanceName: instance.instanceName,
+        };
 
-        // Only involve participants whose command patterns match a fired command
-        const relevant = EXT_SYNC.filter(p =>
-            p.commands.some(rx => firedCommands.some(cmd => rx.test(cmd)))
-        );
+        // Build filtered context per participant; skip those with no matching entries
+        const participants = [];
+        EXT_SYNC.forEach(p => {
+            const filtered = allEntries.filter(e => p.commands.some(rx => rx.test(e.content)));
+            if (filtered.length > 0) participants.push({ participant: p, entries: filtered });
+        });
 
-        if (relevant.length === 0) { onResolved(); return; }
+        if (participants.length === 0) { onResolved(); return; }
 
-        let remaining = relevant.length;
+        let remaining = participants.length;
         let resolved = false;
 
         const checkDone = () => {
@@ -203,22 +226,18 @@ var Choreograph = Choreograph || (() => {
             }
         }, timeoutMs || 30000);
 
-        const context = {
-            tokens:   (instance.firedCommands || []).flatMap(e => e.tokens),
-            commands: firedCommands,
-            instanceId: instance.id,
-        };
-
-        relevant.forEach(participant => {
+        participants.forEach(({ participant, entries }) => {
             let called = false;
-            participant.waiting(Object.assign({}, context, {
+            participant.waiting({
+                entries,
+                sceneInfo,
                 done: () => {
                     if (called) return;
                     called = true;
                     checkDone();
                     if (resolved) clearTimeout(timeout);
                 },
-            }));
+            });
         });
     };
 
@@ -275,10 +294,16 @@ var Choreograph = Choreograph || (() => {
     // Chat helpers
     // =========================================================================
 
+    const getPlayerName = (playerid) => {
+        if (!playerid || playerid === 'API') return 'gm';
+        const player = getObj('player', playerid);
+        return player ? player.get('_displayname') : 'gm';
+    };
+
     const reply = (msg, tag, text, noarchive = false) => {
         const body      = text !== undefined ? text : tag;
         const prefix    = text !== undefined ? ` [${tag}]` : '';
-        const recipient = msg.who.split(' ')[0];
+        const recipient = getPlayerName(msg.playerid);
         sendChat(`${SCRIPT_NAME}${prefix}`, `/w ${recipient} ${body}`,
             null, noarchive ? { noarchive: true } : undefined);
     };
@@ -692,7 +717,7 @@ var Choreograph = Choreograph || (() => {
         if (!instance || instance.state !== 'paused') return;
         instance.state = 'running';
         instance.startTime = Date.now();
-        const sender = msg ? msg.who.split(' ')[0] : 'gm';
+        const sender = getPlayerName(msg && msg.playerid);
         // Re-schedule remaining entries
         let i = 0;
         const queue = instance.remaining || [];
@@ -1024,6 +1049,10 @@ var Choreograph = Choreograph || (() => {
         // Sort each chunk by time, break ties by rowIndex
         chunks.forEach(chunk => chunk.sort((a, b) => a.time - b.time || a.rowIndex - b.rowIndex));
 
+        const sender = getPlayerName(msg.playerid);
+        const senderPlayerId = msg.playerid;
+        const senderWho = msg.who;
+
         // Register running scene
         const instance = {
             id:       instanceId,
@@ -1036,6 +1065,8 @@ var Choreograph = Choreograph || (() => {
             state:    'running',
             startTime: Date.now(),
             firedCommands: [],
+            who: senderWho,
+            playerid: senderPlayerId,
             loop:     loopOpts || null,
             parentId: (runtimeOpts && runtimeOpts.parent) || null,
             children: [],
@@ -1079,7 +1110,6 @@ var Choreograph = Choreograph || (() => {
         };
 
         // Execute chunks — chain with sync between them
-        const sender = msg.who.split(' ')[0];
         const syncTimeout = (runtimeOpts && runtimeOpts.syncTimeout) ? runtimeOpts.syncTimeout : 30000;
 
         // Execute one chunk, then fire sync and proceed to next
@@ -1124,7 +1154,7 @@ var Choreograph = Choreograph || (() => {
                         }
 
                         const tokens = tokenIds.map(id => getObj('graphic', id)).filter(Boolean);
-                        const ctx = { tokens, command: finalCmd, instanceId: instance.id, sender };
+                        const ctx = buildHookContext(instance, { command: finalCmd, tokens });
 
                         // Check if any lifecycle hook wants to handle this via start
                         let handled = false;
@@ -1175,7 +1205,7 @@ var Choreograph = Choreograph || (() => {
     // Command handler
     // =========================================================================
 
-    const handleInput = (msg) => {
+    const handleInput = (msg, invokeOpts) => {
         if (msg.type !== 'api') return;
         if (msg.content.split(' ')[0] !== CMD_TOKEN) return;
 
@@ -2010,29 +2040,22 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         registerLifecycleHook(SCRIPT_NAME, {
             commands: [/^!choreograph run /],
             start: (ctx) => {
-                // Directly invoke the run handler for chained scenes
-                const fakeMsg = {
-                    type: 'api',
-                    content: ctx.command,
-                    who: ctx.sender || 'gm',
-                    playerid: 'API',
-                    selected: ctx.tokens.map(t => ({ _id: t.get('id'), _type: 'graphic' })),
-                };
-                handleInput(fakeMsg);
+                // ctx is msg-shaped from Choreograph's execution engine
+                handleInput(ctx, { internal: true });
             },
             stop: (ctx) => {
                 Object.values(runningScenes)
-                    .filter(s => s.parentId === ctx.instanceId)
+                    .filter(s => s.parentId === ctx.sceneInfo.instanceId)
                     .forEach(s => stopScene(s.id));
             },
             pause: (ctx) => {
                 Object.values(runningScenes)
-                    .filter(s => s.parentId === ctx.instanceId)
+                    .filter(s => s.parentId === ctx.sceneInfo.instanceId)
                     .forEach(s => pauseScene(s.id));
             },
             resume: (ctx) => {
                 Object.values(runningScenes)
-                    .filter(s => s.parentId === ctx.instanceId)
+                    .filter(s => s.parentId === ctx.sceneInfo.instanceId)
                     .forEach(s => resumeScene(s.id));
             },
         });
@@ -2042,12 +2065,12 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             commands: [/^!choreograph run /],
             waiting: (ctx) => {
                 const children = Object.values(runningScenes)
-                    .filter(s => s.parentId === ctx.instanceId);
+                    .filter(s => s.parentId === ctx.sceneInfo.instanceId);
                 if (children.length === 0) { ctx.done(); return; }
                 // Poll for children to finish
                 const check = setInterval(() => {
                     const remaining = Object.values(runningScenes)
-                        .filter(s => s.parentId === ctx.instanceId);
+                        .filter(s => s.parentId === ctx.sceneInfo.instanceId);
                     if (remaining.length === 0) {
                         clearInterval(check);
                         ctx.done();

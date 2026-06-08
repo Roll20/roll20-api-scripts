@@ -2704,6 +2704,7 @@ var Sequence = Sequence || (() => {
             paused:        false,
             pausedAt:      null,
             preview:       opts.preview  || false,
+            silent:        opts.silent   || false,
             playerid:      opts.playerid || null,
             cumulative:    {},  // per-playback scratchpad for registered functions
             resolvedTimes: [0], // resolvedTimes[i] = resolved timestamp for kf[i]
@@ -3036,8 +3037,8 @@ var Sequence = Sequence || (() => {
             const playerid = pb.playerid;
             const recName  = pb.recordingName;
             stopPlayback(objId); // auto-reverts if preview:true
-            // Send the stopped/reverted menu to the owning player
-            if (playerid) sendPlaybackMenuTo(playerid, objId, recName);
+            // Send the stopped/reverted menu to the owning player (unless silent)
+            if (playerid && !pb.silent) sendPlaybackMenuTo(playerid, objId, recName);
         }
     };
 
@@ -3469,12 +3470,13 @@ var Sequence = Sequence || (() => {
                         only:     opts.only    ? opts.only.split(',')    : null,
                         exclude:  opts.exclude ? opts.exclude.split(',') : null,
                         playerid: msg.playerid,
+                        silent:   !!msg.sceneInfo || flags.has('silent'),
                     };
                     let started = 0;
                     objIds.forEach(id => {
                         if (startPlayback(id, recording, attrCols, playOpts)) started++;
                     });
-                    showPlaybackMenu(msg, objIds.filter(id => activePlayback[id]), name);
+                    if (!msg.sceneInfo) showPlaybackMenu(msg, objIds.filter(id => activePlayback[id]), name);
                 });
                 return;
             }
@@ -3485,7 +3487,7 @@ var Sequence = Sequence || (() => {
                     activePlayback[id] ? activePlayback[id].recordingName : null
                 );
                 objIds.forEach(id => stopPlayback(id)); // auto-reverts if preview mode
-                objIds.forEach((id, i) => showPlaybackMenu(msg, [id], stoppedNames[i]));
+                if (!msg.sceneInfo) objIds.forEach((id, i) => showPlaybackMenu(msg, [id], stoppedNames[i]));
                 return;
             }
 
@@ -5262,27 +5264,16 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             Choreograph.registerLifecycleHook(SCRIPT_NAME, {
                 commands: [/^!sequence\b/],
                 start: (ctx) => {
-                    // Direct invocation — parse and handle as a chat message
-                    const fakeMsg = {
-                        type: 'api',
-                        content: ctx.command,
-                        who: ctx.sender || 'gm',
-                        playerid: 'API',
-                        selected: ctx.tokens.map(t => ({ _id: t.get('id'), _type: 'graphic' })),
-                    };
-                    // Store choreograph instance ID on any playback started from this command
-                    fakeMsg._choreoInstanceId = ctx.instanceId;
-                    handleInput(fakeMsg);
+                    handleInput(ctx);
                 },
                 stop: (ctx) => {
-                    // Stop playback on the tokens involved
-                    ctx.tokens.forEach(t => stopPlayback(t.get('id')));
+                    (ctx.selected || []).forEach(s => stopPlayback(s._id));
                 },
                 pause: (ctx) => {
-                    ctx.tokens.forEach(t => pausePlayback(t.get('id')));
+                    (ctx.selected || []).forEach(s => pausePlayback(s._id));
                 },
                 resume: (ctx) => {
-                    ctx.tokens.forEach(t => resumePlayback(t.get('id')));
+                    (ctx.selected || []).forEach(s => resumePlayback(s._id));
                 },
             });
 
@@ -5290,9 +5281,15 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             Choreograph.registerSyncParticipant(SCRIPT_NAME, {
                 commands: [/^!sequence play\b/],
                 waiting: (ctx) => {
-                    // Check if any tokens still have active playback
+                    // Gather all token IDs from entries
+                    const tokenIds = new Set();
+                    (ctx.entries || []).forEach(entry => {
+                        (entry.selected || []).forEach(s => tokenIds.add(s._id));
+                    });
+                    // Poll until none have active playback
                     const check = setInterval(() => {
-                        const stillPlaying = ctx.tokens.some(t => activePlayback[t.get('id')]);
+                        let stillPlaying = false;
+                        tokenIds.forEach(id => { if (activePlayback[id]) stillPlaying = true; });
                         if (!stillPlaying) {
                             clearInterval(check);
                             ctx.done();
