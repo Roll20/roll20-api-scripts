@@ -1210,6 +1210,30 @@ var Choreograph = Choreograph || (() => {
             args.push(tok);
         });
 
+        // ---- help / --help ----
+        if (cmd === 'help' || cmd === '--help') {
+            reply(msg, SCRIPT_NAME, `<b>${SCRIPT_NAME} v${SCRIPT_VERSION}</b><br><br>`
+                + `<b>Scene commands:</b><br>`
+                + `${CMD_TOKEN} run &lt;name&gt; [flags] — execute a scene<br>`
+                + `${CMD_TOKEN} new &lt;name&gt; — create blank scene<br>`
+                + `${CMD_TOKEN} list [query] — list scenes<br>`
+                + `${CMD_TOKEN} edit &lt;name&gt; — open handout<br>`
+                + `${CMD_TOKEN} delete &lt;name&gt; — delete scene<br>`
+                + `${CMD_TOKEN} refresh &lt;name&gt; — regenerate handout<br>`
+                + `${CMD_TOKEN} add-row &lt;name&gt; — add blank row<br><br>`
+                + `<b>Playback:</b><br>`
+                + `${CMD_TOKEN} stop [name] — stop scene(s)<br>`
+                + `${CMD_TOKEN} pause [name] — pause scene(s)<br>`
+                + `${CMD_TOKEN} resume [name] — resume scene(s)<br>`
+                + `${CMD_TOKEN} status — show running scenes<br><br>`
+                + `<b>Cast:</b><br>`
+                + `${CMD_TOKEN} cast add/remove/list/show/delete<br><br>`
+                + `<b>Help:</b><br>`
+                + `${CMD_TOKEN} man [topic] — detailed help by topic<br>`
+                + `${CMD_TOKEN} gen-dev-docs — generate extension guide<br>`);
+            return;
+        }
+
         // ---- new ----
         if (cmd === 'new') {
             const name = args[0];
