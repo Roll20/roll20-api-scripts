@@ -842,7 +842,7 @@ var Choreograph = Choreograph || (() => {
      * Build the expression scope for a token in context.
      */
     const buildTokenScope = (token, filteredTokens, params) => {
-        return {
+        const scope = {
             left:   token.get('left'),
             top:    token.get('top'),
             name:   token.get('name') || '',
@@ -2140,15 +2140,15 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
             name: 'shockwave',
-            description: 'Propagates an echo outward from the leftmost token like a shockwave.',
+            description: 'Propagates an echo outward from the nearest neighbor.',
             scene: {
-                notes: 'Tokens fire in order of horizontal position, with timing proportional to spacing.',
+                notes: 'Each token fires based on its distance rank from the nearest neighbor (actors()[1]).',
                 params: [
-                    { name: 'speed', type: 'number', default: '300', description: 'Ms between each token' },
+                    { name: 'interval', type: 'number', default: '500', description: 'Ms between each token' },
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), speed)', commands: ['!choreograph echo 💥 Shockwave hits ${tokenName}!'], notes: 'Propagate left to right' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph echo 💥 Shockwave hits ${tokenName}! (${actors().length} actors nearby)'], notes: 'Propagate' },
                 ],
             },
         });
