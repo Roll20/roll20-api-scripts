@@ -953,6 +953,12 @@ var Choreograph = Choreograph || (() => {
 
         // For each row, evaluate filter on all cast, then compute delays
         scene.rows.forEach((row, rowIndex) => {
+            // Check for sync delay — only one sync entry per row
+            if (row.delay.trim().toLowerCase() === 'sync') {
+                queue.push({ time: -1, rowIndex, isSync: true });
+                return;
+            }
+
             // Filter cast
             const filtered = cast.filter(token => evalFilter(row.filter, token, castData));
             if (filtered.length === 0) return;
@@ -970,12 +976,6 @@ var Choreograph = Choreograph || (() => {
                 scope.self      = scene.name;
                 scope.__parent  = instanceId;
                 scope.__depth   = Math.max(0, ((runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10) - 1);
-
-                // Check for sync delay
-                if (row.delay.trim().toLowerCase() === 'sync') {
-                    queue.push({ time: -1, rowIndex, isSync: true });
-                    return;
-                }
 
                 const delay = evalDelay(row.delay, scope);
                 if (!isFinite(delay)) return; // INF/SKIP
