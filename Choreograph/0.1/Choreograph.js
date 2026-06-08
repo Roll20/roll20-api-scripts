@@ -1771,6 +1771,10 @@ var Choreograph = Choreograph || (() => {
             const handout = scenes().getOrCreate(sceneName);
             setHandoutNotes(handout, generateSceneHtml(sceneName, scene));
             scenes().cache[sceneName] = scene;
+
+            // Call onGenerate hook if provided (e.g. to set up recordings)
+            if (typeof ex.onGenerate === 'function') ex.onGenerate(sceneName);
+
             reply(msg, 'Examples',
                 `Generated example scene "<b>${escHtml(sceneName)}</b>". `
                 + `<a href="http://journal.roll20.net/handout/${handout.get('id')}">[Open Handout]</a> `

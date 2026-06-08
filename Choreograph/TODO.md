@@ -13,7 +13,7 @@
 
 ## Known Issues
 
-(none currently)
+- `actors()` function not available in delay expressions despite being in scope (needs investigation — may be an eval scope issue with function closures)
 
 ## Done
 

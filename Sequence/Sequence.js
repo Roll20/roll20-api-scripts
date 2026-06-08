@@ -5302,8 +5302,18 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             Choreograph.registerExample(SCRIPT_NAME, {
                 name: 'scatter',
                 description: 'Tokens scatter outward with staggered animation playback.',
+                onGenerate: () => {
+                    recordingCache['scatter'] = { recording: {
+                        name: 'scatter', objectType: 'graphic', duration: 1000, notes: '',
+                        tracks: { 'track-0': { label: '', keyframes: [
+                            { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
+                            { time: 1000, type: 'change', deltas: { left: { expr: 'orig + cos(freeze(rand(0, TAU))) * 100', mode: 'abs' }, top: { expr: 'orig + sin(freeze(rand(0, TAU))) * 100', mode: 'abs' } }, easings: {} },
+                        ]}},
+                    }, attrCols: ['left', 'top'] };
+                    log(`${SCRIPT_NAME}: generated "scatter" recording for example`);
+                },
                 scene: {
-                    notes: 'Plays a recording on each token staggered by distance from center. Requires a Sequence recording named "scatter" (or change the command).',
+                    notes: 'Tokens scatter in random directions. Recording auto-generated.',
                     params: [
                         { name: 'anim', type: 'text', default: 'scatter', description: 'Sequence recording name' },
                     ],
@@ -5316,9 +5326,20 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
 
             Choreograph.registerExample(SCRIPT_NAME, {
                 name: 'wave',
-                description: 'Plays an animation in a wave across tokens sorted by position.',
+                description: 'Plays a pulse animation in a wave across tokens sorted by position.',
+                onGenerate: () => {
+                    recordingCache['pulse'] = { recording: {
+                        name: 'pulse', objectType: 'graphic', duration: 800, notes: '',
+                        tracks: { 'track-0': { label: '', keyframes: [
+                            { time: 0,   type: 'change', deltas: { width: { delta: 1.3 }, height: { delta: 1.3 } }, easings: { width: 'sine', height: 'sine' } },
+                            { time: 400, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 } }, easings: { width: '~sine', height: '~sine' } },
+                            { time: 800, type: 'change', deltas: {}, easings: {} },
+                        ]}},
+                    }, attrCols: ['width', 'height'] };
+                    log(`${SCRIPT_NAME}: generated "pulse" recording for example`);
+                },
                 scene: {
-                    notes: 'Spatial wave — tokens further right start later. Requires a Sequence recording.',
+                    notes: 'Tokens pulse (grow/shrink) in a wave. Recording auto-generated.',
                     params: [
                         { name: 'anim', type: 'text', default: 'pulse', description: 'Sequence recording name' },
                         { name: 'interval', type: 'number', default: '300', description: 'Ms between each token' },
