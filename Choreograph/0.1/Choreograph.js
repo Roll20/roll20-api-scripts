@@ -2162,8 +2162,75 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         // ---- echo (debug/test) ----
         if (cmd === 'echo') {
             const text = rest.join(' ');
-            const ts = Date.now() % 100000; // last 5 digits for readability
+            const ts = Date.now() % 100000;
             reply(msg, 'Echo', `[${ts}ms] ${text}`, true);
+            return;
+        }
+
+        // ---- ping ----
+        // Usage: !choreograph ping <x> <y> [pageId] [moveAll]
+        // Or with selected token: !choreograph ping (pings selected token location)
+        if (cmd === 'ping') {
+            let x, y, pageId, moveAll = false;
+            if (args.length >= 2) {
+                x = parseFloat(args[0]);
+                y = parseFloat(args[1]);
+                pageId = args[2] || Campaign().get('playerpageid');
+                moveAll = args[3] === 'true';
+            } else if (msg.selected && msg.selected.length > 0) {
+                const tok = getObj('graphic', msg.selected[0]._id);
+                if (tok) { x = tok.get('left'); y = tok.get('top'); pageId = tok.get('_pageid'); }
+            }
+            if (x !== undefined && y !== undefined) {
+                sendPing(x, y, msg.playerid, pageId, moveAll);
+            }
+            return;
+        }
+
+        // ---- fx ----
+        // Usage: !choreograph fx <type> <x> <y> [pageId]
+        // Or with selected: !choreograph fx <type> (at selected token location)
+        if (cmd === 'fx') {
+            const fxType = args[0];
+            if (!fxType) { replyError(msg, 'Usage: !choreograph fx <type> [x y] or with token selected'); return; }
+            let x, y, pageId;
+            if (args.length >= 3) {
+                x = parseFloat(args[1]);
+                y = parseFloat(args[2]);
+                pageId = args[3] || Campaign().get('playerpageid');
+            } else if (msg.selected && msg.selected.length > 0) {
+                const tok = getObj('graphic', msg.selected[0]._id);
+                if (tok) { x = tok.get('left'); y = tok.get('top'); pageId = tok.get('_pageid'); }
+            }
+            if (x !== undefined && y !== undefined) {
+                spawnFx(x, y, fxType, pageId);
+            }
+            return;
+        }
+
+        // ---- fxbetween ----
+        // Usage: !choreograph fxbetween <type> <x1> <y1> <x2> <y2> [pageId]
+        // Or with 2 selected: !choreograph fxbetween <type>
+        if (cmd === 'fxbetween') {
+            const fxType = args[0];
+            if (!fxType) { replyError(msg, 'Usage: !choreograph fxbetween <type> [x1 y1 x2 y2]'); return; }
+            let p1, p2, pageId;
+            if (args.length >= 5) {
+                p1 = { x: parseFloat(args[1]), y: parseFloat(args[2]) };
+                p2 = { x: parseFloat(args[3]), y: parseFloat(args[4]) };
+                pageId = args[5] || Campaign().get('playerpageid');
+            } else if (msg.selected && msg.selected.length >= 2) {
+                const t1 = getObj('graphic', msg.selected[0]._id);
+                const t2 = getObj('graphic', msg.selected[1]._id);
+                if (t1 && t2) {
+                    p1 = { x: t1.get('left'), y: t1.get('top') };
+                    p2 = { x: t2.get('left'), y: t2.get('top') };
+                    pageId = t1.get('_pageid');
+                }
+            }
+            if (p1 && p2) {
+                spawnFxBetweenPoints(p1, p2, fxType, pageId);
+            }
             return;
         }
 
@@ -2262,6 +2329,136 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${tokenName} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'fireball',
+            description: 'Explosion FX propagates outward from the leftmost token.',
+            scene: {
+                notes: 'Fire explosions staggered by position — looks like a spreading fireball.',
+                params: [
+                    { name: 'interval', type: 'number', default: '200', description: 'Ms between each explosion' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top}'], notes: '' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'chain-lightning',
+            description: 'Lightning beam jumps from each token to the next nearest.',
+            scene: {
+                notes: 'Beams connect tokens in order of proximity using fxbetween.',
+                params: [
+                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
+                        '!choreograph fx burst-magic ${left} ${top}',
+                        '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
+                    ], notes: 'Bolt + beam to nearest neighbor' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'battle-cry',
+            description: 'Tokens rally one by one with a ping, glow, and announcement.',
+            scene: {
+                notes: 'Staggered rally effect — each token pings, glows, and announces.',
+                params: [
+                    { name: 'interval', type: 'number', default: '800', description: 'Ms between each token' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
+                        '!choreograph ping ${left} ${top}',
+                        '!choreograph fx glow-holy ${left} ${top}',
+                        '!choreograph echo ⚔️ ${tokenName} rallies!',
+                    ], notes: 'Ping + glow + announce' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'fireball',
+            description: 'Explosion FX propagates outward from the leftmost token.',
+            scene: {
+                notes: 'Fire explosions staggered by position.',
+                params: [
+                    { name: 'interval', type: 'number', default: '200', description: 'Ms between each explosion' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top}'], notes: '' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'chain-lightning',
+            description: 'Lightning beam jumps from each token to the next nearest.',
+            scene: {
+                notes: 'Beams connect tokens in order of proximity.',
+                params: [
+                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
+                        '!choreograph fx burst-magic ${left} ${top}',
+                        '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
+                    ], notes: 'Bolt + beam to nearest' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'battle-cry',
+            description: 'Tokens rally one by one with a ping, glow, and announcement.',
+            scene: {
+                notes: 'Staggered rally effect.',
+                params: [
+                    { name: 'interval', type: 'number', default: '800', description: 'Ms between each token' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
+                        '!choreograph ping ${left} ${top}',
+                        '!choreograph fx glow-holy ${left} ${top}',
+                        '!choreograph echo ⚔️ ${tokenName} rallies!',
+                    ], notes: 'Ping + glow + announce' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'ripple-ping',
+            description: 'Cascading pings that propagate outward and decay in speed over distance.',
+            scene: {
+                notes: 'Pings the origin point, then recursively pings outward with decreasing speed. Pass --px/--py to set origin (defaults to center of cast).',
+                params: [
+                    { name: 'px', type: 'number', default: '0', description: 'Origin X (0 = auto-center)' },
+                    { name: 'py', type: 'number', default: '0', description: 'Origin Y (0 = auto-center)' },
+                    { name: 'speed', type: 'number', default: '0.4', description: 'Propagation speed (px/ms)' },
+                    { name: 'decay', type: 'number', default: '0.6', description: 'Speed multiplier each hop' },
+                    { name: 'minSpeed', type: 'number', default: '0.05', description: 'Stop when speed drops below this' },
+                ],
+                variables: [
+                    { name: 'cx', expression: 'px > 0 ? px : actors().reduce((s,t) => s + t.get("left"), 0) / count' },
+                    { name: 'cy', expression: 'py > 0 ? py : actors().reduce((s,t) => s + t.get("top"), 0) / count' },
+                ],
+                rows: [
+                    { filter: '*', delay: 'propagate(distance(cx, cy), speed)', commands: [
+                        '!choreograph ping ${left} ${top}',
+                        '!choreograph fx nova-holy ${left} ${top}',
+                        '${speed * decay >= minSpeed ? "!choreograph run " + self + " --px " + left + " --py " + top + " --speed " + (speed * decay) + " --decay " + decay + " --minSpeed " + minSpeed : ""}',
+                    ], notes: 'Ping + FX + recurse with decay' },
                 ],
             },
         });
