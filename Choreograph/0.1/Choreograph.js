@@ -43,8 +43,8 @@ var Choreograph = Choreograph || (() => {
     const EXT_TOKEN_VARS     = {}; // { 'namespace/name': { name, namespace, fn, description } }
     const EXT_CONSTANTS      = {}; // { 'namespace/name': { name, namespace, value, description, type } }
     const EXT_PARAM_TYPES    = {}; // { 'typeName': { name, description, parse, validate } }
-    const EXT_LIFECYCLE      = []; // [{ source, stop, pause, resume }]
-    const EXT_SYNC           = []; // [{ source, waiting: fn }]
+    const EXT_LIFECYCLE      = []; // [{ source, commands: [RegExp], start, stop, pause, resume }]
+    const EXT_SYNC           = []; // [{ source, commands: [RegExp], waiting: fn }]
 
     const validIdent = (s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
 
@@ -133,7 +133,11 @@ var Choreograph = Choreograph || (() => {
 
     const registerLifecycleHook = (sourceId, struct) => {
         const src = sourceId || SCRIPT_NAME;
-        EXT_LIFECYCLE.push(Object.assign({ source: src, stop: null, pause: null, resume: null }, struct));
+        if (!struct.commands || !Array.isArray(struct.commands)) {
+            log(`${SCRIPT_NAME}: [${src}] registerLifecycleHook — missing commands array`);
+            return false;
+        }
+        EXT_LIFECYCLE.push(Object.assign({ source: src, start: null, stop: null, pause: null, resume: null }, struct));
         return true;
     };
 
@@ -143,6 +147,9 @@ var Choreograph = Choreograph || (() => {
             const fn = hook[event];
             if (typeof fn !== 'function') return;
             firedCommands.forEach(entry => {
+                // Only fire if command matches this hook's registered patterns
+                const matches = hook.commands.some(rx => rx.test(entry.command));
+                if (!matches) return;
                 fn({ tokens: entry.tokens, command: entry.command, instanceId: instance.id });
             });
         });
@@ -154,6 +161,10 @@ var Choreograph = Choreograph || (() => {
             log(`${SCRIPT_NAME}: [${src}] registerSyncParticipant — missing waiting function`);
             return false;
         }
+        if (!struct.commands || !Array.isArray(struct.commands)) {
+            log(`${SCRIPT_NAME}: [${src}] registerSyncParticipant — missing commands array`);
+            return false;
+        }
         EXT_SYNC.push(Object.assign({ source: src }, struct));
         return true;
     };
@@ -163,9 +174,16 @@ var Choreograph = Choreograph || (() => {
      * when all have called done() or timeout expires.
      */
     const fireSync = (instance, onResolved, timeoutMs) => {
-        if (EXT_SYNC.length === 0) { onResolved(); return; }
+        const firedCommands = (instance.firedCommands || []).map(e => e.command);
 
-        let remaining = EXT_SYNC.length;
+        // Only involve participants whose command patterns match a fired command
+        const relevant = EXT_SYNC.filter(p =>
+            p.commands.some(rx => firedCommands.some(cmd => rx.test(cmd)))
+        );
+
+        if (relevant.length === 0) { onResolved(); return; }
+
+        let remaining = relevant.length;
         let resolved = false;
 
         const checkDone = () => {
@@ -187,11 +205,11 @@ var Choreograph = Choreograph || (() => {
 
         const context = {
             tokens:   (instance.firedCommands || []).flatMap(e => e.tokens),
-            commands: (instance.firedCommands || []).map(e => e.command),
+            commands: firedCommands,
             instanceId: instance.id,
         };
 
-        EXT_SYNC.forEach(participant => {
+        relevant.forEach(participant => {
             let called = false;
             participant.waiting(Object.assign({}, context, {
                 done: () => {
@@ -902,7 +920,7 @@ var Choreograph = Choreograph || (() => {
     /**
      * Execute a scene: gather cast, evaluate rows, build queue, fire commands.
      */
-    const executeScene = (scene, cast, params, msg, castData, loopOpts) => {
+    const executeScene = (scene, cast, params, msg, castData, loopOpts, runtimeOpts) => {
         const instanceId = genInstanceId();
         const queue = [];
 
@@ -946,9 +964,12 @@ var Choreograph = Choreograph || (() => {
                 Object.assign(scope, resolvedParams);
                 // Add computed variables
                 Object.assign(scope, tokenVars[token.get('id')] || {});
-                // Add tokenId and tokenName for command templates
+                // Add tokenId, tokenName, self, and chaining metadata for command templates
                 scope.tokenId   = token.get('id');
                 scope.tokenName = token.get('name') || '';
+                scope.self      = scene.name;
+                scope.__parent  = instanceId;
+                scope.__depth   = Math.max(0, instance.depth - 1);
 
                 // Check for sync delay
                 if (row.delay.trim().toLowerCase() === 'sync') {
@@ -980,9 +1001,17 @@ var Choreograph = Choreograph || (() => {
             state:    'running',
             startTime: Date.now(),
             firedCommands: [],
-            loop: loopOpts || null, // { unbounded: bool, remaining: number|null, sync: bool }
+            loop:     loopOpts || null,
+            parentId: (runtimeOpts && runtimeOpts.parent) || null,
+            children: [],
+            depth:    (runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10,
         };
         runningScenes[instanceId] = instance;
+
+        // Register as child of parent
+        if (instance.parentId && runningScenes[instance.parentId]) {
+            runningScenes[instance.parentId].children.push(instanceId);
+        }
 
         // Handle scene completion — loop or cleanup
         const finishScene = () => {
@@ -1060,12 +1089,36 @@ var Choreograph = Choreograph || (() => {
                         byCommand[entry.command].push(entry.tokenId);
                     });
                     Object.entries(byCommand).forEach(([command, tokenIds]) => {
-                        const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
-                        sendChat(sender, command + selectSuffix);
-                        instance.firedCommands.push({
-                            tokens: tokenIds.map(id => getObj('graphic', id)).filter(Boolean),
-                            command,
+                        let finalCmd = command;
+                        // Auto-inject --parent and --depth for chained choreograph runs
+                        if (finalCmd.startsWith('!choreograph run ') || finalCmd.startsWith(`${CMD_TOKEN} run `)) {
+                            if (instance.depth <= 0) {
+                                return; // Depth exhausted — skip child spawn
+                            }
+                            finalCmd += ` --parent ${instanceId} --depth ${instance.depth - 1}`;
+                        }
+
+                        const tokens = tokenIds.map(id => getObj('graphic', id)).filter(Boolean);
+                        const ctx = { tokens, command: finalCmd, instanceId: instance.id, sender };
+
+                        // Check if any lifecycle hook wants to handle this via start
+                        let handled = false;
+                        EXT_LIFECYCLE.forEach(hook => {
+                            if (!hook.start) return;
+                            const matches = hook.commands.some(rx => rx.test(finalCmd));
+                            if (matches) {
+                                hook.start(ctx);
+                                handled = true;
+                            }
                         });
+
+                        // Fall back to sendChat if no start hook handled it
+                        if (!handled) {
+                            const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
+                            sendChat(sender, finalCmd + selectSuffix);
+                        }
+
+                        instance.firedCommands.push({ tokens, command: finalCmd });
                     });
                 }, batchTime);
                 instance.timers.push(timer);
@@ -1375,7 +1428,12 @@ var Choreograph = Choreograph || (() => {
                         }
                     }
 
-                    const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts);
+                    const runtimeOpts = {
+                        parent: opts.parent || null,
+                        depth:  opts.depth !== undefined ? parseInt(opts.depth, 10) : 10,
+                    };
+
+                    const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
                     reply(msg, 'Choreograph',
                         `Running "${escHtml(name)}" on ${cast.length} token(s). `
                         + `Instance: <code>${instanceId}</code>`);
@@ -1544,6 +1602,56 @@ var Choreograph = Choreograph || (() => {
 
     const checkInstall = () => {
         state[SCRIPT_NAME] = state[SCRIPT_NAME] || {};
+
+        // Register Choreograph with itself for child cascading
+        registerLifecycleHook(SCRIPT_NAME, {
+            commands: [/^!choreograph run /],
+            start: (ctx) => {
+                // Directly invoke the run handler for chained scenes
+                const fakeMsg = {
+                    type: 'api',
+                    content: ctx.command,
+                    who: ctx.sender || 'gm',
+                    playerid: 'API',
+                    selected: ctx.tokens.map(t => ({ _id: t.get('id'), _type: 'graphic' })),
+                };
+                handleInput(fakeMsg);
+            },
+            stop: (ctx) => {
+                Object.values(runningScenes)
+                    .filter(s => s.parentId === ctx.instanceId)
+                    .forEach(s => stopScene(s.id));
+            },
+            pause: (ctx) => {
+                Object.values(runningScenes)
+                    .filter(s => s.parentId === ctx.instanceId)
+                    .forEach(s => pauseScene(s.id));
+            },
+            resume: (ctx) => {
+                Object.values(runningScenes)
+                    .filter(s => s.parentId === ctx.instanceId)
+                    .forEach(s => resumeScene(s.id));
+            },
+        });
+
+        // Register as sync participant — wait for children to finish
+        registerSyncParticipant(SCRIPT_NAME, {
+            commands: [/^!choreograph run /],
+            waiting: (ctx) => {
+                const children = Object.values(runningScenes)
+                    .filter(s => s.parentId === ctx.instanceId);
+                if (children.length === 0) { ctx.done(); return; }
+                // Poll for children to finish
+                const check = setInterval(() => {
+                    const remaining = Object.values(runningScenes)
+                        .filter(s => s.parentId === ctx.instanceId);
+                    if (remaining.length === 0) {
+                        clearInterval(check);
+                        ctx.done();
+                    }
+                }, 100);
+            },
+        });
 
         log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
 
