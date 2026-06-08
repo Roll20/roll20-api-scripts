@@ -1732,7 +1732,7 @@ var Choreograph = Choreograph || (() => {
         }
 
         // ---- example ----
-        if (cmd === 'example') {
+        if (cmd === 'example' || cmd === 'examples') {
             const exName = args[0];
             if (!exName || exName === 'list') {
                 const examples = Object.values(EXT_EXAMPLES);
@@ -2138,13 +2138,13 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             name: 'shockwave',
             description: 'Propagates an echo outward from the leftmost token like a shockwave.',
             scene: {
-                notes: 'Tokens fire in order of distance from the leftmost token.',
+                notes: 'Tokens fire in order of horizontal position, with timing proportional to spacing.',
                 params: [
-                    { name: 'speed', type: 'number', default: '0.2', description: 'Propagation speed (px/ms)' },
+                    { name: 'speed', type: 'number', default: '300', description: 'Ms between each token' },
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'propagate(distance(actors()[0].get("left"), actors()[0].get("top")), speed)', commands: ['!choreograph echo Shockwave hit ${tokenName}!'], notes: 'Propagate from leftmost' },
+                    { filter: '*', delay: 'stagger(rank("left"), speed)', commands: ['!choreograph echo 💥 Shockwave hits ${tokenName}!'], notes: 'Propagate left to right' },
                 ],
             },
         });
