@@ -36,6 +36,78 @@ var Choreograph = Choreograph || (() => {
     const s = () => state[SCRIPT_NAME];
 
     // =========================================================================
+    // Extension API Registries
+    // =========================================================================
+
+    const EXT_FUNCTIONS      = {}; // { 'namespace/name': { name, namespace, fn, description, args, returns, pure } }
+    const EXT_TOKEN_VARS     = {}; // { 'namespace/name': { name, namespace, fn, description } }
+    const EXT_PARAM_TYPES    = {}; // { 'typeName': { name, description, parse, validate } }
+
+    const validIdent = (s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
+
+    const registerFunction = (sourceId, struct) => {
+        const src = sourceId || SCRIPT_NAME;
+        const { name, namespace = 'core', fn } = struct;
+        if (!name || !validIdent(name)) {
+            log(`${SCRIPT_NAME}: [${src}] registerFunction — invalid name "${name}"`);
+            return false;
+        }
+        if (typeof fn !== 'function') {
+            log(`${SCRIPT_NAME}: [${src}] registerFunction — "${name}" missing fn`);
+            return false;
+        }
+        const key = `${namespace}/${name}`;
+        if (EXT_FUNCTIONS[key]) {
+            const existing = EXT_FUNCTIONS[key].source || SCRIPT_NAME;
+            if (existing !== src) log(`${SCRIPT_NAME}: [${src}] registerFunction — "${name}" already registered by [${existing}]`);
+            return false;
+        }
+        EXT_FUNCTIONS[key] = Object.assign({ namespace, source: src, pure: true, description: '', args: [], returns: 'any', examples: [] }, struct);
+        return true;
+    };
+
+    const registerTokenVariable = (sourceId, struct) => {
+        const src = sourceId || SCRIPT_NAME;
+        const { name, namespace = 'core', fn } = struct;
+        if (!name || !validIdent(name)) {
+            log(`${SCRIPT_NAME}: [${src}] registerTokenVariable — invalid name "${name}"`);
+            return false;
+        }
+        if (typeof fn !== 'function') {
+            log(`${SCRIPT_NAME}: [${src}] registerTokenVariable — "${name}" missing fn`);
+            return false;
+        }
+        const key = `${namespace}/${name}`;
+        if (EXT_TOKEN_VARS[key]) {
+            const existing = EXT_TOKEN_VARS[key].source || SCRIPT_NAME;
+            if (existing !== src) log(`${SCRIPT_NAME}: [${src}] registerTokenVariable — "${name}" already registered by [${existing}]`);
+            return false;
+        }
+        EXT_TOKEN_VARS[key] = Object.assign({ namespace, source: src, description: '' }, struct);
+        return true;
+    };
+
+    const registerParameterType = (sourceId, struct) => {
+        const src = sourceId || SCRIPT_NAME;
+        const { name, parse } = struct;
+        if (!name) {
+            log(`${SCRIPT_NAME}: [${src}] registerParameterType — missing name`);
+            return false;
+        }
+        if (typeof parse !== 'function') {
+            log(`${SCRIPT_NAME}: [${src}] registerParameterType — "${name}" missing parse`);
+            return false;
+        }
+        if (EXT_PARAM_TYPES[name]) {
+            const existing = EXT_PARAM_TYPES[name].source || SCRIPT_NAME;
+            if (existing !== src) log(`${SCRIPT_NAME}: [${src}] registerParameterType — "${name}" already registered by [${existing}]`);
+            return false;
+        }
+        EXT_PARAM_TYPES[name] = Object.assign({ source: src, description: '', validate: null }, struct);
+        return true;
+    };
+
+    // =========================================================================
     // Chat helpers
     // =========================================================================
 
@@ -172,6 +244,16 @@ var Choreograph = Choreograph || (() => {
         });
         html += `</table>`;
 
+        // Variables table
+        html += `<table style="border-collapse:collapse;width:100%;font-size:12px;margin-bottom:8px;">`;
+        html += `<tr><th style="${STYLE.th}">Variable</th>`;
+        html += `<th style="${STYLE.th}">Expression</th></tr>`;
+        (scene.variables || []).forEach(v => {
+            html += `<tr><td style="${STYLE.td}">${escHtml(v.name)}</td>`;
+            html += `<td style="${STYLE.td}">${escHtml(v.expression)}</td></tr>`;
+        });
+        html += `</table>`;
+
         // Scene table
         html += `<table style="border-collapse:collapse;width:100%;font-size:12px;">`;
         html += `<tr><th style="${STYLE.th}">Filter</th>`;
@@ -231,7 +313,7 @@ var Choreograph = Choreograph || (() => {
         const stripTags = (s) => String(s).replace(/<[^>]+>/g, '').trim();
 
         // Parse metadata
-        const scene = { name, notes: '', params: [], rows: [] };
+        const scene = { name, notes: '', params: [], rows: [], variables: [] };
 
         const metaVal = (label) => {
             const re = new RegExp(label + '[^<]*(?:<[^>]+>)?\\s*([^<\\n]+)', 'i');
@@ -263,6 +345,7 @@ var Choreograph = Choreograph || (() => {
 
             const isParamTable = headers.includes('name') && headers.includes('type');
             const isSceneTable = headers.includes('filter') && headers.some(h => h.startsWith('delay'));
+            const isVarTable   = headers.includes('variable') && headers.includes('expression');
 
             // Parse rows
             const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
@@ -282,6 +365,11 @@ var Choreograph = Choreograph || (() => {
                         type:        cells[1] || 'text',
                         default:     cells[2] || null,
                         description: cells[3] || '',
+                    });
+                } else if (isVarTable && cells.length >= 2) {
+                    scene.variables.push({
+                        name:       cells[0] || '',
+                        expression: cells[1] || '',
                     });
                 } else if (isSceneTable && cells.length >= 2) {
                     scene.rows.push({
@@ -534,6 +622,20 @@ var Choreograph = Choreograph || (() => {
             PI:      Math.PI,
             TAU:     Math.PI * 2,
         };
+
+        // Inject registered extension functions
+        Object.values(EXT_FUNCTIONS).forEach(reg => {
+            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
+            scope[name] = (...args) => reg.fn(token, filteredTokens, params, ...args);
+        });
+
+        // Inject registered token variables
+        Object.values(EXT_TOKEN_VARS).forEach(reg => {
+            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
+            scope[name] = reg.fn(token, { tokens: filteredTokens, params });
+        });
+
+        return scope;
     };
 
     /**
@@ -606,6 +708,24 @@ var Choreograph = Choreograph || (() => {
                 : (p.default || null);
         });
 
+        // Precompute variables per token
+        const tokenVars = {};
+        if (scene.variables && scene.variables.length > 0) {
+            cast.forEach(token => {
+                const scope = buildTokenScope(token, cast, resolvedParams);
+                Object.assign(scope, resolvedParams);
+                scope.tokenId   = token.get('id');
+                scope.tokenName = token.get('name') || '';
+                const vars = {};
+                scene.variables.forEach(v => {
+                    if (!v.name || !v.expression) return;
+                    scope[v.name] = evalDelay(v.expression, scope);
+                    vars[v.name] = scope[v.name];
+                });
+                tokenVars[token.get('id')] = vars;
+            });
+        }
+
         // For each row, evaluate filter on all cast, then compute delays
         scene.rows.forEach((row, rowIndex) => {
             // Filter cast
@@ -617,6 +737,8 @@ var Choreograph = Choreograph || (() => {
                 const scope = buildTokenScope(token, filtered, resolvedParams);
                 // Add resolved params to scope
                 Object.assign(scope, resolvedParams);
+                // Add computed variables
+                Object.assign(scope, tokenVars[token.get('id')] || {});
                 // Add tokenId and tokenName for command templates
                 scope.tokenId   = token.get('id');
                 scope.tokenName = token.get('name') || '';
@@ -1112,6 +1234,14 @@ var Choreograph = Choreograph || (() => {
     return {
         checkInstall,
         registerEventHandlers,
+        // Public Extension API
+        registerFunction,
+        registerTokenVariable,
+        registerParameterType,
+        // Introspection
+        getFunction:      (name) => EXT_FUNCTIONS[name] || null,
+        getVariable:      (name) => EXT_TOKEN_VARS[name] || null,
+        getParameterType: (name) => EXT_PARAM_TYPES[name] || null,
     };
 })();
 
