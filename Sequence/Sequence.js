@@ -1707,10 +1707,16 @@ var Sequence = Sequence || (() => {
                     const easing    = (rawEasing && !validateEasingExpr(rawEasing)) ? rawEasing : '';
                     // Clean invalid value from cache
                     if (rawEasing && !easing && kf.easings) delete kf.easings[attr];
-                    // parsed is { delta: val } or { abs: val } — extract the actual value
+                    // parsed is { delta: val }, { abs: val }, or { expr, mode } — extract display value
                     let cellVal = '';
                     if (parsed !== null && parsed !== undefined) {
-                        if (reg) {
+                        if ('expr' in parsed) {
+                            // Expression — display with mode prefix
+                            if (parsed.mode === 'abs') cellVal = `=${parsed.expr}`;
+                            else if (parsed.mode === 'mul') cellVal = `×${parsed.expr}`;
+                            else if (parsed.sign === -1) cellVal = `-${parsed.expr}`;
+                            else cellVal = `+${parsed.expr}`;
+                        } else if (reg) {
                             if ('abs' in parsed) {
                                 cellVal = reg.format(parsed.abs);
                                 // Ensure abs values always show = prefix
@@ -2704,6 +2710,7 @@ var Sequence = Sequence || (() => {
             paused:        false,
             pausedAt:      null,
             preview:       opts.preview  || false,
+            silent:        opts.silent   || false,
             playerid:      opts.playerid || null,
             cumulative:    {},  // per-playback scratchpad for registered functions
             resolvedTimes: [0], // resolvedTimes[i] = resolved timestamp for kf[i]
@@ -3036,8 +3043,8 @@ var Sequence = Sequence || (() => {
             const playerid = pb.playerid;
             const recName  = pb.recordingName;
             stopPlayback(objId); // auto-reverts if preview:true
-            // Send the stopped/reverted menu to the owning player
-            if (playerid) sendPlaybackMenuTo(playerid, objId, recName);
+            // Send the stopped/reverted menu to the owning player (unless silent)
+            if (playerid && !pb.silent) sendPlaybackMenuTo(playerid, objId, recName);
         }
     };
 
@@ -3097,8 +3104,9 @@ var Sequence = Sequence || (() => {
     const reply = (msg, tag, text, noarchive = false) => {
         const body      = text !== undefined ? text : tag;
         const prefix    = text !== undefined ? ` [${tag}]` : '';
-        const recipient = msg.who.split(' ')[0];
-        sendChat(`${SCRIPT_NAME}${prefix}`, `/w ${recipient} ${body}`,
+        const player    = getObj('player', msg.playerid);
+        const recipient = player ? player.get('_displayname') : msg.who.replace(' (GM)', '');
+        sendChat(`${SCRIPT_NAME}${prefix}`, `/w "${recipient}" ${body}`,
             null, noarchive ? { noarchive: true } : undefined);
     };
 
@@ -3469,12 +3477,13 @@ var Sequence = Sequence || (() => {
                         only:     opts.only    ? opts.only.split(',')    : null,
                         exclude:  opts.exclude ? opts.exclude.split(',') : null,
                         playerid: msg.playerid,
+                        silent:   !!msg.sceneInfo || flags.has('silent'),
                     };
                     let started = 0;
                     objIds.forEach(id => {
                         if (startPlayback(id, recording, attrCols, playOpts)) started++;
                     });
-                    showPlaybackMenu(msg, objIds.filter(id => activePlayback[id]), name);
+                    if (!msg.sceneInfo) showPlaybackMenu(msg, objIds.filter(id => activePlayback[id]), name);
                 });
                 return;
             }
@@ -3485,7 +3494,7 @@ var Sequence = Sequence || (() => {
                     activePlayback[id] ? activePlayback[id].recordingName : null
                 );
                 objIds.forEach(id => stopPlayback(id)); // auto-reverts if preview mode
-                objIds.forEach((id, i) => showPlaybackMenu(msg, [id], stoppedNames[i]));
+                if (!msg.sceneInfo) objIds.forEach((id, i) => showPlaybackMenu(msg, [id], stoppedNames[i]));
                 return;
             }
 
@@ -5249,6 +5258,123 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('change:handout:notes',  onHandoutChanged);
+
+        // ── Choreograph integration ───────────────────────────────────────
+        const registerWithChoreograph = () => {
+            if (typeof Choreograph === 'undefined') return;
+
+            // Register constants
+            Choreograph.registerConstant(SCRIPT_NAME, { name: 'PI', namespace: 'core', value: Math.PI, description: 'π' });
+            Choreograph.registerConstant(SCRIPT_NAME, { name: 'TAU', namespace: 'core', value: Math.PI * 2, description: '2π' });
+
+            // Lifecycle hook — handle !sequence play/stop-play/pause-play/resume-play
+            Choreograph.registerLifecycleHook(SCRIPT_NAME, {
+                commands: [/^!sequence\b/],
+                start: (ctx) => {
+                    handleInput(ctx);
+                },
+                stop: (ctx) => {
+                    (ctx.selected || []).forEach(s => stopPlayback(s._id));
+                },
+                pause: (ctx) => {
+                    (ctx.selected || []).forEach(s => pausePlayback(s._id));
+                },
+                resume: (ctx) => {
+                    (ctx.selected || []).forEach(s => resumePlayback(s._id));
+                },
+            });
+
+            // Sync participant — wait for playback to finish on tokens
+            Choreograph.registerSyncParticipant(SCRIPT_NAME, {
+                commands: [/^!sequence play\b/],
+                waiting: (ctx) => {
+                    // Gather all token IDs from entries
+                    const tokenIds = new Set();
+                    (ctx.entries || []).forEach(entry => {
+                        (entry.selected || []).forEach(s => tokenIds.add(s._id));
+                    });
+                    // Poll until none have active playback
+                    const check = setInterval(() => {
+                        let stillPlaying = false;
+                        tokenIds.forEach(id => { if (activePlayback[id]) stillPlaying = true; });
+                        if (!stillPlaying) {
+                            clearInterval(check);
+                            ctx.done();
+                        }
+                    }, 100);
+                },
+            });
+
+            // Register example scenes
+            Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'scatter',
+                description: 'Tokens scatter outward with staggered animation playback.',
+                onGenerate: () => {
+                    const rec = {
+                        name: 'scatter', objectType: 'graphic', duration: 1000, notes: '',
+                        tracks: { 'track-0': { label: '', keyframes: [
+                            { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
+                            { time: 1000, type: 'change', deltas: { left: { expr: 'orig + cos(freeze(rand(0, TAU))) * 100', mode: 'abs' }, top: { expr: 'orig + sin(freeze(rand(0, TAU))) * 100', mode: 'abs' } }, easings: {} },
+                        ]}},
+                    };
+                    const attrCols = ['left', 'top'];
+                    const handout = getOrCreateHandout('scatter');
+                    setHandoutNotes(handout, generateHandoutHtml('scatter', rec, attrCols), 'scatter');
+                    recordingCache['scatter'] = { recording: rec, attrCols };
+                    log(`${SCRIPT_NAME}: generated "scatter" recording handout for example`);
+                },
+                scene: {
+                    notes: 'Tokens scatter in random directions. Recording auto-generated.',
+                    params: [
+                        { name: 'anim', type: 'text', default: 'scatter', description: 'Sequence recording name' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: '*', delay: 'stagger(rank("left"), 500)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Staggered playback' },
+                    ],
+                },
+            });
+
+            Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'wave',
+                description: 'Plays a pulse animation in a wave across tokens sorted by position.',
+                onGenerate: () => {
+                    const rec = {
+                        name: 'pulse', objectType: 'graphic', duration: 800, notes: '',
+                        tracks: { 'track-0': { label: '', keyframes: [
+                            { time: 0,   type: 'change', deltas: { width: { delta: 1.3 }, height: { delta: 1.3 } }, easings: { width: 'sine', height: 'sine' } },
+                            { time: 400, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 } }, easings: { width: '~sine', height: '~sine' } },
+                            { time: 800, type: 'change', deltas: {}, easings: {} },
+                        ]}},
+                    };
+                    const attrCols = ['width', 'height'];
+                    const handout = getOrCreateHandout('pulse');
+                    setHandoutNotes(handout, generateHandoutHtml('pulse', rec, attrCols), 'pulse');
+                    recordingCache['pulse'] = { recording: rec, attrCols };
+                    log(`${SCRIPT_NAME}: generated "pulse" recording handout for example`);
+                },
+                scene: {
+                    notes: 'Tokens pulse (grow/shrink) in a wave. Recording auto-generated.',
+                    params: [
+                        { name: 'anim', type: 'text', default: 'pulse', description: 'Sequence recording name' },
+                        { name: 'interval', type: 'number', default: '300', description: 'Ms between each token' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Wave' },
+                    ],
+                },
+            });
+
+            log(`${SCRIPT_NAME}: registered with Choreograph`);
+        };
+
+        // Listen for choreograph-ready signal
+        on('chat:message', (msg) => {
+            if (msg.type === 'api' && msg.content === '!choreograph-ready') registerWithChoreograph();
+        });
+        // Also register immediately if Choreograph is already loaded
+        registerWithChoreograph();
 
         // Record all graphic change events
         // Register change events for all attributes that have a watchProp

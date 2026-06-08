@@ -18,7 +18,6 @@
 //     Start recording on selected/listed objects.
 //     Flags:
 //       --attrs <a,b,...>   Only record the listed attributes (default: all)
-//       --create [n]        Also capture the next N object creations
 //
 //   !sequence stop [ignore-selected] [obj_id...]
 //     Stop recording and save automatically if a name was given.
@@ -679,6 +678,7 @@ var Sequence = Sequence || (() => {
 
     const validateEasingExpr = (expr) => {
         if (!expr || !expr.trim()) return null;
+        if (expr.trim() === 'continuous') return null; // special keyword — not a curve
         const token = parseEasingToken(expr.trim());
         if (!token) return `Could not parse easing expression: "${expr}"`;
         if (!EASING[token.name]) return `Unknown easing curve: "${token.name}"`;
@@ -799,7 +799,7 @@ var Sequence = Sequence || (() => {
     const TIME_EXPR_SCOPE = {};
 
     // Top-level identifiers allowed in value expressions
-    const EXPR_ALLOWED_VARS  = new Set(['orig', 'original', 'prev', 'previous', 'curr', 'current']);
+    const EXPR_ALLOWED_VARS  = new Set(['orig', 'original', 'prev', 'previous', 'curr', 'current', 't']);
     const EXPR_ALLOWED_ROOTS = new Set([...EXPR_ALLOWED_VARS]);
     // Top-level identifiers allowed in time expressions (only prev)
     const TIME_ALLOWED_ROOTS = new Set(['prev', 'previous']);
@@ -946,13 +946,16 @@ var Sequence = Sequence || (() => {
             return _currCache;
         };
 
+        const _t = context && context.t !== undefined ? context.t : 0;
+
         const body = expr
             .replace(/\boriginal\b/g, '_orig')
             .replace(/\bprevious\b/g, '_prev')
             .replace(/\bcurrent\b/g,  '_getCurr()')
             .replace(/\borig\b/g,     '_orig')
             .replace(/\bprev\b/g,     '_prev')
-            .replace(/\bcurr\b/g,     '_getCurr()');
+            .replace(/\bcurr\b/g,     '_getCurr()')
+            .replace(/\bt\b/g,        '_t');
 
         const _ctx = {
             obj:        context ? context.obj : null,
@@ -966,20 +969,48 @@ var Sequence = Sequence || (() => {
         // receives ctx as its final argument regardless of how it's called.
         // Core functions live as flat properties; namespaced functions live
         // under their namespace chain for natural dot-access in eval.
-        const _wrapNode = function(node) {
+        //
+        // Memoization: discrete functions are memoized per call-site within a
+        // segment. In a non-continuous segment, ALL functions are memoized.
+        // In a continuous segment, only discrete functions are memoized.
+        const _memoCache = context && context.memo ? context.memo : null;
+        const _isContinuousSeg = !!(context && context.isContinuousSegment);
+        var _callCounter = 0;
+
+        const _wrapNode = function(node, regKey) {
             if (typeof node === 'function') {
+                var reg = FN_REGISTRY[regKey] || null;
+                var isImpure = !!(reg && !reg.pure);
+                var isFreeze = regKey === 'core/freeze';
+                // Memoize if: freeze (always), OR impure function in non-continuous segment
+                var shouldMemo = _memoCache && (isFreeze || (isImpure && !_isContinuousSeg));
+
+                if (shouldMemo) {
+                    return function() {
+                        var idx = _callCounter++;
+                        var key = (regKey || 'fn') + ':' + idx;
+                        if (key in _memoCache) return _memoCache[key];
+                        var args = Array.prototype.slice.call(arguments);
+                        var result = node.apply(null, [_ctx].concat(args));
+                        _memoCache[key] = result;
+                        return result;
+                    };
+                }
                 return function() {
+                    _callCounter++;
                     var args = Array.prototype.slice.call(arguments);
                     return node.apply(null, [_ctx].concat(args));
                 };
             }
+            if (node === null || typeof node !== 'object') return node;
             var wrapped = {};
             Object.keys(node).forEach(function(k) {
-                wrapped[k] = _wrapNode(node[k]);
+                var childKey = regKey ? regKey + '/' + k : 'core/' + k;
+                wrapped[k] = _wrapNode(node[k], childKey);
             });
             return wrapped;
         };
-        var _wrapped = _wrapNode(EXPR_SCOPE);
+        var _wrapped = _wrapNode(EXPR_SCOPE, '');
 
         // Declare each top-level name as a local var so eval can access it.
         // Core functions become flat locals (rand, clamp, etc.).
@@ -1108,6 +1139,7 @@ var Sequence = Sequence || (() => {
         reg.args        = reg.args        || [];
         reg.returns     = reg.returns     || 'number';
         reg.examples    = reg.examples    || [];
+        reg.pure        = reg.pure !== undefined ? reg.pure : true;
         reg.source      = src;
 
         insertIntoScope(scope, namespace, name, reg.fn);
@@ -1199,6 +1231,7 @@ var Sequence = Sequence || (() => {
         {
             name: 'rand', namespace: 'core',
             description: 'Returns a uniformly distributed random number between min (inclusive) and max (exclusive).',
+            pure: false,
             args: [
                 { name: 'min', type: 'number', description: 'Lower bound (inclusive)' },
                 { name: 'max', type: 'number', description: 'Upper bound (exclusive)' },
@@ -1210,6 +1243,7 @@ var Sequence = Sequence || (() => {
         {
             name: 'randInt', namespace: 'core',
             description: 'Returns a random integer between min and max (both inclusive).',
+            pure: false,
             args: [
                 { name: 'min', type: 'number', description: 'Lower bound (inclusive)' },
                 { name: 'max', type: 'number', description: 'Upper bound (inclusive)' },
@@ -1221,10 +1255,19 @@ var Sequence = Sequence || (() => {
         {
             name: 'pick', namespace: 'core',
             description: 'Returns one of the provided values chosen uniformly at random.',
+            pure: false,
             args: [{ name: '...values', type: 'any', description: 'Values to pick from' }],
             returns: 'any',
             examples: ['=pick(0,90,180,270)  random cardinal rotation'],
             fn: (ctx, ...args) => args[Math.floor(Math.random() * args.length)],
+        },
+        {
+            name: 'freeze', namespace: 'core',
+            description: 'Memoizes its argument — evaluates once per segment, returns the cached value on subsequent ticks. Use in continuous easing to stabilize non-deterministic values.',
+            args: [{ name: 'value', type: 'any', description: 'Value to freeze' }],
+            returns: 'any',
+            examples: ['=orig + freeze(rand(-50,50)) + cos(t * TAU) * 140  stable random offset with continuous orbit'],
+            fn: (ctx, val) => val,
         },
         {
             name: 'clamp', namespace: 'core',
@@ -1488,6 +1531,18 @@ var Sequence = Sequence || (() => {
         description: 'Transparent (no tint)',
     });
 
+    // ── Math constants ────────────────────────────────────────────────────────
+    registerPlaybackConstant(SCRIPT_NAME, {
+        name: 'PI', namespace: 'core', type: 'number',
+        value: Math.PI,
+        description: 'π (3.14159…)',
+    });
+    registerPlaybackConstant(SCRIPT_NAME, {
+        name: 'TAU', namespace: 'core', type: 'number',
+        value: Math.PI * 2,
+        description: '2π (6.28318…) — one full rotation in radians.',
+    });
+
     // Pre-built query strings for handout dropdown buttons
     // Escape a string for use inside a nested Roll20 ?{} query that is itself
     const EASING_QUERY = () => {
@@ -1515,7 +1570,7 @@ var Sequence = Sequence || (() => {
         return `?{Easing|${entries.join('|')}}`;
     };
 
-    const TYPE_QUERY = '?{Type|change|command|create|destroy}';
+    const TYPE_QUERY = '?{Type|change|command}';
 
     const generateHandoutHtml = (name, recording, attrCols) => {
         const { objectType = 'graphic', duration = 0, notes = '' } = recording;
@@ -1652,10 +1707,16 @@ var Sequence = Sequence || (() => {
                     const easing    = (rawEasing && !validateEasingExpr(rawEasing)) ? rawEasing : '';
                     // Clean invalid value from cache
                     if (rawEasing && !easing && kf.easings) delete kf.easings[attr];
-                    // parsed is { delta: val } or { abs: val } — extract the actual value
+                    // parsed is { delta: val }, { abs: val }, or { expr, mode } — extract display value
                     let cellVal = '';
                     if (parsed !== null && parsed !== undefined) {
-                        if (reg) {
+                        if ('expr' in parsed) {
+                            // Expression — display with mode prefix
+                            if (parsed.mode === 'abs') cellVal = `=${parsed.expr}`;
+                            else if (parsed.mode === 'mul') cellVal = `×${parsed.expr}`;
+                            else if (parsed.sign === -1) cellVal = `-${parsed.expr}`;
+                            else cellVal = `+${parsed.expr}`;
+                        } else if (reg) {
                             if ('abs' in parsed) {
                                 cellVal = reg.format(parsed.abs);
                                 // Ensure abs values always show = prefix
@@ -2042,10 +2103,10 @@ var Sequence = Sequence || (() => {
                     }
                 });
 
-                // Include command, create, destroy, and change rows with deltas
+                // Include command and change rows with deltas
                 // Also include blank change rows (user may have added them manually)
                 if (Object.keys(kf.deltas).length > 0 ||
-                    kf.type === 'command' || kf.type === 'create' || kf.type === 'destroy' ||
+                    kf.type === 'command' ||
                     kf.type === 'change') {
                     track.keyframes.push(kf);
                 }
@@ -2557,7 +2618,7 @@ var Sequence = Sequence || (() => {
      * @param {object} prevState     - running state before this keyframe (prev)
      * @param {object} liveObj       - Roll20 graphic object (curr)
      */
-    const resolveDeltas = (deltas, initialState, prevState, liveObj, cumulative) => {
+    const resolveDeltas = (deltas, initialState, prevState, liveObj, cumulative, t, memo) => {
         const resolved = {};
         Object.entries(deltas || {}).forEach(([attrName, parsed]) => {
             if (!parsed || !parsed.expr) { resolved[attrName] = parsed; return; }
@@ -2570,7 +2631,7 @@ var Sequence = Sequence || (() => {
 
             try {
                 const val = evalExpr(parsed.expr, orig, prev, curr,
-                    { obj: liveObj, cumulative: cumulative || {} });
+                    { obj: liveObj, t: t || 0, memo: memo || null, isContinuousSegment: false, cumulative: cumulative || {} });
                 if (parsed.mode === 'abs') {
                     resolved[attrName] = { abs: val };
                 } else if (parsed.mode === 'mul') {
@@ -2649,6 +2710,7 @@ var Sequence = Sequence || (() => {
             paused:        false,
             pausedAt:      null,
             preview:       opts.preview  || false,
+            silent:        opts.silent   || false,
             playerid:      opts.playerid || null,
             cumulative:    {},  // per-playback scratchpad for registered functions
             resolvedTimes: [0], // resolvedTimes[i] = resolved timestamp for kf[i]
@@ -2739,7 +2801,7 @@ var Sequence = Sequence || (() => {
                 }
                 pb.startTime      = Date.now();
                 pb.lastKfIndex    = -1;
-                pb.resolvedExprs  = {}; // re-evaluate value expressions on next loop
+                pb.memoCache      = {}; // reset function memo on next loop
                 pb.cumulative     = {}; // reset scratchpad each loop cycle
                 pb.currentEasings = {}; // reset easing switches each loop cycle
                 pb.rotNudgeDir    = 1;  // reset nudge direction each loop
@@ -2761,6 +2823,9 @@ var Sequence = Sequence || (() => {
         if (lastKfTime !== undefined && t >= secondLastKfTime && Math.abs(lastKfTime - t) <= HALF_TICK) {
             t = lastKfTime;
         }
+
+        // Normalized time (0-1) for expression scope
+        const tNorm = t / duration;
 
         let prevIdx = -1;
         let nextIdx = kfs.length;
@@ -2815,7 +2880,7 @@ var Sequence = Sequence || (() => {
                 const prevState = stateAt(i - 1);
                 const state     = stateAt(i);
                 // Resolve any expression deltas before applying
-                const resolvedDeltas = resolveDeltas(kf.deltas, pb.initialState, prevState, obj, pb.cumulative);
+                const resolvedDeltas = resolveDeltas(kf.deltas, pb.initialState, prevState, obj, pb.cumulative, tNorm, {});
                 // Re-apply with resolved deltas via shadow
                 const shadow = makeShadow(prevState);
                 Object.entries(resolvedDeltas || {}).forEach(([attrName, parsed]) => {
@@ -2868,42 +2933,60 @@ var Sequence = Sequence || (() => {
                     // Resolve expression if needed to get the target value
                     let nextParsed = nextKf.deltas[attrName];
                     if (nextParsed && nextParsed.expr) {
+                        const srcEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
+                            ? kfs[prevIdx].easings[attrName]
+                            : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                        const isContinuous = srcEasing === 'continuous';
                         const orig = pb.initialState[attrName] !== undefined ? pb.initialState[attrName] : 0;
                         const prev = prevAbsState[attrName] !== undefined ? prevAbsState[attrName] : orig;
-                        // curr fetched lazily inside evalExpr via reg+obj
+
+                        // Per-segment memo cache for function memoization
+                        const memoKey = `${nextIdx}:${attrName}`;
+                        if (!pb.memoCache) pb.memoCache = {};
+                        if (!pb.memoCache[memoKey]) pb.memoCache[memoKey] = {};
+                        const memo = pb.memoCache[memoKey];
+
                         try {
                             const val = evalExpr(nextParsed.expr, orig, prev, undefined,
-                                { obj, reg, cumulative: pb.cumulative || {} });
-                            nextParsed = nextParsed.mode === 'abs' ? { abs: val }
+                                { obj, reg, t: tNorm, memo, isContinuousSegment: isContinuous, cumulative: pb.cumulative || {} });
+                            let resolved = nextParsed.mode === 'abs' ? { abs: val }
                                 : nextParsed.mode === 'mul' ? { delta: val }
                                 : { delta: (nextParsed.sign || 1) * val };
-                            // Cache the resolved value so all ticks in this segment agree
-                            if (!pb.resolvedExprs) pb.resolvedExprs = {};
-                            const key = `${nextIdx}:${attrName}`;
-                            if (!(key in pb.resolvedExprs)) pb.resolvedExprs[key] = nextParsed;
-                            nextParsed = pb.resolvedExprs[key];
+                            // In continuous segments, use resolved value directly (no lerp)
+                            if (isContinuous) {
+                                const shadow = makeShadow(prevAbsState);
+                                if ('abs' in resolved)        reg.set(shadow, resolved.abs);
+                                else if ('delta' in resolved) reg.apply(shadow, resolved.delta);
+                                interpolated = shadow._state[attrName];
+                            } else {
+                                // Non-continuous: memoization ensures same result each tick,
+                                // so we can use it as the lerp target
+                                nextParsed = resolved;
+                            }
                         } catch(e) {
                             log(`${SCRIPT_NAME}: lerp expr error for ${attrName}: ${e.message}`);
                         }
                     }
-                    // Apply resolved delta to prevState shadow to get absolute nextVal
-                    const shadow = makeShadow(prevAbsState);
-                    if (nextParsed && 'abs' in nextParsed)        reg.set(shadow, nextParsed.abs);
-                    else if (nextParsed && 'delta' in nextParsed) reg.apply(shadow, nextParsed.delta);
-                    const nextVal    = shadow._state[attrName];
-                    const prevTime   = prevIdx >= 0
-                        ? (pb.resolvedTimes[prevIdx] !== undefined ? pb.resolvedTimes[prevIdx] : (typeof kfs[prevIdx].time === 'number' ? kfs[prevIdx].time : 0))
-                        : 0;
-                    const nextTime   = pb.resolvedTimes[nextIdx] !== undefined
-                        ? pb.resolvedTimes[nextIdx]
-                        : (typeof nextKf.time === 'number' ? nextKf.time : prevTime);
-                    const segDur     = nextTime - prevTime;
-                    const segElapsed = t - prevTime;
-                    const segT       = segDur > 0 ? segElapsed / segDur : 1;
-                    const srcEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
-                        ? kfs[prevIdx].easings[attrName]
-                        : (pb.currentEasings[attrName] || pb.easing || 'linear');
-                    interpolated = reg.lerp(prevVal, nextVal, getEasing(srcEasing)(segT));
+                    if (interpolated === undefined) {
+                        // Normal lerp path (non-continuous expressions or non-expression deltas)
+                        const shadow = makeShadow(prevAbsState);
+                        if (nextParsed && 'abs' in nextParsed)        reg.set(shadow, nextParsed.abs);
+                        else if (nextParsed && 'delta' in nextParsed) reg.apply(shadow, nextParsed.delta);
+                        const nextVal    = shadow._state[attrName];
+                        const prevTime   = prevIdx >= 0
+                            ? (pb.resolvedTimes[prevIdx] !== undefined ? pb.resolvedTimes[prevIdx] : (typeof kfs[prevIdx].time === 'number' ? kfs[prevIdx].time : 0))
+                            : 0;
+                        const nextTime   = pb.resolvedTimes[nextIdx] !== undefined
+                            ? pb.resolvedTimes[nextIdx]
+                            : (typeof nextKf.time === 'number' ? nextKf.time : prevTime);
+                        const segDur     = nextTime - prevTime;
+                        const segElapsed = t - prevTime;
+                        const segT       = segDur > 0 ? segElapsed / segDur : 1;
+                        const lerpEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
+                            ? kfs[prevIdx].easings[attrName]
+                            : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                        interpolated = reg.lerp(prevVal, nextVal, getEasing(lerpEasing)(segT));
+                    }
                 } else {
                     interpolated = prevVal;
                 }
@@ -2960,8 +3043,8 @@ var Sequence = Sequence || (() => {
             const playerid = pb.playerid;
             const recName  = pb.recordingName;
             stopPlayback(objId); // auto-reverts if preview:true
-            // Send the stopped/reverted menu to the owning player
-            if (playerid) sendPlaybackMenuTo(playerid, objId, recName);
+            // Send the stopped/reverted menu to the owning player (unless silent)
+            if (playerid && !pb.silent) sendPlaybackMenuTo(playerid, objId, recName);
         }
     };
 
@@ -3021,8 +3104,9 @@ var Sequence = Sequence || (() => {
     const reply = (msg, tag, text, noarchive = false) => {
         const body      = text !== undefined ? text : tag;
         const prefix    = text !== undefined ? ` [${tag}]` : '';
-        const recipient = msg.who.split(' ')[0];
-        sendChat(`${SCRIPT_NAME}${prefix}`, `/w ${recipient} ${body}`,
+        const player    = getObj('player', msg.playerid);
+        const recipient = player ? player.get('_displayname') : msg.who.replace(' (GM)', '');
+        sendChat(`${SCRIPT_NAME}${prefix}`, `/w "${recipient}" ${body}`,
             null, noarchive ? { noarchive: true } : undefined);
     };
 
@@ -3393,12 +3477,13 @@ var Sequence = Sequence || (() => {
                         only:     opts.only    ? opts.only.split(',')    : null,
                         exclude:  opts.exclude ? opts.exclude.split(',') : null,
                         playerid: msg.playerid,
+                        silent:   !!msg.sceneInfo || flags.has('silent'),
                     };
                     let started = 0;
                     objIds.forEach(id => {
                         if (startPlayback(id, recording, attrCols, playOpts)) started++;
                     });
-                    showPlaybackMenu(msg, objIds.filter(id => activePlayback[id]), name);
+                    if (!msg.sceneInfo) showPlaybackMenu(msg, objIds.filter(id => activePlayback[id]), name);
                 });
                 return;
             }
@@ -3409,7 +3494,7 @@ var Sequence = Sequence || (() => {
                     activePlayback[id] ? activePlayback[id].recordingName : null
                 );
                 objIds.forEach(id => stopPlayback(id)); // auto-reverts if preview mode
-                objIds.forEach((id, i) => showPlaybackMenu(msg, [id], stoppedNames[i]));
+                if (!msg.sceneInfo) objIds.forEach((id, i) => showPlaybackMenu(msg, [id], stoppedNames[i]));
                 return;
             }
 
@@ -3664,7 +3749,7 @@ var Sequence = Sequence || (() => {
                     replyError(msg, 'Usage: !sequence set-type <name> <time> <type>');
                     return;
                 }
-                const validTypes = ['change', 'command', 'create', 'destroy'];
+                const validTypes = ['change', 'command'];
                 if (!validTypes.includes(newType)) {
                     replyError(msg, `Invalid type "${newType}". Valid: ${validTypes.join(', ')}`);
                     return;
@@ -3911,7 +3996,8 @@ var Sequence = Sequence || (() => {
                     const argList = (r.args || []).map(a =>
                         a.optional ? `[${escHtml(a.name)}]` : escHtml(a.name)
                     ).join(', ');
-                    let html = `<b>${ns}${escHtml(r.name)}(${argList})</b> → <i>${escHtml(r.returns || 'number')}</i>${fmtContexts(r)}<br>`;
+                    const unstable = r.pure === false ? ' [unstable]' : '';
+                    let html = `<b>${ns}${escHtml(r.name)}(${argList})</b> → <i>${escHtml(r.returns || 'number')}</i>${unstable}${fmtContexts(r)}<br>`;
                     if (r.description) html += `${escHtml(r.description)}<br>`;
                     if (r.args && r.args.length) {
                         html += (r.args.map(a =>
@@ -4225,7 +4311,7 @@ var Sequence = Sequence || (() => {
     // Guard against recursive handout change events when we write back
     const handoutWriting = new Set();
 
-    const VALID_TYPES = new Set(['change', 'command', 'create', 'destroy']);
+    const VALID_TYPES = new Set(['change', 'command']);
 
     /**
      * Validate a parsed recording. Returns an array of error strings.
@@ -4379,21 +4465,6 @@ var Sequence = Sequence || (() => {
                 });
             }
         });
-    };
-
-    const onDestroyObject = (obj) => {
-        const id      = obj.get('id');
-        const session = activeSessions[id];
-        if (session) {
-            session.keyframes.push({
-                time:    Date.now() - session.startTime,
-                type:    'destroy',
-                deltas:  {},
-                easings: {},
-            });
-            stopRecording(id);
-        }
-        stopPlayback(id);
     };
 
     // =========================================================================
@@ -4651,7 +4722,13 @@ var Sequence = Sequence || (() => {
             li(`${c('ctx.curr')} — current live value (lazy-fetched)`),
             li(`${c('ctx.cumulative')} — per-loop scratchpad, reset each cycle`),
         );
-        html += p(b('Struct fields: ') + c('name') + ', ' + c('namespace') + ', ' + c('fn') + ', ' + c('description') + ', ' + c('args') + ', ' + c('returns') + ', ' + c('examples') + '.');
+        html += p(b('Struct fields: ') + c('name') + ', ' + c('namespace') + ', ' + c('fn') + ', ' + c('description') + ', ' + c('args') + ', ' + c('returns') + ', ' + c('examples') + ', ' + c('pure') + '.');
+        html += p(b('pure') + ' (boolean, default ' + c('true') + '): '
+            + 'Set to ' + c('false') + ' for functions that may return different values on repeated calls with the same arguments '
+            + '(e.g. random, stateful, or time-dependent functions). '
+            + 'Impure functions (' + c('pure: false') + ') are automatically memoized per call-site in non-continuous easing segments, '
+            + 'ensuring stable values for the duration of the segment. In ' + c('continuous') + ' segments, impure functions re-evaluate every tick. '
+            + 'Users can wrap impure calls in ' + c('freeze()') + ' to force memoization in continuous segments.');
         html += pre(
 `Sequence.registerValueFunction('MyScript', {
     name: 'wave', namespace: 'anim',
@@ -4882,7 +4959,8 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             const ns      = r.namespace === 'core' ? '' : `${b(r.namespace + '.')}&shy;`;
             const argList = (r.args || []).map(a =>
                 a.optional ? `[${a.name}]` : a.name).join(', ');
-            let s = `${b(ns + r.name + `(${argList})`)} → ${i(r.returns || 'number')}${fmtContexts(r)}<br>`;
+            const unstable = r.pure === false ? ' [unstable]' : '';
+            let s = `${b(ns + r.name + `(${argList})`)} → ${i(r.returns || 'number')}${unstable}${fmtContexts(r)}<br>`;
             if (r.description) s += `${r.description}<br>`;
             if (r.args && r.args.length)
                 s += ul(r.args.map(a =>
@@ -4935,6 +5013,7 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             ['orig / original', 'Attribute value at start of playback. Stable for entire session.'],
             ['prev / previous', 'Accumulated value at the previous keyframe.'],
             ['curr / current',  'Current live value on the token (fetched lazily).'],
+            ['t',               'Normalized time (0–1) within the current playback cycle. Requires continuous easing.'],
         ];
         const timeVars = [
             ['prev', 'Previous resolved timestamp (ms) — the only available variable in time expressions'],
@@ -4970,12 +5049,29 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             li(`${c('power(3)')} — parametric curve with arguments`),
             li(`${c('~bezier(0.42,0,0.58,1)')} — reversed parametric`),
             li(`${c('step')} — instant jump at end of segment`),
+            li(`${c('continuous')} — re-evaluate expression every tick (no lerp). Required for ${c('t')}-based animations.`),
         ].join(''));
         html += p(`Available curves: ${c(EASING_NAMES().join(', '))}.`);
         html += p('For ease-in-out, add an empty row at the midpoint with a '
             + c('~curve') + ' easing. An empty-row easing cell (no delta for that attribute) '
             + 'switches the easing for future lerps of that attribute at that timestamp, '
             + 'without moving the token.');
+
+        html += h(2, 'Continuous Animations');
+        html += p('For animations driven by mathematical functions (orbit, oscillation, etc.), '
+            + 'use ' + c('continuous') + ' easing with the ' + c('t') + ' variable. '
+            + 'The expression re-evaluates every tick instead of lerping between two values.');
+        html += p(i('Example: orbit at radius 140px over 3 seconds, looping:'));
+        html += ul([
+            li('Row 1: time ' + c('=0') + ', easing ' + c('continuous') + ', no delta'),
+            li('Row 2: time ' + c('=3000') + ', left ' + c('=orig + cos(t * TAU) * 140') + ', top ' + c('=orig + sin(t * TAU) * 140')),
+        ].join(''));
+        html += p(b('freeze(value)') + ' — memoizes its result for the segment. '
+            + 'Use to stabilize impure functions in continuous easing: '
+            + c('=orig + freeze(rand(-50,50)) + cos(t * TAU) * 140'));
+        html += p('Impure functions (' + c('rand') + ', ' + c('randInt') + ', ' + c('pick')
+            + ') are automatically memoized in non-continuous segments. '
+            + 'In ' + c('continuous') + ' segments they re-evaluate every tick.');
 
         html += h(2, 'Expression Variables (Value Context)');
         html += ul(vars.map(([name, desc]) => li(`${b(name)} — ${desc}`)).join(''));
@@ -5050,7 +5146,8 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             const ns2     = `${b(r.namespace + '.')}&shy;`;
             const argList = (r.args || []).map(a =>
                 a.optional ? `[${a.name}]` : a.name).join(', ');
-            let s = `${b(ns2 + r.name + `(${argList})`)} → ${i(r.returns || 'number')}${fmtContexts(r)}<br>`;
+            const unstable = r.pure === false ? ' [unstable]' : '';
+            let s = `${b(ns2 + r.name + `(${argList})`)} → ${i(r.returns || 'number')}${unstable}${fmtContexts(r)}<br>`;
             if (r.description) s += `${r.description}<br>`;
             if (r.args && r.args.length)
                 s += ul(r.args.map(a =>
@@ -5162,6 +5259,123 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
         on('chat:message', handleInput);
         on('change:handout:notes',  onHandoutChanged);
 
+        // ── Choreograph integration ───────────────────────────────────────
+        const registerWithChoreograph = () => {
+            if (typeof Choreograph === 'undefined') return;
+
+            // Register constants
+            Choreograph.registerConstant(SCRIPT_NAME, { name: 'PI', namespace: 'core', value: Math.PI, description: 'π' });
+            Choreograph.registerConstant(SCRIPT_NAME, { name: 'TAU', namespace: 'core', value: Math.PI * 2, description: '2π' });
+
+            // Lifecycle hook — handle !sequence play/stop-play/pause-play/resume-play
+            Choreograph.registerLifecycleHook(SCRIPT_NAME, {
+                commands: [/^!sequence\b/],
+                start: (ctx) => {
+                    handleInput(ctx);
+                },
+                stop: (ctx) => {
+                    (ctx.selected || []).forEach(s => stopPlayback(s._id));
+                },
+                pause: (ctx) => {
+                    (ctx.selected || []).forEach(s => pausePlayback(s._id));
+                },
+                resume: (ctx) => {
+                    (ctx.selected || []).forEach(s => resumePlayback(s._id));
+                },
+            });
+
+            // Sync participant — wait for playback to finish on tokens
+            Choreograph.registerSyncParticipant(SCRIPT_NAME, {
+                commands: [/^!sequence play\b/],
+                waiting: (ctx) => {
+                    // Gather all token IDs from entries
+                    const tokenIds = new Set();
+                    (ctx.entries || []).forEach(entry => {
+                        (entry.selected || []).forEach(s => tokenIds.add(s._id));
+                    });
+                    // Poll until none have active playback
+                    const check = setInterval(() => {
+                        let stillPlaying = false;
+                        tokenIds.forEach(id => { if (activePlayback[id]) stillPlaying = true; });
+                        if (!stillPlaying) {
+                            clearInterval(check);
+                            ctx.done();
+                        }
+                    }, 100);
+                },
+            });
+
+            // Register example scenes
+            Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'scatter',
+                description: 'Tokens scatter outward with staggered animation playback.',
+                onGenerate: () => {
+                    const rec = {
+                        name: 'scatter', objectType: 'graphic', duration: 1000, notes: '',
+                        tracks: { 'track-0': { label: '', keyframes: [
+                            { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
+                            { time: 1000, type: 'change', deltas: { left: { expr: 'orig + cos(freeze(rand(0, TAU))) * 100', mode: 'abs' }, top: { expr: 'orig + sin(freeze(rand(0, TAU))) * 100', mode: 'abs' } }, easings: {} },
+                        ]}},
+                    };
+                    const attrCols = ['left', 'top'];
+                    const handout = getOrCreateHandout('scatter');
+                    setHandoutNotes(handout, generateHandoutHtml('scatter', rec, attrCols), 'scatter');
+                    recordingCache['scatter'] = { recording: rec, attrCols };
+                    log(`${SCRIPT_NAME}: generated "scatter" recording handout for example`);
+                },
+                scene: {
+                    notes: 'Tokens scatter in random directions. Recording auto-generated.',
+                    params: [
+                        { name: 'anim', type: 'text', default: 'scatter', description: 'Sequence recording name' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: '*', delay: 'stagger(rank("left"), 500)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Staggered playback' },
+                    ],
+                },
+            });
+
+            Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'wave',
+                description: 'Plays a pulse animation in a wave across tokens sorted by position.',
+                onGenerate: () => {
+                    const rec = {
+                        name: 'pulse', objectType: 'graphic', duration: 800, notes: '',
+                        tracks: { 'track-0': { label: '', keyframes: [
+                            { time: 0,   type: 'change', deltas: { width: { delta: 1.3 }, height: { delta: 1.3 } }, easings: { width: 'sine', height: 'sine' } },
+                            { time: 400, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 } }, easings: { width: '~sine', height: '~sine' } },
+                            { time: 800, type: 'change', deltas: {}, easings: {} },
+                        ]}},
+                    };
+                    const attrCols = ['width', 'height'];
+                    const handout = getOrCreateHandout('pulse');
+                    setHandoutNotes(handout, generateHandoutHtml('pulse', rec, attrCols), 'pulse');
+                    recordingCache['pulse'] = { recording: rec, attrCols };
+                    log(`${SCRIPT_NAME}: generated "pulse" recording handout for example`);
+                },
+                scene: {
+                    notes: 'Tokens pulse (grow/shrink) in a wave. Recording auto-generated.',
+                    params: [
+                        { name: 'anim', type: 'text', default: 'pulse', description: 'Sequence recording name' },
+                        { name: 'interval', type: 'number', default: '300', description: 'Ms between each token' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Wave' },
+                    ],
+                },
+            });
+
+            log(`${SCRIPT_NAME}: registered with Choreograph`);
+        };
+
+        // Listen for choreograph-ready signal
+        on('chat:message', (msg) => {
+            if (msg.type === 'api' && msg.content === '!choreograph-ready') registerWithChoreograph();
+        });
+        // Also register immediately if Choreograph is already loaded
+        registerWithChoreograph();
+
         // Record all graphic change events
         // Register change events for all attributes that have a watchProp
         // (core attributes have watchProp = their Roll20 property name;
@@ -5172,8 +5386,6 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                 .filter(Boolean)
         );
         watchProps.forEach(prop => on(`change:graphic:${prop}`, onObjectChanged));
-
-        on('destroy:graphic', onDestroyObject);
     };
 
     // =========================================================================

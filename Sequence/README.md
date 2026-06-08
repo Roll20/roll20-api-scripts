@@ -56,6 +56,7 @@ A playback menu appears in chat with pause, stop, restart, loop, and revert cont
 | `--offset <ms>` | Start at a time offset |
 | `--only <a,b,...>` | Only apply listed attributes |
 | `--exclude <a,b,...>` | Exclude listed attributes |
+| `--silent` | Suppress playback menus (used by Choreograph) |
 
 ## Handout Editor
 
