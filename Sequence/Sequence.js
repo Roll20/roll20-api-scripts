@@ -1707,10 +1707,16 @@ var Sequence = Sequence || (() => {
                     const easing    = (rawEasing && !validateEasingExpr(rawEasing)) ? rawEasing : '';
                     // Clean invalid value from cache
                     if (rawEasing && !easing && kf.easings) delete kf.easings[attr];
-                    // parsed is { delta: val } or { abs: val } — extract the actual value
+                    // parsed is { delta: val }, { abs: val }, or { expr, mode } — extract display value
                     let cellVal = '';
                     if (parsed !== null && parsed !== undefined) {
-                        if (reg) {
+                        if ('expr' in parsed) {
+                            // Expression — display with mode prefix
+                            if (parsed.mode === 'abs') cellVal = `=${parsed.expr}`;
+                            else if (parsed.mode === 'mul') cellVal = `×${parsed.expr}`;
+                            else if (parsed.sign === -1) cellVal = `-${parsed.expr}`;
+                            else cellVal = `+${parsed.expr}`;
+                        } else if (reg) {
                             if ('abs' in parsed) {
                                 cellVal = reg.format(parsed.abs);
                                 // Ensure abs values always show = prefix
@@ -5303,14 +5309,18 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                 name: 'scatter',
                 description: 'Tokens scatter outward with staggered animation playback.',
                 onGenerate: () => {
-                    recordingCache['scatter'] = { recording: {
+                    const rec = {
                         name: 'scatter', objectType: 'graphic', duration: 1000, notes: '',
                         tracks: { 'track-0': { label: '', keyframes: [
                             { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
                             { time: 1000, type: 'change', deltas: { left: { expr: 'orig + cos(freeze(rand(0, TAU))) * 100', mode: 'abs' }, top: { expr: 'orig + sin(freeze(rand(0, TAU))) * 100', mode: 'abs' } }, easings: {} },
                         ]}},
-                    }, attrCols: ['left', 'top'] };
-                    log(`${SCRIPT_NAME}: generated "scatter" recording for example`);
+                    };
+                    const attrCols = ['left', 'top'];
+                    const handout = getOrCreateHandout('scatter');
+                    setHandoutNotes(handout, generateHandoutHtml('scatter', rec, attrCols), 'scatter');
+                    recordingCache['scatter'] = { recording: rec, attrCols };
+                    log(`${SCRIPT_NAME}: generated "scatter" recording handout for example`);
                 },
                 scene: {
                     notes: 'Tokens scatter in random directions. Recording auto-generated.',
@@ -5328,15 +5338,19 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                 name: 'wave',
                 description: 'Plays a pulse animation in a wave across tokens sorted by position.',
                 onGenerate: () => {
-                    recordingCache['pulse'] = { recording: {
+                    const rec = {
                         name: 'pulse', objectType: 'graphic', duration: 800, notes: '',
                         tracks: { 'track-0': { label: '', keyframes: [
                             { time: 0,   type: 'change', deltas: { width: { delta: 1.3 }, height: { delta: 1.3 } }, easings: { width: 'sine', height: 'sine' } },
                             { time: 400, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 } }, easings: { width: '~sine', height: '~sine' } },
                             { time: 800, type: 'change', deltas: {}, easings: {} },
                         ]}},
-                    }, attrCols: ['width', 'height'] };
-                    log(`${SCRIPT_NAME}: generated "pulse" recording for example`);
+                    };
+                    const attrCols = ['width', 'height'];
+                    const handout = getOrCreateHandout('pulse');
+                    setHandoutNotes(handout, generateHandoutHtml('pulse', rec, attrCols), 'pulse');
+                    recordingCache['pulse'] = { recording: rec, attrCols };
+                    log(`${SCRIPT_NAME}: generated "pulse" recording handout for example`);
                 },
                 scene: {
                     notes: 'Tokens pulse (grow/shrink) in a wave. Recording auto-generated.',
