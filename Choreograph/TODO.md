@@ -1,28 +1,36 @@
 # Choreograph — TODO
 
-## Post-MVP
+## Remaining
 
-- [ ] `--page` token source
-- [ ] Cast system (`[Cast]` handouts, roles, cast commands)
-- [ ] Computed variables (metadata-level)
-- [ ] `actors()` / `actor_ids()` functions
-- [ ] Scene chaining / `self` / `--parent` / `--depth`
-- [ ] Looping (`--loop` / `--loop N` / `--loop N --sync`)
-- [ ] Pause / resume commands
-- [ ] Sync system / sync participants
-- [ ] Lifecycle hooks (stop/pause/resume for extensions)
-- [ ] Extension API (registerFunction, registerTokenVariable, registerParameterType)
-- [ ] Expression fallback in filters
+- [ ] Expression fallback in filters (boolean expressions as filter conditions)
 - [ ] `wave()` function
-- [ ] `!choreograph man` / `gen-dev-docs`
-- [ ] Handout change detection / auto-validation
-- [ ] `!choreograph status`
-- [ ] `!choreograph bake`
+- [ ] `!choreograph bake` (bake scene timing into Sequence recording)
 - [ ] Row-level variable assignment (`set` command)
 - [ ] Flow control (if/break/goto — design TBD)
 - [ ] Mid-run actor addition
-- [ ] Human-readable instance names (markov chain or similar)
-- [ ] Status card with playback controls
-- [ ] `--id-only` flag for scripting
+- [ ] `--id-only` flag for scripting (whisper just instance ID)
+- [ ] `!choreograph example list` / `!choreograph example <name>` — built-in example scenes
 
-- [ ] `!choreograph example list` / `!choreograph example <name>` — built-in example scenes (wave, stagger, ripple, etc.) with descriptions, generated as handouts on demand
+## Known Issues
+
+- `resumeScene` should use start-hook dispatch (currently uses plain sendChat)
+
+## Done
+
+- [x] `--page` token source
+- [x] Cast system (`[Cast]` handouts, roles, cast commands)
+- [x] Computed variables (metadata-level)
+- [x] `actors()` / `actor_ids()` functions
+- [x] Scene chaining / `self` / `--parent` / `--depth`
+- [x] Looping (`--loop` / `--loop N` / `--loop N --sync`)
+- [x] Pause / resume commands
+- [x] Sync system / sync participants
+- [x] Lifecycle hooks (start/stop/pause/resume with command matching)
+- [x] Extension API (registerFunction, registerTokenVariable, registerParameterType, registerConstant, registerLifecycleHook, registerSyncParticipant, generateExtensionHandout)
+- [x] `!choreograph man` / `gen-dev-docs`
+- [x] Handout change detection / auto-validation
+- [x] `!choreograph status`
+- [x] `!choreograph help` / `--help`
+- [x] Human-readable instance names
+- [x] Status card with playback controls
+- [x] Sequence ↔ Choreograph integration

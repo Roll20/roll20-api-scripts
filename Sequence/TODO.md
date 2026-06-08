@@ -105,3 +105,20 @@ However, Choreograph already has a `{{paramName}}` substitution system and is th
 ## Planned: MovementAnimations Parity
 
 Spin and hover are straightforward with current Sequence. Orbit requires the `t` variable or Choreograph. Wave stagger offsets (the 8 sort orders from MovementAnimations) belong in Choreograph.
+
+
+---
+
+## Known Issue: Expression Deltas Cannot Round-Trip Through Handout HTML
+
+`generateHandoutHtml` cannot render `{ expr: ... }` deltas into handout cells —
+they appear as empty cells. When Roll20's `onHandoutChanged` fires, the parser
+reads empty cells and overwrites the cache, losing the expressions.
+
+**Impact:** Recordings using `continuous` easing with expressions (e.g. orbit)
+must be created programmatically (in-memory cache only) and cannot be
+hand-edited in handouts.
+
+**Fix needed:** Teach `generateHandoutHtml` to render expression deltas (e.g.
+display `=expr` in the cell) and teach `parseHandout` to parse them back into
+`{ expr, mode }` objects.

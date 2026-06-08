@@ -218,6 +218,8 @@ Choreograph.registerSyncParticipant(sourceId, struct)
 Choreograph.generateExtensionHandout(sourceId, opts)
 ```
 
+All registrations are source-deduplicated — calling the same registration from the same `sourceId` twice is a silent no-op.
+
 ### Lifecycle Hooks
 
 Register with `commands: [/regex/]` to filter which commands trigger your hooks:
@@ -232,7 +234,23 @@ Choreograph.registerLifecycleHook('MyScript', {
 });
 ```
 
-The `start` hook receives commands directly (bypassing chat) with full context including `instanceId`.
+The `start` hook receives a msg-shaped context (bypassing chat):
+
+```javascript
+// ctx shape for start/stop/pause/resume:
+{
+    type: 'api',
+    content: '!myscript ...',       // the command string
+    who: 'PlayerName (GM)',         // raw msg.who
+    playerid: '-ABC123',            // original player ID
+    selected: [{ _id, _type }],    // tokens for this command
+    sceneInfo: {                    // Choreograph metadata
+        instanceId: 'Choreograph-1-...',
+        sceneName: 'my-scene',
+        instanceName: 'swift-wolf-1',
+    },
+}
+```
 
 ### Sync Participants
 
@@ -240,10 +258,14 @@ The `start` hook receives commands directly (bypassing chat) with full context i
 Choreograph.registerSyncParticipant('MyScript', {
     commands: [/^!myscript\b/],
     waiting: (ctx) => {
-        // Do async work, then call ctx.done()
+        // ctx.entries — array of msg-shaped contexts (filtered to your commands)
+        // ctx.sceneInfo — scene metadata
+        // ctx.done() — call when finished (idempotent)
     },
 });
 ```
+
+Each participant only receives entries matching their registered command patterns. If none match, the participant is not called.
 
 ## License
 

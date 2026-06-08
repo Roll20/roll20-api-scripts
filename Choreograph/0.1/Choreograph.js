@@ -1972,29 +1972,40 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 });`);
 
             html += h(2, 'registerLifecycleHook(sourceId, struct)');
-            html += p('React to scene lifecycle events. ' + c('commands') + ' filters which fired commands trigger your hooks.');
+            html += p('React to scene lifecycle events. ' + c('commands') + ' filters which fired commands trigger your hooks. Source-deduplicated — same sourceId cannot register twice.');
             html += pre(
 `Choreograph.registerLifecycleHook('MyScript', {
     commands: [/^!myscript\\b/],
-    start:  (ctx) => { /* Direct invocation with ctx.instanceId */ },
-    stop:   (ctx) => { /* ctx: { tokens, command, instanceId } */ },
-    pause:  (ctx) => { /* ... */ },
-    resume: (ctx) => { /* ... */ },
-});`);
-            html += p(`The ${c('start')} hook receives commands directly (bypassing sendChat) with full context. Use it to avoid parsing instanceId from the command string.`);
+    start:  (ctx) => { /* msg-shaped context — pass to your handleInput */ },
+    stop:   (ctx) => { /* same shape */ },
+    pause:  (ctx) => { /* same shape */ },
+    resume: (ctx) => { /* same shape */ },
+});
+
+// ctx shape (msg-shaped with sceneInfo):
+// {
+//   type: 'api',
+//   content: '!myscript ...',
+//   who: 'PlayerName (GM)',
+//   playerid: '-ABC123',
+//   selected: [{ _id, _type }],
+//   sceneInfo: { instanceId, sceneName, instanceName },
+// }`);
+            html += p(`The ${c('start')} hook receives commands directly (bypassing sendChat). The context is msg-shaped so you can pass it directly to your command handler. ${c('sceneInfo.instanceId')} enables correlation with stop/pause/resume events.`);
 
             html += h(2, 'registerSyncParticipant(sourceId, struct)');
-            html += p('Participate in sync resolution. Only called when fired commands match your patterns.');
+            html += p('Participate in sync resolution. Only called when fired commands match your patterns. Source-deduplicated.');
             html += pre(
 `Choreograph.registerSyncParticipant('MyScript', {
     commands: [/^!myscript\\b/],
     waiting: (ctx) => {
-        // ctx: { tokens, commands, instanceId, done }
-        // Do async work, then call ctx.done()
+        // ctx.entries — array of msg-shaped contexts (filtered to your commands)
+        // ctx.sceneInfo — { instanceId, sceneName, instanceName }
+        // ctx.done() — call when finished (idempotent)
         setTimeout(() => ctx.done(), 1000);
     },
 });`);
-            html += p(`${c('done()')} is idempotent — safe to call multiple times. Sync times out after 30s by default.`);
+            html += p(`${c('done()')} is idempotent — safe to call multiple times. Sync times out after 30s by default. Each participant only receives entries matching their registered command patterns.`);
 
             html += h(2, 'generateExtensionHandout(sourceId, opts)');
             html += p('Generate a help handout documenting your registered items.');
