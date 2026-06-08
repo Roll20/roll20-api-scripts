@@ -3104,8 +3104,9 @@ var Sequence = Sequence || (() => {
     const reply = (msg, tag, text, noarchive = false) => {
         const body      = text !== undefined ? text : tag;
         const prefix    = text !== undefined ? ` [${tag}]` : '';
-        const recipient = msg.who.split(' ')[0];
-        sendChat(`${SCRIPT_NAME}${prefix}`, `/w ${recipient} ${body}`,
+        const player    = getObj('player', msg.playerid);
+        const recipient = player ? player.get('_displayname') : msg.who.replace(' (GM)', '');
+        sendChat(`${SCRIPT_NAME}${prefix}`, `/w "${recipient}" ${body}`,
             null, noarchive ? { noarchive: true } : undefined);
     };
 
