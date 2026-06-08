@@ -5250,6 +5250,67 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
         on('chat:message', handleInput);
         on('change:handout:notes',  onHandoutChanged);
 
+        // ── Choreograph integration ───────────────────────────────────────
+        const registerWithChoreograph = () => {
+            if (typeof Choreograph === 'undefined') return;
+
+            // Register constants
+            Choreograph.registerConstant(SCRIPT_NAME, { name: 'PI', namespace: 'core', value: Math.PI, description: 'π' });
+            Choreograph.registerConstant(SCRIPT_NAME, { name: 'TAU', namespace: 'core', value: Math.PI * 2, description: '2π' });
+
+            // Lifecycle hook — handle !sequence play/stop-play/pause-play/resume-play
+            Choreograph.registerLifecycleHook(SCRIPT_NAME, {
+                commands: [/^!sequence\b/],
+                start: (ctx) => {
+                    // Direct invocation — parse and handle as a chat message
+                    const fakeMsg = {
+                        type: 'api',
+                        content: ctx.command,
+                        who: ctx.sender || 'gm',
+                        playerid: 'API',
+                        selected: ctx.tokens.map(t => ({ _id: t.get('id'), _type: 'graphic' })),
+                    };
+                    // Store choreograph instance ID on any playback started from this command
+                    fakeMsg._choreoInstanceId = ctx.instanceId;
+                    handleInput(fakeMsg);
+                },
+                stop: (ctx) => {
+                    // Stop playback on the tokens involved
+                    ctx.tokens.forEach(t => stopPlayback(t.get('id')));
+                },
+                pause: (ctx) => {
+                    ctx.tokens.forEach(t => pausePlayback(t.get('id')));
+                },
+                resume: (ctx) => {
+                    ctx.tokens.forEach(t => resumePlayback(t.get('id')));
+                },
+            });
+
+            // Sync participant — wait for playback to finish on tokens
+            Choreograph.registerSyncParticipant(SCRIPT_NAME, {
+                commands: [/^!sequence play\b/],
+                waiting: (ctx) => {
+                    // Check if any tokens still have active playback
+                    const check = setInterval(() => {
+                        const stillPlaying = ctx.tokens.some(t => activePlayback[t.get('id')]);
+                        if (!stillPlaying) {
+                            clearInterval(check);
+                            ctx.done();
+                        }
+                    }, 100);
+                },
+            });
+
+            log(`${SCRIPT_NAME}: registered with Choreograph`);
+        };
+
+        // Listen for choreograph-ready signal
+        on('chat:message', (msg) => {
+            if (msg.type === 'api' && msg.content === '!choreograph-ready') registerWithChoreograph();
+        });
+        // Also register immediately if Choreograph is already loaded
+        registerWithChoreograph();
+
         // Record all graphic change events
         // Register change events for all attributes that have a watchProp
         // (core attributes have watchProp = their Roll20 property name;
