@@ -902,7 +902,7 @@ var Choreograph = Choreograph || (() => {
     /**
      * Execute a scene: gather cast, evaluate rows, build queue, fire commands.
      */
-    const executeScene = (scene, cast, params, msg, castData) => {
+    const executeScene = (scene, cast, params, msg, castData, loopOpts) => {
         const instanceId = genInstanceId();
         const queue = [];
 
@@ -980,8 +980,39 @@ var Choreograph = Choreograph || (() => {
             state:    'running',
             startTime: Date.now(),
             firedCommands: [],
+            loop: loopOpts || null, // { unbounded: bool, remaining: number|null, sync: bool }
         };
         runningScenes[instanceId] = instance;
+
+        // Handle scene completion — loop or cleanup
+        const finishScene = () => {
+            const loop = instance.loop;
+            if (!loop) {
+                delete runningScenes[instanceId];
+                return;
+            }
+            if (loop.unbounded) {
+                // Unbounded: sync then restart
+                fireSync(instance, () => {
+                    instance.firedCommands = [];
+                    instance.timers = [];
+                    executeChunk(0);
+                }, syncTimeout);
+            } else if (loop.remaining > 0) {
+                instance.loop = Object.assign({}, loop, { remaining: loop.remaining - 1 });
+                instance.firedCommands = [];
+                instance.timers = [];
+                if (loop.sync) {
+                    // Bounded with sync: wait then restart
+                    fireSync(instance, () => executeChunk(0), syncTimeout);
+                } else {
+                    // Bounded without sync: immediate restart
+                    executeChunk(0);
+                }
+            } else {
+                delete runningScenes[instanceId];
+            }
+        };
 
         // Execute queue — split at sync points, chain chunks
         const sender = msg.who.split(' ')[0];
@@ -1000,17 +1031,15 @@ var Choreograph = Choreograph || (() => {
         // Execute one chunk, then fire sync and proceed to next
         const executeChunk = (chunkIdx) => {
             if (chunkIdx >= chunks.length) {
-                // All chunks done — cleanup
-                delete runningScenes[instanceId];
+                finishScene();
                 return;
             }
             const chunk = chunks[chunkIdx];
             if (chunk.length === 0) {
-                // Empty chunk (sync at start or consecutive syncs) — go to next
                 if (chunkIdx < chunks.length - 1) {
                     fireSync(instance, () => executeChunk(chunkIdx + 1), syncTimeout);
                 } else {
-                    delete runningScenes[instanceId];
+                    finishScene();
                 }
                 return;
             }
@@ -1051,9 +1080,9 @@ var Choreograph = Choreograph || (() => {
                 }, maxTime + 1);
                 instance.timers.push(syncTimer);
             } else {
-                // Last chunk — cleanup after it finishes
+                // Last chunk — finish (loop or cleanup) after it completes
                 const cleanup = setTimeout(() => {
-                    delete runningScenes[instanceId];
+                    finishScene();
                 }, maxTime + 100);
                 instance.timers.push(cleanup);
             }
@@ -1325,13 +1354,28 @@ var Choreograph = Choreograph || (() => {
                         return;
                     }
 
-                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync']);
+                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync', 'sync-timeout']);
                     const params = {};
                     Object.entries(opts).forEach(([k, v]) => {
                         if (!knownFlags.has(k) && typeof v === 'string') params[k] = v;
                     });
 
-                    const instanceId = executeScene(scene, cast, params, msg, castData || null);
+                    // Parse loop options
+                    let loopOpts = null;
+                    if (flags.has('loop')) {
+                        const loopVal = opts.loop;
+                        if (loopVal === true || loopVal === 'true') {
+                            // --loop (unbounded)
+                            loopOpts = { unbounded: true, remaining: null, sync: true };
+                        } else {
+                            const n = parseInt(loopVal, 10);
+                            if (!isNaN(n) && n > 0) {
+                                loopOpts = { unbounded: false, remaining: n - 1, sync: flags.has('sync') };
+                            }
+                        }
+                    }
+
+                    const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts);
                     reply(msg, 'Choreograph',
                         `Running "${escHtml(name)}" on ${cast.length} token(s). `
                         + `Instance: <code>${instanceId}</code>`);
