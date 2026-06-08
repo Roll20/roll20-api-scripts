@@ -13,7 +13,7 @@
 
 ## Known Issues
 
-- `resumeScene` should use start-hook dispatch (currently uses plain sendChat)
+(none currently)
 
 ## Done
 

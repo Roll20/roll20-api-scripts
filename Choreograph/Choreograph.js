@@ -746,20 +746,7 @@ var Choreograph = Choreograph || (() => {
                     if (!byCommand[entry.command]) byCommand[entry.command] = [];
                     byCommand[entry.command].push(entry.tokenId);
                 });
-                Object.entries(byCommand).forEach(([command, tokenIds]) => {
-                    if (command.startsWith('!')) {
-                        const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
-                        sendChat(sender, command + selectSuffix);
-                    } else {
-                        sendChat(sender, command);
-                    }
-                    // Track fired commands for lifecycle hooks
-                    instance.firedCommands = instance.firedCommands || [];
-                    instance.firedCommands.push({
-                        tokens: tokenIds.map(id => getObj('graphic', id)).filter(Boolean),
-                        command,
-                    });
-                });
+                dispatchCommands(byCommand, instance, sender);
             }, batchTime);
             instance.timers.push(timer);
         }
@@ -979,6 +966,52 @@ var Choreograph = Choreograph || (() => {
     };
 
     // =========================================================================
+    // Command dispatch helper
+    // =========================================================================
+
+    /**
+     * Dispatch a batch of commands grouped by command string.
+     * Handles start hooks, {& select} injection, depth enforcement.
+     */
+    const dispatchCommands = (byCommand, instance, sender) => {
+        const instanceId = instance.id;
+        Object.entries(byCommand).forEach(([command, tokenIds]) => {
+            let finalCmd = command;
+            // Auto-inject --parent and --depth for chained choreograph runs
+            if (finalCmd.startsWith('!choreograph run ') || finalCmd.startsWith(`${CMD_TOKEN} run `)) {
+                if (instance.depth <= 0) return;
+                finalCmd += ` --parent ${instanceId} --depth ${instance.depth - 1}`;
+            }
+
+            const tokens = tokenIds.map(id => getObj('graphic', id)).filter(Boolean);
+            const ctx = buildHookContext(instance, { command: finalCmd, tokens });
+
+            // Check if any lifecycle hook wants to handle this via start
+            let handled = false;
+            EXT_LIFECYCLE.forEach(hook => {
+                if (!hook.start) return;
+                const matches = hook.commands.some(rx => rx.test(finalCmd));
+                if (matches) {
+                    hook.start(ctx);
+                    handled = true;
+                }
+            });
+
+            // Fall back to sendChat if no start hook handled it
+            if (!handled) {
+                if (finalCmd.startsWith('!')) {
+                    const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
+                    sendChat(sender, finalCmd + selectSuffix);
+                } else {
+                    sendChat(sender, finalCmd);
+                }
+            }
+
+            instance.firedCommands.push({ tokens, command: finalCmd });
+        });
+    };
+
+    // =========================================================================
     // Scene execution
     // =========================================================================
 
@@ -1161,42 +1194,7 @@ var Choreograph = Choreograph || (() => {
                         if (!byCommand[entry.command]) byCommand[entry.command] = [];
                         byCommand[entry.command].push(entry.tokenId);
                     });
-                    Object.entries(byCommand).forEach(([command, tokenIds]) => {
-                        let finalCmd = command;
-                        // Auto-inject --parent and --depth for chained choreograph runs
-                        if (finalCmd.startsWith('!choreograph run ') || finalCmd.startsWith(`${CMD_TOKEN} run `)) {
-                            if (instance.depth <= 0) {
-                                return; // Depth exhausted — skip child spawn
-                            }
-                            finalCmd += ` --parent ${instanceId} --depth ${instance.depth - 1}`;
-                        }
-
-                        const tokens = tokenIds.map(id => getObj('graphic', id)).filter(Boolean);
-                        const ctx = buildHookContext(instance, { command: finalCmd, tokens });
-
-                        // Check if any lifecycle hook wants to handle this via start
-                        let handled = false;
-                        EXT_LIFECYCLE.forEach(hook => {
-                            if (!hook.start) return;
-                            const matches = hook.commands.some(rx => rx.test(finalCmd));
-                            if (matches) {
-                                hook.start(ctx);
-                                handled = true;
-                            }
-                        });
-
-                        // Fall back to sendChat if no start hook handled it
-                        if (!handled) {
-                            if (finalCmd.startsWith('!')) {
-                                const selectSuffix = ` {& select ${tokenIds.join(', ')}}`;
-                                sendChat(sender, finalCmd + selectSuffix);
-                            } else {
-                                sendChat(sender, finalCmd);
-                            }
-                        }
-
-                        instance.firedCommands.push({ tokens, command: finalCmd });
-                    });
+                    dispatchCommands(byCommand, instance, sender);
                 }, batchTime);
                 instance.timers.push(timer);
             }
