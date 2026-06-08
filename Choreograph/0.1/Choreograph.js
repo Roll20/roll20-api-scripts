@@ -256,7 +256,7 @@ var Choreograph = Choreograph || (() => {
             return false;
         }
         if (EXT_EXAMPLES[name]) return false; // no-op on duplicate
-        EXT_EXAMPLES[name] = { name, description, source: src, scene };
+        EXT_EXAMPLES[name] = { name, description, source: src, scene, onGenerate: struct.onGenerate || null };
         return true;
     };
 
