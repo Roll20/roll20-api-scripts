@@ -28,7 +28,6 @@ var Choreograph = Choreograph || (() => {
     const SCRIPT_NAME    = 'Choreograph';
     const SCRIPT_VERSION = '0.1';
     const CMD_TOKEN      = '!choreograph';
-    const HANDOUT_PREFIX = '[Choreograph] ';
 
     // =========================================================================
     // State helpers
@@ -60,25 +59,62 @@ var Choreograph = Choreograph || (() => {
     // Handout helpers
     // =========================================================================
 
-    const HANDOUT_NAME = (name) => `${HANDOUT_PREFIX}${name}`;
+    const HandoutRegex = /^\[([^\]]+)\] (.+)$/;
 
-    const findHandout = (name) => {
-        const results = findObjs({ _type: 'handout', name: HANDOUT_NAME(name) });
-        return results.length > 0 ? results[0] : undefined;
-    };
+    class HandoutCache {
+        constructor(tag, parser) {
+            this.tag = tag;
+            this.parser = parser;
+            this.cache = {};
+        }
 
-    const findAllSceneHandouts = () =>
-        findObjs({ _type: 'handout' })
-            .filter(h => h.get('name').startsWith(HANDOUT_PREFIX));
+        static handoutTag = (tag) => `[${tag}]`;
+        static handoutNametag = (tag, name) => `${HandoutCache.handoutTag(tag)} ${name}`;
+        static getHandoutTagAndName = (nametag) => {
+            const match = nametag.match(HandoutRegex);
+            return match ? [match[1], match[2]] : [null, null];
+        };
 
-    const getOrCreateHandout = (name) => {
-        const existing = findHandout(name);
-        if (existing) return existing;
-        return createObj('handout', {
-            name:             HANDOUT_NAME(name),
-            inplayerjournals: '',
-            archived:         false,
-        });
+        handoutName = (nametag) => {
+            const handoutTag = HandoutCache.handoutTag(this.tag);
+            if (!nametag || !nametag.startsWith(handoutTag)) return null;
+            return nametag.slice(handoutTag.length).trim();
+        };
+
+        find = (name) => {
+            const results = findObjs({ _type: 'handout', name: `${HandoutCache.handoutNametag(this.tag, name)}` });
+            return results.length > 0 ? results[0] : undefined;
+        };
+
+        findAll = () => findObjs({ _type: 'handout' }).filter(h => h.get('name').startsWith(HandoutCache.handoutTag(this.tag)));
+
+        getOrCreate = (name) => {
+            const existing = this.find(name);
+            if (existing) return existing;
+            return createObj('handout', {
+                name:             HandoutCache.handoutNametag(this.tag, name),
+                inplayerjournals: '',
+                archived:         false,
+            });
+        };
+
+        load = (name, callback) => {
+            if (this.cache[name]) { callback(this.cache[name]); return; }
+            const handout = this.find(name);
+            if (!handout) { callback(null); return; }
+            getHandoutNotes(handout, (html) => {
+                if (!html) { callback(null); return; }
+                const result = this.parser(name, html);
+                this.cache[name] = result;
+                callback(result);
+            });
+        };
+    }
+
+    const handoutCache = {};
+
+    const addHandoutCache = (tag, parser) => {
+        handoutCache[tag] = new HandoutCache(tag, parser);
     };
 
     const getHandoutNotes = (handout, callback) => {
@@ -90,7 +126,7 @@ var Choreograph = Choreograph || (() => {
     };
 
     // =========================================================================
-    // Scene scaffolding (new)
+    // Scene System
     // =========================================================================
 
     const STYLE = {
@@ -110,7 +146,6 @@ var Choreograph = Choreograph || (() => {
 
         // Metadata
         html += `<div style="font-family:monospace;font-size:12px;margin-bottom:8px;">`;
-        html += `<b>Scene:</b> ${escHtml(name)}<br>`;
         html += `<b>Notes:</b> ${escHtml(scene.notes || '')}<br>`;
         html += `</div>`;
 
@@ -169,7 +204,7 @@ var Choreograph = Choreograph || (() => {
     };
 
     // =========================================================================
-    // Handout parser
+    // Scene Handout parser
     // =========================================================================
 
     /**
@@ -270,23 +305,93 @@ var Choreograph = Choreograph || (() => {
         return scene;
     };
 
-    // In-memory cache of parsed scenes
-    const sceneCache = {};
+    const sceneHandoutTag = 'Scene';
+    const scenes = () => handoutCache[sceneHandoutTag];
+
+    // =========================================================================
+    // Cast System
+    // =========================================================================
+
+    const castHandoutTag = 'Cast';
+    const casts = () => handoutCache[castHandoutTag];
 
     /**
-     * Load a scene from its handout into the cache.
+     * Parse a cast handout into { roles: { roleName: [tokenId, ...] } }
+     * Format:
+     *   role1: -id1, -id2, -id3
+     *   role2: -id4
+     *   -id5, -id6          (no role — stored under '')
      */
-    const loadScene = (name, callback) => {
-        if (sceneCache[name]) { callback(sceneCache[name]); return; }
-        const handout = findHandout(name);
-        if (!handout) { callback(null); return; }
-        getHandoutNotes(handout, (html) => {
-            if (!html) { callback(null); return; }
-            const scene = parseScene(name, html);
-            if (scene) sceneCache[name] = scene;
-            callback(scene);
+    const parseCast = (name, html) => {
+        const decode = (s) => String(s)
+            .replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+            .replace(/&nbsp;/g, ' ');
+
+        const text = decode(html)
+            .replace(/<\/?p[^>]*>/gi, '\n')
+            .replace(/<br[^>]*>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+            .replace(/\r\n/g, '\n');
+
+        const roles = {};
+        text.split('\n').forEach(line => {
+            line = line.trim();
+            if (!line) return;
+            const colonIdx = line.indexOf(':');
+            let role = '';
+            let idsStr = line;
+            if (colonIdx !== -1) {
+                const beforeColon = line.slice(0, colonIdx).trim();
+                // Only treat as role if the part before colon doesn't look like an ID
+                if (!/^-[A-Za-z0-9_-]+$/.test(beforeColon)) {
+                    role = beforeColon;
+                    idsStr = line.slice(colonIdx + 1);
+                }
+            }
+            const ids = idsStr.split(',')
+                .map(s => s.trim())
+                .filter(s => /^-[A-Za-z0-9_-]+$/.test(s));
+            if (ids.length === 0) return;
+            if (!roles[role]) roles[role] = [];
+            roles[role].push(...ids);
         });
+        return { roles };
     };
+
+    /**
+     * Generate cast handout HTML from a roles object.
+     */
+    const generateCastHtml = (name, roles) => {
+        let html = `<div style="font-family:monospace;font-size:12px;">`;
+        Object.entries(roles).forEach(([role, ids]) => {
+            if (role) {
+                html += `<b>${escHtml(role)}:</b> ${ids.join(', ')}<br>`;
+            } else {
+                html += `${ids.join(', ')}<br>`;
+            }
+        });
+        html += `</div>`;
+        return html;
+    };
+
+    /**
+     * Get all token IDs from a cast (all roles combined).
+     */
+    const getAllCastIds = (cast) => {
+        const ids = [];
+        Object.values(cast.roles).forEach(roleIds => ids.push(...roleIds));
+        return [...new Set(ids)];
+    };
+
+    /**
+     * Get token IDs for a specific role.
+     */
+    const getCastRoleIds = (cast, role) => cast.roles[role] || [];
+
+    // Register handout caches (after parsers are defined)
+    addHandoutCache(sceneHandoutTag, parseScene);
+    addHandoutCache(castHandoutTag, parseCast);
 
     // =========================================================================
     // Running scenes
@@ -317,13 +422,13 @@ var Choreograph = Choreograph || (() => {
      * Evaluate a single filter condition against a token.
      * Returns true if token matches.
      */
-    const evalFilterCondition = (condition, token) => {
+    const evalFilterCondition = (condition, token, castData) => {
         const c = condition.trim();
         if (!c || c === '*') return true;
 
         // Negation
         if (c.startsWith('!')) {
-            return !evalFilterCondition(c.slice(1), token);
+            return !evalFilterCondition(c.slice(1), token, castData);
         }
 
         // key=value patterns
@@ -346,9 +451,11 @@ var Choreograph = Choreograph || (() => {
                 }
                 return name === val;
             }
-            // role=X — check if token has this role in the cast metadata
-            // (for MVP, role filtering requires cast roles — deferred)
-            if (key === 'role') return false; // TODO: cast role support
+            if (key === 'role') {
+                if (!castData) return false;
+                const roleIds = castData.roles[val] || [];
+                return roleIds.includes(token.get('id'));
+            }
         }
 
         return false;
@@ -357,11 +464,11 @@ var Choreograph = Choreograph || (() => {
     /**
      * Evaluate a full filter string (space-separated AND conditions).
      */
-    const evalFilter = (filterStr, token) => {
+    const evalFilter = (filterStr, token, castData) => {
         if (!filterStr.trim()) return false; // empty = no match
         if (filterStr.trim() === '*') return true;
         const conditions = filterStr.trim().split(/\s+/);
-        return conditions.every(c => evalFilterCondition(c, token));
+        return conditions.every(c => evalFilterCondition(c, token, castData));
     };
 
     // =========================================================================
@@ -486,7 +593,7 @@ var Choreograph = Choreograph || (() => {
     /**
      * Execute a scene: gather cast, evaluate rows, build queue, fire commands.
      */
-    const executeScene = (scene, cast, params, msg) => {
+    const executeScene = (scene, cast, params, msg, castData) => {
         const instanceId = genInstanceId();
         const queue = [];
 
@@ -502,7 +609,7 @@ var Choreograph = Choreograph || (() => {
         // For each row, evaluate filter on all cast, then compute delays
         scene.rows.forEach((row, rowIndex) => {
             // Filter cast
-            const filtered = cast.filter(token => evalFilter(row.filter, token));
+            const filtered = cast.filter(token => evalFilter(row.filter, token, castData));
             if (filtered.length === 0) return;
 
             // For each matching token, evaluate delay and build queue entry
@@ -621,11 +728,11 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'new') {
             const name = args[0];
             if (!name) { replyError(msg, 'Usage: !choreograph new <name>'); return; }
-            if (findHandout(name)) {
+            if (scenes().find(name)) {
                 replyError(msg, `A scene named "${name}" already exists.`);
                 return;
             }
-            const handout = getOrCreateHandout(name);
+            const handout = scenes().getOrCreate(name);
             setHandoutNotes(handout, generateBlankScene(name));
             reply(msg, 'Choreograph',
                 `Created scene "${escHtml(name)}". `
@@ -635,13 +742,14 @@ var Choreograph = Choreograph || (() => {
 
         // ---- list ----
         if (cmd === 'list') {
-            let handouts = findAllSceneHandouts();
+            let handouts = scenes().findAll();
             const query = args[0];
             if (query) {
                 const q = query.toLowerCase();
-                handouts = handouts.filter(h =>
-                    h.get('name').slice(HANDOUT_PREFIX.length).toLowerCase().includes(q)
-                );
+                handouts = handouts.filter(h => {
+                    const n = scenes().handoutName(h.get('name'));
+                    return n && n.toLowerCase().includes(q);
+                });
             }
             if (handouts.length === 0) {
                 reply(msg, 'Choreograph', query
@@ -651,7 +759,7 @@ var Choreograph = Choreograph || (() => {
             }
             let out = `<b>${handouts.length} scene(s)${query ? ` matching "${escHtml(query)}"` : ''}:</b><br>`;
             handouts.forEach(h => {
-                const sceneName = h.get('name').slice(HANDOUT_PREFIX.length);
+                const sceneName = scenes().handoutName(h.get('name'));
                 out += `• <b>${escHtml(sceneName)}</b> `
                     + `<a href="http://journal.roll20.net/handout/${h.get('id')}">[Open Handout]</a><br>`;
             });
@@ -663,7 +771,7 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'edit') {
             const name = args[0];
             if (!name) { replyError(msg, 'Usage: !choreograph edit <name>'); return; }
-            const handout = findHandout(name);
+            const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
             reply(msg, 'Choreograph',
                 `Opening scene "${escHtml(name)}": `
@@ -682,7 +790,7 @@ var Choreograph = Choreograph || (() => {
                     + `style="display:inline-block;padding:2px 8px;background:#900;color:#fff;border-radius:3px;text-decoration:none;font-size:11px;">Yes, delete</a>`);
                 return;
             }
-            const handout = findHandout(name);
+            const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
             handout.remove();
             reply(msg, 'Choreograph', `Deleted scene "${escHtml(name)}".`);
@@ -716,10 +824,10 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'refresh') {
             const name = args[0];
             if (!name) { replyError(msg, 'Usage: !choreograph refresh <name>'); return; }
-            const handout = findHandout(name);
+            const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
-            delete sceneCache[name];
-            loadScene(name, (scene) => {
+            delete scenes().cache[name];
+            scenes().load(name, (scene) => {
                 if (!scene) { replyError(msg, `Could not parse scene "${name}".`); return; }
                 const html = generateSceneHtml(name, scene);
                 setHandoutNotes(handout, html);
@@ -732,13 +840,12 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'add-row') {
             const name = args[0];
             if (!name) { replyError(msg, 'Usage: !choreograph add-row <name>'); return; }
-            const handout = findHandout(name);
+            const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
-            delete sceneCache[name];
-            loadScene(name, (scene) => {
+            delete scenes().cache[name];
+            scenes().load(name, (scene) => {
                 if (!scene) { replyError(msg, `Could not parse scene "${name}".`); return; }
                 scene.rows.push({ filter: '*', delay: '0', command: '', notes: '' });
-                sceneCache[name] = scene;
                 const html = generateSceneHtml(name, scene);
                 setHandoutNotes(handout, html);
                 reply(msg, 'Choreograph', `Added row to "${escHtml(name)}".`);
@@ -750,7 +857,7 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'dump-html') {
             const name = args[0];
             if (!name) { replyError(msg, 'Usage: !choreograph dump-html <name>'); return; }
-            const handout = findHandout(name);
+            const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
             getHandoutNotes(handout, (html) => {
                 const chunkSize = 1000;
@@ -768,51 +875,195 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'run') {
             const name = args[0];
             if (!name) { replyError(msg, 'Usage: !choreograph run <name>'); return; }
-            const handout = findHandout(name);
+            const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
 
-            // Gather cast
+            // Gather cast IDs from all sources
             const castIds = [];
             if (!flags.has('ignore-selected')) {
                 (msg.selected || []).forEach(s => castIds.push(s._id));
             }
-            // --id tokens
             if (opts.id) {
                 const ids = Array.isArray(opts.id) ? opts.id : String(opts.id).split(/\s+/);
                 ids.forEach(id => { if (id) castIds.push(id); });
             }
-            // Also collect any Roll20 IDs from remaining args
             args.slice(1).forEach(a => {
                 if (/^-[A-Za-z0-9_-]+$/.test(a)) castIds.push(a);
             });
 
-            const cast = castIds
-                .map(id => getObj('graphic', id))
-                .filter(Boolean);
+            // --cast <name> — merge IDs from cast handout
+            const runWithCast = (castData) => {
+                const cast = [...new Set(castIds)]
+                    .map(id => getObj('graphic', id))
+                    .filter(Boolean);
 
-            if (cast.length === 0) {
-                replyError(msg, 'No tokens in cast. Select tokens, use --id, or use --cast.');
-                return;
-            }
-
-            loadScene(name, (scene) => {
-                if (!scene) {
-                    replyError(msg, `Could not parse scene "${name}".`);
+                if (cast.length === 0) {
+                    replyError(msg, 'No tokens in cast. Select tokens, use --id, or use --cast.');
                     return;
                 }
 
-                // Collect params from opts (strip known flags)
-                const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync']);
-                const params = {};
-                Object.entries(opts).forEach(([k, v]) => {
-                    if (!knownFlags.has(k) && typeof v === 'string') params[k] = v;
-                });
+                scenes().load(name, (scene) => {
+                    if (!scene) {
+                        replyError(msg, `Could not parse scene "${name}".`);
+                        return;
+                    }
 
-                const instanceId = executeScene(scene, cast, params, msg);
-                reply(msg, 'Choreograph',
-                    `Running "${escHtml(name)}" on ${cast.length} token(s). `
-                    + `Instance: <code>${instanceId}</code>`);
-            });
+                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync']);
+                    const params = {};
+                    Object.entries(opts).forEach(([k, v]) => {
+                        if (!knownFlags.has(k) && typeof v === 'string') params[k] = v;
+                    });
+
+                    const instanceId = executeScene(scene, cast, params, msg, castData || null);
+                    reply(msg, 'Choreograph',
+                        `Running "${escHtml(name)}" on ${cast.length} token(s). `
+                        + `Instance: <code>${instanceId}</code>`);
+                });
+            };
+
+            if (opts.cast) {
+                casts().load(String(opts.cast), (castData) => {
+                    if (!castData) {
+                        replyError(msg, `No cast named "${opts.cast}" found.`);
+                        return;
+                    }
+                    getAllCastIds(castData).forEach(id => castIds.push(id));
+                    runWithCast(castData);
+                });
+            } else {
+                runWithCast(null);
+            }
+            return;
+        }
+
+        // ---- cast ----
+        if (cmd === 'cast') {
+            const subCmd = args[0];
+            const castName = args[1];
+
+            if (subCmd === 'list') {
+                const handouts = casts().findAll();
+                if (handouts.length === 0) {
+                    reply(msg, 'Cast', 'No casts found.');
+                    return;
+                }
+                let out = `<b>${handouts.length} cast(s):</b><br>`;
+                handouts.forEach(h => {
+                    const n = casts().handoutName(h.get('name'));
+                    out += `• <b>${escHtml(n)}</b> `
+                        + `<a href="http://journal.roll20.net/handout/${h.get('id')}">[Open]</a><br>`;
+                });
+                reply(msg, 'Cast', out);
+                return;
+            }
+
+            if (subCmd === 'show') {
+                if (!castName) { replyError(msg, 'Usage: !choreograph cast show <name>'); return; }
+                casts().load(castName, (cast) => {
+                    if (!cast) { replyError(msg, `No cast named "${castName}" found.`); return; }
+                    let out = `<b>Cast: ${escHtml(castName)}</b><br>`;
+                    Object.entries(cast.roles).forEach(([role, ids]) => {
+                        const label = role || '(no role)';
+                        const names = ids.map(id => {
+                            const obj = getObj('graphic', id);
+                            return obj ? (obj.get('name') || id) : `${id} (missing)`;
+                        });
+                        out += `<b>${escHtml(label)}:</b> ${names.join(', ')}<br>`;
+                    });
+                    reply(msg, 'Cast', out);
+                });
+                return;
+            }
+
+            if (subCmd === 'add') {
+                if (!castName) { replyError(msg, 'Usage: !choreograph cast add <name> [--role <role>]'); return; }
+                const role = opts.role || '';
+                // Gather IDs from selection + --id + remaining args
+                const ids = [];
+                if (!flags.has('ignore-selected')) {
+                    (msg.selected || []).forEach(s => ids.push(s._id));
+                }
+                if (opts.id) String(opts.id).split(/\s+/).forEach(id => { if (id) ids.push(id); });
+                args.slice(2).forEach(a => { if (/^-[A-Za-z0-9_-]+$/.test(a)) ids.push(a); });
+
+                if (ids.length === 0) {
+                    replyError(msg, 'No tokens specified. Select tokens or use --id.');
+                    return;
+                }
+
+                const handout = casts().getOrCreate(castName);
+                casts().load(castName, (cast) => {
+                    if (!cast) cast = { roles: {} };
+                    if (!cast.roles[role]) cast.roles[role] = [];
+                    ids.forEach(id => {
+                        if (!cast.roles[role].includes(id)) cast.roles[role].push(id);
+                    });
+                    casts().cache[castName] = cast;
+                    setHandoutNotes(handout, generateCastHtml(castName, cast.roles));
+                    reply(msg, 'Cast',
+                        `Added ${ids.length} token(s) to "${escHtml(castName)}"${role ? ` role "${escHtml(role)}"` : ''}.`);
+                });
+                return;
+            }
+
+            if (subCmd === 'remove') {
+                if (!castName) { replyError(msg, 'Usage: !choreograph cast remove <name> [--role <role>]'); return; }
+                const role = opts.role;
+                // Gather IDs to remove
+                const ids = [];
+                if (!flags.has('ignore-selected')) {
+                    (msg.selected || []).forEach(s => ids.push(s._id));
+                }
+                if (opts.id) String(opts.id).split(/\s+/).forEach(id => { if (id) ids.push(id); });
+                args.slice(2).forEach(a => { if (/^-[A-Za-z0-9_-]+$/.test(a)) ids.push(a); });
+
+                if (ids.length === 0) {
+                    replyError(msg, 'No tokens specified. Select tokens or use --id.');
+                    return;
+                }
+
+                casts().load(castName, (cast) => {
+                    if (!cast) { replyError(msg, `No cast named "${castName}" found.`); return; }
+                    const handout = casts().find(castName);
+                    if (role !== undefined) {
+                        // Remove from specific role
+                        if (cast.roles[role]) {
+                            cast.roles[role] = cast.roles[role].filter(id => !ids.includes(id));
+                            if (cast.roles[role].length === 0) delete cast.roles[role];
+                        }
+                    } else {
+                        // Remove from all roles
+                        Object.keys(cast.roles).forEach(r => {
+                            cast.roles[r] = cast.roles[r].filter(id => !ids.includes(id));
+                            if (cast.roles[r].length === 0) delete cast.roles[r];
+                        });
+                    }
+                    casts().cache[castName] = cast;
+                    setHandoutNotes(handout, generateCastHtml(castName, cast.roles));
+                    reply(msg, 'Cast',
+                        `Removed ${ids.length} token(s) from "${escHtml(castName)}"${role ? ` role "${escHtml(role)}"` : ''}.`);
+                });
+                return;
+            }
+
+            if (subCmd === 'delete') {
+                if (!castName) { replyError(msg, 'Usage: !choreograph cast delete <name>'); return; }
+                if (!flags.has('force')) {
+                    reply(msg, 'Cast',
+                        `Delete cast "${escHtml(castName)}"? `
+                        + `<a href="${CMD_TOKEN} cast delete ${castName} --force" `
+                        + `style="${STYLE.btn};background:#900;">Yes, delete</a>`);
+                    return;
+                }
+                const handout = casts().find(castName);
+                if (!handout) { replyError(msg, `No cast named "${castName}" found.`); return; }
+                handout.remove();
+                delete casts().cache[castName];
+                reply(msg, 'Cast', `Deleted cast "${escHtml(castName)}".`);
+                return;
+            }
+
+            replyError(msg, 'Usage: !choreograph cast <add|remove|list|show|delete> [name] [options]');
             return;
         }
 
@@ -841,6 +1092,21 @@ var Choreograph = Choreograph || (() => {
 
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
+        on('change:handout:notes', (handout) => {
+            const [tag, name] = HandoutCache.getHandoutTagAndName(handout.get('name'));
+            const cache = handoutCache[tag];
+            if (cache !== undefined) {
+                delete cache.cache[name];
+                cache.load(name, () => {});
+            }
+        });
+        on('destroy:handout', (handout) => {
+            const [tag, name] = HandoutCache.getHandoutTagAndName(handout.get('name'));
+            const cache = handoutCache[tag];
+            if (cache !== undefined) {
+                delete cache.cache[name];
+            }
+        });
     };
 
     return {

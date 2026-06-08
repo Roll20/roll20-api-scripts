@@ -41,7 +41,7 @@ Install from the Roll20 One-Click Script Library, or paste `Choreograph.js` into
 
 ## Scene Handout Structure
 
-Scenes are stored in `[Choreograph] <name>` handouts containing a parameter table and a scene table.
+Scenes are stored in `[Scene] <name>` handouts containing a parameter table and a scene table.
 
 ### Parameter Table
 
