@@ -20,7 +20,8 @@
 // =============================================================================
 
 /* global state, on, sendChat, getObj, createObj, findObjs, Campaign,
-          playerIsGM, log, _, setInterval, clearInterval, setTimeout, Date */
+          playerIsGM, log, _, setInterval, clearInterval, setTimeout, Date,
+          sendPing, spawnFx, spawnFxBetweenPoints */
 
 var Choreograph = Choreograph || (() => {
     'use strict';
@@ -1123,6 +1124,7 @@ var Choreograph = Choreograph || (() => {
                 // Add tokenId, tokenName, self, and chaining metadata for command templates
                 scope.tokenId   = token.get('id');
                 scope.tokenName = token.get('name') || '';
+                scope.pageId    = token.get('_pageid');
                 scope.self      = scene.name;
                 scope.__parent  = instanceId;
                 scope.__depth   = Math.max(0, ((runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10) - 1);
@@ -2192,15 +2194,22 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         // Or with selected: !choreograph fx <type> (at selected token location)
         if (cmd === 'fx') {
             const fxType = args[0];
-            if (!fxType) { replyError(msg, 'Usage: !choreograph fx <type> [x y] or with token selected'); return; }
+            if (!fxType) { replyError(msg, 'Usage: !choreograph fx <type> [x y [pageId]] or with token selected'); return; }
             let x, y, pageId;
             if (args.length >= 3) {
                 x = parseFloat(args[1]);
                 y = parseFloat(args[2]);
-                pageId = args[3] || Campaign().get('playerpageid');
-            } else if (msg.selected && msg.selected.length > 0) {
+                pageId = args[3] || undefined;
+            }
+            if (x === undefined || y === undefined) {
+                if (msg.selected && msg.selected.length > 0) {
+                    const tok = getObj('graphic', msg.selected[0]._id);
+                    if (tok) { x = tok.get('left'); y = tok.get('top'); pageId = pageId || tok.get('_pageid'); }
+                }
+            }
+            if (!pageId && msg.selected && msg.selected.length > 0) {
                 const tok = getObj('graphic', msg.selected[0]._id);
-                if (tok) { x = tok.get('left'); y = tok.get('top'); pageId = tok.get('_pageid'); }
+                if (tok) pageId = tok.get('_pageid');
             }
             if (x !== undefined && y !== undefined) {
                 spawnFx(x, y, fxType, pageId);
@@ -2343,7 +2352,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top}'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top} ${pageId}'], notes: '' },
                 ],
             },
         });
@@ -2359,7 +2368,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${left} ${top}',
+                        '!choreograph fx burst-magic ${left} ${top} ${pageId}',
                         '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
                     ], notes: 'Bolt + beam to nearest neighbor' },
                 ],
@@ -2377,8 +2386,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${left} ${top}',
-                        '!choreograph fx glow-holy ${left} ${top}',
+                        '!choreograph ping ${left} ${top} ${pageId}',
+                        '!choreograph fx glow-holy ${left} ${top} ${pageId}',
                         '!choreograph echo ⚔️ ${tokenName} rallies!',
                     ], notes: 'Ping + glow + announce' },
                 ],
@@ -2395,7 +2404,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top}'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top} ${pageId}'], notes: '' },
                 ],
             },
         });
@@ -2411,7 +2420,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${left} ${top}',
+                        '!choreograph fx burst-magic ${left} ${top} ${pageId}',
                         '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
                     ], notes: 'Bolt + beam to nearest' },
                 ],
@@ -2429,8 +2438,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${left} ${top}',
-                        '!choreograph fx glow-holy ${left} ${top}',
+                        '!choreograph ping ${left} ${top} ${pageId}',
+                        '!choreograph fx glow-holy ${left} ${top} ${pageId}',
                         '!choreograph echo ⚔️ ${tokenName} rallies!',
                     ], notes: 'Ping + glow + announce' },
                 ],
@@ -2455,8 +2464,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 rows: [
                     { filter: '*', delay: 'propagate(distance(cx, cy), speed)', commands: [
-                        '!choreograph ping ${left} ${top}',
-                        '!choreograph fx nova-holy ${left} ${top}',
+                        '!choreograph ping ${left} ${top} ${pageId}',
+                        '!choreograph fx nova-holy ${left} ${top} ${pageId}',
                         '${speed * decay >= minSpeed ? "!choreograph run " + self + " --px " + left + " --py " + top + " --speed " + (speed * decay) + " --decay " + decay + " --minSpeed " + minSpeed : ""}',
                     ], notes: 'Ping + FX + recurse with decay' },
                 ],
