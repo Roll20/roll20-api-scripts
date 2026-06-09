@@ -1,23 +1,70 @@
 {
-    "name": "Concentration",
-    "script": "Concentration.js",
-    "version": "0.2.0",
-    "previousversions": [
-        "0.1.5",
-        "0.1.8",
-        "0.1.12",
-        "0.1.13",
-        "0.1.14"
-    ],
-    "description": "Concentration keeps track of characters concentration, and reminds to do a concentration check.  If you use the 5e OGL character sheet, it can also automaticly add the concentrating marker when a concentrating spell is cast.  ![Concentration Reminder](https://i.imgur.com/zEVJpOH.png \"Concentration Reminder\") ![Spell Cast](https://i.imgur.com/HucNIDc.png \"Spell Cast\")  ### Commands  * **!concentration**     * Shows the config menu without tokens selected.     * Toggles concentration on selected tokens.  ### Config  ![Config Menu](https://i.imgur.com/P2Siu61.png \"Config Menu\")  * **Command** - Which command you want to use for this script. * **Statusmarker** - Which statusmarker you want to use for concentration. * **HP Bar** - Which bar do you use as the HP bar? * **Send Reminder To** - To who you want to send the reminder. * **Auto Add Con. Marker** - Automatically add the concentration marker when a concentration spell is cast (works only for the 5e OGL sheet at the moment). * **Auto Roll Save** - If you want to Automatically roll the saving throw. * **Bonus Attribute** - Which attribute to use for the bonus modifier (defaulted to the constitution saving throw for the 5e OGL sheet).  ![Auto Roll](https://i.imgur.com/WHUV5iw.png \"Auto Roll\")  ---  #### Changelog: **0.1.11** * `!concentration` with tokens selected will now toggle the statusmarker on them.  **0.1.10** * If you use autoroll, and the save failed, it will automatically remove the statusmarker.  **0.1.9** * Auto Roll Saves (Optional)  **01-05-2018 - 0.1.8** * Bugfix.  **28-04-2018 - 0.1.7** * Remove statusmarker from all objects when removed.  **25-04-2018 - 0.1.5** * Correct whisper target on spell cast concentration check.",
-    "authors": "Robin Kuiper",
-    "roll20userid": "1226016",
-    "patreon": "https://www.patreon.com/robinkuiper",
-    "useroptions": [],
-    "dependencies": {},
-    "modifies": {
-        "state.CONCENTRATION": "read,write",
-        "graphic.statusmarkers": "read,write"
+  "name": "Concentration",
+  "script": "Concentration.js",
+  "version": "1.0.0",
+  "previousversions": ["0.1.5", "0.1.8", "0.1.12", "0.1.13", "0.1.14", "0.2.0"],
+  "description": "Concentration tracks concentration markers, reminders, and saving throws for Roll20 characters. It supports manual toggling, HP-loss concentration prompts, optional auto-roll saves, legacy 5e OGL-style spell cards, and D&D 2024 / Beacon spell-card detection. Beacon compatibility may require the Experimental API server, and Debug Mode can help diagnose detection issues.",
+  "authors": "robin, MidNiteShadow7",
+  "roll20userid": "1226016, 16506286",
+  "patreon": "https://www.patreon.com/robinkuiper",
+  "useroptions": [
+    {
+      "name": "Command",
+      "type": "text",
+      "default": "concentration",
+      "description": "Primary chat command keyword used by the script (without the ! prefix)."
     },
-    "conflicts": []
+    {
+      "name": "Status Marker",
+      "type": "text",
+      "default": "stopwatch",
+      "description": "Status marker used to represent concentration on tokens."
+    },
+    {
+      "name": "HP Bar",
+      "type": "number",
+      "default": 1,
+      "description": "Token bar number to monitor for HP loss and concentration checks (1-3)."
+    },
+    {
+      "name": "Send Reminder To",
+      "type": "select",
+      "default": "everyone",
+      "description": "Reminder destination. Accepted values: everyone, character, gm."
+    },
+    {
+      "name": "Bonus Attribute",
+      "type": "text",
+      "default": "constitution_save_mod",
+      "description": "Character attribute used as concentration save modifier."
+    },
+    {
+      "name": "Debug Mode",
+      "type": "select",
+      "default": "false",
+      "description": "Enable debug logging. Accepted values: true, false."
+    },
+    {
+      "name": "Support Mode",
+      "type": "select",
+      "default": "basic",
+      "description": "Debug verbosity mode. Accepted values: basic, detailed."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "state.CONCENTRATION": "read,write",
+    "graphic.statusmarkers": "read,write",
+    "graphic.bar1_value": "read",
+    "graphic.bar2_value": "read",
+    "graphic.bar3_value": "read",
+    "graphic.represents": "read",
+    "graphic.name": "read",
+    "graphic.controlledby": "read",
+    "character.controlledby": "read",
+    "character.name": "read",
+    "player.lastpage": "read",
+    "attribute.current": "read"
+  },
+  "conflicts": []
 }
