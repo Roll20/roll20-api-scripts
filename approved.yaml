@@ -1419,3 +1419,8 @@ TrinketsAndTrackers:
 Sequence:
   - "Sequence"
   - "Tokens"
+
+CombatEncounterDirector:
+  - "CombatEncounterDirector"
+  - "Utility"
+  
