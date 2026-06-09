@@ -1415,3 +1415,7 @@ Chronicle:
 TrinketsAndTrackers:
   - "T&T - Trinkets and Trackers"
   - "Utility"
+  
+Sequence:
+  - "Sequence"
+  - "Tokens"
