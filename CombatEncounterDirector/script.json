@@ -42,8 +42,8 @@
   ],
   "dependencies": [],
   "modifies": {
-    "tokens": "read,modify",
-    "handouts": "read,modify"
+    "tokens": "read,write",
+    "handouts": "read,write"
   },
   "conflicts": []
 }
