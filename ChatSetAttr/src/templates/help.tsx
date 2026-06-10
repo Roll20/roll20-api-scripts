@@ -61,45 +61,45 @@ export function createHelpHandout(handoutID: string): string {
       <p>Creates or updates attributes on the selected target(s). If the attribute doesn't exist, it will be created (unless <code>--nocreate</code> is specified).</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --sel --hp|25|50 --xp|0|800</code></pre>
+      <pre><code>!setattr --sel --hp|25|50 --hp|0|800</code></pre>
 
-      <p>This would set <code>hp</code> to 25, <code>hp_max</code> to 50, <code>xp</code> to 0 and <code>xp_max</code> to 800.</p>
+      <p>This would set <code>hp</code> to 25, <code>hp_max</code> to 50, <code>hp</code> to 0 and <code>xp_max</code> to 800.</p>
 
       <h3>!modattr</h3>
 
       <p>Adds to existing attribute values (works only with numeric values). Shorthand for <code>!setattr --mod</code>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!modattr --sel --hp|-5 --xp|100</code></pre>
+      <pre><code>!modattr --sel --hp|-5 --hp|100</code></pre>
 
-      <p>This subtracts 5 from <code>hp</code> and adds 100 to <code>xp</code>.</p>
+      <p>This subtracts 5 from <code>hp</code> and adds 100 to <code>hp</code>.</p>
 
       <h3>!modbattr</h3>
 
       <p>Adds to existing attribute values but keeps the result between 0 and the maximum value. Shorthand for <code>!setattr --modb</code>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!modbattr --sel --hp|-25 --xp|2500</code></pre>
+      <pre><code>!modbattr --sel --hp|-25 --hp|2500</code></pre>
 
-      <p>This subtracts 5 from <code>hp</code> but won't reduce it below 0 and increase <code>xp</code> by 25, but won't increase it above <code>mp_xp</code>.</p>
+      <p>This subtracts 5 from <code>hp</code> but won't reduce it below 0 and increase <code>hp</code> by 25, but won't increase it above <code>mp_xp</code>.</p>
 
       <h3>!resetattr</h3>
 
       <p>Resets attributes to their maximum value. Shorthand for <code>!setattr --reset</code>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!resetattr --sel --hp --xp</code></pre>
+      <pre><code>!resetattr --sel --hp --hp</code></pre>
 
-      <p>This resets <code>hp</code>, and <code>xp</code> to their respective maximum values.</p>
+      <p>This resets <code>hp</code>, and <code>hp</code> to their respective maximum values.</p>
 
       <h3>!delattr</h3>
 
       <p>Deletes the specified attributes.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!delattr --sel --hp --xp</code></pre>
+      <pre><code>!delattr --sel --hp --hp</code></pre>
 
-      <p>This removes the <code>hp</code> and <code>xp</code> attributes.</p>
+      <p>This removes the <code>hp</code> and <code>hp</code> attributes.</p>
 
       <h2 id="target-selection">Target Selection</h2>
 
@@ -117,7 +117,7 @@ export function createHelpHandout(handoutID: string): string {
       <p>Affects all characters without player controllers (typically NPCs). <strong>GM only</strong>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --allgm --xp|150</code></pre>
+      <pre><code>!setattr --allgm --hp|150</code></pre>
 
       <h3>--allplayers</h3>
 
@@ -131,7 +131,7 @@ export function createHelpHandout(handoutID: string): string {
       <p>Affects characters with the specified character IDs. Non-GM players can only affect characters they control.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --charid &lt;ID1&gt; &lt;ID2&gt; --xp|150</code></pre>
+      <pre><code>!setattr --charid &lt;ID1&gt; &lt;ID2&gt; --hp|150</code></pre>
 
       <h3>--name</h3>
 
@@ -145,7 +145,7 @@ export function createHelpHandout(handoutID: string): string {
       <p>Affects characters represented by currently selected tokens.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --sel --hp|25 --xp|30</code></pre>
+      <pre><code>!setattr --sel --hp|25 --hp|30</code></pre>
 
       <h3>--sel-party</h3>
 
@@ -220,9 +220,9 @@ export function createHelpHandout(handoutID: string): string {
       <p>Prevents creation of new attributes, only updates existing ones.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --sel --nocreate --perception|20 --xp|15</code></pre>
+      <pre><code>!setattr --sel --nocreate --perception|20 --hp|15</code></pre>
 
-      <p>This will only update <code>perception</code> or <code>xp</code> if it already exists.</p>
+      <p>This will only update <code>perception</code> or <code>hp</code> if it already exists.</p>
 
       <h3>--evaluate</h3>
 
@@ -348,15 +348,15 @@ export function createHelpHandout(handoutID: string): string {
 
       <h3>Creating New Repeating Items</h3>
 
-      <p>Use <code>-CREATE</code> to create a new row in a repeating section:</p>
+      <p>Use <code>CREATE</code> to create a new row in a repeating section:</p>
 
-      <pre><code>!setattr --sel --repeating_inventory_-CREATE_itemname|"Magic Sword" --repeating_inventory_-CREATE_itemweight|2</code></pre>
+      <pre><code>!setattr --sel --repeating_inventory_CREATE_itemname|"Magic Sword" --repeating_inventory_CREATE_itemweight|2</code></pre>
 
       <h3>Modifying Existing Repeating Items</h3>
 
       <p>Access by row ID:</p>
 
-      <pre><code>!setattr --sel --repeating_inventory_-ID_itemname|"Enchanted Magic Sword"</code></pre>
+      <pre><code>!setattr --sel --repeating_inventory_ID_itemname|"Enchanted Magic Sword"</code></pre>
 
       <p>Access by index (starts at 0):</p>
 
@@ -366,7 +366,7 @@ export function createHelpHandout(handoutID: string): string {
 
       <p>Delete by row ID:</p>
 
-      <pre><code>!delattr --sel --repeating_inventory_-ID</code></pre>
+      <pre><code>!delattr --sel --repeating_inventory_ID</code></pre>
 
       <p>Delete by index:</p>
 

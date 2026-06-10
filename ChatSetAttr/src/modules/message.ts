@@ -128,7 +128,7 @@ export function parseMessage(content: string) {
     }
 
     else {
-      const suspectedAttribute = part.replace(/[^a-zA-Z0-9_$]/g, "");
+      const suspectedAttribute = part.replace(/[^-0-9A-Za-z_$]/g, "");
       if (!suspectedAttribute) continue;
       changes.push({ name: suspectedAttribute });
     }

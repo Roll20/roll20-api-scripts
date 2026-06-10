@@ -672,6 +672,10 @@ var ChatSetAttr = (function (exports) {
                 h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout"))));
     }
 
+    function whisperPrefix(playerID) {
+        const player = getPlayerName(playerID);
+        return `/w "${player || "GM"}" `;
+    }
     function normalizeCommandOutputOptions(options = {}) {
         return {
             mute: Boolean(options.mute),
@@ -682,21 +686,24 @@ var ChatSetAttr = (function (exports) {
         const player = getObj("player", playerID);
         return player?.get("_displayname") || undefined;
     }
-    function sendMessages(playerID, header, messages, from = "ChatSetAttr", output) {
+    function sendMessages(playerID, header, messages, delivery, output) {
         if (output?.silent) {
             return;
         }
+        const from = delivery?.from ?? "ChatSetAttr";
         const newMessage = createChatMessage(header, messages);
-        const player = getPlayerName(playerID);
-        sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
+        const chatMessage = delivery?.public
+            ? newMessage
+            : `${whisperPrefix(playerID)}${newMessage}`;
+        sendChat(from, chatMessage);
     }
-    function sendErrors(playerID, header, errors, from = "ChatSetAttr", output) {
+    function sendErrors(playerID, header, errors, from, output) {
         if (errors.length === 0 || output?.mute) {
             return;
         }
+        const sender = from ?? "ChatSetAttr";
         const newMessage = createErrorMessage(header, errors);
-        const player = getPlayerName(playerID);
-        sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
+        sendChat(sender, `${whisperPrefix(playerID)}${newMessage}`);
     }
     function sendDelayMessage(output) {
         if (output?.silent) {
@@ -1113,14 +1120,14 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --sel --hp|25|50 --xp|0|800")),
+                h("code", null, "!setattr --sel --hp|25|50 --hp|0|800")),
             h("p", null,
                 "This would set ",
                 h("code", null, "hp"),
                 " to 25, ",
                 h("code", null, "hp_max"),
                 " to 50, ",
-                h("code", null, "xp"),
+                h("code", null, "hp"),
                 " to 0 and ",
                 h("code", null, "xp_max"),
                 " to 800."),
@@ -1132,12 +1139,12 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!modattr --sel --hp|-5 --xp|100")),
+                h("code", null, "!modattr --sel --hp|-5 --hp|100")),
             h("p", null,
                 "This subtracts 5 from ",
                 h("code", null, "hp"),
                 " and adds 100 to ",
-                h("code", null, "xp"),
+                h("code", null, "hp"),
                 "."),
             h("h3", null, "!modbattr"),
             h("p", null,
@@ -1147,12 +1154,12 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!modbattr --sel --hp|-25 --xp|2500")),
+                h("code", null, "!modbattr --sel --hp|-25 --hp|2500")),
             h("p", null,
                 "This subtracts 5 from ",
                 h("code", null, "hp"),
                 " but won't reduce it below 0 and increase ",
-                h("code", null, "xp"),
+                h("code", null, "hp"),
                 " by 25, but won't increase it above ",
                 h("code", null, "mp_xp"),
                 "."),
@@ -1164,24 +1171,24 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!resetattr --sel --hp --xp")),
+                h("code", null, "!resetattr --sel --hp --hp")),
             h("p", null,
                 "This resets ",
                 h("code", null, "hp"),
                 ", and ",
-                h("code", null, "xp"),
+                h("code", null, "hp"),
                 " to their respective maximum values."),
             h("h3", null, "!delattr"),
             h("p", null, "Deletes the specified attributes."),
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!delattr --sel --hp --xp")),
+                h("code", null, "!delattr --sel --hp --hp")),
             h("p", null,
                 "This removes the ",
                 h("code", null, "hp"),
                 " and ",
-                h("code", null, "xp"),
+                h("code", null, "hp"),
                 " attributes."),
             h("h2", { id: "target-selection" }, "Target Selection"),
             h("p", null, "One of these options must be specified to determine which characters will be affected:"),
@@ -1202,7 +1209,7 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --allgm --xp|150")),
+                h("code", null, "!setattr --allgm --hp|150")),
             h("h3", null, "--allplayers"),
             h("p", null, "Affects all characters with player controllers (typically PCs)."),
             h("p", null,
@@ -1214,7 +1221,7 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --charid <ID1> <ID2> --xp|150")),
+                h("code", null, "!setattr --charid <ID1> <ID2> --hp|150")),
             h("h3", null, "--name"),
             h("p", null, "Affects characters with the specified names. Non-GM players can only affect characters they control."),
             h("p", null,
@@ -1226,7 +1233,7 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --sel --hp|25 --xp|30")),
+                h("code", null, "!setattr --sel --hp|25 --hp|30")),
             h("h3", null, "--sel-party"),
             h("p", null,
                 "Affects only party characters represented by currently selected tokens (characters with ",
@@ -1318,12 +1325,12 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --sel --nocreate --perception|20 --xp|15")),
+                h("code", null, "!setattr --sel --nocreate --perception|20 --hp|15")),
             h("p", null,
                 "This will only update ",
                 h("code", null, "perception"),
                 " or ",
-                h("code", null, "xp"),
+                h("code", null, "hp"),
                 " if it already exists."),
             h("h3", null, "--evaluate"),
             h("p", null,
@@ -1450,21 +1457,21 @@ var ChatSetAttr = (function (exports) {
             h("h3", null, "Creating New Repeating Items"),
             h("p", null,
                 "Use ",
-                h("code", null, "-CREATE"),
+                h("code", null, "CREATE"),
                 " to create a new row in a repeating section:"),
             h("pre", null,
-                h("code", null, "!setattr --sel --repeating_inventory_-CREATE_itemname|\"Magic Sword\" --repeating_inventory_-CREATE_itemweight|2")),
+                h("code", null, "!setattr --sel --repeating_inventory_CREATE_itemname|\"Magic Sword\" --repeating_inventory_CREATE_itemweight|2")),
             h("h3", null, "Modifying Existing Repeating Items"),
             h("p", null, "Access by row ID:"),
             h("pre", null,
-                h("code", null, "!setattr --sel --repeating_inventory_-ID_itemname|\"Enchanted Magic Sword\"")),
+                h("code", null, "!setattr --sel --repeating_inventory_ID_itemname|\"Enchanted Magic Sword\"")),
             h("p", null, "Access by index (starts at 0):"),
             h("pre", null,
                 h("code", null, "!setattr --sel --repeating_inventory_$0_itemname|\"First Item\"")),
             h("h3", null, "Deleting Repeating Rows"),
             h("p", null, "Delete by row ID:"),
             h("pre", null,
-                h("code", null, "!delattr --sel --repeating_inventory_-ID")),
+                h("code", null, "!delattr --sel --repeating_inventory_ID")),
             h("p", null, "Delete by index:"),
             h("pre", null,
                 h("code", null, "!delattr --sel --repeating_inventory_$0")),
@@ -1773,7 +1780,7 @@ var ChatSetAttr = (function (exports) {
                 references.push(...currentMatches, ...maxMatches);
             }
             else {
-                const suspectedAttribute = part.replace(/[^a-zA-Z0-9_$]/g, "");
+                const suspectedAttribute = part.replace(/[^-0-9A-Za-z_$]/g, "");
                 if (!suspectedAttribute)
                     continue;
                 changes.push({ name: suspectedAttribute });
@@ -1789,6 +1796,123 @@ var ChatSetAttr = (function (exports) {
         };
     }
 
+    const REPEATING_INDEX_TOKEN = /^\$(\d+)$/i;
+    const REPEATING_CREATE_TOKEN = /^CREATE$/i;
+    const REPEATING_DASH_CREATE_TOKEN = /^-CREATE$/i;
+    function isRepeatingCreateToken(token) {
+        return REPEATING_CREATE_TOKEN.test(token) || REPEATING_DASH_CREATE_TOKEN.test(token);
+    }
+    function parseRepeatingIdentifierToken(token) {
+        if (!token)
+            return null;
+        const indexMatch = token.match(REPEATING_INDEX_TOKEN);
+        if (indexMatch) {
+            return { kind: "index", index: Number(indexMatch[1]) };
+        }
+        if (isRepeatingCreateToken(token)) {
+            return { kind: "create" };
+        }
+        return { kind: "rowId", rowId: token };
+    }
+    function isRepeatingRowIdToken(token) {
+        const parsed = parseRepeatingIdentifierToken(token);
+        return parsed?.kind === "rowId";
+    }
+    function resolveRowIdInRepOrder(repOrder, rowId) {
+        const rowIdLo = rowId.toLowerCase();
+        const index = repOrder.findIndex(id => id.toLowerCase() === rowIdLo);
+        if (index === -1)
+            return null;
+        return repOrder[index];
+    }
+    function parseRepeatingRowDeleteTarget(name) {
+        if (extractRepeatingParts(name)) {
+            return null;
+        }
+        const parts = name.split("_");
+        if (parts.length !== 3) {
+            return null;
+        }
+        const [repeating, section, identifierToken] = parts;
+        if (repeating !== "repeating" || !section || !identifierToken) {
+            return null;
+        }
+        const parsed = parseRepeatingIdentifierToken(identifierToken);
+        if (!parsed || parsed.kind === "create") {
+            return null;
+        }
+        const sectionPrefix = `repeating_${section}`;
+        if (parsed.kind === "index") {
+            return { sectionPrefix, rowIndex: parsed.index };
+        }
+        return { sectionPrefix, rowId: parsed.rowId };
+    }
+    function getSectionFromRepeatingPrefix(sectionPrefix) {
+        const match = sectionPrefix.match(/^repeating_(.+)$/);
+        return match ? match[1] : null;
+    }
+    function resolveRepeatingRowId(target, repOrder) {
+        if (target.rowIndex !== undefined) {
+            if (target.rowIndex < 0 || target.rowIndex >= repOrder.length) {
+                return null;
+            }
+            return repOrder[target.rowIndex];
+        }
+        if (target.rowId) {
+            return resolveRowIdInRepOrder(repOrder, target.rowId);
+        }
+        return null;
+    }
+    function findRepeatingRowAttributeNames(characterID, sectionPrefix, rowId) {
+        const prefix = `${sectionPrefix}_${rowId}_`.toUpperCase();
+        const attributes = findObjs({
+            _type: "attribute",
+            _characterid: characterID,
+        });
+        const names = [];
+        for (const attribute of attributes) {
+            const name = attribute.get("name");
+            if (typeof name !== "string")
+                continue;
+            if (name.toUpperCase().startsWith(prefix)) {
+                names.push(name);
+            }
+        }
+        return names;
+    }
+    function expandRepeatingRowDeletes(characterID, changes, repOrders, errors, characterName) {
+        const result = [];
+        for (const change of changes) {
+            if (!change.name)
+                continue;
+            const target = parseRepeatingRowDeleteTarget(change.name);
+            if (!target) {
+                result.push(change);
+                continue;
+            }
+            const section = getSectionFromRepeatingPrefix(target.sectionPrefix);
+            if (!section) {
+                result.push(change);
+                continue;
+            }
+            const repOrder = repOrders[section] || [];
+            const resolvedRowId = resolveRepeatingRowId(target, repOrder);
+            if (!resolvedRowId) {
+                if (target.rowIndex !== undefined) {
+                    errors.push(`Repeating row number ${target.rowIndex} invalid for character ${characterName} and repeating section ${target.sectionPrefix}.`);
+                }
+                else {
+                    errors.push(`Repeating row id ${target.rowId} invalid for character ${characterName} and repeating section ${target.sectionPrefix}.`);
+                }
+                continue;
+            }
+            const fieldNames = findRepeatingRowAttributeNames(characterID, target.sectionPrefix, resolvedRowId);
+            for (const name of fieldNames) {
+                result.push({ name });
+            }
+        }
+        return result;
+    }
     function extractRepeatingParts(attributeName) {
         const [repeating, section, identifier, ...fieldParts] = attributeName.split("_");
         if (repeating !== "repeating") {
@@ -1804,40 +1928,76 @@ var ChatSetAttr = (function (exports) {
             field
         };
     }
-    function isRepeatingAttribute(attributeName) {
-        const parts = extractRepeatingParts(attributeName);
-        return parts !== null;
-    }
     function hasCreateIdentifier(attributeName) {
         const parts = extractRepeatingParts(attributeName);
         if (parts) {
-            const hasIndentifier = parts.identifier.toLowerCase().includes("create");
-            return hasIndentifier;
+            return isRepeatingCreateToken(parts.identifier);
         }
-        const hasIndentifier = attributeName.toLowerCase().includes("create");
-        return hasIndentifier;
+        return isRepeatingCreateToken(attributeName);
+    }
+    function hasIndexIdentifier(attributeName) {
+        const parts = extractRepeatingParts(attributeName);
+        if (!parts)
+            return false;
+        return REPEATING_INDEX_TOKEN.test(parts.identifier);
     }
     function convertRepOrderToArray(repOrder) {
-        return repOrder.split(",").map(id => id.trim());
+        return repOrder.split(",").map(id => id.trim()).filter(Boolean);
+    }
+    function discoverRowIds(characterID, section) {
+        const rowIds = new Set();
+        const attributes = findObjs({
+            _type: "attribute",
+            _characterid: characterID,
+        });
+        for (const attribute of attributes) {
+            const name = attribute.get("name");
+            if (typeof name !== "string")
+                continue;
+            const parts = name.split("_");
+            if (parts.length < 4)
+                continue;
+            if (parts[0] !== "repeating" || parts[1] !== section)
+                continue;
+            const identifier = parts[2];
+            if (isRepeatingRowIdToken(identifier)) {
+                rowIds.add(identifier);
+            }
+        }
+        return Array.from(rowIds);
+    }
+    function mergeRepOrder(storedOrder, discoveredIds) {
+        const discoveredSet = new Set(discoveredIds);
+        const ordered = storedOrder.filter(id => discoveredSet.has(id));
+        for (const id of discoveredIds) {
+            if (!ordered.includes(id)) {
+                ordered.push(id);
+            }
+        }
+        return ordered;
     }
     async function getRepOrderForSection(characterID, section) {
         const repOrderAttribute = `_reporder_repeating_${section}`;
         const repOrder = await libSmartAttributes.getAttribute(characterID, repOrderAttribute);
         return repOrder;
     }
-    function extractRepeatingAttributes(attributes) {
-        return attributes.filter(attr => attr.name && isRepeatingAttribute(attr.name));
-    }
     function getAllSectionNames(attributes) {
         const sectionNames = new Set();
-        const repeatingAttributes = extractRepeatingAttributes(attributes);
-        for (const attr of repeatingAttributes) {
+        for (const attr of attributes) {
             if (!attr.name)
                 continue;
             const parts = extractRepeatingParts(attr.name);
-            if (!parts)
+            if (parts) {
+                sectionNames.add(parts.section);
                 continue;
-            sectionNames.add(parts.section);
+            }
+            const rowDelete = parseRepeatingRowDeleteTarget(attr.name);
+            if (rowDelete) {
+                const section = getSectionFromRepeatingPrefix(rowDelete.sectionPrefix);
+                if (section) {
+                    sectionNames.add(section);
+                }
+            }
         }
         return Array.from(sectionNames);
     }
@@ -1845,12 +2005,11 @@ var ChatSetAttr = (function (exports) {
         const repOrders = {};
         for (const section of sectionNames) {
             const repOrderString = await getRepOrderForSection(characterID, section);
-            if (repOrderString && typeof repOrderString === "string") {
-                repOrders[section] = convertRepOrderToArray(repOrderString);
-            }
-            else {
-                repOrders[section] = [];
-            }
+            const stored = repOrderString && typeof repOrderString === "string"
+                ? convertRepOrderToArray(repOrderString)
+                : [];
+            const discovered = discoverRowIds(characterID, section);
+            repOrders[section] = mergeRepOrder(stored, discovered);
         }
         return repOrders;
     }
@@ -1908,7 +2067,7 @@ var ChatSetAttr = (function (exports) {
         }
         return result;
     }
-    function processModifications(modifications, resolved, options, repOrders) {
+    function processModifications(modifications, resolved, options, repOrders, errors = [], characterName = "") {
         const processedModifications = [];
         const repeatingID = libUUID.generateRowID();
         for (const mod of modifications) {
@@ -1923,6 +2082,13 @@ var ChatSetAttr = (function (exports) {
                     repeatingID: hasCreate ? repeatingID : parts.identifier,
                     repOrder,
                 });
+                if (hasIndexIdentifier(mod.name)) {
+                    const unresolvedIndex = processedName.match(/\$(\d+)/);
+                    if (unresolvedIndex) {
+                        errors.push(`Repeating row number ${unresolvedIndex[1]} invalid for character ${characterName} and repeating section repeating_${parts.section}.`);
+                        continue;
+                    }
+                }
             }
             let processedCurrent = undefined;
             if (mod.current !== "undefined") {
@@ -2295,7 +2461,11 @@ var ChatSetAttr = (function (exports) {
             priorValues[target] = attrs;
             const sectionNames = getAllSectionNames(changes);
             const repOrders = await getAllRepOrders(target, sectionNames);
-            const modifications = processModifications(changes, attrs, options, repOrders);
+            let effectiveChanges = changes;
+            if (operation === "delattr") {
+                effectiveChanges = expandRepeatingRowDeletes(target, changes, repOrders, errors, getCharName(target));
+            }
+            const modifications = processModifications(effectiveChanges, attrs, options, repOrders, errors, getCharName(target));
             const response = await command(modifications, target, references, options.nocreate, feedback);
             if (response.errors.length > 0) {
                 errors.push(...response.errors);
@@ -2319,7 +2489,10 @@ var ChatSetAttr = (function (exports) {
         sendErrors(msg.playerid, "Errors", errors, feedback?.from, output);
         const delSetTitle = operation === "delattr" ? "Deleting Attributes" : "Setting Attributes";
         const feedbackTitle = feedback?.header ?? delSetTitle;
-        sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from, output);
+        sendMessages(msg.playerid, feedbackTitle, messages, {
+            from: feedback?.from,
+            public: feedback?.public,
+        }, output);
     }
     function errorOut(errorText, playerid, errors, output) {
         errors.push(errorText);

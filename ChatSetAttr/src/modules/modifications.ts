@@ -1,5 +1,5 @@
 import { ALIAS_CHARACTERS, type Attribute, type AttributeRecord, type OptionsRecord } from "../types";
-import { extractRepeatingParts, hasCreateIdentifier } from "./repeating";
+import { extractRepeatingParts, hasCreateIdentifier, hasIndexIdentifier } from "./repeating";
 
 export type ProcessModifierOptions = {
   shouldEvaluate?: boolean;
@@ -93,6 +93,8 @@ export function processModifications(
   resolved: AttributeRecord,
   options: OptionsRecord,
   repOrders: Record<string, string[]>,
+  errors: string[] = [],
+  characterName = "",
 ): Attribute[] {
   const processedModifications: Attribute[] = [];
   const repeatingID = libUUID.generateRowID();
@@ -108,6 +110,16 @@ export function processModifications(
         repeatingID: hasCreate ? repeatingID : parts.identifier,
         repOrder,
       });
+
+      if (hasIndexIdentifier(mod.name)) {
+        const unresolvedIndex = processedName.match(/\$(\d+)/);
+        if (unresolvedIndex) {
+          errors.push(
+            `Repeating row number ${unresolvedIndex[1]} invalid for character ${characterName} and repeating section repeating_${parts.section}.`,
+          );
+          continue;
+        }
+      }
     }
 
     let processedCurrent = undefined;

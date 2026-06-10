@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   processModifierValue,
   processModifierName,
+  processModifications,
   type ProcessModifierNameOptions,
 } from "../../modules/modifications";
-import type { AttributeRecord } from "../../types";
+import type { Attribute, AttributeRecord, OptionsRecord } from "../../types";
 
 describe("modifications", () => {
   describe("processModifierValue", () => {
@@ -346,6 +347,52 @@ describe("modifications", () => {
         const result = processModifierName("repeating_create_name", options);
         expect(result).toBe("repeating_create_name"); // Should not replace lowercase 'create'
       });
+    });
+  });
+
+  describe("processModifications", () => {
+    const options = {} as OptionsRecord;
+
+    it("should error and omit modifications when row index cannot be resolved", () => {
+      const errors: string[] = [];
+      const changes: Attribute[] = [
+        { name: "repeating_inventory_$0_itemname", current: "First Item" },
+      ];
+
+      const result = processModifications(
+        changes,
+        {},
+        options,
+        { inventory: [] },
+        errors,
+        "Test Character",
+      );
+
+      expect(result).toEqual([]);
+      expect(errors).toEqual([
+        "Repeating row number 0 invalid for character Test Character and repeating section repeating_inventory.",
+      ]);
+    });
+
+    it("should resolve row index when rep order is available", () => {
+      const errors: string[] = [];
+      const changes: Attribute[] = [
+        { name: "repeating_inventory_$0_itemname", current: "First Item" },
+      ];
+
+      const result = processModifications(
+        changes,
+        {},
+        options,
+        { inventory: ["-row1"] },
+        errors,
+        "Test Character",
+      );
+
+      expect(result).toEqual([
+        { name: "repeating_inventory_-row1_itemname", current: "First Item" },
+      ]);
+      expect(errors).toEqual([]);
     });
   });
 });

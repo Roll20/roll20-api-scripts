@@ -6,12 +6,19 @@ import {
   hasCreateIdentifier,
   hasIndexIdentifier,
   convertRepOrderToArray,
+  discoverRowIds,
+  mergeRepOrder,
   getIDFromIndex,
   getRepOrderForSection,
   extractRepeatingAttributes,
   getAllSectionNames,
   getAllRepOrders,
   processRepeatingAttributes,
+  parseRepeatingIdentifierToken,
+  isRepeatingRowIdToken,
+  resolveRowIdInRepOrder,
+  parseRepeatingRowDeleteTarget,
+  expandRepeatingRowDeletes,
   type RepeatingParts
 } from "../../modules/repeating";
 import type { Attribute } from "../../types";
@@ -200,12 +207,12 @@ describe("repeating", () => {
 
     it("should handle empty string", () => {
       const result = convertRepOrderToArray("");
-      expect(result).toEqual([""]);
+      expect(result).toEqual([]);
     });
 
     it("should handle string with only commas", () => {
       const result = convertRepOrderToArray(",,");
-      expect(result).toEqual(["", "", ""]);
+      expect(result).toEqual([]);
     });
 
     it("should handle mixed spacing", () => {
@@ -214,18 +221,55 @@ describe("repeating", () => {
     });
   });
 
+  describe("mergeRepOrder", () => {
+    it("should preserve stored order for discovered IDs", () => {
+      const stored = ["-def456", "-abc123"];
+      const discovered = ["-abc123", "-def456", "-ghi789"];
+      expect(mergeRepOrder(stored, discovered)).toEqual(["-def456", "-abc123", "-ghi789"]);
+    });
+
+    it("should fall back to discovered IDs when stored order is empty", () => {
+      expect(mergeRepOrder([], ["-abc123", "-def456"])).toEqual(["-abc123", "-def456"]);
+    });
+
+    it("should omit stored IDs that are not on the character", () => {
+      expect(mergeRepOrder(["-missing", "-abc123"], ["-abc123"])).toEqual(["-abc123"]);
+    });
+  });
+
+  describe("discoverRowIds", () => {
+    it("should collect unique row IDs from repeating attributes", () => {
+      vi.mocked(global.findObjs).mockReturnValueOnce([
+        { get: (key: string) => key === "name" ? "repeating_inventory_-abc123_itemname" : undefined },
+        { get: (key: string) => key === "name" ? "repeating_inventory_-def456_itemcount" : undefined },
+        { get: (key: string) => key === "name" ? "repeating_inventory_-abc123_itemweight" : undefined },
+      ] as Roll20Object[]);
+
+      expect(discoverRowIds("char1", "inventory")).toEqual(["-abc123", "-def456"]);
+    });
+
+    it("should ignore index and CREATE identifiers", () => {
+      vi.mocked(global.findObjs).mockReturnValueOnce([
+        { get: (key: string) => key === "name" ? "repeating_weapons_$0_name" : undefined },
+        { get: (key: string) => key === "name" ? "repeating_weapons_CREATE_name" : undefined },
+        { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_name" : undefined },
+      ] as Roll20Object[]);
+
+      expect(discoverRowIds("char1", "weapons")).toEqual(["-abc123"]);
+    });
+  });
+
   describe("getIDFromIndex", () => {
     const repOrder = ["-abc123", "-def456", "-ghi789"];
 
-    it("should return row ID for valid index identifiers", () => {
-      expect(getIDFromIndex("repeating_weapons_$1_name", repOrder)).toBe("-abc123");
-      expect(getIDFromIndex("repeating_weapons_$2_name", repOrder)).toBe("-def456");
-      expect(getIDFromIndex("repeating_weapons_$3_name", repOrder)).toBe("-ghi789");
+    it("should return row ID for valid 0-based index identifiers", () => {
+      expect(getIDFromIndex("repeating_weapons_$0_name", repOrder)).toBe("-abc123");
+      expect(getIDFromIndex("repeating_weapons_$1_name", repOrder)).toBe("-def456");
+      expect(getIDFromIndex("repeating_weapons_$2_name", repOrder)).toBe("-ghi789");
     });
 
     it("should return null for index out of range", () => {
-      expect(getIDFromIndex("repeating_weapons_$0_name", repOrder)).toBeNull();
-      expect(getIDFromIndex("repeating_weapons_$4_name", repOrder)).toBeNull();
+      expect(getIDFromIndex("repeating_weapons_$3_name", repOrder)).toBeNull();
       expect(getIDFromIndex("repeating_weapons_$-1_name", repOrder)).toBeNull();
       expect(getIDFromIndex("repeating_weapons_$999_name", repOrder)).toBeNull();
     });
@@ -245,13 +289,12 @@ describe("repeating", () => {
     });
 
     it("should handle empty repOrder array", () => {
-      expect(getIDFromIndex("repeating_weapons_$1_name", [])).toBeNull();
+      expect(getIDFromIndex("repeating_weapons_$0_name", [])).toBeNull();
     });
 
     it("should handle leading zeros in index", () => {
-      // Leading zeros should be parsed correctly (01 -> 1, 02 -> 2)
-      expect(getIDFromIndex("repeating_weapons_$01_name", repOrder)).toBe("-abc123");
-      expect(getIDFromIndex("repeating_weapons_$02_name", repOrder)).toBe("-def456");
+      expect(getIDFromIndex("repeating_weapons_$00_name", repOrder)).toBe("-abc123");
+      expect(getIDFromIndex("repeating_weapons_$01_name", repOrder)).toBe("-def456");
     });
   });
 
@@ -422,6 +465,15 @@ describe("repeating", () => {
       mockGetAttribute
         .mockResolvedValueOnce("-abc123,-def456") // weapons
         .mockResolvedValueOnce("-ghi789,-jkl101"); // spells
+      vi.mocked(global.findObjs).mockImplementation((props: Record<string, unknown>) => {
+        if (props._characterid !== "char123") return [];
+        return [
+          { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_name" : undefined },
+          { get: (key: string) => key === "name" ? "repeating_weapons_-def456_damage" : undefined },
+          { get: (key: string) => key === "name" ? "repeating_spells_-ghi789_level" : undefined },
+          { get: (key: string) => key === "name" ? "repeating_spells_-jkl101_level" : undefined },
+        ] as Roll20Object[];
+      });
 
       const result = await getAllRepOrders("char123", ["weapons", "spells"]);
 
@@ -437,12 +489,32 @@ describe("repeating", () => {
       mockGetAttribute
         .mockResolvedValueOnce("-abc123,-def456") // weapons
         .mockResolvedValueOnce(undefined); // spells - no reporder
+      vi.mocked(global.findObjs).mockImplementation((props: Record<string, unknown>) => {
+        if (props._characterid !== "char123") return [];
+        return [
+          { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_name" : undefined },
+          { get: (key: string) => key === "name" ? "repeating_weapons_-def456_damage" : undefined },
+        ] as Roll20Object[];
+      });
 
       const result = await getAllRepOrders("char123", ["weapons", "spells"]);
 
       expect(result).toEqual({
         weapons: ["-abc123", "-def456"],
         spells: []
+      });
+    });
+
+    it("should discover row IDs when _reporder_ is missing", async () => {
+      mockGetAttribute.mockResolvedValue(undefined);
+      vi.mocked(global.findObjs).mockReturnValueOnce([
+        { get: (key: string) => key === "name" ? "repeating_inventory_-row1_itemname" : undefined },
+      ] as Roll20Object[]);
+
+      const result = await getAllRepOrders("char123", ["inventory"]);
+
+      expect(result).toEqual({
+        inventory: ["-row1"],
       });
     });
 
@@ -455,6 +527,9 @@ describe("repeating", () => {
 
     it("should handle single section", async () => {
       mockGetAttribute.mockResolvedValue("-abc123");
+      vi.mocked(global.findObjs).mockReturnValueOnce([
+        { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_name" : undefined },
+      ] as Roll20Object[]);
 
       const result = await getAllRepOrders("char123", ["weapons"]);
 
@@ -466,6 +541,13 @@ describe("repeating", () => {
 
   describe("processRepeatingAttributes", () => {
     let mockGetAttribute: MockedFunction<typeof libSmartAttributes.getAttribute>;
+
+    const mockWeaponRowDiscovery = () => {
+      vi.mocked(global.findObjs).mockReturnValueOnce([
+        { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_name" : undefined },
+        { get: (key: string) => key === "name" ? "repeating_weapons_-def456_damage" : undefined },
+      ] as Roll20Object[]);
+    };
 
     beforeEach(() => {
       mockGetAttribute = vi.fn();
@@ -511,15 +593,15 @@ describe("repeating", () => {
 
     it("should process index identifiers correctly", async () => {
       const attributes: Attribute[] = [
-        { name: "repeating_weapons_$1_name", current: "First Weapon" },
-        { name: "repeating_weapons_$2_damage", current: "1d8" }
+        { name: "repeating_weapons_$0_name", current: "First Weapon" },
+        { name: "repeating_weapons_$1_damage", current: "1d8" }
       ];
 
       mockGetAttribute.mockResolvedValue("-abc123,-def456");
+      mockWeaponRowDiscovery();
 
       const result = await processRepeatingAttributes("char123", attributes);
 
-      // Should resolve $1 -> -abc123 and $2 -> -def456
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         name: "repeating_weapons_-abc123_name",
@@ -533,15 +615,15 @@ describe("repeating", () => {
 
     it("should skip attributes with invalid index identifiers", async () => {
       const attributes: Attribute[] = [
-        { name: "repeating_weapons_$1_name", current: "First Weapon" },
-        { name: "repeating_weapons_$5_name", current: "Invalid Index" } // Index out of range
+        { name: "repeating_weapons_$0_name", current: "First Weapon" },
+        { name: "repeating_weapons_$5_name", current: "Invalid Index" }
       ];
 
       mockGetAttribute.mockResolvedValue("-abc123,-def456");
+      mockWeaponRowDiscovery();
 
       const result = await processRepeatingAttributes("char123", attributes);
 
-      // $1 should work, $5 should be skipped (out of range)
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         name: "repeating_weapons_-abc123_name",
@@ -553,13 +635,21 @@ describe("repeating", () => {
       const attributes: Attribute[] = [
         { name: "repeating_weapons_-abc123_name", current: "Existing Sword" },
         { name: "repeating_weapons_CREATE_name", current: "New Sword" },
-        { name: "repeating_weapons_$1_damage", current: "1d8" },
+        { name: "repeating_weapons_$0_damage", current: "1d8" },
         { name: "repeating_spells_CREATE_spell", current: "New Spell" }
       ];
 
       mockGetAttribute
         .mockResolvedValueOnce("-abc123,-def456") // weapons
         .mockResolvedValueOnce("-ghi789"); // spells
+      vi.mocked(global.findObjs)
+        .mockReturnValueOnce([
+          { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_name" : undefined },
+          { get: (key: string) => key === "name" ? "repeating_weapons_-def456_damage" : undefined },
+        ] as Roll20Object[])
+        .mockReturnValueOnce([
+          { get: (key: string) => key === "name" ? "repeating_spells_-ghi789_level" : undefined },
+        ] as Roll20Object[]);
 
       const result = await processRepeatingAttributes("char123", attributes);
 
@@ -621,6 +711,143 @@ describe("repeating", () => {
 
       expect(result).toEqual([]);
       expect(mockGetAttribute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("parseRepeatingIdentifierToken", () => {
+    it("should classify index tokens", () => {
+      expect(parseRepeatingIdentifierToken("$0")).toEqual({ kind: "index", index: 0 });
+      expect(parseRepeatingIdentifierToken("$12")).toEqual({ kind: "index", index: 12 });
+    });
+
+    it("should classify CREATE tokens case-insensitively", () => {
+      expect(parseRepeatingIdentifierToken("CREATE")).toEqual({ kind: "create" });
+      expect(parseRepeatingIdentifierToken("create")).toEqual({ kind: "create" });
+    });
+
+    it("should classify libUUID-style row ID tokens", () => {
+      expect(parseRepeatingIdentifierToken("-abc123")).toEqual({ kind: "rowId", rowId: "-abc123" });
+      expect(parseRepeatingIdentifierToken("0ABCxyzZ")).toEqual({ kind: "rowId", rowId: "0ABCxyzZ" });
+    });
+
+    it("should not treat libUUID tokens as CREATE", () => {
+      expect(parseRepeatingIdentifierToken("-CREATE123longtoken")).toEqual({
+        kind: "rowId",
+        rowId: "-CREATE123longtoken",
+      });
+    });
+  });
+
+  describe("isRepeatingRowIdToken", () => {
+    it("should return true for row ID tokens only", () => {
+      expect(isRepeatingRowIdToken("-abc123")).toBe(true);
+      expect(isRepeatingRowIdToken("0ABCxyzZ")).toBe(true);
+      expect(isRepeatingRowIdToken("$0")).toBe(false);
+      expect(isRepeatingRowIdToken("CREATE")).toBe(false);
+    });
+  });
+
+  describe("resolveRowIdInRepOrder", () => {
+    const repOrder = ["-abc123", "-Def456", "0GHIxyzZ"];
+
+    it("should resolve row IDs case-insensitively and return canonical casing", () => {
+      expect(resolveRowIdInRepOrder(repOrder, "-ABC123")).toBe("-abc123");
+      expect(resolveRowIdInRepOrder(repOrder, "-def456")).toBe("-Def456");
+      expect(resolveRowIdInRepOrder(repOrder, "0ghixyzz")).toBe("0GHIxyzZ");
+    });
+
+    it("should return null for unknown row IDs", () => {
+      expect(resolveRowIdInRepOrder(repOrder, "-missing")).toBeNull();
+    });
+  });
+
+  describe("parseRepeatingRowDeleteTarget", () => {
+    it("should parse row-only index targets", () => {
+      expect(parseRepeatingRowDeleteTarget("repeating_weapons_$0")).toEqual({
+        sectionPrefix: "repeating_weapons",
+        rowIndex: 0,
+      });
+    });
+
+    it("should parse row-only row ID targets", () => {
+      expect(parseRepeatingRowDeleteTarget("repeating_weapons_-def456")).toEqual({
+        sectionPrefix: "repeating_weapons",
+        rowId: "-def456",
+      });
+    });
+
+    it("should reject field-specific targets", () => {
+      expect(parseRepeatingRowDeleteTarget("repeating_weapons_$1_weaponname")).toBeNull();
+      expect(parseRepeatingRowDeleteTarget("repeating_weapons_-abc123_name")).toBeNull();
+    });
+
+    it("should reject CREATE row-only targets", () => {
+      expect(parseRepeatingRowDeleteTarget("repeating_weapons_CREATE")).toBeNull();
+    });
+  });
+
+  describe("expandRepeatingRowDeletes", () => {
+    it("should expand a row-only target into field deletes", () => {
+      vi.mocked(global.findObjs).mockReturnValueOnce([
+        { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_weaponname" : undefined },
+        { get: (key: string) => key === "name" ? "repeating_weapons_-abc123_damage" : undefined },
+        { get: (key: string) => key === "name" ? "repeating_weapons_-def456_weaponname" : undefined },
+      ] as Roll20Object[]);
+
+      const errors: string[] = [];
+      const result = expandRepeatingRowDeletes(
+        "char1",
+        [{ name: "repeating_weapons_$0" }],
+        { weapons: ["-abc123", "-def456"] },
+        errors,
+        "Test Character",
+      );
+
+      expect(errors).toEqual([]);
+      expect(result).toEqual([
+        { name: "repeating_weapons_-abc123_weaponname" },
+        { name: "repeating_weapons_-abc123_damage" },
+      ]);
+    });
+
+    it("should pass through non-row-delete targets unchanged", () => {
+      const errors: string[] = [];
+      const result = expandRepeatingRowDeletes(
+        "char1",
+        [{ name: "repeating_weapons_$1_weaponname" }],
+        { weapons: ["-abc123"] },
+        errors,
+        "Test Character",
+      );
+
+      expect(result).toEqual([{ name: "repeating_weapons_$1_weaponname" }]);
+    });
+
+    it("should error on invalid row index", () => {
+      const errors: string[] = [];
+      const result = expandRepeatingRowDeletes(
+        "char1",
+        [{ name: "repeating_weapons_$5" }],
+        { weapons: ["-abc123"] },
+        errors,
+        "Test Character",
+      );
+
+      expect(result).toEqual([]);
+      expect(errors).toEqual([
+        "Repeating row number 5 invalid for character Test Character and repeating section repeating_weapons.",
+      ]);
+    });
+  });
+
+  describe("getAllSectionNames row-delete targets", () => {
+    it("should extract section from row-only delete targets", () => {
+      const result = getAllSectionNames([
+        { name: "repeating_weapons_$0" },
+        { name: "repeating_inventory_-abc123" },
+      ]);
+
+      expect(result.sort()).toEqual(["inventory", "weapons"]);
     });
   });
 });

@@ -13,6 +13,16 @@ export type NormalizedCommandOutputOptions = {
   mute: boolean;
 };
 
+export type FeedbackDeliveryOptions = {
+  from?: string;
+  public?: boolean;
+};
+
+function whisperPrefix(playerID: string): string {
+  const player = getPlayerName(playerID);
+  return `/w "${player || "GM"}" `;
+}
+
 export function normalizeCommandOutputOptions(
   options: CommandOutputOptions = {},
 ): NormalizedCommandOutputOptions {
@@ -31,32 +41,35 @@ export function sendMessages(
   playerID: string,
   header: string,
   messages: string[],
-  from: string = "ChatSetAttr",
+  delivery?: FeedbackDeliveryOptions,
   output?: NormalizedCommandOutputOptions,
 ): void {
   if (output?.silent) {
     return;
   }
 
+  const from = delivery?.from ?? "ChatSetAttr";
   const newMessage = createChatMessage(header, messages);
-  const player = getPlayerName(playerID);
-  sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
+  const chatMessage = delivery?.public
+    ? newMessage
+    : `${whisperPrefix(playerID)}${newMessage}`;
+  sendChat(from, chatMessage);
 };
 
 export function sendErrors(
   playerID: string,
   header: string,
   errors: string[],
-  from: string = "ChatSetAttr",
+  from?: string,
   output?: NormalizedCommandOutputOptions,
 ): void {
   if (errors.length === 0 || output?.mute) {
     return;
   }
 
+  const sender = from ?? "ChatSetAttr";
   const newMessage = createErrorMessage(header, errors);
-  const player = getPlayerName(playerID);
-  sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
+  sendChat(sender, `${whisperPrefix(playerID)}${newMessage}`);
 };
 
 export function sendDelayMessage(output?: NormalizedCommandOutputOptions): void {

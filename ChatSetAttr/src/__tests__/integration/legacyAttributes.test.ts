@@ -683,17 +683,36 @@ describe("ChatSetAttr Integration Tests", () => {
         expect(attr).toBeDefined();
         expect(attr).toBe("42");
 
-        const mockCalls = vi.mocked(sendChat).mock.calls;
-        const feedbackCalls = mockCalls.filter(call => {
+        const feedbackCall = vi.mocked(sendChat).mock.calls.find(call => {
           const message = call[1];
-          const messageIsString = typeof message === "string";
-          const messageIsWhisper = message.startsWith("/w ");
-          const messageIncludesFeedback = message.includes("Setting Attribute");
-
-          return messageIsString && messageIsWhisper && messageIncludesFeedback;
+          return call[0] === "ChatSetAttr" &&
+            typeof message === "string" &&
+            !message.startsWith("/w ") &&
+            message.includes("Setting Attribute");
         });
 
-        expect(feedbackCalls.length).toBeGreaterThan(0);
+        expect(feedbackCall).toBeDefined();
+      });
+    });
+
+    it("should default feedback sender to ChatSetAttr without --fb-from", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --charid char1 --Attribute|42");
+
+      await vi.waitFor(async () => {
+        const attr = await libSmartAttributes.getAttribute("char1", "Attribute");
+        expect(attr).toBe("42");
+
+        const feedbackCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[0] === "ChatSetAttr" &&
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes("Set attribute 'Attribute'")
+        );
+
+        expect(feedbackCall).toBeDefined();
       });
     });
 
@@ -786,8 +805,39 @@ describe("ChatSetAttr Integration Tests", () => {
         expect(attr).toBeDefined();
         expect(attr).toBe("25");
 
-        // Verify that sendChat was called (feedback message sent)
-        expect(sendChat).toHaveBeenCalled();
+        const feedbackCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[0] === "Dungeon_Master" &&
+          call[1] && typeof call[1] === "string" &&
+          !call[1].startsWith("/w ") &&
+          call[1].includes("Combat Stats Updated") &&
+          call[1].includes("Character 1's health increased to 25!")
+        );
+
+        expect(feedbackCall).toBeDefined();
+      });
+    });
+
+    it("should whisper errors even when --fb-public is set", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --charid char1 --fb-public --nocreate --MissingAttr|5");
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].startsWith("/w ") &&
+          call[1].includes("MissingAttr")
+        );
+        expect(errorCall).toBeDefined();
+
+        const publicSuccessCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          !call[1].startsWith("/w ") &&
+          call[1].includes("Set attribute")
+        );
+        expect(publicSuccessCall).toBeUndefined();
       });
     });
   });
@@ -1207,6 +1257,54 @@ describe("ChatSetAttr Integration Tests", () => {
       });
     });
 
+    it("should delete all fields for a row by $0 index", async () => {
+      const {
+        token,
+        firstWeaponNameAttr,
+        firstWeaponDamageAttr,
+        secondWeaponNameAttr,
+        secondWeaponDamageAttr,
+        thirdWeaponNameAttr,
+        thirdWeaponDamageAttr,
+      } = createRepeatingObjects();
+      const selected = [token.properties];
+
+      executeCommand("!delattr --sel --repeating_weapons_$0", { selected });
+
+      await vi.waitFor(() => {
+        expect(firstWeaponNameAttr.remove).toHaveBeenCalled();
+        expect(firstWeaponDamageAttr.remove).toHaveBeenCalled();
+        expect(secondWeaponNameAttr.remove).not.toHaveBeenCalled();
+        expect(secondWeaponDamageAttr.remove).not.toHaveBeenCalled();
+        expect(thirdWeaponNameAttr.remove).not.toHaveBeenCalled();
+        expect(thirdWeaponDamageAttr.remove).not.toHaveBeenCalled();
+      });
+    });
+
+    it("should delete all fields for a row by row ID", async () => {
+      const {
+        token,
+        firstWeaponNameAttr,
+        firstWeaponDamageAttr,
+        secondWeaponNameAttr,
+        secondWeaponDamageAttr,
+        thirdWeaponNameAttr,
+        thirdWeaponDamageAttr,
+      } = createRepeatingObjects();
+      const selected = [token.properties];
+
+      executeCommand("!delattr --sel --repeating_weapons_-def456", { selected });
+
+      await vi.waitFor(() => {
+        expect(firstWeaponNameAttr.remove).not.toHaveBeenCalled();
+        expect(firstWeaponDamageAttr.remove).not.toHaveBeenCalled();
+        expect(secondWeaponNameAttr.remove).toHaveBeenCalled();
+        expect(secondWeaponDamageAttr.remove).toHaveBeenCalled();
+        expect(thirdWeaponNameAttr.remove).not.toHaveBeenCalled();
+        expect(thirdWeaponDamageAttr.remove).not.toHaveBeenCalled();
+      });
+    });
+
     it("should handle modifying repeating section attributes referenced by index", async () => {
       // arrange
       const { token } = createRepeatingObjects();
@@ -1247,6 +1345,97 @@ describe("ChatSetAttr Integration Tests", () => {
         const newlyCreated = await libSmartAttributes.getAttribute("char1", "repeating_weapons_-def456_newlycreated");
         expect(newlyCreated).toBeDefined();
         expect(newlyCreated).toBe("5");
+      });
+    });
+
+    it("should update repeating row field by $0 index", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      const character = createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      const token = createObj("graphic", { _id: "token1", represents: character.id, _subtype: "token" });
+      createObj("attribute", {
+        _id: "inv-name",
+        _characterid: character.id,
+        name: "repeating_inventory_-row1_itemname",
+        current: "Old Item",
+      });
+      createObj("attribute", {
+        _id: "inv-reporder",
+        _characterid: character.id,
+        name: "_reporder_repeating_inventory",
+        current: "-row1",
+      });
+
+      executeCommand('!setattr --sel --repeating_inventory_$0_itemname|"First Item"', {
+        selected: [token.properties],
+      });
+
+      await vi.waitFor(async () => {
+        const itemName = await libSmartAttributes.getAttribute("char1", "repeating_inventory_-row1_itemname");
+        expect(itemName).toBe("First Item");
+
+        const literalIndexAttr = findObjs({
+          _type: "attribute",
+          _characterid: "char1",
+        }).find(attr => attr.get("name")?.includes("_$0_"));
+        expect(literalIndexAttr).toBeUndefined();
+      });
+    });
+
+    it("should resolve $0 from discovered rows when _reporder_ is missing", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      const character = createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      const token = createObj("graphic", { _id: "token1", represents: character.id, _subtype: "token" });
+      createObj("attribute", {
+        _id: "inv-name-only",
+        _characterid: character.id,
+        name: "repeating_inventory_-row1_itemname",
+        current: "Old Item",
+      });
+
+      executeCommand('!setattr --sel --repeating_inventory_$0_itemname|"First Item"', {
+        selected: [token.properties],
+      });
+
+      await vi.waitFor(async () => {
+        const itemName = await libSmartAttributes.getAttribute("char1", "repeating_inventory_-row1_itemname");
+        expect(itemName).toBe("First Item");
+      });
+    });
+
+    it("should error instead of creating literal $5 attribute when index is invalid", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      const character = createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      const token = createObj("graphic", { _id: "token1", represents: character.id, _subtype: "token" });
+      createObj("attribute", {
+        _id: "inv-name-error",
+        _characterid: character.id,
+        name: "repeating_inventory_-row1_itemname",
+        current: "Old Item",
+      });
+      createObj("attribute", {
+        _id: "inv-reporder-error",
+        _characterid: character.id,
+        name: "_reporder_repeating_inventory",
+        current: "-row1",
+      });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --sel --repeating_inventory_$5_itemname|Bad", {
+        selected: [token.properties],
+      });
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes("Repeating row number 5")
+        );
+        expect(errorCall).toBeDefined();
+
+        const literalIndexAttr = findObjs({
+          _type: "attribute",
+          _characterid: "char1",
+        }).find(attr => attr.get("name") === "repeating_inventory_$5_itemname");
+        expect(literalIndexAttr).toBeUndefined();
       });
     });
   });

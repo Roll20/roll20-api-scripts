@@ -319,6 +319,16 @@ describe("message", () => {
         expect(result.changes[0]).toEqual({ name: "skill_1", current: "5" });
         expect(result.changes[1]).toEqual({ name: "attr_test_2", current: "value" });
       });
+
+      it("should preserve libUUID row ID characters in bare attribute names", () => {
+        const result = parse("!delattr --sel --repeating_weapons_-Def456");
+        expect(result.changes).toEqual([{ name: "repeating_weapons_-Def456" }]);
+      });
+
+      it("should preserve mixed-case row ID tokens without leading hyphen", () => {
+        const result = parse("!delattr --sel --repeating_inventory_0ABCxyzZ");
+        expect(result.changes).toEqual([{ name: "repeating_inventory_0ABCxyzZ" }]);
+      });
     });
 
     describe("referenced attributes parsing", () => {

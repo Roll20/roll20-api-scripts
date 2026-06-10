@@ -286,6 +286,53 @@ describe("chat", () => {
     });
   });
 
+  describe("feedback delivery", () => {
+    beforeEach(() => {
+      mockPlayer.get.mockReturnValue("Test Player");
+      mockGetObj.mockReturnValue(mockPlayer);
+      mockCreateChatMessage.mockReturnValue("formatted-chat-message");
+      mockCreateErrorMessage.mockReturnValue("formatted-error-message");
+    });
+
+    it("should default sender to ChatSetAttr when delivery is omitted", () => {
+      sendMessages("player123", "Test Header", ["Message"]);
+
+      expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"Test Player\" formatted-chat-message");
+    });
+
+    it("should send public feedback without a whisper prefix", () => {
+      sendMessages("player123", "Test Header", ["Message"], { public: true });
+
+      expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "formatted-chat-message");
+      expect(mockSendChat.mock.calls[0][1]).not.toMatch(/^\/w /);
+    });
+
+    it("should send public feedback from a custom sender", () => {
+      sendMessages("player123", "Test Header", ["Message"], { from: "Wizard", public: true });
+
+      expect(mockSendChat).toHaveBeenCalledWith("Wizard", "formatted-chat-message");
+      expect(mockSendChat.mock.calls[0][1]).not.toMatch(/^\/w /);
+    });
+
+    it("should whisper feedback from a custom sender when not public", () => {
+      sendMessages("player123", "Test Header", ["Message"], { from: "Wizard" });
+
+      expect(mockSendChat).toHaveBeenCalledWith("Wizard", "/w \"Test Player\" formatted-chat-message");
+    });
+
+    it("should default error sender to ChatSetAttr when from is undefined", () => {
+      sendErrors("player123", "Errors", ["Something went wrong"], undefined);
+
+      expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"Test Player\" formatted-error-message");
+    });
+
+    it("should always whisper errors even with a custom sender", () => {
+      sendErrors("player123", "Errors", ["Something went wrong"], "Wizard");
+
+      expect(mockSendChat).toHaveBeenCalledWith("Wizard", "/w \"Test Player\" formatted-error-message");
+    });
+  });
+
   describe("command output suppression", () => {
     beforeEach(() => {
       mockPlayer.get.mockReturnValue("Test Player");
@@ -310,14 +357,14 @@ describe("chat", () => {
     });
 
     it("should suppress success messages when silent is set", () => {
-      sendMessages("player123", "Setting Attributes", ["Set attribute"], "ChatSetAttr", { mute: false, silent: true });
+      sendMessages("player123", "Setting Attributes", ["Set attribute"], undefined, { mute: false, silent: true });
 
       expect(mockCreateChatMessage).not.toHaveBeenCalled();
       expect(mockSendChat).not.toHaveBeenCalled();
     });
 
     it("should suppress success messages when mute is set", () => {
-      sendMessages("player123", "Setting Attributes", ["Set attribute"], "ChatSetAttr", { mute: true, silent: true });
+      sendMessages("player123", "Setting Attributes", ["Set attribute"], undefined, { mute: true, silent: true });
 
       expect(mockCreateChatMessage).not.toHaveBeenCalled();
       expect(mockSendChat).not.toHaveBeenCalled();

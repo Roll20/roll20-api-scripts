@@ -5,10 +5,11 @@ import { sendDelayMessage, sendErrors, sendMessages, normalizeCommandOutputOptio
 import { handlers } from "./commands";
 import { checkConfigMessage, getConfig, handleConfigCommand, hasFlag } from "./config";
 import { checkHelpMessage, handleHelpCommand } from "./help";
+import { getCharName } from "./helpers";
 import { extractMessageFromRollTemplate, parseMessage, validateMessage } from "./message";
 import { processModifications } from "./modifications";
 import { checkPermissions } from "./permissions";
-import { getAllRepOrders, getAllSectionNames } from "./repeating";
+import { expandRepeatingRowDeletes, getAllRepOrders, getAllSectionNames } from "./repeating";
 import { generateTargets } from "./targets";
 import { clearTimer, startTimer } from "./timer";
 import { makeUpdate } from "./updates";
@@ -92,7 +93,15 @@ async function acceptMessage(msg: Roll20ChatMessage) {
     priorValues[target] = attrs;
     const sectionNames = getAllSectionNames(changes);
     const repOrders = await getAllRepOrders(target, sectionNames);
-    const modifications = processModifications(changes, attrs, options, repOrders);
+    let effectiveChanges = changes;
+    if (operation === "delattr") {
+      effectiveChanges = expandRepeatingRowDeletes(
+        target, changes, repOrders, errors, getCharName(target),
+      );
+    }
+    const modifications = processModifications(
+      effectiveChanges, attrs, options, repOrders, errors, getCharName(target),
+    );
 
     const response = await command(modifications, target, references, options.nocreate, feedback);
 
@@ -126,7 +135,10 @@ async function acceptMessage(msg: Roll20ChatMessage) {
   sendErrors(msg.playerid, "Errors", errors, feedback?.from, output);
   const delSetTitle = operation === "delattr" ? "Deleting Attributes" : "Setting Attributes";
   const feedbackTitle = feedback?.header ?? delSetTitle;
-  sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from, output);
+  sendMessages(msg.playerid, feedbackTitle, messages, {
+    from: feedback?.from,
+    public: feedback?.public,
+  }, output);
 };
 
 function errorOut(
