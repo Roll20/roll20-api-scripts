@@ -1423,4 +1423,11 @@ Sequence:
 CombatEncounterDirector:
   - "CombatEncounterDirector"
   - "Utility"
-  
+
+Choreograph:
+  - "Choreograph"
+  - "Utility"
+
+SwapTokenPositions:
+  - "SwapTokenPositions"
+  - "Utility"
