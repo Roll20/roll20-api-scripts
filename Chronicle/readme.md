@@ -8,7 +8,7 @@ Watch a walkthrough of Chronicle's features: https://youtu.be/Zb4M21NtP3Y
 
 ## Key Features
 
-- **Custom or Preset Calendars** — Create your own or load from five included presets (Gregorian, Forgotten Realms, Golarion, Greyhawk, Eberron)
+- **Custom or Preset Calendars** — Create your own or load from five included presets (Gregorian, Forgotten Realms, Golarion, Greyhawk, Eberron, Traveller)
 - **Event and Note Tracking** — Powerful tagging system for organizing and filtering campaign events
 - **Calendar View** — Interactive grid with date-by-date navigation and exploration
 - **Timeline Mode** — Chronological campaign review with tag and date-range filtering
@@ -16,7 +16,7 @@ Watch a walkthrough of Chronicle's features: https://youtu.be/Zb4M21NtP3Y
 - **Moon Phases** — Multiple moons with automatic phase calculation for any date
 - **Send to Chat** — Announce dates and events directly to players
 - **GM-Only Content** — Tag items 'gm' to hide them from chat output
-- **Special Days** — Support for holidays, intercalary days, leap days, and custom events
+- **Special Days** — Support for holidays, intercalary days, interannual days, leap days, and custom events
 
 ## Getting Started
 
