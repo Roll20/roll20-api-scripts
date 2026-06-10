@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.1.3] – 2026-05-22 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/6)
+
+### Fixed
+
+- Fixed HealthColors treating an empty or whitespace-only `USEBLOOD` value as a custom FX name. The script now trims and validates the attribute before FX lookup, so fetched/imported characters with a blank override fall back to the default hurt FX instead of whispering a missing custom FX warning.
+- Hardened `!aura` setting validation for the remaining editable values. Percentage thresholds now reject invalid input, heal/hurt colors require valid hex values, yes/no/off settings are normalized, and blank death sound names no longer overwrite the previous value.
+
 ## [2.1.2] – 2026-05-17 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/5)
 
 ### Fixed
