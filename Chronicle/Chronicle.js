@@ -10,10 +10,10 @@ const Chronicle = (() => {
   // ==================================================
 
   const scriptName = 'Chronicle';
-  const version = '1.0.1';
+  const version = '1.0.2';
   //Changelog
-  // 1.0.1 Added custom weather and Climate options, made some display changes including parsing of images and links in the display.
-  //       Fixed firefox Display bug. Added Interannual Day code to handle Traveller Imperial Calendar
+  ///1.0.2 Added Interannual Day code to handle Traveller Imperial Calendar
+  // 1.0.1 Added custom weather and Climate options, made some display changes including parsing of images and links in the display. Fixed firefox Display bug.
   // 1.0.0 Debut
   
   const lastUpdate = Math.floor(Date.now() / 1000);
