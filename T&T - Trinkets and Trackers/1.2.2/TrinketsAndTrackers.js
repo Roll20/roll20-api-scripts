@@ -1,6 +1,6 @@
 /**
  * =========================================================
- * @File        Trinkets&Trackers.js
+ * @File        TrinketsAndTrackers.js
  * @Project     Trinkets and Trackers (T&T)
  * @Description Professional base prototype for commands, cards and helpers.
  * @Author      AmadeusVF
