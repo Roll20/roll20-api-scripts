@@ -1,6 +1,9 @@
 // Script:   Chronicle
 // By:       Keith Curtis
 // Contact:  https://app.roll20.net/users/162065/keithcurtis
+  //Changelog
+  // 1.0.1 Added custom weather and Climate options, made some display changes including parsing of images and links in the display. Fixed firefox Display bug
+  //.1.0.0 Debut
 
 const Chronicle = (() => {
   'use strict';
@@ -11,11 +14,6 @@ const Chronicle = (() => {
 
   const scriptName = 'Chronicle';
   const version = '1.0.1';
-  //Changelog
-  // 1.0.1 Added custom weather and Climate options, made some display changes including parsing of images and links in the display.
-  //       Fixed firefox Display bug. Added Interannual Day code to handle Traveller Imperial Calendar
-  // 1.0.0 Debut
-  
   const lastUpdate = Math.floor(Date.now() / 1000);
   const schemaVersion = 0.1;
 
@@ -51,10 +49,10 @@ const Chronicle = (() => {
 <p>Click "Design" in the main interface to access configuration options.</p>
 
 <h4>Calendar Name</h4>
-<p>Chronicle ships with configuration for Gregorian, Harptos (the calendar used by the Forgotten Realms), Greyhawk, Eberron, Absalom Reckoning, and Traveller Imperial calendars. Choose one of these, or create you own bly clicking New Calendar, and then set the name for your calendar system (e.g., "Mystara", "Exandrian"). The resto of these design instructions will assume that you are creating your own custom calendar. Otherwise, that is all you need to do.</p>
+<p>Chronicle ships with configuration for Gregorian and Harptos (the calendar used by the Forgotten Realms). Choose one of these, or create you own bly clicking New Calendar, and then set the name for your calendar system (e.g., "Mystara", "Exandrian"). The resto of these design instructions will assume that you are creating your own custom calendar. Otherwise, that is all you need to do.</p>
 
 <h4>Calendar Description</h4>
-<p>Add context about your calendar system that appears in Design mode. This is useful for explaining the calendar's structure, cultural significance, or special properties to players. Preset calendars (Gregorian, Absalom Reckoning, Faerun, Greyhawk, Eberron, and Traveller Imperial) include detailed descriptions that you can edit or replace with your own text.</p>
+<p>Add context about your calendar system that appears in Design mode. This is useful for explaining the calendar's structure, cultural significance, or special properties to players. Preset calendars (Gregorian, Absalom Reckoning, Faerun, Greyhawk, Eberron) include detailed descriptions that you can edit or replace with your own text.</p>
 
 <h4>Months</h4>
 <p>Define each month with:</p>
@@ -83,7 +81,7 @@ const Chronicle = (() => {
 <p>Holidays appear in red text throughout the calendar. Click a holiday name to view its description privately (whisper) or announce it publicly to all players.</p>
 
 <h3>Special Days</h3>
-<p>Special days are intercalary days (like Midsummer) or leap days (like Shieldmeet) that fall outside the normal month/week structure. Some calendars also include interannual days—special days that fall at the beginning or end of the year (such as the Holiday in the Traveller Imperial Calendar) and don't follow the weekly cycle.</p>
+<p>Special days are intercalary days (like Midsummer) or leap days (like Shieldmeet) that fall outside the normal month/week structure.</p>
 
 <h4>Types</h4>
 <ul>
@@ -121,7 +119,7 @@ const Chronicle = (() => {
 <p><strong>Sprite System:</strong> Moons use a sprite sheet system ensuring compatibility with Roll20's handout system. The system handles all 8 lunar phases with full color support.</p>
 
 <h3>Weather System</h3>
-<p>Enable procedural weather generation based on climate zones, or create custom weather effects.</p>
+<p>Enable procedural weather generation based on climate zones.</p>
 
 <h4>Setup</h4>
 <ol>
@@ -132,9 +130,6 @@ const Chronicle = (() => {
 
 <h4>Generating Weather</h4>
 <p>Click "Generate Weather" in the Featured Date section to create weather for the current date. Generated weather persists and appears automatically when viewing that date.</p>
-
-<h4>Custom Weather</h4>
-<p>In addition to the climate-based weather generation, you can add custom weather effects to any date. Click the "Add Custom Weather" button in the Featured Date section to manually create weather entries such as storms, fog, earthquakes, or other non-standard atmospheric effects. You can add emojis to custom weather entries (such as 🌪️ for tornado, ⛏️ for earthquake, 🔥 for wildfire) to make them visually distinctive in the calendar and timeline.</p>
 
 <h2>Calendar Mode</h2>
 
@@ -211,32 +206,6 @@ const Chronicle = (() => {
 <li>Holidays and special days (clickable to announce descriptions)</li>
 <li>Events and notes for that date</li>
 </ul>
-
-<h3>Links and Images in Events/Notes</h3>
-
-<p>Events and notes support embedded links and images, allowing you to attach reference materials directly to your calendar entries. Links are automatically parsed and formatted based on type.</p>
-
-<h4>How Links Display</h4>
-<ul>
-<li><strong>Calendar Grid:</strong> Links appear as clickable styled text or thumbnail images. Image links show as small previews of the image.</li>
-<li><strong>Featured Date & Send to Chat:</strong> Links appear as clickable thumbnails or styled text buttons that open the link or command when clicked.</li>
-</ul>
-
-<h4>Supported Link Types</h4>
-
-<p><strong>Image Links (Inline Images):</strong> Display as clickable image thumbnails that send the image to chat when clicked.</p>
-<p style="margin-left: 20px; font-family: monospace;">Example: <code>[any text](https://example.com/image.png)</code></p>
-
-<p><strong>Roll20 Handout Links:</strong> Open a specific campaign handout when clicked.</p>
-<p style="margin-left: 20px; font-family: monospace;">Example: <code>[Open Lore](http://journal.roll20.net/handout/HANDOUT_ID)</code></p>
-
-<p><strong>Roll20 Character Links:</strong> Open a character sheet when clicked.</p>
-<p style="margin-left: 20px; font-family: monospace;">Example: <code>[Open Character](http://journal.roll20.net/character/CHARACTER_ID)</code></p>
-
-<p><strong>API Commands:</strong> Execute a Roll20 API command when clicked (useful for triggering other scripts or macros).</p>
-<p style="margin-left: 20px; font-family: monospace;">Example: <code>[Link Text](!API Command)</code></p>
-
-<p>Note that link parsing is very simple, and not as robust as the Roll20 chat engine. Use with caution.</p>
 
 <h2>Timeline Mode</h2>
 
@@ -621,7 +590,6 @@ const Chronicle = (() => {
       daysInYear: 365,
       months: [],
       interMonthDays: [], // Special days between months
-      interannualDays: [], // Days outside the year cycle (beginning/end of year)
       weeks: {
         enabled: true,
         daysInWeek: 7,
@@ -659,13 +627,6 @@ const Chronicle = (() => {
       frequency: frequency || null, // for leap days (e.g., 4 = every 4 years)
       offset: offset || 0, // for leap days (year % frequency === offset)
       description: description || ''
-    }),
-
-    createInterannualDay: (name, position = 'beginning', order = 0) => ({
-      id: `interannual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: name,
-      position: position, // 'beginning' or 'end'
-      order: order // For ordering multiple interannual days at same position
     }),
 
     createMoon: (name, period, fullDayRef, size = 1, color = 'yellow', display = true) => ({
@@ -1297,40 +1258,7 @@ const Chronicle = (() => {
         DataModels.createMoon('Vult', 29.2, { year: 1, month: 1, day: 12 }, 0.8, 'yellow', true)  // Large, visible, yellow
       ];
       return cal;
-    },
-
-    traveller: () => {
-      const cal = DataModels.createCalendar('Traveller');
-      cal.description = 'The standard Imperial Calendar used throughout the Third Imperium. The year begins with Holiday, a day outside the normal weekly cycle. This is followed by 364 numbered days, ensuring that Wonday always marks Day 2 of every year.';
-      cal.daysInYear = 365;  // Full year: Holiday (1) + month days (364)
-      cal.months = [
-        DataModels.createMonth('Day', 364, 0)
-      ];
-      cal.interannualDays = [
-        DataModels.createInterannualDay('Holiday', 'beginning', 0)
-      ];
-      cal.weeks = {
-        enabled: true,
-        daysInWeek: 7,
-        weekdayNames: ['Wonday', 'Tuday', 'Thirday', 'Forday', 'Fiday', 'Sixday', 'Senday'],
-        weekNames: [],
-        displayWeekNames: false,
-        canSpanMonths: true
-      };
-      cal.leapYears = {
-        enabled: false,
-        cycle: 4,
-        exceptions: []
-      };
-      cal.seasons = {
-        vernalEquinox: 1
-      };
-      cal.holidays = [];
-      cal.climate = null;
-      cal.units = 'us';
-      cal.moons = [];
-      return cal;
-    },
+    }
 
   };
 
@@ -1584,109 +1512,7 @@ const Chronicle = (() => {
 
   const DateUtils = {
 
-    // ==================================================
-    // Interannual Day Helpers
-    // ==================================================
-
-    // Get all interannual days at a given position, sorted by order
-    getInterannualDaysAtPosition: (position, calendar) => {
-      if (!calendar.interannualDays || calendar.interannualDays.length === 0) return [];
-      return calendar.interannualDays
-        .filter(d => d.position === position)
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
-    },
-
-    // Count interannual days at beginning (needed for month offset)
-    countInterannualDaysAtBeginning: (calendar) => {
-      if (!calendar.interannualDays || calendar.interannualDays.length === 0) return 0;
-      return calendar.interannualDays.filter(d => d.position === 'beginning').length;
-    },
-
-    // Count interannual days at end
-    countInterannualDaysAtEnd: (calendar) => {
-      if (!calendar.interannualDays || calendar.interannualDays.length === 0) return 0;
-      return calendar.interannualDays.filter(d => d.position === 'end').length;
-    },
-
-    // Convert interannual day reference to absolute day within the year
-    getAbsDayOfInterannualDay: (position, order, calendar) => {
-      if (!calendar.interannualDays || calendar.interannualDays.length === 0) return 0;
-
-      if (position === 'beginning') {
-        // Beginning interannual days are at the start: 1, 2, 3, ...
-        const beginningDays = DateUtils.getInterannualDaysAtPosition('beginning', calendar);
-        const index = beginningDays.findIndex(d => d.order === order);
-        return index >= 0 ? index + 1 : 0;
-      } else if (position === 'end') {
-        // End interannual days are at the end of the year
-        const baseDays = calendar.daysInYear;
-        const endDays = DateUtils.getInterannualDaysAtPosition('end', calendar);
-        const index = endDays.findIndex(d => d.order === order);
-        return index >= 0 ? baseDays + index + 1 : 0;
-      }
-      return 0;
-    },
-
-    // Get effective day for weekday calculation (excludes interannual days from sequence)
-    getEffectiveDayForWeekday: (absDay, year, calendar) => {
-      if (!calendar.interannualDays || calendar.interannualDays.length === 0) return absDay;
-
-      // Count interannual days that come before this absolute day in the year
-      let interannualsBefore = 0;
-
-      // Count beginning interannual days (they come before all other days)
-      const beginningCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-      const baseDays = calendar.daysInYear;
-
-      if (absDay > beginningCount) {
-        interannualsBefore = beginningCount;
-      } else {
-        interannualsBefore = 0; // absDay is on or before a beginning interannual day
-      }
-
-      // Check for ending interannual days
-      const endingDays = DateUtils.getInterannualDaysAtPosition('end', calendar);
-      for (const day of endingDays) {
-        const endAbsDay = DateUtils.getAbsDayOfInterannualDay('end', day.order, calendar);
-        if (absDay > endAbsDay) {
-          interannualsBefore++;
-        }
-      }
-
-      return absDay - interannualsBefore;
-    },
-
-    // Check if an absolute day falls on an interannual day
-    isAbsDayOnInterannualDay: (absDay, calendar) => {
-      if (!calendar.interannualDays || calendar.interannualDays.length === 0) return false;
-
-      for (const day of calendar.interannualDays) {
-        const dayAbsDay = DateUtils.getAbsDayOfInterannualDay(day.position, day.order, calendar);
-        if (absDay === dayAbsDay) return true;
-      }
-      return false;
-    },
-
-    // Get interannual day reference from absolute day
-    getInterannualDayFromAbsDay: (absDay, calendar) => {
-      if (!calendar.interannualDays || calendar.interannualDays.length === 0) return null;
-
-      for (const day of calendar.interannualDays) {
-        const dayAbsDay = DateUtils.getAbsDayOfInterannualDay(day.position, day.order, calendar);
-        if (absDay === dayAbsDay) {
-          return {
-            id: day.id,
-            name: day.name,
-            position: day.position,
-            order: day.order,
-            dayOfYear: absDay
-          };
-        }
-      }
-      return null;
-    },
-
-    // Convert {year, month, day} or {year, isInterannual, position, order} to absolute day number
+    // Convert {year, month, day} to absolute day number
     toAbsoluteDay: (dateRef, calendar) => {
       if (!calendar || !dateRef) return 0;
 
@@ -1694,32 +1520,25 @@ const Chronicle = (() => {
 
       // Count all complete years before the current year
       if (dateRef.year > 0) {
+        // Positive years: count from year 1 to year-1
         for (let y = 1; y < dateRef.year; y++) {
           dayCount += DateUtils.getDaysInYear(y, calendar);
         }
       } else if (dateRef.year < 0) {
+        // Negative years: count backwards from year -1
         for (let y = -1; y >= dateRef.year; y--) {
           dayCount -= DateUtils.getDaysInYear(y, calendar);
         }
       }
+      // Year 0 is treated as day 0, no offset needed
 
-      // Handle interannual day reference
-      if (dateRef.isInterannual) {
-        const absDayInYear = DateUtils.getAbsDayOfInterannualDay(dateRef.position, dateRef.order, calendar);
-        if (absDayInYear === undefined || absDayInYear === null || isNaN(absDayInYear)) {
-          return dayCount; // Fall back to just the year count
-        }
-        return dayCount + absDayInYear;
-      }
-
-      // Handle regular month/day reference
-      // Add complete months in current year
+      // Add complete months in current year (always add, regardless of year sign)
       for (let m = 1; m < dateRef.month; m++) {
         const daysInMonth = DateUtils.getDaysInMonth(m, dateRef.year, calendar);
         dayCount += daysInMonth;
       }
 
-      // Add days in current month
+      // Add days in current month (always add, regardless of year sign)
       if (dateRef.day) {
         dayCount += dateRef.day;
       }
@@ -1729,17 +1548,13 @@ const Chronicle = (() => {
 
     // Get days in a specific year (accounting for leap years)
     getDaysInYear: (year, calendar) => {
-      // Base calculation for leap years
-      let baseDays = calendar.daysInYear;
-      if (calendar.leapYears?.enabled) {
-        if (year % calendar.leapYears.cycle === 0 && !calendar.leapYears.exceptions?.includes(year)) {
-          baseDays += 1; // Leap year
-        }
+      if (!calendar.leapYears.enabled) return calendar.daysInYear;
+
+      if (year % calendar.leapYears.cycle === 0 && !calendar.leapYears.exceptions.includes(year)) {
+        return calendar.daysInYear + 1; // Leap year
       }
 
-      // Note: Interannual days are NOT included in the year count because they're
-      // outside the normal month/day structure and don't affect absolute day calculations
-      return baseDays;
+      return calendar.daysInYear;
     },
 
     // Get days in a specific month
@@ -1755,62 +1570,6 @@ const Chronicle = (() => {
       }
 
       return month.days;
-    },
-
-    // Convert absolute day back to date reference {year, month, day} or interannual reference
-    getDateRefFromAbsoluteDay: (absDay, calendar) => {
-      if (!calendar) return { year: 0, month: 1, day: 1 };
-
-      // Find the year this absolute day falls in
-      let dayCount = 0;
-      let year = 1;
-
-      // Handle positive years
-      while (dayCount + DateUtils.getDaysInYear(year, calendar) < absDay) {
-        dayCount += DateUtils.getDaysInYear(year, calendar);
-        year++;
-      }
-
-      // Now calculate day within this year
-      const dayInYear = absDay - dayCount;
-
-      // Check if this is an interannual day
-      const interannualDay = DateUtils.getInterannualDayFromAbsDay(dayInYear, calendar);
-      if (interannualDay) {
-        return {
-          year: year,
-          isInterannual: true,
-          position: interannualDay.position,
-          order: interannualDay.order
-        };
-      }
-
-      // Account for beginning interannual days when calculating month/day
-      const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-      const adjustedDayInYear = dayInYear - beginningInterannualCount;
-
-      if (adjustedDayInYear <= 0) {
-        // This shouldn't happen if interannualDay check worked, but safety net
-        return { year: year, month: 1, day: Math.max(1, adjustedDayInYear) };
-      }
-
-      // Calculate which month and day
-      let month = 1;
-      let dayCount2 = 0;
-
-      while (month <= calendar.months.length) {
-        const daysInMonth = DateUtils.getDaysInMonth(month, year, calendar);
-        if (dayCount2 + daysInMonth >= adjustedDayInYear) {
-          // Found the month
-          const dayInMonth = adjustedDayInYear - dayCount2;
-          return { year: year, month: month, day: dayInMonth };
-        }
-        dayCount2 += daysInMonth;
-        month++;
-      }
-
-      // Fallback (shouldn't reach here)
-      return { year: year, month: calendar.months.length || 1, day: 1 };
     },
 
     // Calculate distance between two dates
@@ -1836,7 +1595,27 @@ const Chronicle = (() => {
     getWeekday: (dateRef, calendar) => {
       if (!calendar.weeks.enabled) return null;
 
-      const absDay = DateUtils.toAbsoluteDay(dateRef, calendar);
+      let absDay = DateUtils.toAbsoluteDay(dateRef, calendar);
+      
+      // Subtract "Between weeks" intercalary days that occur before this date
+      // These days should not count toward the weekday cycle
+      if (calendar.interMonthDays && calendar.interMonthDays.length > 0) {
+        const specialDaysInYear = DataModels.getSpecialDaysForYear(dateRef.year, calendar)
+          .filter(d => d.breaksWeekCycle);
+        
+        for (let day of specialDaysInYear) {
+          // Check if this intercalary day comes before the current date in the year
+          // Position format: {afterMonth: X, afterDay: Y}
+          if (day.position) {
+            const isBefore = (day.position.afterMonth < dateRef.month) ||
+                            (day.position.afterMonth === dateRef.month && day.position.afterDay < dateRef.day);
+            if (isBefore) {
+              absDay--; // Subtract 1 because this intercalary day shouldn't count toward weekday
+            }
+          }
+        }
+      }
+      
       const weekdayIndex = (absDay - 1) % calendar.weeks.daysInWeek;
       return calendar.weeks.weekdayNames[weekdayIndex];
     },
@@ -1893,56 +1672,53 @@ const Chronicle = (() => {
     getElapsedTime: (fromDate, toDate, calendar) => {
       if (!calendar || !fromDate || !toDate) return { years: 0, months: 0, days: 0, isNegative: false };
 
-      // Calculate absolute day values using the same logic as timeline sorting
-      let fromAbsDay, toAbsDay;
+      // Determine direction (which date is earlier)
+      let isNegative = false;
+      let start = fromDate;
+      let end = toDate;
       
-      if (fromDate.isInterannual) {
-        let yearDays = 0;
-        if (fromDate.year > 1) {
-          for (let y = 1; y < fromDate.year; y++) {
-            yearDays += DateUtils.getDaysInYear(y, calendar);
-          }
+      if (toDate.year < fromDate.year ||
+          (toDate.year === fromDate.year && toDate.month < fromDate.month) ||
+          (toDate.year === fromDate.year && toDate.month === fromDate.month && toDate.day < fromDate.day)) {
+        isNegative = true;
+        start = toDate;
+        end = fromDate;
+      }
+      
+      // Calculate the difference
+      let years = end.year - start.year;
+      let months = end.month - start.month;
+      let days = end.day - start.day;
+      
+      // Adjust if days went negative
+      if (days < 0) {
+        months--;
+        if (start.month > 0 && start.month <= calendar.months.length) {
+          days += DateUtils.getDaysInMonth(start.month, start.year, calendar);
+        } else {
+          days += 30; // fallback
         }
-        fromAbsDay = yearDays + DateUtils.getAbsDayOfInterannualDay(fromDate.position, fromDate.order, calendar);
-      } else {
-        const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-        fromAbsDay = DateUtils.toAbsoluteDay(fromDate, calendar) + beginningInterannualCount;
       }
       
-      if (toDate.isInterannual) {
-        let yearDays = 0;
-        if (toDate.year > 1) {
-          for (let y = 1; y < toDate.year; y++) {
-            yearDays += DateUtils.getDaysInYear(y, calendar);
-          }
-        }
-        toAbsDay = yearDays + DateUtils.getAbsDayOfInterannualDay(toDate.position, toDate.order, calendar);
-      } else {
-        const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-        toAbsDay = DateUtils.toAbsoluteDay(toDate, calendar) + beginningInterannualCount;
+      // Adjust if months went negative
+      if (months < 0) {
+        years--;
+        months += calendar.months.length;
       }
       
-      let totalDays = Math.floor(toAbsDay - fromAbsDay);
-      const isNegative = totalDays < 0;
-      totalDays = Math.abs(totalDays);
-      
-      let years = 0;
-      let months = 0;
-      let days = totalDays;
-      
-      const daysInYear = DateUtils.getDaysInYear(fromDate.year || toDate.year, calendar);
-      if (days >= daysInYear) {
-        years = Math.floor(days / daysInYear);
-        days = days % daysInYear;
+      // Special case: if both dates are first day of their respective years, show only years
+      if (start.day === 1 && start.month === 1 && end.day === 1 && end.month === 1) {
+        return { years: years, months: 0, days: 0, isNegative: isNegative, isFirstOfYear: true };
       }
       
-      if (days >= 30) {
-        months = Math.floor(days / 30);
-        days = days % 30;
-      }
-      
-      return { years: years, months: months, days: days, isNegative: isNegative, isFirstOfYear: false };
-    },
+      return { 
+        years: years, 
+        months: months, 
+        days: days, 
+        isNegative: isNegative,
+        isFirstOfYear: false
+      };
+    }
 
   };
 
@@ -2304,15 +2080,9 @@ const Chronicle = (() => {
       html += `<a style="${CSS_CURRENT.button}" href="!chr --jumptoday ?{Which day?|${currentDate.day}}">${currentDate.day}</a>`;
       html += ` `;
       
-      // Month picker with direct query (or simple link for single-month calendars)
-      let monthButtonHref;
-      if (calendar.months.length === 1) {
-        monthButtonHref = `!chr --jumptomonth 1`;
-      } else {
-        const monthList = calendar.months.map((m, idx) => `${m.name},${idx + 1}`).join('|');
-        monthButtonHref = `!chr --jumptomonth ?{Which month?|${monthList}}`;
-      }
-      html += `<a style="${CSS_CURRENT.button}" href="${monthButtonHref}">${monthName}</a>`;
+      // Month picker with direct query
+      const monthList = calendar.months.map((m, idx) => `${m.name},${idx + 1}`).join('|');
+      html += `<a style="${CSS_CURRENT.button}" href="!chr --jumptomonth ?{Which month?|${monthList}}">${monthName}</a>`;
       html += ` `;
       
       // Year picker with direct query
@@ -2353,7 +2123,21 @@ const Chronicle = (() => {
 
       // Find what weekday the 1st falls on
       const firstDate = { year: viewingDate.year, month: viewingDate.month, day: 1 };
-      const firstAbsDay = DateUtils.toAbsoluteDay(firstDate, calendar);
+      let firstAbsDay = DateUtils.toAbsoluteDay(firstDate, calendar);
+      
+      // Subtract "Between weeks" intercalary days that occur BEFORE month 1, day 1
+      // These should not count toward the weekday cycle
+      const allSpecialDays = DateUtils.getSpecialDaysForYear(viewingDate.year, calendar);
+      for (let sd of allSpecialDays) {
+        if (sd.breaksWeekCycle && sd.position) {
+          // Only subtract if this intercalary day comes BEFORE the 1st of this month
+          if (sd.position.afterMonth < viewingDate.month ||
+              (sd.position.afterMonth === viewingDate.month && sd.position.afterDay === 0)) {
+            firstAbsDay--;
+          }
+        }
+      }
+      
       const firstWeekday = (firstAbsDay - 1) % daysInWeek;
 
       let html = '<table style="' + CSS_CURRENT.table + ' table-layout: fixed;">';
@@ -2365,23 +2149,6 @@ const Chronicle = (() => {
         html += `<th style="${CSS_CURRENT.tableCell}">${dayName}</th>`;
       }
       html += '</tr>';
-
-      // Render beginning interannual days (only when viewing month 1)
-      if (viewingDate.month === 1 && calendar.interannualDays?.length > 0) {
-        const beginningDays = DateUtils.getInterannualDaysAtPosition('beginning', calendar);
-        for (const day of beginningDays) {
-          html += '<tr>';
-          const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' : 
-                               CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : 
-                               '#e4d4c0';
-          html += `<td colspan="${daysInWeek}" style="padding: 8px; text-align: left; background: ${specialDayBg}; border: 2px solid #6a6a6a; font-weight: bold; font-size: 13px; cursor: pointer; padding-left: 15px;">`;
-          html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --viewinterannual ${viewingDate.year}|${day.position}|${day.order}">`;
-          html += `<span style="${CSS_CURRENT.holiday}">${day.name}</span>`;
-          html += `</a>`;
-          html += `</td>`;
-          html += '</tr>';
-        }
-      }
 
       // Get special days for this year that break the week cycle (between weeks intercalary days)
       const specialDaysThisYear = DateUtils.getSpecialDaysForYear(viewingDate.year, calendar);
@@ -2532,23 +2299,6 @@ const Chronicle = (() => {
         html += '</tr>';
       });
 
-      // Render ending interannual days (only when viewing the last month)
-      if (viewingDate.month === calendar.months.length && calendar.interannualDays?.length > 0) {
-        const endingDays = DateUtils.getInterannualDaysAtPosition('end', calendar);
-        for (const day of endingDays) {
-          html += '<tr>';
-          const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' : 
-                               CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : 
-                               '#e4d4c0';
-          html += `<td colspan="${daysInWeek}" style="padding: 8px; text-align: left; background: ${specialDayBg}; border: 2px solid #6a6a6a; font-weight: bold; font-size: 13px; cursor: pointer; padding-left: 15px;">`;
-          html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --viewinterannual ${viewingDate.year}|${day.position}|${day.order}">`;
-          html += `<span style="${CSS_CURRENT.holiday}">${day.name}</span>`;
-          html += `</a>`;
-          html += `</td>`;
-          html += '</tr>';
-        }
-      }
-
       html += '</table>';
       return html;
     },
@@ -2596,11 +2346,9 @@ const Chronicle = (() => {
         html += `<div style="${CSS_CURRENT.emojiCircle}">${weatherEmoji}</div>`;
       }
       
-      // Date number - offset by beginning interannual days to show day-of-year
-      const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-      const displayDay = date.day + beginningInterannualCount;
+      // Date number
       html += `<div style="font-weight: bold; clear: none;">`;
-      html += `${displayDay}`;
+      html += `${date.day}`;
       html += `</div>`;
 
       // Moon phases (sprite-based)
@@ -2702,75 +2450,34 @@ const Chronicle = (() => {
     renderDayDetails: (date, calendar, data) => {
       const CSS_CURRENT = getCSS();
       const verbose = State.config().verboseCalendar || false;
-
-      // Check if this is an interannual day
-      let isInterannual = false;
-      let interannualDayInfo = null;
-      if (date.isInterannual) {
-        isInterannual = true;
-        interannualDayInfo = DateUtils.getInterannualDayFromAbsDay(
-          DateUtils.getAbsDayOfInterannualDay(date.position, date.order, calendar),
-          calendar
-        );
-      }
-
-      // Filter events and notes - handle both regular and interannual dates
-      const events = data.events.filter(e => {
-        if (isInterannual) {
-          return e.dateRef.year === date.year && 
-                 e.dateRef.isInterannual === true &&
-                 e.dateRef.position === date.position &&
-                 e.dateRef.order === date.order;
-        } else {
-          return e.dateRef.year === date.year && 
-                 e.dateRef.month === date.month && 
-                 e.dateRef.day === date.day;
-        }
-      });
-
-      const notes = data.notes.filter(n => {
-        if (isInterannual) {
-          return n.dateRef.year === date.year && 
-                 n.dateRef.isInterannual === true &&
-                 n.dateRef.position === date.position &&
-                 n.dateRef.order === date.order;
-        } else {
-          return n.dateRef.year === date.year && 
-                 n.dateRef.month === date.month && 
-                 n.dateRef.day === date.day;
-        }
-      });
-
-      const weather = data.weather.find(w => {
-        if (isInterannual) {
-          return w.dateRef.year === date.year &&
-                 w.dateRef.isInterannual === true &&
-                 w.dateRef.position === date.position &&
-                 w.dateRef.order === date.order;
-        } else {
-          return w.dateRef.year === date.year &&
-                 w.dateRef.month === date.month &&
-                 w.dateRef.day === date.day;
-        }
-      });
-
-      // Calculate day of year and month name (handles both regular and interannual)
-      let dayOfYear = 0;
-      let monthName = '';
       
-      if (isInterannual) {
-        dayOfYear = DateUtils.getAbsDayOfInterannualDay(date.position, date.order, calendar);
-        monthName = ''; // Not applicable for interannual days
-      } else {
-        const month = calendar.months[date.month - 1];
-        monthName = month ? month.name : 'Unknown';
-        // Calculate day of year (1-based, counting from month 1 day 1)
-        const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-        for (let m = 1; m < date.month; m++) {
-          dayOfYear += DateUtils.getDaysInMonth(m, date.year, calendar);
-        }
-        dayOfYear += beginningInterannualCount + date.day;
+      const events = data.events.filter(e => 
+        e.dateRef.year === date.year && 
+        e.dateRef.month === date.month && 
+        e.dateRef.day === date.day
+      );
+
+      const notes = data.notes.filter(n => 
+        n.dateRef.year === date.year && 
+        n.dateRef.month === date.month && 
+        n.dateRef.day === date.day
+      );
+
+      const weather = data.weather.find(w =>
+        w.dateRef.year === date.year &&
+        w.dateRef.month === date.month &&
+        w.dateRef.day === date.day
+      );
+
+      const month = calendar.months[date.month - 1];
+      const monthName = month ? month.name : 'Unknown';
+
+      // Calculate day of year (1-based, counting from month 1 day 1)
+      let dayOfYear = 0;
+      for (let m = 1; m < date.month; m++) {
+        dayOfYear += DateUtils.getDaysInMonth(m, date.year, calendar);
       }
+      dayOfYear += date.day;
 
       const daysInYear = DateUtils.getDaysInYear(date.year, calendar);
       const vernal = calendar.seasons.vernalEquinox || 80; // Default to day 80 if not set
@@ -2795,28 +2502,21 @@ const Chronicle = (() => {
 
       let html = '<div style="margin-top: 20px; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">';
 
-      // Display interannual day or regular date
-      if (isInterannual && interannualDayInfo) {
-        html += `<span style="font-size: 18px; font-weight: bold;">Featured Date: `;
-        html += `<a style="${CSS_CURRENT.holiday} text-decoration: underline; cursor: pointer;">${interannualDayInfo.name}</a>`;
-        html += `, Year ${date.year}</span>`;
-      } else if (date.specialDayId) {
+
+      // Check if this date has a special day reference
+      if (date.specialDayId) {
         const specialDay = (calendar.interMonthDays || []).find(sd => sd.id === date.specialDayId);
         if (specialDay) {
           html += `<span style="font-size: 18px; font-weight: bold;">Featured Date: `;
           html += `<a style="${CSS_CURRENT.holiday} text-decoration: underline; cursor: pointer;" href="!chr --specialdaywhisper ${specialDay.id}">${specialDay.name}</a>`;
           html += `, ${date.year}</span>`;
         } else {
-          // Regular date with special day ID - apply offset for display
-          const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-          const displayDay = date.day + beginningInterannualCount;
-          html += `<span style="font-size: 18px; font-weight: bold;">Featured Date: ${monthName} ${displayDay}, ${date.year}</span>`;
+          // Special day not found, fall back to regular display
+          html += `<span style="font-size: 18px; font-weight: bold;">Featured Date: ${monthName} ${date.day}, ${date.year}</span>`;
         }
       } else {
-        // Regular date - apply offset for display to match grid
-        const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-        const displayDay = date.day + beginningInterannualCount;
-        html += `<span style="font-size: 18px; font-weight: bold;">Featured Date: ${monthName} ${displayDay}, ${date.year}</span>`;
+        // Regular date display
+        html += `<span style="font-size: 18px; font-weight: bold;">Featured Date: ${monthName} ${date.day}, ${date.year}</span>`;
       }
 
       // Control buttons with Roll20 queries
@@ -3001,7 +2701,6 @@ const Chronicle = (() => {
       html += Output.makeButton('Load Faerun', `!chr --loadcal faerun`, CSS_CURRENT.button);
       html += Output.makeButton('Load Greyhawk', `!chr --loadcal greyhawk`, CSS_CURRENT.button);
       html += Output.makeButton('Load Eberron', `!chr --loadcal eberron`, CSS_CURRENT.button);
-      html += Output.makeButton('Load Traveller', `!chr --loadcal traveller`, CSS_CURRENT.button);
       
       // Find all custom calendar handouts
       const allHandouts = findObjs({ type: 'handout' });
@@ -3010,8 +2709,7 @@ const Chronicle = (() => {
         HANDOUT_PREFIX + ' Calendar: Absalom Reckoning',
         HANDOUT_PREFIX + ' Calendar: Faerun',
         HANDOUT_PREFIX + ' Calendar: Greyhawk',
-        HANDOUT_PREFIX + ' Calendar: Eberron',
-        HANDOUT_PREFIX + ' Calendar: Traveller'
+        HANDOUT_PREFIX + ' Calendar: Eberron'
       ];
       
       const customCalendars = allHandouts.filter(h => {
@@ -3238,61 +2936,7 @@ const Chronicle = (() => {
       html += '</div>';
       html += '</div>';
 
-      // Interannual Days
-      html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Interannual Days (Year Holidays)</h3>';
-      const interannualDays = calendar.interannualDays || [];
-      
-      if (interannualDays.length === 0) {
-        html += '<p><em>No interannual days defined</em></p>';
-      } else {
-        html += '<table style="width: 100%; border-collapse: collapse;">';
-        html += '<tr style="background: var(--bg-primary); font-weight: bold;">';
-        html += '<td style="padding: 5px; border: 1px solid var(--border);">Position</td>';
-        html += '<td style="padding: 5px; border: 1px solid var(--border);">Order</td>';
-        html += '<td style="padding: 5px; border: 1px solid var(--border);">Name</td>';
-        html += '<td style="padding: 5px; border: 1px solid var(--border);">Actions</td>';
-        html += '</tr>';
-        
-        interannualDays.forEach((day, idx) => {
-          const escapedName = day.name.replace(/'/g, "\\'");
-          const positionLabel = day.position === 'beginning' ? 'Beginning of Year' : 'End of Year';
-          
-          html += '<tr>';
-          html += `<td style="padding: 5px; border: 1px solid var(--border);">${positionLabel}</td>`;
-          html += `<td style="padding: 5px; border: 1px solid var(--border);">${day.order}</td>`;
-          html += `<td style="padding: 5px; border: 1px solid var(--border);">${day.name}</td>`;
-          html += '<td style="padding: 5px; border: 1px solid var(--border);">';
-          
-          // Up arrow (move earlier in position)
-          if (idx > 0 && interannualDays[idx - 1].position === day.position) {
-            html += Output.makeButton('↑', `!chr --moveinterannual ${idx}|up`, CSS_CURRENT.buttonSmall);
-          }
-          
-          // Down arrow (move later in position)
-          if (idx < interannualDays.length - 1 && interannualDays[idx + 1].position === day.position) {
-            html += Output.makeButton('↓', `!chr --moveinterannual ${idx}|down`, CSS_CURRENT.buttonSmall);
-          }
-          
-          // Edit button
-          const editQuery = `!chr --updateinterannual ${idx}|?{Name|${escapedName}}`;
-          html += `<a style="${CSS_CURRENT.buttonSmall}" href="${editQuery}">Edit</a>`;
-          
-          // Delete button
-          html += Output.makeButton('Delete', `!chr --deleteinterannual ${idx}`, CSS_CURRENT.buttonSmall);
-          html += '</td>';
-          html += '</tr>';
-        });
-        
-        html += '</table>';
-      }
-      
-      html += '<div style="margin-top: 5px;">';
-      // Add Interannual Day query - embedded in button link
-      const interannualQuery = `!chr --addinterannual ?{Name}|?{Position|beginning,end}`;
-      html += `<a style="${CSS_CURRENT.button}" href="${interannualQuery}">Add Interannual Day</a>`;
-      html += '</div>';
-      html += '</div>';
+      // Moons
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
       html += '<h3>Moons</h3>';
       const moons = data.moons;
@@ -3795,48 +3439,18 @@ const Chronicle = (() => {
           html += 'No items match the selected filters';
           html += '</div>';
         } else {
-          // Group items by date AND sort by proper date order
+          // Group items by date
           const itemsByDate = {};
           filteredItems.forEach(item => {
-            // Create a key that works for both regular and interannual dates
-            let key;
-            if (item.date.isInterannual) {
-              key = `${item.date.year}-interannual-${item.date.position}-${item.date.order}`;
-            } else {
-              key = `${item.date.year}-${item.date.month}-${item.date.day}`;
-            }
+            const key = `${item.date.year}-${item.date.month}-${item.date.day}`;
             if (!itemsByDate[key]) {
-              // Calculate sortKey specially to account for interannual days coming first
-              let sortKey;
-              if (item.date.isInterannual) {
-                // Interannual days: calculate year + their position in year
-                let yearDays = 0;
-                if (item.date.year > 1) {
-                  for (let y = 1; y < item.date.year; y++) {
-                    yearDays += DateUtils.getDaysInYear(y, calendar);
-                  }
-                }
-                const absDayInYear = DateUtils.getAbsDayOfInterannualDay(item.date.position, item.date.order, calendar);
-                sortKey = yearDays + absDayInYear;
-              } else {
-                // Regular dates: add beginning interannual count so they come after those days
-                const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-                sortKey = DateUtils.toAbsoluteDay(item.date, calendar) + beginningInterannualCount;
-              }
-              
               itemsByDate[key] = {
                 date: item.date,
-                items: [],
-                sortKey: sortKey
+                items: []
               };
             }
             itemsByDate[key].items.push(item);
           });
-          
-          // Convert to array and sort by absolute day (this is the key fix!)
-          const sortedDates = Object.values(itemsByDate).sort((a, b) => 
-            timelineState.sortAscending ? a.sortKey - b.sortKey : b.sortKey - a.sortKey
-          );
           
           // Render timeline table
           html += '<table style="width: 100%; border-collapse: collapse; border: none;">';
@@ -3844,18 +3458,16 @@ const Chronicle = (() => {
           let lastYear = null;
           let lastMonth = null;
           
-          sortedDates.forEach(entry => {
+          Object.keys(itemsByDate).forEach(key => {
+            const entry = itemsByDate[key];
             const d = entry.date;
-            const month = d.isInterannual ? null : calendar.months[d.month - 1];
-            const monthName = d.isInterannual ? '' : (month ? month.name : 'Unknown');
+            const month = calendar.months[d.month - 1];
+            const monthName = month ? month.name : 'Unknown';
             
-            // Calculate weekday (interannual days have no weekday)
-            let weekdayName = '';
-            if (!d.isInterannual) {
-              const absDay = DateUtils.toAbsoluteDay(d, calendar);
-              const weekdayIndex = (absDay - 1) % calendar.weeks.daysInWeek;
-              weekdayName = calendar.weeks.weekdayNames[weekdayIndex] || 'Day';
-            }
+            // Calculate weekday
+            const absDay = DateUtils.toAbsoluteDay(d, calendar);
+            const weekdayIndex = (absDay - 1) % calendar.weeks.daysInWeek;
+            const weekdayName = calendar.weeks.weekdayNames[weekdayIndex] || 'Day';
             
             // Check if only events (no notes or holidays)
             const hasOnlyEvents = entry.items.every(item => item.type === 'event');
@@ -3864,15 +3476,7 @@ const Chronicle = (() => {
             
             // Date column - theme-aware colors, clickable
             html += `<td style="padding: 5px 15px 5px 0; width: 150px; font-size: 11px; border: none; cursor: pointer;">`;
-            
-            // Create link based on date type
-            let dateLink;
-            if (d.isInterannual) {
-              dateLink = `!chr --viewinterannual ${d.year}|${d.position}|${d.order}`;
-            } else {
-              dateLink = `!chr --viewdate ${d.year}|${d.month}|${d.day}`;
-            }
-            html += `<a style="text-decoration: none; color: inherit; display: block;" href="${dateLink}">`;
+            html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --viewdate ${d.year}|${d.month}|${d.day}">`;
             
             if (d.year !== lastYear) {
               html += `<strong style="font-size: 13px;">${d.year}</strong><br>`;
@@ -3880,26 +3484,14 @@ const Chronicle = (() => {
               lastMonth = null; // Reset month when year changes
             }
             
-            // Display date information based on type
-            if (d.isInterannual) {
-              // For interannual days, find and display the name
-              const interannualDay = DateUtils.getInterannualDayFromAbsDay(
-                DateUtils.getAbsDayOfInterannualDay(d.position, d.order, calendar),
-                calendar
-              );
-              if (interannualDay) {
-                html += `<span style="${CSS_CURRENT.holiday}">${interannualDay.name}</span>`;
+            // Only show month/day if not just events
+            if (!hasOnlyEvents) {
+              if (d.month !== lastMonth) {
+                html += `<strong>${monthName}</strong><br>`;
+                lastMonth = d.month;
               }
-            } else {
-              // For regular dates, show month and day
-              if (!hasOnlyEvents) {
-                if (d.month !== lastMonth) {
-                  html += `<strong>${monthName}</strong><br>`;
-                  lastMonth = d.month;
-                }
-                
-                html += `<span>${weekdayName} ${d.day}</span>`;
-              }
+              
+              html += `<span>${weekdayName} ${d.day}</span>`;
             }
             html += '</a>';
             html += '</td>';
@@ -3950,7 +3542,7 @@ const Chronicle = (() => {
                   html += ' ';
                   e.tags.forEach(tag => {
                     const tagState = timelineState.selectedTags.includes(tag) ? 'active' : 'inactive';
-                    html += `<a style="${CSS_CURRENT.tag}" href="!chr --edittag ${e.id}|event|${tag}|?{Edit tag &#39;${tag}&#39; (leave blank to delete)|${tag}}">${tag}</a>`;
+                    html += Output.makeButton(tag, `!chr --tl-tag ${tag}`, CSS_CURRENT.tag);
                   });
                 }
                 html += '</div>';
@@ -3991,7 +3583,7 @@ const Chronicle = (() => {
                   html += ' ';
                   n.tags.forEach(tag => {
                     const tagState = timelineState.selectedTags.includes(tag) ? 'active' : 'inactive';
-                    html += `<a style="${CSS_CURRENT.tag}" href="!chr --edittag ${n.id}|note|${tag}|?{Edit tag &#39;${tag}&#39; (leave blank to delete)|${tag}}">${tag}</a>`;
+                    html += Output.makeButton(tag, `!chr --tl-tag ${tag}`, CSS_CURRENT.tag);
                   });
                 }
                 html += '</div>';
@@ -4302,26 +3894,6 @@ const Chronicle = (() => {
         return Commands.setSpecialDay(msg, args.setspecialday);
       }
 
-      if (args.addinterannual) {
-        return Commands.addInterannualDay(msg, args.addinterannual);
-      }
-
-      if (args.updateinterannual) {
-        return Commands.updateInterannualDay(msg, args.updateinterannual);
-      }
-
-      if (args.deleteinterannual) {
-        return Commands.deleteInterannualDay(msg, args.deleteinterannual);
-      }
-
-      if (args.moveinterannual) {
-        return Commands.moveInterannualDay(msg, args.moveinterannual);
-      }
-
-      if (args.viewinterannual) {
-        return Commands.viewInterannualDay(msg, args.viewinterannual);
-      }
-
       if (args.deleteholiday !== undefined) {
         return Commands.deleteHoliday(msg, args.deleteholiday);
       }
@@ -4594,7 +4166,7 @@ const Chronicle = (() => {
       }
       
       // Check if loading a default calendar type
-      if (calType === 'gregorian' || calType === 'absalom' || calType === 'faerun' || calType === 'greyhawk' || calType === 'eberron' || calType === 'traveller') {
+      if (calType === 'gregorian' || calType === 'absalom' || calType === 'faerun' || calType === 'greyhawk' || calType === 'eberron') {
         // Get the default calendar
         if (calType === 'gregorian') {
           calendar = DefaultCalendars.gregorian();
@@ -4606,8 +4178,6 @@ const Chronicle = (() => {
           calendar = DefaultCalendars.greyhawk();
         } else if (calType === 'eberron') {
           calendar = DefaultCalendars.eberron();
-        } else if (calType === 'traveller') {
-          calendar = DefaultCalendars.traveller();
         }
         
         // Check if handouts already exist - if so, just load them instead of overwriting
@@ -4635,7 +4205,7 @@ const Chronicle = (() => {
       const handout = HandoutManager.findHandout(handoutName);
       
       if (!handout) {
-        Output.send(msg.who, `Calendar "${calType}" not found. Use <strong>!chr --loadcal list</strong> to see existing calendars, or <strong>!chr --loadcal gregorian</strong> / <strong>!chr --loadcal absalom</strong> / <strong>!chr --loadcal faerun</strong> / <strong>!chr --loadcal greyhawk</strong> / <strong>!chr --loadcal eberron</strong> / <strong>!chr --loadcal traveller</strong> to create a new one.`);
+        Output.send(msg.who, `Calendar "${calType}" not found. Use <strong>!chr --loadcal list</strong> to see existing calendars, or <strong>!chr --loadcal gregorian</strong> / <strong>!chr --loadcal absalom</strong> / <strong>!chr --loadcal faerun</strong> / <strong>!chr --loadcal greyhawk</strong> / <strong>!chr --loadcal eberron</strong> to create a new one.`);
         return;
       }
       
@@ -5424,15 +4994,9 @@ const Chronicle = (() => {
           return;
         }
 
-        // Build list of months for query (or simple link for single-month calendars)
-        let monthButtonHref;
-        if (calendar.months.length === 1) {
-          monthButtonHref = `!chr --jumptomonth 1`;
-        } else {
-          const monthList = calendar.months.map((m, idx) => `${m.name},${idx + 1}`).join('|');
-          monthButtonHref = `!chr --jumptomonth ?{Which month?|${monthList}}`;
-        }
-        Output.send(msg.who, `Click to jump to month: <br>${Output.makeButton('Select Month', monthButtonHref, CSS_CURRENT.button)}`);
+        // Build list of months for query
+        const monthList = calendar.months.map((m, idx) => `${m.name},${idx + 1}`).join('|');
+        Output.send(msg.who, `Click to jump to month: <br>${Output.makeButton('Select Month', `!chr --jumptomonth ?{Which month?|${monthList}}`, CSS_CURRENT.button)}`);
       });
     },
 
@@ -6441,119 +6005,6 @@ const Chronicle = (() => {
       });
     },
 
-
-    addInterannualDay: (msg, data) => {
-      DataLoader.loadAll((calData) => {
-        const parts = data.split('|');
-        const name = parts[0] || 'Unnamed';
-        const position = parts[1] || 'beginning';
-
-        const calendar = calData.calendar;
-        if (!calendar.interannualDays) {
-          calendar.interannualDays = [];
-        }
-
-        // Find the highest order for this position
-        const daysAtPosition = calendar.interannualDays.filter(d => d.position === position);
-        const maxOrder = daysAtPosition.length > 0 ? Math.max(...daysAtPosition.map(d => d.order || 0)) : -1;
-
-        const newDay = DataModels.createInterannualDay(name, position, maxOrder + 1);
-        calendar.interannualDays.push(newDay);
-
-        HandoutManager.saveCalendar(calendar);
-        Commands.renderInterface(msg);
-      });
-    },
-
-    updateInterannualDay: (msg, data) => {
-      DataLoader.loadAll((calData) => {
-        const parts = data.split('|');
-        const idx = parseInt(parts[0]);
-        const name = parts[1] || 'Unnamed';
-
-        const calendar = calData.calendar;
-        if (calendar.interannualDays && calendar.interannualDays[idx]) {
-          calendar.interannualDays[idx].name = name;
-          HandoutManager.saveCalendar(calendar);
-        }
-
-        Commands.renderInterface(msg);
-      });
-    },
-
-    deleteInterannualDay: (msg, idxStr) => {
-      DataLoader.loadAll((calData) => {
-        const calendar = calData.calendar;
-        const idx = parseInt(idxStr);
-
-        if (calendar.interannualDays && idx >= 0 && idx < calendar.interannualDays.length) {
-          calendar.interannualDays.splice(idx, 1);
-          HandoutManager.saveCalendar(calendar);
-        }
-
-        Commands.renderInterface(msg);
-      });
-    },
-
-    moveInterannualDay: (msg, data) => {
-      DataLoader.loadAll((calData) => {
-        const parts = data.split('|');
-        const idx = parseInt(parts[0]);
-        const direction = parts[1];
-
-        const calendar = calData.calendar;
-        if (!calendar.interannualDays || idx < 0 || idx >= calendar.interannualDays.length) {
-          Commands.renderInterface(msg);
-          return;
-        }
-
-        const day = calendar.interannualDays[idx];
-        const daysAtPosition = calendar.interannualDays.filter(d => d.position === day.position);
-        const positionIndex = daysAtPosition.indexOf(day);
-
-        if (direction === 'up' && positionIndex > 0) {
-          // Swap orders with previous day
-          const prevDay = daysAtPosition[positionIndex - 1];
-          [day.order, prevDay.order] = [prevDay.order, day.order];
-          HandoutManager.saveCalendar(calendar);
-        } else if (direction === 'down' && positionIndex < daysAtPosition.length - 1) {
-          // Swap orders with next day
-          const nextDay = daysAtPosition[positionIndex + 1];
-          [day.order, nextDay.order] = [nextDay.order, day.order];
-          HandoutManager.saveCalendar(calendar);
-        }
-
-        Commands.renderInterface(msg);
-      });
-    },
-
-    viewInterannualDay: (msg, data) => {
-      DataLoader.loadAll((calData) => {
-        const parts = data.split('|');
-        const year = parseInt(parts[0]);
-        const position = parts[1];
-        const order = parseInt(parts[2]);
-
-        const calendar = calData.calendar;
-
-        // Set current date to this interannual day
-        State.setConfig('currentDate', {
-          year: year,
-          isInterannual: true,
-          position: position,
-          order: order
-        });
-
-        // Set viewing month (first month for beginning, last for end)
-        const viewMonth = position === 'beginning' ? 1 : calendar.months.length;
-        State.setConfig('viewingDate', {
-          year: year,
-          month: viewMonth
-        });
-
-        Commands.renderInterface(msg);
-      });
-    },
 
     deleteHoliday: (msg, idxStr) => {
       DataLoader.loadAll((data) => {
