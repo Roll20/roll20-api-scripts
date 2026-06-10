@@ -1,0 +1,13 @@
+{
+    "name": "Choreograph",
+    "script": "Choreograph.js",
+    "version": "0.1",
+    "previousversions": [],
+    "description": "Meta-sequencer for Roll20 tokens. Define scenes in handouts — filter tokens, compute per-token timing, and fire commands at the right moments. Designed to orchestrate animations and effects across groups of tokens with spatial propagation, staggering, and parameterizable timing.\n\nRequires: SelectManager.\n\nScenes are stored in [Scene] handouts, casts in [Cast] handouts.\n\nCommands:\n- `!choreograph run <name>` — execute a scene on selected tokens\n- `!choreograph new <name>` — create a blank scene handout\n- `!choreograph list` — list all scenes\n- `!choreograph edit <name>` — open scene handout\n- `!choreograph delete <name>` — delete a scene\n- `!choreograph stop` — stop all running scenes\n\nSee the Help: Choreograph handout (generated on startup) for full documentation.",
+    "authors": "Kenan Millet",
+    "roll20userid": "2614613",
+    "useroptions": {},
+    "dependencies": ["SelectManager"],
+    "modifies": {},
+    "conflicts": []
+}
