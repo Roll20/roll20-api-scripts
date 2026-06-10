@@ -178,11 +178,246 @@ var ChatSetAttr = (function (exports) {
         }
         observers[event].push(callback);
     }
-    function notifyObservers(event, targetID, attributeName, newValue, oldValue) {
+    function notifyObservers(event, obj, prev) {
         const callbacks = observers[event] || [];
         callbacks.forEach(callback => {
-            callback(event, targetID, attributeName, newValue, oldValue);
+            callback(obj, prev);
         });
+    }
+
+    const WRITABLE_KEYS = new Set(["current", "max"]);
+    function normalizeKey(key) {
+        return key.startsWith("_") ? key.slice(1) : key;
+    }
+    function toAttrString(value) {
+        if (value === undefined || value === null) {
+            return "";
+        }
+        return String(value);
+    }
+    function hasSheetItemValue(value) {
+        return value !== null && value !== undefined && value !== "";
+    }
+    function hasPriorValue$1(value) {
+        return value !== undefined && value !== null && value !== "";
+    }
+    function toSnapshot(targetId, actualName, kind, state, id = "") {
+        return {
+            _id: id,
+            _type: kind,
+            _characterid: targetId,
+            name: actualName,
+            current: state.current,
+            max: state.max,
+        };
+    }
+    function mergeAttributeState(targetId, actualName, priorValues, results, isDelete) {
+        const maxKey = `${actualName}_max`;
+        const priorCurrent = priorValues[targetId]?.[actualName];
+        const priorMax = priorValues[targetId]?.[maxKey];
+        if (isDelete) {
+            return {
+                current: toAttrString(priorCurrent),
+                max: toAttrString(priorMax),
+                priorCurrent: toAttrString(priorCurrent),
+                priorMax: toAttrString(priorMax),
+            };
+        }
+        const newCurrent = results[targetId]?.[actualName];
+        const newMax = results[targetId]?.[maxKey];
+        return {
+            current: newCurrent !== undefined ? toAttrString(newCurrent) : toAttrString(priorCurrent),
+            max: newMax !== undefined ? toAttrString(newMax) : toAttrString(priorMax),
+            priorCurrent: toAttrString(priorCurrent),
+            priorMax: toAttrString(priorMax),
+        };
+    }
+    function tryFindLegacyAttribute(targetId, actualName) {
+        return findObjs({
+            _type: "attribute",
+            _characterid: targetId,
+            name: actualName,
+        })[0];
+    }
+    function isLegacySheet(targetId) {
+        const character = getObj("character", targetId);
+        return character?.sheetEnvironment === "legacy";
+    }
+    function legacyAttributeForSheet(targetId, actualName) {
+        if (!isLegacySheet(targetId)) {
+            return undefined;
+        }
+        return tryFindLegacyAttribute(targetId, actualName);
+    }
+    async function resolveObserverKind(targetId, actualName) {
+        if (isLegacySheet(targetId)) {
+            return "attribute";
+        }
+        const computed = await getSheetItem(targetId, actualName, "current");
+        const computedMax = await getSheetItem(targetId, actualName, "max");
+        if (hasSheetItemValue(computed) || hasSheetItemValue(computedMax)) {
+            return "computed";
+        }
+        const userAttr = await getSheetItem(targetId, `user.${actualName}`, "current");
+        const userMax = await getSheetItem(targetId, `user.${actualName}`, "max");
+        if (hasSheetItemValue(userAttr) || hasSheetItemValue(userMax)) {
+            return "userAttribute";
+        }
+        return "computed";
+    }
+    function isNewAttributeOrUser(kind, state) {
+        if (kind === "computed") {
+            return false;
+        }
+        return state.priorCurrent === "" && state.priorMax === "";
+    }
+    function sheetItemPath(kind, actualName) {
+        return kind === "userAttribute" ? `user.${actualName}` : actualName;
+    }
+    async function writeSheetItemValue(characterId, kind, actualName, key, value) {
+        const normalized = normalizeKey(key);
+        if (!WRITABLE_KEYS.has(normalized)) {
+            return false;
+        }
+        const type = normalized;
+        const path = sheetItemPath(kind, actualName);
+        try {
+            await setSheetItem(characterId, path, value, type, {
+                allowThrow: true,
+                createAttr: true,
+                withWorker: true,
+            });
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
+    function createObserverAttributeObject(targetId, actualName, kind, state, id = "") {
+        const snapshot = toSnapshot(targetId, actualName, kind, state, id);
+        const obj = {
+            get(key) {
+                const normalized = normalizeKey(key);
+                const byKey = {
+                    id: snapshot._id,
+                    _id: snapshot._id,
+                    type: snapshot._type,
+                    _type: snapshot._type,
+                    characterid: snapshot._characterid,
+                    _characterid: snapshot._characterid,
+                    name: snapshot.name,
+                    current: snapshot.current,
+                    max: snapshot.max,
+                };
+                return byKey[normalized] ?? byKey[key];
+            },
+            set(keyOrProps, value) {
+                const updates = {};
+                if (typeof keyOrProps === "string") {
+                    const normalized = normalizeKey(keyOrProps);
+                    if (WRITABLE_KEYS.has(normalized) && value !== undefined) {
+                        updates[normalized] = value;
+                    }
+                }
+                else {
+                    if (keyOrProps.current !== undefined) {
+                        updates.current = keyOrProps.current;
+                    }
+                    if (keyOrProps.max !== undefined) {
+                        updates.max = keyOrProps.max;
+                    }
+                }
+                for (const [key, nextValue] of Object.entries(updates)) {
+                    if (nextValue === undefined) {
+                        continue;
+                    }
+                    void writeSheetItemValue(targetId, kind, actualName, key, nextValue).then(ok => {
+                        if (ok) {
+                            snapshot[key] = nextValue;
+                        }
+                    });
+                }
+                return obj;
+            },
+            toJSON() {
+                return { ...snapshot };
+            },
+        };
+        return obj;
+    }
+    function resolveObserverObj(targetId, actualName, kind, state) {
+        if (kind === "attribute") {
+            const legacyAttr = legacyAttributeForSheet(targetId, actualName);
+            if (legacyAttr) {
+                return legacyAttr;
+            }
+        }
+        const legacyAttr = legacyAttributeForSheet(targetId, actualName);
+        const id = legacyAttr?.get("_id") ?? "";
+        return createObserverAttributeObject(targetId, actualName, kind, state, id);
+    }
+    function resolveObserverAddObj(targetId, actualName, kind, state) {
+        if (kind === "attribute") {
+            const legacyAttr = legacyAttributeForSheet(targetId, actualName);
+            if (legacyAttr) {
+                return legacyAttr;
+            }
+        }
+        const legacyAttr = legacyAttributeForSheet(targetId, actualName);
+        const id = legacyAttr?.get("_id") ?? "";
+        return createObserverAttributeObject(targetId, actualName, kind, state, id);
+    }
+    async function captureDeletePriorState(targetId, actualName, kind, priorValues) {
+        const maxKey = `${actualName}_max`;
+        let priorCurrent = priorValues[targetId]?.[actualName];
+        let priorMax = priorValues[targetId]?.[maxKey];
+        const legacyAttr = legacyAttributeForSheet(targetId, actualName);
+        if (legacyAttr) {
+            if (!hasPriorValue$1(priorCurrent)) {
+                priorCurrent = legacyAttr.get("current");
+            }
+            if (!hasPriorValue$1(priorMax)) {
+                priorMax = legacyAttr.get("max");
+            }
+        }
+        else {
+            const userCurrent = await getSheetItem(targetId, `user.${actualName}`, "current");
+            const userMax = await getSheetItem(targetId, `user.${actualName}`, "max");
+            const hasUserValues = hasSheetItemValue(userCurrent) || hasSheetItemValue(userMax);
+            const path = hasUserValues || kind === "userAttribute"
+                ? `user.${actualName}`
+                : actualName;
+            if (!hasPriorValue$1(priorCurrent)) {
+                priorCurrent = await getSheetItem(targetId, path, "current");
+            }
+            if (!hasPriorValue$1(priorMax)) {
+                priorMax = await getSheetItem(targetId, path, "max");
+            }
+            if (!hasPriorValue$1(priorCurrent) && hasUserValues) {
+                priorCurrent = userCurrent;
+            }
+            if (!hasPriorValue$1(priorMax) && hasUserValues) {
+                priorMax = userMax;
+            }
+        }
+        const current = toAttrString(priorCurrent);
+        const max = toAttrString(priorMax);
+        return {
+            current,
+            max,
+            priorCurrent: current,
+            priorMax: max,
+        };
+    }
+    function logicalAttributeKey(target, actualName) {
+        return `${target}:${actualName}`;
+    }
+    function toActualName(name) {
+        const isMax = name.endsWith("_max");
+        return {
+            actualName: isMax ? name.slice(0, -4) : name,
+            isMax,
+        };
     }
 
     function buildSetAttributeOptions(overrides = {}) {
@@ -195,26 +430,78 @@ var ChatSetAttr = (function (exports) {
     function failureKey(target, name) {
         return `${target}:${name}`;
     }
-    function observerEvent(operation, priorValue, isDelete) {
-        if (operation === "setattr" && priorValue === undefined) {
-            return "add";
+    function collectLogicalGroups(results) {
+        const groups = new Map();
+        for (const target in results) {
+            for (const name in results[target]) {
+                const { actualName } = toActualName(name);
+                const key = logicalAttributeKey(target, actualName);
+                const existing = groups.get(key);
+                if (existing) {
+                    existing.keys.push(name);
+                }
+                else {
+                    groups.set(key, { target, actualName, keys: [name] });
+                }
+            }
         }
-        return "change";
+        return Array.from(groups.values());
+    }
+    function groupHasFailure(group, failed) {
+        return group.keys.some(name => failed.has(failureKey(group.target, name)));
+    }
+    function shouldSkipPairedMaxDelete(target, actualName, isMax, priorValues, results) {
+        if (!isMax) {
+            return false;
+        }
+        const maxKey = `${actualName}_max`;
+        const hasCompanionCurrent = Object.hasOwn(results[target], actualName);
+        const character = getObj("character", target);
+        if (character?.sheetEnvironment === "legacy") {
+            return hasCompanionCurrent;
+        }
+        // Beacon userAttributes are removed when current is cleared; a follow-up max delete fails.
+        if (hasCompanionCurrent) {
+            return true;
+        }
+        if (!hasPriorValue(priorValues[target]?.[maxKey])) {
+            return true;
+        }
+        return false;
+    }
+    function hasPriorValue(value) {
+        return value !== undefined && value !== null && value !== "";
     }
     async function makeUpdate(operation, results, options) {
         const isSetting = operation !== "delattr";
         const errors = [];
         const messages = [];
         const failed = [];
-        const { noCreate = false, priorValues = {}, operation: op = operation } = options || {};
+        const failedSet = new Set();
+        const { noCreate = false, priorValues = {} } = options || {};
         const setOptions = buildSetAttributeOptions({ noCreate });
+        const deleteKinds = new Map();
+        const deleteStates = new Map();
+        if (!isSetting) {
+            for (const target in results) {
+                for (const name in results[target]) {
+                    const { actualName } = toActualName(name);
+                    const groupKey = logicalAttributeKey(target, actualName);
+                    if (!deleteKinds.has(groupKey)) {
+                        deleteKinds.set(groupKey, await resolveObserverKind(target, actualName));
+                    }
+                    if (!deleteStates.has(groupKey)) {
+                        const kind = deleteKinds.get(groupKey) ?? await resolveObserverKind(target, actualName);
+                        deleteStates.set(groupKey, await captureDeletePriorState(target, actualName, kind, priorValues));
+                    }
+                }
+            }
+        }
         for (const target in results) {
             for (const name in results[target]) {
-                const isMax = name.endsWith("_max");
+                const { actualName, isMax } = toActualName(name);
                 const type = isMax ? "max" : "current";
-                const actualName = isMax ? name.slice(0, -4) : name;
                 const key = failureKey(target, name);
-                const priorValue = priorValues[target]?.[name];
                 const newValue = results[target][name];
                 if (isSetting) {
                     const value = newValue ?? "";
@@ -222,32 +509,62 @@ var ChatSetAttr = (function (exports) {
                         const ok = await libSmartAttributes.setAttribute(target, actualName, value, type, setOptions);
                         if (!ok) {
                             failed.push(key);
+                            failedSet.add(key);
                             errors.push(`Failed to set attribute '${name}' on target '${target}'.`);
-                            continue;
                         }
-                        const event = observerEvent(op, priorValue, false);
-                        notifyObservers(event, target, name, newValue, priorValue);
                     }
                     catch (error) {
                         failed.push(key);
+                        failedSet.add(key);
                         errors.push(`Failed to set attribute '${name}' on target '${target}': ${String(error)}`);
                     }
                 }
                 else {
+                    if (shouldSkipPairedMaxDelete(target, actualName, isMax, priorValues, results)) {
+                        continue;
+                    }
                     try {
                         const ok = await libSmartAttributes.deleteAttribute(target, actualName, type);
                         if (!ok) {
                             failed.push(key);
+                            failedSet.add(key);
                             errors.push(`Failed to delete attribute '${actualName}' on target '${target}'.`);
-                            continue;
                         }
-                        notifyObservers("destroy", target, name, newValue, priorValue);
                     }
                     catch (error) {
                         failed.push(key);
+                        failedSet.add(key);
                         errors.push(`Failed to delete attribute '${actualName}' on target '${target}': ${String(error)}`);
                     }
                 }
+            }
+        }
+        const groups = collectLogicalGroups(results);
+        for (const group of groups) {
+            if (groupHasFailure(group, failedSet)) {
+                continue;
+            }
+            const groupKey = logicalAttributeKey(group.target, group.actualName);
+            const state = isSetting
+                ? mergeAttributeState(group.target, group.actualName, priorValues, results, false)
+                : deleteStates.get(groupKey) ?? mergeAttributeState(group.target, group.actualName, priorValues, results, true);
+            const kind = isSetting
+                ? await resolveObserverKind(group.target, group.actualName)
+                : deleteKinds.get(logicalAttributeKey(group.target, group.actualName)) ?? await resolveObserverKind(group.target, group.actualName);
+            if (isSetting) {
+                const prev = toSnapshot(group.target, group.actualName, kind, {
+                    current: state.priorCurrent,
+                    max: state.priorMax,
+                });
+                const obj = resolveObserverObj(group.target, group.actualName, kind, state);
+                if (isNewAttributeOrUser(kind, state)) {
+                    notifyObservers("add", resolveObserverAddObj(group.target, group.actualName, kind, state));
+                }
+                notifyObservers("change", obj, prev);
+            }
+            else {
+                const obj = resolveObserverObj(group.target, group.actualName, kind, state);
+                notifyObservers("destroy", obj);
             }
         }
         return { errors, messages, failed };
@@ -355,26 +672,36 @@ var ChatSetAttr = (function (exports) {
                 h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout"))));
     }
 
-    //import { s } from "../utils/chat";
+    function normalizeCommandOutputOptions(options = {}) {
+        return {
+            mute: Boolean(options.mute),
+            silent: Boolean(options.silent || options.mute),
+        };
+    }
     function getPlayerName(playerID) {
         const player = getObj("player", playerID);
         return player?.get("_displayname") || undefined;
     }
-    function sendMessages(playerID, header, messages, from = "ChatSetAttr") {
+    function sendMessages(playerID, header, messages, from = "ChatSetAttr", output) {
+        if (output?.silent) {
+            return;
+        }
         const newMessage = createChatMessage(header, messages);
         const player = getPlayerName(playerID);
         sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
     }
-    function sendErrors(playerID, header, errors, from = "ChatSetAttr") {
-        if (errors.length === 0)
+    function sendErrors(playerID, header, errors, from = "ChatSetAttr", output) {
+        if (errors.length === 0 || output?.mute) {
             return;
+        }
         const newMessage = createErrorMessage(header, errors);
         const player = getPlayerName(playerID);
         sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
     }
-    function sendDelayMessage(silent = false) {
-        if (silent)
+    function sendDelayMessage(output) {
+        if (output?.silent) {
             return;
+        }
         const delayMessage = createDelayMessage();
         sendChat("ChatSetAttr", delayMessage, undefined, { noarchive: true });
     }
@@ -669,9 +996,7 @@ var ChatSetAttr = (function (exports) {
         for (const change of changes) {
             if (change.name) {
                 queriedAttributes.add(change.name);
-                if (change.max !== undefined) {
-                    queriedAttributes.add(`${change.name}_max`);
-                }
+                queriedAttributes.add(`${change.name}_max`);
             }
         }
         const attributes = await getAttributes(target, Array.from(queriedAttributes));
@@ -1806,12 +2131,31 @@ var ChatSetAttr = (function (exports) {
             errors,
         };
     }
+    function splitCommaSeparatedValues(valueString) {
+        if (!valueString) {
+            return [];
+        }
+        return valueString.split(/\s*,\s*/).map(v => v.trim()).filter(v => v.length > 0);
+    }
+    function parseTargetOption(option) {
+        const trimmed = option.trim();
+        const spaceIndex = trimmed.indexOf(" ");
+        if (spaceIndex === -1) {
+            return { type: trimmed, values: [] };
+        }
+        const type = trimmed.slice(0, spaceIndex);
+        const remainder = trimmed.slice(spaceIndex + 1).trim();
+        if (type === "name" || type === "charid") {
+            return { type, values: splitCommaSeparatedValues(remainder) };
+        }
+        return { type, values: [] };
+    }
     function generateNameTargets(values) {
         const { playerID } = getPermissions();
         const targets = [];
         const errors = [];
         for (const name of values) {
-            const characters = findObjs({ _type: "character", name: name });
+            const characters = findObjs({ _type: "character", name }, { caseInsensitive: true });
             if (characters.length === 0) {
                 errors.push(`Character with name "${name}" not found.`);
                 continue;
@@ -1838,7 +2182,7 @@ var ChatSetAttr = (function (exports) {
         const characterIDs = [];
         const errors = [];
         for (const option of targetOptions) {
-            const [type, ...values] = option.split(/[, ]/).map(v => v.trim()).filter(v => v.length > 0);
+            const { type, values } = parseTargetOption(option);
             if (type === "sel" || type === "sel-noparty" || type === "sel-party") {
                 const results = generateSelectedTargets(message, type);
                 characterIDs.push(...results.targets);
@@ -1916,31 +2260,32 @@ var ChatSetAttr = (function (exports) {
         const result = {};
         // Parse Message
         const { operation, targeting, options, changes, references, feedback, } = parseMessage(msg.content);
+        const output = normalizeCommandOutputOptions(options);
         // Start Timer
-        startTimer("chatsetattr", 8000, () => sendDelayMessage(options.silent));
+        startTimer("chatsetattr", 8000, () => sendDelayMessage(output));
         // Check Config and Permissions
         const config = getConfig();
         const isAPI = "API" === msg.playerid;
         const isGM = playerIsGM(msg.playerid);
         if (options.evaluate && !isAPI && !isGM && !config.playersCanEvaluate) {
-            return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors);
+            return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors, output);
         }
         if (targeting.includes("party") && !isAPI && !isGM && !config.playersCanTargetParty) {
-            return errorOut("You do not have permission to target the party.", msg.playerid, errors);
+            return errorOut("You do not have permission to target the party.", msg.playerid, errors, output);
         }
         if ((operation === "modattr" || operation === "modbattr") && !isAPI && !isGM && !config.playersCanModify) {
-            return errorOut("You do not have permission to modify attributes.", msg.playerid, errors);
+            return errorOut("You do not have permission to modify attributes.", msg.playerid, errors, output);
         }
         // Preprocess
         const { targets, errors: targetErrors } = generateTargets(msg, targeting);
         errors.push(...targetErrors);
         if (targets.length === 0) {
-            return errorOut("No valid targets found.", msg.playerid, errors);
+            return errorOut("No valid targets found.", msg.playerid, errors, output);
         }
         const request = generateRequest(references, changes);
         const command = handlers[operation];
         if (!command) {
-            return errorOut(`Invalid operation: ${operation}`, msg.playerid, errors);
+            return errorOut(`Invalid operation: ${operation}`, msg.playerid, errors, output);
         }
         // Execute
         const priorValues = {};
@@ -1961,9 +2306,7 @@ var ChatSetAttr = (function (exports) {
         }
         const updateResult = await makeUpdate(operation, result, {
             noCreate: options.nocreate,
-            priorValues,
-            operation,
-        });
+            priorValues});
         clearTimer("chatsetattr");
         errors.push(...updateResult.errors);
         for (const target in pendingMessages) {
@@ -1973,31 +2316,28 @@ var ChatSetAttr = (function (exports) {
                 }
             }
         }
-        if (options.silent)
-            return;
-        sendErrors(msg.playerid, "Errors", errors, feedback?.from);
-        if (options.mute)
-            return;
+        sendErrors(msg.playerid, "Errors", errors, feedback?.from, output);
         const delSetTitle = operation === "delattr" ? "Deleting Attributes" : "Setting Attributes";
         const feedbackTitle = feedback?.header ?? delSetTitle;
-        sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from);
+        sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from, output);
     }
-    function errorOut(errorText, playerid, errors) {
+    function errorOut(errorText, playerid, errors, output) {
         errors.push(errorText);
-        sendErrors(playerid, "Errors", errors);
+        sendErrors(playerid, "Errors", errors, undefined, output);
         clearTimer("chatsetattr");
     }
     function generateRequest(references, changes) {
         const referenceSet = new Set(references);
         for (const change of changes) {
-            if (change.name && !referenceSet.has(change.name)) {
+            if (!change.name) {
+                continue;
+            }
+            if (!referenceSet.has(change.name)) {
                 referenceSet.add(change.name);
             }
-            if (change.max !== undefined) {
-                const maxName = `${change.name}_max`;
-                if (!referenceSet.has(maxName)) {
-                    referenceSet.add(maxName);
-                }
+            const maxName = `${change.name}_max`;
+            if (!referenceSet.has(maxName)) {
+                referenceSet.add(maxName);
             }
         }
         return Array.from(referenceSet);

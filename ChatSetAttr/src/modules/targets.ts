@@ -148,13 +148,37 @@ function generatePartyTargets() {
 };
 
 
+function splitCommaSeparatedValues(valueString: string): string[] {
+  if (!valueString) {
+    return [];
+  }
+  return valueString.split(/\s*,\s*/).map(v => v.trim()).filter(v => v.length > 0);
+};
+
+function parseTargetOption(option: string): { type: string; values: string[] } {
+  const trimmed = option.trim();
+  const spaceIndex = trimmed.indexOf(" ");
+  if (spaceIndex === -1) {
+    return { type: trimmed, values: [] };
+  }
+
+  const type = trimmed.slice(0, spaceIndex);
+  const remainder = trimmed.slice(spaceIndex + 1).trim();
+
+  if (type === "name" || type === "charid") {
+    return { type, values: splitCommaSeparatedValues(remainder) };
+  }
+
+  return { type, values: [] };
+};
+
 function generateNameTargets(values: string[]) {
   const { playerID } = getPermissions();
   const targets: string[] = [];
   const errors: string[] = [];
 
   for (const name of values) {
-    const characters = findObjs({ _type: "character", name: name });
+    const characters = findObjs({ _type: "character", name }, { caseInsensitive: true });
     if (characters.length === 0) {
       errors.push(`Character with name "${name}" not found.`);
       continue;
@@ -184,7 +208,7 @@ export function generateTargets(message: Roll20ChatMessage, targetOptions: strin
   const errors: string[] = [];
 
   for (const option of targetOptions) {
-    const [type, ...values] = option.split(/[, ]/).map(v => v.trim()).filter(v => v.length > 0);
+    const { type, values } = parseTargetOption(option);
 
     if (type === "sel" || type === "sel-noparty" || type === "sel-party") {
       const results = generateSelectedTargets(message, type);

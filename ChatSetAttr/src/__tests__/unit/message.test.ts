@@ -252,6 +252,12 @@ describe("message", () => {
         expect(result.targeting).toContain("name Gandalf");
       });
 
+      it("should preserve multi-word comma-separated name targeting", () => {
+        const result = parse("!setattr --name bob the slayer, timmy the weak --time|now");
+        expect(result.targeting).toContain("name bob the slayer, timmy the weak");
+        expect(result.changes).toEqual([{ name: "time", current: "now" }]);
+      });
+
       it("should parse sel target", () => {
         const result = parse("!setattr --sel --strength 18");
         expect(result.targeting).toContain("sel");

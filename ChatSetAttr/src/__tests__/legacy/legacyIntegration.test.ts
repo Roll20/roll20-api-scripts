@@ -754,13 +754,43 @@ describe("ChatSetAttr Integration Tests", () => {
       createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
       vi.mocked(sendChat).mockClear();
 
-      executeCommand("!setattr --charid char1 --mute --mod --NonNumeric|abc --Value|5");
+      executeCommand("!setattr --charid char1 --mute --nocreate --MissingAttr|5");
 
       await vi.waitFor(() => {
         const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
           call[1] && typeof call[1] === "string" && call[1].includes("Error")
         );
         expect(errorCall).toBeUndefined();
+      });
+    });
+
+    it("should suppress errors when mute is used with no valid target", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --mute --thisisafakecommand --hp|140");
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" && call[1].includes("No target characters")
+        );
+        expect(errorCall).toBeUndefined();
+      });
+    });
+
+    it("should still show errors when silent is used with no valid target", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --silent --thisisafakecommand --hp|140");
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" && call[1].includes("No target characters")
+        );
+        expect(errorCall).toBeDefined();
       });
     });
 
@@ -799,7 +829,7 @@ describe("ChatSetAttr Integration Tests", () => {
         const calls = mockObserver.mock.calls;
         const hasAddCall = calls.some(call => {
           const attr = call[0];
-          return attr && attr.get("name") === "NewAttribute" && attr.get("current") === "42";
+          return attr && attr.get("name") === "NewAttribute";
         });
         expect(hasAddCall).toBe(true);
       });

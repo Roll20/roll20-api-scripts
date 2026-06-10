@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { AttributeRecord } from "../../types";
+import { resetAllObjects } from "../../__mocks__/apiObjects.mock";
 import { makeUpdate } from "../../modules/updates";
 
 // Mock the config module
@@ -28,6 +29,7 @@ const mockNotifyObservers = vi.mocked(notifyObservers);
 describe("updates", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetAllObjects();
     mockGetConfig.mockReturnValue({ useWorkers: false });
   });
 
@@ -459,16 +461,48 @@ describe("updates", () => {
 
       await makeUpdate("setattr", { char1: { strength: 15 } }, { priorValues, operation: "setattr" });
 
-      expect(mockNotifyObservers).toHaveBeenCalledWith("change", "char1", "strength", 15, 10);
+      expect(mockNotifyObservers).toHaveBeenCalledWith(
+        "change",
+        expect.objectContaining({ get: expect.any(Function) }),
+        expect.objectContaining({
+          _characterid: "char1",
+          name: "strength",
+          current: "10",
+        }),
+      );
+      expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("15");
     });
 
-    it("should notify observers with add event when prior value is undefined", async () => {
+    it("should notify observers with add and change when prior value is undefined", async () => {
       mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
+      vi.spyOn(global, "getSheetItem").mockImplementation(async (_charId, name) => {
+        if (name === "user.NewAttr") {
+          return "42";
+        }
+        return undefined;
+      });
       const priorValues = { char1: {} };
 
       await makeUpdate("setattr", { char1: { NewAttr: 42 } }, { priorValues, operation: "setattr" });
 
-      expect(mockNotifyObservers).toHaveBeenCalledWith("add", "char1", "NewAttr", 42, undefined);
+      expect(mockNotifyObservers).toHaveBeenCalledTimes(2);
+      expect(mockNotifyObservers).toHaveBeenNthCalledWith(
+        1,
+        "add",
+        expect.objectContaining({ get: expect.any(Function) }),
+      );
+      expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("42");
+      expect(mockNotifyObservers).toHaveBeenNthCalledWith(
+        2,
+        "change",
+        expect.objectContaining({ get: expect.any(Function) }),
+        expect.objectContaining({
+          name: "NewAttr",
+          current: "",
+          max: "",
+        }),
+      );
+      expect(mockNotifyObservers.mock.calls[1][1].get("current")).toBe("42");
     });
 
     it("should notify observers with destroy event on successful delete", async () => {
@@ -477,7 +511,89 @@ describe("updates", () => {
 
       await makeUpdate("delattr", { char1: { strength: undefined } }, { priorValues });
 
-      expect(mockNotifyObservers).toHaveBeenCalledWith("destroy", "char1", "strength", undefined, 10);
+      expect(mockNotifyObservers).toHaveBeenCalledTimes(1);
+      expect(mockNotifyObservers.mock.calls[0][0]).toBe("destroy");
+      expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("10");
+      expect(mockNotifyObservers.mock.calls[0][1].get("name")).toBe("strength");
+    });
+
+    it("should include max on destroy when legacy attribute had max", async () => {
+      const character = createObj("character", { _id: "char1", name: "Hero" });
+      Object.assign(character, { sheetEnvironment: "legacy" });
+      createObj("attribute", { _id: "attr1", _characterid: "char1", name: "hp", current: "10", max: "20" });
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
+      const priorValues = { char1: { hp: 10 } };
+
+      await makeUpdate("delattr", { char1: { hp: undefined } }, { priorValues });
+
+      expect(mockNotifyObservers).toHaveBeenCalledTimes(1);
+      expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("10");
+      expect(mockNotifyObservers.mock.calls[0][1].get("max")).toBe("20");
+    });
+
+    it("should notify destroy for userAttribute delete without max", async () => {
+      vi.spyOn(global, "getSheetItem").mockImplementation(async (_charId, name, type) => {
+        if (name === "user.UserOnlyAttr" && type === "current") {
+          return "42";
+        }
+        return undefined;
+      });
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
+      const priorValues = { char1: { UserOnlyAttr: "42" } };
+
+      await makeUpdate("delattr", {
+        char1: { UserOnlyAttr: undefined, UserOnlyAttr_max: undefined },
+      }, { priorValues });
+
+      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledTimes(1);
+      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "UserOnlyAttr", "current");
+      expect(mockNotifyObservers).toHaveBeenCalledTimes(1);
+      expect(mockNotifyObservers.mock.calls[0][0]).toBe("destroy");
+      expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("42");
+      expect(mockNotifyObservers.mock.calls[0][1].toJSON()._type).toBe("userAttribute");
+    });
+
+    it("should notify destroy for userAttribute delete with max", async () => {
+      vi.spyOn(global, "getSheetItem").mockImplementation(async (_charId, name, type) => {
+        if (name === "user.UserAttrWithMax") {
+          return type === "current" ? "42" : "100";
+        }
+        return undefined;
+      });
+      mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
+      const priorValues = { char1: { UserAttrWithMax: "42", UserAttrWithMax_max: "100" } };
+
+      await makeUpdate("delattr", {
+        char1: { UserAttrWithMax: undefined, UserAttrWithMax_max: undefined },
+      }, { priorValues });
+
+      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledTimes(1);
+      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "UserAttrWithMax", "current");
+      expect(mockNotifyObservers).toHaveBeenCalledTimes(1);
+      expect(mockNotifyObservers.mock.calls[0][0]).toBe("destroy");
+      expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("42");
+      expect(mockNotifyObservers.mock.calls[0][1].get("max")).toBe("100");
+      expect(mockNotifyObservers.mock.calls[0][1].toJSON()._type).toBe("userAttribute");
+    });
+
+    it("should group hp and hp_max into one change notification", async () => {
+      mocklibSmartAttributes.setAttribute.mockResolvedValue(true);
+      const priorValues = { char1: { hp: 8, hp_max: 18 } };
+
+      await makeUpdate("setattr", { char1: { hp: 10, hp_max: 20 } }, { priorValues, operation: "setattr" });
+
+      expect(mockNotifyObservers).toHaveBeenCalledTimes(1);
+      expect(mockNotifyObservers).toHaveBeenCalledWith(
+        "change",
+        expect.objectContaining({ get: expect.any(Function) }),
+        expect.objectContaining({
+          name: "hp",
+          current: "8",
+          max: "18",
+        }),
+      );
+      expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("10");
+      expect(mockNotifyObservers.mock.calls[0][1].get("max")).toBe("20");
     });
 
     it("should not notify observers when setAttribute returns false", async () => {
@@ -813,10 +929,16 @@ describe("updates", () => {
           "mp_max": 15,
         },
       };
+      const priorValues = {
+        char1: {
+          hp_max: 25,
+          mp_max: 15,
+        },
+      };
 
       mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
-      await makeUpdate("delattr", results);
+      await makeUpdate("delattr", results, { priorValues });
 
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledTimes(2);
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith(
@@ -899,34 +1021,41 @@ describe("updates", () => {
           "mp_max": 10,
         },
       };
+      const priorValues = {
+        char1: {
+          hp: 20,
+          hp_max: 25,
+          strength: 14,
+          mp_max: 10,
+        },
+      };
 
       mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
-      await makeUpdate("delattr", results);
+      await makeUpdate("delattr", results, { priorValues });
 
-      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledTimes(4);
+      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledTimes(3);
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "hp", "current");
-      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "hp", "max");
+      expect(mocklibSmartAttributes.deleteAttribute).not.toHaveBeenCalledWith("char1", "hp", "max");
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "strength", "current");
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "mp", "max");
     });
 
-    it("should handle delete errors for mixed current and max attributes", async () => {
+    it("should handle delete errors for max-only attribute deletion", async () => {
       const results: Record<string, AttributeRecord> = {
         "char1": {
-          "hp": 20,
-          "hp_max": 25,
+          "mp_max": 10,
         },
       };
+      const priorValues = { char1: { mp_max: 10 } };
 
       mocklibSmartAttributes.deleteAttribute
-        .mockResolvedValueOnce(true) // hp current succeeds
-        .mockRejectedValueOnce(new Error("Max deletion failed")); // hp max fails
+        .mockRejectedValueOnce(new Error("Max deletion failed"));
 
-      const result = await makeUpdate("delattr", results);
+      const result = await makeUpdate("delattr", results, { priorValues });
 
       expect(result.errors).toEqual([
-        "Failed to delete attribute 'hp' on target 'char1': Error: Max deletion failed",
+        "Failed to delete attribute 'mp' on target 'char1': Error: Max deletion failed",
       ]);
     });
 
@@ -939,12 +1068,16 @@ describe("updates", () => {
           "max": "value", // attribute named "max" without underscore
         },
       };
+      const priorValues = {
+        char1: {
+          a_max: "value",
+        },
+      };
 
       mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
 
-      const result = await makeUpdate("delattr", results);
+      const result = await makeUpdate("delattr", results, { priorValues });
 
-      expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "", "max");
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "a", "max");
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "", "current");
       expect(mocklibSmartAttributes.deleteAttribute).toHaveBeenCalledWith("char1", "max", "current");

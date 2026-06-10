@@ -72,7 +72,7 @@ type SetSheetItemOptions = {
 export async function setSheetItem(
   characterId: string,
   attributeName: string,
-  value: string,
+  value: string | undefined,
   type: "current" | "max" = "current",
   options?: SetSheetItemOptions,
 ): Promise<boolean> {
@@ -86,6 +86,20 @@ export async function setSheetItem(
 
   if (options?.allowThrow && !hasLegacy && !hasBeaconEntry && !isUserAttribute) {
     throw new Error(`Sheet item ${attributeName} not found on character ${characterId}`);
+  }
+
+  if (value === undefined || value === null) {
+    if (!beaconAttributes[characterId]?.[attributeName]) {
+      return false;
+    }
+
+    if (isUserAttribute && type === "current") {
+      delete beaconAttributes[characterId][attributeName];
+      return true;
+    }
+
+    beaconAttributes[characterId][attributeName][type] = "";
+    return true;
   }
 
   if (!beaconAttributes[characterId]) {

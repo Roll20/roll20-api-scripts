@@ -1,9 +1,26 @@
 import { createDelayMessage } from "../templates/delay";
 import { createChatMessage, createErrorMessage } from "../templates/messages";
 import { createNotifyMessage } from "../templates/notification";
-import { buttonStyleBase } from "../templates/styles";
 import { createWelcomeMessage } from "../templates/welcome";
-//import { s } from "../utils/chat";
+
+export type CommandOutputOptions = {
+  silent?: boolean;
+  mute?: boolean;
+};
+
+export type NormalizedCommandOutputOptions = {
+  silent: boolean;
+  mute: boolean;
+};
+
+export function normalizeCommandOutputOptions(
+  options: CommandOutputOptions = {},
+): NormalizedCommandOutputOptions {
+  return {
+    mute: Boolean(options.mute),
+    silent: Boolean(options.silent || options.mute),
+  };
+};
 
 export function getPlayerName(playerID: string): string | undefined {
   const player = getObj("player", playerID);
@@ -15,7 +32,12 @@ export function sendMessages(
   header: string,
   messages: string[],
   from: string = "ChatSetAttr",
+  output?: NormalizedCommandOutputOptions,
 ): void {
+  if (output?.silent) {
+    return;
+  }
+
   const newMessage = createChatMessage(header, messages);
   const player = getPlayerName(playerID);
   sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
@@ -26,15 +48,22 @@ export function sendErrors(
   header: string,
   errors: string[],
   from: string = "ChatSetAttr",
+  output?: NormalizedCommandOutputOptions,
 ): void {
-  if (errors.length === 0) return;
+  if (errors.length === 0 || output?.mute) {
+    return;
+  }
+
   const newMessage = createErrorMessage(header, errors);
   const player = getPlayerName(playerID);
   sendChat(from, `/w "${player || "GM"}" ${newMessage}`);
 };
 
-export function sendDelayMessage(silent: boolean = false): void {
-  if (silent) return;
+export function sendDelayMessage(output?: NormalizedCommandOutputOptions): void {
+  if (output?.silent) {
+    return;
+  }
+
   const delayMessage = createDelayMessage();
   sendChat("ChatSetAttr", delayMessage, undefined, { noarchive: true });
 };

@@ -330,6 +330,71 @@ describe("generateTargets", () => {
       expect(result.targets).toEqual(["char1", "char2"]);
       expect(result.errors).toContain("Permission error. You do not have permission to modify character with name \"Charlie\".");
     });
+
+    it("should resolve a single multi-word character name", () => {
+      const characterBob = makeMockCharacter("char1", "player1");
+      const message = makeMockMessage("", []);
+      const findObjsSpy = vi.fn((props: Record<string, unknown>) => {
+        if (props.name === "bob the slayer") return [characterBob];
+        return [];
+      });
+      vi.mocked(checkPermissionForTarget).mockReturnValue(true);
+      vi.mocked(getPermissions).mockReturnValue({ playerID: "player1", isGM: false, canModify: true });
+      vi.mocked(global.findObjs).mockImplementation(findObjsSpy);
+
+      const result = generateTargets(message, ["name bob the slayer"]);
+
+      expect(result.targets).toEqual(["char1"]);
+      expect(findObjsSpy).toHaveBeenCalledTimes(1);
+      expect(findObjsSpy).toHaveBeenCalledWith(
+        { _type: "character", name: "bob the slayer" },
+        { caseInsensitive: true },
+      );
+    });
+
+    it("should resolve comma-separated multi-word character names", () => {
+      const characterBob = makeMockCharacter("char1", "player1");
+      const characterTimmy = makeMockCharacter("char2", "player1");
+      const message = makeMockMessage("", []);
+      const findObjsSpy = vi.fn((props: Record<string, unknown>) => {
+        if (props.name === "bob the slayer") return [characterBob];
+        if (props.name === "timmy the weak") return [characterTimmy];
+        return [];
+      });
+      vi.mocked(checkPermissionForTarget).mockReturnValue(true);
+      vi.mocked(getPermissions).mockReturnValue({ playerID: "player1", isGM: false, canModify: true });
+      vi.mocked(global.findObjs).mockImplementation(findObjsSpy);
+
+      const result = generateTargets(message, ["name bob the slayer, timmy the weak"]);
+
+      expect(result.targets).toEqual(["char1", "char2"]);
+      expect(findObjsSpy).toHaveBeenCalledTimes(2);
+      expect(findObjsSpy).toHaveBeenCalledWith(
+        { _type: "character", name: "bob the slayer" },
+        { caseInsensitive: true },
+      );
+      expect(findObjsSpy).toHaveBeenCalledWith(
+        { _type: "character", name: "timmy the weak" },
+        { caseInsensitive: true },
+      );
+    });
+
+    it("should match character names case-insensitively", () => {
+      const characterBob = makeMockCharacter("char1", "player1");
+      const message = makeMockMessage("", []);
+      vi.mocked(checkPermissionForTarget).mockReturnValue(true);
+      vi.mocked(getPermissions).mockReturnValue({ playerID: "player1", isGM: false, canModify: true });
+      vi.mocked(global.findObjs).mockImplementation((props: Record<string, unknown>, options?: { caseInsensitive?: boolean }) => {
+        if (props._type === "character" && options?.caseInsensitive && typeof props.name === "string") {
+          if (props.name.toLowerCase() === "bob the slayer") return [characterBob];
+        }
+        return [];
+      });
+
+      const result = generateTargets(message, ["name bob the slayer"]);
+
+      expect(result.targets).toEqual(["char1"]);
+    });
   });
 
   describe("target = party", () => {

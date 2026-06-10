@@ -73,10 +73,26 @@ describe("ChatSetAttr Integration Tests", () => {
       });
     });
 
+    it("should set attributes for comma-separated multi-word character names", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "bob1", name: "Bob the Slayer", controlledby: player.id });
+      createObj("character", { _id: "timmy1", name: "Timmy the Weak", controlledby: player.id });
+
+      executeCommand("!setattr --name bob the slayer, timmy the weak --time|now");
+
+      await vi.waitFor(async () => {
+        const bobTime = await libSmartAttributes.getAttribute("bob1", "time");
+        const timmyTime = await libSmartAttributes.getAttribute("timmy1", "time");
+
+        expect(bobTime).toBe("now");
+        expect(timmyTime).toBe("now");
+      });
+    });
+
     it("should set HP and Dex for character named John", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       createObj("character", { _id: "john1", name: "John", controlledby: player.id });
-      createObj("character", { _id: "john2", name: "john", controlledby: player.id });
+      createObj("character", { _id: "john2", name: "Jonathan", controlledby: player.id });
       createObj("character", { _id: "char3", name: "NotJohn", controlledby: player.id });
 
       executeCommand("!setattr --name John --HP|17|27 --Dex|10");
@@ -801,13 +817,43 @@ describe("ChatSetAttr Integration Tests", () => {
       createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
       vi.mocked(sendChat).mockClear();
 
-      executeCommand("!setattr --charid char1 --mute --mod --NonNumeric|abc --Value|5");
+      executeCommand("!setattr --charid char1 --mute --nocreate --MissingAttr|5");
 
       await vi.waitFor(() => {
         const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
           call[1] && typeof call[1] === "string" && call[1].includes("Error")
         );
         expect(errorCall).toBeUndefined();
+      });
+    });
+
+    it("should suppress errors when mute is used with no valid target", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --mute --thisisafakecommand --hp|140");
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" && call[1].includes("No valid targets found")
+        );
+        expect(errorCall).toBeUndefined();
+      });
+    });
+
+    it("should still show errors when silent is used with no valid target", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --silent --thisisafakecommand --hp|140");
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" && call[1].includes("No valid targets found")
+        );
+        expect(errorCall).toBeDefined();
       });
     });
 
@@ -835,24 +881,28 @@ describe("ChatSetAttr Integration Tests", () => {
     it("should observe attribute additions with registered observers", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
-      const mockObserver = vi.fn();
+      const mockAddObserver = vi.fn();
+      const mockChangeObserver = vi.fn();
 
-      ChatSetAttr.registerObserver("add", mockObserver);
+      ChatSetAttr.registerObserver("add", mockAddObserver);
+      ChatSetAttr.registerObserver("change", mockChangeObserver);
 
       executeCommand("!setattr --charid char1 --NewAttribute|42");
 
       await vi.waitFor(() => {
-        expect(mockObserver).toHaveBeenCalled();
-        const calls = mockObserver.mock.calls;
-        const firstCall = calls[0];
-        expect(firstCall).toStrictEqual([
-          "add",
-          "char1",
-          "NewAttribute",
-          "42",
-          undefined
-        ]);
+        expect(mockAddObserver).toHaveBeenCalled();
+        expect(mockChangeObserver).toHaveBeenCalled();
       });
+
+      const addCall = mockAddObserver.mock.calls.find(call => call[0]?.get?.("name") === "NewAttribute");
+      expect(addCall).toBeDefined();
+      expect(addCall?.[0].get("current")).toBe("42");
+      expect(mockChangeObserver.mock.calls.find(call => call[0]?.get?.("name") === "NewAttribute")?.[0].get("current")).toBe("42");
+      expect(mockChangeObserver.mock.calls.find(call => call[0]?.get?.("name") === "NewAttribute")?.[1]).toEqual(expect.objectContaining({
+        name: "NewAttribute",
+        current: "",
+        max: "",
+      }));
     });
 
     it("should observe attribute changes with registered observers", async () => {
@@ -867,22 +917,21 @@ describe("ChatSetAttr Integration Tests", () => {
 
       await vi.waitFor(() => {
         expect(mockObserver).toHaveBeenCalled();
-        const calls = mockObserver.mock.calls;
-        const firstCall = calls[0];
-        expect(firstCall).toStrictEqual([
-          "change",
-          "char1",
-          "ExistingAttr",
-          "20",
-          "10",
-        ]);
       });
+
+      const firstCall = mockObserver.mock.calls[0];
+      expect(firstCall[0].get("name")).toBe("ExistingAttr");
+      expect(firstCall[0].get("current")).toBe("20");
+      expect(firstCall[1]).toEqual(expect.objectContaining({
+        name: "ExistingAttr",
+        current: "10",
+      }));
     });
 
     it("should observe attribute deletions with registered observers", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
-      createObj("attribute", { _id: "attr1", _characterid: "char1", name: "DeleteMe", current: "10" });
+      createObj("attribute", { _id: "attr1", _characterid: "char1", name: "DeleteMe", current: "10", max: "20" });
       const mockObserver = vi.fn();
 
       ChatSetAttr.registerObserver("destroy", mockObserver);
@@ -891,16 +940,65 @@ describe("ChatSetAttr Integration Tests", () => {
 
       await vi.waitFor(() => {
         expect(mockObserver).toHaveBeenCalled();
-        const calls = mockObserver.mock.calls;
-        const firstCall = calls[0];
-        expect(firstCall).toStrictEqual([
-          "destroy",
-          "char1",
-          "DeleteMe",
-          undefined,
-          "10",
-        ]);
       });
+
+      const firstCall = mockObserver.mock.calls[0];
+      expect(firstCall[0].get("name")).toBe("DeleteMe");
+      expect(firstCall[0].get("current")).toBe("10");
+      expect(firstCall[0].get("max")).toBe("20");
+      expect(firstCall[1]).toBeUndefined();
+    });
+
+    it("should observe userAttribute deletions with registered observers", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      const mockObserver = vi.fn();
+
+      ChatSetAttr.registerObserver("destroy", mockObserver);
+
+      executeCommand("!setattr --charid char1 --UserOnlyAttr|42");
+      await vi.waitFor(() => {
+        expect(getBeaconAttributeNames("char1").some(name => name === "user.UserOnlyAttr")).toBe(true);
+      });
+
+      mockObserver.mockClear();
+      executeCommand("!delattr --charid char1 --UserOnlyAttr");
+
+      await vi.waitFor(() => {
+        expect(mockObserver).toHaveBeenCalled();
+      });
+
+      const firstCall = mockObserver.mock.calls[0];
+      expect(firstCall[0].get("name")).toBe("UserOnlyAttr");
+      expect(firstCall[0].get("current")).toBe("42");
+      expect(firstCall[0].toJSON()._type).toBe("userAttribute");
+    });
+
+    it("should observe userAttribute deletions with max on registered observers", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      const mockObserver = vi.fn();
+
+      ChatSetAttr.registerObserver("destroy", mockObserver);
+
+      executeCommand("!setattr --charid char1 --UserAttrWithMax|42");
+      executeCommand("!setattr --charid char1 --UserAttrWithMax_max|100");
+      await vi.waitFor(() => {
+        expect(getBeaconAttributeNames("char1").some(name => name === "user.UserAttrWithMax")).toBe(true);
+      });
+
+      mockObserver.mockClear();
+      executeCommand("!delattr --charid char1 --UserAttrWithMax");
+
+      await vi.waitFor(() => {
+        expect(mockObserver).toHaveBeenCalled();
+      });
+
+      const firstCall = mockObserver.mock.calls[0];
+      expect(firstCall[0].get("name")).toBe("UserAttrWithMax");
+      expect(firstCall[0].get("current")).toBe("42");
+      expect(firstCall[0].get("max")).toBe("100");
+      expect(firstCall[0].toJSON()._type).toBe("userAttribute");
     });
 
     it("should not notify observers when setAttribute returns false", async () => {

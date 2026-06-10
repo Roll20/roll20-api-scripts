@@ -85,9 +85,22 @@ export function mockGetObj<T extends Roll20ObjectType>(
   return found;
 };
 
+function propertyMatches(
+  actual: unknown,
+  expected: unknown,
+  caseInsensitive: boolean,
+): boolean {
+  if (caseInsensitive && typeof actual === "string" && typeof expected === "string") {
+    return actual.toLowerCase() === expected.toLowerCase();
+  }
+  return actual === expected;
+};
+
 export function mockFindObjs<T extends Roll20ObjectType>(
   attrs: Partial<Roll20ObjectTypeToInstance[T]["properties"]> & { _type: T },
+  options?: { caseInsensitive?: boolean },
 ): Roll20ObjectTypeToInstance[T][] {
+  const caseInsensitive = options?.caseInsensitive ?? false;
   debugLog("=================================");
   debugLog("mockFindObjs called with attrs:", attrs);
   debugLog("Current allObjects:", allObjects.map(obj => obj.id));
@@ -102,7 +115,7 @@ export function mockFindObjs<T extends Roll20ObjectType>(
         debugWarn(`Property ${fixedKey} not found on object ${obj.id}`);
         return false;
       }
-      if ((obj.properties as Record<string, unknown>)[fixedKey] !== value) {
+      if (!propertyMatches((obj.properties as Record<string, unknown>)[fixedKey], value, caseInsensitive)) {
         debugWarn(`Property ${fixedKey} on object ${obj.id} has value ${(obj.properties as Record<string, unknown>)[fixedKey]}, expected ${value}`);
         return false;
       }

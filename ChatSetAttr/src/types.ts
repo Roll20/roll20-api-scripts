@@ -178,7 +178,29 @@ export type VersionObject = {
 
 export type ObserverEvent = "add" | "change" | "destroy";
 
-export type ObserverCallback = (event: ObserverEvent, targetID: string, attribute: string, newValue: AttributeValue, oldValue: AttributeValue) => void;
+export type ObserverAttributeKind = "attribute" | "computed" | "userAttribute";
+
+export type ObserverAttributeSnapshot = {
+  _id: string;
+  _type: ObserverAttributeKind;
+  _characterid: string;
+  name: string;
+  current: string;
+  max: string;
+};
+
+export interface ObserverAttributeObject {
+  get(key: string): string | undefined;
+  set(keyOrProps: string | Partial<ObserverAttributeSnapshot>, value?: string): ObserverAttributeObject;
+  toJSON(): ObserverAttributeSnapshot;
+}
+
+export type ObserverCallbackTarget = Roll20Attribute | ObserverAttributeObject;
+
+export type ObserverCallback = (
+  obj: ObserverCallbackTarget,
+  prev?: ObserverAttributeSnapshot
+) => void;
 
 export type ObserverRecord = Record<string, ObserverCallback[]>;
 

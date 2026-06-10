@@ -357,9 +357,7 @@ async function getCurrentValues(
   for (const change of changes) {
     if (change.name) {
       queriedAttributes.add(change.name);
-      if (change.max !== undefined) {
-        queriedAttributes.add(`${change.name}_max`);
-      }
+      queriedAttributes.add(`${change.name}_max`);
     }
   }
   const attributes = await getAttributes(target, Array.from(queriedAttributes));

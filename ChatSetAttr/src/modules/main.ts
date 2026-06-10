@@ -1,7 +1,7 @@
 import scriptJson from "../../script.json" assert { type: "json" };
 import type { Attribute, AttributeRecord } from "../types";
 import { getAttributes } from "./attributes";
-import { sendDelayMessage, sendErrors, sendMessages } from "./chat";
+import { sendDelayMessage, sendErrors, sendMessages, normalizeCommandOutputOptions } from "./chat";
 import { handlers } from "./commands";
 import { checkConfigMessage, getConfig, handleConfigCommand, hasFlag } from "./config";
 import { checkHelpMessage, handleHelpCommand } from "./help";
@@ -47,8 +47,10 @@ async function acceptMessage(msg: Roll20ChatMessage) {
     feedback,
   } = parseMessage(msg.content);
 
+  const output = normalizeCommandOutputOptions(options);
+
   // Start Timer
-  startTimer("chatsetattr", 8000, () => sendDelayMessage(options.silent));
+  startTimer("chatsetattr", 8000, () => sendDelayMessage(output));
 
   // Check Config and Permissions
   const config = getConfig();
@@ -56,29 +58,29 @@ async function acceptMessage(msg: Roll20ChatMessage) {
   const isGM = playerIsGM(msg.playerid);
 
   if (options.evaluate && !isAPI && !isGM && !config.playersCanEvaluate) {
-    return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors);
+    return errorOut("You do not have permission to use the evaluate option.", msg.playerid, errors, output);
   }
 
   if (targeting.includes("party") && !isAPI && !isGM && !config.playersCanTargetParty) {
-    return errorOut("You do not have permission to target the party.", msg.playerid, errors);
+    return errorOut("You do not have permission to target the party.", msg.playerid, errors, output);
   }
 
   if((operation === "modattr" || operation === "modbattr") && !isAPI && !isGM && !config.playersCanModify) {
-    return errorOut("You do not have permission to modify attributes.", msg.playerid, errors);
+    return errorOut("You do not have permission to modify attributes.", msg.playerid, errors, output);
   }
 
   // Preprocess
   const { targets, errors: targetErrors } = generateTargets(msg, targeting);
   errors.push(...targetErrors);
   if (targets.length === 0) {
-    return errorOut("No valid targets found.", msg.playerid, errors);
+    return errorOut("No valid targets found.", msg.playerid, errors, output);
   }
 
   const request = generateRequest(references, changes);
   const command = handlers[operation];
 
   if (!command) {
-    return errorOut(`Invalid operation: ${operation}`, msg.playerid, errors);
+    return errorOut(`Invalid operation: ${operation}`, msg.playerid, errors, output);
   }
 
   // Execute
@@ -121,17 +123,20 @@ async function acceptMessage(msg: Roll20ChatMessage) {
     }
   }
 
-  if (options.silent) return;
-  sendErrors(msg.playerid, "Errors", errors, feedback?.from);
-  if (options.mute) return;
+  sendErrors(msg.playerid, "Errors", errors, feedback?.from, output);
   const delSetTitle = operation === "delattr" ? "Deleting Attributes" : "Setting Attributes";
   const feedbackTitle = feedback?.header ?? delSetTitle;
-  sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from);
+  sendMessages(msg.playerid, feedbackTitle, messages, feedback?.from, output);
 };
 
-function errorOut(errorText: string, playerid: string, errors: string[]) {
+function errorOut(
+  errorText: string,
+  playerid: string,
+  errors: string[],
+  output: ReturnType<typeof normalizeCommandOutputOptions>,
+) {
   errors.push(errorText);
-  sendErrors(playerid, "Errors", errors);
+  sendErrors(playerid, "Errors", errors, undefined, output);
   clearTimer("chatsetattr");
 }
 
@@ -142,14 +147,15 @@ export function generateRequest(
 ): string[] {
   const referenceSet = new Set(references);
   for (const change of changes) {
-    if (change.name && !referenceSet.has(change.name)) {
+    if (!change.name) {
+      continue;
+    }
+    if (!referenceSet.has(change.name)) {
       referenceSet.add(change.name);
     }
-    if (change.max !== undefined) {
-      const maxName = `${change.name}_max`;
-      if (!referenceSet.has(maxName)) {
-        referenceSet.add(maxName);
-      }
+    const maxName = `${change.name}_max`;
+    if (!referenceSet.has(maxName)) {
+      referenceSet.add(maxName);
     }
   }
   return Array.from(referenceSet);

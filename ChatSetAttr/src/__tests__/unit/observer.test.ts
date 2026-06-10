@@ -1,162 +1,165 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { ObserverCallback } from "../../types";
+import type { ObserverAttributeSnapshot, ObserverCallback } from "../../types";
+import { createObserverAttributeObject } from "../../modules/observerPayload";
 import { notifyObservers, registerObserver } from "../../modules/observer";
+
+function makeObserverObj(current = "10", max = "20") {
+  return createObserverAttributeObject("char1", "hp", "computed", { current, max });
+};
+
+function makePrev(current = "5", max = "10"): ObserverAttributeSnapshot {
+  return {
+    _id: "",
+    _type: "computed",
+    _characterid: "char1",
+    name: "hp",
+    current,
+    max,
+  };
+};
 
 describe("observer", () => {
   beforeEach(async () => {
-    // Reset modules to clear the observers state
     vi.resetModules();
   });
 
   describe("registerObserver", () => {
-    it("should add a callback for a new event", () => {
+    it("should add a callback for a new event", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const mockCallback: ObserverCallback = vi.fn();
+      const obj = makeObserverObj();
 
-      registerObserver("add", mockCallback);
+      reg("add", mockCallback);
+      notify("add", obj);
 
-      // Verify by triggering notification
-      notifyObservers("add", "exampleID", "exampleAttribute", "newValue", "oldValue");
       expect(mockCallback).toHaveBeenCalledTimes(1);
-      expect(mockCallback).toHaveBeenCalledWith("add", "exampleID", "exampleAttribute", "newValue", "oldValue");
+      expect(mockCallback).toHaveBeenCalledWith(obj, undefined);
     });
 
-    it("should add multiple callbacks for the same event", () => {
+    it("should add multiple callbacks for the same event", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const mockCallback1: ObserverCallback = vi.fn();
       const mockCallback2: ObserverCallback = vi.fn();
+      const obj = makeObserverObj();
+      const prev = makePrev();
 
-      registerObserver("change", mockCallback1);
-      registerObserver("change", mockCallback2);
+      reg("change", mockCallback1);
+      reg("change", mockCallback2);
+      notify("change", obj, prev);
 
-      notifyObservers("change", "exampleID", "exampleAttribute", "newValue", "oldValue");
-
-      expect(mockCallback1).toHaveBeenCalledTimes(1);
-      expect(mockCallback2).toHaveBeenCalledTimes(1);
-      expect(mockCallback1).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", "newValue", "oldValue");
-      expect(mockCallback2).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", "newValue", "oldValue");
+      expect(mockCallback1).toHaveBeenCalledWith(obj, prev);
+      expect(mockCallback2).toHaveBeenCalledWith(obj, prev);
     });
 
-    it("should add callbacks for different events", () => {
+    it("should add callbacks for different events", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const addCallback: ObserverCallback = vi.fn();
       const changeCallback: ObserverCallback = vi.fn();
       const destroyCallback: ObserverCallback = vi.fn();
+      const obj = makeObserverObj();
+      const prev = makePrev();
 
-      registerObserver("add", addCallback);
-      registerObserver("change", changeCallback);
-      registerObserver("destroy", destroyCallback);
+      reg("add", addCallback);
+      reg("change", changeCallback);
+      reg("destroy", destroyCallback);
 
-      notifyObservers("add", "exampleID", "exampleAttribute", "value1", "value2");
-      notifyObservers("change", "exampleID", "exampleAttribute", "value3", "value4");
-      notifyObservers("destroy", "exampleID", "exampleAttribute", "value5", "value6");
+      notify("add", obj);
+      notify("change", obj, prev);
+      notify("destroy", obj);
 
-      expect(addCallback).toHaveBeenCalledTimes(1);
-      expect(changeCallback).toHaveBeenCalledTimes(1);
-      expect(destroyCallback).toHaveBeenCalledTimes(1);
-
-      expect(addCallback).toHaveBeenCalledWith("add", "exampleID", "exampleAttribute", "value1", "value2");
-      expect(changeCallback).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", "value3", "value4");
-      expect(destroyCallback).toHaveBeenCalledWith("destroy", "exampleID", "exampleAttribute", "value5", "value6");
+      expect(addCallback).toHaveBeenCalledWith(obj, undefined);
+      expect(changeCallback).toHaveBeenCalledWith(obj, prev);
+      expect(destroyCallback).toHaveBeenCalledWith(obj, undefined);
     });
 
-    it("should allow the same callback to be added multiple times", () => {
+    it("should allow the same callback to be added multiple times", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const mockCallback: ObserverCallback = vi.fn();
+      const obj = makeObserverObj();
 
-      registerObserver("add", mockCallback);
-      registerObserver("add", mockCallback);
+      reg("add", mockCallback);
+      reg("add", mockCallback);
+      notify("add", obj);
 
-      notifyObservers("add", "exampleID", "exampleAttribute", "newValue", "oldValue");
-
-      // Should be called twice since it was added twice
       expect(mockCallback).toHaveBeenCalledTimes(2);
     });
   });
 
   describe("notifyObservers", () => {
-    it("should call all callbacks for a given event", () => {
+    it("should call all callbacks for a given event", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const mockCallback1: ObserverCallback = vi.fn();
       const mockCallback2: ObserverCallback = vi.fn();
-      const mockCallback3: ObserverCallback = vi.fn();
+      const obj = makeObserverObj("100", "50");
+      const prev = makePrev("50", "25");
 
-      registerObserver("change", mockCallback1);
-      registerObserver("change", mockCallback2);
-      registerObserver("change", mockCallback3);
+      reg("change", mockCallback1);
+      reg("change", mockCallback2);
+      notify("change", obj, prev);
 
-      notifyObservers("change", "exampleID", "exampleAttribute", 100, 50);
-
-      expect(mockCallback1).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", 100, 50);
-      expect(mockCallback2).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", 100, 50);
-      expect(mockCallback3).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", 100, 50);
+      expect(mockCallback1).toHaveBeenCalledWith(obj, prev);
+      expect(mockCallback2).toHaveBeenCalledWith(obj, prev);
     });
 
     it("should handle notification when no observers exist for event", () => {
-      // This should not throw an error
       expect(() => {
-        notifyObservers("add", "exampleID", "exampleAttribute", "newValue", "oldValue");
+        notifyObservers("add", makeObserverObj());
       }).not.toThrow();
     });
 
-    it("should only notify observers for the specific event", () => {
+    it("should only notify observers for the specific event", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const addCallback: ObserverCallback = vi.fn();
       const changeCallback: ObserverCallback = vi.fn();
+      const obj = makeObserverObj();
 
-      registerObserver("add", addCallback);
-      registerObserver("change", changeCallback);
+      reg("add", addCallback);
+      reg("change", changeCallback);
+      notify("add", obj);
 
-      notifyObservers("add", "exampleID", "exampleAttribute", "value1", "value2");
-
-      expect(addCallback).toHaveBeenCalledWith("add", "exampleID", "exampleAttribute", "value1", "value2");
+      expect(addCallback).toHaveBeenCalledWith(obj, undefined);
       expect(changeCallback).not.toHaveBeenCalled();
     });
 
-    it("should handle different attribute value types", () => {
+    it("should pass observer objects that support get", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const mockCallback: ObserverCallback = vi.fn();
-      registerObserver("change", mockCallback);
+      const obj = makeObserverObj("25", "30");
 
-      // Test with numbers
-      notifyObservers("change", "exampleID", "exampleAttribute", 25, 10);
-      expect(mockCallback).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", 25, 10);
+      reg("change", mockCallback);
+      notify("change", obj, makePrev("10", "20"));
 
-      // Test with strings
-      notifyObservers("change", "exampleID", "exampleAttribute", "newString", "oldString");
-      expect(mockCallback).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", "newString", "oldString");
-
-      // Test with booleans
-      notifyObservers("change", "exampleID", "exampleAttribute", true, false);
-      expect(mockCallback).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", true, false);
-
-      // Test with undefined
-      notifyObservers("change", "exampleID", "exampleAttribute", undefined, "someValue");
-      expect(mockCallback).toHaveBeenCalledWith("change", "exampleID", "exampleAttribute", undefined, "someValue");
+      expect(mockCallback.mock.calls[0][0].get("current")).toBe("25");
+      expect(mockCallback.mock.calls[0][0].get("name")).toBe("hp");
     });
 
-    it("should handle callback execution errors gracefully", () => {
+    it("should handle callback execution errors gracefully", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const errorCallback: ObserverCallback = vi.fn(() => {
         throw new Error("Callback error");
       });
       const normalCallback: ObserverCallback = vi.fn();
+      const obj = makeObserverObj();
 
-      registerObserver("destroy", errorCallback);
-      registerObserver("destroy", normalCallback);
+      reg("destroy", errorCallback);
+      reg("destroy", normalCallback);
 
-      // This should not prevent other callbacks from executing
       expect(() => {
-        notifyObservers("destroy", "targetID", "exampleAttribute", "value1", "value2");
+        notify("destroy", obj);
       }).toThrow("Callback error");
 
       expect(errorCallback).toHaveBeenCalled();
     });
 
-    it("should call callbacks in the order they were added", () => {
+    it("should call callbacks in the order they were added", async () => {
+      const { registerObserver: reg, notifyObservers: notify } = await import("../../modules/observer");
       const callOrder: number[] = [];
+      const obj = makeObserverObj();
 
-      const callback1: ObserverCallback = vi.fn(() => callOrder.push(1));
-      const callback2: ObserverCallback = vi.fn(() => callOrder.push(2));
-      const callback3: ObserverCallback = vi.fn(() => callOrder.push(3));
-
-      registerObserver("add", callback1);
-      registerObserver("add", callback2);
-      registerObserver("add", callback3);
-
-      notifyObservers("add", "exampleID", "exampleAttribute", "value", "oldValue");
+      reg("add", vi.fn(() => callOrder.push(1)));
+      reg("add", vi.fn(() => callOrder.push(2)));
+      reg("add", vi.fn(() => callOrder.push(3)));
+      notify("add", obj);
 
       expect(callOrder).toEqual([1, 2, 3]);
     });

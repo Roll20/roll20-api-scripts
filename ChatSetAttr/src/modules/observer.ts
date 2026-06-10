@@ -1,4 +1,10 @@
-import type { AttributeValue, ObserverCallback, ObserverEvent, ObserverRecord } from "../types";
+import type {
+  ObserverAttributeSnapshot,
+  ObserverCallback,
+  ObserverCallbackTarget,
+  ObserverEvent,
+  ObserverRecord,
+} from "../types";
 
 const observers: ObserverRecord = {};
 
@@ -14,13 +20,11 @@ export function registerObserver(
 
 export function notifyObservers(
   event: ObserverEvent,
-  targetID: string,
-  attributeName: string,
-  newValue: AttributeValue,
-  oldValue: AttributeValue
+  obj: ObserverCallbackTarget,
+  prev?: ObserverAttributeSnapshot
 ): void {
   const callbacks = observers[event] || [];
   callbacks.forEach(callback => {
-    callback(event, targetID, attributeName, newValue, oldValue);
+    callback(obj, prev);
   });
 };

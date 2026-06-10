@@ -1,10 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getPlayerName, sendMessages, sendErrors } from "../../modules/chat";
+import {
+  getPlayerName,
+  sendMessages,
+  sendErrors,
+  sendDelayMessage,
+  normalizeCommandOutputOptions,
+} from "../../modules/chat";
 
 // Mock the templates
 vi.mock("../../templates/messages", () => ({
   createChatMessage: vi.fn(),
   createErrorMessage: vi.fn(),
+}));
+
+vi.mock("../../templates/delay", () => ({
+  createDelayMessage: vi.fn(),
 }));
 
 // Mock Roll20 globals
@@ -19,8 +29,10 @@ global.getObj = mockGetObj;
 global.sendChat = mockSendChat;
 
 import { createChatMessage, createErrorMessage } from "../../templates/messages";
+import { createDelayMessage } from "../../templates/delay";
 const mockCreateChatMessage = vi.mocked(createChatMessage);
 const mockCreateErrorMessage = vi.mocked(createErrorMessage);
+const mockCreateDelayMessage = vi.mocked(createDelayMessage);
 
 describe("chat", () => {
   beforeEach(() => {
@@ -255,6 +267,67 @@ describe("chat", () => {
       sendErrors("player123", "Error Header", errors);
 
       expect(mockSendChat).toHaveBeenCalledWith("ChatSetAttr", "/w \"Player@123\" formatted-error-message");
+    });
+  });
+
+  describe("normalizeCommandOutputOptions", () => {
+    it("should treat mute as silent for feedback and delay", () => {
+      expect(normalizeCommandOutputOptions({ mute: true })).toEqual({
+        mute: true,
+        silent: true,
+      });
+    });
+
+    it("should keep silent-only distinct from mute for errors", () => {
+      expect(normalizeCommandOutputOptions({ silent: true })).toEqual({
+        mute: false,
+        silent: true,
+      });
+    });
+  });
+
+  describe("command output suppression", () => {
+    beforeEach(() => {
+      mockPlayer.get.mockReturnValue("Test Player");
+      mockGetObj.mockReturnValue(mockPlayer);
+      mockCreateChatMessage.mockReturnValue("formatted-chat-message");
+      mockCreateErrorMessage.mockReturnValue("formatted-error-message");
+      mockCreateDelayMessage.mockReturnValue("delay-message");
+    });
+
+    it("should suppress errors when mute is set", () => {
+      sendErrors("player123", "Errors", ["No valid targets found."], "ChatSetAttr", { mute: true, silent: true });
+
+      expect(mockCreateErrorMessage).not.toHaveBeenCalled();
+      expect(mockSendChat).not.toHaveBeenCalled();
+    });
+
+    it("should still send errors when only silent is set", () => {
+      sendErrors("player123", "Errors", ["No valid targets found."], "ChatSetAttr", { mute: false, silent: true });
+
+      expect(mockCreateErrorMessage).toHaveBeenCalled();
+      expect(mockSendChat).toHaveBeenCalled();
+    });
+
+    it("should suppress success messages when silent is set", () => {
+      sendMessages("player123", "Setting Attributes", ["Set attribute"], "ChatSetAttr", { mute: false, silent: true });
+
+      expect(mockCreateChatMessage).not.toHaveBeenCalled();
+      expect(mockSendChat).not.toHaveBeenCalled();
+    });
+
+    it("should suppress success messages when mute is set", () => {
+      sendMessages("player123", "Setting Attributes", ["Set attribute"], "ChatSetAttr", { mute: true, silent: true });
+
+      expect(mockCreateChatMessage).not.toHaveBeenCalled();
+      expect(mockSendChat).not.toHaveBeenCalled();
+    });
+
+    it("should suppress delay notice when mute is set", () => {
+      sendDelayMessage({ mute: true, silent: true });
+
+      expect(mockCreateDelayMessage).not.toHaveBeenCalled();
+      expect(mockSendChat).not.toHaveBeenCalled();
     });
   });
 
