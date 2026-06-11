@@ -224,18 +224,82 @@ var ChatSetAttr = (function (exports) {
                 h("div", { style: CONFIG_CLEAR_FIX_STYLE }))));
     }
 
+    const GLOBAL_CONFIG_OPTIONS = [
+        {
+            label: "Players can modify all characters",
+            key: "playersCanModify",
+            value: "playersCanModify",
+        },
+        {
+            label: "Players can use --evaluate",
+            key: "playersCanEvaluate",
+            value: "playersCanEvaluate",
+        },
+        {
+            label: "Trigger sheet workers when setting attributes",
+            key: "useWorkers",
+            value: "useWorkers",
+        },
+        {
+            label: "Players can target party members",
+            key: "playersCanTargetParty",
+            value: "playersCanTargetParty",
+        },
+    ];
     const SCHEMA_VERSION = "2.0";
     const DEFAULT_CONFIG = {
         version: SCHEMA_VERSION,
         globalconfigCache: {
-            lastsaved: 0
+            lastsaved: 0,
         },
         playersCanTargetParty: true,
         playersCanModify: false,
         playersCanEvaluate: false,
         useWorkers: true,
-        flags: []
+        flags: [],
     };
+    function parseGlobalConfigCheckbox(g, label, valueField) {
+        return g[label] === valueField;
+    }
+    function buildCacheSnapshot(g) {
+        const cache = { lastsaved: g.lastsaved ?? 0 };
+        for (const option of GLOBAL_CONFIG_OPTIONS) {
+            cache[option.label] = `${g[option.label] ?? ""}`;
+        }
+        return cache;
+    }
+    function checkGlobalConfig() {
+        const g = globalconfig?.chatsetattr;
+        if (!g?.lastsaved) {
+            return [];
+        }
+        state.ChatSetAttr = state.ChatSetAttr || {};
+        const cache = (state.ChatSetAttr.globalconfigCache || { lastsaved: 0 });
+        if (g.lastsaved <= cache.lastsaved) {
+            return [];
+        }
+        const changes = [];
+        for (const option of GLOBAL_CONFIG_OPTIONS) {
+            const newRaw = `${g[option.label] ?? ""}`;
+            const oldRaw = `${cache[option.label] ?? ""}`;
+            if (newRaw === oldRaw) {
+                continue;
+            }
+            const newValue = parseGlobalConfigCheckbox(g, option.label, option.value);
+            const oldValue = getConfig()[option.key];
+            if (newValue === oldValue) {
+                continue;
+            }
+            state.ChatSetAttr[option.key] = newValue;
+            changes.push(`${option.key}: ${String(oldValue)} → ${String(newValue)}`);
+        }
+        state.ChatSetAttr.globalconfigCache = buildCacheSnapshot(g);
+        if (changes.length > 0) {
+            log(`ChatSetAttr: Imported Global Config settings: ${changes.join(", ")}`);
+            sendNotification("ChatSetAttr Global Config", `<p>New settings imported from Global Config:</p><ul>${changes.map(change => `<li>${change}</li>`).join("")}</ul>`, false);
+        }
+        return changes;
+    }
     function getConfig() {
         const stateConfig = state?.ChatSetAttr || {};
         return {
@@ -248,9 +312,6 @@ var ChatSetAttr = (function (exports) {
         state.ChatSetAttr = {
             ...stateConfig,
             ...newConfig,
-            globalconfigCache: {
-                lastsaved: Date.now()
-            }
         };
     }
     function hasFlag(flag) {
@@ -1204,7 +1265,7 @@ var ChatSetAttr = (function (exports) {
                 h("code", null, "hp_temp"),
                 " attributes."),
             h("h2", { id: "beacon-computed-values" }, "Beacon Computed Values"),
-            h("p", null, "Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet existing when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try."),
+            h("p", null, "Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet exist when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try."),
             h("p", null, "Some Computed values are read-only and cannot be set.  Attempting to set or modify them will result in an error message."),
             h("p", null,
                 "For player created attributes, Beacon sheets have a system called User Attributes.  If you attempt to add a new attribute to a Beacon sheet, it will create a User Attribute by that name.  User Attributes are prefaced with ",
@@ -1212,6 +1273,18 @@ var ChatSetAttr = (function (exports) {
                 " like ",
                 h("code", null, "user.spellpoints"),
                 ". They function like attributes and can be created, removed, set, reset, and modified as desired."),
+            h("p", null,
+                h("strong", null, "Example:")),
+            h("pre", null,
+                h("code", null, "!setattr --sel --spellpoints|18")),
+            h("p", null,
+                "This will create the ",
+                h("code", null, "user.spellpoints"),
+                " User Attribute, which can be referenced as either ",
+                h("code", null, "&commat;&lcub;selected|user.spellpoints&rcub;"),
+                " or ",
+                h("code", null, "&commat;&lcub;selected|spellpoints&rcub;"),
+                " and operates like an attribute."),
             h("h2", { id: "target-selection" }, "Target Selection"),
             h("p", null, "One of these options must be specified to determine which characters will be affected:"),
             h("h3", null, "--all"),
@@ -1497,6 +1570,10 @@ var ChatSetAttr = (function (exports) {
             h("p", null, "Delete by index:"),
             h("pre", null,
                 h("code", null, "!delattr --sel --repeating_inventory_$0")),
+            h("p", null,
+                h("em", null,
+                    h("strong", null, "Note:"),
+                    " repeating sections for Beacon sheets are currently not supported.  They are read-only which prevents ChatSetAttr from being able to modify them.")),
             h("h2", { id: "special-value-expressions" }, "Special Value Expressions"),
             h("h3", null, "Attribute References"),
             h("p", null,
@@ -1509,6 +1586,8 @@ var ChatSetAttr = (function (exports) {
             h("p", null, "Reset an attribute to its maximum value:"),
             h("pre", null,
                 h("code", null, "!setattr --sel --hp|%hp_max%")),
+            h("p", null,
+                h("em", null)),
             h("h2", { id: "global-configuration" }, "Global Configuration"),
             h("p", null,
                 "The script has four global configuration options that can be toggled with ",
@@ -2745,6 +2824,7 @@ var ChatSetAttr = (function (exports) {
     }
 
     on("ready", () => {
+        checkGlobalConfig();
         registerHandlers();
         update();
         welcome();

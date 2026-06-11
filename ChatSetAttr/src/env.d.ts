@@ -13,6 +13,11 @@ declare global {
     ChatSetAttr?: Record<string, unknown> & { version?: string };
     [key: string]: unknown;
   };
+  /** Roll20 One-Click script page configuration. */
+  var globalconfig: {
+    chatsetattr?: Record<string, string | number> & { lastsaved?: number };
+    [key: string]: unknown;
+  };
 
   function h(
     tagName: string,
