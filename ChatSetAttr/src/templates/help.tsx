@@ -104,11 +104,15 @@ export function createHelpHandout(handoutID: string): string {
 
       <h2 id="beacon-computed-values">Beacon Computed Values</h2>
 
-      <p>Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet existing when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try.</p>
+      <p>Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet exist when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try.</p>
 
       <p>Some Computed values are read-only and cannot be set.  Attempting to set or modify them will result in an error message.</p>
 
       <p>For player created attributes, Beacon sheets have a system called User Attributes.  If you attempt to add a new attribute to a Beacon sheet, it will create a User Attribute by that name.  User Attributes are prefaced with <code>user.</code> like <code>user.spellpoints</code>. They function like attributes and can be created, removed, set, reset, and modified as desired.</p>
+
+      <p><strong>Example:</strong></p>
+      <pre><code>!setattr --sel --spellpoints|18</code></pre>
+      <p>This will create the <code>user.spellpoints</code> User Attribute, which can be referenced as either <code>&commat;&lcub;selected|user.spellpoints&rcub;</code> or <code>&commat;&lcub;selected|spellpoints&rcub;</code> and operates like an attribute.</p>
 
       <h2 id="target-selection">Target Selection</h2>
 
@@ -381,6 +385,8 @@ export function createHelpHandout(handoutID: string): string {
 
       <pre><code>!delattr --sel --repeating_inventory_$0</code></pre>
 
+      <p><em><strong>Note:</strong> repeating sections for Beacon sheets are currently not supported.  They are read-only which prevents ChatSetAttr from being able to modify them.</em></p>
+
       <h2 id="special-value-expressions">Special Value Expressions</h2>
 
       <h3>Attribute References</h3>
@@ -394,6 +400,8 @@ export function createHelpHandout(handoutID: string): string {
       <p>Reset an attribute to its maximum value:</p>
 
       <pre><code>!setattr --sel --hp|%hp_max%</code></pre>
+
+      <p><em></em></p>
 
       <h2 id="global-configuration">Global Configuration</h2>
 
