@@ -210,7 +210,7 @@ export function registerHandlers() {
       if (!playerIsGM(msg.playerid)) {
         return;
       }
-      handleConfigCommand(msg.content);
+      handleConfigCommand(msg.content, msg.playerid);
       return;
     }
     const validMessage = validateMessage(msg.content);

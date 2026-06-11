@@ -14,7 +14,7 @@ export function createFeedbackMessage(
   // _CURJ_: will insert the final current value of the attribute, for this character.
   // _MAXJ_: will insert the final maximum value of the attribute, for this character.
 
-  const targetValueKeys = Object.keys(targetValues).filter(key => !key.endsWith("_max"));
+  const targetValueKeys = getChangedAttributeNames(targetValues);
   message = message.replace("_CHARNAME_", characterName);
 
   message = message.replace(/_(NAME|TCUR|TMAX|CUR|MAX)(\d+)_/g, (_, key: string, num: string) => {
@@ -23,22 +23,26 @@ export function createFeedbackMessage(
 
     if (!attributeName) return "";
 
-    const targetCurrent = startingValues[attributeName];
-    const targetMax = startingValues[`${attributeName}_max`];
-    const startingCurrent = targetValues[attributeName];
-    const startingMax = targetValues[`${attributeName}_max`];
+    const sheetCurrent = startingValues[attributeName];
+    const sheetMax = startingValues[`${attributeName}_max`];
+    const resultCurrent = targetValues[attributeName];
+    const resultMax = targetValues[`${attributeName}_max`];
 
     switch (key) {
       case "NAME":
         return attributeName;
       case "TCUR":
-        return `${targetCurrent}`;
+        return sheetCurrent !== undefined ? `${sheetCurrent}` : "";
       case "TMAX":
-        return `${targetMax}`;
-      case "CUR":
-        return `${startingCurrent}`;
-      case "MAX":
-        return `${startingMax}`;
+        return sheetMax !== undefined ? `${sheetMax}` : "";
+      case "CUR": {
+        const value = resultCurrent ?? sheetCurrent;
+        return value !== undefined ? `${value}` : "";
+      }
+      case "MAX": {
+        const value = resultMax ?? sheetMax;
+        return value !== undefined ? `${value}` : "";
+      }
       default:
         return "";
     }
@@ -46,3 +50,18 @@ export function createFeedbackMessage(
 
   return message;
 };
+
+function getChangedAttributeNames(targetValues: AttributeRecord): string[] {
+  const seen = new Set<string>();
+  const names: string[] = [];
+
+  for (const key of Object.keys(targetValues)) {
+    const name = key.endsWith("_max") ? key.slice(0, -4) : key;
+    if (!seen.has(name)) {
+      seen.add(name);
+      names.push(name);
+    }
+  }
+
+  return names;
+}

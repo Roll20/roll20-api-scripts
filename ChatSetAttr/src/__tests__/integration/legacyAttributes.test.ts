@@ -713,14 +713,40 @@ describe("ChatSetAttr Integration Tests", () => {
       executeCommand("!setattr-config --players-can-modify", { playerid: "example-player-id" });
       expect(global.state.ChatSetAttr.playersCanModify).toBeFalsy();
       expect(sendChat).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(sendChat).mock.calls[0][1]).toMatch(/^\/w "Test Player" /);
+      expect(vi.mocked(sendChat).mock.calls[0][1]).toContain("ChatSetAttr Configuration");
 
       executeCommand("!setattr-config --players-can-evaluate", { playerid: "example-player-id" });
       expect(global.state.ChatSetAttr.playersCanEvaluate).toBeFalsy();
       expect(sendChat).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(sendChat).mock.calls[1][1]).toMatch(/^\/w "Test Player" /);
 
       executeCommand("!setattr-config --use-workers", { playerid: "example-player-id" });
       expect(global.state.ChatSetAttr.useWorkers).toBeFalsy();
       expect(sendChat).toHaveBeenCalledTimes(3);
+      expect(vi.mocked(sendChat).mock.calls[2][1]).toMatch(/^\/w "Test Player" /);
+    });
+
+    it("should whisper config output to the executing GM", () => {
+      vi.mocked(global.playerIsGM).mockReturnValue(true);
+      createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+
+      executeCommand("!setattr-config", { playerid: "example-player-id" });
+
+      expect(sendChat).toHaveBeenCalledTimes(1);
+      const message = vi.mocked(sendChat).mock.calls[0][1];
+      expect(message).toMatch(/^\/w "Test Player" /);
+      expect(message).toContain("ChatSetAttr Configuration");
+    });
+
+    it("should not send config output for non-GM players", () => {
+      vi.mocked(global.playerIsGM).mockReturnValue(false);
+      createObj("player", { _id: "player123", _displayname: "Regular Player" });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr-config", { playerid: "player123" });
+
+      expect(sendChat).not.toHaveBeenCalled();
     });
 
     it("should respect player permissions", async () => {

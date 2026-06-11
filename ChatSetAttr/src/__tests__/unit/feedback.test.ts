@@ -85,12 +85,31 @@ describe("createFeedbackMessage", () => {
     expect(result).toBe("");
   });
 
+  it("should fall back to starting max when max was not modified", () => {
+    const startingValues: AttributeRecord = { hp: 7, hp_max: 119 };
+    const targetValues: AttributeRecord = { hp: 10 };
+    const feedback: FeedbackObject = {
+      public: false,
+      content: "_NAME0_ was _TCUR0_/_TMAX0_ now _CUR0_/_MAX0_ for _CHARNAME_",
+    };
+    const result = createFeedbackMessage("The Aaron 2014", feedback, startingValues, targetValues);
+    expect(result).toBe("hp was 7/119 now 10/119 for The Aaron 2014");
+  });
+
+  it("should fall back to starting current when current was not modified", () => {
+    const startingValues: AttributeRecord = { hp: 7, hp_max: 119 };
+    const targetValues: AttributeRecord = { hp_max: 125 };
+    const feedback: FeedbackObject = { public: false, content: "_CUR0_/_MAX0_" };
+    const result = createFeedbackMessage("John", feedback, startingValues, targetValues);
+    expect(result).toBe("7/125");
+  });
+
   it("should handle missing max attributes gracefully", () => {
     const limitedStarting: AttributeRecord = { hp: 10 };
     const limitedTarget: AttributeRecord = { hp: 25 };
     const feedback: FeedbackObject = { public: false, content: "_TMAX0_ to _MAX0_" };
     const result = createFeedbackMessage("John", feedback, limitedStarting, limitedTarget);
-    expect(result).toBe("undefined to undefined");
+    expect(result).toBe(" to ");
   });
 
   it("should handle empty target values", () => {

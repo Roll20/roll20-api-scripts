@@ -18,7 +18,7 @@ export type FeedbackDeliveryOptions = {
   public?: boolean;
 };
 
-function whisperPrefix(playerID: string): string {
+export function getWhisperPrefix(playerID: string): string {
   const player = getPlayerName(playerID);
   return `/w "${player || "GM"}" `;
 }
@@ -52,7 +52,7 @@ export function sendMessages(
   const newMessage = createChatMessage(header, messages);
   const chatMessage = delivery?.public
     ? newMessage
-    : `${whisperPrefix(playerID)}${newMessage}`;
+    : `${getWhisperPrefix(playerID)}${newMessage}`;
   sendChat(from, chatMessage);
 };
 
@@ -69,7 +69,7 @@ export function sendErrors(
 
   const sender = from ?? "ChatSetAttr";
   const newMessage = createErrorMessage(header, errors);
-  sendChat(sender, `${whisperPrefix(playerID)}${newMessage}`);
+  sendChat(sender, `${getWhisperPrefix(playerID)}${newMessage}`);
 };
 
 export function sendDelayMessage(output?: NormalizedCommandOutputOptions): void {

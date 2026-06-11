@@ -1,3 +1,4 @@
+import { getWhisperPrefix } from "./chat";
 import { createConfigMessage } from "../templates/config";
 
 type ScriptConfig = {
@@ -69,7 +70,7 @@ const FLAG_MAP: Record<string, keyof ScriptConfig> = {
   "--use-workers": "useWorkers",
 } as const;
 
-export function handleConfigCommand(message: string) {
+export function handleConfigCommand(message: string, playerID: string) {
   message = message.replace("!setattr-config", "").trim();
   const args = message.split(/\s+/);
   const newConfig: Record<string, unknown> = {};
@@ -83,5 +84,10 @@ export function handleConfigCommand(message: string) {
   }
   setConfig(newConfig);
   const configMessage = createConfigMessage();
-  sendChat("ChatSetAttr", configMessage, undefined, { noarchive: true });
+  sendChat(
+    "ChatSetAttr",
+    `${getWhisperPrefix(playerID)}${configMessage}`,
+    undefined,
+    { noarchive: true },
+  );
 };

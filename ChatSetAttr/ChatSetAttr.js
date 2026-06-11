@@ -59,6 +59,125 @@ var ChatSetAttr = (function (exports) {
         marginBottom: "0.5em",
     };
 
+    const DELAY_WRAPPER_STYLE = s(frameStyleBase);
+    const DELAY_HEADER_STYLE = s(headerStyleBase);
+    function createDelayMessage() {
+        return (h("div", { style: DELAY_WRAPPER_STYLE },
+            h("div", { style: DELAY_HEADER_STYLE }, "Long Running Query"),
+            h("div", null, "The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes.")));
+    }
+
+    const CHAT_WRAPPER_STYLE = s(frameStyleBase);
+    const CHAT_HEADER_STYLE = s(headerStyleBase);
+    const CHAT_BODY_STYLE = s({
+        fontSize: "14px",
+        lineHeight: "1.4",
+    });
+    const ERROR_WRAPPER_STYLE = s({
+        ...frameStyleBase,
+        ...frameStyleError,
+    });
+    const ERROR_HEADER_STYLE = s(headerStyleBase);
+    const ERROR_BODY_STYLE = s({
+        fontSize: "14px",
+        lineHeight: "1.4",
+    });
+    // #region Generic Message Creation Function
+    function createMessage(header, messages, styles) {
+        return (h("div", { style: styles.wrapper },
+            h("h3", { style: styles.header }, header),
+            h("div", { style: styles.body }, messages.map(message => h("p", null, message)))));
+    }
+    // #region Chat Message Function
+    function createChatMessage(header, messages) {
+        return createMessage(header, messages, {
+            wrapper: CHAT_WRAPPER_STYLE,
+            header: CHAT_HEADER_STYLE,
+            body: CHAT_BODY_STYLE
+        });
+    }
+    // #region Error Message Function
+    function createErrorMessage(header, errors) {
+        return createMessage(header, errors, {
+            wrapper: ERROR_WRAPPER_STYLE,
+            header: ERROR_HEADER_STYLE,
+            body: ERROR_BODY_STYLE
+        });
+    }
+
+    const NOTIFY_WRAPPER_STYLE = s(frameStyleBase);
+    const NOTIFY_HEADER_STYLE = s(headerStyleBase);
+    function createNotifyMessage(title, content) {
+        return (h("div", { style: NOTIFY_WRAPPER_STYLE },
+            h("div", { style: NOTIFY_HEADER_STYLE }, title),
+            h("div", null, content)));
+    }
+
+    function createWelcomeMessage() {
+        const buttonStyle = s(buttonStyleBase);
+        return (h("div", null,
+            h("p", null, "Thank you for installing ChatSetAttr."),
+            h("p", null,
+                "To get started, use the command ",
+                h("code", null, "!setattr-config"),
+                " to configure the script to your needs."),
+            h("p", null,
+                "For detailed documentation and examples, please use the ",
+                h("code", null, "!setattr-help"),
+                " command or click the button below:"),
+            h("p", null,
+                h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout"))));
+    }
+
+    function getWhisperPrefix(playerID) {
+        const player = getPlayerName(playerID);
+        return `/w "${player || "GM"}" `;
+    }
+    function normalizeCommandOutputOptions(options = {}) {
+        return {
+            mute: Boolean(options.mute),
+            silent: Boolean(options.silent || options.mute),
+        };
+    }
+    function getPlayerName(playerID) {
+        const player = getObj("player", playerID);
+        return player?.get("_displayname") || undefined;
+    }
+    function sendMessages(playerID, header, messages, delivery, output) {
+        if (output?.silent) {
+            return;
+        }
+        const from = delivery?.from ?? "ChatSetAttr";
+        const newMessage = createChatMessage(header, messages);
+        const chatMessage = delivery?.public
+            ? newMessage
+            : `${getWhisperPrefix(playerID)}${newMessage}`;
+        sendChat(from, chatMessage);
+    }
+    function sendErrors(playerID, header, errors, from, output) {
+        if (errors.length === 0 || output?.mute) {
+            return;
+        }
+        const sender = from ?? "ChatSetAttr";
+        const newMessage = createErrorMessage(header, errors);
+        sendChat(sender, `${getWhisperPrefix(playerID)}${newMessage}`);
+    }
+    function sendDelayMessage(output) {
+        if (output?.silent) {
+            return;
+        }
+        const delayMessage = createDelayMessage();
+        sendChat("ChatSetAttr", delayMessage, undefined, { noarchive: true });
+    }
+    function sendNotification(title, content, archive) {
+        const notifyMessage = createNotifyMessage(title, content);
+        sendChat("ChatSetAttr", "/w gm " + notifyMessage, undefined, { noarchive: archive });
+    }
+    function sendWelcomeMessage() {
+        const welcomeMessage = createWelcomeMessage();
+        sendNotification("Welcome to ChatSetAttr!", welcomeMessage, false);
+    }
+
     const CONFIG_WRAPPER_STYLE = s(frameStyleBase);
     const CONFIG_HEADER_STYLE = s(headerStyleBase);
     const CONFIG_TABLE_STYLE = s({
@@ -154,7 +273,7 @@ var ChatSetAttr = (function (exports) {
         "--players-can-target-party": "playersCanTargetParty",
         "--use-workers": "useWorkers",
     };
-    function handleConfigCommand(message) {
+    function handleConfigCommand(message, playerID) {
         message = message.replace("!setattr-config", "").trim();
         const args = message.split(/\s+/);
         const newConfig = {};
@@ -168,7 +287,7 @@ var ChatSetAttr = (function (exports) {
         }
         setConfig(newConfig);
         const configMessage = createConfigMessage();
-        sendChat("ChatSetAttr", configMessage, undefined, { noarchive: true });
+        sendChat("ChatSetAttr", `${getWhisperPrefix(playerID)}${configMessage}`, undefined, { noarchive: true });
     }
 
     const observers = {};
@@ -602,125 +721,6 @@ var ChatSetAttr = (function (exports) {
         return attributes;
     }
 
-    const DELAY_WRAPPER_STYLE = s(frameStyleBase);
-    const DELAY_HEADER_STYLE = s(headerStyleBase);
-    function createDelayMessage() {
-        return (h("div", { style: DELAY_WRAPPER_STYLE },
-            h("div", { style: DELAY_HEADER_STYLE }, "Long Running Query"),
-            h("div", null, "The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes.")));
-    }
-
-    const CHAT_WRAPPER_STYLE = s(frameStyleBase);
-    const CHAT_HEADER_STYLE = s(headerStyleBase);
-    const CHAT_BODY_STYLE = s({
-        fontSize: "14px",
-        lineHeight: "1.4",
-    });
-    const ERROR_WRAPPER_STYLE = s({
-        ...frameStyleBase,
-        ...frameStyleError,
-    });
-    const ERROR_HEADER_STYLE = s(headerStyleBase);
-    const ERROR_BODY_STYLE = s({
-        fontSize: "14px",
-        lineHeight: "1.4",
-    });
-    // #region Generic Message Creation Function
-    function createMessage(header, messages, styles) {
-        return (h("div", { style: styles.wrapper },
-            h("h3", { style: styles.header }, header),
-            h("div", { style: styles.body }, messages.map(message => h("p", null, message)))));
-    }
-    // #region Chat Message Function
-    function createChatMessage(header, messages) {
-        return createMessage(header, messages, {
-            wrapper: CHAT_WRAPPER_STYLE,
-            header: CHAT_HEADER_STYLE,
-            body: CHAT_BODY_STYLE
-        });
-    }
-    // #region Error Message Function
-    function createErrorMessage(header, errors) {
-        return createMessage(header, errors, {
-            wrapper: ERROR_WRAPPER_STYLE,
-            header: ERROR_HEADER_STYLE,
-            body: ERROR_BODY_STYLE
-        });
-    }
-
-    const NOTIFY_WRAPPER_STYLE = s(frameStyleBase);
-    const NOTIFY_HEADER_STYLE = s(headerStyleBase);
-    function createNotifyMessage(title, content) {
-        return (h("div", { style: NOTIFY_WRAPPER_STYLE },
-            h("div", { style: NOTIFY_HEADER_STYLE }, title),
-            h("div", null, content)));
-    }
-
-    function createWelcomeMessage() {
-        const buttonStyle = s(buttonStyleBase);
-        return (h("div", null,
-            h("p", null, "Thank you for installing ChatSetAttr."),
-            h("p", null,
-                "To get started, use the command ",
-                h("code", null, "!setattr-config"),
-                " to configure the script to your needs."),
-            h("p", null,
-                "For detailed documentation and examples, please use the ",
-                h("code", null, "!setattr-help"),
-                " command or click the button below:"),
-            h("p", null,
-                h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout"))));
-    }
-
-    function whisperPrefix(playerID) {
-        const player = getPlayerName(playerID);
-        return `/w "${player || "GM"}" `;
-    }
-    function normalizeCommandOutputOptions(options = {}) {
-        return {
-            mute: Boolean(options.mute),
-            silent: Boolean(options.silent || options.mute),
-        };
-    }
-    function getPlayerName(playerID) {
-        const player = getObj("player", playerID);
-        return player?.get("_displayname") || undefined;
-    }
-    function sendMessages(playerID, header, messages, delivery, output) {
-        if (output?.silent) {
-            return;
-        }
-        const from = delivery?.from ?? "ChatSetAttr";
-        const newMessage = createChatMessage(header, messages);
-        const chatMessage = delivery?.public
-            ? newMessage
-            : `${whisperPrefix(playerID)}${newMessage}`;
-        sendChat(from, chatMessage);
-    }
-    function sendErrors(playerID, header, errors, from, output) {
-        if (errors.length === 0 || output?.mute) {
-            return;
-        }
-        const sender = from ?? "ChatSetAttr";
-        const newMessage = createErrorMessage(header, errors);
-        sendChat(sender, `${whisperPrefix(playerID)}${newMessage}`);
-    }
-    function sendDelayMessage(output) {
-        if (output?.silent) {
-            return;
-        }
-        const delayMessage = createDelayMessage();
-        sendChat("ChatSetAttr", delayMessage, undefined, { noarchive: true });
-    }
-    function sendNotification(title, content, archive) {
-        const notifyMessage = createNotifyMessage(title, content);
-        sendChat("ChatSetAttr", "/w gm " + notifyMessage, undefined, { noarchive: archive });
-    }
-    function sendWelcomeMessage() {
-        const welcomeMessage = createWelcomeMessage();
-        sendNotification("Welcome to ChatSetAttr!", welcomeMessage, false);
-    }
-
     function createFeedbackMessage(characterName, feedback, startingValues, targetValues) {
         let message = feedback?.content ?? "";
         // _NAMEJ_: will insert the attribute name.
@@ -729,33 +729,49 @@ var ChatSetAttr = (function (exports) {
         // _CHARNAME_: will insert the character name.
         // _CURJ_: will insert the final current value of the attribute, for this character.
         // _MAXJ_: will insert the final maximum value of the attribute, for this character.
-        const targetValueKeys = Object.keys(targetValues).filter(key => !key.endsWith("_max"));
+        const targetValueKeys = getChangedAttributeNames(targetValues);
         message = message.replace("_CHARNAME_", characterName);
         message = message.replace(/_(NAME|TCUR|TMAX|CUR|MAX)(\d+)_/g, (_, key, num) => {
             const index = parseInt(num, 10);
             const attributeName = targetValueKeys[index];
             if (!attributeName)
                 return "";
-            const targetCurrent = startingValues[attributeName];
-            const targetMax = startingValues[`${attributeName}_max`];
-            const startingCurrent = targetValues[attributeName];
-            const startingMax = targetValues[`${attributeName}_max`];
+            const sheetCurrent = startingValues[attributeName];
+            const sheetMax = startingValues[`${attributeName}_max`];
+            const resultCurrent = targetValues[attributeName];
+            const resultMax = targetValues[`${attributeName}_max`];
             switch (key) {
                 case "NAME":
                     return attributeName;
                 case "TCUR":
-                    return `${targetCurrent}`;
+                    return sheetCurrent !== undefined ? `${sheetCurrent}` : "";
                 case "TMAX":
-                    return `${targetMax}`;
-                case "CUR":
-                    return `${startingCurrent}`;
-                case "MAX":
-                    return `${startingMax}`;
+                    return sheetMax !== undefined ? `${sheetMax}` : "";
+                case "CUR": {
+                    const value = resultCurrent ?? sheetCurrent;
+                    return value !== undefined ? `${value}` : "";
+                }
+                case "MAX": {
+                    const value = resultMax ?? sheetMax;
+                    return value !== undefined ? `${value}` : "";
+                }
                 default:
                     return "";
             }
         });
         return message;
+    }
+    function getChangedAttributeNames(targetValues) {
+        const seen = new Set();
+        const names = [];
+        for (const key of Object.keys(targetValues)) {
+            const name = key.endsWith("_max") ? key.slice(0, -4) : key;
+            if (!seen.has(name)) {
+                seen.add(name);
+                names.push(name);
+            }
+        }
+        return names;
     }
 
     function cleanValue(value) {
@@ -1062,6 +1078,7 @@ var ChatSetAttr = (function (exports) {
         const contents = [
             "Basic Usage",
             "Available Commands",
+            "Beacon Computed Values",
             "Target Selection",
             "Attribute Syntax",
             "Modifier Options",
@@ -1120,17 +1137,15 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --sel --hp|25|50 --hp|0|800")),
+                h("code", null, "!setattr --sel --hp|25|50 --hp_temp|8")),
             h("p", null,
                 "This would set ",
                 h("code", null, "hp"),
                 " to 25, ",
                 h("code", null, "hp_max"),
                 " to 50, ",
-                h("code", null, "hp"),
-                " to 0 and ",
-                h("code", null, "xp_max"),
-                " to 800."),
+                h("code", null, "hp_temp"),
+                " to 8."),
             h("h3", null, "!modattr"),
             h("p", null,
                 "Adds to existing attribute values (works only with numeric values). Shorthand for ",
@@ -1139,11 +1154,11 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!modattr --sel --hp|-5 --hp|100")),
+                h("code", null, "!modattr --sel --hp_temp|-5 --hp|6")),
             h("p", null,
                 "This subtracts 5 from ",
-                h("code", null, "hp"),
-                " and adds 100 to ",
+                h("code", null, "hp_temp"),
+                " and adds 6 to ",
                 h("code", null, "hp"),
                 "."),
             h("h3", null, "!modbattr"),
@@ -1154,10 +1169,10 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!modbattr --sel --hp|-25 --hp|2500")),
+                h("code", null, "!modbattr --sel --hp_temp|-5 --hp|25")),
             h("p", null,
                 "This subtracts 5 from ",
-                h("code", null, "hp"),
+                h("code", null, "hp_temp"),
                 " but won't reduce it below 0 and increase ",
                 h("code", null, "hp"),
                 " by 25, but won't increase it above ",
@@ -1171,25 +1186,32 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!resetattr --sel --hp --hp")),
+                h("code", null, "!resetattr --sel --hp")),
             h("p", null,
                 "This resets ",
                 h("code", null, "hp"),
-                ", and ",
-                h("code", null, "hp"),
-                " to their respective maximum values."),
+                " to its maximum value."),
             h("h3", null, "!delattr"),
             h("p", null, "Deletes the specified attributes."),
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!delattr --sel --hp --hp")),
+                h("code", null, "!delattr --sel --hp --hp_temp")),
             h("p", null,
                 "This removes the ",
                 h("code", null, "hp"),
                 " and ",
-                h("code", null, "hp"),
+                h("code", null, "hp_temp"),
                 " attributes."),
+            h("h2", { id: "beacon-computed-values" }, "Beacon Computed Values"),
+            h("p", null, "Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet existing when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try."),
+            h("p", null, "Some Computed values are read-only and cannot be set.  Attempting to set or modify them will result in an error message."),
+            h("p", null,
+                "For player created attributes, Beacon sheets have a system called User Attributes.  If you attempt to add a new attribute to a Beacon sheet, it will create a User Attribute by that name.  User Attributes are prefaced with ",
+                h("code", null, "user."),
+                " like ",
+                h("code", null, "user.spellpoints"),
+                ". They function like attributes and can be created, removed, set, reset, and modified as desired."),
             h("h2", { id: "target-selection" }, "Target Selection"),
             h("p", null, "One of these options must be specified to determine which characters will be affected:"),
             h("h3", null, "--all"),
@@ -1200,7 +1222,7 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --all --hp|15")),
+                h("code", null, "!resetattr --all --hp")),
             h("h3", null, "--allgm"),
             h("p", null,
                 "Affects all characters without player controllers (typically NPCs). ",
@@ -1209,19 +1231,19 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --allgm --hp|150")),
+                h("code", null, "!setattr --allgm --reset --hp")),
             h("h3", null, "--allplayers"),
             h("p", null, "Affects all characters with player controllers (typically PCs)."),
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --allplayers --hp|15")),
+                h("code", null, "!setattr --allplayers --mod --hp|-15")),
             h("h3", null, "--charid"),
             h("p", null, "Affects characters with the specified character IDs. Non-GM players can only affect characters they control."),
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --charid <ID1> <ID2> --hp|150")),
+                h("code", null, "!setattr --charid &lt;ID1&gt; &lt;ID2&gt; --hp|150")),
             h("h3", null, "--name"),
             h("p", null, "Affects characters with the specified names. Non-GM players can only affect characters they control."),
             h("p", null,
@@ -1233,7 +1255,7 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --sel --hp|25 --hp|30")),
+                h("code", null, "!setattr --sel --hp|25 --hp_temp|8")),
             h("h3", null, "--sel-party"),
             h("p", null,
                 "Affects only party characters represented by currently selected tokens (characters with ",
@@ -1348,8 +1370,8 @@ var ChatSetAttr = (function (exports) {
             h("h3", null, "--replace"),
             h("p", null, "Replaces special characters to prevent Roll20 from evaluating them:"),
             h("ul", null,
-                h("li", null, "< becomes ["),
-                h("li", null, "> becomes ]"),
+                h("li", null, "&lt; becomes ["),
+                h("li", null, "&gt; becomes ]"),
                 h("li", null, "~ becomes -"),
                 h("li", null, "; becomes ?"),
                 h("li", null, "` becomes @")),
@@ -1357,7 +1379,7 @@ var ChatSetAttr = (function (exports) {
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
-                h("code", null, "!setattr --sel --replace --notes|\"Roll <<1d6>> to succeed\"")),
+                h("code", null, "!setattr --sel --replace --notes|\"Roll &lt;&lt;1d6&gt;&gt; to succeed\"")),
             h("p", null, "This stores \"Roll [[1d6]] to succeed\" without evaluating the roll."),
             h("h2", { id: "output-control-options" }, "Output Control Options"),
             h("p", null, "These options control the feedback messages generated by the script:"),
@@ -1379,19 +1401,19 @@ var ChatSetAttr = (function (exports) {
                 h("strong", null, "Example:")),
             h("pre", null,
                 h("code", null, "!setattr --sel --fb-public --hp|25|25 --status|\"Healed\"")),
-            h("h3", null, "--fb-from <NAME>"),
+            h("h3", null, "--fb-from &lt;NAME&gt;"),
             h("p", null, "Changes the name of the sender for output messages (default is \"ChatSetAttr\")."),
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
                 h("code", null, "!setattr --sel --fb-from \"Healing Potion\" --hp|25")),
-            h("h3", null, "--fb-header <STRING>"),
+            h("h3", null, "--fb-header &lt;STRING&gt;"),
             h("p", null, "Customizes the header of the output message."),
             h("p", null,
                 h("strong", null, "Example:")),
             h("pre", null,
                 h("code", null, "!setattr --sel --evaluate --fb-header \"Combat Effects Applied\" --status|\"Poisoned\" --hp|%hp%-5")),
-            h("h3", null, "--fb-content <STRING>"),
+            h("h3", null, "--fb-content &lt;STRING&gt;"),
             h("p", null, "Customizes the content of the output message."),
             h("p", null,
                 h("strong", null, "Example:")),
@@ -2582,7 +2604,7 @@ var ChatSetAttr = (function (exports) {
                 if (!playerIsGM(msg.playerid)) {
                     return;
                 }
-                handleConfigCommand(msg.content);
+                handleConfigCommand(msg.content, msg.playerid);
                 return;
             }
             const validMessage = validateMessage(msg.content);

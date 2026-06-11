@@ -3,6 +3,7 @@ export function createHelpHandout(handoutID: string): string {
   const contents = [
     "Basic Usage",
     "Available Commands",
+    "Beacon Computed Values",
     "Target Selection",
     "Attribute Syntax",
     "Modifier Options",
@@ -61,45 +62,53 @@ export function createHelpHandout(handoutID: string): string {
       <p>Creates or updates attributes on the selected target(s). If the attribute doesn't exist, it will be created (unless <code>--nocreate</code> is specified).</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --sel --hp|25|50 --hp|0|800</code></pre>
+      <pre><code>!setattr --sel --hp|25|50 --hp_temp|8</code></pre>
 
-      <p>This would set <code>hp</code> to 25, <code>hp_max</code> to 50, <code>hp</code> to 0 and <code>xp_max</code> to 800.</p>
+      <p>This would set <code>hp</code> to 25, <code>hp_max</code> to 50, <code>hp_temp</code> to 8.</p>
 
       <h3>!modattr</h3>
 
       <p>Adds to existing attribute values (works only with numeric values). Shorthand for <code>!setattr --mod</code>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!modattr --sel --hp|-5 --hp|100</code></pre>
+      <pre><code>!modattr --sel --hp_temp|-5 --hp|6</code></pre>
 
-      <p>This subtracts 5 from <code>hp</code> and adds 100 to <code>hp</code>.</p>
+      <p>This subtracts 5 from <code>hp_temp</code> and adds 6 to <code>hp</code>.</p>
 
       <h3>!modbattr</h3>
 
       <p>Adds to existing attribute values but keeps the result between 0 and the maximum value. Shorthand for <code>!setattr --modb</code>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!modbattr --sel --hp|-25 --hp|2500</code></pre>
+      <pre><code>!modbattr --sel --hp_temp|-5 --hp|25</code></pre>
 
-      <p>This subtracts 5 from <code>hp</code> but won't reduce it below 0 and increase <code>hp</code> by 25, but won't increase it above <code>mp_xp</code>.</p>
+      <p>This subtracts 5 from <code>hp_temp</code> but won't reduce it below 0 and increase <code>hp</code> by 25, but won't increase it above <code>mp_xp</code>.</p>
 
       <h3>!resetattr</h3>
 
       <p>Resets attributes to their maximum value. Shorthand for <code>!setattr --reset</code>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!resetattr --sel --hp --hp</code></pre>
+      <pre><code>!resetattr --sel --hp</code></pre>
 
-      <p>This resets <code>hp</code>, and <code>hp</code> to their respective maximum values.</p>
+      <p>This resets <code>hp</code> to its maximum value.</p>
 
       <h3>!delattr</h3>
 
       <p>Deletes the specified attributes.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!delattr --sel --hp --hp</code></pre>
+      <pre><code>!delattr --sel --hp --hp_temp</code></pre>
 
-      <p>This removes the <code>hp</code> and <code>hp</code> attributes.</p>
+      <p>This removes the <code>hp</code> and <code>hp_temp</code> attributes.</p>
+
+      <h2 id="beacon-computed-values">Beacon Computed Values</h2>
+
+      <p>Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet existing when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try.</p>
+
+      <p>Some Computed values are read-only and cannot be set.  Attempting to set or modify them will result in an error message.</p>
+
+      <p>For player created attributes, Beacon sheets have a system called User Attributes.  If you attempt to add a new attribute to a Beacon sheet, it will create a User Attribute by that name.  User Attributes are prefaced with <code>user.</code> like <code>user.spellpoints</code>. They function like attributes and can be created, removed, set, reset, and modified as desired.</p>
 
       <h2 id="target-selection">Target Selection</h2>
 
@@ -110,28 +119,28 @@ export function createHelpHandout(handoutID: string): string {
       <p>Affects all characters in the campaign. <strong>GM only</strong> and should be used with caution, especially in large campaigns.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --all --hp|15</code></pre>
+      <pre><code>!resetattr --all --hp</code></pre>
 
       <h3>--allgm</h3>
 
       <p>Affects all characters without player controllers (typically NPCs). <strong>GM only</strong>.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --allgm --hp|150</code></pre>
+      <pre><code>!setattr --allgm --reset --hp</code></pre>
 
       <h3>--allplayers</h3>
 
       <p>Affects all characters with player controllers (typically PCs).</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --allplayers --hp|15</code></pre>
+      <pre><code>!setattr --allplayers --mod --hp|-15</code></pre>
 
       <h3>--charid</h3>
 
       <p>Affects characters with the specified character IDs. Non-GM players can only affect characters they control.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --charid &lt;ID1&gt; &lt;ID2&gt; --hp|150</code></pre>
+      <pre><code>!setattr --charid &amp;lt;ID1&amp;gt; &amp;lt;ID2&amp;gt; --hp|150</code></pre>
 
       <h3>--name</h3>
 
@@ -145,7 +154,7 @@ export function createHelpHandout(handoutID: string): string {
       <p>Affects characters represented by currently selected tokens.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --sel --hp|25 --hp|30</code></pre>
+      <pre><code>!setattr --sel --hp|25 --hp_temp|8</code></pre>
 
       <h3>--sel-party</h3>
 
@@ -237,8 +246,8 @@ export function createHelpHandout(handoutID: string): string {
 
       <p>Replaces special characters to prevent Roll20 from evaluating them:</p>
       <ul>
-        <li>&lt; becomes [</li>
-        <li>&gt; becomes ]</li>
+        <li>&amp;lt; becomes [</li>
+        <li>&amp;gt; becomes ]</li>
         <li>~ becomes -</li>
         <li>; becomes ?</li>
         <li>` becomes @</li>
@@ -247,7 +256,7 @@ export function createHelpHandout(handoutID: string): string {
       <p>Also supports \lbrak, \rbrak, \n, \at, and \ques for [, ], newline, @, and ?.</p>
 
       <p><strong>Example:</strong></p>
-      <pre><code>!setattr --sel --replace --notes|"Roll &lt;&lt;1d6&gt;&gt; to succeed"</code></pre>
+      <pre><code>!setattr --sel --replace --notes|"Roll &amp;lt;&amp;lt;1d6&amp;gt;&amp;gt; to succeed"</code></pre>
 
       <p>This stores "Roll [[1d6]] to succeed" without evaluating the roll.</p>
 
@@ -276,21 +285,21 @@ export function createHelpHandout(handoutID: string): string {
       <p><strong>Example:</strong></p>
       <pre><code>!setattr --sel --fb-public --hp|25|25 --status|"Healed"</code></pre>
 
-      <h3>--fb-from &lt;NAME&gt;</h3>
+      <h3>--fb-from &amp;lt;NAME&amp;gt;</h3>
 
       <p>Changes the name of the sender for output messages (default is "ChatSetAttr").</p>
 
       <p><strong>Example:</strong></p>
       <pre><code>!setattr --sel --fb-from "Healing Potion" --hp|25</code></pre>
 
-      <h3>--fb-header &lt;STRING&gt;</h3>
+      <h3>--fb-header &amp;lt;STRING&amp;gt;</h3>
 
       <p>Customizes the header of the output message.</p>
 
       <p><strong>Example:</strong></p>
       <pre><code>!setattr --sel --evaluate --fb-header "Combat Effects Applied" --status|"Poisoned" --hp|%hp%-5</code></pre>
 
-      <h3>--fb-content &lt;STRING&gt;</h3>
+      <h3>--fb-content &amp;lt;STRING&amp;gt;</h3>
 
       <p>Customizes the content of the output message.</p>
 
@@ -328,7 +337,7 @@ export function createHelpHandout(handoutID: string): string {
 
       <p>Place the command between roll template properties and end it with <code>!!!</code>:</p>
 
-      <pre><code>&&lcub;template:default&rcub; &lcub;&lcub;name=Fireball Damage&rcub;&rcub; !setattr --name @&lcub;target|character_name&rcub; --silent --hp|-&lcub;&lcub;damage=[[8d6]]&rcub;&rcub;!!! &lcub;&lcub;effect=Fire damage&rcub;&rcub;</code></pre>
+      <pre><code>&amp;&amp;lcub;template:default&amp;rcub; &amp;lcub;&amp;lcub;name=Fireball Damage&amp;rcub;&amp;rcub; !setattr --name @&amp;lcub;target|character_name&amp;rcub; --silent --hp|-&amp;lcub;&amp;lcub;damage=[[8d6]]&amp;rcub;&amp;rcub;!!! &amp;lcub;&amp;lcub;effect=Fire damage&amp;rcub;&amp;rcub;</code></pre>
 
       <h3>Using Inline Rolls in Values</h3>
 
@@ -340,7 +349,7 @@ export function createHelpHandout(handoutID: string): string {
 
       <p>Roll queries can determine attribute values:</p>
 
-      <pre><code>!setattr --sel --hp|?&lcub;Set strength to what value?|100&rcub;</code></pre>
+      <pre><code>!setattr --sel --hp|?&amp;lcub;Set strength to what value?|100&amp;rcub;</code></pre>
 
       <h2 id="repeating-section-support">Repeating Section Support</h2>
 
@@ -438,7 +447,7 @@ export function createHelpHandout(handoutID: string): string {
 
       <p>Apply a debuff to selected enemies in the middle of combat:</p>
 
-      <pre><code>&&lcub;template:default&rcub; &lcub;&lcub;name=Web Spell&rcub;&rcub; &lcub;&lcub;effect=Slows movement&rcub;&rcub; !setattr --name @&lcub;target|character_name&rcub; --silent --speed|-15 --status|"Restrained"!!! &lcub;&lcub;duration=1d4 rounds&rcub;&rcub;</code></pre>
+      <pre><code>&amp;&amp;lcub;template:default&amp;rcub; &amp;lcub;&amp;lcub;name=Web Spell&amp;rcub;&amp;rcub; &amp;lcub;&amp;lcub;effect=Slows movement&amp;rcub;&amp;rcub; !setattr --name @&amp;lcub;target|character_name&amp;rcub; --silent --speed|-15 --status|"Restrained"!!! &amp;lcub;&amp;lcub;duration=1d4 rounds&amp;rcub;&amp;rcub;</code></pre>
 
       <h3>Party Management Examples</h3>
 

@@ -125,6 +125,26 @@ describe("commands", () => {
       });
     });
 
+    it("should substitute _MAX0_ from sheet when only current is modified", async () => {
+      mockGetAttributes.mockResolvedValue({
+        hp: 7,
+        hp_max: 119,
+      });
+
+      const changes: Attribute[] = [
+        { name: "hp", current: "+3" },
+      ];
+      const feedback = {
+        public: false,
+        content: "_NAME0_ was _TCUR0_/_TMAX0_ now _CUR0_/_MAX0_ for _CHARNAME_",
+      };
+
+      const result = await modattr(changes, "char1", [], false, feedback);
+
+      expect(result.messagesByKey.hp).toBe("hp was 7/119 now 10/119 for ID: char1");
+      expect(result.messagesByKey.hp).not.toContain("undefined");
+    });
+
     it("should modify current values with subtraction", async () => {
       const changes: Attribute[] = [
         { name: "hp", current: "-3" },
