@@ -133,7 +133,7 @@ tr {line-height: 25px;}
           </div>
         </div>
         <div class="col-md-9 col-sm-8 content">
-          <h1>Documentation pour la version 3.15 de COFantasy</h1>
+          <h1>Documentation pour la version 3.16 de COFantasy</h1>
           <h2 class="text-primary" id="comment_utiliser_script">1. Comment utiliser Le script</h2>
           <div class="decalage">
             <h3 class="text-info" id="token_personnages">1.1 Tokens et personnages</h3>
@@ -260,7 +260,7 @@ tr {line-height: 25px;}
                 <p>Les tokens sélectionnés sont ajouté au tracker de tour. Si celui-ci n'existe pas, un nouveau est créé, avec compteur de tour à 1, et on rentre en combat. Les tokens ayant un <a href=#predicats>prédicat</a> <code>aucuneActionCombat</code> ne sont jamais ajoutés au turn tracker.</p>
                 <p>Une option du script (ajustable en utilisant <code>!cof-options</code>) permet d'utiliser la règle de l'initiative variable (ajout d'un d6 explosif à l'initiative). Il est alors possible de faire lancer les dés d'initiative par les joueurs.</p>
                 <p>Les règles de tri suivent ce qui est donné p 70 : priorité aux PJs. Pour l'instant, on distingue un PJ d'un PNJ au dé de vie : si le personnage d'a pas de dé de vie, c'est un PNJ. Ensuite, entre PJs, priorité à la plus haute sagesse. Pour les PNJ, c'est aléatoire.</p>
-                <p>À chaque instant, le token dont c'est le tour d'agir est signalé par une aura qui bouge lentement. L'image de cette aura peut être modifiée dans les options (<code>!cof-options images</code>), et il est possible de spécifier une aura pour chaque token, en ajoutant une ligne dans le champ <code>GM Notes</code> du token (en bas de la partie basique de l'édition du token). Cette ligne doit commencer par <code>init_aura:</code>, et contenir une <a href=https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions>url valide pour un token</a>. N'oubliez pas de sauvegarder le token comme token par défaut pour un personnage si vous voulez que ce personnage ait toujours cette aura.</p>
+                <p>À chaque instant, le token dont c'est le tour d'agir est signalé par une aura qui bouge lentement. L'image de cette aura peut être modifiée dans les options (<code>!cof-options images</code>), et il est possible de spécifier une aura pour chaque token, en ajoutant une ligne dans le champ <code>GM Notes</code> du token (en bas de la partie basique de l'édition du token). Cette ligne doit commencer par <code>init_aura:</code>, et contenir une <a href=https://wiki.roll20.net/API:Objects#imgsrc_and_avatar_property_restrictions>url valide pour un token</a>. N'oubliez pas de sauvegarder le token comme token par défaut pour un personnage si vous voulez que ce personnage ait toujours cette aura. Le token dont c'est le tour est automatiquement mis au premier plan, sauf si le personnage a un prédicat <code>tokenEnDessous</code> (utile pour les gros tokens).</p>
                 <p>Il est possible de laisser les joueurs passer leur tour, en utilisant la commande <code>!cof-tour-suivant</code>. Une utilisation possible est de le mettre en macro dans les actions du tour (voir <a href="#actions_du_tour">Actions du tour</a> ci-dessous).</p>
                 <div class="alert alert-primary">
                   <h5>Astuces :</h5>
@@ -913,7 +913,7 @@ tr {line-height: 25px;}
                 <p>La limite au nombre d'escaliers est de 12 étages, donc pas de lettre après <code>L</code>.</p>
                 <p>Il est possible d'avoir des escaliers qui mènent à d'autres cartes (ce qui fait alors changer la carte vue par le joueur). Il suffit que le nom de l'escalier commence par <code>tmap_</code>. Attention, à cause de limitations de Roll20, cela ne peut fonctionner que si l'image du token est dans une library personnelle d'un joueur : si elle vient du marketplace, il faut d'abord la copier dans sa library, puis utiliser l'image qui est dans la library pour le token.</p>
                 <p>Pour des escaliers plus flexibles (voire des portails), on peut décrire dans le champ des <code>Notes du MJ</code> du token sur la couche MJ une destination quand on monte et une destination quand on descend. Il suffit de mettre sur une ligne, <code>descend:</code> directement suivi du nom du token vers lequel aller pour descendre, et/ou sur une autre ligne <code>monte:</code> suivi du nom du token vers lequel aller quand on monte. Par exemple, pour bloquer un escalier qui descend, il suffit de mettre <code>descend:</code> dans le champ de notes du MJ. On peut aussi faire des "escaliers" à sens unique.</p>
-                <p>Il est possible d'automatiser les escaliers, de façons à ce que les tokens qui passent sur le lieux de l'escalier soient automatiquement transportés. Pour cela, sélectionner le token de l'escalier et lancer la commande <code>!cof-tp-auto</code>. Dans sa version sans argument, le dépacement automatique aura lieu dès qu'un token sera dans le rectangle du token de l'escalier. Sinon, on peut préciser un rayon (en mètres), et le mouvement aura lieur dès que le token sera à moins de cette distance du centre de l'escalier. Le déplacement se fera vers le haut si c'est possible, et sinon vers le bas. À noter que Roll20 peut perdre parfois les données sur les tokens entre les parties. Quand c'est le cas, le script va s'efforce de rerouver les escaliers automatiques, mais ça a plus de chances de marcher si vous donnez un nom unique au token de votre escalier. Pour mettre fin au déplacement automatique sur un escalier, sélectionner le token de l'escalier et taper la commande <code>!cof-tp-auto off</code>.</p>
+                <p>Il est possible d'automatiser les escaliers, de façons à ce que les tokens qui passent sur le lieux de l'escalier soient automatiquement transportés. Pour cela, sélectionner le token de l'escalier et lancer la commande <code>!cof-tp-auto</code>. Dans sa version sans argument, le déplacement automatique aura lieu dès qu'un token sera dans le rectangle du token de l'escalier. Sinon, on peut préciser un rayon (en mètres), et le mouvement aura lieur dès que le token sera à moins de cette distance du centre de l'escalier. Le déplacement se fera vers le haut si c'est possible, et sinon vers le bas. À noter que Roll20 peut perdre parfois les données sur les tokens entre les parties. Quand c'est le cas, le script va s'efforce de rerouver les escaliers automatiques, mais ça a plus de chances de marcher si vous donnez un nom unique au token de votre escalier. Pour mettre fin au déplacement automatique sur un escalier, sélectionner le token de l'escalier et taper la commande <code>!cof-tp-auto off</code>.</p>
               </div>
               <h4 class="text-secondary" id="montures">Montures</h4>
               <div class="decalage">
@@ -1033,7 +1033,7 @@ tr {line-height: 25px;}
                   <li><strong>Action concertée</strong> : utiliser <code>!cof-echange-init @{selected|token_id} @{target|token_id} <i>n</i> --limiteParTour 1 actionConcertee</code> où <i>n</i> peut valoir 0, 1 ou 2 selon le rang dans la voie.</li>
                   <li><strong>À couvert</strong> : <code>!cof-a-couvert @{selected|token_id} @{target|token_id}</code> le target est l'allié qui se déplace avec l'arquebusier. Se sélectionner soi-même si pas d'allié.</li>
                   <li><strong>Combattant aguerri</strong> : se reporter à la capacité choisie</li>
-                  <li><strong>Combat de masse</strong> : pas de support particulier, effectuer les actions supplémentaires en fonction des situations.</li>
+                  <li><strong>Combat de masse</strong> : ajouter un prédicat <code>combatDeMasse</code>.</li>
                   <li><strong>Constitution héroïque</strong> : reporter le bonus sur la fiche</li>
                 </ol>
                 <h4 class="text-secondary">Voie du Pistolero</h4>
@@ -1449,7 +1449,7 @@ tr {line-height: 25px;}
                   <li><strong>Robustesse</strong> : rajouter les PV sur la fiche.</li>
                   <li><strong>Armure naturelle</strong> : rajouter la DEF sur la fiche.</li>
                   <li><strong>Second souffle</strong> : Ajouter un <a href=#predicats>prédicat</a> <code>secondSouffle</code> permet de faire apparaître un bouton pour utiliser le second souffle quand le guerrier a perdu des PVs en combat, limite le gain de PVs à ceux perdus dans le combat en cours, et utilise automatiquement la capacité en fin de combat si elle n'a pas été utilisée. Si cette automatisation ne vous convient pas, vous pouvez utiliser la commande <code>!cof-soin @{selected|token_id} secondSouffle</code> à la place. Enfin, on peut préciser une valeur pour ce prédicat, pour remplacer le niveau + CON (par exemple pour un PNJ).</li>
-                  <li><strong>Dur à cuire</strong> : rajouter un <a href=#predicats>prédicat</a> <code>durACuire</code> sur la fiche.</li>
+                  <li><strong>Dur à cuire</strong> : rajouter un <a href=#predicats>prédicat</a> <code>durACuire</code> sur la fiche et ajouter le bonus de +5 aux tests de CON.</li>
                   <li><strong>Constitution héroïque</strong> : reporter les bonus sur la fiche.</li>
                 </ol>
                 <h4 class="text-secondary">Voie du soldat</h4>
@@ -2299,6 +2299,14 @@ tr {line-height: 25px;}
                   <li><strong>Homme de la situation</strong> : pas de support.</li>
                   <li><strong>Meneur d'hommes</strong> : Ajouter une action : <code>!cof-set-attribute meneurDHommesCible @{selected|token_id} --target @{target|token_id}</code>. Le personnage peut utiliser cette action pour désigner sa cible. Tous les alliés du personnage recevront automatiquement les bonus sur le reste du combat.</li>
                 </ol>
+                <h4 class="text-secondary">Voie du maître des cadavres</h4>
+                <ol>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li></li>
+                  <li><strong>Décarnation morbide</strong> : faire une attaque magique de portée 30 m, de DM 2d6+INT, avec le modificateur <code>necromancie</code>, avec comme option <code>--mana 3 --effet decarnationMorbide</code>. Pour le maintien de la concentration, ajouter une seconde attaque magique de portée 30 m, DM 2d6+INT, avec les modificateurs <code>necromancie, auto</code> et comme option <code>--si etat concentrationSurDecarnationMorbide --effet decarnationMorbide</code>. Le MJ doit vérifier si la cible a bien un squelette à décarner.</li>
+                </ol>
                 <h4 class="text-secondary">Voie du maître des poisons</h4>
                 Rappel : pour appliquer un poison, utiliser <code>!cof-enduire-poison -1 type force save</code>.
                 <ol>
@@ -2484,6 +2492,7 @@ tr {line-height: 25px;}
                   <li><strong>Clignotement</strong> : <code>!cof-effet-temp clignotement [[1d6+2]]</code>.</li>
                   <li><strong>Créature non-vivante</strong> : ajouter un <a href=#predicats>prédicat</a> <code>nonVivant</code>.</li>
                   <li><strong>Créature végétative</strong> : ajouter un <a href=#predicats>prédicat</a> <code>vegetatif</code>.</li>
+                  <li><strong>Croc du dragon</strong> (Invicible) : ajouter un <a href=#predicats>prédicat</a> <code>crocDuDragon</code> dans les prédicats de l'arme, et <code>--seulementVivant --bonusContreArmure 3</code> dans les options d'attaque. Le dragon est reconnu par un prédicat <code>dragonInvicible</code>, et ses émissaires par un prédicat <code>emissaireDuDragonInvincible</code>.</li>
                   <li><strong>Cyclone</strong> (pour les élementaires) : <code>!cof-effet-temp cyclone [[1d4+1]] --limiteParCombat 1</code>. Cela va proposer une attaque <code>Traverser</code> dans les actions de l'élémentaire, qui ne peut fonctionner que si le personnage a au moins une attaque sur sa fiche. Par défaut, l'attaque utilisée en traversant est l'attaque de label <code>1</code>, mais on peut préciser un autre label en utilisant l'option <code>--valeur</code>.</li>
                   <li><strong>Dégâts si touché au contact</strong> (élémentaire de feu,...) : ajouter un <a href=#predicats>prédicat</a> nommé <code>dmSiToucheContact</code>, de valeur les dégâts, suivis de <code> --</code> et du type si besoin. Par exemple, pour un élémentaire de feu, le prédicat <code>dmSiToucheContact:: 1d6 --feu</code>, en fin de ligne (rien ne doit suivre sur cette ligne).</li>
                   <li><strong>Drain de force</strong> (pour la campagne Invincible) : ajouter un <a href=#predicats>prédicat</a> <code>auraDrainDeForce</code> pour la version de base. Pour la version avancée, remplacer par un prédicat <code>auraDrainDeForceSup</code>.</li>
@@ -3140,7 +3149,7 @@ tr {line-height: 25px;}
                   <li><strong>attaqueEnMeute</strong> : booléen ou entier (2 par défaut), bonus à l'attaque quand le personnage attaque la même cible qu'un allié.</li>
                   <li><strong>attaqueEnTraitre</strong> : booléen, propose une attaque en traître quand un allié touche un adversaire au contact.</li>
                   <li><strong>attaqueSournoise</strong> : entier, nombre de d6 à ajouter pour les DM d'attaques sournoises.</li>
-                  <li><strong>attributsDeStatut</strong> : nom, spécifie un attribut qui doit être afficher avec le statt d'un personnage. On peut spécifier plusieurs attributs en ayant plusieur prédicats <code>attributsDeStatut</code>.</li>
+                  <li><strong>attributsDeStatut</strong> : nom, spécifie un attribut qui doit être afficher avec le statut d'un personnage. On peut spécifier plusieurs attributs en ayant plusieur prédicats <code>attributsDeStatut</code>.</li>
                   <li><strong>asDeLaGachette</strong> : booléen, augmente les DM des arbalètes et armes à poudre de 1d6 si le jet d'attaque atteint 25.</li>
                   <li><strong>aucuneActionCombat</strong> : booléen, le personnage ne rentre pas en combat.</li>
                   <li><strong>batarde</strong> : expression de dés, seulement pour les prédicats des armes à 1 mains : dés de DM quand l'arme est portée à 2 mains.</li>
@@ -3272,6 +3281,7 @@ tr {line-height: 25px;}
                   <li><strong>nbDesFeinte</strong> : entier (2 par défaut), nombre de dés à ajouter aux DM des feintes réussies.</li>
                   <li><strong>necromancien</strong> : booléen, le personnage est un nécromancien ou une sorcière.</li>
                   <li><strong>nonVivant</strong> : booléen, le personnage n'est pas vivant (élémentaire, golem ou autre).</li>
+                  <li><strong>optionsAttaquesNaturelles</strong> : argments à ajouter aux attaques avec armes naturelles.</li>
                   <li><strong>ordreDuChevalierDragon</strong> : booléen, augmente de 5 les jets de persuasion et d'intimidation quand le personnage est sur une monture.</li>
                   <li><strong>pacifisme</strong> : booléen, augmente la DEF de 5 tant que le personnage n'a pas attaqué dans un combat. </li>
                   <li><strong>pacteSanglant</strong> : entier, propose un bouton pour augmenter la DEF de cette valeur, en échange d'une dépense de PV (1d4 pour 3 ou moins, 2d4 sinon).</li>
