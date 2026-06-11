@@ -200,6 +200,25 @@ describe("modifications", () => {
         expect(result).toBe("repeating_skills_row123_name");
       });
 
+      it("should replace -CREATE without doubling a leading hyphen in the row ID", () => {
+        const options: ProcessModifierNameOptions = {
+          repeatingID: "-Ounn8umZgulvFN0kH0Q",
+          repOrder: [""],
+        };
+        const result = processModifierName("repeating_inventory_-CREATE_itemname", options);
+        expect(result).toBe("repeating_inventory_-Ounn8umZgulvFN0kH0Q_itemname");
+        expect(result).not.toMatch(/inventory_--/);
+      });
+
+      it("should replace -CREATE with row IDs that do not start with a hyphen", () => {
+        const options: ProcessModifierNameOptions = {
+          repeatingID: "unique-rowid-1234",
+          repOrder: [""],
+        };
+        const result = processModifierName("repeating_inventory_-CREATE_itemname", options);
+        expect(result).toBe("repeating_inventory_unique-rowid-1234_itemname");
+      });
+
       it("should not replace CREATE when repeatingID is not provided", () => {
         const options: ProcessModifierNameOptions = {
           repOrder: [""],

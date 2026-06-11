@@ -67,18 +67,6 @@ export function simulateChatMessage(message: string, options?: SimulationMessage
     contentWithReplacements = contentWithReplacements.replace(match, value);
   });
 
-  // match all occurrences of XdX inside [[...]] and replace with a fixed number for testing
-  const rollMatches = contentWithReplacements.match(/\[\[\d+d(\d+)\]\]/g);
-  rollMatches?.forEach((match) => {
-    // replace with half the die size rounded up multiplied by the number of dice
-    // e.g. 3d6 becomes 12 (3 * 3 + 1)
-    const parts = match.replace(/[[\]]/g, "").split("d");
-    const numDice = parseInt(parts[0], 10);
-    const dieSize = parseInt(parts[1], 10);
-    const replacement = Math.ceil(dieSize / 2) * numDice;
-    contentWithReplacements = contentWithReplacements.replace(match, replacement.toString());
-  });
-
   // match all occurrences of ?{...} with the inputs in order
   const regex = /\?\{([^}]+)\}/g;
   const matches = contentWithReplacements.match(regex);
@@ -90,18 +78,34 @@ export function simulateChatMessage(message: string, options?: SimulationMessage
     contentWithReplacements = contentWithReplacements.replace(match, input);
   });
 
-  // replace all occurrences of [[...]] with the evaluated result
-  const inlineRegex = /\[\[([^\]]+)\]\]/g;
-  const inlineMatches = contentWithReplacements.match(inlineRegex);
-  inlineMatches?.forEach((match) => {
-    const noBrackets = match.replace(/[[\]]/g, "");
-    try {
-      const result = eval(noBrackets);
-      contentWithReplacements = contentWithReplacements.replace(match, result.toString());
-    } catch {
-      throw new Error(`Error evaluating inline roll: ${match}`);
-    }
-  });
+  // When Roll20 has already resolved inline rolls, content uses $[[N]] placeholders
+  // and inlinerolls carries the results — do not pre-evaluate [[...]] in that case.
+  if (!inlinerolls?.length) {
+    // match all occurrences of XdX inside [[...]] and replace with a fixed number for testing
+    const rollMatches = contentWithReplacements.match(/\[\[\d+d(\d+)\]\]/g);
+    rollMatches?.forEach((match) => {
+      // replace with half the die size rounded up multiplied by the number of dice
+      // e.g. 3d6 becomes 12 (3 * 3 + 1)
+      const parts = match.replace(/[[\]]/g, "").split("d");
+      const numDice = parseInt(parts[0], 10);
+      const dieSize = parseInt(parts[1], 10);
+      const replacement = Math.ceil(dieSize / 2) * numDice;
+      contentWithReplacements = contentWithReplacements.replace(match, replacement.toString());
+    });
+
+    // replace all occurrences of [[...]] with the evaluated result
+    const inlineRegex = /\[\[([^\]]+)\]\]/g;
+    const inlineMatches = contentWithReplacements.match(inlineRegex);
+    inlineMatches?.forEach((match) => {
+      const noBrackets = match.replace(/[[\]]/g, "");
+      try {
+        const result = eval(noBrackets);
+        contentWithReplacements = contentWithReplacements.replace(match, result.toString());
+      } catch {
+        throw new Error(`Error evaluating inline roll: ${match}`);
+      }
+    });
+  }
 
   const defaultMessage: Roll20ChatMessage = {
     who,

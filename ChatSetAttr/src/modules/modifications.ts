@@ -74,7 +74,11 @@ export function processModifierName(
   let result = name;
   const hasCreate = result.includes("CREATE");
   if (hasCreate && repeatingID) {
-    result = result.replace("CREATE", repeatingID);
+    if (/-CREATE/i.test(result)) {
+      result = result.replace(/-CREATE/i, repeatingID);
+    } else {
+      result = result.replace(/CREATE/i, repeatingID);
+    }
   }
 
   const rowIndexMatch = result.match(/\$(\d+)/);

@@ -1589,6 +1589,31 @@ var ChatSetAttr = (function (exports) {
         });
     }
 
+    function inlineRollValue(roll) {
+        const tableItems = roll.results.rolls.reduce((names, subRoll) => {
+            const tableSubRoll = subRoll;
+            if (!Object.prototype.hasOwnProperty.call(tableSubRoll, "table")) {
+                return names;
+            }
+            const subNames = (tableSubRoll.results ?? [])
+                .map(result => result.tableItem?.name ?? "")
+                .filter(Boolean);
+            if (subNames.length) {
+                names.push(subNames.join(", "));
+            }
+            return names;
+        }, []);
+        const tableText = tableItems.filter(Boolean).join(", ");
+        return (tableText.length && tableText) || roll.results.total || 0;
+    }
+    function processInlinerolls(msg) {
+        if (!msg.inlinerolls?.length) {
+            return msg.content;
+        }
+        const values = msg.inlinerolls.map(roll => String(inlineRollValue(roll)));
+        return values.reduce((content, value, index) => content.replace(`$[[${index}]]`, value), msg.content);
+    }
+
     // #region Commands
     const COMMAND_TYPE = [
         "setattr",
@@ -2055,7 +2080,12 @@ var ChatSetAttr = (function (exports) {
         let result = name;
         const hasCreate = result.includes("CREATE");
         if (hasCreate && repeatingID) {
-            result = result.replace("CREATE", repeatingID);
+            if (/-CREATE/i.test(result)) {
+                result = result.replace(/-CREATE/i, repeatingID);
+            }
+            else {
+                result = result.replace(/CREATE/i, repeatingID);
+            }
         }
         const rowIndexMatch = result.match(/\$(\d+)/);
         if (rowIndexMatch && repOrder) {
@@ -2527,6 +2557,7 @@ var ChatSetAttr = (function (exports) {
                     return;
                 msg.content = inlineMessage;
             }
+            msg.content = processInlinerolls(msg);
             const debugReset = msg.content.startsWith("!setattrs-debugreset");
             if (debugReset) {
                 log("ChatSetAttr: Debug - resetting state.");

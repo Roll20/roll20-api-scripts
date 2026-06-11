@@ -165,13 +165,13 @@ describe("ChatSetAttr Integration Tests", () => {
       await vi.waitFor(async () => {
         expect(sendChat).toHaveBeenCalled();
 
-        const repeatingRowId = "-unique-rowid-1234";
+        const repeatingRowId = "unique-rowid-1234";
         const itemName = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_itemname`);
         const itemCount = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_itemcount`);
         const itemWeight = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_itemweight`);
         const itemEquipped = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_equipped`);
         const itemModifiers = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_itemmodifiers`);
-        const itemContent = await libSmartAttributes.getAttribute("char1", "user.repeating_inventory_-unique-rowid-1234_itemcontent");
+        const itemContent = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_unique-rowid-1234_itemcontent`);
 
         expect(itemName).toBe("Cloak of Excellence");
         expect(itemCount).toBe("1");
@@ -179,6 +179,27 @@ describe("ChatSetAttr Integration Tests", () => {
         expect(itemEquipped).toBe("1");
         expect(itemModifiers).toBe("Item Type: Wondrous item, AC +2, Saving Throws +1");
         expect(itemContent).toBe("(Requires Attunment)A purple cape, that feels heavy to the touch, but light to carry. It has gnomish text embroiled near the collar.");
+      });
+    });
+
+    it("should not double the leading hyphen when using -CREATE with a row ID that starts with -", async () => {
+      vi.mocked(libUUID.generateRowID).mockReturnValueOnce("-Ounn8umZgulvFN0kH0Q");
+
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      const token = createObj("graphic", { _id: "token1", represents: "char1", _subtype: "token" });
+
+      executeCommand(
+        "!setattr --sel --repeating_inventory_-CREATE_itemname|taco sword",
+        { selected: [token.properties] },
+      );
+
+      await vi.waitFor(async () => {
+        const itemName = await libSmartAttributes.getAttribute(
+          "char1",
+          "user.repeating_inventory_-Ounn8umZgulvFN0kH0Q_itemname",
+        );
+        expect(itemName).toBe("taco sword");
       });
     });
 
@@ -196,6 +217,69 @@ describe("ChatSetAttr Integration Tests", () => {
         expect(strAttr).toBe("15");
         expect(dexAttr).toBeDefined();
         expect(dexAttr).toBe("20");
+      });
+    });
+
+    it("should substitute inline roll placeholders in attribute values", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      const token = createObj("graphic", { _id: "token1", represents: "char1", _subtype: "token" });
+
+      executeCommand("!setattr --sel --hp|$[[0]]", {
+        selected: [token.properties],
+        content: "!setattr --sel --hp|$[[0]]",
+        inlinerolls: [{
+          expression: "3d6",
+          results: {
+            resultType: "sum",
+            total: 11,
+            type: "V",
+            rolls: [{
+              dice: 3,
+              sides: 6,
+              type: "R",
+              results: [{ v: 4 }, { v: 3 }, { v: 4 }],
+            }],
+          },
+          rollid: "roll-hp",
+          signature: "sig-hp",
+        }],
+      });
+
+      await vi.waitFor(async () => {
+        const hp = await libSmartAttributes.getAttribute("char1", "hp");
+        expect(hp).toBe("11");
+      });
+    });
+
+    it("should substitute rollable table inline roll placeholders in attribute values", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      const token = createObj("graphic", { _id: "token1", represents: "char1", _subtype: "token" });
+
+      executeCommand("!setattr --sel --treasure|$[[0]]", {
+        selected: [token.properties],
+        content: "!setattr --sel --treasure|$[[0]]",
+        inlinerolls: [{
+          expression: "1d100",
+          results: {
+            resultType: "sum",
+            total: 42,
+            type: "V",
+            rolls: [{
+              table: "table-id",
+              type: "R",
+              results: [{ tableItem: { name: "Magic Sword" } }],
+            }],
+          },
+          rollid: "roll-table",
+          signature: "sig-table",
+        }],
+      });
+
+      await vi.waitFor(async () => {
+        const treasure = await libSmartAttributes.getAttribute("char1", "treasure");
+        expect(treasure).toBe("Magic Sword");
       });
     });
 

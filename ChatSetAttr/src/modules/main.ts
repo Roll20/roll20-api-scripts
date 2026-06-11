@@ -6,6 +6,7 @@ import { handlers } from "./commands";
 import { checkConfigMessage, getConfig, handleConfigCommand, hasFlag } from "./config";
 import { checkHelpMessage, handleHelpCommand } from "./help";
 import { getCharName } from "./helpers";
+import { processInlinerolls } from "./inlinerolls";
 import { extractMessageFromRollTemplate, parseMessage, validateMessage } from "./message";
 import { processModifications } from "./modifications";
 import { checkPermissions } from "./permissions";
@@ -185,6 +186,7 @@ export function registerHandlers() {
       if (!inlineMessage) return;
       msg.content = inlineMessage;
     }
+    msg.content = processInlinerolls(msg);
     const debugReset = msg.content.startsWith("!setattrs-debugreset");
     if (debugReset) {
       log("ChatSetAttr: Debug - resetting state.");
