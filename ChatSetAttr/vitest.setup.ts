@@ -37,6 +37,9 @@ global.state = {
   }
 };
 
+// region Global Config
+global.globalconfig = {};
+
 // region Objects
 global.getObj = vi.fn(mockGetObj);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
