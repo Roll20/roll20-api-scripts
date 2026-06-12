@@ -1852,6 +1852,22 @@ var Anchor = Anchor || (() => {
         return tracked.filter(k => !(lockedSet instanceof Set) || !lockedSet.has(k));
     };
 
+    /**
+     * Lock components on a child. components is an array of names or null for all.
+     */
+    const lock = (obj, components) => {
+        const comps = components ? components.reduce((o, c) => { o[c] = true; return o; }, {}) : null;
+        lockComponents(obj.get('id'), comps);
+    };
+
+    /**
+     * Unlock components on a child. components is an array of names or null for all.
+     */
+    const unlock = (obj, components) => {
+        const comps = components ? components.reduce((o, c) => { o[c] = true; return o; }, {}) : null;
+        unlockComponents(obj.get('id'), comps);
+    };
+
     // -------------------------------------------------------------------------
     // Initialisation
     // -------------------------------------------------------------------------
@@ -2188,6 +2204,8 @@ var Anchor = Anchor || (() => {
             getZOffset,
             getLocked,
             getUnlocked,
+            lock,
+            unlock,
         },
     };
 })();
