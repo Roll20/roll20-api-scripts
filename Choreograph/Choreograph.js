@@ -2027,7 +2027,7 @@ var Choreograph = Choreograph || (() => {
             if (topic === 'commands' || topic === 'templates') {
                 reply(msg, 'Man', '<b>Command Templates</b><br>'
                     + `Use ${c('${expr}')} for substitutions. Evaluated as JS template literals.<br><br>`
-                    + `Example: ${c('!sequence play ${anim} ignore-selected ${tokenId}')}<br>`
+                    + `Example: ${c('!sequence play ${anim} ignore-selected ${token.id}')}<br>`
                     + `Conditional: ${c('${counter > 1 ? "!choreograph run " + self : ""}')}<br><br>`
                     + 'All variables, params, computed variables, and functions are in scope.');
                 return;
@@ -2411,7 +2411,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph echo 💥 Shockwave hits ${tokenName}! (${actors().length} actors nearby)'], notes: 'Propagate' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph echo 💥 Shockwave hits ${token.name}! (${actors().length} actors nearby)'], notes: 'Propagate' },
                 ],
             },
         });
@@ -2424,7 +2424,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 params: [],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 800)', commands: ['!choreograph echo ${tokenName} reporting in!'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), 800)', commands: ['!choreograph echo ${token.name} reporting in!'], notes: '' },
                 ],
             },
         });
@@ -2454,7 +2454,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 params: [],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${tokenName} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
+                    { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${token.name} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
                 ],
             },
         });
@@ -2467,8 +2467,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 params: [],
                 variables: [],
                 rows: [
-                    { filter: 'width > 70', delay: '0', commands: ['!choreograph echo 🏆 ${tokenName} is an elite! (width=${width})'], notes: 'Expression filter' },
-                    { filter: 'width <= 70', delay: '0', commands: ['!choreograph echo 🐜 ${tokenName} is too small (width=${width})'], notes: 'Inverse' },
+                    { filter: 'width > 70', delay: '0', commands: ['!choreograph echo 🏆 ${token.name} is an elite! (width=${token.width})'], notes: 'Expression filter' },
+                    { filter: 'width <= 70', delay: '0', commands: ['!choreograph echo 🐜 ${token.name} is too small (width=${token.width})'], notes: 'Inverse' },
                 ],
             },
         });
@@ -2484,7 +2484,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${tokenName} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
+                    { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${token.name} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
                 ],
             },
         });
@@ -2499,7 +2499,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top} ${pageId}'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
                 ],
             },
         });
@@ -2515,7 +2515,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${left} ${top} ${pageId}',
+                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
                         '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
                     ], notes: 'Bolt + beam to nearest neighbor' },
                 ],
@@ -2533,9 +2533,9 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${left} ${top} ${pageId}',
-                        '!choreograph fx glow-holy ${left} ${top} ${pageId}',
-                        '!choreograph echo ⚔️ ${tokenName} rallies!',
+                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph echo ⚔️ ${token.name} rallies!',
                     ], notes: 'Ping + glow + announce' },
                 ],
             },
@@ -2551,7 +2551,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top} ${pageId}'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
                 ],
             },
         });
@@ -2567,7 +2567,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${left} ${top} ${pageId}',
+                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
                         '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
                     ], notes: 'Bolt + beam to nearest' },
                 ],
@@ -2585,9 +2585,9 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${left} ${top} ${pageId}',
-                        '!choreograph fx glow-holy ${left} ${top} ${pageId}',
-                        '!choreograph echo ⚔️ ${tokenName} rallies!',
+                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph echo ⚔️ ${token.name} rallies!',
                     ], notes: 'Ping + glow + announce' },
                 ],
             },
@@ -2611,8 +2611,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 rows: [
                     { filter: '*', delay: 'propagate(distance(cx, cy), speed)', commands: [
-                        '!choreograph ping ${left} ${top} ${pageId}',
-                        '!choreograph fx nova-holy ${left} ${top} ${pageId}',
+                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx nova-holy ${token.left} ${token.top} ${token.pageid}',
                         '${speed * decay >= minSpeed ? "!choreograph run " + self + " --px " + left + " --py " + top + " --speed " + (speed * decay) + " --decay " + decay + " --minSpeed " + minSpeed : ""}',
                     ], notes: 'Ping + FX + recurse with decay' },
                 ],
@@ -2735,7 +2735,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 
             html += h(2, 'Command Templates');
             html += p(`Use ${c('${expr}')} for substitutions. Evaluated as JS template literals.`);
-            html += p(`Example: ${c('!sequence play ${anim} ignore-selected ${tokenId}')}`);
+            html += p(`Example: ${c('!sequence play ${anim} ignore-selected ${token.id}')}`);
 
             html += h(2, 'Cast System');
             html += p(`Casts are saved token groups in ${c('[Cast] <name>')} handouts with optional roles.`);
