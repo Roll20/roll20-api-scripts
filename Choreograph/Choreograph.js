@@ -1974,7 +1974,8 @@ var Choreograph = Choreograph || (() => {
             if (topic === 'delay') {
                 reply(msg, 'Man', '<b>Delay Expressions</b><br>'
                     + 'Return: number (ms), INF/SKIP, or sync.<br><br>'
-                    + '<b>Variables:</b> left, top, name, layer, width, height, count, INF, SKIP, self, tokenId, tokenName<br><br>'
+                    + '<b>Variables:</b> left, top, name, layer, width, height, count, INF, SKIP, self, plus params/computed vars.<br>'
+                    + '<b>Token proxy:</b> ' + c('token.left') + ', ' + c('token.name') + ', ' + c('token.id') + ', ' + c('token.pageid') + '. Extension namespaces: ' + c('token.ns.var') + '.<br><br>'
                     + '<b>Functions:</b><br>'
                     + `${c('rank("attr")')} — sort position in filtered set<br>`
                     + `${c('distance(x, y)')} — pixel distance (or ${c('distance(orig)')})<br>`
@@ -2161,15 +2162,56 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 });`);
 
             html += h(2, 'registerTokenVariable(sourceId, struct)');
-            html += p('Add a per-token variable to the expression scope.');
+            html += p('Add a per-token variable. Appears as a getter on TokenProxy objects.');
+            html += p('Namespace determines access path: ' + c('token.dnd.hp') + ' for namespace ' + c('"dnd"') + ', or ' + c('token.hp') + ' for namespace ' + c('"core"') + '.');
             html += pre(
 `Choreograph.registerTokenVariable('MyScript', {
     name: 'hp',
     namespace: 'dnd',
     description: 'Current hit points from bar1',
+    evaluation: 'lazy',  // 'eager' | 'lazy' | 'computed'
+    returns: 'number',   // 'token' or 'token[]' for auto-wrapping
     fn: (token, ctx) => parseInt(token.get('bar1_value')) || 0,
     // ctx: { tokens, params }
+});
+
+// Evaluation modes:
+// eager    — computed once upfront for all tokens (default for core vars)
+// lazy     — computed on first access, cached (default for extensions)
+// computed — re-evaluated every access (no cache)`);
+
+            html += h(2, 'registerFunction(sourceId, struct)');
+            html += p('Add a function to the expression scope. Namespace determines access: '
+                + c('dnd.roll()') + ' for namespace ' + c('"dnd"') + ', or ' + c('roll()') + ' for ' + c('"core"') + '.');
+            html += p('Functions with ' + c('returns: "token"') + ' or ' + c('"token[]"') + ' auto-wrap results as TokenProxy/enriched arrays.');
+            html += pre(
+`Choreograph.registerFunction('MyScript', {
+    name: 'allies',
+    namespace: 'dnd',
+    description: 'Tokens on same team',
+    returns: 'token[]',  // auto-wrapped as enriched TokenProxy array
+    pure: true,
+    fn: (token, filteredTokens, params) => {
+        // Return raw Roll20 objects — they get auto-wrapped
+        return filteredTokens.filter(t => t.get('bar3_value') === token.get('bar3_value'));
+    },
 });`);
+
+            html += h(2, 'TokenProxy & LINQ Arrays');
+            html += p('All tokens in scope are wrapped as TokenProxy objects with getters for registered token variables. '
+                + 'Extension namespaces appear as sub-objects: ' + c('token.dnd.hp') + '.');
+            html += p('Arrays returned by functions with ' + c('returns: "token[]"') + ' are enriched with LINQ-inspired methods:');
+            html += ul(
+                li(c('.from(other)') + ' — intersection'),
+                li(c('.without(other)') + ' — exclusion'),
+                li(c('.where(fn)') + ' — filter alias'),
+                li(c('.select(fn)') + ' — map alias'),
+                li(c('.orderBy(attr)') + ' — sort by attribute or function'),
+                li(c('.first(n?)') + ' / ' + c('.last(n?)') + ' — first/last element(s)'),
+                li(c('.any(fn?)') + ' — existence check'),
+                li(c('.count(fn?)') + ' — count'),
+                li(c('.ids()') + ' — get ID strings')
+            );
 
             html += h(2, 'registerConstant(sourceId, struct)');
             html += p('Add a named constant to the expression scope.');
@@ -2809,7 +2851,9 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 
             html += h(2, 'Delay Expressions');
             html += p('Evaluated per-token. Return ms, INF/SKIP, or sync.');
-            html += p(b('Variables:') + ' left, top, name, layer, width, height, count, INF, SKIP, self, tokenId, tokenName, plus all params and computed variables.');
+            html += p(b('Variables:') + ' left, top, name, layer, width, height, count, INF, SKIP, self, plus all params and computed variables.');
+            html += p(b('Token proxy:') + ' ' + c('token.left') + ', ' + c('token.name') + ', ' + c('token.id') + ', ' + c('token.pageid') + ' etc. Extension namespaces: ' + c('token.namespace.variable') + '.');
+            html += p(b('LINQ arrays:') + ' ' + c('actors()') + ' returns enriched arrays with ' + c('.from()') + ', ' + c('.without()') + ', ' + c('.where()') + ', ' + c('.select()') + ', ' + c('.orderBy()') + ', ' + c('.first()') + ', ' + c('.last()') + ', ' + c('.count()') + ', ' + c('.ids()') + '.');
             html += p(b('Functions:') + ` rank("attr"), distance(x,y), propagate(dist,speed), stagger(rank,interval), rand(min,max), randInt(min,max), clamp(v,lo,hi), actors(filter?), actor_ids(filter?), plus math.`);
             html += p(b('Constants:') + ' PI, TAU');
 
