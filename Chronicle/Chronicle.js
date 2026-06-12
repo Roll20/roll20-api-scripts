@@ -10,9 +10,10 @@ const Chronicle = (() => {
   // ==================================================
 
   const scriptName = 'Chronicle';
-  const version = '1.0.2';
+  const version = '1.0.3';
   //Changelog
-  ///1.0.2 Added Interannual Day code to handle Traveller Imperial Calendar
+  // 1.0.3 Corrected reversion in default calendar definitions
+  // 1.0.2 Added Interannual Day code to handle Traveller Imperial Calendar
   // 1.0.1 Added custom weather and Climate options, made some display changes including parsing of images and links in the display. Fixed firefox Display bug.
   // 1.0.0 Debut
   
@@ -1074,28 +1075,18 @@ const Chronicle = (() => {
       };
       cal.holidays = [
         DataModels.createHoliday('New Year\'s Day', { month: 1, day: 1 }, true),
-        DataModels.createHoliday('Martin Luther King Jr. Day', { month: 1, day: 15 }, true),
-        DataModels.createHoliday('Valentine\'s Day', { month: 2, day: 14 }, true),
-        DataModels.createHoliday('St. Patrick\'s Day', { month: 3, day: 17 }, true),
-        DataModels.createHoliday('Passover (Pesach)', { month: 4, day: 8 }, true),
         DataModels.createHoliday('Earth Day', { month: 4, day: 22 }, true),
-        DataModels.createHoliday('Mother\'s Day', { month: 5, day: 12 }, true),
-        DataModels.createHoliday('Shavuot', { month: 5, day: 26 }, true),
         DataModels.createHoliday('Memorial Day', { month: 5, day: 26 }, true),
-        DataModels.createHoliday('Father\'s Day', { month: 6, day: 16 }, true),
         DataModels.createHoliday('Independence Day', { month: 7, day: 4 }, true),
-        DataModels.createHoliday('Labor Day', { month: 9, day: 3 }, true),
-        DataModels.createHoliday('Rosh Hashanah', { month: 9, day: 23 }, true),
-        DataModels.createHoliday('Yom Kippur', { month: 10, day: 2 }, true),
-        DataModels.createHoliday('Sukkot', { month: 9, day: 30 }, true),
         DataModels.createHoliday('Halloween', { month: 10, day: 31 }, true),
         DataModels.createHoliday('Thanksgiving', { month: 11, day: 22 }, true),
-        DataModels.createHoliday('Hanukkah (Chanukah)', { month: 12, day: 6 }, true),
         DataModels.createHoliday('Christmas', { month: 12, day: 25 }, true)
       ];
       cal.climate = null;
       cal.units = 'us';
-      cal.moons = [];
+      cal.moons = [
+        DataModels.createMoon('Luna', 29.53059, { year: 2000, month: 1, day: 21 })
+      ];
       return cal;
     },
 
@@ -1139,7 +1130,9 @@ const Chronicle = (() => {
       ];
       cal.climate = null;
       cal.units = 'us';
-      cal.moons = [];
+      cal.moons = [
+        DataModels.createMoon('Somal', 29.53059, { year: 4722, month: 1, day: 6 })
+      ];
       return cal;
     },
 
@@ -1188,7 +1181,9 @@ const Chronicle = (() => {
       cal.holidays = [];
       cal.climate = null;
       cal.units = 'us';
-      cal.moons = [];
+      cal.moons = [
+        DataModels.createMoon('Selune', 91, { year: 1, month: 8, day: 4 })
+      ];
       return cal;
     },
 
@@ -1234,8 +1229,8 @@ const Chronicle = (() => {
       cal.climate = null;
       cal.units = 'us';
       cal.moons = [
-        DataModels.createMoon('Luna', 28, { year: 1, month: 8, day: 4 }),
-        DataModels.createMoon('Celene', 91, { year: 1, month: 8, day: 4 })
+        DataModels.createMoon('Luna', 28, { year: 1, month: 8, day: 4 }, .8, 'cyan', true),
+        DataModels.createMoon('Celene', 91, { year: 1, month: 8, day: 4 }, 1, 'white', true)
       ];
       return cal;
     },
@@ -1302,7 +1297,7 @@ const Chronicle = (() => {
     traveller: () => {
       const cal = DataModels.createCalendar('Traveller');
       cal.description = 'The standard Imperial Calendar used throughout the Third Imperium. The year begins with Holiday, a day outside the normal weekly cycle. This is followed by 364 numbered days, ensuring that Wonday always marks Day 2 of every year.';
-      cal.daysInYear = 365;  // Full year: Holiday (1) + month days (364)
+      cal.daysInYear = 364;  // Full year: Holiday (1) + month days (364)
       cal.months = [
         DataModels.createMonth('Day', 364, 0)
       ];
@@ -2869,7 +2864,7 @@ const Chronicle = (() => {
         const weatherEmojis = [
           '☀️ Clear', '⛅ Partly Cloudy', '☁️ Cloudy', '🌤️ Hazy', '🌫️ Fog/Mist',
           '🌧️ Rain', '🌨️ Light Snow', '❄️ Heavy Snow', '⛈️ Thunderstorm', '🌬️ Windy',
-          '🔥 Wildfire', '⚡ Earthquake', '💧 Flood', '☄️ Meteor'
+          '🔥 Wildfire', '⛏️ Earthquake', '💧 Flood', '🌪️ Tornado', '☄️ Meteor'
         ];
         let weatherDropdown = '?{Choose Weather and Description|';
         weatherDropdown += weatherEmojis.map(e => {
