@@ -863,6 +863,99 @@ var Choreograph = Choreograph || (() => {
     };
 
     // =========================================================================
+    // TokenProxy — rich wrapper for tokens in expression scope
+    // =========================================================================
+
+    // Registry of token variable definitions (used by TokenProxy to build getters)
+    // Each entry: { name, namespace, fn, evaluation: 'eager'|'lazy'|'computed' }
+    const TOKEN_VAR_DEFS = [];
+
+    /**
+     * Register a token variable definition for use by TokenProxy.
+     * Called during checkInstall (for core vars) and by extensions (via registerTokenVariable).
+     */
+    const addTokenVarDef = (reg) => {
+        TOKEN_VAR_DEFS.push(reg);
+    };
+
+    /**
+     * NamespaceProxy — lazy sub-proxy for a specific namespace on a token.
+     * Created once per namespace per TokenProxy instance.
+     */
+    class NamespaceProxy {
+        constructor(rawToken, namespace, ctx) {
+            this._token = rawToken;
+            this._namespace = namespace;
+            this._ctx = ctx;
+            this._cache = {};
+
+            // Attach getters for all token vars in this namespace
+            TOKEN_VAR_DEFS
+                .filter(d => d.namespace === namespace)
+                .forEach(d => {
+                    Object.defineProperty(this, d.name, {
+                        get: () => {
+                            const eval_ = d.evaluation || 'lazy';
+                            if (eval_ === 'computed') return d.fn(this._token, this._ctx);
+                            if (eval_ === 'lazy' || eval_ === 'eager') {
+                                if (!(d.name in this._cache)) this._cache[d.name] = d.fn(this._token, this._ctx);
+                                return this._cache[d.name];
+                            }
+                            return d.fn(this._token, this._ctx);
+                        },
+                        enumerable: true,
+                    });
+                });
+        }
+    }
+
+    /**
+     * TokenProxy — wraps a Roll20 graphic object with namespaced getters.
+     * Core properties (left, top, name, etc.) are direct getters.
+     * Extension namespaces are lazy NamespaceProxy instances.
+     */
+    class TokenProxy {
+        constructor(rawToken, ctx) {
+            this._token = rawToken;
+            this._ctx = ctx || {};
+            this._nsCache = {};
+
+            // Attach core namespace getters directly
+            TOKEN_VAR_DEFS
+                .filter(d => d.namespace === 'core')
+                .forEach(d => {
+                    Object.defineProperty(this, d.name, {
+                        get: () => d.fn(this._token, this._ctx),
+                        enumerable: true,
+                    });
+                });
+
+            // Attach namespace sub-proxies as lazy getters
+            const namespaces = [...new Set(TOKEN_VAR_DEFS.map(d => d.namespace).filter(ns => ns !== 'core'))];
+            namespaces.forEach(ns => {
+                Object.defineProperty(this, ns, {
+                    get: () => {
+                        if (!this._nsCache[ns]) this._nsCache[ns] = new NamespaceProxy(this._token, ns, this._ctx);
+                        return this._nsCache[ns];
+                    },
+                    enumerable: true,
+                });
+            });
+        }
+
+        // Allow access to the raw Roll20 object for interop
+        get _id() { return this._token.get('id'); }
+        get(prop) { return this._token.get(prop); }
+        toString() { return this._token.get('name') || this._token.get('id'); }
+    }
+
+    /**
+     * Wrap a Roll20 graphic object (or array of them) in TokenProxy.
+     */
+    const wrapToken = (rawToken, ctx) => rawToken ? new TokenProxy(rawToken, ctx) : null;
+    const wrapTokens = (arr, ctx) => arr.map(t => wrapToken(t, ctx));
+
+    // =========================================================================
     // Delay expression evaluation
     // =========================================================================
 
@@ -942,22 +1035,28 @@ var Choreograph = Choreograph || (() => {
         };
         scope.actor_ids = (filterStr) => scope.actors(filterStr).map(t => t.get('id'));
 
+        // Insert a value into scope at the given namespace path
+        const insertIntoScope = (ns, name, val) => {
+            if (ns === 'core') { scope[name] = val; return; }
+            const parts = ns.split('.');
+            let node = scope;
+            parts.forEach(p => { if (!node[p] || typeof node[p] !== 'object') node[p] = {}; node = node[p]; });
+            node[name] = val;
+        };
+
         // Inject registered extension functions
         Object.values(EXT_FUNCTIONS).forEach(reg => {
-            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
-            scope[name] = (...args) => reg.fn(token, filteredTokens, params, ...args);
+            insertIntoScope(reg.namespace, reg.name, (...args) => reg.fn(token, filteredTokens, params, ...args));
         });
 
         // Inject registered token variables
         Object.values(EXT_TOKEN_VARS).forEach(reg => {
-            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
-            scope[name] = reg.fn(token, { tokens: filteredTokens, params });
+            insertIntoScope(reg.namespace, reg.name, reg.fn(token, { tokens: filteredTokens, params }));
         });
 
         // Inject registered constants
         Object.values(EXT_CONSTANTS).forEach(reg => {
-            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
-            scope[name] = reg.value;
+            insertIntoScope(reg.namespace, reg.name, reg.value);
         });
 
         return scope;
@@ -2252,6 +2351,26 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 
     const checkInstall = () => {
         state[SCRIPT_NAME] = state[SCRIPT_NAME] || {};
+
+        // ── Register core token variables (eager) ─────────────────────────
+        [
+            { name: 'id',       fn: (t) => t.get('id') },
+            { name: 'left',     fn: (t) => t.get('left') },
+            { name: 'top',      fn: (t) => t.get('top') },
+            { name: 'name',     fn: (t) => t.get('name') || '' },
+            { name: 'layer',    fn: (t) => t.get('layer') },
+            { name: 'width',    fn: (t) => t.get('width') },
+            { name: 'height',   fn: (t) => t.get('height') },
+            { name: 'rotation', fn: (t) => t.get('rotation') || 0 },
+            { name: 'flipv',    fn: (t) => t.get('flipv') },
+            { name: 'fliph',    fn: (t) => t.get('fliph') },
+            { name: 'bar1_value', fn: (t) => parseFloat(t.get('bar1_value')) || 0 },
+            { name: 'bar2_value', fn: (t) => parseFloat(t.get('bar2_value')) || 0 },
+            { name: 'bar3_value', fn: (t) => parseFloat(t.get('bar3_value')) || 0 },
+            { name: 'statusmarkers', fn: (t) => t.get('statusmarkers') || '' },
+            { name: 'imgsrc',   fn: (t) => t.get('imgsrc') || '' },
+            { name: 'pageid',   fn: (t) => t.get('_pageid') },
+        ].forEach(def => addTokenVarDef({ name: def.name, namespace: 'core', fn: def.fn, evaluation: 'eager' }));
 
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
