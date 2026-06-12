@@ -1430,7 +1430,7 @@ var Anchor = Anchor || (() => {
                 const handoutName = `Help: ${SCRIPT_NAME}/Scripting API`;
                 let hh = findObjs({ type: 'handout', name: handoutName })[0];
                 if (!hh) {
-                    hh = createObj('handout', { name: handoutName, inplayerjournals: 'all', archived: false });
+                    hh = createObj('handout', { name: handoutName, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
                 }
                 let html = `<h1>${SCRIPT_NAME} — Scripting API</h1>`;
                 html += `<p>Access via <code>Anchor.*</code> after <code>on('ready')</code> fires.</p>`;
@@ -2045,7 +2045,7 @@ var Anchor = Anchor || (() => {
             const helpName = `Help: ${SCRIPT_NAME}`;
             let hh = findObjs({ type: 'handout', name: helpName })[0];
             if (!hh) {
-                hh = createObj('handout', { name: helpName, inplayerjournals: 'all', archived: false });
+                hh = createObj('handout', { name: helpName, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
             }
             let html = `<h1>${SCRIPT_NAME} v${SCRIPT_VERSION}</h1>`;
             html += `<p>Attach child tokens to an anchor token so they automatically follow its position, rotation, scale, layer, and flip.</p>`;
