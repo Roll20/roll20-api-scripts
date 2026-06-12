@@ -1070,14 +1070,22 @@ var Choreograph = Choreograph || (() => {
             node[name] = val;
         };
 
+        // Auto-wrap return values based on declared returns type
+        const autoWrap = (val, returns) => {
+            if (returns === 'token' && val && !( val instanceof TokenProxy)) return wrapToken(val, ctx);
+            if (returns === 'token[]' && Array.isArray(val)) return enrichArray(val.filter(Boolean).map(t => t instanceof TokenProxy ? t : wrapToken(t, ctx)));
+            return val;
+        };
+
         // Inject registered extension functions
         Object.values(EXT_FUNCTIONS).forEach(reg => {
-            insertIntoScope(reg.namespace, reg.name, (...args) => reg.fn(token, filteredTokens, params, ...args));
+            insertIntoScope(reg.namespace, reg.name, (...args) => autoWrap(reg.fn(token, filteredTokens, params, ...args), reg.returns));
         });
 
         // Inject registered token variables
         Object.values(EXT_TOKEN_VARS).forEach(reg => {
-            insertIntoScope(reg.namespace, reg.name, reg.fn(token, { tokens: filteredTokens, params }));
+            const val = reg.fn(token, { tokens: filteredTokens, params });
+            insertIntoScope(reg.namespace, reg.name, autoWrap(val, reg.returns));
         });
 
         // Inject registered constants
