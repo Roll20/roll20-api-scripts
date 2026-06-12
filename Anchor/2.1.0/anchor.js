@@ -2000,28 +2000,74 @@ var Anchor = Anchor || (() => {
         const registerWithChoreograph = () => {
             if (typeof Choreograph === 'undefined') return;
 
-            // Token variables
+            // Token variables (appear as token.anchor.isAnchored, token.anchor.localLeft, etc.)
             Choreograph.registerTokenVariable(SCRIPT_NAME, {
                 name: 'isAnchored', namespace: 'anchor',
                 description: 'Whether this token is anchored to another',
+                returns: 'boolean',
                 fn: (token) => !!getAnchor(token.get('id')),
             });
 
             Choreograph.registerTokenVariable(SCRIPT_NAME, {
                 name: 'anchorId', namespace: 'anchor',
                 description: 'ID of the anchor token (or empty string)',
+                returns: 'string',
                 fn: (token) => getAnchor(token.get('id')) || '',
             });
 
-            // Functions
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'left', namespace: 'anchor',
+                description: 'Anchor-local X position',
+                returns: 'number',
+                fn: (token) => { const p = getPosition(token); return p ? p[0] : 0; },
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'top', namespace: 'anchor',
+                description: 'Anchor-local Y position',
+                returns: 'number',
+                fn: (token) => { const p = getPosition(token); return p ? p[1] : 0; },
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'rotation', namespace: 'anchor',
+                description: 'Anchor-local rotation in degrees',
+                returns: 'number',
+                fn: (token) => { const r = getRotation(token); return r !== undefined ? r : 0; },
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'scaleW', namespace: 'anchor',
+                description: 'Anchor-local width scale ratio',
+                returns: 'number',
+                fn: (token) => { const s = getScale(token); return s ? s[0] : 1; },
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'scaleH', namespace: 'anchor',
+                description: 'Anchor-local height scale ratio',
+                returns: 'number',
+                fn: (token) => { const s = getScale(token); return s ? s[1] : 1; },
+            });
+
+            // Functions (appear as anchor.siblings(), anchor.children())
             Choreograph.registerFunction(SCRIPT_NAME, {
-                name: 'anchorTo', namespace: 'anchor',
-                description: 'Anchor the current token to another token by ID',
-                args: [{ name: 'anchorId', type: 'string' }],
-                returns: 'boolean',
-                fn: (token, filteredTokens, params, anchorId) => {
-                    return !!anchorObj(token.get('id'), anchorId);
+                name: 'siblings', namespace: 'anchor',
+                description: 'Other tokens anchored to the same parent',
+                returns: 'token[]',
+                fn: (token, filteredTokens) => {
+                    const anchorId = getAnchor(token.get('id'));
+                    if (!anchorId) return [];
+                    return getChildren(anchorId)
+                        .filter(t => t.get('id') !== token.get('id'));
                 },
+            });
+
+            Choreograph.registerFunction(SCRIPT_NAME, {
+                name: 'children', namespace: 'anchor',
+                description: 'Tokens anchored to this token as children',
+                returns: 'token[]',
+                fn: (token) => getChildren(token.get('id')) || [],
             });
 
             // Lifecycle hook for !anchor commands in scenes
