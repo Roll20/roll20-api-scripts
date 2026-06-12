@@ -333,8 +333,8 @@ var Anchor = Anchor || (() => {
         if (components.width)    info.widthRatio  = aW > 0 ? child.get('width')  / aW : 1;
         if (components.height)   info.heightRatio = aH > 0 ? child.get('height') / aH : 1;
         if (components.layer)    info.layerOffset = 0;    // always same layer as anchor
-        if (components.flipv)    info.flipv = child.get('flipv') === anchor.get('flipv'); // true = match
-        if (components.fliph)    info.fliph = child.get('fliph') === anchor.get('fliph');
+        if (components.flipv)    info.flipv = child.get('flipv') !== anchor.get('flipv'); // true = flipped relative to parent
+        if (components.fliph)    info.fliph = child.get('fliph') !== anchor.get('fliph');
 
         // Z-order is not stored in anchorInfo per-child; instead the anchor
         // maintains front/back ordered lists. We flag it here so setAnchor
@@ -779,11 +779,11 @@ var Anchor = Anchor || (() => {
         }
 
         if ('flipv' in info && shouldApply('flipv')) {
-            updates.flipv = info.flipv ? anchor.get('flipv') : !anchor.get('flipv');
+            updates.flipv = info.flipv ? !anchor.get('flipv') : anchor.get('flipv');
         }
 
         if ('fliph' in info && shouldApply('fliph')) {
-            updates.fliph = info.fliph ? anchor.get('fliph') : !anchor.get('fliph');
+            updates.fliph = info.fliph ? !anchor.get('fliph') : anchor.get('fliph');
         }
 
         child.set(updates);
@@ -1226,10 +1226,10 @@ var Anchor = Anchor || (() => {
                 trackedDisplay.push(`layer${locked.has('layer') ? ' 🔒' : ''}`);
             }
             if ('flipv' in info) {
-                trackedDisplay.push(`flipv(${info.flipv ? 'match' : 'invert'})${locked.has('flipv') ? ' 🔒' : ''}`);
+                trackedDisplay.push(`flipv(${info.flipv ? 'flipped' : 'same'})${locked.has('flipv') ? ' 🔒' : ''}`);
             }
             if ('fliph' in info) {
-                trackedDisplay.push(`fliph(${info.fliph ? 'match' : 'invert'})${locked.has('fliph') ? ' 🔒' : ''}`);
+                trackedDisplay.push(`fliph(${info.fliph ? 'flipped' : 'same'})${locked.has('fliph') ? ' 🔒' : ''}`);
             }
             if ('zorder' in info) {
                 trackedDisplay.push(`z-order${locked.has('zorder') ? ' 🔒' : ''}`);
@@ -1779,6 +1779,79 @@ var Anchor = Anchor || (() => {
         }
     };
 
+    /**
+     * Get whether child is flipped vertically relative to its anchor.
+     * true = flipped relative to parent, false = same as parent.
+     */
+    const getFlipV = (obj) => {
+        const info = state[SCRIPT_NAME].anchorInfoByChildId[obj.get('id')];
+        return info && 'flipv' in info ? info.flipv : undefined;
+    };
+
+    /**
+     * Set the child's flipv state relative to anchor.
+     * true = flipped relative to parent, false = same as parent.
+     */
+    const setFlipV = (obj, flipped) => {
+        const id = obj.get('id');
+        const info = state[SCRIPT_NAME].anchorInfoByChildId[id];
+        if (info && 'flipv' in info) {
+            info.flipv = !!flipped;
+            applyAnchorToChild(id);
+        }
+    };
+
+    /**
+     * Get whether child is flipped horizontally relative to its anchor.
+     */
+    const getFlipH = (obj) => {
+        const info = state[SCRIPT_NAME].anchorInfoByChildId[obj.get('id')];
+        return info && 'fliph' in info ? info.fliph : undefined;
+    };
+
+    /**
+     * Set the child's fliph state relative to anchor.
+     */
+    const setFlipH = (obj, flipped) => {
+        const id = obj.get('id');
+        const info = state[SCRIPT_NAME].anchorInfoByChildId[id];
+        if (info && 'fliph' in info) {
+            info.fliph = !!flipped;
+            applyAnchorToChild(id);
+        }
+    };
+
+    /**
+     * Get the child's z-order offset relative to anchor (read-only).
+     * Returns 0 if not tracked.
+     */
+    const getZOffset = (obj) => {
+        const info = state[SCRIPT_NAME].anchorInfoByChildId[obj.get('id')];
+        return info && 'z_offset' in info ? info.z_offset : 0;
+    };
+
+    /**
+     * Get array of locked component names for a child.
+     */
+    const getLocked = (obj) => {
+        const s = state[SCRIPT_NAME];
+        const set = s.lockedObjects && s.lockedObjects[obj.get('id')];
+        return set instanceof Set ? [...set] : [];
+    };
+
+    /**
+     * Get array of tracked-but-unlocked component names for a child.
+     */
+    const getUnlocked = (obj) => {
+        const s = state[SCRIPT_NAME];
+        const id = obj.get('id');
+        const info = s.anchorInfoByChildId[id];
+        if (!info) return [];
+        const lockedSet = s.lockedObjects && s.lockedObjects[id];
+        const tracked = Object.keys(info).filter(k => k !== 'anchor_id' && !k.startsWith('_'));
+        return tracked.filter(k => !(lockedSet instanceof Set) || !lockedSet.has(k));
+    };
+
     // -------------------------------------------------------------------------
     // Initialisation
     // -------------------------------------------------------------------------
@@ -2108,6 +2181,13 @@ var Anchor = Anchor || (() => {
             setRotation,
             getScale,
             setScale,
+            getFlipV,
+            setFlipV,
+            getFlipH,
+            setFlipH,
+            getZOffset,
+            getLocked,
+            getUnlocked,
         },
     };
 })();
