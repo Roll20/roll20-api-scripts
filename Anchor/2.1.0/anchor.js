@@ -1922,6 +1922,124 @@ var Anchor = Anchor || (() => {
         on('destroy:graphic',         onDestroyObject);
 
         setInterval(pollUpdates, cfg().pollIntervalMs);
+
+        // ── Sequence integration ──────────────────────────────────────────
+        const registerWithSequence = () => {
+            if (typeof Sequence === 'undefined') return;
+
+            // Register anchor-local position as virtual attributes
+            Sequence.registerAttribute(SCRIPT_NAME, {
+                name: 'left', namespace: 'anchor', objectType: 'graphic',
+                description: 'Anchor-local X position. Animates relative to anchor.',
+                valueType: 'number',
+                examples: ['+70  move right 70px in anchor space', '=0  snap to anchor center'],
+                startWatch: null, stopWatch: null,
+                get:    (obj) => { const p = getPosition(obj); return p ? p[0] : obj.get('left'); },
+                set:    (obj, val) => { setPosition(obj, val, getPosition(obj)[1]); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                diff:   (prev, curr) => { const d = Math.round((curr - prev) * 10000) / 10000; return d === 0 ? null : d; },
+                apply:  (obj, delta) => { const p = getPosition(obj); setPosition(obj, p[0] + delta, p[1]); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                lerp:   (a, b, t) => a + (b - a) * t,
+                identity: () => ({ delta: 0 }),
+                format: (d) => d >= 0 ? `+${d}` : `${d}`,
+                parse:  (str) => {
+                    const s = String(str).trim();
+                    if (s.startsWith('=')) return { abs: parseFloat(s.slice(1)) };
+                    return { delta: parseFloat(s) };
+                },
+            });
+
+            Sequence.registerAttribute(SCRIPT_NAME, {
+                name: 'top', namespace: 'anchor', objectType: 'graphic',
+                description: 'Anchor-local Y position. Animates relative to anchor.',
+                valueType: 'number',
+                examples: ['+70  move down 70px in anchor space', '=0  snap to anchor center'],
+                startWatch: null, stopWatch: null,
+                get:    (obj) => { const p = getPosition(obj); return p ? p[1] : obj.get('top'); },
+                set:    (obj, val) => { const p = getPosition(obj); setPosition(obj, p[0], val); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                diff:   (prev, curr) => { const d = Math.round((curr - prev) * 10000) / 10000; return d === 0 ? null : d; },
+                apply:  (obj, delta) => { const p = getPosition(obj); setPosition(obj, p[0], p[1] + delta); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                lerp:   (a, b, t) => a + (b - a) * t,
+                identity: () => ({ delta: 0 }),
+                format: (d) => d >= 0 ? `+${d}` : `${d}`,
+                parse:  (str) => {
+                    const s = String(str).trim();
+                    if (s.startsWith('=')) return { abs: parseFloat(s.slice(1)) };
+                    return { delta: parseFloat(s) };
+                },
+            });
+
+            Sequence.registerAttribute(SCRIPT_NAME, {
+                name: 'rotation', namespace: 'anchor', objectType: 'graphic',
+                description: 'Anchor-local rotation in degrees.',
+                valueType: 'number',
+                examples: ['+90  rotate 90° in anchor space'],
+                startWatch: null, stopWatch: null,
+                get:    (obj) => { const r = getRotation(obj); return r !== undefined ? r : 0; },
+                set:    (obj, val) => { setRotation(obj, val); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                diff:   (prev, curr) => { const d = Math.round((curr - prev) * 10000) / 10000; return d === 0 ? null : d; },
+                apply:  (obj, delta) => { setRotation(obj, getRotation(obj) + delta); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                lerp:   (a, b, t) => a + (b - a) * t,
+                identity: () => ({ delta: 0 }),
+                format: (d) => d >= 0 ? `+${d}` : `${d}`,
+                parse:  (str) => {
+                    const s = String(str).trim();
+                    if (s.startsWith('=')) return { abs: parseFloat(s.slice(1)) };
+                    return { delta: parseFloat(s) };
+                },
+            });
+
+            log(`${SCRIPT_NAME}: registered anchor-local attributes with Sequence`);
+        };
+
+        on('chat:message', (msg) => {
+            if (msg.type === 'api' && msg.content === '!sequence-ready') registerWithSequence();
+        });
+        registerWithSequence();
+
+        // ── Choreograph integration ───────────────────────────────────────
+        const registerWithChoreograph = () => {
+            if (typeof Choreograph === 'undefined') return;
+
+            // Token variables
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'isAnchored', namespace: 'anchor',
+                description: 'Whether this token is anchored to another',
+                fn: (token) => !!getAnchor(token.get('id')),
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'anchorId', namespace: 'anchor',
+                description: 'ID of the anchor token (or empty string)',
+                fn: (token) => getAnchor(token.get('id')) || '',
+            });
+
+            // Functions
+            Choreograph.registerFunction(SCRIPT_NAME, {
+                name: 'anchorTo', namespace: 'anchor',
+                description: 'Anchor the current token to another token by ID',
+                args: [{ name: 'anchorId', type: 'string' }],
+                returns: 'boolean',
+                fn: (token, filteredTokens, params, anchorId) => {
+                    return !!anchorObj(token.get('id'), anchorId);
+                },
+            });
+
+            // Lifecycle hook for !anchor commands in scenes
+            Choreograph.registerLifecycleHook(SCRIPT_NAME, {
+                commands: [/^!anchor\b/],
+                start: (ctx) => { handleInput(ctx); },
+                stop: null,
+                pause: null,
+                resume: null,
+            });
+
+            log(`${SCRIPT_NAME}: registered with Choreograph`);
+        };
+
+        on('chat:message', (msg) => {
+            if (msg.type === 'api' && msg.content === '!choreograph-ready') registerWithChoreograph();
+        });
+        registerWithChoreograph();
     };
 
     // -------------------------------------------------------------------------
