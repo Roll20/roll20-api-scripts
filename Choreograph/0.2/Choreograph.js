@@ -1,6 +1,6 @@
 // =============================================================================
-// Choreograph v0.1
-// Last Updated: 2026-06-07
+// Choreograph v0.2
+// Last Updated: 2026-06-12
 // Author: Kenan Millet
 //
 // Description:
@@ -27,7 +27,7 @@ var Choreograph = Choreograph || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Choreograph';
-    const SCRIPT_VERSION = '0.1';
+    const SCRIPT_VERSION = '0.2';
     const CMD_TOKEN      = '!choreograph';
 
     // =========================================================================
