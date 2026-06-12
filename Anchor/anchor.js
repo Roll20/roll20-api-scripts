@@ -2159,6 +2159,86 @@ var Anchor = Anchor || (() => {
                 },
             });
 
+            Sequence.registerAttribute(SCRIPT_NAME, {
+                name: 'scaleW', namespace: 'anchor', objectType: 'graphic',
+                description: 'Anchor-local width scale (multiplicative — ×2 doubles).',
+                valueType: 'scale',
+                examples: ['×2  double width in anchor space', '×0.5  halve width'],
+                startWatch: null, stopWatch: null,
+                get:    (obj) => { const s = getScale(obj); return s ? s[0] : 1; },
+                set:    (obj, val) => { const s = getScale(obj); setScale(obj, val, s ? s[1] : 1); refreshAnchor(obj); },
+                diff:   (prev, curr) => { if (!prev || prev === 0 || curr === prev) return null; const r = Math.round((curr / prev) * 10000) / 10000; return r === 1 ? null : r; },
+                apply:  (obj, ratio) => { const s = getScale(obj); setScale(obj, (s ? s[0] : 1) * ratio, s ? s[1] : 1); refreshAnchor(obj); },
+                lerp:   (a, b, t) => a + (b - a) * t,
+                identity: () => ({ delta: 1 }),
+                format: (ratio) => `×${ratio}`,
+                parse:  (str) => {
+                    const s = String(str).trim();
+                    if (s.startsWith('=')) return { abs: parseFloat(s.slice(1)) };
+                    if (s.startsWith('×') || s.startsWith('*')) return { delta: parseFloat(s.slice(1)) };
+                    return { delta: parseFloat(s) };
+                },
+            });
+
+            Sequence.registerAttribute(SCRIPT_NAME, {
+                name: 'scaleH', namespace: 'anchor', objectType: 'graphic',
+                description: 'Anchor-local height scale (multiplicative).',
+                valueType: 'scale',
+                examples: ['×2  double height in anchor space'],
+                startWatch: null, stopWatch: null,
+                get:    (obj) => { const s = getScale(obj); return s ? s[1] : 1; },
+                set:    (obj, val) => { const s = getScale(obj); setScale(obj, s ? s[0] : 1, val); refreshAnchor(obj); },
+                diff:   (prev, curr) => { if (!prev || prev === 0 || curr === prev) return null; const r = Math.round((curr / prev) * 10000) / 10000; return r === 1 ? null : r; },
+                apply:  (obj, ratio) => { const s = getScale(obj); setScale(obj, s ? s[0] : 1, (s ? s[1] : 1) * ratio); refreshAnchor(obj); },
+                lerp:   (a, b, t) => a + (b - a) * t,
+                identity: () => ({ delta: 1 }),
+                format: (ratio) => `×${ratio}`,
+                parse:  (str) => {
+                    const s = String(str).trim();
+                    if (s.startsWith('=')) return { abs: parseFloat(s.slice(1)) };
+                    if (s.startsWith('×') || s.startsWith('*')) return { delta: parseFloat(s.slice(1)) };
+                    return { delta: parseFloat(s) };
+                },
+            });
+
+            Sequence.registerAttribute(SCRIPT_NAME, {
+                name: 'flipV', namespace: 'anchor', objectType: 'graphic',
+                description: 'Anchor-local vertical flip (true = flipped relative to parent).',
+                valueType: 'boolean',
+                examples: ['=true  flip vertically', '=false  unflip'],
+                startWatch: null, stopWatch: null,
+                get:    (obj) => { const v = getFlipV(obj); return v !== undefined ? v : false; },
+                set:    (obj, val) => { setFlipV(obj, val); refreshAnchor(obj); },
+                diff:   (prev, curr) => curr === prev ? null : curr,
+                apply:  (obj, val) => { setFlipV(obj, val); refreshAnchor(obj); },
+                lerp:   null,
+                format: (val) => `=${val}`,
+                parse:  (str) => {
+                    const s = String(str).trim();
+                    const v = s.startsWith('=') ? s.slice(1) : s;
+                    return { abs: v === 'true' || v === '1' };
+                },
+            });
+
+            Sequence.registerAttribute(SCRIPT_NAME, {
+                name: 'flipH', namespace: 'anchor', objectType: 'graphic',
+                description: 'Anchor-local horizontal flip (true = flipped relative to parent).',
+                valueType: 'boolean',
+                examples: ['=true  flip horizontally', '=false  unflip'],
+                startWatch: null, stopWatch: null,
+                get:    (obj) => { const v = getFlipH(obj); return v !== undefined ? v : false; },
+                set:    (obj, val) => { setFlipH(obj, val); refreshAnchor(obj); },
+                diff:   (prev, curr) => curr === prev ? null : curr,
+                apply:  (obj, val) => { setFlipH(obj, val); refreshAnchor(obj); },
+                lerp:   null,
+                format: (val) => `=${val}`,
+                parse:  (str) => {
+                    const s = String(str).trim();
+                    const v = s.startsWith('=') ? s.slice(1) : s;
+                    return { abs: v === 'true' || v === '1' };
+                },
+            });
+
             log(`${SCRIPT_NAME}: registered anchor-local attributes with Sequence`);
         };
 
