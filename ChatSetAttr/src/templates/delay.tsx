@@ -13,5 +13,5 @@ export function createDelayMessage(): string {
         The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes.
       </div>
     </div>
-  );
+  ).html;
 };

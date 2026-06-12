@@ -12,7 +12,7 @@ const PARAGRAPH_SPACING_STYLE = s({
   marginBottom: "8px",
 });
 
-export function createVersionMessage() {
+export function createVersionMessage(): string {
   return (
     <div style={WRAPPER_STYLE}>
       <p><strong>ChatSetAttr has been updated to version 2.0!</strong></p>
@@ -35,5 +35,5 @@ export function createVersionMessage() {
         <a href="!setattrs-help">Create Help Handout</a>
       </div>
     </div>
-  );
+  ).html;
 }

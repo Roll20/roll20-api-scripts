@@ -6,73 +6,73 @@ describe("chat utilities", () => {
   describe("h function (JSX helper)", () => {
     it("should create a simple HTML tag with no attributes or children", () => {
       const result = h("div");
-      expect(result).toBe("<div></div>");
+      expect(result.html).toBe("<div></div>");
     });
 
     it("should create a tag with text content", () => {
       const result = h("p", {}, "Hello World");
-      expect(result).toBe("<p>Hello World</p>");
+      expect(result.html).toBe("<p>Hello World</p>");
     });
 
     it("should create a tag with multiple text children", () => {
       const result = h("div", {}, "First", "Second", "Third");
-      expect(result).toBe("<div>FirstSecondThird</div>");
+      expect(result.html).toBe("<div>FirstSecondThird</div>");
     });
 
     it("should create a tag with a single attribute", () => {
       const result = h("div", { class: "container" });
-      expect(result).toBe("<div class=\"container\"></div>");
+      expect(result.html).toBe("<div class=\"container\"></div>");
     });
 
     it("should create a tag with multiple attributes", () => {
       const result = h("input", { type: "text", name: "username", id: "user" });
-      expect(result).toBe("<input type=\"text\" name=\"username\" id=\"user\"></input>");
+      expect(result.html).toBe("<input type=\"text\" name=\"username\" id=\"user\"></input>");
     });
 
     it("should create a tag with attributes and children", () => {
       const result = h("button", { type: "submit", class: "btn" }, "Click me");
-      expect(result).toBe("<button type=\"submit\" class=\"btn\">Click me</button>");
+      expect(result.html).toBe("<button type=\"submit\" class=\"btn\">Click me</button>");
     });
 
     it("should handle empty attributes object", () => {
       const result = h("span", {}, "Content");
-      expect(result).toBe("<span>Content</span>");
+      expect(result.html).toBe("<span>Content</span>");
     });
 
     it("should filter out null and undefined children", () => {
       const result = h("div", {}, "First", null, "Second", undefined, "Third");
-      expect(result).toBe("<div>FirstSecondThird</div>");
+      expect(result.html).toBe("<div>FirstSecondThird</div>");
     });
 
     it("should handle empty string children", () => {
       const result = h("div", {}, "First", "", "Second");
-      expect(result).toBe("<div>FirstSecond</div>");
+      expect(result.html).toBe("<div>FirstSecond</div>");
     });
 
     it("should handle nested HTML structure simulation", () => {
       const inner = h("span", {}, "Inner");
       const result = h("div", { class: "outer" }, "Before", inner, "After");
-      expect(result).toBe('<div class="outer">Before<span>Inner</span>After</div>');
+      expect(result.html).toBe('<div class="outer">Before<span>Inner</span>After</div>');
     });
 
     it("should handle special characters in attribute values", () => {
       const result = h("div", { "data-value": "test & value", title: 'Quote "test"' });
-      expect(result).toBe('<div data-value="test & value" title="Quote "test""></div>');
+      expect(result.html).toBe('<div data-value="test &amp; value" title="Quote &quot;test&quot;"></div>');
     });
 
     it("should handle special characters in children", () => {
       const result = h("p", {}, "Text with & < > characters");
-      expect(result).toBe("<p>Text with & < > characters</p>");
+      expect(result.html).toBe("<p>Text with &amp; &lt; &gt; characters</p>");
     });
 
     it("should handle numeric string children", () => {
       const result = h("div", {}, "Count: ", "42");
-      expect(result).toBe("<div>Count: 42</div>");
+      expect(result.html).toBe("<div>Count: 42</div>");
     });
 
     it("should handle self-closing tag behavior (treats all tags the same)", () => {
       const result = h("br", { class: "line-break" });
-      expect(result).toBe('<br class="line-break"></br>');
+      expect(result.html).toBe('<br class="line-break"></br>');
     });
 
     it("should handle complex nested attributes", () => {
@@ -82,130 +82,130 @@ describe("chat utilities", () => {
         "data-toggle": "modal",
         "aria-label": "Main content"
       }, "Content");
-      expect(result).toBe('<div id="main" class="container fluid" data-toggle="modal" aria-label="Main content">Content</div>');
+      expect(result.html).toBe('<div id="main" class="container fluid" data-toggle="modal" aria-label="Main content">Content</div>');
     });
 
     it("should handle CSS style attribute", () => {
       const result = h("div", { style: "color: red; font-size: 16px;" }, "Styled text");
-      expect(result).toBe('<div style="color: red; font-size: 16px;">Styled text</div>');
+      expect(result.html).toBe('<div style="color: red; font-size: 16px;">Styled text</div>');
     });
 
     it("should preserve order of attributes", () => {
       const result = h("input", { z: "last", a: "first", m: "middle" });
-      expect(result).toBe('<input z="last" a="first" m="middle"></input>');
+      expect(result.html).toBe('<input z="last" a="first" m="middle"></input>');
     });
 
     it("should handle boolean-like attribute values", () => {
       const result = h("input", { disabled: "true", checked: "false" });
-      expect(result).toBe('<input disabled="true" checked="false"></input>');
+      expect(result.html).toBe('<input disabled="true" checked="false"></input>');
     });
 
     it("should handle whitespace in children", () => {
       const result = h("pre", {}, "  Code with  spaces  ");
-      expect(result).toBe("<pre>  Code with  spaces  </pre>");
+      expect(result.html).toBe("<pre>  Code with  spaces  </pre>");
     });
 
     describe("edge cases and undefined props", () => {
       it("should handle undefined attributes parameter", () => {
         const result = h("div", undefined, "Content");
-        expect(result).toBe("<div>Content</div>");
+        expect(result.html).toBe("<div>Content</div>");
       });
 
       it("should handle undefined attribute values", () => {
         const result = h("div", { class: "test", id: undefined as unknown as string });
-        expect(result).toBe('<div class="test" id="undefined"></div>');
+        expect(result.html).toBe('<div class="test" id="undefined"></div>');
       });
 
       it("should handle null attribute values", () => {
         const result = h("div", { class: "test", id: null as unknown as string });
-        expect(result).toBe('<div class="test" id="null"></div>');
+        expect(result.html).toBe('<div class="test" id="null"></div>');
       });
 
       it("should handle empty string attribute values", () => {
         const result = h("input", { type: "text", value: "", placeholder: "" });
-        expect(result).toBe('<input type="text" value="" placeholder=""></input>');
+        expect(result.html).toBe('<input type="text" value="" placeholder=""></input>');
       });
 
       it("should handle zero as attribute value", () => {
         const result = h("div", { tabindex: "0", "data-count": "0" });
-        expect(result).toBe('<div tabindex="0" data-count="0"></div>');
+        expect(result.html).toBe('<div tabindex="0" data-count="0"></div>');
       });
 
       it("should handle attributes with special characters in keys", () => {
         const result = h("div", { "data-test-value": "test", "aria-label": "label" });
-        expect(result).toBe('<div data-test-value="test" aria-label="label"></div>');
+        expect(result.html).toBe('<div data-test-value="test" aria-label="label"></div>');
       });
 
       it("should handle empty tag name", () => {
         const result = h("", {}, "Content");
-        expect(result).toBe("<>Content</>");
+        expect(result.html).toBe("<>Content</>");
       });
 
       it("should handle tag name with numbers", () => {
         const result = h("h1", {}, "Heading");
-        expect(result).toBe("<h1>Heading</h1>");
+        expect(result.html).toBe("<h1>Heading</h1>");
       });
 
       it("should handle very long attribute values", () => {
         const longValue = "a".repeat(1000);
         const result = h("div", { "data-long": longValue });
-        expect(result).toBe(`<div data-long="${longValue}"></div>`);
+        expect(result.html).toBe(`<div data-long="${longValue}"></div>`);
       });
 
       it("should handle very long children content", () => {
         const longContent = "content ".repeat(500);
         const result = h("div", {}, longContent);
-        expect(result).toBe(`<div>${longContent}</div>`);
+        expect(result.html).toBe(`<div>${longContent}</div>`);
       });
 
       it("should handle numeric-like strings in children", () => {
         const result = h("div", {}, "123", "456.789", "-42");
-        expect(result).toBe("<div>123456.789-42</div>");
+        expect(result.html).toBe("<div>123456.789-42</div>");
       });
 
       it("should handle boolean-like strings in children", () => {
         const result = h("div", {}, "true", "false", "null", "undefined");
-        expect(result).toBe("<div>truefalsenullundefined</div>");
+        expect(result.html).toBe("<div>truefalsenullundefined</div>");
       });
 
       it("should handle mixed null, undefined, and valid children", () => {
         const result = h("div", {}, "Start", null, undefined, "", "End");
-        expect(result).toBe("<div>StartEnd</div>");
+        expect(result.html).toBe("<div>StartEnd</div>");
       });
 
       it("should handle attributes with Unicode characters", () => {
         const result = h("div", { title: "Café München 🎉", "data-emoji": "👍" });
-        expect(result).toBe('<div title="Café München 🎉" data-emoji="👍"></div>');
+        expect(result.html).toBe('<div title="Café München 🎉" data-emoji="👍"></div>');
       });
 
       it("should handle children with Unicode characters", () => {
         const result = h("p", {}, "Hello 世界", " Café ☕");
-        expect(result).toBe("<p>Hello 世界 Café ☕</p>");
+        expect(result.html).toBe("<p>Hello 世界 Café ☕</p>");
       });
 
       it("should handle arrays of children without adding commas", () => {
         const children = ["First", "Second", "Third"];
         const result = h("div", {}, children);
-        expect(result).toBe("<div>FirstSecondThird</div>");
+        expect(result.html).toBe("<div>FirstSecondThird</div>");
       });
 
       it("should handle nested arrays of children", () => {
         const firstGroup = ["A", "B"];
         const secondGroup = ["C", "D"];
         const result = h("div", {}, firstGroup, secondGroup);
-        expect(result).toBe("<div>ABCD</div>");
+        expect(result.html).toBe("<div>ABCD</div>");
       });
 
       it("should handle arrays mixed with regular children", () => {
         const arrayChildren = ["Middle1", "Middle2"];
         const result = h("div", {}, "Start", arrayChildren, "End");
-        expect(result).toBe("<div>StartMiddle1Middle2End</div>");
+        expect(result.html).toBe("<div>StartMiddle1Middle2End</div>");
       });
 
       it("should handle arrays with null and undefined values", () => {
         const children = ["First", null, "Second", undefined, "Third"];
         const result = h("div", {}, children);
-        expect(result).toBe("<div>FirstSecondThird</div>");
+        expect(result.html).toBe("<div>FirstSecondThird</div>");
       });
 
       it("should simulate JSX array behavior (like map)", () => {
@@ -213,24 +213,24 @@ describe("chat utilities", () => {
         const messages = ["Message 1", "Message 2", "Message 3"];
         const paragraphs = messages.map(message => h("p", {}, message));
         const result = h("div", {}, paragraphs);
-        expect(result).toBe("<div><p>Message 1</p><p>Message 2</p><p>Message 3</p></div>");
+        expect(result.html).toBe("<div><p>Message 1</p><p>Message 2</p><p>Message 3</p></div>");
       });
 
       it("should handle deeply nested arrays", () => {
         const nestedArray = [["A", "B"], [["C", "D"], "E"]];
         const result = h("div", {}, ...nestedArray);
-        expect(result).toBe("<div>ABCDE</div>");
+        expect(result.html).toBe("<div>ABCDE</div>");
       });
 
       it("should handle empty arrays", () => {
         const result = h("div", {}, []);
-        expect(result).toBe("<div></div>");
+        expect(result.html).toBe("<div></div>");
       });
 
       it("should handle arrays containing empty strings", () => {
         const children = ["Start", "", "End"];
         const result = h("div", {}, children);
-        expect(result).toBe("<div>StartEnd</div>");
+        expect(result.html).toBe("<div>StartEnd</div>");
       });
     });
   });
@@ -487,7 +487,7 @@ describe("chat utilities", () => {
     it("should work together to create styled HTML elements", () => {
       const styles = s({ backgroundColor: "red", padding: "10px" });
       const result = h("div", { style: styles }, "Styled content");
-      expect(result).toBe('<div style="background-color: red;padding: 10px;">Styled content</div>');
+      expect(result.html).toBe('<div style="background-color: red;padding: 10px;">Styled content</div>');
     });
 
     it("should handle complex nested structures with styles", () => {
@@ -498,7 +498,7 @@ describe("chat utilities", () => {
       const content = h("p", {}, "Some content");
       const result = h("div", { style: containerStyle }, header, content);
 
-      expect(result).toBe('<div style="border: 1px solid #ccc;padding: 20px;"><h1 style="font-size: 24px;font-weight: bold;">Title</h1><p>Some content</p></div>');
+      expect(result.html).toBe('<div style="border: 1px solid #ccc;padding: 20px;"><h1 style="font-size: 24px;font-weight: bold;">Title</h1><p>Some content</p></div>');
     });
 
     it("should handle multiple styled elements", () => {
@@ -509,7 +509,7 @@ describe("chat utilities", () => {
       const link = h("a", { style: linkStyle, href: "#" }, "Link");
       const result = h("div", {}, button, " ", link);
 
-      expect(result).toBe('<div><button style="background-color: blue;color: white;padding: 8px 16px;" type="submit">Submit</button> <a style="text-decoration: none;color: blue;" href="#">Link</a></div>');
+      expect(result.html).toBe('<div><button style="background-color: blue;color: white;padding: 8px 16px;" type="submit">Submit</button> <a style="text-decoration: none;color: blue;" href="#">Link</a></div>');
     });
   });
 });

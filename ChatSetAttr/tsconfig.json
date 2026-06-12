@@ -8,6 +8,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "sourceMap": false,
+    "resolveJsonModule": true,
     "jsx": "react",
     "jsxFactory": "h"
   },

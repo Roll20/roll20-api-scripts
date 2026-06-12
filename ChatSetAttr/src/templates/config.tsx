@@ -68,5 +68,5 @@ export function createConfigMessage(): string {
         <div style={CONFIG_CLEAR_FIX_STYLE}></div>
       </div>
     </div>
-  );
+  ).html;
 };

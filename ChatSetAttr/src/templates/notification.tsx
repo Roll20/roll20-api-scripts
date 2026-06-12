@@ -13,5 +13,5 @@ export function createNotifyMessage(title: string, content: string): string {
         {content}
       </div>
     </div>
-  );
+  ).html;
 };

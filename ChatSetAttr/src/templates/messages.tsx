@@ -42,7 +42,7 @@ function createMessage(
         {messages.map(message => <p>{message}</p>)}
       </div>
     </div>
-  );
+  ).html;
 }
 
 // #region Chat Message Function

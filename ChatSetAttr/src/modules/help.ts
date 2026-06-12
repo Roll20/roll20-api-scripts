@@ -1,4 +1,4 @@
-import { createHelpHandout } from "../templates/help";
+import { createHelpHandout } from "../templates/help/index";
 
 export function checkHelpMessage(msg: string): boolean {
   return msg.trim().toLowerCase().startsWith("!setattrs-help");

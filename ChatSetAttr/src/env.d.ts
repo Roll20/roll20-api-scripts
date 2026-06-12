@@ -22,12 +22,12 @@ declare global {
   function h(
     tagName: string,
     attributes: Record<string, string>,
-    ...children: (string | null | undefined)[]
-  ): string;
+    ...children: (string | import("./utils/chat").SafeHtml | null | undefined)[]
+  ): import("./utils/chat").SafeHtml;
   var s: typeof import("./utils/chat").s;
 
   namespace JSX {
-    type Element = string;
+    type Element = import("./utils/chat").SafeHtml;
     interface IntrinsicElements {
       [elemName: string]: {
         [key: string]: string | undefined;

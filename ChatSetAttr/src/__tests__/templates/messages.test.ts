@@ -96,8 +96,8 @@ describe("messages", () => {
 
       const result = createChatMessage(header, messages);
 
-      expect(result).toContain("Special Characters: & < > \" '");
-      expect(result).toContain("Message with & < > \" ' characters");
+      expect(result).toContain("Special Characters: &amp; &lt; &gt; &quot; '");
+      expect(result).toContain("Message with &amp; &lt; &gt; &quot; ' characters");
       expect(result).toContain("Another message with åäö");
     });
 
@@ -233,8 +233,8 @@ describe("messages", () => {
 
       const result = createErrorMessage(header, errors);
 
-      expect(result).toContain("Special Error Characters: & < > \" '");
-      expect(result).toContain("Error with & < > \" ' characters");
+      expect(result).toContain("Special Error Characters: &amp; &lt; &gt; &quot; '");
+      expect(result).toContain("Error with &amp; &lt; &gt; &quot; ' characters");
       expect(result).toContain("Another error with åäö");
     });
 

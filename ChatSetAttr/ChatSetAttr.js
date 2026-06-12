@@ -25,14 +25,35 @@ var ChatSetAttr = (function (exports) {
         }
         return style;
     }
+    function escapeHtml$1(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+    class SafeHtml {
+        html;
+        constructor(html) {
+            this.html = html;
+        }
+    }
+    function renderChild(child) {
+        if (child instanceof SafeHtml) {
+            return child.html;
+        }
+        if (typeof child === "string") {
+            return escapeHtml$1(child);
+        }
+        return "";
+    }
     function h(tagName, attributes = {}, ...children) {
         const attrs = Object.entries(attributes ?? {})
-            .map(([key, value]) => ` ${key}="${value}"`)
+            .map(([key, value]) => ` ${key}="${escapeHtml$1(String(value))}"`)
             .join("");
-        // Deeply flatten arrays and filter out null/undefined values
         const flattenedChildren = children.flat(10).filter(child => child != null);
-        const childrenContent = flattenedChildren.join("");
-        return `<${tagName}${attrs}>${childrenContent}</${tagName}>`;
+        const childrenContent = flattenedChildren.map(renderChild).join("");
+        return new SafeHtml(`<${tagName}${attrs}>${childrenContent}</${tagName}>`);
     }
 
     const buttonStyleBase = {
@@ -64,7 +85,7 @@ var ChatSetAttr = (function (exports) {
     function createDelayMessage() {
         return (h("div", { style: DELAY_WRAPPER_STYLE },
             h("div", { style: DELAY_HEADER_STYLE }, "Long Running Query"),
-            h("div", null, "The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes.")));
+            h("div", null, "The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes."))).html;
     }
 
     const CHAT_WRAPPER_STYLE = s(frameStyleBase);
@@ -86,7 +107,7 @@ var ChatSetAttr = (function (exports) {
     function createMessage(header, messages, styles) {
         return (h("div", { style: styles.wrapper },
             h("h3", { style: styles.header }, header),
-            h("div", { style: styles.body }, messages.map(message => h("p", null, message)))));
+            h("div", { style: styles.body }, messages.map(message => h("p", null, message))))).html;
     }
     // #region Chat Message Function
     function createChatMessage(header, messages) {
@@ -110,7 +131,7 @@ var ChatSetAttr = (function (exports) {
     function createNotifyMessage(title, content) {
         return (h("div", { style: NOTIFY_WRAPPER_STYLE },
             h("div", { style: NOTIFY_HEADER_STYLE }, title),
-            h("div", null, content)));
+            h("div", null, content))).html;
     }
 
     function createWelcomeMessage() {
@@ -126,7 +147,7 @@ var ChatSetAttr = (function (exports) {
                 h("code", null, "!setattr-help"),
                 " command or click the button below:"),
             h("p", null,
-                h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout"))));
+                h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout")))).html;
     }
 
     function getWhisperPrefix(playerID) {
@@ -221,7 +242,7 @@ var ChatSetAttr = (function (exports) {
                             ":")),
                     h("td", null,
                         h("a", { href: `!setattr-config --${camelToKebabCase(key)}`, style: value ? CONFIG_BUTTON_STYLE_ON : CONFIG_BUTTON_STYLE_OFF }, value ? "Enabled" : "Disabled")))))),
-                h("div", { style: CONFIG_CLEAR_FIX_STYLE }))));
+                h("div", { style: CONFIG_CLEAR_FIX_STYLE })))).html;
     }
 
     const GLOBAL_CONFIG_OPTIONS = [
@@ -1135,539 +1156,1282 @@ var ChatSetAttr = (function (exports) {
         return Math.max(Math.min(currentValue, maxValue), 0);
     }
 
-    function createHelpHandout(handoutID) {
-        const contents = [
-            "Basic Usage",
-            "Available Commands",
-            "Beacon Computed Values",
-            "Target Selection",
-            "Attribute Syntax",
-            "Modifier Options",
-            "Output Control Options",
-            "Inline Roll Integration",
-            "Repeating Section Support",
-            "Special Value Expressions",
-            "Global Configuration",
-            "Complete Examples",
-            "For Developers",
-        ];
-        function createTableOfContents() {
-            return (h("ol", null, contents.map(section => (h("li", { key: section },
-                h("a", { href: `http://journal.roll20.net/handout/${handoutID}/#${section.replace(/\s+/g, "%20")}` }, section))))));
+    var $schema = "./content.schema.json";
+    var title = "ChatSetAttr";
+    var introduction = "ChatSetAttr is a Roll20 API script that allows users to create, modify, or delete character sheet attributes through chat commands macros. Whether you need to update a single character attribute or make bulk changes across multiple characters, ChatSetAttr provides flexible options to streamline your game management.";
+    var sections = [
+    	{
+    		id: "basic-usage",
+    		title: "Basic Usage",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "The script provides several command formats:"
+    			},
+    			{
+    				type: "unorderedList",
+    				items: [
+    					"`!setattr [--options]` - Create or modify attributes",
+    					"`!modattr [--options]` - Shortcut for `!setattr --mod` (adds to existing values)",
+    					"`!modbattr [--options]` - Shortcut for `!setattr --modb` (adds to values with bounds)",
+    					"`!resetattr [--options]` - Shortcut for `!setattr --reset` (resets to max values)",
+    					"`!delattr [--options]` - Delete attributes"
+    				]
+    			},
+    			{
+    				type: "paragraph",
+    				text: "Each command requires a target selection option and one or more attributes to modify."
+    			},
+    			{
+    				type: "paragraph",
+    				text: "**Basic structure:**"
+    			},
+    			{
+    				type: "codeBlock",
+    				lines: [
+    					"!setattr --[target selection] --attribute1|value1 --attribute2|value2|max2"
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "available-commands",
+    		title: "Available Commands",
+    		subsections: [
+    			{
+    				id: "setattr",
+    				title: "!setattr",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Creates or updates attributes on the selected target(s). If the attribute doesn't exist, it will be created (unless `--nocreate` is specified)."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --hp|25|50 --hp_temp|8"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This would set `hp` to 25, `hp_max` to 50, `hp_temp` to 8."
+    					}
+    				]
+    			},
+    			{
+    				id: "modattr",
+    				title: "!modattr",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Adds to existing attribute values (works only with numeric values). Shorthand for `!setattr --mod`."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!modattr --sel --hp_temp|-5 --hp|6"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This subtracts 5 from `hp_temp` and adds 6 to `hp`."
+    					}
+    				]
+    			},
+    			{
+    				id: "modbattr",
+    				title: "!modbattr",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Adds to existing attribute values but keeps the result between 0 and the maximum value. Shorthand for `!setattr --modb`."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!modbattr --sel --hp_temp|-5 --hp|25"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This subtracts 5 from `hp_temp` but won't reduce it below 0 and increase `hp` by 25, but won't increase it above `mp_xp`."
+    					}
+    				]
+    			},
+    			{
+    				id: "resetattr",
+    				title: "!resetattr",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Resets attributes to their maximum value. Shorthand for `!setattr --reset`."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!resetattr --sel --hp"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This resets `hp` to its maximum value."
+    					}
+    				]
+    			},
+    			{
+    				id: "delattr",
+    				title: "!delattr",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Deletes the specified attributes."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!delattr --sel --hp --hp_temp"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This removes the `hp` and `hp_temp` attributes."
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "beacon-computed-values",
+    		title: "Beacon Computed Values",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet exist when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try."
+    			},
+    			{
+    				type: "paragraph",
+    				text: "Some Computed values are read-only and cannot be set.  Attempting to set or modify them will result in an error message."
+    			},
+    			{
+    				type: "paragraph",
+    				text: "For player created attributes, Beacon sheets have a system called User Attributes.  If you attempt to add a new attribute to a Beacon sheet, it will create a User Attribute by that name.  User Attributes are prefaced with `user.` like `user.spellpoints`. They function like attributes and can be created, removed, set, reset, and modified as desired."
+    			},
+    			{
+    				type: "paragraph",
+    				text: "**Example:**"
+    			},
+    			{
+    				type: "codeBlock",
+    				lines: [
+    					"!setattr --sel --spellpoints|18"
+    				]
+    			},
+    			{
+    				type: "paragraph",
+    				text: "This will create the `user.spellpoints` User Attribute, which can be referenced as either `@{selected|user.spellpoints}` or `@{selected|spellpoints}` and operates like an attribute."
+    			}
+    		]
+    	},
+    	{
+    		id: "target-selection",
+    		title: "Target Selection",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "One of these options must be specified to determine which characters will be affected:"
+    			}
+    		],
+    		subsections: [
+    			{
+    				id: "all",
+    				title: "--all",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects all characters in the campaign. **GM only** and should be used with caution, especially in large campaigns."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!resetattr --all --hp"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "allgm",
+    				title: "--allgm",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects all characters without player controllers (typically NPCs). **GM only**."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --allgm --reset --hp"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "allplayers",
+    				title: "--allplayers",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects all characters with player controllers (typically PCs)."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --allplayers --mod --hp|-15"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "charid",
+    				title: "--charid",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects characters with the specified character IDs. Non-GM players can only affect characters they control."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --charid <ID1> <ID2> --hp|150"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "name",
+    				title: "--name",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects characters with the specified names. Non-GM players can only affect characters they control."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --name Gandalf, Frodo Baggins --party|\"Fellowship of the Ring\""
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "sel",
+    				title: "--sel",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects characters represented by currently selected tokens."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --hp|25 --hp_temp|8"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "sel-party",
+    				title: "--sel-party",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects only party characters represented by currently selected tokens (characters with `inParty` set to true)."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel-party --inspiration|1"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "sel-noparty",
+    				title: "--sel-noparty",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects only non-party characters represented by currently selected tokens (characters with `inParty` set to false or not set)."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel-noparty --npc_status|\"Hostile\""
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "party",
+    				title: "--party",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Affects all characters marked as party members (characters with `inParty` set to true). **GM only by default**, but can be enabled for players with configuration."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --party --rest_complete|1"
+    						]
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "attribute-syntax",
+    		title: "Attribute Syntax",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "The syntax for specifying attributes is:"
+    			},
+    			{
+    				type: "codeBlock",
+    				lines: [
+    					"--attributeName|currentValue|maxValue"
+    				]
+    			},
+    			{
+    				type: "unorderedList",
+    				items: [
+    					"`attributeName` is the name of the attribute to modify",
+    					"`currentValue` is the value to set (optional for some commands)",
+    					"`maxValue` is the maximum value to set (optional)"
+    				]
+    			}
+    		],
+    		subsections: [
+    			{
+    				id: "examples",
+    				title: "Examples:",
+    				blocks: [
+    					{
+    						type: "orderedList",
+    						items: [
+    							{
+    								text: "Set current value only:",
+    								codeBlock: {
+    									lines: [
+    										"--strength|15"
+    									]
+    								}
+    							},
+    							{
+    								text: "Set both current and maximum values:",
+    								codeBlock: {
+    									lines: [
+    										"--hp|27|35"
+    									]
+    								}
+    							},
+    							{
+    								text: "Set only the maximum value (leave current unchanged):",
+    								codeBlock: {
+    									lines: [
+    										"--hp||50"
+    									]
+    								}
+    							},
+    							{
+    								text: "Create empty attribute or set to empty:",
+    								codeBlock: {
+    									lines: [
+    										"--notes|"
+    									]
+    								}
+    							},
+    							{
+    								text: "Use `#` instead of `|` (useful in roll queries):",
+    								codeBlock: {
+    									lines: [
+    										"--strength#15"
+    									]
+    								}
+    							}
+    						]
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "modifier-options",
+    		title: "Modifier Options",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "These options change how attributes are processed:"
+    			}
+    		],
+    		subsections: [
+    			{
+    				id: "mod",
+    				title: "--mod",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "See `!modattr` command."
+    					}
+    				]
+    			},
+    			{
+    				id: "modb",
+    				title: "--modb",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "See `!modbattr` command."
+    					}
+    				]
+    			},
+    			{
+    				id: "reset",
+    				title: "--reset",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "See `!resetattr` command."
+    					}
+    				]
+    			},
+    			{
+    				id: "nocreate",
+    				title: "--nocreate",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Prevents creation of new attributes, only updates existing ones."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --nocreate --perception|20 --hp|15"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This will only update `perception` or `hp` if it already exists."
+    					}
+    				]
+    			},
+    			{
+    				id: "evaluate",
+    				title: "--evaluate",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Evaluates JavaScript expressions in attribute values. **GM only by default**."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --evaluate --hp|2 * 3"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This will set the `hp` attribute to 6."
+    					}
+    				]
+    			},
+    			{
+    				id: "replace",
+    				title: "--replace",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Replaces special characters to prevent Roll20 from evaluating them:"
+    					},
+    					{
+    						type: "unorderedList",
+    						items: [
+    							"< becomes [",
+    							"> becomes ]",
+    							"~ becomes -",
+    							"; becomes ?",
+    							"` becomes @"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "Also supports \\lbrak, \\rbrak, \\n, \\at, and \\ques for [, ], newline, @, and ?."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --replace --notes|\"Roll <<1d6>> to succeed\""
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This stores \"Roll [[1d6]] to succeed\" without evaluating the roll."
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "output-control-options",
+    		title: "Output Control Options",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "These options control the feedback messages generated by the script:"
+    			}
+    		],
+    		subsections: [
+    			{
+    				id: "silent",
+    				title: "--silent",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Suppresses normal output messages (error messages will still appear)."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --silent --stealth|20"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "mute",
+    				title: "--mute",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Suppresses all output messages, including errors."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --mute --nocreate --new_value|42"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "fb-public",
+    				title: "--fb-public",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Sends output publicly to the chat instead of whispering to the command sender."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --fb-public --hp|25|25 --status|\"Healed\""
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "fb-from",
+    				title: "--fb-from <NAME>",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Changes the name of the sender for output messages (default is \"ChatSetAttr\")."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --fb-from \"Healing Potion\" --hp|25"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "fb-header",
+    				title: "--fb-header <STRING>",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Customizes the header of the output message."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --evaluate --fb-header \"Combat Effects Applied\" --status|\"Poisoned\" --hp|%hp%-5"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "fb-content",
+    				title: "--fb-content <STRING>",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Customizes the content of the output message."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --fb-content \"Increasing Hitpoints\" --hp|10"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "special-placeholders",
+    				title: "Special Placeholders",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "For use in `--fb-header` and `--fb-content`:"
+    					},
+    					{
+    						type: "unorderedList",
+    						items: [
+    							"`_NAMEJ_` - Name of the Jth attribute being changed",
+    							"`_TCURJ_` - Target current value of the Jth attribute",
+    							"`_TMAXJ_` - Target maximum value of the Jth attribute"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "For use in `--fb-content` only:"
+    					},
+    					{
+    						type: "unorderedList",
+    						items: [
+    							"`_CHARNAME_` - Name of the character",
+    							"`_CURJ_` - Final current value of the Jth attribute",
+    							"`_MAXJ_` - Final maximum value of the Jth attribute"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Important:** The Jth index starts with 0 at the first item."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "**Example:**"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --fb-header \"Healing Effects\" --fb-content \"_CHARNAME_ healed by _CUR0_ hitpoints --hp|10"
+    						]
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "inline-roll-integration",
+    		title: "Inline Roll Integration",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "ChatSetAttr can be used within roll templates or combined with inline rolls:"
+    			}
+    		],
+    		subsections: [
+    			{
+    				id: "within-roll-templates",
+    				title: "Within Roll Templates",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Place the command between roll template properties and end it with `!!!`:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"&{template:default} {{name=Fireball Damage}} !setattr --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "using-inline-rolls-in-values",
+    				title: "Using Inline Rolls in Values",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Inline rolls can be used for attribute values:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --hp|[[2d6+5]]"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "roll-queries",
+    				title: "Roll Queries",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Roll queries can determine attribute values:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --hp|?{Set strength to what value?|100}"
+    						]
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "repeating-section-support",
+    		title: "Repeating Section Support",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "ChatSetAttr supports working with repeating sections:"
+    			}
+    		],
+    		subsections: [
+    			{
+    				id: "creating-new-repeating-items",
+    				title: "Creating New Repeating Items",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Use `CREATE` to create a new row in a repeating section:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --repeating_inventory_CREATE_itemname|\"Magic Sword\" --repeating_inventory_CREATE_itemweight|2"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "modifying-existing-repeating-items",
+    				title: "Modifying Existing Repeating Items",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Access by row ID:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --repeating_inventory_ID_itemname|\"Enchanted Magic Sword\""
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "Access by index (starts at 0):"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --repeating_inventory_$0_itemname|\"First Item\""
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "deleting-repeating-rows",
+    				title: "Deleting Repeating Rows",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Delete by row ID:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!delattr --sel --repeating_inventory_ID"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "Delete by index:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!delattr --sel --repeating_inventory_$0"
+    						]
+    					},
+    					{
+    						type: "note",
+    						text: "repeating sections for Beacon sheets are currently not supported.  They are read-only which prevents ChatSetAttr from being able to modify them.",
+    						emphasis: true
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "special-value-expressions",
+    		title: "Special Value Expressions",
+    		subsections: [
+    			{
+    				id: "attribute-references",
+    				title: "Attribute References",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Reference other attribute values using `%attribute_name%`:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --evaluate --temp_hp|%hp% / 2"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "resetting-to-maximum",
+    				title: "Resetting to Maximum",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Reset an attribute to its maximum value:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --hp|%hp_max%"
+    						]
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "global-configuration",
+    		title: "Global Configuration",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "The script has four global configuration options that can be toggled with `!setattr-config`:"
+    			}
+    		],
+    		subsections: [
+    			{
+    				id: "players-can-modify",
+    				title: "--players-can-modify",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Allows players to modify attributes on characters they don't control."
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr-config --players-can-modify"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "players-can-evaluate",
+    				title: "--players-can-evaluate",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Allows players to use the `--evaluate` option."
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr-config --players-can-evaluate"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "players-can-target-party",
+    				title: "--players-can-target-party",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Allows players to use the `--party` target option. **GM only by default**."
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr-config --players-can-target-party"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "use-workers",
+    				title: "--use-workers",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Toggles whether the script triggers sheet workers when setting attributes."
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr-config --use-workers"
+    						]
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "complete-examples",
+    		title: "Complete Examples",
+    		subsections: [
+    			{
+    				id: "basic-combat-example",
+    				title: "Basic Combat Example",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Reduce a character's HP and status after taking damage:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!modattr --sel --evaluate --hp|-15 --fb-header \"Combat Result\" --fb-content \"_CHARNAME_ took 15 damage and has _CUR0_ HP remaining!\""
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "leveling-up-a-character",
+    				title: "Leveling Up a Character",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Update multiple stats when a character gains a level:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --level|8 --hp|75|75 --attack_bonus|7 --fb-from \"Level Up\" --fb-header \"Character Advanced\" --fb-public"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "create-new-item-in-inventory",
+    				title: "Create New Item in Inventory",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Add a new item to a character's inventory:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel --repeating_inventory_-CREATE_itemname|\"Healing Potion\" --repeating_inventory_-CREATE_itemcount|3 --repeating_inventory_-CREATE_itemweight|0.5 --repeating_inventory_-CREATE_itemcontent|\"Restores 2d8+2 hit points when consumed\""
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "apply-status-effects-during-combat",
+    				title: "Apply Status Effects During Combat",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Apply a debuff to selected enemies in the middle of combat:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"&{template:default} {{name=Web Spell}} {{effect=Slows movement}} !setattr --name @{target|character_name} --silent --speed|-15 --status|\"Restrained\"!!! {{duration=1d4 rounds}}"
+    						]
+    					}
+    				]
+    			},
+    			{
+    				id: "party-management-examples",
+    				title: "Party Management Examples",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "Give inspiration to all party members after a great roleplay moment:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --party --inspiration|1 --fb-public --fb-header \"Inspiration Awarded\" --fb-content \"All party members receive inspiration for excellent roleplay!\""
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "Apply a long rest to only party characters among selected tokens:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel-party --hp|%hp_max% --spell_slots_reset|1 --fb-header \"Long Rest Complete\""
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "Set hostile status for non-party characters among selected tokens:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"!setattr --sel-noparty --attitude|\"Hostile\" --fb-from \"DM\" --fb-content \"Enemies are now hostile!\""
+    						]
+    					}
+    				]
+    			}
+    		]
+    	},
+    	{
+    		id: "for-developers",
+    		title: "For Developers",
+    		subsections: [
+    			{
+    				id: "registering-observers",
+    				title: "Registering Observers",
+    				blocks: [
+    					{
+    						type: "paragraph",
+    						text: "If you're developing your own scripts, you can register observer functions to react to attribute changes made by ChatSetAttr:"
+    					},
+    					{
+    						type: "codeBlock",
+    						lines: [
+    							"ChatSetAttr.registerObserver(event, observer);"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "Where `event` is one of:"
+    					},
+    					{
+    						type: "unorderedList",
+    						items: [
+    							"`\"add\"` - Called when attributes are created",
+    							"`\"change\"` - Called when attributes are modified",
+    							"`\"destroy\"` - Called when attributes are deleted"
+    						]
+    					},
+    					{
+    						type: "paragraph",
+    						text: "And `observer` is an event handler function similar to Roll20's built-in event handlers."
+    					},
+    					{
+    						type: "paragraph",
+    						text: "This allows your scripts to react to changes made by ChatSetAttr the same way they would react to changes made directly by Roll20's interface."
+    					}
+    				]
+    			}
+    		]
+    	}
+    ];
+    var helpContent = {
+    	$schema: $schema,
+    	title: title,
+    	introduction: introduction,
+    	sections: sections
+    };
+
+    function loadHelpDocument() {
+        return helpContent;
+    }
+
+    const INLINE_PATTERN = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+    function renderInlineHtml(text) {
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+        INLINE_PATTERN.lastIndex = 0;
+        while ((match = INLINE_PATTERN.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push(escapeHtml(text.slice(lastIndex, match.index)));
+            }
+            const token = match[0];
+            if (token.startsWith("**")) {
+                parts.push(`<strong>${escapeHtml(token.slice(2, -2))}</strong>`);
+            }
+            else {
+                parts.push(`<code>${escapeHtml(token.slice(1, -1))}</code>`);
+            }
+            lastIndex = match.index + token.length;
         }
-        return (h("div", null,
-            h("h1", null, "ChatSetAttr"),
-            h("p", null, "ChatSetAttr is a Roll20 API script that allows users to create, modify, or delete character sheet attributes through chat commands macros. Whether you need to update a single character attribute or make bulk changes across multiple characters, ChatSetAttr provides flexible options to streamline your game management."),
-            h("h2", null, "Table of Contents"),
-            createTableOfContents(),
-            h("h2", { id: "basic-usage" }, "Basic Usage"),
-            h("p", null, "The script provides several command formats:"),
-            h("ul", null,
-                h("li", null,
-                    h("code", null, "!setattr [--options]"),
-                    " - Create or modify attributes"),
-                h("li", null,
-                    h("code", null, "!modattr [--options]"),
-                    " - Shortcut for ",
-                    h("code", null, "!setattr --mod"),
-                    " (adds to existing values)"),
-                h("li", null,
-                    h("code", null, "!modbattr [--options]"),
-                    " - Shortcut for ",
-                    h("code", null, "!setattr --modb"),
-                    " (adds to values with bounds)"),
-                h("li", null,
-                    h("code", null, "!resetattr [--options]"),
-                    " - Shortcut for ",
-                    h("code", null, "!setattr --reset"),
-                    " (resets to max values)"),
-                h("li", null,
-                    h("code", null, "!delattr [--options]"),
-                    " - Delete attributes")),
-            h("p", null, "Each command requires a target selection option and one or more attributes to modify."),
-            h("p", null,
-                h("strong", null, "Basic structure:")),
-            h("pre", null,
-                h("code", null, "!setattr --[target selection] --attribute1|value1 --attribute2|value2|max2")),
-            h("h2", { id: "available-commands" }, "Available Commands"),
-            h("h3", null, "!setattr"),
-            h("p", null,
-                "Creates or updates attributes on the selected target(s). If the attribute doesn't exist, it will be created (unless ",
-                h("code", null, "--nocreate"),
-                " is specified)."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --hp|25|50 --hp_temp|8")),
-            h("p", null,
-                "This would set ",
-                h("code", null, "hp"),
-                " to 25, ",
-                h("code", null, "hp_max"),
-                " to 50, ",
-                h("code", null, "hp_temp"),
-                " to 8."),
-            h("h3", null, "!modattr"),
-            h("p", null,
-                "Adds to existing attribute values (works only with numeric values). Shorthand for ",
-                h("code", null, "!setattr --mod"),
-                "."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!modattr --sel --hp_temp|-5 --hp|6")),
-            h("p", null,
-                "This subtracts 5 from ",
-                h("code", null, "hp_temp"),
-                " and adds 6 to ",
-                h("code", null, "hp"),
-                "."),
-            h("h3", null, "!modbattr"),
-            h("p", null,
-                "Adds to existing attribute values but keeps the result between 0 and the maximum value. Shorthand for ",
-                h("code", null, "!setattr --modb"),
-                "."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!modbattr --sel --hp_temp|-5 --hp|25")),
-            h("p", null,
-                "This subtracts 5 from ",
-                h("code", null, "hp_temp"),
-                " but won't reduce it below 0 and increase ",
-                h("code", null, "hp"),
-                " by 25, but won't increase it above ",
-                h("code", null, "mp_xp"),
-                "."),
-            h("h3", null, "!resetattr"),
-            h("p", null,
-                "Resets attributes to their maximum value. Shorthand for ",
-                h("code", null, "!setattr --reset"),
-                "."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!resetattr --sel --hp")),
-            h("p", null,
-                "This resets ",
-                h("code", null, "hp"),
-                " to its maximum value."),
-            h("h3", null, "!delattr"),
-            h("p", null, "Deletes the specified attributes."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!delattr --sel --hp --hp_temp")),
-            h("p", null,
-                "This removes the ",
-                h("code", null, "hp"),
-                " and ",
-                h("code", null, "hp_temp"),
-                " attributes."),
-            h("h2", { id: "beacon-computed-values" }, "Beacon Computed Values"),
-            h("p", null, "Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet exist when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try."),
-            h("p", null, "Some Computed values are read-only and cannot be set.  Attempting to set or modify them will result in an error message."),
-            h("p", null,
-                "For player created attributes, Beacon sheets have a system called User Attributes.  If you attempt to add a new attribute to a Beacon sheet, it will create a User Attribute by that name.  User Attributes are prefaced with ",
-                h("code", null, "user."),
-                " like ",
-                h("code", null, "user.spellpoints"),
-                ". They function like attributes and can be created, removed, set, reset, and modified as desired."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --spellpoints|18")),
-            h("p", null,
-                "This will create the ",
-                h("code", null, "user.spellpoints"),
-                " User Attribute, which can be referenced as either ",
-                h("code", null, "&commat;&lcub;selected|user.spellpoints&rcub;"),
-                " or ",
-                h("code", null, "&commat;&lcub;selected|spellpoints&rcub;"),
-                " and operates like an attribute."),
-            h("h2", { id: "target-selection" }, "Target Selection"),
-            h("p", null, "One of these options must be specified to determine which characters will be affected:"),
-            h("h3", null, "--all"),
-            h("p", null,
-                "Affects all characters in the campaign. ",
-                h("strong", null, "GM only"),
-                " and should be used with caution, especially in large campaigns."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!resetattr --all --hp")),
-            h("h3", null, "--allgm"),
-            h("p", null,
-                "Affects all characters without player controllers (typically NPCs). ",
-                h("strong", null, "GM only"),
-                "."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --allgm --reset --hp")),
-            h("h3", null, "--allplayers"),
-            h("p", null, "Affects all characters with player controllers (typically PCs)."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --allplayers --mod --hp|-15")),
-            h("h3", null, "--charid"),
-            h("p", null, "Affects characters with the specified character IDs. Non-GM players can only affect characters they control."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --charid &lt;ID1&gt; &lt;ID2&gt; --hp|150")),
-            h("h3", null, "--name"),
-            h("p", null, "Affects characters with the specified names. Non-GM players can only affect characters they control."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --name Gandalf, Frodo Baggins --party|\"Fellowship of the Ring\"")),
-            h("h3", null, "--sel"),
-            h("p", null, "Affects characters represented by currently selected tokens."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --hp|25 --hp_temp|8")),
-            h("h3", null, "--sel-party"),
-            h("p", null,
-                "Affects only party characters represented by currently selected tokens (characters with ",
-                h("code", null, "inParty"),
-                " set to true)."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel-party --inspiration|1")),
-            h("h3", null, "--sel-noparty"),
-            h("p", null,
-                "Affects only non-party characters represented by currently selected tokens (characters with ",
-                h("code", null, "inParty"),
-                " set to false or not set)."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel-noparty --npc_status|\"Hostile\"")),
-            h("h3", null, "--party"),
-            h("p", null,
-                "Affects all characters marked as party members (characters with ",
-                h("code", null, "inParty"),
-                " set to true). ",
-                h("strong", null, "GM only by default"),
-                ", but can be enabled for players with configuration."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --party --rest_complete|1")),
-            h("h2", { id: "attribute-syntax" }, "Attribute Syntax"),
-            h("p", null, "The syntax for specifying attributes is:"),
-            h("pre", null,
-                h("code", null, "--attributeName|currentValue|maxValue")),
-            h("ul", null,
-                h("li", null,
-                    h("code", null, "attributeName"),
-                    " is the name of the attribute to modify"),
-                h("li", null,
-                    h("code", null, "currentValue"),
-                    " is the value to set (optional for some commands)"),
-                h("li", null,
-                    h("code", null, "maxValue"),
-                    " is the maximum value to set (optional)")),
-            h("h3", null, "Examples:"),
-            h("ol", null,
-                h("li", null,
-                    "Set current value only:",
-                    h("pre", null,
-                        h("code", null, "--strength|15"))),
-                h("li", null,
-                    "Set both current and maximum values:",
-                    h("pre", null,
-                        h("code", null, "--hp|27|35"))),
-                h("li", null,
-                    "Set only the maximum value (leave current unchanged):",
-                    h("pre", null,
-                        h("code", null, "--hp||50"))),
-                h("li", null,
-                    "Create empty attribute or set to empty:",
-                    h("pre", null,
-                        h("code", null, "--notes|"))),
-                h("li", null,
-                    "Use ",
-                    h("code", null, "#"),
-                    " instead of ",
-                    h("code", null, "|"),
-                    " (useful in roll queries):",
-                    h("pre", null,
-                        h("code", null, "--strength#15")))),
-            h("h2", { id: "modifier-options" }, "Modifier Options"),
-            h("p", null, "These options change how attributes are processed:"),
-            h("h3", null, "--mod"),
-            h("p", null,
-                "See ",
-                h("code", null, "!modattr"),
-                " command."),
-            h("h3", null, "--modb"),
-            h("p", null,
-                "See ",
-                h("code", null, "!modbattr"),
-                " command."),
-            h("h3", null, "--reset"),
-            h("p", null,
-                "See ",
-                h("code", null, "!resetattr"),
-                " command."),
-            h("h3", null, "--nocreate"),
-            h("p", null, "Prevents creation of new attributes, only updates existing ones."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --nocreate --perception|20 --hp|15")),
-            h("p", null,
-                "This will only update ",
-                h("code", null, "perception"),
-                " or ",
-                h("code", null, "hp"),
-                " if it already exists."),
-            h("h3", null, "--evaluate"),
-            h("p", null,
-                "Evaluates JavaScript expressions in attribute values. ",
-                h("strong", null, "GM only by default"),
-                "."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --evaluate --hp|2 * 3")),
-            h("p", null,
-                "This will set the ",
-                h("code", null, "hp"),
-                " attribute to 6."),
-            h("h3", null, "--replace"),
-            h("p", null, "Replaces special characters to prevent Roll20 from evaluating them:"),
-            h("ul", null,
-                h("li", null, "&lt; becomes ["),
-                h("li", null, "&gt; becomes ]"),
-                h("li", null, "~ becomes -"),
-                h("li", null, "; becomes ?"),
-                h("li", null, "` becomes @")),
-            h("p", null, "Also supports \\lbrak, \\rbrak, \\n, \\at, and \\ques for [, ], newline, @, and ?."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --replace --notes|\"Roll &lt;&lt;1d6&gt;&gt; to succeed\"")),
-            h("p", null, "This stores \"Roll [[1d6]] to succeed\" without evaluating the roll."),
-            h("h2", { id: "output-control-options" }, "Output Control Options"),
-            h("p", null, "These options control the feedback messages generated by the script:"),
-            h("h3", null, "--silent"),
-            h("p", null, "Suppresses normal output messages (error messages will still appear)."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --silent --stealth|20")),
-            h("h3", null, "--mute"),
-            h("p", null, "Suppresses all output messages, including errors."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --mute --nocreate --new_value|42")),
-            h("h3", null, "--fb-public"),
-            h("p", null, "Sends output publicly to the chat instead of whispering to the command sender."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --fb-public --hp|25|25 --status|\"Healed\"")),
-            h("h3", null, "--fb-from &lt;NAME&gt;"),
-            h("p", null, "Changes the name of the sender for output messages (default is \"ChatSetAttr\")."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --fb-from \"Healing Potion\" --hp|25")),
-            h("h3", null, "--fb-header &lt;STRING&gt;"),
-            h("p", null, "Customizes the header of the output message."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --evaluate --fb-header \"Combat Effects Applied\" --status|\"Poisoned\" --hp|%hp%-5")),
-            h("h3", null, "--fb-content &lt;STRING&gt;"),
-            h("p", null, "Customizes the content of the output message."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --fb-content \"Increasing Hitpoints\" --hp|10")),
-            h("h3", null, "Special Placeholders"),
-            h("p", null,
-                "For use in ",
-                h("code", null, "--fb-header"),
-                " and ",
-                h("code", null, "--fb-content"),
-                ":"),
-            h("ul", null,
-                h("li", null,
-                    h("code", null, "_NAMEJ_"),
-                    " - Name of the Jth attribute being changed"),
-                h("li", null,
-                    h("code", null, "_TCURJ_"),
-                    " - Target current value of the Jth attribute"),
-                h("li", null,
-                    h("code", null, "_TMAXJ_"),
-                    " - Target maximum value of the Jth attribute")),
-            h("p", null,
-                "For use in ",
-                h("code", null, "--fb-content"),
-                " only:"),
-            h("ul", null,
-                h("li", null,
-                    h("code", null, "_CHARNAME_"),
-                    " - Name of the character"),
-                h("li", null,
-                    h("code", null, "_CURJ_"),
-                    " - Final current value of the Jth attribute"),
-                h("li", null,
-                    h("code", null, "_MAXJ_"),
-                    " - Final maximum value of the Jth attribute")),
-            h("p", null,
-                h("strong", null, "Important:"),
-                " The Jth index starts with 0 at the first item."),
-            h("p", null,
-                h("strong", null, "Example:")),
-            h("pre", null,
-                h("code", null, "!setattr --sel --fb-header \"Healing Effects\" --fb-content \"_CHARNAME_ healed by _CUR0_ hitpoints --hp|10")),
-            h("h2", { id: "inline-roll-integration" }, "Inline Roll Integration"),
-            h("p", null, "ChatSetAttr can be used within roll templates or combined with inline rolls:"),
-            h("h3", null, "Within Roll Templates"),
-            h("p", null,
-                "Place the command between roll template properties and end it with ",
-                h("code", null, "!!!"),
-                ":"),
-            h("pre", null,
-                h("code", null, "&&lcub;template:default&rcub; &lcub;&lcub;name=Fireball Damage&rcub;&rcub; !setattr --name @&lcub;target|character_name&rcub; --silent --hp|-&lcub;&lcub;damage=[[8d6]]&rcub;&rcub;!!! &lcub;&lcub;effect=Fire damage&rcub;&rcub;")),
-            h("h3", null, "Using Inline Rolls in Values"),
-            h("p", null, "Inline rolls can be used for attribute values:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --hp|[[2d6+5]]")),
-            h("h3", null, "Roll Queries"),
-            h("p", null, "Roll queries can determine attribute values:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --hp|?&lcub;Set strength to what value?|100&rcub;")),
-            h("h2", { id: "repeating-section-support" }, "Repeating Section Support"),
-            h("p", null, "ChatSetAttr supports working with repeating sections:"),
-            h("h3", null, "Creating New Repeating Items"),
-            h("p", null,
-                "Use ",
-                h("code", null, "CREATE"),
-                " to create a new row in a repeating section:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --repeating_inventory_CREATE_itemname|\"Magic Sword\" --repeating_inventory_CREATE_itemweight|2")),
-            h("h3", null, "Modifying Existing Repeating Items"),
-            h("p", null, "Access by row ID:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --repeating_inventory_ID_itemname|\"Enchanted Magic Sword\"")),
-            h("p", null, "Access by index (starts at 0):"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --repeating_inventory_$0_itemname|\"First Item\"")),
-            h("h3", null, "Deleting Repeating Rows"),
-            h("p", null, "Delete by row ID:"),
-            h("pre", null,
-                h("code", null, "!delattr --sel --repeating_inventory_ID")),
-            h("p", null, "Delete by index:"),
-            h("pre", null,
-                h("code", null, "!delattr --sel --repeating_inventory_$0")),
-            h("p", null,
-                h("em", null,
-                    h("strong", null, "Note:"),
-                    " repeating sections for Beacon sheets are currently not supported.  They are read-only which prevents ChatSetAttr from being able to modify them.")),
-            h("h2", { id: "special-value-expressions" }, "Special Value Expressions"),
-            h("h3", null, "Attribute References"),
-            h("p", null,
-                "Reference other attribute values using ",
-                h("code", null, "%attribute_name%"),
-                ":"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --evaluate --temp_hp|%hp% / 2")),
-            h("h3", null, "Resetting to Maximum"),
-            h("p", null, "Reset an attribute to its maximum value:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --hp|%hp_max%")),
-            h("p", null,
-                h("em", null)),
-            h("h2", { id: "global-configuration" }, "Global Configuration"),
-            h("p", null,
-                "The script has four global configuration options that can be toggled with ",
-                h("code", null, "!setattr-config"),
-                ":"),
-            h("h3", null, "--players-can-modify"),
-            h("p", null, "Allows players to modify attributes on characters they don't control."),
-            h("pre", null,
-                h("code", null, "!setattr-config --players-can-modify")),
-            h("h3", null, "--players-can-evaluate"),
-            h("p", null,
-                "Allows players to use the ",
-                h("code", null, "--evaluate"),
-                " option."),
-            h("pre", null,
-                h("code", null, "!setattr-config --players-can-evaluate")),
-            h("h3", null, "--players-can-target-party"),
-            h("p", null,
-                "Allows players to use the ",
-                h("code", null, "--party"),
-                " target option. ",
-                h("strong", null, "GM only by default"),
-                "."),
-            h("pre", null,
-                h("code", null, "!setattr-config --players-can-target-party")),
-            h("h3", null, "--use-workers"),
-            h("p", null, "Toggles whether the script triggers sheet workers when setting attributes."),
-            h("pre", null,
-                h("code", null, "!setattr-config --use-workers")),
-            h("h2", { id: "complete-examples" }, "Complete Examples"),
-            h("h3", null, "Basic Combat Example"),
-            h("p", null, "Reduce a character's HP and status after taking damage:"),
-            h("pre", null,
-                h("code", null, "!modattr --sel --evaluate --hp|-15 --fb-header \"Combat Result\" --fb-content \"_CHARNAME_ took 15 damage and has _CUR0_ HP remaining!\"")),
-            h("h3", null, "Leveling Up a Character"),
-            h("p", null, "Update multiple stats when a character gains a level:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --level|8 --hp|75|75 --attack_bonus|7 --fb-from \"Level Up\" --fb-header \"Character Advanced\" --fb-public")),
-            h("h3", null, "Create New Item in Inventory"),
-            h("p", null, "Add a new item to a character's inventory:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel --repeating_inventory_-CREATE_itemname|\"Healing Potion\" --repeating_inventory_-CREATE_itemcount|3 --repeating_inventory_-CREATE_itemweight|0.5 --repeating_inventory_-CREATE_itemcontent|\"Restores 2d8+2 hit points when consumed\"")),
-            h("h3", null, "Apply Status Effects During Combat"),
-            h("p", null, "Apply a debuff to selected enemies in the middle of combat:"),
-            h("pre", null,
-                h("code", null, "&&lcub;template:default&rcub; &lcub;&lcub;name=Web Spell&rcub;&rcub; &lcub;&lcub;effect=Slows movement&rcub;&rcub; !setattr --name @&lcub;target|character_name&rcub; --silent --speed|-15 --status|\"Restrained\"!!! &lcub;&lcub;duration=1d4 rounds&rcub;&rcub;")),
-            h("h3", null, "Party Management Examples"),
-            h("p", null, "Give inspiration to all party members after a great roleplay moment:"),
-            h("pre", null,
-                h("code", null, "!setattr --party --inspiration|1 --fb-public --fb-header \"Inspiration Awarded\" --fb-content \"All party members receive inspiration for excellent roleplay!\"")),
-            h("p", null, "Apply a long rest to only party characters among selected tokens:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel-party --hp|%hp_max% --spell_slots_reset|1 --fb-header \"Long Rest Complete\"")),
-            h("p", null, "Set hostile status for non-party characters among selected tokens:"),
-            h("pre", null,
-                h("code", null, "!setattr --sel-noparty --attitude|\"Hostile\" --fb-from \"DM\" --fb-content \"Enemies are now hostile!\"")),
-            h("h2", { id: "for-developers" }, "For Developers"),
-            h("h3", null, "Registering Observers"),
-            h("p", null, "If you're developing your own scripts, you can register observer functions to react to attribute changes made by ChatSetAttr:"),
-            h("pre", null,
-                h("code", null, "ChatSetAttr.registerObserver(event, observer);")),
-            h("p", null,
-                "Where ",
-                h("code", null, "event"),
-                " is one of:"),
-            h("ul", null,
-                h("li", null,
-                    h("code", null, "\"add\""),
-                    " - Called when attributes are created"),
-                h("li", null,
-                    h("code", null, "\"change\""),
-                    " - Called when attributes are modified"),
-                h("li", null,
-                    h("code", null, "\"destroy\""),
-                    " - Called when attributes are deleted")),
-            h("p", null,
-                "And ",
-                h("code", null, "observer"),
-                " is an event handler function similar to Roll20's built-in event handlers."),
-            h("p", null, "This allows your scripts to react to changes made by ChatSetAttr the same way they would react to changes made directly by Roll20's interface.")));
+        if (lastIndex < text.length) {
+            parts.push(escapeHtml(text.slice(lastIndex)));
+        }
+        return new SafeHtml(parts.join(""));
+    }
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+    function joinCodeLines(lines) {
+        return lines.join("\n");
+    }
+
+    function concatHtml(...parts) {
+        return new SafeHtml(parts.map(part => part.html).join(""));
+    }
+    function renderBlocks(blocks) {
+        if (!blocks)
+            return [];
+        const parts = [];
+        for (const block of blocks) {
+            switch (block.type) {
+                case "paragraph":
+                    parts.push(h("p", {}, renderInlineHtml(block.text)));
+                    break;
+                case "codeBlock":
+                    parts.push(h("pre", {}, h("code", {}, joinCodeLines(block.lines))));
+                    break;
+                case "unorderedList":
+                    parts.push(h("ul", {}, ...block.items.map(item => h("li", {}, renderInlineHtml(item)))));
+                    break;
+                case "orderedList":
+                    parts.push(h("ol", {}, ...block.items.map(item => {
+                        const children = [renderInlineHtml(item.text)];
+                        if (item.codeBlock) {
+                            children.push(h("pre", {}, h("code", {}, joinCodeLines(item.codeBlock.lines))));
+                        }
+                        return h("li", {}, ...children);
+                    })));
+                    break;
+                case "note":
+                    parts.push(block.emphasis
+                        ? h("p", {}, h("em", {}, h("strong", {}, "Note:"), " ", renderInlineHtml(block.text)))
+                        : h("p", {}, renderInlineHtml(block.text)));
+                    break;
+            }
+        }
+        return parts;
+    }
+    function renderSubsection(subsection) {
+        return concatHtml(h("h3", {}, subsection.title), ...renderBlocks(subsection.blocks));
+    }
+    function renderSection(section) {
+        return concatHtml(h("h2", { id: section.id }, section.title), ...renderBlocks(section.blocks), ...(section.subsections?.map(renderSubsection) ?? []));
+    }
+    function renderTableOfContents(doc, handoutID) {
+        return h("ol", {}, ...doc.sections.map(section => h("li", {}, h("a", {
+            href: `http://journal.roll20.net/handout/${handoutID}/#${section.title.replace(/\s+/g, "%20")}`,
+        }, section.title))));
+    }
+    function renderHelpHtml(doc, handoutID) {
+        return concatHtml(h("h1", {}, doc.title), h("p", {}, doc.introduction), h("h2", {}, "Table of Contents"), renderTableOfContents(doc, handoutID), ...doc.sections.map(section => renderSection(section))).html;
+    }
+
+    function createHelpHandout(handoutID) {
+        return renderHelpHtml(loadHelpDocument(), handoutID);
     }
 
     function checkHelpMessage(msg) {
@@ -2733,7 +3497,7 @@ var ChatSetAttr = (function (exports) {
                     "If you want to create a handout with the updated documentation, use the command ",
                     h("code", null, "!setattrs-help"),
                     " or click the button below"),
-                h("a", { href: "!setattrs-help" }, "Create Help Handout"))));
+                h("a", { href: "!setattrs-help" }, "Create Help Handout")))).html;
     }
 
     const v2_0 = {

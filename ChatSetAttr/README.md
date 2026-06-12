@@ -1,3 +1,5 @@
+<!-- Generated from docs/help/content.json. Run pnpm docs:generate -->
+
 # ChatSetAttr
 
 ChatSetAttr is a Roll20 API script that allows users to create, modify, or delete character sheet attributes through chat commands macros. Whether you need to update a single character attribute or make bulk changes across multiple characters, ChatSetAttr provides flexible options to streamline your game management.
@@ -6,16 +8,17 @@ ChatSetAttr is a Roll20 API script that allows users to create, modify, or delet
 
 1. [Basic Usage](#basic-usage)
 2. [Available Commands](#available-commands)
-3. [Target Selection](#target-selection)
-4. [Attribute Syntax](#attribute-syntax)
-5. [Modifier Options](#modifier-options)
-6. [Output Control Options](#output-control-options)
-7. [Inline Roll Integration](#inline-roll-integration)
-8. [Repeating Section Support](#repeating-section-support)
-9. [Special Value Expressions](#special-value-expressions)
-10. [Global Configuration](#global-configuration)
-11. [Complete Examples](#complete-examples)
-12. [For Developers](#for-developers)
+3. [Beacon Computed Values](#beacon-computed-values)
+4. [Target Selection](#target-selection)
+5. [Attribute Syntax](#attribute-syntax)
+6. [Modifier Options](#modifier-options)
+7. [Output Control Options](#output-control-options)
+8. [Inline Roll Integration](#inline-roll-integration)
+9. [Repeating Section Support](#repeating-section-support)
+10. [Special Value Expressions](#special-value-expressions)
+11. [Global Configuration](#global-configuration)
+12. [Complete Examples](#complete-examples)
+13. [For Developers](#for-developers)
 
 ## Basic Usage
 
@@ -30,6 +33,7 @@ The script provides several command formats:
 Each command requires a target selection option and one or more attributes to modify.
 
 **Basic structure:**
+
 ```
 !setattr --[target selection] --attribute1|value1 --attribute2|value2|max2
 ```
@@ -41,55 +45,76 @@ Each command requires a target selection option and one or more attributes to mo
 Creates or updates attributes on the selected target(s). If the attribute doesn't exist, it will be created (unless `--nocreate` is specified).
 
 **Example:**
+
 ```
-!setattr --sel --hp|25|50 --xp|0|800
+!setattr --sel --hp|25|50 --hp_temp|8
 ```
 
-This would set `hp` to 25, `hp_max` to 50, `xp` to 0 and `xp_max` to 800.
+This would set `hp` to 25, `hp_max` to 50, `hp_temp` to 8.
 
 ### !modattr
 
 Adds to existing attribute values (works only with numeric values). Shorthand for `!setattr --mod`.
 
 **Example:**
+
 ```
-!modattr --sel --hp|-5 --xp|100
+!modattr --sel --hp_temp|-5 --hp|6
 ```
 
-This subtracts 5 from `hp` and adds 100 to `xp`.
+This subtracts 5 from `hp_temp` and adds 6 to `hp`.
 
 ### !modbattr
 
 Adds to existing attribute values but keeps the result between 0 and the maximum value. Shorthand for `!setattr --modb`.
 
 **Example:**
+
 ```
-!modbattr --sel --hp|-25 --xp|2500
+!modbattr --sel --hp_temp|-5 --hp|25
 ```
 
-This subtracts 5 from `hp` but won't reduce it below 0 and increase `xp` by 25, but won't increase it above `mp_xp`.
+This subtracts 5 from `hp_temp` but won't reduce it below 0 and increase `hp` by 25, but won't increase it above `mp_xp`.
 
 ### !resetattr
 
 Resets attributes to their maximum value. Shorthand for `!setattr --reset`.
 
 **Example:**
+
 ```
-!resetattr --sel --hp --xp
+!resetattr --sel --hp
 ```
 
-This resets `hp`, and `xp` to their respective maximum values.
+This resets `hp` to its maximum value.
 
 ### !delattr
 
 Deletes the specified attributes.
 
 **Example:**
+
 ```
-!delattr --sel --hp --xp
+!delattr --sel --hp --hp_temp
 ```
 
-This removes the `hp` and `xp` attributes.
+This removes the `hp` and `hp_temp` attributes.
+
+## Beacon Computed Values
+
+Beacon character sheets don't have attributes, they have Computed values.  All Computeds for a sheet exist when the sheet starts up, you can't create more or remove existing ones.  If you try to delete a computed, you will get an error message, but it is otherewise safe to try.
+
+Some Computed values are read-only and cannot be set.  Attempting to set or modify them will result in an error message.
+
+For player created attributes, Beacon sheets have a system called User Attributes.  If you attempt to add a new attribute to a Beacon sheet, it will create a User Attribute by that name.  User Attributes are prefaced with `user.` like `user.spellpoints`. They function like attributes and can be created, removed, set, reset, and modified as desired.
+
+**Example:**
+
+```
+!setattr --sel --spellpoints|18
+```
+
+This will create the `user.spellpoints` User Attribute, which can be referenced as either `@{selected|user.spellpoints}` or `@{selected|spellpoints}` and operates like an attribute.
 
 ## Target Selection
 
@@ -100,8 +125,9 @@ One of these options must be specified to determine which characters will be aff
 Affects all characters in the campaign. **GM only** and should be used with caution, especially in large campaigns.
 
 **Example:**
+
 ```
-!setattr --all --hp|15
+!resetattr --all --hp
 ```
 
 ### --allgm
@@ -109,8 +135,9 @@ Affects all characters in the campaign. **GM only** and should be used with caut
 Affects all characters without player controllers (typically NPCs). **GM only**.
 
 **Example:**
+
 ```
-!setattr --allgm --xp|150
+!setattr --allgm --reset --hp
 ```
 
 ### --allplayers
@@ -118,8 +145,9 @@ Affects all characters without player controllers (typically NPCs). **GM only**.
 Affects all characters with player controllers (typically PCs).
 
 **Example:**
+
 ```
-!setattr --allplayers --hp|15
+!setattr --allplayers --mod --hp|-15
 ```
 
 ### --charid
@@ -127,8 +155,9 @@ Affects all characters with player controllers (typically PCs).
 Affects characters with the specified character IDs. Non-GM players can only affect characters they control.
 
 **Example:**
+
 ```
-!setattr --charid <ID1> <ID2> --xp|150
+!setattr --charid <ID1> <ID2> --hp|150
 ```
 
 ### --name
@@ -136,6 +165,7 @@ Affects characters with the specified character IDs. Non-GM players can only aff
 Affects characters with the specified names. Non-GM players can only affect characters they control.
 
 **Example:**
+
 ```
 !setattr --name Gandalf, Frodo Baggins --party|"Fellowship of the Ring"
 ```
@@ -145,8 +175,9 @@ Affects characters with the specified names. Non-GM players can only affect char
 Affects characters represented by currently selected tokens.
 
 **Example:**
+
 ```
-!setattr --sel --hp|25 --xp|30
+!setattr --sel --hp|25 --hp_temp|8
 ```
 
 ### --sel-party
@@ -154,6 +185,7 @@ Affects characters represented by currently selected tokens.
 Affects only party characters represented by currently selected tokens (characters with `inParty` set to true).
 
 **Example:**
+
 ```
 !setattr --sel-party --inspiration|1
 ```
@@ -163,6 +195,7 @@ Affects only party characters represented by currently selected tokens (characte
 Affects only non-party characters represented by currently selected tokens (characters with `inParty` set to false or not set).
 
 **Example:**
+
 ```
 !setattr --sel-noparty --npc_status|"Hostile"
 ```
@@ -172,6 +205,7 @@ Affects only non-party characters represented by currently selected tokens (char
 Affects all characters marked as party members (characters with `inParty` set to true). **GM only by default**, but can be enabled for players with configuration.
 
 **Example:**
+
 ```
 !setattr --party --rest_complete|1
 ```
@@ -179,40 +213,37 @@ Affects all characters marked as party members (characters with `inParty` set to
 ## Attribute Syntax
 
 The syntax for specifying attributes is:
+
 ```
 --attributeName|currentValue|maxValue
 ```
 
-* `attributeName` is the name of the attribute to modify
-* `currentValue` is the value to set (optional for some commands)
-* `maxValue` is the maximum value to set (optional)
+- `attributeName` is the name of the attribute to modify
+- `currentValue` is the value to set (optional for some commands)
+- `maxValue` is the maximum value to set (optional)
 
 ### Examples:
 
 1. Set current value only:
-   ```
-   --strength|15
-   ```
-
+```
+--strength|15
+```
 2. Set both current and maximum values:
-   ```
-   --hp|27|35
-   ```
-
+```
+--hp|27|35
+```
 3. Set only the maximum value (leave current unchanged):
-   ```
-   --hp||50
-   ```
-
+```
+--hp||50
+```
 4. Create empty attribute or set to empty:
-   ```
-   --notes|
-   ```
-
+```
+--notes|
+```
 5. Use `#` instead of `|` (useful in roll queries):
-   ```
-   --strength#15
-   ```
+```
+--strength#15
+```
 
 ## Modifier Options
 
@@ -235,17 +266,19 @@ See `!resetattr` command.
 Prevents creation of new attributes, only updates existing ones.
 
 **Example:**
+
 ```
-!setattr --sel --nocreate --perception|20 --xp|15
+!setattr --sel --nocreate --perception|20 --hp|15
 ```
 
-This will only update `perception` or `xp` if it already exists.
+This will only update `perception` or `hp` if it already exists.
 
 ### --evaluate
 
 Evaluates JavaScript expressions in attribute values. **GM only by default**.
 
 **Example:**
+
 ```
 !setattr --sel --evaluate --hp|2 * 3
 ```
@@ -255,15 +288,17 @@ This will set the `hp` attribute to 6.
 ### --replace
 
 Replaces special characters to prevent Roll20 from evaluating them:
+
 - < becomes [
 - > becomes ]
 - ~ becomes -
 - ; becomes ?
-- \` becomes @
+- ` becomes @
 
 Also supports \lbrak, \rbrak, \n, \at, and \ques for [, ], newline, @, and ?.
 
 **Example:**
+
 ```
 !setattr --sel --replace --notes|"Roll <<1d6>> to succeed"
 ```
@@ -279,6 +314,7 @@ These options control the feedback messages generated by the script:
 Suppresses normal output messages (error messages will still appear).
 
 **Example:**
+
 ```
 !setattr --sel --silent --stealth|20
 ```
@@ -288,6 +324,7 @@ Suppresses normal output messages (error messages will still appear).
 Suppresses all output messages, including errors.
 
 **Example:**
+
 ```
 !setattr --sel --mute --nocreate --new_value|42
 ```
@@ -297,33 +334,37 @@ Suppresses all output messages, including errors.
 Sends output publicly to the chat instead of whispering to the command sender.
 
 **Example:**
+
 ```
 !setattr --sel --fb-public --hp|25|25 --status|"Healed"
 ```
 
-### --fb-from \<NAME>
+### --fb-from <NAME>
 
 Changes the name of the sender for output messages (default is "ChatSetAttr").
 
 **Example:**
+
 ```
 !setattr --sel --fb-from "Healing Potion" --hp|25
 ```
 
-### --fb-header \<STRING>
+### --fb-header <STRING>
 
 Customizes the header of the output message.
 
 **Example:**
+
 ```
 !setattr --sel --evaluate --fb-header "Combat Effects Applied" --status|"Poisoned" --hp|%hp%-5
 ```
 
-### --fb-content \<STRING>
+### --fb-content <STRING>
 
 Customizes the content of the output message.
 
 **Example:**
+
 ```
 !setattr --sel --fb-content "Increasing Hitpoints" --hp|10
 ```
@@ -332,19 +373,20 @@ Customizes the content of the output message.
 
 For use in `--fb-header` and `--fb-content`:
 
-* `_NAMEJ_` - Name of the Jth attribute being changed
-* `_TCURJ_` - Target current value of the Jth attribute
-* `_TMAXJ_` - Target maximum value of the Jth attribute
+- `_NAMEJ_` - Name of the Jth attribute being changed
+- `_TCURJ_` - Target current value of the Jth attribute
+- `_TMAXJ_` - Target maximum value of the Jth attribute
 
 For use in `--fb-content` only:
 
-* `_CHARNAME_` - Name of the character
-* `_CURJ_` - Final current value of the Jth attribute
-* `_MAXJ_` - Final maximum value of the Jth attribute
+- `_CHARNAME_` - Name of the character
+- `_CURJ_` - Final current value of the Jth attribute
+- `_MAXJ_` - Final maximum value of the Jth attribute
 
 **Important:** The Jth index starts with 0 at the first item.
 
 **Example:**
+
 ```
 !setattr --sel --fb-header "Healing Effects" --fb-content "_CHARNAME_ healed by _CUR0_ hitpoints --hp|10
 ```
@@ -383,10 +425,10 @@ ChatSetAttr supports working with repeating sections:
 
 ### Creating New Repeating Items
 
-Use `-CREATE` to create a new row in a repeating section:
+Use `CREATE` to create a new row in a repeating section:
 
 ```
-!setattr --sel --repeating_inventory_-CREATE_itemname|"Magic Sword" --repeating_inventory_-CREATE_itemweight|2
+!setattr --sel --repeating_inventory_CREATE_itemname|"Magic Sword" --repeating_inventory_CREATE_itemweight|2
 ```
 
 ### Modifying Existing Repeating Items
@@ -394,7 +436,7 @@ Use `-CREATE` to create a new row in a repeating section:
 Access by row ID:
 
 ```
-!setattr --sel --repeating_inventory_-ID_itemname|"Enchanted Magic Sword"
+!setattr --sel --repeating_inventory_ID_itemname|"Enchanted Magic Sword"
 ```
 
 Access by index (starts at 0):
@@ -408,7 +450,7 @@ Access by index (starts at 0):
 Delete by row ID:
 
 ```
-!delattr --sel --repeating_inventory_-ID
+!delattr --sel --repeating_inventory_ID
 ```
 
 Delete by index:
@@ -416,6 +458,8 @@ Delete by index:
 ```
 !delattr --sel --repeating_inventory_$0
 ```
+
+> **Note:** repeating sections for Beacon sheets are currently not supported.  They are read-only which prevents ChatSetAttr from being able to modify them.
 
 ## Special Value Expressions
 
@@ -531,11 +575,12 @@ Set hostile status for non-party characters among selected tokens:
 
 If you're developing your own scripts, you can register observer functions to react to attribute changes made by ChatSetAttr:
 
-```javascript
+```
 ChatSetAttr.registerObserver(event, observer);
 ```
 
 Where `event` is one of:
+
 - `"add"` - Called when attributes are created
 - `"change"` - Called when attributes are modified
 - `"destroy"` - Called when attributes are deleted

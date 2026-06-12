@@ -7,10 +7,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "sourceMap": false,
+    "resolveJsonModule": true,
     "jsx": "react",
     "jsxFactory": "h"
   },
-  "include": ["src", "rollup.config.ts"],
+  "include": ["src", "docs/help/content.json", "rollup.config.ts"],
   "exclude": [
     "node_modules",
     "src/__tests__/**",

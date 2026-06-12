@@ -10,5 +10,5 @@ export function createWelcomeMessage(): string {
       <p>For detailed documentation and examples, please use the <code>!setattr-help</code> command or click the button below:</p>
       <p><a href="!setattrs-help" style={buttonStyle}>Create Journal Handout</a></p>
     </div>
-  );
+  ).html;
 }
