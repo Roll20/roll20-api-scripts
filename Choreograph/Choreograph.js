@@ -1974,8 +1974,9 @@ var Choreograph = Choreograph || (() => {
             if (topic === 'delay') {
                 reply(msg, 'Man', '<b>Delay Expressions</b><br>'
                     + 'Return: number (ms), INF/SKIP, or sync.<br><br>'
-                    + '<b>Variables:</b> left, top, name, layer, width, height, count, INF, SKIP, self, plus params/computed vars.<br>'
-                    + '<b>Token proxy:</b> ' + c('token.left') + ', ' + c('token.name') + ', ' + c('token.id') + ', ' + c('token.pageid') + '. Extension namespaces: ' + c('token.ns.var') + '.<br><br>'
+                    + '<b>Variables:</b> ' + TOKEN_VAR_DEFS.filter(d => d.namespace === 'core').map(d => d.name).join(', ') + ', self, plus params/computed vars.<br>'
+                    + '<b>Constants:</b> ' + Object.values(EXT_CONSTANTS).filter(r => r.namespace === 'core').map(r => r.name).join(', ') + '<br>'
+                    + '<b>Functions:</b> ' + Object.values(EXT_FUNCTIONS).filter(r => r.namespace === 'core').map(r => r.name + '()').join(', ') + '<br>'
                     + '<b>Functions:</b><br>'
                     + `${c('rank("attr")')} — sort position in filtered set<br>`
                     + `${c('distance(x, y)')} — pixel distance (or ${c('distance(orig)')})<br>`
@@ -2851,7 +2852,9 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 
             html += h(2, 'Delay Expressions');
             html += p('Evaluated per-token. Return ms, INF/SKIP, or sync.');
-            html += p(b('Variables:') + ' left, top, name, layer, width, height, count, INF, SKIP, self, plus all params and computed variables.');
+            html += p(b('Variables:') + ' ' + TOKEN_VAR_DEFS.filter(d => d.namespace === 'core').map(d => d.name).join(', ') + ', self, plus params and computed variables.');
+            html += p(b('Constants:') + ' ' + Object.values(EXT_CONSTANTS).filter(r => r.namespace === 'core').map(r => r.name).join(', '));
+            html += p(b('Functions:') + ' ' + Object.values(EXT_FUNCTIONS).filter(r => r.namespace === 'core').map(r => r.name + '()').join(', '));
             html += p(b('Token proxy:') + ' ' + c('token.left') + ', ' + c('token.name') + ', ' + c('token.id') + ', ' + c('token.pageid') + ' etc. Extension namespaces: ' + c('token.namespace.variable') + '.');
             html += p(b('LINQ arrays:') + ' ' + c('actors()') + ' returns enriched arrays with ' + c('.from()') + ', ' + c('.without()') + ', ' + c('.where()') + ', ' + c('.select()') + ', ' + c('.orderBy()') + ', ' + c('.first()') + ', ' + c('.last()') + ', ' + c('.count()') + ', ' + c('.ids()') + '.');
             html += p(b('Functions:') + ` rank("attr"), distance(x,y), propagate(dist,speed), stagger(rank,interval), rand(min,max), randInt(min,max), clamp(v,lo,hi), actors(filter?), actor_ids(filter?), plus math.`);
