@@ -863,6 +863,99 @@ var Choreograph = Choreograph || (() => {
     };
 
     // =========================================================================
+    // TokenProxy — rich wrapper for tokens in expression scope
+    // =========================================================================
+
+    // Registry of token variable definitions (used by TokenProxy to build getters)
+    // Each entry: { name, namespace, fn, evaluation: 'eager'|'lazy'|'computed' }
+    const TOKEN_VAR_DEFS = [];
+
+    /**
+     * Register a token variable definition for use by TokenProxy.
+     * Called during checkInstall (for core vars) and by extensions (via registerTokenVariable).
+     */
+    const addTokenVarDef = (reg) => {
+        TOKEN_VAR_DEFS.push(reg);
+    };
+
+    /**
+     * NamespaceProxy — lazy sub-proxy for a specific namespace on a token.
+     * Created once per namespace per TokenProxy instance.
+     */
+    class NamespaceProxy {
+        constructor(rawToken, namespace, ctx) {
+            this._token = rawToken;
+            this._namespace = namespace;
+            this._ctx = ctx;
+            this._cache = {};
+
+            // Attach getters for all token vars in this namespace
+            TOKEN_VAR_DEFS
+                .filter(d => d.namespace === namespace)
+                .forEach(d => {
+                    Object.defineProperty(this, d.name, {
+                        get: () => {
+                            const eval_ = d.evaluation || 'lazy';
+                            if (eval_ === 'computed') return d.fn(this._token, this._ctx);
+                            if (eval_ === 'lazy' || eval_ === 'eager') {
+                                if (!(d.name in this._cache)) this._cache[d.name] = d.fn(this._token, this._ctx);
+                                return this._cache[d.name];
+                            }
+                            return d.fn(this._token, this._ctx);
+                        },
+                        enumerable: true,
+                    });
+                });
+        }
+    }
+
+    /**
+     * TokenProxy — wraps a Roll20 graphic object with namespaced getters.
+     * Core properties (left, top, name, etc.) are direct getters.
+     * Extension namespaces are lazy NamespaceProxy instances.
+     */
+    class TokenProxy {
+        constructor(rawToken, ctx) {
+            this._token = rawToken;
+            this._ctx = ctx || {};
+            this._nsCache = {};
+
+            // Attach core namespace getters directly
+            TOKEN_VAR_DEFS
+                .filter(d => d.namespace === 'core')
+                .forEach(d => {
+                    Object.defineProperty(this, d.name, {
+                        get: () => d.fn(this._token, this._ctx),
+                        enumerable: true,
+                    });
+                });
+
+            // Attach namespace sub-proxies as lazy getters
+            const namespaces = [...new Set(TOKEN_VAR_DEFS.map(d => d.namespace).filter(ns => ns !== 'core'))];
+            namespaces.forEach(ns => {
+                Object.defineProperty(this, ns, {
+                    get: () => {
+                        if (!this._nsCache[ns]) this._nsCache[ns] = new NamespaceProxy(this._token, ns, this._ctx);
+                        return this._nsCache[ns];
+                    },
+                    enumerable: true,
+                });
+            });
+        }
+
+        // Allow access to the raw Roll20 object for interop
+        get _id() { return this._token.get('id'); }
+        get(prop) { return this._token.get(prop); }
+        toString() { return this._token.get('name') || this._token.get('id'); }
+    }
+
+    /**
+     * Wrap a Roll20 graphic object (or array of them) in TokenProxy.
+     */
+    const wrapToken = (rawToken, ctx) => rawToken ? new TokenProxy(rawToken, ctx) : null;
+    const wrapTokens = (arr, ctx) => arr.map(t => wrapToken(t, ctx));
+
+    // =========================================================================
     // Delay expression evaluation
     // =========================================================================
 
@@ -883,9 +976,9 @@ var Choreograph = Choreograph || (() => {
             // Built-in functions
             distance: (x, y) => {
                 if (typeof x === 'object' && x !== null) {
-                    // distance(tokenObj) sugar
-                    y = x.top || x.get('top');
-                    x = x.left || x.get('left');
+                    // Accept TokenProxy (.left/.top) or Roll20 obj (.get('left'))
+                    y = x.top !== undefined ? x.top : (x.get ? x.get('top') : 0);
+                    x = x.left !== undefined ? x.left : (x.get ? x.get('left') : 0);
                 }
                 const dx = token.get('left') - x;
                 const dy = token.get('top') - y;
@@ -929,35 +1022,75 @@ var Choreograph = Choreograph || (() => {
 
         // actors(filter?) — returns tokens sorted by distance from current token
         // actor_ids(filter?) — returns token ID strings
+        // LINQ-inspired enriched array — returned by actors() and similar
+        const enrichArray = (arr) => {
+            arr.from = (other) => {
+                const ids = new Set((other || []).map(t => typeof t === 'string' ? t : (t._id || t.get('id'))));
+                return enrichArray(arr.filter(t => ids.has(typeof t === 'string' ? t : (t._id || t.get('id')))));
+            };
+            arr.without = (other) => {
+                const ids = new Set((other || []).map(t => typeof t === 'string' ? t : (t._id || t.get('id'))));
+                return enrichArray(arr.filter(t => !ids.has(typeof t === 'string' ? t : (t._id || t.get('id')))));
+            };
+            arr.where = (fn) => enrichArray(arr.filter(fn));
+            arr.orderBy = (attr) => {
+                if (typeof attr === 'function') return enrichArray([...arr].sort((a, b) => attr(a) - attr(b)));
+                return enrichArray([...arr].sort((a, b) => ((a[attr] !== undefined ? a[attr] : a.get(attr)) || 0) - ((b[attr] !== undefined ? b[attr] : b.get(attr)) || 0)));
+            };
+            arr.first = (n) => n === undefined ? arr[0] : enrichArray(arr.slice(0, n));
+            arr.last = (n) => n === undefined ? arr[arr.length - 1] : enrichArray(arr.slice(-n));
+            arr.any = (fn) => fn ? arr.some(fn) : arr.length > 0;
+            arr.count = (fn) => fn ? arr.filter(fn).length : arr.length;
+            arr.ids = () => enrichArray(arr.map(t => typeof t === 'string' ? t : (t._id || t.id || t.get('id'))));
+            return arr;
+        };
+
+        const ctx = { tokens: filteredTokens, params };
+
         scope.actors = (filterStr) => {
             const set = filterStr
                 ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
                 : filteredTokens;
             const tx = token.get('left'), ty = token.get('top');
-            return [...set].sort((a, b) => {
+            const sorted = [...set].sort((a, b) => {
                 const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
                 const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
                 return da - db;
             });
+            return enrichArray(sorted.map(t => wrapToken(t, ctx)));
         };
-        scope.actor_ids = (filterStr) => scope.actors(filterStr).map(t => t.get('id'));
+        scope.actor_ids = (filterStr) => enrichArray(scope.actors(filterStr).map(t => t.id));
+
+        // Insert a value into scope at the given namespace path
+        const insertIntoScope = (ns, name, val) => {
+            if (ns === 'core') { scope[name] = val; return; }
+            const parts = ns.split('.');
+            let node = scope;
+            parts.forEach(p => { if (!node[p] || typeof node[p] !== 'object') node[p] = {}; node = node[p]; });
+            node[name] = val;
+        };
+
+        // Auto-wrap return values based on declared returns type
+        const autoWrap = (val, returns) => {
+            if (returns === 'token' && val && !( val instanceof TokenProxy)) return wrapToken(val, ctx);
+            if (returns === 'token[]' && Array.isArray(val)) return enrichArray(val.filter(Boolean).map(t => t instanceof TokenProxy ? t : wrapToken(t, ctx)));
+            return val;
+        };
 
         // Inject registered extension functions
         Object.values(EXT_FUNCTIONS).forEach(reg => {
-            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
-            scope[name] = (...args) => reg.fn(token, filteredTokens, params, ...args);
+            insertIntoScope(reg.namespace, reg.name, (...args) => autoWrap(reg.fn(token, filteredTokens, params, ...args), reg.returns));
         });
 
         // Inject registered token variables
         Object.values(EXT_TOKEN_VARS).forEach(reg => {
-            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
-            scope[name] = reg.fn(token, { tokens: filteredTokens, params });
+            const val = reg.fn(token, { tokens: filteredTokens, params });
+            insertIntoScope(reg.namespace, reg.name, autoWrap(val, reg.returns));
         });
 
         // Inject registered constants
         Object.values(EXT_CONSTANTS).forEach(reg => {
-            const name = reg.namespace === 'core' ? reg.name : `${reg.namespace}_${reg.name}`;
-            scope[name] = reg.value;
+            insertIntoScope(reg.namespace, reg.name, reg.value);
         });
 
         return scope;
@@ -1074,9 +1207,13 @@ var Choreograph = Choreograph || (() => {
         const resolvedParams = {};
         scene.params.forEach(p => {
             if (p.name === 'cast') return; // handled separately
-            resolvedParams[p.name] = params[p.name] !== undefined
-                ? params[p.name]
-                : (p.default || null);
+            let val = params[p.name] !== undefined ? params[p.name] : (p.default || null);
+            // Resolve token-type parameters to TokenProxy
+            if (p.type === 'token' && val && typeof val === 'string') {
+                const obj = getObj('graphic', val);
+                if (obj) val = wrapToken(obj, { tokens: cast, params: resolvedParams });
+            }
+            resolvedParams[p.name] = val;
         });
 
         // Precompute variables per token
@@ -1085,8 +1222,7 @@ var Choreograph = Choreograph || (() => {
             cast.forEach(token => {
                 const scope = buildTokenScope(token, cast, resolvedParams);
                 Object.assign(scope, resolvedParams);
-                scope.tokenId   = token.get('id');
-                scope.tokenName = token.get('name') || '';
+                scope.token = wrapToken(token, { tokens: cast, params: resolvedParams });
                 const vars = {};
                 scene.variables.forEach(v => {
                     if (!v.name || !v.expression) return;
@@ -1121,7 +1257,10 @@ var Choreograph = Choreograph || (() => {
                 Object.assign(scope, resolvedParams);
                 // Add computed variables
                 Object.assign(scope, tokenVars[token.get('id')] || {});
-                // Add tokenId, tokenName, self, and chaining metadata for command templates
+                // Add token proxy and scene metadata
+                const tokenProxy = wrapToken(token, { tokens: filtered, params: resolvedParams });
+                scope.token     = tokenProxy;
+                // Deprecated aliases (kept for backward compat)
                 scope.tokenId   = token.get('id');
                 scope.tokenName = token.get('name') || '';
                 scope.pageId    = token.get('_pageid');
@@ -1136,7 +1275,7 @@ var Choreograph = Choreograph || (() => {
                 commands.forEach(cmdTemplate => {
                     const command = evalCommand(cmdTemplate, scope);
                     if (!command) return;
-                    queue.push({ time: delay, rowIndex, tokenId: scope.tokenId, command });
+                    queue.push({ time: delay, rowIndex, tokenId: token.get('id'), command });
                 });
             });
         });
@@ -1900,7 +2039,7 @@ var Choreograph = Choreograph || (() => {
             if (topic === 'commands' || topic === 'templates') {
                 reply(msg, 'Man', '<b>Command Templates</b><br>'
                     + `Use ${c('${expr}')} for substitutions. Evaluated as JS template literals.<br><br>`
-                    + `Example: ${c('!sequence play ${anim} ignore-selected ${tokenId}')}<br>`
+                    + `Example: ${c('!sequence play ${anim} ignore-selected ${token.id}')}<br>`
                     + `Conditional: ${c('${counter > 1 ? "!choreograph run " + self : ""}')}<br><br>`
                     + 'All variables, params, computed variables, and functions are in scope.');
                 return;
@@ -2253,6 +2392,26 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
     const checkInstall = () => {
         state[SCRIPT_NAME] = state[SCRIPT_NAME] || {};
 
+        // ── Register core token variables (eager) ─────────────────────────
+        [
+            { name: 'id',       fn: (t) => t.get('id') },
+            { name: 'left',     fn: (t) => t.get('left') },
+            { name: 'top',      fn: (t) => t.get('top') },
+            { name: 'name',     fn: (t) => t.get('name') || '' },
+            { name: 'layer',    fn: (t) => t.get('layer') },
+            { name: 'width',    fn: (t) => t.get('width') },
+            { name: 'height',   fn: (t) => t.get('height') },
+            { name: 'rotation', fn: (t) => t.get('rotation') || 0 },
+            { name: 'flipv',    fn: (t) => t.get('flipv') },
+            { name: 'fliph',    fn: (t) => t.get('fliph') },
+            { name: 'bar1_value', fn: (t) => parseFloat(t.get('bar1_value')) || 0 },
+            { name: 'bar2_value', fn: (t) => parseFloat(t.get('bar2_value')) || 0 },
+            { name: 'bar3_value', fn: (t) => parseFloat(t.get('bar3_value')) || 0 },
+            { name: 'statusmarkers', fn: (t) => t.get('statusmarkers') || '' },
+            { name: 'imgsrc',   fn: (t) => t.get('imgsrc') || '' },
+            { name: 'pageid',   fn: (t) => t.get('_pageid') },
+        ].forEach(def => addTokenVarDef({ name: def.name, namespace: 'core', fn: def.fn, evaluation: 'eager' }));
+
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
             name: 'shockwave',
@@ -2264,7 +2423,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph echo 💥 Shockwave hits ${tokenName}! (${actors().length} actors nearby)'], notes: 'Propagate' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph echo 💥 Shockwave hits ${token.name}! (${actors().length} actors nearby)'], notes: 'Propagate' },
                 ],
             },
         });
@@ -2277,7 +2436,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 params: [],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 800)', commands: ['!choreograph echo ${tokenName} reporting in!'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), 800)', commands: ['!choreograph echo ${token.name} reporting in!'], notes: '' },
                 ],
             },
         });
@@ -2307,7 +2466,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 params: [],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${tokenName} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
+                    { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${token.name} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
                 ],
             },
         });
@@ -2320,8 +2479,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 params: [],
                 variables: [],
                 rows: [
-                    { filter: 'width > 70', delay: '0', commands: ['!choreograph echo 🏆 ${tokenName} is an elite! (width=${width})'], notes: 'Expression filter' },
-                    { filter: 'width <= 70', delay: '0', commands: ['!choreograph echo 🐜 ${tokenName} is too small (width=${width})'], notes: 'Inverse' },
+                    { filter: 'width > 70', delay: '0', commands: ['!choreograph echo 🏆 ${token.name} is an elite! (width=${token.width})'], notes: 'Expression filter' },
+                    { filter: 'width <= 70', delay: '0', commands: ['!choreograph echo 🐜 ${token.name} is too small (width=${token.width})'], notes: 'Inverse' },
                 ],
             },
         });
@@ -2337,7 +2496,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${tokenName} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
+                    { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${token.name} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
                 ],
             },
         });
@@ -2352,7 +2511,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top} ${pageId}'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
                 ],
             },
         });
@@ -2368,7 +2527,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${left} ${top} ${pageId}',
+                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
                         '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
                     ], notes: 'Bolt + beam to nearest neighbor' },
                 ],
@@ -2386,9 +2545,9 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${left} ${top} ${pageId}',
-                        '!choreograph fx glow-holy ${left} ${top} ${pageId}',
-                        '!choreograph echo ⚔️ ${tokenName} rallies!',
+                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph echo ⚔️ ${token.name} rallies!',
                     ], notes: 'Ping + glow + announce' },
                 ],
             },
@@ -2404,7 +2563,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${left} ${top} ${pageId}'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
                 ],
             },
         });
@@ -2420,7 +2579,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${left} ${top} ${pageId}',
+                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
                         '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
                     ], notes: 'Bolt + beam to nearest' },
                 ],
@@ -2438,9 +2597,9 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${left} ${top} ${pageId}',
-                        '!choreograph fx glow-holy ${left} ${top} ${pageId}',
-                        '!choreograph echo ⚔️ ${tokenName} rallies!',
+                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph echo ⚔️ ${token.name} rallies!',
                     ], notes: 'Ping + glow + announce' },
                 ],
             },
@@ -2464,8 +2623,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 rows: [
                     { filter: '*', delay: 'propagate(distance(cx, cy), speed)', commands: [
-                        '!choreograph ping ${left} ${top} ${pageId}',
-                        '!choreograph fx nova-holy ${left} ${top} ${pageId}',
+                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx nova-holy ${token.left} ${token.top} ${token.pageid}',
                         '${speed * decay >= minSpeed ? "!choreograph run " + self + " --px " + left + " --py " + top + " --speed " + (speed * decay) + " --decay " + decay + " --minSpeed " + minSpeed : ""}',
                     ], notes: 'Ping + FX + recurse with decay' },
                 ],
@@ -2588,7 +2747,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 
             html += h(2, 'Command Templates');
             html += p(`Use ${c('${expr}')} for substitutions. Evaluated as JS template literals.`);
-            html += p(`Example: ${c('!sequence play ${anim} ignore-selected ${tokenId}')}`);
+            html += p(`Example: ${c('!sequence play ${anim} ignore-selected ${token.id}')}`);
 
             html += h(2, 'Cast System');
             html += p(`Casts are saved token groups in ${c('[Cast] <name>')} handouts with optional roles.`);
