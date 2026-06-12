@@ -228,6 +228,23 @@ Anchor.setRotation(obj, degrees)
 // Get/set scale relative to anchor [widthRatio, heightRatio].
 Anchor.getScale(obj)
 Anchor.setScale(obj, widthRatio, heightRatio)
+
+// Get/set flip state relative to anchor (true = flipped relative to parent).
+Anchor.getFlipV(obj)
+Anchor.setFlipV(obj, flipped)
+Anchor.getFlipH(obj)
+Anchor.setFlipH(obj, flipped)
+
+// Get z-order offset relative to anchor (read-only).
+Anchor.getZOffset(obj)
+
+// Get locked/unlocked component arrays.
+Anchor.getLocked(obj)
+Anchor.getUnlocked(obj)
+
+// Lock/unlock components. Pass array of names, or null for all.
+Anchor.lock(obj, ['left', 'top'])
+Anchor.unlock(obj, ['rotation'])
 ```
 
 ---

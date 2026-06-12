@@ -2016,6 +2016,12 @@ var Anchor = Anchor || (() => {
         const registerWithSequence = () => {
             if (typeof Sequence === 'undefined') return;
 
+            // Helper: update anchor object after modifying child's local state
+            const refreshAnchor = (obj) => {
+                const anchorId = getAnchor(obj.get('id'));
+                if (anchorId) { const a = getObj('graphic', anchorId); if (a) updateObj(a); }
+            };
+
             // Register anchor-local position as virtual attributes
             Sequence.registerAttribute(SCRIPT_NAME, {
                 name: 'left', namespace: 'anchor', objectType: 'graphic',
@@ -2024,9 +2030,9 @@ var Anchor = Anchor || (() => {
                 examples: ['+70  move right 70px in anchor space', '=0  snap to anchor center'],
                 startWatch: null, stopWatch: null,
                 get:    (obj) => { const p = getPosition(obj); return p ? p[0] : obj.get('left'); },
-                set:    (obj, val) => { setPosition(obj, val, getPosition(obj)[1]); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                set:    (obj, val) => { setPosition(obj, val, getPosition(obj)[1]); refreshAnchor(obj); },
                 diff:   (prev, curr) => { const d = Math.round((curr - prev) * 10000) / 10000; return d === 0 ? null : d; },
-                apply:  (obj, delta) => { const p = getPosition(obj); setPosition(obj, p[0] + delta, p[1]); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                apply:  (obj, delta) => { const p = getPosition(obj); setPosition(obj, p[0] + delta, p[1]); refreshAnchor(obj); },
                 lerp:   (a, b, t) => a + (b - a) * t,
                 identity: () => ({ delta: 0 }),
                 format: (d) => d >= 0 ? `+${d}` : `${d}`,
@@ -2044,9 +2050,9 @@ var Anchor = Anchor || (() => {
                 examples: ['+70  move down 70px in anchor space', '=0  snap to anchor center'],
                 startWatch: null, stopWatch: null,
                 get:    (obj) => { const p = getPosition(obj); return p ? p[1] : obj.get('top'); },
-                set:    (obj, val) => { const p = getPosition(obj); setPosition(obj, p[0], val); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                set:    (obj, val) => { const p = getPosition(obj); setPosition(obj, p[0], val); refreshAnchor(obj); },
                 diff:   (prev, curr) => { const d = Math.round((curr - prev) * 10000) / 10000; return d === 0 ? null : d; },
-                apply:  (obj, delta) => { const p = getPosition(obj); setPosition(obj, p[0], p[1] + delta); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                apply:  (obj, delta) => { const p = getPosition(obj); setPosition(obj, p[0], p[1] + delta); refreshAnchor(obj); },
                 lerp:   (a, b, t) => a + (b - a) * t,
                 identity: () => ({ delta: 0 }),
                 format: (d) => d >= 0 ? `+${d}` : `${d}`,
@@ -2064,9 +2070,9 @@ var Anchor = Anchor || (() => {
                 examples: ['+90  rotate 90° in anchor space'],
                 startWatch: null, stopWatch: null,
                 get:    (obj) => { const r = getRotation(obj); return r !== undefined ? r : 0; },
-                set:    (obj, val) => { setRotation(obj, val); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                set:    (obj, val) => { setRotation(obj, val); refreshAnchor(obj); },
                 diff:   (prev, curr) => { const d = Math.round((curr - prev) * 10000) / 10000; return d === 0 ? null : d; },
-                apply:  (obj, delta) => { setRotation(obj, getRotation(obj) + delta); updateObj(getObj('graphic', getAnchor(obj.get('id')))); },
+                apply:  (obj, delta) => { setRotation(obj, getRotation(obj) + delta); refreshAnchor(obj); },
                 lerp:   (a, b, t) => a + (b - a) * t,
                 identity: () => ({ delta: 0 }),
                 format: (d) => d >= 0 ? `+${d}` : `${d}`,
