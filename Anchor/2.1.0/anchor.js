@@ -2000,19 +2000,15 @@ var Anchor = Anchor || (() => {
         const registerWithChoreograph = () => {
             if (typeof Choreograph === 'undefined') return;
 
-            // Token variables (appear as token.anchor.isAnchored, token.anchor.localLeft, etc.)
+            // Token variables (appear as token.anchor.parent, token.anchor.left, etc.)
             Choreograph.registerTokenVariable(SCRIPT_NAME, {
-                name: 'isAnchored', namespace: 'anchor',
-                description: 'Whether this token is anchored to another',
-                returns: 'boolean',
-                fn: (token) => !!getAnchor(token.get('id')),
-            });
-
-            Choreograph.registerTokenVariable(SCRIPT_NAME, {
-                name: 'anchorId', namespace: 'anchor',
-                description: 'ID of the anchor token (or empty string)',
-                returns: 'string',
-                fn: (token) => getAnchor(token.get('id')) || '',
+                name: 'parent', namespace: 'anchor',
+                description: 'The anchor token this token is attached to (or null)',
+                returns: 'token',
+                fn: (token) => {
+                    const id = getAnchor(token.get('id'));
+                    return id ? getObj('graphic', id) : null;
+                },
             });
 
             Choreograph.registerTokenVariable(SCRIPT_NAME, {
