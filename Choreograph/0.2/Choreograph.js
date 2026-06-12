@@ -964,6 +964,7 @@ var Choreograph = Choreograph || (() => {
      */
     const buildTokenScope = (token, filteredTokens, params) => {
         const scope = {
+            // Flat backward-compat aliases (also accessible via token.X proxy)
             left:   token.get('left'),
             top:    token.get('top'),
             name:   token.get('name') || '',
@@ -971,53 +972,6 @@ var Choreograph = Choreograph || (() => {
             width:  token.get('width'),
             height: token.get('height'),
             count:  filteredTokens.length,
-            INF:    Infinity,
-            SKIP:   Infinity,
-            // Built-in functions
-            distance: (x, y) => {
-                if (typeof x === 'object' && x !== null) {
-                    // Accept TokenProxy (.left/.top) or Roll20 obj (.get('left'))
-                    y = x.top !== undefined ? x.top : (x.get ? x.get('top') : 0);
-                    x = x.left !== undefined ? x.left : (x.get ? x.get('left') : 0);
-                }
-                const dx = token.get('left') - x;
-                const dy = token.get('top') - y;
-                return Math.sqrt(dx * dx + dy * dy);
-            },
-            propagate: (dist, speed) => dist / speed,
-            stagger:   (rank, interval) => rank * interval,
-            wave:      (pos, wavelength, duration) => ((pos % wavelength) / wavelength) * (duration || wavelength),
-            rank: (attr) => {
-                let sorted;
-                if (typeof attr === 'function') {
-                    sorted = [...filteredTokens].sort((a, b) => attr(a) - attr(b));
-                } else if (typeof attr === 'string') {
-                    sorted = [...filteredTokens].sort((a, b) =>
-                        (a.get(attr) || 0) - (b.get(attr) || 0)
-                    );
-                } else {
-                    // attr is a number — caller passed the value of a variable
-                    // Fall back to sorting by that same property for all tokens
-                    // Can't determine which property, so just return index in cast
-                    return filteredTokens.indexOf(token);
-                }
-                return sorted.indexOf(token);
-            },
-            rand:    (min, max) => min + Math.random() * (max - min),
-            randInt: (min, max) => Math.floor(min + Math.random() * (max + 1 - min)),
-            clamp:   (v, lo, hi) => Math.min(Math.max(v, lo), hi),
-            abs:     Math.abs,
-            round:   Math.round,
-            floor:   Math.floor,
-            ceil:    Math.ceil,
-            min:     Math.min,
-            max:     Math.max,
-            sqrt:    Math.sqrt,
-            pow:     Math.pow,
-            sin:     Math.sin,
-            cos:     Math.cos,
-            PI:      Math.PI,
-            TAU:     Math.PI * 2,
         };
 
         // actors(filter?) — returns tokens sorted by distance from current token
@@ -1059,20 +1013,6 @@ var Choreograph = Choreograph || (() => {
         };
 
         const ctx = { tokens: filteredTokens, params };
-
-        scope.actors = (filterStr) => {
-            const set = filterStr
-                ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
-                : filteredTokens;
-            const tx = token.get('left'), ty = token.get('top');
-            const sorted = [...set].sort((a, b) => {
-                const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
-                const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
-                return da - db;
-            });
-            return enrichArray(sorted.map(t => wrapToken(t, ctx)));
-        };
-        scope.actor_ids = (filterStr) => enrichArray(scope.actors(filterStr).map(t => t.id));
 
         // Insert a value into scope at the given namespace path
         const insertIntoScope = (ns, name, val) => {
@@ -2424,6 +2364,121 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             { name: 'imgsrc',   fn: (t) => t.get('imgsrc') || '' },
             { name: 'pageid',   fn: (t) => t.get('_pageid') },
         ].forEach(def => addTokenVarDef({ name: def.name, namespace: 'core', fn: def.fn, evaluation: 'eager' }));
+
+        // ── Register core constants ───────────────────────────────────────
+        registerConstant(SCRIPT_NAME, { name: 'PI', namespace: 'core', value: Math.PI, description: 'π' });
+        registerConstant(SCRIPT_NAME, { name: 'TAU', namespace: 'core', value: Math.PI * 2, description: '2π' });
+        registerConstant(SCRIPT_NAME, { name: 'INF', namespace: 'core', value: Infinity, description: 'Infinity — skip token' });
+        registerConstant(SCRIPT_NAME, { name: 'SKIP', namespace: 'core', value: Infinity, description: 'Alias for INF' });
+
+        // ── Register core functions ───────────────────────────────────────
+        registerFunction(SCRIPT_NAME, {
+            name: 'distance', namespace: 'core', returns: 'number',
+            description: 'Pixel distance from (x,y) or token to current token.',
+            args: [{ name: 'x', type: 'number' }, { name: 'y', type: 'number' }],
+            fn: (token, filteredTokens, params, x, y) => {
+                if (typeof x === 'object' && x !== null) {
+                    y = x.top !== undefined ? x.top : (x.get ? x.get('top') : 0);
+                    x = x.left !== undefined ? x.left : (x.get ? x.get('left') : 0);
+                }
+                const dx = token.get('left') - x;
+                const dy = token.get('top') - y;
+                return Math.sqrt(dx * dx + dy * dy);
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'propagate', namespace: 'core', returns: 'number',
+            description: 'dist / speed',
+            fn: (token, filteredTokens, params, dist, speed) => dist / speed,
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'stagger', namespace: 'core', returns: 'number',
+            description: 'rank * interval',
+            fn: (token, filteredTokens, params, rank, interval) => rank * interval,
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'wave', namespace: 'core', returns: 'number',
+            description: 'Wave offset: (pos % wavelength) / wavelength * duration',
+            fn: (token, filteredTokens, params, pos, wavelength, duration) => ((pos % wavelength) / wavelength) * (duration || wavelength),
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'rank', namespace: 'core', returns: 'number',
+            description: 'Sort position (0-based) within filtered set.',
+            fn: (token, filteredTokens, params, attr) => {
+                let sorted;
+                if (typeof attr === 'function') {
+                    sorted = [...filteredTokens].sort((a, b) => attr(a) - attr(b));
+                } else if (typeof attr === 'string') {
+                    sorted = [...filteredTokens].sort((a, b) => (a.get(attr) || 0) - (b.get(attr) || 0));
+                } else {
+                    return filteredTokens.indexOf(token);
+                }
+                return sorted.indexOf(token);
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'rand', namespace: 'core', returns: 'number', pure: false,
+            description: 'Random number between min and max.',
+            fn: (token, filteredTokens, params, min, max) => min + Math.random() * (max - min),
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'randInt', namespace: 'core', returns: 'number', pure: false,
+            description: 'Random integer between min and max (inclusive).',
+            fn: (token, filteredTokens, params, min, max) => Math.floor(min + Math.random() * (max + 1 - min)),
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'clamp', namespace: 'core', returns: 'number',
+            fn: (token, filteredTokens, params, v, lo, hi) => Math.min(Math.max(v, lo), hi),
+        });
+        registerFunction(SCRIPT_NAME, { name: 'abs',   namespace: 'core', returns: 'number', fn: (t, f, p, x) => Math.abs(x) });
+        registerFunction(SCRIPT_NAME, { name: 'round', namespace: 'core', returns: 'number', fn: (t, f, p, x) => Math.round(x) });
+        registerFunction(SCRIPT_NAME, { name: 'floor', namespace: 'core', returns: 'number', fn: (t, f, p, x) => Math.floor(x) });
+        registerFunction(SCRIPT_NAME, { name: 'ceil',  namespace: 'core', returns: 'number', fn: (t, f, p, x) => Math.ceil(x) });
+        registerFunction(SCRIPT_NAME, { name: 'min',   namespace: 'core', returns: 'number', fn: (t, f, p, ...args) => Math.min(...args) });
+        registerFunction(SCRIPT_NAME, { name: 'max',   namespace: 'core', returns: 'number', fn: (t, f, p, ...args) => Math.max(...args) });
+        registerFunction(SCRIPT_NAME, { name: 'sqrt',  namespace: 'core', returns: 'number', fn: (t, f, p, x) => Math.sqrt(x) });
+        registerFunction(SCRIPT_NAME, { name: 'pow',   namespace: 'core', returns: 'number', fn: (t, f, p, x, y) => Math.pow(x, y) });
+        registerFunction(SCRIPT_NAME, { name: 'sin',   namespace: 'core', returns: 'number', fn: (t, f, p, x) => Math.sin(x) });
+        registerFunction(SCRIPT_NAME, { name: 'cos',   namespace: 'core', returns: 'number', fn: (t, f, p, x) => Math.cos(x) });
+
+        // count — number of tokens in current filtered set (registered as function, 0 args)
+        registerFunction(SCRIPT_NAME, {
+            name: 'count', namespace: 'core', returns: 'number',
+            description: 'Number of tokens passing the current row filter.',
+            fn: (token, filteredTokens) => filteredTokens.length,
+        });
+
+        // actors / actor_ids — registered as functions returning token[]
+        registerFunction(SCRIPT_NAME, {
+            name: 'actors', namespace: 'core', returns: 'token[]',
+            description: 'Tokens sorted by distance from current token.',
+            fn: (token, filteredTokens, params, filterStr) => {
+                const set = filterStr
+                    ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
+                    : filteredTokens;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                });
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'actor_ids', namespace: 'core', returns: 'string[]',
+            description: 'Token IDs sorted by distance from current token.',
+            fn: (token, filteredTokens, params, filterStr) => {
+                const set = filterStr
+                    ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
+                    : filteredTokens;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                }).map(t => t.get('id'));
+            },
+        });
 
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
