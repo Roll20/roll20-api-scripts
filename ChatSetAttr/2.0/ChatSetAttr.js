@@ -147,7 +147,7 @@ var ChatSetAttr = (function (exports) {
                 h("code", null, "!setattr-help"),
                 " command or click the button below:"),
             h("p", null,
-                h("a", { href: "!setattrs-help", style: buttonStyle }, "Create Journal Handout")))).html;
+                h("a", { href: "!setattr-help", style: buttonStyle }, "Create Journal Handout")))).html;
     }
 
     function getWhisperPrefix(playerID) {
@@ -277,6 +277,7 @@ var ChatSetAttr = (function (exports) {
         playersCanModify: false,
         playersCanEvaluate: false,
         useWorkers: true,
+        helpContentUpdatedAt: 0,
         flags: [],
     };
     function parseGlobalConfigCheckbox(g, label, valueField) {
@@ -2434,24 +2435,56 @@ var ChatSetAttr = (function (exports) {
         return renderHelpHtml(loadHelpDocument(), handoutID);
     }
 
+    var updatedAt = 1781273463973;
+    var contentRevision = {
+    	updatedAt: updatedAt
+    };
+
+    const revision = contentRevision;
+    function getBundledHelpContentUpdatedAt() {
+        return revision.updatedAt;
+    }
+
+    const HELP_COMMAND = "!setattr-help";
+    const HELP_HANDOUT_NAME = "ChatSetAttr Help";
     function checkHelpMessage(msg) {
-        return msg.trim().toLowerCase().startsWith("!setattrs-help");
+        return msg.trim().toLowerCase().startsWith(HELP_COMMAND);
+    }
+    function findHelpHandout() {
+        return findObjs({
+            _type: "handout",
+            name: HELP_HANDOUT_NAME,
+        })[0];
+    }
+    function applyHelpContentToHandout(handout) {
+        const helpContent = createHelpHandout(handout.id);
+        const bundledAt = getBundledHelpContentUpdatedAt();
+        handout.set({
+            inplayerjournals: "all",
+            notes: helpContent,
+        });
+        setConfig({ helpContentUpdatedAt: bundledAt });
     }
     function handleHelpCommand() {
-        let handout = findObjs({
-            _type: "handout",
-            name: "ChatSetAttr Help",
-        })[0];
+        let handout = findHelpHandout();
         if (!handout) {
             handout = createObj("handout", {
-                name: "ChatSetAttr Help",
+                name: HELP_HANDOUT_NAME,
             });
         }
-        const helpContent = createHelpHandout(handout.id);
-        handout.set({
-            "inplayerjournals": "all",
-            "notes": helpContent,
-        });
+        applyHelpContentToHandout(handout);
+    }
+    function syncHelpHandoutOnStartup() {
+        const handout = findHelpHandout();
+        if (!handout) {
+            return;
+        }
+        const bundledAt = getBundledHelpContentUpdatedAt();
+        const stateAt = getConfig().helpContentUpdatedAt;
+        if (stateAt >= bundledAt) {
+            return;
+        }
+        applyHelpContentToHandout(handout);
     }
 
     function inlineRollValue(roll) {
@@ -3495,9 +3528,9 @@ var ChatSetAttr = (function (exports) {
             h("div", { style: PARAGRAPH_SPACING_STYLE },
                 h("strong", null,
                     "If you want to create a handout with the updated documentation, use the command ",
-                    h("code", null, "!setattrs-help"),
+                    h("code", null, "!setattr-help"),
                     " or click the button below"),
-                h("a", { href: "!setattrs-help" }, "Create Help Handout")))).html;
+                h("a", { href: "!setattr-help" }, "Create Help Handout")))).html;
     }
 
     const v2_0 = {
@@ -3590,6 +3623,7 @@ var ChatSetAttr = (function (exports) {
     on("ready", () => {
         checkGlobalConfig();
         registerHandlers();
+        syncHelpHandoutOnStartup();
         update();
         welcome();
     });

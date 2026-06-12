@@ -12,7 +12,8 @@
     "docs:check": "tsx scripts/generate-docs.ts --check",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
     "@stylistic/eslint-plugin": "^5.4.0",
     "@types/node": "^22.15.15",
     "@types/underscore": "^1.13.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.36.0",
     "lib-smart-attributes": "../libSmartAttributes",
     "lib-uuid": "../libUUID",

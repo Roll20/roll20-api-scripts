@@ -8,6 +8,7 @@ type ScriptConfig = {
   playersCanModify: boolean;
   playersCanEvaluate: boolean;
   useWorkers: boolean;
+  helpContentUpdatedAt: number;
   flags: string[];
 };
 
@@ -53,6 +54,7 @@ const DEFAULT_CONFIG: ScriptConfig = {
   playersCanModify: false,
   playersCanEvaluate: false,
   useWorkers: true,
+  helpContentUpdatedAt: 0,
   flags: [],
 };
 

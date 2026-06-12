@@ -171,7 +171,7 @@ describe("ChatSetAttr Integration Tests", () => {
         const itemWeight = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_itemweight`);
         const itemEquipped = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_equipped`);
         const itemModifiers = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_${repeatingRowId}_itemmodifiers`);
-        const itemContent = await libSmartAttributes.getAttribute("char1", `user.repeating_inventory_unique-rowid-1234_itemcontent`);
+        const itemContent = await libSmartAttributes.getAttribute("char1", "user.repeating_inventory_unique-rowid-1234_itemcontent");
 
         expect(itemName).toBe("Cloak of Excellence");
         expect(itemCount).toBe("1");
@@ -1475,7 +1475,7 @@ describe("ChatSetAttr Integration Tests", () => {
         current: "-row1",
       });
 
-      executeCommand('!setattr --sel --repeating_inventory_$0_itemname|"First Item"', {
+      executeCommand("!setattr --sel --repeating_inventory_$0_itemname|\"First Item\"", {
         selected: [token.properties],
       });
 
@@ -1502,7 +1502,7 @@ describe("ChatSetAttr Integration Tests", () => {
         current: "Old Item",
       });
 
-      executeCommand('!setattr --sel --repeating_inventory_$0_itemname|"First Item"', {
+      executeCommand("!setattr --sel --repeating_inventory_$0_itemname|\"First Item\"", {
         selected: [token.properties],
       });
 

@@ -3,10 +3,15 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import helpContent from "../../../docs/help/content.json";
+import { hashHelpContentFile } from "../../templates/help/contentHash";
 import { loadHelpDocument } from "../../templates/help/loadContent";
+import { getBundledHelpContentHash, getBundledHelpContentUpdatedAt } from "../../templates/help/loadContentRevision";
 import { renderHelpHtml } from "../../templates/help/renderHtml";
 import { renderHelpMarkdown } from "../../templates/help/renderMarkdown";
 import type { HelpDocument } from "../../templates/help/types";
+
+const contentPath = join(process.cwd(), "docs/help/content.json");
+const revisionPath = join(process.cwd(), "docs/help/content.revision.json");
 
 const SECTION_IDS = [
   "basic-usage",
@@ -82,6 +87,17 @@ describe("help content", () => {
     const expected = "<!-- Generated from docs/help/content.json. Run pnpm docs:generate -->\n\n"
       + renderHelpMarkdown(doc, { includeToc: true });
     expect(readme).toBe(expected);
+  });
+
+  it("should have a revision file matching content.json", () => {
+    const revision = JSON.parse(readFileSync(revisionPath, "utf8")) as {
+      contentHash: string;
+      updatedAt: number;
+    };
+    expect(revision.contentHash).toBe(hashHelpContentFile(contentPath));
+    expect(revision.updatedAt).toBe(getBundledHelpContentUpdatedAt());
+    expect(revision.contentHash).toBe(getBundledHelpContentHash());
+    expect(revision.updatedAt).toBeGreaterThan(0);
   });
 });
 

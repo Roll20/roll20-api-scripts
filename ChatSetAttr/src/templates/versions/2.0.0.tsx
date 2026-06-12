@@ -31,8 +31,8 @@ export function createVersionMessage(): string {
         <strong>If you encounter any bugs or issues, please report them via the <a href="https://help.roll20.net/hc/en-us/requests/new">Roll20 Helpdesk</a></strong>
       </div>
       <div style={PARAGRAPH_SPACING_STYLE}>
-        <strong>If you want to create a handout with the updated documentation, use the command <code>!setattrs-help</code> or click the button below</strong>
-        <a href="!setattrs-help">Create Help Handout</a>
+        <strong>If you want to create a handout with the updated documentation, use the command <code>!setattr-help</code> or click the button below</strong>
+        <a href="!setattr-help">Create Help Handout</a>
       </div>
     </div>
   ).html;

@@ -6,6 +6,7 @@
   "include": [
     "src/env.d.ts",
     "docs/help/content.json",
+    "docs/help/content.revision.json",
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.mock.ts",

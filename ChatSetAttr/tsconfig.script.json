@@ -11,7 +11,7 @@
     "jsx": "react",
     "jsxFactory": "h"
   },
-  "include": ["src", "docs/help/content.json", "rollup.config.ts"],
+  "include": ["src", "docs/help/content.json", "docs/help/content.revision.json", "rollup.config.ts"],
   "exclude": [
     "node_modules",
     "src/__tests__/**",

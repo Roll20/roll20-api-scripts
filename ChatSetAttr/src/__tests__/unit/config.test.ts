@@ -44,6 +44,7 @@ describe("config", () => {
         playersCanModify: false,
         playersCanEvaluate: false,
         useWorkers: true,
+        helpContentUpdatedAt: 0,
         flags: []
       });
     });
@@ -63,6 +64,7 @@ describe("config", () => {
         playersCanModify: false,
         playersCanEvaluate: false,
         useWorkers: true,
+        helpContentUpdatedAt: 0,
         flags: []
       });
     });
@@ -81,6 +83,7 @@ describe("config", () => {
         playersCanModify: false,
         playersCanEvaluate: false,
         useWorkers: true,
+        helpContentUpdatedAt: 0,
         flags: []
       });
     });
@@ -102,6 +105,7 @@ describe("config", () => {
         playersCanModify: true,
         playersCanEvaluate: true,
         useWorkers: true,
+        helpContentUpdatedAt: 0,
         flags: []
       });
     });
@@ -128,6 +132,7 @@ describe("config", () => {
         playersCanModify: true,
         playersCanEvaluate: true,
         useWorkers: false,
+        helpContentUpdatedAt: 0,
         flags: []
       });
     });
@@ -166,6 +171,7 @@ describe("config", () => {
         playersCanModify: true,
         playersCanEvaluate: false,
         useWorkers: true,
+        helpContentUpdatedAt: 0,
         flags: [],
         extraProperty: "should be included",
         anotherExtra: 42

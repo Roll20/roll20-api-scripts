@@ -9,5 +9,11 @@ export default defineConfig({
       tsconfig: "./tsconfig.vitest.json"
     },
     setupFiles: ["./vitest.setup.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/__tests__/**"],
+    },
   },
 });
