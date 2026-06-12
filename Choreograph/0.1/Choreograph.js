@@ -1260,6 +1260,10 @@ var Choreograph = Choreograph || (() => {
                 // Add token proxy and scene metadata
                 const tokenProxy = wrapToken(token, { tokens: filtered, params: resolvedParams });
                 scope.token     = tokenProxy;
+                // Deprecated aliases (kept for backward compat)
+                scope.tokenId   = token.get('id');
+                scope.tokenName = token.get('name') || '';
+                scope.pageId    = token.get('_pageid');
                 scope.self      = scene.name;
                 scope.__parent  = instanceId;
                 scope.__depth   = Math.max(0, ((runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10) - 1);
