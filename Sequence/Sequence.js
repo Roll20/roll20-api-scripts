@@ -5330,7 +5330,7 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                     ],
                     variables: [],
                     rows: [
-                        { filter: '*', delay: 'stagger(rank("left"), 500)', commands: ['!sequence play ${anim} --silent ignore-selected ${token.id}'], notes: 'Staggered playback' },
+                        { filter: '*', delay: 'stagger(rank("left"), 500)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Staggered playback' },
                     ],
                 },
             });
@@ -5361,7 +5361,7 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                     ],
                     variables: [],
                     rows: [
-                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!sequence play ${anim} --silent ignore-selected ${token.id}'], notes: 'Wave' },
+                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Wave' },
                     ],
                 },
             });
