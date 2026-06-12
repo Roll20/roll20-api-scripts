@@ -1022,18 +1022,44 @@ var Choreograph = Choreograph || (() => {
 
         // actors(filter?) — returns tokens sorted by distance from current token
         // actor_ids(filter?) — returns token ID strings
+        // LINQ-inspired enriched array — returned by actors() and similar
+        const enrichArray = (arr) => {
+            arr.from = (other) => {
+                const ids = new Set((other || []).map(t => typeof t === 'string' ? t : (t._id || t.get('id'))));
+                return enrichArray(arr.filter(t => ids.has(typeof t === 'string' ? t : (t._id || t.get('id')))));
+            };
+            arr.without = (other) => {
+                const ids = new Set((other || []).map(t => typeof t === 'string' ? t : (t._id || t.get('id'))));
+                return enrichArray(arr.filter(t => !ids.has(typeof t === 'string' ? t : (t._id || t.get('id')))));
+            };
+            arr.where = (fn) => enrichArray(arr.filter(fn));
+            arr.orderBy = (attr) => {
+                if (typeof attr === 'function') return enrichArray([...arr].sort((a, b) => attr(a) - attr(b)));
+                return enrichArray([...arr].sort((a, b) => ((a[attr] !== undefined ? a[attr] : a.get(attr)) || 0) - ((b[attr] !== undefined ? b[attr] : b.get(attr)) || 0)));
+            };
+            arr.first = (n) => n === undefined ? arr[0] : enrichArray(arr.slice(0, n));
+            arr.last = (n) => n === undefined ? arr[arr.length - 1] : enrichArray(arr.slice(-n));
+            arr.any = (fn) => fn ? arr.some(fn) : arr.length > 0;
+            arr.count = (fn) => fn ? arr.filter(fn).length : arr.length;
+            arr.ids = () => enrichArray(arr.map(t => typeof t === 'string' ? t : (t._id || t.id || t.get('id'))));
+            return arr;
+        };
+
+        const ctx = { tokens: filteredTokens, params };
+
         scope.actors = (filterStr) => {
             const set = filterStr
                 ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
                 : filteredTokens;
             const tx = token.get('left'), ty = token.get('top');
-            return [...set].sort((a, b) => {
+            const sorted = [...set].sort((a, b) => {
                 const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
                 const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
                 return da - db;
             });
+            return enrichArray(sorted.map(t => wrapToken(t, ctx)));
         };
-        scope.actor_ids = (filterStr) => scope.actors(filterStr).map(t => t.get('id'));
+        scope.actor_ids = (filterStr) => enrichArray(scope.actors(filterStr).map(t => t.id));
 
         // Insert a value into scope at the given namespace path
         const insertIntoScope = (ns, name, val) => {
@@ -1173,9 +1199,13 @@ var Choreograph = Choreograph || (() => {
         const resolvedParams = {};
         scene.params.forEach(p => {
             if (p.name === 'cast') return; // handled separately
-            resolvedParams[p.name] = params[p.name] !== undefined
-                ? params[p.name]
-                : (p.default || null);
+            let val = params[p.name] !== undefined ? params[p.name] : (p.default || null);
+            // Resolve token-type parameters to TokenProxy
+            if (p.type === 'token' && val && typeof val === 'string') {
+                const obj = getObj('graphic', val);
+                if (obj) val = wrapToken(obj, { tokens: cast, params: resolvedParams });
+            }
+            resolvedParams[p.name] = val;
         });
 
         // Precompute variables per token
