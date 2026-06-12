@@ -2050,20 +2050,20 @@ var Anchor = Anchor || (() => {
                 fn: (token) => { const s = getScale(token); return s ? s[1] : 1; },
             });
 
-            // Functions (appear as anchor.siblings(), anchor.children())
-            Choreograph.registerFunction(SCRIPT_NAME, {
+            // Functions returning token arrays
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
                 name: 'siblings', namespace: 'anchor',
                 description: 'Other tokens anchored to the same parent',
                 returns: 'token[]',
-                fn: (token, filteredTokens) => {
+                fn: (token) => {
                     const anchorId = getAnchor(token.get('id'));
                     if (!anchorId) return [];
-                    return getChildren(anchorId)
+                    return (getChildren(anchorId) || [])
                         .filter(t => t.get('id') !== token.get('id'));
                 },
             });
 
-            Choreograph.registerFunction(SCRIPT_NAME, {
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
                 name: 'children', namespace: 'anchor',
                 description: 'Tokens anchored to this token as children',
                 returns: 'token[]',
