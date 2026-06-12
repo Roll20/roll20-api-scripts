@@ -1023,25 +1023,38 @@ var Choreograph = Choreograph || (() => {
         // actors(filter?) — returns tokens sorted by distance from current token
         // actor_ids(filter?) — returns token ID strings
         // LINQ-inspired enriched array — returned by actors() and similar
+        // Get a comparable identity from any item (token ID, or the value itself)
+        const itemId = (t) => {
+            if (typeof t === 'string' || typeof t === 'number') return t;
+            if (t && t._id) return t._id;
+            if (t && typeof t.get === 'function') return t.get('id');
+            return t;
+        };
+
         const enrichArray = (arr) => {
             arr.from = (other) => {
-                const ids = new Set((other || []).map(t => typeof t === 'string' ? t : (t._id || t.get('id'))));
-                return enrichArray(arr.filter(t => ids.has(typeof t === 'string' ? t : (t._id || t.get('id')))));
+                const ids = new Set((other || []).map(itemId));
+                return enrichArray(arr.filter(t => ids.has(itemId(t))));
             };
             arr.without = (other) => {
-                const ids = new Set((other || []).map(t => typeof t === 'string' ? t : (t._id || t.get('id'))));
-                return enrichArray(arr.filter(t => !ids.has(typeof t === 'string' ? t : (t._id || t.get('id')))));
+                const ids = new Set((other || []).map(itemId));
+                return enrichArray(arr.filter(t => !ids.has(itemId(t))));
             };
             arr.where = (fn) => enrichArray(arr.filter(fn));
+            arr.select = (fn) => enrichArray(arr.map(fn));
             arr.orderBy = (attr) => {
                 if (typeof attr === 'function') return enrichArray([...arr].sort((a, b) => attr(a) - attr(b)));
-                return enrichArray([...arr].sort((a, b) => ((a[attr] !== undefined ? a[attr] : a.get(attr)) || 0) - ((b[attr] !== undefined ? b[attr] : b.get(attr)) || 0)));
+                return enrichArray([...arr].sort((a, b) => {
+                    const av = a && typeof a === 'object' ? (a[attr] !== undefined ? a[attr] : (a.get ? a.get(attr) : 0)) : a;
+                    const bv = b && typeof b === 'object' ? (b[attr] !== undefined ? b[attr] : (b.get ? b.get(attr) : 0)) : b;
+                    return (av || 0) - (bv || 0);
+                }));
             };
             arr.first = (n) => n === undefined ? arr[0] : enrichArray(arr.slice(0, n));
             arr.last = (n) => n === undefined ? arr[arr.length - 1] : enrichArray(arr.slice(-n));
             arr.any = (fn) => fn ? arr.some(fn) : arr.length > 0;
             arr.count = (fn) => fn ? arr.filter(fn).length : arr.length;
-            arr.ids = () => enrichArray(arr.map(t => typeof t === 'string' ? t : (t._id || t.id || t.get('id'))));
+            arr.ids = () => enrichArray(arr.map(itemId));
             return arr;
         };
 
