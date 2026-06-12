@@ -976,9 +976,9 @@ var Choreograph = Choreograph || (() => {
             // Built-in functions
             distance: (x, y) => {
                 if (typeof x === 'object' && x !== null) {
-                    // distance(tokenObj) sugar
-                    y = x.top || x.get('top');
-                    x = x.left || x.get('left');
+                    // Accept TokenProxy (.left/.top) or Roll20 obj (.get('left'))
+                    y = x.top !== undefined ? x.top : (x.get ? x.get('top') : 0);
+                    x = x.left !== undefined ? x.left : (x.get ? x.get('left') : 0);
                 }
                 const dx = token.get('left') - x;
                 const dy = token.get('top') - y;
@@ -1184,8 +1184,7 @@ var Choreograph = Choreograph || (() => {
             cast.forEach(token => {
                 const scope = buildTokenScope(token, cast, resolvedParams);
                 Object.assign(scope, resolvedParams);
-                scope.tokenId   = token.get('id');
-                scope.tokenName = token.get('name') || '';
+                scope.token = wrapToken(token, { tokens: cast, params: resolvedParams });
                 const vars = {};
                 scene.variables.forEach(v => {
                     if (!v.name || !v.expression) return;
@@ -1220,10 +1219,9 @@ var Choreograph = Choreograph || (() => {
                 Object.assign(scope, resolvedParams);
                 // Add computed variables
                 Object.assign(scope, tokenVars[token.get('id')] || {});
-                // Add tokenId, tokenName, self, and chaining metadata for command templates
-                scope.tokenId   = token.get('id');
-                scope.tokenName = token.get('name') || '';
-                scope.pageId    = token.get('_pageid');
+                // Add token proxy and scene metadata
+                const tokenProxy = wrapToken(token, { tokens: filtered, params: resolvedParams });
+                scope.token     = tokenProxy;
                 scope.self      = scene.name;
                 scope.__parent  = instanceId;
                 scope.__depth   = Math.max(0, ((runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10) - 1);
@@ -1235,7 +1233,7 @@ var Choreograph = Choreograph || (() => {
                 commands.forEach(cmdTemplate => {
                     const command = evalCommand(cmdTemplate, scope);
                     if (!command) return;
-                    queue.push({ time: delay, rowIndex, tokenId: scope.tokenId, command });
+                    queue.push({ time: delay, rowIndex, tokenId: token.get('id'), command });
                 });
             });
         });
