@@ -1,4 +1,4 @@
-import { s } from "../utils/chat";
+import { rawHtml, s } from "../utils/chat";
 import { frameStyleBase, headerStyleBase } from "./styles";
 
 const NOTIFY_WRAPPER_STYLE = s(frameStyleBase);
@@ -10,7 +10,7 @@ export function createNotifyMessage(title: string, content: string): string {
     <div style={NOTIFY_WRAPPER_STYLE}>
       <div style={NOTIFY_HEADER_STYLE}>{title}</div>
       <div>
-        {content}
+        {rawHtml(content)}
       </div>
     </div>
   ).html;

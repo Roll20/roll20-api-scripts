@@ -38,6 +38,9 @@ var ChatSetAttr = (function (exports) {
             this.html = html;
         }
     }
+    function rawHtml(html) {
+        return new SafeHtml(html);
+    }
     function renderChild(child) {
         if (child instanceof SafeHtml) {
             return child.html;
@@ -131,7 +134,7 @@ var ChatSetAttr = (function (exports) {
     function createNotifyMessage(title, content) {
         return (h("div", { style: NOTIFY_WRAPPER_STYLE },
             h("div", { style: NOTIFY_HEADER_STYLE }, title),
-            h("div", null, content))).html;
+            h("div", null, rawHtml(content)))).html;
     }
 
     function createWelcomeMessage() {
@@ -231,7 +234,11 @@ var ChatSetAttr = (function (exports) {
     function createConfigMessage() {
         const config = getConfig();
         const configEntries = Object.entries(config);
-        const relevantEntries = configEntries.filter(([key]) => key !== "version" && key !== "globalconfigCache" && key !== "flags");
+        const relevantEntries = configEntries.filter(([key]) => key !== "version"
+            && key !== "scriptVersion"
+            && key !== "globalconfigCache"
+            && key !== "flags"
+            && key !== "helpContentUpdatedAt");
         return (h("div", { style: CONFIG_WRAPPER_STYLE },
             h("div", { style: CONFIG_HEADER_STYLE }, "ChatSetAttr Configuration"),
             h("div", null,
@@ -245,6 +252,7 @@ var ChatSetAttr = (function (exports) {
                 h("div", { style: CONFIG_CLEAR_FIX_STYLE })))).html;
     }
 
+    const STATE_SCHEMA_VERSION = 4;
     const GLOBAL_CONFIG_OPTIONS = [
         {
             label: "Players can modify all characters",
@@ -267,9 +275,9 @@ var ChatSetAttr = (function (exports) {
             value: "playersCanTargetParty",
         },
     ];
-    const SCHEMA_VERSION = "2.0";
     const DEFAULT_CONFIG = {
-        version: SCHEMA_VERSION,
+        version: STATE_SCHEMA_VERSION,
+        scriptVersion: scriptJson.version,
         globalconfigCache: {
             lastsaved: 0,
         },
@@ -280,6 +288,44 @@ var ChatSetAttr = (function (exports) {
         helpContentUpdatedAt: 0,
         flags: [],
     };
+    function getStateSchemaVersion(raw) {
+        if (raw === undefined || raw === null) {
+            return 0;
+        }
+        if (typeof raw === "number" && Number.isFinite(raw)) {
+            return raw;
+        }
+        if (typeof raw === "string") {
+            const parsed = Number(raw);
+            if (Number.isFinite(parsed) && /^\d+$/.test(raw.trim())) {
+                return parsed;
+            }
+            return 0;
+        }
+        return 0;
+    }
+    function ensureChatSetAttrState() {
+        if (!state.ChatSetAttr) {
+            state.ChatSetAttr = {};
+        }
+        return state.ChatSetAttr;
+    }
+    function getPersistedSchemaVersion() {
+        return getStateSchemaVersion(state.ChatSetAttr?.version);
+    }
+    function persistStateVersionMetadata() {
+        const raw = ensureChatSetAttrState();
+        const schemaVersion = getStateSchemaVersion(raw.version);
+        if (schemaVersion > 0 && raw.version !== schemaVersion) {
+            raw.version = schemaVersion;
+        }
+        if (!Object.hasOwn(raw, "scriptVersion") || raw.scriptVersion !== scriptJson.version) {
+            raw.scriptVersion = scriptJson.version;
+        }
+    }
+    function syncScriptVersion() {
+        persistStateVersionMetadata();
+    }
     function parseGlobalConfigCheckbox(g, label, valueField) {
         return g[label] === valueField;
     }
@@ -330,11 +376,7 @@ var ChatSetAttr = (function (exports) {
         };
     }
     function setConfig(newConfig) {
-        const stateConfig = state.ChatSetAttr || {};
-        state.ChatSetAttr = {
-            ...stateConfig,
-            ...newConfig,
-        };
+        Object.assign(ensureChatSetAttrState(), newConfig);
     }
     function hasFlag(flag) {
         const config = getConfig();
@@ -1159,7 +1201,7 @@ var ChatSetAttr = (function (exports) {
 
     var $schema = "./content.schema.json";
     var title = "ChatSetAttr";
-    var introduction = "ChatSetAttr is a Roll20 API script that allows users to create, modify, or delete character sheet attributes through chat commands macros. Whether you need to update a single character attribute or make bulk changes across multiple characters, ChatSetAttr provides flexible options to streamline your game management.";
+    var introduction = "ChatSetAttr is a Roll20 Mod API script that allows users to create, modify, or delete character sheet attributes through chat commands macros. Whether you need to update a single character attribute or make bulk changes across multiple characters, ChatSetAttr provides flexible options to streamline your game management.";
     var sections = [
     	{
     		id: "basic-usage",
@@ -2435,7 +2477,7 @@ var ChatSetAttr = (function (exports) {
         return renderHelpHtml(loadHelpDocument(), handoutID);
     }
 
-    var updatedAt = 1781273463973;
+    var updatedAt = 1781300523076;
     var contentRevision = {
     	updatedAt: updatedAt
     };
@@ -3464,10 +3506,10 @@ var ChatSetAttr = (function (exports) {
             }
             const debugVersion = msg.content.startsWith("!setattrs-debugversion");
             if (debugVersion) {
-                log("ChatSetAttr: Debug - setting version to 1.10.");
+                log("ChatSetAttr: Debug - setting state schema version to 3.");
                 if (!state.ChatSetAttr)
                     state.ChatSetAttr = {};
-                state.ChatSetAttr.version = "1.10";
+                state.ChatSetAttr.version = 3;
                 return;
             }
             const isHelpMessage = checkHelpMessage(msg.content);
@@ -3534,15 +3576,14 @@ var ChatSetAttr = (function (exports) {
     }
 
     const v2_0 = {
-        appliesTo: "<=1.10",
-        version: "2.0",
+        appliesTo: "<=3",
+        version: 4,
         update: () => {
-            // Update state data
-            const config = getConfig();
-            config.version = "2.0";
-            config.playersCanTargetParty = true;
-            setConfig(config);
-            // Send message explaining update
+            setConfig({
+                version: 4,
+                playersCanTargetParty: true,
+                scriptVersion: scriptJson.version,
+            });
             const title = "ChatSetAttr Updated to Version 2.0";
             const content = createVersionMessage();
             sendNotification(title, content, false);
@@ -3561,23 +3602,19 @@ var ChatSetAttr = (function (exports) {
         setFlag("welcome");
     }
     function update() {
-        log("ChatSetAttr: Checking for updates...");
-        const config = getConfig();
-        let currentVersion = config.version || "1.10";
-        log(`ChatSetAttr: Current version: ${currentVersion}`);
-        if (currentVersion === 3) {
-            currentVersion = "1.10";
-        }
-        log(`ChatSetAttr: Normalized current version: ${currentVersion}`);
-        checkForUpdates(String(currentVersion));
+        log("ChatSetAttr: Checking for state schema updates...");
+        const currentSchemaVersion = getPersistedSchemaVersion();
+        log(`ChatSetAttr: Current state schema version: ${currentSchemaVersion}`);
+        checkForUpdates(currentSchemaVersion);
+        persistStateVersionMetadata();
     }
-    function checkForUpdates(currentVersion) {
-        for (const version of VERSION_HISTORY) {
-            log(`ChatSetAttr: Evaluating version update to ${version.version} (appliesTo: ${version.appliesTo})`);
-            const applies = version.appliesTo;
-            const versionString = applies.replace(/(<=|<|>=|>|=)/, "").trim();
-            const comparison = applies.replace(versionString, "").trim();
-            const compared = compareVersions(currentVersion, versionString);
+    function checkForUpdates(currentSchemaVersion) {
+        for (const migration of VERSION_HISTORY) {
+            log(`ChatSetAttr: Evaluating schema migration to ${migration.version} (appliesTo: ${migration.appliesTo})`);
+            const applies = migration.appliesTo;
+            const threshold = Number(applies.replace(/(<=|<|>=|>|=)/, "").trim());
+            const comparison = applies.replace(String(threshold), "").trim();
+            const compared = compareSchemaVersions(currentSchemaVersion, threshold);
             let shouldApply = false;
             switch (comparison) {
                 case "<=":
@@ -3597,35 +3634,27 @@ var ChatSetAttr = (function (exports) {
                     break;
             }
             if (shouldApply) {
-                version.update();
-                currentVersion = version.version;
-                updateVersionInState(currentVersion);
+                migration.update();
+                currentSchemaVersion = migration.version;
+                updateVersionInState(currentSchemaVersion);
             }
         }
     }
-    function compareVersions(v1, v2) {
-        const [major1, minor1 = 0, patch1 = 0] = v1.split(".").map(Number);
-        const [major2, minor2 = 0, patch2 = 0] = v2.split(".").map(Number);
-        if (major1 !== major2) {
-            return major1 - major2;
-        }
-        if (minor1 !== minor2) {
-            return minor1 - minor2;
-        }
-        return patch1 - patch2;
+    function compareSchemaVersions(current, threshold) {
+        return current - threshold;
     }
-    function updateVersionInState(newVersion) {
-        const config = getConfig();
-        config.version = newVersion;
-        setConfig(config);
+    function updateVersionInState(newSchemaVersion) {
+        setConfig({ version: newSchemaVersion });
     }
 
     on("ready", () => {
         checkGlobalConfig();
         registerHandlers();
         syncHelpHandoutOnStartup();
+        syncScriptVersion();
         update();
         welcome();
+        persistStateVersionMetadata();
     });
 
     exports.registerObserver = registerObserver;

@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { checkGlobalConfig, getConfig, setConfig } from "../../modules/config";
+import {
+  checkGlobalConfig,
+  getConfig,
+  getPersistedSchemaVersion,
+  getStateSchemaVersion,
+  persistStateVersionMetadata,
+  setConfig,
+  syncScriptVersion,
+} from "../../modules/config";
 
 const GLOBAL_CONFIG_LABELS = {
   playersCanModify: "Players can modify all characters",
@@ -28,6 +36,98 @@ describe("config", () => {
     };
   });
 
+  describe("getStateSchemaVersion", () => {
+    it("should return 0 for missing values", () => {
+      expect(getStateSchemaVersion(undefined)).toBe(0);
+      expect(getStateSchemaVersion(null)).toBe(0);
+    });
+
+    it("should return numeric schema versions as-is", () => {
+      expect(getStateSchemaVersion(3)).toBe(3);
+      expect(getStateSchemaVersion(4)).toBe(4);
+    });
+
+    it("should return numeric strings as schema versions", () => {
+      expect(getStateSchemaVersion("3")).toBe(3);
+      expect(getStateSchemaVersion("4")).toBe(4);
+    });
+
+    it("should return 0 for non-numeric version strings", () => {
+      expect(getStateSchemaVersion("1.10")).toBe(0);
+      expect(getStateSchemaVersion("2.0")).toBe(0);
+    });
+  });
+
+  describe("getPersistedSchemaVersion", () => {
+    it("should return 0 when version is missing", () => {
+      global.state.ChatSetAttr = {
+        flags: ["welcome"],
+        helpContentUpdatedAt: 123,
+      };
+      expect(getPersistedSchemaVersion()).toBe(0);
+    });
+
+    it("should return persisted schema version when present", () => {
+      global.state.ChatSetAttr = { version: 3 };
+      expect(getPersistedSchemaVersion()).toBe(3);
+
+      global.state.ChatSetAttr = { version: 4 };
+      expect(getPersistedSchemaVersion()).toBe(4);
+    });
+  });
+
+  describe("persistStateVersionMetadata", () => {
+    it("should persist only scriptVersion when schema version is missing", () => {
+      global.state.ChatSetAttr = {
+        flags: ["welcome"],
+        helpContentUpdatedAt: 1781273463973,
+        useWorkers: false,
+      };
+
+      persistStateVersionMetadata();
+
+      expect(Object.hasOwn(global.state.ChatSetAttr, "version")).toBe(false);
+      expect(global.state.ChatSetAttr.scriptVersion).toBe("2.0");
+    });
+
+    it("should persist normalized schema version and scriptVersion when version is stored as a string", () => {
+      global.state.ChatSetAttr = { version: "3" };
+
+      persistStateVersionMetadata();
+
+      expect(global.state.ChatSetAttr.version).toBe(3);
+      expect(global.state.ChatSetAttr.scriptVersion).toBe("2.0");
+    });
+
+    it("should persist scriptVersion when schema version is already stored", () => {
+      global.state.ChatSetAttr = { version: 4 };
+
+      persistStateVersionMetadata();
+
+      expect(global.state.ChatSetAttr.version).toBe(4);
+      expect(global.state.ChatSetAttr.scriptVersion).toBe("2.0");
+    });
+  });
+
+  describe("syncScriptVersion", () => {
+    it("should persist script.json version in state", () => {
+      global.state.ChatSetAttr = { scriptVersion: "1.10" };
+
+      syncScriptVersion();
+
+      expect(global.state.ChatSetAttr.scriptVersion).toBe("2.0");
+    });
+
+    it("should not write state when script version and schema version are already current", () => {
+      global.state.ChatSetAttr = { version: 4, scriptVersion: "2.0" };
+      const before = { ...global.state.ChatSetAttr };
+
+      syncScriptVersion();
+
+      expect(global.state.ChatSetAttr).toEqual(before);
+    });
+  });
+
   describe("getConfig", () => {
     it("should return default config when no state config exists", () => {
       // Clear the state entirely
@@ -36,7 +136,8 @@ describe("config", () => {
       const config = getConfig();
 
       expect(config).toEqual({
-        version: "2.0",
+        version: 4,
+        scriptVersion: "2.0",
         globalconfigCache: {
           lastsaved: 0
         },
@@ -56,7 +157,8 @@ describe("config", () => {
       const config = getConfig();
 
       expect(config).toEqual({
-        version: "2.0",
+        version: 4,
+        scriptVersion: "2.0",
         globalconfigCache: {
           lastsaved: 0
         },
@@ -75,7 +177,8 @@ describe("config", () => {
       const config = getConfig();
 
       expect(config).toEqual({
-        version: "2.0",
+        version: 4,
+        scriptVersion: "2.0",
         globalconfigCache: {
           lastsaved: 0
         },
@@ -97,7 +200,8 @@ describe("config", () => {
       const config = getConfig();
 
       expect(config).toEqual({
-        version: "2.0",
+        version: 4,
+        scriptVersion: "2.0",
         globalconfigCache: {
           lastsaved: 0
         },
@@ -125,6 +229,7 @@ describe("config", () => {
 
       expect(config).toEqual({
         version: 4,
+        scriptVersion: "2.0",
         globalconfigCache: {
           lastsaved: 1234567890
         },
@@ -149,7 +254,7 @@ describe("config", () => {
       expect(config.globalconfigCache).toEqual({
         lastsaved: 9876543210
       });
-      expect(config.version).toBe("2.0");
+      expect(config.version).toBe(4);
       expect(config.playersCanModify).toBe(false);
     });
 
@@ -163,7 +268,8 @@ describe("config", () => {
       const config = getConfig();
 
       expect(config).toEqual({
-        version: "2.0",
+        version: 4,
+        scriptVersion: "2.0",
         globalconfigCache: {
           lastsaved: 0
         },
@@ -487,7 +593,7 @@ describe("config", () => {
       expect(config.playersCanModify).toBe(true);
       expect(config.playersCanEvaluate).toBe(true);
       expect(config.useWorkers).toBe(false);
-      expect(config.version).toBe("2.0"); // Default value
+      expect(config.version).toBe(4); // Default value
     });
 
     it("should handle overriding previously set values", () => {

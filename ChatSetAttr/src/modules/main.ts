@@ -195,9 +195,9 @@ export function registerHandlers() {
     }
     const debugVersion = msg.content.startsWith("!setattrs-debugversion");
     if (debugVersion) {
-      log("ChatSetAttr: Debug - setting version to 1.10.");
+      log("ChatSetAttr: Debug - setting state schema version to 3.");
       if (!state.ChatSetAttr) state.ChatSetAttr = {};
-      state.ChatSetAttr.version = "1.10";
+      state.ChatSetAttr.version = 3;
       return;
     }
     const isHelpMessage = checkHelpMessage(msg.content);

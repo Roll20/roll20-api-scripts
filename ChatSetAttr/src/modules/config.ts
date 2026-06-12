@@ -1,8 +1,12 @@
+import scriptJson from "../../script.json" assert { type: "json" };
 import { getWhisperPrefix, sendNotification } from "./chat";
 import { createConfigMessage } from "../templates/config";
 
+export const STATE_SCHEMA_VERSION = 4;
+
 type ScriptConfig = {
-  version: number | string;
+  version: number;
+  scriptVersion: string;
   globalconfigCache: GlobalConfigCache;
   playersCanTargetParty: boolean;
   playersCanModify: boolean;
@@ -43,10 +47,9 @@ export const GLOBAL_CONFIG_OPTIONS = [
   },
 ] as const;
 
-const SCHEMA_VERSION = "2.0";
-
 const DEFAULT_CONFIG: ScriptConfig = {
-  version: SCHEMA_VERSION,
+  version: STATE_SCHEMA_VERSION,
+  scriptVersion: scriptJson.version,
   globalconfigCache: {
     lastsaved: 0,
   },
@@ -57,6 +60,51 @@ const DEFAULT_CONFIG: ScriptConfig = {
   helpContentUpdatedAt: 0,
   flags: [],
 };
+
+export function getStateSchemaVersion(raw: unknown): number {
+  if (raw === undefined || raw === null) {
+    return 0;
+  }
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw;
+  }
+  if (typeof raw === "string") {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && /^\d+$/.test(raw.trim())) {
+      return parsed;
+    }
+    return 0;
+  }
+  return 0;
+}
+
+function ensureChatSetAttrState(): Record<string, unknown> {
+  if (!state.ChatSetAttr) {
+    state.ChatSetAttr = {};
+  }
+  return state.ChatSetAttr;
+}
+
+export function getPersistedSchemaVersion(): number {
+  return getStateSchemaVersion(state.ChatSetAttr?.version);
+}
+
+export function persistStateVersionMetadata(): void {
+  const raw = ensureChatSetAttrState();
+  const schemaVersion = getStateSchemaVersion(raw.version);
+
+  if (schemaVersion > 0 && raw.version !== schemaVersion) {
+    raw.version = schemaVersion;
+  }
+
+  if (!Object.hasOwn(raw, "scriptVersion") || raw.scriptVersion !== scriptJson.version) {
+    raw.scriptVersion = scriptJson.version;
+  }
+}
+
+export function syncScriptVersion(): void {
+  persistStateVersionMetadata();
+}
 
 export function parseGlobalConfigCheckbox(
   g: GlobalConfigRecord,
@@ -127,11 +175,7 @@ export function getConfig() {
 };
 
 export function setConfig(newConfig: Record<string, unknown>) {
-  const stateConfig = state.ChatSetAttr || {};
-  state.ChatSetAttr = {
-    ...stateConfig,
-    ...newConfig,
-  };
+  Object.assign(ensureChatSetAttrState(), newConfig);
 };
 
 export function hasFlag(flag: string) {

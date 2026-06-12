@@ -43,7 +43,11 @@ export function createConfigMessage(): string {
   const config = getConfig();
   const configEntries = Object.entries(config);
   const relevantEntries = configEntries.filter(([key]) =>
-    key !== "version" && key !== "globalconfigCache" && key !== "flags"
+    key !== "version"
+    && key !== "scriptVersion"
+    && key !== "globalconfigCache"
+    && key !== "flags"
+    && key !== "helpContentUpdatedAt"
   );
   return (
     <div style={CONFIG_WRAPPER_STYLE}>

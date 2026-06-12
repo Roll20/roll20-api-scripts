@@ -1,6 +1,6 @@
 /* eslint-disable @stylistic/quotes */
 import { describe, it, expect } from "vitest";
-import { h, s } from "../../utils/chat";
+import { h, rawHtml, s } from "../../utils/chat";
 
 describe("chat utilities", () => {
   describe("h function (JSX helper)", () => {
@@ -232,6 +232,19 @@ describe("chat utilities", () => {
         const result = h("div", {}, children);
         expect(result.html).toBe("<div>StartEnd</div>");
       });
+    });
+  });
+
+  describe("rawHtml", () => {
+    it("should render SafeHtml children without escaping", () => {
+      const result = h("div", {}, rawHtml("<p>Hello</p>"));
+      expect(result.html).toBe("<div><p>Hello</p></div>");
+    });
+
+    it("should preserve multiple HTML elements when embedded in JSX", () => {
+      const fragment = rawHtml("<p>Line 1</p><p>Line 2</p>");
+      const result = h("div", {}, fragment);
+      expect(result.html).toBe("<div><p>Line 1</p><p>Line 2</p></div>");
     });
   });
 

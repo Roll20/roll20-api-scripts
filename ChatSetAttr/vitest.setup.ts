@@ -30,7 +30,8 @@ global.executeCommand = simulateChatMessage;
 // region State
 global.state = {
   ChatSetAttr: {
-    version: "1.10",
+    version: 4,
+    scriptVersion: "2.0",
     playersCanModify: true,
     playersCanEvaluate: true,
     useWorkers: true

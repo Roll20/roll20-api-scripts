@@ -1,19 +1,19 @@
+import scriptJson from "../../script.json" assert { type: "json" };
 import { sendNotification } from "../modules/chat";
-import { getConfig, setConfig } from "../modules/config";
+import { setConfig } from "../modules/config";
 import { createVersionMessage } from "../templates/versions/2.0.0";
 import type { VersionObject } from "../types";
 
 export const v2_0: VersionObject = {
-  appliesTo: "<=1.10",
-  version: "2.0",
+  appliesTo: "<=3",
+  version: 4,
   update: () => {
-    // Update state data
-    const config = getConfig();
-    config.version = "2.0";
-    config.playersCanTargetParty = true;
-    setConfig(config);
+    setConfig({
+      version: 4,
+      playersCanTargetParty: true,
+      scriptVersion: scriptJson.version,
+    });
 
-    // Send message explaining update
     const title = "ChatSetAttr Updated to Version 2.0";
     const content = createVersionMessage();
 

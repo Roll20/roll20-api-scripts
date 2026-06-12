@@ -10,7 +10,7 @@ declare global {
   var libUUID: { generateRowID(): string; generateUUID(): string };
   /** Roll20 Mod API persistent script state. */
   var state: {
-    ChatSetAttr?: Record<string, unknown> & { version?: string };
+    ChatSetAttr?: Record<string, unknown> & { version?: number | string; scriptVersion?: string };
     [key: string]: unknown;
   };
   /** Roll20 One-Click script page configuration. */

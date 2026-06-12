@@ -153,24 +153,18 @@ export const ALIAS_CHARACTERS: Record<string, string> = {
 
 // #region Versioning
 
-export type VersionString =
-  `${number}.${number}` |
-  `${number}.${number}.${number}` |
-  `${number}.${number}${string | ""}` |
-  `${number}.${number}.${number}${string | ""}`;
-
-export type VersionComparison =
+export type SchemaVersionComparison =
   "<=" |
   "<" |
   ">=" |
   ">" |
   "=" ;
 
-export type VersionAppliesTo = `${VersionComparison}${VersionString}`;
+export type SchemaVersionAppliesTo = `${SchemaVersionComparison}${number}`;
 
 export type VersionObject = {
-  appliesTo: VersionAppliesTo;
-  version: VersionString;
+  appliesTo: SchemaVersionAppliesTo;
+  version: number;
   update: () => void;
 };
 

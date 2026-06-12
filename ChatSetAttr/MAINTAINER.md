@@ -132,33 +132,49 @@ Before publishing a new build to Roll20:
 5. Confirm `script.json` `version` matches the intended release
 6. Upload the appropriate `ChatSetAttr.js` (or update the One-Click script source)
 
-## Adding a new script version
+## State schema vs script version
 
-Version migrations run automatically on API `ready` via [`src/modules/versioning.ts`](src/modules/versioning.ts). Each migration is a `VersionObject` with:
+Two separate version concepts exist:
 
-- `appliesTo` — comparison against the stored version (e.g. `"<=1.10"`, `"<2.0"`)
-- `version` — version string written to state after the migration runs
-- `update` — function that performs one-time upgrade work (state changes, notifications, etc.)
+| Field | Meaning | Example |
+|-------|---------|---------|
+| `state.ChatSetAttr.version` | **State schema** layout revision (integer) | `3` in 1.x, `4` in 2.0 |
+| `script.json` `version` | **Script release** shown in logs and One-Click | `"2.0"` |
+| `state.ChatSetAttr.scriptVersion` | Last seen script release (synced on startup) | `"2.0"` |
 
-To add a new version (for example 2.1):
+1.x wrote `state.ChatSetAttr.version = 3` when the state layout changed. 2.0 uses schema `4` for its expanded config (`playersCanTargetParty`, `flags`, `helpContentUpdatedAt`, etc.). Do not store the script release string in `version`.
+
+`getStateSchemaVersion()` in [`src/modules/config.ts`](src/modules/config.ts) reads the persisted numeric schema from `state.ChatSetAttr.version`. Missing or invalid values map to `0`. Migrations run when the persisted schema is `0` or `<=3`.
+
+## Adding a new state schema or script release
+
+State migrations run on API `ready` via [`src/modules/versioning.ts`](src/modules/versioning.ts). Each `VersionObject` in `VERSION_HISTORY` has:
+
+- `appliesTo` — comparison against the **state schema** (e.g. `"<=3"`, `"<5"`)
+- `version` — target schema number written to `state.ChatSetAttr.version` after migration
+- `update` — one-time upgrade work (state changes, GM notification, etc.)
+
+To add a new schema revision (for example schema `5` with script release `2.1`):
 
 1. **Bump `script.json`** — set `"version"` to the new release string.
 
-2. **Create a version module** — add `src/versions/2.1.0.ts` exporting a `VersionObject`. Follow the pattern in [`src/versions/2.0.0.ts`](src/versions/2.0.0.ts): migrate `state.ChatSetAttr` as needed and optionally notify GMs.
+2. **Bump `STATE_SCHEMA_VERSION`** in [`src/modules/config.ts`](src/modules/config.ts) and extend `DEFAULT_CONFIG` if new fields are added.
 
-3. **Create an update message template** (optional) — add `src/templates/versions/2.1.0.tsx` for the in-game changelog HTML, similar to [`src/templates/versions/2.0.0.tsx`](src/templates/versions/2.0.0.tsx).
+3. **Create a migration module** — add `src/versions/2.1.0.ts` exporting a `VersionObject` with `appliesTo: "<=4"` and `version: 5`. Follow [`src/versions/2.0.0.ts`](src/versions/2.0.0.ts).
 
-4. **Register the migration** — import the new object and append it to `VERSION_HISTORY` in `src/modules/versioning.ts`. Order matters: migrations are evaluated sequentially.
+4. **Create an update message template** (optional) — add `src/templates/versions/2.1.0.tsx` for in-game changelog HTML.
 
-5. **Update default config** if new options are added — extend `DEFAULT_CONFIG` and `GLOBAL_CONFIG_OPTIONS` in [`src/modules/config.ts`](src/modules/config.ts), and add matching `useroptions` entries in `script.json` when appropriate.
+5. **Register the migration** — append to `VERSION_HISTORY` in [`src/modules/versioning.ts`](src/modules/versioning.ts). Order matters.
 
-6. **Add tests** — cover migration logic and any new config flags in `src/__tests__/unit/`.
+6. **Add tests** — cover `getStateSchemaVersion`, migration gating, and new config fields.
 
 7. **Update user docs** — edit `docs/help/content.json`, then `npm run docs:generate`.
 
 8. **Build and verify** — `npm run test:run && npm run build`.
 
-On first load after upgrade, campaigns whose `state.ChatSetAttr.version` satisfies `appliesTo` will run the migration once and advance the stored version.
+`syncScriptVersion()` runs on every `ready` and updates `scriptVersion` from `script.json` without triggering migrations.
+
+Use `!setattrs-debugversion` in-game to reset `state.ChatSetAttr.version` to `3` for migration testing.
 
 ## Configuration and state
 

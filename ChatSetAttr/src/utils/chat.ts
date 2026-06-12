@@ -24,6 +24,10 @@ export class SafeHtml {
   constructor(public readonly html: string) {}
 }
 
+export function rawHtml(html: string): SafeHtml {
+  return new SafeHtml(html);
+}
+
 function renderChild(child: Child): string {
   if (child instanceof SafeHtml) {
     return child.html;
