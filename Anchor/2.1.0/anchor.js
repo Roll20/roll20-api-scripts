@@ -2135,6 +2135,41 @@ var Anchor = Anchor || (() => {
                 fn: (token) => { const s = getScale(token); return s ? s[1] : 1; },
             });
 
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'flipV', namespace: 'anchor',
+                description: 'Flipped vertically relative to anchor',
+                returns: 'boolean',
+                fn: (token) => { const v = getFlipV(token); return v !== undefined ? v : false; },
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'flipH', namespace: 'anchor',
+                description: 'Flipped horizontally relative to anchor',
+                returns: 'boolean',
+                fn: (token) => { const v = getFlipH(token); return v !== undefined ? v : false; },
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'zOffset', namespace: 'anchor',
+                description: 'Z-order offset relative to anchor',
+                returns: 'number',
+                fn: (token) => getZOffset(token),
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'locked', namespace: 'anchor',
+                description: 'Locked component names',
+                returns: 'string[]',
+                fn: (token) => getLocked(token),
+            });
+
+            Choreograph.registerTokenVariable(SCRIPT_NAME, {
+                name: 'unlocked', namespace: 'anchor',
+                description: 'Tracked but unlocked component names',
+                returns: 'string[]',
+                fn: (token) => getUnlocked(token),
+            });
+
             // Functions returning token arrays
             Choreograph.registerTokenVariable(SCRIPT_NAME, {
                 name: 'siblings', namespace: 'anchor',
