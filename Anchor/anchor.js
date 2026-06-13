@@ -1502,7 +1502,9 @@ var Anchor = Anchor || (() => {
             // Only skip the first otherArg as a potential anchor ID when we're
             // establishing a new anchor relationship AND it's actually a valid graphic.
             // If there's no valid graphic as the first arg, all otherArgs are child IDs.
-            const isNewAnchor = Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.size === 0;
+            const ACTION_FLAGS = ['remove', 'lock', 'unlock', 'center', 'update', 'info', 'track', 'untrack', 'retrack'];
+            const hasAction = ACTION_FLAGS.some(f => flags.has(f));
+            const isNewAnchor = !hasAction && (Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.size === 0);
             const firstArgIsAnchor = isNewAnchor &&
                 !flags.has('remove') &&
                 otherArgs.length > 0 &&
