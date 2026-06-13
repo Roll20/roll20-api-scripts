@@ -1,6 +1,6 @@
 # Anchor
 
-Attach child tokens to an anchor token so they automatically follow its position, rotation, scale, layer, and flip. When the anchor moves or transforms, all anchored children update to maintain their stored relative transform. Anchor chains are supported — a child can itself be an anchor to grandchildren.
+Attach child tokens to an anchor token so they automatically follow its position, rotation, scale, and flip. When the anchor moves or transforms, all anchored children update to maintain their stored relative transform. Anchor chains are supported — a child can itself be an anchor to grandchildren.
 
 **Requires:** [MatrixMath](https://github.com/Roll20/roll20-api-scripts/tree/master/MatrixMath)
 
@@ -48,14 +48,14 @@ All commands accept `[ignore-selected]` to skip the current token selection, and
 
 Anchor selected/listed tokens to `anchor_id`. If `anchor_id` is omitted or not a valid token, an invisible anchor token is auto-created at the first child's position. The auto-created token is destroyed automatically when its last child is removed. Add `persist` to keep it even when childless.
 
-**Default components** (when no flags given): position, rotation, scale, width, height, layer, flipv, fliph.
+**Default components** (when no flags given): position, rotation, scale, width, height, flipv, fliph.
 
 **Component flags** — long form or short alias:
 
 | Long form | Short alias | Components |
 |-----------|-------------|------------|
-| `anchor-all` | `-all` | Everything including z-order |
-| `anchor` | *(bare flag)* | All defaults (no z-order) |
+| `anchor-all` | `-all` | Everything including layer and z-order |
+| `anchor` | *(bare flag)* | All defaults (no layer or z-order) |
 | `anchor-position` | `-pos` | x + y |
 | `anchor-x` | `-x` | x position only |
 | `anchor-y` | `-y` | y position only |

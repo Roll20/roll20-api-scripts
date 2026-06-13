@@ -5,7 +5,7 @@
 //
 // Description:
 //   Attach child graphics to an anchor graphic so they automatically mirror
-//   the anchor's transform (position, rotation, scale, layer, flip).
+//   the anchor's transform (position, rotation, scale, flip).
 //   Supports arbitrary chains: a child can itself be an anchor to grandchildren.
 //
 // Dependencies: MatrixMath
@@ -14,7 +14,7 @@
 //   !anchor [<anchor_id>] [flags...] [ignore-selected] [<child_id>...]
 //     Anchor selected token(s) (and any listed IDs) to anchor_id.
 //     By default anchors all transform components (position, rotation, scale,
-//     layer, flipv, fliph).
+//     flipv, fliph).
 //     If anchor_id is omitted or not a valid token ID, an invisible anchor
 //     token is automatically created at the first child's position and
 //     auto-destroyed when its last child is removed. Add persist to keep it:
@@ -22,7 +22,7 @@
 //
 //   Component flags — long form (anchor-<name>) or short alias (-<name>):
 //     anchor-all / -all      = every component including z-order
-//     anchor / (no flags)    = default: pos+rot+scale+layer+flip (no z-order)
+//     anchor / (no flags)    = default: pos+rot+scale+flip (no layer or z-order)
 //     anchor-position / -pos = x + y
 //     anchor-x / -x          = x position only
 //     anchor-y / -y          = y position only
@@ -139,10 +139,10 @@ var Anchor = Anchor || (() => {
     };
 
     // Components included in the default set (everything except zorder).
-    const DEFAULT_COMPONENTS = ['left','top','rotation','width','height','layer','flipv','fliph'];
+    const DEFAULT_COMPONENTS = ['left','top','rotation','width','height','flipv','fliph'];
 
-    // All components including zorder.
-    const ALL_COMPONENTS = [...DEFAULT_COMPONENTS, 'zorder'];
+    // All components including layer and zorder.
+    const ALL_COMPONENTS = [...DEFAULT_COMPONENTS, 'layer', 'zorder'];
 
     // Long-form command flags that expand to component sets.
     // Short aliases (e.g. -x, -rot) map to the same expansions via ALIAS_MAP below.
@@ -775,7 +775,14 @@ var Anchor = Anchor || (() => {
         }
 
         if ('layerOffset' in info && shouldApply('layer')) {
-            updates.layer = anchor.get('layer');
+            // Only propagate layer when it has actually changed on the anchor
+            // (not on every positional update). This prevents auto-created anchors
+            // on the GM layer from pulling children to that layer.
+            const prevState = s.objectStates[info.anchor_id];
+            const anchorLayer = anchor.get('layer');
+            if (prevState && prevState.layer !== anchorLayer) {
+                updates.layer = anchorLayer;
+            }
         }
 
         if ('flipv' in info && shouldApply('flipv')) {
@@ -1094,7 +1101,7 @@ var Anchor = Anchor || (() => {
         'anchor-rotation, anchor-scale, anchor-width, anchor-height, anchor-layer,',
         'anchor-flip, anchor-flipv, anchor-fliph, anchor-z',
         'Short aliases: -all, -pos, -x, -y, -rot, -scale, -w, -h, -layer, -flip, -flipv, -fliph, -z',
-        'Default (no flags): position+rotation+scale+layer+flip. anchor-all/-all adds z-order.',
+        'Default (no flags): position+rotation+scale+flip. anchor-all/-all adds layer+z-order.',
         '',
         'Add <b>persist</b> flag to keep an auto-created anchor token even when childless.',
         '',
@@ -2048,7 +2055,7 @@ var Anchor = Anchor || (() => {
                 hh = createObj('handout', { name: helpName, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
             }
             let html = `<h1>${SCRIPT_NAME} v${SCRIPT_VERSION}</h1>`;
-            html += `<p>Attach child tokens to an anchor token so they automatically follow its position, rotation, scale, layer, and flip.</p>`;
+            html += `<p>Attach child tokens to an anchor token so they automatically follow its position, rotation, scale, and flip. Layer and z-order tracking are opt-in via flags.</p>`;
             html += `<h2>Commands</h2>`;
             html += `<ul>`;
             html += `<li><code>!anchor [anchor_id] [flags]</code> — Anchor selected tokens</li>`;
