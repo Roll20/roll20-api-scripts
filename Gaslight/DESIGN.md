@@ -147,12 +147,25 @@ No state changes are made. Use before `split` to verify setup.
 
 **Always sync** (hardcoded): left, top, rotation, width, height
 
-**Configurable sync** (per-character via `gaslight_sync` attribute, comma-separated):
-- `side` -- multi-sided token current side index (`currentSide`). Each page's token can have different images in its sides list but stay on the same frame index.
+### Configurable Sync Properties
+
+Controlled by the `gaslight_sync` character attribute (v2):
+
+- **No attribute present** → sync `base` (default behavior)
+- **Attribute present, empty value** → sync nothing (linked for identity tracking only, effectively excluded from sync)
+- **Attribute with values** → sync only the listed properties (comma-separated)
+
+Available sync properties:
+- `base` -- shorthand for left, top, rotation, width, height
+- `left`, `top`, `rotation`, `width`, `height` -- individual position/size
+- `side` -- multi-sided token current side index (`currentSide`)
 - `light` -- light emission (radius, dimradius, angle, otherplayers)
-- `statusmarkers` -- conditions visible to all (all-or-nothing in v1)
-- `bar1`, `bar2`, `bar3` -- HP/resource values visible to all
-- `layer` -- if GM hides a token, hide everywhere
+- `statusmarkers` -- conditions (all-or-nothing in v1; per-marker in v2+)
+- `bar1`, `bar2`, `bar3` -- HP/resource values
+- `layer` -- visibility layer
+- `opacity` -- token opacity (baseOpacity)
+
+Example: `gaslight_sync = "base, light, opacity"` syncs position + light + opacity.
 
 **Sight rules** (hardcoded logic):
 - Child/peer tokens have sight stripped by default

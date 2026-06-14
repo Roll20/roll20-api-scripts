@@ -544,12 +544,9 @@ var Gaslight = Gaslight || (() => {
     // GM Override
     // =========================================================================
 
-    var propagatingIds = new Set();
-
     const onGraphicChanged = (obj) => {
         if (typeof Anchor === 'undefined') return;
         const tokenId = obj.get('id');
-        if (propagatingIds.has(tokenId)) return;
         const s = state[SCRIPT_NAME];
         const pageId = obj.get('_pageid');
 
@@ -564,14 +561,12 @@ var Gaslight = Gaslight || (() => {
         if (anchor.get('_pageid') === pageId) return;
 
         // GM moved a child on master — set parent to match child's new position
-        propagatingIds.add(tokenId);
         anchor.set({
             left: obj.get('left'),
             top: obj.get('top'),
             rotation: obj.get('rotation')
         });
         Anchor.updateObj(anchor);
-        propagatingIds.delete(tokenId);
     };
 
     // =========================================================================
@@ -791,21 +786,6 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Unlink', tokens.length + ' token(s) unlinked.');
     };
 
-    const logAllConfigs = () => {
-        setTimeout(function() {
-            const pages = findObjs({ _type: 'page' });
-            log(SCRIPT_NAME + ': --- All Gaslight configs ---');
-            pages.forEach(function(page) {
-                var configs = getConfigsOnPage(page.get('_id'));
-                if (configs.length === 0) return;
-                configs.forEach(function(c) {
-                    log(SCRIPT_NAME + ':   Page "' + page.get('name') + '" (' + page.get('_id') + '): ' + JSON.stringify(c.data));
-                });
-            });
-            log(SCRIPT_NAME + ': --- End configs ---');
-        }, 1000);
-    };
-
     const doGroup = (msg, args) => {
         if (args.length < 2) { reply(msg, 'Error', 'Usage: !gaslight group &lt;group&gt; &lt;player|GM&gt;'); return; }
         const groupName = args.shift();
@@ -825,7 +805,6 @@ var Gaslight = Gaslight || (() => {
         }
         setConfigOnPage(pageId, groupName, configData);
         reply(msg, 'Config', 'Page "' + pageName + '" (' + pageId + ') assigned to group "' + groupName + '" for ' + resolved.name + '.');
-        logAllConfigs();
     };
 
     const doStatus = (msg) => {
@@ -889,8 +868,7 @@ var Gaslight = Gaslight || (() => {
                 if (cfg) { cfg.obj.remove(); removed++; }
             });
             reply(msg, 'Ungroup', 'Removed all ' + removed + ' config(s) for group "' + groupName + '".');
-            logAllConfigs();
-            return;
+                return;
         }
 
         var playerArg = args.join(' ').replace(/^["']|["']$/g, '');
@@ -938,7 +916,6 @@ var Gaslight = Gaslight || (() => {
         if (!found) {
             reply(msg, 'Error', 'No config found for "' + playerArg + '" in group "' + groupName + '".');
         }
-        logAllConfigs();
     };
 
     const checkDanglingGroups = () => {
@@ -948,8 +925,13 @@ var Gaslight = Gaslight || (() => {
             if (!entry[1].master) dangling.push(entry[0]);
         });
         if (dangling.length > 0) {
-            sendChat(SCRIPT_NAME, '/w gm ⚠️ Dangling groups with no master page: <b>' +
-                dangling.join(', ') + '</b>. Use <code>!gaslight ungroup &lt;group&gt; --all</code> to clean up, or <code>!gaslight master &lt;group&gt;</code> to assign a master.');
+            var out = '⚠️ Dangling groups with no master page:<br>';
+            dangling.forEach(function(gn) {
+                out += '<b>' + gn + '</b>: ';
+                out += '<code>!gaslight ungroup ' + gn + ' --all</code> to remove, or ';
+                out += '<code>!gaslight group ' + gn + ' GM</code> to assign a master.<br>';
+            });
+            sendChat(SCRIPT_NAME, '/w gm ' + out);
         }
     };
 
