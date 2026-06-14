@@ -1,0 +1,20 @@
+{
+    "name": "Gaslight",
+    "script": "Gaslight.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "Per-player map perception. Split players onto individual copies of a page with tokens synchronized via Anchor. Each player can see different things (different token art, names, hidden tokens) while token movement stays consistent across all copies.\n\nUse cases: illusions, shapechangers, stealth/perception, madness/hallucinations, secrets.\n\nCommands:\n- `!gaslight split <group>` -- Activate a gaslight group (test-first)\n- `!gaslight merge [group]` -- Tear down links, return players\n- `!gaslight test <group>` -- Dry-run linking resolution\n- `!gaslight link [name|new] [ids...]` -- Manually link tokens\n- `!gaslight unlink [ids...]` -- Remove links\n- `!gaslight group <group> <player|GM>` -- Assign page to group\n- `!gaslight ungroup <group> <player|GM|--all>` -- Remove page from group\n- `!gaslight status` -- Show current state\n- `!gaslight --help` -- Command reference",
+    "authors": "Kenan Millet",
+    "roll20userid": "2614613",
+    "dependencies": ["Anchor"],
+    "modifies": {
+        "graphic": "read, write",
+        "text": "read, write",
+        "character": "read",
+        "attribute": "read",
+        "campaign": "read, write",
+        "page": "read"
+    },
+    "conflicts": [],
+    "useroptions": []
+}
