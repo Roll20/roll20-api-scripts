@@ -61,11 +61,17 @@ if (explicitVersion) {
   }
 }
 
-// Append current version to history (oldest-first, matching Roll20 corpus convention),
-// deduplicate (handles building the same explicit version twice), then keep the last 5.
-scriptJson.previousversions = [
-  ...new Set([...(scriptJson.previousversions || []), scriptJson.version]),
-].slice(-5);
+const isPrerelease = (version) => version.includes('-');
+
+// Append current stable version to history (oldest-first, matching Roll20
+// corpus convention), deduplicate (handles building the same explicit version
+// twice), then keep the last 5. Prerelease versions are intentionally skipped.
+const historySeed = (scriptJson.previousversions || []).filter((v) => !isPrerelease(v));
+const nextHistory = isPrerelease(scriptJson.version)
+  ? historySeed
+  : [...new Set([...historySeed, scriptJson.version])].slice(-5);
+
+scriptJson.previousversions = nextHistory;
 scriptJson.version = nextVersion;
 packageJson.version = nextVersion;
 
