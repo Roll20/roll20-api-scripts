@@ -704,13 +704,11 @@ var Gaslight = Gaslight || (() => {
         if (args.length < 1) { reply(msg, 'Error', 'Usage: !gaslight setup &lt;group_name&gt; [--selected | player names...]'); return; }
         var groupName = args.shift();
 
-        // Determine players
-        var useSelected = args.indexOf('--selected') !== -1;
-        args = args.filter(function(a) { return a !== '--selected'; });
-
+        // Determine players: selected tokens + named args, fallback to party tags
         var playerIds = [];
-        if (useSelected && msg.selected && msg.selected.length > 0) {
-            // Get players from selected tokens' character controllers
+
+        // From selected tokens
+        if (msg.selected && msg.selected.length > 0) {
             msg.selected.forEach(function(sel) {
                 var obj = getObj(sel._type, sel._id);
                 if (!obj) return;
@@ -725,16 +723,18 @@ var Gaslight = Gaslight || (() => {
                     });
                 }
             });
-        } else if (args.length > 0) {
-            // Resolve player names
-            args.forEach(function(name) {
-                var resolved = resolvePlayer(msg, name, CMD + ' setup ' + groupName);
-                if (resolved && resolved !== 'ambiguous' && resolved.id !== 'GM') {
-                    if (playerIds.indexOf(resolved.id) === -1) playerIds.push(resolved.id);
-                }
-            });
-        } else {
-            // Fallback: party-tagged characters
+        }
+
+        // From named args
+        args.forEach(function(name) {
+            var resolved = resolvePlayer(msg, name, CMD + ' setup ' + groupName);
+            if (resolved && resolved !== 'ambiguous' && resolved.id !== 'GM') {
+                if (playerIds.indexOf(resolved.id) === -1) playerIds.push(resolved.id);
+            }
+        });
+
+        // Fallback: party-tagged characters (only if no selected and no args)
+        if (playerIds.length === 0) {
             var characters = findObjs({ _type: 'character' });
             characters.forEach(function(c) {
                 var tags = c.get('tags') || '';
