@@ -163,139 +163,180 @@ function buildDeckTabs(activeView, lang) {
 // Section renderers
 // ---------------------------------------------------------------------------
 
+/**
+ * Builds the quick-actions section with preset scaling and boss buttons.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildQuickActionsSection(lang) {
-  const parts = [
+  const partyPresetButtons = Object.entries(PARTY_PRESETS).map(([key, preset]) =>
+    btn(preset.label, `${COMMAND} scale preset ${key}`)
+  );
+  const bossPresetButtons = Object.entries(BOSS_PRESETS).map(([key, preset]) =>
+    btn(preset.label, `${COMMAND} boss ${key}`)
+  );
+
+  return [
     section(t('ui.quickActions', lang)),
     desc(t('ui.quickActionsDesc', lang)),
     `<div style="${SECTION_BODY}"><div>`,
-  ];
-  for (const [key, preset] of Object.entries(PARTY_PRESETS)) {
-    parts.push(btn(preset.label, `${COMMAND} scale preset ${key}`));
-  }
-  parts.push('</div><div style="margin-top:3px">');
-  for (const [key, preset] of Object.entries(BOSS_PRESETS)) {
-    parts.push(btn(preset.label, `${COMMAND} boss ${key}`));
-  }
-  parts.push('</div></div>');
-  return parts.join('');
+    ...partyPresetButtons,
+    '</div><div style="margin-top:3px">',
+    ...bossPresetButtons,
+    '</div></div>',
+  ].join('');
 }
 
+/**
+ * Builds the party scaling section with preset and party-size controls.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildPartyScalingSection(lang) {
-  const parts = [
+  const presetButtons = Object.entries(PARTY_PRESETS).map(([key, preset]) =>
+    btn(preset.label, `${COMMAND} scale preset ${key}`)
+  );
+  const sizeButtons = [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20].map((size) =>
+    btn(String(size), `${COMMAND} scale party ${size}`, true)
+  );
+
+  return [
     section(t('ui.partyScaling', lang)),
     desc(t('ui.partyScalingDesc', lang)),
     `<div style="${SECTION_BODY}">`,
-  ];
-  parts.push('<div style="margin-bottom:3px">');
-  for (const [key, preset] of Object.entries(PARTY_PRESETS)) {
-    parts.push(btn(preset.label, `${COMMAND} scale preset ${key}`));
-  }
-  parts.push('</div>');
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-bottom:2px">${escapeHtml(t('ui.partySizeLabel', lang))}</div>`
-  );
-  parts.push('<div>');
-  for (const size of [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20]) {
-    parts.push(btn(String(size), `${COMMAND} scale party ${size}`, true));
-  }
-  parts.push('</div></div>');
-  return parts.join('');
+    '<div style="margin-bottom:3px">',
+    ...presetButtons,
+    '</div>',
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-bottom:2px">${escapeHtml(t('ui.partySizeLabel', lang))}</div>`,
+    '<div>',
+    ...sizeButtons,
+    '</div></div>',
+  ].join('');
 }
 
+/**
+ * Builds the custom scaling section for HP/AC/damage adjustments.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildCustomScalingSection(lang) {
-  const parts = [
+  const hpButtons = [25, 50, 75, 100, 125, 150, 175, 200, 300].map((pct) =>
+    btn(`${pct}%`, `${COMMAND} scale hp ${pct}`, pct === 100)
+  );
+  const acButtons = [-3, -2, -1, 0, 1, 2, 3, 4, 5].map((mod) => {
+    const label = mod >= 0 ? `+${mod}` : String(mod);
+    return btn(label, `${COMMAND} scale ac ${mod}`, mod === 0);
+  });
+  const damageButtons = [50, 75, 100, 125, 150, 200].map((pct) =>
+    btn(`${pct}%`, `${COMMAND} scale damage ${pct}`, pct === 100)
+  );
+
+  return [
     section(t('ui.customScaling', lang)),
     desc(t('ui.customScalingDesc', lang)),
     `<div style="${SECTION_BODY}">`,
-  ];
-
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('ui.hpPercentLabel', lang))}</div><div>`
-  );
-  for (const pct of [25, 50, 75, 100, 125, 150, 175, 200, 300]) {
-    parts.push(btn(`${pct}%`, `${COMMAND} scale hp ${pct}`, pct === 100));
-  }
-  parts.push('</div>');
-
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.acModLabel', lang))}</div><div>`
-  );
-  for (const mod of [-3, -2, -1, 0, 1, 2, 3, 4, 5]) {
-    const label = mod >= 0 ? `+${mod}` : String(mod);
-    parts.push(btn(label, `${COMMAND} scale ac ${mod}`, mod === 0));
-  }
-  parts.push('</div>');
-
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.damagePercentLabel', lang))}</div><div>`
-  );
-  for (const pct of [50, 75, 100, 125, 150, 200]) {
-    parts.push(btn(`${pct}%`, `${COMMAND} scale damage ${pct}`, pct === 100));
-  }
-  parts.push('</div>');
-
-  parts.push('</div>');
-  return parts.join('');
+    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('ui.hpPercentLabel', lang))}</div><div>`,
+    ...hpButtons,
+    '</div>',
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.acModLabel', lang))}</div><div>`,
+    ...acButtons,
+    '</div>',
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('ui.damagePercentLabel', lang))}</div><div>`,
+    ...damageButtons,
+    '</div>',
+    '</div>',
+  ].join('');
 }
 
+/**
+ * Builds the boss tools section.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildBossToolsSection(lang) {
-  const parts = [
+  const bossButtons = Object.entries(BOSS_PRESETS).map(([key, preset]) =>
+    btn(preset.label, `${COMMAND} boss ${key}`)
+  );
+
+  return [
     section(t('ui.bossTools', lang)),
     desc(t('ui.bossToolsDesc', lang)),
     `<div style="${SECTION_BODY}"><div>`,
-  ];
-  for (const [key, preset] of Object.entries(BOSS_PRESETS)) {
-    parts.push(btn(preset.label, `${COMMAND} boss ${key}`));
-  }
-  parts.push('</div>');
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.75em;margin-top:2px">${escapeHtml(t('ui.bossPresetHint', lang))}</div>`
-  );
-  parts.push('</div>');
-  return parts.join('');
+    ...bossButtons,
+    '</div>',
+    `<div style="color:${COLOR_MUTED};font-size:0.75em;margin-top:2px">${escapeHtml(t('ui.bossPresetHint', lang))}</div>`,
+    '</div>',
+  ].join('');
 }
 
+/**
+ * Builds reinforcement controls for duplication and numbering.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildReinforcementsSection(lang) {
-  const parts = [
+  const duplicateButtons = DUPLICATE_OPTIONS.map((count) =>
+    btn(`×${count}`, `${COMMAND} reinforce duplicate ${count}`)
+  );
+  const customDuplicateButton = btn(
+    t('ui.customDuplicate', lang),
+    `${COMMAND} reinforce duplicate ?{Copies|3}`
+  );
+  const autoNumberButton = btn(t('ui.autoNumber', lang), `${COMMAND} reinforce enumerate`, true);
+
+  return [
     section(t('ui.reinforcements', lang)),
     desc(t('ui.reinforcementsDesc', lang)),
     `<div style="${SECTION_BODY}">`,
-  ];
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('ui.duplicateSelected', lang))}</div><div>`
-  );
-  for (const count of DUPLICATE_OPTIONS) {
-    parts.push(btn(`×${count}`, `${COMMAND} reinforce duplicate ${count}`));
-  }
-  parts.push(
-    `${btn(t('ui.customDuplicate', lang), `${COMMAND} reinforce duplicate ?{Copies|3}`)}</div>`
-  );
-  parts.push(
-    `<div style="margin-top:3px">${btn(t('ui.autoNumber', lang), `${COMMAND} reinforce enumerate`, true)}</div>`
-  );
-  parts.push('</div>');
-  return parts.join('');
+    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('ui.duplicateSelected', lang))}</div><div>`,
+    ...duplicateButtons,
+    customDuplicateButton,
+    '</div>',
+    `<div style="margin-top:3px">${autoNumberButton}</div>`,
+    '</div>',
+  ].join('');
 }
 
+/**
+ * Builds layer and visibility controls.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildLayerVisibilitySection(lang) {
-  const parts = [
+  const layerButtons = [
+    btn(t('ui.tokenLayer', lang), `${COMMAND} layer token`),
+    btn(t('ui.gmLayer', lang), `${COMMAND} layer gm`),
+    btn(t('ui.mapLayer', lang), `${COMMAND} layer map`),
+  ];
+  const visibilityButtons = [
+    btn(t('ui.hideSelected', lang), `${COMMAND} hide`),
+    btn(t('ui.revealSelected', lang), `${COMMAND} reveal`),
+  ];
+
+  return [
     section(t('ui.layerVisibility', lang)),
     desc(t('ui.layerVisibilityDesc', lang)),
     `<div style="${SECTION_BODY}">`,
-  ];
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('ui.moveToLayer', lang))}</div><div>`
-  );
-  parts.push(btn(t('ui.tokenLayer', lang), `${COMMAND} layer token`));
-  parts.push(btn(t('ui.gmLayer', lang), `${COMMAND} layer gm`));
-  parts.push(btn(t('ui.mapLayer', lang), `${COMMAND} layer map`));
-  parts.push('</div><div style="margin-top:3px">');
-  parts.push(btn(t('ui.hideSelected', lang), `${COMMAND} hide`));
-  parts.push(btn(t('ui.revealSelected', lang), `${COMMAND} reveal`));
-  parts.push('</div></div>');
-  return parts.join('');
+    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('ui.moveToLayer', lang))}</div><div>`,
+    ...layerButtons,
+    '</div><div style="margin-top:3px">',
+    ...visibilityButtons,
+    '</div></div>',
+  ].join('');
 }
 
+/**
+ * Builds position save/restore controls.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildPositionSavingSection(lang) {
   return [
     section(t('ui.positionSaving', lang)),
@@ -307,6 +348,12 @@ function buildPositionSavingSection(lang) {
   ].join('');
 }
 
+/**
+ * Builds encounter template controls.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildEncounterTemplatesSection(lang) {
   return [
     section(t('ui.encounterTemplates', lang)),
@@ -330,6 +377,12 @@ function buildEncounterTemplatesSection(lang) {
   ].join('');
 }
 
+/**
+ * Builds reset and recovery controls.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildResetRecoverySection(lang) {
   return [
     section(t('ui.resetRecovery', lang)),
@@ -342,6 +395,12 @@ function buildResetRecoverySection(lang) {
   ].join('');
 }
 
+/**
+ * Builds reporting controls.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildReportingSection(lang) {
   return [
     section(t('ui.reporting', lang)),
@@ -355,32 +414,44 @@ function buildReportingSection(lang) {
   ].join('');
 }
 
+/**
+ * Builds configuration controls for HP/AC bars.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildConfigSection(lang) {
-  const parts = [
+  const hpBarButtons = [
+    btn('Bar 1', `${COMMAND} config hp-bar bar1`, true),
+    btn('Bar 2', `${COMMAND} config hp-bar bar2`, true),
+    btn('Bar 3', `${COMMAND} config hp-bar bar3`, true),
+  ];
+  const acBarButtons = [
+    btn('Bar 1', `${COMMAND} config ac-bar bar1`, true),
+    btn('Bar 2', `${COMMAND} config ac-bar bar2`, true),
+    btn('Bar 3', `${COMMAND} config ac-bar bar3`, true),
+    btn(t('ui.disableAc', lang), `${COMMAND} config ac-bar none`, true),
+  ];
+
+  return [
     section(t('ui.config', lang)),
     desc(t('ui.configDesc', lang)),
     `<div style="${SECTION_BODY}">`,
-  ];
-
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('labels.hpBar', lang))}</div><div>`
-  );
-  parts.push(btn('Bar 1', `${COMMAND} config hp-bar bar1`, true));
-  parts.push(btn('Bar 2', `${COMMAND} config hp-bar bar2`, true));
-  parts.push(btn('Bar 3', `${COMMAND} config hp-bar bar3`, true));
-  parts.push('</div>');
-
-  parts.push(
-    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.acBar', lang))}</div><div>`
-  );
-  parts.push(btn('Bar 1', `${COMMAND} config ac-bar bar1`, true));
-  parts.push(btn('Bar 2', `${COMMAND} config ac-bar bar2`, true));
-  parts.push(btn('Bar 3', `${COMMAND} config ac-bar bar3`, true));
-  parts.push(btn(t('ui.disableAc', lang), `${COMMAND} config ac-bar none`, true));
-  parts.push('</div></div>');
-  return parts.join('');
+    `<div style="color:${COLOR_MUTED};font-size:0.8em">${escapeHtml(t('labels.hpBar', lang))}</div><div>`,
+    ...hpBarButtons,
+    '</div>',
+    `<div style="color:${COLOR_MUTED};font-size:0.8em;margin-top:3px">${escapeHtml(t('labels.acBar', lang))}</div><div>`,
+    ...acBarButtons,
+    '</div></div>',
+  ].join('');
 }
 
+/**
+ * Builds help and journal-maintenance controls.
+ *
+ * @param {string} lang Locale code.
+ * @returns {string} HTML string.
+ */
 function buildHelpSection(lang) {
   return [
     section(t('ui.help', lang)),
