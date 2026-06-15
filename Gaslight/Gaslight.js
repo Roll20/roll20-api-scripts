@@ -978,18 +978,18 @@ var Gaslight = Gaslight || (() => {
         var tokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
         if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) to relay from.'); return; }
 
-        // Split args: views are everything before first !-prefixed arg, command is the rest
+        // Split args: views are everything before first command-prefixed arg (! # %), command is the rest
         var views = [];
         var commandArgs = [];
         var foundCmd = false;
         args.forEach(function(a) {
-            if (!foundCmd && a.startsWith('!')) foundCmd = true;
+            if (!foundCmd && (a.startsWith('!') || a.startsWith('#') || a.startsWith('%'))) foundCmd = true;
             if (foundCmd) commandArgs.push(a);
             else views.push(a);
         });
 
         if (views.length === 0) { reply(msg, 'Error', 'Specify view target(s): player names, "all", or "master". Usage: !gaslight relay &lt;views&gt; &lt;!command&gt;'); return; }
-        if (commandArgs.length === 0) { reply(msg, 'Error', 'No command provided. Command must start with !'); return; }
+        if (commandArgs.length === 0) { reply(msg, 'Error', 'No command provided. Command must start with !, #, or %'); return; }
         var command = commandArgs.join(' ');
 
         // Resolve views
