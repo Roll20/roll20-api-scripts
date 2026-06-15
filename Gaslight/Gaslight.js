@@ -937,6 +937,144 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Config', 'Page "' + pageName + '" (' + pageId + ') assigned to group "' + groupName + '" for ' + resolved.name + '.');
     };
 
+    /**
+     * Stage selected tokens: duplicate to player pages and link.
+     * !gaslight stage [playerName1 playerName2 ...]
+     */
+    const doStage = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        var tokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
+        if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) to stage.'); return; }
+
+        // Find which active group this page belongs to
+        var pageId = tokens[0].get('_pageid');
+        var activeEntry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pageId || Object.values(e[1].playerPages).some(function(p) { return p.pageId === pageId; }); });
+        if (!activeEntry) { reply(msg, 'Error', 'Token is not on an active gaslit page.'); return; }
+        var groupName = activeEntry[0];
+        var groupInfo = { master: activeEntry[1].masterPageId, players: activeEntry[1].playerPages };
+
+        // Determine target players
+        var targetPlayerIds = [];
+        if (args.length > 0) {
+            args.forEach(function(name) {
+                var resolved = Object.entries(groupInfo.players).find(function(e) {
+                    return e[1].name && e[1].name.toLowerCase() === name.toLowerCase();
+                });
+                if (resolved) targetPlayerIds.push(resolved[0]);
+                else reply(msg, 'Warning', 'Player "' + name + '" not found in group.');
+            });
+        } else {
+            targetPlayerIds = Object.keys(groupInfo.players);
+        }
+
+        if (targetPlayerIds.length === 0) { reply(msg, 'Error', 'No valid target players.'); return; }
+
+        var staged = 0;
+        tokens.forEach(function(token) {
+            targetPlayerIds.forEach(function(pid) {
+                var targetPageId = groupInfo.players[pid].pageId;
+                // Check if already exists on target page
+                var existing = findMatchingToken(token, targetPageId);
+                if (existing) return;
+                // Clone token to target page
+                var imgsrc = token.get('imgsrc');
+                if (!imgsrc) return;
+                createObj('graphic', {
+                    _subtype: 'token',
+                    pageid: targetPageId,
+                    imgsrc: imgsrc,
+                    left: token.get('left'),
+                    top: token.get('top'),
+                    width: token.get('width'),
+                    height: token.get('height'),
+                    rotation: token.get('rotation'),
+                    layer: token.get('layer'),
+                    name: token.get('name'),
+                    represents: token.get('represents') || '',
+                    controlledby: token.get('controlledby') || ''
+                });
+                staged++;
+            });
+        });
+
+        // Re-run linking for this group to pick up the new tokens
+        if (staged > 0) {
+            var groupDiscovered = discoverGroup(groupName);
+            var allPageIds = [groupDiscovered.master].concat(Object.values(groupDiscovered.players).map(function(p) { return p.pageId; }));
+            allPageIds.forEach(function(pid) {
+                findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(autoPopulateLinkId);
+            });
+            var allLinks = [];
+            Object.values(groupDiscovered.players).forEach(function(pInfo) {
+                var links = resolveLinks(groupDiscovered.master, pInfo.pageId);
+                links.forEach(function(l) { if (l.target) allLinks.push(l); });
+            });
+            establishLinks(groupName, groupDiscovered, allLinks);
+        }
+
+        reply(msg, 'Stage', 'Staged ' + staged + ' token(s) to ' + targetPlayerIds.length + ' player page(s).');
+    };
+
+    /**
+     * Auto-stage: when a token is added to a gaslit page and its character has gaslight_stage=1.
+     */
+    const onTokenAdded = (obj) => {
+        var s = state[SCRIPT_NAME];
+        var charId = obj.get('represents');
+        if (!charId) return;
+
+        // Check gaslight_stage attribute
+        var attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gaslight_stage' })[0];
+        if (!attr || attr.get('current') !== '1') return;
+
+        // Find which active group this page belongs to
+        var pageId = obj.get('_pageid');
+        var activeEntry = Object.entries(s.activeGroups).find(function(e) {
+            return e[1].masterPageId === pageId;
+        });
+        if (!activeEntry) return; // only auto-stage from master page
+
+        var groupName = activeEntry[0];
+        var groupInfo = { master: activeEntry[1].masterPageId, players: activeEntry[1].playerPages };
+
+        // Clone to all player pages
+        Object.values(groupInfo.players).forEach(function(pInfo) {
+            var existing = findMatchingToken(obj, pInfo.pageId);
+            if (existing) return;
+            var imgsrc = obj.get('imgsrc');
+            if (!imgsrc) return;
+            createObj('graphic', {
+                _subtype: 'token',
+                pageid: pInfo.pageId,
+                imgsrc: imgsrc,
+                left: obj.get('left'),
+                top: obj.get('top'),
+                width: obj.get('width'),
+                height: obj.get('height'),
+                rotation: obj.get('rotation'),
+                layer: obj.get('layer'),
+                name: obj.get('name'),
+                represents: charId,
+                controlledby: obj.get('controlledby') || ''
+            });
+        });
+
+        // Re-link after a short delay to let createObj finish
+        setTimeout(function() {
+            var groupDiscovered = discoverGroup(groupName);
+            var allPageIds = [groupDiscovered.master].concat(Object.values(groupDiscovered.players).map(function(p) { return p.pageId; }));
+            allPageIds.forEach(function(pid) {
+                findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(autoPopulateLinkId);
+            });
+            var allLinks = [];
+            Object.values(groupDiscovered.players).forEach(function(pInfo) {
+                var links = resolveLinks(groupDiscovered.master, pInfo.pageId);
+                links.forEach(function(l) { if (l.target) allLinks.push(l); });
+            });
+            establishLinks(groupName, groupDiscovered, allLinks);
+        }, 500);
+    };
+
     const doStatus = (msg) => {
         const s = state[SCRIPT_NAME];
         const groups = Object.keys(s.activeGroups);
@@ -1096,6 +1234,7 @@ var Gaslight = Gaslight || (() => {
             case 'unlink':  doUnlink(msg, args);  break;
             case 'group':   doGroup(msg, args);   break;
             case 'ungroup': doUngroup(msg, args); break;
+            case 'stage':   doStage(msg, args);   break;
             case 'status':  doStatus(msg);        break;
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
@@ -1114,6 +1253,7 @@ var Gaslight = Gaslight || (() => {
 
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
+        on('add:graphic', onTokenAdded);
     };
 
     return { checkInstall, registerEventHandlers };
