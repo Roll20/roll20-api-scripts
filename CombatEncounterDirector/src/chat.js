@@ -234,5 +234,5 @@ export function buildRow(label, value, valueColor) {
 function getPlayerDisplayName(playerId) {
   const player = getObj('player', playerId);
   const raw = player ? player.get('displayname') || playerId : playerId;
-  return String(raw).replace(/"/g, '');
+  return String(raw).replaceAll('"', '');
 }
