@@ -648,113 +648,147 @@ function handleBoss(msg, args, playerId) {
 function handleReinforce(msg, args, playerId) {
   const [action, value] = args;
   const lang = locale();
+  const handlers = {
+    duplicate: () => handleReinforceDuplicate(msg, playerId, lang, value),
+    show: () => handleReinforceShow(playerId, lang),
+    enumerate: () => handleReinforceEnumerate(msg, playerId, lang),
+  };
 
-  switch (action) {
-    case 'duplicate': {
-      const parsed = parseDuplicateCount(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidDuplicateCount', lang, { value }),
-          `Example: ${COMMAND} reinforce duplicate 3`
-        );
-        return;
-      }
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length === 0) {
-        whisperWarning(playerId, t('errors.noTokensSelected', lang));
-        return;
-      }
-      const result = duplicateSelectedTokens(msg, parsed.value);
-      if (result.limitHit) {
-        whisperError(
-          playerId,
-          t('errors.duplicateBurstLimit', lang, {
-            requested: result.requested,
-            limit: result.limit,
-          })
-        );
-        return;
-      }
-      setLastReinforcementIds(result.createdIds);
-      whisper(
-        playerId,
-        t('titles.reinforcementsCreated', lang),
-        [
-          buildRow(t('labels.copiesPerToken', lang), String(parsed.value)),
-          buildRow(t('labels.totalCreated', lang), String(result.created)),
-          buildDivider(),
-          ...result.names.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
-          result.created > 0
-            ? buildButton(t('ui.revealReinforcements', lang), `${COMMAND} reinforce show`)
-            : '',
-          result.failedNames.length > 0
-            ? [
-                buildDivider(),
-                buildRow(t('labels.duplicateFailed', lang), String(result.failedCount)),
-                ...result.failedNames.map(
-                  (n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`
-                ),
-                `<div style="font-size:0.8em;margin-top:4px;opacity:0.75">${escapeHtml(t('labels.duplicateFailedHint', lang))}</div>`,
-              ].join('')
-            : '',
-        ].join('')
-      );
-      break;
-    }
-
-    case 'show': {
-      const ids = getLastReinforcementIds();
-      if (!ids.length) {
-        whisperError(
-          playerId,
-          t('errors.noReinforcementsToReveal', lang),
-          t('errors.noReinforcementsToRevealHint', lang)
-        );
-        return;
-      }
-      let moved = 0;
-      for (const id of ids) {
-        const token = getGraphicToken(id);
-        if (token) {
-          token.set('layer', 'objects');
-          moved++;
-        }
-      }
-      whisper(
-        playerId,
-        t('titles.tokensRevealed', lang),
-        buildRow(t('labels.moved', lang), String(moved))
-      );
-      break;
-    }
-
-    case 'enumerate': {
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length === 0) {
-        whisperWarning(playerId, t('errors.noTokensSelected', lang));
-        return;
-      }
-      const result = enumerateSelectedTokens(msg);
-      whisper(
-        playerId,
-        t('titles.tokensNumbered', lang),
-        [
-          buildRow(t('labels.renamed', lang), String(result.renamed.length)),
-          buildDivider(),
-          ...result.renamed.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
-        ].join('')
-      );
-      break;
-    }
-
-    default:
-      whisperError(
-        playerId,
-        t('errors.unknownReinforceAction', lang, { action }),
-        t('errors.reinforceActionHint', lang)
-      );
+  if (handlers[action]) {
+    handlers[action]();
+    return;
   }
+
+  whisperError(
+    playerId,
+    t('errors.unknownReinforceAction', lang, { action }),
+    t('errors.reinforceActionHint', lang)
+  );
+}
+
+/**
+ * Handles token duplication workflow for reinforce command.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} countRaw Raw duplicate count argument.
+ * @returns {void}
+ */
+function handleReinforceDuplicate(msg, playerId, lang, countRaw) {
+  const parsed = parseDuplicateCount(countRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidDuplicateCount', lang, { value: countRaw }),
+      `Example: ${COMMAND} reinforce duplicate 3`
+    );
+    return;
+  }
+
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length === 0) {
+    whisperWarning(playerId, t('errors.noTokensSelected', lang));
+    return;
+  }
+
+  const result = duplicateSelectedTokens(msg, parsed.value);
+  if (result.limitHit) {
+    whisperError(
+      playerId,
+      t('errors.duplicateBurstLimit', lang, {
+        requested: result.requested,
+        limit: result.limit,
+      })
+    );
+    return;
+  }
+
+  setLastReinforcementIds(result.createdIds);
+  whisper(
+    playerId,
+    t('titles.reinforcementsCreated', lang),
+    [
+      buildRow(t('labels.copiesPerToken', lang), String(parsed.value)),
+      buildRow(t('labels.totalCreated', lang), String(result.created)),
+      buildDivider(),
+      ...result.names.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
+      result.created > 0
+        ? buildButton(t('ui.revealReinforcements', lang), `${COMMAND} reinforce show`)
+        : '',
+      result.failedNames.length > 0
+        ? [
+            buildDivider(),
+            buildRow(t('labels.duplicateFailed', lang), String(result.failedCount)),
+            ...result.failedNames.map(
+              (n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`
+            ),
+            `<div style="font-size:0.8em;margin-top:4px;opacity:0.75">${escapeHtml(t('labels.duplicateFailedHint', lang))}</div>`,
+          ].join('')
+        : '',
+    ].join('')
+  );
+}
+
+/**
+ * Reveals the most recently created reinforcement tokens.
+ *
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @returns {void}
+ */
+function handleReinforceShow(playerId, lang) {
+  const ids = getLastReinforcementIds();
+  if (!ids.length) {
+    whisperError(
+      playerId,
+      t('errors.noReinforcementsToReveal', lang),
+      t('errors.noReinforcementsToRevealHint', lang)
+    );
+    return;
+  }
+
+  let moved = 0;
+  for (const id of ids) {
+    const token = getGraphicToken(id);
+    if (token) {
+      token.set('layer', 'objects');
+      moved++;
+    }
+  }
+
+  whisper(
+    playerId,
+    t('titles.tokensRevealed', lang),
+    buildRow(t('labels.moved', lang), String(moved))
+  );
+}
+
+/**
+ * Enumerates selected token names for reinforcement numbering.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @returns {void}
+ */
+function handleReinforceEnumerate(msg, playerId, lang) {
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length === 0) {
+    whisperWarning(playerId, t('errors.noTokensSelected', lang));
+    return;
+  }
+
+  const result = enumerateSelectedTokens(msg);
+  whisper(
+    playerId,
+    t('titles.tokensNumbered', lang),
+    [
+      buildRow(t('labels.renamed', lang), String(result.renamed.length)),
+      buildDivider(),
+      ...result.renamed.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
+    ].join('')
+  );
 }
 
 /**
