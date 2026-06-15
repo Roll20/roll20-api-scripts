@@ -1305,7 +1305,12 @@ var Gaslight = Gaslight || (() => {
 
         var staged = 0;
         tokens.forEach(function(token) {
-            var targetPages = targetPlayerIds.map(function(pid) { return groupInfo.players[pid].pageId; });
+            var sourcePageId = token.get('_pageid');
+            var targetPages = targetPlayerIds
+                .map(function(pid) { return groupInfo.players[pid].pageId; })
+                .filter(function(pid) { return pid !== sourcePageId; });
+            // Include master if source is not master
+            if (sourcePageId !== groupInfo.master) targetPages.push(groupInfo.master);
             staged += stageTokenToPages(token, targetPages);
         });
 
@@ -1342,15 +1347,20 @@ var Gaslight = Gaslight || (() => {
         // Find which active group this page belongs to
         var pageId = obj.get('_pageid');
         var activeEntry = Object.entries(s.activeGroups).find(function(e) {
-            return e[1].masterPageId === pageId;
+            if (e[1].masterPageId === pageId) return true;
+            return Object.values(e[1].playerPages).some(function(p) { return p.pageId === pageId; });
         });
-        if (!activeEntry) return; // only auto-stage from master page
+        if (!activeEntry) return;
 
         var groupName = activeEntry[0];
         var groupInfo = { master: activeEntry[1].masterPageId, players: activeEntry[1].playerPages };
 
-        // Clone to player pages
-        var targetPages = Object.values(groupInfo.players).map(function(pInfo) { return pInfo.pageId; });
+        // Clone to all OTHER pages (master + players, excluding source page)
+        var targetPages = [];
+        if (pageId !== groupInfo.master) targetPages.push(groupInfo.master);
+        Object.values(groupInfo.players).forEach(function(pInfo) {
+            if (pInfo.pageId !== pageId) targetPages.push(pInfo.pageId);
+        });
         stageTokenToPages(obj, targetPages);
 
         // Re-link after a short delay to let createObj finish
