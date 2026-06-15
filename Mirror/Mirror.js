@@ -191,11 +191,43 @@ var Mirror = Mirror || (() => {
 
     const createLink = (mode, props, ids, soft, excludes) => {
         var s = state[SCRIPT_NAME];
-        var linkId = genId();
-        s.links[linkId] = { props: props, ids: ids, mode: mode, soft: soft, excludes: excludes || [] };
+
+        // Guard: children in a hard link can't have multiple hard parents or join chains
+        if (mode === 'link' && !soft) {
+            // Check that child IDs (ids[1:]) don't already have a hard parent
+            for (var i = 1; i < ids.length; i++) {
+                var existing = findLinksForToken(ids[i]);
+                var hasHardParent = existing.some(function(e) {
+                    return e.link.mode === 'link' && !e.link.soft && e.link.ids[0] !== ids[i];
+                });
+                if (hasHardParent) {
+                    log(SCRIPT_NAME + ': Cannot hard-link ' + ids[i] + ' — already has a hard parent.');
+                    return null;
+                }
+                if (s.chainedIds[ids[i]]) {
+                    log(SCRIPT_NAME + ': Cannot hard-link ' + ids[i] + ' — token is in a chain.');
+                    return null;
+                }
+            }
+        }
+
         if (mode === 'chain') {
+            // Check that none of the IDs have a hard parent link as a child
+            for (var i = 0; i < ids.length; i++) {
+                var existing = findLinksForToken(ids[i]);
+                var hasHardParent = existing.some(function(e) {
+                    return e.link.mode === 'link' && !e.link.soft && e.link.ids[0] !== ids[i];
+                });
+                if (hasHardParent) {
+                    log(SCRIPT_NAME + ': Cannot chain ' + ids[i] + ' — has a hard parent link.');
+                    return null;
+                }
+            }
             ids.forEach(function(id) { s.chainedIds[id] = true; });
         }
+
+        var linkId = genId();
+        s.links[linkId] = { props: props, ids: ids, mode: mode, soft: soft, excludes: excludes || [] };
         return linkId;
     };
 
@@ -420,7 +452,8 @@ var Mirror = Mirror || (() => {
                 reply(msg, 'Link', 'Added ' + linkProps.length + ' prop(s) to existing link (' + link.props.length + ' total).');
             }
         } else {
-            createLink('link', linkProps, parsed.ids, parsed.soft, parsed.excludes);
+            var result = createLink('link', linkProps, parsed.ids, parsed.soft, parsed.excludes);
+            if (!result) { reply(msg, 'Error', 'Cannot create link — a child token already has a hard parent or is in a chain.'); return; }
             if (parsed.align) {
                 var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
                 alignTokens(parsed.ids, alignProps);
@@ -514,7 +547,8 @@ var Mirror = Mirror || (() => {
             } else {
                 // No existing chains: create new chain with 'all'
                 if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
-                createLink('chain', 'all', parsed.ids, true, parsed.excludes);
+                var result = createLink('chain', 'all', parsed.ids, true, parsed.excludes);
+                if (!result) { reply(msg, 'Error', 'Cannot create chain — a token has a hard parent link.'); return; }
                 if (parsed.align) alignTokens(parsed.ids, getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }));
                 reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (all props' + (parsed.align ? ', aligned' : '') + ').');
             }
@@ -537,7 +571,8 @@ var Mirror = Mirror || (() => {
             } else {
                 // No existing chains: create new
                 if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
-                createLink('chain', linkProps, parsed.ids, true, parsed.excludes);
+                var result = createLink('chain', linkProps, parsed.ids, true, parsed.excludes);
+                if (!result) { reply(msg, 'Error', 'Cannot create chain — a token has a hard parent link.'); return; }
                 if (parsed.align) {
                     var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
                     alignTokens(parsed.ids, alignProps);
