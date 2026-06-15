@@ -1090,10 +1090,10 @@ var Mirror = Mirror || (() => {
         html += '<b>--up</b>: align to parent first<br>';
         html += '<b>--down</b>: cascade from current value<br>';
         html += '<b>--if-linked</b>: only align props that are actually linked</p>';
-        hh.set('notes', html);
-    };
-
-    const generateDevDocs = (msg) => {
+        html += '<h2>Using with Anchor</h2>';
+        html += '<p>Use <code>--exclude anchor</code> on tokens that also use Anchor for spatial sync. This prevents overlap.</p>';
+        html += '<p><code>!mirror chain --exclude anchor</code> — sync everything except Anchor-managed props.</p>';
+        hh.set('notes', html);    const generateDevDocs = (msg) => {
         var name = 'Help: ' + SCRIPT_NAME + '/Scripting API';
         var hh = findObjs({ type: 'handout', name: name })[0];
         if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
@@ -1105,6 +1105,7 @@ var Mirror = Mirror || (() => {
         html += '<pre>Mirror.unlink(ids, props)         // remove link or add excludes\nMirror.unchain(ids, props)        // remove chain or add excludes\nMirror.removeFromChain(tokenId)   // remove one token from chain\nMirror.addToChain(existingId, newIds)  // add tokens to chain</pre>';
         html += '<h2>Alignment</h2>';
         html += '<pre>Mirror.align(sourceId, { up, ifLinked, props })</pre>';
+        html += '<p><code>Mirror.align(id, { ifLinked: true })</code> is the equivalent of <code>Anchor.updateObj()</code> — pushes linked props to all dependents.</p>';
         html += '<h2>Queries</h2>';
         html += '<pre>Mirror.getLinks(tokenId)       // → [{ id, link }]\nMirror.getParent(childId)      // → parentId or null\nMirror.getChildren(parentId)   // → [childIds]\nMirror.getChainMembers(tokenId) // → [ids]</pre>';
         html += '<h2>Configuration</h2>';

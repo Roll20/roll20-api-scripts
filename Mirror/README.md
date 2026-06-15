@@ -79,6 +79,23 @@ Mirror.ALL_PROPS
 Mirror.PROP_GROUPS
 ```
 
+## Using with Anchor
+
+Mirror and Anchor complement each other — Anchor handles spatial transforms (position, rotation, scale with offsets), Mirror handles flat property copying (bars, status, light, etc.).
+
+To avoid conflicts on tokens that use both:
+
+```
+!mirror chain --exclude anchor
+```
+
+This syncs everything *except* what Anchor manages (left, top, rotation, width, height, flipv, fliph, layer).
+
+**API equivalent of `Anchor.updateObj`:**
+```javascript
+Mirror.align(tokenId, { ifLinked: true })  // push linked props to dependents
+```
+
 ## License
 
 MIT
