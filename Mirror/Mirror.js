@@ -1064,7 +1064,7 @@ var Mirror = Mirror || (() => {
     const generateHelpHandout = () => {
         var name = 'Help: ' + SCRIPT_NAME;
         var hh = findObjs({ type: 'handout', name: name })[0];
-        if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false });
+        if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
         var html = '<h1>' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + '</h1>';
         html += '<p>Flat property syncing between tokens. No transforms — values are copied directly.</p>';
         html += '<h2>Commands</h2><ul>';
@@ -1092,7 +1092,7 @@ var Mirror = Mirror || (() => {
     const generateDevDocs = (msg) => {
         var name = 'Help: ' + SCRIPT_NAME + '/Scripting API';
         var hh = findObjs({ type: 'handout', name: name })[0];
-        if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false });
+        if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
         var html = '<h1>' + SCRIPT_NAME + ' — Scripting API</h1>';
         html += '<p>Access via <code>Mirror.*</code> after <code>on("ready")</code>.</p>';
         html += '<h2>Linking</h2>';
