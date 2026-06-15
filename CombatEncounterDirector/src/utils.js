@@ -220,7 +220,8 @@ export function getCleanImgsrc(imgsrc) {
   if (!imgsrc) {
     return '';
   }
-  const parts = imgsrc.match(/(.*\/images\/.*?)(thumb|med|original|max)(\..*?)(\?.*)?$/);
+  const imgsrcRe = /(.*\/images\/.*?)(thumb|med|original|max)(\..*?)(\?.*)?$/;
+  const parts = imgsrcRe.exec(imgsrc);
   if (parts) {
     return parts[1] + 'thumb' + parts[3] + (parts[4] || '');
   }
@@ -271,14 +272,17 @@ export function formatTimestamp(timestamp) {
   // Prefer Intl.DateTimeFormat which returns named abbreviations (BST, EST…).
   // Fall back to parsing the parenthesised name in toTimeString().
   let tz = 'UTC';
-  try {
+  if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
     const parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
     const tzPart = parts.find((p) => p.type === 'timeZoneName');
     if (tzPart) {
       tz = tzPart.value;
     }
-  } catch (_) {
-    const match = d.toTimeString().match(/\(([^)]+)\)/);
+  }
+
+  if (tz === 'UTC') {
+    const tzNameRe = /\(([^)]+)\)/;
+    const match = tzNameRe.exec(d.toTimeString());
     if (match) {
       tz = match[1]
         .split(/\s+/)

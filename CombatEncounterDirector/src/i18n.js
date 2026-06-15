@@ -1,10 +1,4 @@
-import {
-  DEFAULT_LOCALE,
-  LOCALE_ALIASES,
-  SUPPORTED_LOCALE_LIST,
-  TRANSLATIONS,
-  VALID_LOCALES,
-} from './locales/index.js';
+import { DEFAULT_LOCALE, LOCALE_ALIASES, TRANSLATIONS, VALID_LOCALES } from './locales/index.js';
 
 export {
   DEFAULT_LOCALE,
