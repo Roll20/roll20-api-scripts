@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.1.4] – 2026-05-31 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/6)
+## [2.1.4] – 2026-06-15 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/7)
 
 ### Fixed
 
