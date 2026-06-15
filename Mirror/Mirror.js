@@ -87,6 +87,7 @@ var Mirror = Mirror || (() => {
         }
         if (!state[SCRIPT_NAME].chainedIds) state[SCRIPT_NAME].chainedIds = {};
         if (!state[SCRIPT_NAME].knownProps) state[SCRIPT_NAME].knownProps = {};
+        if (!state[SCRIPT_NAME].globalExcludes) state[SCRIPT_NAME].globalExcludes = [];
         // Seed known props from ALL_PROPS
         ALL_PROPS.forEach(function(p) { state[SCRIPT_NAME].knownProps[p] = true; });
     };
@@ -128,12 +129,35 @@ var Mirror = Mirror || (() => {
         var soft = args.indexOf('--soft') !== -1;
         var align = args.indexOf('--align') !== -1;
         args = args.filter(function(a) { return a !== '--soft' && a !== '--align'; });
+
+        // Parse --exclude
+        var excludes = [];
+        var exIdx = args.indexOf('--exclude');
+        if (exIdx !== -1) {
+            var afterExclude = args.slice(exIdx + 1);
+            args = args.slice(0, exIdx);
+            var exResolved = resolveProps(afterExclude);
+            excludes = exResolved.props;
+            // Any remaining non-prop args after --exclude are IDs
+            args = args.concat(exResolved.remaining);
+        }
+
         var resolved = resolveProps(args);
         var ids = resolved.remaining.filter(function(a) { return a.startsWith('-'); });
         ids = ids.concat(getSelectedIds(msg));
         ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; }); // dedupe
-        var props = resolved.props.length > 0 ? resolved.props : getKnownProps();
-        return { props: props, ids: ids, soft: soft, align: align };
+
+        // Determine if using 'all' or specific props
+        var props;
+        if (resolved.props.length === 0) {
+            props = 'all'; // default: all
+        } else if (resolved.props.length === getKnownProps().length) {
+            props = 'all'; // explicit 'all' group resolved to full list
+        } else {
+            props = resolved.props;
+        }
+
+        return { props: props, ids: ids, soft: soft, align: align, excludes: excludes };
     };
 
     /**
@@ -151,14 +175,29 @@ var Mirror = Mirror || (() => {
         }
     };
 
-    const createLink = (mode, props, ids, soft) => {
+    const createLink = (mode, props, ids, soft, excludes) => {
         var s = state[SCRIPT_NAME];
         var linkId = genId();
-        s.links[linkId] = { props: props, ids: ids, mode: mode, soft: soft };
+        s.links[linkId] = { props: props, ids: ids, mode: mode, soft: soft, excludes: excludes || [] };
         if (mode === 'chain') {
             ids.forEach(function(id) { s.chainedIds[id] = true; });
         }
         return linkId;
+    };
+
+    /**
+     * Get the effective props for a link, accounting for 'all' and excludes.
+     */
+    const getEffectiveProps = (link) => {
+        if (link.props === 'all') {
+            var excludes = (link.excludes || []).concat(getGlobalExcludes());
+            return getKnownProps().filter(function(p) { return excludes.indexOf(p) === -1; });
+        }
+        return link.props;
+    };
+
+    const getGlobalExcludes = () => {
+        return state[SCRIPT_NAME].globalExcludes || [];
     };
 
     const findLinksForToken = (tokenId) => {
@@ -225,7 +264,8 @@ var Mirror = Mirror || (() => {
             if (idx === -1) return;
 
             // Determine relevant changed props for this link
-            var relevantProps = changed.filter(function(p) { return link.props.indexOf(p) !== -1; });
+            var effectiveProps = getEffectiveProps(link);
+            var relevantProps = changed.filter(function(p) { return effectiveProps.indexOf(p) !== -1; });
             if (relevantProps.length === 0) return;
 
             if (link.mode === 'chain') {
@@ -273,43 +313,119 @@ var Mirror = Mirror || (() => {
     const doLink = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Link requires at least 2 tokens.'); return; }
-        createLink('link', parsed.props, parsed.ids, parsed.soft);
-        if (parsed.align) alignTokens(parsed.ids, parsed.props);
-        reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + (parsed.align ? ', aligned' : '') + '). Source: first selected.');
+        createLink('link', parsed.props, parsed.ids, parsed.soft, parsed.excludes);
+        if (parsed.align) alignTokens(parsed.ids, parsed.props === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : parsed.props);
+        var propCount = parsed.props === 'all' ? 'all' : parsed.props.length;
+        reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
     };
 
     const doUnlink = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
-        var propsToRemove = parsed.props.length > 0 && parsed.props.length < ALL_PROPS.length ? parsed.props : null;
-        var removed = 0;
+        var hasSpecificProps = parsed.props !== 'all';
+        var processed = 0;
         parsed.ids.forEach(function(id) {
             findLinksForToken(id).forEach(function(entry) {
-                if (entry.link.mode === 'link') { removePropsFromLink(entry.id, propsToRemove); removed++; }
+                if (entry.link.mode !== 'link') return;
+                if (!hasSpecificProps) {
+                    // No props specified: remove entire link
+                    removePropsFromLink(entry.id, null);
+                } else if (entry.link.props === 'all') {
+                    // Link uses 'all': add props to excludes
+                    parsed.props.forEach(function(p) {
+                        if (entry.link.excludes.indexOf(p) === -1) entry.link.excludes.push(p);
+                    });
+                } else {
+                    // Link uses specific props: remove them
+                    removePropsFromLink(entry.id, parsed.props);
+                }
+                processed++;
             });
         });
-        reply(msg, 'Unlink', 'Processed ' + removed + ' link(s).');
+        reply(msg, 'Unlink', 'Processed ' + processed + ' link(s).');
     };
 
     const doChain = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
-        createLink('chain', parsed.props, parsed.ids, true);
-        if (parsed.align) alignTokens(parsed.ids, parsed.props);
-        reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props' + (parsed.align ? ', aligned' : '') + ').');
+
+        // Check if tokens are already in an existing chain — if so, re-include props
+        var existingChain = null;
+        var links = findLinksForToken(parsed.ids[0]);
+        for (var i = 0; i < links.length; i++) {
+            if (links[i].link.mode === 'chain') { existingChain = links[i]; break; }
+        }
+
+        if (existingChain && parsed.props !== 'all') {
+            // Re-include: remove specified props from excludes
+            existingChain.link.excludes = (existingChain.link.excludes || []).filter(function(p) {
+                return parsed.props.indexOf(p) === -1;
+            });
+            reply(msg, 'Chain', 'Re-included ' + parsed.props.length + ' prop(s) in existing chain.');
+        } else {
+            createLink('chain', parsed.props, parsed.ids, true, parsed.excludes);
+            if (parsed.align) {
+                var alignProps = parsed.props === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : parsed.props;
+                alignTokens(parsed.ids, alignProps);
+            }
+            var propCount = parsed.props === 'all' ? 'all' : parsed.props.length;
+            reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
+        }
     };
 
     const doUnchain = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
-        var propsToRemove = parsed.props.length > 0 && parsed.props.length < ALL_PROPS.length ? parsed.props : null;
-        var removed = 0;
+        var hasSpecificProps = parsed.props !== 'all';
+        var processed = 0;
         parsed.ids.forEach(function(id) {
             findLinksForToken(id).forEach(function(entry) {
-                if (entry.link.mode === 'chain') { removePropsFromLink(entry.id, propsToRemove); removed++; }
+                if (entry.link.mode !== 'chain') return;
+                if (!hasSpecificProps) {
+                    // No props specified: remove entire chain
+                    removePropsFromLink(entry.id, null);
+                } else if (entry.link.props === 'all') {
+                    // Link uses 'all': add props to excludes
+                    var propsToExclude = parsed.props;
+                    propsToExclude.forEach(function(p) {
+                        if (entry.link.excludes.indexOf(p) === -1) entry.link.excludes.push(p);
+                    });
+                } else {
+                    // Link uses specific props: remove them
+                    removePropsFromLink(entry.id, parsed.props);
+                }
+                processed++;
             });
         });
-        reply(msg, 'Unchain', 'Processed ' + removed + ' chain(s).');
+        reply(msg, 'Unchain', 'Processed ' + processed + ' chain(s).');
+    };
+
+    const doConfig = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        if (args.length === 0) {
+            // Show current config
+            reply(msg, 'Config', '<b>Global excludes:</b> ' + (s.globalExcludes.length > 0 ? s.globalExcludes.join(', ') : '(none)'));
+            return;
+        }
+        var sub = args.shift();
+        if (sub === 'exclude') {
+            var resolved = resolveProps(args);
+            if (resolved.props.length === 0) { reply(msg, 'Error', 'Specify properties to exclude.'); return; }
+            resolved.props.forEach(function(p) {
+                if (s.globalExcludes.indexOf(p) === -1) s.globalExcludes.push(p);
+            });
+            reply(msg, 'Config', 'Global excludes: ' + s.globalExcludes.join(', '));
+        } else if (sub === 'include') {
+            var resolved = resolveProps(args);
+            if (resolved.props.length === 0) { reply(msg, 'Error', 'Specify properties to include.'); return; }
+            s.globalExcludes = s.globalExcludes.filter(function(p) { return resolved.props.indexOf(p) === -1; });
+            reply(msg, 'Config', 'Global excludes: ' + (s.globalExcludes.length > 0 ? s.globalExcludes.join(', ') : '(none)'));
+        } else if (sub === 'reset') {
+            s.globalExcludes = [];
+            reply(msg, 'Config', 'Global excludes cleared.');
+        } else {
+            reply(msg, 'Error', 'Usage: !mirror config [exclude|include|reset] [props]');
+        }
     };
 
     const doAlign = (msg, args) => {
@@ -420,7 +536,8 @@ var Mirror = Mirror || (() => {
         + '<code>' + CMD + ' unlink [props] [ids...]</code> -- Remove link<br>'
         + '<code>' + CMD + ' chain [props] [ids...]</code> -- Bidirectional ring<br>'
         + '<code>' + CMD + ' unchain [props] [ids...]</code> -- Remove chain<br>'
-        + '<code>' + CMD + ' align [props] [ids...]</code> -- Copy props from first to others (one-shot)<br>'
+        + '<code>' + CMD + ' align [--linked|--unlinked] [props] [ids...]</code> -- Align tokens<br>'
+        + '<code>' + CMD + ' config [exclude|include|reset] [props]</code> -- Global excludes<br>'
         + '<code>' + CMD + ' status</code> -- Show links for selected<br>'
         + '<code>' + CMD + ' --help</code> -- This help<br>'
         + '<br><b>Groups:</b> all, spatial, position, size, bars, light, auras, flip<br>'
@@ -444,6 +561,7 @@ var Mirror = Mirror || (() => {
             case 'chain':   doChain(msg, args);   break;
             case 'unchain': doUnchain(msg, args); break;
             case 'align':   doAlign(msg, args);   break;
+            case 'config':  doConfig(msg, args);  break;
             case 'status':  doStatus(msg);        break;
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
