@@ -607,9 +607,10 @@ var Mirror = Mirror || (() => {
         var unlinked = args.indexOf('--unlinked') !== -1;
         var up = args.indexOf('--up') !== -1;
         var down = args.indexOf('--down') !== -1;
-        var chainFlag = args.indexOf('--chain') !== -1;
         args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked' && a !== '--up' && a !== '--down' && a !== '--chain'; });
         if (!linked && !unlinked) linked = true;
+        // --up takes precedence; --up --down is same as --up
+        if (up) down = false;
 
         var parsed = parseCommand(msg, args);
 
@@ -617,87 +618,67 @@ var Mirror = Mirror || (() => {
         if (parsed.ids.length === 1 && linked) {
             var singleLinks = findLinksForToken(parsed.ids[0]);
             if (singleLinks.length > 0) {
-                var asParent = singleLinks.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] === parsed.ids[0]; });
                 var asChild = singleLinks.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] !== parsed.ids[0]; });
-                var asChain = singleLinks.filter(function(e) { return e.link.mode === 'chain'; });
+                var isParentOrChain = singleLinks.some(function(e) { return e.link.mode === 'chain' || (e.link.mode === 'link' && e.link.ids[0] === parsed.ids[0]); });
+                var isChild = asChild.length > 0;
 
-                var types = (asChain.length > 0 ? 1 : 0) + (asParent.length > 0 ? 1 : 0) + (asChild.length > 0 ? 1 : 0);
-                var hasFlags = up || down || chainFlag;
-
-                // If multiple relationship types and no flags, error
-                if (types > 1 && !hasFlags) {
-                    var typeNames = [];
-                    if (asChain.length > 0) typeNames.push('--chain');
-                    if (asChild.length > 0) typeNames.push('--up');
-                    if (asParent.length > 0) typeNames.push('--down');
-                    reply(msg, 'Error', 'Token has multiple relationship types. Specify: ' + typeNames.join(', '));
+                // Ambiguous: both parent/chain AND child, no flags
+                if (isParentOrChain && isChild && !up && !down) {
+                    reply(msg, 'Error', 'Token is both parent/chain and child. Use --up (align to parent then cascade) or --down (cascade from current value).');
                     return;
                 }
 
-                // Determine what to do
-                var doChainAlign = chainFlag || (!hasFlags && asChain.length > 0 && types === 1);
-                var doUp = up || (!hasFlags && asChild.length > 0 && types === 1);
-                var doDown = down || (!hasFlags && asParent.length > 0 && types === 1);
-
-                var aligned = 0;
                 var source = getObj('graphic', parsed.ids[0]);
                 if (!source) { reply(msg, 'Error', 'Token not found.'); return; }
+                var aligned = 0;
 
-                // Application order: up → chain → down
-                if (doUp) {
-                    asChild.forEach(function(entry) {
-                        var link = entry.link;
-                        var props = parsed.props === null ? getEffectiveProps(link) :
+                // Step 1: If --up (or unambiguous child), align self to parent
+                var doUp = up || (!down && isChild && !isParentOrChain);
+                if (doUp && asChild.length > 0) {
+                    var parentLink = asChild[0].link;
+                    var props = parsed.props === null ? getEffectiveProps(parentLink) :
+                                parsed.props === 'all' ? getKnownProps() : parsed.props;
+                    var parent = getObj('graphic', parentLink.ids[0]);
+                    if (parent) {
+                        var updates = {};
+                        props.forEach(function(p) { updates[p] = parent.get(p); });
+                        source.set(updates);
+                        aligned++;
+                    }
+                }
+
+                // Step 2: Cascade from self to chain + children recursively
+                var cascadeVisited = new Set([parsed.ids[0]]);
+                var cascadeFrom = function(tokenId) {
+                    var tokenObj = getObj('graphic', tokenId);
+                    if (!tokenObj) return;
+                    var s = state[SCRIPT_NAME];
+                    Object.values(s.links).forEach(function(link) {
+                        var idx = link.ids.indexOf(tokenId);
+                        if (idx === -1) return;
+                        var linkProps = parsed.props === null ? getEffectiveProps(link) :
                                     parsed.props === 'all' ? getKnownProps() : parsed.props;
-                        var parent = getObj('graphic', link.ids[0]);
-                        if (parent) {
-                            var updates = {};
-                            props.forEach(function(p) { updates[p] = parent.get(p); });
-                            source.set(updates);
-                            aligned++;
+                        var updates = {};
+                        linkProps.forEach(function(p) { updates[p] = tokenObj.get(p); });
+
+                        if (link.mode === 'chain') {
+                            link.ids.forEach(function(tid) {
+                                if (cascadeVisited.has(tid)) return;
+                                cascadeVisited.add(tid);
+                                var t = getObj('graphic', tid);
+                                if (t) { t.set(updates); aligned++; cascadeFrom(tid); }
+                            });
+                        } else if (idx === 0) {
+                            link.ids.slice(1).forEach(function(tid) {
+                                if (cascadeVisited.has(tid)) return;
+                                cascadeVisited.add(tid);
+                                var t = getObj('graphic', tid);
+                                if (t) { t.set(updates); aligned++; cascadeFrom(tid); }
+                            });
                         }
                     });
-                }
-
-                if (doChainAlign) {
-                    asChain.forEach(function(entry) {
-                        var link = entry.link;
-                        var props = parsed.props === null ? getEffectiveProps(link) :
-                                    parsed.props === 'all' ? getKnownProps() : parsed.props;
-                        var updates = {};
-                        props.forEach(function(p) { updates[p] = source.get(p); });
-                        link.ids.forEach(function(tid) {
-                            if (tid === parsed.ids[0]) return;
-                            var t = getObj('graphic', tid);
-                            if (t) { t.set(updates); aligned++; }
-                        });
-                    });
-                }
-
-                if (doDown) {
-                    var downVisited = new Set([parsed.ids[0]]);
-                    var alignDown = function(parentId, props) {
-                        var s = state[SCRIPT_NAME];
-                        var parentObj = getObj('graphic', parentId);
-                        if (!parentObj) return;
-                        var updates = {};
-                        props.forEach(function(p) { updates[p] = parentObj.get(p); });
-                        Object.values(s.links).forEach(function(link) {
-                            if (link.mode !== 'link' || link.ids[0] !== parentId) return;
-                            var linkProps = parsed.props === null ? getEffectiveProps(link) :
-                                        parsed.props === 'all' ? getKnownProps() : parsed.props;
-                            var linkUpdates = {};
-                            linkProps.forEach(function(p) { linkUpdates[p] = parentObj.get(p); });
-                            link.ids.slice(1).forEach(function(tid) {
-                                if (downVisited.has(tid)) return;
-                                downVisited.add(tid);
-                                var t = getObj('graphic', tid);
-                                if (t) { t.set(linkUpdates); aligned++; alignDown(tid, linkProps); }
-                            });
-                        });
-                    };
-                    alignDown(parsed.ids[0], parsed.props === null ? getKnownProps() : (parsed.props === 'all' ? getKnownProps() : parsed.props));
-                }
+                };
+                cascadeFrom(parsed.ids[0]);
 
                 reply(msg, 'Align', 'Aligned ' + aligned + ' token(s).');
                 return;
