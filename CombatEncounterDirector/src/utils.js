@@ -83,7 +83,7 @@ export function getGmPlayerIds() {
  * @returns {number} Parsed integer.
  */
 export function parseBarValue(raw) {
-  const n = parseInt(toText(raw), 10);
+  const n = Number.parseInt(toText(raw), 10);
   return Number.isFinite(n) ? n : 0;
 }
 
@@ -105,7 +105,7 @@ export function readBarSafe(raw) {
   if (s === '') {
     return { valid: false, value: 0 };
   }
-  const n = parseInt(s, 10);
+  const n = Number.parseInt(s, 10);
   return Number.isFinite(n) ? { valid: true, value: n } : { valid: false, value: 0 };
 }
 
@@ -119,9 +119,9 @@ export function readBarSafe(raw) {
 export function parseStrictInt(raw) {
   const s = String(raw === undefined || raw === null ? '' : raw).trim();
   if (!/^[+-]?\d+$/.test(s)) {
-    return NaN;
+    return Number.NaN;
   }
-  return parseInt(s, 10);
+  return Number.parseInt(s, 10);
 }
 
 /**
