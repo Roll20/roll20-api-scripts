@@ -312,7 +312,9 @@ var Gaslight = Gaslight || (() => {
         var parts = val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
         var resolved = [];
         parts.forEach(function(p) {
-            if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS[p]) {
+            if (p === 'base' || p === 'anchor') {
+                resolved = resolved.concat(['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph']);
+            } else if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS[p]) {
                 resolved = resolved.concat(Mirror.PROP_GROUPS[p]);
             } else {
                 resolved.push(p);
@@ -571,37 +573,57 @@ var Gaslight = Gaslight || (() => {
 
             var ids = tokens.map(function(t) { return t.get('id'); });
 
-            if (controllerIds.length === 0) {
-                // NPC: master is parent, all others are children
-                var parent = tokens.find(function(t) { return t.get('_pageid') === groupInfo.master; });
-                if (!parent) parent = tokens[0];
-                tokens.forEach(function(t) {
-                    if (t.get('id') === parent.get('id')) return;
-                    Anchor.anchorObj(t.get('id'), parent.get('id'));
-                });
-            } else {
-                // Player-controlled: chain-link master + controlling players' pages
-                // Non-controlling player pages become children of one chain member
-                var chainPageIds = [groupInfo.master];
-                controllerIds.forEach(function(pid) {
-                    if (groupInfo.players[pid]) chainPageIds.push(groupInfo.players[pid].pageId);
-                });
+            // Check gaslight_sync attribute
+            var syncProps = getGaslightSync(repCharId);
+            // syncProps: null = default (base spatial), '' = no sync at all, array = specific
 
-                var chainTokens = tokens.filter(function(t) { return chainPageIds.indexOf(t.get('_pageid')) !== -1; });
-                var childTokens = tokens.filter(function(t) { return chainPageIds.indexOf(t.get('_pageid')) === -1; });
+            // If empty string, skip all linking for this group
+            if (syncProps === '') return;
 
-                // Chain-link the peer tokens
-                var chainIds = chainTokens.map(function(t) { return t.get('id'); });
-                if (chainIds.length >= 2) {
-                    Anchor.chainAnchorObjs(chainIds);
-                }
+            // Determine which props go to Anchor vs Mirror
+            var anchorProps = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
+            var needsAnchor = true;
+            var mirrorProps = null; // null = all non-anchor
+            if (Array.isArray(syncProps)) {
+                // Specific props: split between anchor and mirror
+                var anchorRequested = syncProps.filter(function(p) { return anchorProps.indexOf(p) !== -1; });
+                var mirrorRequested = syncProps.filter(function(p) { return anchorProps.indexOf(p) === -1; });
+                needsAnchor = anchorRequested.length > 0 || syncProps.indexOf('base') !== -1;
+                mirrorProps = mirrorRequested.length > 0 ? mirrorRequested : null;
+                if (mirrorRequested.length === 0 && anchorRequested.length > 0) mirrorProps = false; // no mirror needed
+            }
 
-                // Non-controlling player page tokens become children of the first chain member
-                if (childTokens.length > 0 && chainTokens.length > 0) {
-                    var chainParent = chainTokens[0];
-                    childTokens.forEach(function(t) {
-                        Anchor.anchorObj(t.get('id'), chainParent.get('id'));
+            // Set up Anchor links (spatial sync)
+            if (needsAnchor) {
+                if (controllerIds.length === 0) {
+                    // NPC: master is parent, all others are children
+                    var parent = tokens.find(function(t) { return t.get('_pageid') === groupInfo.master; });
+                    if (!parent) parent = tokens[0];
+                    tokens.forEach(function(t) {
+                        if (t.get('id') === parent.get('id')) return;
+                        Anchor.anchorObj(t.get('id'), parent.get('id'));
                     });
+                } else {
+                    // Player-controlled: chain-link master + controlling players' pages
+                    var chainPageIds = [groupInfo.master];
+                    controllerIds.forEach(function(pid) {
+                        if (groupInfo.players[pid]) chainPageIds.push(groupInfo.players[pid].pageId);
+                    });
+
+                    var chainTokens = tokens.filter(function(t) { return chainPageIds.indexOf(t.get('_pageid')) !== -1; });
+                    var childTokens = tokens.filter(function(t) { return chainPageIds.indexOf(t.get('_pageid')) === -1; });
+
+                    var chainIds = chainTokens.map(function(t) { return t.get('id'); });
+                    if (chainIds.length >= 2) {
+                        Anchor.chainAnchorObjs(chainIds);
+                    }
+
+                    if (childTokens.length > 0 && chainTokens.length > 0) {
+                        var chainParent = chainTokens[0];
+                        childTokens.forEach(function(t) {
+                            Anchor.anchorObj(t.get('id'), chainParent.get('id'));
+                        });
+                    }
                 }
             }
 
@@ -621,13 +643,13 @@ var Gaslight = Gaslight || (() => {
             });
 
             // Set up Mirror chain for non-spatial property sync
-            if (typeof Mirror !== 'undefined') {
-                var syncProps = getGaslightSync(repCharId);
-                if (syncProps !== '') {
-                    // syncProps: null = default (all minus anchor), array = specific, '' = no sync
-                    var mirrorProps = syncProps || null; // null = api-all (minus anchor via exclude)
-                    var mirrorExcludes = syncProps ? [] : Mirror.PROP_GROUPS.anchor;
-                    Mirror.chainLink(ids, mirrorProps, mirrorExcludes);
+            if (typeof Mirror !== 'undefined' && mirrorProps !== false) {
+                if (mirrorProps === null) {
+                    // Default: sync all minus anchor props
+                    Mirror.chainLink(ids, null, Mirror.PROP_GROUPS.anchor);
+                } else if (Array.isArray(mirrorProps) && mirrorProps.length > 0) {
+                    // Specific non-spatial props
+                    Mirror.chainLink(ids, mirrorProps);
                 }
             }
 
