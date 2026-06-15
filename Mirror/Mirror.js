@@ -263,6 +263,48 @@ var Mirror = Mirror || (() => {
 
     var syncing = false;
 
+    /**
+     * Recursively propagate updates to targets and their children.
+     * visited prevents infinite loops in circular link structures.
+     */
+    const propagateUpdates = (tokenId, updates, visited) => {
+        var s = state[SCRIPT_NAME];
+        Object.values(s.links).forEach(function(link) {
+            var idx = link.ids.indexOf(tokenId);
+            if (idx === -1) return;
+
+            var effectiveProps = getEffectiveProps(link);
+            var relevantUpdates = {};
+            Object.keys(updates).forEach(function(p) {
+                if (effectiveProps.indexOf(p) !== -1) relevantUpdates[p] = updates[p];
+            });
+            if (Object.keys(relevantUpdates).length === 0) return;
+
+            if (link.mode === 'chain') {
+                link.ids.forEach(function(id) {
+                    if (id === tokenId || visited.has(id)) return;
+                    visited.add(id);
+                    var target = getObj('graphic', id);
+                    if (target) {
+                        target.set(relevantUpdates);
+                        propagateUpdates(id, relevantUpdates, visited);
+                    }
+                });
+            } else if (idx === 0) {
+                // Source: propagate down to children
+                link.ids.slice(1).forEach(function(id) {
+                    if (visited.has(id)) return;
+                    visited.add(id);
+                    var target = getObj('graphic', id);
+                    if (target) {
+                        target.set(relevantUpdates);
+                        propagateUpdates(id, relevantUpdates, visited);
+                    }
+                });
+            }
+        });
+    };
+
     const onGraphicChanged = (obj, prev) => {
         if (syncing) return;
         var s = state[SCRIPT_NAME];
@@ -277,51 +319,53 @@ var Mirror = Mirror || (() => {
         // Grow known props set with any discovered properties
         changed.forEach(function(p) { s.knownProps[p] = true; });
 
+        syncing = true;
+        var visited = new Set([tokenId]);
+
         Object.values(s.links).forEach(function(link) {
             var idx = link.ids.indexOf(tokenId);
             if (idx === -1) return;
 
-            // Determine relevant changed props for this link
             var effectiveProps = getEffectiveProps(link);
             var relevantProps = changed.filter(function(p) { return effectiveProps.indexOf(p) !== -1; });
             if (relevantProps.length === 0) return;
 
+            var updates = {};
+            relevantProps.forEach(function(p) { updates[p] = obj.get(p); });
+
             if (link.mode === 'chain') {
-                // Bidirectional: propagate to all others
-                var updates = {};
-                relevantProps.forEach(function(p) { updates[p] = obj.get(p); });
-                syncing = true;
                 link.ids.forEach(function(id) {
-                    if (id === tokenId) return;
+                    if (visited.has(id)) return;
+                    visited.add(id);
                     var target = getObj('graphic', id);
-                    if (target) target.set(updates);
-                });
-                syncing = false;
-            } else {
-                // Unidirectional
-                if (idx === 0) {
-                    // Source changed: propagate to targets
-                    var updates = {};
-                    relevantProps.forEach(function(p) { updates[p] = obj.get(p); });
-                    syncing = true;
-                    link.ids.slice(1).forEach(function(id) {
-                        var target = getObj('graphic', id);
-                        if (target) target.set(updates);
-                    });
-                    syncing = false;
-                } else if (!link.soft) {
-                    // Hard lock: revert child to source value
-                    var source = getObj('graphic', link.ids[0]);
-                    if (source) {
-                        var revert = {};
-                        relevantProps.forEach(function(p) { revert[p] = source.get(p); });
-                        syncing = true;
-                        obj.set(revert);
-                        syncing = false;
+                    if (target) {
+                        target.set(updates);
+                        propagateUpdates(id, updates, visited);
                     }
+                });
+            } else if (idx === 0) {
+                // Source: propagate to children recursively
+                link.ids.slice(1).forEach(function(id) {
+                    if (visited.has(id)) return;
+                    visited.add(id);
+                    var target = getObj('graphic', id);
+                    if (target) {
+                        target.set(updates);
+                        propagateUpdates(id, updates, visited);
+                    }
+                });
+            } else if (!link.soft) {
+                // Hard lock: revert child to source value
+                var source = getObj('graphic', link.ids[0]);
+                if (source) {
+                    var revert = {};
+                    relevantProps.forEach(function(p) { revert[p] = source.get(p); });
+                    obj.set(revert);
                 }
             }
         });
+
+        syncing = false;
     };
 
     // =========================================================================
@@ -631,17 +675,28 @@ var Mirror = Mirror || (() => {
                 }
 
                 if (doDown) {
-                    asParent.forEach(function(entry) {
-                        var link = entry.link;
-                        var props = parsed.props === null ? getEffectiveProps(link) :
-                                    parsed.props === 'all' ? getKnownProps() : parsed.props;
+                    var downVisited = new Set([parsed.ids[0]]);
+                    var alignDown = function(parentId, props) {
+                        var s = state[SCRIPT_NAME];
+                        var parentObj = getObj('graphic', parentId);
+                        if (!parentObj) return;
                         var updates = {};
-                        props.forEach(function(p) { updates[p] = source.get(p); });
-                        link.ids.slice(1).forEach(function(tid) {
-                            var t = getObj('graphic', tid);
-                            if (t) { t.set(updates); aligned++; }
+                        props.forEach(function(p) { updates[p] = parentObj.get(p); });
+                        Object.values(s.links).forEach(function(link) {
+                            if (link.mode !== 'link' || link.ids[0] !== parentId) return;
+                            var linkProps = parsed.props === null ? getEffectiveProps(link) :
+                                        parsed.props === 'all' ? getKnownProps() : parsed.props;
+                            var linkUpdates = {};
+                            linkProps.forEach(function(p) { linkUpdates[p] = parentObj.get(p); });
+                            link.ids.slice(1).forEach(function(tid) {
+                                if (downVisited.has(tid)) return;
+                                downVisited.add(tid);
+                                var t = getObj('graphic', tid);
+                                if (t) { t.set(linkUpdates); aligned++; alignDown(tid, linkProps); }
+                            });
                         });
-                    });
+                    };
+                    alignDown(parsed.ids[0], parsed.props === null ? getKnownProps() : (parsed.props === 'all' ? getKnownProps() : parsed.props));
                 }
 
                 reply(msg, 'Align', 'Aligned ' + aligned + ' token(s).');
