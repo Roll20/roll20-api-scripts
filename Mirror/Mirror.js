@@ -55,7 +55,8 @@ var Mirror = Mirror || (() => {
                 'has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
                 'emits_bright_light', 'bright_light_distance', 'emits_low_light', 'low_light_distance'],
         auras: ['aura1_radius', 'aura1_color', 'aura1_square', 'aura2_radius', 'aura2_color', 'aura2_square'],
-        flip: ['flipv', 'fliph']
+        flip: ['flipv', 'fliph'],
+        anchor: ['left', 'top', 'width', 'height', 'rotation', 'flipv', 'fliph', 'layer']
     };
 
     // =========================================================================
