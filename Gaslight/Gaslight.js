@@ -1226,6 +1226,111 @@ var Gaslight = Gaslight || (() => {
      * Shared relay execution: sends command to linked tokens on target pages.
      * Returns number of tokens relayed to.
      */
+    /**
+     * Find all Roll20 IDs (starting with -) in a command string that match linked tokens.
+     * Returns { found: [{id, linkedIds}], hasIds: bool }
+     */
+    const findLinkedIdsInCommand = (command, activeGroups) => {
+        var idRx = /-[A-Za-z0-9_-]{19}/g;
+        var matches = command.match(idRx) || [];
+        var found = [];
+        matches.forEach(function(id) {
+            var linkedIds = [];
+            Object.values(activeGroups).forEach(function(active) {
+                var allLinked = active.linkedTokens[id] || [];
+                Object.entries(active.linkedTokens).forEach(function(entry) {
+                    if (entry[1].indexOf(id) !== -1) {
+                        allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                    }
+                });
+                allLinked = allLinked.filter(function(lid, i) { return allLinked.indexOf(lid) === i && lid !== id; });
+                linkedIds = linkedIds.concat(allLinked);
+            });
+            if (linkedIds.length > 0) found.push({ id: id, linkedIds: linkedIds });
+        });
+        return { found: found, hasIds: found.length > 0 };
+    };
+
+    /**
+     * Path 2: Replace token IDs in command with linked counterparts per target page, emit immediately.
+     */
+    const relayByIdReplacement = (sender, command, activeGroups, targetPlayerIds) => {
+        var idInfo = findLinkedIdsInCommand(command, activeGroups);
+        if (!idInfo.hasIds) return 0;
+
+        var relayed = 0;
+        targetPlayerIds.forEach(function(playerId) {
+            var newCmd = command;
+            idInfo.found.forEach(function(entry) {
+                // Find the linked token that's on this player's page
+                var targetId = null;
+                Object.values(activeGroups).forEach(function(active) {
+                    if (targetId) return;
+                    var playerPage = active.playerPages[playerId];
+                    if (!playerPage) return;
+                    entry.linkedIds.forEach(function(lid) {
+                        if (targetId) return;
+                        var obj = getObj('graphic', lid);
+                        if (obj && obj.get('_pageid') === playerPage.pageId) targetId = lid;
+                    });
+                });
+                if (targetId) newCmd = newCmd.replace(entry.id, targetId);
+            });
+            if (newCmd !== command) {
+                sendChat(sender, newCmd);
+                relayed++;
+            }
+        });
+        return relayed;
+    };
+
+    /**
+     * Path 1: Queue commands for execution when GM visits the target page.
+     */
+    const queueRelay = (sender, tokens, command, targetPlayerIds) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.relayQueue) s.relayQueue = {};
+        var tokenIds = tokens.map(function(t) { return t.get('id'); });
+
+        targetPlayerIds.forEach(function(playerId) {
+            // Find the linked token IDs for this player page
+            var linkedIds = [];
+            Object.values(s.activeGroups).forEach(function(active) {
+                var playerPage = active.playerPages[playerId];
+                if (!playerPage) return;
+                tokenIds.forEach(function(tokenId) {
+                    var allLinked = active.linkedTokens[tokenId] || [];
+                    Object.entries(active.linkedTokens).forEach(function(entry) {
+                        if (entry[1].indexOf(tokenId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                    });
+                    allLinked.filter(function(id) {
+                        var obj = getObj('graphic', id);
+                        return obj && obj.get('_pageid') === playerPage.pageId;
+                    }).forEach(function(id) {
+                        if (linkedIds.indexOf(id) === -1) linkedIds.push(id);
+                    });
+                });
+            });
+
+            if (linkedIds.length > 0) {
+                var pageId = null;
+                Object.values(s.activeGroups).forEach(function(active) {
+                    var pp = active.playerPages[playerId];
+                    if (pp) pageId = pp.pageId;
+                });
+                if (pageId) {
+                    if (!s.relayQueue[pageId]) s.relayQueue[pageId] = [];
+                    s.relayQueue[pageId].push({ sender: sender, command: command, selectIds: linkedIds });
+                }
+            }
+        });
+
+        var queuedPages = Object.keys(s.relayQueue).filter(function(pid) { return s.relayQueue[pid].length > 0; });
+        if (queuedPages.length > 0) {
+            sendChat(SCRIPT_NAME, '/w gm Queued relay commands for ' + queuedPages.length + ' page(s). Navigate to player pages to execute.');
+        }
+    };
+
     const executeRelay = (sender, tokens, command, targetPlayerIds, includeMaster) => {
         var s = state[SCRIPT_NAME];
         var relayed = 0;
@@ -1237,38 +1342,39 @@ var Gaslight = Gaslight || (() => {
         }
 
         if (targetPlayerIds.length > 0) {
-            // Collect linked tokens in selection order
-            var orderedLinkedIds = [];
-            tokens.forEach(function(token) {
-                var tokenId = token.get('id');
-                Object.values(s.activeGroups).forEach(function(active) {
-                    var allLinked = active.linkedTokens[tokenId] || [];
-                    Object.entries(active.linkedTokens).forEach(function(entry) {
-                        if (entry[1].indexOf(tokenId) !== -1) {
-                            allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
-                        }
-                    });
-                    allLinked = allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i && id !== tokenId; });
-
-                    allLinked.forEach(function(id) {
-                        var obj = getObj('graphic', id);
-                        if (!obj) return;
-                        var pageId = obj.get('_pageid');
-                        var isTarget = Object.entries(active.playerPages).some(function(entry) {
-                            return targetPlayerIds.indexOf(entry[0]) !== -1 && entry[1].pageId === pageId;
-                        });
-                        if (isTarget && orderedLinkedIds.indexOf(id) === -1) orderedLinkedIds.push(id);
-                    });
-                });
-            });
-
-            if (orderedLinkedIds.length > 0) {
-                sendChat(sender, command + ' {& select ' + orderedLinkedIds.join(', ') + '}');
-                relayed += orderedLinkedIds.length;
+            // Path 2: try ID replacement first (works cross-page)
+            var idRelayed = relayByIdReplacement(sender, command, s.activeGroups, targetPlayerIds);
+            if (idRelayed > 0) {
+                relayed += idRelayed;
+            } else {
+                // Path 1: queue for when GM visits page (selection-based)
+                queueRelay(sender, tokens, command, targetPlayerIds);
             }
         }
 
         return relayed;
+    };
+
+    /**
+     * Poll _lastpage to fire queued relay commands when GM arrives on a target page.
+     */
+    const pollRelayQueue = () => {
+        var s = state[SCRIPT_NAME];
+        if (!s.relayQueue) return;
+
+        var gmPlayers = findObjs({ _type: 'player' }).filter(function(p) { return playerIsGM(p.get('_id')); });
+        gmPlayers.forEach(function(gm) {
+            var lastPage = gm.get('_lastpage');
+            if (!lastPage) return;
+            var queue = s.relayQueue[lastPage];
+            if (!queue || queue.length === 0) return;
+
+            // Fire all queued commands for this page
+            queue.forEach(function(entry) {
+                sendChat(entry.sender, entry.command + ' {& select ' + entry.selectIds.join(', ') + '}');
+            });
+            delete s.relayQueue[lastPage];
+        });
     };
 
     /**
@@ -1569,6 +1675,15 @@ var Gaslight = Gaslight || (() => {
             case 'view':    doView(msg, args);    break;
             case 'stage':   doStage(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
+            case 'test-relay': {
+                // Temporary: test sendChat with {& select}
+                var testId = args[0] || '';
+                if (!testId) { reply(msg, 'Error', 'Provide a token ID'); break; }
+                var testCmd = '!token-mod --set bar1_value|42 {& select ' + testId + '}';
+                log(SCRIPT_NAME + ': test-relay sending: ' + testCmd);
+                sendChat(getPlayerName(msg.playerid), testCmd);
+                break;
+            }
             case 'status':  doStatus(msg);        break;
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
@@ -1686,6 +1801,7 @@ var Gaslight = Gaslight || (() => {
         on('chat:message', viewInterceptor);
         on('add:graphic', onTokenAdded);
         on('destroy:graphic', onTokenDestroyed);
+        setInterval(pollRelayQueue, 500);
     };
 
     return { checkInstall, registerEventHandlers };
