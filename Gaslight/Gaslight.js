@@ -1038,9 +1038,10 @@ var Gaslight = Gaslight || (() => {
         }
 
         if (targetPlayerIds.length > 0) {
+            // Collect linked tokens in selection order
+            var orderedLinkedIds = [];
             tokens.forEach(function(token) {
                 var tokenId = token.get('id');
-                var linkedIds = [];
                 Object.values(s.activeGroups).forEach(function(active) {
                     var allLinked = active.linkedTokens[tokenId] || [];
                     Object.entries(active.linkedTokens).forEach(function(entry) {
@@ -1057,16 +1058,15 @@ var Gaslight = Gaslight || (() => {
                         var isTarget = Object.entries(active.playerPages).some(function(entry) {
                             return targetPlayerIds.indexOf(entry[0]) !== -1 && entry[1].pageId === pageId;
                         });
-                        if (isTarget) linkedIds.push(id);
+                        if (isTarget && orderedLinkedIds.indexOf(id) === -1) orderedLinkedIds.push(id);
                     });
                 });
-
-                linkedIds = linkedIds.filter(function(id, i) { return linkedIds.indexOf(id) === i; });
-                linkedIds.forEach(function(id) {
-                    sendChat(sender, command + ' {& select ' + id + '}');
-                    relayed++;
-                });
             });
+
+            if (orderedLinkedIds.length > 0) {
+                sendChat(sender, command + ' {& select ' + orderedLinkedIds.join(', ') + '}');
+                relayed += orderedLinkedIds.length;
+            }
         }
 
         return relayed;
