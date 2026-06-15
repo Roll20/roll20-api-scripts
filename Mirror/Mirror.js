@@ -607,7 +607,8 @@ var Mirror = Mirror || (() => {
         var unlinked = args.indexOf('--unlinked') !== -1;
         var up = args.indexOf('--up') !== -1;
         var down = args.indexOf('--down') !== -1;
-        args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked' && a !== '--up' && a !== '--down' && a !== '--chain'; });
+        var ifLinked = args.indexOf('--if-linked') !== -1;
+        args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked' && a !== '--up' && a !== '--down' && a !== '--chain' && a !== '--if-linked'; });
         if (!linked && !unlinked) linked = true;
         // --up takes precedence; --up --down is same as --up
         if (up) down = false;
@@ -656,8 +657,10 @@ var Mirror = Mirror || (() => {
                     Object.values(s.links).forEach(function(link) {
                         var idx = link.ids.indexOf(tokenId);
                         if (idx === -1) return;
-                        var linkProps = parsed.props === null ? getEffectiveProps(link) :
+                        var requestedProps = parsed.props === null ? getEffectiveProps(link) :
                                     parsed.props === 'all' ? getKnownProps() : parsed.props;
+                        // --if-linked: intersect with link's effective props
+                        var linkProps = ifLinked ? requestedProps.filter(function(p) { return getEffectiveProps(link).indexOf(p) !== -1; }) : requestedProps;
                         var updates = {};
                         linkProps.forEach(function(p) { updates[p] = tokenObj.get(p); });
 
