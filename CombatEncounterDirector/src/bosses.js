@@ -1,7 +1,42 @@
 import { BOSS_PRESETS, VALID_BOSS_PRESETS } from './constants.js';
 import { getConfig, setTokenRecord } from './state.js';
-import { applyAcToToken, ensureTokenRecord, getSelectedTokens, writeTokenHp } from './tokens.js';
+import { ensureTokenRecord, getSelectedTokens, writeTokenHp } from './tokens.js';
 import { getTokenName, roundAtLeastOne } from './utils.js';
+
+/**
+ * Applies the HP portion of a boss preset to a token record.
+ *
+ * @param {Graphic} token Roll20 Graphic object.
+ * @param {object} record Token state record.
+ * @param {object} preset Boss preset config.
+ * @returns {void}
+ */
+function applyBossHp(token, record, preset) {
+  if (preset.hpMode === 'set') {
+    // Minion: force HP to a fixed value — only when the HP bar was present.
+    if (record.original.maxHp !== null) {
+      writeTokenHp(token, preset.hp, preset.hp);
+      record.hpModifier = preset.hp === 1 ? -999 : preset.hp; // flag for report display
+    }
+    return;
+  }
+
+  // percent mode: scale from original max HP.
+  // Guard: blank bar (null) or zero/negative max means we cannot derive a value.
+  const hasScalableMaxHp = record.original.maxHp !== null && record.original.maxHp > 0;
+  if (!hasScalableMaxHp) {
+    return;
+  }
+
+  const newMax = roundAtLeastOne((record.original.maxHp * preset.hp) / 100);
+  const hpRatio =
+    record.original.hp !== null && record.original.hp > 0
+      ? record.original.hp / record.original.maxHp
+      : 1;
+  const newHp = roundAtLeastOne(newMax * hpRatio);
+  writeTokenHp(token, Math.min(newHp, newMax), newMax);
+  record.hpModifier = preset.hp;
+}
 
 /**
  * Returns the boss preset configuration for a given key.
@@ -40,27 +75,7 @@ export function isValidBossPreset(key) {
  */
 export function applyBossPresetToToken(token, preset, presetKey) {
   const record = ensureTokenRecord(token);
-
-  if (preset.hpMode === 'set') {
-    // Minion: force HP to a fixed value — only when the HP bar was present.
-    if (record.original.maxHp !== null) {
-      writeTokenHp(token, preset.hp, preset.hp);
-      record.hpModifier = preset.hp === 1 ? -999 : preset.hp; // flag for report display
-    }
-  } else {
-    // percent mode: scale from original max HP.
-    // Guard: blank bar (null) or zero/negative max means we cannot derive a value.
-    if (record.original.maxHp !== null && record.original.maxHp > 0) {
-      const newMax = roundAtLeastOne((record.original.maxHp * preset.hp) / 100);
-      const hpRatio =
-        record.original.hp !== null && record.original.hp > 0
-          ? record.original.hp / record.original.maxHp
-          : 1;
-      const newHp = roundAtLeastOne(newMax * hpRatio);
-      writeTokenHp(token, Math.min(newHp, newMax), newMax);
-      record.hpModifier = preset.hp;
-    }
-  }
+  applyBossHp(token, record, preset);
 
   // Apply AC modifier — skipped when original.ac is null (blank bar or 'none').
   if (record.original.ac !== null) {
