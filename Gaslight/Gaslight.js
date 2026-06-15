@@ -695,6 +695,105 @@ var Gaslight = Gaslight || (() => {
     // Commands
     // =========================================================================
 
+    /**
+     * Quick setup: auto-configure a group from duplicate pages.
+     * !gaslight setup <group_name> [--selected | player1 player2 ...]
+     * Expects N+1 pages with the same name (or name prefix). Assigns master + players.
+     */
+    const doSetup = (msg, args) => {
+        if (args.length < 1) { reply(msg, 'Error', 'Usage: !gaslight setup &lt;group_name&gt; [--selected | player names...]'); return; }
+        var groupName = args.shift();
+
+        // Determine players
+        var useSelected = args.indexOf('--selected') !== -1;
+        args = args.filter(function(a) { return a !== '--selected'; });
+
+        var playerIds = [];
+        if (useSelected && msg.selected && msg.selected.length > 0) {
+            // Get players from selected tokens' character controllers
+            msg.selected.forEach(function(sel) {
+                var obj = getObj(sel._type, sel._id);
+                if (!obj) return;
+                var charId = obj.get('represents');
+                if (!charId) return;
+                var character = getObj('character', charId);
+                if (!character) return;
+                var cb = character.get('controlledby') || '';
+                if (cb && cb !== 'all') {
+                    cb.split(',').filter(Boolean).forEach(function(pid) {
+                        if (playerIds.indexOf(pid) === -1) playerIds.push(pid);
+                    });
+                }
+            });
+        } else if (args.length > 0) {
+            // Resolve player names
+            args.forEach(function(name) {
+                var resolved = resolvePlayer(msg, name, CMD + ' setup ' + groupName);
+                if (resolved && resolved !== 'ambiguous' && resolved.id !== 'GM') {
+                    if (playerIds.indexOf(resolved.id) === -1) playerIds.push(resolved.id);
+                }
+            });
+        } else {
+            // Fallback: party-tagged characters
+            var characters = findObjs({ _type: 'character' });
+            characters.forEach(function(c) {
+                var tags = c.get('tags') || '';
+                if (!tags.toLowerCase().includes('party')) return;
+                var cb = c.get('controlledby') || '';
+                if (cb && cb !== 'all') {
+                    cb.split(',').filter(Boolean).forEach(function(pid) {
+                        if (playerIds.indexOf(pid) === -1) playerIds.push(pid);
+                    });
+                }
+            });
+        }
+
+        if (playerIds.length === 0) { reply(msg, 'Error', 'No players found. Use --selected, provide names, or tag party characters.'); return; }
+
+        // Find the master page (where selected token is, or current player page)
+        var masterPageId = resolvePageId(msg, []);
+        var masterPage = getObj('page', masterPageId);
+        if (!masterPage) { reply(msg, 'Error', 'Could not determine master page. Select a token on the master page.'); return; }
+        var masterName = masterPage.get('name');
+
+        // Find candidate pages: pages with the same name or name starting with masterName
+        var allPages = findObjs({ _type: 'page' });
+        var candidates = allPages.filter(function(p) {
+            return p.get('name') === masterName || p.get('name').indexOf(masterName) === 0;
+        });
+
+        // We need N+1 pages (1 master + N players)
+        var needed = playerIds.length + 1;
+        if (candidates.length < needed) {
+            reply(msg, 'Error', 'Found ' + candidates.length + ' page(s) named "' + masterName + '..." but need ' + needed + ' (1 master + ' + playerIds.length + ' players). Duplicate the page ' + (needed - candidates.length) + ' more time(s).');
+            return;
+        }
+
+        // Assign: first candidate = master, rest = players (arbitrary order)
+        var masterCandidate = candidates.find(function(p) { return p.get('_id') === masterPageId; }) || candidates[0];
+        var playerCandidates = candidates.filter(function(p) { return p.get('_id') !== masterCandidate.get('_id'); }).slice(0, playerIds.length);
+
+        // Rename and configure
+        masterCandidate.set('name', masterName + ' (master)');
+        setConfigOnPage(masterCandidate.get('_id'), groupName, { player: 'GM' });
+
+        var assignments = [];
+        playerIds.forEach(function(pid, i) {
+            var page = playerCandidates[i];
+            var player = getObj('player', pid);
+            var playerName = player ? player.get('_displayname') : pid;
+            page.set('name', masterName + ' (' + playerName + ')');
+            setConfigOnPage(page.get('_id'), groupName, { player: playerName, playerid: pid });
+            assignments.push(playerName + ' → ' + page.get('name'));
+        });
+
+        var out = 'Group "<b>' + groupName + '</b>" set up:<br>';
+        out += 'Master: ' + masterCandidate.get('name') + '<br>';
+        out += assignments.join('<br>');
+        out += '<br><br>Run <code>!gaslight test ' + groupName + '</code> to verify, then <code>!gaslight split ' + groupName + '</code> to activate.';
+        reply(msg, 'Setup', out);
+    };
+
     const doSplit = (msg, args) => {
         var force = args.indexOf('--force') !== -1;
         args = args.filter(function(a) { return a !== '--force'; });
@@ -1410,6 +1509,7 @@ var Gaslight = Gaslight || (() => {
         const sub = (args.shift() || '').toLowerCase();
 
         switch (sub) {
+            case 'setup':   doSetup(msg, args);   break;
             case 'split':   doSplit(msg, args);   break;
             case 'merge':   doMerge(msg, args);   break;
             case 'test':    doTest(msg, args);    break;
