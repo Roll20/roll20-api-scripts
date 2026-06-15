@@ -1191,7 +1191,6 @@ var Gaslight = Gaslight || (() => {
 
         return relayed;
     };
-    };
 
     /**
      * Stage selected tokens: duplicate to player pages and link.
