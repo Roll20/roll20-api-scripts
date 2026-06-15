@@ -186,6 +186,7 @@ var Anchor = Anchor || (() => {
         ...Object.keys(ALIAS_MAP),
         'remove', 'lock', 'unlock', 'center', 'update', 'info',
         'track', 'untrack', 'retrack',
+        'chain',
         'ignore-selected', 'persist',
         'config',
         '--help',
@@ -1132,6 +1133,9 @@ var Anchor = Anchor || (() => {
         `<b>${CMD_TOKEN} center [ignore-selected] [child_id...]</b>`,
         'Snap child(ren) to anchor centre (0 offset, 0 rotation, 1:1 scale).',
         '',
+        `<b>${CMD_TOKEN} chain [component flags] [ignore-selected] [child_id...]</b>`,
+        'Mutually anchor tokens in a ring (A\u2192B, B\u2192C, C\u2192A). Move any one, all follow.',
+        '',
         `<b>${CMD_TOKEN} update [ignore-selected] [child_id...]</b>`,
         'Force immediate transform sync.',
         '',
@@ -1507,7 +1511,7 @@ var Anchor = Anchor || (() => {
             // Only skip the first otherArg as a potential anchor ID when we're
             // establishing a new anchor relationship AND it's actually a valid graphic.
             // If there's no valid graphic as the first arg, all otherArgs are child IDs.
-            const ACTION_FLAGS = ['remove', 'lock', 'unlock', 'center', 'update', 'info', 'track', 'untrack', 'retrack'];
+            const ACTION_FLAGS = ['remove', 'lock', 'unlock', 'center', 'update', 'info', 'track', 'untrack', 'retrack', 'chain'];
             const hasAction = ACTION_FLAGS.some(f => flags.has(f));
             const isNewAnchor = !hasAction && (Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.size === 0);
             const firstArgIsAnchor = isNewAnchor &&
@@ -1638,6 +1642,21 @@ var Anchor = Anchor || (() => {
                     if (Object.keys(toRemove).length > 0) removeTrackedComponents(id, toRemove);
                     if (Object.keys(toAdd).length > 0)    addTrackedComponents(id, toAdd);
                 });
+            }
+
+            // Chain — circular anchor ring: A→B, B→C, C→A
+            if (flags.has('chain')) {
+                const comps = resolveComponents(flags);
+                const ids = resolveChildIds(msg, flags, otherArgs);
+                if (ids.length < 2) {
+                    reply(msg, 'Error', 'Chain requires at least 2 tokens.');
+                } else {
+                    for (var i = 0; i < ids.length; i++) {
+                        var nextIdx = (i + 1) % ids.length;
+                        anchorObj(ids[i], ids[nextIdx], comps);
+                    }
+                    reply(msg, 'Info', 'Chain-linked ' + ids.length + ' tokens in a ring.');
+                }
             }
 
             // Info
