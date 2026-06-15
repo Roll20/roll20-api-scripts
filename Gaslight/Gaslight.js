@@ -1401,60 +1401,64 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * In player view mode, intercept non-gaslight API commands and re-emit
-     * with the linked player token as selection via SelectManager.
+     * In any active view mode, intercept non-gaslight API commands and re-emit
+     * with linked player tokens as selection via SelectManager.
+     * Master view: relay to ALL player pages.
+     * Player view: relay to that player's page only.
      */
     const viewInterceptor = (msg) => {
         if (msg.type !== 'api') return;
         var s = state[SCRIPT_NAME];
-        if (!s.view) return; // master view, don't intercept
+        if (Object.keys(s.activeGroups).length === 0) return; // no active gaslight
         if (msg.content.split(' ')[0] === CMD) return; // don't intercept our own commands
         if (!playerIsGM(msg.playerid)) return;
         if (!msg.selected || msg.selected.length === 0) return;
-        if (msg._gaslightRelayed) return; // prevent infinite loop
+        if (msg.content.indexOf('{& select') !== -1) return; // already has SelectManager, skip
 
-        var viewPlayerId = s.view;
+        var viewPlayerId = s.view; // null = master (all players), string = specific player
+
         var rewrittenIds = [];
         var needsRewrite = false;
 
         msg.selected.forEach(function(sel) {
             var tokenId = sel._id;
-            // Find the linked token on the viewed player's page
-            var linkedId = null;
-            Object.values(s.activeGroups).forEach(function(active) {
-                if (linkedId) return;
-                var playerPage = active.playerPages[viewPlayerId];
-                if (!playerPage) return;
-                var targetPageId = playerPage.pageId;
+            var allLinked = [];
 
-                // Check if this token has links, find the one on the target page
-                var allLinked = active.linkedTokens[tokenId] || [];
-                // Also check if tokenId is in someone else's list
+            Object.values(s.activeGroups).forEach(function(active) {
+                var linked = active.linkedTokens[tokenId] || [];
                 Object.entries(active.linkedTokens).forEach(function(entry) {
                     if (entry[1].indexOf(tokenId) !== -1) {
-                        allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                        linked = linked.concat([entry[0]]).concat(entry[1]);
                     }
                 });
-                allLinked = allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i && id !== tokenId; });
+                linked = linked.filter(function(id, i) { return linked.indexOf(id) === i && id !== tokenId; });
 
-                allLinked.forEach(function(id) {
-                    if (linkedId) return;
-                    var obj = getObj('graphic', id);
-                    if (obj && obj.get('_pageid') === targetPageId) linkedId = id;
-                });
+                if (viewPlayerId) {
+                    // Player view: only the token on that player's page
+                    var playerPage = active.playerPages[viewPlayerId];
+                    if (playerPage) {
+                        linked.forEach(function(id) {
+                            var obj = getObj('graphic', id);
+                            if (obj && obj.get('_pageid') === playerPage.pageId) rewrittenIds.push(id);
+                        });
+                    }
+                } else {
+                    // Master view: all linked tokens on all player pages
+                    linked.forEach(function(id) {
+                        var obj = getObj('graphic', id);
+                        if (obj && obj.get('_pageid') !== active.masterPageId) rewrittenIds.push(id);
+                    });
+                }
             });
 
-            if (linkedId) { rewrittenIds.push(linkedId); needsRewrite = true; }
-            else rewrittenIds.push(tokenId); // keep original if no match
+            if (rewrittenIds.length > 0) needsRewrite = true;
         });
 
         if (needsRewrite) {
-            // Suppress original by marking as handled (other scripts will also see this msg,
-            // but we can't prevent that). Instead, re-emit with correct selection.
+            // Deduplicate
+            rewrittenIds = rewrittenIds.filter(function(id, i) { return rewrittenIds.indexOf(id) === i; });
             var newCmd = msg.content + ' {& select ' + rewrittenIds.join(', ') + '}';
             sendChat('API', newCmd);
-            // Note: original msg still fires to other handlers with original selection.
-            // This is a best-effort approach — SelectManager-aware scripts will use the new selection.
         }
     };
 
