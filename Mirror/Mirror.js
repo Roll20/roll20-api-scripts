@@ -563,13 +563,13 @@ var Mirror = Mirror || (() => {
         var unlinked = args.indexOf('--unlinked') !== -1;
         var up = args.indexOf('--up') !== -1;
         var down = args.indexOf('--down') !== -1;
-        args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked' && a !== '--up' && a !== '--down'; });
-        // Default: --linked only
+        var chainFlag = args.indexOf('--chain') !== -1;
+        args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked' && a !== '--up' && a !== '--down' && a !== '--chain'; });
         if (!linked && !unlinked) linked = true;
 
         var parsed = parseCommand(msg, args);
 
-        // Allow single token if it's in a link/chain
+        // Single-token align
         if (parsed.ids.length === 1 && linked) {
             var singleLinks = findLinksForToken(parsed.ids[0]);
             if (singleLinks.length > 0) {
@@ -577,46 +577,30 @@ var Mirror = Mirror || (() => {
                 var asChild = singleLinks.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] !== parsed.ids[0]; });
                 var asChain = singleLinks.filter(function(e) { return e.link.mode === 'chain'; });
 
-                if (asParent.length > 0 && asChild.length > 0 && !up && !down) {
-                    reply(msg, 'Error', 'Token is both parent and child. Use --up (align to parent) or --down (align children to me).');
+                var types = (asChain.length > 0 ? 1 : 0) + (asParent.length > 0 ? 1 : 0) + (asChild.length > 0 ? 1 : 0);
+                var hasFlags = up || down || chainFlag;
+
+                // If multiple relationship types and no flags, error
+                if (types > 1 && !hasFlags) {
+                    var typeNames = [];
+                    if (asChain.length > 0) typeNames.push('--chain');
+                    if (asChild.length > 0) typeNames.push('--up');
+                    if (asParent.length > 0) typeNames.push('--down');
+                    reply(msg, 'Error', 'Token has multiple relationship types. Specify: ' + typeNames.join(', '));
                     return;
                 }
+
+                // Determine what to do
+                var doChainAlign = chainFlag || (!hasFlags && asChain.length > 0 && types === 1);
+                var doUp = up || (!hasFlags && asChild.length > 0 && types === 1);
+                var doDown = down || (!hasFlags && asParent.length > 0 && types === 1);
 
                 var aligned = 0;
                 var source = getObj('graphic', parsed.ids[0]);
                 if (!source) { reply(msg, 'Error', 'Token not found.'); return; }
 
-                // Handle chains
-                asChain.forEach(function(entry) {
-                    var link = entry.link;
-                    var props = parsed.props === null ? getEffectiveProps(link) :
-                                parsed.props === 'all' ? getKnownProps() : parsed.props;
-                    var updates = {};
-                    props.forEach(function(p) { updates[p] = source.get(p); });
-                    link.ids.forEach(function(tid) {
-                        if (tid === parsed.ids[0]) return;
-                        var t = getObj('graphic', tid);
-                        if (t) { t.set(updates); aligned++; }
-                    });
-                });
-
-                // Handle one-way links
-                if (down || (!up && asParent.length > 0 && asChild.length === 0)) {
-                    // Align children to me
-                    asParent.forEach(function(entry) {
-                        var link = entry.link;
-                        var props = parsed.props === null ? getEffectiveProps(link) :
-                                    parsed.props === 'all' ? getKnownProps() : parsed.props;
-                        var updates = {};
-                        props.forEach(function(p) { updates[p] = source.get(p); });
-                        link.ids.slice(1).forEach(function(tid) {
-                            var t = getObj('graphic', tid);
-                            if (t) { t.set(updates); aligned++; }
-                        });
-                    });
-                }
-                if (up || (!down && asChild.length > 0 && asParent.length === 0)) {
-                    // Align me to parent
+                // Application order: up → chain → down
+                if (doUp) {
                     asChild.forEach(function(entry) {
                         var link = entry.link;
                         var props = parsed.props === null ? getEffectiveProps(link) :
@@ -628,6 +612,35 @@ var Mirror = Mirror || (() => {
                             source.set(updates);
                             aligned++;
                         }
+                    });
+                }
+
+                if (doChainAlign) {
+                    asChain.forEach(function(entry) {
+                        var link = entry.link;
+                        var props = parsed.props === null ? getEffectiveProps(link) :
+                                    parsed.props === 'all' ? getKnownProps() : parsed.props;
+                        var updates = {};
+                        props.forEach(function(p) { updates[p] = source.get(p); });
+                        link.ids.forEach(function(tid) {
+                            if (tid === parsed.ids[0]) return;
+                            var t = getObj('graphic', tid);
+                            if (t) { t.set(updates); aligned++; }
+                        });
+                    });
+                }
+
+                if (doDown) {
+                    asParent.forEach(function(entry) {
+                        var link = entry.link;
+                        var props = parsed.props === null ? getEffectiveProps(link) :
+                                    parsed.props === 'all' ? getKnownProps() : parsed.props;
+                        var updates = {};
+                        props.forEach(function(p) { updates[p] = source.get(p); });
+                        link.ids.slice(1).forEach(function(tid) {
+                            var t = getObj('graphic', tid);
+                            if (t) { t.set(updates); aligned++; }
+                        });
                     });
                 }
 
