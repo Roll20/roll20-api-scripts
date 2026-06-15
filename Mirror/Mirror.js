@@ -186,11 +186,15 @@ var Mirror = Mirror || (() => {
     };
 
     /**
-     * Get the effective props for a link, accounting for 'all' and excludes.
+     * Get the effective props for a link, accounting for 'all'/'api-all' and excludes.
      */
     const getEffectiveProps = (link) => {
         if (link.props === 'all') {
             var excludes = (link.excludes || []).concat(getGlobalExcludes());
+            return getKnownProps().filter(function(p) { return excludes.indexOf(p) === -1; });
+        }
+        if (link.props === 'api-all') {
+            var excludes = link.excludes || [];
             return getKnownProps().filter(function(p) { return excludes.indexOf(p) === -1; });
         }
         return link.props;
@@ -574,12 +578,12 @@ var Mirror = Mirror || (() => {
 
     const link = (ids, props, soft) => {
         if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': link requires at least 2 IDs.'); return null; }
-        return createLink('link', props || getKnownProps(), ids, !!soft);
+        return createLink('link', props || 'api-all', ids, !!soft);
     };
 
     const chainLink = (ids, props) => {
         if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': chainLink requires at least 2 IDs.'); return null; }
-        return createLink('chain', props || getKnownProps(), ids, true);
+        return createLink('chain', props || 'api-all', ids, true);
     };
 
     const unlink = (ids, props) => {
