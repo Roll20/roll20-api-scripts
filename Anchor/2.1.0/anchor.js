@@ -715,7 +715,11 @@ var Anchor = Anchor || (() => {
      * If onlyComponents is provided, only those components are applied.
      * Otherwise, all tracked but UNLOCKED components are applied.
      */
-    const applyAnchorToChild = (childId, onlyComponents) => {
+    const applyAnchorToChild = (childId, onlyComponents, visited) => {
+        if (!visited) visited = new Set();
+        if (visited.has(childId)) return;
+        visited.add(childId);
+
         const s = state[SCRIPT_NAME];
         const info = s.anchorInfoByChildId[childId];
         if (!info) { setAnchor(childId, undefined); return; }
@@ -803,7 +807,7 @@ var Anchor = Anchor || (() => {
         // Propagate to this child's own children (if it is also an anchor)
         if (childId in s.anchorChildrenByAnchorId) {
             Object.keys(s.anchorChildrenByAnchorId[childId])
-                  .forEach(grandchildId => applyAnchorToChild(grandchildId));
+                  .forEach(grandchildId => applyAnchorToChild(grandchildId, undefined, visited));
         }
     };
 
@@ -880,8 +884,9 @@ var Anchor = Anchor || (() => {
 
         // Case 2: changed object is an anchor — push to children for their unlocked components
         if (id in s.anchorChildrenByAnchorId) {
+            const visited = new Set([id]);
             Object.keys(s.anchorChildrenByAnchorId[id])
-                  .forEach(childId => applyAnchorToChild(childId));
+                  .forEach(childId => applyAnchorToChild(childId, undefined, visited));
         }
 
         refreshObjState(obj);
