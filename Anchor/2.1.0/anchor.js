@@ -186,7 +186,7 @@ var Anchor = Anchor || (() => {
         ...Object.keys(ALIAS_MAP),
         'remove', 'lock', 'unlock', 'center', 'update', 'info',
         'track', 'untrack', 'retrack',
-        'chain',
+        'chain', 'unchain',
         'ignore-selected', 'persist',
         'config',
         '--help',
@@ -1136,6 +1136,9 @@ var Anchor = Anchor || (() => {
         `<b>${CMD_TOKEN} chain [component flags] [ignore-selected] [child_id...]</b>`,
         'Mutually anchor tokens in a ring (A\u2192B, B\u2192C, C\u2192A). Move any one, all follow.',
         '',
+        `<b>${CMD_TOKEN} unchain [ignore-selected] [child_id...]</b>`,
+        'Dissolve a chain ring. Select any one token in the ring.',
+        '',
         `<b>${CMD_TOKEN} update [ignore-selected] [child_id...]</b>`,
         'Force immediate transform sync.',
         '',
@@ -1511,7 +1514,7 @@ var Anchor = Anchor || (() => {
             // Only skip the first otherArg as a potential anchor ID when we're
             // establishing a new anchor relationship AND it's actually a valid graphic.
             // If there's no valid graphic as the first arg, all otherArgs are child IDs.
-            const ACTION_FLAGS = ['remove', 'lock', 'unlock', 'center', 'update', 'info', 'track', 'untrack', 'retrack', 'chain'];
+            const ACTION_FLAGS = ['remove', 'lock', 'unlock', 'center', 'update', 'info', 'track', 'untrack', 'retrack', 'chain', 'unchain'];
             const hasAction = ACTION_FLAGS.some(f => flags.has(f));
             const isNewAnchor = !hasAction && (Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.size === 0);
             const firstArgIsAnchor = isNewAnchor &&
@@ -1656,6 +1659,21 @@ var Anchor = Anchor || (() => {
                 }
             }
 
+            // Unchain — dissolve a chain ring from any member
+            if (flags.has('unchain')) {
+                const ids = resolveChildIds(msg, flags, otherArgs);
+                if (ids.length === 0) {
+                    reply(msg, 'Error', 'Select or specify a token in the chain.');
+                } else {
+                    var unchained = unchainAnchorObjs(ids[0]);
+                    if (unchained) {
+                        reply(msg, 'Info', 'Unchained ' + unchained.length + ' tokens.');
+                    } else {
+                        reply(msg, 'Error', 'Token is not part of a chain ring.');
+                    }
+                }
+            }
+
             // Info
             if (flags.has('info')) {
                 if (childIds.length > 0) {
@@ -1743,6 +1761,43 @@ var Anchor = Anchor || (() => {
             var nextIdx = (i + 1) % ids.length;
             anchorObj(ids[i], ids[nextIdx], components);
         }
+    };
+
+    /**
+     * Walk the anchor chain from a starting token and find the ring.
+     * Returns the array of IDs forming the ring, or null if no ring found.
+     * The starting token does not need to be in the ring itself — if it's
+     * a child of a ring member, the ring is still found.
+     */
+    const walkChain = (startId) => {
+        const s = state[SCRIPT_NAME];
+        const visited = [];
+        var current = startId;
+        while (true) {
+            var info = s.anchorInfoByChildId[current];
+            if (!info) return null; // not a child — dead end, no ring
+            visited.push(current);
+            var nextId = info.anchor_id;
+            var idx = visited.indexOf(nextId);
+            if (idx !== -1) return visited.slice(idx); // found the ring
+            current = nextId;
+            if (visited.length > 1000) return null; // safety cap
+        }
+    };
+
+    /**
+     * Unchain a ring of anchored tokens. Given any token ID in the ring,
+     * walks the chain and removes all anchor relationships.
+     * Returns the array of unchained IDs, or null if the token is not in a ring.
+     */
+    const unchainAnchorObjs = (startId) => {
+        var ids = walkChain(startId);
+        if (!ids) {
+            log(SCRIPT_NAME + ': unchainAnchorObjs — token is not part of a chain ring.');
+            return null;
+        }
+        ids.forEach(function(id) { removeAnchor(id); });
+        return ids;
     };
 
     /**
@@ -2450,6 +2505,7 @@ var Anchor = Anchor || (() => {
             lock,
             unlock,
             chainAnchorObjs,
+            unchainAnchorObjs,
         },
     };
 })();
