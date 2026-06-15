@@ -1446,6 +1446,8 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         if (Object.keys(s.activeGroups).length === 0) return;
         if (msg.content.split(' ')[0] === CMD) return;
+        var firstWord = msg.content.split(' ')[0];
+        if (firstWord === '!mirror' || firstWord === '!anchor') return;
         if (!playerIsGM(msg.playerid)) return;
         if (!msg.selected || msg.selected.length === 0) return;
         if (msg.content.indexOf('{& select') !== -1) return;
