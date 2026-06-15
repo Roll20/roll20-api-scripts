@@ -308,6 +308,54 @@ var Gaslight = Gaslight || (() => {
         return null;
     };
 
+    /**
+     * Stage a single token to target pages using 3-step logic.
+     * Returns number of clones created.
+     */
+    const stageTokenToPages = (token, targetPageIds) => {
+        var linkId = getLinkId(token);
+        var pagesToCloneTo = [];
+
+        if (linkId) {
+            // Step 1-2: find pages missing a token with this gaslight_link
+            targetPageIds.forEach(function(pageId) {
+                var targets = findObjs({ _type: 'graphic', _pageid: pageId, _subtype: 'token' });
+                var hasMatch = targets.some(function(t) { return getLinkId(t) === linkId; });
+                if (!hasMatch) pagesToCloneTo.push(pageId);
+            });
+        }
+
+        if (!linkId || pagesToCloneTo.length === 0) {
+            // Step 3: generate new gaslight_link and clone to all target pages
+            var newLinkId = genId();
+            setLinkId(token, newLinkId);
+            pagesToCloneTo = targetPageIds;
+        }
+
+        var cloned = 0;
+        pagesToCloneTo.forEach(function(targetPageId) {
+            var imgsrc = token.get('imgsrc');
+            if (!imgsrc) return;
+            var newToken = createObj('graphic', {
+                _subtype: 'token',
+                pageid: targetPageId,
+                imgsrc: imgsrc,
+                left: token.get('left'),
+                top: token.get('top'),
+                width: token.get('width'),
+                height: token.get('height'),
+                rotation: token.get('rotation'),
+                layer: token.get('layer'),
+                name: token.get('name'),
+                represents: token.get('represents') || '',
+                controlledby: token.get('controlledby') || ''
+            });
+            if (newToken) setLinkId(newToken, getLinkId(token));
+            cloned++;
+        });
+        return cloned;
+    };
+
     const autoPopulateLinkId = (token) => {
         if (getLinkId(token)) return; // already has one
         const charId = token.get('represents');
@@ -1257,47 +1305,8 @@ var Gaslight = Gaslight || (() => {
 
         var staged = 0;
         tokens.forEach(function(token) {
-            var linkId = getLinkId(token);
-            var pagesToCloneTo = [];
-
-            if (linkId) {
-                // Step 1-2: find pages missing a token with this gaslight_link
-                targetPlayerIds.forEach(function(pid) {
-                    var targetPageId = groupInfo.players[pid].pageId;
-                    var targets = findObjs({ _type: 'graphic', _pageid: targetPageId, _subtype: 'token' });
-                    var hasMatch = targets.some(function(t) { return getLinkId(t) === linkId; });
-                    if (!hasMatch) pagesToCloneTo.push(targetPageId);
-                });
-            }
-
-            if (!linkId || pagesToCloneTo.length === 0) {
-                // Step 3: generate new gaslight_link and clone to all target pages
-                var newLinkId = genId();
-                setLinkId(token, newLinkId);
-                pagesToCloneTo = targetPlayerIds.map(function(pid) { return groupInfo.players[pid].pageId; });
-            }
-
-            // Clone to determined pages
-            pagesToCloneTo.forEach(function(targetPageId) {
-                var imgsrc = token.get('imgsrc');
-                if (!imgsrc) return;
-                var newToken = createObj('graphic', {
-                    _subtype: 'token',
-                    pageid: targetPageId,
-                    imgsrc: imgsrc,
-                    left: token.get('left'),
-                    top: token.get('top'),
-                    width: token.get('width'),
-                    height: token.get('height'),
-                    rotation: token.get('rotation'),
-                    layer: token.get('layer'),
-                    name: token.get('name'),
-                    represents: token.get('represents') || '',
-                    controlledby: token.get('controlledby') || ''
-                });
-                if (newToken) setLinkId(newToken, getLinkId(token));
-                staged++;
-            });
+            var targetPages = targetPlayerIds.map(function(pid) { return groupInfo.players[pid].pageId; });
+            staged += stageTokenToPages(token, targetPages);
         });
 
         // Re-run linking for this group to pick up the new tokens
@@ -1340,43 +1349,9 @@ var Gaslight = Gaslight || (() => {
         var groupName = activeEntry[0];
         var groupInfo = { master: activeEntry[1].masterPageId, players: activeEntry[1].playerPages };
 
-        // Clone to player pages using 3-step staging logic
-        var linkId = getLinkId(obj);
-        var pagesToCloneTo = [];
-
-        if (linkId) {
-            Object.values(groupInfo.players).forEach(function(pInfo) {
-                var targets = findObjs({ _type: 'graphic', _pageid: pInfo.pageId, _subtype: 'token' });
-                var hasMatch = targets.some(function(t) { return getLinkId(t) === linkId; });
-                if (!hasMatch) pagesToCloneTo.push(pInfo.pageId);
-            });
-        }
-
-        if (!linkId || pagesToCloneTo.length === 0) {
-            var newLinkId = genId();
-            setLinkId(obj, newLinkId);
-            pagesToCloneTo = Object.values(groupInfo.players).map(function(pInfo) { return pInfo.pageId; });
-        }
-
-        pagesToCloneTo.forEach(function(targetPageId) {
-            var imgsrc = obj.get('imgsrc');
-            if (!imgsrc) return;
-            var newToken = createObj('graphic', {
-                _subtype: 'token',
-                pageid: targetPageId,
-                imgsrc: imgsrc,
-                left: obj.get('left'),
-                top: obj.get('top'),
-                width: obj.get('width'),
-                height: obj.get('height'),
-                rotation: obj.get('rotation'),
-                layer: obj.get('layer'),
-                name: obj.get('name'),
-                represents: charId,
-                controlledby: obj.get('controlledby') || ''
-            });
-            if (newToken) setLinkId(newToken, getLinkId(obj));
-        });
+        // Clone to player pages
+        var targetPages = Object.values(groupInfo.players).map(function(pInfo) { return pInfo.pageId; });
+        stageTokenToPages(obj, targetPages);
 
         // Re-link after a short delay to let createObj finish
         setTimeout(function() {
