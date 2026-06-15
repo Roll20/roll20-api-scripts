@@ -24,16 +24,29 @@
 - [x] gaslight_stage character attribute (auto-propagate on add)
 - [x] Cascade-delete linked tokens
 - [x] Anchor chain-linking for player tokens (removed GM override listener)
+- [x] !gaslight view (master/player view switching)
+- [x] !gaslight relay (explicit command relay to views)
+- [x] View interceptor (auto-relay commands from master page)
+- [x] Player relay-commands (auto-relay configured commands from player pages)
+- [x] !gaslight config (relay-add/relay-remove/relay-list)
+- [x] Relay preserves selection order
+- [x] Relay sends as invoking player (macros/permissions work)
+- [x] Interceptor skips !gaslight, !mirror, !anchor
+- [x] Loop prevention via {& select} check
 
 ## v2 Remaining
 - [ ] On-demand split (page cloning, adhoc flag, adhoc merge/cleanup)
 - [ ] Ad-hoc test (no group arg)
 - [ ] Reaction suppression (interactionTriggered reset)
 - [ ] Focus-ping players on split
-- [ ] Config visibility toggle (hide text in HTML comment)
+
+## v3 Ideas
+- [ ] Config handout (editable in-game, live reload)
+- [ ] Group/page-level relay-command overrides
+- [ ] Config visibility toggle (hide gaslight text in HTML comment)
 - [ ] Near-match suggestions in step 4 warnings
-- [ ] Per-status-marker sync granularity
-- [ ] Master page view toggling
+- [ ] Per-status-marker sync granularity (manual for now)
+- [ ] Replay command (re-run last N commands against different views)
 - [ ] Choreograph/Sequence integration
 
 ## Known Issues
