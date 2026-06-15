@@ -346,25 +346,43 @@ var Mirror = Mirror || (() => {
         if (parsed.ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
         var hasSpecificProps = parsed.props !== null && parsed.props !== 'all';
         var processed = 0;
+        var errors = [];
         parsed.ids.forEach(function(id) {
             findLinksForToken(id).forEach(function(entry) {
-                if (entry.link.mode !== 'link') return;
-                if (!hasSpecificProps) {
-                    // No props specified: remove entire link
-                    removePropsFromLink(entry.id, null);
-                } else if (entry.link.props === 'all') {
-                    // Link uses 'all': add props to excludes
-                    parsed.props.forEach(function(p) {
-                        if (entry.link.excludes.indexOf(p) === -1) entry.link.excludes.push(p);
-                    });
+                if (entry.link.mode === 'chain') {
+                    if (hasSpecificProps) {
+                        errors.push((getObj('graphic', id) || {get:function(){return id;}}).get('name') || id);
+                        return;
+                    }
+                    // Remove this token from the chain
+                    var link = entry.link;
+                    link.ids = link.ids.filter(function(tid) { return tid !== id; });
+                    // Rebuild chainedIds for removed token
+                    rebuildChainedIds(id, entry.id);
+                    // If chain has fewer than 2 members, destroy it
+                    if (link.ids.length < 2) {
+                        link.ids.forEach(function(tid) { rebuildChainedIds(tid, entry.id); });
+                        delete state[SCRIPT_NAME].links[entry.id];
+                    }
+                    processed++;
                 } else {
-                    // Link uses specific props: remove them
-                    removePropsFromLink(entry.id, parsed.props);
+                    // Non-chain: existing behavior
+                    if (!hasSpecificProps) {
+                        removePropsFromLink(entry.id, null);
+                    } else if (entry.link.props === 'all' || entry.link.props === 'api-all') {
+                        parsed.props.forEach(function(p) {
+                            if (entry.link.excludes.indexOf(p) === -1) entry.link.excludes.push(p);
+                        });
+                    } else {
+                        removePropsFromLink(entry.id, parsed.props);
+                    }
+                    processed++;
                 }
-                processed++;
             });
         });
-        reply(msg, 'Unlink', 'Processed ' + processed + ' link(s).');
+        var out = 'Processed ' + processed + ' link(s).';
+        if (errors.length > 0) out += '<br>Cannot unlink specific props from chain members: ' + errors.join(', ') + '. Use <code>!mirror unchain [props]</code> instead.';
+        reply(msg, 'Unlink', out);
     };
 
     const doChain = (msg, args) => {
