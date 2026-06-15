@@ -1171,13 +1171,6 @@ function handleReport(msg, args, playerId) {
 }
 
 /**
- * Handles !ced journal ... commands.
- *
- * @param {string[]} args Remaining arguments after 'journal'.
- * @param {string} playerId GM player ID.
- * @returns {void}
- */
-/**
  * Handles !ced deck [view] commands.
  * Rebuilds the Command Deck journal in the specified or stored view.
  *
@@ -1213,6 +1206,13 @@ function handleDeck(args, playerId) {
   );
 }
 
+/**
+ * Handles !ced journal ... commands.
+ *
+ * @param {string[]} args Remaining arguments after 'journal'.
+ * @param {string} playerId GM player ID.
+ * @returns {void}
+ */
 function handleJournal(args, playerId) {
   const [action] = args;
   const lang = locale();
