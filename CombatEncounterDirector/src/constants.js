@@ -38,7 +38,7 @@ export const DEFAULT_AC_BAR = 'bar2';
 export const LAYER_TOKEN = 'objects';
 export const LAYER_GM = 'gmlayer';
 export const LAYER_MAP = 'map';
-export const VALID_LAYERS = [LAYER_TOKEN, LAYER_GM, LAYER_MAP];
+export const VALID_LAYERS = new Set([LAYER_TOKEN, LAYER_GM, LAYER_MAP]);
 
 /**
  * Party-size scaling presets.
