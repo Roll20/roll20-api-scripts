@@ -55,8 +55,7 @@ var Mirror = Mirror || (() => {
                 'has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
                 'emits_bright_light', 'bright_light_distance', 'emits_low_light', 'low_light_distance'],
         auras: ['aura1_radius', 'aura1_color', 'aura1_square', 'aura2_radius', 'aura2_color', 'aura2_square'],
-        flip: ['flipv', 'fliph'],
-        all: ALL_PROPS.slice()
+        flip: ['flipv', 'fliph']
     };
 
     // =========================================================================
@@ -81,14 +80,18 @@ var Mirror = Mirror || (() => {
     const ensureState = () => {
         if (!state[SCRIPT_NAME]) {
             state[SCRIPT_NAME] = {
-                // linkId → { props: [...], ids: [...], mode: 'link'|'chain', soft: bool }
                 links: {},
-                // Set of token IDs that are part of any chain (for fast lookup)
-                chainedIds: {}
+                chainedIds: {},
+                knownProps: {}
             };
         }
         if (!state[SCRIPT_NAME].chainedIds) state[SCRIPT_NAME].chainedIds = {};
+        if (!state[SCRIPT_NAME].knownProps) state[SCRIPT_NAME].knownProps = {};
+        // Seed known props from ALL_PROPS
+        ALL_PROPS.forEach(function(p) { state[SCRIPT_NAME].knownProps[p] = true; });
     };
+
+    const getKnownProps = () => Object.keys(state[SCRIPT_NAME].knownProps);
 
     // =========================================================================
     // Property Resolution
@@ -98,7 +101,9 @@ var Mirror = Mirror || (() => {
         var props = [];
         var remaining = [];
         args.forEach(function(arg) {
-            if (PROP_GROUPS[arg]) {
+            if (arg === 'all') {
+                props = props.concat(getKnownProps());
+            } else if (PROP_GROUPS[arg]) {
                 props = props.concat(PROP_GROUPS[arg]);
             } else if (ALL_PROPS.indexOf(arg) !== -1) {
                 props.push(arg);
@@ -127,7 +132,7 @@ var Mirror = Mirror || (() => {
         var ids = resolved.remaining.filter(function(a) { return a.startsWith('-'); });
         ids = ids.concat(getSelectedIds(msg));
         ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; }); // dedupe
-        var props = resolved.props.length > 0 ? resolved.props : ALL_PROPS.slice();
+        var props = resolved.props.length > 0 ? resolved.props : getKnownProps();
         return { props: props, ids: ids, soft: soft, align: align };
     };
 
@@ -206,14 +211,14 @@ var Mirror = Mirror || (() => {
         var s = state[SCRIPT_NAME];
         var tokenId = obj.get('id');
 
-        // Find changed properties
-        var changed = [];
-        ALL_PROPS.forEach(function(prop) {
-            if (prev[prop] !== undefined && prev[prop] !== obj.get(prop)) {
-                changed.push(prop);
-            }
+        // Find changed properties dynamically from prev keys
+        var changed = Object.keys(prev).filter(function(k) {
+            return !k.startsWith('_') && prev[k] !== obj.get(k);
         });
         if (changed.length === 0) return;
+
+        // Grow known props set with any discovered properties
+        changed.forEach(function(p) { s.knownProps[p] = true; });
 
         Object.values(s.links).forEach(function(link) {
             var idx = link.ids.indexOf(tokenId);
@@ -373,12 +378,12 @@ var Mirror = Mirror || (() => {
 
     const link = (ids, props, soft) => {
         if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': link requires at least 2 IDs.'); return null; }
-        return createLink('link', props || ALL_PROPS.slice(), ids, !!soft);
+        return createLink('link', props || getKnownProps(), ids, !!soft);
     };
 
     const chainLink = (ids, props) => {
         if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': chainLink requires at least 2 IDs.'); return null; }
-        return createLink('chain', props || ALL_PROPS.slice(), ids, true);
+        return createLink('chain', props || getKnownProps(), ids, true);
     };
 
     const unlink = (ids, props) => {
