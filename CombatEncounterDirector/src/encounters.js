@@ -258,5 +258,5 @@ export function deleteEncounterTemplate(name) {
 export function listEncounterNames() {
   return getAllEncounters()
     .map((e) => e.name)
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 }
