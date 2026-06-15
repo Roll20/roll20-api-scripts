@@ -756,10 +756,19 @@ var Gaslight = Gaslight || (() => {
         if (!masterPage) { reply(msg, 'Error', 'Could not determine master page. Select a token on the master page.'); return; }
         var masterName = masterPage.get('name');
 
-        // Find candidate pages: pages with the same name or name starting with masterName
+        // Find candidate pages: same base name (strip recursive "Copy of " prefixes), or already has this group's config
         var allPages = findObjs({ _type: 'page' });
+        var stripCopyOf = function(name) {
+            while (name.indexOf('Copy of ') === 0) name = name.slice(8);
+            return name;
+        };
         var candidates = allPages.filter(function(p) {
-            return p.get('name') === masterName || p.get('name').indexOf(masterName) === 0;
+            var name = stripCopyOf(p.get('name'));
+            if (name === masterName) return true;
+            // Check if page already has config for this group
+            var cfg = getGroupConfigOnPage(p.get('_id'), groupName);
+            if (cfg) return true;
+            return false;
         });
 
         // We need N+1 pages (1 master + N players)
