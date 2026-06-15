@@ -1212,6 +1212,32 @@ var Gaslight = Gaslight || (() => {
         }, 500);
     };
 
+    const doConfig = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        if (args.length === 0) {
+            var cmds = s.config.relayCommands.length > 0 ? s.config.relayCommands.join(', ') : '(none)';
+            reply(msg, 'Config', '<b>relay-commands:</b> ' + cmds);
+            return;
+        }
+        var sub = args.shift();
+        if (sub === 'relay-add') {
+            if (args.length === 0) { reply(msg, 'Error', 'Specify command(s) to add.'); return; }
+            args.forEach(function(cmd) {
+                if (s.config.relayCommands.indexOf(cmd) === -1) s.config.relayCommands.push(cmd);
+            });
+            reply(msg, 'Config', 'relay-commands: ' + s.config.relayCommands.join(', '));
+        } else if (sub === 'relay-remove') {
+            if (args.length === 0) { reply(msg, 'Error', 'Specify command(s) to remove.'); return; }
+            s.config.relayCommands = s.config.relayCommands.filter(function(c) { return args.indexOf(c) === -1; });
+            reply(msg, 'Config', 'relay-commands: ' + (s.config.relayCommands.length > 0 ? s.config.relayCommands.join(', ') : '(none)'));
+        } else if (sub === 'relay-list') {
+            var cmds = s.config.relayCommands.length > 0 ? s.config.relayCommands.join(', ') : '(none)';
+            reply(msg, 'Config', 'relay-commands: ' + cmds);
+        } else {
+            reply(msg, 'Error', 'Usage: !gaslight config [relay-add|relay-remove|relay-list] [commands...]');
+        }
+    };
+
     const doStatus = (msg) => {
         const s = state[SCRIPT_NAME];
         const groups = Object.keys(s.activeGroups);
@@ -1374,6 +1400,7 @@ var Gaslight = Gaslight || (() => {
             case 'relay':   doRelay(msg, args);   break;
             case 'view':    doView(msg, args);    break;
             case 'stage':   doStage(msg, args);   break;
+            case 'config':  doConfig(msg, args);  break;
             case 'status':  doStatus(msg);        break;
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
