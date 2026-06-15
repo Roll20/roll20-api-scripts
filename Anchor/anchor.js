@@ -1651,10 +1651,7 @@ var Anchor = Anchor || (() => {
                 if (ids.length < 2) {
                     reply(msg, 'Error', 'Chain requires at least 2 tokens.');
                 } else {
-                    for (var i = 0; i < ids.length; i++) {
-                        var nextIdx = (i + 1) % ids.length;
-                        anchorObj(ids[i], ids[nextIdx], comps);
-                    }
+                    chainAnchorObjs(ids, comps);
                     reply(msg, 'Info', 'Chain-linked ' + ids.length + ' tokens in a ring.');
                 }
             }
@@ -1731,6 +1728,22 @@ var Anchor = Anchor || (() => {
 
     /** Remove the anchor relationship from a child object. */
     const removeAnchor = (childId) => setAnchor(childId, undefined);
+
+    /**
+     * Mutually anchor a list of token IDs in a ring (A→B, B→C, C→A).
+     * Move any one and all others follow.
+     * `components` is optional; defaults to all components.
+     */
+    const chainAnchorObjs = (ids, components) => {
+        if (!ids || ids.length < 2) {
+            log(SCRIPT_NAME + ': chainAnchorObjs requires at least 2 token IDs.');
+            return;
+        }
+        for (var i = 0; i < ids.length; i++) {
+            var nextIdx = (i + 1) % ids.length;
+            anchorObj(ids[i], ids[nextIdx], components);
+        }
+    };
 
     /**
      * Programmatically create an invisible auto-anchor token for `obj` and
@@ -2436,6 +2449,7 @@ var Anchor = Anchor || (() => {
             getUnlocked,
             lock,
             unlock,
+            chainAnchorObjs,
         },
     };
 })();
