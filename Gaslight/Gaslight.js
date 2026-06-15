@@ -1251,9 +1251,56 @@ var Gaslight = Gaslight || (() => {
         checkDanglingGroups();
     };
 
+    /**
+     * When a linked token is deleted, delete its counterparts on other pages.
+     */
+    var destroying = false;
+    const onTokenDestroyed = (obj) => {
+        if (destroying) return;
+        var s = state[SCRIPT_NAME];
+        var tokenId = obj.get('id');
+
+        // Find if this token is tracked in any active group
+        var linkedIds = null;
+        Object.values(s.activeGroups).forEach(function(active) {
+            if (active.linkedTokens[tokenId]) {
+                linkedIds = active.linkedTokens[tokenId];
+                // Clean up tracking
+                delete active.linkedTokens[tokenId];
+                linkedIds.forEach(function(id) {
+                    if (active.linkedTokens[id]) {
+                        active.linkedTokens[id] = active.linkedTokens[id].filter(function(lid) { return lid !== tokenId; });
+                    }
+                });
+            } else {
+                // Check if it's in someone else's list
+                Object.entries(active.linkedTokens).forEach(function(entry) {
+                    var idx = entry[1].indexOf(tokenId);
+                    if (idx !== -1) {
+                        entry[1].splice(idx, 1);
+                        if (!linkedIds) linkedIds = [entry[0]].concat(entry[1].filter(function(id) { return id !== tokenId; }));
+                    }
+                });
+            }
+        });
+
+        if (!linkedIds || linkedIds.length === 0) return;
+
+        // Remove Anchor/Mirror links and delete counterparts
+        destroying = true;
+        linkedIds.forEach(function(id) {
+            if (typeof Anchor !== 'undefined') Anchor.removeAnchor(id);
+            if (typeof Mirror !== 'undefined') Mirror.unlink([id]);
+            var target = getObj('graphic', id);
+            if (target) target.remove();
+        });
+        destroying = false;
+    };
+
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('add:graphic', onTokenAdded);
+        on('destroy:graphic', onTokenDestroyed);
     };
 
     return { checkInstall, registerEventHandlers };
