@@ -329,15 +329,37 @@ var Mirror = Mirror || (() => {
     // =========================================================================
 
     const doLink = (msg, args) => {
+        var up = args.indexOf('--up') !== -1;
+        var down = args.indexOf('--down') !== -1;
+        args = args.filter(function(a) { return a !== '--up' && a !== '--down'; });
         var parsed = parseCommand(msg, args);
-        if (parsed.ids.length < 2) { reply(msg, 'Error', 'Link requires at least 2 tokens.'); return; }
-        var linkProps = parsed.props || 'all'; // null = default to all
+        var linkProps = parsed.props || 'all';
 
-        // Check if source token already has an existing link
+        // Check if token already has an existing link
         var existingLink = null;
-        var links = findLinksForToken(parsed.ids[0]);
-        for (var i = 0; i < links.length; i++) {
-            if (links[i].link.mode === 'link' && links[i].link.ids[0] === parsed.ids[0]) { existingLink = links[i]; break; }
+        if (parsed.ids.length >= 1) {
+            var links = findLinksForToken(parsed.ids[0]);
+            var asParent = links.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] === parsed.ids[0]; });
+            var asChild = links.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] !== parsed.ids[0]; });
+
+            if (parsed.ids.length === 1) {
+                if (asParent.length > 0 && asChild.length > 0 && !up && !down) {
+                    reply(msg, 'Error', 'Token is both parent and child. Use --up (modify parent link) or --down (modify child link).');
+                    return;
+                }
+                if (up && asChild.length > 0) existingLink = asChild[0];
+                else if (down && asParent.length > 0) existingLink = asParent[0];
+                else if (asParent.length > 0) existingLink = asParent[0];
+                else if (asChild.length > 0) existingLink = asChild[0];
+            } else {
+                // Multi-token: check if source has existing link as parent
+                if (asParent.length > 0) existingLink = asParent[0];
+            }
+        }
+
+        if (parsed.ids.length < 2 && !existingLink) {
+            reply(msg, 'Error', 'Link requires at least 2 tokens (or 1 token already in a link).');
+            return;
         }
 
         if (existingLink && Array.isArray(linkProps)) {
@@ -410,14 +432,20 @@ var Mirror = Mirror || (() => {
 
     const doChain = (msg, args) => {
         var parsed = parseCommand(msg, args);
-        if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
         var linkProps = parsed.props || 'all'; // null = default to all
 
-        // Check if tokens are already in an existing chain — if so, re-include props
+        // If only 1 token, check if it's already in a chain
         var existingChain = null;
-        var links = findLinksForToken(parsed.ids[0]);
-        for (var i = 0; i < links.length; i++) {
-            if (links[i].link.mode === 'chain') { existingChain = links[i]; break; }
+        if (parsed.ids.length >= 1) {
+            var links = findLinksForToken(parsed.ids[0]);
+            for (var i = 0; i < links.length; i++) {
+                if (links[i].link.mode === 'chain') { existingChain = links[i]; break; }
+            }
+        }
+
+        if (parsed.ids.length < 2 && !existingChain) {
+            reply(msg, 'Error', 'Chain requires at least 2 tokens (or 1 token already in a chain).');
+            return;
         }
 
         if (existingChain && Array.isArray(linkProps)) {
@@ -508,7 +536,53 @@ var Mirror = Mirror || (() => {
         if (!linked && !unlinked) linked = true;
 
         var parsed = parseCommand(msg, args);
-        if (parsed.ids.length < 2) { reply(msg, 'Error', 'Align requires at least 2 tokens.'); return; }
+
+        // Allow single token if it's in a link/chain
+        if (parsed.ids.length === 1 && linked) {
+            var singleLinks = findLinksForToken(parsed.ids[0]);
+            if (singleLinks.length > 0) {
+                // For chains: align entire chain to this token
+                // For links: parent aligns children, child aligns to parent
+                var aligned = 0;
+                singleLinks.forEach(function(entry) {
+                    var link = entry.link;
+                    var props = parsed.props === null ? getEffectiveProps(link) :
+                                parsed.props === 'all' ? getKnownProps() : parsed.props;
+                    var source = getObj('graphic', parsed.ids[0]);
+                    if (!source) return;
+                    var updates = {};
+                    props.forEach(function(p) { updates[p] = source.get(p); });
+
+                    if (link.mode === 'chain') {
+                        // Align entire chain to selected token
+                        link.ids.forEach(function(tid) {
+                            if (tid === parsed.ids[0]) return;
+                            var t = getObj('graphic', tid);
+                            if (t) { t.set(updates); aligned++; }
+                        });
+                    } else if (link.ids[0] === parsed.ids[0]) {
+                        // Parent selected: align children
+                        link.ids.slice(1).forEach(function(tid) {
+                            var t = getObj('graphic', tid);
+                            if (t) { t.set(updates); aligned++; }
+                        });
+                    } else {
+                        // Child selected: align to parent
+                        var parent = getObj('graphic', link.ids[0]);
+                        if (parent) {
+                            var parentUpdates = {};
+                            props.forEach(function(p) { parentUpdates[p] = parent.get(p); });
+                            source.set(parentUpdates);
+                            aligned++;
+                        }
+                    }
+                });
+                reply(msg, 'Align', 'Aligned ' + aligned + ' token(s).');
+                return;
+            }
+        }
+
+        if (parsed.ids.length < 2) { reply(msg, 'Error', 'Align requires at least 2 tokens (or 1 token in a link/chain).'); return; }
 
         var s = state[SCRIPT_NAME];
         var aligned = 0;
