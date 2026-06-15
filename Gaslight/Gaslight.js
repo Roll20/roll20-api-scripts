@@ -58,11 +58,12 @@ var Gaslight = Gaslight || (() => {
         if (!state[SCRIPT_NAME]) {
             state[SCRIPT_NAME] = {
                 activeGroups: {},
-                config: { autoCommit: false },
-                view: null // null = master view, playerId = that player's view
+                config: { autoCommit: false, relayCommands: [] },
+                view: null
             };
         }
         if (!state[SCRIPT_NAME].view) state[SCRIPT_NAME].view = null;
+        if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
     };
 
     // =========================================================================
@@ -1447,29 +1448,42 @@ var Gaslight = Gaslight || (() => {
         if (Object.keys(s.activeGroups).length === 0) return;
         var firstWord = msg.content.split(' ')[0];
         if (firstWord === CMD || firstWord === '!mirror' || firstWord === '!anchor') return;
-        if (!playerIsGM(msg.playerid)) return;
         if (!msg.selected || msg.selected.length === 0) return;
         if (msg.content.indexOf('{& select') !== -1) return;
 
         var tokens = msg.selected.map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
         if (tokens.length === 0) return;
 
-        // Only intercept if tokens are on a master page
         var pageId = tokens[0].get('_pageid');
-        var activeEntry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pageId; });
-        if (!activeEntry) return; // tokens not on master, let command run normally
+        var isGM = playerIsGM(msg.playerid);
 
-        var viewPlayerId = s.view;
+        // Case 1: GM on master page — relay based on view
+        if (isGM) {
+            var activeEntry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pageId; });
+            if (!activeEntry) return;
 
-        // Determine target player IDs based on current view
-        var targetPlayerIds;
-        if (viewPlayerId) {
-            targetPlayerIds = [viewPlayerId];
-        } else {
-            targetPlayerIds = Object.keys(activeEntry[1].playerPages);
+            var viewPlayerId = s.view;
+            var targetPlayerIds = viewPlayerId ? [viewPlayerId] : Object.keys(activeEntry[1].playerPages);
+            executeRelay('player|' + msg.playerid, tokens, msg.content, targetPlayerIds, false);
+            return;
         }
 
-        executeRelay('player|' + msg.playerid, tokens, msg.content, targetPlayerIds, false);
+        // Case 2: Player on their page — relay if command is in relay-commands list
+        if (s.config.relayCommands.indexOf(firstWord) === -1) return;
+
+        // Find which group/player this page belongs to
+        var activeEntry = null;
+        var sourcePlayerId = null;
+        Object.entries(s.activeGroups).forEach(function(e) {
+            Object.entries(e[1].playerPages).forEach(function(pp) {
+                if (pp[1].pageId === pageId) { activeEntry = e; sourcePlayerId = pp[0]; }
+            });
+        });
+        if (!activeEntry) return;
+
+        // Relay to all OTHER player pages + master
+        var targetPlayerIds = Object.keys(activeEntry[1].playerPages).filter(function(id) { return id !== sourcePlayerId; });
+        executeRelay('player|' + msg.playerid, tokens, msg.content, targetPlayerIds, true);
     };
 
     const registerEventHandlers = () => {
