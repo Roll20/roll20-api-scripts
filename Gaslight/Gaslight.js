@@ -1017,12 +1017,14 @@ var Gaslight = Gaslight || (() => {
         });
         targetPlayerIds = targetPlayerIds.filter(function(id, i) { return targetPlayerIds.indexOf(id) === i; });
 
+        var sender = 'player|' + msg.playerid;
+
         var relayed = 0;
 
         // Master: run command with original token selection
         if (includeMaster) {
             var masterIds = tokens.map(function(t) { return t.get('id'); });
-            sendChat('API', command + ' {& select ' + masterIds.join(', ') + '}');
+            sendChat(sender, command + ' {& select ' + masterIds.join(', ') + '}');
             relayed += masterIds.length;
         }
 
@@ -1054,7 +1056,7 @@ var Gaslight = Gaslight || (() => {
 
                 linkedIds = linkedIds.filter(function(id, i) { return linkedIds.indexOf(id) === i; });
                 linkedIds.forEach(function(id) {
-                    sendChat('API', command + ' {& select ' + id + '}');
+                    sendChat(sender, command + ' {& select ' + id + '}');
                     relayed++;
                 });
             });
@@ -1483,7 +1485,7 @@ var Gaslight = Gaslight || (() => {
             // Deduplicate
             rewrittenIds = rewrittenIds.filter(function(id, i) { return rewrittenIds.indexOf(id) === i; });
             var newCmd = msg.content + ' {& select ' + rewrittenIds.join(', ') + '}';
-            sendChat('API', newCmd);
+            sendChat('player|' + msg.playerid, newCmd);
         }
     };
 
