@@ -121,13 +121,29 @@ var Mirror = Mirror || (() => {
 
     const parseCommand = (msg, args) => {
         var soft = args.indexOf('--soft') !== -1;
-        args = args.filter(function(a) { return a !== '--soft'; });
+        var align = args.indexOf('--align') !== -1;
+        args = args.filter(function(a) { return a !== '--soft' && a !== '--align'; });
         var resolved = resolveProps(args);
         var ids = resolved.remaining.filter(function(a) { return a.startsWith('-'); });
         ids = ids.concat(getSelectedIds(msg));
         ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; }); // dedupe
         var props = resolved.props.length > 0 ? resolved.props : ALL_PROPS.slice();
-        return { props: props, ids: ids, soft: soft };
+        return { props: props, ids: ids, soft: soft, align: align };
+    };
+
+    /**
+     * Align targets to source: copy specified props from first token to all others.
+     */
+    const alignTokens = (ids, props) => {
+        if (ids.length < 2) return;
+        var source = getObj('graphic', ids[0]);
+        if (!source) return;
+        var updates = {};
+        props.forEach(function(p) { updates[p] = source.get(p); });
+        for (var i = 1; i < ids.length; i++) {
+            var target = getObj('graphic', ids[i]);
+            if (target) target.set(updates);
+        }
     };
 
     const createLink = (mode, props, ids, soft) => {
@@ -253,7 +269,8 @@ var Mirror = Mirror || (() => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Link requires at least 2 tokens.'); return; }
         createLink('link', parsed.props, parsed.ids, parsed.soft);
-        reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + '). Source: first selected.');
+        if (parsed.align) alignTokens(parsed.ids, parsed.props);
+        reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + (parsed.align ? ', aligned' : '') + '). Source: first selected.');
     };
 
     const doUnlink = (msg, args) => {
@@ -273,7 +290,8 @@ var Mirror = Mirror || (() => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
         createLink('chain', parsed.props, parsed.ids, true);
-        reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props).');
+        if (parsed.align) alignTokens(parsed.ids, parsed.props);
+        reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props' + (parsed.align ? ', aligned' : '') + ').');
     };
 
     const doUnchain = (msg, args) => {
@@ -287,6 +305,13 @@ var Mirror = Mirror || (() => {
             });
         });
         reply(msg, 'Unchain', 'Processed ' + removed + ' chain(s).');
+    };
+
+    const doAlign = (msg, args) => {
+        var parsed = parseCommand(msg, args);
+        if (parsed.ids.length < 2) { reply(msg, 'Error', 'Align requires at least 2 tokens.'); return; }
+        alignTokens(parsed.ids, parsed.props);
+        reply(msg, 'Align', 'Aligned ' + (parsed.ids.length - 1) + ' token(s) to source (' + parsed.props.length + ' props).');
     };
 
     const doStatus = (msg) => {
@@ -312,6 +337,7 @@ var Mirror = Mirror || (() => {
         + '<code>' + CMD + ' unlink [props] [ids...]</code> -- Remove link<br>'
         + '<code>' + CMD + ' chain [props] [ids...]</code> -- Bidirectional ring<br>'
         + '<code>' + CMD + ' unchain [props] [ids...]</code> -- Remove chain<br>'
+        + '<code>' + CMD + ' align [props] [ids...]</code> -- Copy props from first to others (one-shot)<br>'
         + '<code>' + CMD + ' status</code> -- Show links for selected<br>'
         + '<code>' + CMD + ' --help</code> -- This help<br>'
         + '<br><b>Groups:</b> all, spatial, position, size, bars, light, auras, flip<br>'
@@ -334,6 +360,7 @@ var Mirror = Mirror || (() => {
             case 'unlink':  doUnlink(msg, args);  break;
             case 'chain':   doChain(msg, args);   break;
             case 'unchain': doUnchain(msg, args); break;
+            case 'align':   doAlign(msg, args);   break;
             case 'status':  doStatus(msg);        break;
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
