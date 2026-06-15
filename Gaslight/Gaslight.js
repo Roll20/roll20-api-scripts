@@ -581,16 +581,20 @@ var Gaslight = Gaslight || (() => {
             if (syncProps === '') return;
 
             // Determine which props go to Anchor vs Mirror
-            var anchorProps = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
+            var allAnchorProps = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph', 'layer'];
             var needsAnchor = true;
+            var anchorComponents = null; // null = use Anchor defaults
             var mirrorProps = null; // null = all non-anchor
             if (Array.isArray(syncProps)) {
-                // Specific props: split between anchor and mirror
-                var anchorRequested = syncProps.filter(function(p) { return anchorProps.indexOf(p) !== -1; });
-                var mirrorRequested = syncProps.filter(function(p) { return anchorProps.indexOf(p) === -1; });
-                needsAnchor = anchorRequested.length > 0 || syncProps.indexOf('base') !== -1;
-                mirrorProps = mirrorRequested.length > 0 ? mirrorRequested : null;
-                if (mirrorRequested.length === 0 && anchorRequested.length > 0) mirrorProps = false; // no mirror needed
+                var anchorRequested = syncProps.filter(function(p) { return allAnchorProps.indexOf(p) !== -1; });
+                var mirrorRequested = syncProps.filter(function(p) { return allAnchorProps.indexOf(p) === -1; });
+                needsAnchor = anchorRequested.length > 0;
+                // Pass specific components to Anchor if not the full default set
+                if (needsAnchor) {
+                    anchorComponents = {};
+                    anchorRequested.forEach(function(p) { anchorComponents[p] = true; });
+                }
+                mirrorProps = mirrorRequested.length > 0 ? mirrorRequested : false;
             }
 
             // Set up Anchor links (spatial sync)
@@ -601,7 +605,7 @@ var Gaslight = Gaslight || (() => {
                     if (!parent) parent = tokens[0];
                     tokens.forEach(function(t) {
                         if (t.get('id') === parent.get('id')) return;
-                        Anchor.anchorObj(t.get('id'), parent.get('id'));
+                        Anchor.anchorObj(t.get('id'), parent.get('id'), anchorComponents);
                     });
                 } else {
                     // Player-controlled: chain-link master + controlling players' pages
@@ -615,13 +619,13 @@ var Gaslight = Gaslight || (() => {
 
                     var chainIds = chainTokens.map(function(t) { return t.get('id'); });
                     if (chainIds.length >= 2) {
-                        Anchor.chainAnchorObjs(chainIds);
+                        Anchor.chainAnchorObjs(chainIds, anchorComponents);
                     }
 
                     if (childTokens.length > 0 && chainTokens.length > 0) {
                         var chainParent = chainTokens[0];
                         childTokens.forEach(function(t) {
-                            Anchor.anchorObj(t.get('id'), chainParent.get('id'));
+                            Anchor.anchorObj(t.get('id'), chainParent.get('id'), anchorComponents);
                         });
                     }
                 }
