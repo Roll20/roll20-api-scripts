@@ -969,73 +969,98 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Relay a command to linked tokens on other pages.
-     * !gaslight relay [--players name1 name2 --] <command...>
+     * Relay a command to linked tokens on specific views.
+     * !gaslight relay <views...> <! command...>
+     * Views: player names, "all", "master"/"GM"
      */
     const doRelay = (msg, args) => {
         var s = state[SCRIPT_NAME];
         var tokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
         if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) to relay from.'); return; }
 
-        // Parse --players
-        var targetPlayerNames = [];
-        var playersIdx = args.indexOf('--players');
-        if (playersIdx !== -1) {
-            var endIdx = args.indexOf('--', playersIdx + 1);
-            if (endIdx === -1) endIdx = args.length;
-            targetPlayerNames = args.slice(playersIdx + 1, endIdx);
-            args = args.slice(0, playersIdx).concat(args.slice(endIdx + 1));
-        }
+        // Split args: views are everything before first !-prefixed arg, command is the rest
+        var views = [];
+        var commandArgs = [];
+        var foundCmd = false;
+        args.forEach(function(a) {
+            if (!foundCmd && a.startsWith('!')) foundCmd = true;
+            if (foundCmd) commandArgs.push(a);
+            else views.push(a);
+        });
 
-        if (args.length === 0) { reply(msg, 'Error', 'No command to relay. Usage: !gaslight relay [--players name1 name2 --] &lt;command&gt;'); return; }
-        var command = args.join(' ');
+        if (views.length === 0) { reply(msg, 'Error', 'Specify view target(s): player names, "all", or "master". Usage: !gaslight relay &lt;views&gt; &lt;!command&gt;'); return; }
+        if (commandArgs.length === 0) { reply(msg, 'Error', 'No command provided. Command must start with !'); return; }
+        var command = commandArgs.join(' ');
 
-        var relayed = 0;
-        tokens.forEach(function(token) {
-            var tokenId = token.get('id');
-            // Find linked counterparts
-            var linkedIds = [];
-            Object.values(s.activeGroups).forEach(function(active) {
-                if (active.linkedTokens[tokenId]) {
-                    linkedIds = linkedIds.concat(active.linkedTokens[tokenId]);
-                } else {
-                    Object.entries(active.linkedTokens).forEach(function(entry) {
-                        if (entry[1].indexOf(tokenId) !== -1) {
-                            linkedIds.push(entry[0]);
-                            linkedIds = linkedIds.concat(entry[1].filter(function(id) { return id !== tokenId; }));
+        // Resolve views
+        var includeMaster = false;
+        var targetPlayerIds = [];
+        views.forEach(function(v) {
+            var lower = v.toLowerCase().replace(/^["']|["']$/g, '');
+            if (lower === 'all') {
+                targetPlayerIds = Object.keys(s.activeGroups).reduce(function(acc, gn) {
+                    return acc.concat(Object.keys(s.activeGroups[gn].playerPages));
+                }, []);
+                includeMaster = true;
+            } else if (lower === 'master' || lower === 'gm') {
+                includeMaster = true;
+            } else {
+                // Resolve as player name
+                Object.values(s.activeGroups).forEach(function(active) {
+                    Object.entries(active.playerPages).forEach(function(entry) {
+                        if (entry[1].name && entry[1].name.toLowerCase() === lower) {
+                            if (targetPlayerIds.indexOf(entry[0]) === -1) targetPlayerIds.push(entry[0]);
                         }
-                    });
-                }
-            });
-
-            // Filter by target players if specified
-            if (targetPlayerNames.length > 0) {
-                linkedIds = linkedIds.filter(function(id) {
-                    var obj = getObj('graphic', id);
-                    if (!obj) return false;
-                    var pageId = obj.get('_pageid');
-                    return Object.values(s.activeGroups).some(function(active) {
-                        return Object.entries(active.playerPages).some(function(entry) {
-                            return entry[1].pageId === pageId && targetPlayerNames.some(function(name) {
-                                return entry[1].name && entry[1].name.toLowerCase() === name.toLowerCase();
-                            });
-                        });
                     });
                 });
             }
-
-            // Deduplicate
-            linkedIds = linkedIds.filter(function(id, i) { return linkedIds.indexOf(id) === i && id !== tokenId; });
-
-            // Send command with each linked token as selection via SelectManager
-            linkedIds.forEach(function(id) {
-                var fullCmd = command + ' {& select ' + id + '}';
-                sendChat('API', fullCmd);
-                relayed++;
-            });
         });
+        targetPlayerIds = targetPlayerIds.filter(function(id, i) { return targetPlayerIds.indexOf(id) === i; });
 
-        reply(msg, 'Relay', 'Relayed command to ' + relayed + ' linked token(s).');
+        var relayed = 0;
+
+        // Master: run command with original token selection
+        if (includeMaster) {
+            var masterIds = tokens.map(function(t) { return t.get('id'); });
+            sendChat('API', command + ' {& select ' + masterIds.join(', ') + '}');
+            relayed += masterIds.length;
+        }
+
+        // Player pages: find linked tokens
+        if (targetPlayerIds.length > 0) {
+            tokens.forEach(function(token) {
+                var tokenId = token.get('id');
+                var linkedIds = [];
+                Object.values(s.activeGroups).forEach(function(active) {
+                    var allLinked = active.linkedTokens[tokenId] || [];
+                    Object.entries(active.linkedTokens).forEach(function(entry) {
+                        if (entry[1].indexOf(tokenId) !== -1) {
+                            allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                        }
+                    });
+                    allLinked = allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i && id !== tokenId; });
+
+                    // Filter to target player pages
+                    allLinked.forEach(function(id) {
+                        var obj = getObj('graphic', id);
+                        if (!obj) return;
+                        var pageId = obj.get('_pageid');
+                        var isTarget = Object.entries(active.playerPages).some(function(entry) {
+                            return targetPlayerIds.indexOf(entry[0]) !== -1 && entry[1].pageId === pageId;
+                        });
+                        if (isTarget) linkedIds.push(id);
+                    });
+                });
+
+                linkedIds = linkedIds.filter(function(id, i) { return linkedIds.indexOf(id) === i; });
+                linkedIds.forEach(function(id) {
+                    sendChat('API', command + ' {& select ' + id + '}');
+                    relayed++;
+                });
+            });
+        }
+
+        reply(msg, 'Relay', 'Relayed to ' + relayed + ' token(s).');
     };
 
     /**
