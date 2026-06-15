@@ -787,15 +787,16 @@ var Mirror = Mirror || (() => {
     };
 
     const HELP_TEXT = '<b>' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + '</b><br><br>'
-        + '<code>' + CMD + ' link [--soft] [props] [ids...]</code> -- Unidirectional (hard-lock by default)<br>'
-        + '<code>' + CMD + ' unlink [props] [ids...]</code> -- Remove link<br>'
-        + '<code>' + CMD + ' chain [props] [ids...]</code> -- Bidirectional ring<br>'
-        + '<code>' + CMD + ' unchain [props] [ids...]</code> -- Remove chain<br>'
-        + '<code>' + CMD + ' align [--linked|--unlinked] [props] [ids...]</code> -- Align tokens<br>'
+        + '<code>' + CMD + ' link [--soft] [--align] [--exclude props] [props] [ids...]</code> -- Unidirectional link (hard-lock default)<br>'
+        + '<code>' + CMD + ' unlink [props] [ids...]</code> -- Remove link or add excludes<br>'
+        + '<code>' + CMD + ' chain [--align] [--exclude props] [props] [ids...]</code> -- Bidirectional chain<br>'
+        + '<code>' + CMD + ' unchain [props] [ids...]</code> -- Remove chain or add excludes<br>'
+        + '<code>' + CMD + ' align [--up|--down] [--linked|--unlinked] [--if-linked] [props] [ids...]</code> -- Align tokens<br>'
         + '<code>' + CMD + ' config [exclude|include|reset] [props]</code> -- Global excludes<br>'
         + '<code>' + CMD + ' status</code> -- Show links for selected<br>'
         + '<code>' + CMD + ' --help</code> -- This help<br>'
-        + '<br><b>Groups:</b> all, spatial, position, size, bars, light, auras, flip<br>'
+        + '<br><b>Groups:</b> all, spatial, position, size, bars, light, auras, flip'
+        + '<br><b>Flags:</b> --soft, --align, --exclude, --up, --down, --linked, --unlinked, --if-linked'
         + '<br><b>Props:</b> ' + ALL_PROPS.join(', ');
 
     // =========================================================================
@@ -818,6 +819,7 @@ var Mirror = Mirror || (() => {
             case 'align':   doAlign(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
             case 'status':  doStatus(msg);        break;
+            case 'gen-dev-docs': generateDevDocs(msg); break;
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
         }
@@ -1002,6 +1004,7 @@ var Mirror = Mirror || (() => {
         ensureState();
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkConfigDrift();
+        generateHelpHandout();
     };
 
     const checkConfigDrift = () => {
@@ -1020,6 +1023,56 @@ var Mirror = Mirror || (() => {
                 (gcExcludes.length > 0 ? gcExcludes.join(', ') : 'none') +
                 '). Use <code>!mirror config</code> to view/change, or update the API Scripts page to match.');
         }
+    };
+
+    const generateHelpHandout = () => {
+        var name = 'Help: ' + SCRIPT_NAME;
+        var hh = findObjs({ type: 'handout', name: name })[0];
+        if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false });
+        var html = '<h1>' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + '</h1>';
+        html += '<p>Flat property syncing between tokens. No transforms — values are copied directly.</p>';
+        html += '<h2>Commands</h2><ul>';
+        html += '<li><code>!mirror link [--soft] [--align] [--exclude props] [props] [ids...]</code> — Unidirectional link</li>';
+        html += '<li><code>!mirror unlink [props] [ids...]</code> — Remove link</li>';
+        html += '<li><code>!mirror chain [--align] [--exclude props] [props] [ids...]</code> — Bidirectional chain</li>';
+        html += '<li><code>!mirror unchain [props] [ids...]</code> — Remove chain</li>';
+        html += '<li><code>!mirror align [--up|--down] [--linked|--unlinked] [--if-linked] [props]</code> — Align tokens</li>';
+        html += '<li><code>!mirror config [exclude|include|reset] [props]</code> — Global excludes</li>';
+        html += '<li><code>!mirror status</code> — Show links</li>';
+        html += '<li><code>!mirror --help</code> — Command reference</li>';
+        html += '</ul>';
+        html += '<h2>Property Groups</h2>';
+        html += '<p><b>all</b> (dynamic), <b>spatial</b> (left,top,rotation,width,height), <b>position</b> (left,top), <b>size</b> (width,height), <b>bars</b>, <b>light</b>, <b>auras</b>, <b>flip</b></p>';
+        html += '<h2>Flags</h2>';
+        html += '<p><b>--soft</b>: children can diverge (no hard lock)<br>';
+        html += '<b>--align</b>: align on link/chain creation<br>';
+        html += '<b>--exclude</b>: exclude props from all group<br>';
+        html += '<b>--up</b>: align to parent first<br>';
+        html += '<b>--down</b>: cascade from current value<br>';
+        html += '<b>--if-linked</b>: only align props that are actually linked</p>';
+        hh.set('notes', html);
+    };
+
+    const generateDevDocs = (msg) => {
+        var name = 'Help: ' + SCRIPT_NAME + '/Scripting API';
+        var hh = findObjs({ type: 'handout', name: name })[0];
+        if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false });
+        var html = '<h1>' + SCRIPT_NAME + ' — Scripting API</h1>';
+        html += '<p>Access via <code>Mirror.*</code> after <code>on("ready")</code>.</p>';
+        html += '<h2>Linking</h2>';
+        html += '<pre>Mirror.link(ids, props, soft, excludes)  // unidirectional\nMirror.chainLink(ids, props, excludes)   // bidirectional chain</pre>';
+        html += '<h2>Unlinking</h2>';
+        html += '<pre>Mirror.unlink(ids, props)         // remove link or add excludes\nMirror.unchain(ids, props)        // remove chain or add excludes\nMirror.removeFromChain(tokenId)   // remove one token from chain\nMirror.addToChain(existingId, newIds)  // add tokens to chain</pre>';
+        html += '<h2>Alignment</h2>';
+        html += '<pre>Mirror.align(sourceId, { up, ifLinked, props })</pre>';
+        html += '<h2>Queries</h2>';
+        html += '<pre>Mirror.getLinks(tokenId)       // → [{ id, link }]\nMirror.getParent(childId)      // → parentId or null\nMirror.getChildren(parentId)   // → [childIds]\nMirror.getChainMembers(tokenId) // → [ids]</pre>';
+        html += '<h2>Configuration</h2>';
+        html += '<pre>Mirror.getGlobalExcludes()     // → [props]\nMirror.setGlobalExcludes(arr)\nMirror.getKnownProps()         // → [all known prop names]</pre>';
+        html += '<h2>Constants</h2>';
+        html += '<pre>Mirror.ALL_PROPS    // hardcoded prop list\nMirror.PROP_GROUPS  // { spatial, position, size, bars, light, auras, flip }</pre>';
+        hh.set('notes', html);
+        reply(msg, 'Generated <b>' + name + '</b> — check your journal.');
     };
 
     const registerEventHandlers = () => {
