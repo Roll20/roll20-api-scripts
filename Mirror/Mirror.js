@@ -82,14 +82,27 @@ var Mirror = Mirror || (() => {
             state[SCRIPT_NAME] = {
                 links: {},
                 chainedIds: {},
-                knownProps: {}
+                knownProps: {},
+                configInitialized: false
             };
         }
         if (!state[SCRIPT_NAME].chainedIds) state[SCRIPT_NAME].chainedIds = {};
         if (!state[SCRIPT_NAME].knownProps) state[SCRIPT_NAME].knownProps = {};
         if (!state[SCRIPT_NAME].globalExcludes) state[SCRIPT_NAME].globalExcludes = [];
+        // Seed global excludes from useroptions on first run
+        if (!state[SCRIPT_NAME].configInitialized && typeof globalconfig !== 'undefined' && globalconfig[SCRIPT_NAME]) {
+            var gc = globalconfig[SCRIPT_NAME];
+            if (gc['Global Excludes'] && gc['Global Excludes'].trim()) {
+                state[SCRIPT_NAME].globalExcludes = gc['Global Excludes'].split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            }
+            state[SCRIPT_NAME].configInitialized = true;
+        }
         // Seed known props from ALL_PROPS
         ALL_PROPS.forEach(function(p) { state[SCRIPT_NAME].knownProps[p] = true; });
+    };
+
+    const hasGlobalConfig = () => {
+        return typeof globalconfig !== 'undefined' && globalconfig[SCRIPT_NAME] && 'Global Excludes' in globalconfig[SCRIPT_NAME];
     };
 
     const getKnownProps = () => Object.keys(state[SCRIPT_NAME].knownProps);
@@ -407,7 +420,6 @@ var Mirror = Mirror || (() => {
     const doConfig = (msg, args) => {
         var s = state[SCRIPT_NAME];
         if (args.length === 0) {
-            // Show current config
             reply(msg, 'Config', '<b>Global excludes:</b> ' + (s.globalExcludes.length > 0 ? s.globalExcludes.join(', ') : '(none)'));
             return;
         }
@@ -603,6 +615,25 @@ var Mirror = Mirror || (() => {
     const checkInstall = () => {
         ensureState();
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
+        checkConfigDrift();
+    };
+
+    const checkConfigDrift = () => {
+        if (!hasGlobalConfig()) return;
+        var gc = globalconfig[SCRIPT_NAME];
+        var gcExcludes = (gc['Global Excludes'] || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        var stateExcludes = state[SCRIPT_NAME].globalExcludes || [];
+
+        // Compare
+        var gcSorted = gcExcludes.slice().sort().join(',');
+        var stateSorted = stateExcludes.slice().sort().join(',');
+        if (gcSorted !== stateSorted) {
+            sendChat(SCRIPT_NAME, '/w gm ⚠️ Mirror config drift: runtime global excludes (' +
+                (stateExcludes.length > 0 ? stateExcludes.join(', ') : 'none') +
+                ') differ from API Scripts page settings (' +
+                (gcExcludes.length > 0 ? gcExcludes.join(', ') : 'none') +
+                '). Use <code>!mirror config</code> to view/change, or update the API Scripts page to match.');
+        }
     };
 
     const registerEventHandlers = () => {
