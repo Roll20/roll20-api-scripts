@@ -313,10 +313,88 @@ var Mirror = Mirror || (() => {
     };
 
     const doAlign = (msg, args) => {
+        var linked = args.indexOf('--linked') !== -1;
+        var unlinked = args.indexOf('--unlinked') !== -1;
+        args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked'; });
+        // Default: --linked only
+        if (!linked && !unlinked) linked = true;
+
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Align requires at least 2 tokens.'); return; }
-        alignTokens(parsed.ids, parsed.props);
-        reply(msg, 'Align', 'Aligned ' + (parsed.ids.length - 1) + ' token(s) to source (' + parsed.props.length + ' props).');
+
+        var s = state[SCRIPT_NAME];
+        var aligned = 0;
+        var ignored = [];
+
+        if (linked) {
+            parsed.ids.forEach(function(id) {
+                var links = findLinksForToken(id);
+                links.forEach(function(entry) {
+                    var link = entry.link;
+                    var props = parsed.props;
+                    if (link.mode === 'chain') {
+                        // Align to the first selected/passed id that is in this chain
+                        var sourceId = parsed.ids.find(function(pid) { return link.ids.indexOf(pid) !== -1; });
+                        if (!sourceId) return;
+                        var source = getObj('graphic', sourceId);
+                        if (!source) return;
+                        var updates = {};
+                        props.forEach(function(p) { updates[p] = source.get(p); });
+                        link.ids.forEach(function(tid) {
+                            if (tid === sourceId) return;
+                            var t = getObj('graphic', tid);
+                            if (t) { t.set(updates); aligned++; }
+                        });
+                    } else {
+                        // One-way: parent aligns children, or child aligns to parent
+                        var sourceIdx = link.ids.indexOf(id);
+                        if (sourceIdx === 0) {
+                            // This is the parent — align children to it
+                            var source = getObj('graphic', id);
+                            if (!source) return;
+                            var updates = {};
+                            props.forEach(function(p) { updates[p] = source.get(p); });
+                            link.ids.slice(1).forEach(function(tid) {
+                                var t = getObj('graphic', tid);
+                                if (t) { t.set(updates); aligned++; }
+                            });
+                        } else {
+                            // This is a child — align to parent
+                            var source = getObj('graphic', link.ids[0]);
+                            if (!source) return;
+                            var updates = {};
+                            props.forEach(function(p) { updates[p] = source.get(p); });
+                            var target = getObj('graphic', id);
+                            if (target) { target.set(updates); aligned++; }
+                        }
+                    }
+                });
+                if (links.length === 0) ignored.push(id);
+            });
+        }
+
+        if (unlinked) {
+            // Align unlinked tokens to first id in selection
+            var sourceId = parsed.ids[0];
+            var source = getObj('graphic', sourceId);
+            if (source) {
+                var updates = {};
+                parsed.props.forEach(function(p) { updates[p] = source.get(p); });
+                parsed.ids.slice(1).forEach(function(id) {
+                    var links = findLinksForToken(id);
+                    if (links.length === 0) {
+                        var t = getObj('graphic', id);
+                        if (t) { t.set(updates); aligned++; }
+                    }
+                });
+            }
+        }
+
+        var out = 'Aligned ' + aligned + ' token(s).';
+        if (ignored.length > 0 && linked && !unlinked) {
+            out += '<br>' + ignored.length + ' token(s) ignored (not linked).';
+        }
+        reply(msg, 'Align', out);
     };
 
     const doStatus = (msg) => {
