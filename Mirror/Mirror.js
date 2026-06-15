@@ -332,13 +332,36 @@ var Mirror = Mirror || (() => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Link requires at least 2 tokens.'); return; }
         var linkProps = parsed.props || 'all'; // null = default to all
-        createLink('link', linkProps, parsed.ids, parsed.soft, parsed.excludes);
-        if (parsed.align) {
-            var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
-            alignTokens(parsed.ids, alignProps);
+
+        // Check if source token already has an existing link
+        var existingLink = null;
+        var links = findLinksForToken(parsed.ids[0]);
+        for (var i = 0; i < links.length; i++) {
+            if (links[i].link.mode === 'link' && links[i].link.ids[0] === parsed.ids[0]) { existingLink = links[i]; break; }
         }
-        var propCount = linkProps === 'all' ? 'all' : linkProps.length;
-        reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
+
+        if (existingLink && Array.isArray(linkProps)) {
+            var link = existingLink.link;
+            if (link.props === 'all' || link.props === 'api-all') {
+                link.excludes = (link.excludes || []).filter(function(p) {
+                    return linkProps.indexOf(p) === -1;
+                });
+                reply(msg, 'Link', 'Re-included ' + linkProps.length + ' prop(s) in existing link.');
+            } else {
+                linkProps.forEach(function(p) {
+                    if (link.props.indexOf(p) === -1) link.props.push(p);
+                });
+                reply(msg, 'Link', 'Added ' + linkProps.length + ' prop(s) to existing link (' + link.props.length + ' total).');
+            }
+        } else {
+            createLink('link', linkProps, parsed.ids, parsed.soft, parsed.excludes);
+            if (parsed.align) {
+                var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
+                alignTokens(parsed.ids, alignProps);
+            }
+            var propCount = linkProps === 'all' ? 'all' : linkProps.length;
+            reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
+        }
     };
 
     const doUnlink = (msg, args) => {
@@ -398,11 +421,20 @@ var Mirror = Mirror || (() => {
         }
 
         if (existingChain && Array.isArray(linkProps)) {
-            // Re-include: remove specified props from excludes
-            existingChain.link.excludes = (existingChain.link.excludes || []).filter(function(p) {
-                return linkProps.indexOf(p) === -1;
-            });
-            reply(msg, 'Chain', 'Re-included ' + linkProps.length + ' prop(s) in existing chain.');
+            var link = existingChain.link;
+            if (link.props === 'all' || link.props === 'api-all') {
+                // Re-include: remove specified props from excludes
+                link.excludes = (link.excludes || []).filter(function(p) {
+                    return linkProps.indexOf(p) === -1;
+                });
+                reply(msg, 'Chain', 'Re-included ' + linkProps.length + ' prop(s) in existing chain.');
+            } else {
+                // Specific props list: add new props
+                linkProps.forEach(function(p) {
+                    if (link.props.indexOf(p) === -1) link.props.push(p);
+                });
+                reply(msg, 'Chain', 'Added ' + linkProps.length + ' prop(s) to existing chain (' + link.props.length + ' total).');
+            }
         } else {
             createLink('chain', linkProps, parsed.ids, true, parsed.excludes);
             if (parsed.align) {
