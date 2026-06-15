@@ -169,7 +169,11 @@ var Mirror = Mirror || (() => {
         } else if (resolved.props.length === getKnownProps().length) {
             props = 'all'; // explicit 'all' group
         } else {
-            props = resolved.props;
+            // Explicit prop list: apply --exclude as immediate filter
+            props = excludes.length > 0
+                ? resolved.props.filter(function(p) { return excludes.indexOf(p) === -1; })
+                : resolved.props;
+            excludes = []; // already applied, don't store
         }
 
         return { props: props, ids: ids, soft: soft, align: align, excludes: excludes };
