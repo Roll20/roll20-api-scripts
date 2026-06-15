@@ -254,3 +254,31 @@ All command handlers are wrapped in a try-catch in `handleInput`. Validation fun
 - `token.set(...)` changes are immediate but not undoable by the GM.
 - `createObj('graphic', {...})` requires `_pageid` and `subtype: 'token'`.
 - `playerIsGM(msg.playerid)` guards all commands — non-GMs are silently ignored.
+
+## Release Notes For Maintainers
+
+### 1.0.1 Technical Notes
+
+- Command migration:
+  - Primary command constant changed to `!ced`.
+  - Legacy alias `!director` is still accepted for backwards compatibility.
+  - Conflict detection uses `DIRECTOR_CONFLICT_STATE_KEY = 'DIRECTOR_STATE'`; when present, legacy alias usage triggers a GM warning instead of routing under the legacy name.
+
+- i18n updates:
+  - Locale hint strings and command examples were updated from `!director` to `!ced` across locale files used in the generated bundle.
+
+- Journal rendering:
+  - Command Deck and Status handout HTML now uses an explicit wrapper/background container to prevent white default journal rendering and preserve intended theme styling.
+
+- One-Click metadata and options:
+  - `script.json` select-style options were normalized to remove pipe-delimited labels.
+  - `language` useroption was changed to a select option containing all supported locale codes.
+
+- Build/versioning pipeline:
+  - Build flow now bumps/sets version before loading version-dependent config, preventing stale version output paths.
+  - Explicit version builds now write snapshots to the matching `<version>/CombatEncounterDirector.js` directory.
+  - Prerelease versions are excluded from `previousversions` history handling.
+
+- Code quality hardening:
+  - Source files feeding the generated bundle were refactored to address SonarQube warnings and improve maintainability.
+  - JSDoc coverage and placement were reviewed and corrected in source modules.
