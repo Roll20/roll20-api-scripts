@@ -768,6 +768,26 @@ var Gaslight = Gaslight || (() => {
         }
         summary += formatWarnings(globalWarnings);
         reply(msg, 'Split', summary);
+
+        // Focus-ping each player to their character token on their page
+        setTimeout(function() {
+            Object.entries(groupInfo.players).forEach(function(entry) {
+                var playerId = entry[0], pInfo = entry[1];
+                // Find a token on the player's page that they control
+                var playerTokens = findObjs({ _type: 'graphic', _pageid: pInfo.pageId, _subtype: 'token' });
+                var charToken = playerTokens.find(function(t) {
+                    var charId = t.get('represents');
+                    if (!charId) return false;
+                    var character = getObj('character', charId);
+                    if (!character) return false;
+                    var cb = character.get('controlledby') || '';
+                    return cb === 'all' || cb.split(',').indexOf(playerId) !== -1;
+                });
+                if (charToken) {
+                    sendPing(charToken.get('left'), charToken.get('top'), pInfo.pageId, playerId, true, [playerId]);
+                }
+            });
+        }, 500);
     };
 
     const doMerge = (msg, args) => {
