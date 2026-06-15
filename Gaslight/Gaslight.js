@@ -293,6 +293,34 @@ var Gaslight = Gaslight || (() => {
         }
     };
 
+    /**
+     * Read the gaslight_sync character attribute.
+     * Returns:
+     *   null — attribute absent (default: sync all non-spatial)
+     *   '' — attribute present but empty (no sync)
+     *   ['prop1','prop2',...] — specific props to sync
+     */
+    const getGaslightSync = (charId) => {
+        if (!charId) return null;
+        var attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gaslight_sync' })[0];
+        if (!attr) return null;
+        var val = attr.get('current');
+        if (val === undefined || val === null) return null;
+        val = val.trim();
+        if (val === '') return '';
+        // Parse comma-separated props, resolve groups
+        var parts = val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        var resolved = [];
+        parts.forEach(function(p) {
+            if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS[p]) {
+                resolved = resolved.concat(Mirror.PROP_GROUPS[p]);
+            } else {
+                resolved.push(p);
+            }
+        });
+        return resolved.filter(function(p, i) { return resolved.indexOf(p) === i; }); // dedupe
+    };
+
     // =========================================================================
     // Token Linking Resolution
     // =========================================================================
@@ -592,6 +620,17 @@ var Gaslight = Gaslight || (() => {
                 }
             });
 
+            // Set up Mirror chain for non-spatial property sync
+            if (typeof Mirror !== 'undefined') {
+                var syncProps = getGaslightSync(repCharId);
+                if (syncProps !== '') {
+                    // syncProps: null = default (all minus anchor), array = specific, '' = no sync
+                    var mirrorProps = syncProps || null; // null = api-all (minus anchor via exclude)
+                    var mirrorExcludes = syncProps ? [] : Mirror.PROP_GROUPS.anchor;
+                    Mirror.chainLink(ids, mirrorProps, mirrorExcludes);
+                }
+            }
+
             // Track links for merge teardown
             ids.forEach(function(id) {
                 if (!active.linkedTokens[id]) active.linkedTokens[id] = [];
@@ -700,6 +739,14 @@ var Gaslight = Gaslight || (() => {
                     ids.forEach(function(id) { allLinkedIds.add(id); });
                 });
                 allLinkedIds.forEach(function(id) { Anchor.removeAnchor(id); });
+            }
+            if (typeof Mirror !== 'undefined') {
+                var allIds = new Set();
+                Object.keys(active.linkedTokens).forEach(function(id) { allIds.add(id); });
+                Object.values(active.linkedTokens).forEach(function(ids) {
+                    ids.forEach(function(id) { allIds.add(id); });
+                });
+                allIds.forEach(function(id) { Mirror.unlink([id]); });
             }
 
             var psp = Campaign().get('playerspecificpages') || {};
