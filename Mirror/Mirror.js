@@ -965,6 +965,31 @@ var Mirror = Mirror || (() => {
     /** Query links for a token. Returns array of { id, link } objects. */
     const apiGetLinks = (tokenId) => findLinksForToken(tokenId);
 
+    /** Get the parent (source) token ID for a one-way link, or null. */
+    const apiGetParent = (childId) => {
+        var links = findLinksForToken(childId);
+        var asChild = links.find(function(e) { return e.link.mode === 'link' && e.link.ids[0] !== childId; });
+        return asChild ? asChild.link.ids[0] : null;
+    };
+
+    /** Get child token IDs for one-way links where tokenId is the parent. */
+    const apiGetChildren = (parentId) => {
+        var children = [];
+        findLinksForToken(parentId).forEach(function(e) {
+            if (e.link.mode === 'link' && e.link.ids[0] === parentId) {
+                children = children.concat(e.link.ids.slice(1));
+            }
+        });
+        return children;
+    };
+
+    /** Get all token IDs in the same chain as tokenId, or empty array. */
+    const apiGetChainMembers = (tokenId) => {
+        var links = findLinksForToken(tokenId);
+        var chain = links.find(function(e) { return e.link.mode === 'chain'; });
+        return chain ? chain.link.ids.slice() : [];
+    };
+
     /** Get/set global excludes. */
     const apiGetGlobalExcludes = () => (state[SCRIPT_NAME].globalExcludes || []).slice();
     const apiSetGlobalExcludes = (excludes) => { state[SCRIPT_NAME].globalExcludes = excludes; };
@@ -1013,6 +1038,9 @@ var Mirror = Mirror || (() => {
         removeFromChain: apiRemoveFromChain,
         align: apiAlign,
         getLinks: apiGetLinks,
+        getParent: apiGetParent,
+        getChildren: apiGetChildren,
+        getChainMembers: apiGetChainMembers,
         getGlobalExcludes: apiGetGlobalExcludes,
         setGlobalExcludes: apiSetGlobalExcludes,
         ALL_PROPS: ALL_PROPS,
