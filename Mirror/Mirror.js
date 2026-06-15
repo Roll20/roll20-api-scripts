@@ -7,16 +7,17 @@
 //   Flat property syncing between tokens. No transforms, no offsets -- when a
 //   property changes on one token, the same value is copied to linked tokens.
 //   Supports unidirectional (link) and bidirectional ring (chain) modes.
+//   Unidirectional links hard-lock children by default (changes reverted).
 //
 // Dependencies: none
 //
 // Commands:
-//   !mirror link [props] [ids...]      Link selected/listed tokens (unidirectional)
-//   !mirror unlink [props] [ids...]    Remove link (or specific properties)
-//   !mirror chain [props] [ids...]     Bidirectional ring link
-//   !mirror unchain [props] [ids...]   Remove chain (or specific properties)
-//   !mirror status                     Show mirror state for selected tokens
-//   !mirror --help                     Command reference
+//   !mirror link [--soft] [props/groups] [ids...]   Unidirectional link
+//   !mirror unlink [props/groups] [ids...]          Remove link or properties
+//   !mirror chain [props/groups] [ids...]           Bidirectional ring link
+//   !mirror unchain [props/groups] [ids...]         Remove chain or properties
+//   !mirror status                                  Show links for selected
+//   !mirror --help                                  Command reference
 // =============================================================================
 
 /* global on, sendChat, getObj, findObjs, playerIsGM, log, state */
@@ -43,6 +44,21 @@ var Mirror = Mirror || (() => {
         'baseOpacity', 'currentSide'
     ];
 
+    // Property groups
+    const PROP_GROUPS = {
+        position: ['left', 'top'],
+        size: ['width', 'height'],
+        spatial: ['left', 'top', 'rotation', 'width', 'height'],
+        bars: ['bar1_value', 'bar1_max', 'bar2_value', 'bar2_max', 'bar3_value', 'bar3_max'],
+        light: ['light_radius', 'light_dimradius', 'light_angle', 'light_otherplayers',
+                'light_hassight', 'light_losangle', 'light_multiplier',
+                'has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
+                'emits_bright_light', 'bright_light_distance', 'emits_low_light', 'low_light_distance'],
+        auras: ['aura1_radius', 'aura1_color', 'aura1_square', 'aura2_radius', 'aura2_color', 'aura2_square'],
+        flip: ['flipv', 'fliph'],
+        all: ALL_PROPS.slice()
+    };
+
     // =========================================================================
     // Helpers
     // =========================================================================
@@ -65,10 +81,34 @@ var Mirror = Mirror || (() => {
     const ensureState = () => {
         if (!state[SCRIPT_NAME]) {
             state[SCRIPT_NAME] = {
-                // linkId → { props: [...], ids: [...], mode: 'link'|'chain' }
-                links: {}
+                // linkId → { props: [...], ids: [...], mode: 'link'|'chain', soft: bool }
+                links: {},
+                // Set of token IDs that are part of any chain (for fast lookup)
+                chainedIds: {}
             };
         }
+        if (!state[SCRIPT_NAME].chainedIds) state[SCRIPT_NAME].chainedIds = {};
+    };
+
+    // =========================================================================
+    // Property Resolution
+    // =========================================================================
+
+    const resolveProps = (args) => {
+        var props = [];
+        var remaining = [];
+        args.forEach(function(arg) {
+            if (PROP_GROUPS[arg]) {
+                props = props.concat(PROP_GROUPS[arg]);
+            } else if (ALL_PROPS.indexOf(arg) !== -1) {
+                props.push(arg);
+            } else {
+                remaining.push(arg);
+            }
+        });
+        // Deduplicate props
+        props = props.filter(function(p, i) { return props.indexOf(p) === i; });
+        return { props: props, remaining: remaining };
     };
 
     // =========================================================================
@@ -79,20 +119,24 @@ var Mirror = Mirror || (() => {
         return (msg.selected || []).map(function(s) { return s._id; }).filter(Boolean);
     };
 
-    const parseArgs = (args) => {
-        var props = [];
-        var ids = [];
-        args.forEach(function(arg) {
-            if (ALL_PROPS.indexOf(arg) !== -1) props.push(arg);
-            else if (arg.startsWith('-')) ids.push(arg); // Roll20 IDs start with -
-        });
-        return { props: props, ids: ids };
+    const parseCommand = (msg, args) => {
+        var soft = args.indexOf('--soft') !== -1;
+        args = args.filter(function(a) { return a !== '--soft'; });
+        var resolved = resolveProps(args);
+        var ids = resolved.remaining.filter(function(a) { return a.startsWith('-'); });
+        ids = ids.concat(getSelectedIds(msg));
+        ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; }); // dedupe
+        var props = resolved.props.length > 0 ? resolved.props : ALL_PROPS.slice();
+        return { props: props, ids: ids, soft: soft };
     };
 
-    const createLink = (mode, props, ids) => {
+    const createLink = (mode, props, ids, soft) => {
         var s = state[SCRIPT_NAME];
         var linkId = genId();
-        s.links[linkId] = { props: props, ids: ids, mode: mode };
+        s.links[linkId] = { props: props, ids: ids, mode: mode, soft: soft };
+        if (mode === 'chain') {
+            ids.forEach(function(id) { s.chainedIds[id] = true; });
+        }
         return linkId;
     };
 
@@ -110,11 +154,29 @@ var Mirror = Mirror || (() => {
         var link = s.links[linkId];
         if (!link) return;
         if (!propsToRemove || propsToRemove.length === 0) {
+            // Remove entire link
+            if (link.mode === 'chain') {
+                link.ids.forEach(function(id) { rebuildChainedIds(id, linkId); });
+            }
             delete s.links[linkId];
         } else {
             link.props = link.props.filter(function(p) { return propsToRemove.indexOf(p) === -1; });
-            if (link.props.length === 0) delete s.links[linkId];
+            if (link.props.length === 0) {
+                if (link.mode === 'chain') {
+                    link.ids.forEach(function(id) { rebuildChainedIds(id, linkId); });
+                }
+                delete s.links[linkId];
+            }
         }
+    };
+
+    const rebuildChainedIds = (tokenId, excludeLinkId) => {
+        var s = state[SCRIPT_NAME];
+        // Check if token is still in any other chain
+        var stillChained = Object.entries(s.links).some(function(entry) {
+            return entry[0] !== excludeLinkId && entry[1].mode === 'chain' && entry[1].ids.indexOf(tokenId) !== -1;
+        });
+        if (!stillChained) delete s.chainedIds[tokenId];
     };
 
     // =========================================================================
@@ -123,39 +185,63 @@ var Mirror = Mirror || (() => {
 
     var syncing = false;
 
-    const onGraphicChanged = (obj) => {
+    const onGraphicChanged = (obj, prev) => {
         if (syncing) return;
         var s = state[SCRIPT_NAME];
         var tokenId = obj.get('id');
 
-        // Find all links this token participates in
+        // Find changed properties
+        var changed = [];
+        ALL_PROPS.forEach(function(prop) {
+            if (prev[prop] !== undefined && prev[prop] !== obj.get(prop)) {
+                changed.push(prop);
+            }
+        });
+        if (changed.length === 0) return;
+
         Object.values(s.links).forEach(function(link) {
             var idx = link.ids.indexOf(tokenId);
             if (idx === -1) return;
 
-            // Determine which tokens to update
-            var targets;
+            // Determine relevant changed props for this link
+            var relevantProps = changed.filter(function(p) { return link.props.indexOf(p) !== -1; });
+            if (relevantProps.length === 0) return;
+
             if (link.mode === 'chain') {
-                // Bidirectional: update all others in the link
-                targets = link.ids.filter(function(id) { return id !== tokenId; });
+                // Bidirectional: propagate to all others
+                var updates = {};
+                relevantProps.forEach(function(p) { updates[p] = obj.get(p); });
+                syncing = true;
+                link.ids.forEach(function(id) {
+                    if (id === tokenId) return;
+                    var target = getObj('graphic', id);
+                    if (target) target.set(updates);
+                });
+                syncing = false;
             } else {
-                // Unidirectional: only propagate if this is the source (first id)
-                if (idx !== 0) return;
-                targets = link.ids.slice(1);
+                // Unidirectional
+                if (idx === 0) {
+                    // Source changed: propagate to targets
+                    var updates = {};
+                    relevantProps.forEach(function(p) { updates[p] = obj.get(p); });
+                    syncing = true;
+                    link.ids.slice(1).forEach(function(id) {
+                        var target = getObj('graphic', id);
+                        if (target) target.set(updates);
+                    });
+                    syncing = false;
+                } else if (!link.soft) {
+                    // Hard lock: revert child to source value
+                    var source = getObj('graphic', link.ids[0]);
+                    if (source) {
+                        var revert = {};
+                        relevantProps.forEach(function(p) { revert[p] = source.get(p); });
+                        syncing = true;
+                        obj.set(revert);
+                        syncing = false;
+                    }
+                }
             }
-
-            // Build updates from changed properties that are in this link's prop list
-            var updates = {};
-            link.props.forEach(function(prop) {
-                updates[prop] = obj.get(prop);
-            });
-
-            syncing = true;
-            targets.forEach(function(targetId) {
-                var target = getObj('graphic', targetId);
-                if (target) target.set(updates);
-            });
-            syncing = false;
         });
     };
 
@@ -164,72 +250,48 @@ var Mirror = Mirror || (() => {
     // =========================================================================
 
     const doLink = (msg, args) => {
-        var parsed = parseArgs(args);
-        var ids = parsed.ids.concat(getSelectedIds(msg));
-        // Deduplicate
-        ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; });
-
-        if (ids.length < 2) { reply(msg, 'Error', 'Link requires at least 2 tokens.'); return; }
-        var props = parsed.props.length > 0 ? parsed.props : ALL_PROPS.slice();
-        var linkId = createLink('link', props, ids);
-        reply(msg, 'Link', 'Linked ' + ids.length + ' tokens (' + props.length + ' properties). Source: first selected/listed.');
+        var parsed = parseCommand(msg, args);
+        if (parsed.ids.length < 2) { reply(msg, 'Error', 'Link requires at least 2 tokens.'); return; }
+        createLink('link', parsed.props, parsed.ids, parsed.soft);
+        reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + '). Source: first selected.');
     };
 
     const doUnlink = (msg, args) => {
-        var parsed = parseArgs(args);
-        var ids = parsed.ids.concat(getSelectedIds(msg));
-        ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; });
-
-        if (ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
-
+        var parsed = parseCommand(msg, args);
+        if (parsed.ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
+        var propsToRemove = parsed.props.length > 0 && parsed.props.length < ALL_PROPS.length ? parsed.props : null;
         var removed = 0;
-        ids.forEach(function(id) {
-            var links = findLinksForToken(id);
-            links.forEach(function(entry) {
-                if (entry.link.mode === 'link') {
-                    removePropsFromLink(entry.id, parsed.props.length > 0 ? parsed.props : null);
-                    removed++;
-                }
+        parsed.ids.forEach(function(id) {
+            findLinksForToken(id).forEach(function(entry) {
+                if (entry.link.mode === 'link') { removePropsFromLink(entry.id, propsToRemove); removed++; }
             });
         });
-        reply(msg, 'Unlink', 'Removed ' + removed + ' link(s).');
+        reply(msg, 'Unlink', 'Processed ' + removed + ' link(s).');
     };
 
     const doChain = (msg, args) => {
-        var parsed = parseArgs(args);
-        var ids = parsed.ids.concat(getSelectedIds(msg));
-        ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; });
-
-        if (ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
-        var props = parsed.props.length > 0 ? parsed.props : ALL_PROPS.slice();
-        var linkId = createLink('chain', props, ids);
-        reply(msg, 'Chain', 'Chain-linked ' + ids.length + ' tokens (' + props.length + ' properties).');
+        var parsed = parseCommand(msg, args);
+        if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
+        createLink('chain', parsed.props, parsed.ids, true);
+        reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + parsed.props.length + ' props).');
     };
 
     const doUnchain = (msg, args) => {
-        var parsed = parseArgs(args);
-        var ids = parsed.ids.concat(getSelectedIds(msg));
-        ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; });
-
-        if (ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
-
+        var parsed = parseCommand(msg, args);
+        if (parsed.ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
+        var propsToRemove = parsed.props.length > 0 && parsed.props.length < ALL_PROPS.length ? parsed.props : null;
         var removed = 0;
-        ids.forEach(function(id) {
-            var links = findLinksForToken(id);
-            links.forEach(function(entry) {
-                if (entry.link.mode === 'chain') {
-                    removePropsFromLink(entry.id, parsed.props.length > 0 ? parsed.props : null);
-                    removed++;
-                }
+        parsed.ids.forEach(function(id) {
+            findLinksForToken(id).forEach(function(entry) {
+                if (entry.link.mode === 'chain') { removePropsFromLink(entry.id, propsToRemove); removed++; }
             });
         });
-        reply(msg, 'Unchain', 'Removed ' + removed + ' chain(s).');
+        reply(msg, 'Unchain', 'Processed ' + removed + ' chain(s).');
     };
 
     const doStatus = (msg) => {
         var ids = getSelectedIds(msg);
         if (ids.length === 0) { reply(msg, 'Error', 'Select token(s).'); return; }
-
         var out = '';
         ids.forEach(function(id) {
             var obj = getObj('graphic', id);
@@ -238,20 +300,22 @@ var Mirror = Mirror || (() => {
             out += '<b>' + name + '</b>: ';
             if (links.length === 0) { out += 'no mirror links<br>'; return; }
             links.forEach(function(entry) {
-                out += entry.link.mode + ' (' + entry.link.props.length + ' props, ' + entry.link.ids.length + ' tokens)<br>';
+                var role = entry.link.mode === 'chain' ? 'chain' : (entry.link.ids[0] === id ? 'source' : 'target');
+                out += role + ' (' + entry.link.props.length + ' props, ' + entry.link.ids.length + ' tokens' + (entry.link.soft ? ', soft' : '') + ')<br>';
             });
         });
         reply(msg, out);
     };
 
     const HELP_TEXT = '<b>' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + '</b><br><br>'
-        + '<code>' + CMD + ' link [props] [ids...]</code> -- Unidirectional link<br>'
+        + '<code>' + CMD + ' link [--soft] [props] [ids...]</code> -- Unidirectional (hard-lock by default)<br>'
         + '<code>' + CMD + ' unlink [props] [ids...]</code> -- Remove link<br>'
         + '<code>' + CMD + ' chain [props] [ids...]</code> -- Bidirectional ring<br>'
         + '<code>' + CMD + ' unchain [props] [ids...]</code> -- Remove chain<br>'
         + '<code>' + CMD + ' status</code> -- Show links for selected<br>'
         + '<code>' + CMD + ' --help</code> -- This help<br>'
-        + '<br>Properties: ' + ALL_PROPS.join(', ');
+        + '<br><b>Groups:</b> all, spatial, position, size, bars, light, auras, flip<br>'
+        + '<br><b>Props:</b> ' + ALL_PROPS.join(', ');
 
     // =========================================================================
     // Command Router
@@ -277,6 +341,30 @@ var Mirror = Mirror || (() => {
     };
 
     // =========================================================================
+    // Public API
+    // =========================================================================
+
+    const link = (ids, props, soft) => {
+        if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': link requires at least 2 IDs.'); return null; }
+        return createLink('link', props || ALL_PROPS.slice(), ids, !!soft);
+    };
+
+    const chainLink = (ids, props) => {
+        if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': chainLink requires at least 2 IDs.'); return null; }
+        return createLink('chain', props || ALL_PROPS.slice(), ids, true);
+    };
+
+    const unlink = (ids, props) => {
+        var s = state[SCRIPT_NAME];
+        var propsToRemove = (props && props.length > 0) ? props : null;
+        ids.forEach(function(id) {
+            findLinksForToken(id).forEach(function(entry) {
+                removePropsFromLink(entry.id, propsToRemove);
+            });
+        });
+    };
+
+    // =========================================================================
     // Initialization
     // =========================================================================
 
@@ -287,30 +375,18 @@ var Mirror = Mirror || (() => {
 
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
-        // Listen to all property changes we care about
-        on('change:graphic:left', onGraphicChanged);
-        on('change:graphic:top', onGraphicChanged);
-        on('change:graphic:rotation', onGraphicChanged);
-        on('change:graphic:width', onGraphicChanged);
-        on('change:graphic:height', onGraphicChanged);
-        on('change:graphic:layer', onGraphicChanged);
-        on('change:graphic:flipv', onGraphicChanged);
-        on('change:graphic:fliph', onGraphicChanged);
-        on('change:graphic:bar1_value', onGraphicChanged);
-        on('change:graphic:bar1_max', onGraphicChanged);
-        on('change:graphic:bar2_value', onGraphicChanged);
-        on('change:graphic:bar2_max', onGraphicChanged);
-        on('change:graphic:bar3_value', onGraphicChanged);
-        on('change:graphic:bar3_max', onGraphicChanged);
-        on('change:graphic:statusmarkers', onGraphicChanged);
-        on('change:graphic:name', onGraphicChanged);
-        on('change:graphic:tint_color', onGraphicChanged);
-        on('change:graphic:light_radius', onGraphicChanged);
-        on('change:graphic:light_dimradius', onGraphicChanged);
-        on('change:graphic:currentSide', onGraphicChanged);
+        on('change:graphic', onGraphicChanged);
     };
 
-    return { checkInstall, registerEventHandlers };
+    return {
+        checkInstall,
+        registerEventHandlers,
+        link: link,
+        chainLink: chainLink,
+        unlink: unlink,
+        ALL_PROPS: ALL_PROPS,
+        PROP_GROUPS: PROP_GROUPS
+    };
 })();
 
 on('ready', () => {
