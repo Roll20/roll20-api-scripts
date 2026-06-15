@@ -432,45 +432,75 @@ var Mirror = Mirror || (() => {
 
     const doChain = (msg, args) => {
         var parsed = parseCommand(msg, args);
-        var linkProps = parsed.props || 'all'; // null = default to all
+        var linkProps = parsed.props; // null = no props specified, 'all' = explicit all, [...] = specific
 
-        // If only 1 token, check if it's already in a chain
-        var existingChain = null;
-        if (parsed.ids.length >= 1) {
-            var links = findLinksForToken(parsed.ids[0]);
-            for (var i = 0; i < links.length; i++) {
-                if (links[i].link.mode === 'chain') { existingChain = links[i]; break; }
+        if (parsed.ids.length < 1) { reply(msg, 'Error', 'Select or specify at least one token.'); return; }
+
+        // Find which selected tokens are already in chains
+        var chainMap = {}; // linkId → entry
+        var unchainedIds = [];
+        parsed.ids.forEach(function(id) {
+            var links = findLinksForToken(id);
+            var inChain = links.find(function(e) { return e.link.mode === 'chain'; });
+            if (inChain) chainMap[inChain.id] = inChain;
+            else unchainedIds.push(id);
+        });
+        var existingChains = Object.values(chainMap);
+
+        if (linkProps === null) {
+            // No props specified: add unchained tokens to chain, or create new chain
+            if (existingChains.length > 1) {
+                reply(msg, 'Error', 'Selected tokens belong to multiple chains. Cannot merge.');
+                return;
             }
-        }
-
-        if (parsed.ids.length < 2 && !existingChain) {
-            reply(msg, 'Error', 'Chain requires at least 2 tokens (or 1 token already in a chain).');
-            return;
-        }
-
-        if (existingChain && Array.isArray(linkProps)) {
-            var link = existingChain.link;
-            if (link.props === 'all' || link.props === 'api-all') {
-                // Re-include: remove specified props from excludes
-                link.excludes = (link.excludes || []).filter(function(p) {
-                    return linkProps.indexOf(p) === -1;
+            if (existingChains.length === 1) {
+                // Add unchained tokens to the existing chain
+                if (unchainedIds.length === 0) {
+                    reply(msg, 'Error', 'No unchained tokens to add. Use <code>!mirror chain all</code> to set all props, or specify props to add.');
+                    return;
+                }
+                var chain = existingChains[0].link;
+                unchainedIds.forEach(function(id) {
+                    if (chain.ids.indexOf(id) === -1) {
+                        chain.ids.push(id);
+                        state[SCRIPT_NAME].chainedIds[id] = true;
+                    }
                 });
-                reply(msg, 'Chain', 'Re-included ' + linkProps.length + ' prop(s) in existing chain.');
+                reply(msg, 'Chain', 'Added ' + unchainedIds.length + ' token(s) to existing chain (' + chain.ids.length + ' total).');
             } else {
-                // Specific props list: add new props
-                linkProps.forEach(function(p) {
-                    if (link.props.indexOf(p) === -1) link.props.push(p);
-                });
-                reply(msg, 'Chain', 'Added ' + linkProps.length + ' prop(s) to existing chain (' + link.props.length + ' total).');
+                // No existing chains: create new chain with 'all'
+                if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
+                createLink('chain', 'all', parsed.ids, true, parsed.excludes);
+                if (parsed.align) alignTokens(parsed.ids, getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }));
+                reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (all props' + (parsed.align ? ', aligned' : '') + ').');
             }
         } else {
-            createLink('chain', linkProps, parsed.ids, true, parsed.excludes);
-            if (parsed.align) {
-                var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
-                alignTokens(parsed.ids, alignProps);
+            // Props specified: modify existing chains or create new one
+            if (existingChains.length > 0) {
+                existingChains.forEach(function(entry) {
+                    var link = entry.link;
+                    var propsToApply = linkProps === 'all' ? null : linkProps;
+                    if (propsToApply && (link.props === 'all' || link.props === 'api-all')) {
+                        link.excludes = (link.excludes || []).filter(function(p) { return propsToApply.indexOf(p) === -1; });
+                    } else if (propsToApply && Array.isArray(link.props)) {
+                        propsToApply.forEach(function(p) { if (link.props.indexOf(p) === -1) link.props.push(p); });
+                    }
+                });
+                var propCount = linkProps === 'all' ? 'all' : linkProps.length;
+                var msg2 = 'Updated ' + existingChains.length + ' chain(s) (' + propCount + ' props).';
+                if (unchainedIds.length > 0) msg2 += '<br>' + unchainedIds.length + ' unchained token(s) ignored (use no props to add them).';
+                reply(msg, 'Chain', msg2);
+            } else {
+                // No existing chains: create new
+                if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
+                createLink('chain', linkProps, parsed.ids, true, parsed.excludes);
+                if (parsed.align) {
+                    var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
+                    alignTokens(parsed.ids, alignProps);
+                }
+                var propCount = linkProps === 'all' ? 'all' : linkProps.length;
+                reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
             }
-            var propCount = linkProps === 'all' ? 'all' : linkProps.length;
-            reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
         }
     };
 
