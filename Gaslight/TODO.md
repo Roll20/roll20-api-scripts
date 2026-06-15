@@ -54,7 +54,7 @@
 - [ ] Near-match suggestions in step 4 warnings
 - [ ] Per-status-marker sync granularity (manual for now)
 - [ ] Replay command (re-run last N commands against different views)
-- [ ] Choreograph/Sequence integration
+- [ ] Conditional relay / per-player scripting (evaluate conditions per player page, run different commands based on results — e.g. stealth/perception visibility. Stored in pins or handouts as reusable logic scripts.)
 - [ ] On-demand page cloning (if TruePageCopy exposes API)
 
 ## Known Issues
