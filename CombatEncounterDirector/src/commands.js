@@ -299,248 +299,287 @@ function routeCommand(msg, args, playerId) {
 function handleScale(msg, args, playerId) {
   const [action, value] = args;
   const lang = locale();
+  const handlers = {
+    preset: () => handleScalePreset(msg, playerId, lang, value),
+    party: () => handleScaleParty(msg, playerId, lang, value),
+    hp: () => handleScaleHp(msg, playerId, lang, value),
+    ac: () => handleScaleAc(msg, playerId, lang, value),
+    damage: () => handleScaleDamage(msg, playerId, lang, value),
+    apply: () => handleScaleApply(msg, playerId, lang),
+  };
 
-  switch (action) {
-    case 'preset': {
-      if (!isValidPartyPreset(value)) {
-        whisperError(
-          playerId,
-          t('errors.unknownPartyPreset', lang, { preset: value }),
-          t('errors.partyPresetHint', lang, { presets: Object.keys(PARTY_PRESETS).join(', ') })
-        );
-        return;
-      }
-      const preset = resolvePartyPreset(value);
-      updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, preset, `preset:${value}`);
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.preset', lang), preset.label),
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.scalingPresetReady', lang),
-          [
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'party': {
-      const parsed = parsePartySize(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidPartySize', lang, { value }),
-          `Example: ${COMMAND} scale party 6`
-        );
-        return;
-      }
-      const preset = resolvePartyPresetBySize(parsed.value);
-      updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, preset, `party:${parsed.value}`);
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.nearestPreset', lang), preset.label),
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.partySize', lang, { size: parsed.value }),
-          [
-            buildRow(t('labels.nearestPreset', lang), preset.label),
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'hp': {
-      const parsed = parseHpPercent(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidHpPercent', lang, { value }),
-          `Example: ${COMMAND} scale hp 150`
-        );
-        return;
-      }
-      const next = updatePendingScaling(playerId, { hp: parsed.value });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, next, 'scale:hp');
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.hpUpdated', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'ac': {
-      const parsed = parseAcModifier(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidAcModifier', lang, { value }),
-          `Example: ${COMMAND} scale ac +2`
-        );
-        return;
-      }
-      const next = updatePendingScaling(playerId, { ac: parsed.value });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, next, 'scale:ac');
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.acUpdated', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'damage': {
-      const parsed = parseDamagePercent(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidDamagePercent', lang, { value }),
-          `Example: ${COMMAND} scale damage 125`
-        );
-        return;
-      }
-      const next = updatePendingScaling(playerId, { damage: parsed.value });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, next, 'scale:damage');
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.damageUpdated', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'apply': {
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length === 0) {
-        whisperWarning(playerId, t('errors.noTokensSelected', lang));
-        return;
-      }
-      const profile = getPendingScaling(playerId);
-      const result = applyScalingToSelected(msg, profile, 'scale:apply');
-      whisper(
-        playerId,
-        t('titles.scalingApplied', lang),
-        [
-          buildRow(t('labels.hp', lang), `${profile.hp}%`),
-          buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-          buildRow(t('labels.damage', lang), `${profile.damage}%`),
-          buildDivider(),
-          buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-        ].join('')
-      );
-      break;
-    }
-
-    default:
-      whisperError(
-        playerId,
-        t('errors.unknownScaleAction', lang, { action }),
-        t('errors.scaleActionHint', lang)
-      );
+  if (handlers[action]) {
+    handlers[action]();
+    return;
   }
+
+  whisperError(
+    playerId,
+    t('errors.unknownScaleAction', lang, { action }),
+    t('errors.scaleActionHint', lang)
+  );
+}
+
+/**
+ * Applies a named scaling preset to pending state and selected tokens.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} presetKey Party preset key.
+ * @returns {void}
+ */
+function handleScalePreset(msg, playerId, lang, presetKey) {
+  if (!isValidPartyPreset(presetKey)) {
+    whisperError(
+      playerId,
+      t('errors.unknownPartyPreset', lang, { preset: presetKey }),
+      t('errors.partyPresetHint', lang, { presets: Object.keys(PARTY_PRESETS).join(', ') })
+    );
+    return;
+  }
+
+  const preset = resolvePartyPreset(presetKey);
+  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+  const tokens = getSelectedTokens(msg);
+
+  if (tokens.length > 0) {
+    const result = applyScalingToSelected(msg, preset, `preset:${presetKey}`);
+    whisper(
+      playerId,
+      t('titles.scalingApplied', lang),
+      [
+        buildRow(t('labels.preset', lang), preset.label),
+        buildRow(t('labels.hp', lang), `${preset.hp}%`),
+        buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+        buildRow(t('labels.damage', lang), `${preset.damage}%`),
+        buildDivider(),
+        buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+      ].join('')
+    );
+    return;
+  }
+
+  whisper(
+    playerId,
+    t('titles.scalingPresetReady', lang),
+    [
+      buildRow(t('labels.hp', lang), `${preset.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+      buildRow(t('labels.damage', lang), `${preset.damage}%`),
+      buildDivider(),
+      `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
+      buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
+    ].join('')
+  );
+}
+
+/**
+ * Resolves nearest preset by party size and applies/queues it.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} partySizeRaw Raw party-size argument.
+ * @returns {void}
+ */
+function handleScaleParty(msg, playerId, lang, partySizeRaw) {
+  const parsed = parsePartySize(partySizeRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidPartySize', lang, { value: partySizeRaw }),
+      `Example: ${COMMAND} scale party 6`
+    );
+    return;
+  }
+
+  const preset = resolvePartyPresetBySize(parsed.value);
+  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+  const tokens = getSelectedTokens(msg);
+
+  if (tokens.length > 0) {
+    const result = applyScalingToSelected(msg, preset, `party:${parsed.value}`);
+    whisper(
+      playerId,
+      t('titles.scalingApplied', lang),
+      [
+        buildRow(t('labels.nearestPreset', lang), preset.label),
+        buildRow(t('labels.hp', lang), `${preset.hp}%`),
+        buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+        buildRow(t('labels.damage', lang), `${preset.damage}%`),
+        buildDivider(),
+        buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+      ].join('')
+    );
+    return;
+  }
+
+  whisper(
+    playerId,
+    t('titles.partySize', lang, { size: parsed.value }),
+    [
+      buildRow(t('labels.nearestPreset', lang), preset.label),
+      buildRow(t('labels.hp', lang), `${preset.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+      buildRow(t('labels.damage', lang), `${preset.damage}%`),
+      buildDivider(),
+      `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
+      buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
+    ].join('')
+  );
+}
+
+/**
+ * Updates pending HP percentage and applies/queues scaling.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} hpRaw Raw HP percentage argument.
+ * @returns {void}
+ */
+function handleScaleHp(msg, playerId, lang, hpRaw) {
+  const parsed = parseHpPercent(hpRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidHpPercent', lang, { value: hpRaw }),
+      `Example: ${COMMAND} scale hp 150`
+    );
+    return;
+  }
+
+  const next = updatePendingScaling(playerId, { hp: parsed.value });
+  reportScaleProfileUpdate(msg, playerId, lang, next, t('titles.hpUpdated', lang), 'scale:hp');
+}
+
+/**
+ * Updates pending AC modifier and applies/queues scaling.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} acRaw Raw AC modifier argument.
+ * @returns {void}
+ */
+function handleScaleAc(msg, playerId, lang, acRaw) {
+  const parsed = parseAcModifier(acRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidAcModifier', lang, { value: acRaw }),
+      `Example: ${COMMAND} scale ac +2`
+    );
+    return;
+  }
+
+  const next = updatePendingScaling(playerId, { ac: parsed.value });
+  reportScaleProfileUpdate(msg, playerId, lang, next, t('titles.acUpdated', lang), 'scale:ac');
+}
+
+/**
+ * Updates pending damage percentage and applies/queues scaling.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} damageRaw Raw damage percentage argument.
+ * @returns {void}
+ */
+function handleScaleDamage(msg, playerId, lang, damageRaw) {
+  const parsed = parseDamagePercent(damageRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidDamagePercent', lang, { value: damageRaw }),
+      `Example: ${COMMAND} scale damage 125`
+    );
+    return;
+  }
+
+  const next = updatePendingScaling(playerId, { damage: parsed.value });
+  reportScaleProfileUpdate(
+    msg,
+    playerId,
+    lang,
+    next,
+    t('titles.damageUpdated', lang),
+    'scale:damage'
+  );
+}
+
+/**
+ * Applies the player's pending scaling profile to selected tokens.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @returns {void}
+ */
+function handleScaleApply(msg, playerId, lang) {
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length === 0) {
+    whisperWarning(playerId, t('errors.noTokensSelected', lang));
+    return;
+  }
+
+  const profile = getPendingScaling(playerId);
+  const result = applyScalingToSelected(msg, profile, 'scale:apply');
+  whisper(
+    playerId,
+    t('titles.scalingApplied', lang),
+    [
+      buildRow(t('labels.hp', lang), `${profile.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(profile.ac)),
+      buildRow(t('labels.damage', lang), `${profile.damage}%`),
+      buildDivider(),
+      buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+    ].join('')
+  );
+}
+
+/**
+ * Applies scaling immediately when tokens are selected, otherwise queues
+ * the values and shows the pending profile card.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {{ hp: number, ac: number, damage: number }} profile Scaling profile.
+ * @param {string} pendingTitle Card title used when no tokens are selected.
+ * @param {string} operation Operation label stored in token records.
+ * @returns {void}
+ */
+function reportScaleProfileUpdate(msg, playerId, lang, profile, pendingTitle, operation) {
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length > 0) {
+    const result = applyScalingToSelected(msg, profile, operation);
+    whisper(
+      playerId,
+      t('titles.scalingApplied', lang),
+      [
+        buildRow(t('labels.hp', lang), `${profile.hp}%`),
+        buildRow(t('labels.ac', lang), formatMod(profile.ac)),
+        buildRow(t('labels.damage', lang), `${profile.damage}%`),
+        buildDivider(),
+        buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+      ].join('')
+    );
+    return;
+  }
+
+  whisper(
+    playerId,
+    pendingTitle,
+    [
+      buildRow(t('labels.hp', lang), `${profile.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(profile.ac)),
+      buildRow(t('labels.damage', lang), `${profile.damage}%`),
+      buildDivider(),
+      buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
+    ].join('')
+  );
 }
 
 /**
