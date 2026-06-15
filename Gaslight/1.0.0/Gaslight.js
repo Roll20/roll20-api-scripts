@@ -256,13 +256,15 @@ var Gaslight = Gaslight || (() => {
     // =========================================================================
 
     const getLinkId = (token) => {
-        const notes = token.get('gmnotes') || '';
+        var notes = token.get('gmnotes') || '';
+        try { notes = decodeURIComponent(notes); } catch(e) { /* already decoded */ }
         const match = notes.match(/gaslight_link:\s*(.+)/);
         return match ? match[1].trim() : null;
     };
 
     const setLinkId = (token, linkId) => {
-        let notes = token.get('gmnotes') || '';
+        var notes = token.get('gmnotes') || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
         if (notes.match(/gaslight_link:\s*.+/)) {
             notes = notes.replace(/gaslight_link:\s*.+/, LINK_KEY + ': ' + linkId);
         } else {
@@ -272,7 +274,8 @@ var Gaslight = Gaslight || (() => {
     };
 
     const removeLinkId = (token) => {
-        let notes = token.get('gmnotes') || '';
+        var notes = token.get('gmnotes') || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
         notes = notes.replace(/\n?gaslight_link:\s*.+/, '').trim();
         token.set('gmnotes', notes);
     };
@@ -457,7 +460,12 @@ var Gaslight = Gaslight || (() => {
         const character = getObj('character', charId);
         if (!character) return null;
         const controlledBy = character.get('controlledby') || '';
-        if (!controlledBy || controlledBy === 'all') return null;
+        if (!controlledBy) return null;
+        if (controlledBy === 'all') {
+            // All players control it — return first group player as representative
+            var firstPlayer = Object.keys(groupInfo.players)[0];
+            return firstPlayer || null;
+        }
         const controllerIds = controlledBy.split(',').filter(Boolean);
         for (var i = 0; i < controllerIds.length; i++) {
             if (groupInfo.players[controllerIds[i]]) return controllerIds[i];
@@ -513,20 +521,29 @@ var Gaslight = Gaslight || (() => {
             var tokens = Object.values(tokenMap);
             if (tokens.length < 2) return;
 
-            // Determine if this is a player-controlled token
-            var controllerId = null;
+            // Find all controlling player IDs in the group for this token
+            var controllerIds = [];
+            // Check the character's controlledby — use first token's character as representative
+            var repCharId = null;
             for (var i = 0; i < tokens.length; i++) {
-                controllerId = getControllingPlayerName(tokens[i], groupInfo);
-                if (controllerId) break;
+                if (tokens[i].get('represents')) { repCharId = tokens[i].get('represents'); break; }
+            }
+            if (repCharId) {
+                var repChar = getObj('character', repCharId);
+                if (repChar) {
+                    var cb = repChar.get('controlledby') || '';
+                    if (cb === 'all') {
+                        controllerIds = Object.keys(groupInfo.players);
+                    } else {
+                        var cbIds = cb.split(',').filter(Boolean);
+                        controllerIds = cbIds.filter(function(id) { return !!groupInfo.players[id]; });
+                    }
+                }
             }
 
             var ids = tokens.map(function(t) { return t.get('id'); });
 
-            if (controllerId) {
-                // Player token: chain-link all copies (mutual ring)
-                // GM can move the master copy, player can move their copy — all sync
-                Anchor.chainAnchorObjs(ids);
-            } else {
+            if (controllerIds.length === 0) {
                 // NPC: master is parent, all others are children
                 var parent = tokens.find(function(t) { return t.get('_pageid') === groupInfo.master; });
                 if (!parent) parent = tokens[0];
@@ -534,16 +551,44 @@ var Gaslight = Gaslight || (() => {
                     if (t.get('id') === parent.get('id')) return;
                     Anchor.anchorObj(t.get('id'), parent.get('id'));
                 });
+            } else {
+                // Player-controlled: chain-link master + controlling players' pages
+                // Non-controlling player pages become children of one chain member
+                var chainPageIds = [groupInfo.master];
+                controllerIds.forEach(function(pid) {
+                    if (groupInfo.players[pid]) chainPageIds.push(groupInfo.players[pid].pageId);
+                });
+
+                var chainTokens = tokens.filter(function(t) { return chainPageIds.indexOf(t.get('_pageid')) !== -1; });
+                var childTokens = tokens.filter(function(t) { return chainPageIds.indexOf(t.get('_pageid')) === -1; });
+
+                // Chain-link the peer tokens
+                var chainIds = chainTokens.map(function(t) { return t.get('id'); });
+                if (chainIds.length >= 2) {
+                    Anchor.chainAnchorObjs(chainIds);
+                }
+
+                // Non-controlling player page tokens become children of the first chain member
+                if (childTokens.length > 0 && chainTokens.length > 0) {
+                    var chainParent = chainTokens[0];
+                    childTokens.forEach(function(t) {
+                        Anchor.anchorObj(t.get('id'), chainParent.get('id'));
+                    });
+                }
             }
 
-            // Strip sight from all tokens except the one on the controlling player's page
+            // Strip sight: only controlling players' pages keep sight
             tokens.forEach(function(t) {
-                if (controllerId) {
-                    var playerPageId = groupInfo.players[controllerId].pageId;
-                    if (t.get('_pageid') !== playerPageId) stripSight(t);
+                var pageId = t.get('_pageid');
+                if (controllerIds.length > 0) {
+                    // Keep sight only on pages belonging to controlling players
+                    var isControllerPage = controllerIds.some(function(pid) {
+                        return groupInfo.players[pid] && groupInfo.players[pid].pageId === pageId;
+                    });
+                    if (!isControllerPage) stripSight(t);
                 } else {
                     // NPC: strip sight from children (not master)
-                    if (t.get('_pageid') !== groupInfo.master) stripSight(t);
+                    if (pageId !== groupInfo.master) stripSight(t);
                 }
             });
 
