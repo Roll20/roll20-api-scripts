@@ -827,25 +827,147 @@ var Mirror = Mirror || (() => {
     // Public API
     // =========================================================================
 
-    const link = (ids, props, soft) => {
+    /** Create a unidirectional link. props: array or 'api-all'. soft: bool. */
+    const apiLink = (ids, props, soft, excludes) => {
         if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': link requires at least 2 IDs.'); return null; }
-        return createLink('link', props || 'api-all', ids, !!soft);
+        return createLink('link', props || 'api-all', ids, !!soft, excludes);
     };
 
-    const chainLink = (ids, props) => {
+    /** Create a bidirectional chain link. */
+    const apiChainLink = (ids, props, excludes) => {
         if (!ids || ids.length < 2) { log(SCRIPT_NAME + ': chainLink requires at least 2 IDs.'); return null; }
-        return createLink('chain', props || 'api-all', ids, true);
+        return createLink('chain', props || 'api-all', ids, true, excludes);
     };
 
-    const unlink = (ids, props) => {
-        var s = state[SCRIPT_NAME];
-        var propsToRemove = (props && props.length > 0) ? props : null;
+    /** Remove links for given token IDs. props: array to remove specific, null to remove all. */
+    const apiUnlink = (ids, props) => {
         ids.forEach(function(id) {
             findLinksForToken(id).forEach(function(entry) {
-                removePropsFromLink(entry.id, propsToRemove);
+                if (entry.link.mode === 'chain') {
+                    // Remove token from chain
+                    entry.link.ids = entry.link.ids.filter(function(tid) { return tid !== id; });
+                    rebuildChainedIds(id, entry.id);
+                    if (entry.link.ids.length < 2) {
+                        entry.link.ids.forEach(function(tid) { rebuildChainedIds(tid, entry.id); });
+                        delete state[SCRIPT_NAME].links[entry.id];
+                    }
+                } else {
+                    if (!props || props.length === 0) removePropsFromLink(entry.id, null);
+                    else if (entry.link.props === 'all' || entry.link.props === 'api-all') {
+                        props.forEach(function(p) { if (entry.link.excludes.indexOf(p) === -1) entry.link.excludes.push(p); });
+                    } else {
+                        removePropsFromLink(entry.id, props);
+                    }
+                }
             });
         });
     };
+
+    /** Remove chain for given token IDs. props: add to excludes. null: destroy chain. */
+    const apiUnchain = (ids, props) => {
+        ids.forEach(function(id) {
+            findLinksForToken(id).forEach(function(entry) {
+                if (entry.link.mode !== 'chain') return;
+                if (!props || props.length === 0) {
+                    removePropsFromLink(entry.id, null);
+                } else if (entry.link.props === 'all' || entry.link.props === 'api-all') {
+                    props.forEach(function(p) { if (entry.link.excludes.indexOf(p) === -1) entry.link.excludes.push(p); });
+                } else {
+                    removePropsFromLink(entry.id, props);
+                }
+            });
+        });
+    };
+
+    /** Add tokens to an existing chain. existingId: any ID in the chain. newIds: IDs to add. */
+    const apiAddToChain = (existingId, newIds) => {
+        var links = findLinksForToken(existingId);
+        var chainEntry = links.find(function(e) { return e.link.mode === 'chain'; });
+        if (!chainEntry) { log(SCRIPT_NAME + ': addToChain — token is not in a chain.'); return; }
+        newIds.forEach(function(id) {
+            if (chainEntry.link.ids.indexOf(id) === -1) {
+                chainEntry.link.ids.push(id);
+                state[SCRIPT_NAME].chainedIds[id] = true;
+            }
+        });
+    };
+
+    /** Remove a token from its chain without destroying it. */
+    const apiRemoveFromChain = (tokenId) => {
+        var links = findLinksForToken(tokenId);
+        links.forEach(function(entry) {
+            if (entry.link.mode !== 'chain') return;
+            entry.link.ids = entry.link.ids.filter(function(id) { return id !== tokenId; });
+            rebuildChainedIds(tokenId, entry.id);
+            if (entry.link.ids.length < 2) {
+                entry.link.ids.forEach(function(id) { rebuildChainedIds(id, entry.id); });
+                delete state[SCRIPT_NAME].links[entry.id];
+            }
+        });
+    };
+
+    /** Align tokens. sourceId's values cascade to chain/children. options: { up, ifLinked, props } */
+    const apiAlign = (sourceId, options) => {
+        options = options || {};
+        var source = getObj('graphic', sourceId);
+        if (!source) { log(SCRIPT_NAME + ': align — source not found.'); return; }
+        var singleLinks = findLinksForToken(sourceId);
+        if (singleLinks.length === 0) return;
+
+        // If up: align to parent first
+        if (options.up) {
+            var asChild = singleLinks.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] !== sourceId; });
+            if (asChild.length > 0) {
+                var parentLink = asChild[0].link;
+                var props = options.props || getEffectiveProps(parentLink);
+                var parent = getObj('graphic', parentLink.ids[0]);
+                if (parent) {
+                    var updates = {};
+                    props.forEach(function(p) { updates[p] = parent.get(p); });
+                    source.set(updates);
+                }
+            }
+        }
+
+        // Cascade from source
+        var visited = new Set([sourceId]);
+        var cascadeFrom = function(tokenId) {
+            var tokenObj = getObj('graphic', tokenId);
+            if (!tokenObj) return;
+            Object.values(state[SCRIPT_NAME].links).forEach(function(link) {
+                var idx = link.ids.indexOf(tokenId);
+                if (idx === -1) return;
+                var requestedProps = options.props || getEffectiveProps(link);
+                var linkProps = options.ifLinked ? requestedProps.filter(function(p) { return getEffectiveProps(link).indexOf(p) !== -1; }) : requestedProps;
+                if (linkProps.length === 0) return;
+                var updates = {};
+                linkProps.forEach(function(p) { updates[p] = tokenObj.get(p); });
+                if (link.mode === 'chain') {
+                    link.ids.forEach(function(tid) {
+                        if (visited.has(tid)) return;
+                        visited.add(tid);
+                        var t = getObj('graphic', tid);
+                        if (t) { t.set(updates); cascadeFrom(tid); }
+                    });
+                } else if (idx === 0) {
+                    link.ids.slice(1).forEach(function(tid) {
+                        if (visited.has(tid)) return;
+                        visited.add(tid);
+                        var t = getObj('graphic', tid);
+                        if (t) { t.set(updates); cascadeFrom(tid); }
+                    });
+                }
+            });
+        };
+        cascadeFrom(sourceId);
+    };
+
+    /** Query links for a token. Returns array of { id, link } objects. */
+    const apiGetLinks = (tokenId) => findLinksForToken(tokenId);
+
+    /** Get/set global excludes. */
+    const apiGetGlobalExcludes = () => (state[SCRIPT_NAME].globalExcludes || []).slice();
+    const apiSetGlobalExcludes = (excludes) => { state[SCRIPT_NAME].globalExcludes = excludes; };
 
     // =========================================================================
     // Initialization
@@ -883,11 +1005,19 @@ var Mirror = Mirror || (() => {
     return {
         checkInstall,
         registerEventHandlers,
-        link: link,
-        chainLink: chainLink,
-        unlink: unlink,
+        link: apiLink,
+        chainLink: apiChainLink,
+        unlink: apiUnlink,
+        unchain: apiUnchain,
+        addToChain: apiAddToChain,
+        removeFromChain: apiRemoveFromChain,
+        align: apiAlign,
+        getLinks: apiGetLinks,
+        getGlobalExcludes: apiGetGlobalExcludes,
+        setGlobalExcludes: apiSetGlobalExcludes,
         ALL_PROPS: ALL_PROPS,
-        PROP_GROUPS: PROP_GROUPS
+        PROP_GROUPS: PROP_GROUPS,
+        getKnownProps: getKnownProps
     };
 })();
 
