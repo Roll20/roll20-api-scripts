@@ -4,6 +4,8 @@ import {
   COLOR_BORDER,
   COLOR_BUTTON_BG,
   COLOR_BUTTON_TEXT,
+  COLOR_CARD_BG_BOTTOM,
+  COLOR_CARD_BG_TOP,
   COLOR_HEADER_BG,
   COLOR_HEADER_TEXT,
   COLOR_MUTED,
@@ -526,6 +528,20 @@ function buildDeckHeader(activeView, lang) {
 }
 
 /**
+ * Wraps journal content in a styled card container.
+ *
+ * @param {string} innerHtml Already-assembled journal HTML body.
+ * @returns {string} Wrapped HTML string.
+ */
+function wrapJournalContent(innerHtml) {
+  return [
+    `<div style="background-image:-webkit-linear-gradient(135deg,${COLOR_CARD_BG_TOP} 0%,${COLOR_CARD_BG_BOTTOM} 100%);color:${COLOR_TEXT};border:1px solid ${COLOR_BORDER};padding:6px;border-radius:4px">`,
+    innerHtml,
+    '</div>',
+  ].join('');
+}
+
+/**
  * Builds the full HTML for the Command Deck journal in the given view.
  *
  * @param {string} [view] Deck view key. Defaults to DEFAULT_DECK_VIEW.
@@ -546,7 +562,9 @@ export function buildCommandDeck(view = DEFAULT_DECK_VIEW) {
     })
     .join('');
 
-  return [buildDeckHeader(activeView, lang), buildDeckTabs(activeView, lang), sectionHtml].join('');
+  return wrapJournalContent(
+    [buildDeckHeader(activeView, lang), buildDeckTabs(activeView, lang), sectionHtml].join('')
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -586,7 +604,9 @@ export function installControlPanelHandout(view = DEFAULT_DECK_VIEW) {
  * @returns {void}
  */
 export function installStatusHandout() {
-  const placeholder = `<p style="color:${COLOR_MUTED};font-style:italic">Run <strong>!director report refresh</strong> to populate this report.</p>`;
+  const placeholder = wrapJournalContent(
+    `<p style="color:${COLOR_MUTED};font-style:italic">Run <strong>!ced report refresh</strong> to populate this report.</p>`
+  );
   const existing = findObjs({ type: 'handout', name: JOURNAL_STATUS_NAME })[0];
   if (!existing) {
     createObj('handout', { name: JOURNAL_STATUS_NAME, notes: placeholder });
