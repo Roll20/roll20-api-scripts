@@ -403,9 +403,9 @@ var Mirror = Mirror || (() => {
         var out = '';
         ids.forEach(function(id) {
             var obj = getObj('graphic', id);
-            var name = obj ? (obj.get('name') || id) : id;
+            var name = obj ? (obj.get('name') || '(unnamed)') : '?';
             var links = findLinksForToken(id);
-            out += '<b>' + name + '</b>: ';
+            out += '<b>' + name + '</b> (' + id + '): ';
             if (links.length === 0) { out += 'no mirror links<br>'; return; }
             links.forEach(function(entry) {
                 var role = entry.link.mode === 'chain' ? 'chain' : (entry.link.ids[0] === id ? 'source' : 'target');
