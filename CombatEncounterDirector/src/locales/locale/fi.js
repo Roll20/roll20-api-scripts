@@ -55,8 +55,7 @@ const TRANSLATION = {
     encounterNameRequired: 'Tapaamisen nimi vaaditaan.',
     encounterNameRequiredHint: 'Esimerkki: !ced kohtaaminen save goblin-ambush',
     encounterNotFound: 'Kohtaamista "{name}" ei löytynyt.',
-    encounterNotFoundHint:
-      'Käytä !ced-kohtaamisten listaa nähdäksesi tallennetut kohtaamiset.',
+    encounterNotFoundHint: 'Käytä !ced-kohtaamisten listaa nähdäksesi tallennetut kohtaamiset.',
     unknownResetScope: 'Tuntematon nollausalue: "{scope}".',
     resetScopeHint: 'Kelvolliset laajuudet: valittu, sivu, kaikki',
     unknownReportAction: 'Tuntematon raporttitoiminto: "{action}".',

@@ -55,8 +55,7 @@ const TRANSLATION = {
     encounterNameRequired: 'Требуется имя встречи.',
     encounterNameRequiredHint: 'Пример: !ced встреча сохранить засаду гоблинов',
     encounterNotFound: 'Встреча «{name}» не найдена.',
-    encounterNotFoundHint:
-      'Используйте список встреч !ced, чтобы просмотреть сохраненные встречи.',
+    encounterNotFoundHint: 'Используйте список встреч !ced, чтобы просмотреть сохраненные встречи.',
     unknownResetScope: 'Неизвестная область сброса: «{scope}».',
     resetScopeHint: 'Допустимые области: выбрано, страница, все.',
     unknownReportAction: 'Неизвестное действие по отчету: «{action}».',
