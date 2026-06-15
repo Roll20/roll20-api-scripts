@@ -508,65 +508,55 @@ var Gaslight = Gaslight || (() => {
             linkGroups[linkId][tgt.get('id')] = tgt;
         });
 
-        // For each link group, determine parent and anchor all others as children
+        // For each link group, determine anchoring strategy
         Object.values(linkGroups).forEach(function(tokenMap) {
             var tokens = Object.values(tokenMap);
             if (tokens.length < 2) return;
 
-            // Determine parent: player-controlled -> parent on player's page; NPC -> parent on master
-            var parent = null;
+            // Determine if this is a player-controlled token
             var controllerId = null;
             for (var i = 0; i < tokens.length; i++) {
                 controllerId = getControllingPlayerName(tokens[i], groupInfo);
                 if (controllerId) break;
             }
 
-            if (controllerId) {
-                var playerPageId = groupInfo.players[controllerId].pageId;
-                parent = tokens.find(function(t) { return t.get('_pageid') === playerPageId; });
-            }
-            if (!parent) {
-                parent = tokens.find(function(t) { return t.get('_pageid') === groupInfo.master; });
-            }
-            if (!parent) parent = tokens[0];
+            var ids = tokens.map(function(t) { return t.get('id'); });
 
+            if (controllerId) {
+                // Player token: chain-link all copies (mutual ring)
+                // GM can move the master copy, player can move their copy — all sync
+                Anchor.chainAnchorObjs(ids);
+            } else {
+                // NPC: master is parent, all others are children
+                var parent = tokens.find(function(t) { return t.get('_pageid') === groupInfo.master; });
+                if (!parent) parent = tokens[0];
+                tokens.forEach(function(t) {
+                    if (t.get('id') === parent.get('id')) return;
+                    Anchor.anchorObj(t.get('id'), parent.get('id'));
+                });
+            }
+
+            // Strip sight from all tokens except the one on the controlling player's page
             tokens.forEach(function(t) {
-                if (t.get('id') === parent.get('id')) return;
-                Anchor.anchorObj(t.get('id'), parent.get('id'));
-                stripSight(t);
-                if (!active.linkedTokens[parent.get('id')]) active.linkedTokens[parent.get('id')] = [];
-                active.linkedTokens[parent.get('id')].push(t.get('id'));
+                if (controllerId) {
+                    var playerPageId = groupInfo.players[controllerId].pageId;
+                    if (t.get('_pageid') !== playerPageId) stripSight(t);
+                } else {
+                    // NPC: strip sight from children (not master)
+                    if (t.get('_pageid') !== groupInfo.master) stripSight(t);
+                }
+            });
+
+            // Track links for merge teardown
+            ids.forEach(function(id) {
+                if (!active.linkedTokens[id]) active.linkedTokens[id] = [];
+            });
+            ids.forEach(function(id) {
+                ids.forEach(function(otherId) {
+                    if (id !== otherId) active.linkedTokens[id].push(otherId);
+                });
             });
         });
-    };
-
-    // =========================================================================
-    // GM Override
-    // =========================================================================
-
-    const onGraphicChanged = (obj) => {
-        if (typeof Anchor === 'undefined') return;
-        const tokenId = obj.get('id');
-        const s = state[SCRIPT_NAME];
-        const pageId = obj.get('_pageid');
-
-        // Only care about master pages of active groups
-        const activeEntry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pageId; });
-        if (!activeEntry) return;
-
-        const anchor = Anchor.getAnchor(tokenId);
-        if (!anchor) return;
-
-        // Parent lives on a different page — this is GM override
-        if (anchor.get('_pageid') === pageId) return;
-
-        // GM moved a child on master — set parent to match child's new position
-        anchor.set({
-            left: obj.get('left'),
-            top: obj.get('top'),
-            rotation: obj.get('rotation')
-        });
-        Anchor.updateObj(anchor);
     };
 
     // =========================================================================
@@ -659,9 +649,12 @@ var Gaslight = Gaslight || (() => {
             if (!active) { reply(msg, 'Warning', 'Group "' + gn + '" is not active.'); return; }
 
             if (typeof Anchor !== 'undefined') {
-                Object.values(active.linkedTokens).forEach(function(childIds) {
-                    childIds.forEach(function(cid) { Anchor.removeAnchor(cid); });
+                var allLinkedIds = new Set();
+                Object.keys(active.linkedTokens).forEach(function(id) { allLinkedIds.add(id); });
+                Object.values(active.linkedTokens).forEach(function(ids) {
+                    ids.forEach(function(id) { allLinkedIds.add(id); });
                 });
+                allLinkedIds.forEach(function(id) { Anchor.removeAnchor(id); });
             }
 
             var psp = Campaign().get('playerspecificpages') || {};
@@ -984,9 +977,6 @@ var Gaslight = Gaslight || (() => {
 
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
-        on('change:graphic:left', onGraphicChanged);
-        on('change:graphic:top', onGraphicChanged);
-        on('change:graphic:rotation', onGraphicChanged);
     };
 
     return { checkInstall, registerEventHandlers };
