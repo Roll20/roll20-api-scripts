@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Unbekannter Befehl: „{sub}“.',
-    unknownCommandHint: 'Geben Sie !director help ein, um eine Liste mit Befehlen anzuzeigen.',
+    unknownCommandHint: 'Geben Sie !ced help ein, um eine Liste mit Befehlen anzuzeigen.',
     noTokensSelected: 'Keine Token ausgewählt. Wählen Sie zuerst Token auf der Karte aus.',
     unknownScaleAction: 'Unbekannte Skalenaktion: „{action}“.',
     scaleActionHint: 'Gültige Aktionen: Voreinstellung, Party, PS, Wechselstrom, Schaden, Anwenden',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Unbekannte Verstärkungsaktion: „{action}“.',
     reinforceActionHint: 'Gültige Aktionen: Duplizieren, Aufzählen, Anzeigen',
     noReinforcementsToReveal: 'Keine aktuellen Verstärkungen zu verraten.',
-    noReinforcementsToRevealHint: 'Verwenden Sie zuerst !director, um das Duplikat zu verstärken.',
+    noReinforcementsToRevealHint: 'Verwenden Sie zuerst !ced, um das Duplikat zu verstärken.',
     unknownLayer: 'Unbekannter Layer: „{layer}“.',
     layerHint: 'Gültige Layer: Token, GM, Karte',
     unknownPositionAction: 'Unbekannte Positionsaktion: „{action}“.',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Unbekannte Begegnungsaktion: „{action}“.',
     encounterActionHint: 'Gültige Aktionen: Speichern, Laden, Löschen, Auflisten',
     encounterNameRequired: 'Begegnungsname erforderlich.',
-    encounterNameRequiredHint: 'Beispiel: !director Begegnung retten Goblin-Hinterhalt',
+    encounterNameRequiredHint: 'Beispiel: !ced Begegnung retten Goblin-Hinterhalt',
     encounterNotFound: 'Begegnung „{name}“ nicht gefunden.',
     encounterNotFoundHint:
-      'Verwenden Sie die !director-Begegnungsliste, um gespeicherte Begegnungen anzuzeigen.',
+      'Verwenden Sie die !ced-Begegnungsliste, um gespeicherte Begegnungen anzuzeigen.',
     unknownResetScope: 'Unbekannter Zurücksetzungsbereich: „{scope}“.',
     resetScopeHint: 'Gültige Bereiche: ausgewählt, Seite, alle',
     unknownReportAction: 'Unbekannte Berichtsaktion: „{action}“.',
@@ -84,7 +84,7 @@ const TRANSLATION = {
       'Die Anzahl der Duplikate muss zwischen 1 und 50 liegen (erhielt „{value}“). Beispiel: 3',
     invalidEncounterName:
       'Ungültiger Begegnungsname: „{name}“. Namen können Buchstaben, Ziffern, Leerzeichen, Bindestriche und Unterstriche enthalten (maximal 64 Zeichen).',
-    invalidEncounterNameHint: 'Beispiel: !director Begegnung retten Goblin-Hinterhalt',
+    invalidEncounterNameHint: 'Beispiel: !ced Begegnung retten Goblin-Hinterhalt',
     duplicateBurstLimit:
       'Der Vorgang würde {requested} Token erstellen und damit den Grenzwert von {limit} überschreiten. Wählen Sie weniger Token aus oder verwenden Sie eine kleinere Anzahl.',
     unexpectedError: 'Es ist ein unerwarteter Fehler aufgetreten: {message}',

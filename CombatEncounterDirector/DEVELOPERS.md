@@ -60,7 +60,7 @@ CombatEncounterDirector/
 | `encounters.js`           | Encounter template CRUD                                           |
 | `reporting.js`            | Build and write the status journal HTML                           |
 | `journals.js`             | Build and write the control panel journal HTML                    |
-| `commands.js`             | Route `!director` subcommands; whisper feedback                   |
+| `commands.js`             | Route `!ced` subcommands; whisper feedback                        |
 | `i18n.js`                 | `t()`, `normalizeLocale()`, `isRtlLocale()` — translation lookup  |
 | `locales/metadata.js`     | Locale definitions, `VALID_LOCALES`, `LOCALE_ALIASES`             |
 | `locales/index.js`        | Assembles `TRANSLATIONS` map from all locale files                |
@@ -118,13 +118,13 @@ state.CombatEncounterDirector = {
 This project uses [Rollup](https://rollupjs.org) to bundle ES modules into a single Roll20-compatible script.
 
 ```bash
-npm install                          # Install dependencies
-npm run build                        # Auto-bump patch version, then build
-npm run build -- 1.1.0              # Set explicit version, then build
-npm run build -- 1.1.0-alpha.1      # Enter prerelease cycle, then build
-npm run watch                        # Watch mode — rebuilds on change, no version bump
-npm run set-version -- 1.1.0        # Set version only, no build
-npm run format                       # Format source with Prettier
+npm install                      # Install dependencies
+npm run build                    # Auto-bump patch version, then build
+npm run build -- 1.1.0           # Set explicit version, then build
+npm run build -- 1.1.0-alpha.1   # Enter prerelease cycle, then build
+npm run watch                    # Watch mode — rebuilds on change, no version bump
+npm run set-version -- 1.1.0     # Set version only, no build
+npm run format                   # Format source with Prettier
 ```
 
 The build (`scripts/build.mjs`):
@@ -165,7 +165,7 @@ All user-facing strings are translated via `t(key, locale, vars?)` in `src/i18n.
 2. `src/locales/metadata.js` declares the 24 supported locales and their aliases.
 3. `src/locales/index.js` imports all locale files and assembles the `TRANSLATIONS` map.
 4. `t('section.key', lang, { var: value })` looks up `TRANSLATIONS[lang].section.key`, interpolates `{var}` placeholders, and falls back to `en-US` when a key is missing.
-5. The active locale is stored in `state.CombatEncounterDirector.config.language` and can be changed at runtime with `!director config language <code>`.
+5. The active locale is stored in `state.CombatEncounterDirector.config.language` and can be changed at runtime with `!ced config language <code>`.
 
 ### Key structure in `en-US.js`
 

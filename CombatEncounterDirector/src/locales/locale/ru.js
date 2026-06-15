@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Неизвестная команда: «{sub}».',
-    unknownCommandHint: 'Введите !director help для получения списка команд.',
+    unknownCommandHint: 'Введите !ced help для получения списка команд.',
     noTokensSelected: 'Токены не выбраны. Сначала выберите жетоны на карте.',
     unknownScaleAction: 'Неизвестное масштабное действие: «{action}».',
     scaleActionHint: 'Допустимые действия: предустановка, группа, здоровье, ток, урон, применить.',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Неизвестное подкрепление: «{action}».',
     reinforceActionHint: 'Допустимые действия: дублировать, перечислять, показывать.',
     noReinforcementsToReveal: 'Никаких недавних подкреплений, о которых можно было бы узнать.',
-    noReinforcementsToRevealHint: 'Используйте !director сначала для усиления дубликата.',
+    noReinforcementsToRevealHint: 'Используйте !ced сначала для усиления дубликата.',
     unknownLayer: 'Неизвестный слой: «{layer}».',
     layerHint: 'Допустимые слои: жетон, гм, карта.',
     unknownPositionAction: 'Неизвестное действие по позиции: «{action}».',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Неизвестное действие при столкновении: «{action}».',
     encounterActionHint: 'Допустимые действия: сохранить, загрузить, удалить, составить список.',
     encounterNameRequired: 'Требуется имя встречи.',
-    encounterNameRequiredHint: 'Пример: !director встреча сохранить засаду гоблинов',
+    encounterNameRequiredHint: 'Пример: !ced встреча сохранить засаду гоблинов',
     encounterNotFound: 'Встреча «{name}» не найдена.',
     encounterNotFoundHint:
-      'Используйте список встреч !director, чтобы просмотреть сохраненные встречи.',
+      'Используйте список встреч !ced, чтобы просмотреть сохраненные встречи.',
     unknownResetScope: 'Неизвестная область сброса: «{scope}».',
     resetScopeHint: 'Допустимые области: выбрано, страница, все.',
     unknownReportAction: 'Неизвестное действие по отчету: «{action}».',
@@ -83,7 +83,7 @@ const TRANSLATION = {
       'Число дубликатов должно быть от 1 до 50 (получено "{value}"). Пример: 3',
     invalidEncounterName:
       'Недопустимое имя встречи: «{name}». Имена могут содержать буквы, цифры, пробелы, дефисы и подчеркивания (максимум 64 символа).',
-    invalidEncounterNameHint: 'Пример: !director встреча сохранить засаду гоблинов',
+    invalidEncounterNameHint: 'Пример: !ced встреча сохранить засаду гоблинов',
     duplicateBurstLimit:
       'В результате операции будет создано {requested} токенов, что превысит ограничение в {limit}. Выберите меньше жетонов или используйте меньшее количество.',
     unexpectedError: 'Произошла непредвиденная ошибка: {message}.',

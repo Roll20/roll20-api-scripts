@@ -1,6 +1,8 @@
 import {
   BOSS_PRESETS,
   COMMAND,
+  DIRECTOR_CONFLICT_STATE_KEY,
+  LEGACY_COMMAND,
   DECK_VIEW_KEYS,
   ENCOUNTER_NAME_RE,
   LAYER_GM,
@@ -116,7 +118,7 @@ function locale() {
 // ---------------------------------------------------------------------------
 
 /**
- * Handles incoming chat messages, routing !director commands to sub-handlers.
+ * Handles incoming chat messages, routing !ced commands to sub-handlers.
  *
  * @param {object} msg Roll20 chat message object.
  * @returns {void}
@@ -142,6 +144,70 @@ export function handleInput(msg) {
     routeCommand(msg, args, playerId);
   } catch (error) {
     log(`[${SCRIPT_NAME}] Command error: ${error.message}`);
+    whisperError(
+      playerId,
+      t('errors.unexpectedError', locale(), { message: error.message }),
+      t('errors.unexpectedErrorHint', locale())
+    );
+  }
+}
+
+/**
+ * Handles the legacy `!ced` command for backward compatibility with v1.0.0.
+ *
+ * If the Director script (the community mod that also uses `!ced`) is
+ * detected via its state key, only a deprecation whisper is sent and the
+ * command is NOT processed — the other mod will handle it.
+ *
+ * If the Director script is NOT installed, the command is forwarded to the
+ * normal router so existing v1.0.0 macros continue to work.
+ *
+ * @param {object} msg Roll20 chat message object.
+ * @returns {void}
+ */
+export function handleLegacyInput(msg) {
+  if (msg.type !== 'api') {
+    return;
+  }
+
+  const rawContent = msg.content || '';
+  if (!rawContent.startsWith(LEGACY_COMMAND)) {
+    return;
+  }
+
+  // Ignore if the message is actually the new !ced command (prefix overlap guard).
+  if (rawContent.startsWith(COMMAND)) {
+    return;
+  }
+
+  if (!playerIsGM(msg.playerid)) {
+    return;
+  }
+
+  const playerId = msg.playerid;
+
+  // Detect whether the Director community mod is also loaded by checking its
+  // known state namespace.  We intentionally access the global `state` object
+  // directly here because there is no Roll20 API to introspect other scripts.
+  const directorConflict = globalThis.state?.[DIRECTOR_CONFLICT_STATE_KEY] !== undefined;
+
+  if (directorConflict) {
+    // Another mod owns !ced — just notify the GM and bail out.
+    whisperWarning(
+      playerId,
+      `⚠️ Command Conflict Detected — Another script is using !ced. ` +
+        `Please update your macros to use !ced to access Combat Encounter Director.`
+    );
+    return;
+  }
+
+  // No conflict — forward to the normal router as a transparent alias.
+  const args = rawContent.slice(LEGACY_COMMAND.length).trim().split(/\s+/).filter(Boolean);
+
+  try {
+    routeCommand(msg, args, playerId);
+  } catch (error) {
+    log(`[${SCRIPT_NAME}] Legacy command error: ${error.message}`);
     whisperError(
       playerId,
       t('errors.unexpectedError', locale(), { message: error.message }),
@@ -223,7 +289,7 @@ function routeCommand(msg, args, playerId) {
 // ---------------------------------------------------------------------------
 
 /**
- * Handles !director scale ... commands.
+ * Handles !ced scale ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'scale'.
@@ -478,7 +544,7 @@ function handleScale(msg, args, playerId) {
 }
 
 /**
- * Handles !director boss ... commands.
+ * Handles !ced boss ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'boss'.
@@ -533,7 +599,7 @@ function handleBoss(msg, args, playerId) {
 }
 
 /**
- * Handles !director reinforce ... commands.
+ * Handles !ced reinforce ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'reinforce'.
@@ -653,7 +719,7 @@ function handleReinforce(msg, args, playerId) {
 }
 
 /**
- * Handles !director layer ... commands.
+ * Handles !ced layer ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'layer'.
@@ -693,7 +759,7 @@ function handleLayer(msg, args, playerId) {
 }
 
 /**
- * Handles !director hide command.
+ * Handles !ced hide command.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string} playerId GM player ID.
@@ -715,7 +781,7 @@ function handleHide(msg, playerId) {
 }
 
 /**
- * Handles !director reveal command.
+ * Handles !ced reveal command.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string} playerId GM player ID.
@@ -737,7 +803,7 @@ function handleReveal(msg, playerId) {
 }
 
 /**
- * Handles !director position ... commands.
+ * Handles !ced position ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'position'.
@@ -789,7 +855,7 @@ function handlePosition(msg, args, playerId) {
 }
 
 /**
- * Handles !director encounter ... commands.
+ * Handles !ced encounter ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'encounter'.
@@ -913,7 +979,7 @@ function handleEncounter(msg, args, playerId) {
 }
 
 /**
- * Handles !director reset ... commands.
+ * Handles !ced reset ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'reset'.
@@ -970,7 +1036,7 @@ function handleReset(msg, args, playerId) {
 }
 
 /**
- * Handles !director report ... commands.
+ * Handles !ced report ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'report'.
@@ -1032,14 +1098,14 @@ function handleReport(msg, args, playerId) {
 }
 
 /**
- * Handles !director journal ... commands.
+ * Handles !ced journal ... commands.
  *
  * @param {string[]} args Remaining arguments after 'journal'.
  * @param {string} playerId GM player ID.
  * @returns {void}
  */
 /**
- * Handles !director deck [view] commands.
+ * Handles !ced deck [view] commands.
  * Rebuilds the Command Deck journal in the specified or stored view.
  *
  * @param {string[]} args Remaining arguments after 'deck'.
@@ -1096,7 +1162,7 @@ function handleJournal(args, playerId) {
 }
 
 /**
- * Handles !director config ... commands.
+ * Handles !ced config ... commands.
  *
  * @param {string[]} args Remaining arguments after 'config'.
  * @param {string} playerId GM player ID.

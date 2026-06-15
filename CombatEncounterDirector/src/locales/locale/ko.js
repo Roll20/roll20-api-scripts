@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: '알 수 없는 명령: "{sub}".',
-    unknownCommandHint: '명령 목록을 보려면 !director help를 입력하세요.',
+    unknownCommandHint: '명령 목록을 보려면 !ced help를 입력하세요.',
     noTokensSelected: '선택된 토큰이 없습니다. 먼저 지도에서 토큰을 선택하세요.',
     unknownScaleAction: '알 수 없는 크기 조정 작업: "{action}".',
     scaleActionHint: '유효한 작업: 사전 설정, 파티, hp, ac, 손상, 적용',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: '알 수 없는 강화 작업: "{action}".',
     reinforceActionHint: '유효한 작업: 복제, 열거, 표시',
     noReinforcementsToReveal: '최근 공개할 지원군이 없습니다.',
-    noReinforcementsToRevealHint: '!director를 사용하여 중복을 먼저 강화하세요.',
+    noReinforcementsToRevealHint: '!ced를 사용하여 중복을 먼저 강화하세요.',
     unknownLayer: '알 수 없는 레이어: "{layer}".',
     layerHint: '유효한 레이어: 토큰, GM, 지도',
     unknownPositionAction: '알 수 없는 위치 작업: "{action}".',
@@ -53,9 +53,9 @@ const TRANSLATION = {
     unknownEncounterAction: '알 수 없는 만남 작업: "{action}".',
     encounterActionHint: '유효한 작업: 저장, 로드, 삭제, 나열',
     encounterNameRequired: '만남 이름이 필요합니다.',
-    encounterNameRequiredHint: '예: !director 조우 save goblin-ambush',
+    encounterNameRequiredHint: '예: !ced 조우 save goblin-ambush',
     encounterNotFound: '"{name}"을(를) 찾을 수 없습니다.',
-    encounterNotFoundHint: '저장된 만남을 보려면 !director 만남 목록을 사용하세요.',
+    encounterNotFoundHint: '저장된 만남을 보려면 !ced 만남 목록을 사용하세요.',
     unknownResetScope: '알 수 없는 재설정 범위: "{scope}".',
     resetScopeHint: '유효한 범위: 선택됨, 페이지, 모두',
     unknownReportAction: '알 수 없는 신고 작업: "{action}".',
@@ -79,7 +79,7 @@ const TRANSLATION = {
     invalidDuplicateCount: '중복 개수는 1에서 50 사이여야 합니다("{value}" 있음). 예: 3',
     invalidEncounterName:
       '잘못된 만남 이름: "{name}". 이름에는 문자, 숫자, 공백, 하이픈, 밑줄(최대 64자)이 포함될 수 있습니다.',
-    invalidEncounterNameHint: '예: !director 조우 save goblin-ambush',
+    invalidEncounterNameHint: '예: !ced 조우 save goblin-ambush',
     duplicateBurstLimit:
       '작업으로 인해 {requested} 토큰이 생성되어 {limit} 한도를 초과합니다. 더 적은 수의 토큰을 선택하거나 더 적은 수를 사용하십시오.',
     unexpectedError: '예상치 못한 오류가 발생했습니다: {message}',

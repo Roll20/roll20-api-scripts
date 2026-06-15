@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Commande inconnue : "{sub}".',
-    unknownCommandHint: 'Tapez !director help pour une liste de commandes.',
+    unknownCommandHint: 'Tapez !ced help pour une liste de commandes.',
     noTokensSelected: 'Aucun jeton sélectionné. Sélectionnez d’abord les jetons sur la carte.',
     unknownScaleAction: 'Action d\'échelle inconnue : "{action}".',
     scaleActionHint: 'Actions valides : préréglage, fête, hp, ac, dégâts, appliquer',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Action de renforcement inconnue : "{action}".',
     reinforceActionHint: 'Actions valides : dupliquer, énumérer, afficher',
     noReinforcementsToReveal: 'Aucun renfort récent à révéler.',
-    noReinforcementsToRevealHint: "Utilisez d'abord !director pour renforcer la duplication.",
+    noReinforcementsToRevealHint: "Utilisez d'abord !ced pour renforcer la duplication.",
     unknownLayer: 'Couche inconnue : "{layer}".',
     layerHint: 'Couches valides : token, gm, map',
     unknownPositionAction: 'Action de position inconnue : "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Action de rencontre inconnue : "{action}".',
     encounterActionHint: 'Actions valides : enregistrer, charger, supprimer, lister',
     encounterNameRequired: 'Nom de la rencontre requis.',
-    encounterNameRequiredHint: 'Exemple : !director rencontre save goblin-ambush',
+    encounterNameRequiredHint: 'Exemple : !ced rencontre save goblin-ambush',
     encounterNotFound: 'Rencontre "{name}" introuvable.',
     encounterNotFoundHint:
-      'Utilisez la liste de rencontres !director pour voir les rencontres enregistrées.',
+      'Utilisez la liste de rencontres !ced pour voir les rencontres enregistrées.',
     unknownResetScope: 'Portée de réinitialisation inconnue : "{scope}".',
     resetScopeHint: 'Portées valides : sélectionnée, page, toutes',
     unknownReportAction: 'Action de rapport inconnue : "{action}".',
@@ -85,7 +85,7 @@ const TRANSLATION = {
       'Le nombre de doublons doit être compris entre 1 et 50 (obtenu "{value}"). Exemple : 3',
     invalidEncounterName:
       'Nom de rencontre non valide : "{name}". Les noms peuvent contenir des lettres, des chiffres, des espaces, des traits d\'union et des traits de soulignement (maximum 64 caractères).',
-    invalidEncounterNameHint: 'Exemple : !director rencontre save goblin-ambush',
+    invalidEncounterNameHint: 'Exemple : !ced rencontre save goblin-ambush',
     duplicateBurstLimit:
       "L'opération créerait {requested} jetons, dépassant la limite de {limit}. Sélectionnez moins de jetons ou utilisez un nombre plus petit.",
     unexpectedError: "Une erreur inattendue s'est produite : {message}",

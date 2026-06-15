@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Ismeretlen parancs: "{sub}".',
-    unknownCommandHint: 'Írja be a !director help parancsot a parancsok listájához.',
+    unknownCommandHint: 'Írja be a !ced help parancsot a parancsok listájához.',
     noTokensSelected: 'Nincs kiválasztva token. Először válassza ki a tokeneket a térképen.',
     unknownScaleAction: 'Ismeretlen léptékművelet: „{action}”.',
     scaleActionHint: 'Érvényes műveletek: előre beállított, party, hp, ac, kár, alkalmaz',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Ismeretlen megerősítési művelet: "{action}".',
     reinforceActionHint: 'Érvényes műveletek: másolás, felsorolás, megjelenítés',
     noReinforcementsToReveal: 'Nem árulnak el újabb erősítéseket.',
-    noReinforcementsToRevealHint: 'Először használd a !director erősítő duplikációt.',
+    noReinforcementsToRevealHint: 'Először használd a !ced erősítő duplikációt.',
     unknownLayer: 'Ismeretlen réteg: "{layer}".',
     layerHint: 'Érvényes rétegek: token, gm, térkép',
     unknownPositionAction: 'Ismeretlen pozícióművelet: "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Ismeretlen találkozási művelet: "{action}".',
     encounterActionHint: 'Érvényes műveletek: mentés, betöltés, törlés, listázás',
     encounterNameRequired: 'Találkozási név kötelező.',
-    encounterNameRequiredHint: 'Példa: !director találkozás mentés goblin-ambush',
+    encounterNameRequiredHint: 'Példa: !ced találkozás mentés goblin-ambush',
     encounterNotFound: 'A „{name}” találkozás nem található.',
     encounterNotFoundHint:
-      'Használja a !director találkozási listát a mentett találkozások megtekintéséhez.',
+      'Használja a !ced találkozási listát a mentett találkozások megtekintéséhez.',
     unknownResetScope: 'Ismeretlen visszaállítási hatókör: "{scope}".',
     resetScopeHint: 'Érvényes hatókör: kiválasztott, oldal, minden',
     unknownReportAction: 'Ismeretlen bejelentési művelet: "{action}".',
@@ -85,7 +85,7 @@ const TRANSLATION = {
       'Az ismétlődések számának 1 és 50 között kell lennie (a következőt kapta: „{value}”). Példa: 3',
     invalidEncounterName:
       'Érvénytelen találkozásnév: "{name}". A nevek tartalmazhatnak betűket, számjegyeket, szóközöket, kötőjeleket és aláhúzásjeleket (max. 64 karakter).',
-    invalidEncounterNameHint: 'Példa: !director találkozás mentés goblin-ambush',
+    invalidEncounterNameHint: 'Példa: !ced találkozás mentés goblin-ambush',
     duplicateBurstLimit:
       'A művelet {requested} tokent hozna létre, ami meghaladja a {limit} korlátot. Válasszon kevesebb tokent, vagy használjon kisebb számot.',
     unexpectedError: 'Váratlan hiba történt: {message}',

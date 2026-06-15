@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: '不明なコマンド:「{sub}」。',
-    unknownCommandHint: 'コマンドのリストを表示するには、「!director help」と入力します。',
+    unknownCommandHint: 'コマンドのリストを表示するには、「!ced help」と入力します。',
     noTokensSelected: 'トークンが選択されていません。まずマップ上のトークンを選択します。',
     unknownScaleAction: '不明なスケール アクション: "{action}"。',
     scaleActionHint: '有効なアクション: プリセット、パーティー、HP、AC、ダメージ、適用',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: '不明な強化アクション:「{action}」。',
     reinforceActionHint: '有効なアクション: 複製、列挙、表示',
     noReinforcementsToReveal: '最近明らかになった増援はありません。',
-    noReinforcementsToRevealHint: '最初に !director を使用して重複を強化します。',
+    noReinforcementsToRevealHint: '最初に !ced を使用して重複を強化します。',
     unknownLayer: '不明なレイヤー:「{layer}」。',
     layerHint: '有効なレイヤー: トークン、gm、マップ',
     unknownPositionAction: '不明な位置アクション:「{action}」。',
@@ -53,9 +53,9 @@ const TRANSLATION = {
     unknownEncounterAction: '不明な遭遇アクション:「{action}」。',
     encounterActionHint: '有効なアクション: 保存、ロード、削除、リスト',
     encounterNameRequired: 'エンカウント名は必須です。',
-    encounterNameRequiredHint: '例: !director 遭遇 保存 ゴブリン待ち伏せ',
+    encounterNameRequiredHint: '例: !ced 遭遇 保存 ゴブリン待ち伏せ',
     encounterNotFound: '「{name}」が見つかりません。',
-    encounterNotFoundHint: '保存された遭遇を表示するには、!director 遭遇リストを使用します。',
+    encounterNotFoundHint: '保存された遭遇を表示するには、!ced 遭遇リストを使用します。',
     unknownResetScope: '不明なリセット スコープ: "{scope}"。',
     resetScopeHint: '有効なスコープ: 選択済み、ページ、すべて',
     unknownReportAction: '不明なレポート アクション:「{action}」。',
@@ -81,7 +81,7 @@ const TRANSLATION = {
     invalidDuplicateCount: '重複数は 1 ～ 50 である必要があります (「{value}」を取得)。例: 3',
     invalidEncounterName:
       '無効なエンカウント名:「{name}」。名前には文字、数字、スペース、ハイフン、アンダースコアを含めることができます (最大 64 文字)。',
-    invalidEncounterNameHint: '例: !director 遭遇 保存 ゴブリン待ち伏せ',
+    invalidEncounterNameHint: '例: !ced 遭遇 保存 ゴブリン待ち伏せ',
     duplicateBurstLimit:
       'この操作により、{limit} の制限を超える {requested} トークンが作成されます。選択するトークンの数を減らすか、より小さい数を使用します。',
     unexpectedError: '予期しないエラーが発生しました: {message}',

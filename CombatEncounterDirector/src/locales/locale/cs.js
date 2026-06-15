@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Neznámý příkaz: "{sub}".',
-    unknownCommandHint: 'Pro seznam příkazů napište !director help.',
+    unknownCommandHint: 'Pro seznam příkazů napište !ced help.',
     noTokensSelected: 'Nejsou vybrány žádné tokeny. Nejprve vyberte žetony na mapě.',
     unknownScaleAction: 'Neznámá akce měřítka: "{action}".',
     scaleActionHint: 'Platné akce: přednastavení, párty, hp, ac, poškození, použít',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Neznámá akce zesílení: "{action}".',
     reinforceActionHint: 'Platné akce: duplikovat, vyjmenovat, ukázat',
     noReinforcementsToReveal: 'Žádné nedávné posily k odhalení.',
-    noReinforcementsToRevealHint: 'Nejprve použijte !director zesílit duplikát.',
+    noReinforcementsToRevealHint: 'Nejprve použijte !ced zesílit duplikát.',
     unknownLayer: 'Neznámá vrstva: "{layer}".',
     layerHint: 'Platné vrstvy: token, gm, mapa',
     unknownPositionAction: 'Neznámá akce pozice: "{action}".',
@@ -53,9 +53,9 @@ const TRANSLATION = {
     unknownEncounterAction: 'Neznámá akce setkání: "{action}".',
     encounterActionHint: 'Platné akce: uložit, načíst, odstranit, vypsat',
     encounterNameRequired: 'Je vyžadován název setkání.',
-    encounterNameRequiredHint: 'Příklad: !director meet save goblin-ambush',
+    encounterNameRequiredHint: 'Příklad: !ced meet save goblin-ambush',
     encounterNotFound: 'Setkání „{name}“ nebylo nalezeno.',
-    encounterNotFoundHint: 'Chcete-li zobrazit uložená setkání, použijte seznam setkání !director.',
+    encounterNotFoundHint: 'Chcete-li zobrazit uložená setkání, použijte seznam setkání !ced.',
     unknownResetScope: 'Neznámý rozsah resetování: "{scope}".',
     resetScopeHint: 'Platné rozsahy: vybrané, stránka, vše',
     unknownReportAction: 'Neznámá akce hlášení: "{action}".',
@@ -80,7 +80,7 @@ const TRANSLATION = {
     invalidDuplicateCount: 'Počet duplicit musí být mezi 1 a 50 (získáno „{value}“). Příklad: 3',
     invalidEncounterName:
       'Neplatný název setkání: "{name}". Jména mohou obsahovat písmena, číslice, mezery, pomlčky a podtržítka (max. 64 znaků).',
-    invalidEncounterNameHint: 'Příklad: !director meet save goblin-ambush',
+    invalidEncounterNameHint: 'Příklad: !ced meet save goblin-ambush',
     duplicateBurstLimit:
       'Operace by vytvořila {requested} tokenů, což by překročilo limit {limit}. Vyberte méně žetonů nebo použijte menší počet.',
     unexpectedError: 'Došlo k neočekávané chybě: {message}',

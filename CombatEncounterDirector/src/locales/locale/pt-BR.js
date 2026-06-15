@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Comando desconhecido: "{sub}".',
-    unknownCommandHint: 'Digite !director help para obter uma lista de comandos.',
+    unknownCommandHint: 'Digite !ced help para obter uma lista de comandos.',
     noTokensSelected: 'Nenhum token selecionado. Selecione os tokens no mapa primeiro.',
     unknownScaleAction: 'Ação de escala desconhecida: "{action}".',
     scaleActionHint: 'Ações válidas: predefinição, grupo, hp, ac, dano, aplicar',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Ação de reforço desconhecida: "{action}".',
     reinforceActionHint: 'Ações válidas: duplicar, enumerar, mostrar',
     noReinforcementsToReveal: 'Nenhum reforço recente para revelar.',
-    noReinforcementsToRevealHint: 'Use !director para reforçar a duplicata primeiro.',
+    noReinforcementsToRevealHint: 'Use !ced para reforçar a duplicata primeiro.',
     unknownLayer: 'Camada desconhecida: "{layer}".',
     layerHint: 'Camadas válidas: token, gm, mapa',
     unknownPositionAction: 'Ação de posição desconhecida: "{action}".',
@@ -53,9 +53,9 @@ const TRANSLATION = {
     unknownEncounterAction: 'Ação de encontro desconhecida: "{action}".',
     encounterActionHint: 'Ações válidas: salvar, carregar, excluir, listar',
     encounterNameRequired: 'Nome do encontro obrigatório.',
-    encounterNameRequiredHint: 'Exemplo: !director encontro salvar goblin-emboscada',
+    encounterNameRequiredHint: 'Exemplo: !ced encontro salvar goblin-emboscada',
     encounterNotFound: 'Encontro "{name}" não encontrado.',
-    encounterNotFoundHint: 'Use !director meet list para ver os encontros salvos.',
+    encounterNotFoundHint: 'Use !ced meet list para ver os encontros salvos.',
     unknownResetScope: 'Escopo de redefinição desconhecido: "{scope}".',
     resetScopeHint: 'Escopos válidos: selecionado, página, todos',
     unknownReportAction: 'Ação de relatório desconhecida: "{action}".',
@@ -83,7 +83,7 @@ const TRANSLATION = {
       'A contagem de duplicatas deve estar entre 1 e 50 (obtido "{value}"). Exemplo: 3',
     invalidEncounterName:
       'Nome de encontro inválido: "{name}". Os nomes podem conter letras, dígitos, espaços, hífens e sublinhados (máximo de 64 caracteres).',
-    invalidEncounterNameHint: 'Exemplo: !director encontro salvar goblin-emboscada',
+    invalidEncounterNameHint: 'Exemplo: !ced encontro salvar goblin-emboscada',
     duplicateBurstLimit:
       'A operação criaria tokens {requested}, excedendo o limite de {limit}. Selecione menos tokens ou use uma contagem menor.',
     unexpectedError: 'Ocorreu um erro inesperado: {message}',

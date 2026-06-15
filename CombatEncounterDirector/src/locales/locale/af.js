@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Onbekende opdrag: "{sub}".',
-    unknownCommandHint: "Tik !director help vir 'n lys opdragte.",
+    unknownCommandHint: "Tik !ced help vir 'n lys opdragte.",
     noTokensSelected: 'Geen tokens gekies nie. Kies eers tekens op die kaart.',
     unknownScaleAction: 'Onbekende skaalhandeling: "{action}".',
     scaleActionHint: 'Geldige aksies: voorafingestel, partytjie, hp, ac, skade, toepas',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Onbekende versterkingsaksie: "{action}".',
     reinforceActionHint: 'Geldige handelinge: dupliseer, optel, wys',
     noReinforcementsToReveal: 'Geen onlangse versterkings om te openbaar nie.',
-    noReinforcementsToRevealHint: 'Gebruik eers !director versterk duplikaat.',
+    noReinforcementsToRevealHint: 'Gebruik eers !ced versterk duplikaat.',
     unknownLayer: 'Onbekende laag: "{layer}".',
     layerHint: 'Geldige lae: teken, gm, kaart',
     unknownPositionAction: 'Onbekende posisie-handeling: "{action}".',

@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Ordre desconeguda: "{sub}".',
-    unknownCommandHint: "Escriviu !director help per obtenir una llista d'ordres.",
+    unknownCommandHint: "Escriviu !ced help per obtenir una llista d'ordres.",
     noTokensSelected: "No s'han seleccionat fitxes. Seleccioneu primer les fitxes al mapa.",
     unknownScaleAction: 'Acció d\'escala desconeguda: "{action}".',
     scaleActionHint: 'Accions vàlides: preset, party, hp, ac, damage, apply',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Acció de reforç desconeguda: "{action}".',
     reinforceActionHint: 'Accions vàlides: duplicar, enumerar, mostrar',
     noReinforcementsToReveal: 'No hi ha reforços recents per revelar.',
-    noReinforcementsToRevealHint: 'Utilitzeu !director reinforce duplicat primer.',
+    noReinforcementsToRevealHint: 'Utilitzeu !ced reinforce duplicat primer.',
     unknownLayer: 'Capa desconeguda: "{layer}".',
     layerHint: 'Capes vàlides: testimoni, gm, mapa',
     unknownPositionAction: 'Acció de posició desconeguda: "{action}".',
@@ -53,7 +53,7 @@ const TRANSLATION = {
     unknownEncounterAction: 'Acció de trobada desconeguda: "{action}".',
     encounterActionHint: 'Accions vàlides: desar, carregar, suprimir, llistar',
     encounterNameRequired: 'Nom de trobada obligatori.',
-    encounterNameRequiredHint: 'Exemple: !director encounter salva goblin-emboscada',
+    encounterNameRequiredHint: 'Exemple: !ced encounter salva goblin-emboscada',
     encounterNotFound: 'No s\'ha trobat la trobada "{name}".',
     encounterNotFoundHint:
       'Utilitzeu la llista de trobades del director per veure les trobades desades.',
@@ -84,7 +84,7 @@ const TRANSLATION = {
       'El nombre de duplicats ha d\'estar entre 1 i 50 (obté "{value}"). Exemple: 3',
     invalidEncounterName:
       'Nom de trobada no vàlid: "{name}". Els noms poden contenir lletres, dígits, espais, guions i guions baixos (màxim 64 caràcters).',
-    invalidEncounterNameHint: 'Exemple: !director encounter salva goblin-emboscada',
+    invalidEncounterNameHint: 'Exemple: !ced encounter salva goblin-emboscada',
     duplicateBurstLimit:
       "L'operació crearia fitxes {requested}, superant el límit de {limit}. Seleccioneu menys fitxes o utilitzeu un recompte més petit.",
     unexpectedError: "S'ha produït un error inesperat: {message}",

@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'פקודה לא ידועה: "{sub}".',
-    unknownCommandHint: 'הקלד !director help לקבלת רשימה של פקודות.',
+    unknownCommandHint: 'הקלד !ced help לקבלת רשימה של פקודות.',
     noTokensSelected: 'לא נבחרו אסימונים. תחילה בחר אסימונים במפה.',
     unknownScaleAction: 'פעולת קנה מידה לא ידועה: "{action}".',
     scaleActionHint: 'פעולות חוקיות: מוגדר מראש, מסיבה, hp, ac, נזק, החל',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'פעולת חיזוק לא ידועה: "{action}".',
     reinforceActionHint: 'פעולות חוקיות: שכפול, מנה, הצג',
     noReinforcementsToReveal: 'אין חיזוקים אחרונים לחשוף.',
-    noReinforcementsToRevealHint: 'השתמש תחילה ב-!director חיזוק שכפול.',
+    noReinforcementsToRevealHint: 'השתמש תחילה ב-!ced חיזוק שכפול.',
     unknownLayer: 'שכבה לא ידועה: "{layer}".',
     layerHint: 'שכבות תקפות: אסימון, GM, מפה',
     unknownPositionAction: 'פעולת מיקום לא ידועה: "{action}".',
@@ -53,9 +53,9 @@ const TRANSLATION = {
     unknownEncounterAction: 'פעולת מפגש לא ידועה: "{action}".',
     encounterActionHint: 'פעולות חוקיות: שמור, טען, מחק, רשום',
     encounterNameRequired: 'נדרש שם מפגש.',
-    encounterNameRequiredHint: 'דוגמה: !director encounter save goblin-ambush',
+    encounterNameRequiredHint: 'דוגמה: !ced encounter save goblin-ambush',
     encounterNotFound: 'המפגש "{name}" לא נמצא.',
-    encounterNotFoundHint: 'השתמש ברשימת מפגשי !director כדי לראות מפגשים שמורים.',
+    encounterNotFoundHint: 'השתמש ברשימת מפגשי !ced כדי לראות מפגשים שמורים.',
     unknownResetScope: 'היקף איפוס לא ידוע: "{scope}".',
     resetScopeHint: 'היקפים תקפים: נבחר, עמוד, הכל',
     unknownReportAction: 'פעולת דיווח לא ידועה: "{action}".',
@@ -79,7 +79,7 @@ const TRANSLATION = {
     invalidDuplicateCount: 'ספירת כפילויות חייבת להיות בין 1 ל-50 (יש "{value}"). דוגמה: 3',
     invalidEncounterName:
       'שם מפגש לא חוקי: "{name}". שמות עשויים להכיל אותיות, ספרות, רווחים, מקפים וקווים תחתונים (מקסימום 64 תווים).',
-    invalidEncounterNameHint: 'דוגמה: !director encounter save goblin-ambush',
+    invalidEncounterNameHint: 'דוגמה: !ced encounter save goblin-ambush',
     duplicateBurstLimit:
       'הפעולה תיצור {requested} אסימונים, יחרוג מהמגבלה של {limit}. בחר פחות אסימונים או השתמש בספירה קטנה יותר.',
     unexpectedError: 'אירעה שגיאה בלתי צפויה: {message}',

@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Comando sconosciuto: "{sub}".',
-    unknownCommandHint: 'Digitare !director help per un elenco di comandi.',
+    unknownCommandHint: 'Digitare !ced help per un elenco di comandi.',
     noTokensSelected: 'Nessun token selezionato. Seleziona prima i token sulla mappa.',
     unknownScaleAction: 'Azione scala sconosciuta: "{action}".',
     scaleActionHint: 'Azioni valide: preset, party, hp, ac, danno, applica',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Azione di rinforzo sconosciuta: "{action}".',
     reinforceActionHint: 'Azioni valide: duplicare, enumerare, mostrare',
     noReinforcementsToReveal: 'Nessun rinforzo recente da rivelare.',
-    noReinforcementsToRevealHint: 'Utilizzare prima !director per rinforzare il duplicato.',
+    noReinforcementsToRevealHint: 'Utilizzare prima !ced per rinforzare il duplicato.',
     unknownLayer: 'Livello sconosciuto: "{layer}".',
     layerHint: 'Livelli validi: token, gm, mappa',
     unknownPositionAction: 'Azione di posizione sconosciuta: "{action}".',
@@ -56,7 +56,7 @@ const TRANSLATION = {
     encounterNameRequiredHint: "Esempio: !l'incontro del regista salva l'imboscata dei goblin",
     encounterNotFound: 'Incontro "{name}" non trovato.',
     encounterNotFoundHint:
-      "Utilizza l'elenco degli incontri di !director per vedere gli incontri salvati.",
+      "Utilizza l'elenco degli incontri di !ced per vedere gli incontri salvati.",
     unknownResetScope: 'Ambito di reimpostazione sconosciuto: "{scope}".',
     resetScopeHint: 'Ambiti validi: selezionato, pagina, tutto',
     unknownReportAction: 'Azione di segnalazione sconosciuta: "{action}".',

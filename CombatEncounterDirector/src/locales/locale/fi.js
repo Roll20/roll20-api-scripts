@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Tuntematon komento: "{sub}".',
-    unknownCommandHint: 'Kirjoita komentoluettelo !director help.',
+    unknownCommandHint: 'Kirjoita komentoluettelo !ced help.',
     noTokensSelected: 'Tunnuksia ei ole valittu. Valitse ensin tunnukset kartalta.',
     unknownScaleAction: 'Tuntematon mittakaavatoiminto: "{action}".',
     scaleActionHint: 'Kelvolliset toiminnot: esiasetus, juhla, hp, ac, vahinko, käytä',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Tuntematon vahvistustoiminto: "{action}".',
     reinforceActionHint: 'Kelvolliset toiminnot: kopioi, luettele, näytä',
     noReinforcementsToReveal: 'Ei viimeaikaisia ​​vahvistuksia paljastettavana.',
-    noReinforcementsToRevealHint: 'Käytä ensin !director vahvistuskopiota.',
+    noReinforcementsToRevealHint: 'Käytä ensin !ced vahvistuskopiota.',
     unknownLayer: 'Tuntematon taso: "{layer}".',
     layerHint: 'Kelvolliset tasot: token, gm, kartta',
     unknownPositionAction: 'Tuntematon sijaintitoiminto: "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Tuntematon kohtaamistoiminto: "{action}".',
     encounterActionHint: 'Kelvolliset toiminnot: tallenna, lataa, poista, luettelo',
     encounterNameRequired: 'Tapaamisen nimi vaaditaan.',
-    encounterNameRequiredHint: 'Esimerkki: !director kohtaaminen save goblin-ambush',
+    encounterNameRequiredHint: 'Esimerkki: !ced kohtaaminen save goblin-ambush',
     encounterNotFound: 'Kohtaamista "{name}" ei löytynyt.',
     encounterNotFoundHint:
-      'Käytä !director-kohtaamisten listaa nähdäksesi tallennetut kohtaamiset.',
+      'Käytä !ced-kohtaamisten listaa nähdäksesi tallennetut kohtaamiset.',
     unknownResetScope: 'Tuntematon nollausalue: "{scope}".',
     resetScopeHint: 'Kelvolliset laajuudet: valittu, sivu, kaikki',
     unknownReportAction: 'Tuntematon raporttitoiminto: "{action}".',
@@ -81,7 +81,7 @@ const TRANSLATION = {
     invalidDuplicateCount: 'Kopioiden määrän on oltava 1–50 (saat "{value}"). Esimerkki: 3',
     invalidEncounterName:
       'Virheellinen kohtaamisen nimi: "{name}". Nimet voivat sisältää kirjaimia, numeroita, välilyöntejä, yhdysmerkkejä ja alaviivoja (enintään 64 merkkiä).',
-    invalidEncounterNameHint: 'Esimerkki: !director kohtaaminen save goblin-ambush',
+    invalidEncounterNameHint: 'Esimerkki: !ced kohtaaminen save goblin-ambush',
     duplicateBurstLimit:
       'Toiminto loisi {requested} tunnistetta ylittäen rajan {limit}. Valitse vähemmän tunnuksia tai käytä pienempää määrää.',
     unexpectedError: 'Tapahtui odottamaton virhe: {message}',

@@ -37,7 +37,7 @@
       "displayname": "Language",
       "type": "text",
       "default": "en-US",
-      "description": "Language code for GM messages (e.g. en-US, fr, de, es, ja). Run !director config language to see all supported codes."
+      "description": "Language code for GM messages. Run !ced config language to see all supported codes."
     }
   ],
   "dependencies": [],

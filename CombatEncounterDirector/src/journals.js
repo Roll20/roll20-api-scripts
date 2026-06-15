@@ -89,7 +89,7 @@ const DIVIDER = `<hr style="border:none;border-top:1px solid ${COLOR_BORDER};mar
  * Builds a primary action button anchor.
  *
  * @param {string} label Button text.
- * @param {string} command !director command.
+ * @param {string} command !ced command.
  * @param {boolean} [dark=false] Use dark/secondary button style.
  * @returns {string} HTML anchor string.
  */

@@ -11,12 +11,12 @@ A quick reference for where to find each feature in the source.
 
 ## Command Routing
 
-| Task                          | File              | Key function   |
-| ----------------------------- | ----------------- | -------------- |
-| Handle `!director` chat input | `src/commands.js` | `handleInput`  |
-| Route subcommands             | `src/commands.js` | `routeCommand` |
-| Quick-action menu             | `src/commands.js` | `showMainMenu` |
-| Help reference card           | `src/commands.js` | `showHelp`     |
+| Task                     | File              | Key function   |
+| ------------------------ | ----------------- | -------------- |
+| Handle `!ced` chat input | `src/commands.js` | `handleInput`  |
+| Route subcommands        | `src/commands.js` | `routeCommand` |
+| Quick-action menu        | `src/commands.js` | `showMainMenu` |
+| Help reference card      | `src/commands.js` | `showHelp`     |
 
 ## Party Scaling
 

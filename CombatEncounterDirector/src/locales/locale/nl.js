@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Onbekend commando: "{sub}".',
-    unknownCommandHint: 'Typ !director help voor een lijst met opdrachten.',
+    unknownCommandHint: 'Typ !ced help voor een lijst met opdrachten.',
     noTokensSelected: 'Geen tokens geselecteerd. Selecteer eerst tokens op de kaart.',
     unknownScaleAction: 'Onbekende schaalactie: "{action}".',
     scaleActionHint: 'Geldige acties: preset, party, hp, ac, damage, apply',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Onbekende versterkingsactie: "{action}".',
     reinforceActionHint: 'Geldige acties: dupliceren, opsommen, weergeven',
     noReinforcementsToReveal: 'Geen recente versterkingen te onthullen.',
-    noReinforcementsToRevealHint: 'Gebruik !director en versterk eerst het duplicaat.',
+    noReinforcementsToRevealHint: 'Gebruik !ced en versterk eerst het duplicaat.',
     unknownLayer: 'Onbekende laag: "{layer}".',
     layerHint: 'Geldige lagen: token, gm, kaart',
     unknownPositionAction: 'Onbekende positieactie: "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Onbekende ontmoetingsactie: "{action}".',
     encounterActionHint: 'Geldige acties: opslaan, laden, verwijderen, lijst',
     encounterNameRequired: 'Naam van ontmoeting vereist.',
-    encounterNameRequiredHint: 'Voorbeeld: !director ontmoeting save goblin-hinderlaag',
+    encounterNameRequiredHint: 'Voorbeeld: !ced ontmoeting save goblin-hinderlaag',
     encounterNotFound: 'Ontmoeting "{name}" niet gevonden.',
     encounterNotFoundHint:
-      'Gebruik de !director-ontmoetingslijst om opgeslagen ontmoetingen te bekijken.',
+      'Gebruik de !ced-ontmoetingslijst om opgeslagen ontmoetingen te bekijken.',
     unknownResetScope: 'Onbekend resetbereik: "{scope}".',
     resetScopeHint: 'Geldige bereiken: geselecteerd, pagina, alles',
     unknownReportAction: 'Onbekende rapportactie: "{action}".',
@@ -83,7 +83,7 @@ const TRANSLATION = {
       'Het dubbele aantal moet tussen 1 en 50 liggen (kreeg "{value}"). Voorbeeld: 3',
     invalidEncounterName:
       'Ongeldige ontmoetingsnaam: "{name}". Namen mogen letters, cijfers, spaties, koppeltekens en onderstrepingstekens bevatten (max. 64 tekens).',
-    invalidEncounterNameHint: 'Voorbeeld: !director ontmoeting save goblin-hinderlaag',
+    invalidEncounterNameHint: 'Voorbeeld: !ced ontmoeting save goblin-hinderlaag',
     duplicateBurstLimit:
       'De bewerking zou {requested} tokens creëren, waardoor de limiet van {limit} wordt overschreden. Selecteer minder tokens of gebruik een kleiner aantal.',
     unexpectedError: 'Er is een onverwachte fout opgetreden: {message}',

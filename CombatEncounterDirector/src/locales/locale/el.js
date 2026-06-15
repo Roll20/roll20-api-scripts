@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Άγνωστη εντολή: "{sub}".',
-    unknownCommandHint: 'Πληκτρολογήστε !director help για μια λίστα εντολών.',
+    unknownCommandHint: 'Πληκτρολογήστε !ced help για μια λίστα εντολών.',
     noTokensSelected: 'Δεν επιλέχθηκαν διακριτικά. Επιλέξτε πρώτα διακριτικά στο χάρτη.',
     unknownScaleAction: 'Άγνωστη ενέργεια κλίμακας: "{action}".',
     scaleActionHint: 'Έγκυρες ενέργειες: προεπιλογή, πάρτι, hp, ac, ζημιά, εφαρμογή',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Άγνωστη ενέργεια ενίσχυσης: "{action}".',
     reinforceActionHint: 'Έγκυρες ενέργειες: διπλότυπο, απαρίθμηση, εμφάνιση',
     noReinforcementsToReveal: 'Δεν υπάρχουν πρόσφατες ενισχύσεις προς αποκάλυψη.',
-    noReinforcementsToRevealHint: 'Χρησιμοποιήστε πρώτα το !director reinforce διπλότυπο.',
+    noReinforcementsToRevealHint: 'Χρησιμοποιήστε πρώτα το !ced reinforce διπλότυπο.',
     unknownLayer: 'Άγνωστο επίπεδο: "{layer}".',
     layerHint: 'Έγκυρα επίπεδα: διακριτικό, gm, χάρτης',
     unknownPositionAction: 'Ενέργεια άγνωστης θέσης: "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Άγνωστη ενέργεια συνάντησης: "{action}".',
     encounterActionHint: 'Έγκυρες ενέργειες: αποθήκευση, φόρτωση, διαγραφή, λίστα',
     encounterNameRequired: 'Απαιτείται όνομα συνάντησης.',
-    encounterNameRequiredHint: 'Παράδειγμα: !director encounter save goblin-ambush',
+    encounterNameRequiredHint: 'Παράδειγμα: !ced encounter save goblin-ambush',
     encounterNotFound: 'Η συνάντηση "{name}" δεν βρέθηκε.',
     encounterNotFoundHint:
-      'Χρησιμοποιήστε τη λίστα συναντήσεων !director για να δείτε αποθηκευμένες συναντήσεις.',
+      'Χρησιμοποιήστε τη λίστα συναντήσεων !ced για να δείτε αποθηκευμένες συναντήσεις.',
     unknownResetScope: 'Άγνωστο εύρος επαναφοράς: "{scope}".',
     resetScopeHint: 'Έγκυρα πεδία: επιλεγμένα, σελίδα, όλα',
     unknownReportAction: 'Άγνωστη ενέργεια αναφοράς: "{action}".',
@@ -85,7 +85,7 @@ const TRANSLATION = {
       'Ο αριθμός των διπλότυπων πρέπει να είναι μεταξύ 1 και 50 (λήφθηκε "{value}"). Παράδειγμα: 3',
     invalidEncounterName:
       'Μη έγκυρο όνομα συνάντησης: "{name}". Τα ονόματα μπορεί να περιέχουν γράμματα, ψηφία, κενά, παύλες και κάτω παύλες (έως 64 χαρακτήρες).',
-    invalidEncounterNameHint: 'Παράδειγμα: !director encounter save goblin-ambush',
+    invalidEncounterNameHint: 'Παράδειγμα: !ced encounter save goblin-ambush',
     duplicateBurstLimit:
       'Η λειτουργία θα δημιουργούσε διακριτικά {requested}, που υπερβαίνουν το όριο των {limit}. Επιλέξτε λιγότερα διακριτικά ή χρησιμοποιήστε μικρότερο πλήθος.',
     unexpectedError: 'Παρουσιάστηκε ένα μη αναμενόμενο σφάλμα: {message}',

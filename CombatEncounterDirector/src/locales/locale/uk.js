@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Невідома команда: "{sub}".',
-    unknownCommandHint: 'Введіть !director help, щоб отримати список команд.',
+    unknownCommandHint: 'Введіть !ced help, щоб отримати список команд.',
     noTokensSelected: 'Токенів не вибрано. Спочатку виберіть жетони на карті.',
     unknownScaleAction: 'Невідома дія масштабу: "{action}".',
     scaleActionHint: 'Допустимі дії: preset, party, hp, ac, damage, apply',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Невідома дія посилення: "{action}".',
     reinforceActionHint: 'Допустимі дії: дублювати, перераховувати, показувати',
     noReinforcementsToReveal: 'Немає нещодавніх підкріплень.',
-    noReinforcementsToRevealHint: 'Спочатку використовуйте !director reinforce duplicate.',
+    noReinforcementsToRevealHint: 'Спочатку використовуйте !ced reinforce duplicate.',
     unknownLayer: 'Невідомий шар: "{layer}".',
     layerHint: 'Дійсні шари: маркер, gm, карта',
     unknownPositionAction: 'Невідома дія позиції: "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Невідома зустрічна дія: "{action}".',
     encounterActionHint: 'Допустимі дії: збереження, завантаження, видалення, список',
     encounterNameRequired: 'Потрібна назва зустрічі.',
-    encounterNameRequiredHint: 'Приклад: !director encounter save goblin-ambush',
+    encounterNameRequiredHint: 'Приклад: !ced encounter save goblin-ambush',
     encounterNotFound: 'Зустріч "{name}" не знайдено.',
     encounterNotFoundHint:
-      'Використовуйте список зустрічей !director, щоб переглянути збережені зустрічі.',
+      'Використовуйте список зустрічей !ced, щоб переглянути збережені зустрічі.',
     unknownResetScope: 'Невідомий діапазон скидання: "{scope}".',
     resetScopeHint: 'Дійсні області: вибрані, сторінка, усі',
     unknownReportAction: 'Невідома дія звіту: "{action}".',
@@ -82,7 +82,7 @@ const TRANSLATION = {
       'Кількість дублікатів має бути від 1 до 50 (отримано "{value}"). Приклад: 3',
     invalidEncounterName:
       'Недійсна назва зустрічі: "{name}". Імена можуть містити літери, цифри, пробіли, дефіси та підкреслення (максимум 64 символи).',
-    invalidEncounterNameHint: 'Приклад: !director encounter save goblin-ambush',
+    invalidEncounterNameHint: 'Приклад: !ced encounter save goblin-ambush',
     duplicateBurstLimit:
       'Операція призведе до створення {requested} токенів, що перевищує ліміт у {limit}. Виберіть менше жетонів або використовуйте меншу кількість.',
     unexpectedError: 'Сталася неочікувана помилка: {message}',

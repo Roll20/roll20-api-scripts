@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Nieznane polecenie: „{sub}”.',
-    unknownCommandHint: 'Wpisz !director help, aby wyświetlić listę poleceń.',
+    unknownCommandHint: 'Wpisz !ced help, aby wyświetlić listę poleceń.',
     noTokensSelected: 'Nie wybrano tokenów. Najpierw wybierz żetony na mapie.',
     unknownScaleAction: 'Nieznana akcja skali: „{action}”.',
     scaleActionHint:
@@ -46,7 +46,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Nieznane działanie wzmacniające: „{action}”.',
     reinforceActionHint: 'Prawidłowe akcje: duplikuj, wylicz, pokaż',
     noReinforcementsToReveal: 'Brak niedawnych wzmocnień do ujawnienia.',
-    noReinforcementsToRevealHint: 'Najpierw użyj !director wzmocnij duplikat.',
+    noReinforcementsToRevealHint: 'Najpierw użyj !ced wzmocnij duplikat.',
     unknownLayer: 'Nieznana warstwa: „{layer}”.',
     layerHint: 'Prawidłowe warstwy: token, gm, map',
     unknownPositionAction: 'Nieznana akcja dotycząca pozycji: „{action}”.',
@@ -56,7 +56,7 @@ const TRANSLATION = {
     encounterNameRequired: 'Wymagana nazwa spotkania.',
     encounterNameRequiredHint: 'Przykład: !reżyser spotkanie zapisz zasadzkę na goblina',
     encounterNotFound: 'Nie znaleziono spotkania „{name}”.',
-    encounterNotFoundHint: 'Użyj listy spotkań !director, aby zobaczyć zapisane spotkania.',
+    encounterNotFoundHint: 'Użyj listy spotkań !ced, aby zobaczyć zapisane spotkania.',
     unknownResetScope: 'Nieznany zakres resetowania: „{scope}”.',
     resetScopeHint: 'Prawidłowe zakresy: wybrane, strona, wszystkie',
     unknownReportAction: 'Nieznana akcja raportu: „{action}”.',

@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Comando desconocido: "{sub}".',
-    unknownCommandHint: 'Escriba !director help para obtener una lista de comandos.',
+    unknownCommandHint: 'Escriba !ced help para obtener una lista de comandos.',
     noTokensSelected: 'No hay tokens seleccionados. Primero selecciona fichas en el mapa.',
     unknownScaleAction: 'Acción de escala desconocida: "{action}".',
     scaleActionHint: 'Acciones válidas: preestablecer, fiesta, hp, ac, dañar, aplicar',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Acción de refuerzo desconocida: "{action}".',
     reinforceActionHint: 'Acciones válidas: duplicar, enumerar, mostrar',
     noReinforcementsToReveal: 'No hay refuerzos recientes que revelar.',
-    noReinforcementsToRevealHint: 'Utilice !director reforzar duplicado primero.',
+    noReinforcementsToRevealHint: 'Utilice !ced reforzar duplicado primero.',
     unknownLayer: 'Capa desconocida: "{layer}".',
     layerHint: 'Capas válidas: token, gm, mapa',
     unknownPositionAction: 'Acción de posición desconocida: "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Acción de encuentro desconocida: "{action}".',
     encounterActionHint: 'Acciones válidas: guardar, cargar, eliminar, listar',
     encounterNameRequired: 'Se requiere el nombre del encuentro.',
-    encounterNameRequiredHint: 'Ejemplo: !director encuentro salvar goblin-emboscada',
+    encounterNameRequiredHint: 'Ejemplo: !ced encuentro salvar goblin-emboscada',
     encounterNotFound: 'No se encontró el encuentro "{name}".',
     encounterNotFoundHint:
-      'Utilice la lista de encuentros de !director para ver los encuentros guardados.',
+      'Utilice la lista de encuentros de !ced para ver los encuentros guardados.',
     unknownResetScope: 'Alcance de reinicio desconocido: "{scope}".',
     resetScopeHint: 'Ámbitos válidos: seleccionado, página, todos',
     unknownReportAction: 'Acción de informe desconocida: "{action}".',
@@ -84,7 +84,7 @@ const TRANSLATION = {
       'El recuento de duplicados debe estar entre 1 y 50 (obtuvo "{value}"). Ejemplo: 3',
     invalidEncounterName:
       'Nombre de encuentro no válido: "{name}". Los nombres pueden contener letras, dígitos, espacios, guiones y guiones bajos (máximo 64 caracteres).',
-    invalidEncounterNameHint: 'Ejemplo: !director encuentro salvar goblin-emboscada',
+    invalidEncounterNameHint: 'Ejemplo: !ced encuentro salvar goblin-emboscada',
     duplicateBurstLimit:
       'La operación crearía {requested} tokens, excediendo el límite de {limit}. Seleccione menos tokens o utilice un recuento menor.',
     unexpectedError: 'Se produjo un error inesperado: {message}',

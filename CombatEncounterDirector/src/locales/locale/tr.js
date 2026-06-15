@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Bilinmeyen komut: "{sub}".',
-    unknownCommandHint: 'Komutların listesi için !director help yazın.',
+    unknownCommandHint: 'Komutların listesi için !ced help yazın.',
     noTokensSelected: 'Hiçbir jeton seçilmedi. Önce haritada jetonları seçin.',
     unknownScaleAction: 'Bilinmeyen ölçek eylemi: "{action}".',
     scaleActionHint: 'Geçerli eylemler: ön ayar, parti, hp, ac, hasar, uygulama',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Bilinmeyen takviye eylemi: "{action}".',
     reinforceActionHint: 'Geçerli eylemler: çoğalt, numaralandır, göster',
     noReinforcementsToReveal: 'Açıklanacak yeni bir takviye yok.',
-    noReinforcementsToRevealHint: 'Önce !director takviye kopyasını kullanın.',
+    noReinforcementsToRevealHint: 'Önce !ced takviye kopyasını kullanın.',
     unknownLayer: 'Bilinmeyen katman: "{layer}".',
     layerHint: 'Geçerli katmanlar: jeton, gm, harita',
     unknownPositionAction: 'Bilinmeyen konum işlemi: "{action}".',
@@ -53,10 +53,10 @@ const TRANSLATION = {
     unknownEncounterAction: 'Bilinmeyen karşılaşma eylemi: "{action}".',
     encounterActionHint: 'Geçerli eylemler: kaydet, yükle, sil, listele',
     encounterNameRequired: 'Karşılaşma adı gerekli.',
-    encounterNameRequiredHint: 'Örnek: !director karşılaşması goblin pususunu kurtarır',
+    encounterNameRequiredHint: 'Örnek: !ced karşılaşması goblin pususunu kurtarır',
     encounterNotFound: '"{name}" ile karşılaşma bulunamadı.',
     encounterNotFoundHint:
-      'Kaydedilen karşılaşmaları görmek için !director karşılaşma listesini kullanın.',
+      'Kaydedilen karşılaşmaları görmek için !ced karşılaşma listesini kullanın.',
     unknownResetScope: 'Bilinmeyen sıfırlama kapsamı: "{scope}".',
     resetScopeHint: 'Geçerli kapsamlar: seçili, sayfa, tümü',
     unknownReportAction: 'Bilinmeyen rapor eylemi: "{action}".',
@@ -83,7 +83,7 @@ const TRANSLATION = {
       'Yinelenen kopya sayısı 1 ile 50 arasında olmalıdır ("{value}" aldı). Örnek: 3',
     invalidEncounterName:
       'Geçersiz karşılaşma adı: "{name}". İsimler harf, rakam, boşluk, tire ve alt çizgi içerebilir (en fazla 64 karakter).',
-    invalidEncounterNameHint: 'Örnek: !director karşılaşması goblin pususunu kurtarır',
+    invalidEncounterNameHint: 'Örnek: !ced karşılaşması goblin pususunu kurtarır',
     duplicateBurstLimit:
       'İşlem, {limit} sınırını aşan {requested} jetonları oluşturacaktır. Daha az jeton seçin veya daha küçük bir sayı kullanın.',
     unexpectedError: 'Beklenmeyen bir hata oluştu: {message}',
