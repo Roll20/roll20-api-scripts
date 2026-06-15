@@ -161,11 +161,12 @@ var Mirror = Mirror || (() => {
         ids = ids.filter(function(id, i) { return ids.indexOf(id) === i; }); // dedupe
 
         // Determine if using 'all' or specific props
+        // null means "no props specified" (let the caller decide context-dependent behavior)
         var props;
         if (resolved.props.length === 0) {
-            props = 'all'; // default: all
+            props = null; // no props specified
         } else if (resolved.props.length === getKnownProps().length) {
-            props = 'all'; // explicit 'all' group resolved to full list
+            props = 'all'; // explicit 'all' group
         } else {
             props = resolved.props;
         }
@@ -330,16 +331,20 @@ var Mirror = Mirror || (() => {
     const doLink = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Link requires at least 2 tokens.'); return; }
-        createLink('link', parsed.props, parsed.ids, parsed.soft, parsed.excludes);
-        if (parsed.align) alignTokens(parsed.ids, parsed.props === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : parsed.props);
-        var propCount = parsed.props === 'all' ? 'all' : parsed.props.length;
+        var linkProps = parsed.props || 'all'; // null = default to all
+        createLink('link', linkProps, parsed.ids, parsed.soft, parsed.excludes);
+        if (parsed.align) {
+            var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
+            alignTokens(parsed.ids, alignProps);
+        }
+        var propCount = linkProps === 'all' ? 'all' : linkProps.length;
         reply(msg, 'Link', 'Linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.soft ? ', soft' : ', hard-lock') + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
     };
 
     const doUnlink = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
-        var hasSpecificProps = parsed.props !== 'all';
+        var hasSpecificProps = parsed.props !== null && parsed.props !== 'all';
         var processed = 0;
         parsed.ids.forEach(function(id) {
             findLinksForToken(id).forEach(function(entry) {
@@ -365,6 +370,7 @@ var Mirror = Mirror || (() => {
     const doChain = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length < 2) { reply(msg, 'Error', 'Chain requires at least 2 tokens.'); return; }
+        var linkProps = parsed.props || 'all'; // null = default to all
 
         // Check if tokens are already in an existing chain — if so, re-include props
         var existingChain = null;
@@ -373,19 +379,19 @@ var Mirror = Mirror || (() => {
             if (links[i].link.mode === 'chain') { existingChain = links[i]; break; }
         }
 
-        if (existingChain && parsed.props !== 'all') {
+        if (existingChain && Array.isArray(linkProps)) {
             // Re-include: remove specified props from excludes
             existingChain.link.excludes = (existingChain.link.excludes || []).filter(function(p) {
-                return parsed.props.indexOf(p) === -1;
+                return linkProps.indexOf(p) === -1;
             });
-            reply(msg, 'Chain', 'Re-included ' + parsed.props.length + ' prop(s) in existing chain.');
+            reply(msg, 'Chain', 'Re-included ' + linkProps.length + ' prop(s) in existing chain.');
         } else {
-            createLink('chain', parsed.props, parsed.ids, true, parsed.excludes);
+            createLink('chain', linkProps, parsed.ids, true, parsed.excludes);
             if (parsed.align) {
-                var alignProps = parsed.props === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : parsed.props;
+                var alignProps = linkProps === 'all' ? getKnownProps().filter(function(p) { return parsed.excludes.indexOf(p) === -1; }) : linkProps;
                 alignTokens(parsed.ids, alignProps);
             }
-            var propCount = parsed.props === 'all' ? 'all' : parsed.props.length;
+            var propCount = linkProps === 'all' ? 'all' : linkProps.length;
             reply(msg, 'Chain', 'Chain-linked ' + parsed.ids.length + ' tokens (' + propCount + ' props' + (parsed.excludes.length ? ', ' + parsed.excludes.length + ' excluded' : '') + (parsed.align ? ', aligned' : '') + ').');
         }
     };
@@ -393,7 +399,7 @@ var Mirror = Mirror || (() => {
     const doUnchain = (msg, args) => {
         var parsed = parseCommand(msg, args);
         if (parsed.ids.length === 0) { reply(msg, 'Error', 'Select or specify token(s).'); return; }
-        var hasSpecificProps = parsed.props !== 'all';
+        var hasSpecificProps = parsed.props !== null && parsed.props !== 'all';
         var processed = 0;
         parsed.ids.forEach(function(id) {
             findLinksForToken(id).forEach(function(entry) {
@@ -463,7 +469,9 @@ var Mirror = Mirror || (() => {
                 var links = findLinksForToken(id);
                 links.forEach(function(entry) {
                     var link = entry.link;
-                    var props = parsed.props;
+                    // null = use link's scope; 'all' or array = explicit
+                    var props = parsed.props === null ? getEffectiveProps(link) :
+                                parsed.props === 'all' ? getKnownProps() : parsed.props;
                     if (link.mode === 'chain') {
                         // Align to the first selected/passed id that is in this chain
                         var sourceId = parsed.ids.find(function(pid) { return link.ids.indexOf(pid) !== -1; });
@@ -510,8 +518,9 @@ var Mirror = Mirror || (() => {
             var sourceId = parsed.ids[0];
             var source = getObj('graphic', sourceId);
             if (source) {
+                var alignProps = parsed.props === null || parsed.props === 'all' ? getKnownProps() : parsed.props;
                 var updates = {};
-                parsed.props.forEach(function(p) { updates[p] = source.get(p); });
+                alignProps.forEach(function(p) { updates[p] = source.get(p); });
                 parsed.ids.slice(1).forEach(function(id) {
                     var links = findLinksForToken(id);
                     if (links.length === 0) {
