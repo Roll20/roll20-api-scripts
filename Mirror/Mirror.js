@@ -531,7 +531,9 @@ var Mirror = Mirror || (() => {
     const doAlign = (msg, args) => {
         var linked = args.indexOf('--linked') !== -1;
         var unlinked = args.indexOf('--unlinked') !== -1;
-        args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked'; });
+        var up = args.indexOf('--up') !== -1;
+        var down = args.indexOf('--down') !== -1;
+        args = args.filter(function(a) { return a !== '--linked' && a !== '--unlinked' && a !== '--up' && a !== '--down'; });
         // Default: --linked only
         if (!linked && !unlinked) linked = true;
 
@@ -541,42 +543,64 @@ var Mirror = Mirror || (() => {
         if (parsed.ids.length === 1 && linked) {
             var singleLinks = findLinksForToken(parsed.ids[0]);
             if (singleLinks.length > 0) {
-                // For chains: align entire chain to this token
-                // For links: parent aligns children, child aligns to parent
+                var asParent = singleLinks.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] === parsed.ids[0]; });
+                var asChild = singleLinks.filter(function(e) { return e.link.mode === 'link' && e.link.ids[0] !== parsed.ids[0]; });
+                var asChain = singleLinks.filter(function(e) { return e.link.mode === 'chain'; });
+
+                if (asParent.length > 0 && asChild.length > 0 && !up && !down) {
+                    reply(msg, 'Error', 'Token is both parent and child. Use --up (align to parent) or --down (align children to me).');
+                    return;
+                }
+
                 var aligned = 0;
-                singleLinks.forEach(function(entry) {
+                var source = getObj('graphic', parsed.ids[0]);
+                if (!source) { reply(msg, 'Error', 'Token not found.'); return; }
+
+                // Handle chains
+                asChain.forEach(function(entry) {
                     var link = entry.link;
                     var props = parsed.props === null ? getEffectiveProps(link) :
                                 parsed.props === 'all' ? getKnownProps() : parsed.props;
-                    var source = getObj('graphic', parsed.ids[0]);
-                    if (!source) return;
                     var updates = {};
                     props.forEach(function(p) { updates[p] = source.get(p); });
+                    link.ids.forEach(function(tid) {
+                        if (tid === parsed.ids[0]) return;
+                        var t = getObj('graphic', tid);
+                        if (t) { t.set(updates); aligned++; }
+                    });
+                });
 
-                    if (link.mode === 'chain') {
-                        // Align entire chain to selected token
-                        link.ids.forEach(function(tid) {
-                            if (tid === parsed.ids[0]) return;
-                            var t = getObj('graphic', tid);
-                            if (t) { t.set(updates); aligned++; }
-                        });
-                    } else if (link.ids[0] === parsed.ids[0]) {
-                        // Parent selected: align children
+                // Handle one-way links
+                if (down || (!up && asParent.length > 0 && asChild.length === 0)) {
+                    // Align children to me
+                    asParent.forEach(function(entry) {
+                        var link = entry.link;
+                        var props = parsed.props === null ? getEffectiveProps(link) :
+                                    parsed.props === 'all' ? getKnownProps() : parsed.props;
+                        var updates = {};
+                        props.forEach(function(p) { updates[p] = source.get(p); });
                         link.ids.slice(1).forEach(function(tid) {
                             var t = getObj('graphic', tid);
                             if (t) { t.set(updates); aligned++; }
                         });
-                    } else {
-                        // Child selected: align to parent
+                    });
+                }
+                if (up || (!down && asChild.length > 0 && asParent.length === 0)) {
+                    // Align me to parent
+                    asChild.forEach(function(entry) {
+                        var link = entry.link;
+                        var props = parsed.props === null ? getEffectiveProps(link) :
+                                    parsed.props === 'all' ? getKnownProps() : parsed.props;
                         var parent = getObj('graphic', link.ids[0]);
                         if (parent) {
-                            var parentUpdates = {};
-                            props.forEach(function(p) { parentUpdates[p] = parent.get(p); });
-                            source.set(parentUpdates);
+                            var updates = {};
+                            props.forEach(function(p) { updates[p] = parent.get(p); });
+                            source.set(updates);
                             aligned++;
                         }
-                    }
-                });
+                    });
+                }
+
                 reply(msg, 'Align', 'Aligned ' + aligned + ' token(s).');
                 return;
             }
