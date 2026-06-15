@@ -9,934 +9,939 @@
 
 /* global createObj TokenMod spawnFxWithDefinition spawnFx getObj state playerIsGM sendChat findObjs log on */
 
-const HealthColors = (() => {
-  'use strict';
+var HealthColors =
+  HealthColors ||
+  (() => {
+    'use strict';
 
-  // ————— CONSTANTS —————
-  const VERSION = '2.1.4';
-  const SCRIPT_NAME = 'HealthColors';
-  const SCHEMA_VERSION = '1.1.0';
-  const UPDATED = '2026-05-31 13:45 UTC';
+    // ————— CONSTANTS —————
+    const VERSION = '2.1.4';
+    const SCRIPT_NAME = 'HealthColors';
+    const SCHEMA_VERSION = '1.1.0';
+    const UPDATED = '2026-06-15 03:11 UTC';
 
-  // ————— DEFAULTS —————
-  /**
-   * Default values written into `state.HealthColors` on first install or after a reset.
-   * Every key maps directly to a property used at runtime — changing a value here changes
-   * the out-of-the-box behavior for new or reset campaigns.
-   *
-   * @property {boolean} auraColorOn  - Master on/off switch for the whole script.
-   * @property {string}  auraBar      - Which token bar to read HP from ('bar1'|'bar2'|'bar3').
-   * @property {boolean} auraTint     - When true, colors the token tint instead of the aura rings.
-   * @property {number}  auraPercPC   - HP % threshold below which the PC aura activates (0–100).
-   * @property {number}  auraPerc     - HP % threshold below which the NPC aura activates (0–100).
-   * @property {boolean} PCAura       - Whether to show a health aura on player-character tokens.
-   * @property {boolean} NPCAura      - Whether to show a health aura on monster/NPC tokens.
-   * @property {boolean} auraDeadPC   - Whether to mark a PC token with the dead status at 0 HP.
-   * @property {boolean} auraDead     - Whether to mark an NPC token with the dead status at 0 HP.
-   * @property {string}  GM_PCNames   - GM visibility of PC token names ('Yes'|'No'|'Off').
-   * @property {string}  PCNames      - Player visibility of PC token names ('Yes'|'No'|'Off').
-   * @property {string}  GM_NPCNames  - GM visibility of NPC token names ('Yes'|'No'|'Off').
-   * @property {string}  NPCNames     - Player visibility of NPC token names ('Yes'|'No'|'Off').
-   * @property {number}  AuraSize     - Feet the aura extends beyond the token edge.
-   * @property {string}  Aura1Shape   - Display/default Aura 1 shape shown in output.
-   * @property {string}  Aura1Color   - Display/default Aura 1 tint shown in output.
-   * @property {number}  Aura2Size    - Display/default Aura 2 radius shown in output.
-   * @property {string}  Aura2Shape   - Display/default Aura 2 shape shown in output.
-   * @property {string}  Aura2Color   - Display/default Aura 2 tint value shown in output.
-   * @property {boolean} OneOff       - When true, tokens without a linked character also get auras.
-   * @property {boolean} FX           - Whether to spawn particle FX on HP changes.
-   * @property {string}  HealFX       - Hex color (no '#') used for the healing particle effect.
-   * @property {string}  HurtFX       - Hex color (no '#') used for the hurt/damage particle effect.
-   * @property {string}  auraDeadFX   - Jukebox track name to play on death, or 'None' to disable.
-   * @property {string}  colorPalette - Health aura colour palette ('default'|'colorblind').
-   */
-  const DEFAULTS = {
-    auraColorOn: true,
-    auraBar: 'bar1',
-    auraTint: false,
-    auraPercPC: 100,
-    auraPerc: 100,
-    PCAura: true,
-    NPCAura: true,
-    auraDeadPC: true,
-    auraDead: true,
-    GM_PCNames: 'Yes',
-    PCNames: 'Yes',
-    GM_NPCNames: 'Yes',
-    NPCNames: 'Yes',
-    AuraSize: 0.35,
-    Aura1Shape: 'Circle',
-    Aura1Color: '00FF00',
-    Aura2Size: 5,
-    Aura2Shape: 'Square',
-    Aura2Color: '806600',
-    OneOff: false,
-    FX: true,
-    HealFX: 'FDDC5C',
-    HurtFX: 'FF0000',
-    auraDeadFX: 'None',
-    colorPalette: 'default',
-  };
-
-  const COLOR_PALETTES = {
-    default: {
-      high: [0, 255, 0], // green
-      mid: [255, 255, 0], // yellow
-      low: [255, 0, 0], // red
-      dead: [0, 0, 0], // black
-    },
-    colorblind: {
-      high: [51, 187, 238], // cyan
-      mid: [238, 119, 51], // orange
-      low: [204, 51, 17], // magenta
-      dead: [0, 0, 0], // black
-    },
-  };
-
-  /**
-   * Seed definition for the '-DefaultHurt' Roll20 custom FX object created at install.
-   * Models a downward-falling burst (blood/debris) triggered when a token loses HP.
-   * `startColour` and `endColour` are placeholder zeroes — they are overwritten at
-   * runtime with the value of `state.HealthColors.HurtFX` (or a per-character override)
-   * before the FX is spawned, so changing them here has no visible effect.
-   *
-   * @property {number}   maxParticles   - Maximum simultaneous particles in the burst.
-   * @property {number}   duration       - How long (in frames) the emitter runs.
-   * @property {number}   size           - Base particle diameter before scale is applied.
-   * @property {number}   sizeRandom     - Random variance added to each particle's size.
-   * @property {number}   lifeSpan       - Frames each particle lives before fading.
-   * @property {number}   lifeSpanRandom - Random variance added to each particle's lifespan.
-   * @property {number}   speed          - Base particle speed before scale is applied.
-   * @property {number}   speedRandom    - Random variance added to each particle's speed.
-   * @property {{x:number,y:number}} gravity - Per-frame acceleration applied to all particles.
-   * @property {number}   angle          - Emission direction in degrees (270 = straight down).
-   * @property {number}   angleRandom    - Cone spread around the emission angle.
-   * @property {number}   emissionRate   - Particles emitted per frame while the emitter is active.
-   * @property {number[]} startColour    - RGBA start colour placeholder; overwritten at runtime.
-   * @property {number[]} endColour      - RGBA end colour placeholder; overwritten at runtime.
-   */
-  const DEFAULT_HURT_FX = {
-    maxParticles: 150,
-    duration: 50,
-    size: 10,
-    sizeRandom: 3,
-    lifeSpan: 25,
-    lifeSpanRandom: 5,
-    speed: 8,
-    speedRandom: 3,
-    gravity: { x: 0.01, y: 0.65 },
-    angle: 270,
-    angleRandom: 25,
-    emissionRate: 100,
-    startColour: [0, 0, 0, 0],
-    endColour: [0, 0, 0, 0],
-  };
-
-  /**
-   * Seed definition for the '-DefaultHeal' Roll20 custom FX object created at install.
-   * Models a soft omnidirectional sparkle/glow triggered when a token regains HP.
-   * Like DEFAULT_HURT_FX, `startColour` and `endColour` are placeholders overwritten
-   * at runtime with `state.HealthColors.HealFX` before the FX is spawned.
-   *
-   * @property {number}   maxParticles   - Maximum simultaneous particles in the burst.
-   * @property {number}   duration       - How long (in frames) the emitter runs.
-   * @property {number}   size           - Base particle diameter before scale is applied.
-   * @property {number}   sizeRandom     - Random variance added to each particle's size (larger
-   *                                       than hurt to produce a softer, more diffuse bloom).
-   * @property {number}   lifeSpan       - Frames each particle lives before fading.
-   * @property {number}   lifeSpanRandom - Random variance added to each particle's lifespan.
-   * @property {number}   speed          - Base particle speed (slow drift upward).
-   * @property {number}   speedRandom    - Random variance added to each particle's speed.
-   * @property {number}   angle          - Emission direction in degrees (0 = straight up).
-   * @property {number}   angleRandom    - 180° spread produces full omnidirectional emission.
-   * @property {number}   emissionRate   - Very high rate creates a dense initial burst.
-   * @property {number[]} startColour    - RGBA start colour placeholder; overwritten at runtime.
-   * @property {number[]} endColour      - RGBA end colour placeholder; overwritten at runtime.
-   */
-  const DEFAULT_HEAL_FX = {
-    maxParticles: 150,
-    duration: 50,
-    size: 10,
-    sizeRandom: 15,
-    lifeSpan: 50,
-    lifeSpanRandom: 30,
-    speed: 0.5,
-    speedRandom: 2,
-    angle: 0,
-    angleRandom: 180,
-    emissionRate: 1000,
-    startColour: [0, 0, 0, 0],
-    endColour: [0, 0, 0, 0],
-  };
-
-  /**
-   * Fallback baseline merged into every FX definition by `spawnFX` before spawning.
-   * This is NOT a Roll20 custfx object — it is a local safety net that ensures
-   * `spawnFX` never passes `undefined` for a required Roll20 FX field when a custom
-   * or per-character definition omits optional properties.
-   * Merge order: `{ ...FX_PARAM_DEFAULTS, ...userDefinition }`, so any property
-   * present in the real definition takes precedence over these fallbacks.
-   *
-   * @property {number}   maxParticles   - Fallback particle count.
-   * @property {number}   duration       - Fallback emitter duration (frames).
-   * @property {number}   size           - Fallback particle size.
-   * @property {number}   sizeRandom     - Fallback size variance.
-   * @property {number}   lifeSpan       - Fallback particle lifespan (frames).
-   * @property {number}   lifeSpanRandom - Fallback lifespan variance.
-   * @property {number}   speed          - Fallback particle speed (0 = stationary).
-   * @property {number}   speedRandom    - Fallback speed variance.
-   * @property {number}   angle          - Fallback emission angle in degrees.
-   * @property {number}   angleRandom    - Fallback angular spread.
-   * @property {number}   emissionRate   - Fallback particles emitted per frame.
-   * @property {number[]} startColour        - Fallback RGBA start colour (British spelling; opaque grey).
-   * @property {number[]} startColor         - Fallback RGBA start color (American spelling; same value).
-   * @property {number[]} endColour          - Fallback RGBA end colour (British spelling; opaque black).
-   * @property {number[]} endColor           - Fallback RGBA end color (American spelling; same value).
-   * @property {number[]} startColourRandom  - Fallback start colour randomization (zeroed).
-   * @property {number[]} startColorRandom   - Fallback start color randomization (zeroed).
-   * @property {number[]} endColourRandom    - Fallback end colour randomization (zeroed).
-   * @property {number[]} endColorRandom     - Fallback end color randomization (zeroed).
-   * @property {{x:number,y:number}} gravity - Fallback gravity (none).
-   */
-  const FX_PARAM_DEFAULTS = {
-    maxParticles: 100,
-    duration: 100,
-    size: 15,
-    sizeRandom: 5,
-    lifeSpan: 50,
-    lifeSpanRandom: 20,
-    speed: 1,
-    speedRandom: 1,
-    angle: 0,
-    angleRandom: 0,
-    emissionRate: 10,
-    startColour: [128, 128, 128, 1],
-    startColor: [128, 128, 128, 1],
-    endColour: [0, 0, 0, 1],
-    endColor: [0, 0, 0, 1],
-    startColourRandom: [0, 0, 0, 0],
-    startColorRandom: [0, 0, 0, 0],
-    endColourRandom: [0, 0, 0, 0],
-    endColorRandom: [0, 0, 0, 0],
-    gravity: { x: 0, y: 0 },
-  };
-
-  // ————— UTILITIES —————
-  /**
-   * Converts a health percentage (0–100+) to a hex color using the active palette.
-   * Values above 100% return blue; 0% uses dead; 1–100 interpolate low→mid→high.
-   *
-   * @param {number} pct - Health percentage.
-   * @returns {string} A 6-digit hex color string, e.g. '#FF0000'.
-   */
-  function percentToHex(pct) {
-    const normalizedPct = Math.max(0, Number(pct) || 0);
-    if (normalizedPct > 100) return '#0000FF';
-    const paletteName = state?.HealthColors?.colorPalette || 'default';
-    const { high, mid, low, dead } = COLOR_PALETTES[paletteName] || COLOR_PALETTES.default;
-    const rgbToHex = (rgb) =>
-      // eslint-disable-next-line no-bitwise
-      `#${((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1)}`;
-
-    if (normalizedPct === 0) {
-      return rgbToHex(dead);
-    }
-
-    const t = normalizedPct >= 50 ? (normalizedPct - 50) / 50 : normalizedPct / 50;
-    const from = normalizedPct >= 50 ? mid : low;
-    const to = normalizedPct >= 50 ? high : mid;
-    const r = Math.round(from[0] + (to[0] - from[0]) * t);
-    const g = Math.round(from[1] + (to[1] - from[1]) * t);
-    const b = Math.round(from[2] + (to[2] - from[2]) * t);
-    return rgbToHex([r, g, b]);
-  }
-
-  /**
-   * Parses a hex color string into an RGBA array suitable for Roll20 FX definitions.
-   * Returns [0,0,0,0] when the input is invalid.
-   *
-   * @param {string} hex - Hex color string with or without leading '#'.
-   * @returns {number[]} Array of [r, g, b, a] where a is always 1.0 on success.
-   */
-  function hexToRgb(hex) {
-    const cleanHex = (hex || '').replace('#', '').trim();
-    const parts = /^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(cleanHex);
-    if (parts) {
-      const rgb = parts.slice(1).map((d) => Number.parseInt(d, 16));
-      rgb.push(1);
-      return rgb;
-    }
-    // Log invalid hex attempts if they appear non-empty
-    if (cleanHex) log(`${SCRIPT_NAME}: hexToRgb received invalid hex: "${hex}"`);
-    return [0, 0, 0, 0];
-  }
-
-  /**
-   * Returns a random integer between min and max inclusive.
-   *
-   * @param {number} min - Lower bound (inclusive).
-   * @param {number} max - Upper bound (inclusive).
-   * @returns {number} Random integer in [min, max].
-   */
-  function randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min; // NOSONAR — cosmetic FX variance, not security-sensitive
-  }
-
-  /**
-   * Creates a plain-object snapshot of a Roll20 API object or any serialisable value.
-   * Uses JSON round-trip rather than structuredClone so that Roll20 proxy objects have
-   * their toJSON() method called, producing a plain object whose properties are
-   * accessible directly (e.g. prev.bar1_value) rather than through .get().
-   *
-   * @param {object} obj - Roll20 API object or plain object to snapshot.
-   * @returns {object} Plain object deep copy.
-   */
-  function deepClone(obj) {
-    return JSON.parse(JSON.stringify(obj)); // NOSONAR — intentional: triggers Roll20 proxy toJSON()
-  }
-
-  /**
-   * Normalizes a 6-digit hex color string (without '#').
-   * Returns fallback when input is invalid.
-   *
-   * @param {string} value    - Candidate hex string.
-   * @param {string} fallback - Fallback value when invalid.
-   * @returns {string} Uppercase 6-digit hex.
-   */
-  function normalizeHex6(value, fallback) {
-    const cleaned = (value || '').replace('#', '').trim().toUpperCase();
-    return /^[0-9A-F]{6}$/.test(cleaned) ? cleaned : fallback;
-  }
-
-  /**
-   * Normalizes an aura shape label to supported display values.
-   *
-   * @param {string} value    - Candidate shape value.
-   * @param {string} fallback - Fallback shape.
-   * @returns {string} One of Circle|Square.
-   */
-  function normalizeShape(value, fallback) {
-    const shape = (value || '').trim().toUpperCase();
-    if (shape === 'CIRCLE') return 'Circle';
-    if (shape === 'SQUARE') return 'Square';
-    return fallback;
-  }
-
-  /**
-   * Normalizes a palette name to one of the supported keys.
-   *
-   * @param {string} value    - Candidate palette key.
-   * @param {string} fallback - Fallback palette key when invalid.
-   * @returns {string} A valid palette key from COLOR_PALETTES.
-   */
-  function normalizePalette(value, fallback) {
-    const p = (value || '').trim().toLowerCase();
-    return COLOR_PALETTES[p] ? p : fallback;
-  }
-
-  /**
-   * Normalizes a percentage setting to an integer between 0 and 100.
-   *
-   * @param {string|number} value    - Candidate percentage.
-   * @param {number}        fallback - Fallback percentage when invalid.
-   * @returns {number} A valid percentage value.
-   */
-  function normalizePercent(value, fallback) {
-    const parsed = Number.parseInt(value, 10);
-    return Number.isInteger(parsed) && parsed >= 0 && parsed <= 100 ? parsed : fallback;
-  }
-
-  /**
-   * Normalizes a positive numeric setting.
-   *
-   * @param {string|number} value    - Candidate numeric value.
-   * @param {number}        fallback - Fallback value when invalid.
-   * @returns {number} A valid non-negative number.
-   */
-  function normalizePositiveNumber(value, fallback) {
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-  }
-
-  /**
-   * Normalizes a Yes/No/Off style setting.
-   *
-   * @param {string} value    - Candidate setting value.
-   * @param {string} fallback - Fallback value when invalid.
-   * @returns {string} One of Yes, No, or Off.
-   */
-  function normalizeYesNoOff(value, fallback) {
-    const normalized = (value || '').trim().toUpperCase();
-    if (normalized === 'YES') return 'Yes';
-    if (normalized === 'NO') return 'No';
-    if (normalized === 'OFF') return 'Off';
-    return fallback;
-  }
-
-  /**
-   * Normalizes a death sound track name.
-   *
-   * @param {string} value    - Candidate track name.
-   * @param {string} fallback - Fallback track name when invalid.
-   * @returns {string} A trimmed track name or None.
-   */
-  function normalizeTrackName(value, fallback) {
-    const normalized = (value || '').trim();
-    if (!normalized) return fallback;
-    return normalized.toUpperCase() === 'NONE' ? 'None' : normalized;
-  }
-
-  // ————— WHISPER GM (declared early; used by checkInstall) —————
-  /**
-   * Sends a styled whisper message to the GM.
-   *
-   * @param {string} text - Plain text content to display inside the styled div.
-   */
-  function gmWhisper(text) {
-    const style = [
-      'width:100%',
-      'border-radius:4px',
-      'box-shadow:1px 1px 1px #707070',
-      'text-align:center',
-      'vertical-align:middle',
-      'padding:3px 0px',
-      'margin:0px auto',
-      'border:1px solid #000',
-      'color:#000',
-      'background-image:-webkit-linear-gradient(-45deg,#a7c7dc 0%,#85b2d3 100%)',
-    ].join(';');
-    sendChat(SCRIPT_NAME, `/w GM <div style='${style}'><b>${text}</b></div>`);
-  }
-
-  // ————— ATTRIBUTE CACHE —————
-  /**
-   * Creates a cached attribute lookup function that auto-refreshes on attribute
-   * change or destruction and re-triggers handleToken for affected tokens.
-   * Creates the attribute with the default value if it does not exist yet.
-   *
-   * @param {string}   attribute          - The Roll20 attribute name to track (e.g. 'USECOLOR').
-   * @param {object}   [options={}]        - Configuration options.
-   * @param {string}   [options.default]   - Value to use when the attribute is missing or invalid.
-   * @param {Function} [options.validation]- Predicate that returns true for valid values.
-   * @returns {Function} Lookup function accepting a character object and returning the current value.
-   */
-  function makeSmartAttrCache(attribute, options = {}) {
-    const cache = {};
-    const defaultValue = options.default || 'YES';
-    const validator = options.validation || (() => true);
-
-    on('change:attribute', (attr) => {
-      if (attr.get('name') !== attribute) return;
-      if (!validator(attr.get('current'))) attr.set('current', defaultValue);
-      cache[attr.get('characterid')] = attr.get('current');
-      findObjs({ type: 'graphic' })
-        .filter((o) => o.get('represents') === attr.get('characterid'))
-        .forEach((obj) => {
-          const prev = deepClone(obj);
-          handleToken(obj, prev, 'YES');
-        });
-    });
-
-    on('destroy:attribute', (attr) => {
-      if (attr.get('name') === attribute) delete cache[attr.get('characterid')];
-    });
-
-    return function (character) {
-      let attr =
-        findObjs({ type: 'attribute', name: attribute, characterid: character.id }, { caseInsensitive: true })[0] ||
-        createObj('attribute', {
-          name: attribute,
-          characterid: character.id,
-          current: defaultValue,
-        });
-
-      if (!cache[character.id] || cache[character.id] !== attr.get('current')) {
-        if (!validator(attr.get('current'))) attr.set('current', defaultValue);
-        cache[character.id] = attr.get('current');
-      }
-      return cache[character.id];
+    // ————— DEFAULTS —————
+    /**
+     * Default values written into `state.HealthColors` on first install or after a reset.
+     * Every key maps directly to a property used at runtime — changing a value here changes
+     * the out-of-the-box behavior for new or reset campaigns.
+     *
+     * @property {boolean} auraColorOn  - Master on/off switch for the whole script.
+     * @property {string}  auraBar      - Which token bar to read HP from ('bar1'|'bar2'|'bar3').
+     * @property {boolean} auraTint     - When true, colors the token tint instead of the aura rings.
+     * @property {number}  auraPercPC   - HP % threshold below which the PC aura activates (0–100).
+     * @property {number}  auraPerc     - HP % threshold below which the NPC aura activates (0–100).
+     * @property {boolean} PCAura       - Whether to show a health aura on player-character tokens.
+     * @property {boolean} NPCAura      - Whether to show a health aura on monster/NPC tokens.
+     * @property {boolean} auraDeadPC   - Whether to mark a PC token with the dead status at 0 HP.
+     * @property {boolean} auraDead     - Whether to mark an NPC token with the dead status at 0 HP.
+     * @property {string}  GM_PCNames   - GM visibility of PC token names ('Yes'|'No'|'Off').
+     * @property {string}  PCNames      - Player visibility of PC token names ('Yes'|'No'|'Off').
+     * @property {string}  GM_NPCNames  - GM visibility of NPC token names ('Yes'|'No'|'Off').
+     * @property {string}  NPCNames     - Player visibility of NPC token names ('Yes'|'No'|'Off').
+     * @property {number}  AuraSize     - Feet the aura extends beyond the token edge.
+     * @property {string}  Aura1Shape   - Display/default Aura 1 shape shown in output.
+     * @property {string}  Aura1Color   - Display/default Aura 1 tint shown in output.
+     * @property {number}  Aura2Size    - Display/default Aura 2 radius shown in output.
+     * @property {string}  Aura2Shape   - Display/default Aura 2 shape shown in output.
+     * @property {string}  Aura2Color   - Display/default Aura 2 tint value shown in output.
+     * @property {boolean} OneOff       - When true, tokens without a linked character also get auras.
+     * @property {boolean} FX           - Whether to spawn particle FX on HP changes.
+     * @property {string}  HealFX       - Hex color (no '#') used for the healing particle effect.
+     * @property {string}  HurtFX       - Hex color (no '#') used for the hurt/damage particle effect.
+     * @property {string}  auraDeadFX   - Jukebox track name to play on death, or 'None' to disable.
+     * @property {string}  colorPalette - Health aura colour palette ('default'|'colorblind').
+     */
+    const DEFAULTS = {
+      auraColorOn: true,
+      auraBar: 'bar1',
+      auraTint: false,
+      auraPercPC: 100,
+      auraPerc: 100,
+      PCAura: true,
+      NPCAura: true,
+      auraDeadPC: true,
+      auraDead: true,
+      GM_PCNames: 'Yes',
+      PCNames: 'Yes',
+      GM_NPCNames: 'Yes',
+      NPCNames: 'Yes',
+      AuraSize: 0.35,
+      Aura1Shape: 'Circle',
+      Aura1Color: '00FF00',
+      Aura2Size: 5,
+      Aura2Shape: 'Square',
+      Aura2Color: '806600',
+      OneOff: false,
+      FX: true,
+      HealFX: 'FDDC5C',
+      HurtFX: 'FF0000',
+      auraDeadFX: 'None',
+      colorPalette: 'default',
     };
-  }
 
-  const lookupUseBlood = makeSmartAttrCache('USEBLOOD', {
-    default: 'DEFAULT',
-    validation: (o) => String(o || '').trim() !== '',
-  });
-  const lookupUseColor = makeSmartAttrCache('USECOLOR', {
-    default: 'YES',
-    validation: (o) => /^(YES|NO)$/i.test(String(o || '').trim()),
-  });
-
-  // ————— TOKEN HELPERS —————
-  /**
-   * Hard-clears all health-indicator visual settings (aura/tint).
-   * Used for dead tokens or when the script/aura is disabled for a type.
-   *
-   * @param {object} obj - Roll20 token graphic object.
-   */
-  function clearAuras(obj) {
-    const changes = { tint_color: 'transparent' };
-    if (!state.HealthColors.auraTint) {
-      changes.aura1_color = 'transparent';
-      changes.aura1_radius = 0;
-    }
-    obj.set(changes);
-  }
-
-  /**
-   * Applies a health color to a token via aura or tint depending on configuration.
-   * When in tint mode, sets tint_color. When in aura mode, sets aura radius and color.
-   * Roll20 measures aura1_radius from the token edge, so sizeSet maps directly.
-   *
-   * @param {object} obj         - Roll20 token object.
-   * @param {number} sizeSet     - Feet the ring extends beyond the token edge (e.g. 0.35).
-   * @param {string} markerColor - Hex color string derived from health percentage.
-   */
-  function tokenSet(obj, sizeSet, markerColor) {
-    const useTint = state.HealthColors.auraTint;
-    if (useTint) {
-      obj.set({ tint_color: markerColor });
-    } else {
-      obj.set({
-        tint_color: 'transparent',
-        aura1_radius: sizeSet,
-        aura1_color: markerColor,
-        showplayers_aura1: true,
-      });
-    }
-  }
-
-  /**
-   * Sets token name-visibility flags for the GM and players.
-   * 'Yes' → true, 'No' → false, 'Off' → leave unchanged.
-   *
-   * @param {string} gm  - GM name-display setting: 'Yes', 'No', or 'Off'.
-   * @param {string} pc  - Player name-display setting: 'Yes', 'No', or 'Off'.
-   * @param {object} obj - Roll20 token object.
-   */
-  function setShowNames(gm, pc, obj) {
-    if (gm !== 'Off' && gm !== '') obj.set({ showname: gm === 'Yes' });
-    if (pc !== 'Off' && pc !== '') obj.set({ showplayers_name: pc === 'Yes' });
-  }
-
-  // ————— FX —————
-  /**
-   * Plays a jukebox track when a token dies.
-   * Accepts a comma-separated list of track names; picks one at random.
-   *
-   * @param {string} trackname - Track name or comma-separated list of track names.
-   */
-  function playDeath(trackname) {
-    const list = trackname.indexOf(',') > 0 ? trackname.split(',') : [trackname];
-    const resolvedName = list[Math.floor(Math.random() * list.length)]; // NOSONAR — random track selection, not security-sensitive
-    const track = findObjs({ type: 'jukeboxtrack', title: resolvedName })[0];
-    if (track) {
-      track.set({ playing: false, softstop: false, volume: 50 });
-      track.set({ playing: true });
-    } else {
-      log(`${SCRIPT_NAME}: No track found named ${resolvedName}`);
-    }
-  }
-
-  /**
-   * Spawns a scaled particle FX at a token's position using a custom FX definition.
-   * Merges the provided definition against FX_PARAM_DEFAULTS so partial definitions work.
-   *
-   * @param {number} scale   - Scaling factor derived from token height (height / 70).
-   * @param {number} hitSize - Hit-size factor based on damage proportion (0.2–1.0).
-   * @param {number} left    - Horizontal pixel position of the token on the page.
-   * @param {number} top     - Vertical pixel position of the token on the page.
-   * @param {object} fx      - Partial or complete Roll20 custom FX definition object.
-   * @param {string} pageId  - ID of the Roll20 page on which to spawn the FX.
-   */
-  function spawnFX(scale, hitSize, left, top, fx, pageId) {
-    const m = { ...FX_PARAM_DEFAULTS, ...fx };
-
-    // Prefer colours from the incoming partial `fx` first (nullish), then merged `m`.
-    // Order matters: after merge, `m.startColour` can still be FX_PARAM_DEFAULTS grey
-    // while the real colour only exists on `fx.startColor` (Roll20 / heal seed used
-    // American keys only). Using `||` on `m` alone would always pick the grey default.
-    const pick = (obj, keys) => {
-      if (!obj) return undefined;
-      for (const key of keys) {
-        const v = obj[key];
-        if (v !== undefined && v !== null) return v;
-      }
-      return undefined;
-    };
-    const startKeys = ['startColour', 'startColor', 'startcolour', 'startcolor'];
-    const endKeys = ['endColour', 'endColor', 'endcolour', 'endcolor'];
-    const startRndKeys = ['startColourRandom', 'startColorRandom', 'startcolourrandom', 'startcolorrandom'];
-    const endRndKeys = ['endColourRandom', 'endColorRandom', 'endcolourrandom', 'endcolorrandom'];
-    const startClr = pick(fx, startKeys) ?? pick(m, startKeys);
-    const endClr = pick(fx, endKeys) ?? pick(m, endKeys);
-    const startClrRnd = pick(fx, startRndKeys) ?? pick(m, startRndKeys);
-    const endClrRnd = pick(fx, endRndKeys) ?? pick(m, endRndKeys);
-
-    spawnFxWithDefinition(
-      left,
-      top,
-      {
-        maxParticles: m.maxParticles * hitSize,
-        duration: m.duration * hitSize,
-        size: (m.size * scale) / 2,
-        sizeRandom: (m.sizeRandom * scale) / 2,
-        lifeSpan: m.lifeSpan,
-        lifeSpanRandom: m.lifeSpanRandom,
-        speed: m.speed * scale,
-        speedRandom: m.speedRandom * scale,
-        angle: m.angle,
-        angleRandom: m.angleRandom,
-        emissionRate: m.emissionRate * hitSize * 2,
-        startColour: startClr,
-        startColor: startClr,
-        endColour: endClr,
-        endColor: endClr,
-        startColourRandom: startClrRnd,
-        startColorRandom: startClrRnd,
-        endColourRandom: endClrRnd,
-        endColorRandom: endClrRnd,
-        gravity: { x: m.gravity.x * scale, y: m.gravity.y * scale },
+    const COLOR_PALETTES = {
+      default: {
+        high: [0, 255, 0], // green
+        mid: [255, 255, 0], // yellow
+        low: [255, 0, 0], // red
+        dead: [0, 0, 0], // black
       },
-      pageId,
-    );
-  }
-
-  /**
-   * Safely reads a Roll20 custfx definition and returns a plain mutable object.
-   * Roll20 may return the definition as either an object or a JSON string.
-   *
-   * @param {object} fxObj - Roll20 custfx object.
-   * @returns {object|null} Parsed FX definition object, or null if unavailable/invalid.
-   */
-  function getFxDefinition(fxObj) {
-    if (!fxObj) return null;
-
-    const raw = fxObj.get('definition');
-    if (!raw) return null;
-
-    if (typeof raw === 'string') {
-      try {
-        return JSON.parse(raw);
-      } catch (err) {
-        log(`${SCRIPT_NAME}: Failed to parse FX definition: ${err.message}`);
-        return null;
-      }
-    }
-
-    if (typeof raw === 'object') {
-      return deepClone(raw);
-    }
-
-    return null;
-  }
-
-  // ————— EVENT DEDUPE STATE —————
-
-  // Tokens recently handled via change:attribute — suppresses duplicate FX in change:graphic and TokenMod observers.
-  const recentAttrFires = new Set();
-
-  /**
-   * Shared token-change wrapper used by both Roll20 change:graphic and TokenMod.
-   * This keeps FX suppression consistent when a linked HP attribute update has
-   * already been processed through the attribute listener.
-   *
-   * @param {object} obj - Roll20 token graphic object.
-   * @param {object} prev - Previous token snapshot.
-   */
-  function handleTokenChange(obj, prev) {
-    handleToken(obj, prev, recentAttrFires.has(obj.id) ? 'YES' : undefined);
-  }
-
-  // ————— STATE / INSTALL —————
-  /**
-   * Initializes or migrates persisted state, applies all default values, registers
-   * the TokenMod observer if available, and creates the default Hurt/Heal FX objects
-   * if they do not already exist in the campaign.
-   * Safe to call multiple times (e.g. after a state reset).
-   */
-  function checkInstall() {
-    log(`-=> ${SCRIPT_NAME} v${VERSION} [Updated: ${UPDATED}] <=-`);
-    if (state?.HealthColors?.schemaVersion !== SCHEMA_VERSION) {
-      log(`<${SCRIPT_NAME} Updating Schema to v${SCHEMA_VERSION}>`);
-      state.HealthColors = { schemaVersion: SCHEMA_VERSION, version: VERSION };
-    }
-    Object.keys(DEFAULTS).forEach((key) => {
-      if (state.HealthColors[key] === undefined) state.HealthColors[key] = DEFAULTS[key];
-    });
-    state.HealthColors.colorPalette = normalizePalette(state.HealthColors.colorPalette, DEFAULTS.colorPalette);
-    if (typeof TokenMod !== 'undefined' && TokenMod.ObserveTokenChange) {
-      TokenMod.ObserveTokenChange(handleTokenChange);
-    }
-    const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
-    const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
-    if (!fxHurt) {
-      gmWhisper('Creating Default Hurt FX');
-      createObj('custfx', {
-        name: '-DefaultHurt',
-        definition: DEFAULT_HURT_FX,
-      });
-    }
-    if (!fxHeal) {
-      gmWhisper('Creating Default Heal FX');
-      createObj('custfx', {
-        name: '-DefaultHeal',
-        definition: DEFAULT_HEAL_FX,
-      });
-    }
-    syncDefaultFxObjects();
-  }
-
-  /**
-   * Builds the normalized default Hurt/Heal definition payload used for
-   * campaign custom FX objects.
-   *
-   * @param {boolean} isHeal - True for Heal profile, false for Hurt profile.
-   * @param {object} baseDef - Existing definition to merge into.
-   * @returns {object} Updated definition with normalized color/profile fields.
-   */
-  function buildDefaultFxDefinition(isHeal, baseDef) {
-    const def = { ...baseDef };
-    const rgb = hexToRgb(isHeal ? state.HealthColors.HealFX : state.HealthColors.HurtFX);
-    def.startColour = rgb;
-    def.startColor = rgb;
-    def.endColour = rgb;
-    def.endColor = rgb;
-    def.startColourRandom = [0, 0, 0, 0];
-    def.startColorRandom = [0, 0, 0, 0];
-    def.endColourRandom = [0, 0, 0, 0];
-    def.endColorRandom = [0, 0, 0, 0];
-
-    // Keep the vivid profile that reads clearly in live play.
-    if (isHeal) {
-      def.maxParticles = 220;
-      def.emissionRate = 260;
-      def.size = 12;
-      def.sizeRandom = 4;
-      def.lifeSpan = 40;
-      def.lifeSpanRandom = 6;
-      def.speed = 0.8;
-      def.speedRandom = 1;
-    } else {
-      def.maxParticles = 200;
-      def.emissionRate = 180;
-      def.size = 10;
-      def.sizeRandom = 2;
-      def.lifeSpan = 22;
-      def.lifeSpanRandom = 3;
-      def.speed = 8;
-      def.speedRandom = 2;
-    }
-    return def;
-  }
-
-  /**
-   * Applies current Heal/Hurt colors and profile tuning to campaign default
-   * custom FX objects. This is called on install/reset and when color settings
-   * change so runtime spawns can use stable pre-synced definitions.
-   */
-  function syncDefaultFxObjects() {
-    const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
-    const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
-    if (fxHeal) {
-      const base = getFxDefinition(fxHeal) || DEFAULT_HEAL_FX;
-      fxHeal.set({ definition: buildDefaultFxDefinition(true, base) });
-    }
-    if (fxHurt) {
-      const base = getFxDefinition(fxHurt) || DEFAULT_HURT_FX;
-      fxHurt.set({ definition: buildDefaultFxDefinition(false, base) });
-    }
-  }
-
-  /**
-   * Recreates HealthColors default custom FX objects in the campaign.
-   * Useful when legacy/stale custfx definitions exist from older script versions.
-   */
-  function resetDefaultFxObjects() {
-    const existing = findObjs({ _type: 'custfx' }, { caseInsensitive: true }).filter((fx) =>
-      /-Default(Hurt|Heal)/i.test(fx.get('name') || ''),
-    );
-    existing.forEach((fx) => fx.remove());
-    gmWhisper('Recreating Default Hurt/Heal FX');
-    checkInstall();
-  }
-
-  /**
-   * Resets all persisted HealthColors settings back to DEFAULTS.
-   * Keeps schema/version metadata aligned to current script constants.
-   */
-  function resetAllSettingsToDefaults() {
-    state.HealthColors = {
-      schemaVersion: SCHEMA_VERSION,
-      version: VERSION,
-      ...DEFAULTS,
+      colorblind: {
+        high: [51, 187, 238], // cyan
+        mid: [238, 119, 51], // orange
+        low: [204, 51, 17], // magenta
+        dead: [0, 0, 0], // black
+      },
     };
-  }
 
-  /**
-   * Restores all state defaults, rebuilds default FX objects, and force-syncs tokens.
-   */
-  function runResetAllFlow() {
-    resetAllSettingsToDefaults();
-    gmWhisper('RESET ALL: defaults restored + default FX + force update');
-    resetDefaultFxObjects();
-    menuForceUpdate();
-  }
+    /**
+     * Seed definition for the '-DefaultHurt' Roll20 custom FX object created at install.
+     * Models a downward-falling burst (blood/debris) triggered when a token loses HP.
+     * `startColour` and `endColour` are placeholder zeroes — they are overwritten at
+     * runtime with the value of `state.HealthColors.HurtFX` (or a per-character override)
+     * before the FX is spawned, so changing them here has no visible effect.
+     *
+     * @property {number}   maxParticles   - Maximum simultaneous particles in the burst.
+     * @property {number}   duration       - How long (in frames) the emitter runs.
+     * @property {number}   size           - Base particle diameter before scale is applied.
+     * @property {number}   sizeRandom     - Random variance added to each particle's size.
+     * @property {number}   lifeSpan       - Frames each particle lives before fading.
+     * @property {number}   lifeSpanRandom - Random variance added to each particle's lifespan.
+     * @property {number}   speed          - Base particle speed before scale is applied.
+     * @property {number}   speedRandom    - Random variance added to each particle's speed.
+     * @property {{x:number,y:number}} gravity - Per-frame acceleration applied to all particles.
+     * @property {number}   angle          - Emission direction in degrees (270 = straight down).
+     * @property {number}   angleRandom    - Cone spread around the emission angle.
+     * @property {number}   emissionRate   - Particles emitted per frame while the emitter is active.
+     * @property {number[]} startColour    - RGBA start colour placeholder; overwritten at runtime.
+     * @property {number[]} endColour      - RGBA end colour placeholder; overwritten at runtime.
+     */
+    const DEFAULT_HURT_FX = {
+      maxParticles: 150,
+      duration: 50,
+      size: 10,
+      sizeRandom: 3,
+      lifeSpan: 25,
+      lifeSpanRandom: 5,
+      speed: 8,
+      speedRandom: 3,
+      gravity: { x: 0.01, y: 0.65 },
+      angle: 270,
+      angleRandom: 25,
+      emissionRate: 100,
+      startColour: [0, 0, 0, 0],
+      endColour: [0, 0, 0, 0],
+    };
 
-  // ————— TOKEN LOGIC —————
-  /**
-   * Reads the configured health bar from a token and its previous snapshot,
-   * validates all three values are numeric, and returns a health data object.
-   * Returns null if any value is missing or non-numeric.
-   *
-   * @param {object} obj  - Roll20 token graphic object.
-   * @param {object} prev - Snapshot of the token's previous attribute values.
-   * @param {string} [update] - Pass 'YES' when called from a forced refresh.
-   * @returns {{ maxValue: number, curValue: number, prevValue: string|number,
-   *             percReal: number, markerColor: string }|null}
-   */
-  function getBarHealth(obj, prev, update) {
-    const barUsed = state.HealthColors.auraBar;
-    if (obj.get(`${barUsed}_max`) === '' && obj.get(`${barUsed}_value`) === '') return null;
-    const maxValue = Number.parseInt(obj.get(`${barUsed}_max`), 10);
-    const curValue = Number.parseInt(obj.get(`${barUsed}_value`), 10);
-    const prevValue = prev[`${barUsed}_value`];
-    if (Number.isNaN(maxValue) || Number.isNaN(curValue)) return null;
-    if (update !== 'YES' && Number.isNaN(Number.parseInt(prevValue, 10))) return null;
-    const percReal = Math.max(0, Math.min(Math.round((curValue / maxValue) * 100), 100));
-    const markerColor = percentToHex(percReal);
-    return { maxValue, curValue, prevValue, percReal, markerColor };
-  }
+    /**
+     * Seed definition for the '-DefaultHeal' Roll20 custom FX object created at install.
+     * Models a soft omnidirectional sparkle/glow triggered when a token regains HP.
+     * Like DEFAULT_HURT_FX, `startColour` and `endColour` are placeholders overwritten
+     * at runtime with `state.HealthColors.HealFX` before the FX is spawned.
+     *
+     * @property {number}   maxParticles   - Maximum simultaneous particles in the burst.
+     * @property {number}   duration       - How long (in frames) the emitter runs.
+     * @property {number}   size           - Base particle diameter before scale is applied.
+     * @property {number}   sizeRandom     - Random variance added to each particle's size (larger
+     *                                       than hurt to produce a softer, more diffuse bloom).
+     * @property {number}   lifeSpan       - Frames each particle lives before fading.
+     * @property {number}   lifeSpanRandom - Random variance added to each particle's lifespan.
+     * @property {number}   speed          - Base particle speed (slow drift upward).
+     * @property {number}   speedRandom    - Random variance added to each particle's speed.
+     * @property {number}   angle          - Emission direction in degrees (0 = straight up).
+     * @property {number}   angleRandom    - 180° spread produces full omnidirectional emission.
+     * @property {number}   emissionRate   - Very high rate creates a dense initial burst.
+     * @property {number[]} startColour    - RGBA start colour placeholder; overwritten at runtime.
+     * @property {number[]} endColour      - RGBA end colour placeholder; overwritten at runtime.
+     */
+    const DEFAULT_HEAL_FX = {
+      maxParticles: 150,
+      duration: 50,
+      size: 10,
+      sizeRandom: 15,
+      lifeSpan: 50,
+      lifeSpanRandom: 30,
+      speed: 0.5,
+      speedRandom: 2,
+      angle: 0,
+      angleRandom: 180,
+      emissionRate: 1000,
+      startColour: [0, 0, 0, 0],
+      endColour: [0, 0, 0, 0],
+    };
 
-  /**
-   * Determines Player vs Monster and returns all type-specific config in one object.
-   *
-   * @param {object|undefined} oCharacter - Roll20 character object (may be undefined).
-   * @returns {{ gm: string, pc: string, isTypeOn: boolean, percentOn: number,
-   *             showDead: boolean }}
-   */
-  function resolveTypeConfig(oCharacter) {
-    const isPlayer = oCharacter && oCharacter.get('controlledby') !== '';
-    if (isPlayer) {
-      return {
-        gm: state.HealthColors.GM_PCNames,
-        pc: state.HealthColors.PCNames,
-        isTypeOn: state.HealthColors.PCAura,
-        percentOn: state.HealthColors.auraPercPC,
-        showDead: state.HealthColors.auraDeadPC,
+    /**
+     * Fallback baseline merged into every FX definition by `spawnFX` before spawning.
+     * This is NOT a Roll20 custfx object — it is a local safety net that ensures
+     * `spawnFX` never passes `undefined` for a required Roll20 FX field when a custom
+     * or per-character definition omits optional properties.
+     * Merge order: `{ ...FX_PARAM_DEFAULTS, ...userDefinition }`, so any property
+     * present in the real definition takes precedence over these fallbacks.
+     *
+     * @property {number}   maxParticles   - Fallback particle count.
+     * @property {number}   duration       - Fallback emitter duration (frames).
+     * @property {number}   size           - Fallback particle size.
+     * @property {number}   sizeRandom     - Fallback size variance.
+     * @property {number}   lifeSpan       - Fallback particle lifespan (frames).
+     * @property {number}   lifeSpanRandom - Fallback lifespan variance.
+     * @property {number}   speed          - Fallback particle speed (0 = stationary).
+     * @property {number}   speedRandom    - Fallback speed variance.
+     * @property {number}   angle          - Fallback emission angle in degrees.
+     * @property {number}   angleRandom    - Fallback angular spread.
+     * @property {number}   emissionRate   - Fallback particles emitted per frame.
+     * @property {number[]} startColour        - Fallback RGBA start colour (British spelling; opaque grey).
+     * @property {number[]} startColor         - Fallback RGBA start color (American spelling; same value).
+     * @property {number[]} endColour          - Fallback RGBA end colour (British spelling; opaque black).
+     * @property {number[]} endColor           - Fallback RGBA end color (American spelling; same value).
+     * @property {number[]} startColourRandom  - Fallback start colour randomization (zeroed).
+     * @property {number[]} startColorRandom   - Fallback start color randomization (zeroed).
+     * @property {number[]} endColourRandom    - Fallback end colour randomization (zeroed).
+     * @property {number[]} endColorRandom     - Fallback end color randomization (zeroed).
+     * @property {{x:number,y:number}} gravity - Fallback gravity (none).
+     */
+    const FX_PARAM_DEFAULTS = {
+      maxParticles: 100,
+      duration: 100,
+      size: 15,
+      sizeRandom: 5,
+      lifeSpan: 50,
+      lifeSpanRandom: 20,
+      speed: 1,
+      speedRandom: 1,
+      angle: 0,
+      angleRandom: 0,
+      emissionRate: 10,
+      startColour: [128, 128, 128, 1],
+      startColor: [128, 128, 128, 1],
+      endColour: [0, 0, 0, 1],
+      endColor: [0, 0, 0, 1],
+      startColourRandom: [0, 0, 0, 0],
+      startColorRandom: [0, 0, 0, 0],
+      endColourRandom: [0, 0, 0, 0],
+      endColorRandom: [0, 0, 0, 0],
+      gravity: { x: 0, y: 0 },
+    };
+
+    // ————— UTILITIES —————
+    /**
+     * Converts a health percentage (0–100+) to a hex color using the active palette.
+     * Values above 100% return blue; 0% uses dead; 1–100 interpolate low→mid→high.
+     *
+     * @param {number} pct - Health percentage.
+     * @returns {string} A 6-digit hex color string, e.g. '#FF0000'.
+     */
+    function percentToHex(pct) {
+      const normalizedPct = Math.max(0, Number(pct) || 0);
+      if (normalizedPct > 100) return '#0000FF';
+      const paletteName = state?.HealthColors?.colorPalette || 'default';
+      const { high, mid, low, dead } = COLOR_PALETTES[paletteName] || COLOR_PALETTES.default;
+      const rgbToHex = (rgb) =>
+        // eslint-disable-next-line no-bitwise
+        `#${((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1)}`;
+
+      if (normalizedPct === 0) {
+        return rgbToHex(dead);
+      }
+
+      const t = normalizedPct >= 50 ? (normalizedPct - 50) / 50 : normalizedPct / 50;
+      const from = normalizedPct >= 50 ? mid : low;
+      const to = normalizedPct >= 50 ? high : mid;
+      const r = Math.round(from[0] + (to[0] - from[0]) * t);
+      const g = Math.round(from[1] + (to[1] - from[1]) * t);
+      const b = Math.round(from[2] + (to[2] - from[2]) * t);
+      return rgbToHex([r, g, b]);
+    }
+
+    /**
+     * Parses a hex color string into an RGBA array suitable for Roll20 FX definitions.
+     * Returns [0,0,0,0] when the input is invalid.
+     *
+     * @param {string} hex - Hex color string with or without leading '#'.
+     * @returns {number[]} Array of [r, g, b, a] where a is always 1.0 on success.
+     */
+    function hexToRgb(hex) {
+      const cleanHex = (hex || '').replace('#', '').trim();
+      const parts = /^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/.exec(cleanHex);
+      if (parts) {
+        const rgb = parts.slice(1).map((d) => Number.parseInt(d, 16));
+        rgb.push(1);
+        return rgb;
+      }
+      // Log invalid hex attempts if they appear non-empty
+      if (cleanHex) log(`${SCRIPT_NAME}: hexToRgb received invalid hex: "${hex}"`);
+      return [0, 0, 0, 0];
+    }
+
+    /**
+     * Returns a random integer between min and max inclusive.
+     *
+     * @param {number} min - Lower bound (inclusive).
+     * @param {number} max - Upper bound (inclusive).
+     * @returns {number} Random integer in [min, max].
+     */
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min; // NOSONAR — cosmetic FX variance, not security-sensitive
+    }
+
+    /**
+     * Creates a plain-object snapshot of a Roll20 API object or any serialisable value.
+     * Uses JSON round-trip rather than structuredClone so that Roll20 proxy objects have
+     * their toJSON() method called, producing a plain object whose properties are
+     * accessible directly (e.g. prev.bar1_value) rather than through .get().
+     *
+     * @param {object} obj - Roll20 API object or plain object to snapshot.
+     * @returns {object} Plain object deep copy.
+     */
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj)); // NOSONAR — intentional: triggers Roll20 proxy toJSON()
+    }
+
+    /**
+     * Normalizes a 6-digit hex color string (without '#').
+     * Returns fallback when input is invalid.
+     *
+     * @param {string} value    - Candidate hex string.
+     * @param {string} fallback - Fallback value when invalid.
+     * @returns {string} Uppercase 6-digit hex.
+     */
+    function normalizeHex6(value, fallback) {
+      const cleaned = (value || '').replace('#', '').trim().toUpperCase();
+      return /^[0-9A-F]{6}$/.test(cleaned) ? cleaned : fallback;
+    }
+
+    /**
+     * Normalizes an aura shape label to supported display values.
+     *
+     * @param {string} value    - Candidate shape value.
+     * @param {string} fallback - Fallback shape.
+     * @returns {string} One of Circle|Square.
+     */
+    function normalizeShape(value, fallback) {
+      const shape = (value || '').trim().toUpperCase();
+      if (shape === 'CIRCLE') return 'Circle';
+      if (shape === 'SQUARE') return 'Square';
+      return fallback;
+    }
+
+    /**
+     * Normalizes a palette name to one of the supported keys.
+     *
+     * @param {string} value    - Candidate palette key.
+     * @param {string} fallback - Fallback palette key when invalid.
+     * @returns {string} A valid palette key from COLOR_PALETTES.
+     */
+    function normalizePalette(value, fallback) {
+      const p = (value || '').trim().toLowerCase();
+      return COLOR_PALETTES[p] ? p : fallback;
+    }
+
+    /**
+     * Normalizes a percentage setting to an integer between 0 and 100.
+     *
+     * @param {string|number} value    - Candidate percentage.
+     * @param {number}        fallback - Fallback percentage when invalid.
+     * @returns {number} A valid percentage value.
+     */
+    function normalizePercent(value, fallback) {
+      const parsed = Number.parseInt(value, 10);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= 100 ? parsed : fallback;
+    }
+
+    /**
+     * Normalizes a positive numeric setting.
+     *
+     * @param {string|number} value    - Candidate numeric value.
+     * @param {number}        fallback - Fallback value when invalid.
+     * @returns {number} A valid non-negative number.
+     */
+    function normalizePositiveNumber(value, fallback) {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+    }
+
+    /**
+     * Normalizes a Yes/No/Off style setting.
+     *
+     * @param {string} value    - Candidate setting value.
+     * @param {string} fallback - Fallback value when invalid.
+     * @returns {string} One of Yes, No, or Off.
+     */
+    function normalizeYesNoOff(value, fallback) {
+      const normalized = (value || '').trim().toUpperCase();
+      if (normalized === 'YES') return 'Yes';
+      if (normalized === 'NO') return 'No';
+      if (normalized === 'OFF') return 'Off';
+      return fallback;
+    }
+
+    /**
+     * Normalizes a death sound track name.
+     *
+     * @param {string} value    - Candidate track name.
+     * @param {string} fallback - Fallback track name when invalid.
+     * @returns {string} A trimmed track name or None.
+     */
+    function normalizeTrackName(value, fallback) {
+      const normalized = (value || '').trim();
+      if (!normalized) return fallback;
+      return normalized.toUpperCase() === 'NONE' ? 'None' : normalized;
+    }
+
+    // ————— WHISPER GM (declared early; used by checkInstall) —————
+    /**
+     * Sends a styled whisper message to the GM.
+     *
+     * @param {string} text - Plain text content to display inside the styled div.
+     */
+    function gmWhisper(text) {
+      const style = [
+        'width:100%',
+        'border-radius:4px',
+        'box-shadow:1px 1px 1px #707070',
+        'text-align:center',
+        'vertical-align:middle',
+        'padding:3px 0px',
+        'margin:0px auto',
+        'border:1px solid #000',
+        'color:#000',
+        'background-image:-webkit-linear-gradient(-45deg,#a7c7dc 0%,#85b2d3 100%)',
+      ].join(';');
+      sendChat(SCRIPT_NAME, `/w GM <div style='${style}'><b>${text}</b></div>`);
+    }
+
+    // ————— ATTRIBUTE CACHE —————
+    /**
+     * Creates a cached attribute lookup function that auto-refreshes on attribute
+     * change or destruction and re-triggers handleToken for affected tokens.
+     * Creates the attribute with the default value if it does not exist yet.
+     *
+     * @param {string}   attribute          - The Roll20 attribute name to track (e.g. 'USECOLOR').
+     * @param {object}   [options={}]        - Configuration options.
+     * @param {string}   [options.default]   - Value to use when the attribute is missing or invalid.
+     * @param {Function} [options.validation]- Predicate that returns true for valid values.
+     * @returns {Function} Lookup function accepting a character object and returning the current value.
+     */
+    function makeSmartAttrCache(attribute, options = {}) {
+      const cache = {};
+      const defaultValue = options.default || 'YES';
+      const validator = options.validation || (() => true);
+
+      on('change:attribute', (attr) => {
+        if (attr.get('name') !== attribute) return;
+        if (!validator(attr.get('current'))) attr.set('current', defaultValue);
+        cache[attr.get('characterid')] = attr.get('current');
+        findObjs({ type: 'graphic' })
+          .filter((o) => o.get('represents') === attr.get('characterid'))
+          .forEach((obj) => {
+            const prev = deepClone(obj);
+            handleToken(obj, prev, 'YES');
+          });
+      });
+
+      on('destroy:attribute', (attr) => {
+        if (attr.get('name') === attribute) delete cache[attr.get('characterid')];
+      });
+
+      return function (character) {
+        let attr =
+          findObjs({ type: 'attribute', name: attribute, characterid: character.id }, { caseInsensitive: true })[0] ||
+          createObj('attribute', {
+            name: attribute,
+            characterid: character.id,
+            current: defaultValue,
+          });
+
+        if (!cache[character.id] || cache[character.id] !== attr.get('current')) {
+          if (!validator(attr.get('current'))) attr.set('current', defaultValue);
+          cache[character.id] = attr.get('current');
+        }
+        return cache[character.id];
       };
     }
-    return {
-      gm: state.HealthColors.GM_NPCNames,
-      pc: state.HealthColors.NPCNames,
-      isTypeOn: state.HealthColors.NPCAura,
-      percentOn: state.HealthColors.auraPerc,
-      showDead: state.HealthColors.auraDead,
-    };
-  }
 
-  /**
-   * Manages the dead-status marker and plays a death sound when a token reaches 0 HP.
-   * Extracted from applyAuraAndDead to reduce nesting depth.
-   *
-   * @param {object}        obj       - Roll20 token graphic object.
-   * @param {number}        curValue  - Current bar value.
-   * @param {number|string} prevValue - Previous bar value.
-   */
-  function applyDeadStatus(obj, curValue, prevValue) {
-    if (curValue > 0) {
-      obj.set('status_dead', false);
-      return;
+    const lookupUseBlood = makeSmartAttrCache('USEBLOOD', {
+      default: 'DEFAULT',
+      validation: (o) => String(o || '').trim() !== '',
+    });
+    const lookupUseColor = makeSmartAttrCache('USECOLOR', {
+      default: 'YES',
+      validation: (o) => /^(YES|NO)$/i.test(String(o || '').trim()),
+    });
+
+    // ————— TOKEN HELPERS —————
+    /**
+     * Hard-clears all health-indicator visual settings (aura/tint).
+     * Used for dead tokens or when the script/aura is disabled for a type.
+     *
+     * @param {object} obj - Roll20 token graphic object.
+     */
+    function clearAuras(obj) {
+      const changes = { tint_color: 'transparent' };
+      if (!state.HealthColors.auraTint) {
+        changes.aura1_color = 'transparent';
+        changes.aura1_radius = 0;
+      }
+      obj.set(changes);
     }
-    const deadSfx = state.HealthColors.auraDeadFX;
-    if (deadSfx !== 'None' && curValue !== Number(prevValue)) playDeath(deadSfx);
-    obj.set('status_dead', true);
-  }
 
-  /**
-   * Applies or removes the health aura/tint and manages the dead-status marker.
-   *
-   * @param {object}           obj        - Roll20 token graphic object.
-   * @param {object|undefined} oCharacter - Roll20 character object.
-   * @param {object}           typeConfig - Config returned by resolveTypeConfig.
-   * @param {object}           health     - Health data returned by getBarHealth.
-   */
-  function applyAuraAndDead(obj, oCharacter, typeConfig, health) {
-    const { curValue, prevValue, percReal, markerColor } = health;
-    const { isTypeOn, percentOn, showDead } = typeConfig;
-    const useAura = oCharacter ? lookupUseColor(oCharacter) : undefined;
-    const useTint = state.HealthColors.auraTint;
-    const colorType = useTint ? 'tint' : 'aura1';
-
-    if (showDead) applyDeadStatus(obj, curValue, prevValue);
-
-    if (isTypeOn && useAura !== 'NO') {
-      if (curValue <= 0) {
-        tokenSet(obj, state.HealthColors.AuraSize, markerColor);
-      } else if (percentOn <= 0) {
-        clearAuras(obj);
-      } else if (percReal > percentOn) {
-        clearAuras(obj);
+    /**
+     * Applies a health color to a token via aura or tint depending on configuration.
+     * When in tint mode, sets tint_color. When in aura mode, sets aura radius and color.
+     * Roll20 measures aura1_radius from the token edge, so sizeSet maps directly.
+     *
+     * @param {object} obj         - Roll20 token object.
+     * @param {number} sizeSet     - Feet the ring extends beyond the token edge (e.g. 0.35).
+     * @param {string} markerColor - Hex color string derived from health percentage.
+     */
+    function tokenSet(obj, sizeSet, markerColor) {
+      const useTint = state.HealthColors.auraTint;
+      if (useTint) {
+        obj.set({ tint_color: markerColor });
       } else {
-        tokenSet(obj, state.HealthColors.AuraSize, markerColor);
+        obj.set({
+          tint_color: 'transparent',
+          aura1_radius: sizeSet,
+          aura1_color: markerColor,
+          showplayers_aura1: true,
+        });
       }
-    } else if (obj.get(`${colorType}_color`) === markerColor) {
-      clearAuras(obj);
-    }
-  }
-
-  /**
-   * Builds the list of FX definition objects to spawn for a heal or hurt event.
-   *
-   * @param {boolean}          isHeal    - True when HP went up.
-   * @param {string|undefined} useBlood  - Per-character blood FX override value.
-   * @param {string}           [label]   - Character/token name for error context.
-   * @returns {object[]} Array of Roll20 custfx definition objects.
-   */
-  function buildFXList(isHeal, useBlood, label) {
-    const fxArray = [];
-
-    if (isHeal) {
-      const aFX = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
-      const def = getFxDefinition(aFX);
-
-      if (def) {
-        const healRgb = hexToRgb(state.HealthColors.HealFX);
-        def.startColour = healRgb;
-        def.startColor = healRgb;
-        def.endColour = healRgb;
-        def.endColor = healRgb;
-        def.startColourRandom = [0, 0, 0, 0];
-        def.startColorRandom = [0, 0, 0, 0];
-        def.endColourRandom = [0, 0, 0, 0];
-        def.endColorRandom = [0, 0, 0, 0];
-        fxArray.push(def);
-      }
-
-      return fxArray;
     }
 
-    const aFX = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
-    const def = getFxDefinition(aFX);
+    /**
+     * Sets token name-visibility flags for the GM and players.
+     * 'Yes' → true, 'No' → false, 'Off' → leave unchanged.
+     *
+     * @param {string} gm  - GM name-display setting: 'Yes', 'No', or 'Off'.
+     * @param {string} pc  - Player name-display setting: 'Yes', 'No', or 'Off'.
+     * @param {object} obj - Roll20 token object.
+     */
+    function setShowNames(gm, pc, obj) {
+      if (gm !== 'Off' && gm !== '') obj.set({ showname: gm === 'Yes' });
+      if (pc !== 'Off' && pc !== '') obj.set({ showplayers_name: pc === 'Yes' });
+    }
 
-    if (!def) return fxArray;
+    // ————— FX —————
+    /**
+     * Plays a jukebox track when a token dies.
+     * Accepts a comma-separated list of track names; picks one at random.
+     *
+     * @param {string} trackname - Track name or comma-separated list of track names.
+     */
+    function playDeath(trackname) {
+      const list = trackname.indexOf(',') > 0 ? trackname.split(',') : [trackname];
+      const resolvedName = list[Math.floor(Math.random() * list.length)]; // NOSONAR — random track selection, not security-sensitive
+      const track = findObjs({ type: 'jukeboxtrack', title: resolvedName })[0];
+      if (track) {
+        track.set({ playing: false, softstop: false, volume: 50 });
+        track.set({ playing: true });
+      } else {
+        log(`${SCRIPT_NAME}: No track found named ${resolvedName}`);
+      }
+    }
 
-    if (useBlood === 'DEFAULT' || useBlood === undefined) {
-      const hurtRgb = hexToRgb(state.HealthColors.HurtFX);
-      def.startColour = hurtRgb;
-      def.startColor = hurtRgb;
-      def.endColour = hurtRgb;
-      def.endColor = hurtRgb;
+    /**
+     * Spawns a scaled particle FX at a token's position using a custom FX definition.
+     * Merges the provided definition against FX_PARAM_DEFAULTS so partial definitions work.
+     *
+     * @param {number} scale   - Scaling factor derived from token height (height / 70).
+     * @param {number} hitSize - Hit-size factor based on damage proportion (0.2–1.0).
+     * @param {number} left    - Horizontal pixel position of the token on the page.
+     * @param {number} top     - Vertical pixel position of the token on the page.
+     * @param {object} fx      - Partial or complete Roll20 custom FX definition object.
+     * @param {string} pageId  - ID of the Roll20 page on which to spawn the FX.
+     */
+    function spawnFX(scale, hitSize, left, top, fx, pageId) {
+      const m = { ...FX_PARAM_DEFAULTS, ...fx };
+
+      // Prefer colours from the incoming partial `fx` first (nullish), then merged `m`.
+      // Order matters: after merge, `m.startColour` can still be FX_PARAM_DEFAULTS grey
+      // while the real colour only exists on `fx.startColor` (Roll20 / heal seed used
+      // American keys only). Using `||` on `m` alone would always pick the grey default.
+      const pick = (obj, keys) => {
+        if (!obj) return undefined;
+        for (const key of keys) {
+          const v = obj[key];
+          if (v !== undefined && v !== null) return v;
+        }
+        return undefined;
+      };
+      const startKeys = ['startColour', 'startColor', 'startcolour', 'startcolor'];
+      const endKeys = ['endColour', 'endColor', 'endcolour', 'endcolor'];
+      const startRndKeys = ['startColourRandom', 'startColorRandom', 'startcolourrandom', 'startcolorrandom'];
+      const endRndKeys = ['endColourRandom', 'endColorRandom', 'endcolourrandom', 'endcolorrandom'];
+      const startClr = pick(fx, startKeys) ?? pick(m, startKeys);
+      const endClr = pick(fx, endKeys) ?? pick(m, endKeys);
+      const startClrRnd = pick(fx, startRndKeys) ?? pick(m, startRndKeys);
+      const endClrRnd = pick(fx, endRndKeys) ?? pick(m, endRndKeys);
+
+      spawnFxWithDefinition(
+        left,
+        top,
+        {
+          maxParticles: m.maxParticles * hitSize,
+          duration: m.duration * hitSize,
+          size: (m.size * scale) / 2,
+          sizeRandom: (m.sizeRandom * scale) / 2,
+          lifeSpan: m.lifeSpan,
+          lifeSpanRandom: m.lifeSpanRandom,
+          speed: m.speed * scale,
+          speedRandom: m.speedRandom * scale,
+          angle: m.angle,
+          angleRandom: m.angleRandom,
+          emissionRate: m.emissionRate * hitSize * 2,
+          startColour: startClr,
+          startColor: startClr,
+          endColour: endClr,
+          endColor: endClr,
+          startColourRandom: startClrRnd,
+          startColorRandom: startClrRnd,
+          endColourRandom: endClrRnd,
+          endColorRandom: endClrRnd,
+          gravity: { x: m.gravity.x * scale, y: m.gravity.y * scale },
+        },
+        pageId,
+      );
+    }
+
+    /**
+     * Safely reads a Roll20 custfx definition and returns a plain mutable object.
+     * Roll20 may return the definition as either an object or a JSON string.
+     *
+     * @param {object} fxObj - Roll20 custfx object.
+     * @returns {object|null} Parsed FX definition object, or null if unavailable/invalid.
+     */
+    function getFxDefinition(fxObj) {
+      if (!fxObj) return null;
+
+      const raw = fxObj.get('definition');
+      if (!raw) return null;
+
+      if (typeof raw === 'string') {
+        try {
+          return JSON.parse(raw);
+        } catch (err) {
+          log(`${SCRIPT_NAME}: Failed to parse FX definition: ${err.message}`);
+          return null;
+        }
+      }
+
+      if (typeof raw === 'object') {
+        return deepClone(raw);
+      }
+
+      return null;
+    }
+
+    // ————— EVENT DEDUPE STATE —————
+
+    // Tokens recently handled via change:attribute — suppresses duplicate FX in change:graphic and TokenMod observers.
+    const recentAttrFires = new Set();
+
+    /**
+     * Shared token-change wrapper used by both Roll20 change:graphic and TokenMod.
+     * This keeps FX suppression consistent when a linked HP attribute update has
+     * already been processed through the attribute listener.
+     *
+     * @param {object} obj - Roll20 token graphic object.
+     * @param {object} prev - Previous token snapshot.
+     */
+    function handleTokenChange(obj, prev) {
+      handleToken(obj, prev, recentAttrFires.has(obj.id) ? 'YES' : undefined);
+    }
+
+    // ————— STATE / INSTALL —————
+    /**
+     * Initializes or migrates persisted state, applies all default values, registers
+     * the TokenMod observer if available, and creates the default Hurt/Heal FX objects
+     * if they do not already exist in the campaign.
+     * Safe to call multiple times (e.g. after a state reset).
+     */
+    function checkInstall() {
+      log(`-=> ${SCRIPT_NAME} v${VERSION} [Updated: ${UPDATED}] <=-`);
+      if (state?.HealthColors?.schemaVersion !== SCHEMA_VERSION) {
+        log(`<${SCRIPT_NAME} Updating Schema to v${SCHEMA_VERSION}>`);
+        state.HealthColors = { schemaVersion: SCHEMA_VERSION, version: VERSION };
+      }
+      Object.keys(DEFAULTS).forEach((key) => {
+        if (state.HealthColors[key] === undefined) state.HealthColors[key] = DEFAULTS[key];
+      });
+      state.HealthColors.colorPalette = normalizePalette(state.HealthColors.colorPalette, DEFAULTS.colorPalette);
+      if (typeof TokenMod !== 'undefined' && TokenMod.ObserveTokenChange) {
+        TokenMod.ObserveTokenChange(handleTokenChange);
+      }
+      const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
+      const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
+      if (!fxHurt) {
+        gmWhisper('Creating Default Hurt FX');
+        createObj('custfx', {
+          name: '-DefaultHurt',
+          definition: DEFAULT_HURT_FX,
+        });
+      }
+      if (!fxHeal) {
+        gmWhisper('Creating Default Heal FX');
+        createObj('custfx', {
+          name: '-DefaultHeal',
+          definition: DEFAULT_HEAL_FX,
+        });
+      }
+      syncDefaultFxObjects();
+    }
+
+    /**
+     * Builds the normalized default Hurt/Heal definition payload used for
+     * campaign custom FX objects.
+     *
+     * @param {boolean} isHeal - True for Heal profile, false for Hurt profile.
+     * @param {object} baseDef - Existing definition to merge into.
+     * @returns {object} Updated definition with normalized color/profile fields.
+     */
+    function buildDefaultFxDefinition(isHeal, baseDef) {
+      const def = { ...baseDef };
+      const rgb = hexToRgb(isHeal ? state.HealthColors.HealFX : state.HealthColors.HurtFX);
+      def.startColour = rgb;
+      def.startColor = rgb;
+      def.endColour = rgb;
+      def.endColor = rgb;
       def.startColourRandom = [0, 0, 0, 0];
       def.startColorRandom = [0, 0, 0, 0];
       def.endColourRandom = [0, 0, 0, 0];
       def.endColorRandom = [0, 0, 0, 0];
-      fxArray.push(def);
-    } else {
-      const normalizedUseBlood = String(useBlood || '').trim();
-      const hurtRgb = hexToRgb(normalizedUseBlood);
 
-      if (hurtRgb.some((v) => v !== 0)) {
+      // Keep the vivid profile that reads clearly in live play.
+      if (isHeal) {
+        def.maxParticles = 220;
+        def.emissionRate = 260;
+        def.size = 12;
+        def.sizeRandom = 4;
+        def.lifeSpan = 40;
+        def.lifeSpanRandom = 6;
+        def.speed = 0.8;
+        def.speedRandom = 1;
+      } else {
+        def.maxParticles = 200;
+        def.emissionRate = 180;
+        def.size = 10;
+        def.sizeRandom = 2;
+        def.lifeSpan = 22;
+        def.lifeSpanRandom = 3;
+        def.speed = 8;
+        def.speedRandom = 2;
+      }
+      return def;
+    }
+
+    /**
+     * Applies current Heal/Hurt colors and profile tuning to campaign default
+     * custom FX objects. This is called on install/reset and when color settings
+     * change so runtime spawns can use stable pre-synced definitions.
+     */
+    function syncDefaultFxObjects() {
+      const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
+      const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
+      if (fxHeal) {
+        const base = getFxDefinition(fxHeal) || DEFAULT_HEAL_FX;
+        fxHeal.set({ definition: buildDefaultFxDefinition(true, base) });
+      }
+      if (fxHurt) {
+        const base = getFxDefinition(fxHurt) || DEFAULT_HURT_FX;
+        fxHurt.set({ definition: buildDefaultFxDefinition(false, base) });
+      }
+    }
+
+    /**
+     * Recreates HealthColors default custom FX objects in the campaign.
+     * Useful when legacy/stale custfx definitions exist from older script versions.
+     */
+    function resetDefaultFxObjects() {
+      const existing = findObjs({ _type: 'custfx' }, { caseInsensitive: true }).filter((fx) =>
+        /-Default(Hurt|Heal)/i.test(fx.get('name') || ''),
+      );
+      existing.forEach((fx) => fx.remove());
+      gmWhisper('Recreating Default Hurt/Heal FX');
+      checkInstall();
+    }
+
+    /**
+     * Resets all persisted HealthColors settings back to DEFAULTS.
+     * Keeps schema/version metadata aligned to current script constants.
+     */
+    function resetAllSettingsToDefaults() {
+      state.HealthColors = {
+        schemaVersion: SCHEMA_VERSION,
+        version: VERSION,
+        ...DEFAULTS,
+      };
+    }
+
+    /**
+     * Restores all state defaults, rebuilds default FX objects, and force-syncs tokens.
+     */
+    function runResetAllFlow() {
+      resetAllSettingsToDefaults();
+      gmWhisper('RESET ALL: defaults restored + default FX + force update');
+      resetDefaultFxObjects();
+      menuForceUpdate();
+    }
+
+    /**
+     * Reads a prior token value from either a plain snapshot object or a Roll20 object.
+     * Supports external scripts that pass JSON-cloned snapshots (no .get method).
+     *
+     * @param {object} prev - Previous token snapshot.
+     * @param {string} key  - Property key to read (e.g. 'bar1_value').
+     * @returns {string|number|undefined} Raw previous value when available.
+     */
+    function getPrevBarValue(prev, key) {
+      if (!prev) return undefined;
+      if (Object.hasOwn(prev, key)) return prev[key];
+      if (typeof prev.get === 'function') return prev.get(key);
+      return undefined;
+    }
+
+    // ————— TOKEN LOGIC —————
+    /**
+     * Reads the configured health bar from a token and its previous snapshot,
+     * validates all three values are numeric, and returns a health data object.
+     * Returns null if any value is missing or non-numeric.
+     *
+     * @param {object} obj  - Roll20 token graphic object.
+     * @param {object} prev - Snapshot of the token's previous attribute values.
+     * @param {string} [update] - Pass 'YES' when called from a forced refresh.
+     * @returns {{ maxValue: number, curValue: number, prevValue: number,
+     *             hasPrevValue: boolean, percReal: number, markerColor: string }|null}
+     */
+    function getBarHealth(obj, prev, update) {
+      const barUsed = state.HealthColors.auraBar;
+      if (obj.get(`${barUsed}_max`) === '' && obj.get(`${barUsed}_value`) === '') return null;
+      const maxValue = Number.parseInt(obj.get(`${barUsed}_max`), 10);
+      const curValue = Number.parseInt(obj.get(`${barUsed}_value`), 10);
+      const prevRawValue = getPrevBarValue(prev, `${barUsed}_value`);
+      const prevValue = Number.parseInt(prevRawValue, 10);
+      const hasPrevValue = !Number.isNaN(prevValue);
+      if (Number.isNaN(maxValue) || Number.isNaN(curValue)) return null;
+      const percReal = Math.max(0, Math.min(Math.round((curValue / maxValue) * 100), 100));
+      const markerColor = percentToHex(percReal);
+      return { maxValue, curValue, prevValue, hasPrevValue, percReal, markerColor };
+    }
+
+    /**
+     * Determines Player vs Monster and returns all type-specific config in one object.
+     *
+     * @param {object|undefined} oCharacter - Roll20 character object (may be undefined).
+     * @returns {{ gm: string, pc: string, isTypeOn: boolean, percentOn: number,
+     *             showDead: boolean }}
+     */
+    function resolveTypeConfig(oCharacter) {
+      const isPlayer = oCharacter && oCharacter.get('controlledby') !== '';
+      if (isPlayer) {
+        return {
+          gm: state.HealthColors.GM_PCNames,
+          pc: state.HealthColors.PCNames,
+          isTypeOn: state.HealthColors.PCAura,
+          percentOn: state.HealthColors.auraPercPC,
+          showDead: state.HealthColors.auraDeadPC,
+        };
+      }
+      return {
+        gm: state.HealthColors.GM_NPCNames,
+        pc: state.HealthColors.NPCNames,
+        isTypeOn: state.HealthColors.NPCAura,
+        percentOn: state.HealthColors.auraPerc,
+        showDead: state.HealthColors.auraDead,
+      };
+    }
+
+    /**
+     * Manages the dead-status marker and plays a death sound when a token reaches 0 HP.
+     * Extracted from applyAuraAndDead to reduce nesting depth.
+     *
+     * @param {object}        obj       - Roll20 token graphic object.
+     * @param {number}        curValue  - Current bar value.
+     * @param {number}        prevValue - Previous bar value.
+     * @param {boolean}       hasPrevValue - Whether a valid previous bar value was provided.
+     */
+    function applyDeadStatus(obj, curValue, prevValue, hasPrevValue) {
+      if (curValue > 0) {
+        obj.set('status_dead', false);
+        return;
+      }
+      const deadSfx = state.HealthColors.auraDeadFX;
+      if (deadSfx !== 'None' && hasPrevValue && curValue !== prevValue) playDeath(deadSfx);
+      obj.set('status_dead', true);
+    }
+
+    /**
+     * Applies or removes the health aura/tint and manages the dead-status marker.
+     *
+     * @param {object}           obj        - Roll20 token graphic object.
+     * @param {object|undefined} oCharacter - Roll20 character object.
+     * @param {object}           typeConfig - Config returned by resolveTypeConfig.
+     * @param {object}           health     - Health data returned by getBarHealth.
+     */
+    function applyAuraAndDead(obj, oCharacter, typeConfig, health) {
+      const { curValue, prevValue, hasPrevValue, percReal, markerColor } = health;
+      const { isTypeOn, percentOn, showDead } = typeConfig;
+      const useAura = oCharacter ? lookupUseColor(oCharacter) : undefined;
+      const useTint = state.HealthColors.auraTint;
+      const colorType = useTint ? 'tint' : 'aura1';
+
+      if (showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue);
+
+      if (isTypeOn && useAura !== 'NO') {
+        if (curValue <= 0) {
+          tokenSet(obj, state.HealthColors.AuraSize, markerColor);
+        } else if (percentOn <= 0) {
+          clearAuras(obj);
+        } else if (percReal > percentOn) {
+          clearAuras(obj);
+        } else {
+          tokenSet(obj, state.HealthColors.AuraSize, markerColor);
+        }
+      } else if (obj.get(`${colorType}_color`) === markerColor) {
+        clearAuras(obj);
+      }
+    }
+
+    /**
+     * Builds the list of FX definition objects to spawn for a heal or hurt event.
+     *
+     * @param {boolean}          isHeal    - True when HP went up.
+     * @param {string|undefined} useBlood  - Per-character blood FX override value.
+     * @param {string}           [label]   - Character/token name for error context.
+     * @returns {object[]} Array of Roll20 custfx definition objects.
+     */
+    function buildFXList(isHeal, useBlood, label) {
+      const fxArray = [];
+
+      if (isHeal) {
+        const aFX = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
+        const def = getFxDefinition(aFX);
+
+        if (def) {
+          const healRgb = hexToRgb(state.HealthColors.HealFX);
+          def.startColour = healRgb;
+          def.startColor = healRgb;
+          def.endColour = healRgb;
+          def.endColor = healRgb;
+          def.startColourRandom = [0, 0, 0, 0];
+          def.startColorRandom = [0, 0, 0, 0];
+          def.endColourRandom = [0, 0, 0, 0];
+          def.endColorRandom = [0, 0, 0, 0];
+          fxArray.push(def);
+        }
+
+        return fxArray;
+      }
+
+      const aFX = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
+      const def = getFxDefinition(aFX);
+
+      if (!def) return fxArray;
+
+      if (useBlood === 'DEFAULT' || useBlood === undefined) {
+        const hurtRgb = hexToRgb(state.HealthColors.HurtFX);
         def.startColour = hurtRgb;
         def.startColor = hurtRgb;
         def.endColour = hurtRgb;
@@ -947,13 +952,10 @@ const HealthColors = (() => {
         def.endColorRandom = [0, 0, 0, 0];
         fxArray.push(def);
       } else {
-        const fxNames = normalizedUseBlood
-          .split(',')
-          .map((fxName) => fxName.trim())
-          .filter((fxName) => fxName !== '');
+        const normalizedUseBlood = String(useBlood || '').trim();
+        const hurtRgb = hexToRgb(normalizedUseBlood);
 
-        if (fxNames.length === 0) {
-          const hurtRgb = hexToRgb(state.HealthColors.HurtFX);
+        if (hurtRgb.some((v) => v !== 0)) {
           def.startColour = hurtRgb;
           def.startColor = hurtRgb;
           def.endColour = hurtRgb;
@@ -963,661 +965,686 @@ const HealthColors = (() => {
           def.endColourRandom = [0, 0, 0, 0];
           def.endColorRandom = [0, 0, 0, 0];
           fxArray.push(def);
-          return fxArray;
-        }
+        } else {
+          const fxNames = normalizedUseBlood
+            .split(',')
+            .map((fxName) => fxName.trim())
+            .filter((fxName) => fxName !== '');
 
-        fxNames.forEach((fxName) => {
-          const custom = findObjs({ _type: 'custfx', name: fxName.trim() }, { caseInsensitive: true })[0];
-          const customDef = getFxDefinition(custom);
-
-          if (customDef) {
-            fxArray.push(customDef);
-          } else {
-            const who = label ? ` (character: "${label}")` : '';
-            log(`${SCRIPT_NAME}: Custom FX "${fxName.trim()}"${who} not found — check the USEBLOOD attribute.`);
-            gmWhisper(
-              `Custom FX "${fxName.trim()}"${who} not found. Fix the USEBLOOD attribute on that character. Falling back to default hurt FX.`,
-            );
-            const fallbackFx = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
-            const fallbackDef = getFxDefinition(fallbackFx);
-            if (fallbackDef) fxArray.push(fallbackDef);
+          if (fxNames.length === 0) {
+            const hurtRgb = hexToRgb(state.HealthColors.HurtFX);
+            def.startColour = hurtRgb;
+            def.startColor = hurtRgb;
+            def.endColour = hurtRgb;
+            def.endColor = hurtRgb;
+            def.startColourRandom = [0, 0, 0, 0];
+            def.startColorRandom = [0, 0, 0, 0];
+            def.endColourRandom = [0, 0, 0, 0];
+            def.endColorRandom = [0, 0, 0, 0];
+            fxArray.push(def);
+            return fxArray;
           }
-        });
+
+          fxNames.forEach((fxName) => {
+            const custom = findObjs({ _type: 'custfx', name: fxName.trim() }, { caseInsensitive: true })[0];
+            const customDef = getFxDefinition(custom);
+
+            if (customDef) {
+              fxArray.push(customDef);
+            } else {
+              const who = label ? ` (character: "${label}")` : '';
+              log(`${SCRIPT_NAME}: Custom FX "${fxName.trim()}"${who} not found — check the USEBLOOD attribute.`);
+              gmWhisper(
+                `Custom FX "${fxName.trim()}"${who} not found. Fix the USEBLOOD attribute on that character. Falling back to default hurt FX.`,
+              );
+              const fallbackFx = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
+              const fallbackDef = getFxDefinition(fallbackFx);
+              if (fallbackDef) fxArray.push(fallbackDef);
+            }
+          });
+        }
       }
+
+      return fxArray;
     }
 
-    return fxArray;
-  }
+    /**
+     * Spawns the default heal or hurt FX by their saved custfx ID using spawnFx.
+     * This avoids client-side color inconsistencies seen in some sandboxes when using
+     * spawnFxWithDefinition directly. Only handles DEFAULT heal/hurt colors; custom
+     * named FX (USEBLOOD set to a custfx name) still use the definition-spawn path.
+     *
+     * @param {object}           obj      - Roll20 token graphic object.
+     * @param {boolean}          isHeal   - True when HP increased.
+     * @param {string|undefined} useBlood - Per-character blood override value.
+     * @returns {boolean} True when spawning was handled; false if the caller should fall back.
+     */
+    function spawnDefaultFxById(obj, isHeal, useBlood) {
+      if (!(useBlood === 'DEFAULT' || useBlood === undefined)) return false;
+      const fxName = isHeal ? '-DefaultHeal' : '-DefaultHurt';
+      const aFX = findObjs({ _type: 'custfx', name: fxName }, { caseInsensitive: true })[0];
+      if (!aFX) return false;
 
-  /**
-   * Spawns the default heal or hurt FX by their saved custfx ID using spawnFx.
-   * This avoids client-side color inconsistencies seen in some sandboxes when using
-   * spawnFxWithDefinition directly. Only handles DEFAULT heal/hurt colors; custom
-   * named FX (USEBLOOD set to a custfx name) still use the definition-spawn path.
-   *
-   * @param {object}           obj      - Roll20 token graphic object.
-   * @param {boolean}          isHeal   - True when HP increased.
-   * @param {string|undefined} useBlood - Per-character blood override value.
-   * @returns {boolean} True when spawning was handled; false if the caller should fall back.
-   */
-  function spawnDefaultFxById(obj, isHeal, useBlood) {
-    if (!(useBlood === 'DEFAULT' || useBlood === undefined)) return false;
-    const fxName = isHeal ? '-DefaultHeal' : '-DefaultHurt';
-    const aFX = findObjs({ _type: 'custfx', name: fxName }, { caseInsensitive: true })[0];
-    if (!aFX) return false;
-
-    spawnFx(obj.get('left'), obj.get('top'), aFX.id, obj.get('pageid'));
-    return true;
-  }
-
-  /**
-   * Gates and triggers particle FX when HP changes on a non-forced update.
-   *
-   * @param {object}           obj        - Roll20 token graphic object.
-   * @param {object|undefined} oCharacter - Roll20 character object.
-   * @param {number}           curValue   - Current bar value.
-   * @param {number|string}    prevValue  - Previous bar value.
-   * @param {number}           maxValue   - Maximum bar value.
-   * @param {string}           [update]   - Pass 'YES' to suppress FX on forced refreshes.
-   */
-  function maybeSpawnFX(obj, oCharacter, curValue, prevValue, maxValue, update) {
-    if (curValue === Number(prevValue) || prevValue === '' || update === 'YES') return;
-    const useBlood = oCharacter ? lookupUseBlood(oCharacter) : undefined;
-    if (!state.HealthColors.FX || useBlood === 'OFF' || useBlood === 'NO') return;
-    const isHeal = curValue > Number(prevValue);
-    const amount = Math.abs(curValue - Number(prevValue));
-    const scale = obj.get('height') / 70;
-    const hitSize = Math.max(Math.min((amount / maxValue) * 4, 1), 0.2) * (randomInt(60, 100) / 100);
-    const fxLabel = (oCharacter && oCharacter.get('name')) || obj.get('name') || '';
-    if (spawnDefaultFxById(obj, isHeal, useBlood)) return;
-    buildFXList(isHeal, useBlood, fxLabel).forEach((fx) =>
-      spawnFX(scale, hitSize, obj.get('left'), obj.get('top'), fx, obj.get('pageid')),
-    );
-  }
-
-  /**
-   * Core token handler — called on token change, token add, and forced updates.
-   * Delegates to specialized helpers for health reading, type resolution,
-   * aura management, and FX spawning.
-   * Clears aura/tint when the selected health bar has no max value.
-   *
-   * @param {object} obj      - The Roll20 token graphic object.
-   * @param {object} prev     - Snapshot of the token's previous attribute values.
-   * @param {string} [update] - Pass 'YES' to indicate a forced refresh (suppresses FX).
-   */
-  function handleToken(obj, prev, update) {
-    if (state.HealthColors === undefined) {
-      log(`${SCRIPT_NAME} ${VERSION}: state missing, reverting to defaults`);
-      checkInstall();
-    }
-    if (state.HealthColors.auraColorOn !== true || obj.get('layer') !== 'objects') return;
-    if (obj.get('represents') === '' && state.HealthColors.OneOff !== true) return;
-    const barUsed = state.HealthColors.auraBar;
-    if (obj.get(`${barUsed}_max`) === '') {
-      clearAuras(obj);
-      return;
+      spawnFx(obj.get('left'), obj.get('top'), aFX.id, obj.get('pageid'));
+      return true;
     }
 
-    const health = getBarHealth(obj, prev, update);
-    if (!health) return;
+    /**
+     * Gates and triggers particle FX when HP changes on a non-forced update.
+     *
+     * @param {object}           obj        - Roll20 token graphic object.
+     * @param {object|undefined} oCharacter - Roll20 character object.
+     * @param {number}           curValue   - Current bar value.
+     * @param {number|string}    prevValue  - Previous bar value.
+     * @param {number}           maxValue   - Maximum bar value.
+     * @param {string}           [update]   - Pass 'YES' to suppress FX on forced refreshes.
+     */
+    function maybeSpawnFX(obj, oCharacter, curValue, prevValue, maxValue, update) {
+      if (update === 'YES' || Number.isNaN(prevValue) || curValue === prevValue) return;
+      const useBlood = oCharacter ? lookupUseBlood(oCharacter) : undefined;
+      if (!state.HealthColors.FX || useBlood === 'OFF' || useBlood === 'NO') return;
+      const isHeal = curValue > prevValue;
+      const amount = Math.abs(curValue - prevValue);
+      const scale = obj.get('height') / 70;
+      const hitSize = Math.max(Math.min((amount / maxValue) * 4, 1), 0.2) * (randomInt(60, 100) / 100);
+      const fxLabel = (oCharacter && oCharacter.get('name')) || obj.get('name') || '';
+      if (spawnDefaultFxById(obj, isHeal, useBlood)) return;
+      buildFXList(isHeal, useBlood, fxLabel).forEach((fx) =>
+        spawnFX(scale, hitSize, obj.get('left'), obj.get('top'), fx, obj.get('pageid')),
+      );
+    }
 
-    const { maxValue, curValue, prevValue } = health;
-    const sizeChanged = prev.width !== obj.get('width') || prev.height !== obj.get('height');
+    /**
+     * Core token handler — called on token change, token add, and forced updates.
+     * Delegates to specialized helpers for health reading, type resolution,
+     * aura management, and FX spawning.
+     * Clears aura/tint when the selected health bar has no max value.
+     *
+     * @param {object} obj      - The Roll20 token graphic object.
+     * @param {object} prev     - Snapshot of the token's previous attribute values.
+     * @param {string} [update] - Pass 'YES' to indicate a forced refresh (suppresses FX).
+     */
+    function handleToken(obj, prev, update) {
+      if (state.HealthColors === undefined) {
+        log(`${SCRIPT_NAME} ${VERSION}: state missing, reverting to defaults`);
+        checkInstall();
+      }
+      if (state.HealthColors.auraColorOn !== true || obj.get('layer') !== 'objects') return;
+      if (obj.get('represents') === '' && state.HealthColors.OneOff !== true) return;
+      const barUsed = state.HealthColors.auraBar;
+      if (obj.get(`${barUsed}_max`) === '') {
+        clearAuras(obj);
+        return;
+      }
 
-    // Only proceed if health changed, token was resized, or this is a forced update.
-    // The size check ensures aura is re-applied when a token is resized, even without an HP change.
-    if (curValue === Number(prevValue) && update !== 'YES' && !sizeChanged) return;
+      const health = getBarHealth(obj, prev, update);
+      if (!health) return;
 
-    const oCharacter = getObj('character', obj.get('represents'));
-    const typeConfig = resolveTypeConfig(oCharacter);
+      const { maxValue, curValue, prevValue, hasPrevValue } = health;
+      const sizeChanged = prev.width !== obj.get('width') || prev.height !== obj.get('height');
 
-    applyAuraAndDead(obj, oCharacter, typeConfig, health);
-    setShowNames(typeConfig.gm, typeConfig.pc, obj);
-    maybeSpawnFX(obj, oCharacter, curValue, prevValue, maxValue, update);
-  }
+      // Only proceed if health changed, token was resized, or this is a forced update.
+      // The size check ensures aura is re-applied when a token is resized, even without an HP change.
+      if (hasPrevValue && curValue === prevValue && update !== 'YES' && !sizeChanged) return;
 
-  // ————— FORCE UPDATE —————
-  /**
-   * Handles the visual transition when switching between aura and tint modes.
-   * Processes every token in a single drain queue pass: when switching to tint mode
-   * it clears aura1 on each token before re-evaluating health, ensuring no stale
-   * HC-set aura rings remain. When switching to aura mode it re-evaluates health
-   * directly so tokenSet clears the tint and applies the aura ring in one step.
-   *
-   * @param {boolean} toTint - True when switching into tint mode, false when switching out.
-   */
-  function modeSwitch(toTint) {
-    const workQueue = findObjs({
-      type: 'graphic',
-      subtype: 'token',
-      layer: 'objects',
-    });
-    const drainQueue = () => {
-      const token = workQueue.shift();
-      if (!token) return;
-      if (toTint) token.set({ aura1_color: 'transparent', aura1_radius: 0 });
-      const prev = deepClone(token);
-      handleToken(token, prev, 'YES');
-      setTimeout(drainQueue, 0);
-    };
-    drainQueue();
-  }
+      const oCharacter = getObj('character', obj.get('represents'));
+      const typeConfig = resolveTypeConfig(oCharacter);
 
-  /**
-   * Forces a re-evaluation of every token on the objects layer,
-   * processing them one at a time via a setTimeout drain queue to avoid
-   * blocking the Roll20 sandbox event loop.
-   */
-  function menuForceUpdate() {
-    const workQueue = findObjs({
-      type: 'graphic',
-      subtype: 'token',
-      layer: 'objects',
-    });
-    sendChat(SCRIPT_NAME, `/w gm Refreshing ${workQueue.length} Tokens`);
-    const drainQueue = () => {
-      const token = workQueue.shift();
-      if (token) {
+      applyAuraAndDead(obj, oCharacter, typeConfig, health);
+      setShowNames(typeConfig.gm, typeConfig.pc, obj);
+      maybeSpawnFX(obj, oCharacter, curValue, prevValue, maxValue, update);
+    }
+
+    // ————— FORCE UPDATE —————
+    /**
+     * Handles the visual transition when switching between aura and tint modes.
+     * Processes every token in a single drain queue pass: when switching to tint mode
+     * it clears aura1 on each token before re-evaluating health, ensuring no stale
+     * HC-set aura rings remain. When switching to aura mode it re-evaluates health
+     * directly so tokenSet clears the tint and applies the aura ring in one step.
+     *
+     * @param {boolean} toTint - True when switching into tint mode, false when switching out.
+     */
+    function modeSwitch(toTint) {
+      const workQueue = findObjs({
+        type: 'graphic',
+        subtype: 'token',
+        layer: 'objects',
+      });
+      const drainQueue = () => {
+        const token = workQueue.shift();
+        if (!token) return;
+        if (toTint) token.set({ aura1_color: 'transparent', aura1_radius: 0 });
         const prev = deepClone(token);
         handleToken(token, prev, 'YES');
         setTimeout(drainQueue, 0);
-      } else {
-        sendChat(SCRIPT_NAME, '/w gm Finished Refreshing Tokens');
-      }
-    };
-    drainQueue();
-  }
-
-  /**
-   * Forces a health-color update on all currently selected tokens.
-   * Whispers the list of updated token names to the GM.
-   *
-   * @param {object} msg - Roll20 chat message object with a populated `selected` array.
-   */
-  function manUpdate(msg) {
-    const allNames = msg.selected.reduce((acc, obj) => {
-      const token = getObj('graphic', obj._id);
-      const prev = deepClone(token);
-      handleToken(token, prev, 'YES');
-      return `${acc}${token.get('name')}<br>`;
-    }, '');
-    gmWhisper(allNames);
-  }
-
-  // ————— MENU —————
-  /**
-   * Builds a styled Roll20 chat button anchor element.
-   *
-   * @param {string} label           - Button label text.
-   * @param {string} href            - Roll20 API command (e.g. '!aura on').
-   * @param {string} [extraStyle=''] - Additional inline CSS to append to the base style.
-   * @returns {string} An HTML anchor string ready for sendChat.
-   */
-  function makeBtn(label, href, extraStyle = '') {
-    const base = [
-      'padding-top:1px',
-      'text-align:center',
-      'font-size:9pt',
-      'width:48px',
-      'height:14px',
-      'border:1px solid black',
-      'margin:1px',
-      'background-color:#6FAEC7',
-      'border-radius:4px',
-      'box-shadow:1px 1px 1px #707070',
-    ].join(';');
-    return `<a style="${base};${extraStyle}" href="${href}">${label}</a>`;
-  }
-
-  /**
-   * Builds a non-interactive styled value pill for read-only output panels.
-   *
-   * @param {string} label           - Display text.
-   * @param {string} [extraStyle=''] - Additional inline CSS to append to base style.
-   * @returns {string} A styled span element.
-   */
-  function makePill(label, extraStyle = '') {
-    const base = [
-      'display:inline-block',
-      'padding-top:1px',
-      'text-align:center',
-      'font-size:9pt',
-      'min-width:48px',
-      'height:14px',
-      'border:1px solid black',
-      'margin:1px',
-      'background-color:#6FAEC7',
-      'border-radius:4px',
-      'box-shadow:1px 1px 1px #707070',
-      'line-height:14px',
-      'padding-left:4px',
-      'padding-right:4px',
-    ].join(';');
-    return `<span style="${base};${extraStyle}">${label}</span>`;
-  }
-
-  /**
-   * Builds a toggle-style button that shows red when the value is false/off.
-   *
-   * @param {boolean} value - Current boolean state (true = on/default blue, false = off/red).
-   * @param {string}  href  - Roll20 API command to execute on click.
-   * @returns {string} An HTML anchor string.
-   */
-  function toggleBtn(value, href) {
-    const style = value === true ? '' : 'background-color:#A84D4D';
-    return makeBtn(value === true ? 'Yes' : 'No', href, style);
-  }
-
-  /**
-   * Builds a three-state name-setting button. Red for 'No', grey for 'Off', default for 'Yes'.
-   *
-   * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
-   * @param {string} href  - Roll20 API command to execute on click.
-   * @returns {string} An HTML anchor string.
-   */
-  function nameBtn(value, href) {
-    let style = '';
-    if (value === 'No') style = 'background-color:#A84D4D';
-    if (value === 'Off') style = 'background-color:#D6D6D6';
-    return makeBtn(value, href, style);
-  }
-
-  /**
-   * Read-only pill counterpart to toggleBtn: default blue background for true, red for false.
-   *
-   * @param {boolean} value - Current boolean state.
-   * @returns {string} A styled span element.
-   */
-  function boolPill(value) {
-    return makePill(value ? 'Yes' : 'No', value ? '' : 'background-color:#A84D4D');
-  }
-
-  /**
-   * Read-only pill counterpart to nameBtn: red for 'No', grey for 'Off', default for 'Yes'.
-   *
-   * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
-   * @returns {string} A styled span element.
-   */
-  function namePill(value) {
-    let style = '';
-    if (value === 'No') style = 'background-color:#A84D4D';
-    if (value === 'Off') style = 'background-color:#D6D6D6';
-    return makePill(value, style);
-  }
-
-  /**
-   * Renders and whispers the HealthColors configuration menu to the GM.
-   * Builds the full HTML panel using makeBtn/toggleBtn/nameBtn helpers and
-   * reflects all current state values as interactive button labels.
-   */
-  function showMenu() {
-    const s = state.HealthColors;
-    const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
-    const wrapStyle = [
-      'border-radius:8px',
-      'padding:5px',
-      'font-size:9pt',
-      'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
-      'box-shadow:3px 3px 1px #707070',
-      'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
-      'color:#FFF',
-      'border:2px solid black',
-      'text-align:right',
-      'vertical-align:middle',
-    ].join(';');
-
-    const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
-    const healBtnStyle = `background-color:#${s.HealFX}`;
-    const hurtBtnStyle = `background-color:#${s.HurtFX}`;
-    const aura1Style = `background-color:#${s.Aura1Color}`;
-    const aura2Style = `background-color:#${s.Aura2Color}`;
-    const deadFxCmd = `!aura deadfx ?{Sound Name?|${s.auraDeadFX}}`;
-    const html = [
-      `<div style="${wrapStyle}">`,
-      `<u><big>HealthColors Version: ${VERSION}</u></big><br>`,
-      hr,
-      `Is On: ${toggleBtn(s.auraColorOn, '!aura on')}<br>`,
-      `Health Bar: ${makeBtn(s.auraBar, '!aura bar ?{Bar|1|2|3}')}<br>`,
-      `Use Tint: ${toggleBtn(s.auraTint, '!aura tint')}<br>`,
-      `Palette: ${makeBtn(s.colorPalette, '!aura palette ?{Palette|default|colorblind}', 'width:80px')} (auto refreshes all tokens)<br>`,
-      `Percentage(PC/NPC): ${makeBtn(percLabel, '!aura perc ?{PCPercent?|100} ?{NPCPercent?|100}')}<br>`,
-      hr,
-      `Show PC Health: ${toggleBtn(s.PCAura, '!aura pc')}<br>`,
-      `Show NPC Health: ${toggleBtn(s.NPCAura, '!aura npc')}<br>`,
-      `Show Dead PC: ${toggleBtn(s.auraDeadPC, '!aura deadPC')}<br>`,
-      `Show Dead NPC: ${toggleBtn(s.auraDead, '!aura dead')}<br>`,
-      hr,
-      `GM Sees all PC Names: ${nameBtn(s.GM_PCNames, '!aura gmpc ?{Setting|Yes|No|Off}')}<br>`,
-      `GM Sees all NPC Names: ${nameBtn(s.GM_NPCNames, '!aura gmnpc ?{Setting|Yes|No|Off}')}<br>`,
-      hr,
-      `PC Sees all PC Names: ${nameBtn(s.PCNames, '!aura pcpc ?{Setting|Yes|No|Off}')}<br>`,
-      `PC Sees all NPC Names: ${nameBtn(s.NPCNames, '!aura pcnpc ?{Setting|Yes|No|Off}')}<br>`,
-      hr,
-      `Aura 1 Radius (ft): ${makeBtn(s.AuraSize, '!aura size ?{Size?|0.35}')}<br>`,
-      `Aura 1 Shape: ${makeBtn(s.Aura1Shape, '!aura a1shape ?{Shape?|Circle|Square}')}<br>`,
-      `Aura 1 Color: ${makeBtn(s.Aura1Color, '!aura a1tint ?{Color?|00FF00}', aura1Style)}<br>`,
-      `Aura 2 Radius (ft): ${makeBtn(String(s.Aura2Size), '!aura a2size ?{Size?|5}')}<br>`,
-      `Aura 2 Shape: ${makeBtn(s.Aura2Shape, '!aura a2shape ?{Shape?|Square|Circle}')}<br>`,
-      `Aura 2 Color: ${makeBtn(s.Aura2Color, '!aura a2tint ?{Color?|806600}', aura2Style)}<br>`,
-      `One Offs: ${toggleBtn(s.OneOff, '!aura ONEOFF')}<br>`,
-      `FX: ${toggleBtn(s.FX, '!aura FX')}<br>`,
-      `HealFX Color: ${makeBtn(s.HealFX, '!aura HEAL ?{Color?|FDDC5C}', healBtnStyle)}<br>`,
-      `HurtFX Color: ${makeBtn(s.HurtFX, '!aura HURT ?{Color?|FF0000}', hurtBtnStyle)}<br>`,
-      `DeathSFX: ${makeBtn(s.auraDeadFX.substring(0, 4), deadFxCmd)}<br>`,
-      hr,
-      `</div>`,
-    ].join('');
-
-    sendChat(SCRIPT_NAME, `/w GM <b><br>${html}`);
-  }
-
-  /**
-   * Renders a read-only settings snapshot to public game chat (all players).
-   * Triggered by `!aura settings` on demand; not called automatically after changes.
-   */
-  function showSettingsInGameChat() {
-    const s = state.HealthColors;
-    const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
-    const wrapStyle = [
-      'border-radius:8px',
-      'padding:5px',
-      'font-size:9pt',
-      'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
-      'box-shadow:3px 3px 1px #707070',
-      'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
-      'color:#FFF',
-      'border:2px solid black',
-      'text-align:right',
-      'vertical-align:middle',
-    ].join(';');
-
-    const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
-    const aura1Style = `background-color:#${s.Aura1Color}`;
-    const aura2Style = `background-color:#${s.Aura2Color}`;
-    const healStyle = `background-color:#${s.HealFX}`;
-    const hurtStyle = `background-color:#${s.HurtFX}`;
-    const html = [
-      `<div style="${wrapStyle}">`,
-      `<u><big>HealthColors Settings: ${VERSION}</u></big><br>`,
-      hr,
-      `Is On: ${boolPill(s.auraColorOn)}<br>`,
-      `Bar: ${makePill(s.auraBar)}<br>`,
-      `Use Tint: ${boolPill(s.auraTint)}<br>`,
-      `Palette: ${makePill(s.colorPalette)}<br>`,
-      `Percentage(PC/NPC): ${makePill(percLabel)}<br>`,
-      hr,
-      `Show PC Health: ${boolPill(s.PCAura)}<br>`,
-      `Show NPC Health: ${boolPill(s.NPCAura)}<br>`,
-      `Show Dead PC: ${boolPill(s.auraDeadPC)}<br>`,
-      `Show Dead NPC: ${boolPill(s.auraDead)}<br>`,
-      hr,
-      `GM Sees all PC Names: ${namePill(s.GM_PCNames)}<br>`,
-      `GM Sees all NPC Names: ${namePill(s.GM_NPCNames)}<br>`,
-      hr,
-      `PC Sees all PC Names: ${namePill(s.PCNames)}<br>`,
-      `PC Sees all NPC Names: ${namePill(s.NPCNames)}<br>`,
-      hr,
-      `Aura 1 Radius: ${makePill(String(s.AuraSize))}<br>`,
-      `Aura 1 Shape: ${makePill(s.Aura1Shape)}<br>`,
-      `Aura 1 Color: ${makePill(s.Aura1Color, aura1Style)}<br>`,
-      `Aura 2 Radius: ${makePill(String(s.Aura2Size))}<br>`,
-      `Aura 2 Shape: ${makePill(s.Aura2Shape)}<br>`,
-      `Aura 2 Color: ${makePill(s.Aura2Color, aura2Style)}<br>`,
-      `One Offs: ${boolPill(s.OneOff)}<br>`,
-      `FX: ${boolPill(s.FX)}<br>`,
-      `HealFX Color: ${makePill(s.HealFX, healStyle)}<br>`,
-      `HurtFX Color: ${makePill(s.HurtFX, hurtStyle)}<br>`,
-      `DeathSFX: ${makePill(s.auraDeadFX)}<br>`,
-      hr,
-      `</div>`,
-    ].join('');
-
-    sendChat(SCRIPT_NAME, `<b><br>${html}`);
-  }
-
-  // ————— CHAT HANDLER —————
-  /**
-   * Processes incoming Roll20 chat messages to handle !aura commands.
-   * GM-only: non-GMs receive an access-denied whisper.
-   * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, etc.) to the
-   * appropriate state mutation then refreshes the menu. BAR validates 1/2/3,
-   * whispers confirmation, and triggers immediate full sync. PALETTE also
-   * triggers immediate full sync so existing tokens update right away.
-   * When a setting changes, re-whispers the interactive menu to the GM.
-   * Use `!aura settings` to post a read-only settings snapshot to public game chat.
-   *
-   * @param {object} msg - Roll20 chat message object.
-   */
-  function handleInput(msg) {
-    const parts = msg.content.split(/\s+/);
-    const command = parts[0].toUpperCase();
-    if (msg.type !== 'api' || !command.includes('!AURA')) return;
-
-    if (!playerIsGM(msg.playerid)) {
-      sendChat(SCRIPT_NAME, `/w ${msg.who} you must be a GM to use this command!`);
-      return;
+      };
+      drainQueue();
     }
 
-    const option = (parts[1] || 'MENU').toUpperCase();
-    if (option !== 'MENU') gmWhisper('UPDATING TOKENS...');
-
-    const s = state.HealthColors;
-
-    // Dispatch tables for structurally identical cases
-    const TOGGLES = {
-      PC: 'PCAura',
-      NPC: 'NPCAura',
-      DEAD: 'auraDead',
-      DEADPC: 'auraDeadPC',
-      ONEOFF: 'OneOff',
-      FX: 'FX',
-    };
-    const STRINGS = {
-      GMNPC: 'GM_NPCNames',
-      GMPC: 'GM_PCNames',
-      PCNPC: 'NPCNames',
-      PCPC: 'PCNames',
-      DEADFX: 'auraDeadFX',
-    };
-    const FLOATS = { SIZE: 'AuraSize', A2SIZE: 'Aura2Size' };
-    const SHAPES = { A1SHAPE: 'Aura1Shape', A2SHAPE: 'Aura2Shape' };
-    const HEXES = { A1TINT: 'Aura1Color', A2TINT: 'Aura2Color' };
-
-    if (TOGGLES[option]) {
-      s[TOGGLES[option]] = !s[TOGGLES[option]];
-    } else if (STRINGS[option]) {
-      if (option === 'DEADFX') {
-        s[STRINGS[option]] = normalizeTrackName(parts.slice(2).join(' '), s[STRINGS[option]]);
-      } else {
-        s[STRINGS[option]] = normalizeYesNoOff(parts[2], s[STRINGS[option]]);
-      }
-    } else if (FLOATS[option]) {
-      s[FLOATS[option]] = normalizePositiveNumber(parts[2], s[FLOATS[option]]);
-    } else if (SHAPES[option]) {
-      s[SHAPES[option]] = normalizeShape(parts[2], s[SHAPES[option]]);
-    } else if (HEXES[option]) {
-      s[HEXES[option]] = normalizeHex6(parts[2], s[HEXES[option]]);
-    } else {
-      switch (option) {
-        case 'MENU':
-          break;
-        case 'SETTINGS':
-          showSettingsInGameChat();
-          return;
-        case 'TINT':
-          s.auraTint = !s.auraTint;
-          modeSwitch(s.auraTint);
-          break;
-        case 'ON':
-          s.auraColorOn = true;
-          break;
-        case 'OFF':
-          s.auraColorOn = false;
-          break;
-        case 'BAR':
-          if (/^[123]$/.test(parts[2] || '')) {
-            s.auraBar = `bar${parts[2]}`;
-            gmWhisper(`Health bar set to ${s.auraBar}. Forcing sync...`);
-            menuForceUpdate();
-          } else {
-            gmWhisper(`Invalid bar "${parts[2] || ''}". Use !aura bar 1, !aura bar 2, or !aura bar 3.`);
-          }
-          break;
-        case 'PERC':
-          s.auraPercPC = normalizePercent(parts[2], s.auraPercPC);
-          s.auraPerc = normalizePercent(parts[3], s.auraPerc);
-          menuForceUpdate();
-          break;
-        case 'PALETTE':
-          s.colorPalette = normalizePalette(parts[2], s.colorPalette);
-          menuForceUpdate();
-          break;
-        case 'HEAL':
-          s.HealFX = normalizeHex6(parts[2], s.HealFX);
-          syncDefaultFxObjects();
-          break;
-        case 'HURT':
-          s.HurtFX = normalizeHex6(parts[2], s.HurtFX);
-          syncDefaultFxObjects();
-          break;
-        case 'RESET':
-          delete state.HealthColors;
-          gmWhisper('STATE RESET');
-          checkInstall();
-          break;
-        case 'RESET-FX':
-          resetDefaultFxObjects();
-          break;
-        case 'RESET-ALL':
-          runResetAllFlow();
-          break;
-        case 'FORCEALL':
-          menuForceUpdate();
-          return;
-        case 'UPDATE':
-          manUpdate(msg);
-          return;
-      }
+    /**
+     * Forces a re-evaluation of every token on the objects layer,
+     * processing them one at a time via a setTimeout drain queue to avoid
+     * blocking the Roll20 sandbox event loop.
+     */
+    function menuForceUpdate() {
+      const workQueue = findObjs({
+        type: 'graphic',
+        subtype: 'token',
+        layer: 'objects',
+      });
+      sendChat(SCRIPT_NAME, `/w gm Refreshing ${workQueue.length} Tokens`);
+      const drainQueue = () => {
+        const token = workQueue.shift();
+        if (token) {
+          const prev = deepClone(token);
+          handleToken(token, prev, 'YES');
+          setTimeout(drainQueue, 0);
+        } else {
+          sendChat(SCRIPT_NAME, '/w gm Finished Refreshing Tokens');
+        }
+      };
+      drainQueue();
     }
 
-    showMenu();
-  }
-
-  // ————— OUTSIDE API —————
-  /**
-   * Public entry point for external scripts to request a token color update.
-   * Validates that the object is a graphic before delegating to handleToken.
-   *
-   * @param {object} obj  - Roll20 object to update.
-   * @param {object} prev - Previous attribute snapshot (passed through to handleToken).
-   */
-  function updateToken(obj, prev) {
-    if (obj.get('type') === 'graphic') {
-      handleToken(obj, prev);
-    } else {
-      gmWhisper('Script sent non-Token to be updated!');
-    }
-  }
-
-  // ————— EVENT HANDLERS —————
-
-  /**
-   * Processes one token when its linked HP attribute changes via an external script.
-   * Constructs a fakePrev with the old HP value so handleToken sees a real delta
-   * (enabling FX), then marks the token in recentAttrFires so any subsequent
-   * change:graphic for the same token skips redundant particle spawning.
-   *
-   * Waits 50 ms before acting so Roll20 has time to propagate the attribute change
-   * to the token bar. At fire time the live bar value is compared against the expected
-   * old and new values: if Roll20 already propagated it (liveVal === newVal) we skip
-   * the redundant set; if a concurrent change moved it to a third value we bail
-   * entirely to avoid overwriting that later change.
-   *
-   * @param {string}        barUsed - Configured health bar property name (e.g. 'bar1').
-   * @param {string|number} oldVal  - Previous attribute current value.
-   * @param {string|number} newVal  - New attribute current value; written to the token bar
-   *                                  only when Roll20 has not yet propagated it.
-   * @param {object}        token   - Roll20 token graphic object (snapshot at event time).
-   */
-  function applyAttrHpChange(barUsed, oldVal, newVal, token) {
-    const fakePrev = deepClone(token);
-    fakePrev[`${barUsed}_value`] = oldVal;
-
-    recentAttrFires.add(token.id);
-
-    setTimeout(() => {
-      const liveToken = getObj('graphic', token.id);
-      if (!liveToken) return;
-      const liveVal = Number(liveToken.get(`${barUsed}_value`));
-      const expectedOld = Number(oldVal);
-      const expectedNew = Number(newVal);
-      // A concurrent change resolved to a third value — bail to avoid overwriting it.
-      if (liveVal !== expectedNew && liveVal !== expectedOld) return;
-      if (liveVal === expectedOld) liveToken.set(`${barUsed}_value`, expectedNew);
-      handleToken(liveToken, fakePrev);
-    }, 50);
-
-    setTimeout(() => recentAttrFires.delete(token.id), 250);
-  }
-
-  /**
-   * Registers a change:attribute listener that catches HP changes made by scripts
-   * such as AlterBars that modify character attributes directly rather than the
-   * token bar. Those scripts fire change:attribute but may not fire change:graphic
-   * with a correct prev value, so we construct a fakePrev from attr's own prev.current
-   * and call handleToken ourselves with a real HP delta (enabling FX).
-   * The token ID is added to recentAttrFires so that if change:graphic fires
-   * afterwards it receives update='YES', skipping duplicate particle spawning.
-   */
-  function registerAttributeListener() {
-    on('change:attribute', (attr, prev) => {
-      const s = state.HealthColors;
-      if (!s?.auraColorOn) return;
-      const barUsed = s.auraBar;
-      const charId = attr.get('characterid');
-      if (!charId) return;
-      const oldVal = prev.current;
-      const newVal = attr.get('current');
-      if (oldVal === newVal) return;
-      findObjs({ type: 'graphic', represents: charId })
-        .filter((t) => t.get('layer') === 'objects' && t.get(`${barUsed}_link`) === attr.id)
-        .forEach((token) => applyAttrHpChange(barUsed, oldVal, newVal, token));
-    });
-  }
-
-  /**
-   * Registers all Roll20 event listeners for the script.
-   * - chat:message     → handleInput       (command processing)
-   * - change:graphic   → handleTokenChange (live HP changes and token resizes; suppresses
-   *                                         FX when the attribute listener already fired)
-   * - change:attribute → registerAttributeListener (AlterBars / indirect HP changes)
-   * - add:graphic      → handleToken       (with 400ms delay to allow token data to settle)
-   */
-  function registerEventHandlers() {
-    on('chat:message', handleInput);
-    on('change:graphic', handleTokenChange);
-    on('add:graphic', (t) => {
-      setTimeout(() => {
-        const token = getObj('graphic', t.id);
-        if (!token) return;
+    /**
+     * Forces a health-color update on all currently selected tokens.
+     * Whispers the list of updated token names to the GM.
+     *
+     * @param {object} msg - Roll20 chat message object with a populated `selected` array.
+     */
+    function manUpdate(msg) {
+      const allNames = msg.selected.reduce((acc, obj) => {
+        const token = getObj('graphic', obj._id);
         const prev = deepClone(token);
         handleToken(token, prev, 'YES');
-      }, 400);
+        return `${acc}${token.get('name')}<br>`;
+      }, '');
+      gmWhisper(allNames);
+    }
+
+    // ————— MENU —————
+    /**
+     * Builds a styled Roll20 chat button anchor element.
+     *
+     * @param {string} label           - Button label text.
+     * @param {string} href            - Roll20 API command (e.g. '!aura on').
+     * @param {string} [extraStyle=''] - Additional inline CSS to append to the base style.
+     * @returns {string} An HTML anchor string ready for sendChat.
+     */
+    function makeBtn(label, href, extraStyle = '') {
+      const base = [
+        'padding-top:1px',
+        'text-align:center',
+        'font-size:9pt',
+        'width:48px',
+        'height:14px',
+        'border:1px solid black',
+        'margin:1px',
+        'background-color:#6FAEC7',
+        'border-radius:4px',
+        'box-shadow:1px 1px 1px #707070',
+      ].join(';');
+      return `<a style="${base};${extraStyle}" href="${href}">${label}</a>`;
+    }
+
+    /**
+     * Builds a non-interactive styled value pill for read-only output panels.
+     *
+     * @param {string} label           - Display text.
+     * @param {string} [extraStyle=''] - Additional inline CSS to append to base style.
+     * @returns {string} A styled span element.
+     */
+    function makePill(label, extraStyle = '') {
+      const base = [
+        'display:inline-block',
+        'padding-top:1px',
+        'text-align:center',
+        'font-size:9pt',
+        'min-width:48px',
+        'height:14px',
+        'border:1px solid black',
+        'margin:1px',
+        'background-color:#6FAEC7',
+        'border-radius:4px',
+        'box-shadow:1px 1px 1px #707070',
+        'line-height:14px',
+        'padding-left:4px',
+        'padding-right:4px',
+      ].join(';');
+      return `<span style="${base};${extraStyle}">${label}</span>`;
+    }
+
+    /**
+     * Builds a toggle-style button that shows red when the value is false/off.
+     *
+     * @param {boolean} value - Current boolean state (true = on/default blue, false = off/red).
+     * @param {string}  href  - Roll20 API command to execute on click.
+     * @returns {string} An HTML anchor string.
+     */
+    function toggleBtn(value, href) {
+      const style = value === true ? '' : 'background-color:#A84D4D';
+      return makeBtn(value === true ? 'Yes' : 'No', href, style);
+    }
+
+    /**
+     * Builds a three-state name-setting button. Red for 'No', grey for 'Off', default for 'Yes'.
+     *
+     * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
+     * @param {string} href  - Roll20 API command to execute on click.
+     * @returns {string} An HTML anchor string.
+     */
+    function nameBtn(value, href) {
+      let style = '';
+      if (value === 'No') style = 'background-color:#A84D4D';
+      if (value === 'Off') style = 'background-color:#D6D6D6';
+      return makeBtn(value, href, style);
+    }
+
+    /**
+     * Read-only pill counterpart to toggleBtn: default blue background for true, red for false.
+     *
+     * @param {boolean} value - Current boolean state.
+     * @returns {string} A styled span element.
+     */
+    function boolPill(value) {
+      return makePill(value ? 'Yes' : 'No', value ? '' : 'background-color:#A84D4D');
+    }
+
+    /**
+     * Read-only pill counterpart to nameBtn: red for 'No', grey for 'Off', default for 'Yes'.
+     *
+     * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
+     * @returns {string} A styled span element.
+     */
+    function namePill(value) {
+      let style = '';
+      if (value === 'No') style = 'background-color:#A84D4D';
+      if (value === 'Off') style = 'background-color:#D6D6D6';
+      return makePill(value, style);
+    }
+
+    /**
+     * Renders and whispers the HealthColors configuration menu to the GM.
+     * Builds the full HTML panel using makeBtn/toggleBtn/nameBtn helpers and
+     * reflects all current state values as interactive button labels.
+     */
+    function showMenu() {
+      const s = state.HealthColors;
+      const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
+      const wrapStyle = [
+        'border-radius:8px',
+        'padding:5px',
+        'font-size:9pt',
+        'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
+        'box-shadow:3px 3px 1px #707070',
+        'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
+        'color:#FFF',
+        'border:2px solid black',
+        'text-align:right',
+        'vertical-align:middle',
+      ].join(';');
+
+      const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
+      const healBtnStyle = `background-color:#${s.HealFX}`;
+      const hurtBtnStyle = `background-color:#${s.HurtFX}`;
+      const aura1Style = `background-color:#${s.Aura1Color}`;
+      const aura2Style = `background-color:#${s.Aura2Color}`;
+      const deadFxCmd = `!aura deadfx ?{Sound Name?|${s.auraDeadFX}}`;
+      const html = [
+        `<div style="${wrapStyle}">`,
+        `<u><big>HealthColors Version: ${VERSION}</u></big><br>`,
+        hr,
+        `Is On: ${toggleBtn(s.auraColorOn, '!aura on')}<br>`,
+        `Health Bar: ${makeBtn(s.auraBar, '!aura bar ?{Bar|1|2|3}')}<br>`,
+        `Use Tint: ${toggleBtn(s.auraTint, '!aura tint')}<br>`,
+        `Palette: ${makeBtn(s.colorPalette, '!aura palette ?{Palette|default|colorblind}', 'width:80px')} (auto refreshes all tokens)<br>`,
+        `Percentage(PC/NPC): ${makeBtn(percLabel, '!aura perc ?{PCPercent?|100} ?{NPCPercent?|100}')}<br>`,
+        hr,
+        `Show PC Health: ${toggleBtn(s.PCAura, '!aura pc')}<br>`,
+        `Show NPC Health: ${toggleBtn(s.NPCAura, '!aura npc')}<br>`,
+        `Show Dead PC: ${toggleBtn(s.auraDeadPC, '!aura deadPC')}<br>`,
+        `Show Dead NPC: ${toggleBtn(s.auraDead, '!aura dead')}<br>`,
+        hr,
+        `GM Sees all PC Names: ${nameBtn(s.GM_PCNames, '!aura gmpc ?{Setting|Yes|No|Off}')}<br>`,
+        `GM Sees all NPC Names: ${nameBtn(s.GM_NPCNames, '!aura gmnpc ?{Setting|Yes|No|Off}')}<br>`,
+        hr,
+        `PC Sees all PC Names: ${nameBtn(s.PCNames, '!aura pcpc ?{Setting|Yes|No|Off}')}<br>`,
+        `PC Sees all NPC Names: ${nameBtn(s.NPCNames, '!aura pcnpc ?{Setting|Yes|No|Off}')}<br>`,
+        hr,
+        `Aura 1 Radius (ft): ${makeBtn(s.AuraSize, '!aura size ?{Size?|0.35}')}<br>`,
+        `Aura 1 Shape: ${makeBtn(s.Aura1Shape, '!aura a1shape ?{Shape?|Circle|Square}')}<br>`,
+        `Aura 1 Color: ${makeBtn(s.Aura1Color, '!aura a1tint ?{Color?|00FF00}', aura1Style)}<br>`,
+        `Aura 2 Radius (ft): ${makeBtn(String(s.Aura2Size), '!aura a2size ?{Size?|5}')}<br>`,
+        `Aura 2 Shape: ${makeBtn(s.Aura2Shape, '!aura a2shape ?{Shape?|Square|Circle}')}<br>`,
+        `Aura 2 Color: ${makeBtn(s.Aura2Color, '!aura a2tint ?{Color?|806600}', aura2Style)}<br>`,
+        `One Offs: ${toggleBtn(s.OneOff, '!aura ONEOFF')}<br>`,
+        `FX: ${toggleBtn(s.FX, '!aura FX')}<br>`,
+        `HealFX Color: ${makeBtn(s.HealFX, '!aura HEAL ?{Color?|FDDC5C}', healBtnStyle)}<br>`,
+        `HurtFX Color: ${makeBtn(s.HurtFX, '!aura HURT ?{Color?|FF0000}', hurtBtnStyle)}<br>`,
+        `DeathSFX: ${makeBtn(s.auraDeadFX.substring(0, 4), deadFxCmd)}<br>`,
+        hr,
+        `</div>`,
+      ].join('');
+
+      sendChat(SCRIPT_NAME, `/w GM <b><br>${html}`);
+    }
+
+    /**
+     * Renders a read-only settings snapshot to public game chat (all players).
+     * Triggered by `!aura settings` on demand; not called automatically after changes.
+     */
+    function showSettingsInGameChat() {
+      const s = state.HealthColors;
+      const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
+      const wrapStyle = [
+        'border-radius:8px',
+        'padding:5px',
+        'font-size:9pt',
+        'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
+        'box-shadow:3px 3px 1px #707070',
+        'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
+        'color:#FFF',
+        'border:2px solid black',
+        'text-align:right',
+        'vertical-align:middle',
+      ].join(';');
+
+      const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
+      const aura1Style = `background-color:#${s.Aura1Color}`;
+      const aura2Style = `background-color:#${s.Aura2Color}`;
+      const healStyle = `background-color:#${s.HealFX}`;
+      const hurtStyle = `background-color:#${s.HurtFX}`;
+      const html = [
+        `<div style="${wrapStyle}">`,
+        `<u><big>HealthColors Settings: ${VERSION}</u></big><br>`,
+        hr,
+        `Is On: ${boolPill(s.auraColorOn)}<br>`,
+        `Bar: ${makePill(s.auraBar)}<br>`,
+        `Use Tint: ${boolPill(s.auraTint)}<br>`,
+        `Palette: ${makePill(s.colorPalette)}<br>`,
+        `Percentage(PC/NPC): ${makePill(percLabel)}<br>`,
+        hr,
+        `Show PC Health: ${boolPill(s.PCAura)}<br>`,
+        `Show NPC Health: ${boolPill(s.NPCAura)}<br>`,
+        `Show Dead PC: ${boolPill(s.auraDeadPC)}<br>`,
+        `Show Dead NPC: ${boolPill(s.auraDead)}<br>`,
+        hr,
+        `GM Sees all PC Names: ${namePill(s.GM_PCNames)}<br>`,
+        `GM Sees all NPC Names: ${namePill(s.GM_NPCNames)}<br>`,
+        hr,
+        `PC Sees all PC Names: ${namePill(s.PCNames)}<br>`,
+        `PC Sees all NPC Names: ${namePill(s.NPCNames)}<br>`,
+        hr,
+        `Aura 1 Radius: ${makePill(String(s.AuraSize))}<br>`,
+        `Aura 1 Shape: ${makePill(s.Aura1Shape)}<br>`,
+        `Aura 1 Color: ${makePill(s.Aura1Color, aura1Style)}<br>`,
+        `Aura 2 Radius: ${makePill(String(s.Aura2Size))}<br>`,
+        `Aura 2 Shape: ${makePill(s.Aura2Shape)}<br>`,
+        `Aura 2 Color: ${makePill(s.Aura2Color, aura2Style)}<br>`,
+        `One Offs: ${boolPill(s.OneOff)}<br>`,
+        `FX: ${boolPill(s.FX)}<br>`,
+        `HealFX Color: ${makePill(s.HealFX, healStyle)}<br>`,
+        `HurtFX Color: ${makePill(s.HurtFX, hurtStyle)}<br>`,
+        `DeathSFX: ${makePill(s.auraDeadFX)}<br>`,
+        hr,
+        `</div>`,
+      ].join('');
+
+      sendChat(SCRIPT_NAME, `<b><br>${html}`);
+    }
+
+    // ————— CHAT HANDLER —————
+    /**
+     * Processes incoming Roll20 chat messages to handle !aura commands.
+     * GM-only: non-GMs receive an access-denied whisper.
+     * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, etc.) to the
+     * appropriate state mutation then refreshes the menu. BAR validates 1/2/3,
+     * whispers confirmation, and triggers immediate full sync. PALETTE also
+     * triggers immediate full sync so existing tokens update right away.
+     * When a setting changes, re-whispers the interactive menu to the GM.
+     * Use `!aura settings` to post a read-only settings snapshot to public game chat.
+     *
+     * @param {object} msg - Roll20 chat message object.
+     */
+    function handleInput(msg) {
+      const parts = msg.content.split(/\s+/);
+      const command = parts[0].toUpperCase();
+      if (msg.type !== 'api' || !command.includes('!AURA')) return;
+
+      if (!playerIsGM(msg.playerid)) {
+        sendChat(SCRIPT_NAME, `/w ${msg.who} you must be a GM to use this command!`);
+        return;
+      }
+
+      const option = (parts[1] || 'MENU').toUpperCase();
+      if (option !== 'MENU') gmWhisper('UPDATING TOKENS...');
+
+      const s = state.HealthColors;
+
+      // Dispatch tables for structurally identical cases
+      const TOGGLES = {
+        PC: 'PCAura',
+        NPC: 'NPCAura',
+        DEAD: 'auraDead',
+        DEADPC: 'auraDeadPC',
+        ONEOFF: 'OneOff',
+        FX: 'FX',
+      };
+      const STRINGS = {
+        GMNPC: 'GM_NPCNames',
+        GMPC: 'GM_PCNames',
+        PCNPC: 'NPCNames',
+        PCPC: 'PCNames',
+        DEADFX: 'auraDeadFX',
+      };
+      const FLOATS = { SIZE: 'AuraSize', A2SIZE: 'Aura2Size' };
+      const SHAPES = { A1SHAPE: 'Aura1Shape', A2SHAPE: 'Aura2Shape' };
+      const HEXES = { A1TINT: 'Aura1Color', A2TINT: 'Aura2Color' };
+
+      if (TOGGLES[option]) {
+        s[TOGGLES[option]] = !s[TOGGLES[option]];
+      } else if (STRINGS[option]) {
+        if (option === 'DEADFX') {
+          s[STRINGS[option]] = normalizeTrackName(parts.slice(2).join(' '), s[STRINGS[option]]);
+        } else {
+          s[STRINGS[option]] = normalizeYesNoOff(parts[2], s[STRINGS[option]]);
+        }
+      } else if (FLOATS[option]) {
+        s[FLOATS[option]] = normalizePositiveNumber(parts[2], s[FLOATS[option]]);
+      } else if (SHAPES[option]) {
+        s[SHAPES[option]] = normalizeShape(parts[2], s[SHAPES[option]]);
+      } else if (HEXES[option]) {
+        s[HEXES[option]] = normalizeHex6(parts[2], s[HEXES[option]]);
+      } else {
+        switch (option) {
+          case 'MENU':
+            break;
+          case 'SETTINGS':
+            showSettingsInGameChat();
+            return;
+          case 'TINT':
+            s.auraTint = !s.auraTint;
+            modeSwitch(s.auraTint);
+            break;
+          case 'ON':
+            s.auraColorOn = true;
+            break;
+          case 'OFF':
+            s.auraColorOn = false;
+            break;
+          case 'BAR':
+            if (/^[123]$/.test(parts[2] || '')) {
+              s.auraBar = `bar${parts[2]}`;
+              gmWhisper(`Health bar set to ${s.auraBar}. Forcing sync...`);
+              menuForceUpdate();
+            } else {
+              gmWhisper(`Invalid bar "${parts[2] || ''}". Use !aura bar 1, !aura bar 2, or !aura bar 3.`);
+            }
+            break;
+          case 'PERC':
+            s.auraPercPC = normalizePercent(parts[2], s.auraPercPC);
+            s.auraPerc = normalizePercent(parts[3], s.auraPerc);
+            menuForceUpdate();
+            break;
+          case 'PALETTE':
+            s.colorPalette = normalizePalette(parts[2], s.colorPalette);
+            menuForceUpdate();
+            break;
+          case 'HEAL':
+            s.HealFX = normalizeHex6(parts[2], s.HealFX);
+            syncDefaultFxObjects();
+            break;
+          case 'HURT':
+            s.HurtFX = normalizeHex6(parts[2], s.HurtFX);
+            syncDefaultFxObjects();
+            break;
+          case 'RESET':
+            delete state.HealthColors;
+            gmWhisper('STATE RESET');
+            checkInstall();
+            break;
+          case 'RESET-FX':
+            resetDefaultFxObjects();
+            break;
+          case 'RESET-ALL':
+            runResetAllFlow();
+            break;
+          case 'FORCEALL':
+            menuForceUpdate();
+            return;
+          case 'UPDATE':
+            manUpdate(msg);
+            return;
+        }
+      }
+
+      showMenu();
+    }
+
+    // ————— OUTSIDE API —————
+    /**
+     * Public entry point for external scripts to request a token color update.
+     * Validates that the object is a graphic before delegating to handleToken.
+     *
+     * @param {object} obj  - Roll20 object to update.
+     * @param {object} prev - Previous attribute snapshot (passed through to handleToken).
+     */
+    function updateToken(obj, prev) {
+      if (obj.get('type') === 'graphic') {
+        handleToken(obj, prev);
+      } else {
+        gmWhisper('Script sent non-Token to be updated!');
+      }
+    }
+
+    // ————— EVENT HANDLERS —————
+
+    /**
+     * Processes one token when its linked HP attribute changes via an external script.
+     * Constructs a fakePrev with the old HP value so handleToken sees a real delta
+     * (enabling FX), then marks the token in recentAttrFires so any subsequent
+     * change:graphic for the same token skips redundant particle spawning.
+     *
+     * Waits 50 ms before acting so Roll20 has time to propagate the attribute change
+     * to the token bar. At fire time the live bar value is compared against the expected
+     * old and new values: if Roll20 already propagated it (liveVal === newVal) we skip
+     * the redundant set; if a concurrent change moved it to a third value we bail
+     * entirely to avoid overwriting that later change.
+     *
+     * @param {string}        barUsed - Configured health bar property name (e.g. 'bar1').
+     * @param {string|number} oldVal  - Previous attribute current value.
+     * @param {string|number} newVal  - New attribute current value; written to the token bar
+     *                                  only when Roll20 has not yet propagated it.
+     * @param {object}        token   - Roll20 token graphic object (snapshot at event time).
+     */
+    function applyAttrHpChange(barUsed, oldVal, newVal, token) {
+      const fakePrev = deepClone(token);
+      fakePrev[`${barUsed}_value`] = oldVal;
+
+      recentAttrFires.add(token.id);
+
+      setTimeout(() => {
+        const liveToken = getObj('graphic', token.id);
+        if (!liveToken) return;
+        const liveVal = Number(liveToken.get(`${barUsed}_value`));
+        const expectedOld = Number(oldVal);
+        const expectedNew = Number(newVal);
+        // A concurrent change resolved to a third value — bail to avoid overwriting it.
+        if (liveVal !== expectedNew && liveVal !== expectedOld) return;
+        if (liveVal === expectedOld) liveToken.set(`${barUsed}_value`, expectedNew);
+        handleToken(liveToken, fakePrev);
+      }, 50);
+
+      setTimeout(() => recentAttrFires.delete(token.id), 250);
+    }
+
+    /**
+     * Registers a change:attribute listener that catches HP changes made by scripts
+     * such as AlterBars that modify character attributes directly rather than the
+     * token bar. Those scripts fire change:attribute but may not fire change:graphic
+     * with a correct prev value, so we construct a fakePrev from attr's own prev.current
+     * and call handleToken ourselves with a real HP delta (enabling FX).
+     * The token ID is added to recentAttrFires so that if change:graphic fires
+     * afterwards it receives update='YES', skipping duplicate particle spawning.
+     */
+    function registerAttributeListener() {
+      on('change:attribute', (attr, prev) => {
+        const s = state.HealthColors;
+        if (!s?.auraColorOn) return;
+        const barUsed = s.auraBar;
+        const charId = attr.get('characterid');
+        if (!charId) return;
+        const oldVal = prev.current;
+        const newVal = attr.get('current');
+        if (oldVal === newVal) return;
+        findObjs({ type: 'graphic', represents: charId })
+          .filter((t) => t.get('layer') === 'objects' && t.get(`${barUsed}_link`) === attr.id)
+          .forEach((token) => applyAttrHpChange(barUsed, oldVal, newVal, token));
+      });
+    }
+
+    /**
+     * Registers all Roll20 event listeners for the script.
+     * - chat:message     → handleInput       (command processing)
+     * - change:graphic   → handleTokenChange (live HP changes and token resizes; suppresses
+     *                                         FX when the attribute listener already fired)
+     * - change:attribute → registerAttributeListener (AlterBars / indirect HP changes)
+     * - add:graphic      → handleToken       (with 400ms delay to allow token data to settle)
+     */
+    function registerEventHandlers() {
+      on('chat:message', handleInput);
+      on('change:graphic', handleTokenChange);
+      on('add:graphic', (t) => {
+        setTimeout(() => {
+          const token = getObj('graphic', t.id);
+          if (!token) return;
+          const prev = deepClone(token);
+          handleToken(token, prev, 'YES');
+        }, 400);
+      });
+      registerAttributeListener();
+    }
+
+    // ————— BOOTSTRAP —————
+    const publicApi = {
+      gmWhisper,
+      GMW: gmWhisper,
+      update: updateToken,
+      Update: updateToken,
+      checkInstall,
+      CheckInstall: checkInstall,
+      registerEventHandlers,
+      RegisterEventHandlers: registerEventHandlers,
+    };
+
+    globalThis.HealthColors = publicApi;
+
+    on('ready', () => {
+      gmWhisper(`MOD READY (v${VERSION})`);
+      checkInstall();
+      registerEventHandlers();
     });
-    registerAttributeListener();
-  }
 
-  // ————— BOOTSTRAP —————
-  globalThis.HealthColors = {
-    gmWhisper,
-    update: updateToken,
-    checkInstall,
-    registerEventHandlers,
-  };
-
-  on('ready', () => {
-    gmWhisper(`MOD READY (v${VERSION})`);
-    checkInstall();
-    registerEventHandlers();
-  });
-})();
+    return publicApi;
+  })();
