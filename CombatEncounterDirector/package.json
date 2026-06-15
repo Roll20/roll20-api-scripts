@@ -1,0 +1,19 @@
+{
+  "name": "combat-encounter-director-roll20",
+  "version": "1.0.0",
+  "description": "Roll20 API Mod for rapid GM control over combat encounters.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "format": "prettier --write \"CombatEncounterDirector.js\" \"rollup.config.js\" \"src/**/*.js\" \"*.md\" \"scripts/**/*.mjs\"",
+    "sync-locales": "node scripts/sync-locales.mjs",
+    "regenerate-locales": "node scripts/sync-locales.mjs --regenerate"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "rollup": "^4.34.8"
+  }
+}

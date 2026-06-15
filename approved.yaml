@@ -1407,3 +1407,27 @@ Wiki:
 ConditionTracker:
   - "ConditionTracker"
   - "Utility"
+
+Chronicle:
+  - "Chronicle"
+  - "Utility"
+
+TrinketsAndTrackers:
+  - "T&T - Trinkets and Trackers"
+  - "Utility"
+  
+Sequence:
+  - "Sequence"
+  - "Tokens"
+
+CombatEncounterDirector:
+  - "CombatEncounterDirector"
+  - "Utility"
+
+Choreograph:
+  - "Choreograph"
+  - "Utility"
+
+SwapTokenPositions:
+  - "SwapTokenPositions"
+  - "Utility"
