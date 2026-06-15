@@ -141,6 +141,16 @@ Force an immediate transform sync for children.
 Whisper anchor state to the caller. Shows tracked components with stored values, lock status (🔒), and pre-locked untracked components. With no tokens selected or specified, shows all anchored tokens on the current page.
 
 ```
+!anchor chain [component flags] [ignore-selected] [child_id...]
+```
+Mutually anchor tokens in a ring (A→B, B→C, C→A). Move any one and all others follow. Useful for syncing tokens across pages or creating peer-linked groups.
+
+```
+!anchor unchain [ignore-selected] [child_id...]
+```
+Dissolve a chain ring. Select any one token in the ring (or even a child of a ring member) — the ring is detected and all relationships in it are removed.
+
+```
 !anchor --help
 ```
 Whisper the command reference.

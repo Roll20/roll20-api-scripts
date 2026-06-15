@@ -1457,6 +1457,8 @@ var Anchor = Anchor || (() => {
                 html += `<pre>Anchor.getAnchor(childId)       // → anchorId or undefined\nAnchor.getChildren(anchorId)    // → [graphic objects]</pre>`;
                 html += `<h2>Creating / Removing</h2>`;
                 html += `<pre>Anchor.anchorObj(childId, anchorId, components)\nAnchor.createAnchorFor(obj, components, persist)  // → new anchor obj\nAnchor.removeAnchor(childId)</pre>`;
+                html += `<h2>Chain Linking</h2>`;
+                html += `<pre>Anchor.chainAnchorObjs(ids, components)   // ring-link: A→B, B→C, C→A\nAnchor.unchainAnchorObjs(startId)          // dissolve ring from any member → [ids] or null</pre>`;
                 html += `<h2>Position (anchor-local)</h2>`;
                 html += `<pre>Anchor.getPosition(obj)           // → [left, top]\nAnchor.setPosition(obj, left, top)</pre>`;
                 html += `<h2>Rotation (anchor-local)</h2>`;
@@ -2162,6 +2164,8 @@ var Anchor = Anchor || (() => {
             html += `<li><code>!anchor center</code> — Snap children to anchor center</li>`;
             html += `<li><code>!anchor update</code> — Force immediate sync</li>`;
             html += `<li><code>!anchor info</code> — Show anchor state</li>`;
+            html += `<li><code>!anchor chain</code> — Mutually anchor tokens in a ring</li>`;
+            html += `<li><code>!anchor unchain</code> — Dissolve a chain ring from any member</li>`;
             html += `<li><code>!anchor config [key] [value]</code> — Configuration</li>`;
             html += `<li><code>!anchor --help</code> — Command reference</li>`;
             html += `<li><code>!anchor gen-dev-docs</code> — Generate scripting API handout</li>`;
