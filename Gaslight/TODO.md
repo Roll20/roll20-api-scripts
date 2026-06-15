@@ -33,12 +33,19 @@
 - [x] Relay sends as invoking player (macros/permissions work)
 - [x] Interceptor skips !gaslight, !mirror, !anchor
 - [x] Loop prevention via {& select} check
+- [x] Focus-ping players on split
+- [x] Reaction suppression confirmed unnecessary (API moves don't trigger reactions)
+- [x] !gaslight setup (quick group config from duplicate pages)
 
-## v2 Remaining
-- [ ] On-demand split (page cloning, adhoc flag, adhoc merge/cleanup)
-- [ ] Ad-hoc test (no group arg)
-- [ ] Reaction suppression (interactionTriggered reset)
-- [ ] Focus-ping players on split
+## Needs Testing (v2)
+- [ ] gaslight_sync attribute (all combos: absent, empty, specific, !exclusion)
+- [ ] Mirror chain setup/teardown on split/merge
+- [ ] !gaslight stage + gaslight_stage auto-propagation
+- [ ] Cascade-delete
+- [ ] View interceptor + relay commands
+- [ ] Player relay-commands config
+- [ ] !gaslight setup workflow
+- [ ] Focus-ping on split
 
 ## v3 Ideas
 - [ ] Config handout (editable in-game, live reload)
@@ -48,6 +55,7 @@
 - [ ] Per-status-marker sync granularity (manual for now)
 - [ ] Replay command (re-run last N commands against different views)
 - [ ] Choreograph/Sequence integration
+- [ ] On-demand page cloning (if TruePageCopy exposes API)
 
 ## Known Issues
 - None currently
