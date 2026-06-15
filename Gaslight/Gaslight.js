@@ -1445,26 +1445,28 @@ var Gaslight = Gaslight || (() => {
         if (msg.type !== 'api') return;
         var s = state[SCRIPT_NAME];
         if (Object.keys(s.activeGroups).length === 0) return;
-        if (msg.content.split(' ')[0] === CMD) return;
         var firstWord = msg.content.split(' ')[0];
-        if (firstWord === '!mirror' || firstWord === '!anchor') return;
+        if (firstWord === CMD || firstWord === '!mirror' || firstWord === '!anchor') return;
         if (!playerIsGM(msg.playerid)) return;
         if (!msg.selected || msg.selected.length === 0) return;
         if (msg.content.indexOf('{& select') !== -1) return;
 
-        var viewPlayerId = s.view;
         var tokens = msg.selected.map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
         if (tokens.length === 0) return;
+
+        // Only intercept if tokens are on a master page
+        var pageId = tokens[0].get('_pageid');
+        var activeEntry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pageId; });
+        if (!activeEntry) return; // tokens not on master, let command run normally
+
+        var viewPlayerId = s.view;
 
         // Determine target player IDs based on current view
         var targetPlayerIds;
         if (viewPlayerId) {
             targetPlayerIds = [viewPlayerId];
         } else {
-            targetPlayerIds = Object.keys(s.activeGroups).reduce(function(acc, gn) {
-                return acc.concat(Object.keys(s.activeGroups[gn].playerPages));
-            }, []);
-            targetPlayerIds = targetPlayerIds.filter(function(id, i) { return targetPlayerIds.indexOf(id) === i; });
+            targetPlayerIds = Object.keys(activeEntry[1].playerPages);
         }
 
         executeRelay('player|' + msg.playerid, tokens, msg.content, targetPlayerIds, false);
