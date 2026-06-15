@@ -16,13 +16,19 @@
 - [x] Sight stripping on children
 - [x] Player disambiguation (clickable buttons)
 
-## v2
+## Done (v2)
+- [x] Peer sync mode (multi-controller tokens via chain-anchoring)
+- [x] Configurable sync properties (gaslight_sync attribute with ! exclusion)
+- [x] Mirror integration (non-spatial property sync)
+- [x] !gaslight stage command (propagate tokens to player pages)
+- [x] gaslight_stage character attribute (auto-propagate on add)
+- [x] Cascade-delete linked tokens
+- [x] Anchor chain-linking for player tokens (removed GM override listener)
+
+## v2 Remaining
 - [ ] On-demand split (page cloning, adhoc flag, adhoc merge/cleanup)
 - [ ] Ad-hoc test (no group arg)
-- [ ] Peer sync mode (multi-controller tokens)
-- [ ] Configurable sync properties (gaslight_sync attribute)
 - [ ] Reaction suppression (interactionTriggered reset)
-- [ ] Auto-commit / !gaslight commit
 - [ ] Focus-ping players on split
 - [ ] Config visibility toggle (hide text in HTML comment)
 - [ ] Near-match suggestions in step 4 warnings

@@ -58,9 +58,11 @@ var Gaslight = Gaslight || (() => {
         if (!state[SCRIPT_NAME]) {
             state[SCRIPT_NAME] = {
                 activeGroups: {},
-                config: { autoCommit: false }
+                config: { autoCommit: false },
+                view: null // null = master view, playerId = that player's view
             };
         }
+        if (!state[SCRIPT_NAME].view) state[SCRIPT_NAME].view = null;
     };
 
     // =========================================================================
@@ -938,6 +940,105 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
+     * Set the current view mode.
+     * !gaslight view [player|master]
+     */
+    const doView = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        if (args.length === 0) {
+            // Show current view
+            var current = s.view ? Object.values(s.activeGroups).reduce(function(name, g) {
+                if (name) return name;
+                var entry = g.playerPages[s.view];
+                return entry ? entry.name : null;
+            }, null) || s.view : 'master';
+            reply(msg, 'View', 'Current view: <b>' + current + '</b>');
+            return;
+        }
+        var arg = args.join(' ').replace(/^["']|["']$/g, '');
+        if (arg.toLowerCase() === 'master' || arg.toLowerCase() === 'gm') {
+            s.view = null;
+            reply(msg, 'View', 'Switched to <b>master</b> view. Commands target master tokens; use <code>!gaslight relay</code> for player targeting.');
+        } else {
+            // Resolve player
+            var resolved = resolvePlayer(msg, arg, CMD + ' view');
+            if (!resolved || resolved === 'ambiguous') return;
+            s.view = resolved.id;
+            reply(msg, 'View', 'Switched to <b>' + resolved.name + '</b> view. Commands will auto-target their linked tokens.');
+        }
+    };
+
+    /**
+     * Relay a command to linked tokens on other pages.
+     * !gaslight relay [--players name1 name2 --] <command...>
+     */
+    const doRelay = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        var tokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
+        if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) to relay from.'); return; }
+
+        // Parse --players
+        var targetPlayerNames = [];
+        var playersIdx = args.indexOf('--players');
+        if (playersIdx !== -1) {
+            var endIdx = args.indexOf('--', playersIdx + 1);
+            if (endIdx === -1) endIdx = args.length;
+            targetPlayerNames = args.slice(playersIdx + 1, endIdx);
+            args = args.slice(0, playersIdx).concat(args.slice(endIdx + 1));
+        }
+
+        if (args.length === 0) { reply(msg, 'Error', 'No command to relay. Usage: !gaslight relay [--players name1 name2 --] &lt;command&gt;'); return; }
+        var command = args.join(' ');
+
+        var relayed = 0;
+        tokens.forEach(function(token) {
+            var tokenId = token.get('id');
+            // Find linked counterparts
+            var linkedIds = [];
+            Object.values(s.activeGroups).forEach(function(active) {
+                if (active.linkedTokens[tokenId]) {
+                    linkedIds = linkedIds.concat(active.linkedTokens[tokenId]);
+                } else {
+                    Object.entries(active.linkedTokens).forEach(function(entry) {
+                        if (entry[1].indexOf(tokenId) !== -1) {
+                            linkedIds.push(entry[0]);
+                            linkedIds = linkedIds.concat(entry[1].filter(function(id) { return id !== tokenId; }));
+                        }
+                    });
+                }
+            });
+
+            // Filter by target players if specified
+            if (targetPlayerNames.length > 0) {
+                linkedIds = linkedIds.filter(function(id) {
+                    var obj = getObj('graphic', id);
+                    if (!obj) return false;
+                    var pageId = obj.get('_pageid');
+                    return Object.values(s.activeGroups).some(function(active) {
+                        return Object.entries(active.playerPages).some(function(entry) {
+                            return entry[1].pageId === pageId && targetPlayerNames.some(function(name) {
+                                return entry[1].name && entry[1].name.toLowerCase() === name.toLowerCase();
+                            });
+                        });
+                    });
+                });
+            }
+
+            // Deduplicate
+            linkedIds = linkedIds.filter(function(id, i) { return linkedIds.indexOf(id) === i && id !== tokenId; });
+
+            // Send command with each linked token as selection via SelectManager
+            linkedIds.forEach(function(id) {
+                var fullCmd = command + ' {& select ' + id + '}';
+                sendChat('API', fullCmd);
+                relayed++;
+            });
+        });
+
+        reply(msg, 'Relay', 'Relayed command to ' + relayed + ' linked token(s).');
+    };
+
+    /**
      * Stage selected tokens: duplicate to player pages and link.
      * !gaslight stage [playerName1 playerName2 ...]
      */
@@ -1234,6 +1335,8 @@ var Gaslight = Gaslight || (() => {
             case 'unlink':  doUnlink(msg, args);  break;
             case 'group':   doGroup(msg, args);   break;
             case 'ungroup': doUngroup(msg, args); break;
+            case 'relay':   doRelay(msg, args);   break;
+            case 'view':    doView(msg, args);    break;
             case 'stage':   doStage(msg, args);   break;
             case 'status':  doStatus(msg);        break;
             case '--help':  reply(msg, HELP_TEXT); break;
@@ -1297,8 +1400,67 @@ var Gaslight = Gaslight || (() => {
         destroying = false;
     };
 
+    /**
+     * In player view mode, intercept non-gaslight API commands and re-emit
+     * with the linked player token as selection via SelectManager.
+     */
+    const viewInterceptor = (msg) => {
+        if (msg.type !== 'api') return;
+        var s = state[SCRIPT_NAME];
+        if (!s.view) return; // master view, don't intercept
+        if (msg.content.split(' ')[0] === CMD) return; // don't intercept our own commands
+        if (!playerIsGM(msg.playerid)) return;
+        if (!msg.selected || msg.selected.length === 0) return;
+        if (msg._gaslightRelayed) return; // prevent infinite loop
+
+        var viewPlayerId = s.view;
+        var rewrittenIds = [];
+        var needsRewrite = false;
+
+        msg.selected.forEach(function(sel) {
+            var tokenId = sel._id;
+            // Find the linked token on the viewed player's page
+            var linkedId = null;
+            Object.values(s.activeGroups).forEach(function(active) {
+                if (linkedId) return;
+                var playerPage = active.playerPages[viewPlayerId];
+                if (!playerPage) return;
+                var targetPageId = playerPage.pageId;
+
+                // Check if this token has links, find the one on the target page
+                var allLinked = active.linkedTokens[tokenId] || [];
+                // Also check if tokenId is in someone else's list
+                Object.entries(active.linkedTokens).forEach(function(entry) {
+                    if (entry[1].indexOf(tokenId) !== -1) {
+                        allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                    }
+                });
+                allLinked = allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i && id !== tokenId; });
+
+                allLinked.forEach(function(id) {
+                    if (linkedId) return;
+                    var obj = getObj('graphic', id);
+                    if (obj && obj.get('_pageid') === targetPageId) linkedId = id;
+                });
+            });
+
+            if (linkedId) { rewrittenIds.push(linkedId); needsRewrite = true; }
+            else rewrittenIds.push(tokenId); // keep original if no match
+        });
+
+        if (needsRewrite) {
+            // Suppress original by marking as handled (other scripts will also see this msg,
+            // but we can't prevent that). Instead, re-emit with correct selection.
+            var newCmd = msg.content + ' {& select ' + rewrittenIds.join(', ') + '}';
+            sendChat('API', newCmd);
+            // Note: original msg still fires to other handlers with original selection.
+            // This is a best-effort approach — SelectManager-aware scripts will use the new selection.
+        }
+    };
+
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
+        on('chat:message', viewInterceptor);
         on('add:graphic', onTokenAdded);
         on('destroy:graphic', onTokenDestroyed);
     };
