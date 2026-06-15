@@ -309,17 +309,35 @@ var Gaslight = Gaslight || (() => {
         val = val.trim();
         if (val === '') return '';
         // Parse comma-separated props, resolve groups
+        // Prefix with ! to exclude (e.g. "!anchor" = everything except anchor props)
         var parts = val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-        var resolved = [];
+        var includes = [];
+        var excludes = [];
         parts.forEach(function(p) {
-            if (p === 'base' || p === 'anchor') {
-                resolved = resolved.concat(['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph']);
-            } else if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS[p]) {
-                resolved = resolved.concat(Mirror.PROP_GROUPS[p]);
+            var isExclude = p.startsWith('!');
+            var name = isExclude ? p.slice(1) : p;
+            var expanded;
+            if (name === 'base' || name === 'anchor') {
+                expanded = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
+            } else if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS[name]) {
+                expanded = Mirror.PROP_GROUPS[name];
             } else {
-                resolved.push(p);
+                expanded = [name];
             }
+            if (isExclude) excludes = excludes.concat(expanded);
+            else includes = includes.concat(expanded);
         });
+        // If only excludes specified, start from all known props and subtract
+        var resolved;
+        if (includes.length === 0 && excludes.length > 0) {
+            var allProps = typeof Mirror !== 'undefined' ? Mirror.getKnownProps() :
+                ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph', 'layer',
+                 'bar1_value', 'bar1_max', 'bar2_value', 'bar2_max', 'bar3_value', 'bar3_max',
+                 'statusmarkers', 'tint_color', 'name', 'light_radius', 'light_dimradius', 'baseOpacity', 'currentSide'];
+            resolved = allProps.filter(function(p) { return excludes.indexOf(p) === -1; });
+        } else {
+            resolved = includes.filter(function(p) { return excludes.indexOf(p) === -1; });
+        }
         return resolved.filter(function(p, i) { return resolved.indexOf(p) === i; }); // dedupe
     };
 
@@ -649,8 +667,9 @@ var Gaslight = Gaslight || (() => {
             // Set up Mirror chain for non-spatial property sync
             if (typeof Mirror !== 'undefined' && mirrorProps !== false) {
                 if (mirrorProps === null) {
-                    // Default: sync all minus anchor props
-                    Mirror.chainLink(ids, null, Mirror.PROP_GROUPS.anchor);
+                    // Default: sync all minus whatever Anchor is handling
+                    var mirrorExcludes = anchorComponents ? Object.keys(anchorComponents) : allAnchorProps;
+                    Mirror.chainLink(ids, null, mirrorExcludes);
                 } else if (Array.isArray(mirrorProps) && mirrorProps.length > 0) {
                     // Specific non-spatial props
                     Mirror.chainLink(ids, mirrorProps);
