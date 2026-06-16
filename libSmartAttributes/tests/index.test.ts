@@ -280,6 +280,18 @@ describe("SmartAttributes", () => {
       expect(result).toBe(true);
     });
 
+    it("should return true when removing a legacy attribute on default-sandbox characters", async () => {
+      const mockRemove = vi.fn();
+      mockGetObj.mockReturnValue({});
+      mockFindObjs.mockReturnValue([{ remove: mockRemove }]);
+
+      const result = await SmartAttributes.deleteAttribute(characterId, attributeName);
+
+      expect(mockRemove).toHaveBeenCalled();
+      expect(mockGetSheetItem).not.toHaveBeenCalled();
+      expect(result).toBe(true);
+    });
+
     it("should return false when legacy character has no matching attribute", async () => {
       mockGetObj.mockReturnValue({ sheetEnvironment: "legacy" });
       mockFindObjs.mockReturnValue([]);
