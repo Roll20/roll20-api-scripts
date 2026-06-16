@@ -105,7 +105,7 @@ export function tryFindLegacyAttribute(
 
 export function isLegacySheet(targetId: string): boolean {
   const character = getObj("character", targetId);
-  return character?.sheetEnvironment === "legacy";
+  return (character?.sheetEnvironment === "legacy" || character?.sheetEnvironment === undefined);
 };
 
 function legacyAttributeForSheet(
