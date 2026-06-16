@@ -1291,6 +1291,7 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         if (!s.relayQueue) s.relayQueue = {};
         var tokenIds = tokens.map(function(t) { return t.get('id'); });
+        var newlyQueued = 0;
 
         targetPlayerIds.forEach(function(playerId) {
             // Find the linked token IDs for this player page
@@ -1321,13 +1322,14 @@ var Gaslight = Gaslight || (() => {
                 if (pageId) {
                     if (!s.relayQueue[pageId]) s.relayQueue[pageId] = [];
                     s.relayQueue[pageId].push({ sender: sender, command: command, selectIds: linkedIds });
+                    newlyQueued++;
                 }
             }
         });
 
-        var queuedPages = Object.keys(s.relayQueue).filter(function(pid) { return s.relayQueue[pid].length > 0; });
-        if (queuedPages.length > 0) {
-            sendChat(SCRIPT_NAME, '/w gm Queued relay commands for ' + queuedPages.length + ' page(s). Navigate to player pages to execute.');
+        if (newlyQueued > 0) {
+            var totalPages = Object.keys(s.relayQueue).filter(function(pid) { return s.relayQueue[pid].length > 0; }).length;
+            sendChat(SCRIPT_NAME, '/w gm Queued for ' + newlyQueued + ' page(s). Total pending: ' + totalPages + ' page(s). Navigate to player pages to execute.');
         }
     };
 
