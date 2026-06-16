@@ -305,6 +305,16 @@ describe("message", () => {
         });
       });
 
+      it("should parse max-only syntax with trailing pipe segments", () => {
+        const result = parse("!setattr --sel --hp||23|43");
+        expect(result.changes).toHaveLength(1);
+        expect(result.changes[0]).toEqual({
+          name: "hp",
+          max: "23",
+        });
+        expect(result.changes[0]).not.toHaveProperty("current");
+      });
+
       it("should parse multiple attributes", () => {
         const result = parse("!setattr --sel --strength|18 --dexterity|14|16 --constitution");
         expect(result.changes).toHaveLength(3);

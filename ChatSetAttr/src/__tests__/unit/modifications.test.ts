@@ -413,5 +413,31 @@ describe("modifications", () => {
       ]);
       expect(errors).toEqual([]);
     });
+
+    it("should omit current when only max is provided (|| max-only syntax)", () => {
+      const result = processModifications(
+        [{ name: "hp", max: "23" }],
+        { hp: "10", hp_max: "20" },
+        options,
+        {},
+        [],
+        "Test Character",
+      );
+
+      expect(result).toEqual([{ name: "hp", max: "23" }]);
+    });
+
+    it("should skip the literal string undefined as current", () => {
+      const result = processModifications(
+        [{ name: "hp", current: "undefined", max: "23" }],
+        {},
+        options,
+        {},
+        [],
+        "Test Character",
+      );
+
+      expect(result).toEqual([{ name: "hp", max: "23" }]);
+    });
   });
 });

@@ -127,7 +127,7 @@ export function processModifications(
     }
 
     let processedCurrent = undefined;
-    if (mod.current !== "undefined") {
+    if (mod.current !== undefined && mod.current !== "undefined") {
       processedCurrent = String(mod.current);
       processedCurrent = processModifierValue(processedCurrent, resolved, {
         shouldEvaluate: options.evaluate,

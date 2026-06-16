@@ -120,6 +120,60 @@ describe("ChatSetAttr Integration Tests", () => {
       });
     });
 
+    it("should set only max for legacy attributes using || syntax", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      createObj("attribute", { _id: "hp1", _characterid: "char1", name: "HP", current: "10", max: "20" });
+
+      executeCommand("!setattr --charid char1 --HP||23");
+
+      await vi.waitFor(async () => {
+        const hp = await libSmartAttributes.getAttribute("char1", "HP", "current");
+        const hpMax = await libSmartAttributes.getAttribute("char1", "HP", "max");
+        expect(hp).toBe("10");
+        expect(hpMax).toBe("23");
+      });
+    });
+
+    it("should set only max for beacon computeds using || syntax", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createBeaconCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      createObj("attribute", { _characterid: "char1", name: "ComputedLike", current: "10", max: "20" });
+
+      executeCommand("!setattr --charid char1 --ComputedLike||23");
+
+      await vi.waitFor(async () => {
+        const current = await libSmartAttributes.getAttribute("char1", "ComputedLike", "current");
+        const max = await libSmartAttributes.getAttribute("char1", "ComputedLike", "max");
+        expect(current).toBe("10");
+        expect(max).toBe("23");
+      });
+    });
+
+    it("should set only max for userAttributes using || syntax", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createBeaconCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+
+      executeCommand("!setattr --charid char1 --UserAttrWithMax|42");
+      executeCommand("!setattr --charid char1 --UserAttrWithMax_max|100");
+
+      await vi.waitFor(async () => {
+        const current = await libSmartAttributes.getAttribute("char1", "UserAttrWithMax", "current");
+        const max = await libSmartAttributes.getAttribute("char1", "UserAttrWithMax", "max");
+        expect(current).toBe("42");
+        expect(max).toBe("100");
+      });
+
+      executeCommand("!setattr --charid char1 --UserAttrWithMax||75");
+
+      await vi.waitFor(async () => {
+        const current = await libSmartAttributes.getAttribute("char1", "UserAttrWithMax", "current");
+        const max = await libSmartAttributes.getAttribute("char1", "UserAttrWithMax", "max");
+        expect(current).toBe("42");
+        expect(max).toBe("75");
+      });
+    });
+
     it("should set td attribute to d8 for all characters", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       vi.mocked(global.playerIsGM).mockReturnValue(true);
