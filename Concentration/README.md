@@ -1,83 +1,171 @@
 ## Concentration
 
-* Skype: RobinKuiper.eu
-* Discord: Atheos#1095
-* My Discord Server: https://discord.gg/AcC9VME
-* Roll20: https://app.roll20.net/users/1226016/robin
-* Roll20 Wiki: https://wiki.roll20.net/Script:Concentration
-* Roll20 Thread: https://app.roll20.net/forum/post/6364317/script-concentration/?pageforid=6364317#post-6364317
-* Github: https://github.com/RobinKuiper/Roll20APIScripts
-* Reddit: https://www.reddit.com/user/robinkuiper/
-* Patreon: https://patreon.com/robinkuiper
-* Paypal.me: https://www.paypal.me/robinkuiper
+This is a community-maintained fork of Robin Kuiper's Concentration script.
+It preserves the original command structure while updating documentation for current Roll20 Legacy and Beacon sheet behavior.
+
+Concentration tracks character concentration and reminds players to make concentration checks.
+
+It supports manual concentration toggling, automatic marker application from compatible spell cards, HP-loss concentration reminders, and optional save rolling.
+
+### Supported Sheets
+
+- D&D 2014 / 5e OGL-style sheets
+- D&D 2024 / Beacon sheets
 
 ---
 
-Concentration keeps track of characters concentration, and reminds to do a concentration check.
+### Beacon Notes
 
-If you use the 5e OGL character sheet, it can also automaticly add the concentrating marker when a concentrating spell is cast.
+- D&D 2024 / Beacon support may require the Experimental API server.
+- Roll20 can change Beacon roll and chat output over time, which may affect automatic spell detection.
+- Enable Debug Mode from the Config Menu when you need to capture why a spell card did or did not trigger concentration.
+- See [docs/beacon-compatibility.md](docs/beacon-compatibility.md) for compatibility expectations and diagnostic guidance.
 
-![Concentration Reminder](https://i.imgur.com/yQwYL1F.png "Concentration Reminder")
-![Spell Cast](https://i.imgur.com/HucNIDc.png "Spell Cast")
+![Concentration Reminder](images/concentration-reminder.png 'Concentration Reminder')
+![Spell Cast](images/spell-cast.png 'Spell Cast')
+
+---
 
 ### Commands
 
-* **!concentration**
-    * Shows the config menu without tokens selected.
-    * Toggles concentration on selected tokens.
+| Command                                          | Who Can Use                | Description                                                                                                                     | Accepted Values                                                                                                       |
+| ------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `!concentration`                                 | GM, Players (with control) | GM: shows Config Menu if no tokens are selected. GM/Players: toggles concentration status marker on selected controlled tokens. | No extra values.                                                                                                      |
+| `!concentration <spell name>`                    | GM, Players (with control) | Toggles concentration status marker on selected controlled tokens and includes spell name in announcement.                      | Any short text spell name (HTML characters are sanitized).                                                            |
+| `!concentration config <key>\|<value>`           | GM                         | Updates a config setting.                                                                                                       | Chat command syntax is `!concentration config key\|value`; keys and values are listed in the Config Keys table below. |
+| `!concentration reset`                           | GM                         | Resets saved script state/config to defaults.                                                                                   | No extra values.                                                                                                      |
+| `!concentration advantage-menu`                  | GM                         | Opens the Advantage Menu.                                                                                                       | No extra values.                                                                                                      |
+| `!concentration toggle-advantage <character_id>` | GM                         | Toggles saved Auto Roll Save advantage for a character.                                                                         | `<character_id>` must be a valid existing Roll20 character id.                                                        |
+| `!concentration roll <pending_roll_id>`          | GM (normally via button)   | Resolves a pending concentration roll button without advantage.                                                                 | `<pending_roll_id>` format: `pr_<timestamp>_<suffix>`.                                                                |
+| `!concentration advantage <pending_roll_id>`     | GM (normally via button)   | Resolves a pending concentration roll button with advantage.                                                                    | `<pending_roll_id>` format: `pr_<timestamp>_<suffix>`.                                                                |
+
+---
+
+### Config Keys
+
+| Key                             | Purpose                                                           | Accepted Values                          |
+| ------------------------------- | ----------------------------------------------------------------- | ---------------------------------------- |
+| `command`                       | Main chat command keyword.                                        | 1-32 chars: letters, numbers, `_`, `-`   |
+| `statusmarker`                  | Status marker used for concentration.                             | Any marker from the Marker dropdown menu |
+| `bar`                           | HP bar watched for damage.                                        | `1`, `2`, `3`                            |
+| `send_reminder_to`              | Where reminders/check prompts are sent.                           | `everyone`, `character`, `gm`            |
+| `auto_add_concentration_marker` | Auto-mark on detected concentration spell.                        | `true`, `false`                          |
+| `auto_roll_save`                | Automatically roll concentration saves.                           | `true`, `false`                          |
+| `bonus_attribute`               | Attribute used for save modifier lookup.                          | Non-empty attribute name                 |
+| `show_roll_button`              | Show Roll/Advantage chat buttons when Auto Roll Save is disabled. | `true`, `false`                          |
+| `debug`                         | Enables debug output.                                             | `true`, `false`                          |
+| `support_mode`                  | Debug verbosity level.                                            | `basic`, `detailed`                      |
+
+---
 
 ### Config
 
-![Config Menu](https://i.imgur.com/SExckX7.png "Config Menu")
+![Config Menu](images/config-menu.png 'Config Menu')
 
-* **Command** - Which command you want to use for this script.
-* **Statusmarker** - Which statusmarker you want to use for concentration.
-* **HP Bar** - Which bar do you use as the HP bar?
-* **Send Reminder To** - To who you want to send the reminder.
-* **Auto Add Con. Marker** - Automatically add the concentration marker when a concentration spell is cast (works only for the 5e OGL sheet at the moment).
-* **Auto Roll Save** - If you want to Automatically roll the saving throw.
-* **Bonus Attribute** - Which attribute to use for the bonus modifier (defaulted to the constitution saving throw for the 5e OGL sheet).
-* **Advantage Menu** - Shows a list of characters, where you can toggle which characters have advantage when autorolling the concentration save.
-
-![Auto Roll](https://i.imgur.com/WHUV5iw.png "Auto Roll")
-![Advantage](https://i.imgur.com/ciSttkH.png "Advantage")
-
----
-
-[![Become a Patron](https://c5.patreon.com/external/logo/become_a_patron_button.png "Become a Patron")](https://www.patreon.com/bePatron?u=10835266)
+- **Command** - The command this script listens for.
+- **Status Marker** - The status marker used to indicate concentration.
+- **HP Bar** - The HP bar monitored for damage.
+- **Send Reminder To** - Who receives concentration reminders.
+- **Auto Add Con. Marker** - Automatically adds the concentration status marker when a concentration spell is cast.
+- **Auto Roll Save** - Automatically rolls the concentration save.
+- **Bonus Attribute** - The attribute used for the save modifier (defaults to the 5e OGL constitution saving throw modifier).
+- **Show Roll Button** - Shows Roll and Advantage buttons when Auto Roll Save is disabled.
+- **Debug Mode** - Writes focused debug logs for spell detection, character resolution, and save modifier lookup.
+- **Support Mode** - Controls debug detail level when Debug Mode is enabled.
+  - **Basic**: concise support-friendly output.
+  - **Detailed**: full structured diagnostics.
+- **Advantage Menu** - Shows a list of characters where you can toggle advantage for Auto Roll Save concentration checks.
 
 ---
 
-#### Changelog:
-**0.1.14**
-* Changed advantage system on autoroll.
-* Fix where huge damage would crash the api.
+### Troubleshooting
 
-**0.1.13**
-* Optionally autoroll with advantage.
-* Optionally show roll button when not using autorolling.
+Detailed troubleshooting steps are also available in [docs/troubleshooting.md](docs/troubleshooting.md).
 
-**0.1.12**
-* `!concentration` can now have another argument to name the spell, eg. `!concentration Bless`.
-* `!concentration` can be used by players (for controlled characters) now.
+- **Manual command works but spells do not auto-trigger**
+  Turn on Debug Mode, cast the spell again, and capture the API log output. Beacon spell detection depends on Roll20's current chat markup.
+- **HP loss does not trigger checks**
+  Verify that the token has the configured concentration status marker and that the configured HP bar matches the bar being reduced.
+- **CON modifier is 0**
+  Check the configured Bonus Attribute. If the attribute is missing or non-numeric, the script falls back to `0` and logs the reason in Debug Mode.
+- **Nothing happens on the D&D 2024 sheet**
+  Confirm whether the game is using the Default or Experimental API server. Current Beacon support may require the Experimental API server.
+- **Experimental API server is not active**
+  Automatic Beacon spell detection may fail even though manual toggling and HP-loss checks still work.
+- **Token is not linked to a character**
+  Manual toggling still works, but sheet-derived CON save modifiers and represented-token syncing are limited for unlinked tokens.
+- **Duplicate character names**
+  The script uses the first exact name match as a fallback and logs a warning in Debug Mode. Unique character names are safer.
 
-**0.1.11**
-* `!concentration` with tokens selected will now toggle the statusmarker on them.
+---
 
-**0.1.10**
-* If you use autoroll, and the save failed, it will automatically remove the statusmarker.
+### Testing Checklist
 
-**0.1.9**
-* Auto Roll Saves (Optional)
+The full v1.0.0 manual test matrix is in [docs/testing-checklist.md](docs/testing-checklist.md).
 
-**01-05-2018 - 0.1.8**
-* Bugfix.
+---
 
-**28-04-2018 - 0.1.7**
-* Remove statusmarker from all objects when removed.
+### Known Limitations
 
-**25-04-2018 - 0.1.5**
-* Correct whisper target on spell cast concentration check.
+- Beacon roll and chat HTML may change over time and can break automatic spell detection until patterns are updated.
+- Auto-detection depends on Roll20 spell-card output and cannot guarantee perfect matching for every custom macro format.
+- Duplicate character names can cause fallback ambiguity; the script logs a warning and uses the first exact match.
+- Unlinked tokens can be toggled manually but cannot provide reliable sheet-derived CON save modifiers.
+- If the configured bonus attribute is missing or non-numeric, the modifier falls back to `0`.
 
-**02-06-2024 - 0.2.0**
-* Updated to work with Beacon sheets
+---
+
+### Support Request Format
+
+```markdown
+## Sheet and API Environment
+
+- Sheet: D&D 2014 / D&D 2024 / Other
+- API server: Default / Experimental
+- Concentration version:
+- Other related scripts:
+
+## What happened
+
+## What you expected
+
+## Spell or action used
+
+## Debug output
+
+Paste relevant debug output, anonymizing character names if needed.
+```
+
+![Auto Roll](images/auto-roll.png 'Auto Roll')
+![Advantage](images/advantage-menu.png 'Advantage')
+
+---
+
+[![Become a Patron](https://c5.patreon.com/external/logo/become_a_patron_button.png 'Become a Patron')](https://www.patreon.com/bePatron?u=10835266)
+
+---
+
+## Credits
+
+### Creator Information
+
+Original Author: Robin Kuiper
+
+| Platform       | Details                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| Skype          | RobinKuiper.eu                                                                                 |
+| Discord        | Atheos#1095                                                                                    |
+| Discord Server | https://discord.gg/AcC9VME                                                                     |
+| Roll20 Profile | https://app.roll20.net/users/1226016/robin                                                     |
+| Roll20 Wiki    | https://wiki.roll20.net/Script:Concentration                                                   |
+| Roll20 Thread  | https://app.roll20.net/forum/post/6364317/script-concentration/?pageforid=6364317#post-6364317 |
+| GitHub         | https://github.com/RobinKuiper/Roll20APIScripts                                                |
+| Reddit         | https://www.reddit.com/user/robinkuiper/                                                       |
+| Patreon        | https://patreon.com/robinkuiper                                                                |
+| PayPal         | https://www.paypal.me/robinkuiper                                                              |
+
+### Maintainer
+
+Refactored and Maintained for v1 by Steve Roberts (AKA MidNiteShadow7)
+
+---
