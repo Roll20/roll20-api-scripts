@@ -485,7 +485,10 @@ var ChatSetAttr = (function (exports) {
     }
     function isLegacySheet(targetId) {
         const character = getObj("character", targetId);
-        return character?.sheetEnvironment === "legacy";
+        if (!character) {
+            return false;
+        }
+        return character.sheetEnvironment === "legacy" || character.sheetEnvironment === undefined;
     }
     function legacyAttributeForSheet(targetId, actualName) {
         if (!isLegacySheet(targetId)) {
@@ -588,6 +591,12 @@ var ChatSetAttr = (function (exports) {
             },
         };
         return obj;
+    }
+    function resolveObserverDestroyObj(targetId, actualName, kind) {
+        if (kind !== "attribute" || !isLegacySheet(targetId)) {
+            return undefined;
+        }
+        return tryFindLegacyAttribute(targetId, actualName);
     }
     function resolveObserverObj(targetId, actualName, kind, state) {
         if (kind === "attribute") {
@@ -700,8 +709,7 @@ var ChatSetAttr = (function (exports) {
         }
         const maxKey = `${actualName}_max`;
         const hasCompanionCurrent = Object.hasOwn(results[target], actualName);
-        const character = getObj("character", target);
-        if (character?.sheetEnvironment === "legacy") {
+        if (isLegacySheet(target)) {
             return hasCompanionCurrent;
         }
         // Beacon userAttributes are removed when current is cleared; a follow-up max delete fails.
@@ -726,6 +734,7 @@ var ChatSetAttr = (function (exports) {
         const setOptions = buildSetAttributeOptions({ noCreate });
         const deleteKinds = new Map();
         const deleteStates = new Map();
+        const deleteObserverTargets = new Map();
         if (!isSetting) {
             for (const target in results) {
                 for (const name in results[target]) {
@@ -737,6 +746,10 @@ var ChatSetAttr = (function (exports) {
                     if (!deleteStates.has(groupKey)) {
                         const kind = deleteKinds.get(groupKey) ?? await resolveObserverKind(target, actualName);
                         deleteStates.set(groupKey, await captureDeletePriorState(target, actualName, kind, priorValues));
+                    }
+                    if (!deleteObserverTargets.has(groupKey)) {
+                        const kind = deleteKinds.get(groupKey) ?? await resolveObserverKind(target, actualName);
+                        deleteObserverTargets.set(groupKey, resolveObserverDestroyObj(target, actualName, kind));
                     }
                 }
             }
@@ -807,7 +820,8 @@ var ChatSetAttr = (function (exports) {
                 notifyObservers("change", obj, prev);
             }
             else {
-                const obj = resolveObserverObj(group.target, group.actualName, kind, state);
+                const obj = deleteObserverTargets.get(groupKey)
+                    ?? resolveObserverObj(group.target, group.actualName, kind, state);
                 notifyObservers("destroy", obj);
             }
         }

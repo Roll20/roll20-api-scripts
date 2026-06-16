@@ -4,14 +4,22 @@ import {
   captureDeletePriorState,
   createObserverAttributeObject,
   emptySnapshot,
+  isLegacySheet,
   isNewAttributeOrUser,
   mergeAttributeState,
   resolveObserverAddObj,
+  resolveObserverDestroyObj,
   resolveObserverKind,
   resolveObserverObj,
   toSnapshot,
   tryFindLegacyAttribute,
 } from "../../modules/observerPayload";
+
+function createBeaconCharacter(properties: Record<string, unknown>) {
+  const character = createObj("character", properties);
+  Object.assign(character, { sheetEnvironment: "beacon" });
+  return character;
+}
 
 describe("observerPayload", () => {
   beforeEach(() => {
@@ -21,6 +29,28 @@ describe("observerPayload", () => {
 
   afterEach(() => {
     resetAllObjects();
+  });
+
+  describe("isLegacySheet", () => {
+    it("should treat missing sheetEnvironment as legacy", () => {
+      createObj("character", { _id: "char1", name: "Hero" });
+      expect(isLegacySheet("char1")).toBe(true);
+    });
+
+    it("should treat explicit legacy sheetEnvironment as legacy", () => {
+      const character = createObj("character", { _id: "char1", name: "Hero" });
+      Object.assign(character, { sheetEnvironment: "legacy" });
+      expect(isLegacySheet("char1")).toBe(true);
+    });
+
+    it("should not treat beacon sheetEnvironment as legacy", () => {
+      createBeaconCharacter({ _id: "char1", name: "Hero" });
+      expect(isLegacySheet("char1")).toBe(false);
+    });
+
+    it("should not treat missing characters as legacy", () => {
+      expect(isLegacySheet("missing-char")).toBe(false);
+    });
   });
 
   describe("createObserverAttributeObject", () => {
@@ -117,23 +147,22 @@ describe("observerPayload", () => {
   });
 
   describe("resolveObserverKind", () => {
-    it("should return attribute when legacy object exists", async () => {
-      const character = createObj("character", { _id: "char1", name: "Hero" });
-      Object.assign(character, { sheetEnvironment: "legacy" });
+    it("should return attribute for default-sandbox legacy characters", async () => {
+      createObj("character", { _id: "char1", name: "Hero" });
       createObj("attribute", { _id: "attr1", _characterid: "char1", name: "hp", current: "10" });
 
       await expect(resolveObserverKind("char1", "hp")).resolves.toBe("attribute");
     });
 
     it("should return computed when beacon value exists", async () => {
-      createObj("character", { _id: "char1", name: "Hero" });
+      createBeaconCharacter({ _id: "char1", name: "Hero" });
       await setSheetItem("char1", "beacon_hp", "10", "current");
 
       await expect(resolveObserverKind("char1", "beacon_hp")).resolves.toBe("computed");
     });
 
     it("should return computed on beacon sheets even when a legacy attribute object exists", async () => {
-      createObj("character", { _id: "char1", name: "Hero" });
+      createBeaconCharacter({ _id: "char1", name: "Hero" });
       createObj("attribute", { _id: "attr1", _characterid: "char1", name: "ComputedLike", current: "10" });
       await setSheetItem("char1", "ComputedLike", "10", "current");
 
@@ -142,9 +171,8 @@ describe("observerPayload", () => {
   });
 
   describe("resolveObserverObj", () => {
-    it("should prefer live legacy attribute objects", () => {
-      const character = createObj("character", { _id: "char1", name: "Hero" });
-      Object.assign(character, { sheetEnvironment: "legacy" });
+    it("should prefer live legacy attribute objects on default-sandbox characters", () => {
+      createObj("character", { _id: "char1", name: "Hero" });
       const legacy = createObj("attribute", { _id: "attr1", _characterid: "char1", name: "hp", current: "10", max: "20" });
 
       const obj = resolveObserverObj("char1", "hp", "attribute", {
@@ -158,7 +186,7 @@ describe("observerPayload", () => {
     });
 
     it("should build synthetic computed object on beacon sheets even when legacy attribute exists", () => {
-      createObj("character", { _id: "char1", name: "Hero" });
+      createBeaconCharacter({ _id: "char1", name: "Hero" });
       createObj("attribute", { _id: "attr1", _characterid: "char1", name: "ComputedLike", current: "10", max: "20" });
 
       const obj = resolveObserverObj("char1", "ComputedLike", "computed", {
@@ -186,6 +214,21 @@ describe("observerPayload", () => {
     });
   });
 
+  describe("resolveObserverDestroyObj", () => {
+    it("should return the live legacy attribute before deletion on default-sandbox characters", () => {
+      createObj("character", { _id: "char1", name: "Hero" });
+      const legacy = createObj("attribute", { _id: "attr1", _characterid: "char1", name: "hp", current: "10", max: "20" });
+
+      expect(resolveObserverDestroyObj("char1", "hp", "attribute")).toBe(legacy);
+    });
+
+    it("should return undefined for beacon sheets", () => {
+      createBeaconCharacter({ _id: "char1", name: "Hero" });
+
+      expect(resolveObserverDestroyObj("char1", "hp", "attribute")).toBeUndefined();
+    });
+  });
+
   describe("resolveObserverAddObj", () => {
     it("should return synthetic object with added values", () => {
       const obj = resolveObserverAddObj("char1", "NewAttr", "userAttribute", { current: "42", max: "100" });
@@ -195,9 +238,8 @@ describe("observerPayload", () => {
       expect(obj.toJSON()._type).toBe("userAttribute");
     });
 
-    it("should return live legacy object when available", () => {
-      const character = createObj("character", { _id: "char1", name: "Hero" });
-      Object.assign(character, { sheetEnvironment: "legacy" });
+    it("should return live legacy object when available on default-sandbox characters", () => {
+      createObj("character", { _id: "char1", name: "Hero" });
       const legacy = createObj("attribute", { _id: "attr1", _characterid: "char1", name: "NewAttr", current: "42", max: "100" });
 
       const obj = resolveObserverAddObj("char1", "NewAttr", "attribute", { current: "42", max: "100" });
@@ -208,8 +250,7 @@ describe("observerPayload", () => {
 
   describe("captureDeletePriorState", () => {
     it("should read max from legacy attribute when priorValues omit hp_max", async () => {
-      const character = createObj("character", { _id: "char1", name: "Hero" });
-      Object.assign(character, { sheetEnvironment: "legacy" });
+      createObj("character", { _id: "char1", name: "Hero" });
       createObj("attribute", { _id: "attr1", _characterid: "char1", name: "hp", current: "10", max: "20" });
 
       const state = await captureDeletePriorState("char1", "hp", "attribute", { char1: { hp: 10 } });

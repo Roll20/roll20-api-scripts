@@ -1,4 +1,4 @@
-import { type AttributeRecord, type AttributeValue, type Command } from "../types";
+import { type AttributeRecord, type AttributeValue, type Command, type ObserverCallbackTarget } from "../types";
 import { getConfig } from "./config";
 import { notifyObservers } from "./observer";
 import {
@@ -8,10 +8,12 @@ import {
   logicalAttributeKey,
   mergeAttributeState,
   resolveObserverAddObj,
+  resolveObserverDestroyObj,
   resolveObserverKind,
   resolveObserverObj,
   toActualName,
   toSnapshot,
+  tryFindLegacyAttribute,
 } from "./observerPayload";
 
 type UpdateOptions = {
@@ -81,8 +83,7 @@ function shouldSkipPairedMaxDelete(
   const maxKey = `${actualName}_max`;
   const hasCompanionCurrent = Object.hasOwn(results[target], actualName);
 
-  const character = getObj("character", target);
-  if (character?.sheetEnvironment === "legacy") {
+  if (isLegacySheet(target)) {
     return hasCompanionCurrent;
   }
 
@@ -117,6 +118,7 @@ export async function makeUpdate(
   const setOptions = buildSetAttributeOptions({ noCreate });
   const deleteKinds = new Map<string, Awaited<ReturnType<typeof resolveObserverKind>>>();
   const deleteStates = new Map<string, Awaited<ReturnType<typeof captureDeletePriorState>>>();
+  const deleteObserverTargets = new Map<string, ObserverCallbackTarget | undefined>();
 
   if (!isSetting) {
     for (const target in results) {
@@ -131,6 +133,13 @@ export async function makeUpdate(
           deleteStates.set(
             groupKey,
             await captureDeletePriorState(target, actualName, kind, priorValues),
+          );
+        }
+        if (!deleteObserverTargets.has(groupKey)) {
+          const kind = deleteKinds.get(groupKey) ?? await resolveObserverKind(target, actualName);
+          deleteObserverTargets.set(
+            groupKey,
+            resolveObserverDestroyObj(target, actualName, kind),
           );
         }
       }
@@ -215,7 +224,8 @@ export async function makeUpdate(
       }
       notifyObservers("change", obj, prev);
     } else {
-      const obj = resolveObserverObj(group.target, group.actualName, kind, state);
+      const obj = deleteObserverTargets.get(groupKey)
+        ?? resolveObserverObj(group.target, group.actualName, kind, state);
       notifyObservers("destroy", obj);
     }
   }

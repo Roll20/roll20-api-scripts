@@ -105,7 +105,10 @@ export function tryFindLegacyAttribute(
 
 export function isLegacySheet(targetId: string): boolean {
   const character = getObj("character", targetId);
-  return (character?.sheetEnvironment === "legacy" || character?.sheetEnvironment === undefined);
+  if (!character) {
+    return false;
+  }
+  return character.sheetEnvironment === "legacy" || character.sheetEnvironment === undefined;
 };
 
 function legacyAttributeForSheet(
@@ -245,6 +248,17 @@ export function createObserverAttributeObject(
   };
 
   return obj;
+};
+
+export function resolveObserverDestroyObj(
+  targetId: string,
+  actualName: string,
+  kind: ObserverAttributeKind,
+): ObserverCallbackTarget | undefined {
+  if (kind !== "attribute" || !isLegacySheet(targetId)) {
+    return undefined;
+  }
+  return tryFindLegacyAttribute(targetId, actualName);
 };
 
 export function resolveObserverObj(

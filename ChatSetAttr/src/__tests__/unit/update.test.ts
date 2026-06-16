@@ -518,20 +518,22 @@ describe("updates", () => {
     });
 
     it("should include max on destroy when legacy attribute had max", async () => {
-      const character = createObj("character", { _id: "char1", name: "Hero" });
-      Object.assign(character, { sheetEnvironment: "legacy" });
-      createObj("attribute", { _id: "attr1", _characterid: "char1", name: "hp", current: "10", max: "20" });
+      createObj("character", { _id: "char1", name: "Hero" });
+      const legacy = createObj("attribute", { _id: "attr1", _characterid: "char1", name: "hp", current: "10", max: "20" });
       mocklibSmartAttributes.deleteAttribute.mockResolvedValue(true);
       const priorValues = { char1: { hp: 10 } };
 
       await makeUpdate("delattr", { char1: { hp: undefined } }, { priorValues });
 
       expect(mockNotifyObservers).toHaveBeenCalledTimes(1);
+      expect(mockNotifyObservers.mock.calls[0][1]).toBe(legacy);
       expect(mockNotifyObservers.mock.calls[0][1].get("current")).toBe("10");
       expect(mockNotifyObservers.mock.calls[0][1].get("max")).toBe("20");
     });
 
     it("should notify destroy for userAttribute delete without max", async () => {
+      const character = createObj("character", { _id: "char1", name: "Hero" });
+      Object.assign(character, { sheetEnvironment: "beacon" });
       vi.spyOn(global, "getSheetItem").mockImplementation(async (_charId, name, type) => {
         if (name === "user.UserOnlyAttr" && type === "current") {
           return "42";
@@ -554,6 +556,8 @@ describe("updates", () => {
     });
 
     it("should notify destroy for userAttribute delete with max", async () => {
+      const character = createObj("character", { _id: "char1", name: "Hero" });
+      Object.assign(character, { sheetEnvironment: "beacon" });
       vi.spyOn(global, "getSheetItem").mockImplementation(async (_charId, name, type) => {
         if (name === "user.UserAttrWithMax") {
           return type === "current" ? "42" : "100";

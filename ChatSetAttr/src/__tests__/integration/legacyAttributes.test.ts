@@ -36,10 +36,14 @@ describe("ChatSetAttr Integration Tests", () => {
     resetAllCallbacks();
   });
 
-  /** libSmartAttributes.deleteAttribute uses legacy removal only when sheetEnvironment is legacy */
+  /** Default-sandbox legacy characters omit sheetEnvironment (treated as legacy). */
   function createLegacyCharacter(properties: Record<string, unknown>) {
+    return createObj("character", properties);
+  }
+
+  function createBeaconCharacter(properties: Record<string, unknown>) {
     const character = createObj("character", properties);
-    Object.assign(character, { sheetEnvironment: "legacy" });
+    Object.assign(character, { sheetEnvironment: "beacon" });
     return character;
   }
 
@@ -583,7 +587,7 @@ describe("ChatSetAttr Integration Tests", () => {
 
     it("should not delete attributes exposed as beacon computeds", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
-      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createBeaconCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
       createObj("attribute", { _characterid: "char1", name: "ComputedLike", current: "10" });
 
       executeCommand("!delattr --charid char1 --ComputedLike");
@@ -1091,7 +1095,7 @@ describe("ChatSetAttr Integration Tests", () => {
     it("should observe attribute deletions with registered observers", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
-      createObj("attribute", { _id: "attr1", _characterid: "char1", name: "DeleteMe", current: "10", max: "20" });
+      const attribute = createObj("attribute", { _id: "attr1", _characterid: "char1", name: "DeleteMe", current: "10", max: "20" });
       const mockObserver = vi.fn();
 
       ChatSetAttr.registerObserver("destroy", mockObserver);
@@ -1103,6 +1107,8 @@ describe("ChatSetAttr Integration Tests", () => {
       });
 
       const firstCall = mockObserver.mock.calls[0];
+      expect(firstCall[0]).toBe(attribute);
+      expect(firstCall[0].get("type")).toBe("attribute");
       expect(firstCall[0].get("name")).toBe("DeleteMe");
       expect(firstCall[0].get("current")).toBe("10");
       expect(firstCall[0].get("max")).toBe("20");
@@ -1111,7 +1117,7 @@ describe("ChatSetAttr Integration Tests", () => {
 
     it("should observe userAttribute deletions with registered observers", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
-      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createBeaconCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
       const mockObserver = vi.fn();
 
       ChatSetAttr.registerObserver("destroy", mockObserver);
@@ -1136,7 +1142,7 @@ describe("ChatSetAttr Integration Tests", () => {
 
     it("should observe userAttribute deletions with max on registered observers", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
-      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createBeaconCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
       const mockObserver = vi.fn();
 
       ChatSetAttr.registerObserver("destroy", mockObserver);
@@ -1186,7 +1192,7 @@ describe("ChatSetAttr Integration Tests", () => {
 
     it("should not notify observers when deleteAttribute fails on a computed", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
-      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      createBeaconCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
       createObj("attribute", { _id: "attr1", _characterid: "char1", name: "ComputedLike", current: "10" });
       const mockObserver = vi.fn();
 
