@@ -1314,6 +1314,7 @@ var Gaslight = Gaslight || (() => {
             });
 
             if (linkedIds.length > 0) {
+                // Queue for when GM visits the page
                 var pageId = null;
                 Object.values(s.activeGroups).forEach(function(active) {
                     var pp = active.playerPages[playerId];
@@ -1329,7 +1330,7 @@ var Gaslight = Gaslight || (() => {
 
         if (newlyQueued > 0) {
             var totalPages = Object.keys(s.relayQueue).filter(function(pid) { return s.relayQueue[pid].length > 0; }).length;
-            sendChat(SCRIPT_NAME, '/w gm Queued for ' + newlyQueued + ' page(s). Total pending: ' + totalPages + ' page(s). Navigate to player pages to execute.');
+            sendChat(SCRIPT_NAME, '/w gm Queued for ' + newlyQueued + ' page(s). Total pending: ' + totalPages + '. Navigate to player pages to execute.');
         }
     };
 
