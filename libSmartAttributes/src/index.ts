@@ -75,7 +75,7 @@ async function deleteAttribute(characterId: string, name: string, type: Attribut
     return false;
   }
 
-  if (character?.sheetEnvironment === "legacy") {
+  if (character?.sheetEnvironment === "legacy" || character?.sheetEnvironment === undefined) {
     const legacyAttr = findObjs({
       _type: "attribute",
       _characterid: characterId,
