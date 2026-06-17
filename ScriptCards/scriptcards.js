@@ -27,8 +27,8 @@ const ScriptCards = (async () => { // eslint-disable-line no-unused-vars
 	*/
 
 	const APINAME = "ScriptCards";
-	const APIVERSION = "3.0.23c";
-	const NUMERIC_VERSION = "300233"
+	const APIVERSION = "3.0.23d";
+	const NUMERIC_VERSION = "300234"
 	const APIAUTHOR = "Kurt Jaegers";
 	const debugMode = false;
 
@@ -742,15 +742,15 @@ const ScriptCards = (async () => { // eslint-disable-line no-unused-vars
 					//let cardWork = cardContent.match(/\{\{(.*?)\}\}/gis)
 					let cardWork = getFirstOutermostDoubleBraceBlock(cardContent);
 					//cardWork = cardWork.trim().slice(2, cardWork.length - 2);
-					cardWork = cardWork.trim().slice(2,-2);
+					cardWork = cardWork.trim().slice(2, -2);
 					if (cardWork) {
 						cardWork = cardWork.replaceAll("!{!{", "{{").replaceAll("!}!}", "}}");
 						//var cardLines = cardWork[0].substring(2, cardWork[0].length - 3).split("--")
 						var cardLines;
 						if ((cardWork.indexOf("$}") > -1) && (cardWork.indexOf("${") > -1)) {
-						  cardLines = cardWork
-							.substring(2, cardWork.length - 3)
-							.split(/--(?=(?:(?:(?!\$\{|\$\})[\s\S])*\$\{(?:(?!\$\{|\$\})[\s\S])*\$\})*(?:(?!\$\{|\$\})[\s\S])*$)/);
+							cardLines = cardWork
+								.substring(2, cardWork.length - 3)
+								.split(/--(?=(?:(?:(?!\$\{|\$\})[\s\S])*\$\{(?:(?!\$\{|\$\})[\s\S])*\$\})*(?:(?!\$\{|\$\})[\s\S])*$)/);
 						} else {
 							cardLines = cardWork.split("--");
 						}
@@ -2008,9 +2008,13 @@ const ScriptCards = (async () => { // eslint-disable-line no-unused-vars
 							var propertyName = objectInfo[3];
 							var thisObj = getObj(objectType, objectID);
 							if (thisObj != null && !(propertyName == "action")) {
-								replacement = thisObj.get(propertyName) || "";
+								if (bioFields[propertyName.toLowerCase()] == 1 || propertyName.toLowerCase() == "defaulttoken") {
+									replacement = await getBioField(thisObj, propertyName) || "";
+								} else {
+									replacement = thisObj.get(propertyName) || "";
+								}
 							} else {
-								replacement = ""
+								replacement = "";
 							}
 							if (thisObj != null && objectType == "player" && propertyName.toLowerCase() == "isgm") {
 								replacement = (playerIsGM(thisObj.id)) ? 1 : 0
@@ -4548,7 +4552,7 @@ const ScriptCards = (async () => { // eslint-disable-line no-unused-vars
 							if (theToken) {
 								log(`ScriptCards: Deleting token with id ${theToken.id} from script run by ${stringVariables.SendingPlayerName}`);
 								theToken.remove();
-							}							
+							}
 						}
 
 						case "h": {
@@ -7863,32 +7867,32 @@ const ScriptCards = (async () => { // eslint-disable-line no-unused-vars
 		return text;
 	}
 
-    function NewGetAttrByName(characterId, attrName, valueType) {
-        if (!characterId || !attrName) {
-            return undefined;
-        }
+	function NewGetAttrByName(characterId, attrName, valueType) {
+		if (!characterId || !attrName) {
+			return undefined;
+		}
 
-        let attrs = findObjs({
-            _type: "attribute",
-            _characterid: characterId
-        }) || [];
+		let attrs = findObjs({
+			_type: "attribute",
+			_characterid: characterId
+		}) || [];
 
-        let targetName = String(attrName).toLowerCase();
-        let attrObj = attrs.find(function (attr) {
-            let name = attr.get("name");
-            return name && String(name).toLowerCase() === targetName;
-        });
+		let targetName = String(attrName).toLowerCase();
+		let attrObj = attrs.find(function (attr) {
+			let name = attr.get("name");
+			return name && String(name).toLowerCase() === targetName;
+		});
 
-        if (!attrObj) {
-            return undefined;
-        }
+		if (!attrObj) {
+			return undefined;
+		}
 
-        if (valueType && String(valueType).toLowerCase() === "max") {
-            return attrObj.get("max");
-        }
+		if (valueType && String(valueType).toLowerCase() === "max") {
+			return attrObj.get("max");
+		}
 
-        return attrObj.get("current");
-    }	
+		return attrObj.get("current");
+	}
 })();
 
 // log(`Error setting z-order ${e.message}, thisTag: ${thisTag}, thisContent: ${thisContent}`)
