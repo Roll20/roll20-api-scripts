@@ -400,7 +400,7 @@ ChatSetAttr can be used within roll templates or combined with inline rolls:
 Place the command between roll template properties and end it with `!!!`:
 
 ```
-&{template:default} {{name=Fireball Damage}} !setattr --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}
+&{template:default} {{name=Fireball Damage}} !setattr --mod --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}
 ```
 
 ### Using Inline Rolls in Values

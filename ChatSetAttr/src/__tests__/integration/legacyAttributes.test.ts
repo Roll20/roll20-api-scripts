@@ -382,6 +382,76 @@ describe("ChatSetAttr Integration Tests", () => {
       });
     });
 
+    it("should subtract template roll damage with --mod from a roll template macro", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      createObj("attribute", { _id: "hp1", _characterid: "char1", name: "hp", current: "50" });
+
+      executeCommand(
+        "&{template:default} {{name=Fireball Damage}} !setattr --charid char1 --silent --mod --hp|-{{damage=$[[0]]}}!!! {{effect=Fire damage}}",
+        {
+          type: "general",
+          inlinerolls: [{
+            expression: "8d6",
+            results: {
+              resultType: "sum",
+              total: 34,
+              type: "V",
+              rolls: [{
+                dice: 8,
+                sides: 6,
+                type: "R",
+                results: [],
+              }],
+            },
+            rollid: "roll-fireball",
+            signature: "sig-fireball",
+          }],
+        },
+      );
+
+      await vi.waitFor(async () => {
+        const hp = await libSmartAttributes.getAttribute("char1", "hp");
+        expect(String(hp)).toBe("16");
+        expect(String(hp)).not.toContain("{{damage");
+      });
+    });
+
+    it("should set negative template roll damage without --mod from a roll template macro", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createLegacyCharacter({ _id: "char1", name: "Character 1", controlledby: player.id });
+      createObj("attribute", { _id: "hp1", _characterid: "char1", name: "hp", current: "50" });
+
+      executeCommand(
+        "&{template:default} {{name=Fireball Damage}} !setattr --charid char1 --silent --hp|-{{damage=$[[0]]}}!!! {{effect=Fire damage}}",
+        {
+          type: "general",
+          inlinerolls: [{
+            expression: "8d6",
+            results: {
+              resultType: "sum",
+              total: 34,
+              type: "V",
+              rolls: [{
+                dice: 8,
+                sides: 6,
+                type: "R",
+                results: [],
+              }],
+            },
+            rollid: "roll-fireball",
+            signature: "sig-fireball",
+          }],
+        },
+      );
+
+      await vi.waitFor(async () => {
+        const hp = await libSmartAttributes.getAttribute("char1", "hp");
+        expect(String(hp)).toBe("-34");
+        expect(String(hp)).not.toContain("{{damage");
+      });
+    });
+
     it("should substitute rollable table inline roll placeholders in attribute values", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });

@@ -27,6 +27,18 @@ function inlineRollValue(roll: RollData): string | number {
   return (tableText.length && tableText) || roll.results.total || 0;
 }
 
+export function normalizeTemplateRollProperties(content: string): string {
+  return content
+    .replace(
+      /\{\{[^}[\]]+=\$?\[\[(\d+)\]\].*?\}\}/g,
+      (_, index) => `$[[${index}]]`,
+    )
+    .replace(
+      /\{\{[^}=]+=([^}]+)\}\}/g,
+      (_, value: string) => value.trim(),
+    );
+}
+
 export function processInlinerolls(
   msg: Pick<Roll20ChatMessage, "content" | "inlinerolls">,
 ): string {

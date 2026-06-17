@@ -789,7 +789,7 @@
             {
               "type": "codeBlock",
               "lines": [
-                "&{template:default} {{name=Fireball Damage}} !setattr --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}"
+                "&{template:default} {{name=Fireball Damage}} !setattr --mod --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}"
               ]
             }
           ]

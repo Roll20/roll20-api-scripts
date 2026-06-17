@@ -1998,7 +1998,7 @@ var ChatSetAttr = (function (exports) {
     					{
     						type: "codeBlock",
     						lines: [
-    							"&{template:default} {{name=Fireball Damage}} !setattr --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}"
+    							"&{template:default} {{name=Fireball Damage}} !setattr --mod --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}"
     						]
     					}
     				]
@@ -2486,7 +2486,7 @@ var ChatSetAttr = (function (exports) {
         return renderHelpHtml(loadHelpDocument(), handoutID);
     }
 
-    var updatedAt = 1781300523076;
+    var updatedAt = 1781656733311;
     var contentRevision = {
     	updatedAt: updatedAt
     };
@@ -2554,6 +2554,11 @@ var ChatSetAttr = (function (exports) {
         }, []);
         const tableText = tableItems.filter(Boolean).join(", ");
         return (tableText.length && tableText) || roll.results.total || 0;
+    }
+    function normalizeTemplateRollProperties(content) {
+        return content
+            .replace(/\{\{[^}[\]]+=\$?\[\[(\d+)\]\].*?\}\}/g, (_, index) => `$[[${index}]]`)
+            .replace(/\{\{[^}=]+=([^}]+)\}\}/g, (_, value) => value.trim());
     }
     function processInlinerolls(msg) {
         if (!msg.inlinerolls?.length) {
@@ -3531,6 +3536,7 @@ var ChatSetAttr = (function (exports) {
                     return;
                 msg.content = inlineMessage;
             }
+            msg.content = normalizeTemplateRollProperties(msg.content);
             msg.content = processInlinerolls(msg);
             const debugReset = msg.content.startsWith("!setattrs-debugreset");
             if (debugReset) {

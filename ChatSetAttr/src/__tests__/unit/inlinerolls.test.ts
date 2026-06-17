@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { processInlinerolls } from "../../modules/inlinerolls";
+import {
+  normalizeTemplateRollProperties,
+  processInlinerolls,
+} from "../../modules/inlinerolls";
 
 function makeDiceRoll(total: number): RollData {
   return {
@@ -100,5 +103,57 @@ describe("processInlinerolls", () => {
     });
 
     expect(result).toBe("!setattr --sel --hp|0");
+  });
+});
+
+function processCommandContent(
+  content: string,
+  inlinerolls?: RollData[],
+): string {
+  return processInlinerolls({
+    content: normalizeTemplateRollProperties(content),
+    inlinerolls,
+  });
+}
+
+describe("normalizeTemplateRollProperties", () => {
+  it("should unwrap template properties containing inline roll placeholders", () => {
+    const content = "!setattr --charid char1 --mod --hp|-{{damage=$[[0]]}}";
+    expect(normalizeTemplateRollProperties(content)).toBe(
+      "!setattr --charid char1 --mod --hp|-$[[0]]",
+    );
+  });
+
+  it("should unwrap resolved template property values", () => {
+    const content = "!setattr --charid char1 --hp|-{{damage=34}}";
+    expect(normalizeTemplateRollProperties(content)).toBe(
+      "!setattr --charid char1 --hp|-34",
+    );
+  });
+});
+
+describe("template roll pipeline", () => {
+  it("should resolve mod damage from template inline roll placeholders", () => {
+    const result = processCommandContent(
+      "!setattr --charid char1 --mod --hp|-{{damage=$[[0]]}}",
+      [makeDiceRoll(34)],
+    );
+    expect(result).toBe("!setattr --charid char1 --mod --hp|-34");
+  });
+
+  it("should resolve setattr damage from template inline roll placeholders", () => {
+    const result = processCommandContent(
+      "!setattr --charid char1 --hp|-{{damage=$[[0]]}}",
+      [makeDiceRoll(34)],
+    );
+    expect(result).toBe("!setattr --charid char1 --hp|-34");
+  });
+
+  it("should resolve setattr damage from already-resolved template properties", () => {
+    const result = processCommandContent(
+      "!setattr --charid char1 --hp|-{{damage=34}}",
+      [makeDiceRoll(34)],
+    );
+    expect(result).toBe("!setattr --charid char1 --hp|-34");
   });
 });
