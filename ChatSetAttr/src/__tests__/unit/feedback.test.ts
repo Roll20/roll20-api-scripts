@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { createFeedbackMessage } from "../../modules/feedback";
-import type { AttributeRecord, FeedbackObject } from "../../types";
+import {
+  createFeedbackMessage,
+  formatDeleteFeedback,
+  formatSettingFeedback,
+} from "../../modules/feedback";
+import type { Attribute, AttributeRecord, FeedbackObject } from "../../types";
+
+const characterName = "The Aaron 2014";
 
 describe("createFeedbackMessage", () => {
   const mockStartingValues: AttributeRecord = {
@@ -125,5 +131,84 @@ describe("createFeedbackMessage", () => {
     };
     const result = createFeedbackMessage("Alice", feedback, mockStartingValues, mockTargetValues);
     expect(result).toBe("Alice updated: hp: 10→25, strength: 15→16");
+  });
+});
+
+describe("formatSettingFeedback", () => {
+  it("should format max-only syntax", () => {
+    const changes: Attribute[] = [{ name: "hp", max: "48" }];
+    const result: AttributeRecord = { hp_max: "48" };
+    expect(formatSettingFeedback(characterName, changes, result)).toBe(
+      "Setting hp to 48 (max) for character The Aaron 2014.",
+    );
+  });
+
+  it("should format current and max", () => {
+    const changes: Attribute[] = [{ name: "hp", current: "13", max: "63" }];
+    const result: AttributeRecord = { hp: "13", hp_max: "63" };
+    expect(formatSettingFeedback(characterName, changes, result)).toBe(
+      "Setting hp to 13 / 63 for character The Aaron 2014.",
+    );
+  });
+
+  it("should format multiple attributes in command order", () => {
+    const changes: Attribute[] = [
+      { name: "hp", current: "13", max: "63" },
+      { name: "ac", current: "18" },
+      { name: "speed", current: "50" },
+    ];
+    const result: AttributeRecord = {
+      hp: "13",
+      hp_max: "63",
+      ac: "18",
+      speed: "50",
+    };
+    expect(formatSettingFeedback(characterName, changes, result)).toBe(
+      "Setting hp to 13 / 63, ac to 18, speed to 50 for character The Aaron 2014.",
+    );
+  });
+
+  it("should format current-only changes", () => {
+    const changes: Attribute[] = [{ name: "ac", current: "18" }];
+    const result: AttributeRecord = { ac: "18" };
+    expect(formatSettingFeedback(characterName, changes, result)).toBe(
+      "Setting ac to 18 for character The Aaron 2014.",
+    );
+  });
+
+  it("should show (empty) for empty string values", () => {
+    const changes: Attribute[] = [{ name: "notes", current: "" }];
+    const result: AttributeRecord = { notes: "" };
+    expect(formatSettingFeedback(characterName, changes, result)).toBe(
+      "Setting notes to (empty) for character The Aaron 2014.",
+    );
+  });
+
+  it("should omit attributes not present in the filtered result", () => {
+    const changes: Attribute[] = [{ name: "hp", current: "13", max: "63" }];
+    const result: AttributeRecord = { hp: "13" };
+    expect(formatSettingFeedback(characterName, changes, result)).toBe(
+      "Setting hp to 13 for character The Aaron 2014.",
+    );
+  });
+
+  it("should return null when nothing was set", () => {
+    const changes: Attribute[] = [{ name: "hp", current: "13" }];
+    expect(formatSettingFeedback(characterName, changes, {})).toBeNull();
+  });
+});
+
+describe("formatDeleteFeedback", () => {
+  it("should format deleted attribute names", () => {
+    const changes: Attribute[] = [{ name: "hp" }, { name: "ac" }];
+    const result: AttributeRecord = { hp: undefined, hp_max: undefined, ac: undefined };
+    expect(formatDeleteFeedback(characterName, changes, result)).toBe(
+      "Deleting attribute(s) hp, ac for character The Aaron 2014.",
+    );
+  });
+
+  it("should return null when no attributes were deleted", () => {
+    const changes: Attribute[] = [{ name: "hp" }];
+    expect(formatDeleteFeedback(characterName, changes, {})).toBeNull();
   });
 });

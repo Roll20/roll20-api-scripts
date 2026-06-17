@@ -174,6 +174,78 @@ describe("ChatSetAttr Integration Tests", () => {
       });
     });
 
+    it("should emit one consolidated 1.10-style message for max-only syntax", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      const character = createLegacyCharacter({ _id: "char1", name: "The Aaron 2014", controlledby: player.id });
+      createObj("attribute", { _id: "hp1", _characterid: character.id, name: "hp", current: "10", max: "20" });
+      const token = createObj("graphic", { _id: "token1", represents: character.id, _subtype: "token" });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --sel --hp||48", { selected: [token.properties] });
+
+      await vi.waitFor(async () => {
+        const hpMax = await libSmartAttributes.getAttribute("char1", "hp", "max");
+        expect(hpMax).toBe("48");
+
+        const feedbackCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes("Setting attributes") &&
+          call[1].includes("Setting hp to 48 (max) for character The Aaron 2014."),
+        );
+        expect(feedbackCall).toBeDefined();
+
+        const setAttributeCount = (feedbackCall![1] as string).match(/Set attribute '/g)?.length ?? 0;
+        expect(setAttributeCount).toBe(0);
+      });
+    });
+
+    it("should emit one consolidated 1.10-style message for current and max", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      const character = createLegacyCharacter({ _id: "char1", name: "The Aaron 2014", controlledby: player.id });
+      createObj("attribute", { _id: "hp1", _characterid: character.id, name: "hp", current: "10", max: "20" });
+      const token = createObj("graphic", { _id: "token1", represents: character.id, _subtype: "token" });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand("!setattr --sel --hp|13|63", { selected: [token.properties] });
+
+      await vi.waitFor(async () => {
+        const feedbackCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes("Setting hp to 13 / 63 for character The Aaron 2014."),
+        );
+        expect(feedbackCall).toBeDefined();
+
+        const body = feedbackCall![1] as string;
+        const settingLines = (body.match(/Setting hp to/g) ?? []).length;
+        expect(settingLines).toBe(1);
+      });
+    });
+
+    it("should emit one consolidated 1.10-style message for multiple attributes", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      const character = createLegacyCharacter({ _id: "char1", name: "The Aaron 2014", controlledby: player.id });
+      const token = createObj("graphic", { _id: "token1", represents: character.id, _subtype: "token" });
+      vi.mocked(sendChat).mockClear();
+
+      executeCommand(
+        "!setattr --sel --hp|13|63 --ac|18 --speed|50",
+        { selected: [token.properties] },
+      );
+
+      await vi.waitFor(async () => {
+        const feedbackCall = vi.mocked(sendChat).mock.calls.find(call =>
+          call[1] && typeof call[1] === "string" &&
+          call[1].includes(
+            "Setting hp to 13 / 63, ac to 18, speed to 50 for character The Aaron 2014.",
+          ),
+        );
+        expect(feedbackCall).toBeDefined();
+
+        const body = feedbackCall![1] as string;
+        expect((body.match(/<p>/g) ?? []).length).toBe(1);
+      });
+    });
+
     it("should set td attribute to d8 for all characters", async () => {
       const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
       vi.mocked(global.playerIsGM).mockReturnValue(true);
@@ -856,7 +928,7 @@ describe("ChatSetAttr Integration Tests", () => {
           return call[0] === "ChatSetAttr" &&
             typeof message === "string" &&
             !message.startsWith("/w ") &&
-            message.includes("Setting Attribute");
+            message.includes("Setting attributes");
         });
 
         expect(feedbackCall).toBeDefined();
@@ -877,7 +949,7 @@ describe("ChatSetAttr Integration Tests", () => {
         const feedbackCall = vi.mocked(sendChat).mock.calls.find(call =>
           call[0] === "ChatSetAttr" &&
           call[1] && typeof call[1] === "string" &&
-          call[1].includes("Set attribute 'Attribute'")
+          call[1].includes("Setting Attribute to 42 for character Character 1.")
         );
 
         expect(feedbackCall).toBeDefined();
@@ -899,7 +971,7 @@ describe("ChatSetAttr Integration Tests", () => {
           const senderIsWizard = call[0] === "Wizard";
           const message = call[1];
           const messageIsString = typeof message === "string";
-          const messageIncludesFeedback = message.includes("Set attribute 'Spell'");
+          const messageIncludesFeedback = message.includes("Setting Spell to Fireball for character Character 1.");
           return senderIsWizard && messageIsString && messageIncludesFeedback;
         });
 
@@ -921,7 +993,7 @@ describe("ChatSetAttr Integration Tests", () => {
         const feedbackCall = vi.mocked(sendChat).mock.calls.find(call =>
           call[1] && typeof call[1] === "string" &&
           call[1].includes("Magic Item Acquired") &&
-          !call[1].includes("Setting Attributes")
+          !call[1].includes("Setting attributes")
         );
 
         expect(feedbackCall).toBeDefined();
@@ -1003,7 +1075,7 @@ describe("ChatSetAttr Integration Tests", () => {
         const publicSuccessCall = vi.mocked(sendChat).mock.calls.find(call =>
           call[1] && typeof call[1] === "string" &&
           !call[1].startsWith("/w ") &&
-          call[1].includes("Set attribute")
+          /Setting .+ for character/.test(call[1]),
         );
         expect(publicSuccessCall).toBeUndefined();
       });

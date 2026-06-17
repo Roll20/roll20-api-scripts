@@ -1,4 +1,75 @@
-import type { AttributeRecord, FeedbackObject } from "../types";
+import type { Attribute, AttributeRecord, AttributeValue, FeedbackObject } from "../types";
+
+function formatFeedbackValue(value: AttributeValue): string {
+  if (value === undefined || value === null || value === "") {
+    return "(empty)";
+  }
+  return String(value);
+}
+
+function formatAttributePart(
+  name: string,
+  result: AttributeRecord,
+): string | null {
+  const hasCurrent = Object.hasOwn(result, name);
+  const maxKey = `${name}_max`;
+  const hasMax = Object.hasOwn(result, maxKey);
+
+  if (!hasCurrent && !hasMax) {
+    return null;
+  }
+
+  if (hasCurrent && hasMax) {
+    return `${name} to ${formatFeedbackValue(result[name])} / ${formatFeedbackValue(result[maxKey])}`;
+  }
+  if (hasCurrent) {
+    return `${name} to ${formatFeedbackValue(result[name])}`;
+  }
+  return `${name} to ${formatFeedbackValue(result[maxKey])} (max)`;
+}
+
+export function formatSettingFeedback(
+  characterName: string,
+  changes: Attribute[],
+  result: AttributeRecord,
+): string | null {
+  const parts: string[] = [];
+
+  for (const change of changes) {
+    if (!change.name) continue;
+    const part = formatAttributePart(change.name, result);
+    if (part) {
+      parts.push(part);
+    }
+  }
+
+  if (parts.length === 0) {
+    return null;
+  }
+
+  return `Setting ${parts.join(", ")} for character ${characterName}.`;
+}
+
+export function formatDeleteFeedback(
+  characterName: string,
+  changes: Attribute[],
+  result: AttributeRecord,
+): string | null {
+  const names: string[] = [];
+
+  for (const change of changes) {
+    if (!change.name) continue;
+    if (Object.hasOwn(result, change.name)) {
+      names.push(change.name);
+    }
+  }
+
+  if (names.length === 0) {
+    return null;
+  }
+
+  return `Deleting attribute(s) ${names.join(", ")} for character ${characterName}.`;
+}
 
 export function createFeedbackMessage(
   characterName: string,

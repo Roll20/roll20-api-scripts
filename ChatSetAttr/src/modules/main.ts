@@ -4,6 +4,11 @@ import { getAttributes } from "./attributes";
 import { sendDelayMessage, sendErrors, sendMessages, normalizeCommandOutputOptions } from "./chat";
 import { handlers } from "./commands";
 import { checkConfigMessage, getConfig, handleConfigCommand, hasFlag } from "./config";
+import {
+  createFeedbackMessage,
+  formatDeleteFeedback,
+  formatSettingFeedback,
+} from "./feedback";
 import { checkHelpMessage, handleHelpCommand } from "./help";
 import { getCharName } from "./helpers";
 import { processInlinerolls } from "./inlinerolls";
@@ -87,7 +92,7 @@ async function acceptMessage(msg: Roll20ChatMessage) {
 
   // Execute
   const priorValues: Record<string, AttributeRecord> = {};
-  const pendingMessages: Record<string, Record<string, string>> = {};
+  const pendingChanges: Record<string, Attribute[]> = {};
 
   for (const target of targets) {
     const attrs = await getAttributes(target, request);
@@ -111,7 +116,7 @@ async function acceptMessage(msg: Roll20ChatMessage) {
       continue;
     }
 
-    pendingMessages[target] = { ...pendingMessages[target], ...response.messagesByKey };
+    pendingChanges[target] = modifications;
     result[target] = response.result;
   }
 
@@ -125,21 +130,43 @@ async function acceptMessage(msg: Roll20ChatMessage) {
 
   errors.push(...updateResult.errors);
 
-  for (const target in pendingMessages) {
-    for (const key in pendingMessages[target]) {
-      if (!updateResult.failed.includes(`${target}:${key}`)) {
-        messages.push(pendingMessages[target][key]);
-      }
+  for (const target in result) {
+    const filteredResult = filterSuccessfulResult(target, result[target], updateResult.failed);
+    if (Object.keys(filteredResult).length === 0) {
+      continue;
+    }
+
+    const characterName = getCharName(target);
+    const targetChanges = pendingChanges[target] ?? [];
+    let message: string | null;
+
+    if (feedback?.content) {
+      message = createFeedbackMessage(
+        characterName,
+        feedback,
+        priorValues[target] ?? {},
+        filteredResult,
+      );
+    } else if (operation === "delattr") {
+      message = formatDeleteFeedback(characterName, targetChanges, filteredResult);
+    } else {
+      message = formatSettingFeedback(characterName, targetChanges, filteredResult);
+    }
+
+    if (message) {
+      messages.push(message);
     }
   }
 
   sendErrors(msg.playerid, "Errors", errors, feedback?.from, output);
-  const delSetTitle = operation === "delattr" ? "Deleting Attributes" : "Setting Attributes";
+  const delSetTitle = operation === "delattr" ? "Deleting attributes" : "Setting attributes";
   const feedbackTitle = feedback?.header ?? delSetTitle;
-  sendMessages(msg.playerid, feedbackTitle, messages, {
-    from: feedback?.from,
-    public: feedback?.public,
-  }, output);
+  if (messages.length > 0) {
+    sendMessages(msg.playerid, feedbackTitle, messages, {
+      from: feedback?.from,
+      public: feedback?.public,
+    }, output);
+  }
 };
 
 function errorOut(
@@ -151,6 +178,22 @@ function errorOut(
   errors.push(errorText);
   sendErrors(playerid, "Errors", errors, undefined, output);
   clearTimer("chatsetattr");
+}
+
+function filterSuccessfulResult(
+  target: string,
+  targetResult: AttributeRecord,
+  failed: string[],
+): AttributeRecord {
+  const filtered: AttributeRecord = {};
+
+  for (const key in targetResult) {
+    if (!failed.includes(`${target}:${key}`)) {
+      filtered[key] = targetResult[key];
+    }
+  }
+
+  return filtered;
 }
 
 

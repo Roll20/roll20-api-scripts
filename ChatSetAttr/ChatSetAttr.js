@@ -860,59 +860,6 @@ var ChatSetAttr = (function (exports) {
         return attributes;
     }
 
-    function createFeedbackMessage(characterName, feedback, startingValues, targetValues) {
-        let message = feedback?.content ?? "";
-        // _NAMEJ_: will insert the attribute name.
-        // _TCURJ_: will insert what you are changing the current value to (or changing by, if you're using --mod or --modb).
-        // _TMAXJ_: will insert what you are changing the maximum value to (or changing by, if you're using --mod or --modb).
-        // _CHARNAME_: will insert the character name.
-        // _CURJ_: will insert the final current value of the attribute, for this character.
-        // _MAXJ_: will insert the final maximum value of the attribute, for this character.
-        const targetValueKeys = getChangedAttributeNames(targetValues);
-        message = message.replace("_CHARNAME_", characterName);
-        message = message.replace(/_(NAME|TCUR|TMAX|CUR|MAX)(\d+)_/g, (_, key, num) => {
-            const index = parseInt(num, 10);
-            const attributeName = targetValueKeys[index];
-            if (!attributeName)
-                return "";
-            const sheetCurrent = startingValues[attributeName];
-            const sheetMax = startingValues[`${attributeName}_max`];
-            const resultCurrent = targetValues[attributeName];
-            const resultMax = targetValues[`${attributeName}_max`];
-            switch (key) {
-                case "NAME":
-                    return attributeName;
-                case "TCUR":
-                    return sheetCurrent !== undefined ? `${sheetCurrent}` : "";
-                case "TMAX":
-                    return sheetMax !== undefined ? `${sheetMax}` : "";
-                case "CUR": {
-                    const value = resultCurrent ?? sheetCurrent;
-                    return value !== undefined ? `${value}` : "";
-                }
-                case "MAX": {
-                    const value = resultMax ?? sheetMax;
-                    return value !== undefined ? `${value}` : "";
-                }
-                default:
-                    return "";
-            }
-        });
-        return message;
-    }
-    function getChangedAttributeNames(targetValues) {
-        const seen = new Set();
-        const names = [];
-        for (const key of Object.keys(targetValues)) {
-            const name = key.endsWith("_max") ? key.slice(0, -4) : key;
-            if (!seen.has(name)) {
-                seen.add(name);
-                names.push(name);
-            }
-        }
-        return names;
-    }
-
     function cleanValue(value) {
         return value.trim().replace(/^['"](.*)['"]$/g, "$1");
     }
@@ -925,9 +872,8 @@ var ChatSetAttr = (function (exports) {
     }
 
     // region Command Handlers
-    async function setattr(changes, target, referenced = [], noCreate = false, feedback) {
+    async function setattr(changes, target, referenced = [], noCreate = false, _feedback) {
         const result = {};
-        const messagesByKey = {};
         const errors = [];
         const request = createRequestList(referenced, changes, false);
         const currentValues = await getCurrentValues(target, request, changes);
@@ -936,41 +882,29 @@ var ChatSetAttr = (function (exports) {
         for (const change of changes) {
             const { name, current, max } = change;
             if (!name)
-                continue; // skip if no name provided
+                continue;
             if (undefinedAttributes.includes(name) && noCreate) {
                 errors.push(`Missing attribute ${name} not created for ${characterName}.`);
                 continue;
             }
             if (current !== undefined) {
                 result[name] = current;
-                let newMessage = `Set attribute '${name}' on ${characterName}.`;
-                if (feedback.content) {
-                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-                }
-                messagesByKey[name] = newMessage;
             }
             if (max !== undefined) {
                 result[`${name}_max`] = max;
-                let newMessage = `Set attribute '${name}' on ${characterName}.`;
-                if (feedback.content) {
-                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-                }
-                messagesByKey[`${name}_max`] = newMessage;
             }
         }
         return {
             result,
-            messagesByKey,
             errors,
         };
     }
-    async function modattr(changes, target, referenced, noCreate = false, feedback) {
+    async function modattr(changes, target, referenced, noCreate = false, _feedback) {
         const result = {};
-        const messagesByKey = {};
         const errors = [];
         const currentValues = await getCurrentValues(target, referenced, changes);
         const undefinedAttributes = extractUndefinedAttributes(currentValues);
-        const characterName = getCharName(target);
+        getCharName(target);
         for (const change of changes) {
             const { name, current, max } = change;
             if (!name)
@@ -986,35 +920,23 @@ var ChatSetAttr = (function (exports) {
             }
             if (current !== undefined) {
                 result[name] = calculateModifiedValue(asNumber, current);
-                let newMessage = `Set attribute '${name}' on ${characterName}.`;
-                if (feedback.content) {
-                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-                }
-                messagesByKey[name] = newMessage;
             }
             if (max !== undefined) {
                 result[`${name}_max`] = calculateModifiedValue(currentValues[`${name}_max`], max);
-                let newMessage = `Set attribute '${name}' on ${characterName}.`;
-                if (feedback.content) {
-                    newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-                }
-                messagesByKey[`${name}_max`] = newMessage;
             }
         }
         return {
             result,
-            messagesByKey,
             errors,
         };
     }
-    async function modbattr(changes, target, referenced, noCreate = false, feedback) {
+    async function modbattr(changes, target, referenced, noCreate = false, _feedback) {
         const result = {};
-        const messagesByKey = {};
         const errors = [];
         const request = createRequestList(referenced, changes, true);
         const currentValues = await getCurrentValues(target, request, changes);
         const undefinedAttributes = extractUndefinedAttributes(currentValues);
-        const characterName = getCharName(target);
+        getCharName(target);
         for (const change of changes) {
             const { name, current, max } = change;
             if (!name)
@@ -1039,31 +961,19 @@ var ChatSetAttr = (function (exports) {
                 const start = currentValues[name];
                 result[name] = calculateBoundValue(result[name] ?? start, newMax);
             }
-            let newMessage = `Modified attribute '${name}' on ${characterName}.`;
-            if (feedback.content) {
-                newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-            }
-            if (current !== undefined) {
-                messagesByKey[name] = newMessage;
-            }
-            if (max !== undefined) {
-                messagesByKey[`${name}_max`] = newMessage;
-            }
         }
         return {
             result,
-            messagesByKey,
             errors,
         };
     }
-    async function resetattr(changes, target, referenced, noCreate = false, feedback) {
+    async function resetattr(changes, target, referenced, noCreate = false, _feedback) {
         const result = {};
-        const messagesByKey = {};
         const errors = [];
         const request = createRequestList(referenced, changes, true);
         const currentValues = await getCurrentValues(target, request, changes);
         const undefinedAttributes = extractUndefinedAttributes(currentValues);
-        const characterName = getCharName(target);
+        getCharName(target);
         for (const change of changes) {
             const { name } = change;
             if (!name)
@@ -1084,41 +994,23 @@ var ChatSetAttr = (function (exports) {
             else {
                 result[name] = 0;
             }
-            let newMessage = `Reset attribute '${name}' on ${characterName}.`;
-            if (feedback.content) {
-                newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-            }
-            messagesByKey[name] = newMessage;
         }
         return {
             result,
-            messagesByKey,
             errors,
         };
     }
-    async function delattr(changes, target, referenced, _, feedback) {
+    async function delattr(changes, target, referenced, _, _feedback) {
         const result = {};
-        const messagesByKey = {};
-        const currentValues = await getCurrentValues(target, referenced, changes);
-        const characterName = getCharName(target);
         for (const change of changes) {
             const { name } = change;
             if (!name)
                 continue;
             result[name] = undefined;
             result[`${name}_max`] = undefined;
-            let newMessage = `Deleted attribute '${name}' on ${characterName}.`;
-            if (feedback.content) {
-                newMessage = createFeedbackMessage(characterName, feedback, currentValues, result);
-            }
-            messagesByKey[name] = newMessage;
-            if (currentValues[`${name}_max`] !== undefined) {
-                messagesByKey[`${name}_max`] = newMessage;
-            }
         }
         return {
             result,
-            messagesByKey,
             errors: [],
         };
     }
@@ -1211,6 +1103,109 @@ var ChatSetAttr = (function (exports) {
         if (isNaN(maxValue))
             return currentValue;
         return Math.max(Math.min(currentValue, maxValue), 0);
+    }
+
+    function formatFeedbackValue(value) {
+        if (value === undefined || value === null || value === "") {
+            return "(empty)";
+        }
+        return String(value);
+    }
+    function formatAttributePart(name, result) {
+        const hasCurrent = Object.hasOwn(result, name);
+        const maxKey = `${name}_max`;
+        const hasMax = Object.hasOwn(result, maxKey);
+        if (!hasCurrent && !hasMax) {
+            return null;
+        }
+        if (hasCurrent && hasMax) {
+            return `${name} to ${formatFeedbackValue(result[name])} / ${formatFeedbackValue(result[maxKey])}`;
+        }
+        if (hasCurrent) {
+            return `${name} to ${formatFeedbackValue(result[name])}`;
+        }
+        return `${name} to ${formatFeedbackValue(result[maxKey])} (max)`;
+    }
+    function formatSettingFeedback(characterName, changes, result) {
+        const parts = [];
+        for (const change of changes) {
+            if (!change.name)
+                continue;
+            const part = formatAttributePart(change.name, result);
+            if (part) {
+                parts.push(part);
+            }
+        }
+        if (parts.length === 0) {
+            return null;
+        }
+        return `Setting ${parts.join(", ")} for character ${characterName}.`;
+    }
+    function formatDeleteFeedback(characterName, changes, result) {
+        const names = [];
+        for (const change of changes) {
+            if (!change.name)
+                continue;
+            if (Object.hasOwn(result, change.name)) {
+                names.push(change.name);
+            }
+        }
+        if (names.length === 0) {
+            return null;
+        }
+        return `Deleting attribute(s) ${names.join(", ")} for character ${characterName}.`;
+    }
+    function createFeedbackMessage(characterName, feedback, startingValues, targetValues) {
+        let message = feedback?.content ?? "";
+        // _NAMEJ_: will insert the attribute name.
+        // _TCURJ_: will insert what you are changing the current value to (or changing by, if you're using --mod or --modb).
+        // _TMAXJ_: will insert what you are changing the maximum value to (or changing by, if you're using --mod or --modb).
+        // _CHARNAME_: will insert the character name.
+        // _CURJ_: will insert the final current value of the attribute, for this character.
+        // _MAXJ_: will insert the final maximum value of the attribute, for this character.
+        const targetValueKeys = getChangedAttributeNames(targetValues);
+        message = message.replace("_CHARNAME_", characterName);
+        message = message.replace(/_(NAME|TCUR|TMAX|CUR|MAX)(\d+)_/g, (_, key, num) => {
+            const index = parseInt(num, 10);
+            const attributeName = targetValueKeys[index];
+            if (!attributeName)
+                return "";
+            const sheetCurrent = startingValues[attributeName];
+            const sheetMax = startingValues[`${attributeName}_max`];
+            const resultCurrent = targetValues[attributeName];
+            const resultMax = targetValues[`${attributeName}_max`];
+            switch (key) {
+                case "NAME":
+                    return attributeName;
+                case "TCUR":
+                    return sheetCurrent !== undefined ? `${sheetCurrent}` : "";
+                case "TMAX":
+                    return sheetMax !== undefined ? `${sheetMax}` : "";
+                case "CUR": {
+                    const value = resultCurrent ?? sheetCurrent;
+                    return value !== undefined ? `${value}` : "";
+                }
+                case "MAX": {
+                    const value = resultMax ?? sheetMax;
+                    return value !== undefined ? `${value}` : "";
+                }
+                default:
+                    return "";
+            }
+        });
+        return message;
+    }
+    function getChangedAttributeNames(targetValues) {
+        const seen = new Set();
+        const names = [];
+        for (const key of Object.keys(targetValues)) {
+            const name = key.endsWith("_max") ? key.slice(0, -4) : key;
+            if (!seen.has(name)) {
+                seen.add(name);
+                names.push(name);
+            }
+        }
+        return names;
     }
 
     var $schema = "./content.schema.json";
@@ -3439,7 +3434,7 @@ var ChatSetAttr = (function (exports) {
         }
         // Execute
         const priorValues = {};
-        const pendingMessages = {};
+        const pendingChanges = {};
         for (const target of targets) {
             const attrs = await getAttributes(target, request);
             priorValues[target] = attrs;
@@ -3455,7 +3450,7 @@ var ChatSetAttr = (function (exports) {
                 errors.push(...response.errors);
                 continue;
             }
-            pendingMessages[target] = { ...pendingMessages[target], ...response.messagesByKey };
+            pendingChanges[target] = modifications;
             result[target] = response.result;
         }
         const updateResult = await makeUpdate(operation, result, {
@@ -3463,25 +3458,50 @@ var ChatSetAttr = (function (exports) {
             priorValues});
         clearTimer("chatsetattr");
         errors.push(...updateResult.errors);
-        for (const target in pendingMessages) {
-            for (const key in pendingMessages[target]) {
-                if (!updateResult.failed.includes(`${target}:${key}`)) {
-                    messages.push(pendingMessages[target][key]);
-                }
+        for (const target in result) {
+            const filteredResult = filterSuccessfulResult(target, result[target], updateResult.failed);
+            if (Object.keys(filteredResult).length === 0) {
+                continue;
+            }
+            const characterName = getCharName(target);
+            const targetChanges = pendingChanges[target] ?? [];
+            let message;
+            if (feedback?.content) {
+                message = createFeedbackMessage(characterName, feedback, priorValues[target] ?? {}, filteredResult);
+            }
+            else if (operation === "delattr") {
+                message = formatDeleteFeedback(characterName, targetChanges, filteredResult);
+            }
+            else {
+                message = formatSettingFeedback(characterName, targetChanges, filteredResult);
+            }
+            if (message) {
+                messages.push(message);
             }
         }
         sendErrors(msg.playerid, "Errors", errors, feedback?.from, output);
-        const delSetTitle = operation === "delattr" ? "Deleting Attributes" : "Setting Attributes";
+        const delSetTitle = operation === "delattr" ? "Deleting attributes" : "Setting attributes";
         const feedbackTitle = feedback?.header ?? delSetTitle;
-        sendMessages(msg.playerid, feedbackTitle, messages, {
-            from: feedback?.from,
-            public: feedback?.public,
-        }, output);
+        if (messages.length > 0) {
+            sendMessages(msg.playerid, feedbackTitle, messages, {
+                from: feedback?.from,
+                public: feedback?.public,
+            }, output);
+        }
     }
     function errorOut(errorText, playerid, errors, output) {
         errors.push(errorText);
         sendErrors(playerid, "Errors", errors, undefined, output);
         clearTimer("chatsetattr");
+    }
+    function filterSuccessfulResult(target, targetResult, failed) {
+        const filtered = {};
+        for (const key in targetResult) {
+            if (!failed.includes(`${target}:${key}`)) {
+                filtered[key] = targetResult[key];
+            }
+        }
+        return filtered;
     }
     function generateRequest(references, changes) {
         const referenceSet = new Set(references);

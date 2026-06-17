@@ -1,11 +1,9 @@
 import type { Command, Attribute, AttributeRecord, AttributeValue, FeedbackObject } from "../types";
 import { getAttributes } from "./attributes";
-import { createFeedbackMessage } from "./feedback";
 import { getCharName } from "./helpers";
 
 export type HandlerResponse = {
   result: AttributeRecord;
-  messagesByKey: Record<string, string>;
   errors: string[];
 };
 
@@ -23,10 +21,9 @@ export async function setattr(
   target: string,
   referenced: string[] = [],
   noCreate = false,
-  feedback: FeedbackObject,
+  _feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
-  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
 
   const request = createRequestList(referenced, changes, false);
@@ -36,56 +33,33 @@ export async function setattr(
 
   for (const change of changes) {
     const { name, current, max } = change;
-    if (!name) continue; // skip if no name provided
+    if (!name) continue;
     if (undefinedAttributes.includes(name) && noCreate) {
       errors.push(`Missing attribute ${name} not created for ${characterName}.`);
       continue;
     }
     if (current !== undefined) {
       result[name] = current;
-      let newMessage = `Set attribute '${name}' on ${characterName}.`;
-      if (feedback.content) {
-        newMessage = createFeedbackMessage(
-          characterName,
-          feedback,
-          currentValues,
-          result,
-        );
-      }
-      messagesByKey[name] = newMessage;
     }
     if (max !== undefined) {
       result[`${name}_max`] = max;
-      let newMessage = `Set attribute '${name}' on ${characterName}.`;
-      if (feedback.content) {
-        newMessage = createFeedbackMessage(
-          characterName,
-          feedback,
-          currentValues,
-          result,
-        );
-      }
-      messagesByKey[`${name}_max`] = newMessage;
     }
   }
 
   return {
     result,
-    messagesByKey,
     errors,
   };
-
-};
+}
 
 export async function modattr(
   changes: Attribute[],
   target: string,
   referenced: string[],
   noCreate = false,
-  feedback: FeedbackObject,
+  _feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
-  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
 
   const currentValues = await getCurrentValues(target, referenced, changes);
@@ -106,48 +80,26 @@ export async function modattr(
     }
     if (current !== undefined) {
       result[name] = calculateModifiedValue(asNumber, current);
-      let newMessage = `Set attribute '${name}' on ${characterName}.`;
-      if (feedback.content) {
-        newMessage = createFeedbackMessage(
-          characterName,
-          feedback,
-          currentValues,
-          result,
-        );
-      }
-      messagesByKey[name] = newMessage;
     }
     if (max !== undefined) {
       result[`${name}_max`] = calculateModifiedValue(currentValues[`${name}_max`], max);
-      let newMessage = `Set attribute '${name}' on ${characterName}.`;
-      if (feedback.content) {
-        newMessage = createFeedbackMessage(
-          characterName,
-          feedback,
-          currentValues,
-          result,
-        );
-      }
-      messagesByKey[`${name}_max`] = newMessage;
     }
   }
 
   return {
     result,
-    messagesByKey,
     errors,
   };
-};
+}
 
 export async function modbattr(
   changes: Attribute[],
   target: string,
   referenced: string[],
   noCreate = false,
-  feedback: FeedbackObject,
+  _feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
-  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
 
   const request = createRequestList(referenced, changes, true);
@@ -181,28 +133,10 @@ export async function modbattr(
         newMax,
       );
     }
-
-    let newMessage = `Modified attribute '${name}' on ${characterName}.`;
-    if (feedback.content) {
-      newMessage = createFeedbackMessage(
-        characterName,
-        feedback,
-        currentValues,
-        result,
-      );
-    }
-
-    if (current !== undefined) {
-      messagesByKey[name] = newMessage;
-    }
-    if (max !== undefined) {
-      messagesByKey[`${name}_max`] = newMessage;
-    }
   }
 
   return {
     result,
-    messagesByKey,
     errors,
   };
 }
@@ -212,10 +146,9 @@ export async function resetattr(
   target: string,
   referenced: string[],
   noCreate = false,
-  feedback: FeedbackObject,
+  _feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
-  const messagesByKey: Record<string, string> = {};
   const errors: string[] = [];
 
   const request = createRequestList(referenced, changes, true);
@@ -241,23 +174,10 @@ export async function resetattr(
     } else {
       result[name] = 0;
     }
-
-    let newMessage = `Reset attribute '${name}' on ${characterName}.`;
-    if (feedback.content) {
-      newMessage = createFeedbackMessage(
-        characterName,
-        feedback,
-        currentValues,
-        result,
-      );
-    }
-
-    messagesByKey[name] = newMessage;
   }
 
   return {
     result,
-    messagesByKey,
     errors,
   };
 }
@@ -267,42 +187,22 @@ export async function delattr(
   target: string,
   referenced: string[],
   _: boolean,
-  feedback: FeedbackObject,
+  _feedback: FeedbackObject,
 ): Promise<HandlerResponse> {
   const result: AttributeRecord = {};
-  const messagesByKey: Record<string, string> = {};
-  const currentValues = await getCurrentValues(target, referenced, changes);
-  const characterName = getCharName(target);
 
   for (const change of changes) {
     const { name } = change;
     if (!name) continue;
     result[name] = undefined;
     result[`${name}_max`] = undefined;
-
-    let newMessage = `Deleted attribute '${name}' on ${characterName}.`;
-
-    if (feedback.content) {
-      newMessage = createFeedbackMessage(
-        characterName,
-        feedback,
-        currentValues,
-        result,
-      );
-    }
-
-    messagesByKey[name] = newMessage;
-
-    if (currentValues[`${name}_max`] !== undefined) {
-      messagesByKey[`${name}_max`] = newMessage;
-    }
   }
+
   return {
     result,
-    messagesByKey,
     errors: [],
   };
-};
+}
 
 export type HandlerDictionary = {
   [key in Command]?: HandlerFunction;
@@ -333,7 +233,7 @@ function createRequestList(
     }
   }
   return Array.from(requestSet);
-};
+}
 
 function extractUndefinedAttributes(
   attributes: AttributeRecord
@@ -346,7 +246,7 @@ function extractUndefinedAttributes(
     }
   }
   return names;
-};
+}
 
 async function getCurrentValues(
   target: string,
@@ -362,7 +262,7 @@ async function getCurrentValues(
   }
   const attributes = await getAttributes(target, Array.from(queriedAttributes));
   return attributes;
-};
+}
 
 function calculateModifiedValue(
   baseValue: string | number | boolean | undefined,
@@ -378,7 +278,7 @@ function calculateModifiedValue(
   if (isNaN(baseValue)) baseValue = 0;
   if (isNaN(modification)) modification = 0;
   return applyCalculation(baseValue, modification, operator);
-};
+}
 
 function getOperator(value: string | number | boolean) {
   if (typeof value === "string") {
@@ -388,7 +288,7 @@ function getOperator(value: string | number | boolean) {
     }
   }
   return;
-};
+}
 
 function applyCalculation(
   baseValue: number,
@@ -408,7 +308,7 @@ function applyCalculation(
     default:
       return baseValue + modification;
   }
-};
+}
 
 function calculateBoundValue(
   currentValue: AttributeValue,
@@ -419,4 +319,4 @@ function calculateBoundValue(
   if (isNaN(currentValue)) currentValue = 0;
   if (isNaN(maxValue)) return currentValue;
   return Math.max(Math.min(currentValue, maxValue), 0);
-};
+}
