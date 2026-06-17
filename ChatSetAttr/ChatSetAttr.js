@@ -1480,7 +1480,7 @@ var ChatSetAttr = (function (exports) {
     				blocks: [
     					{
     						type: "paragraph",
-    						text: "Affects characters with the specified character IDs. Non-GM players can only affect characters they control."
+    						text: "Affects characters with the specified character IDs. Non-GM players can only affect characters they control.  Multiple IDs must be separated by a comma."
     					},
     					{
     						type: "paragraph",
@@ -1489,7 +1489,7 @@ var ChatSetAttr = (function (exports) {
     					{
     						type: "codeBlock",
     						lines: [
-    							"!setattr --charid <ID1> <ID2> --hp|150"
+    							"!setattr --charid <ID1>, <ID2> --hp|150"
     						]
     					}
     				]
@@ -1500,7 +1500,7 @@ var ChatSetAttr = (function (exports) {
     				blocks: [
     					{
     						type: "paragraph",
-    						text: "Affects characters with the specified names. Non-GM players can only affect characters they control."
+    						text: "Affects characters with the specified names. Non-GM players can only affect characters they control.  Multiple character names must be separated by a comma."
     					},
     					{
     						type: "paragraph",
@@ -2486,7 +2486,7 @@ var ChatSetAttr = (function (exports) {
         return renderHelpHtml(loadHelpDocument(), handoutID);
     }
 
-    var updatedAt = 1781656733311;
+    var updatedAt = 1781657828941;
     var contentRevision = {
     	updatedAt: updatedAt
     };

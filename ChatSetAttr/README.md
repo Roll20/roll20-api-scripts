@@ -152,17 +152,17 @@ Affects all characters with player controllers (typically PCs).
 
 ### --charid
 
-Affects characters with the specified character IDs. Non-GM players can only affect characters they control.
+Affects characters with the specified character IDs. Non-GM players can only affect characters they control.  Multiple IDs must be separated by a comma.
 
 **Example:**
 
 ```
-!setattr --charid <ID1> <ID2> --hp|150
+!setattr --charid <ID1>, <ID2> --hp|150
 ```
 
 ### --name
 
-Affects characters with the specified names. Non-GM players can only affect characters they control.
+Affects characters with the specified names. Non-GM players can only affect characters they control.  Multiple character names must be separated by a comma.
 
 **Example:**
 
