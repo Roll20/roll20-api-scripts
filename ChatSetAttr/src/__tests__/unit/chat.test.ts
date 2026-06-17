@@ -370,8 +370,20 @@ describe("chat", () => {
       expect(mockSendChat).not.toHaveBeenCalled();
     });
 
+    it("should whisper delay notice to the command runner", () => {
+      sendDelayMessage("player123");
+
+      expect(mockCreateDelayMessage).toHaveBeenCalled();
+      expect(mockSendChat).toHaveBeenCalledWith(
+        "ChatSetAttr",
+        '/w "Test Player" delay-message',
+        undefined,
+        { noarchive: true },
+      );
+    });
+
     it("should suppress delay notice when mute is set", () => {
-      sendDelayMessage({ mute: true, silent: true });
+      sendDelayMessage("player123", { mute: true, silent: true });
 
       expect(mockCreateDelayMessage).not.toHaveBeenCalled();
       expect(mockSendChat).not.toHaveBeenCalled();

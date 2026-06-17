@@ -1808,14 +1808,12 @@ describe("ChatSetAttr Integration Tests", () => {
       vi.runAllTimers();
       await vi.waitFor(() => {
         expect(sendChat).toBeCalledTimes(2);
-        expect(sendChat).toHaveBeenCalledWith(
-          "ChatSetAttr",
-          expect.stringMatching(/long time to execute/g),
-          undefined,
-          expect.objectContaining({
-            noarchive: true,
-          })
+        const delayCall = vi.mocked(sendChat).mock.calls.find(call =>
+          typeof call[1] === "string" &&
+          /long time to execute/i.test(call[1]),
         );
+        expect(delayCall).toBeDefined();
+        expect(delayCall![1]).toMatch(/^\/w "Test Player" /);
       });
     });
   });

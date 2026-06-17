@@ -57,7 +57,7 @@ async function acceptMessage(msg: Roll20ChatMessage) {
   const output = normalizeCommandOutputOptions(options);
 
   // Start Timer
-  startTimer("chatsetattr", 8000, () => sendDelayMessage(output));
+  startTimer("chatsetattr", 8000, () => sendDelayMessage(msg.playerid, output));
 
   // Check Config and Permissions
   const config = getConfig();

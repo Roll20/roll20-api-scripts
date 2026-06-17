@@ -186,12 +186,12 @@ var ChatSetAttr = (function (exports) {
         const newMessage = createErrorMessage(header, errors);
         sendChat(sender, `${getWhisperPrefix(playerID)}${newMessage}`);
     }
-    function sendDelayMessage(output) {
+    function sendDelayMessage(playerID, output) {
         if (output?.silent) {
             return;
         }
         const delayMessage = createDelayMessage();
-        sendChat("ChatSetAttr", delayMessage, undefined, { noarchive: true });
+        sendChat("ChatSetAttr", `${getWhisperPrefix(playerID)}${delayMessage}`, undefined, { noarchive: true });
     }
     function sendNotification(title, content, archive) {
         const notifyMessage = createNotifyMessage(title, content);
@@ -3412,7 +3412,7 @@ var ChatSetAttr = (function (exports) {
         const { operation, targeting, options, changes, references, feedback, } = parseMessage(msg.content);
         const output = normalizeCommandOutputOptions(options);
         // Start Timer
-        startTimer("chatsetattr", 8000, () => sendDelayMessage(output));
+        startTimer("chatsetattr", 8000, () => sendDelayMessage(msg.playerid, output));
         // Check Config and Permissions
         const config = getConfig();
         const isAPI = "API" === msg.playerid;

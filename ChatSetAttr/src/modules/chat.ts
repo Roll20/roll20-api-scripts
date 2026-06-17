@@ -72,13 +72,21 @@ export function sendErrors(
   sendChat(sender, `${getWhisperPrefix(playerID)}${newMessage}`);
 };
 
-export function sendDelayMessage(output?: NormalizedCommandOutputOptions): void {
+export function sendDelayMessage(
+  playerID: string,
+  output?: NormalizedCommandOutputOptions,
+): void {
   if (output?.silent) {
     return;
   }
 
   const delayMessage = createDelayMessage();
-  sendChat("ChatSetAttr", delayMessage, undefined, { noarchive: true });
+  sendChat(
+    "ChatSetAttr",
+    `${getWhisperPrefix(playerID)}${delayMessage}`,
+    undefined,
+    { noarchive: true },
+  );
 };
 
 export function sendNotification(title: string, content: string, archive?: boolean): void {
