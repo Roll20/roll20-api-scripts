@@ -1814,6 +1814,7 @@ describe("ChatSetAttr Integration Tests", () => {
         );
         expect(delayCall).toBeDefined();
         expect(delayCall![1]).toMatch(/^\/w "Test Player" /);
+        expect(delayCall![1]).toContain("rgba(245, 158, 11");
       });
     });
   });

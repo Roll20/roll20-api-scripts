@@ -74,6 +74,12 @@ var ChatSetAttr = (function (exports) {
         padding: "8px",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
     };
+    const frameStyleNotice = {
+        border: "1px solid rgba(245, 158, 11, 0.55)",
+        borderRadius: "8px",
+        padding: "8px",
+        backgroundColor: "rgba(245, 158, 11, 0.18)",
+    };
     const frameStyleError = {
         border: "1px solid rgba(239, 68, 68, 0.4)",
         backgroundColor: "rgba(239, 68, 68, 0.1)",
@@ -82,14 +88,6 @@ var ChatSetAttr = (function (exports) {
         fontSize: "1.5em",
         marginBottom: "0.5em",
     };
-
-    const DELAY_WRAPPER_STYLE = s(frameStyleBase);
-    const DELAY_HEADER_STYLE = s(headerStyleBase);
-    function createDelayMessage() {
-        return (h("div", { style: DELAY_WRAPPER_STYLE },
-            h("div", { style: DELAY_HEADER_STYLE }, "Long Running Query"),
-            h("div", null, "The operation is taking a long time to execute. This may be due to a large number of targets or attributes being processed. Please be patient as the operation completes."))).html;
-    }
 
     const CHAT_WRAPPER_STYLE = s(frameStyleBase);
     const CHAT_HEADER_STYLE = s(headerStyleBase);
@@ -129,6 +127,14 @@ var ChatSetAttr = (function (exports) {
         });
     }
 
+    const NOTICE_WRAPPER_STYLE = s(frameStyleNotice);
+    const NOTICE_HEADER_STYLE = s(headerStyleBase);
+    function createNoticeMessage(title, content) {
+        return (h("div", { style: NOTICE_WRAPPER_STYLE },
+            h("div", { style: NOTICE_HEADER_STYLE }, title),
+            h("div", null, content))).html;
+    }
+
     const NOTIFY_WRAPPER_STYLE = s(frameStyleBase);
     const NOTIFY_HEADER_STYLE = s(headerStyleBase);
     function createNotifyMessage(title, content) {
@@ -153,6 +159,13 @@ var ChatSetAttr = (function (exports) {
                 h("a", { href: "!setattr-help", style: buttonStyle }, "Create Journal Handout")))).html;
     }
 
+    const BEACON_UNSUPPORTED_NOTICE_TITLE = "Notice: Beacon Support Disabled";
+    const BEACON_UNSUPPORTED_NOTICE_BODY = "Beacon character sheets are not supported on this Mod API Sandbox. " +
+        "Please be sure you have the correct Sandbox selected on the Mod API Scripts Page " +
+        "and restart the Mod API Server.";
+    const LONG_RUNNING_QUERY_TITLE = "Long Running Query";
+    const LONG_RUNNING_QUERY_BODY = "The operation is taking a long time to execute. This may be due to a large number of " +
+        "targets or attributes being processed. Please be patient as the operation completes.";
     function getWhisperPrefix(playerID) {
         const player = getPlayerName(playerID);
         return `/w "${player || "GM"}" `;
@@ -190,8 +203,12 @@ var ChatSetAttr = (function (exports) {
         if (output?.silent) {
             return;
         }
-        const delayMessage = createDelayMessage();
-        sendChat("ChatSetAttr", `${getWhisperPrefix(playerID)}${delayMessage}`, undefined, { noarchive: true });
+        const noticeMessage = createNoticeMessage(LONG_RUNNING_QUERY_TITLE, LONG_RUNNING_QUERY_BODY);
+        sendChat("ChatSetAttr", `${getWhisperPrefix(playerID)}${noticeMessage}`, undefined, { noarchive: true });
+    }
+    function sendBeaconUnsupportedNotice() {
+        const message = createNoticeMessage(BEACON_UNSUPPORTED_NOTICE_TITLE, BEACON_UNSUPPORTED_NOTICE_BODY);
+        sendChat("ChatSetAttr", "/w gm " + message, undefined, { noarchive: true });
     }
     function sendNotification(title, content, archive) {
         const notifyMessage = createNotifyMessage(title, content);
@@ -858,6 +875,15 @@ var ChatSetAttr = (function (exports) {
             }
         }
         return attributes;
+    }
+
+    function isBeaconSupported() {
+        try {
+            return !!Campaign().computedSummary;
+        }
+        catch {
+            return false;
+        }
     }
 
     function cleanValue(value) {
@@ -3528,6 +3554,9 @@ var ChatSetAttr = (function (exports) {
         broadcastHeader();
         if (!checkDependencies()) {
             return;
+        }
+        if (!isBeaconSupported()) {
+            sendBeaconUnsupportedNotice();
         }
         on("chat:message", (msg) => {
             if (msg.type !== "api") {

@@ -58,6 +58,7 @@ global.setSheetItem = setSheetItem;
 // region Utility Functions
 global.playerIsGM = vi.fn();
 global.sendChat = vi.fn();
+global.Campaign = vi.fn(() => ({ computedSummary: {} })) as typeof Campaign;
 
 // region Requirements
 global.libSmartAttributes = SA;

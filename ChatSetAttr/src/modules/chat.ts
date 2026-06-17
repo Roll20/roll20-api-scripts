@@ -1,7 +1,20 @@
-import { createDelayMessage } from "../templates/delay";
 import { createChatMessage, createErrorMessage } from "../templates/messages";
+import { createNoticeMessage } from "../templates/notice";
 import { createNotifyMessage } from "../templates/notification";
 import { createWelcomeMessage } from "../templates/welcome";
+
+export const BEACON_UNSUPPORTED_NOTICE_TITLE = "Notice: Beacon Support Disabled";
+
+export const BEACON_UNSUPPORTED_NOTICE_BODY =
+  "Beacon character sheets are not supported on this Mod API Sandbox. " +
+  "Please be sure you have the correct Sandbox selected on the Mod API Scripts Page " +
+  "and restart the Mod API Server.";
+
+export const LONG_RUNNING_QUERY_TITLE = "Long Running Query";
+
+export const LONG_RUNNING_QUERY_BODY =
+  "The operation is taking a long time to execute. This may be due to a large number of " +
+  "targets or attributes being processed. Please be patient as the operation completes.";
 
 export type CommandOutputOptions = {
   silent?: boolean;
@@ -80,13 +93,21 @@ export function sendDelayMessage(
     return;
   }
 
-  const delayMessage = createDelayMessage();
+  const noticeMessage = createNoticeMessage(LONG_RUNNING_QUERY_TITLE, LONG_RUNNING_QUERY_BODY);
   sendChat(
     "ChatSetAttr",
-    `${getWhisperPrefix(playerID)}${delayMessage}`,
+    `${getWhisperPrefix(playerID)}${noticeMessage}`,
     undefined,
     { noarchive: true },
   );
+};
+
+export function sendBeaconUnsupportedNotice(): void {
+  const message = createNoticeMessage(
+    BEACON_UNSUPPORTED_NOTICE_TITLE,
+    BEACON_UNSUPPORTED_NOTICE_BODY,
+  );
+  sendChat("ChatSetAttr", "/w gm " + message, undefined, { noarchive: true });
 };
 
 export function sendNotification(title: string, content: string, archive?: boolean): void {

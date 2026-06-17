@@ -168,3 +168,53 @@ describe("startup state persistence", () => {
     expect(persisted.scriptVersion).toBe("2.0");
   });
 });
+
+describe("Beacon unsupported notice", () => {
+  const originalLibSmartAttributes = global.libSmartAttributes;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.libSmartAttributes = originalLibSmartAttributes;
+    global.libUUID = {
+      generateRowID: vi.fn(() => "unique-rowid-1234"),
+      generateUUID: vi.fn(() => "unique-libUUID-5678"),
+    };
+  });
+
+  it("should whisper Beacon unsupported notice when computedSummary is missing", () => {
+    global.Campaign = vi.fn(() => ({})) as typeof Campaign;
+
+    registerHandlers();
+
+    const beaconCall = vi.mocked(sendChat).mock.calls.find(call =>
+      typeof call[1] === "string" && call[1].includes("Beacon Support Disabled"),
+    );
+    expect(beaconCall).toBeDefined();
+    expect(beaconCall![1]).toMatch(/^\/w gm /);
+    expect(beaconCall![1]).toContain("rgba(245, 158, 11");
+    expect(beaconCall![1]).toContain("Mod API Sandbox");
+  });
+
+  it("should not send Beacon notice when computedSummary is present", () => {
+    global.Campaign = vi.fn(() => ({ computedSummary: {} })) as typeof Campaign;
+
+    registerHandlers();
+
+    const beaconCall = vi.mocked(sendChat).mock.calls.find(call =>
+      typeof call[1] === "string" && call[1].includes("Beacon Support Disabled"),
+    );
+    expect(beaconCall).toBeUndefined();
+  });
+
+  it("should not send Beacon notice when dependencies are missing", () => {
+    global.Campaign = vi.fn(() => ({})) as typeof Campaign;
+    global.libSmartAttributes = undefined as unknown as typeof libSmartAttributes;
+
+    registerHandlers();
+
+    const beaconCall = vi.mocked(sendChat).mock.calls.find(call =>
+      typeof call[1] === "string" && call[1].includes("Beacon Support Disabled"),
+    );
+    expect(beaconCall).toBeUndefined();
+  });
+});

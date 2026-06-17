@@ -25,6 +25,13 @@ export const frameStyleWarning = {
   backgroundColor: "rgba(245, 158, 11, 0.1)",
 };
 
+export const frameStyleNotice = {
+  border: "1px solid rgba(245, 158, 11, 0.55)",
+  borderRadius: "8px",
+  padding: "8px",
+  backgroundColor: "rgba(245, 158, 11, 0.18)",
+};
+
 export const frameStyleError = {
   border: "1px solid rgba(239, 68, 68, 0.4)",
   backgroundColor: "rgba(239, 68, 68, 0.1)",

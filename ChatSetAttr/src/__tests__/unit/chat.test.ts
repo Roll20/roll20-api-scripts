@@ -4,7 +4,12 @@ import {
   sendMessages,
   sendErrors,
   sendDelayMessage,
+  sendBeaconUnsupportedNotice,
   normalizeCommandOutputOptions,
+  BEACON_UNSUPPORTED_NOTICE_TITLE,
+  BEACON_UNSUPPORTED_NOTICE_BODY,
+  LONG_RUNNING_QUERY_TITLE,
+  LONG_RUNNING_QUERY_BODY,
 } from "../../modules/chat";
 
 // Mock the templates
@@ -13,8 +18,8 @@ vi.mock("../../templates/messages", () => ({
   createErrorMessage: vi.fn(),
 }));
 
-vi.mock("../../templates/delay", () => ({
-  createDelayMessage: vi.fn(),
+vi.mock("../../templates/notice", () => ({
+  createNoticeMessage: vi.fn(),
 }));
 
 // Mock Roll20 globals
@@ -29,10 +34,10 @@ global.getObj = mockGetObj;
 global.sendChat = mockSendChat;
 
 import { createChatMessage, createErrorMessage } from "../../templates/messages";
-import { createDelayMessage } from "../../templates/delay";
+import { createNoticeMessage } from "../../templates/notice";
 const mockCreateChatMessage = vi.mocked(createChatMessage);
 const mockCreateErrorMessage = vi.mocked(createErrorMessage);
-const mockCreateDelayMessage = vi.mocked(createDelayMessage);
+const mockCreateNoticeMessage = vi.mocked(createNoticeMessage);
 
 describe("chat", () => {
   beforeEach(() => {
@@ -339,7 +344,7 @@ describe("chat", () => {
       mockGetObj.mockReturnValue(mockPlayer);
       mockCreateChatMessage.mockReturnValue("formatted-chat-message");
       mockCreateErrorMessage.mockReturnValue("formatted-error-message");
-      mockCreateDelayMessage.mockReturnValue("delay-message");
+      mockCreateNoticeMessage.mockReturnValue("notice-message");
     });
 
     it("should suppress errors when mute is set", () => {
@@ -373,10 +378,28 @@ describe("chat", () => {
     it("should whisper delay notice to the command runner", () => {
       sendDelayMessage("player123");
 
-      expect(mockCreateDelayMessage).toHaveBeenCalled();
+      expect(mockCreateNoticeMessage).toHaveBeenCalledWith(
+        LONG_RUNNING_QUERY_TITLE,
+        LONG_RUNNING_QUERY_BODY,
+      );
       expect(mockSendChat).toHaveBeenCalledWith(
         "ChatSetAttr",
-        '/w "Test Player" delay-message',
+        '/w "Test Player" notice-message',
+        undefined,
+        { noarchive: true },
+      );
+    });
+
+    it("should whisper Beacon unsupported notice to the GM", () => {
+      sendBeaconUnsupportedNotice();
+
+      expect(mockCreateNoticeMessage).toHaveBeenCalledWith(
+        BEACON_UNSUPPORTED_NOTICE_TITLE,
+        BEACON_UNSUPPORTED_NOTICE_BODY,
+      );
+      expect(mockSendChat).toHaveBeenCalledWith(
+        "ChatSetAttr",
+        "/w gm notice-message",
         undefined,
         { noarchive: true },
       );
@@ -385,7 +408,7 @@ describe("chat", () => {
     it("should suppress delay notice when mute is set", () => {
       sendDelayMessage("player123", { mute: true, silent: true });
 
-      expect(mockCreateDelayMessage).not.toHaveBeenCalled();
+      expect(mockCreateNoticeMessage).not.toHaveBeenCalled();
       expect(mockSendChat).not.toHaveBeenCalled();
     });
   });

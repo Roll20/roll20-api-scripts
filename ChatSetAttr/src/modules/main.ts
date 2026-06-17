@@ -1,7 +1,8 @@
 import scriptJson from "../../script.json" assert { type: "json" };
 import type { Attribute, AttributeRecord } from "../types";
 import { getAttributes } from "./attributes";
-import { sendDelayMessage, sendErrors, sendMessages, normalizeCommandOutputOptions } from "./chat";
+import { sendDelayMessage, sendBeaconUnsupportedNotice, sendErrors, sendMessages, normalizeCommandOutputOptions } from "./chat";
+import { isBeaconSupported } from "./beaconSupport";
 import { handlers } from "./commands";
 import { checkConfigMessage, getConfig, handleConfigCommand, hasFlag } from "./config";
 import {
@@ -221,6 +222,10 @@ export function registerHandlers() {
   broadcastHeader();
   if (!checkDependencies()) {
     return;
+  }
+
+  if (!isBeaconSupported()) {
+    sendBeaconUnsupportedNotice();
   }
 
   on("chat:message", (msg) => {
