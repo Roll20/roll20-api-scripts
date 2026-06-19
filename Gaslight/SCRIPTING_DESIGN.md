@@ -70,23 +70,33 @@ Two namespaces resolved by Gaslight:
 - MathOps — inline math
 
 **Fetch extension:**
-Gaslight registers computed properties on `Fetch.CustomPropsByType.graphic.compProps` at startup. These read from a module-level context variable set during evaluation:
+Gaslight registers computed properties on `Fetch.CustomPropsByType.graphic.compProps` when script handouts are created or modified. Properties use the `gl_` prefix as a namespace. Resolution depends on evaluation context (scope):
+
+- `scope: token` → reads from token gmnotes field `gl_<fieldname>: <value>`
+- `scope: character` → reads from character attribute named `gl_<fieldname>`
+
+Convention: the `gl_` prefix is used consistently everywhere — in gmnotes, character attributes, AND script references. No stripping.
 
 ```javascript
-// Pseudocode
-let evaluationContext = { target: null, viewer: null, scope: 'token' };
-
-Fetch.CustomPropsByType.graphic.compProps.stealth_result = {
-    nicks: ['stealth_roll'],
+// Registered dynamically per gl_ field found in active scripts
+Fetch.CustomPropsByType.graphic.compProps['gl_stealth_result'] = {
+    nicks: [],
     val: (o) => {
-        if (evaluationContext.scope === 'token') return readGmNotesField(o.gmnotes, 'stealth_result');
-        else return getAttrByName(o.represents, 'stealth_result');
+        if (evaluationContext.scope === 'token') {
+            return readGmNotesField(o.gmnotes, 'gl_stealth_result');
+        } else {
+            return getAttrByName(o.represents, 'gl_stealth_result');
+        }
     }
 };
 ```
 
+Script reference: `@(target.gl_stealth_result)`
+
+CompProps are registered at handout creation/modification time — Gaslight watches `change:handout` and `add:handout`, scans the content for `gl_*` references, and registers any new compProps. This ensures they're ready before any evaluation fires.
+
 **Muler injection:**
-Before each evaluation pass, Gaslight sends a Muler set command to establish viewer context variables.
+Before each evaluation pass, Gaslight sends a Muler set command to establish viewer context variables (viewer.id, viewer.name, viewer.page, etc.).
 
 ### Triggers
 
