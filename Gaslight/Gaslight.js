@@ -270,7 +270,8 @@ var Gaslight = Gaslight || (() => {
     const getLinkId = (token) => {
         var notes = token.get('gmnotes') || '';
         try { notes = decodeURIComponent(notes); } catch(e) { /* already decoded */ }
-        const match = notes.match(/gaslight_link:\s*(.+)/);
+        notes = notes.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+        const match = notes.match(/gaslight_link:\s*(\S+)/);
         return match ? match[1].trim() : null;
     };
 
