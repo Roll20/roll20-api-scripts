@@ -1670,30 +1670,83 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Find pins on a page that are gaslight script pins (linked to a handout).
+     * Find pins on a page that are gaslight script pins.
+     * A pin is a script pin if:
+     * - It links to a handout (script in handout notes, config in handout gmNotes or pin gmNotes)
+     * - OR it has ---GASLIGHT-SCRIPT--- in its own gmNotes (self-contained)
      */
     const findScriptPins = (pageId) => {
         var pins = findObjs({ _type: 'pin', _pageid: pageId });
         return pins.filter(function(pin) {
-            return pin.get('link') && pin.get('linkType') === 'handout';
+            if (pin.get('link') && pin.get('linkType') === 'handout') return true;
+            var notes = pin.get('gmNotes') || '';
+            try { notes = decodeURIComponent(notes); } catch(e) {}
+            return notes.indexOf('---GASLIGHT-SCRIPT---') !== -1;
         });
     };
 
     /**
-     * Parse pin gmNotes for script configuration.
+     * Parse pin configuration. Checks pin gmNotes first, falls back to linked handout gmNotes.
      */
-    const parsePinConfig = (pin) => {
+    const parsePinConfig = (pin, callback) => {
         var notes = pin.get('gmNotes') || '';
         try { notes = decodeURIComponent(notes); } catch(e) {}
+
+        // If pin has its own config, use it
+        if (notes.indexOf('---GASLIGHT-SCRIPT---') !== -1) {
+            callback(parseConfigText(notes));
+            return;
+        }
+
+        // Fall back to linked handout's gmNotes
+        var handoutId = pin.get('link');
+        if (handoutId) {
+            var handout = getObj('handout', handoutId);
+            if (handout) {
+                handout.get('gmnotes', function(gmnotes) {
+                    gmnotes = gmnotes || '';
+                    try { gmnotes = decodeURIComponent(gmnotes); } catch(e) {}
+                    if (gmnotes.indexOf('---GASLIGHT-SCRIPT---') !== -1) {
+                        callback(parseConfigText(gmnotes));
+                    } else {
+                        // No config found, use defaults
+                        callback({ scope: 'token', filter: 'all', triggers: [] });
+                    }
+                });
+                return;
+            }
+        }
+        callback(null);
+    };
+
+    /**
+     * Parse config text into structured object.
+     */
+    const parseConfigText = (text) => {
         var config = { scope: 'token', filter: 'all', triggers: [] };
-        if (!notes.includes('---GASLIGHT-SCRIPT---')) return null;
-        notes.split('\n').forEach(function(line) {
+        text.split('\n').forEach(function(line) {
             line = line.trim();
             if (line.startsWith('scope:')) config.scope = line.slice(6).trim();
             else if (line.startsWith('filter:')) config.filter = line.slice(7).trim();
             else if (line.startsWith('trigger:')) config.triggers.push(line.slice(8).trim());
         });
         return config;
+    };
+
+    /**
+     * Get the script content for a pin.
+     * Linked pin: from handout notes. Self-contained: from pin notes.
+     */
+    const getPinScript = (pin, callback) => {
+        var handoutId = pin.get('link');
+        if (handoutId) {
+            getHandoutContent(handoutId, callback);
+        } else {
+            // Self-contained: script in pin notes
+            var notes = pin.get('notes') || '';
+            try { notes = decodeURIComponent(notes); } catch(e) {}
+            callback(notes);
+        }
     };
 
     /**
@@ -1787,9 +1840,6 @@ var Gaslight = Gaslight || (() => {
     const evaluatePins = (pins, msg, dryRun) => {
         var s = state[SCRIPT_NAME];
         pins.forEach(function(pin) {
-            var config = parsePinConfig(pin);
-            if (!config) return;
-            var handoutId = pin.get('link');
             var pageId = pin.get('_pageid');
 
             // Find the active group for this page
@@ -1799,19 +1849,39 @@ var Gaslight = Gaslight || (() => {
             if (!activeEntry) return;
 
             var groupInfo = activeEntry[1];
-            var targets = getTargetTokens(pageId, config, s.activeGroups);
 
-            getHandoutContent(handoutId, function(content) {
-                if (!content) return;
-                // Strip HTML tags from handout content
-                content = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+            // Determine which viewers to evaluate for based on pin placement
+            var viewers;
+            if (pageId === groupInfo.masterPageId) {
+                // Pin on master: evaluate for all players
+                viewers = Object.entries(groupInfo.playerPages);
+            } else {
+                // Pin on player page: evaluate only for that player
+                var playerEntry = Object.entries(groupInfo.playerPages).find(function(e) { return e[1].pageId === pageId; });
+                viewers = playerEntry ? [playerEntry] : [];
+            }
+            if (viewers.length === 0) return;
 
-                // Evaluate for each viewer + target combination
-                Object.entries(groupInfo.playerPages).forEach(function(entry) {
-                    var viewerPlayerId = entry[0];
-                    var viewerPageId = entry[1].pageId;
-                    targets.forEach(function(target) {
-                        evaluateScript(content, target, viewerPlayerId, viewerPageId, config, msg, dryRun);
+            // Get targets from master page (source of truth for token list)
+            var targets = getTargetTokens(groupInfo.masterPageId, { filter: 'all' }, s.activeGroups);
+
+            parsePinConfig(pin, function(config) {
+                if (!config) return;
+                // Re-filter targets based on config
+                targets = getTargetTokens(groupInfo.masterPageId, config, s.activeGroups);
+
+                getPinScript(pin, function(content) {
+                    if (!content) return;
+                    // Strip HTML tags from content
+                    content = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+                    // Evaluate for each viewer + target combination
+                    viewers.forEach(function(entry) {
+                        var viewerPlayerId = entry[0];
+                        var viewerPageId = entry[1].pageId;
+                        targets.forEach(function(target) {
+                            evaluateScript(content, target, viewerPlayerId, viewerPageId, config, msg, dryRun);
+                        });
                     });
                 });
             });
