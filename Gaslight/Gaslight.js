@@ -957,8 +957,9 @@ var Gaslight = Gaslight || (() => {
         summary += formatWarnings(globalWarnings);
         reply(msg, 'Split', summary);
 
-        // Build trigger map for scripting engine
+        // Build trigger map and register Fetch compProps for scripting engine
         buildTriggerMap();
+        registerAllCompProps();
 
         // Focus-ping each player to their character token on their page
         setTimeout(function() {
@@ -1667,6 +1668,80 @@ var Gaslight = Gaslight || (() => {
         + '<code>' + CMD + ' --help</code> -- This help<br>';
 
     // =========================================================================
+    // Scripting Engine — Fetch Integration
+    // =========================================================================
+
+    // Module-level evaluation context for Fetch compProp resolution
+    var evaluationContext = { scope: 'token', targetId: null, viewerPlayerId: null };
+
+    /**
+     * Read a gl_ field from a token's gmnotes.
+     */
+    const readGlField = (gmnotes, fieldName) => {
+        var notes = gmnotes || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
+        notes = notes.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+        var rx = new RegExp(fieldName + '\\s*:\\s*(\\S+)');
+        var match = notes.match(rx);
+        return match ? match[1] : '';
+    };
+
+    /**
+     * Register a gl_ field as a Fetch compProp on the graphic type.
+     * Resolution depends on evaluationContext.scope.
+     */
+    const registerGlCompProp = (fieldName) => {
+        if (typeof Fetch === 'undefined' || !Fetch.CustomPropsByType) return;
+        if (Fetch.CustomPropsByType.graphic.compProps[fieldName]) return; // already registered
+
+        Fetch.CustomPropsByType.graphic.compProps[fieldName] = {
+            nicks: [],
+            val: function(o) {
+                if (evaluationContext.scope === 'token') {
+                    return readGlField(o.gmnotes, fieldName);
+                } else {
+                    // scope: character — read from character attribute
+                    var charId = o.represents;
+                    if (!charId) return '';
+                    return getAttrByName(charId, fieldName) || '';
+                }
+            }
+        };
+        log(SCRIPT_NAME + ': registered Fetch compProp "' + fieldName + '"');
+    };
+
+    /**
+     * Scan a script for gl_ references and register compProps for each.
+     */
+    const registerCompPropsFromScript = (content) => {
+        var text = content.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+        var rx = /@\([^)]*\.(gl_[a-zA-Z0-9_]+)\)/g;
+        var match;
+        while ((match = rx.exec(text)) !== null) {
+            registerGlCompProp(match[1]);
+        }
+    };
+
+    /**
+     * Scan all active script handouts and register compProps.
+     * Called on split and when handouts change.
+     */
+    const registerAllCompProps = () => {
+        var s = state[SCRIPT_NAME];
+        Object.values(s.activeGroups).forEach(function(group) {
+            var allPageIds = [group.masterPageId].concat(Object.values(group.playerPages).map(function(p) { return p.pageId; }));
+            allPageIds.forEach(function(pageId) {
+                var pins = findScriptPins(pageId);
+                pins.forEach(function(pin) {
+                    getPinScript(pin, function(content) {
+                        if (content) registerCompPropsFromScript(content);
+                    });
+                });
+            });
+        });
+    };
+
+    // =========================================================================
     // Scripting Engine — Trigger Map
     // =========================================================================
 
@@ -1995,11 +2070,28 @@ var Gaslight = Gaslight || (() => {
     const evaluateScript = (scriptContent, targetToken, viewerPlayerId, viewerPageId, config, msg, dryRun) => {
         // Find the linked token on the viewer's page
         var viewerTarget = findLinkedTokenOnPage(targetToken, viewerPageId);
-        if (!viewerTarget) return; // no linked copy on this viewer's page
+        if (!viewerTarget) return;
+
+        // Set evaluation context for Fetch compProp resolution
+        evaluationContext.scope = config.scope || 'token';
+        evaluationContext.targetId = viewerTarget.get('id');
+        evaluationContext.viewerPlayerId = viewerPlayerId; // no linked copy on this viewer's page
 
         var content = scriptContent;
-        content = content.replace(/@\(target\.token_id\)/g, viewerTarget.get('id'));
-        content = content.replace(/@\(target\.name\)/g, viewerTarget.get('name') || '');
+        // Replace @(target.*) with token ID — Fetch resolves properties/attributes/compProps
+        content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
+        // Replace @(viewer.*) with viewer's controlled token ID (first found)
+        var viewerTokens = findObjs({ _type: 'graphic', _pageid: viewerPageId, _subtype: 'token' }).filter(function(t) {
+            var cid = t.get('represents');
+            if (!cid) return false;
+            var c = getObj('character', cid);
+            if (!c) return false;
+            var cb = c.get('controlledby') || '';
+            return cb === 'all' || cb.split(',').indexOf(viewerPlayerId) !== -1;
+        });
+        if (viewerTokens.length > 0) {
+            content = content.replace(/@\(viewer\./g, '@(' + viewerTokens[0].get('id') + '.');
+        }
 
         var lines = content.split('\n').filter(function(l) {
             l = l.trim();
