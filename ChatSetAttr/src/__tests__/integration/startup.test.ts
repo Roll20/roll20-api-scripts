@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+import { mockCampaign } from "../../__mocks__/apiObjects.mock";
+
 import { checkGlobalConfig, getConfig, persistStateVersionMetadata, syncScriptVersion } from "../../modules/config";
 import { syncHelpHandoutOnStartup } from "../../modules/help";
 import { registerHandlers } from "../../modules/main";
@@ -182,7 +184,7 @@ describe("Beacon unsupported notice", () => {
   });
 
   it("should whisper Beacon unsupported notice when computedSummary is missing", () => {
-    global.Campaign = vi.fn(() => ({})) as typeof Campaign;
+    global.Campaign = mockCampaign({});
 
     registerHandlers();
 
@@ -196,7 +198,7 @@ describe("Beacon unsupported notice", () => {
   });
 
   it("should not send Beacon notice when computedSummary is present", () => {
-    global.Campaign = vi.fn(() => ({ computedSummary: {} })) as typeof Campaign;
+    global.Campaign = mockCampaign({ computedSummary: {} });
 
     registerHandlers();
 
@@ -207,7 +209,7 @@ describe("Beacon unsupported notice", () => {
   });
 
   it("should not send Beacon notice when dependencies are missing", () => {
-    global.Campaign = vi.fn(() => ({})) as typeof Campaign;
+    global.Campaign = mockCampaign({});
     global.libSmartAttributes = undefined as unknown as typeof libSmartAttributes;
 
     registerHandlers();

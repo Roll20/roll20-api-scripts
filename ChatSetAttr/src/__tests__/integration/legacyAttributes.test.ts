@@ -1818,4 +1818,21 @@ describe("ChatSetAttr Integration Tests", () => {
       });
     });
   });
+
+  describe("Malformed commands", () => {
+    it("should not crash on single-dash target shorthand", async () => {
+      const player = createObj("player", { _id: "example-player-id", _displayname: "Test Player" });
+      createObj("character", { _id: "char1", name: "Character 1", controlledby: player.id });
+      vi.mocked(sendChat).mockClear();
+
+      expect(() => executeCommand("!setattr -all --hp|1")).not.toThrow();
+
+      await vi.waitFor(() => {
+        const errorCall = vi.mocked(sendChat).mock.calls.find(call =>
+          typeof call[1] === "string" && /No valid targets found/i.test(call[1]),
+        );
+        expect(errorCall).toBeDefined();
+      });
+    });
+  });
 });

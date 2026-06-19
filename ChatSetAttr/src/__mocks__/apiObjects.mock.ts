@@ -9,6 +9,10 @@ export function resetAllObjects(): void {
   resetBeaconAttributes();
 }
 
+export function mockCampaign(value: { computedSummary?: unknown }): typeof Campaign {
+  return vi.fn(() => value) as unknown as typeof Campaign;
+}
+
 function createRandomId(): string {
   return Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
 };

@@ -42,11 +42,23 @@ function extractOperation(parts: string[]): Command | undefined {
     log("Empty Command.");
     return;
   }
-  const command = parts.shift()!.slice(1); // remove the leading '!'
-  const isValidCommand = isCommand(command);
-  if (!isValidCommand) {
+  const commandPart = parts.shift()!;
+  const tokens = commandPart.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) {
+    log("Empty Command.");
+    return;
+  }
+  if (!tokens[0].startsWith("!")) {
     log("Invalid Command.");
     return;
+  }
+  const command = tokens[0].slice(1);
+  if (!isCommand(command)) {
+    log("Invalid Command.");
+    return;
+  }
+  if (tokens.length > 1) {
+    parts.unshift(tokens.slice(1).join(" "));
   }
   return command;
 };

@@ -167,6 +167,51 @@ describe("message", () => {
       it("should return undefined for invalid command", () => {
         expect(parseMessage("!invalidcmd --test")).toBeUndefined();
       });
+
+      it("should extract command when extra tokens follow on the same segment", () => {
+        const result = parse("!setattr -all --hp|1");
+        expect(result.operation).toBe("setattr");
+        expect(result.changes).toEqual(
+          expect.arrayContaining([
+            { name: "-all" },
+            { name: "hp", current: "1" },
+          ]),
+        );
+      });
+
+      it("should extract command when multiple words follow before first --", () => {
+        const result = parse("!setattr foo bar --hp|1");
+        expect(result.operation).toBe("setattr");
+        expect(result.changes).toEqual(
+          expect.arrayContaining([
+            { name: "foobar" },
+            { name: "hp", current: "1" },
+          ]),
+        );
+      });
+    });
+
+    describe("aberrant input", () => {
+      it("should return undefined when the command segment has no leading bang", () => {
+        expect(parseMessage("setattr --hp|1")).toBeUndefined();
+      });
+
+      it("should return undefined when the first token is not a known command", () => {
+        expect(parseMessage("!notacommand --hp|1")).toBeUndefined();
+      });
+
+      it("should parse setattr with only the operation and no segments", () => {
+        const result = parse("!setattr");
+        expect(result.operation).toBe("setattr");
+        expect(result.targeting).toEqual([]);
+        expect(result.changes).toEqual([]);
+      });
+
+      it("should treat single-dash tokens as attribute names, not options", () => {
+        const result = parse("!setattr -all --hp|1");
+        expect(result.options).toEqual({});
+        expect(result.targeting).toEqual([]);
+      });
     });
 
     describe("command option overrides", () => {

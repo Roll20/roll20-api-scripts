@@ -879,7 +879,8 @@ var ChatSetAttr = (function (exports) {
 
     function isBeaconSupported() {
         try {
-            return !!Campaign().computedSummary;
+            const campaign = Campaign();
+            return !!campaign.computedSummary;
         }
         catch {
             return false;
@@ -2703,11 +2704,23 @@ var ChatSetAttr = (function (exports) {
             log("Empty Command.");
             return;
         }
-        const command = parts.shift().slice(1); // remove the leading '!'
-        const isValidCommand = isCommand(command);
-        if (!isValidCommand) {
+        const commandPart = parts.shift();
+        const tokens = commandPart.trim().split(/\s+/).filter(Boolean);
+        if (tokens.length === 0) {
+            log("Empty Command.");
+            return;
+        }
+        if (!tokens[0].startsWith("!")) {
             log("Invalid Command.");
             return;
+        }
+        const command = tokens[0].slice(1);
+        if (!isCommand(command)) {
+            log("Invalid Command.");
+            return;
+        }
+        if (tokens.length > 1) {
+            parts.unshift(tokens.slice(1).join(" "));
         }
         return command;
     }
@@ -3435,7 +3448,11 @@ var ChatSetAttr = (function (exports) {
         const messages = [];
         const result = {};
         // Parse Message
-        const { operation, targeting, options, changes, references, feedback, } = parseMessage(msg.content);
+        const parsed = parseMessage(msg.content);
+        if (!parsed) {
+            return errorOut("Could not parse command. Check that command options use -- (double dash).", msg.playerid, errors, normalizeCommandOutputOptions());
+        }
+        const { operation, targeting, options, changes, references, feedback, } = parsed;
         const output = normalizeCommandOutputOptions(options);
         // Start Timer
         startTimer("chatsetattr", 8000, () => sendDelayMessage(msg.playerid, output));

@@ -106,7 +106,7 @@ describe("help", () => {
     it("should write rendered content and persist bundled revision in state", () => {
       const handout = mockHandout("apply-handout");
 
-      applyHelpContentToHandout(handout as Roll20Object);
+      applyHelpContentToHandout(handout as Roll20Handout);
 
       expect(mockSet).toHaveBeenCalledWith({
         inplayerjournals: "all",

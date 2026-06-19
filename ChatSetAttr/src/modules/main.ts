@@ -46,6 +46,16 @@ async function acceptMessage(msg: Roll20ChatMessage) {
   const result: Record<string, AttributeRecord> = {};
 
   // Parse Message
+  const parsed = parseMessage(msg.content);
+  if (!parsed) {
+    return errorOut(
+      "Could not parse command. Check that command options use -- (double dash).",
+      msg.playerid,
+      errors,
+      normalizeCommandOutputOptions(),
+    );
+  }
+
   const {
     operation,
     targeting,
@@ -53,7 +63,7 @@ async function acceptMessage(msg: Roll20ChatMessage) {
     changes,
     references,
     feedback,
-  } = parseMessage(msg.content);
+  } = parsed;
 
   const output = normalizeCommandOutputOptions(options);
 

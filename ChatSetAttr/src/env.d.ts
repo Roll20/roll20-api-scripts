@@ -34,4 +34,9 @@ declare global {
       };
     }
   }
+
+  /** Present on Beacon-capable Mod API sandboxes; not yet in @roll20/api-types. */
+  interface BeaconCampaignMarker {
+    computedSummary?: unknown;
+  }
 }

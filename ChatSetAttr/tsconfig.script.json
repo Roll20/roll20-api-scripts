@@ -17,6 +17,8 @@
     "src/__tests__/**",
     "**/*.test.ts",
     "**/*.spec.ts",
-    "**/*.mock.ts"
+    "**/*.mock.ts",
+    "vitest.setup.ts",
+    "vitest.config.ts"
   ]
 }

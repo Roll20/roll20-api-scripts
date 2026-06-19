@@ -9,14 +9,14 @@ export function checkHelpMessage(msg: string): boolean {
   return msg.trim().toLowerCase().startsWith(HELP_COMMAND);
 }
 
-export function findHelpHandout(): Roll20Object | undefined {
+export function findHelpHandout(): Roll20Handout | undefined {
   return findObjs({
     _type: "handout",
     name: HELP_HANDOUT_NAME,
   })[0];
 }
 
-export function applyHelpContentToHandout(handout: Roll20Object): void {
+export function applyHelpContentToHandout(handout: Roll20Handout): void {
   const helpContent = createHelpHandout(handout.id);
   const bundledAt = getBundledHelpContentUpdatedAt();
 
