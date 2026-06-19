@@ -1881,7 +1881,7 @@ var Gaslight = Gaslight || (() => {
                     if (dryRun) {
                         var handout = pin.get('link') ? getObj('handout', pin.get('link')) : null;
                         var pinTitle = stripGlsTag(pin.get('title') || (handout && handout.get('name')) || pin.get('_id'));
-                        reply(msg, 'Eval', '<hr><b>Pin:</b> ' + pinTitle);
+                        sendChat('player|' + msg.playerid, CMD + ' --echo-header ' + pinTitle);
                     }
 
                     // Evaluate for each viewer + target combination
@@ -1985,6 +1985,12 @@ var Gaslight = Gaslight || (() => {
                 var viewerName = echoViewer ? echoViewer.get('_displayname') : echoViewerId;
                 var targetName = echoTarget ? (echoTarget.get('name') || echoTargetId) : echoTargetId;
                 reply(msg, 'Eval', '<b>Dry run</b><br><b>Target:</b> ' + targetName + ' <small><code>' + echoTargetId + '</code></small><br><b>Viewer:</b> ' + viewerName + ' <small><code>' + echoViewerId + '</code></small><br><code>' + echoCmd + '</code>');
+                break;
+            }
+            case '--echo-header': {
+                // Internal: dry-run pin header
+                var headerContent = msg.content.slice(msg.content.indexOf('--echo-header') + 13).trim();
+                reply(msg, 'Eval', '<b>Pin:</b> ' + headerContent);
                 break;
             }
             case '--help':  reply(msg, HELP_TEXT); break;
