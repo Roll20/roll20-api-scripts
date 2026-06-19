@@ -166,15 +166,28 @@ The handout notes/gmnotes contain commands using standard Meta-Toolbox syntax:
 {& end}
 ```
 
-## Open Questions
+## Resolved Questions
 
-1. How do we detect which fields a script references for auto-trigger registration? Regex parse of `@(target.*)` and `@(viewer.*)` patterns?
-2. Should scripts support multi-line (multiple commands per evaluation)? If so, do they execute sequentially or as one batch?
-3. How to handle script errors gracefully (bad syntax, missing attributes)?
-4. Should there be a "dry run" mode for testing scripts without applying changes?
-5. Performance: how many change:attribute listeners is too many? Should we debounce?
-6. Can a script reference other scripts (composition/chaining)?
-7. Should we support `@(target.*)` for token properties that Fetch already handles (left, top, bar1_value)? Or only for gaslight-managed fields?
+1. **Field detection for auto-triggers:** Regex parse `@(target.gl_*)` and `@(viewer.*)` patterns inside `{& if}` blocks. Basic bracket matching to distinguish conditions from actions.
+
+2. **Multi-line scripts:** Yes. Multiple commands per evaluation, executed sequentially. APILogic likely handles this natively.
+
+3. **Error handling:** Try/catch around our resolution/sendChat phase. Whisper GM on errors (missing attributes, bad pin config, missing handout). Downstream script errors are outside our control.
+
+4. **Dry run:** `!gaslight eval --dry` (pins selected). Shows resolved commands and affected tokens without applying.
+
+5. **Performance:** Single `on('change:attribute')` handler with a trigger map for O(1) lookup:
+   ```
+   triggerMap = {
+       'gl_stealth_result': [{ pinId, handoutId, scope }],
+       'passive_perception': [{ pinId, handoutId, scope }]
+   };
+   ```
+   Built at handout parse time. Rebuilt on handout change. Debounce per-script (100ms).
+
+6. **Script composition:** Deferred to v3. Scripts are self-contained for now.
+
+7. **Standard token properties:** Fetch handles natively. We only register `gl_*` compProps.
 
 ## Future Ideas
 
