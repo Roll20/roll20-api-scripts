@@ -1762,8 +1762,26 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle gmnotes changes — detect which gl_ fields changed and trigger.
+     * Handle token property changes — check trigger map for graphic properties.
      */
+    const onGraphicPropChanged = (obj, prev) => {
+        var changed = Object.keys(prev).filter(function(k) { return !k.startsWith('_') && prev[k] !== obj.get(k) && k !== 'gmnotes'; });
+        if (changed.length === 0) return;
+
+        var triggered = false;
+        changed.forEach(function(prop) {
+            var entries = triggerMap[prop];
+            if (!entries || entries.length === 0) return;
+            if (triggered) return; // only evaluate once per change event
+            triggered = true;
+            entries.forEach(function(entry) {
+                var pin = getObj('pin', entry.pinId);
+                if (!pin) return;
+                var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
+                evaluatePins([pin], fakeMsg, false);
+            });
+        });
+    };
     const onGmNotesChanged = (obj, prev) => {
         if (!prev || !prev.gmnotes) return;
         var oldNotes = prev.gmnotes || '';
@@ -2278,6 +2296,7 @@ var Gaslight = Gaslight || (() => {
         on('add:graphic', onTokenAdded);
         on('destroy:graphic', onTokenDestroyed);
         on('change:attribute', onAttributeChanged);
+        on('change:graphic', onGraphicPropChanged);
         on('change:graphic:gmnotes', onGmNotesChanged);
         setInterval(pollRelayQueue, 500);
     };
