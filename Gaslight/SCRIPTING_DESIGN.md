@@ -49,7 +49,14 @@ Two namespaces resolved by Gaslight:
   - Resolved from gmnotes (scope: token) or character attribute (scope: character)
   - Also includes standard token properties and character attributes
 - `viewer.*` — the player whose page we're evaluating
-  - Character attributes from the viewer's controlled character
+  - Represents the viewing PLAYER, not a single token
+  - A player may control multiple tokens on their page
+  - `viewer.*` attribute references iterate over each controlled token by default ("each" semantics)
+  - If ANY viewer token's evaluation passes, the action applies (most permissive wins)
+  - Aggregation functions available: `max(viewer.passive_perception)`, `min(...)`, `any(...)`, `all(...)`
+  - `all(...)` requires every viewer token to pass
+  - Player-level properties (viewer.id, viewer.name, viewer.page) are singular, not iterated
+  - Party-tagged tokens may be used as a narrowing hint but do NOT guarantee a single token
 
 ### Integration with Meta-Toolbox
 
