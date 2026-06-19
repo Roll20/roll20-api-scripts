@@ -1,6 +1,6 @@
 # Gaslight TODO
 
-## Done (v1.0.0)
+## Done (v1.0.0 — shipped in Gaslight branch PR)
 - [x] Pre-setup split with test-first behavior
 - [x] Merge (tear down Anchor + Mirror, unassign players)
 - [x] Anchor-mode sync (NPC + player tokens via chain-linking)
