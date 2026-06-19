@@ -1766,7 +1766,11 @@ var Gaslight = Gaslight || (() => {
         });
 
         if (dryRun) {
-            var out = '<b>Dry run</b> (target: ' + (targetToken.get('name') || targetToken.get('id')) + ', viewer: ' + viewerPlayerId + '):<br>';
+            var targetName = viewerTarget.get('name');
+            var targetDisplay = targetName ? targetName + ' (' + viewerTarget.get('id') + ')' : viewerTarget.get('id');
+            var viewerPlayer = getObj('player', viewerPlayerId);
+            var viewerDisplay = viewerPlayer ? viewerPlayer.get('_displayname') + ' (' + viewerPlayerId + ')' : viewerPlayerId;
+            var out = '<b>Dry run</b> (target: ' + targetDisplay + ', viewer: ' + viewerDisplay + '):<br>';
             lines.forEach(function(l) { out += '<code>' + l + '</code><br>'; });
             reply(msg, 'Eval', out);
         } else {
