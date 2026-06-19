@@ -1725,19 +1725,41 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Evaluate a script for a specific target token and viewer.
-     * Sends the script content through the meta-script pipeline via sendChat.
+     * Find the linked counterpart of a token on a specific page.
      */
-    const evaluateScript = (scriptContent, targetToken, viewerPlayerId, config, msg, dryRun) => {
-        // TODO: Set evaluation context for Fetch compProp resolution
-        // TODO: Inject Muler variables for viewer context
+    const findLinkedTokenOnPage = (sourceToken, targetPageId) => {
+        var s = state[SCRIPT_NAME];
+        var sourceId = sourceToken.get('id');
+        var linkedIds = [];
+        Object.values(s.activeGroups).forEach(function(active) {
+            var allLinked = active.linkedTokens[sourceId] || [];
+            Object.entries(active.linkedTokens).forEach(function(entry) {
+                if (entry[1].indexOf(sourceId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+            });
+            allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i && id !== sourceId; }).forEach(function(id) {
+                linkedIds.push(id);
+            });
+        });
+        for (var i = 0; i < linkedIds.length; i++) {
+            var obj = getObj('graphic', linkedIds[i]);
+            if (obj && obj.get('_pageid') === targetPageId) return obj;
+        }
+        return null;
+    };
 
-        // For now, basic string replacement of known patterns
+    /**
+     * Evaluate a script for a specific target token and viewer.
+     * Resolves target to the linked copy on the viewer's page.
+     */
+    const evaluateScript = (scriptContent, targetToken, viewerPlayerId, viewerPageId, config, msg, dryRun) => {
+        // Find the linked token on the viewer's page
+        var viewerTarget = findLinkedTokenOnPage(targetToken, viewerPageId);
+        if (!viewerTarget) return; // no linked copy on this viewer's page
+
         var content = scriptContent;
-        content = content.replace(/@\(target\.token_id\)/g, targetToken.get('id'));
-        content = content.replace(/@\(target\.name\)/g, targetToken.get('name') || '');
+        content = content.replace(/@\(target\.token_id\)/g, viewerTarget.get('id'));
+        content = content.replace(/@\(target\.name\)/g, viewerTarget.get('name') || '');
 
-        // Split into lines, send each command
         var lines = content.split('\n').filter(function(l) {
             l = l.trim();
             return l && (l.startsWith('!') || l.startsWith('{&'));
@@ -1748,7 +1770,6 @@ var Gaslight = Gaslight || (() => {
             lines.forEach(function(l) { out += '<code>' + l + '</code><br>'; });
             reply(msg, 'Eval', out);
         } else {
-            // Combine into single message for ZeroFrame to process
             var fullCmd = lines.join('\n');
             if (fullCmd) sendChat('player|' + msg.playerid, fullCmd);
         }
@@ -1782,8 +1803,9 @@ var Gaslight = Gaslight || (() => {
                 // Evaluate for each viewer + target combination
                 Object.entries(groupInfo.playerPages).forEach(function(entry) {
                     var viewerPlayerId = entry[0];
+                    var viewerPageId = entry[1].pageId;
                     targets.forEach(function(target) {
-                        evaluateScript(content, target, viewerPlayerId, config, msg, dryRun);
+                        evaluateScript(content, target, viewerPlayerId, viewerPageId, config, msg, dryRun);
                     });
                 });
             });
