@@ -1875,6 +1875,12 @@ var Gaslight = Gaslight || (() => {
                     // Strip HTML tags from content
                     content = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
+                    if (dryRun) {
+                        var handout = pin.get('link') ? getObj('handout', pin.get('link')) : null;
+                        var pinTitle = pin.get('title') || (handout && handout.get('name')) || pin.get('_id');
+                        reply(msg, 'Eval', '<hr><b>Pin:</b> ' + pinTitle);
+                    }
+
                     // Evaluate for each viewer + target combination
                     viewers.forEach(function(entry) {
                         var viewerPlayerId = entry[0];
