@@ -100,12 +100,24 @@ Before each evaluation pass, Gaslight sends a Muler set command to establish vie
 
 ### Triggers
 
-Scripts auto-trigger based on:
+**Auto-detection (default):**
+Gaslight parses the script and identifies references inside conditional blocks (`{& if}` ... `{& end}`). Only condition inputs are watched — action outputs (inside `!` command lines) are NOT triggers. This prevents infinite loops.
 
-1. **Attribute change** — parsed from script references. If the script mentions `target.stealth_result`, Gaslight watches for changes to that field.
-2. **Token property change** — if the script references `target.baseOpacity`, watch `change:graphic:baseOpacity`.
-3. **Chat roll capture** — configured in pin gmNotes. Matches roll results from chat by pattern/template name, stores the result, which triggers #1.
-4. **Manual** — `!gaslight eval <script_name>` forces re-evaluation.
+**Manual override (pin gmNotes):**
+```
+trigger: auto                        ← default, derive from conditions
+trigger: manual only                 ← only fires via !gaslight eval
+trigger: on change gl_stealth_result ← explicit field watch (additive)
+trigger: on roll "Stealth"           ← chat roll capture
+trigger: ignore passive_perception   ← exclude from auto-detection
+```
+
+Multiple trigger lines are additive. `manual only` disables all auto-triggers.
+
+**Manual evaluation:**
+- `!gaslight eval` (with pins selected) — evaluate selected pins
+- `!gaslight eval <handout_name>` — evaluate all pins linked to that handout
+- `!gaslight eval --all` — re-evaluate all active pins
 
 ### Chat Roll Capture
 
