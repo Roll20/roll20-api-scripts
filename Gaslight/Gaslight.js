@@ -32,6 +32,15 @@ var Gaslight = Gaslight || (() => {
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
+    const GLS_TAG        = '[GLS]';
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
+
+    const stripGlsTag = (name) => {
+        return (name || '').replace(/^\[GLS\]\s*/i, '').trim();
+    };
 
     // =========================================================================
     // Helpers
@@ -1877,7 +1886,7 @@ var Gaslight = Gaslight || (() => {
 
                     if (dryRun) {
                         var handout = pin.get('link') ? getObj('handout', pin.get('link')) : null;
-                        var pinTitle = pin.get('title') || (handout && handout.get('name')) || pin.get('_id');
+                        var pinTitle = stripGlsTag(pin.get('title') || (handout && handout.get('name')) || pin.get('_id'));
                         reply(msg, 'Eval', '<hr><b>Pin:</b> ' + pinTitle);
                     }
 
