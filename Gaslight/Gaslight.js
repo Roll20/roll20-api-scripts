@@ -1712,24 +1712,20 @@ var Gaslight = Gaslight || (() => {
                 pins.forEach(function(pin) {
                     parsePinConfig(pin, function(config) {
                         if (!config) return;
-                        // Get explicit triggers from config
                         var explicitTriggers = config.triggers.filter(function(t) { return t.startsWith('on change '); }).map(function(t) { return t.slice(10).trim(); });
                         var manualOnly = config.triggers.some(function(t) { return t === 'manual only'; });
 
                         if (manualOnly) return;
 
                         if (explicitTriggers.length > 0) {
-                            // Use explicit triggers
                             explicitTriggers.forEach(function(field) {
                                 if (!triggerMap[field]) triggerMap[field] = [];
                                 triggerMap[field].push({ pinId: pin.get('_id'), pageId: pageId });
                             });
                         } else {
-                            // Auto-detect from script content
                             getPinScript(pin, function(content) {
                                 if (!content) return;
                                 var autoTriggers = parseTriggersFromScript(content);
-                                // Remove ignored fields
                                 var ignored = config.triggers.filter(function(t) { return t.startsWith('ignore '); }).map(function(t) { return t.slice(7).trim(); });
                                 autoTriggers = autoTriggers.filter(function(t) { return ignored.indexOf(t) === -1; });
 
@@ -1806,11 +1802,30 @@ var Gaslight = Gaslight || (() => {
         changedFields.forEach(function(field) {
             var entries = triggerMap[field];
             if (!entries || entries.length === 0) return;
+            // Find the master page counterpart of this token
+            var tokenId = obj.get('id');
+            var masterTokenId = null;
+            var s = state[SCRIPT_NAME];
+            Object.values(s.activeGroups).forEach(function(active) {
+                // Check if this token is linked; find the master copy
+                var allLinked = active.linkedTokens[tokenId] || [];
+                Object.entries(active.linkedTokens).forEach(function(entry) {
+                    if (entry[1].indexOf(tokenId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                });
+                allLinked = allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i; });
+                allLinked.forEach(function(id) {
+                    var t = getObj('graphic', id);
+                    if (t && t.get('_pageid') === active.masterPageId) masterTokenId = id;
+                });
+                // If the token itself is on master
+                if (obj.get('_pageid') === active.masterPageId) masterTokenId = tokenId;
+            });
+
             entries.forEach(function(entry) {
                 var pin = getObj('pin', entry.pinId);
                 if (!pin) return;
                 var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
-                evaluatePins([pin], fakeMsg, false);
+                evaluatePins([pin], fakeMsg, false, masterTokenId, obj.get('_pageid'));
             });
         });
     };
@@ -2003,7 +2018,7 @@ var Gaslight = Gaslight || (() => {
     /**
      * Evaluate all scripts on pins for a given page.
      */
-    const evaluatePins = (pins, msg, dryRun) => {
+    const evaluatePins = (pins, msg, dryRun, targetTokenId, sourcePageId) => {
         var s = state[SCRIPT_NAME];
         pins.forEach(function(pin) {
             var pageId = pin.get('_pageid');
@@ -2019,12 +2034,15 @@ var Gaslight = Gaslight || (() => {
             // Determine which viewers to evaluate for based on pin placement
             var viewers;
             if (pageId === groupInfo.masterPageId) {
-                // Pin on master: evaluate for all players
                 viewers = Object.entries(groupInfo.playerPages);
             } else {
-                // Pin on player page: evaluate only for that player
                 var playerEntry = Object.entries(groupInfo.playerPages).find(function(e) { return e[1].pageId === pageId; });
                 viewers = playerEntry ? [playerEntry] : [];
+            }
+            // If triggered from a specific player page, narrow to that viewer only
+            if (sourcePageId && sourcePageId !== groupInfo.masterPageId) {
+                var sourceViewer = Object.entries(groupInfo.playerPages).find(function(e) { return e[1].pageId === sourcePageId; });
+                if (sourceViewer) viewers = [sourceViewer];
             }
             if (viewers.length === 0) return;
 
@@ -2035,6 +2053,11 @@ var Gaslight = Gaslight || (() => {
                 if (!config) return;
                 // Re-filter targets based on config
                 targets = getTargetTokens(groupInfo.masterPageId, config, s.activeGroups);
+                // If triggered by a specific token, only evaluate that one
+                if (targetTokenId) {
+                    targets = targets.filter(function(t) { return t.get('id') === targetTokenId; });
+                    if (targets.length === 0) return;
+                }
 
                 getPinScript(pin, function(content) {
                     if (!content) return;
