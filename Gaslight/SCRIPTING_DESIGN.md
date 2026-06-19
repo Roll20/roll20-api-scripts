@@ -51,7 +51,7 @@ Filter which tokens/characters the script evaluates against:
 
 ### Variables
 
-Two namespaces resolved by Gaslight:
+Two primary namespaces resolved by Gaslight:
 
 - `target.*` — the token/character being evaluated
   - Resolved from gmnotes (scope: token) or character attribute (scope: character)
@@ -65,6 +65,10 @@ Two namespaces resolved by Gaslight:
   - `all(...)` requires every viewer token to pass
   - Player-level properties (viewer.id, viewer.name, viewer.page) are singular, not iterated
   - Party-tagged tokens may be used as a narrowing hint but do NOT guarantee a single token
+- `gm.*` — targets the master page (opt-in)
+  - If the script references `gm.*`, the script also evaluates on master page
+  - If only `viewer.*` is referenced, master page is untouched
+  - Use case: GM-side indicators (e.g. transparent overlay to show stealth status)
 
 ### Integration with Meta-Toolbox
 
