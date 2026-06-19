@@ -21,8 +21,16 @@ else:
 
 - **Handout** (notes or gmnotes) = the reusable script logic
 - **Pin** on a page = "this script is active here"
-  - `link` → handout ID
-  - `gmNotes` → pin-specific configuration (scope, filter, trigger rules)
+  - `link` → handout ID (or empty for self-contained pin scripts)
+  - `gmNotes` → pin-specific configuration (scope, filter, trigger rules). Inherits from linked handout's GM notes by default unless desynced.
+  - Pin `notes` can contain the script itself for self-contained one-off scripts (no handout needed)
+
+### Pin Placement
+
+- **Pin on master page** → script evaluates for ALL viewers (normal case)
+- **Pin on a player page** → script evaluates for ONLY that player (per-player override/special effect)
+  - Use case: hallucinations, player-specific illusions, per-player narrative moments
+  - Consistent with Gaslight's master/player-page distinction
 
 ### Scope (configured per-pin)
 
