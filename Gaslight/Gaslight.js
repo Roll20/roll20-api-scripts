@@ -1983,8 +1983,9 @@ var Gaslight = Gaslight || (() => {
                 var echoViewer = getObj('player', echoViewerId);
                 var echoTarget = getObj('graphic', echoTargetId);
                 var viewerName = echoViewer ? echoViewer.get('_displayname') : echoViewerId;
-                var targetName = echoTarget ? (echoTarget.get('name') || echoTargetId) : echoTargetId;
-                reply(msg, 'Eval', '<b>Dry run</b><br><b>Target:</b> ' + targetName + ' <small><code>' + echoTargetId + '</code></small><br><b>Viewer:</b> ' + viewerName + ' <small><code>' + echoViewerId + '</code></small><br><code>' + echoCmd + '</code>');
+                var echoTargetName = echoTarget ? echoTarget.get('name') : '';
+                var targetDisplay = echoTargetName ? echoTargetName + ' <small><code>' + echoTargetId + '</code></small>' : '<code>' + echoTargetId + '</code>';
+                reply(msg, 'Eval', '<b>Dry run</b><br><b>Target:</b> ' + targetDisplay + '<br><b>Viewer:</b> ' + viewerName + ' <small><code>' + echoViewerId + '</code></small><br><code>' + echoCmd + '</code>');
                 break;
             }
             case '--echo-header': {
