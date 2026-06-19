@@ -956,6 +956,9 @@ var Gaslight = Gaslight || (() => {
         summary += formatWarnings(globalWarnings);
         reply(msg, 'Split', summary);
 
+        // Build trigger map for scripting engine
+        buildTriggerMap();
+
         // Focus-ping each player to their character token on their page
         setTimeout(function() {
             Object.entries(groupInfo.players).forEach(function(entry) {
@@ -1663,6 +1666,138 @@ var Gaslight = Gaslight || (() => {
         + '<code>' + CMD + ' --help</code> -- This help<br>';
 
     // =========================================================================
+    // Scripting Engine — Trigger Map
+    // =========================================================================
+
+    // triggerMap: attributeName → [{ pinId, pageId }]
+    var triggerMap = {};
+
+    /**
+     * Parse a script's conditional blocks to find referenced attributes for auto-triggering.
+     * Looks for @(target.gl_*) and @(viewer.*) inside {& if} blocks.
+     */
+    const parseTriggersFromScript = (content) => {
+        var triggers = [];
+        // Strip HTML for parsing
+        var text = content.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+        // Find content inside {& if ...} blocks (simple regex — catches most cases)
+        var ifRx = /\{&\s*if\s+(.+?)\}/gi;
+        var match;
+        while ((match = ifRx.exec(text)) !== null) {
+            var condition = match[1];
+            // Find @(target.*) and @(viewer.*) references in the condition
+            var refRx = /@\((?:target|viewer)\.([^)]+)\)/g;
+            var refMatch;
+            while ((refMatch = refRx.exec(condition)) !== null) {
+                var field = refMatch[1];
+                if (triggers.indexOf(field) === -1) triggers.push(field);
+            }
+        }
+        return triggers;
+    };
+
+    /**
+     * Build the trigger map for all active script pins.
+     * Called on split, and when handouts change.
+     */
+    const buildTriggerMap = () => {
+        triggerMap = {};
+        var s = state[SCRIPT_NAME];
+
+        Object.values(s.activeGroups).forEach(function(group) {
+            var allPageIds = [group.masterPageId].concat(Object.values(group.playerPages).map(function(p) { return p.pageId; }));
+            allPageIds.forEach(function(pageId) {
+                var pins = findScriptPins(pageId);
+                pins.forEach(function(pin) {
+                    parsePinConfig(pin, function(config) {
+                        if (!config) return;
+                        // Get explicit triggers from config
+                        var explicitTriggers = config.triggers.filter(function(t) { return t.startsWith('on change '); }).map(function(t) { return t.slice(10).trim(); });
+                        var manualOnly = config.triggers.some(function(t) { return t === 'manual only'; });
+
+                        if (manualOnly) return;
+
+                        if (explicitTriggers.length > 0) {
+                            // Use explicit triggers
+                            explicitTriggers.forEach(function(field) {
+                                if (!triggerMap[field]) triggerMap[field] = [];
+                                triggerMap[field].push({ pinId: pin.get('_id'), pageId: pageId });
+                            });
+                        } else {
+                            // Auto-detect from script content
+                            getPinScript(pin, function(content) {
+                                if (!content) return;
+                                var autoTriggers = parseTriggersFromScript(content);
+                                // Remove ignored fields
+                                var ignored = config.triggers.filter(function(t) { return t.startsWith('ignore '); }).map(function(t) { return t.slice(7).trim(); });
+                                autoTriggers = autoTriggers.filter(function(t) { return ignored.indexOf(t) === -1; });
+
+                                autoTriggers.forEach(function(field) {
+                                    if (!triggerMap[field]) triggerMap[field] = [];
+                                    triggerMap[field].push({ pinId: pin.get('_id'), pageId: pageId });
+                                });
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    };
+
+    /**
+     * Handle attribute changes — check trigger map and re-evaluate affected pins.
+     */
+    const onAttributeChanged = (obj) => {
+        var attrName = obj.get('name');
+        var entries = triggerMap[attrName];
+        if (!entries || entries.length === 0) return;
+
+        entries.forEach(function(entry) {
+            var pin = getObj('pin', entry.pinId);
+            if (!pin) return;
+            var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
+            evaluatePins([pin], fakeMsg, false);
+        });
+    };
+
+    /**
+     * Handle gmnotes changes — detect which gl_ fields changed and trigger.
+     */
+    const onGmNotesChanged = (obj, prev) => {
+        if (!prev || !prev.gmnotes) return;
+        var oldNotes = prev.gmnotes || '';
+        var newNotes = obj.get('gmnotes') || '';
+        try { oldNotes = decodeURIComponent(oldNotes); } catch(e) {}
+        try { newNotes = decodeURIComponent(newNotes); } catch(e) {}
+
+        // Parse gl_ fields from old and new
+        var glRx = /gl_([a-zA-Z0-9_]+)\s*:\s*(.+)/g;
+        var oldFields = {};
+        var newFields = {};
+        var m;
+        while ((m = glRx.exec(oldNotes)) !== null) oldFields['gl_' + m[1]] = m[2].trim();
+        glRx.lastIndex = 0;
+        while ((m = glRx.exec(newNotes)) !== null) newFields['gl_' + m[1]] = m[2].trim();
+
+        // Find changed fields
+        var changedFields = Object.keys(newFields).filter(function(k) { return oldFields[k] !== newFields[k]; });
+        // Also check removed fields
+        Object.keys(oldFields).forEach(function(k) { if (!(k in newFields) && changedFields.indexOf(k) === -1) changedFields.push(k); });
+
+        changedFields.forEach(function(field) {
+            var entries = triggerMap[field];
+            if (!entries || entries.length === 0) return;
+            entries.forEach(function(entry) {
+                var pin = getObj('pin', entry.pinId);
+                if (!pin) return;
+                var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
+                evaluatePins([pin], fakeMsg, false);
+            });
+        });
+    };
+
+    // =========================================================================
     // Scripting Engine
     // =========================================================================
 
@@ -2142,6 +2277,8 @@ var Gaslight = Gaslight || (() => {
         on('chat:message', viewInterceptor);
         on('add:graphic', onTokenAdded);
         on('destroy:graphic', onTokenDestroyed);
+        on('change:attribute', onAttributeChanged);
+        on('change:graphic:gmnotes', onGmNotesChanged);
         setInterval(pollRelayQueue, 500);
     };
 
