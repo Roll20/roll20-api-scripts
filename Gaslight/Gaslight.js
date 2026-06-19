@@ -1654,6 +1654,185 @@ var Gaslight = Gaslight || (() => {
         + '<code>' + CMD + ' --help</code> -- This help<br>';
 
     // =========================================================================
+    // Scripting Engine
+    // =========================================================================
+
+    /**
+     * Read a handout's notes content (async → callback pattern).
+     * Returns content via callback since Roll20 requires it for notes/gmnotes.
+     */
+    const getHandoutContent = (handoutId, callback) => {
+        var handout = getObj('handout', handoutId);
+        if (!handout) { callback(null); return; }
+        handout.get('notes', function(notes) {
+            callback(notes || '');
+        });
+    };
+
+    /**
+     * Find pins on a page that are gaslight script pins (linked to a handout).
+     */
+    const findScriptPins = (pageId) => {
+        var pins = findObjs({ _type: 'pin', _pageid: pageId });
+        return pins.filter(function(pin) {
+            return pin.get('link') && pin.get('linkType') === 'handout';
+        });
+    };
+
+    /**
+     * Parse pin gmNotes for script configuration.
+     */
+    const parsePinConfig = (pin) => {
+        var notes = pin.get('gmNotes') || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
+        var config = { scope: 'token', filter: 'all', triggers: [] };
+        if (!notes.includes('---GASLIGHT-SCRIPT---')) return null;
+        notes.split('\n').forEach(function(line) {
+            line = line.trim();
+            if (line.startsWith('scope:')) config.scope = line.slice(6).trim();
+            else if (line.startsWith('filter:')) config.filter = line.slice(7).trim();
+            else if (line.startsWith('trigger:')) config.triggers.push(line.slice(8).trim());
+        });
+        return config;
+    };
+
+    /**
+     * Get target tokens for evaluation based on pin config filter.
+     */
+    const getTargetTokens = (pageId, config, activeGroups) => {
+        var tokens = findObjs({ _type: 'graphic', _pageid: pageId, _subtype: 'token' });
+        var filter = config.filter.toLowerCase();
+        if (filter === 'all') return tokens;
+        if (filter === 'npc') {
+            return tokens.filter(function(t) {
+                var charId = t.get('represents');
+                if (!charId) return false;
+                var character = getObj('character', charId);
+                if (!character) return false;
+                var cb = character.get('controlledby') || '';
+                return !cb || cb === '';
+            });
+        }
+        if (filter.startsWith('has ')) {
+            var field = filter.slice(4).trim();
+            return tokens.filter(function(t) {
+                var notes = t.get('gmnotes') || '';
+                try { notes = decodeURIComponent(notes); } catch(e) {}
+                return notes.indexOf(field + ':') !== -1 || notes.indexOf(field + ' :') !== -1;
+            });
+        }
+        return tokens;
+    };
+
+    /**
+     * Evaluate a script for a specific target token and viewer.
+     * Sends the script content through the meta-script pipeline via sendChat.
+     */
+    const evaluateScript = (scriptContent, targetToken, viewerPlayerId, config, msg, dryRun) => {
+        // TODO: Set evaluation context for Fetch compProp resolution
+        // TODO: Inject Muler variables for viewer context
+
+        // For now, basic string replacement of known patterns
+        var content = scriptContent;
+        content = content.replace(/@\(target\.token_id\)/g, targetToken.get('id'));
+        content = content.replace(/@\(target\.name\)/g, targetToken.get('name') || '');
+
+        // Split into lines, send each command
+        var lines = content.split('\n').filter(function(l) {
+            l = l.trim();
+            return l && (l.startsWith('!') || l.startsWith('{&'));
+        });
+
+        if (dryRun) {
+            var out = '<b>Dry run</b> (target: ' + (targetToken.get('name') || targetToken.get('id')) + ', viewer: ' + viewerPlayerId + '):<br>';
+            lines.forEach(function(l) { out += '<code>' + l + '</code><br>'; });
+            reply(msg, 'Eval', out);
+        } else {
+            // Combine into single message for ZeroFrame to process
+            var fullCmd = lines.join('\n');
+            if (fullCmd) sendChat('player|' + msg.playerid, fullCmd);
+        }
+    };
+
+    /**
+     * Evaluate all scripts on pins for a given page.
+     */
+    const evaluatePins = (pins, msg, dryRun) => {
+        var s = state[SCRIPT_NAME];
+        pins.forEach(function(pin) {
+            var config = parsePinConfig(pin);
+            if (!config) return;
+            var handoutId = pin.get('link');
+            var pageId = pin.get('_pageid');
+
+            // Find the active group for this page
+            var activeEntry = Object.entries(s.activeGroups).find(function(e) {
+                return e[1].masterPageId === pageId || Object.values(e[1].playerPages).some(function(p) { return p.pageId === pageId; });
+            });
+            if (!activeEntry) return;
+
+            var groupInfo = activeEntry[1];
+            var targets = getTargetTokens(pageId, config, s.activeGroups);
+
+            getHandoutContent(handoutId, function(content) {
+                if (!content) return;
+                // Strip HTML tags from handout content
+                content = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+                // Evaluate for each viewer + target combination
+                Object.entries(groupInfo.playerPages).forEach(function(entry) {
+                    var viewerPlayerId = entry[0];
+                    targets.forEach(function(target) {
+                        evaluateScript(content, target, viewerPlayerId, config, msg, dryRun);
+                    });
+                });
+            });
+        });
+    };
+
+    /**
+     * !gaslight eval [--dry] [--all | <handout_name>]
+     * With pins selected: evaluate those pins.
+     * With --all: evaluate all active pins.
+     * With handout name: evaluate all pins linked to that handout.
+     */
+    const doEval = (msg, args) => {
+        var dryRun = args.indexOf('--dry') !== -1;
+        args = args.filter(function(a) { return a !== '--dry'; });
+
+        var pins = [];
+
+        if (args.indexOf('--all') !== -1) {
+            // All active gaslit pages
+            var s = state[SCRIPT_NAME];
+            Object.values(s.activeGroups).forEach(function(group) {
+                var allPageIds = [group.masterPageId].concat(Object.values(group.playerPages).map(function(p) { return p.pageId; }));
+                allPageIds.forEach(function(pid) {
+                    pins = pins.concat(findScriptPins(pid));
+                });
+            });
+        } else if (args.length > 0) {
+            // By handout name
+            var handoutName = args.join(' ');
+            var handout = findObjs({ _type: 'handout', name: handoutName })[0];
+            if (!handout) { reply(msg, 'Error', 'Handout "' + handoutName + '" not found.'); return; }
+            var allPins = findObjs({ _type: 'pin' });
+            pins = allPins.filter(function(p) { return p.get('link') === handout.get('_id'); });
+        } else if (msg.selected && msg.selected.length > 0) {
+            // Selected pins
+            msg.selected.forEach(function(sel) {
+                var obj = getObj(sel._type, sel._id);
+                if (obj && obj.get('_type') === 'pin') pins.push(obj);
+            });
+        }
+
+        if (pins.length === 0) { reply(msg, 'Error', 'No pins found. Select pins, provide a handout name, or use --all.'); return; }
+
+        reply(msg, 'Eval', 'Evaluating ' + pins.length + ' pin(s)' + (dryRun ? ' (dry run)' : '') + '...');
+        evaluatePins(pins, msg, dryRun);
+    };
+
+    // =========================================================================
     // Command Router
     // =========================================================================
 
@@ -1678,6 +1857,7 @@ var Gaslight = Gaslight || (() => {
             case 'view':    doView(msg, args);    break;
             case 'stage':   doStage(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
+            case 'eval':    doEval(msg, args);    break;
             case 'test-relay': {
                 // Temporary: test sendChat with {& select}
                 var testId = args[0] || '';
