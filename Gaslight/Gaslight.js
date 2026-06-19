@@ -1767,10 +1767,12 @@ var Gaslight = Gaslight || (() => {
 
         if (dryRun) {
             var targetName = viewerTarget.get('name');
-            var targetDisplay = targetName ? targetName + ' (' + viewerTarget.get('id') + ')' : viewerTarget.get('id');
+            var targetDisplay = targetName ? targetName + ' <small><code>' + viewerTarget.get('id') + '</code></small>' : '<code>' + viewerTarget.get('id') + '</code>';
             var viewerPlayer = getObj('player', viewerPlayerId);
-            var viewerDisplay = viewerPlayer ? viewerPlayer.get('_displayname') + ' (' + viewerPlayerId + ')' : viewerPlayerId;
-            var out = '<b>Dry run</b> (target: ' + targetDisplay + ', viewer: ' + viewerDisplay + '):<br>';
+            var viewerDisplay = viewerPlayer ? viewerPlayer.get('_displayname') + ' <small><code>' + viewerPlayerId + '</code></small>' : '<code>' + viewerPlayerId + '</code>';
+            var out = '<b>Dry run</b><br>';
+            out += '<b>Target:</b> ' + targetDisplay + '<br>';
+            out += '<b>Viewer:</b> ' + viewerDisplay + '<br>';
             lines.forEach(function(l) { out += '<code>' + l + '</code><br>'; });
             reply(msg, 'Eval', out);
         } else {
