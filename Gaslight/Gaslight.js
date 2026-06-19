@@ -1832,11 +1832,11 @@ var Gaslight = Gaslight || (() => {
             var targetDisplay = targetName ? targetName + ' <small><code>' + viewerTarget.get('id') + '</code></small>' : '<code>' + viewerTarget.get('id') + '</code>';
             var viewerPlayer = getObj('player', viewerPlayerId);
             var viewerDisplay = viewerPlayer ? viewerPlayer.get('_displayname') + ' <small><code>' + viewerPlayerId + '</code></small>' : '<code>' + viewerPlayerId + '</code>';
-            var out = '<b>Dry run</b><br>';
-            out += '<b>Target:</b> ' + targetDisplay + '<br>';
-            out += '<b>Viewer:</b> ' + viewerDisplay + '<br>';
-            lines.forEach(function(l) { out += '<code>' + l + '</code><br>'; });
-            reply(msg, 'Eval', out);
+            reply(msg, 'Eval', '<b>Dry run</b><br><b>Target:</b> ' + targetDisplay + '<br><b>Viewer:</b> ' + viewerDisplay);
+            // Send each line through pipeline wrapped in --echo
+            lines.forEach(function(l) {
+                sendChat('player|' + msg.playerid, CMD + ' --echo ' + l);
+            });
         } else {
             var fullCmd = lines.join('\n');
             if (fullCmd) sendChat('player|' + msg.playerid, fullCmd);
@@ -1981,6 +1981,12 @@ var Gaslight = Gaslight || (() => {
                 break;
             }
             case 'status':  doStatus(msg);        break;
+            case '--echo': {
+                // Echo resolved command back to sender for dry-run display
+                var echoContent = msg.content.slice(msg.content.indexOf('--echo') + 6).trim();
+                reply(msg, 'Eval', '<b>Dry run</b><br><code>' + echoContent + '</code>');
+                break;
+            }
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
         }
