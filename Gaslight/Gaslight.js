@@ -1828,14 +1828,8 @@ var Gaslight = Gaslight || (() => {
         });
 
         if (dryRun) {
-            var targetName = viewerTarget.get('name');
-            var targetDisplay = targetName ? targetName + ' <small><code>' + viewerTarget.get('id') + '</code></small>' : '<code>' + viewerTarget.get('id') + '</code>';
-            var viewerPlayer = getObj('player', viewerPlayerId);
-            var viewerDisplay = viewerPlayer ? viewerPlayer.get('_displayname') + ' <small><code>' + viewerPlayerId + '</code></small>' : '<code>' + viewerPlayerId + '</code>';
-            reply(msg, 'Eval', '<b>Dry run</b><br><b>Target:</b> ' + targetDisplay + '<br><b>Viewer:</b> ' + viewerDisplay);
-            // Send each line through pipeline wrapped in --echo
             lines.forEach(function(l) {
-                sendChat('player|' + msg.playerid, CMD + ' --echo ' + l);
+                sendChat('player|' + msg.playerid, CMD + ' --echo ' + viewerPlayerId + ' ' + viewerTarget.get('id') + ' ' + l);
             });
         } else {
             var fullCmd = lines.join('\n');
@@ -1982,9 +1976,15 @@ var Gaslight = Gaslight || (() => {
             }
             case 'status':  doStatus(msg);        break;
             case '--echo': {
-                // Echo resolved command back to sender for dry-run display
-                var echoContent = msg.content.slice(msg.content.indexOf('--echo') + 6).trim();
-                reply(msg, 'Eval', '<b>Dry run</b><br><code>' + echoContent + '</code>');
+                // Internal: dry-run echo. Format: !gaslight --echo <viewerId> <targetId> <command>
+                var echoRaw = msg.content.slice(msg.content.indexOf('--echo') + 6).trim();
+                var [echoViewerId, echoTargetId] = echoRaw.split(' ');
+                var echoCmd = echoRaw.slice(echoViewerId.length + 1 + echoTargetId.length + 1);
+                var echoViewer = getObj('player', echoViewerId);
+                var echoTarget = getObj('graphic', echoTargetId);
+                var viewerName = echoViewer ? echoViewer.get('_displayname') : echoViewerId;
+                var targetName = echoTarget ? (echoTarget.get('name') || echoTargetId) : echoTargetId;
+                reply(msg, 'Eval', '<b>Dry run</b><br><b>Target:</b> ' + targetName + ' <small><code>' + echoTargetId + '</code></small><br><b>Viewer:</b> ' + viewerName + ' <small><code>' + echoViewerId + '</code></small><br><code>' + echoCmd + '</code>');
                 break;
             }
             case '--help':  reply(msg, HELP_TEXT); break;
