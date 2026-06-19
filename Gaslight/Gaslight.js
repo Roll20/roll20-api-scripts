@@ -1733,6 +1733,8 @@ var Gaslight = Gaslight || (() => {
      */
     const parseConfigText = (text) => {
         var config = { scope: 'token', filter: 'all', triggers: [] };
+        // Strip HTML and normalize line breaks
+        text = text.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
         text.split('\n').forEach(function(line) {
             line = line.trim();
             if (line.startsWith('scope:')) config.scope = line.slice(6).trim();
@@ -1778,9 +1780,17 @@ var Gaslight = Gaslight || (() => {
         if (filter.startsWith('has ')) {
             var field = filter.slice(4).trim();
             return tokens.filter(function(t) {
+                // Check gmnotes
                 var notes = t.get('gmnotes') || '';
                 try { notes = decodeURIComponent(notes); } catch(e) {}
-                return notes.indexOf(field + ':') !== -1 || notes.indexOf(field + ' :') !== -1;
+                if (notes.indexOf(field + ':') !== -1 || notes.indexOf(field + ' :') !== -1) return true;
+                // Check character attribute
+                var charId = t.get('represents');
+                if (charId) {
+                    var attr = findObjs({ _type: 'attribute', _characterid: charId, name: field })[0];
+                    if (attr) return true;
+                }
+                return false;
             });
         }
         return tokens;
@@ -1992,6 +2002,28 @@ var Gaslight = Gaslight || (() => {
                 // Internal: dry-run pin header
                 var headerContent = msg.content.slice(msg.content.indexOf('--echo-header') + 13).trim();
                 reply(msg, 'Eval', '<b>Pin:</b> ' + headerContent);
+                break;
+            }
+            case '--dump-script': {
+                // Debug: dump raw handout/pin content to console
+                var sel = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
+                sel.forEach(function(pin) {
+                    var handoutId = pin.get('link');
+                    if (handoutId) {
+                        var ho = getObj('handout', handoutId);
+                        if (ho) {
+                            ho.get('gmnotes', function(gn) {
+                                log(SCRIPT_NAME + ' [gmnotes]: ' + JSON.stringify(gn));
+                            });
+                            ho.get('notes', function(n) {
+                                log(SCRIPT_NAME + ' [notes]: ' + JSON.stringify(n));
+                            });
+                        }
+                    } else {
+                        log(SCRIPT_NAME + ' [pin gmNotes]: ' + JSON.stringify(pin.get('gmNotes')));
+                        log(SCRIPT_NAME + ' [pin notes]: ' + JSON.stringify(pin.get('notes')));
+                    }
+                });
                 break;
             }
             case '--help':  reply(msg, HELP_TEXT); break;
