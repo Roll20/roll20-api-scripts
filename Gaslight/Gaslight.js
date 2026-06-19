@@ -1904,8 +1904,8 @@ var Gaslight = Gaslight || (() => {
      * With handout name: evaluate all pins linked to that handout.
      */
     const doEval = (msg, args) => {
-        var dryRun = args.indexOf('--dry') !== -1;
-        args = args.filter(function(a) { return a !== '--dry'; });
+        var dryRun = args.indexOf('--dry-run') !== -1;
+        args = args.filter(function(a) { return a !== '--dry-run'; });
 
         var pins = [];
 
