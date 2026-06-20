@@ -201,6 +201,84 @@ The handout notes/gmnotes contain commands using standard Meta-Toolbox syntax:
 
 7. **Standard token properties:** Fetch handles natively. We only register `gl_*` compProps.
 
+## Roll Capture
+
+### Concept
+
+Roll capture is a separate system from script evaluation. It monitors chat for roll results, extracts values, and stores them in `gl_*` fields (gmnotes or character attributes). This storage then triggers script re-evaluation via the normal trigger map.
+
+Roll capture rules are defined in handouts (tagged `[GLS]` for discoverability). The system runs silently in the background — no special trigger syntax needed in script pins.
+
+### Capture Rule Handout
+
+A capture rule handout defines:
+
+1. **Identification** — how to recognize a specific kind of roll in chat (roll template name, content pattern, regex)
+2. **Value extraction** — which inline roll result to capture (by index, by field name, advantage/disadvantage handling)
+3. **Variable name** (optional) — which `gl_*` field to store it in. If omitted, derived from the roll name (e.g. "Stealth" → `gl_stealth`)
+4. **Character identification** (optional) — how to determine which character the roll belongs to. May be auto-detected from `msg.content` character references.
+
+### Format (TBD)
+
+```
+---GLS-CAPTURE---
+match: rolltemplate "atk" where {{name}} contains "Stealth"
+extract: inline_roll[0].total
+advantage: highest
+variable: gl_stealth_result
+```
+
+Or a simpler generic form:
+```
+---GLS-CAPTURE---
+match: rolltemplate "simple" 
+name_field: {{rname}}
+extract: inline_roll[0].total
+variable_prefix: gl_
+```
+
+This generic form captures ANY "simple" template roll and maps it to `gl_<rname>`.
+
+### Value Extraction Challenges
+
+- **Advantage/Disadvantage** (D&D 5E): Two d20s rolled, result depends on token state. Options:
+  - Always take `inline_roll[0].total` (the final computed result after sheet logic)
+  - Configurable: `extract: highest`, `extract: lowest`, `extract: first`, `extract: inline_roll[N].total`
+  - Sheet-specific: different sheets encode advantage differently
+
+- **Multiple rolls in one message**: Capture rule specifies which roll by index or by position in template
+
+### Token Association
+
+When a capture rule matches a roll:
+
+1. **Selected token** (default) — `msg.selected[0]` identifies the token. Store on that token.
+2. **Character-level context check** — if ALL active scripts using this `gl_*` field are `scope: character`, store on the character attribute (no token ambiguity issue).
+3. **Ambiguity** — if at least one script uses `scope: token` AND no token is selected (or multiple are selected without enough rolls):
+   - Whisper the GM: "Stealth roll of 14 captured. Select a token to assign it to, or roll X more times for Y tokens."
+   - Provide clickable buttons per eligible token
+   - Queue the result until assigned
+4. **Character fallback** — if the roll message identifies a character (via template content like `{{charname=Goblin}}`), and no token-level scripts exist for this field, store directly on the character attribute.
+
+### Auto-Detection vs Custom Handouts
+
+- **Custom handouts** (v1): GM writes capture rules as `[GLS]` handouts. Full control over pattern matching.
+- **Auto-generation** (v2): Gaslight analyzes the character sheet template(s) in use and auto-generates capture rules in memory. No handout needed for common rolls.
+
+### Capture Flow
+
+1. `on('chat:message')` — check all capture rules against message
+2. If match: extract value, determine character, determine token (if needed)
+3. Store: write to `gl_*` in gmnotes (scope: token) or character attribute (scope: character)
+4. After write: manually call trigger evaluation for the affected field (since API `set()` won't fire `change:graphic` events for gmnotes)
+
+### Open Questions
+
+1. Should capture rules be active only on gaslit pages, or always active (so rolls captured before split are ready)?
+2. How to handle roll results that arrive before any script references the field (pre-capture)?
+3. Should there be a `!gaslight captures` command to list active capture rules and recent captured values?
+4. Can we support ScriptCards output as a capture source?
+
 ## Future Ideas
 
 - Visual script editor (handout with structured format)
