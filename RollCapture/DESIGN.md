@@ -125,10 +125,10 @@ template: npc, simple
 name_field: rname
 char_field: name, charname
 value: r1=0, r2=1
-normal: {{normal=1}} → r1
-advantage: {{advantage=1}} → max(r1,r2)
-disadvantage: {{disadvantage=1}} → min(r1,r2)
-always: {{always=1}} → max(r1,r2)
+when: {{advantage=1}} => max(r1, r2)
+when: {{disadvantage=1}} => min(r1, r2)
+when: {{always=1}} => choose(r1, r2)
+default: r1
 variable: gl_${rname}
 storage: gmnotes
 ```
@@ -140,7 +140,8 @@ template: roll
 name_field: trait
 char_field: name
 value: skill=0, wild=1
-default: max(skill, wild)
+when: {{wildcard=1}} => max(skill, wild)
+default: skill
 variable: gl_${trait}
 storage: gmnotes
 ```
