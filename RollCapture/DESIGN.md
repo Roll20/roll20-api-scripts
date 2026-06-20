@@ -81,25 +81,23 @@ One rule can capture multiple variables from a single roll. Each `when:`/`defaul
 
 ### Block Parsing (No Indentation Required)
 
-Lines after `when:` or `default:` are treated as captures until the next `when:`, `default:`, or known keyword (`template:`, `name_field:`, `char_field:`, `variable:`, `storage:`). No indentation sensitivity.
+Lines after `when:` or `default:` are treated as captures until the next `when:`, `default:`, or known keyword (`template:`, `name_field:`, `char_field:`, `variable:`). No indentation sensitivity.
 
 ### Extraction Logic
 
 1. Check `msg.rolltemplate` against rule's `template` list
-2. Parse `msg.content` for `{{field=value}}` pairs
-3. Check which advantage flag is present → select extraction formula
-4. Resolve formula: `r1` → `msg.inlinerolls[0].results.total`, `max(r1,r2)` → `Math.max(inlinerolls[0], inlinerolls[1])`
-5. Determine variable name: substitute `${rname}` with cleaned roll name
-6. Store value
+2. Parse `msg.content` for `{{field=$[[N]]}}` pairs → builds field-to-index map
+3. Parse `msg.content` for `{{field=value}}` pairs → builds flag map
+4. Check `when:` conditions against flag map → select matching capture block
+5. Resolve formula: field names map to `inlinerolls[N].results.total` via the index map. Missing fields are dropped from functions.
+6. Determine variable name: substitute `${rname}`, `${capture}` with cleaned values
+7. Emit via `onCapture` callback
 
 ### Token Association
 
-1. `msg.selected[0]` — if a token is selected, store on it
-2. Character lookup — if `char_field` matches a character name, find tokens representing that character
-3. Scope-aware ambiguity:
-   - If only `storage: attribute` rules use this field → store on character (no token needed)
-   - If `storage: gmnotes` rules exist AND multiple tokens represent same character → prompt GM
-4. Queue unresolved captures — whisper GM with clickable assignment buttons
+1. Character lookup — if `char_field` matches a character name, find tokens representing that character on the current page
+2. If multiple tokens represent same character → prompt GM or let consumer decide
+3. Queue unresolved captures — whisper GM with clickable assignment buttons
 
 ### Name Cleaning
 
@@ -109,7 +107,7 @@ Lines after `when:` or `default:` are treated as captures until the next `when:`
 - Lowercase
 - Result: `stealth`
 
-So `gl_${rname}` → `gl_stealth`
+So `gl_${rname}_${capture}` → `gl_stealth_attack`
 
 ### API
 
@@ -117,14 +115,15 @@ So `gl_${rname}` → `gl_stealth`
 RollCapture.getCapturedValue(tokenId, fieldName)  // read latest captured value
 RollCapture.getLastCapture()                       // most recent capture result
 RollCapture.registerRule(ruleObj)                   // programmatic rule registration
+RollCapture.onCapture(pattern, callback)           // register consumer callback
 ```
 
 ### Events / Integration
 
-After storing a value:
-- If `storage: gmnotes` → manually fire `change:graphic:gmnotes` won't work (API set doesn't trigger)
-- Instead: expose a callback/hook that other scripts register for: `RollCapture.onCapture(fieldName, callback)`
+After capturing a value:
+- Expose a callback/hook that other scripts register for: `RollCapture.onCapture('gl_*', callback)`
 - Gaslight registers: `RollCapture.onCapture('gl_*', evaluateTriggeredPins)`
+- Consumer decides storage (gmnotes, attributes, or both)
 
 ### Dependencies
 
@@ -148,12 +147,36 @@ None required. Optional integration with:
 template: npc, simple
 name_field: rname
 char_field: name, charname
-value: r1=0, r2=1
-when: {{advantage=1}} => max(r1, r2)
-when: {{disadvantage=1}} => min(r1, r2)
-when: {{always=1}} => choose(r1, r2)
-default: r1
-variable: gl_${rname}
+when: {{advantage=1}}
+result: max(r1, r2)
+when: {{disadvantage=1}}
+result: min(r1, r2)
+when: {{always=1}}
+result: choose(r1, r2)
+default:
+result: r1
+variable: gl_${rname}_${capture}
+```
+
+### D&D 5E Attack + Damage
+```
+---ROLLCAPTURE---
+template: atkdmg
+name_field: rname
+char_field: charname
+when: {{always=1}}
+attack: choose(r1, r2)
+damage: sum(dmg1, dmg2, crit1, crit2, globaldamage, globaldamagecrit)
+when: {{advantage=1}}
+attack: max(r1, r2)
+damage: sum(dmg1, dmg2, crit1, crit2, globaldamage, globaldamagecrit)
+when: {{disadvantage=1}}
+attack: min(r1, r2)
+damage: sum(dmg1, dmg2, crit1, crit2, globaldamage, globaldamagecrit)
+default:
+attack: r1
+damage: sum(dmg1, dmg2, crit1, crit2, globaldamage, globaldamagecrit)
+variable: gl_${rname}_${capture}
 ```
 
 ### Savage Worlds
@@ -162,10 +185,9 @@ variable: gl_${rname}
 template: roll
 name_field: trait
 char_field: name
-value: skill=0, wild=1
-when: {{wildcard=1}} => max(skill, wild)
-default: skill
-variable: gl_${trait}
+default:
+result: max(skill_roll, wild_die)
+variable: gl_${trait}_${capture}
 ```
 
 ### Shadow of the Demon Lord
@@ -174,9 +196,9 @@ variable: gl_${trait}
 template: sotdl
 name_field: roll-label
 char_field: name, title
-value: roll=0
-default: roll
-variable: gl_${roll-label}
+default:
+result: roll
+variable: gl_${roll-label}_${capture}
 ```
 
 ### Warhammer Fantasy Roleplay 4E
@@ -185,9 +207,9 @@ variable: gl_${roll-label}
 template: wfrp
 name_field: roll_name
 char_field: name
-value: roll=0
-default: roll
-variable: gl_${roll_name}
+default:
+result: roll
+variable: gl_${roll_name}_${capture}
 ```
 
 ### Call of Cthulhu 7E
@@ -196,7 +218,7 @@ variable: gl_${roll_name}
 template: coc-dice-roll
 name_field: name
 char_field: name
-value: roll=0
-default: roll
-variable: gl_${name}
+default:
+result: roll
+variable: gl_${name}_${capture}
 ```
