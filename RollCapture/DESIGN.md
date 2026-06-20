@@ -24,23 +24,64 @@ Rules are defined in handouts tagged `[RC]` (Roll Capture). Each handout defines
 template: npc, simple
 name_field: rname
 char_field: name, charname
-value: r1=0, r2=1
-normal: {{normal=1}} → r1
-advantage: {{advantage=1}} → max(r1,r2)
-disadvantage: {{disadvantage=1}} → min(r1,r2)
-always: {{always=1}} → max(r1,r2)
-variable: gl_${rname}
+when: {{advantage=1}}
+attack: max(r1, r2)
+damage: sum(dmg1, dmg2, globaldamage)
+when: {{disadvantage=1}}
+attack: min(r1, r2)
+damage: sum(dmg1, dmg2, globaldamage)
+when: {{always=1}}
+attack: choose(r1, r2)
+damage: sum(dmg1, dmg2, globaldamage)
+default:
+attack: r1
+damage: sum(dmg1, dmg2, globaldamage)
+variable: gl_${rname}_${capture}
 storage: gmnotes
 ```
 
 Fields:
 - `template` — roll template name(s) to match (comma-separated)
-- `name_field` — template field containing the roll name (e.g. skill name)
+- `name_field` — template field containing the roll name (e.g. skill/weapon name)
 - `char_field` — template field(s) for character identification (comma-separated, tried in order)
-- `value` — maps symbolic names to inline roll indices (e.g. `r1=0` means "r1 is inlinerolls[0].results.total")
-- `normal/advantage/disadvantage/always` — condition pattern → extraction formula
-- `variable` — gl_ field name pattern. `${rname}` substitutes the matched roll name, cleaned (lowercase, stripped)
+- `when: <pattern>` — condition block: if pattern found in content, use the captures that follow
+- `default:` — captures to use when no `when` condition matches
+- `<capture_name>: <formula>` — after a `when:` or `default:`, any non-keyword line is a capture
+- `variable` — gl_ field name pattern. `${rname}` = roll name, `${capture}` = capture name
 - `storage` — `gmnotes` (per-token) or `attribute` (per-character). Default: `gmnotes`
+
+### Field Name Resolution
+
+Template content uses `{{field=$[[N]]}}` patterns. Formulas reference field names (e.g. `r1`, `dmg1`), which resolve to inline roll indices by parsing the content:
+- `{{r1=$[[2]]}}` → `r1` = `inlinerolls[2].results.total`
+- `{{dmg1=$[[6]]}}` → `dmg1` = `inlinerolls[6].results.total`
+- Raw `rN` without a matching template field falls back to `inlinerolls[N].results.total`
+
+### Formula Language
+
+- `r1` — value of a single field
+- `max(r1, r2, ...)` — highest value among fields
+- `min(r1, r2, ...)` — lowest value among fields
+- `sum(r1, r2, ...)` — total of all fields
+- `choose(r1, r2, ...)` — whisper GM with buttons to pick
+
+**Missing fields:** If a field referenced in a formula doesn't exist in the content, it is dropped from the function (not set to 0). This prevents interference with min/max/choose.
+
+### Capture Semantics
+
+- `attack: r1` — store the resolved value
+- `attack:` (empty formula) — clear/unset the captured variable
+- Capture name not listed in a block — don't touch, leave previous value
+
+### Multi-Variable Capture
+
+One rule can capture multiple variables from a single roll. Each `when:`/`default:` block can define any number of captures. The `variable` pattern uses `${capture}` to differentiate:
+- `variable: gl_${rname}_${capture}` with captures `attack` and `damage` and rname `Scimitar`
+- Produces: `gl_scimitar_attack` and `gl_scimitar_damage`
+
+### Block Parsing (No Indentation Required)
+
+Lines after `when:` or `default:` are treated as captures until the next `when:`, `default:`, or known keyword (`template:`, `name_field:`, `char_field:`, `variable:`, `storage:`). No indentation sensitivity.
 
 ### Extraction Logic
 
@@ -90,23 +131,6 @@ After storing a value:
 None required. Optional integration with:
 - Gaslight (consumes captured values)
 - Fetch (gl_ compProps for reading stored values)
-
-### D&D 5E Default Rule
-
-Ships with a pre-built `[RC] D&D 5E Skills` handout:
-```
----ROLLCAPTURE---
-template: npc, simple
-name_field: rname
-char_field: name, charname
-value: r1=0, r2=1
-normal: {{normal=1}} → r1
-advantage: {{advantage=1}} → max(r1,r2)
-disadvantage: {{disadvantage=1}} → min(r1,r2)
-always: {{always=1}} → max(r1,r2)
-variable: gl_${rname}
-storage: gmnotes
-```
 
 ### Open Questions
 
