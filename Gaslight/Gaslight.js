@@ -1692,21 +1692,23 @@ var Gaslight = Gaslight || (() => {
      */
     const registerGlCompProp = (fieldName) => {
         if (typeof Fetch === 'undefined' || !Fetch.CustomPropsByType) return;
-        if (Fetch.CustomPropsByType.graphic.compProps[fieldName]) return; // already registered
+        if (Fetch.CustomPropsByType.graphic.compProps[fieldName]) return;
 
-        Fetch.CustomPropsByType.graphic.compProps[fieldName] = {
-            nicks: [],
-            val: function(o) {
-                if (evaluationContext.scope === 'token') {
-                    return readGlField(o.gmnotes, fieldName);
-                } else {
-                    // scope: character — read from character attribute
-                    var charId = o.represents;
-                    if (!charId) return '';
-                    return getAttrByName(charId, fieldName) || '';
-                }
+        var valFn = function(o) {
+            if (evaluationContext.scope === 'token') {
+                return readGlField(o.gmnotes, fieldName);
+            } else {
+                var charId = o.represents;
+                if (!charId) return '';
+                return getAttrByName(charId, fieldName) || '';
             }
         };
+
+        Fetch.CustomPropsByType.graphic.compProps[fieldName] = { nicks: [], val: valFn };
+        // Also inject into the cached PropContainers so Fetch uses it immediately
+        if (Fetch.PropContainers && Fetch.PropContainers.graphic) {
+            Fetch.PropContainers.graphic[fieldName] = valFn;
+        }
         log(SCRIPT_NAME + ': registered Fetch compProp "' + fieldName + '"');
     };
 
@@ -2078,7 +2080,16 @@ var Gaslight = Gaslight || (() => {
         evaluationContext.viewerPlayerId = viewerPlayerId; // no linked copy on this viewer's page
 
         var content = scriptContent;
-        // Replace @(target.*) with token ID — Fetch resolves properties/attributes/compProps
+        // Resolve @(target.gl_*) ourselves since Fetch compProps don't fire for sendChat messages
+        content = content.replace(/@\(target\.(gl_[a-zA-Z0-9_]+)\)/g, function(match, field) {
+            if (config.scope === 'token') {
+                return readGlField(viewerTarget.get('gmnotes'), field);
+            } else {
+                var charId = viewerTarget.get('represents');
+                return charId ? (getAttrByName(charId, field) || '') : '';
+            }
+        });
+        // Replace remaining @(target.*) with token ID — Fetch resolves native props
         content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
         // Replace @(viewer.*) with viewer's controlled token ID (first found)
         var viewerTokens = findObjs({ _type: 'graphic', _pageid: viewerPageId, _subtype: 'token' }).filter(function(t) {
@@ -2104,7 +2115,15 @@ var Gaslight = Gaslight || (() => {
             });
         } else {
             var fullCmd = lines.join('\n');
-            if (fullCmd) sendChat('player|' + msg.playerid, fullCmd);
+            if (fullCmd) {
+                var senderId = msg.playerid;
+                if (senderId === 'API') {
+                    var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
+                    if (gmPlayer) senderId = gmPlayer.get('_id');
+                }
+                log(SCRIPT_NAME + ': SENDING: ' + JSON.stringify(fullCmd));
+                sendChat(getPlayerName(senderId), fullCmd);
+            }
         }
     };
 
@@ -2273,24 +2292,25 @@ var Gaslight = Gaslight || (() => {
                 reply(msg, 'Eval', '<b>Pin:</b> ' + headerContent);
                 break;
             }
-            case '--dump-script': {
-                // Debug: dump raw handout/pin content to console
+            case '--dump-html': {
+                // Debug: dump raw content to console for selected pins or tokens
                 var sel = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
-                sel.forEach(function(pin) {
-                    var handoutId = pin.get('link');
-                    if (handoutId) {
-                        var ho = getObj('handout', handoutId);
-                        if (ho) {
-                            ho.get('gmnotes', function(gn) {
-                                log(SCRIPT_NAME + ' [gmnotes]: ' + JSON.stringify(gn));
-                            });
-                            ho.get('notes', function(n) {
-                                log(SCRIPT_NAME + ' [notes]: ' + JSON.stringify(n));
-                            });
+                sel.forEach(function(obj) {
+                    var type = obj.get('_type') || obj.get('type');
+                    if (type === 'pin') {
+                        var handoutId = obj.get('link');
+                        if (handoutId) {
+                            var ho = getObj('handout', handoutId);
+                            if (ho) {
+                                ho.get('gmnotes', function(gn) { log(SCRIPT_NAME + ' [handout gmnotes]: ' + JSON.stringify(gn)); });
+                                ho.get('notes', function(n) { log(SCRIPT_NAME + ' [handout notes]: ' + JSON.stringify(n)); });
+                            }
+                        } else {
+                            log(SCRIPT_NAME + ' [pin gmNotes]: ' + JSON.stringify(obj.get('gmNotes')));
+                            log(SCRIPT_NAME + ' [pin notes]: ' + JSON.stringify(obj.get('notes')));
                         }
-                    } else {
-                        log(SCRIPT_NAME + ' [pin gmNotes]: ' + JSON.stringify(pin.get('gmNotes')));
-                        log(SCRIPT_NAME + ' [pin notes]: ' + JSON.stringify(pin.get('notes')));
+                    } else if (type === 'graphic') {
+                        log(SCRIPT_NAME + ' [token ' + (obj.get('name') || obj.get('id')) + ' gmnotes]: ' + JSON.stringify(obj.get('gmnotes')));
                     }
                 });
                 break;
