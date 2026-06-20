@@ -37,7 +37,6 @@ default:
 attack: r1
 damage: sum(dmg1, dmg2, globaldamage)
 variable: gl_${rname}_${capture}
-storage: gmnotes
 ```
 
 Fields:
@@ -48,7 +47,8 @@ Fields:
 - `default:` — captures to use when no `when` condition matches
 - `<capture_name>: <formula>` — after a `when:` or `default:`, any non-keyword line is a capture
 - `variable` — gl_ field name pattern. `${rname}` = roll name, `${capture}` = capture name
-- `storage` — `gmnotes` (per-token) or `attribute` (per-character). Default: `gmnotes`
+
+Consumers (e.g. Gaslight) decide where to store captured values (token gmnotes, character attribute, or both) based on their own configuration.
 
 ### Field Name Resolution
 
@@ -154,7 +154,6 @@ when: {{disadvantage=1}} => min(r1, r2)
 when: {{always=1}} => choose(r1, r2)
 default: r1
 variable: gl_${rname}
-storage: gmnotes
 ```
 
 ### Savage Worlds
@@ -167,7 +166,6 @@ value: skill=0, wild=1
 when: {{wildcard=1}} => max(skill, wild)
 default: skill
 variable: gl_${trait}
-storage: gmnotes
 ```
 
 ### Shadow of the Demon Lord
@@ -179,7 +177,6 @@ char_field: name, title
 value: roll=0
 default: roll
 variable: gl_${roll-label}
-storage: gmnotes
 ```
 
 ### Warhammer Fantasy Roleplay 4E
@@ -191,7 +188,6 @@ char_field: name
 value: roll=0
 default: roll
 variable: gl_${roll_name}
-storage: gmnotes
 ```
 
 ### Call of Cthulhu 7E
@@ -203,5 +199,4 @@ char_field: name
 value: roll=0
 default: roll
 variable: gl_${name}
-storage: gmnotes
 ```
