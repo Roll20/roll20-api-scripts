@@ -2293,7 +2293,18 @@ var Gaslight = Gaslight || (() => {
                 break;
             }
             case '--dump-html': {
-                // Debug: dump raw content to console for selected pins or tokens
+                // Debug: dump raw content to console for selected pins/tokens or named character
+                if (args.length > 0) {
+                    var charName = args.join(' ');
+                    var charObj = findObjs({ _type: 'character', name: charName })[0];
+                    if (charObj) {
+                        charObj.get('bio', function(bio) { log(SCRIPT_NAME + ' [char "' + charName + '" bio]: ' + JSON.stringify(bio)); });
+                        charObj.get('gmnotes', function(gn) { log(SCRIPT_NAME + ' [char "' + charName + '" gmnotes]: ' + JSON.stringify(gn)); });
+                    } else {
+                        reply(msg, 'Error', 'Character "' + charName + '" not found.');
+                    }
+                    break;
+                }
                 var sel = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
                 sel.forEach(function(obj) {
                     var type = obj.get('_type') || obj.get('type');
@@ -2311,6 +2322,9 @@ var Gaslight = Gaslight || (() => {
                         }
                     } else if (type === 'graphic') {
                         log(SCRIPT_NAME + ' [token ' + (obj.get('name') || obj.get('id')) + ' gmnotes]: ' + JSON.stringify(obj.get('gmnotes')));
+                    } else if (type === 'character') {
+                        obj.get('bio', function(bio) { log(SCRIPT_NAME + ' [char ' + obj.get('name') + ' bio]: ' + JSON.stringify(bio)); });
+                        obj.get('gmnotes', function(gn) { log(SCRIPT_NAME + ' [char ' + obj.get('name') + ' gmnotes]: ' + JSON.stringify(gn)); });
                     }
                 });
                 break;
@@ -2429,6 +2443,15 @@ var Gaslight = Gaslight || (() => {
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
+        on('chat:message', function(msg) {
+            if (msg.rolltemplate && msg.inlinerolls) {
+                log(SCRIPT_NAME + ' [ROLL]: template=' + msg.rolltemplate + ', inlinerolls count=' + msg.inlinerolls.length);
+                msg.inlinerolls.forEach(function(r, i) {
+                    log(SCRIPT_NAME + '   [' + i + ']: total=' + (r.results ? r.results.total : 'N/A'));
+                });
+                log(SCRIPT_NAME + '   content=' + msg.content.slice(0, 200));
+            }
+        });
         on('add:graphic', onTokenAdded);
         on('destroy:graphic', onTokenDestroyed);
         on('change:attribute', onAttributeChanged);

@@ -272,7 +272,58 @@ When a capture rule matches a roll:
 3. Store: write to `gl_*` in gmnotes (scope: token) or character attribute (scope: character)
 4. After write: manually call trigger evaluation for the affected field (since API `set()` won't fire `change:graphic` events for gmnotes)
 
-### Open Questions
+### D&D 5E Roll Message Structure (Observed)
+
+**NPCs** (template: `npc`):
+```
+content: {{name=Blackguard}} {{rname=^{stealth}}} {{mod=1}} {{r1=$[[0]]}} {{query=1}} {{normal=1}} {{r2=$[[1]]}} {{type=Skill}}
+inlinerolls: [0]=total, [1]=total (always 2 rolls)
+```
+
+**PCs** (template: `simple`):
+```
+content: {{rname=^{stealth-u}}} {{mod=12}} {{r1=$[[0]]}} {{query=1}} {{normal=1}} {{r2=$[[1]]}} {{global=}} {{charname=Leilah "Obscura"}}
+inlinerolls: [0]=total, [1]=total (always 2 rolls)
+```
+
+**Advantage flags** (mutually exclusive):
+- `{{normal=1}}` → use r1 (index 0)
+- `{{advantage=1}}` → use max(r1, r2)
+- `{{disadvantage=1}}` → use min(r1, r2)
+- `{{always=1}}` → ambiguous; default to max(r1, r2)
+
+**Character identification:**
+- NPC: `{{name=X}}` (when "add name to template" is on)
+- PC: `{{charname=X}}` or bare `charname=X` at end of content
+
+**Skill name:**
+- NPC: `{{rname=^{stealth}}}` (translation key format)
+- PC: `{{rname=^{stealth-u}}}` (with `-u` suffix)
+
+### Proposed Capture Rule Format
+
+```
+---GLS-CAPTURE---
+template: npc, simple
+name_field: rname
+char_field: name, charname
+value: r1=0, r2=1
+advantage: {{advantage=1}} → max(r1,r2)
+disadvantage: {{disadvantage=1}} → min(r1,r2)
+normal: {{normal=1}} → r1
+always: {{always=1}} → max(r1,r2)
+variable: gl_${rname}
+```
+
+Fields:
+- `template` — which roll templates to match (comma-separated)
+- `name_field` — which template field contains the skill/ability name
+- `char_field` — which template field(s) contain the character name (for identification)
+- `value` — maps symbolic names to inline roll indices
+- `advantage/disadvantage/normal/always` — condition → extraction rule
+- `variable` — gl_ field name pattern (`${rname}` substitutes the matched skill name)
+
+### Roll Capture Open Questions (Continued)
 
 1. Should capture rules be active only on gaslit pages, or always active (so rolls captured before split are ready)?
 2. How to handle roll results that arrive before any script references the field (pre-capture)?
