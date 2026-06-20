@@ -115,3 +115,68 @@ storage: gmnotes
 3. Should there be a capture history (last N rolls per token)?
 4. Command interface: `!rollcapture status`, `!rollcapture rules`, `!rollcapture clear`?
 5. Should the script auto-detect which character sheet is in use and suggest rules?
+
+## Example Capture Rules
+
+### D&D 5E Skills
+```
+---ROLLCAPTURE---
+template: npc, simple
+name_field: rname
+char_field: name, charname
+value: r1=0, r2=1
+normal: {{normal=1}} → r1
+advantage: {{advantage=1}} → max(r1,r2)
+disadvantage: {{disadvantage=1}} → min(r1,r2)
+always: {{always=1}} → max(r1,r2)
+variable: gl_${rname}
+storage: gmnotes
+```
+
+### Savage Worlds
+```
+---ROLLCAPTURE---
+template: roll
+name_field: trait
+char_field: name
+value: skill=0, wild=1
+default: max(skill, wild)
+variable: gl_${trait}
+storage: gmnotes
+```
+
+### Shadow of the Demon Lord
+```
+---ROLLCAPTURE---
+template: sotdl
+name_field: roll-label
+char_field: name, title
+value: roll=0
+default: roll
+variable: gl_${roll-label}
+storage: gmnotes
+```
+
+### Warhammer Fantasy Roleplay 4E
+```
+---ROLLCAPTURE---
+template: wfrp
+name_field: roll_name
+char_field: name
+value: roll=0
+default: roll
+variable: gl_${roll_name}
+storage: gmnotes
+```
+
+### Call of Cthulhu 7E
+```
+---ROLLCAPTURE---
+template: coc-dice-roll
+name_field: name
+char_field: name
+value: roll=0
+default: roll
+variable: gl_${name}
+storage: gmnotes
+```
