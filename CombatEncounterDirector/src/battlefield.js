@@ -1,4 +1,4 @@
-import { LAYER_GM, LAYER_MAP, LAYER_TOKEN, VALID_LAYERS } from './constants.js';
+import { LAYER_GM, LAYER_TOKEN, VALID_LAYERS } from './constants.js';
 import { getTokenRecord, setTokenRecord } from './state.js';
 import { ensureTokenRecord, getSelectedTokens } from './tokens.js';
 import { getTokenName } from './utils.js';
@@ -11,7 +11,7 @@ import { getTokenName } from './utils.js';
  * @returns {{ moved: string[], invalid: boolean }} Result summary.
  */
 export function moveSelectedToLayer(msg, layer) {
-  if (!VALID_LAYERS.includes(layer)) {
+  if (!VALID_LAYERS.has(layer)) {
     return { moved: [], invalid: true };
   }
 

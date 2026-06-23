@@ -6,7 +6,14 @@ export const SCRIPT_LAST_UPDATED = '__BUILD_DATE__';
 export const DEFAULT_LOCALE = 'en-US';
 
 export const STATE_KEY = 'CombatEncounterDirector';
-export const COMMAND = '!director';
+export const COMMAND = '!ced';
+
+// Legacy command from v1.0.0 — kept for backward compatibility.
+// If the Director script (community mod) is also installed its state key will
+// be present; we use that to detect a conflict and only whisper a notice
+// rather than silently processing the command under the old name.
+export const LEGACY_COMMAND = '!director';
+export const DIRECTOR_CONFLICT_STATE_KEY = 'DIRECTOR_STATE';
 
 export const JOURNAL_PANEL_NAME = 'Combat Encounter Director - Command Deck';
 export const JOURNAL_STATUS_NAME = 'Combat Encounter Director - Status';
@@ -31,7 +38,7 @@ export const DEFAULT_AC_BAR = 'bar2';
 export const LAYER_TOKEN = 'objects';
 export const LAYER_GM = 'gmlayer';
 export const LAYER_MAP = 'map';
-export const VALID_LAYERS = [LAYER_TOKEN, LAYER_GM, LAYER_MAP];
+export const VALID_LAYERS = new Set([LAYER_TOKEN, LAYER_GM, LAYER_MAP]);
 
 /**
  * Party-size scaling presets.

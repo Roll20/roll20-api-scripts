@@ -21,11 +21,15 @@ export function resolvePartyPreset(presetKey) {
  */
 export function resolvePartyPresetBySize(partySize) {
   const presets = Object.values(PARTY_PRESETS);
+  if (presets.length === 0) {
+    return null;
+  }
+
   return presets.reduce((best, preset) => {
     const bestDelta = Math.abs(best.partySize - partySize);
     const thisDelta = Math.abs(preset.partySize - partySize);
     return thisDelta < bestDelta ? preset : best;
-  });
+  }, presets[0]);
 }
 
 /**
