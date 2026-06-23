@@ -133,7 +133,11 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 case 'max': return Math.max(...resolved);
                 case 'min': return Math.min(...resolved);
                 case 'sum': return resolved.reduce((a, b) => a + b, 0);
-                case 'choose': return { __choose: true, options: args.filter(a => fieldMap[a] !== undefined).map(a => ({ name: a, value: fieldMap[a] })) };
+                case 'choose': {
+                    const unique = [...new Set(resolved)];
+                    if (unique.length === 1) return unique[0];
+                    return { __choose: true, options: args.filter(a => fieldMap[a] !== undefined).map(a => ({ name: a, value: fieldMap[a] })) };
+                }
             }
         }
 
