@@ -1,15 +1,80 @@
 {
     "name": "Anchor",
-    "version": "1.0.0",
-    "description": "Assign anchors to graphics, making it so they automatically move and rotate relative to their anchor.",
+    "script": "anchor.js",
+    "version": "2.1.0",
+    "previousversions": [
+        "1.0.0"
+    ],
+    "description": "Attach child tokens to an anchor token so they automatically follow its position, rotation, scale, layer, and flip. When the anchor moves, rotates, scales, or flips, all anchored children update to match their stored relative transform. Chains are supported: a child can itself be an anchor to grandchildren.\n\nAuto-creates an invisible anchor token when no anchor ID is supplied. The auto-created token is destroyed when its last child is removed.\n\n**Setup:** Upload a small transparent PNG to your Roll20 image library and set its thumb URL via !anchor config default-anchor-imgsrc, or on the API Scripts page. Without this, auto-created anchor tokens will not be visible or selectable.\n\n**Commands**\n\n\t!anchor [anchor_id] [flags] [ignore-selected] [child_id...]\n\tAnchor tokens. Component flags (long/short): anchor-all/-all, anchor/-default, anchor-position/-pos, anchor-x/-x, anchor-y/-y, anchor-rotation/-rot, anchor-scale/-scale, anchor-width/-w, anchor-height/-h, anchor-layer/-layer, anchor-flip/-flip, anchor-flipv/-flipv, anchor-fliph/-fliph, anchor-z/-z\n\n\t!anchor remove -- Remove anchor relationship\n\n\t!anchor lock [flags] -- Lock components (re-enforced every poll tick). No flags = lock all.\n\t!anchor unlock [flags] -- Unlock components. No flags = unlock all.\n\n\t!anchor track [flags] -- Add component tracking to existing relationship.\n\t!anchor untrack [flags] -- Remove component tracking.\n\t!anchor retrack [flags] -- Replace tracked set. No flags = default set.\n\n\t!anchor center -- Snap to anchor centre (offset 0,0, rotation 0, scale 1:1).\n\t!anchor update -- Force immediate transform sync.\n\t!anchor info -- Show anchor state (tracked components, lock status).\n\t!anchor config [key value] [reset] -- View or change configuration.\n\t!anchor --help -- Show command reference.\n\n**Scripting API** (for use by other scripts after ready):\n\tAnchor.getAnchor(id), Anchor.getChildren(id), Anchor.anchorObj(childId, anchorId, components)\n\tAnchor.createAnchorFor(obj, components, persist) -- auto-create anchor token programmatically\n\tAnchor.removeAnchor(id), Anchor.updateObj(obj), Anchor.updateZOrder(obj)\n\tAnchor.getPosition/setPosition, getRotation/setRotation, getScale/setScale\n\n**Dependencies:** MatrixMath",
     "authors": "Kenan Millet",
     "roll20userid": "2614613",
     "dependencies": [
         "MatrixMath"
     ],
-    "modifies": {},
+    "modifies": {
+        "graphic.left": "read,write",
+        "graphic.top": "read,write",
+        "graphic.rotation": "read,write",
+        "graphic.width": "read,write",
+        "graphic.height": "read,write",
+        "graphic.layer": "read,write",
+        "graphic.flipv": "read,write",
+        "graphic.fliph": "read,write"
+    },
     "conflicts": [],
-    "script": "anchor.js",
-    "useroptions": [],
-    "previousversions": []
+    "useroptions": [
+        {
+            "name": "Allow Player Use",
+            "type": "checkbox",
+            "description": "Allow players to use the lock, unlock, update, center, and info commands on tokens they control. Players can never create or remove anchor relationships or change configuration.",
+            "value": "allowPlayerUse"
+        },
+        {
+            "name": "Poll Interval (ms)",
+            "type": "number",
+            "description": "How often (in milliseconds) Anchor polls for token changes that event handlers may have missed. Lower values are more responsive but use more CPU. Minimum 100. Default: 1000.",
+            "default": 1000
+        },
+        {
+            "name": "Default Anchor Layer",
+            "type": "select",
+            "description": "The layer that auto-created anchor tokens are placed on.",
+            "options": [
+                "gmlayer|GM Layer (default)",
+                "objects|Objects Layer",
+                "map|Map Layer"
+            ],
+            "default": "gmlayer"
+        },
+        {
+            "name": "Default Anchor Size (px)",
+            "type": "number",
+            "description": "Width and height in pixels of auto-created anchor tokens. Default: 35.",
+            "default": 35
+        },
+        {
+            "name": "Default Anchor Name",
+            "type": "text",
+            "description": "Name given to auto-created anchor tokens. Default: Anchor.",
+            "default": "Anchor"
+        },
+        {
+            "name": "Default Anchor Image URL",
+            "type": "text",
+            "description": "Thumb URL of a transparent PNG from your Roll20 image library, used as the image for auto-created anchor tokens. Roll20 requires a valid library image for tokens to be visible and selectable. Upload a small transparent PNG to your library, then paste the thumb URL here (must begin with https://s3.amazonaws.com/files.d20.io/images/ and end with thumb.png?...).",
+            "default": ""
+        },
+        {
+            "name": "Default Anchor Aura Color",
+            "type": "text",
+            "description": "Hex color of the GM-only aura on auto-created anchor tokens, so the GM can see and click them. Default: #00ffff.",
+            "default": "#00ffff"
+        },
+        {
+            "name": "Default Anchor Aura Visible",
+            "type": "checkbox",
+            "description": "Show a GM-only aura on auto-created anchor tokens. Uncheck to make them completely invisible (harder to find and select). Default: checked.",
+            "value": "defaultAnchorAuraVisible"
+        }
+    ]
 }
