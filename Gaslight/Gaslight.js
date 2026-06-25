@@ -2538,6 +2538,18 @@ var Gaslight = Gaslight || (() => {
                     ' [Clear overrides](' + CMD + ' --clear-capture ' + rollName + ' ' + charId + ')');
             }
         }
+
+        // Manually trigger pin evaluation for changed capture fields
+        var fakeMsg = { playerid: playerId || 'API', who: 'API', type: 'api' };
+        var pins = Object.keys(captures).reduce(function(acc, cap) {
+            var entries = triggerMap['gl_' + rollName + '_' + cap] || [];
+            entries.forEach(function(entry) {
+                var pin = getObj('pin', entry.pinId);
+                if (pin && acc.indexOf(pin) === -1) acc.push(pin);
+            });
+            return acc;
+        }, []);
+        if (pins.length > 0) evaluatePins(pins, fakeMsg, false);
     };
 
     const writeCapturesToToken = (token, rollName, captures) => {
