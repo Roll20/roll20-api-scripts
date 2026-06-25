@@ -17,7 +17,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
     // ─── Rule Parser ────────────────────────────────────────────────────────────
 
     const parseRules = (text) => {
-        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#'));
         const rule = { templates: [], nameField: '', charFields: [], blocks: [] };
         let currentBlock = null;
 
@@ -321,11 +321,39 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             const tag = '[RC] ' + name;
             let handout = findObjs({ type: 'handout', name: tag })[0]
                 || findObjs({ type: 'handout', name: '[RollCapture] ' + name })[0];
+            let created = false;
             if (!handout) {
                 handout = createObj('handout', { name: tag });
-                handout.set('notes', 'template: \nname_field: \nchar_field: \ndefault:\nresult: r0');
+                handout.set('notes', [
+                    '<p># RollCapture Rule: ' + name + '</p>',
+                    '<p># Lines starting with # are comments.</p>',
+                    '<p>#</p>',
+                    '<p># template: which roll template(s) to match (comma-separated)</p>',
+                    '<p># name_field: template field containing the roll name (e.g. skill name)</p>',
+                    '<p># char_field: template field(s) for character identification</p>',
+                    '<p># when: {{flag=value}} — condition block, captures follow</p>',
+                    '<p># default: — captures when no "when" matches</p>',
+                    '<p># Captures reference template fields: {{r1=$[[N]]}} means r1 = inlinerolls[N]</p>',
+                    '<p># Formulas: fieldname, max(a,b), min(a,b), sum(a,b,...), choose(a,b)</p>',
+                    '<p># Missing fields are dropped from functions (not set to 0).</p>',
+                    '<p># Empty capture (name: ) clears that value.</p>',
+                    '<p>#</p>',
+                    '<p># To react to captures, add abilities to the character sheet:</p>',
+                    '<p>#   rc_any — runs on every capture</p>',
+                    '<p>#   rc_&lt;rollname&gt; — runs for that specific roll (e.g. rc_stealth)</p>',
+                    '<p>#   rc_default — runs when no specific rc_&lt;rollname&gt; exists</p>',
+                    '<p># Use ${rollname} and ${capturename} in ability actions.</p>',
+                    '<p></p>',
+                    '<p>template: simple</p>',
+                    '<p>name_field: rname</p>',
+                    '<p>char_field: charname</p>',
+                    '<p>default:</p>',
+                    '<p>result: r1</p>',
+                ].join(''));
+                created = true;
             }
-            whisper(`<a href="http://journal.roll20.net/handout/${handout.get('id')}">${stripTag(handout.get('name'))}</a>`);
+            const label = created ? 'Created' : 'Found';
+            whisper(`${label}: <a href="http://journal.roll20.net/handout/${handout.get('id')}">${stripTag(handout.get('name'))}</a>`);
             return;
         }
 
