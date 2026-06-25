@@ -2088,21 +2088,17 @@ var Gaslight = Gaslight || (() => {
      * Sweep 2: all (LHS then RHS)
      * Sweep 3: max/min (resolve to literal)
      */
-    const expandAggregates = (content, viewerIds) => {
-        if (viewerIds.length === 0) return content;
-
-        // Sweep: any
-        content = expandAggregate(content, 'any', '||', viewerIds);
-        // Sweep: all
-        content = expandAggregate(content, 'all', '&&', viewerIds);
-        // Sweep: max/min
-        content = resolveMaxMin(content, viewerIds);
-
+    const expandAggregates = (content, ids, namespace) => {
+        if (ids.length === 0) return content;
+        content = expandAggregate(content, 'any', '||', ids, namespace);
+        content = expandAggregate(content, 'all', '&&', ids, namespace);
+        content = resolveMaxMin(content, ids, namespace);
         return content;
     };
 
-    const expandAggregate = (content, funcName, joiner, viewerIds) => {
+    const expandAggregate = (content, funcName, joiner, ids, namespace) => {
         var search = funcName + '(';
+        var nsRx = new RegExp('@\\(' + namespace + '\\.', 'g');
         var idx = findUnquoted(content, search, 0);
         while (idx !== -1) {
             if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
@@ -2110,25 +2106,28 @@ var Gaslight = Gaslight || (() => {
             if (closeIdx === -1) break;
 
             var inner = content.slice(idx + funcName.length + 1, closeIdx);
+            // Only expand if this aggregate contains our namespace
+            if (inner.indexOf('@(' + namespace + '.') === -1) { idx = findUnquoted(content, search, idx + 1); continue; }
+
             var beforeAgg = content.slice(0, idx);
             var afterAgg = content.slice(closeIdx + 1);
 
             var opRhs = extractOpRhs(afterAgg, 0);
             if (opRhs) {
-                var expanded = '(' + viewerIds.map(function(id) {
-                    return inner.replace(/@\(viewer\./g, '@(' + id + '.') + ' ' + opRhs.op + ' ' + opRhs.rhs;
+                var expanded = '(' + ids.map(function(id) {
+                    return inner.replace(nsRx, '@(' + id + '.') + ' ' + opRhs.op + ' ' + opRhs.rhs;
                 }).join(' ' + joiner + ' ') + ')';
                 content = beforeAgg + expanded + afterAgg.slice(opRhs.end);
             } else {
                 var opLhs = extractOpLhs(beforeAgg, beforeAgg.length);
                 if (opLhs) {
-                    var expanded = '(' + viewerIds.map(function(id) {
-                        return opLhs.lhs + ' ' + opLhs.op + ' ' + inner.replace(/@\(viewer\./g, '@(' + id + '.');
+                    var expanded = '(' + ids.map(function(id) {
+                        return opLhs.lhs + ' ' + opLhs.op + ' ' + inner.replace(nsRx, '@(' + id + '.');
                     }).join(' ' + joiner + ' ') + ')';
                     content = beforeAgg.slice(0, opLhs.start) + expanded + afterAgg;
                 } else {
-                    var expanded = '(' + viewerIds.map(function(id) {
-                        return inner.replace(/@\(viewer\./g, '@(' + id + '.');
+                    var expanded = '(' + ids.map(function(id) {
+                        return inner.replace(nsRx, '@(' + id + '.');
                     }).join(' ' + joiner + ' ') + ')';
                     content = beforeAgg + expanded + afterAgg;
                 }
@@ -2139,7 +2138,9 @@ var Gaslight = Gaslight || (() => {
         return content;
     };
 
-    const resolveMaxMin = (content, viewerIds) => {
+    const resolveMaxMin = (content, ids, namespace) => {
+        var nsRx = new RegExp('@\\(' + namespace + '\\.', 'g');
+        var nsCheck = '@(' + namespace + '.';
         ['max', 'min'].forEach(function(fn) {
             var search = fn + '(';
             var idx = findUnquoted(content, search, 0);
@@ -2148,9 +2149,9 @@ var Gaslight = Gaslight || (() => {
                 var closeIdx = findCloseParen(content, idx + fn.length);
                 if (closeIdx === -1) break;
                 var inner = content.slice(idx + fn.length + 1, closeIdx);
-                if (inner.indexOf('@(viewer.') !== -1) {
-                    var expanded = '{& math ' + fn + '(' + viewerIds.map(function(id) {
-                        return inner.replace(/@\(viewer\./g, '@(' + id + '.');
+                if (inner.indexOf(nsCheck) !== -1) {
+                    var expanded = '{& math ' + fn + '(' + ids.map(function(id) {
+                        return inner.replace(nsRx, '@(' + id + '.');
                     }).join(', ') + ')}';
                     content = content.slice(0, idx) + expanded + content.slice(closeIdx + 1);
                 }
@@ -2196,12 +2197,29 @@ var Gaslight = Gaslight || (() => {
         });
         var viewerIds = viewerTokens.map(function(t) { return t.get('id'); });
 
-        // Expand any()/all() aggregates, then resolve max()/min()
-        content = expandAggregates(content, viewerIds);
+        // Resolve GM tokens on master page for gm.* aggregation
+        var masterPageId = targetToken.get('_pageid');
+        var gmTokens = findObjs({ _type: 'graphic', _pageid: masterPageId, _subtype: 'token' }).filter(function(t) {
+            var cid = t.get('represents');
+            if (!cid) return false;
+            var c = getObj('character', cid);
+            if (!c) return false;
+            var cb = c.get('controlledby') || '';
+            return !cb || cb.split(',').every(function(id) { return id.trim() === '' || playerIsGM(id.trim()); });
+        });
+        var gmIds = gmTokens.map(function(t) { return t.get('id'); });
 
-        // Error check: bare @(viewer.*) without aggregate
+        // Expand any()/all()/max()/min() aggregates for viewer.* and gm.*
+        content = expandAggregates(content, viewerIds, 'viewer');
+        content = expandAggregates(content, gmIds, 'gm');
+
+        // Error check: bare @(viewer.*) or @(gm.*) without aggregate
         if (content.indexOf('@(viewer.') !== -1) {
             whisper('⚠️ Script error: <code>@(viewer.*)</code> must be inside any(), all(), max(), or min()');
+            return;
+        }
+        if (content.indexOf('@(gm.') !== -1) {
+            whisper('⚠️ Script error: <code>@(gm.*)</code> must be inside any(), all(), max(), or min()');
             return;
         }
 
