@@ -7,7 +7,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
     const VERSION = '0.1.0';
     const HANDOUT_MARKER = '---ROLLCAPTURE---';
-    const KEYWORDS = ['template:', 'name_field:', 'char_field:', 'variable:', 'when:', 'default:'];
+    const KEYWORDS = ['template:', 'name_field:', 'char_field:', 'when:', 'default:'];
     const CMD = '!rollcapture';
 
     let rules = [];
@@ -18,7 +18,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
     const parseRules = (text) => {
         const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l && l !== HANDOUT_MARKER);
-        const rule = { templates: [], nameField: '', charFields: [], variable: '', blocks: [] };
+        const rule = { templates: [], nameField: '', charFields: [], blocks: [] };
         let currentBlock = null;
 
         for (const line of lines) {
@@ -28,8 +28,6 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 rule.nameField = line.slice(11).trim();
             } else if (line.startsWith('char_field:')) {
                 rule.charFields = line.slice(11).split(',').map(s => s.trim()).filter(Boolean);
-            } else if (line.startsWith('variable:')) {
-                rule.variable = line.slice(9).trim();
             } else if (line.startsWith('when:')) {
                 currentBlock = { condition: line.slice(5).trim(), captures: {} };
                 rule.blocks.push(currentBlock);
@@ -163,15 +161,6 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             .replace(/[^a-z0-9_-]/g, '_');          // sanitize
     };
 
-    // ─── Variable Name Building ─────────────────────────────────────────────────
-
-    const buildVarName = (pattern, rname, captureName) => {
-        return pattern
-            .replace(/\$\{rname\}/g, cleanName(rname))
-            .replace(/\$\{name_field\}/g, cleanName(rname))
-            .replace(/\$\{capture\}/g, captureName);
-    };
-
     // ─── Choose Prompt ──────────────────────────────────────────────────────────
 
     const promptChoose = (context, captureName, options) => {
@@ -235,24 +224,23 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 const value = evalFormula(formula, fieldMap);
                 if (value && value.__choose) {
                     hasChoose = true;
-                    const context = { rule, rollName: cleanName(rollName), charName, playerId: msg.playerid, results };
+                    const context = { rule, rollName: cleanName(rollName), charName, playerId: msg.playerid, results, msg };
                     promptChoose(context, captureName, value.options);
                 } else {
-                    const varName = buildVarName(rule.variable, rollName, captureName);
-                    results[varName] = value; // undefined = clear
+                    results[captureName] = value; // undefined = clear
                 }
             }
 
             if (!hasChoose) {
-                emitCapture(charName, cleanName(rollName), results, msg.playerid);
+                emitCapture(charName, cleanName(rollName), results, msg.playerid, msg);
             }
         }
     };
 
     // ─── Callback Registry ──────────────────────────────────────────────────────
 
-    const emitCapture = (charName, rollName, captures, playerId) => {
-        const event = { charName, rollName, captures, playerId };
+    const emitCapture = (charName, rollName, captures, playerId, msg) => {
+        const event = { charName, rollName, captures, playerId, msg };
         for (const { pattern, fn } of callbacks) {
             if (pattern === '*' || Object.keys(captures).some(k => matchPattern(pattern, k))) {
                 fn(event);
@@ -310,10 +298,9 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             const [, id, captureName, value] = args;
             const ctx = pendingChoices[id];
             if (!ctx) return whisper('Choice expired or invalid.');
-            const varName = buildVarName(ctx.rule.variable, ctx.rollName, captureName);
-            ctx.results[varName] = parseInt(value, 10) || 0;
+            ctx.results[captureName] = parseInt(value, 10) || 0;
             delete pendingChoices[id];
-            emitCapture(ctx.charName, ctx.rollName, ctx.results, ctx.playerId);
+            emitCapture(ctx.charName, ctx.rollName, ctx.results, ctx.playerId, ctx.msg);
             whisper(`Captured ${captureName} = ${value}`);
             return;
         }
@@ -331,7 +318,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
         if (args[0] === 'rules') {
             if (!rules.length) return whisper('No rules loaded.');
-            const list = rules.map((r, i) => `${i + 1}. templates: ${r.templates.join(', ')} | var: ${r.variable}`).join('\n');
+            const list = rules.map((r, i) => `${i + 1}. templates: ${r.templates.join(', ')} | name: ${r.nameField}`).join('\n');
             whisper(`**Loaded Rules:**\n${list}`);
             return;
         }
