@@ -2516,14 +2516,27 @@ var Gaslight = Gaslight || (() => {
             return t && t.get('represents') === charId;
         });
 
+        // Fallback: if no selection, find tokens of this character on master pages
+        if (tokens.length === 0 && charId) {
+            var masterPageIds = Object.values(s.activeGroups).map(function(g) { return g.masterPageId; });
+            tokens = findObjs({ _type: 'graphic', _subtype: 'token', represents: charId }).filter(function(t) {
+                return masterPageIds.indexOf(t.get('_pageid')) !== -1;
+            });
+        }
+
         if (tokens.length === 1) {
             writeCapturesToToken(tokens[0], rollName, captures);
         } else {
-            // 0 or multiple — prompt GM with assign button
-            var captureArgs = Object.entries(captures).map(function(e) { return e[0] + '=' + e[1]; }).join(' ');
-            whisper('**' + charName + '** rolled **' + rollName + '**: ' + captureArgs +
-                '<br>[Assign to selected](' + CMD + ' --assign-capture ' + rollName + ' ' + charId + ' ' + captureArgs + ')' +
-                ' [Clear overrides](' + CMD + ' --clear-capture ' + rollName + ' ' + charId + ')');
+            // Only prompt if any captured field is referenced by an active script
+            var hasRelevantTrigger = Object.keys(captures).some(function(cap) {
+                return triggerMap['gl_' + rollName + '_' + cap];
+            });
+            if (hasRelevantTrigger) {
+                var captureArgs = Object.entries(captures).map(function(e) { return e[0] + '=' + e[1]; }).join(' ');
+                whisper('**' + charName + '** rolled **' + rollName + '**: ' + captureArgs +
+                    '<br>[Assign to selected](' + CMD + ' --assign-capture ' + rollName + ' ' + charId + ' ' + captureArgs + ')' +
+                    ' [Clear overrides](' + CMD + ' --clear-capture ' + rollName + ' ' + charId + ')');
+            }
         }
     };
 
