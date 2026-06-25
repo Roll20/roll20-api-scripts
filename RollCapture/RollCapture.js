@@ -311,8 +311,8 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
         if (args[0] === 'rules') {
             if (!rules.length) return whisper('No rules loaded.');
-            const list = rules.map((r, i) => `${i + 1}. templates: ${r.templates.join(', ')} | name: ${r.nameField}`).join('\n');
-            whisper(`**Loaded Rules:**\n${list}`);
+            const list = rules.map((r, i) => `${i + 1}. templates: ${r.templates.join(', ')} | name: ${r.nameField}`).join('<br>');
+            whisper(`**Loaded Rules:**<br>${list}`);
             return;
         }
 
@@ -334,7 +334,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
     const registerEventHandlers = () => {
         on('chat:message', (msg) => {
-            if (msg.type === 'api' && msg.content.startsWith(CMD)) {
+            if (msg.type === 'api' && msg.content.split(' ')[0] === CMD) {
                 handleCommand(msg);
             } else if (msg.rolltemplate) {
                 processMessage(msg);
