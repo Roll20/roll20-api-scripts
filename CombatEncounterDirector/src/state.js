@@ -59,10 +59,10 @@ export function ensureState() {
 
   const s = state[STATE_KEY];
 
-  if (!isRecord(s.config)) {
-    s.config = createDefaultConfig();
-  } else {
+  if (isRecord(s.config)) {
     s.config = mergeConfig(s.config);
+  } else {
+    s.config = createDefaultConfig();
   }
 
   if (!isRecord(s.tokens)) {
@@ -73,10 +73,10 @@ export function ensureState() {
     s.encounters = {};
   }
 
-  if (!isRecord(s.deck)) {
-    s.deck = createDefaultDeck();
-  } else {
+  if (isRecord(s.deck)) {
     s.deck = mergeDeckState(s.deck);
+  } else {
+    s.deck = createDefaultDeck();
   }
 
   if (!Array.isArray(s.lastReinforcementIds)) {

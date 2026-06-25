@@ -82,9 +82,9 @@ Computed once per token before execution. Later variables can reference earlier 
 
 | Filter | Delay (ms) | Command | Notes |
 |--------|-----------|---------|-------|
-| `*` | `stagger(rank("left"), 200)` | `!sequence play ${anim} ignore-selected ${tokenId}` | Main wave |
+| `*` | `stagger(rank("left"), 200)` | `!sequence play ${anim} ignore-selected ${token.id}` | Main wave |
 | `layer=gm` | `INF` | | Skip GM tokens |
-| `role=hero` | `0` | `!sequence play charge ignore-selected ${tokenId}` | Heroes react immediately |
+| `role=hero` | `0` | `!sequence play charge ignore-selected ${token.id}` | Heroes react immediately |
 | `*` | `sync` | | Wait for all participants |
 
 ## Filters
@@ -110,6 +110,7 @@ Evaluated per-token. Must return a number (ms), `INF`/`SKIP` (skip this token), 
 
 | Variable | Description |
 |----------|-------------|
+| `token` | TokenProxy for the current token (see below) |
 | `left` | Token center X (px) |
 | `top` | Token center Y (px) |
 | `name` | Token display name |
@@ -119,8 +120,34 @@ Evaluated per-token. Must return a number (ms), `INF`/`SKIP` (skip this token), 
 | `count` | Tokens passing this row's filter |
 | `INF` / `SKIP` | Infinity — skip this token |
 | `self` | Current scene name |
-| `tokenId` | Token ID |
-| `tokenName` | Token display name |
+| `tokenId` | *(deprecated)* Use `token.id` |
+| `tokenName` | *(deprecated)* Use `token.name` |
+
+### TokenProxy
+
+The `token` object provides access to all token properties via dot notation:
+`token.id`, `token.name`, `token.left`, `token.top`, `token.width`, `token.height`,
+`token.rotation`, `token.layer`, `token.pageid`, `token.bar1_value`, etc.
+
+Extension-registered namespaces appear as sub-objects: `token.anchor.isAnchored`.
+
+Token parameters (type `token`) are also TokenProxy instances: `orig.left`, `orig.name`.
+
+### Array Methods (LINQ-inspired)
+
+Arrays returned by `actors()` have extra methods:
+
+| Method | Description |
+|--------|-------------|
+| `.from(other)` | Intersection — keep only items in both arrays |
+| `.without(other)` | Exclusion — remove items in other |
+| `.where(fn)` | Filter (alias for `.filter()`) |
+| `.orderBy(attr)` | Sort by attribute name or function |
+| `.first(n?)` | First element or first N elements |
+| `.last(n?)` | Last element or last N elements |
+| `.any(fn?)` | True if any match (or non-empty) |
+| `.count(fn?)` | Count matching or total |
+| `.ids()` | Get ID strings |
 
 All scene parameters and computed variables are also in scope.
 
@@ -146,7 +173,7 @@ Constants: `PI`, `TAU`
 Use `${expr}` for substitutions — evaluated as JS template literals:
 
 ```
-!sequence play ${anim} ignore-selected ${tokenId}
+!sequence play ${anim} ignore-selected ${token.id}
 ${counter > 1 ? "!choreograph run " + self + " --counter " + (counter - 1) : ""}
 ```
 

@@ -1,11 +1,5 @@
 import { getConfig, createTokenRecord, getTokenRecord, setTokenRecord } from './state.js';
-import {
-  getGraphicToken,
-  getTokenName,
-  getTokenPageId,
-  readBarSafe,
-  roundAtLeastOne,
-} from './utils.js';
+import { getGraphicToken, getTokenPageId, readBarSafe, roundAtLeastOne } from './utils.js';
 
 // ---------------------------------------------------------------------------
 // Bar ownership helpers

@@ -29,11 +29,11 @@ export function toText(value) {
  */
 export function escapeHtml(text) {
   return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 /**
@@ -83,7 +83,7 @@ export function getGmPlayerIds() {
  * @returns {number} Parsed integer.
  */
 export function parseBarValue(raw) {
-  const n = parseInt(toText(raw), 10);
+  const n = Number.parseInt(toText(raw), 10);
   return Number.isFinite(n) ? n : 0;
 }
 
@@ -105,7 +105,7 @@ export function readBarSafe(raw) {
   if (s === '') {
     return { valid: false, value: 0 };
   }
-  const n = parseInt(s, 10);
+  const n = Number.parseInt(s, 10);
   return Number.isFinite(n) ? { valid: true, value: n } : { valid: false, value: 0 };
 }
 
@@ -119,9 +119,9 @@ export function readBarSafe(raw) {
 export function parseStrictInt(raw) {
   const s = String(raw === undefined || raw === null ? '' : raw).trim();
   if (!/^[+-]?\d+$/.test(s)) {
-    return NaN;
+    return Number.NaN;
   }
-  return parseInt(s, 10);
+  return Number.parseInt(s, 10);
 }
 
 /**
@@ -220,7 +220,8 @@ export function getCleanImgsrc(imgsrc) {
   if (!imgsrc) {
     return '';
   }
-  const parts = imgsrc.match(/(.*\/images\/.*?)(thumb|med|original|max)(\..*?)(\?.*)?$/);
+  const imgsrcRe = /(.*\/images\/.*?)(thumb|med|original|max)(\..*?)(\?.*)?$/;
+  const parts = imgsrcRe.exec(imgsrc);
   if (parts) {
     return parts[1] + 'thumb' + parts[3] + (parts[4] || '');
   }
@@ -271,14 +272,17 @@ export function formatTimestamp(timestamp) {
   // Prefer Intl.DateTimeFormat which returns named abbreviations (BST, EST…).
   // Fall back to parsing the parenthesised name in toTimeString().
   let tz = 'UTC';
-  try {
+  if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
     const parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
     const tzPart = parts.find((p) => p.type === 'timeZoneName');
     if (tzPart) {
       tz = tzPart.value;
     }
-  } catch (_) {
-    const match = d.toTimeString().match(/\(([^)]+)\)/);
+  }
+
+  if (tz === 'UTC') {
+    const tzNameRe = /\(([^)]+)\)/;
+    const match = tzNameRe.exec(d.toTimeString());
     if (match) {
       tz = match[1]
         .split(/\s+/)

@@ -32,7 +32,7 @@ const TRANSLATION = {
   },
   errors: {
     unknownCommand: 'Unknown command: "{sub}".',
-    unknownCommandHint: 'Type !director help for a list of commands.',
+    unknownCommandHint: 'Type !ced help for a list of commands.',
     noTokensSelected: 'No tokens selected. Select tokens on the map first.',
     unknownScaleAction: 'Unknown scale action: "{action}".',
     scaleActionHint: 'Valid actions: preset, party, hp, ac, damage, apply',
@@ -45,7 +45,7 @@ const TRANSLATION = {
     unknownReinforceAction: 'Unknown reinforce action: "{action}".',
     reinforceActionHint: 'Valid actions: duplicate, enumerate, show',
     noReinforcementsToReveal: 'No recent reinforcements to reveal.',
-    noReinforcementsToRevealHint: 'Use !director reinforce duplicate first.',
+    noReinforcementsToRevealHint: 'Use !ced reinforce duplicate first.',
     unknownLayer: 'Unknown layer: "{layer}".',
     layerHint: 'Valid layers: token, gm, map',
     unknownPositionAction: 'Unknown position action: "{action}".',
@@ -53,9 +53,9 @@ const TRANSLATION = {
     unknownEncounterAction: 'Unknown encounter action: "{action}".',
     encounterActionHint: 'Valid actions: save, load, delete, list',
     encounterNameRequired: 'Encounter name required.',
-    encounterNameRequiredHint: 'Example: !director encounter save goblin-ambush',
+    encounterNameRequiredHint: 'Example: !ced encounter save goblin-ambush',
     encounterNotFound: 'Encounter "{name}" not found.',
-    encounterNotFoundHint: 'Use !director encounter list to see saved encounters.',
+    encounterNotFoundHint: 'Use !ced encounter list to see saved encounters.',
     unknownResetScope: 'Unknown reset scope: "{scope}".',
     resetScopeHint: 'Valid scopes: selected, page, all',
     unknownReportAction: 'Unknown report action: "{action}".',
@@ -80,7 +80,7 @@ const TRANSLATION = {
     invalidDuplicateCount: 'Duplicate count must be between 1 and 50 (got "{value}"). Example: 3',
     invalidEncounterName:
       'Invalid encounter name: "{name}". Names may contain letters, digits, spaces, hyphens and underscores (max 64 characters).',
-    invalidEncounterNameHint: 'Example: !director encounter save goblin-ambush',
+    invalidEncounterNameHint: 'Example: !ced encounter save goblin-ambush',
     duplicateBurstLimit:
       'Operation would create {requested} tokens, exceeding the limit of {limit}. Select fewer tokens or use a smaller count.',
     unexpectedError: 'An unexpected error occurred: {message}',

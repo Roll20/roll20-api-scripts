@@ -1,5 +1,5 @@
 import { whisper } from './chat.js';
-import { handleInput, showMainMenu } from './commands.js';
+import { handleInput, handleLegacyInput, showMainMenu } from './commands.js';
 import { SCRIPT_LAST_UPDATED, SCRIPT_NAME, SCRIPT_VERSION } from './constants.js';
 import { t } from './i18n.js';
 import { installControlPanelHandout, installStatusHandout } from './journals.js';
@@ -43,6 +43,7 @@ function checkInstall() {
 function registerEventHandlers() {
   on('ready', checkInstall);
   on('chat:message', handleInput);
+  on('chat:message', handleLegacyInput);
 }
 
 registerEventHandlers();

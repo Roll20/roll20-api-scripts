@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.1.4] – 2026-06-15 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/7)
+
+### Fixed
+
+- Fixed HealthColors not responding when HP is changed by an external script (e.g. AlterBars) that modifies the character attribute linked to a token bar rather than the token bar directly. Roll20 fires `change:graphic` too late in this path — `prev.bar1_value` already reflects the new value, so the early-return guard blocked every update. Added a dedicated `change:attribute` listener (`registerAttributeListener`) that fires reliably with genuine old/new values, verifies the token's bar is actually linked to the changed attribute, constructs a correct `fakePrev`, and calls `handleToken` with the real delta so aura/tint and dead-status update correctly.
+- Fixed duplicate particle FX spawning when both the `change:attribute` and `change:graphic` listeners fire for the same HP change. The `recentAttrFires` Set tracks tokens recently handled by the attribute listener; the `change:graphic` wrapper (`handleTokenChange`) passes `update='YES'` for those tokens to suppress the redundant FX, and the marker is cleared after a 250 ms deduplication window.
+- Fixed TokenMod's observer receiving the raw `handleToken` instead of `handleTokenChange`, causing TokenMod-triggered HP changes to bypass FX deduplication entirely.
+- Fixed a race condition in `applyAttrHpChange` where two rapid HP changes within the 50 ms propagation window could cause the first timeout to overwrite the bar value already set by the second change. At timeout fire time the live bar value is now compared three ways: if it matches `newVal` Roll20 already propagated it (skip the set); if it matches neither `oldVal` nor `newVal` a concurrent change has landed (bail entirely); only if it still equals `oldVal` is the bar written.
+- Fixed `add:graphic` handler: corrected from `change:graphic` to `add:graphic` in `registerEventHandlers` and added a null guard so the delayed token lookup safely handles tokens deleted before the 400 ms fires.
+- Restored legacy public API aliases from v1.7.1 while keeping v2 camelCase exports. `HealthColors` now exposes both: `gmWhisper`/`GMW`, `update`/`Update`, `checkInstall`/`CheckInstall`, and `registerEventHandlers`/`RegisterEventHandlers`.
+- Improved compatibility with AlterBars/PowerCards macro-driven HP updates that call `HealthColors.Update(Target, Previous)` using external token snapshots.
+- Hardened previous-value handling for external updates by tolerating both object-style (`prev[bar + '_value']`) and Roll20 getter-style (`prev.get(bar + '_value')`) lookups, and by safely proceeding with tint/aura, name visibility, and dead-marker updates when previous HP is missing or invalid.
+- Updated FX/death-comparison gating so missing/invalid previous HP no longer aborts visual health updates; only delta-based FX/death transition comparisons are skipped when no reliable previous value is available.
+
+### Changed
+
+- Bootstrap/public export cleanup: introduced a single `publicApi` object for `HealthColors`, assigned it to `globalThis.HealthColors`, and returned it from the module IIFE so exported aliases and ready-time initialization stay in one canonical place.
+- Extracted four input-normalization helpers (`normalizePercent`, `normalizePositiveNumber`, `normalizeYesNoOff`, `normalizeTrackName`) and applied them throughout `handleInput`, replacing ad-hoc inline validation with consistent, tested helpers.
+- JSDoc corrections: `applyDeadStatus.prevValue` type widened to `{number|string}`; `toggleBtn` and `boolPill` background-color descriptions corrected from green/red to blue/red (the true/false button background is `#6FAEC7`, not green); `registerEventHandlers` bullet list updated to name `handleTokenChange` and `add:graphic` correctly.
+
+---
+
+## [2.1.3] – 2026-05-22 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/6)
+
+### Fixed
+
+- Fixed HealthColors treating an empty or whitespace-only `USEBLOOD` value as a custom FX name. The script now trims and validates the attribute before FX lookup, so fetched/imported characters with a blank override fall back to the default hurt FX instead of whispering a missing custom FX warning.
+- Hardened `!aura` setting validation for the remaining editable values. Percentage thresholds now reject invalid input, heal/hurt colors require valid hex values, yes/no/off settings are normalized, and blank death sound names no longer overwrite the previous value.
+
 ---
 
 ## [2.1.3] – 2026-05-22 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/6)
@@ -63,6 +92,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Fixed dead-state visuals at 0 HP so dead color behavior remains consistent.
 - Fixed missed updates when tokens are resized by treating width/height changes as a visual refresh trigger.
+
+---
 
 ## [2.0.1] – 2026-04-20
 
@@ -139,6 +170,7 @@ Major modernization and stability refactor of the entire script, consolidating p
 ## [1.6.1] – 2020-08-20
 
 - Maintenance release. Bug fixes and minor state schema updates.
+
 
 ## [1.6.0] – 2020-08-19
 
