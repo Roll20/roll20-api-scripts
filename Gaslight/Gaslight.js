@@ -2223,8 +2223,10 @@ var Gaslight = Gaslight || (() => {
             return;
         }
 
-        var lines = content.split('\n').filter(function(l) {
-            l = l.trim();
+        var lines = content.split('\n').map(function(l) {
+            var ci = l.indexOf('//');
+            return (ci !== -1 ? l.slice(0, ci) : l).trim();
+        }).filter(function(l) {
             return l && (l.startsWith('!') || l.startsWith('{&'));
         });
 
