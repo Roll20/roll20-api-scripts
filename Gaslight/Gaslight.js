@@ -1976,6 +1976,185 @@ var Gaslight = Gaslight || (() => {
      * Evaluate a script for a specific target token and viewer.
      * Resolves target to the linked copy on the viewer's page.
      */
+    // ─── Viewer Aggregation ────────────────────────────────────────────────────
+
+    const OPS = ['>=', '<=', '!=', '!~', '=', '~', '>', '<'];
+
+    /**
+     * Find `search` in `str` starting at `startIdx`, skipping quoted regions.
+     * Returns index or -1.
+     */
+    const findUnquoted = (str, search, startIdx) => {
+        var inQuote = null;
+        for (var i = startIdx || 0; i <= str.length - search.length; i++) {
+            var ch = str[i];
+            if (inQuote) { if (ch === inQuote) inQuote = null; continue; }
+            if (ch === '"' || ch === "'" || ch === '`') { inQuote = ch; continue; }
+            if (str.slice(i, i + search.length) === search) return i;
+        }
+        return -1;
+    };
+
+    /**
+     * Find the matching close paren for an open paren at `start`.
+     * Skips quoted strings. Returns index of closing paren or -1.
+     */
+    const findCloseParen = (str, start) => {
+        var depth = 0;
+        var inQuote = null;
+        for (var i = start; i < str.length; i++) {
+            var ch = str[i];
+            if (inQuote) { if (ch === inQuote) inQuote = null; continue; }
+            if (ch === '"' || ch === "'" || ch === '`') { inQuote = ch; continue; }
+            if (ch === '(') depth++;
+            else if (ch === ')') { depth--; if (depth === 0) return i; }
+        }
+        return -1;
+    };
+
+    /**
+     * Extract operator and RHS starting at `pos` in `str`.
+     * Respects quotes and balanced parens. Stops at unbalanced ), ||, &&, or }.
+     * Returns { op, rhs, end } or null.
+     */
+    const extractOpRhs = (str, pos) => {
+        var rest = str.slice(pos).replace(/^\s*/, '');
+        var offset = pos + (str.slice(pos).length - rest.length);
+        for (var i = 0; i < OPS.length; i++) {
+            if (rest.startsWith(OPS[i])) {
+                var afterOp = rest.slice(OPS[i].length).replace(/^\s*/, '');
+                var opEnd = offset + OPS[i].length + (rest.slice(OPS[i].length).length - afterOp.length);
+                var rhs = '';
+                var depth = 0;
+                var inQ = null;
+                var j = 0;
+                for (; j < afterOp.length; j++) {
+                    var c = afterOp[j];
+                    if (inQ) { if (c === inQ) inQ = null; rhs += c; continue; }
+                    if (c === '"' || c === "'" || c === '`') { inQ = c; rhs += c; continue; }
+                    if (c === '(') { depth++; rhs += c; continue; }
+                    if (c === ')') { if (depth === 0) break; depth--; rhs += c; continue; }
+                    if (depth === 0 && j + 1 < afterOp.length && (afterOp.slice(j, j + 2) === '||' || afterOp.slice(j, j + 2) === '&&')) break;
+                    if (c === '}') break;
+                    rhs += c;
+                }
+                return { op: OPS[i], rhs: rhs.trim(), end: opEnd + j };
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Extract operator and LHS ending at `pos` in `str`.
+     * Respects quotes and balanced parens. Stops at unbalanced (, ||, &&, or {&.
+     * Returns { op, lhs, start } or null.
+     */
+    const extractOpLhs = (str, pos) => {
+        var before = str.slice(0, pos).replace(/\s*$/, '');
+        for (var i = 0; i < OPS.length; i++) {
+            if (before.endsWith(OPS[i])) {
+                var beforeOp = before.slice(0, -OPS[i].length).replace(/\s*$/, '');
+                var lhs = '';
+                var depth = 0;
+                var inQ = null;
+                var j = beforeOp.length - 1;
+                for (; j >= 0; j--) {
+                    var c = beforeOp[j];
+                    if (inQ) { if (c === inQ) inQ = null; lhs = c + lhs; continue; }
+                    if (c === '"' || c === "'" || c === '`') { inQ = c; lhs = c + lhs; continue; }
+                    if (c === ')') { depth++; lhs = c + lhs; continue; }
+                    if (c === '(') { if (depth === 0) break; depth--; lhs = c + lhs; continue; }
+                    if (j > 0 && (beforeOp.slice(j - 1, j + 1) === '||' || beforeOp.slice(j - 1, j + 1) === '&&')) { j--; break; }
+                    lhs = c + lhs;
+                }
+                return { op: OPS[i], lhs: lhs.trim(), start: j + 1 };
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Expand any()/all()/max()/min() viewer aggregates.
+     * Sweep 1: any (LHS then RHS)
+     * Sweep 2: all (LHS then RHS)
+     * Sweep 3: max/min (resolve to literal)
+     */
+    const expandAggregates = (content, viewerIds) => {
+        if (viewerIds.length === 0) return content;
+
+        // Sweep: any
+        content = expandAggregate(content, 'any', '||', viewerIds);
+        // Sweep: all
+        content = expandAggregate(content, 'all', '&&', viewerIds);
+        // Sweep: max/min
+        content = resolveMaxMin(content, viewerIds);
+
+        return content;
+    };
+
+    const expandAggregate = (content, funcName, joiner, viewerIds) => {
+        var search = funcName + '(';
+        var idx = findUnquoted(content, search, 0);
+        while (idx !== -1) {
+            // Skip if part of a longer word
+            if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
+            var closeIdx = findCloseParen(content, idx + funcName.length);
+            if (closeIdx === -1) break;
+
+            var inner = content.slice(idx + funcName.length + 1, closeIdx);
+            var beforeAgg = content.slice(0, idx);
+            var afterAgg = content.slice(closeIdx + 1);
+
+            // Check for op + RHS after the aggregate
+            var opRhs = extractOpRhs(afterAgg, 0);
+            if (opRhs) {
+                var expanded = '(' + viewerIds.map(function(id) {
+                    return inner.replace(/@\(viewer\./g, '@(' + id + '.') + ' ' + opRhs.op + ' ' + opRhs.rhs;
+                }).join(' ' + joiner + ' ') + ')';
+                content = beforeAgg + expanded + afterAgg.slice(opRhs.end);
+            } else {
+                // Check for LHS + op before the aggregate
+                var opLhs = extractOpLhs(beforeAgg, beforeAgg.length);
+                if (opLhs) {
+                    var expanded = '(' + viewerIds.map(function(id) {
+                        return opLhs.lhs + ' ' + opLhs.op + ' ' + inner.replace(/@\(viewer\./g, '@(' + id + '.');
+                    }).join(' ' + joiner + ' ') + ')';
+                    content = beforeAgg.slice(0, opLhs.start) + expanded + afterAgg;
+                } else {
+                    // No operator context — just expand inner with joiner (bare boolean)
+                    var expanded = '(' + viewerIds.map(function(id) {
+                        return inner.replace(/@\(viewer\./g, '@(' + id + '.');
+                    }).join(' ' + joiner + ' ') + ')';
+                    content = beforeAgg + expanded + afterAgg;
+                }
+            }
+
+            idx = findUnquoted(content, search, idx + 1);
+        }
+        return content;
+    };
+
+    const resolveMaxMin = (content, viewerIds) => {
+        ['max', 'min'].forEach(function(fn) {
+            var search = fn + '(';
+            var idx = findUnquoted(content, search, 0);
+            while (idx !== -1) {
+                if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
+                var closeIdx = findCloseParen(content, idx + fn.length);
+                if (closeIdx === -1) break;
+                var inner = content.slice(idx + fn.length + 1, closeIdx);
+                if (inner.indexOf('@(viewer.') !== -1) {
+                    var expanded = '{& math ' + fn + '(' + viewerIds.map(function(id) {
+                        return inner.replace(/@\(viewer\./g, '@(' + id + '.');
+                    }).join(', ') + ')}';
+                    content = content.slice(0, idx) + expanded + content.slice(closeIdx + 1);
+                }
+                idx = findUnquoted(content, search, idx + 1);
+            }
+        });
+        return content;
+    };
+
     const evaluateScript = (scriptContent, targetToken, viewerPlayerId, viewerPageId, config, msg, dryRun) => {
         // Find the linked token on the viewer's page
         var viewerTarget = findLinkedTokenOnPage(targetToken, viewerPageId);
@@ -1998,7 +2177,7 @@ var Gaslight = Gaslight || (() => {
         });
         // Replace remaining @(target.*) with token ID — Fetch resolves native props
         content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
-        // Replace @(viewer.*) with viewer's controlled token ID (first found)
+        // Resolve viewer tokens for aggregation
         var viewerTokens = findObjs({ _type: 'graphic', _pageid: viewerPageId, _subtype: 'token' }).filter(function(t) {
             var cid = t.get('represents');
             if (!cid) return false;
@@ -2007,8 +2186,15 @@ var Gaslight = Gaslight || (() => {
             var cb = c.get('controlledby') || '';
             return cb === 'all' || cb.split(',').indexOf(viewerPlayerId) !== -1;
         });
-        if (viewerTokens.length > 0) {
-            content = content.replace(/@\(viewer\./g, '@(' + viewerTokens[0].get('id') + '.');
+        var viewerIds = viewerTokens.map(function(t) { return t.get('id'); });
+
+        // Expand any()/all() aggregates, then resolve max()/min()
+        content = expandAggregates(content, viewerIds);
+
+        // Error check: bare @(viewer.*) without aggregate
+        if (content.indexOf('@(viewer.') !== -1) {
+            whisper('⚠️ Script error: <code>@(viewer.*)</code> must be inside any(), all(), max(), or min()');
+            return;
         }
 
         var lines = content.split('\n').filter(function(l) {
