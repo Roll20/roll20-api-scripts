@@ -258,6 +258,36 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 fn(event);
             }
         }
+        fireAbility(charName, rollName, captures, playerId);
+    };
+
+    // ─── Ability Firing ─────────────────────────────────────────────────────────
+
+    const fireAbility = (charName, rollName, captures, playerId) => {
+        const chars = findObjs({ type: 'character', name: charName });
+        if (chars.length === 0) return;
+        const charId = chars[0].get('id');
+
+        const abilities = findObjs({ type: 'ability', _characterid: charId });
+        const specificName = 'rc_' + rollName;
+
+        const any_abils = abilities.filter(a => a.get('name') === 'rc_any');
+        const match_abils = abilities.filter(a => a.get('name') === specificName);
+        const default_abils = match_abils.length === 0 ? abilities.filter(a => a.get('name') === 'rc_default') : [];
+        for (const a of [...any_abils, ...match_abils, ...default_abils]) {
+            runAbility(a, captures, rollName, playerId);
+        }
+    };
+
+    const runAbility = (ability, captures, rollName, playerId) => {
+        const action = ability.get('action');
+        if (!action) return;
+        let cmd = action.replace(/\$\{rollname\}/gi, rollName);
+        for (const [varName, value] of Object.entries(captures)) {
+            const captureName = varName.split('_').pop();
+            cmd = cmd.replace(new RegExp('\\$\\{' + captureName + '\\}', 'gi'), value !== undefined ? value : '');
+        }
+        sendChat('player|' + playerId, cmd);
     };
 
     const matchPattern = (pattern, key) => {
