@@ -1771,7 +1771,7 @@ var Gaslight = Gaslight || (() => {
         try { newNotes = decodeURIComponent(newNotes); } catch(e) {}
 
         // Parse gl_ fields from old and new
-        var glRx = /gl_([a-zA-Z0-9_]+)\s*:\s*(.+)/g;
+        var glRx = /gl_([a-zA-Z0-9_]+)\s*[=:]\s*(.+)/g;
         var oldFields = {};
         var newFields = {};
         var m;
