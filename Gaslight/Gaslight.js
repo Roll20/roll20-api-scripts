@@ -1,23 +1,29 @@
 // =============================================================================
-// Gaslight v1.0.0
-// Last Updated: 2026-06-14
+// Gaslight v1.1.0
+// Last Updated: 2026-06-25
 // Author: Kenan Millet
 //
 // Description:
 //   Per-player map perception. Split players onto individual copies of a page
-//   with tokens synchronized via Anchor. Each player can see different things
-//   while token movement stays consistent across all copies.
+//   with tokens synchronized via Anchor and Mirror. Each player can see
+//   different things while token movement stays consistent across all copies.
+//   Commands auto-relay to all player pages transparently.
 //
-// Dependencies: Anchor
+// Dependencies: Anchor, Mirror, SelectManager
 //
 // Commands:
-//   !gaslight split <group>                     Activate a prepared gaslight group
+//   !gaslight setup <group>                     Quick-configure from duplicates
+//   !gaslight split <group> [--force]           Activate a prepared group
 //   !gaslight merge [group]                     Tear down links, return players
 //   !gaslight test <group>                      Dry-run linking resolution
 //   !gaslight link [<name>|new] [ids...]        Set gaslight_link on tokens
-//   !gaslight unlink [ids...]                   Remove gaslight_link from tokens
-//   !gaslight group <name> <player>             Assign page to group
-//   !gaslight master <group>                    Designate page as group master
+//   !gaslight unlink [ids...|--group <g>]       Remove gaslight_link from tokens
+//   !gaslight group <name> <player|GM>          Assign page to group
+//   !gaslight ungroup <name> <player|--all>     Remove page from group
+//   !gaslight stage [players...]                Propagate tokens to player pages
+//   !gaslight view [player|master]              Switch relay view target
+//   !gaslight relay <views...> <!command>       Manually relay command to views
+//   !gaslight config [relay-add|remove|list]    Configure auto-relay commands
 //   !gaslight status                            Show current state
 //   !gaslight --help                            Command reference
 // =============================================================================
