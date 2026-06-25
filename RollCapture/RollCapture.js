@@ -201,6 +201,12 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 if (bareMatch) charName = bareMatch[1].replace(/\\"/g, '"').trim();
             }
 
+            // Resolve character ID(s)
+            const chars = charName ? findObjs({ type: 'character', name: charName }) : [];
+            if (chars.length > 1) {
+                whisper(`⚠️ Multiple character sheets named <code>${charName}</code> — capturing for all matches.`);
+            }
+
             // Find matching block
             let activeBlock = null;
             for (const block of rule.blocks) {
@@ -224,35 +230,39 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 const value = evalFormula(formula, fieldMap);
                 if (value && value.__choose) {
                     hasChoose = true;
-                    const context = { rule, rollName: cleanName(rollName), charName, playerId: msg.playerid, results, msg };
+                    const charId = chars.length > 0 ? chars[0].get('id') : null;
+                    const context = { rule, rollName: cleanName(rollName), charName, charId, playerId: msg.playerid, results, msg, chars };
                     promptChoose(context, captureName, value.options);
                 } else {
-                    results[captureName] = value; // undefined = clear
+                    results[captureName] = value;
                 }
             }
 
             if (!hasChoose) {
-                emitCapture(charName, cleanName(rollName), results, msg.playerid, msg);
+                chars.forEach(c => {
+                    emitCapture(charName, c.get('id'), cleanName(rollName), results, msg.playerid, msg);
+                });
+                if (chars.length === 0) {
+                    emitCapture(charName, null, cleanName(rollName), results, msg.playerid, msg);
+                }
             }
         }
     };
 
     // ─── Callback Registry ──────────────────────────────────────────────────────
 
-    const emitCapture = (charName, rollName, captures, playerId, msg) => {
-        const event = { charName, rollName, captures, playerId, msg };
+    const emitCapture = (charName, charId, rollName, captures, playerId, msg) => {
+        const event = { charName, charId, rollName, captures, playerId, msg };
         for (const fn of callbacks.values()) {
             fn(event);
         }
-        fireAbility(charName, rollName, captures, playerId);
+        fireAbility(charId, rollName, captures, playerId);
     };
 
     // ─── Ability Firing ─────────────────────────────────────────────────────────
 
-    const fireAbility = (charName, rollName, captures, playerId) => {
-        const chars = findObjs({ type: 'character', name: charName });
-        if (chars.length === 0) return;
-        const charId = chars[0].get('id');
+    const fireAbility = (charId, rollName, captures, playerId) => {
+        if (!charId) return;
 
         const abilities = findObjs({ type: 'ability', _characterid: charId });
         const specificName = 'rc_' + rollName;
@@ -292,7 +302,12 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             if (!ctx) return whisper('Choice expired or invalid.');
             ctx.results[captureName] = parseInt(value, 10) || 0;
             delete pendingChoices[id];
-            emitCapture(ctx.charName, ctx.rollName, ctx.results, ctx.playerId, ctx.msg);
+            (ctx.chars || []).forEach(c => {
+                emitCapture(ctx.charName, c.get('id'), ctx.rollName, ctx.results, ctx.playerId, ctx.msg);
+            });
+            if (!ctx.chars || ctx.chars.length === 0) {
+                emitCapture(ctx.charName, ctx.charId, ctx.rollName, ctx.results, ctx.playerId, ctx.msg);
+            }
             whisper(`Captured ${captureName} = ${value}`);
             return;
         }
