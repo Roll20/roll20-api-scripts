@@ -324,32 +324,32 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             let created = false;
             if (!handout) {
                 handout = createObj('handout', { name: tag });
-                handout.set('notes', [
-                    '<p># RollCapture Rule: ' + name + '</p>',
-                    '<p># Lines starting with # are comments.</p>',
-                    '<p>#</p>',
-                    '<p># template: which roll template(s) to match (comma-separated)</p>',
-                    '<p># name_field: template field containing the roll name (e.g. skill name)</p>',
-                    '<p># char_field: template field(s) for character identification</p>',
-                    '<p># when: {{flag=value}} — condition block, captures follow</p>',
-                    '<p># default: — captures when no "when" matches</p>',
-                    '<p># Captures reference template fields: {{r1=$[[N]]}} means r1 = inlinerolls[N]</p>',
-                    '<p># Formulas: fieldname, max(a,b), min(a,b), sum(a,b,...), choose(a,b)</p>',
-                    '<p># Missing fields are dropped from functions (not set to 0).</p>',
-                    '<p># Empty capture (name: ) clears that value.</p>',
-                    '<p>#</p>',
-                    '<p># To react to captures, add abilities to the character sheet:</p>',
-                    '<p>#   rc_any — runs on every capture</p>',
-                    '<p>#   rc_&lt;rollname&gt; — runs for that specific roll (e.g. rc_stealth)</p>',
-                    '<p>#   rc_default — runs when no specific rc_&lt;rollname&gt; exists</p>',
-                    '<p># Use ${rollname} and ${capturename} in ability actions.</p>',
-                    '<p></p>',
-                    '<p>template: simple</p>',
-                    '<p>name_field: rname</p>',
-                    '<p>char_field: charname</p>',
-                    '<p>default:</p>',
-                    '<p>result: r1</p>',
-                ].join(''));
+                handout.set('notes', '<pre><code>'
+                    + '# RollCapture Rule: ' + name + '\n'
+                    + '# Lines starting with # are comments.\n'
+                    + '#\n'
+                    + '# template: which roll template(s) to match (comma-separated)\n'
+                    + '# name_field: template field containing the roll name (e.g. skill name)\n'
+                    + '# char_field: template field(s) for character identification\n'
+                    + '# when: {{flag=value}} — condition block, captures follow\n'
+                    + '# default: — captures when no "when" matches\n'
+                    + '# Captures reference template fields: {{r1=$[[N]]}} means r1 = inlinerolls[N]\n'
+                    + '# Formulas: fieldname, max(a,b), min(a,b), sum(a,b,...), choose(a,b)\n'
+                    + '# Missing fields are dropped from functions (not set to 0).\n'
+                    + '# Empty capture (name: ) clears that value.\n'
+                    + '#\n'
+                    + '# To react to captures, add abilities to the character sheet:\n'
+                    + '#   rc_any — runs on every capture\n'
+                    + '#   rc_&lt;rollname&gt; — runs for that specific roll (e.g. rc_stealth)\n'
+                    + '#   rc_default — runs when no specific rc_&lt;rollname&gt; exists\n'
+                    + '# Use ${rollname} and ${capturename} in ability actions.\n'
+                    + '\n'
+                    + 'template: simple\n'
+                    + 'name_field: rname\n'
+                    + 'char_field: charname\n'
+                    + 'default:\n'
+                    + 'result: r1\n'
+                    + '</code></pre>');
                 created = true;
             }
             const label = created ? 'Created' : 'Found';
