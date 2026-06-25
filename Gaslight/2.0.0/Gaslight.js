@@ -1,23 +1,30 @@
 // =============================================================================
 // Gaslight v2.0.0
-// Last Updated: 2026-06-14
+// Last Updated: 2026-06-25
 // Author: Kenan Millet
 //
 // Description:
 //   Per-player map perception. Split players onto individual copies of a page
-//   with tokens synchronized via Anchor. Each player can see different things
-//   while token movement stays consistent across all copies.
+//   with tokens synchronized via Anchor and Mirror. Each player can see
+//   different things while token movement stays consistent across all copies.
+//   Commands auto-relay to all player pages transparently.
 //
-// Dependencies: Anchor
+// Dependencies: Anchor, Mirror, SelectManager, RollCapture (optional)
 //
 // Commands:
-//   !gaslight split <group>                     Activate a prepared gaslight group
+//   !gaslight setup <group>                     Quick-configure from duplicates
+//   !gaslight split <group> [--force]           Activate a prepared group
 //   !gaslight merge [group]                     Tear down links, return players
 //   !gaslight test <group>                      Dry-run linking resolution
 //   !gaslight link [<name>|new] [ids...]        Set gaslight_link on tokens
-//   !gaslight unlink [ids...]                   Remove gaslight_link from tokens
-//   !gaslight group <name> <player>             Assign page to group
-//   !gaslight master <group>                    Designate page as group master
+//   !gaslight unlink [ids...|--group <g>]       Remove gaslight_link from tokens
+//   !gaslight group <name> <player|GM>          Assign page to group
+//   !gaslight ungroup <name> <player|--all>     Remove page from group
+//   !gaslight stage [players...]                Propagate tokens to player pages
+//   !gaslight view [player|master]              Switch relay view target
+//   !gaslight relay <views...> <!command>       Manually relay command to views
+//   !gaslight config [relay-add|remove|list]    Configure auto-relay commands
+//   !gaslight eval [--dry-run] [--all|<name>]   Evaluate script pins
 //   !gaslight status                            Show current state
 //   !gaslight --help                            Command reference
 // =============================================================================
@@ -32,6 +39,20 @@ var Gaslight = Gaslight || (() => {
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
+    const GLS_TAG        = '[GLS]';
+
+    // =========================================================================
+    // Helpers
+    // =========================================================================
+
+    const stripGlsTag = (name) => {
+        return (name || '').replace(/^\[GLS\]\s*/i, '').trim();
+    };
+
+    var relaying = new Set();
+    var scripting = false;
+
+    const relayKey = (content, sender, selectedIds) => content + '\x01' + sender + '\x01' + selectedIds.sort().join(',');
 
     // =========================================================================
     // Helpers
@@ -261,7 +282,8 @@ var Gaslight = Gaslight || (() => {
     const getLinkId = (token) => {
         var notes = token.get('gmnotes') || '';
         try { notes = decodeURIComponent(notes); } catch(e) { /* already decoded */ }
-        const match = notes.match(/gaslight_link:\s*(.+)/);
+        notes = notes.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+        const match = notes.match(/gaslight_link:\s*(\S+)/);
         return match ? match[1].trim() : null;
     };
 
@@ -947,6 +969,10 @@ var Gaslight = Gaslight || (() => {
         summary += formatWarnings(globalWarnings);
         reply(msg, 'Split', summary);
 
+        // Build trigger map and register Fetch compProps for scripting engine
+        buildTriggerMap();
+        registerAllCompProps();
+
         // Focus-ping each player to their character token on their page
         setTimeout(function() {
             Object.entries(groupInfo.players).forEach(function(entry) {
@@ -1223,161 +1249,57 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Shared relay execution: sends command to linked tokens on target pages.
-     * Returns number of tokens relayed to.
+     * Relay execution: replaces token IDs in command with linked counterparts per
+     * target page and appends {& select} for SelectManager cross-page targeting.
      */
-    /**
-     * Find all Roll20 IDs (starting with -) in a command string that match linked tokens.
-     * Returns { found: [{id, linkedIds}], hasIds: bool }
-     */
-    const findLinkedIdsInCommand = (command, activeGroups) => {
-        var idRx = /-[A-Za-z0-9_-]{19}/g;
-        var matches = command.match(idRx) || [];
-        var found = [];
-        matches.forEach(function(id) {
-            var linkedIds = [];
-            Object.values(activeGroups).forEach(function(active) {
-                var allLinked = active.linkedTokens[id] || [];
-                Object.entries(active.linkedTokens).forEach(function(entry) {
-                    if (entry[1].indexOf(id) !== -1) {
-                        allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
-                    }
-                });
-                allLinked = allLinked.filter(function(lid, i) { return allLinked.indexOf(lid) === i && lid !== id; });
-                linkedIds = linkedIds.concat(allLinked);
-            });
-            if (linkedIds.length > 0) found.push({ id: id, linkedIds: linkedIds });
-        });
-        return { found: found, hasIds: found.length > 0 };
-    };
-
-    /**
-     * Path 2: Replace token IDs in command with linked counterparts per target page, emit immediately.
-     */
-    const relayByIdReplacement = (sender, command, activeGroups, targetPlayerIds) => {
-        var idInfo = findLinkedIdsInCommand(command, activeGroups);
-        if (!idInfo.hasIds) return 0;
-
-        var relayed = 0;
-        targetPlayerIds.forEach(function(playerId) {
-            var newCmd = command;
-            idInfo.found.forEach(function(entry) {
-                // Find the linked token that's on this player's page
-                var targetId = null;
-                Object.values(activeGroups).forEach(function(active) {
-                    if (targetId) return;
-                    var playerPage = active.playerPages[playerId];
-                    if (!playerPage) return;
-                    entry.linkedIds.forEach(function(lid) {
-                        if (targetId) return;
-                        var obj = getObj('graphic', lid);
-                        if (obj && obj.get('_pageid') === playerPage.pageId) targetId = lid;
-                    });
-                });
-                if (targetId) newCmd = newCmd.replace(entry.id, targetId);
-            });
-            if (newCmd !== command) {
-                sendChat(sender, newCmd);
-                relayed++;
-            }
-        });
-        return relayed;
-    };
-
-    /**
-     * Path 1: Queue commands for execution when GM visits the target page.
-     */
-    const queueRelay = (sender, tokens, command, targetPlayerIds) => {
+    const executeRelay = (sender, tokens, command, targetPlayerIds, includeMaster) => {
         var s = state[SCRIPT_NAME];
-        if (!s.relayQueue) s.relayQueue = {};
+        var relayed = 0;
         var tokenIds = tokens.map(function(t) { return t.get('id'); });
-        var newlyQueued = 0;
+
+        if (includeMaster) {
+            relaying.add(relayKey(command, sender, tokenIds));
+            sendChat(sender, command + ' {& select ' + tokenIds.join(', ') + '}');
+            relayed += tokenIds.length;
+        }
 
         targetPlayerIds.forEach(function(playerId) {
-            // Find the linked token IDs for this player page
             var linkedIds = [];
+            var newCmd = command;
+
             Object.values(s.activeGroups).forEach(function(active) {
                 var playerPage = active.playerPages[playerId];
                 if (!playerPage) return;
+
                 tokenIds.forEach(function(tokenId) {
-                    var allLinked = active.linkedTokens[tokenId] || [];
+                    // Find all linked counterparts
+                    var allLinked = (active.linkedTokens[tokenId] || []).slice();
                     Object.entries(active.linkedTokens).forEach(function(entry) {
-                        if (entry[1].indexOf(tokenId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                        if (entry[1].indexOf(tokenId) !== -1) {
+                            allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                        }
                     });
-                    allLinked.filter(function(id) {
+                    // Filter to ones on this player's page
+                    var onPage = allLinked.filter(function(id, i, arr) {
+                        if (arr.indexOf(id) !== i || id === tokenId) return false;
                         var obj = getObj('graphic', id);
                         return obj && obj.get('_pageid') === playerPage.pageId;
-                    }).forEach(function(id) {
+                    });
+                    onPage.forEach(function(id) {
+                        newCmd = newCmd.split(tokenId).join(id);
                         if (linkedIds.indexOf(id) === -1) linkedIds.push(id);
                     });
                 });
             });
 
             if (linkedIds.length > 0) {
-                // Queue for when GM visits the page
-                var pageId = null;
-                Object.values(s.activeGroups).forEach(function(active) {
-                    var pp = active.playerPages[playerId];
-                    if (pp) pageId = pp.pageId;
-                });
-                if (pageId) {
-                    if (!s.relayQueue[pageId]) s.relayQueue[pageId] = [];
-                    s.relayQueue[pageId].push({ sender: sender, command: command, selectIds: linkedIds });
-                    newlyQueued++;
-                }
+                relaying.add(relayKey(newCmd, sender, linkedIds));
+                sendChat(sender, newCmd + ' {& select ' + linkedIds.join(', ') + '}');
+                relayed += linkedIds.length;
             }
         });
-
-        if (newlyQueued > 0) {
-            var totalPages = Object.keys(s.relayQueue).filter(function(pid) { return s.relayQueue[pid].length > 0; }).length;
-            sendChat(SCRIPT_NAME, '/w gm Queued for ' + newlyQueued + ' page(s). Total pending: ' + totalPages + '. Navigate to player pages to execute.');
-        }
-    };
-
-    const executeRelay = (sender, tokens, command, targetPlayerIds, includeMaster) => {
-        var s = state[SCRIPT_NAME];
-        var relayed = 0;
-
-        if (includeMaster) {
-            var masterIds = tokens.map(function(t) { return t.get('id'); });
-            sendChat(sender, command + ' {& select ' + masterIds.join(', ') + '}');
-            relayed += masterIds.length;
-        }
-
-        if (targetPlayerIds.length > 0) {
-            // Path 2: try ID replacement first (works cross-page)
-            var idRelayed = relayByIdReplacement(sender, command, s.activeGroups, targetPlayerIds);
-            if (idRelayed > 0) {
-                relayed += idRelayed;
-            } else {
-                // Path 1: queue for when GM visits page (selection-based)
-                queueRelay(sender, tokens, command, targetPlayerIds);
-            }
-        }
 
         return relayed;
-    };
-
-    /**
-     * Poll _lastpage to fire queued relay commands when GM arrives on a target page.
-     */
-    const pollRelayQueue = () => {
-        var s = state[SCRIPT_NAME];
-        if (!s.relayQueue) return;
-
-        var gmPlayers = findObjs({ _type: 'player' }).filter(function(p) { return playerIsGM(p.get('_id')); });
-        gmPlayers.forEach(function(gm) {
-            var lastPage = gm.get('_lastpage');
-            if (!lastPage) return;
-            var queue = s.relayQueue[lastPage];
-            if (!queue || queue.length === 0) return;
-
-            // Fire all queued commands for this page
-            queue.forEach(function(entry) {
-                sendChat(entry.sender, entry.command + ' {& select ' + entry.selectIds.join(', ') + '}');
-            });
-            delete s.relayQueue[lastPage];
-        });
     };
 
     /**
@@ -1654,6 +1576,247 @@ var Gaslight = Gaslight || (() => {
         + '<code>' + CMD + ' --help</code> -- This help<br>';
 
     // =========================================================================
+    // Scripting Engine — Fetch Integration
+    // =========================================================================
+
+    // Module-level evaluation context for Fetch compProp resolution
+    var evaluationContext = { scope: 'token', targetId: null, viewerPlayerId: null };
+
+    /**
+     * Read a gl_ field from a token's gmnotes.
+     */
+    const readGlField = (gmnotes, fieldName) => {
+        var notes = gmnotes || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
+        notes = notes.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+        var rx = new RegExp(fieldName + '\\s*:\\s*(\\S+)');
+        var match = notes.match(rx);
+        return match ? match[1] : '';
+    };
+
+    /**
+     * Register a gl_ field as a Fetch compProp on the graphic type.
+     * Resolution depends on evaluationContext.scope.
+     */
+    const registerGlCompProp = (fieldName) => {
+        if (typeof Fetch === 'undefined' || !Fetch.CustomPropsByType) return;
+        if (Fetch.CustomPropsByType.graphic.compProps[fieldName]) return;
+
+        var valFn = function(o) {
+            if (evaluationContext.scope === 'token') {
+                return readGlField(o.gmnotes, fieldName);
+            } else {
+                var charId = o.represents;
+                if (!charId) return '';
+                return getAttrByName(charId, fieldName) || '';
+            }
+        };
+
+        Fetch.CustomPropsByType.graphic.compProps[fieldName] = { nicks: [], val: valFn };
+        // Also inject into the cached PropContainers so Fetch uses it immediately
+        if (Fetch.PropContainers && Fetch.PropContainers.graphic) {
+            Fetch.PropContainers.graphic[fieldName] = valFn;
+        }
+        log(SCRIPT_NAME + ': registered Fetch compProp "' + fieldName + '"');
+    };
+
+    /**
+     * Scan a script for gl_ references and register compProps for each.
+     */
+    const registerCompPropsFromScript = (content) => {
+        var text = content.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+        var rx = /@\([^)]*\.(gl_[a-zA-Z0-9_]+)\)/g;
+        var match;
+        while ((match = rx.exec(text)) !== null) {
+            registerGlCompProp(match[1]);
+        }
+    };
+
+    /**
+     * Scan all active script handouts and register compProps.
+     * Called on split and when handouts change.
+     */
+    const registerAllCompProps = () => {
+        var s = state[SCRIPT_NAME];
+        Object.values(s.activeGroups).forEach(function(group) {
+            var allPageIds = [group.masterPageId].concat(Object.values(group.playerPages).map(function(p) { return p.pageId; }));
+            allPageIds.forEach(function(pageId) {
+                var pins = findScriptPins(pageId);
+                pins.forEach(function(pin) {
+                    getPinScript(pin, function(content) {
+                        if (content) registerCompPropsFromScript(content);
+                    });
+                });
+            });
+        });
+    };
+
+    // =========================================================================
+    // Scripting Engine — Trigger Map
+    // =========================================================================
+
+    // triggerMap: attributeName → [{ pinId, pageId }]
+    var triggerMap = {};
+
+    /**
+     * Parse a script's conditional blocks to find referenced attributes for auto-triggering.
+     * Looks for @(target.gl_*) and @(viewer.*) inside {& if} blocks.
+     */
+    const parseTriggersFromScript = (content) => {
+        var triggers = [];
+        // Strip HTML for parsing
+        var text = content.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+        // Find content inside {& if ...} blocks (simple regex — catches most cases)
+        var ifRx = /\{&\s*if\s+(.+?)\}/gi;
+        var match;
+        while ((match = ifRx.exec(text)) !== null) {
+            var condition = match[1];
+            // Find @(target.*) and @(viewer.*) references in the condition
+            var refRx = /@\((?:target|viewer)\.([^)]+)\)/g;
+            var refMatch;
+            while ((refMatch = refRx.exec(condition)) !== null) {
+                var field = refMatch[1];
+                if (triggers.indexOf(field) === -1) triggers.push(field);
+            }
+        }
+        return triggers;
+    };
+
+    /**
+     * Build the trigger map for all active script pins.
+     * Called on split, and when handouts change.
+     */
+    const buildTriggerMap = () => {
+        triggerMap = {};
+        var s = state[SCRIPT_NAME];
+
+        Object.values(s.activeGroups).forEach(function(group) {
+            var allPageIds = [group.masterPageId].concat(Object.values(group.playerPages).map(function(p) { return p.pageId; }));
+            allPageIds.forEach(function(pageId) {
+                var pins = findScriptPins(pageId);
+                pins.forEach(function(pin) {
+                    parsePinConfig(pin, function(config) {
+                        if (!config) return;
+                        var explicitTriggers = config.triggers.filter(function(t) { return t.startsWith('on change '); }).map(function(t) { return t.slice(10).trim(); });
+                        var manualOnly = config.triggers.some(function(t) { return t === 'manual only'; });
+
+                        if (manualOnly) return;
+
+                        if (explicitTriggers.length > 0) {
+                            explicitTriggers.forEach(function(field) {
+                                if (!triggerMap[field]) triggerMap[field] = [];
+                                triggerMap[field].push({ pinId: pin.get('_id'), pageId: pageId });
+                            });
+                        } else {
+                            getPinScript(pin, function(content) {
+                                if (!content) return;
+                                var autoTriggers = parseTriggersFromScript(content);
+                                var ignored = config.triggers.filter(function(t) { return t.startsWith('ignore '); }).map(function(t) { return t.slice(7).trim(); });
+                                autoTriggers = autoTriggers.filter(function(t) { return ignored.indexOf(t) === -1; });
+
+                                autoTriggers.forEach(function(field) {
+                                    if (!triggerMap[field]) triggerMap[field] = [];
+                                    triggerMap[field].push({ pinId: pin.get('_id'), pageId: pageId });
+                                });
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    };
+
+    /**
+     * Handle attribute changes — check trigger map and re-evaluate affected pins.
+     */
+    const onAttributeChanged = (obj) => {
+        var attrName = obj.get('name');
+        var entries = triggerMap[attrName];
+        if (!entries || entries.length === 0) return;
+
+        entries.forEach(function(entry) {
+            var pin = getObj('pin', entry.pinId);
+            if (!pin) return;
+            var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
+            evaluatePins([pin], fakeMsg, false);
+        });
+    };
+
+    /**
+     * Handle token property changes — check trigger map for graphic properties.
+     */
+    const onGraphicPropChanged = (obj, prev) => {
+        var changed = Object.keys(prev).filter(function(k) { return !k.startsWith('_') && prev[k] !== obj.get(k) && k !== 'gmnotes'; });
+        if (changed.length === 0) return;
+
+        var triggered = false;
+        changed.forEach(function(prop) {
+            var entries = triggerMap[prop];
+            if (!entries || entries.length === 0) return;
+            if (triggered) return; // only evaluate once per change event
+            triggered = true;
+            entries.forEach(function(entry) {
+                var pin = getObj('pin', entry.pinId);
+                if (!pin) return;
+                var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
+                evaluatePins([pin], fakeMsg, false);
+            });
+        });
+    };
+    const onGmNotesChanged = (obj, prev) => {
+        if (!prev || !prev.gmnotes) return;
+        var oldNotes = prev.gmnotes || '';
+        var newNotes = obj.get('gmnotes') || '';
+        try { oldNotes = decodeURIComponent(oldNotes); } catch(e) {}
+        try { newNotes = decodeURIComponent(newNotes); } catch(e) {}
+
+        // Parse gl_ fields from old and new
+        var glRx = /gl_([a-zA-Z0-9_]+)\s*[=:]\s*(.+)/g;
+        var oldFields = {};
+        var newFields = {};
+        var m;
+        while ((m = glRx.exec(oldNotes)) !== null) oldFields['gl_' + m[1]] = m[2].trim();
+        glRx.lastIndex = 0;
+        while ((m = glRx.exec(newNotes)) !== null) newFields['gl_' + m[1]] = m[2].trim();
+
+        // Find changed fields
+        var changedFields = Object.keys(newFields).filter(function(k) { return oldFields[k] !== newFields[k]; });
+        // Also check removed fields
+        Object.keys(oldFields).forEach(function(k) { if (!(k in newFields) && changedFields.indexOf(k) === -1) changedFields.push(k); });
+
+        changedFields.forEach(function(field) {
+            var entries = triggerMap[field];
+            if (!entries || entries.length === 0) return;
+            // Find the master page counterpart of this token
+            var tokenId = obj.get('id');
+            var masterTokenId = null;
+            var s = state[SCRIPT_NAME];
+            Object.values(s.activeGroups).forEach(function(active) {
+                // Check if this token is linked; find the master copy
+                var allLinked = active.linkedTokens[tokenId] || [];
+                Object.entries(active.linkedTokens).forEach(function(entry) {
+                    if (entry[1].indexOf(tokenId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                });
+                allLinked = allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i; });
+                allLinked.forEach(function(id) {
+                    var t = getObj('graphic', id);
+                    if (t && t.get('_pageid') === active.masterPageId) masterTokenId = id;
+                });
+                // If the token itself is on master
+                if (obj.get('_pageid') === active.masterPageId) masterTokenId = tokenId;
+            });
+
+            entries.forEach(function(entry) {
+                var pin = getObj('pin', entry.pinId);
+                if (!pin) return;
+                var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
+                evaluatePins([pin], fakeMsg, false, masterTokenId, obj.get('_pageid'));
+            });
+        });
+    };
+
+    // =========================================================================
     // Scripting Engine
     // =========================================================================
 
@@ -1665,35 +1828,99 @@ var Gaslight = Gaslight || (() => {
         var handout = getObj('handout', handoutId);
         if (!handout) { callback(null); return; }
         handout.get('notes', function(notes) {
-            callback(notes || '');
+            if (!notes) { callback(''); return; }
+            var text = decodeURIComponent(notes)
+                .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/?[^>]+>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
+            callback(text);
         });
     };
 
     /**
-     * Find pins on a page that are gaslight script pins (linked to a handout).
+     * Find pins on a page that are gaslight script pins.
+     * A pin is a script pin if:
+     * - It links to a handout (script in handout notes, config in handout gmNotes or pin gmNotes)
+     * - OR it has ---GASLIGHT-SCRIPT--- in its own gmNotes (self-contained)
      */
     const findScriptPins = (pageId) => {
         var pins = findObjs({ _type: 'pin', _pageid: pageId });
         return pins.filter(function(pin) {
-            return pin.get('link') && pin.get('linkType') === 'handout';
+            if (pin.get('link') && pin.get('linkType') === 'handout') return true;
+            var notes = pin.get('gmNotes') || '';
+            try { notes = decodeURIComponent(notes); } catch(e) {}
+            return notes.indexOf('---GASLIGHT-SCRIPT---') !== -1;
         });
     };
 
     /**
-     * Parse pin gmNotes for script configuration.
+     * Parse pin configuration. Checks pin gmNotes first, falls back to linked handout gmNotes.
      */
-    const parsePinConfig = (pin) => {
+    const parsePinConfig = (pin, callback) => {
         var notes = pin.get('gmNotes') || '';
         try { notes = decodeURIComponent(notes); } catch(e) {}
+
+        // If pin has its own config, use it
+        if (notes.indexOf('---GASLIGHT-SCRIPT---') !== -1) {
+            callback(parseConfigText(notes));
+            return;
+        }
+
+        // Fall back to linked handout's gmNotes
+        var handoutId = pin.get('link');
+        if (handoutId) {
+            var handout = getObj('handout', handoutId);
+            if (handout) {
+                handout.get('gmnotes', function(gmnotes) {
+                    gmnotes = gmnotes || '';
+                    try { gmnotes = decodeURIComponent(gmnotes); } catch(e) {}
+                    if (gmnotes.indexOf('---GASLIGHT-SCRIPT---') !== -1) {
+                        callback(parseConfigText(gmnotes));
+                    } else {
+                        // No config found, use defaults
+                        callback({ scope: 'token', filter: 'all', triggers: [] });
+                    }
+                });
+                return;
+            }
+        }
+        callback(null);
+    };
+
+    /**
+     * Parse config text into structured object.
+     */
+    const parseConfigText = (text) => {
         var config = { scope: 'token', filter: 'all', triggers: [] };
-        if (!notes.includes('---GASLIGHT-SCRIPT---')) return null;
-        notes.split('\n').forEach(function(line) {
+        // Strip HTML and normalize line breaks
+        text = text.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+        text.split('\n').forEach(function(line) {
             line = line.trim();
             if (line.startsWith('scope:')) config.scope = line.slice(6).trim();
             else if (line.startsWith('filter:')) config.filter = line.slice(7).trim();
             else if (line.startsWith('trigger:')) config.triggers.push(line.slice(8).trim());
         });
         return config;
+    };
+
+    /**
+     * Get the script content for a pin.
+     * Linked pin: from handout notes. Self-contained: from pin notes.
+     */
+    const getPinScript = (pin, callback) => {
+        var handoutId = pin.get('link');
+        if (handoutId) {
+            getHandoutContent(handoutId, callback);
+        } else {
+            // Self-contained: script in pin notes
+            var notes = pin.get('notes') || '';
+            try { notes = decodeURIComponent(notes); } catch(e) {}
+            callback(notes);
+        }
     };
 
     /**
@@ -1716,53 +1943,349 @@ var Gaslight = Gaslight || (() => {
         if (filter.startsWith('has ')) {
             var field = filter.slice(4).trim();
             return tokens.filter(function(t) {
+                // Check gmnotes
                 var notes = t.get('gmnotes') || '';
                 try { notes = decodeURIComponent(notes); } catch(e) {}
-                return notes.indexOf(field + ':') !== -1 || notes.indexOf(field + ' :') !== -1;
+                if (notes.indexOf(field + ':') !== -1 || notes.indexOf(field + ' :') !== -1) return true;
+                // Check character attribute
+                var charId = t.get('represents');
+                if (charId) {
+                    var attr = findObjs({ _type: 'attribute', _characterid: charId, name: field })[0];
+                    if (attr) return true;
+                }
+                return false;
             });
         }
         return tokens;
     };
 
     /**
-     * Evaluate a script for a specific target token and viewer.
-     * Sends the script content through the meta-script pipeline via sendChat.
+     * Find the linked counterpart of a token on a specific page.
      */
-    const evaluateScript = (scriptContent, targetToken, viewerPlayerId, config, msg, dryRun) => {
-        // TODO: Set evaluation context for Fetch compProp resolution
-        // TODO: Inject Muler variables for viewer context
+    const findLinkedTokenOnPage = (sourceToken, targetPageId) => {
+        var s = state[SCRIPT_NAME];
+        var sourceId = sourceToken.get('id');
+        var linkedIds = [];
+        Object.values(s.activeGroups).forEach(function(active) {
+            var allLinked = active.linkedTokens[sourceId] || [];
+            Object.entries(active.linkedTokens).forEach(function(entry) {
+                if (entry[1].indexOf(sourceId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+            });
+            allLinked.filter(function(id, i) { return allLinked.indexOf(id) === i && id !== sourceId; }).forEach(function(id) {
+                linkedIds.push(id);
+            });
+        });
+        for (var i = 0; i < linkedIds.length; i++) {
+            var obj = getObj('graphic', linkedIds[i]);
+            if (obj && obj.get('_pageid') === targetPageId) return obj;
+        }
+        return null;
+    };
 
-        // For now, basic string replacement of known patterns
+    /**
+     * Evaluate a script for a specific target token and viewer.
+     * Resolves target to the linked copy on the viewer's page.
+     */
+    // ─── Viewer Aggregation ────────────────────────────────────────────────────
+
+    const OPS = ['>=', '<=', '!=', '!~', '=', '~', '>', '<'];
+
+    /**
+     * Find `search` in `str` starting at `startIdx`, skipping quoted regions.
+     * Returns index or -1.
+     */
+    const findUnquoted = (str, search, startIdx) => {
+        var inQuote = null;
+        for (var i = startIdx || 0; i <= str.length - search.length; i++) {
+            var ch = str[i];
+            if (inQuote) { if (ch === inQuote) inQuote = null; continue; }
+            if (ch === '"' || ch === "'" || ch === '`') { inQuote = ch; continue; }
+            if (str.slice(i, i + search.length) === search) return i;
+        }
+        return -1;
+    };
+
+    /**
+     * Find the matching close paren for an open paren at `start`.
+     * Skips quoted strings. Returns index of closing paren or -1.
+     */
+    const findCloseParen = (str, start) => {
+        var depth = 0;
+        var inQuote = null;
+        for (var i = start; i < str.length; i++) {
+            var ch = str[i];
+            if (inQuote) { if (ch === inQuote) inQuote = null; continue; }
+            if (ch === '"' || ch === "'" || ch === '`') { inQuote = ch; continue; }
+            if (ch === '(') depth++;
+            else if (ch === ')') { depth--; if (depth === 0) return i; }
+        }
+        return -1;
+    };
+
+    /**
+     * Extract operator and RHS starting at `pos` in `str`.
+     * Respects quotes and balanced parens. Stops at unbalanced ), ||, &&, or }.
+     * Returns { op, rhs, end } or null.
+     */
+    const extractOpRhs = (str, pos) => {
+        var rest = str.slice(pos).replace(/^\s*/, '');
+        var offset = pos + (str.slice(pos).length - rest.length);
+        for (var i = 0; i < OPS.length; i++) {
+            if (rest.startsWith(OPS[i])) {
+                var afterOp = rest.slice(OPS[i].length).replace(/^\s*/, '');
+                var opEnd = offset + OPS[i].length + (rest.slice(OPS[i].length).length - afterOp.length);
+                var rhs = '';
+                var depth = 0;
+                var inQ = null;
+                var j = 0;
+                for (; j < afterOp.length; j++) {
+                    var c = afterOp[j];
+                    if (inQ) { if (c === inQ) inQ = null; rhs += c; continue; }
+                    if (c === '"' || c === "'" || c === '`') { inQ = c; rhs += c; continue; }
+                    if (c === '(') { depth++; rhs += c; continue; }
+                    if (c === ')') { if (depth === 0) break; depth--; rhs += c; continue; }
+                    if (depth === 0 && j + 1 < afterOp.length && (afterOp.slice(j, j + 2) === '||' || afterOp.slice(j, j + 2) === '&&')) break;
+                    if (c === '}') break;
+                    rhs += c;
+                }
+                return { op: OPS[i], rhs: rhs.trim(), end: opEnd + j };
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Extract operator and LHS ending at `pos` in `str`.
+     * Respects quotes and balanced parens. Stops at unbalanced (, ||, &&, or {&.
+     * Returns { op, lhs, start } or null.
+     */
+    const extractOpLhs = (str, pos) => {
+        var before = str.slice(0, pos).replace(/\s*$/, '');
+        for (var i = 0; i < OPS.length; i++) {
+            if (before.endsWith(OPS[i])) {
+                var beforeOp = before.slice(0, -OPS[i].length).replace(/\s*$/, '');
+                var lhs = '';
+                var depth = 0;
+                var inQ = null;
+                var j = beforeOp.length - 1;
+                for (; j >= 0; j--) {
+                    var c = beforeOp[j];
+                    if (inQ) { if (c === inQ) inQ = null; lhs = c + lhs; continue; }
+                    if (c === '"' || c === "'" || c === '`') { inQ = c; lhs = c + lhs; continue; }
+                    if (c === ')') { depth++; lhs = c + lhs; continue; }
+                    if (c === '(') { if (depth === 0) break; depth--; lhs = c + lhs; continue; }
+                    if (j > 0 && (beforeOp.slice(j - 1, j + 1) === '||' || beforeOp.slice(j - 1, j + 1) === '&&')) { break; }
+                    lhs = c + lhs;
+                }
+                return { op: OPS[i], lhs: lhs.trim(), start: j + 1 };
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Expand any()/all()/max()/min() viewer aggregates.
+     * Sweep 1: any (LHS then RHS)
+     * Sweep 2: all (LHS then RHS)
+     * Sweep 3: max/min (resolve to literal)
+     */
+    const expandAggregates = (content, ids, namespace) => {
+        if (ids.length === 0) return content;
+        content = expandAggregate(content, 'any', '||', ids, namespace);
+        content = expandAggregate(content, 'all', '&&', ids, namespace);
+        content = resolveMaxMin(content, ids, namespace);
+        content = resolveJoin(content, ids, namespace);
+        return content;
+    };
+
+    const expandAggregate = (content, funcName, joiner, ids, namespace) => {
+        var search = funcName + '(';
+        var nsRx = new RegExp('@\\(' + namespace + '\\.', 'g');
+        var idx = findUnquoted(content, search, 0);
+        while (idx !== -1) {
+            if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
+            var closeIdx = findCloseParen(content, idx + funcName.length);
+            if (closeIdx === -1) break;
+
+            var inner = content.slice(idx + funcName.length + 1, closeIdx);
+            // Only expand if this aggregate contains our namespace
+            if (inner.indexOf('@(' + namespace + '.') === -1) { idx = findUnquoted(content, search, idx + 1); continue; }
+
+            var beforeAgg = content.slice(0, idx);
+            var afterAgg = content.slice(closeIdx + 1);
+
+            var opRhs = extractOpRhs(afterAgg, 0);
+            if (opRhs) {
+                var expanded = '(' + ids.map(function(id) {
+                    return inner.replace(nsRx, '@(' + id + '.') + ' ' + opRhs.op + ' ' + opRhs.rhs;
+                }).join(' ' + joiner + ' ') + ')';
+                content = beforeAgg + expanded + afterAgg.slice(opRhs.end);
+            } else {
+                var opLhs = extractOpLhs(beforeAgg, beforeAgg.length);
+                if (opLhs) {
+                    var expanded = '(' + ids.map(function(id) {
+                        return opLhs.lhs + ' ' + opLhs.op + ' ' + inner.replace(nsRx, '@(' + id + '.');
+                    }).join(' ' + joiner + ' ') + ')';
+                    content = beforeAgg.slice(0, opLhs.start) + expanded + afterAgg;
+                } else {
+                    var expanded = '(' + ids.map(function(id) {
+                        return inner.replace(nsRx, '@(' + id + '.');
+                    }).join(' ' + joiner + ' ') + ')';
+                    content = beforeAgg + expanded + afterAgg;
+                }
+            }
+
+            idx = findUnquoted(content, search, idx + 1);
+        }
+        return content;
+    };
+
+    const resolveMaxMin = (content, ids, namespace) => {
+        var nsRx = new RegExp('@\\(' + namespace + '\\.', 'g');
+        var nsCheck = '@(' + namespace + '.';
+        ['max', 'min'].forEach(function(fn) {
+            var search = fn + '(';
+            var idx = findUnquoted(content, search, 0);
+            while (idx !== -1) {
+                if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
+                var closeIdx = findCloseParen(content, idx + fn.length);
+                if (closeIdx === -1) break;
+                var inner = content.slice(idx + fn.length + 1, closeIdx);
+                if (inner.indexOf(nsCheck) !== -1) {
+                    var expanded = '{& math ' + fn + '(' + ids.map(function(id) {
+                        return inner.replace(nsRx, '@(' + id + '.');
+                    }).join(', ') + ')}';
+                    content = content.slice(0, idx) + expanded + content.slice(closeIdx + 1);
+                }
+                idx = findUnquoted(content, search, idx + 1);
+            }
+        });
+        return content;
+    };
+
+    const resolveJoin = (content, ids, namespace) => {
+        var nsRx = new RegExp('@\\(' + namespace + '\\.', 'g');
+        var nsCheck = '@(' + namespace + '.';
+        var search = 'join(';
+        var idx = findUnquoted(content, search, 0);
+        while (idx !== -1) {
+            if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
+            var closeIdx = findCloseParen(content, idx + 4);
+            if (closeIdx === -1) break;
+            var inner = content.slice(idx + 5, closeIdx);
+            if (inner.indexOf(nsCheck) !== -1) {
+                // Check for optional delimiter: join(@(viewer.field), ",")
+                var parts = inner.split(',');
+                var field = parts[0].trim();
+                var delim = ' ';
+                if (parts.length > 1) {
+                    var rawDelim = parts.slice(1).join(',').trim();
+                    delim = rawDelim.replace(/^['"`]|['"`]$/g, '');
+                }
+                var expanded = ids.map(function(id) {
+                    return field.replace(nsRx, '@(' + id + '.');
+                }).join(delim);
+                content = content.slice(0, idx) + expanded + content.slice(closeIdx + 1);
+            }
+            idx = findUnquoted(content, search, idx + 1);
+        }
+        return content;
+    };
+
+    const evaluateScript = (scriptContent, targetToken, viewerPlayerId, viewerPageId, config, msg, dryRun) => {
+        // Find the linked token on the viewer's page
+        var viewerTarget = findLinkedTokenOnPage(targetToken, viewerPageId);
+        if (!viewerTarget) return;
+
+        // Set evaluation context for Fetch compProp resolution
+        evaluationContext.scope = config.scope || 'token';
+        evaluationContext.targetId = viewerTarget.get('id');
+        evaluationContext.viewerPlayerId = viewerPlayerId; // no linked copy on this viewer's page
+
         var content = scriptContent;
-        content = content.replace(/@\(target\.token_id\)/g, targetToken.get('id'));
-        content = content.replace(/@\(target\.name\)/g, targetToken.get('name') || '');
+        // Resolve @(target.gl_*) ourselves since Fetch compProps don't fire for sendChat messages
+        content = content.replace(/@\(target\.(gl_[a-zA-Z0-9_]+)\)/g, function(match, field) {
+            var val = '';
+            if (config.scope === 'token') {
+                val = readGlField(viewerTarget.get('gmnotes'), field);
+            }
+            if (!val) {
+                var charId = viewerTarget.get('represents');
+                val = charId ? (getAttrByName(charId, field) || '') : '';
+            }
+            return val;
+        });
+        // Replace remaining @(target.*) with token ID — Fetch resolves native props
+        content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
+        // Resolve viewer tokens for aggregation
+        var viewerTokens = findObjs({ _type: 'graphic', _pageid: viewerPageId, _subtype: 'token' }).filter(function(t) {
+            var cid = t.get('represents');
+            if (!cid) return false;
+            var c = getObj('character', cid);
+            if (!c) return false;
+            var cb = c.get('controlledby') || '';
+            return cb === 'all' || cb.split(',').indexOf(viewerPlayerId) !== -1;
+        });
+        var viewerIds = viewerTokens.map(function(t) { return t.get('id'); });
 
-        // Split into lines, send each command
-        var lines = content.split('\n').filter(function(l) {
-            l = l.trim();
+        // Resolve GM tokens on master page for gm.* aggregation
+        var masterPageId = targetToken.get('_pageid');
+        var gmTokens = findObjs({ _type: 'graphic', _pageid: masterPageId, _subtype: 'token' }).filter(function(t) {
+            var cid = t.get('represents');
+            if (!cid) return false;
+            var c = getObj('character', cid);
+            if (!c) return false;
+            var cb = c.get('controlledby') || '';
+            return !cb || cb.split(',').every(function(id) { return id.trim() === '' || playerIsGM(id.trim()); });
+        });
+        var gmIds = gmTokens.map(function(t) { return t.get('id'); });
+
+        // Expand any()/all()/max()/min() aggregates for viewer.* and gm.*
+        content = expandAggregates(content, viewerIds, 'viewer');
+        content = expandAggregates(content, gmIds, 'gm');
+
+        // Error check: bare @(viewer.*) or @(gm.*) without aggregate
+        if (content.indexOf('@(viewer.') !== -1) {
+            whisper('⚠️ Script error: <code>@(viewer.*)</code> must be inside any(), all(), max(), or min()');
+            return;
+        }
+        if (content.indexOf('@(gm.') !== -1) {
+            whisper('⚠️ Script error: <code>@(gm.*)</code> must be inside any(), all(), max(), or min()');
+            return;
+        }
+
+        var lines = content.split('\n').map(function(l) {
+            var ci = l.indexOf('//');
+            return (ci !== -1 ? l.slice(0, ci) : l).trim();
+        }).filter(function(l) {
             return l && (l.startsWith('!') || l.startsWith('{&'));
         });
 
         if (dryRun) {
-            var out = '<b>Dry run</b> (target: ' + (targetToken.get('name') || targetToken.get('id')) + ', viewer: ' + viewerPlayerId + '):<br>';
-            lines.forEach(function(l) { out += '<code>' + l + '</code><br>'; });
-            reply(msg, 'Eval', out);
+            lines.forEach(function(l) {
+                sendChat('player|' + msg.playerid, CMD + ' --echo ' + viewerPlayerId + ' ' + viewerTarget.get('id') + ' ' + l);
+            });
         } else {
-            // Combine into single message for ZeroFrame to process
             var fullCmd = lines.join('\n');
-            if (fullCmd) sendChat('player|' + msg.playerid, fullCmd);
+            if (fullCmd) {
+                var senderId = msg.playerid;
+                if (senderId === 'API') {
+                    var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
+                    if (gmPlayer) senderId = gmPlayer.get('_id');
+                }
+                sendChat('', CMD + ' --script-lock', null, { noarchive: true });
+                sendChat(getPlayerName(senderId), fullCmd);
+                sendChat('', CMD + ' --script-unlock', null, { noarchive: true });
+            }
         }
     };
 
     /**
      * Evaluate all scripts on pins for a given page.
      */
-    const evaluatePins = (pins, msg, dryRun) => {
+    const evaluatePins = (pins, msg, dryRun, targetTokenId, sourcePageId) => {
         var s = state[SCRIPT_NAME];
         pins.forEach(function(pin) {
-            var config = parsePinConfig(pin);
-            if (!config) return;
-            var handoutId = pin.get('link');
             var pageId = pin.get('_pageid');
 
             // Find the active group for this page
@@ -1772,18 +2295,53 @@ var Gaslight = Gaslight || (() => {
             if (!activeEntry) return;
 
             var groupInfo = activeEntry[1];
-            var targets = getTargetTokens(pageId, config, s.activeGroups);
 
-            getHandoutContent(handoutId, function(content) {
-                if (!content) return;
-                // Strip HTML tags from handout content
-                content = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+            // Determine which viewers to evaluate for based on pin placement
+            var viewers;
+            if (pageId === groupInfo.masterPageId) {
+                viewers = Object.entries(groupInfo.playerPages);
+            } else {
+                var playerEntry = Object.entries(groupInfo.playerPages).find(function(e) { return e[1].pageId === pageId; });
+                viewers = playerEntry ? [playerEntry] : [];
+            }
+            // If triggered from a specific player page, narrow to that viewer only
+            if (sourcePageId && sourcePageId !== groupInfo.masterPageId) {
+                var sourceViewer = Object.entries(groupInfo.playerPages).find(function(e) { return e[1].pageId === sourcePageId; });
+                if (sourceViewer) viewers = [sourceViewer];
+            }
+            if (viewers.length === 0) return;
 
-                // Evaluate for each viewer + target combination
-                Object.entries(groupInfo.playerPages).forEach(function(entry) {
-                    var viewerPlayerId = entry[0];
-                    targets.forEach(function(target) {
-                        evaluateScript(content, target, viewerPlayerId, config, msg, dryRun);
+            // Get targets from master page (source of truth for token list)
+            var targets = getTargetTokens(groupInfo.masterPageId, { filter: 'all' }, s.activeGroups);
+
+            parsePinConfig(pin, function(config) {
+                if (!config) return;
+                // Re-filter targets based on config
+                targets = getTargetTokens(groupInfo.masterPageId, config, s.activeGroups);
+                // If triggered by a specific token, only evaluate that one
+                if (targetTokenId) {
+                    targets = targets.filter(function(t) { return t.get('id') === targetTokenId; });
+                    if (targets.length === 0) return;
+                }
+
+                getPinScript(pin, function(content) {
+                    if (!content) return;
+                    // Strip HTML tags from content
+                    content = content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+
+                    if (dryRun) {
+                        var handout = pin.get('link') ? getObj('handout', pin.get('link')) : null;
+                        var pinTitle = stripGlsTag(pin.get('title') || (handout && handout.get('name')) || pin.get('_id'));
+                        sendChat('player|' + msg.playerid, CMD + ' --echo-header ' + pinTitle);
+                    }
+
+                    // Evaluate for each viewer + target combination
+                    viewers.forEach(function(entry) {
+                        var viewerPlayerId = entry[0];
+                        var viewerPageId = entry[1].pageId;
+                        targets.forEach(function(target) {
+                            evaluateScript(content, target, viewerPlayerId, viewerPageId, config, msg, dryRun);
+                        });
                     });
                 });
             });
@@ -1797,8 +2355,8 @@ var Gaslight = Gaslight || (() => {
      * With handout name: evaluate all pins linked to that handout.
      */
     const doEval = (msg, args) => {
-        var dryRun = args.indexOf('--dry') !== -1;
-        args = args.filter(function(a) { return a !== '--dry'; });
+        var dryRun = args.indexOf('--dry-run') !== -1;
+        args = args.filter(function(a) { return a !== '--dry-run'; });
 
         var pins = [];
 
@@ -1858,27 +2416,285 @@ var Gaslight = Gaslight || (() => {
             case 'stage':   doStage(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
             case 'eval':    doEval(msg, args);    break;
-            case 'test-relay': {
-                // Temporary: test sendChat with {& select}
-                var testId = args[0] || '';
-                if (!testId) { reply(msg, 'Error', 'Provide a token ID'); break; }
-                var testCmd = '!token-mod --set bar1_value|42 {& select ' + testId + '}';
-                log(SCRIPT_NAME + ': test-relay sending: ' + testCmd);
-                sendChat(getPlayerName(msg.playerid), testCmd);
+            case 'status':  doStatus(msg);        break;
+            case '--script-lock': scripting = true; return;
+            case '--script-unlock': scripting = false; return;
+            case '--assign-capture': {
+                // Format: --assign-capture <rollName> <charId> <cap=val> ...
+                var acRollName = args[0];
+                var acCharId = args[1];
+                var acCaptures = {};
+                args.slice(2).forEach(function(a) {
+                    var eq = a.indexOf('=');
+                    if (eq > 0) acCaptures[a.slice(0, eq)] = a.slice(eq + 1);
+                });
+                var acTokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
+                    return t && t.get('represents') === acCharId;
+                });
+                if (acTokens.length === 0) return reply(msg, 'Error', 'Select token(s) representing this character.');
+                acTokens.forEach(function(t) { writeCapturesToToken(t, acRollName, acCaptures); });
+                reply(msg, 'Capture', 'Assigned ' + acRollName + ' to ' + acTokens.length + ' token(s).');
+                return;
+            }
+            case '--clear-capture': {
+                // Format: --clear-capture <rollName> <charId>
+                var ccRollName = args[0];
+                var ccCharId = args[1];
+                var ccTokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
+                    return t && t.get('represents') === ccCharId;
+                });
+                if (ccTokens.length === 0) return reply(msg, 'Error', 'Select token(s) representing this character.');
+                ccTokens.forEach(function(t) {
+                    var gmnotes = decodeURIComponent(t.get('gmnotes') || '');
+                    gmnotes = gmnotes.replace(new RegExp('(^|\\n)gl_' + ccRollName + '_[^=]+=([^\\n]*)', 'g'), '');
+                    t.set('gmnotes', gmnotes.trim());
+                });
+                reply(msg, 'Capture', 'Cleared ' + ccRollName + ' overrides from ' + ccTokens.length + ' token(s).');
+                return;
+            }
+            case '--echo': {
+                // Internal: dry-run echo. Format: !gaslight --echo <viewerId> <targetId> <command>
+                var echoRaw = msg.content.slice(msg.content.indexOf('--echo') + 6).trim();
+                var [echoViewerId, echoTargetId] = echoRaw.split(' ');
+                var echoCmd = echoRaw.slice(echoViewerId.length + 1 + echoTargetId.length + 1);
+                var echoViewer = getObj('player', echoViewerId);
+                var echoTarget = getObj('graphic', echoTargetId);
+                var viewerName = echoViewer ? echoViewer.get('_displayname') : echoViewerId;
+                var echoTargetName = echoTarget ? echoTarget.get('name') : '';
+                var targetDisplay = echoTargetName ? echoTargetName + ' <small><code>' + echoTargetId + '</code></small>' : '<code>' + echoTargetId + '</code>';
+                reply(msg, 'Eval', '<b>Dry run</b><br><b>Target:</b> ' + targetDisplay + '<br><b>Viewer:</b> ' + viewerName + ' <small><code>' + echoViewerId + '</code></small><br><code>' + echoCmd + '</code>');
                 break;
             }
-            case 'status':  doStatus(msg);        break;
+            case '--echo-header': {
+                // Internal: dry-run pin header
+                var headerContent = msg.content.slice(msg.content.indexOf('--echo-header') + 13).trim();
+                reply(msg, 'Eval', '<b>Pin:</b> ' + headerContent);
+                break;
+            }
+            case '--dump-html': {
+                // Debug: dump raw content to console for selected pins/tokens or named character
+                if (args.length > 0) {
+                    var charName = args.join(' ');
+                    var charObj = findObjs({ _type: 'character', name: charName })[0];
+                    if (charObj) {
+                        charObj.get('bio', function(bio) { log(SCRIPT_NAME + ' [char "' + charName + '" bio]: ' + JSON.stringify(bio)); });
+                        charObj.get('gmnotes', function(gn) { log(SCRIPT_NAME + ' [char "' + charName + '" gmnotes]: ' + JSON.stringify(gn)); });
+                    } else {
+                        reply(msg, 'Error', 'Character "' + charName + '" not found.');
+                    }
+                    break;
+                }
+                var sel = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
+                sel.forEach(function(obj) {
+                    var type = obj.get('_type') || obj.get('type');
+                    if (type === 'pin') {
+                        var handoutId = obj.get('link');
+                        if (handoutId) {
+                            var ho = getObj('handout', handoutId);
+                            if (ho) {
+                                ho.get('gmnotes', function(gn) { log(SCRIPT_NAME + ' [handout gmnotes]: ' + JSON.stringify(gn)); });
+                                ho.get('notes', function(n) { log(SCRIPT_NAME + ' [handout notes]: ' + JSON.stringify(n)); });
+                            }
+                        } else {
+                            log(SCRIPT_NAME + ' [pin gmNotes]: ' + JSON.stringify(obj.get('gmNotes')));
+                            log(SCRIPT_NAME + ' [pin notes]: ' + JSON.stringify(obj.get('notes')));
+                        }
+                    } else if (type === 'graphic') {
+                        log(SCRIPT_NAME + ' [token ' + (obj.get('name') || obj.get('id')) + ' gmnotes]: ' + JSON.stringify(obj.get('gmnotes')));
+                    } else if (type === 'character') {
+                        obj.get('bio', function(bio) { log(SCRIPT_NAME + ' [char ' + obj.get('name') + ' bio]: ' + JSON.stringify(bio)); });
+                        obj.get('gmnotes', function(gn) { log(SCRIPT_NAME + ' [char ' + obj.get('name') + ' gmnotes]: ' + JSON.stringify(gn)); });
+                    }
+                });
+                break;
+            }
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
         }
     };
 
     // =========================================================================
+    // RollCapture Integration
+    // =========================================================================
+
+    const registerWithRollCapture = () => {
+        if (typeof RollCapture === 'undefined' || !RollCapture.onCapture) return;
+        RollCapture.onCapture(SCRIPT_NAME, onCaptureReceived);
+    };
+
+    const onCaptureReceived = (event) => {
+        var s = state[SCRIPT_NAME];
+        if (Object.keys(s.activeGroups).length === 0) return;
+
+        var { charName, charId, rollName, captures, playerId, msg } = event;
+        var selected = (msg && msg.selected) || [];
+
+        // Always write to character attribute
+        if (charId) {
+            Object.entries(captures).forEach(function(entry) {
+                var attrName = 'gl_' + rollName + '_' + entry[0];
+                var val = entry[1];
+                var attr = findObjs({ type: 'attribute', _characterid: charId, name: attrName })[0];
+                if (val === undefined) {
+                    if (attr) attr.remove();
+                } else {
+                    if (attr) attr.set('current', String(val));
+                    else createObj('attribute', { _characterid: charId, name: attrName, current: String(val) });
+                }
+            });
+        }
+
+        // Token assignment — only count tokens representing this character
+        var tokens = selected.map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
+            return t && t.get('represents') === charId;
+        });
+
+        // Fallback: if no selection, find tokens of this character on master pages
+        if (tokens.length === 0 && charId) {
+            var masterPageIds = Object.values(s.activeGroups).map(function(g) { return g.masterPageId; });
+            tokens = findObjs({ _type: 'graphic', _subtype: 'token', represents: charId }).filter(function(t) {
+                return masterPageIds.indexOf(t.get('_pageid')) !== -1;
+            });
+        }
+
+        if (tokens.length === 1) {
+            writeCapturesToToken(tokens[0], rollName, captures);
+        } else {
+            // Only prompt if any captured field is referenced by an active script
+            var hasRelevantTrigger = Object.keys(captures).some(function(cap) {
+                return triggerMap['gl_' + rollName + '_' + cap];
+            });
+            if (hasRelevantTrigger) {
+                var captureArgs = Object.entries(captures).map(function(e) { return e[0] + '=' + e[1]; }).join(' ');
+                whisper('**' + charName + '** rolled **' + rollName + '**: ' + captureArgs +
+                    '<br>[Assign to selected](' + CMD + ' --assign-capture ' + rollName + ' ' + charId + ' ' + captureArgs + ')' +
+                    ' [Clear overrides](' + CMD + ' --clear-capture ' + rollName + ' ' + charId + ')');
+            }
+        }
+
+        // Manually trigger pin evaluation for changed capture fields
+        var fakeMsg = { playerid: playerId || 'API', who: 'API', type: 'api' };
+        var pins = Object.keys(captures).reduce(function(acc, cap) {
+            var entries = triggerMap['gl_' + rollName + '_' + cap] || [];
+            entries.forEach(function(entry) {
+                var pin = getObj('pin', entry.pinId);
+                if (pin && acc.indexOf(pin) === -1) acc.push(pin);
+            });
+            return acc;
+        }, []);
+        if (pins.length > 0) evaluatePins(pins, fakeMsg, false);
+    };
+
+    const writeCapturesToToken = (token, rollName, captures) => {
+        var gmnotes = decodeURIComponent(token.get('gmnotes') || '');
+        Object.entries(captures).forEach(function(entry) {
+            var field = 'gl_' + rollName + '_' + entry[0];
+            var val = entry[1];
+            var rx = new RegExp('(^|\\n)' + field + '=[^\\n]*');
+            if (val === undefined) {
+                gmnotes = gmnotes.replace(rx, '');
+            } else if (gmnotes.match(rx)) {
+                gmnotes = gmnotes.replace(rx, '$1' + field + '=' + val);
+            } else {
+                gmnotes = gmnotes.trim() + '\n' + field + '=' + val;
+            }
+        });
+        token.set('gmnotes', gmnotes);
+    };
+
+    // =========================================================================
     // Initialization
     // =========================================================================
 
+    const HANDOUT_NAME = 'Help: Gaslight';
+    const HANDOUT_AVATAR = 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385';
+
+    const createHelpHandout = () => {
+        var existing = findObjs({ type: 'handout', name: HANDOUT_NAME });
+        var h = existing.length > 0 ? existing[0] : createObj('handout', { name: HANDOUT_NAME, avatar: HANDOUT_AVATAR });
+        if (HANDOUT_AVATAR) h.set('avatar', HANDOUT_AVATAR);
+        h.set('notes', [
+            '<h2>Gaslight v' + SCRIPT_VERSION + '</h2>',
+            '<p>Per-player map perception. Split players onto individual page copies with synchronized tokens. Each player can see different things while movement stays consistent.</p>',
+            '<h3>Quick Start</h3>',
+            '<ol>',
+            '<li>Create your master page with all tokens placed.</li>',
+            '<li>Duplicate it once per player (Roll20 built-in Duplicate Page).</li>',
+            '<li>Select party tokens on the master page, run: <code>!gaslight setup mygroup</code> — this auto-detects duplicates, assigns pages to players, and configures the group.</li>',
+            '<li>Run <code>!gaslight test mygroup</code> — dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
+            '<li>Run <code>!gaslight split mygroup</code> — activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
+            '<li>When done: <code>!gaslight merge</code> — tears down all links, returns players to the banner page.</li>',
+            '</ol>',
+            '<h3>Commands</h3>',
+            '<p><code>!gaslight setup &lt;group&gt;</code> — Quick-configure from duplicate pages</p>',
+            '<p><code>!gaslight split &lt;group&gt; [--force]</code> — Activate group</p>',
+            '<p><code>!gaslight merge [group]</code> — Tear down links, return players</p>',
+            '<p><code>!gaslight test &lt;group&gt;</code> — Dry-run linking</p>',
+            '<p><code>!gaslight link [name|new] [ids...]</code> — Manually link tokens</p>',
+            '<p><code>!gaslight unlink [ids...|--group &lt;g&gt;]</code> — Remove links</p>',
+            '<p><code>!gaslight group &lt;g&gt; &lt;player|GM&gt;</code> — Assign page to group</p>',
+            '<p><code>!gaslight ungroup &lt;g&gt; &lt;player|--all&gt;</code> — Remove from group</p>',
+            '<p><code>!gaslight stage [players...]</code> — Propagate tokens to player pages</p>',
+            '<p><code>!gaslight view [player|master]</code> — Switch relay view</p>',
+            '<p><code>!gaslight relay &lt;views&gt; &lt;!command&gt;</code> — Relay command to specific views</p>',
+            '<p><code>!gaslight config [relay-add|relay-remove|relay-list]</code> — Configure relay commands</p>',
+            '<p><code>!gaslight eval [--dry-run] [--all|&lt;handout&gt;]</code> — Evaluate script pins</p>',
+            '<p><code>!gaslight status</code> — Show state</p>',
+            '<h3>Auto-Relay</h3>',
+            '<p>Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages. Token IDs in the command are replaced with their linked counterparts on each page. No configuration needed.</p>',
+            '<p><b>Player-page commands are page-local by default.</b> A command run against tokens on a player page only affects that page. To have player-page commands relay to other player pages and master, add them to relay-commands: <code>!gaslight config relay-add !token-mod</code></p>',
+            '<h3>Selective Relay</h3>',
+            '<p>Use <code>!gaslight relay</code> to send a command to specific players only. Useful when you are on a player page or want to exclude certain players:</p>',
+            '<p><code>!gaslight relay Alice Bob !token-mod --set layer|objects</code> — only Alice and Bob see a door open; Charlie does not.</p>',
+            '<p><code>!gaslight relay all !token-mod --set bar1_value|10</code> — relay to all player pages (useful when running from a player page instead of master).</p>',
+            '<h3>Token Linking</h3>',
+            '<p>Tokens are linked across pages automatically by:</p>',
+            '<ol>',
+            '<li><code>gaslight_link</code> in token GM notes (explicit)</li>',
+            '<li>Same <code>represents</code> + <code>name</code> (unique pair per page)</li>',
+            '<li>Same <code>represents</code> + position fingerprint</li>',
+            '</ol>',
+            '<h3>Sync Control</h3>',
+            '<p>Set the <code>gaslight_sync</code> attribute on a character to control what stays in sync:</p>',
+            '<ul>',
+            '<li><b>Absent</b> — full sync (position + all properties). Default for most tokens.</li>',
+            '<li><b>Empty</b> — no sync at all. Use for tokens that are completely independent per player (e.g. a hallucination only one player sees).</li>',
+            '<li><code>base</code> — position/rotation/scale only. Use for NPCs whose appearance differs per player (e.g. a disguised shapechanger) but still moves together.</li>',
+            '<li><code>base, bars</code> — position + HP/bars. Use for enemies with different names or art per player but shared health pools.</li>',
+            '<li><code>base, bars, light</code> — position + HP + light. Standard for most combat tokens where you want per-player auras/names but shared position and health.</li>',
+            '<li><code>!anchor</code> — sync all properties except position. Use for a token that appears in different locations per player (e.g. an illusory wall) but keeps the same stats.</li>',
+            '</ul>',
+            '<h3>Staging</h3>',
+            '<p><b>Token changes and deletion propagate automatically</b> across linked pages. However, <b>token creation does not</b> — new tokens placed on one page are not automatically copied to others.</p>',
+            '<p>Use <code>!gaslight stage</code> with tokens selected to duplicate them to all player pages and link them. Alternatively, set <code>gaslight_stage = 1</code> on a character to auto-stage whenever a token representing that character is placed.</p>',
+            '<h3>Scripting</h3>',
+            '<p>Gaslight scripts are reactive automation stored in handouts, activated via pins on the map. Scripts evaluate per-viewer per-target and fire API commands conditionally.</p>',
+            '<p><b>Setup:</b> Create a handout with your script. Place a pin on the master page, link it to the handout. Add config to the pin\'s GM notes:</p>',
+            '<pre>---GASLIGHT-SCRIPT---\nscope: token\nfilter: has gl_stealth_result</pre>',
+            '<p><b>Script syntax:</b></p>',
+            '<pre>// Comments start with //\n!token-mod --ids @(target.token_id) --set {& if (any(@(viewer.passive_wisdom)) >= @(target.gl_stealth_result))} layer|objects {& else} layer|gmlayer {& end}</pre>',
+            '<p><b>Variables:</b></p>',
+            '<ul>',
+            '<li><code>@(target.*)</code> — the token being evaluated (linked per viewer page)</li>',
+            '<li><code>@(target.gl_*)</code> — captured values (falls back to character attribute)</li>',
+            '</ul>',
+            '<p><b>Aggregate functions</b> (required for viewer.*/gm.*):</p>',
+            '<ul>',
+            '<li><code>any(@(viewer.field)) op value</code> — true if any viewer token passes</li>',
+            '<li><code>all(@(viewer.field)) op value</code> — true if all pass</li>',
+            '<li><code>max(@(viewer.field))</code> — highest value across viewer tokens</li>',
+            '<li><code>min(@(viewer.field))</code> — lowest value</li>',
+            '<li><code>join(@(viewer.token_id))</code> — space-separated IDs for commands</li>',
+            '</ul>',
+            '<p><b>Triggers:</b> Scripts auto-detect triggers from <code>@(target.gl_*)</code> references. Override with pin GM notes: <code>trigger: on change gl_stealth_result</code> or <code>trigger: manual only</code>.</p>',
+            '<p><b>Evaluation:</b> <code>!gaslight eval</code> (selected pins), <code>!gaslight eval --all</code>, or <code>!gaslight eval &lt;handout name&gt;</code>. Add <code>--dry-run</code> to preview without executing.</p>',
+            '<p><b>RollCapture integration:</b> Install RollCapture to automatically capture roll results into <code>gl_*</code> attributes, which trigger script re-evaluation.</p>',
+        ].join(''));
+    };
+
     const checkInstall = () => {
         ensureState();
+        createHelpHandout();
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
     };
@@ -1930,61 +2746,116 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * In any active view mode, intercept non-gaslight API commands and re-emit
-     * with linked player tokens as selection via SelectManager.
-     * Master view: relay to ALL player pages.
-     * Player view: relay to that player's page only.
+     * Universal relay interceptor. Automatically relays commands to linked tokens:
+     * - If selected tokens or IDs in command reference master-page linked tokens
+     *   AND no player-page tokens are selected/referenced → relay to all player pages.
+     * - If player-page tokens are involved → only relay if command is in relayCommands.
      */
     const viewInterceptor = (msg) => {
         if (msg.type !== 'api') return;
+        if (scripting) return;
         var s = state[SCRIPT_NAME];
         if (Object.keys(s.activeGroups).length === 0) return;
-        var firstWord = msg.content.split(' ')[0];
+        var content = msg.content.trim();
+        if (!content) return;
+        var firstWord = content.split(' ')[0];
         if (firstWord === CMD || firstWord === '!mirror' || firstWord === '!anchor') return;
-        if (!msg.selected || msg.selected.length === 0) return;
-        if (msg.content.indexOf('{& select') !== -1) return;
 
-        var tokens = msg.selected.map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
-        if (tokens.length === 0) return;
+        // Check relaying set to prevent loops
+        var selectedIds = (msg.selected || []).map(function(sel) { return sel._id; });
+        var key = relayKey(content, 'player|' + msg.playerid, selectedIds);
+        if (relaying.delete(key)) return;
+        if (content.indexOf('{& select') !== -1) return;
 
-        var pageId = tokens[0].get('_pageid');
-        var isGM = playerIsGM(msg.playerid);
+        var tokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
 
-        // Case 1: GM on master page — relay based on view
-        if (isGM) {
-            var activeEntry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pageId; });
-            if (!activeEntry) return;
+        // Scan command for token IDs that belong to linked groups
+        var idRx = /-[A-Za-z0-9_-]{19}/g;
+        var idsInCommand = (content.match(idRx) || []).filter(function(id, i, arr) { return arr.indexOf(id) === i; });
 
+        // Classify: which IDs/tokens are on master pages vs player pages?
+        var masterTokens = [];
+        var hasPlayerPageRef = false;
+        var activeEntry = null;
+
+        // Check selected tokens
+        tokens.forEach(function(t) {
+            var pid = t.get('_pageid');
+            var entry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pid; });
+            if (entry) {
+                masterTokens.push(t);
+                if (!activeEntry) activeEntry = entry;
+            } else {
+                var playerEntry = Object.entries(s.activeGroups).find(function(e) {
+                    return Object.values(e[1].playerPages).some(function(p) { return p.pageId === pid; });
+                });
+                if (playerEntry) hasPlayerPageRef = true;
+            }
+        });
+
+        // Check IDs in command text
+        idsInCommand.forEach(function(id) {
+            // Skip IDs already accounted for by selection
+            if (tokens.some(function(t) { return t.get('id') === id; })) return;
+            var obj = getObj('graphic', id);
+            if (!obj) return;
+            var pid = obj.get('_pageid');
+            var entry = Object.entries(s.activeGroups).find(function(e) { return e[1].masterPageId === pid; });
+            if (entry) {
+                // Check if this token is actually linked
+                var linked = entry[1].linkedTokens[id] || [];
+                var isLinked = linked.length > 0 || Object.values(entry[1].linkedTokens).some(function(arr) { return arr.indexOf(id) !== -1; });
+                if (isLinked) {
+                    masterTokens.push(obj);
+                    if (!activeEntry) activeEntry = entry;
+                }
+            } else {
+                var playerEntry = Object.entries(s.activeGroups).find(function(e) {
+                    return Object.values(e[1].playerPages).some(function(p) { return p.pageId === pid; });
+                });
+                if (playerEntry) hasPlayerPageRef = true;
+            }
+        });
+
+        if (masterTokens.length === 0 && !hasPlayerPageRef) return;
+
+        // Universal relay: master-page refs, no player-page refs
+        if (masterTokens.length > 0 && !hasPlayerPageRef) {
             var viewPlayerId = s.view;
             var targetPlayerIds = viewPlayerId ? [viewPlayerId] : Object.keys(activeEntry[1].playerPages);
-            executeRelay('player|' + msg.playerid, tokens, msg.content, targetPlayerIds, false);
+            executeRelay('player|' + msg.playerid, masterTokens, content, targetPlayerIds, false);
             return;
         }
 
-        // Case 2: Player on their page — relay if command is in relay-commands list
-        if (s.config.relayCommands.indexOf(firstWord) === -1) return;
-
-        // Find which group/player this page belongs to
-        var activeEntry = null;
-        var sourcePlayerId = null;
-        Object.entries(s.activeGroups).forEach(function(e) {
-            Object.entries(e[1].playerPages).forEach(function(pp) {
-                if (pp[1].pageId === pageId) { activeEntry = e; sourcePlayerId = pp[0]; }
+        // Player-page involved: only relay if relayCommands allows it
+        if (hasPlayerPageRef && s.config.relayCommands.indexOf(firstWord) !== -1) {
+            // Find source player page
+            var sourcePlayerId = null;
+            var entry = null;
+            Object.entries(s.activeGroups).forEach(function(e) {
+                Object.entries(e[1].playerPages).forEach(function(pp) {
+                    var srcToken = tokens.find(function(t) { return t.get('_pageid') === pp[1].pageId; });
+                    if (srcToken) { entry = e; sourcePlayerId = pp[0]; }
+                });
             });
-        });
-        if (!activeEntry) return;
-
-        // Relay to all OTHER player pages + master
-        var targetPlayerIds = Object.keys(activeEntry[1].playerPages).filter(function(id) { return id !== sourcePlayerId; });
-        executeRelay('player|' + msg.playerid, tokens, msg.content, targetPlayerIds, true);
+            if (!entry) return;
+            var targetPlayerIds = Object.keys(entry[1].playerPages).filter(function(id) { return id !== sourcePlayerId; });
+            executeRelay('player|' + msg.playerid, tokens, content, targetPlayerIds, true);
+        }
     };
 
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
+        on('chat:message', function(msg) {
+            if (msg.type === 'api' && msg.content === '!rollcapture-ready') registerWithRollCapture();
+        });
+        registerWithRollCapture();
         on('add:graphic', onTokenAdded);
         on('destroy:graphic', onTokenDestroyed);
-        setInterval(pollRelayQueue, 500);
+        on('change:attribute', onAttributeChanged);
+        on('change:graphic', onGraphicPropChanged);
+        on('change:graphic:gmnotes', onGmNotesChanged);
     };
 
     return { checkInstall, registerEventHandlers };

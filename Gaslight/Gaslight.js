@@ -9,7 +9,7 @@
 //   different things while token movement stays consistent across all copies.
 //   Commands auto-relay to all player pages transparently.
 //
-// Dependencies: Anchor, Mirror, SelectManager
+// Dependencies: Anchor, Mirror, SelectManager, RollCapture (optional)
 //
 // Commands:
 //   !gaslight setup <group>                     Quick-configure from duplicates
@@ -24,6 +24,7 @@
 //   !gaslight view [player|master]              Switch relay view target
 //   !gaslight relay <views...> <!command>       Manually relay command to views
 //   !gaslight config [relay-add|remove|list]    Configure auto-relay commands
+//   !gaslight eval [--dry-run] [--all|<name>]   Evaluate script pins
 //   !gaslight status                            Show current state
 //   !gaslight --help                            Command reference
 // =============================================================================
