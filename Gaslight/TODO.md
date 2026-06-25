@@ -38,6 +38,7 @@
 - [ ] Focus-ping on split
 
 ## v2 Ideas
+- [ ] `!gaslight relay all --except <player>` flag
 - [ ] Config handout (editable in-game, live reload)
 - [ ] Group/page-level relay-command overrides
 - [ ] Config visibility toggle (hide gaslight text in HTML comment)
