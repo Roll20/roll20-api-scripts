@@ -2518,8 +2518,8 @@ var Gaslight = Gaslight || (() => {
 
         if (tokens.length === 1) {
             writeCapturesToToken(tokens[0], rollName, captures);
-        } else if (tokens.length > 1) {
-            // Build simple space-separated args: rollName charId captureName=value ...
+        } else {
+            // 0 or multiple — prompt GM with assign button
             var captureArgs = Object.entries(captures).map(function(e) { return e[0] + '=' + e[1]; }).join(' ');
             whisper('**' + charName + '** rolled **' + rollName + '**: ' + captureArgs +
                 '<br>[Assign to selected](' + CMD + ' --assign-capture ' + rollName + ' ' + charId + ' ' + captureArgs + ')' +
