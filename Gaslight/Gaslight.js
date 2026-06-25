@@ -2093,6 +2093,7 @@ var Gaslight = Gaslight || (() => {
         content = expandAggregate(content, 'any', '||', ids, namespace);
         content = expandAggregate(content, 'all', '&&', ids, namespace);
         content = resolveMaxMin(content, ids, namespace);
+        content = resolveJoin(content, ids, namespace);
         return content;
     };
 
@@ -2158,6 +2159,35 @@ var Gaslight = Gaslight || (() => {
                 idx = findUnquoted(content, search, idx + 1);
             }
         });
+        return content;
+    };
+
+    const resolveJoin = (content, ids, namespace) => {
+        var nsRx = new RegExp('@\\(' + namespace + '\\.', 'g');
+        var nsCheck = '@(' + namespace + '.';
+        var search = 'join(';
+        var idx = findUnquoted(content, search, 0);
+        while (idx !== -1) {
+            if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
+            var closeIdx = findCloseParen(content, idx + 4);
+            if (closeIdx === -1) break;
+            var inner = content.slice(idx + 5, closeIdx);
+            if (inner.indexOf(nsCheck) !== -1) {
+                // Check for optional delimiter: join(@(viewer.field), ",")
+                var parts = inner.split(',');
+                var field = parts[0].trim();
+                var delim = ' ';
+                if (parts.length > 1) {
+                    var rawDelim = parts.slice(1).join(',').trim();
+                    delim = rawDelim.replace(/^['"`]|['"`]$/g, '');
+                }
+                var expanded = ids.map(function(id) {
+                    return field.replace(nsRx, '@(' + id + '.');
+                }).join(delim);
+                content = content.slice(0, idx) + expanded + content.slice(closeIdx + 1);
+            }
+            idx = findUnquoted(content, search, idx + 1);
+        }
         return content;
     };
 
