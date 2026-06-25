@@ -48,6 +48,5 @@
 - [ ] On-demand page cloning (if TruePageCopy exposes API)
 
 ## Known Issues
-- Relay Path 1 (selection-based) requires GM to navigate to target page
-- Roll20 limitation: sendChat as player carries their UI selection state
+- SelectManager `{& select}` text may visibly bleed into chat even though selection works correctly (upstream issue, reported to timmaugh)
 - linkedTokens accumulates duplicates on repeated splits (cosmetic, deduped at use)
