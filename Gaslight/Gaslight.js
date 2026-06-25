@@ -1827,7 +1827,16 @@ var Gaslight = Gaslight || (() => {
         var handout = getObj('handout', handoutId);
         if (!handout) { callback(null); return; }
         handout.get('notes', function(notes) {
-            callback(notes || '');
+            if (!notes) { callback(''); return; }
+            var text = decodeURIComponent(notes)
+                .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/?[^>]+>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
+            callback(text);
         });
     };
 
@@ -2168,12 +2177,15 @@ var Gaslight = Gaslight || (() => {
         var content = scriptContent;
         // Resolve @(target.gl_*) ourselves since Fetch compProps don't fire for sendChat messages
         content = content.replace(/@\(target\.(gl_[a-zA-Z0-9_]+)\)/g, function(match, field) {
+            var val = '';
             if (config.scope === 'token') {
-                return readGlField(viewerTarget.get('gmnotes'), field);
-            } else {
-                var charId = viewerTarget.get('represents');
-                return charId ? (getAttrByName(charId, field) || '') : '';
+                val = readGlField(viewerTarget.get('gmnotes'), field);
             }
+            if (!val) {
+                var charId = viewerTarget.get('represents');
+                val = charId ? (getAttrByName(charId, field) || '') : '';
+            }
+            return val;
         });
         // Replace remaining @(target.*) with token ID — Fetch resolves native props
         content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
