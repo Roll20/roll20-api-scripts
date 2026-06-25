@@ -317,9 +317,9 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
         }
 
         whisper(`**RollCapture v${SCRIPT_VERSION}** — Commands:<br>` +
-            `\`!rollcapture status\` — Show status<br>` +
-            `\`!rollcapture rules\` — List loaded rules<br>` +
-            `\`!rollcapture reload\` — Reload rules from handouts`);
+            `<code>!rollcapture status</code> — Show status<br>` +
+            `<code>!rollcapture rules</code> — List loaded rules<br>` +
+            `<code>!rollcapture reload</code> — Reload rules from handouts`);
     };
 
     // ─── Utilities ──────────────────────────────────────────────────────────────
