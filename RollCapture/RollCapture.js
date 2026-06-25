@@ -7,7 +7,6 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
     const SCRIPT_NAME = 'RollCapture';
     const SCRIPT_VERSION = '0.1.0';
-    const HANDOUT_MARKER = '---ROLLCAPTURE---';
     const KEYWORDS = ['template:', 'name_field:', 'char_field:', 'when:', 'default:'];
     const CMD = '!rollcapture';
 
@@ -18,7 +17,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
     // ─── Rule Parser ────────────────────────────────────────────────────────────
 
     const parseRules = (text) => {
-        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l && l !== HANDOUT_MARKER);
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
         const rule = { templates: [], nameField: '', charFields: [], blocks: [] };
         let currentBlock = null;
 
@@ -69,12 +68,12 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                     .replace(/&amp;/g, '&')
                     .replace(/&lt;/g, '<')
                     .replace(/&gt;/g, '>');
-                if (text.includes(HANDOUT_MARKER)) {
-                    const rule = parseRules(text);
-                    if (rule.templates.length) {
-                        rules.push(rule);
-                        loaded++;
-                    }
+                const rule = parseRules(text);
+                if (rule.templates.length) {
+                    rule.handoutId = h.get('id');
+                    rule.handoutName = h.get('name');
+                    rules.push(rule);
+                    loaded++;
                 }
             });
         });
@@ -311,8 +310,22 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
         if (args[0] === 'rules') {
             if (!rules.length) return whisper('No rules loaded.');
-            const list = rules.map((r, i) => `${i + 1}. templates: ${r.templates.join(', ')} | name: ${r.nameField}`).join('<br>');
+            const list = rules.map((r, i) => `${i + 1}. [${r.handoutName}](http://journal.roll20.net/handout/${r.handoutId})`).join('<br>');
             whisper(`**Loaded Rules:**<br>${list}`);
+            return;
+        }
+
+        if (args[0] === 'rule') {
+            const name = args.slice(1).join(' ');
+            if (!name) return whisper('Usage: <code>!rollcapture rule &lt;name&gt;</code>');
+            const tag = '[RC] ' + name;
+            let handout = findObjs({ type: 'handout', name: tag })[0]
+                || findObjs({ type: 'handout', name: '[RollCapture] ' + name })[0];
+            if (!handout) {
+                handout = createObj('handout', { name: tag });
+                handout.set('notes', 'template: \nname_field: \nchar_field: \ndefault:\nresult: r0');
+            }
+            whisper(`[${handout.get('name')}](http://journal.roll20.net/handout/${handout.get('id')})`);
             return;
         }
 
