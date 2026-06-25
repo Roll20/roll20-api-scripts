@@ -2174,6 +2174,39 @@ var Gaslight = Gaslight || (() => {
             case 'status':  doStatus(msg);        break;
             case '--script-lock': scripting = true; return;
             case '--script-unlock': scripting = false; return;
+            case '--assign-capture': {
+                // Format: --assign-capture <rollName> <charId> <cap=val> ...
+                var acRollName = args[0];
+                var acCharId = args[1];
+                var acCaptures = {};
+                args.slice(2).forEach(function(a) {
+                    var eq = a.indexOf('=');
+                    if (eq > 0) acCaptures[a.slice(0, eq)] = a.slice(eq + 1);
+                });
+                var acTokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
+                    return t && t.get('represents') === acCharId;
+                });
+                if (acTokens.length === 0) return reply(msg, 'Error', 'Select token(s) representing this character.');
+                acTokens.forEach(function(t) { writeCapturesToToken(t, acRollName, acCaptures); });
+                reply(msg, 'Capture', 'Assigned ' + acRollName + ' to ' + acTokens.length + ' token(s).');
+                return;
+            }
+            case '--clear-capture': {
+                // Format: --clear-capture <rollName> <charId>
+                var ccRollName = args[0];
+                var ccCharId = args[1];
+                var ccTokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
+                    return t && t.get('represents') === ccCharId;
+                });
+                if (ccTokens.length === 0) return reply(msg, 'Error', 'Select token(s) representing this character.');
+                ccTokens.forEach(function(t) {
+                    var gmnotes = decodeURIComponent(t.get('gmnotes') || '');
+                    gmnotes = gmnotes.replace(new RegExp('(^|\\n)gl_' + ccRollName + '_[^=]+=([^\\n]*)', 'g'), '');
+                    t.set('gmnotes', gmnotes.trim());
+                });
+                reply(msg, 'Capture', 'Cleared ' + ccRollName + ' overrides from ' + ccTokens.length + ' token(s).');
+                return;
+            }
             case '--echo': {
                 // Internal: dry-run echo. Format: !gaslight --echo <viewerId> <targetId> <command>
                 var echoRaw = msg.content.slice(msg.content.indexOf('--echo') + 6).trim();
@@ -2233,6 +2266,70 @@ var Gaslight = Gaslight || (() => {
             case '--help':  reply(msg, HELP_TEXT); break;
             default:        reply(msg, HELP_TEXT); break;
         }
+    };
+
+    // =========================================================================
+    // RollCapture Integration
+    // =========================================================================
+
+    const registerWithRollCapture = () => {
+        if (typeof RollCapture === 'undefined' || !RollCapture.onCapture) return;
+        RollCapture.onCapture(SCRIPT_NAME, onCaptureReceived);
+    };
+
+    const onCaptureReceived = (event) => {
+        var s = state[SCRIPT_NAME];
+        if (Object.keys(s.activeGroups).length === 0) return;
+
+        var { charName, charId, rollName, captures, playerId, msg } = event;
+        var selected = (msg && msg.selected) || [];
+
+        // Always write to character attribute
+        if (charId) {
+            Object.entries(captures).forEach(function(entry) {
+                var attrName = 'gl_' + rollName + '_' + entry[0];
+                var val = entry[1];
+                var attr = findObjs({ type: 'attribute', _characterid: charId, name: attrName })[0];
+                if (val === undefined) {
+                    if (attr) attr.remove();
+                } else {
+                    if (attr) attr.set('current', String(val));
+                    else createObj('attribute', { _characterid: charId, name: attrName, current: String(val) });
+                }
+            });
+        }
+
+        // Token assignment — only count tokens representing this character
+        var tokens = selected.map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
+            return t && t.get('represents') === charId;
+        });
+
+        if (tokens.length === 1) {
+            writeCapturesToToken(tokens[0], rollName, captures);
+        } else if (tokens.length > 1) {
+            // Build simple space-separated args: rollName charId captureName=value ...
+            var captureArgs = Object.entries(captures).map(function(e) { return e[0] + '=' + e[1]; }).join(' ');
+            whisper('**' + charName + '** rolled **' + rollName + '**: ' + captureArgs +
+                '<br>[Assign to selected](' + CMD + ' --assign-capture ' + rollName + ' ' + charId + ' ' + captureArgs + ')' +
+                ' [Clear overrides](' + CMD + ' --clear-capture ' + rollName + ' ' + charId + ')');
+        }
+    };
+
+    const writeCapturesToToken = (token, rollName, captures) => {
+        var gmnotes = decodeURIComponent(token.get('gmnotes') || '');
+        Object.entries(captures).forEach(function(entry) {
+            var field = 'gl_' + rollName + '_' + entry[0];
+            var val = entry[1];
+            var rx = new RegExp('(^|\\n)' + field + '=[^\\n]*');
+            if (val === undefined) {
+                gmnotes = gmnotes.replace(rx, '');
+            } else if (gmnotes.match(rx)) {
+                gmnotes = gmnotes.replace(rx, '$1' + field + '=' + val);
+            } else {
+                gmnotes = gmnotes.trim() + '\n' + field + '=' + val;
+            }
+        });
+        token.set('gmnotes', gmnotes);
     };
 
     // =========================================================================
@@ -2458,14 +2555,9 @@ var Gaslight = Gaslight || (() => {
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
         on('chat:message', function(msg) {
-            if (msg.rolltemplate && msg.inlinerolls) {
-                log(SCRIPT_NAME + ' [ROLL]: template=' + msg.rolltemplate + ', inlinerolls count=' + msg.inlinerolls.length);
-                msg.inlinerolls.forEach(function(r, i) {
-                    log(SCRIPT_NAME + '   [' + i + ']: total=' + (r.results ? r.results.total : 'N/A'));
-                });
-                log(SCRIPT_NAME + '   content=' + msg.content.slice(0, 200));
-            }
+            if (msg.type === 'api' && msg.content === '!rollcapture-ready') registerWithRollCapture();
         });
+        registerWithRollCapture();
         on('add:graphic', onTokenAdded);
         on('destroy:graphic', onTokenDestroyed);
         on('change:attribute', onAttributeChanged);
