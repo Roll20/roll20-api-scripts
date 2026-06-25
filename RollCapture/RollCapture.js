@@ -359,6 +359,7 @@ default:
         whisper(`**RollCapture v${SCRIPT_VERSION}** — Commands:<br>` +
             `<code>!rollcapture status</code> — Show status<br>` +
             `<code>!rollcapture rules</code> — List loaded rules<br>` +
+            `<code>!rollcapture rule &lt;name&gt;</code> — Open or create a rule handout<br>` +
             `<code>!rollcapture reload</code> — Reload rules from handouts`);
     };
 
