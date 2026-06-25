@@ -1,6 +1,8 @@
 import {
   BOSS_PRESETS,
   COMMAND,
+  DIRECTOR_CONFLICT_STATE_KEY,
+  LEGACY_COMMAND,
   DECK_VIEW_KEYS,
   ENCOUNTER_NAME_RE,
   LAYER_GM,
@@ -116,7 +118,7 @@ function locale() {
 // ---------------------------------------------------------------------------
 
 /**
- * Handles incoming chat messages, routing !director commands to sub-handlers.
+ * Handles incoming chat messages, routing !ced commands to sub-handlers.
  *
  * @param {object} msg Roll20 chat message object.
  * @returns {void}
@@ -142,6 +144,70 @@ export function handleInput(msg) {
     routeCommand(msg, args, playerId);
   } catch (error) {
     log(`[${SCRIPT_NAME}] Command error: ${error.message}`);
+    whisperError(
+      playerId,
+      t('errors.unexpectedError', locale(), { message: error.message }),
+      t('errors.unexpectedErrorHint', locale())
+    );
+  }
+}
+
+/**
+ * Handles the legacy `!ced` command for backward compatibility with v1.0.0.
+ *
+ * If the Director script (the community mod that also uses `!ced`) is
+ * detected via its state key, only a deprecation whisper is sent and the
+ * command is NOT processed — the other mod will handle it.
+ *
+ * If the Director script is NOT installed, the command is forwarded to the
+ * normal router so existing v1.0.0 macros continue to work.
+ *
+ * @param {object} msg Roll20 chat message object.
+ * @returns {void}
+ */
+export function handleLegacyInput(msg) {
+  if (msg.type !== 'api') {
+    return;
+  }
+
+  const rawContent = msg.content || '';
+  if (!rawContent.startsWith(LEGACY_COMMAND)) {
+    return;
+  }
+
+  // Ignore if the message is actually the new !ced command (prefix overlap guard).
+  if (rawContent.startsWith(COMMAND)) {
+    return;
+  }
+
+  if (!playerIsGM(msg.playerid)) {
+    return;
+  }
+
+  const playerId = msg.playerid;
+
+  // Detect whether the Director community mod is also loaded by checking its
+  // known state namespace.  We intentionally access the global `state` object
+  // directly here because there is no Roll20 API to introspect other scripts.
+  const directorConflict = globalThis.state?.[DIRECTOR_CONFLICT_STATE_KEY] !== undefined;
+
+  if (directorConflict) {
+    // Another mod owns !ced — just notify the GM and bail out.
+    whisperWarning(
+      playerId,
+      `⚠️ Command Conflict Detected — Another script is using !ced. ` +
+        `Please update your macros to use !ced to access Combat Encounter Director.`
+    );
+    return;
+  }
+
+  // No conflict — forward to the normal router as a transparent alias.
+  const args = rawContent.slice(LEGACY_COMMAND.length).trim().split(/\s+/).filter(Boolean);
+
+  try {
+    routeCommand(msg, args, playerId);
+  } catch (error) {
+    log(`[${SCRIPT_NAME}] Legacy command error: ${error.message}`);
     whisperError(
       playerId,
       t('errors.unexpectedError', locale(), { message: error.message }),
@@ -223,7 +289,7 @@ function routeCommand(msg, args, playerId) {
 // ---------------------------------------------------------------------------
 
 /**
- * Handles !director scale ... commands.
+ * Handles !ced scale ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'scale'.
@@ -233,252 +299,291 @@ function routeCommand(msg, args, playerId) {
 function handleScale(msg, args, playerId) {
   const [action, value] = args;
   const lang = locale();
+  const handlers = {
+    preset: () => handleScalePreset(msg, playerId, lang, value),
+    party: () => handleScaleParty(msg, playerId, lang, value),
+    hp: () => handleScaleHp(msg, playerId, lang, value),
+    ac: () => handleScaleAc(msg, playerId, lang, value),
+    damage: () => handleScaleDamage(msg, playerId, lang, value),
+    apply: () => handleScaleApply(msg, playerId, lang),
+  };
 
-  switch (action) {
-    case 'preset': {
-      if (!isValidPartyPreset(value)) {
-        whisperError(
-          playerId,
-          t('errors.unknownPartyPreset', lang, { preset: value }),
-          t('errors.partyPresetHint', lang, { presets: Object.keys(PARTY_PRESETS).join(', ') })
-        );
-        return;
-      }
-      const preset = resolvePartyPreset(value);
-      updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, preset, `preset:${value}`);
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.preset', lang), preset.label),
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.scalingPresetReady', lang),
-          [
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'party': {
-      const parsed = parsePartySize(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidPartySize', lang, { value }),
-          `Example: ${COMMAND} scale party 6`
-        );
-        return;
-      }
-      const preset = resolvePartyPresetBySize(parsed.value);
-      updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, preset, `party:${parsed.value}`);
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.nearestPreset', lang), preset.label),
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.partySize', lang, { size: parsed.value }),
-          [
-            buildRow(t('labels.nearestPreset', lang), preset.label),
-            buildRow(t('labels.hp', lang), `${preset.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(preset.ac)),
-            buildRow(t('labels.damage', lang), `${preset.damage}%`),
-            buildDivider(),
-            `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'hp': {
-      const parsed = parseHpPercent(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidHpPercent', lang, { value }),
-          `Example: ${COMMAND} scale hp 150`
-        );
-        return;
-      }
-      const next = updatePendingScaling(playerId, { hp: parsed.value });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, next, 'scale:hp');
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.hpUpdated', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'ac': {
-      const parsed = parseAcModifier(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidAcModifier', lang, { value }),
-          `Example: ${COMMAND} scale ac +2`
-        );
-        return;
-      }
-      const next = updatePendingScaling(playerId, { ac: parsed.value });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, next, 'scale:ac');
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.acUpdated', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'damage': {
-      const parsed = parseDamagePercent(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidDamagePercent', lang, { value }),
-          `Example: ${COMMAND} scale damage 125`
-        );
-        return;
-      }
-      const next = updatePendingScaling(playerId, { damage: parsed.value });
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length > 0) {
-        const result = applyScalingToSelected(msg, next, 'scale:damage');
-        whisper(
-          playerId,
-          t('titles.scalingApplied', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-          ].join('')
-        );
-      } else {
-        whisper(
-          playerId,
-          t('titles.damageUpdated', lang),
-          [
-            buildRow(t('labels.hp', lang), `${next.hp}%`),
-            buildRow(t('labels.ac', lang), formatMod(next.ac)),
-            buildRow(t('labels.damage', lang), `${next.damage}%`),
-            buildDivider(),
-            buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
-          ].join('')
-        );
-      }
-      break;
-    }
-
-    case 'apply': {
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length === 0) {
-        whisperWarning(playerId, t('errors.noTokensSelected', lang));
-        return;
-      }
-      const profile = getPendingScaling(playerId);
-      const result = applyScalingToSelected(msg, profile, 'scale:apply');
-      whisper(
-        playerId,
-        t('titles.scalingApplied', lang),
-        [
-          buildRow(t('labels.hp', lang), `${profile.hp}%`),
-          buildRow(t('labels.ac', lang), formatMod(profile.ac)),
-          buildRow(t('labels.damage', lang), `${profile.damage}%`),
-          buildDivider(),
-          buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
-        ].join('')
-      );
-      break;
-    }
-
-    default:
-      whisperError(
-        playerId,
-        t('errors.unknownScaleAction', lang, { action }),
-        t('errors.scaleActionHint', lang)
-      );
+  if (handlers[action]) {
+    handlers[action]();
+    return;
   }
+
+  whisperError(
+    playerId,
+    t('errors.unknownScaleAction', lang, { action }),
+    t('errors.scaleActionHint', lang)
+  );
 }
 
 /**
- * Handles !director boss ... commands.
+ * Applies a named scaling preset to pending state and selected tokens.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} presetKey Party preset key.
+ * @returns {void}
+ */
+function handleScalePreset(msg, playerId, lang, presetKey) {
+  if (!isValidPartyPreset(presetKey)) {
+    whisperError(
+      playerId,
+      t('errors.unknownPartyPreset', lang, { preset: presetKey }),
+      t('errors.partyPresetHint', lang, { presets: Object.keys(PARTY_PRESETS).join(', ') })
+    );
+    return;
+  }
+
+  const preset = resolvePartyPreset(presetKey);
+  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+  const tokens = getSelectedTokens(msg);
+
+  if (tokens.length > 0) {
+    const result = applyScalingToSelected(msg, preset, `preset:${presetKey}`);
+    whisper(
+      playerId,
+      t('titles.scalingApplied', lang),
+      [
+        buildRow(t('labels.preset', lang), preset.label),
+        buildRow(t('labels.hp', lang), `${preset.hp}%`),
+        buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+        buildRow(t('labels.damage', lang), `${preset.damage}%`),
+        buildDivider(),
+        buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+      ].join('')
+    );
+    return;
+  }
+
+  whisper(
+    playerId,
+    t('titles.scalingPresetReady', lang),
+    [
+      buildRow(t('labels.hp', lang), `${preset.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+      buildRow(t('labels.damage', lang), `${preset.damage}%`),
+      buildDivider(),
+      `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
+      buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
+    ].join('')
+  );
+}
+
+/**
+ * Resolves nearest preset by party size and applies/queues it.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} partySizeRaw Raw party-size argument.
+ * @returns {void}
+ */
+function handleScaleParty(msg, playerId, lang, partySizeRaw) {
+  const parsed = parsePartySize(partySizeRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidPartySize', lang, { value: partySizeRaw }),
+      `Example: ${COMMAND} scale party 6`
+    );
+    return;
+  }
+
+  const preset = resolvePartyPresetBySize(parsed.value);
+  updatePendingScaling(playerId, { hp: preset.hp, ac: preset.ac, damage: preset.damage });
+  const tokens = getSelectedTokens(msg);
+
+  if (tokens.length > 0) {
+    const result = applyScalingToSelected(msg, preset, `party:${parsed.value}`);
+    whisper(
+      playerId,
+      t('titles.scalingApplied', lang),
+      [
+        buildRow(t('labels.nearestPreset', lang), preset.label),
+        buildRow(t('labels.hp', lang), `${preset.hp}%`),
+        buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+        buildRow(t('labels.damage', lang), `${preset.damage}%`),
+        buildDivider(),
+        buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+      ].join('')
+    );
+    return;
+  }
+
+  whisper(
+    playerId,
+    t('titles.partySize', lang, { size: parsed.value }),
+    [
+      buildRow(t('labels.nearestPreset', lang), preset.label),
+      buildRow(t('labels.hp', lang), `${preset.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(preset.ac)),
+      buildRow(t('labels.damage', lang), `${preset.damage}%`),
+      buildDivider(),
+      `<div style="font-size:0.85em">${escapeHtml(t('confirm.scalingPresetPending', lang))}</div>`,
+      buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
+    ].join('')
+  );
+}
+
+/**
+ * Updates pending HP percentage and applies/queues scaling.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} hpRaw Raw HP percentage argument.
+ * @returns {void}
+ */
+function handleScaleHp(msg, playerId, lang, hpRaw) {
+  const parsed = parseHpPercent(hpRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidHpPercent', lang, { value: hpRaw }),
+      `Example: ${COMMAND} scale hp 150`
+    );
+    return;
+  }
+
+  const next = updatePendingScaling(playerId, { hp: parsed.value });
+  reportScaleProfileUpdate(msg, playerId, lang, next, t('titles.hpUpdated', lang), 'scale:hp');
+}
+
+/**
+ * Updates pending AC modifier and applies/queues scaling.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} acRaw Raw AC modifier argument.
+ * @returns {void}
+ */
+function handleScaleAc(msg, playerId, lang, acRaw) {
+  const parsed = parseAcModifier(acRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidAcModifier', lang, { value: acRaw }),
+      `Example: ${COMMAND} scale ac +2`
+    );
+    return;
+  }
+
+  const next = updatePendingScaling(playerId, { ac: parsed.value });
+  reportScaleProfileUpdate(msg, playerId, lang, next, t('titles.acUpdated', lang), 'scale:ac');
+}
+
+/**
+ * Updates pending damage percentage and applies/queues scaling.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} damageRaw Raw damage percentage argument.
+ * @returns {void}
+ */
+function handleScaleDamage(msg, playerId, lang, damageRaw) {
+  const parsed = parseDamagePercent(damageRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidDamagePercent', lang, { value: damageRaw }),
+      `Example: ${COMMAND} scale damage 125`
+    );
+    return;
+  }
+
+  const next = updatePendingScaling(playerId, { damage: parsed.value });
+  reportScaleProfileUpdate(
+    msg,
+    playerId,
+    lang,
+    next,
+    t('titles.damageUpdated', lang),
+    'scale:damage'
+  );
+}
+
+/**
+ * Applies the player's pending scaling profile to selected tokens.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @returns {void}
+ */
+function handleScaleApply(msg, playerId, lang) {
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length === 0) {
+    whisperWarning(playerId, t('errors.noTokensSelected', lang));
+    return;
+  }
+
+  const profile = getPendingScaling(playerId);
+  const result = applyScalingToSelected(msg, profile, 'scale:apply');
+  whisper(
+    playerId,
+    t('titles.scalingApplied', lang),
+    [
+      buildRow(t('labels.hp', lang), `${profile.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(profile.ac)),
+      buildRow(t('labels.damage', lang), `${profile.damage}%`),
+      buildDivider(),
+      buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+    ].join('')
+  );
+}
+
+/**
+ * Applies scaling immediately when tokens are selected, otherwise queues
+ * the values and shows the pending profile card.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {{ hp: number, ac: number, damage: number }} profile Scaling profile.
+ * @param {string} pendingTitle Card title used when no tokens are selected.
+ * @param {string} operation Operation label stored in token records.
+ * @returns {void}
+ */
+function reportScaleProfileUpdate(msg, playerId, lang, profile, pendingTitle, operation) {
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length > 0) {
+    const result = applyScalingToSelected(msg, profile, operation);
+    whisper(
+      playerId,
+      t('titles.scalingApplied', lang),
+      [
+        buildRow(t('labels.hp', lang), `${profile.hp}%`),
+        buildRow(t('labels.ac', lang), formatMod(profile.ac)),
+        buildRow(t('labels.damage', lang), `${profile.damage}%`),
+        buildDivider(),
+        buildRow(t('labels.appliedTo', lang), `${result.applied.length}`),
+      ].join('')
+    );
+    return;
+  }
+
+  whisper(
+    playerId,
+    pendingTitle,
+    [
+      buildRow(t('labels.hp', lang), `${profile.hp}%`),
+      buildRow(t('labels.ac', lang), formatMod(profile.ac)),
+      buildRow(t('labels.damage', lang), `${profile.damage}%`),
+      buildDivider(),
+      buildButton(t('ui.applyScalingButton', lang), `${COMMAND} scale apply`),
+    ].join('')
+  );
+}
+
+/**
+ * Handles !ced boss ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'boss'.
@@ -533,7 +638,7 @@ function handleBoss(msg, args, playerId) {
 }
 
 /**
- * Handles !director reinforce ... commands.
+ * Handles !ced reinforce ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'reinforce'.
@@ -543,117 +648,151 @@ function handleBoss(msg, args, playerId) {
 function handleReinforce(msg, args, playerId) {
   const [action, value] = args;
   const lang = locale();
+  const handlers = {
+    duplicate: () => handleReinforceDuplicate(msg, playerId, lang, value),
+    show: () => handleReinforceShow(playerId, lang),
+    enumerate: () => handleReinforceEnumerate(msg, playerId, lang),
+  };
 
-  switch (action) {
-    case 'duplicate': {
-      const parsed = parseDuplicateCount(value);
-      if (!parsed.valid) {
-        whisperError(
-          playerId,
-          t('errors.invalidDuplicateCount', lang, { value }),
-          `Example: ${COMMAND} reinforce duplicate 3`
-        );
-        return;
-      }
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length === 0) {
-        whisperWarning(playerId, t('errors.noTokensSelected', lang));
-        return;
-      }
-      const result = duplicateSelectedTokens(msg, parsed.value);
-      if (result.limitHit) {
-        whisperError(
-          playerId,
-          t('errors.duplicateBurstLimit', lang, {
-            requested: result.requested,
-            limit: result.limit,
-          })
-        );
-        return;
-      }
-      setLastReinforcementIds(result.createdIds);
-      whisper(
-        playerId,
-        t('titles.reinforcementsCreated', lang),
-        [
-          buildRow(t('labels.copiesPerToken', lang), String(parsed.value)),
-          buildRow(t('labels.totalCreated', lang), String(result.created)),
-          buildDivider(),
-          ...result.names.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
-          result.created > 0
-            ? buildButton(t('ui.revealReinforcements', lang), `${COMMAND} reinforce show`)
-            : '',
-          result.failedNames.length > 0
-            ? [
-                buildDivider(),
-                buildRow(t('labels.duplicateFailed', lang), String(result.failedCount)),
-                ...result.failedNames.map(
-                  (n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`
-                ),
-                `<div style="font-size:0.8em;margin-top:4px;opacity:0.75">${escapeHtml(t('labels.duplicateFailedHint', lang))}</div>`,
-              ].join('')
-            : '',
-        ].join('')
-      );
-      break;
-    }
-
-    case 'show': {
-      const ids = getLastReinforcementIds();
-      if (!ids.length) {
-        whisperError(
-          playerId,
-          t('errors.noReinforcementsToReveal', lang),
-          t('errors.noReinforcementsToRevealHint', lang)
-        );
-        return;
-      }
-      let moved = 0;
-      for (const id of ids) {
-        const token = getGraphicToken(id);
-        if (token) {
-          token.set('layer', 'objects');
-          moved++;
-        }
-      }
-      whisper(
-        playerId,
-        t('titles.tokensRevealed', lang),
-        buildRow(t('labels.moved', lang), String(moved))
-      );
-      break;
-    }
-
-    case 'enumerate': {
-      const tokens = getSelectedTokens(msg);
-      if (tokens.length === 0) {
-        whisperWarning(playerId, t('errors.noTokensSelected', lang));
-        return;
-      }
-      const result = enumerateSelectedTokens(msg);
-      whisper(
-        playerId,
-        t('titles.tokensNumbered', lang),
-        [
-          buildRow(t('labels.renamed', lang), String(result.renamed.length)),
-          buildDivider(),
-          ...result.renamed.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
-        ].join('')
-      );
-      break;
-    }
-
-    default:
-      whisperError(
-        playerId,
-        t('errors.unknownReinforceAction', lang, { action }),
-        t('errors.reinforceActionHint', lang)
-      );
+  if (handlers[action]) {
+    handlers[action]();
+    return;
   }
+
+  whisperError(
+    playerId,
+    t('errors.unknownReinforceAction', lang, { action }),
+    t('errors.reinforceActionHint', lang)
+  );
 }
 
 /**
- * Handles !director layer ... commands.
+ * Handles token duplication workflow for reinforce command.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @param {string} countRaw Raw duplicate count argument.
+ * @returns {void}
+ */
+function handleReinforceDuplicate(msg, playerId, lang, countRaw) {
+  const parsed = parseDuplicateCount(countRaw);
+  if (!parsed.valid) {
+    whisperError(
+      playerId,
+      t('errors.invalidDuplicateCount', lang, { value: countRaw }),
+      `Example: ${COMMAND} reinforce duplicate 3`
+    );
+    return;
+  }
+
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length === 0) {
+    whisperWarning(playerId, t('errors.noTokensSelected', lang));
+    return;
+  }
+
+  const result = duplicateSelectedTokens(msg, parsed.value);
+  if (result.limitHit) {
+    whisperError(
+      playerId,
+      t('errors.duplicateBurstLimit', lang, {
+        requested: result.requested,
+        limit: result.limit,
+      })
+    );
+    return;
+  }
+
+  setLastReinforcementIds(result.createdIds);
+  whisper(
+    playerId,
+    t('titles.reinforcementsCreated', lang),
+    [
+      buildRow(t('labels.copiesPerToken', lang), String(parsed.value)),
+      buildRow(t('labels.totalCreated', lang), String(result.created)),
+      buildDivider(),
+      ...result.names.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
+      result.created > 0
+        ? buildButton(t('ui.revealReinforcements', lang), `${COMMAND} reinforce show`)
+        : '',
+      result.failedNames.length > 0
+        ? [
+            buildDivider(),
+            buildRow(t('labels.duplicateFailed', lang), String(result.failedCount)),
+            ...result.failedNames.map(
+              (n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`
+            ),
+            `<div style="font-size:0.8em;margin-top:4px;opacity:0.75">${escapeHtml(t('labels.duplicateFailedHint', lang))}</div>`,
+          ].join('')
+        : '',
+    ].join('')
+  );
+}
+
+/**
+ * Reveals the most recently created reinforcement tokens.
+ *
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @returns {void}
+ */
+function handleReinforceShow(playerId, lang) {
+  const ids = getLastReinforcementIds();
+  if (!ids.length) {
+    whisperError(
+      playerId,
+      t('errors.noReinforcementsToReveal', lang),
+      t('errors.noReinforcementsToRevealHint', lang)
+    );
+    return;
+  }
+
+  let moved = 0;
+  for (const id of ids) {
+    const token = getGraphicToken(id);
+    if (token) {
+      token.set('layer', 'objects');
+      moved++;
+    }
+  }
+
+  whisper(
+    playerId,
+    t('titles.tokensRevealed', lang),
+    buildRow(t('labels.moved', lang), String(moved))
+  );
+}
+
+/**
+ * Enumerates selected token names for reinforcement numbering.
+ *
+ * @param {object} msg Roll20 chat message.
+ * @param {string} playerId GM player ID.
+ * @param {string} lang Locale code.
+ * @returns {void}
+ */
+function handleReinforceEnumerate(msg, playerId, lang) {
+  const tokens = getSelectedTokens(msg);
+  if (tokens.length === 0) {
+    whisperWarning(playerId, t('errors.noTokensSelected', lang));
+    return;
+  }
+
+  const result = enumerateSelectedTokens(msg);
+  whisper(
+    playerId,
+    t('titles.tokensNumbered', lang),
+    [
+      buildRow(t('labels.renamed', lang), String(result.renamed.length)),
+      buildDivider(),
+      ...result.renamed.map((n) => `<div style="font-size:0.85em">• ${escapeHtml(n)}</div>`),
+    ].join('')
+  );
+}
+
+/**
+ * Handles !ced layer ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'layer'.
@@ -693,7 +832,7 @@ function handleLayer(msg, args, playerId) {
 }
 
 /**
- * Handles !director hide command.
+ * Handles !ced hide command.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string} playerId GM player ID.
@@ -715,7 +854,7 @@ function handleHide(msg, playerId) {
 }
 
 /**
- * Handles !director reveal command.
+ * Handles !ced reveal command.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string} playerId GM player ID.
@@ -737,7 +876,7 @@ function handleReveal(msg, playerId) {
 }
 
 /**
- * Handles !director position ... commands.
+ * Handles !ced position ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'position'.
@@ -789,7 +928,7 @@ function handlePosition(msg, args, playerId) {
 }
 
 /**
- * Handles !director encounter ... commands.
+ * Handles !ced encounter ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'encounter'.
@@ -913,7 +1052,7 @@ function handleEncounter(msg, args, playerId) {
 }
 
 /**
- * Handles !director reset ... commands.
+ * Handles !ced reset ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'reset'.
@@ -970,7 +1109,7 @@ function handleReset(msg, args, playerId) {
 }
 
 /**
- * Handles !director report ... commands.
+ * Handles !ced report ... commands.
  *
  * @param {object} msg Roll20 chat message.
  * @param {string[]} args Remaining arguments after 'report'.
@@ -1032,14 +1171,7 @@ function handleReport(msg, args, playerId) {
 }
 
 /**
- * Handles !director journal ... commands.
- *
- * @param {string[]} args Remaining arguments after 'journal'.
- * @param {string} playerId GM player ID.
- * @returns {void}
- */
-/**
- * Handles !director deck [view] commands.
+ * Handles !ced deck [view] commands.
  * Rebuilds the Command Deck journal in the specified or stored view.
  *
  * @param {string[]} args Remaining arguments after 'deck'.
@@ -1074,6 +1206,13 @@ function handleDeck(args, playerId) {
   );
 }
 
+/**
+ * Handles !ced journal ... commands.
+ *
+ * @param {string[]} args Remaining arguments after 'journal'.
+ * @param {string} playerId GM player ID.
+ * @returns {void}
+ */
 function handleJournal(args, playerId) {
   const [action] = args;
   const lang = locale();
@@ -1096,7 +1235,7 @@ function handleJournal(args, playerId) {
 }
 
 /**
- * Handles !director config ... commands.
+ * Handles !ced config ... commands.
  *
  * @param {string[]} args Remaining arguments after 'config'.
  * @param {string} playerId GM player ID.

@@ -2,6 +2,7 @@ import {
   createTokenRecord,
   deleteEncounter,
   getAllEncounters,
+  getConfig,
   getEncounter,
   getTokenRecord,
   setEncounter,
@@ -15,7 +16,76 @@ import {
   getTokensOnPage,
   readBarSafe,
 } from './utils.js';
-import { getConfig } from './state.js';
+
+/**
+ * Returns true when a snapshot value is neither null nor undefined.
+ *
+ * @param {*} value Snapshot value.
+ * @returns {boolean} True when value is present.
+ */
+function isDefined(value) {
+  return value !== null && value !== undefined;
+}
+
+/**
+ * Restores token name, layer, and coordinates from a snapshot.
+ *
+ * @param {Graphic} token Roll20 Graphic object.
+ * @param {object} snapshot Encounter token snapshot.
+ * @returns {void}
+ */
+function restoreTokenPlacement(token, snapshot) {
+  token.set('name', snapshot.name);
+  token.set('layer', snapshot.layer);
+  token.set('left', snapshot.left);
+  token.set('top', snapshot.top);
+}
+
+/**
+ * Restores HP bar value/max from a snapshot when bar mappings match.
+ *
+ * @param {Graphic} token Roll20 Graphic object.
+ * @param {object} snapshot Encounter token snapshot.
+ * @param {string} savedHpBar HP bar key recorded in the snapshot.
+ * @param {string} currentHpBar Currently configured HP bar key.
+ * @returns {void}
+ */
+function restoreHpBar(token, snapshot, savedHpBar, currentHpBar) {
+  if (savedHpBar !== currentHpBar) {
+    return;
+  }
+
+  const hpValue = snapshot[`${savedHpBar}_value`];
+  const hpMax = snapshot[`${savedHpBar}_max`];
+  if (!isDefined(hpValue) || !isDefined(hpMax)) {
+    return;
+  }
+
+  token.set(`${savedHpBar}_value`, hpValue);
+  token.set(`${savedHpBar}_max`, hpMax);
+}
+
+/**
+ * Restores AC bar value from a snapshot when bar mappings match.
+ *
+ * @param {Graphic} token Roll20 Graphic object.
+ * @param {object} snapshot Encounter token snapshot.
+ * @param {string} savedAcBar AC bar key recorded in the snapshot.
+ * @param {string} currentAcBar Currently configured AC bar key.
+ * @returns {void}
+ */
+function restoreAcBar(token, snapshot, savedAcBar, currentAcBar) {
+  if (savedAcBar === 'none' || savedAcBar !== currentAcBar) {
+    return;
+  }
+
+  const acValue = snapshot[`${savedAcBar}_value`];
+  if (!isDefined(acValue)) {
+    return;
+  }
+
+  token.set(`${savedAcBar}_value`, acValue);
+}
 
 // ---------------------------------------------------------------------------
 // Bar snapshot helpers
@@ -135,10 +205,7 @@ export function loadEncounter(name) {
     }
 
     // Restore position and layer — these are safe, no bar activation risk.
-    token.set('name', snapshot.name);
-    token.set('layer', snapshot.layer);
-    token.set('left', snapshot.left);
-    token.set('top', snapshot.top);
+    restoreTokenPlacement(token, snapshot);
 
     // Determine which bar names were used as HP/AC at save time.
     // Fall back to current config for snapshots saved before hpBar/acBar were recorded.
@@ -149,23 +216,11 @@ export function loadEncounter(name) {
     // Writing _max without _value (or vice versa) is enough to activate a
     // previously-blank bar in the Roll20 token HUD. Both must be non-null to
     // write either. Only restores when the snapshot used the current HP bar.
-    if (savedHpBar === currentHpBar) {
-      const hpValue = snapshot[`${savedHpBar}_value`];
-      const hpMax = snapshot[`${savedHpBar}_max`];
-      if (hpValue !== null && hpValue !== undefined && hpMax !== null && hpMax !== undefined) {
-        token.set(`${savedHpBar}_value`, hpValue);
-        token.set(`${savedHpBar}_max`, hpMax);
-      }
-    }
+    restoreHpBar(token, snapshot, savedHpBar, currentHpBar);
 
     // Restore AC bar (value only — AC bars have no meaningful max).
     // Skipped when the AC value was null (bar was blank when saved).
-    if (savedAcBar !== 'none' && savedAcBar === currentAcBar) {
-      const acValue = snapshot[`${savedAcBar}_value`];
-      if (acValue !== null && acValue !== undefined) {
-        token.set(`${savedAcBar}_value`, acValue);
-      }
-    }
+    restoreAcBar(token, snapshot, savedAcBar, currentAcBar);
 
     // Restore the state record.
     const tokenPageId = getTokenPageId(token);
@@ -203,5 +258,5 @@ export function deleteEncounterTemplate(name) {
 export function listEncounterNames() {
   return getAllEncounters()
     .map((e) => e.name)
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 }

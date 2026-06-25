@@ -60,7 +60,7 @@ CombatEncounterDirector/
 | `encounters.js`           | Encounter template CRUD                                           |
 | `reporting.js`            | Build and write the status journal HTML                           |
 | `journals.js`             | Build and write the control panel journal HTML                    |
-| `commands.js`             | Route `!director` subcommands; whisper feedback                   |
+| `commands.js`             | Route `!ced` subcommands; whisper feedback                        |
 | `i18n.js`                 | `t()`, `normalizeLocale()`, `isRtlLocale()` — translation lookup  |
 | `locales/metadata.js`     | Locale definitions, `VALID_LOCALES`, `LOCALE_ALIASES`             |
 | `locales/index.js`        | Assembles `TRANSLATIONS` map from all locale files                |
@@ -118,13 +118,13 @@ state.CombatEncounterDirector = {
 This project uses [Rollup](https://rollupjs.org) to bundle ES modules into a single Roll20-compatible script.
 
 ```bash
-npm install                          # Install dependencies
-npm run build                        # Auto-bump patch version, then build
-npm run build -- 1.1.0              # Set explicit version, then build
-npm run build -- 1.1.0-alpha.1      # Enter prerelease cycle, then build
-npm run watch                        # Watch mode — rebuilds on change, no version bump
-npm run set-version -- 1.1.0        # Set version only, no build
-npm run format                       # Format source with Prettier
+npm install                      # Install dependencies
+npm run build                    # Auto-bump patch version, then build
+npm run build -- 1.1.0           # Set explicit version, then build
+npm run build -- 1.1.0-alpha.1   # Enter prerelease cycle, then build
+npm run watch                    # Watch mode — rebuilds on change, no version bump
+npm run set-version -- 1.1.0     # Set version only, no build
+npm run format                   # Format source with Prettier
 ```
 
 The build (`scripts/build.mjs`):
@@ -165,7 +165,7 @@ All user-facing strings are translated via `t(key, locale, vars?)` in `src/i18n.
 2. `src/locales/metadata.js` declares the 24 supported locales and their aliases.
 3. `src/locales/index.js` imports all locale files and assembles the `TRANSLATIONS` map.
 4. `t('section.key', lang, { var: value })` looks up `TRANSLATIONS[lang].section.key`, interpolates `{var}` placeholders, and falls back to `en-US` when a key is missing.
-5. The active locale is stored in `state.CombatEncounterDirector.config.language` and can be changed at runtime with `!director config language <code>`.
+5. The active locale is stored in `state.CombatEncounterDirector.config.language` and can be changed at runtime with `!ced config language <code>`.
 
 ### Key structure in `en-US.js`
 
@@ -254,3 +254,31 @@ All command handlers are wrapped in a try-catch in `handleInput`. Validation fun
 - `token.set(...)` changes are immediate but not undoable by the GM.
 - `createObj('graphic', {...})` requires `_pageid` and `subtype: 'token'`.
 - `playerIsGM(msg.playerid)` guards all commands — non-GMs are silently ignored.
+
+## Release Notes For Maintainers
+
+### 1.0.1 Technical Notes
+
+- Command migration:
+  - Primary command constant changed to `!ced`.
+  - Legacy alias `!director` is still accepted for backwards compatibility.
+  - Conflict detection uses `DIRECTOR_CONFLICT_STATE_KEY = 'DIRECTOR_STATE'`; when present, legacy alias usage triggers a GM warning instead of routing under the legacy name.
+
+- i18n updates:
+  - Locale hint strings and command examples were updated from `!director` to `!ced` across locale files used in the generated bundle.
+
+- Journal rendering:
+  - Command Deck and Status handout HTML now uses an explicit wrapper/background container to prevent white default journal rendering and preserve intended theme styling.
+
+- One-Click metadata and options:
+  - `script.json` select-style options were normalized to remove pipe-delimited labels.
+  - `language` useroption was changed to a select option containing all supported locale codes.
+
+- Build/versioning pipeline:
+  - Build flow now bumps/sets version before loading version-dependent config, preventing stale version output paths.
+  - Explicit version builds now write snapshots to the matching `<version>/CombatEncounterDirector.js` directory.
+  - Prerelease versions are excluded from `previousversions` history handling.
+
+- Code quality hardening:
+  - Source files feeding the generated bundle were refactored to address SonarQube warnings and improve maintainability.
+  - JSDoc coverage and placement were reviewed and corrected in source modules.

@@ -1,7 +1,7 @@
 import { MAX_TOTAL_DUPLICATES } from './constants.js';
 import { createTokenRecord, setTokenRecord } from './state.js';
 import { captureOriginalValues, getSelectedTokens } from './tokens.js';
-import { getCleanImgsrc, getTokenName, getTokenPageId, parseStrictInt } from './utils.js';
+import { getCleanImgsrc, getTokenPageId, parseStrictInt } from './utils.js';
 
 /**
  * Duplicates a single token N times, placing copies offset from the original.
@@ -77,7 +77,7 @@ export function duplicateToken(token, count, startIndex) {
   // button in the confirmation whisper to move them when ready.
   tokenProps.layer = 'gmlayer';
 
-  const idx = startIndex !== undefined ? startIndex : 1;
+  const idx = startIndex ?? 1;
 
   for (let i = 0; i < count; i++) {
     const copyNumber = idx + i;
