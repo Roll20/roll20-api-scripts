@@ -5,13 +5,14 @@
 const RollCapture = (() => { // eslint-disable-line no-unused-vars
     'use strict';
 
-    const VERSION = '0.1.0';
+    const SCRIPT_NAME = 'RollCapture';
+    const SCRIPT_VERSION = '0.1.0';
     const HANDOUT_MARKER = '---ROLLCAPTURE---';
     const KEYWORDS = ['template:', 'name_field:', 'char_field:', 'when:', 'default:'];
     const CMD = '!rollcapture';
 
     let rules = [];
-    let callbacks = [];
+    let callbacks = new Map();
     let pendingChoices = {}; // id → { captures, resolve info }
 
     // ─── Rule Parser ────────────────────────────────────────────────────────────
@@ -241,10 +242,8 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
     const emitCapture = (charName, rollName, captures, playerId, msg) => {
         const event = { charName, rollName, captures, playerId, msg };
-        for (const { pattern, fn } of callbacks) {
-            if (pattern === '*' || Object.keys(captures).some(k => matchPattern(pattern, k))) {
-                fn(event);
-            }
+        for (const fn of callbacks.values()) {
+            fn(event);
         }
         fireAbility(charName, rollName, captures, playerId);
     };
@@ -278,14 +277,8 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
         sendChat('player|' + playerId, cmd);
     };
 
-    const matchPattern = (pattern, key) => {
-        if (pattern === '*') return true;
-        if (pattern.endsWith('*')) return key.startsWith(pattern.slice(0, -1));
-        return pattern === key;
-    };
-
-    const onCapture = (pattern, fn) => {
-        callbacks.push({ pattern, fn });
+    const onCapture = (sourceId, fn) => {
+        callbacks.set(sourceId, fn);
     };
 
     // ─── Command Handling ───────────────────────────────────────────────────────
@@ -312,7 +305,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
         }
 
         if (args[0] === 'status') {
-            whisper(`**RollCapture v${VERSION}**\nRules: ${rules.length}\nCallbacks: ${callbacks.length}\nPending choices: ${Object.keys(pendingChoices).length}`);
+            whisper(`**RollCapture v${SCRIPT_VERSION}**\nRules: ${rules.length}\nCallbacks: ${callbacks.size}\nPending choices: ${Object.keys(pendingChoices).length}`);
             return;
         }
 
@@ -323,7 +316,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             return;
         }
 
-        whisper(`**RollCapture v${VERSION}** — Commands:\n` +
+        whisper(`**RollCapture v${SCRIPT_VERSION}** — Commands:\n` +
             `\`!rollcapture status\` — Show status\n` +
             `\`!rollcapture rules\` — List loaded rules\n` +
             `\`!rollcapture reload\` — Reload rules from handouts`);
@@ -352,7 +345,8 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
     on('ready', () => {
         loadRulesFromHandouts();
         registerEventHandlers();
-        log(`RollCapture v${VERSION} loaded.`);
+        log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
+        sendChat('', `!${SCRIPT_NAME.toLowerCase()}-ready`, null, { noarchive: true });
     });
 
     return {
