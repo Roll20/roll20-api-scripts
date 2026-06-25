@@ -2073,7 +2073,7 @@ var Gaslight = Gaslight || (() => {
                     if (c === '"' || c === "'" || c === '`') { inQ = c; lhs = c + lhs; continue; }
                     if (c === ')') { depth++; lhs = c + lhs; continue; }
                     if (c === '(') { if (depth === 0) break; depth--; lhs = c + lhs; continue; }
-                    if (j > 0 && (beforeOp.slice(j - 1, j + 1) === '||' || beforeOp.slice(j - 1, j + 1) === '&&')) { j--; break; }
+                    if (j > 0 && (beforeOp.slice(j - 1, j + 1) === '||' || beforeOp.slice(j - 1, j + 1) === '&&')) { break; }
                     lhs = c + lhs;
                 }
                 return { op: OPS[i], lhs: lhs.trim(), start: j + 1 };
@@ -2105,7 +2105,6 @@ var Gaslight = Gaslight || (() => {
         var search = funcName + '(';
         var idx = findUnquoted(content, search, 0);
         while (idx !== -1) {
-            // Skip if part of a longer word
             if (idx > 0 && /\w/.test(content[idx - 1])) { idx = findUnquoted(content, search, idx + 1); continue; }
             var closeIdx = findCloseParen(content, idx + funcName.length);
             if (closeIdx === -1) break;
@@ -2114,7 +2113,6 @@ var Gaslight = Gaslight || (() => {
             var beforeAgg = content.slice(0, idx);
             var afterAgg = content.slice(closeIdx + 1);
 
-            // Check for op + RHS after the aggregate
             var opRhs = extractOpRhs(afterAgg, 0);
             if (opRhs) {
                 var expanded = '(' + viewerIds.map(function(id) {
@@ -2122,7 +2120,6 @@ var Gaslight = Gaslight || (() => {
                 }).join(' ' + joiner + ' ') + ')';
                 content = beforeAgg + expanded + afterAgg.slice(opRhs.end);
             } else {
-                // Check for LHS + op before the aggregate
                 var opLhs = extractOpLhs(beforeAgg, beforeAgg.length);
                 if (opLhs) {
                     var expanded = '(' + viewerIds.map(function(id) {
@@ -2130,7 +2127,6 @@ var Gaslight = Gaslight || (() => {
                     }).join(' ' + joiner + ' ') + ')';
                     content = beforeAgg.slice(0, opLhs.start) + expanded + afterAgg;
                 } else {
-                    // No operator context — just expand inner with joiner (bare boolean)
                     var expanded = '(' + viewerIds.map(function(id) {
                         return inner.replace(/@\(viewer\./g, '@(' + id + '.');
                     }).join(' ' + joiner + ' ') + ')';
