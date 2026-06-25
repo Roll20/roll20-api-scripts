@@ -310,7 +310,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
         if (args[0] === 'rules') {
             if (!rules.length) return whisper('No rules loaded.');
-            const list = rules.map((r, i) => `${i + 1}. [${r.handoutName}](http://journal.roll20.net/handout/${r.handoutId})`).join('<br>');
+            const list = rules.map((r, i) => `${i + 1}. <a href="http://journal.roll20.net/handout/${r.handoutId}">${r.handoutName}</a>`).join('<br>');
             whisper(`**Loaded Rules:**<br>${list}`);
             return;
         }
@@ -325,7 +325,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 handout = createObj('handout', { name: tag });
                 handout.set('notes', 'template: \nname_field: \nchar_field: \ndefault:\nresult: r0');
             }
-            whisper(`[${handout.get('name')}](http://journal.roll20.net/handout/${handout.get('id')})`);
+            whisper(`<a href="http://journal.roll20.net/handout/${handout.get('id')}">${handout.get('name')}</a>`);
             return;
         }
 
