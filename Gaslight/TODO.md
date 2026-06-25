@@ -38,6 +38,7 @@
 - [ ] Focus-ping on split
 
 ## v2 Ideas
+- [ ] `!gaslight relay all --except <player>` flag
 - [ ] Config handout (editable in-game, live reload)
 - [ ] Group/page-level relay-command overrides
 - [ ] Config visibility toggle (hide gaslight text in HTML comment)
@@ -48,6 +49,4 @@
 - [ ] On-demand page cloning (if TruePageCopy exposes API)
 
 ## Known Issues
-- Relay Path 1 (selection-based) requires GM to navigate to target page
-- Roll20 limitation: sendChat as player carries their UI selection state
 - linkedTokens accumulates duplicates on repeated splits (cosmetic, deduped at use)
