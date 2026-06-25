@@ -310,7 +310,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
 
         if (args[0] === 'rules') {
             if (!rules.length) return whisper('No rules loaded.');
-            const list = rules.map((r, i) => `${i + 1}. <a href="http://journal.roll20.net/handout/${r.handoutId}">${r.handoutName}</a>`).join('<br>');
+            const list = rules.map((r, i) => `${i + 1}. <a href="http://journal.roll20.net/handout/${r.handoutId}">${stripTag(r.handoutName)}</a>`).join('<br>');
             whisper(`**Loaded Rules:**<br>${list}`);
             return;
         }
@@ -325,7 +325,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
                 handout = createObj('handout', { name: tag });
                 handout.set('notes', 'template: \nname_field: \nchar_field: \ndefault:\nresult: r0');
             }
-            whisper(`<a href="http://journal.roll20.net/handout/${handout.get('id')}">${handout.get('name')}</a>`);
+            whisper(`<a href="http://journal.roll20.net/handout/${handout.get('id')}">${stripTag(handout.get('name'))}</a>`);
             return;
         }
 
@@ -338,6 +338,8 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
     // ─── Utilities ──────────────────────────────────────────────────────────────
 
     const whisper = (msg) => sendChat('RollCapture', `/w gm ${msg}`);
+
+    const stripTag = (name) => name.replace(/\[RollCapture\]\s*/i, '').replace(/\[RC\]\s*/i, '').trim();
 
     const generateUUID = () => {
         return 'rc_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
