@@ -30,12 +30,13 @@ const scriptJson = JSON.parse(fs.readFileSync(scriptJsonPath, 'utf8'));
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
 const explicitVersion = process.argv[2];
+const currentVersion = scriptJson.version;
 let nextVersion;
 
 if (explicitVersion) {
   nextVersion = explicitVersion;
 } else {
-  const current = scriptJson.version;
+  const current = currentVersion;
   const dashIdx = current.indexOf('-');
 
   if (dashIdx === -1) {
@@ -61,11 +62,18 @@ if (explicitVersion) {
   }
 }
 
-// Append current version to history (oldest-first, matching Roll20 corpus convention),
-// deduplicate (handles building the same explicit version twice), then keep the last 5.
-scriptJson.previousversions = [
-  ...new Set([...(scriptJson.previousversions || []), scriptJson.version]),
-].slice(-5);
+const isPrerelease = (version) => version.includes('-');
+
+// Append current stable version to history only when the version actually
+// changes (oldest-first, matching Roll20 corpus convention), deduplicate, then
+// keep the last 5. Prerelease versions are intentionally skipped.
+const historySeed = (scriptJson.previousversions || []).filter((v) => !isPrerelease(v));
+const shouldAppendCurrentStable = !isPrerelease(currentVersion) && currentVersion !== nextVersion;
+const nextHistory = shouldAppendCurrentStable
+  ? [...new Set([...historySeed, currentVersion])].slice(-5)
+  : [...new Set(historySeed)].slice(-5);
+
+scriptJson.previousversions = nextHistory;
 scriptJson.version = nextVersion;
 packageJson.version = nextVersion;
 

@@ -16,9 +16,8 @@
 
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { rollup, watch as rollupWatch } from 'rollup';
-import config from '../rollup.config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '..');
@@ -27,6 +26,16 @@ const isWatch = process.argv.includes('--watch');
 const noBump = process.argv.includes('--no-bump');
 // Pick the first argument that doesn't start with '--' as an explicit version.
 const versionArg = process.argv.slice(2).find((a) => !a.startsWith('--'));
+
+async function loadRollupConfig() {
+  // Load config lazily after any version bump and bypass ESM cache so
+  // rollup.config.js re-reads script.json with the latest version.
+  const configPath = path.join(rootDir, 'rollup.config.js');
+  const configUrl = pathToFileURL(configPath);
+  configUrl.searchParams.set('t', Date.now().toString());
+  const mod = await import(configUrl.href);
+  return mod.default;
+}
 
 // Bump (or set) the version before every non-watch, non-no-bump build.
 if (!isWatch && !noBump) {
@@ -41,6 +50,7 @@ if (!isWatch && !noBump) {
 }
 
 async function build() {
+  const config = await loadRollupConfig();
   const bundle = await rollup(config);
   for (const output of config.output) {
     await bundle.write(output);
@@ -50,6 +60,7 @@ async function build() {
 }
 
 if (isWatch) {
+  const config = await loadRollupConfig();
   const watcher = rollupWatch(config.output.map((output) => ({ ...config, output })));
 
   watcher.on('event', (event) => {

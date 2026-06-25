@@ -85,6 +85,7 @@ When a command changes a setting, HealthColors re-whispers the interactive GM me
 - **One-Off Tokens**: You can toggle "One-Offs" in the settings to enable health tracking for tokens that are not linked to a character sheet.
 - **FX Rendering Variance**: Some Roll20 sandbox/client combinations can render `spawnFxWithDefinition` colors inaccurately. HealthColors uses a fallback that updates default custom FX objects and spawns by FX ID to keep heal/hurt colors consistent.
 - **Missing Max HP**: If the configured health bar has no `max` value on a token, HealthColors now clears that token's aura/tint until a max value is set.
+- **Third-Party Script Compatibility (AlterBars, etc.)**: When another API script changes HP by writing to a character attribute (rather than directly to the token bar), HealthColors detects the change via its `change:attribute` listener and updates the aura/tint and dead status correctly. No special configuration is required.
 
 ---
 

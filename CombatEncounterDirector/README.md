@@ -17,15 +17,15 @@ The mod is designed to support anything from solo adventures to large convention
 
 ## Quick Start
 
-Type `!director` in chat for the quick-action menu, or open the **Combat Encounter Director - Command Deck** journal for the full control panel.
+Type `!ced` in chat for the quick-action menu, or open the **Combat Encounter Director - Command Deck** journal for the full control panel.
 
 ## Primary Command
 
 ```
-!director
+!ced
 ```
 
-No aliases are provided to avoid collisions with other scripts.
+Legacy `!director` is accepted for backward compatibility when no conflicting Director mod is detected. If a conflict is detected, the GM is warned to use `!ced`.
 
 ---
 
@@ -50,17 +50,17 @@ Scale enemy HP, AC, and damage for different party sizes.
 Apply a preset to selected tokens:
 
 ```
-!director scale preset standard
-!director scale party 6
+!ced scale preset standard
+!ced scale party 6
 ```
 
 Set individual values:
 
 ```
-!director scale hp 150
-!director scale ac +2
-!director scale damage 125
-!director scale apply
+!ced scale hp 150
+!ced scale ac +2
+!ced scale damage 125
+!ced scale apply
 ```
 
 ### Boss Tools
@@ -68,10 +68,10 @@ Set individual values:
 Apply a boss-type preset to selected tokens:
 
 ```
-!director boss minion
-!director boss elite
-!director boss boss
-!director boss legendary
+!ced boss minion
+!ced boss elite
+!ced boss boss
+!ced boss legendary
 ```
 
 | Preset    | HP       | AC  | Damage |
@@ -86,8 +86,8 @@ Apply a boss-type preset to selected tokens:
 Duplicate selected tokens and auto-enumerate them:
 
 ```
-!director reinforce duplicate 3
-!director reinforce enumerate
+!ced reinforce duplicate 3
+!ced reinforce enumerate
 ```
 
 Duplicate copies are placed 1 grid square to the right of the original.
@@ -95,11 +95,11 @@ Duplicate copies are placed 1 grid square to the right of the original.
 ### Layer & Visibility
 
 ```
-!director layer token
-!director layer gm
-!director layer map
-!director hide
-!director reveal
+!ced layer token
+!ced layer gm
+!ced layer map
+!ced hide
+!ced reveal
 ```
 
 ### Position Management
@@ -107,8 +107,8 @@ Duplicate copies are placed 1 grid square to the right of the original.
 Save and restore token positions:
 
 ```
-!director position save
-!director position restore
+!ced position save
+!ced position restore
 ```
 
 ### Encounter Templates
@@ -116,10 +116,10 @@ Save and restore token positions:
 Save the full state of all tokens on the current page and restore them later:
 
 ```
-!director encounter save goblin-ambush
-!director encounter load goblin-ambush
-!director encounter delete goblin-ambush
-!director encounter list
+!ced encounter save goblin-ambush
+!ced encounter load goblin-ambush
+!ced encounter delete goblin-ambush
+!ced encounter list
 ```
 
 ### Reset & Recovery
@@ -127,9 +127,9 @@ Save the full state of all tokens on the current page and restore them later:
 Every modified token retains its original values. Reset at any time:
 
 ```
-!director reset selected
-!director reset page
-!director reset all
+!ced reset selected
+!ced reset page
+!ced reset all
 ```
 
 ### Reporting
@@ -137,19 +137,19 @@ Every modified token retains its original values. Reset at any time:
 Generate a status report in the **Combat Encounter Director - Status** journal:
 
 ```
-!director report refresh
-!director report selected
-!director report changed
-!director report clear
+!ced report refresh
+!ced report selected
+!ced report changed
+!ced report clear
 ```
 
 ### Configuration
 
 ```
-!director config
-!director config hp-bar bar1
-!director config ac-bar bar2
-!director config ac-bar none
+!ced config
+!ced config hp-bar bar1
+!ced config ac-bar bar2
+!ced config ac-bar none
 ```
 
 ### Journal Management
@@ -157,7 +157,7 @@ Generate a status report in the **Combat Encounter Director - Status** journal:
 Rebuild the control panel and status journals:
 
 ```
-!director journal rebuild
+!ced journal rebuild
 ```
 
 ---
@@ -169,7 +169,7 @@ Rebuild the control panel and status journals:
 | HP Bar  | bar1    | bar1, bar2, bar3       | Which token bar tracks HP |
 | AC Bar  | bar2    | bar1, bar2, bar3, none | Which token bar tracks AC |
 
-Configure via Roll20 One-Click settings or with `!director config`.
+Configure via Roll20 One-Click settings or with `!ced config`.
 
 ---
 
@@ -194,4 +194,3 @@ Maintainer: [MidNiteShadow7](https://app.roll20.net/users/16506286/midniteshadow
 ## License
 
 This script is licensed under the MIT License.
-

@@ -1,6 +1,6 @@
 {
   "name": "combat-encounter-director-roll20",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Roll20 API Mod for rapid GM control over combat encounters.",
   "private": true,
   "type": "module",
