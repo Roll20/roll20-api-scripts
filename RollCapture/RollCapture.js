@@ -305,7 +305,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
         }
 
         if (args[0] === 'status') {
-            whisper(`**RollCapture v${SCRIPT_VERSION}**\nRules: ${rules.length}\nCallbacks: ${callbacks.size}\nPending choices: ${Object.keys(pendingChoices).length}`);
+            whisper(`**RollCapture v${SCRIPT_VERSION}**<br>Rules: ${rules.length}<br>Callbacks: ${callbacks.size}<br>Pending choices: ${Object.keys(pendingChoices).length}`);
             return;
         }
 
@@ -316,9 +316,9 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             return;
         }
 
-        whisper(`**RollCapture v${SCRIPT_VERSION}** — Commands:\n` +
-            `\`!rollcapture status\` — Show status\n` +
-            `\`!rollcapture rules\` — List loaded rules\n` +
+        whisper(`**RollCapture v${SCRIPT_VERSION}** — Commands:<br>` +
+            `\`!rollcapture status\` — Show status<br>` +
+            `\`!rollcapture rules\` — List loaded rules<br>` +
             `\`!rollcapture reload\` — Reload rules from handouts`);
     };
 
