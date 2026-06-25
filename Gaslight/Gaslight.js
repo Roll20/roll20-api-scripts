@@ -49,6 +49,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     var relaying = new Set();
+    var scripting = false;
 
     const relayKey = (content, sender, selectedIds) => content + '\x01' + sender + '\x01' + selectedIds.sort().join(',');
 
@@ -2027,8 +2028,9 @@ var Gaslight = Gaslight || (() => {
                     var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
                     if (gmPlayer) senderId = gmPlayer.get('_id');
                 }
-                log(SCRIPT_NAME + ': SENDING: ' + JSON.stringify(fullCmd));
+                sendChat('', CMD + ' --script-lock', null, { noarchive: true });
                 sendChat(getPlayerName(senderId), fullCmd);
+                sendChat('', CMD + ' --script-unlock', null, { noarchive: true });
             }
         }
     };
@@ -2170,6 +2172,8 @@ var Gaslight = Gaslight || (() => {
             case 'config':  doConfig(msg, args);  break;
             case 'eval':    doEval(msg, args);    break;
             case 'status':  doStatus(msg);        break;
+            case '--script-lock': scripting = true; return;
+            case '--script-unlock': scripting = false; return;
             case '--echo': {
                 // Internal: dry-run echo. Format: !gaslight --echo <viewerId> <targetId> <command>
                 var echoRaw = msg.content.slice(msg.content.indexOf('--echo') + 6).trim();
@@ -2359,6 +2363,7 @@ var Gaslight = Gaslight || (() => {
      */
     const viewInterceptor = (msg) => {
         if (msg.type !== 'api') return;
+        if (scripting) return;
         var s = state[SCRIPT_NAME];
         if (Object.keys(s.activeGroups).length === 0) return;
         var content = msg.content.trim();
