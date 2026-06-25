@@ -1594,8 +1594,73 @@ var Gaslight = Gaslight || (() => {
     // Initialization
     // =========================================================================
 
+    const HANDOUT_NAME = 'Help: Gaslight';
+    const HANDOUT_AVATAR = 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385';
+
+    const createHelpHandout = () => {
+        var existing = findObjs({ type: 'handout', name: HANDOUT_NAME });
+        var h = existing.length > 0 ? existing[0] : createObj('handout', { name: HANDOUT_NAME, avatar: HANDOUT_AVATAR });
+        if (HANDOUT_AVATAR) h.set('avatar', HANDOUT_AVATAR);
+        h.set('notes', [
+            '<h2>Gaslight v' + SCRIPT_VERSION + '</h2>',
+            '<p>Per-player map perception. Split players onto individual page copies with synchronized tokens. Each player can see different things while movement stays consistent.</p>',
+            '<h3>Quick Start</h3>',
+            '<ol>',
+            '<li>Create your master page with all tokens placed.</li>',
+            '<li>Duplicate it once per player (Roll20 built-in Duplicate Page).</li>',
+            '<li>Select party tokens on the master page, run: <code>!gaslight setup mygroup</code> — this auto-detects duplicates, assigns pages to players, and configures the group.</li>',
+            '<li>Run <code>!gaslight test mygroup</code> — dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
+            '<li>Run <code>!gaslight split mygroup</code> — activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
+            '<li>When done: <code>!gaslight merge</code> — tears down all links, returns players to the banner page.</li>',
+            '</ol>',
+            '<h3>Commands</h3>',
+            '<p><code>!gaslight setup &lt;group&gt;</code> — Quick-configure from duplicate pages</p>',
+            '<p><code>!gaslight split &lt;group&gt; [--force]</code> — Activate group</p>',
+            '<p><code>!gaslight merge [group]</code> — Tear down links, return players</p>',
+            '<p><code>!gaslight test &lt;group&gt;</code> — Dry-run linking</p>',
+            '<p><code>!gaslight link [name|new] [ids...]</code> — Manually link tokens</p>',
+            '<p><code>!gaslight unlink [ids...|--group &lt;g&gt;]</code> — Remove links</p>',
+            '<p><code>!gaslight group &lt;g&gt; &lt;player|GM&gt;</code> — Assign page to group</p>',
+            '<p><code>!gaslight ungroup &lt;g&gt; &lt;player|--all&gt;</code> — Remove from group</p>',
+            '<p><code>!gaslight stage [players...]</code> — Propagate tokens to player pages</p>',
+            '<p><code>!gaslight view [player|master]</code> — Switch relay view</p>',
+            '<p><code>!gaslight relay &lt;views&gt; &lt;!command&gt;</code> — Relay command to specific views</p>',
+            '<p><code>!gaslight config [relay-add|relay-remove|relay-list]</code> — Configure relay commands</p>',
+            '<p><code>!gaslight status</code> — Show state</p>',
+            '<h3>Auto-Relay</h3>',
+            '<p>Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages. Token IDs in the command are replaced with their linked counterparts on each page. No configuration needed.</p>',
+            '<p><b>Player-page commands are page-local by default.</b> A command run against tokens on a player page only affects that page. To have player-page commands relay to other player pages and master, add them to relay-commands: <code>!gaslight config relay-add !token-mod</code></p>',
+            '<h3>Selective Relay</h3>',
+            '<p>Use <code>!gaslight relay</code> to target specific players. Example: only Alice and Bob see a door open, but Charlie does not:</p>',
+            '<p><code>!gaslight relay Alice Bob !token-mod --set layer|objects</code></p>',
+            '<p>Or relay to everyone except by relaying to "all" and handling exceptions separately:</p>',
+            '<p><code>!gaslight relay all !token-mod --set bar1_value|10</code></p>',
+            '<h3>Token Linking</h3>',
+            '<p>Tokens are linked across pages automatically by:</p>',
+            '<ol>',
+            '<li><code>gaslight_link</code> in token GM notes (explicit)</li>',
+            '<li>Same <code>represents</code> + <code>name</code> (unique pair per page)</li>',
+            '<li>Same <code>represents</code> + position fingerprint</li>',
+            '</ol>',
+            '<h3>Sync Control</h3>',
+            '<p>Set the <code>gaslight_sync</code> attribute on a character to control what stays in sync:</p>',
+            '<ul>',
+            '<li><b>Absent</b> — full sync (position + all properties). Default for most tokens.</li>',
+            '<li><b>Empty</b> — no sync at all. Use for tokens that are completely independent per player (e.g. a hallucination only one player sees).</li>',
+            '<li><code>base</code> — position/rotation/scale only. Use for NPCs whose appearance differs per player (e.g. a disguised shapechanger) but still moves together.</li>',
+            '<li><code>base, bars</code> — position + HP/bars. Use for enemies with different names or art per player but shared health pools.</li>',
+            '<li><code>base, bars, light</code> — position + HP + light. Standard for most combat tokens where you want per-player auras/names but shared position and health.</li>',
+            '<li><code>!anchor</code> — sync all properties except position. Use for a token that appears in different locations per player (e.g. an illusory wall) but keeps the same stats.</li>',
+            '</ul>',
+            '<h3>Staging</h3>',
+            '<p><b>Token changes and deletion propagate automatically</b> across linked pages. However, <b>token creation does not</b> — new tokens placed on one page are not automatically copied to others.</p>',
+            '<p>Use <code>!gaslight stage</code> with tokens selected to duplicate them to all player pages and link them. Alternatively, set <code>gaslight_stage = 1</code> on a character to auto-stage whenever a token representing that character is placed.</p>',
+        ].join(''));
+    };
+
     const checkInstall = () => {
         ensureState();
+        createHelpHandout();
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
     };
