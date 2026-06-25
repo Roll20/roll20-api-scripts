@@ -65,11 +65,16 @@ Controlled by `gaslight_sync` character attribute:
 
 ## Command Relay
 
-Commands run on master page auto-relay to player pages:
-- **Path 1 (IDs in command)**: immediate cross-page via ID replacement
-- **Path 2 (selection only)**: queued, fires when GM navigates to target page
+Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages with token IDs replaced by their linked counterparts. This happens transparently — no configuration needed.
 
-Configure player auto-relay: `!gaslight config relay-add !token-mod`
+**Rules:**
+- Master-page tokens selected or IDs in command → auto-relay to all player pages
+- Player-page tokens involved → only relay if the command is in `relayCommands` list
+- Commands already relayed are not re-relayed (loop prevention)
+
+**Manual relay:** `!gaslight relay <views...> <!command>` — explicitly relay to specific views.
+
+**Player auto-relay:** `!gaslight config relay-add !token-mod` — allow player-page commands to relay to other pages.
 
 ## Staging
 
