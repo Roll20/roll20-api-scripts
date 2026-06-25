@@ -49,5 +49,4 @@
 - [ ] On-demand page cloning (if TruePageCopy exposes API)
 
 ## Known Issues
-- SelectManager `{& select}` text may visibly bleed into chat even though selection works correctly (upstream issue, reported to timmaugh)
 - linkedTokens accumulates duplicates on repeated splits (cosmetic, deduped at use)
