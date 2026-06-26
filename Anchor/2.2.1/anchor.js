@@ -2696,8 +2696,4 @@ on('ready', () => {
     'use strict';
     Anchor.checkInstall();
     Anchor.registerEventHandlers();
-    // Expose the public API at the top level for other scripts:
-    //   Anchor.getAnchor(id), Anchor.anchorObj(...), etc.
-    Object.assign(Anchor, Anchor.API);
-    delete Anchor.API;
 });
