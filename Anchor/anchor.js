@@ -324,9 +324,13 @@ var Anchor = Anchor || (() => {
         const info = { id: childId, anchor_id: anchorId };
 
         if (components.left || components.top) {
-            // Express child position in anchor-local frame (undo rotation + scale)
+            // Express child position in anchor-local frame (undo rotation + scale + flip)
+            const aFlipH = components.fliph && anchor.get('fliph');
+            const aFlipV = components.flipv && anchor.get('flipv');
+            const sx = aW > 0 ? 1 / (aW * (aFlipH ? -1 : 1)) : 1;
+            const sy = aH > 0 ? 1 / (aH * (aFlipV ? -1 : 1)) : 1;
             const relTransform = MatrixMath.multiply(
-                MatrixMath.scale([aW > 0 ? 1/aW : 1, aH > 0 ? 1/aH : 1]),
+                MatrixMath.scale([sx, sy]),
                 MatrixMath.multiply(
                     MatrixMath.rotate(toRad(-aRot)),
                     MatrixMath.translate([cLeft - aLeft, cTop - aTop])
@@ -749,22 +753,18 @@ var Anchor = Anchor || (() => {
         const updates = {};
 
         if (('left' in info || 'top' in info) && (shouldApply('left') || shouldApply('top'))) {
+            // Include flip as negative scale in the transform (for offset mirroring only)
+            const aFlipH = ('fliph' in info) && anchor.get('fliph');
+            const aFlipV = ('flipv' in info) && anchor.get('flipv');
+            const sx = anchor.get('width')  * (aFlipH ? -1 : 1);
+            const sy = anchor.get('height') * (aFlipV ? -1 : 1);
+
             const anchorTransform = buildTransform(
-                anchor.get('left'), anchor.get('top'), anchor.get('rotation'),
-                anchor.get('width'), anchor.get('height')
+                anchor.get('left'), anchor.get('top'), anchor.get('rotation'), sx, sy
             );
 
-            // Mirror offsets when flip components are tracked and anchor is flipped.
-            // fliph flips the anchor horizontally → mirror the x (left) offset.
-            // flipv flips the anchor vertically   → mirror the y (top) offset.
-            const aFlipH = anchor.get('fliph');
-            const aFlipV = anchor.get('flipv');
-            const localLeft = ('left' in info)
-                ? (('fliph' in info) && aFlipH ? -(info.left) : info.left)
-                : 0;
-            const localTop  = ('top' in info)
-                ? (('flipv' in info) && aFlipV ? -(info.top)  : info.top)
-                : 0;
+            const localLeft = ('left' in info) ? info.left : 0;
+            const localTop  = ('top'  in info) ? info.top  : 0;
 
             const childWorld = MatrixMath.multiply(
                 anchorTransform,
