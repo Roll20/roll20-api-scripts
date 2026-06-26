@@ -20,15 +20,21 @@ Attach child tokens to an anchor token so they automatically follow its position
 
 ## Quick Start
 
-Select one or more tokens and run:
+Select a parent token and one or more child tokens, then run:
 
 ```
 !anchor
 ```
 
-An invisible anchor token is auto-created at the first selected token's position on the GM layer. Move the anchor — the children follow.
+The first selected token becomes the parent anchor. The rest become children that follow the parent's transforms.
 
-To use an existing token as the anchor instead:
+To auto-create an invisible anchor instead (children move together with no visible parent):
+
+```
+!anchor --new
+```
+
+To use an existing token as the anchor by ID:
 
 ```
 !anchor <anchor_token_id>
@@ -38,15 +44,22 @@ To use an existing token as the anchor instead:
 
 ## Commands
 
-All commands accept `[ignore-selected]` to skip the current token selection, and `[child_id...]` to specify tokens explicitly by ID.
+All commands accept `[--ignore-selected]` to skip the current token selection, and `[child_id...]` to specify tokens explicitly by ID.
 
 ### Anchoring
 
 ```
-!anchor [anchor_id] [component flags] [ignore-selected] [child_id...]
+!anchor [anchor_id] [component flags] [--ignore-selected] [--new] [--persist] [child_id...]
 ```
 
-Anchor selected/listed tokens to `anchor_id`. If `anchor_id` is omitted or not a valid token, an invisible anchor token is auto-created at the first child's position. The auto-created token is destroyed automatically when its last child is removed. Add `persist` to keep it even when childless.
+Anchor selected/listed tokens to `anchor_id`.
+
+**Selection-based parenting** (when no `anchor_id` is given):
+- **Multiple tokens selected:** first selected = parent, rest = children.
+- **One token selected (not already anchored):** auto-creates an invisible anchor.
+- **One token selected (already anchored):** reports existing relationship.
+- **`--new` flag:** force auto-create an invisible anchor (all selected become children).
+- **`--persist`:** keep auto-created anchors even when childless (otherwise auto-destroyed).
 
 **Default components** (when no flags given): position, rotation, scale, width, height, flipv, fliph.
 
@@ -71,11 +84,12 @@ Anchor selected/listed tokens to `anchor_id`. If `anchor_id` is omitted or not a
 
 **Examples:**
 ```
-!anchor                          -- anchor selected token(s), all default components
+!anchor                          -- first selected = parent, rest = children
+!anchor --new                    -- auto-create invisible anchor, all selected = children
+!anchor --new --persist          -- same, but anchor persists when childless
 !anchor -x -rot -layer           -- anchor x-position, rotation, and layer only
 !anchor anchor-all               -- anchor everything including z-order
-!anchor -OtyABCDEF123            -- anchor to an existing token
-!anchor persist                  -- auto-create anchor and keep it when childless
+!anchor -OtyABCDEF123            -- anchor selected to an existing token by ID
 ```
 
 When z-order anchoring (`-z` / `anchor-z`) is active, call `Anchor.updateZOrder(anchorObj)` from another script (e.g. EasyReZorder) after moving the anchor in z-order to propagate the new stack to children.
@@ -85,23 +99,28 @@ When z-order anchoring (`-z` / `anchor-z`) is active, call `Anchor.updateZOrder(
 ### Removing
 
 ```
-!anchor remove [ignore-selected] [child_id...]
+!anchor remove [--up] [--down] [--ignore-selected] [child_id...]
 ```
 
-Remove the anchor relationship from tokens. Does not delete the anchor token itself.
+Remove anchor relationships from tokens.
+- **Child selected:** removes it from its parent.
+- **Parent selected:** unanchors all its children.
+- **Both parent and child:** removes both directions. Use `--up` (remove parent link only) or `--down` (remove children only) to disambiguate.
 
 ---
 
 ### Locking and Unlocking
 
 ```
-!anchor lock [component flags] [ignore-selected] [child_id...]
-!anchor unlock [component flags] [ignore-selected] [child_id...]
+!anchor lock [component flags] [--up] [--down] [--ignore-selected] [child_id...]
+!anchor unlock [component flags] [--up] [--down] [--ignore-selected] [child_id...]
 ```
 
-**Lock** freezes components — manual moves are undone every poll tick, and anchor changes to those components are ignored. With no component flags, locks all components.
+**Lock** freezes components — manual moves are undone every poll tick, and anchor changes to those components are ignored. With no component flags, locks all components. When both left+top are tracked and locked, `lockMovement` is set on the token to prevent dragging entirely.
 
 **Unlock** releases components. With no component flags, unlocks everything.
+
+**`--down`** — when a parent is selected, apply to all children. **`--up`** — apply to own parent link. Required when token is both parent and child.
 
 Components can be locked before they are tracked ("pre-locked") — they will activate automatically when tracking is added via `track`.
 
@@ -110,9 +129,9 @@ Components can be locked before they are tracked ("pre-locked") — they will ac
 ### Tracking
 
 ```
-!anchor track [component flags] [ignore-selected] [child_id...]
-!anchor untrack [component flags] [ignore-selected] [child_id...]
-!anchor retrack [component flags] [ignore-selected] [child_id...]
+!anchor track [component flags] [--down] [--ignore-selected] [child_id...]
+!anchor untrack [component flags] [--down] [--ignore-selected] [child_id...]
+!anchor retrack [component flags] [--ignore-selected] [child_id...]
 ```
 
 Modify which components are tracked on existing relationships without disturbing other stored offsets.
@@ -120,33 +139,34 @@ Modify which components are tracked on existing relationships without disturbing
 - **`track`** — add components, recording the current relative state as the offset.
 - **`untrack`** — remove components. Does not affect locked state.
 - **`retrack`** — replace the tracked set entirely. No flags = default set.
+- **`--down`** — when a parent is selected, apply to all children instead of the parent's own relationship.
 
 ---
 
 ### Other Commands
 
 ```
-!anchor center [ignore-selected] [child_id...]
+!anchor center [--ignore-selected] [child_id...]
 ```
 Snap children to anchor centre (offset 0,0, rotation 0°, scale 1:1).
 
 ```
-!anchor update [ignore-selected] [child_id...]
+!anchor update [--ignore-selected] [child_id...]
 ```
 Force an immediate transform sync for children.
 
 ```
-!anchor info [ignore-selected] [child_id...]
+!anchor info [--ignore-selected] [child_id...]
 ```
 Whisper anchor state to the caller. Shows tracked components with stored values, lock status (🔒), and pre-locked untracked components. With no tokens selected or specified, shows all anchored tokens on the current page.
 
 ```
-!anchor chain [component flags] [ignore-selected] [child_id...]
+!anchor chain [component flags] [--ignore-selected] [child_id...]
 ```
 Mutually anchor tokens in a ring (A→B, B→C, C→A). Move any one and all others follow. Useful for syncing tokens across pages or creating peer-linked groups.
 
 ```
-!anchor unchain [ignore-selected] [child_id...]
+!anchor unchain [--ignore-selected] [child_id...]
 ```
 Dissolve a chain ring. Select any one token in the ring (or even a child of a ring member) — the ring is detected and all relationships in it are removed.
 
@@ -288,6 +308,19 @@ The public API changed:
 ---
 
 ## Changelog
+
+### v2.2.1
+- Fix: child position offset now scales with parent size (proper matrix transform with scale)
+- Fix: flip mirroring handled via scale matrix instead of manual negation
+- Auto `lockMovement` when both left+top are tracked AND locked (clears when conditions change)
+- State migration: old pixel offsets auto-normalized to anchor-size-relative on first load
+
+### v2.2.0
+- Selection-based parenting: first selected = parent when multiple tokens selected
+- `--new` flag: force auto-create invisible anchor (all selected become children)
+- `--up` / `--down` modifiers for `remove`, `track`, `untrack` disambiguation
+- `--persist` and `--ignore-selected` as preferred syntax (bare words still work)
+- `remove` from parent now unanchors all children
 
 ### v2.1.0
 - Rewrite with full ES6 modernisation (IIFE module pattern, `const`/`let`, arrow functions)
