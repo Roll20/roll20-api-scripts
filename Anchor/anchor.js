@@ -1,6 +1,6 @@
 // =============================================================================
-// Anchor v2.1.0
-// Last Updated: 2026-06-12
+// Anchor v2.2.0
+// Last Updated: 2026-06-26
 // Author: Kenan Millet
 //
 // Description:
@@ -102,7 +102,7 @@ var Anchor = Anchor || (() => {
     // -------------------------------------------------------------------------
 
     const SCRIPT_NAME    = 'Anchor';
-    const SCRIPT_VERSION = '2.1.0';
+    const SCRIPT_VERSION = '2.2.0';
     const CMD_TOKEN      = '!anchor';
 
     const DEFAULTS = {
@@ -1103,42 +1103,42 @@ var Anchor = Anchor || (() => {
     const HELP_TEXT = [
         `<b>${SCRIPT_NAME} v${SCRIPT_VERSION}</b>`,
         '',
-        `<b>${CMD_TOKEN} [anchor_id] [flags] [ignore-selected] [child_id...]</b>`,
-        'Anchor selected/listed tokens. Auto-creates anchor token if no anchor_id given.',
-        'Long form: anchor-all, anchor, anchor-position, anchor-x, anchor-y,',
+        `<b>${CMD_TOKEN} [anchor_id] [flags] [--ignore-selected] [--new] [--persist] [child_id...]</b>`,
+        'Anchor selected tokens. First selected = parent, rest = children.',
+        '--new: force auto-create invisible anchor (all selected = children).',
+        '--persist: keep auto-created anchor even when childless.',
+        'Long form: anchor-all, anchor-position, anchor-x, anchor-y,',
         'anchor-rotation, anchor-scale, anchor-width, anchor-height, anchor-layer,',
         'anchor-flip, anchor-flipv, anchor-fliph, anchor-z',
         'Short aliases: -all, -pos, -x, -y, -rot, -scale, -w, -h, -layer, -flip, -flipv, -fliph, -z',
-        'Default (no flags): position+rotation+scale+flip. anchor-all/-all adds layer+z-order.',
+        'Default (no flags): position+rotation+scale+flip. -all adds layer+z-order.',
         '',
-        'Add <b>persist</b> flag to keep an auto-created anchor token even when childless.',
+        `<b>${CMD_TOKEN} remove [--up] [--down] [--ignore-selected] [child_id...]</b>`,
+        'Remove anchor relationships. Parent selected = unanchor children.',
+        '--up: remove only parent link. --down: remove only children.',
         '',
-        `<b>${CMD_TOKEN} remove [ignore-selected] [child_id...]</b>`,
-        'Remove anchor from tokens.',
-        '',
-        `<b>${CMD_TOKEN} lock [component flags] [ignore-selected] [child_id...]</b>`,
+        `<b>${CMD_TOKEN} lock [component flags] [--ignore-selected] [child_id...]</b>`,
         'Lock components — re-enforced every poll tick. No flags = lock all.',
-        'Untracked components are pre-locked (activate when tracking is added).',
         '',
-        `<b>${CMD_TOKEN} unlock [component flags] [ignore-selected] [child_id...]</b>`,
+        `<b>${CMD_TOKEN} unlock [component flags] [--ignore-selected] [child_id...]</b>`,
         'Unlock components. No flags = unlock all.',
         '',
-        `<b>${CMD_TOKEN} track [component flags] [ignore-selected] [child_id...]</b>`,
-        'Add tracking to existing relationship (records current relative state).',
+        `<b>${CMD_TOKEN} track [component flags] [--down] [--ignore-selected] [child_id...]</b>`,
+        'Add tracking to existing relationship. --down: apply to children.',
         '',
-        `<b>${CMD_TOKEN} untrack [component flags] [ignore-selected] [child_id...]</b>`,
-        'Remove tracking. Does not affect locked state.',
+        `<b>${CMD_TOKEN} untrack [component flags] [--down] [--ignore-selected] [child_id...]</b>`,
+        'Remove tracking. --down: apply to children.',
         '',
-        `<b>${CMD_TOKEN} retrack [component flags] [ignore-selected] [child_id...]</b>`,
+        `<b>${CMD_TOKEN} retrack [component flags] [--ignore-selected] [child_id...]</b>`,
         'Replace tracked set entirely. No flags = default set.',
         '',
-        `<b>${CMD_TOKEN} center [ignore-selected] [child_id...]</b>`,
+        `<b>${CMD_TOKEN} center [--ignore-selected] [child_id...]</b>`,
         'Snap child(ren) to anchor centre (0 offset, 0 rotation, 1:1 scale).',
         '',
-        `<b>${CMD_TOKEN} chain [component flags] [ignore-selected] [child_id...]</b>`,
+        `<b>${CMD_TOKEN} chain [component flags] [--ignore-selected] [child_id...]</b>`,
         'Mutually anchor tokens in a ring (A\u2192B, B\u2192C, C\u2192A). Move any one, all follow.',
         '',
-        `<b>${CMD_TOKEN} unchain [ignore-selected] [child_id...]</b>`,
+        `<b>${CMD_TOKEN} unchain [--ignore-selected] [child_id...]</b>`,
         'Dissolve a chain ring. Select any one token in the ring.',
         '',
         `<b>${CMD_TOKEN} update [ignore-selected] [child_id...]</b>`,
