@@ -1,7 +1,7 @@
 {
     "name": "Anchor",
     "script": "anchor.js",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "previousversions": ["2.1.0",
         "1.0.0"
     ],

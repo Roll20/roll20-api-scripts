@@ -307,6 +307,12 @@ The public API changed:
 
 ## Changelog
 
+### v2.2.1
+- Fix: child position offset now scales with parent size (proper matrix transform with scale)
+- Fix: flip mirroring handled via scale matrix instead of manual negation
+- Auto `lockMovement` when both left+top are tracked AND locked (clears when conditions change)
+- State migration: old pixel offsets auto-normalized to anchor-size-relative on first load
+
 ### v2.2.0
 - Selection-based parenting: first selected = parent when multiple tokens selected
 - `--new` flag: force auto-create invisible anchor (all selected become children)
