@@ -1,0 +1,17 @@
+{
+    "name": "RollCapture",
+    "script": "RollCapture.js",
+    "version": "0.1.0",
+    "previousversions": [],
+    "description": "Generic roll result extraction for Roll20. Listens to roll template messages, extracts values per configurable rules stored in handouts, and fires character abilities with captured values.\n\nFeatures:\n- Configurable capture rules via handouts tagged [RollCapture] or [RC]\n- Conditional extraction (when/default blocks)\n- Formulas: direct value, max(), min(), sum(), choose() (GM prompt)\n- Character ability firing: rc_any, rc_<rollname>, rc_default\n- onCapture API for programmatic consumers\n\nCommands:\n- `!rollcapture` -- Show help\n- `!rollcapture status` -- Show status\n- `!rollcapture rules` -- List loaded rules with links\n- `!rollcapture rule <name>` -- Open or create a rule handout\n- `!rollcapture reload` -- Reload rules from handouts",
+    "authors": "Kenan Millet",
+    "roll20userid": "2614613",
+    "dependencies": [],
+    "modifies": {
+        "character": "read",
+        "ability": "read",
+        "handout": "read, write"
+    },
+    "conflicts": [],
+    "useroptions": []
+}
