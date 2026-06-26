@@ -1518,7 +1518,7 @@ var Anchor = Anchor || (() => {
             // If there's no valid graphic as the first arg, all otherArgs are child IDs.
             const ACTION_FLAGS = ['remove', 'lock', 'unlock', 'center', 'update', 'info', 'track', 'untrack', 'retrack', 'chain', 'unchain'];
             const hasAction = ACTION_FLAGS.some(f => flags.has(f));
-            const isNewAnchor = !hasAction && (Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.size === 0);
+            const isNewAnchor = !hasAction && (Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.has('new') || flags.size === 0);
             const firstArgIsAnchor = isNewAnchor &&
                 !flags.has('remove') &&
                 otherArgs.length > 0 &&
