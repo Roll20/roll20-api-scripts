@@ -5395,42 +5395,41 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
     return {
         checkInstall,
         registerEventHandlers,
-        API: {
-            // Extension registration
-            registerAttribute,
-            registerPlaybackConstant,
-            registerEasing,
-            generateExtensionHandout,
 
-            // Registry introspection — returns struct or null
-            getAttribute:   getAttrReg,
-            getFunction:    (qualName) => {
-                const parts = qualName.split('.');
-                const ns    = parts.length > 1 ? parts.slice(0, -1).join('.') : 'core';
-                const name  = parts[parts.length - 1];
-                return FN_REGISTRY[`${ns}/${name}`] || null;
-            },
-            getConstant:    (qualName) => {
-                const parts = qualName.split('.');
-                const ns    = parts.length > 1 ? parts.slice(0, -1).join('.') : 'core';
-                const name  = parts[parts.length - 1];
-                return CONST_REGISTRY[`${ns}/${name}`] || null;
-            },
-            getEasing,
+        // Extension registration
+        registerAttribute,
+        registerPlaybackConstant,
+        registerEasing,
+        generateExtensionHandout,
 
-            // Playback control — for scripts that trigger playback programmatically
-            loadRecording,
-            startPlayback,
-            stopPlayback,
-            pausePlayback,
-            resumePlayback,
-            startRecording,
-            stopRecording,
-            saveRecording,
-
-            // Notify Sequence that a virtual attribute changed (for recording)
-            notifyChange,
+        // Registry introspection — returns struct or null
+        getAttribute:   getAttrReg,
+        getFunction:    (qualName) => {
+            const parts = qualName.split('.');
+            const ns    = parts.length > 1 ? parts.slice(0, -1).join('.') : 'core';
+            const name  = parts[parts.length - 1];
+            return FN_REGISTRY[`${ns}/${name}`] || null;
         },
+        getConstant:    (qualName) => {
+            const parts = qualName.split('.');
+            const ns    = parts.length > 1 ? parts.slice(0, -1).join('.') : 'core';
+            const name  = parts[parts.length - 1];
+            return CONST_REGISTRY[`${ns}/${name}`] || null;
+        },
+        getEasing,
+
+        // Playback control — for scripts that trigger playback programmatically
+        loadRecording,
+        startPlayback,
+        stopPlayback,
+        pausePlayback,
+        resumePlayback,
+        startRecording,
+        stopRecording,
+        saveRecording,
+
+        // Notify Sequence that a virtual attribute changed (for recording)
+        notifyChange,
     };
 })();
 
