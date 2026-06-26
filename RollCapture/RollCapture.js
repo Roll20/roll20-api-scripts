@@ -13,6 +13,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
     let rules = [];
     let callbacks = new Map();
     let pendingChoices = {}; // id → { captures, resolve info }
+    let dissectArmed = false;
 
     // ─── Rule Parser ────────────────────────────────────────────────────────────
 
@@ -177,6 +178,45 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
     const processMessage = (msg) => {
         if (!msg.rolltemplate || !msg.inlinerolls) return;
 
+        if (dissectArmed) {
+            dissectArmed = false;
+            const template = msg.rolltemplate;
+            const content = msg.content;
+            const inlinerolls = msg.inlinerolls;
+            let out = '<b>Template:</b> <code>' + template + '</code><br>';
+            // Fields with roll refs: {{field=$[[N]]}}
+            const rollRefs = [];
+            const rollRx = /\{\{(\w[\w-]*)=\$\[\[(\d+)\]\]\}\}/g;
+            let m;
+            while ((m = rollRx.exec(content)) !== null) {
+                const idx = parseInt(m[2], 10);
+                const total = (inlinerolls[idx] && inlinerolls[idx].results) ? inlinerolls[idx].results.total : '?';
+                rollRefs.push(m[1] + ' = $[[' + m[2] + ']] → <b>' + total + '</b>');
+            }
+            // Fields with literal values: {{field=value}}
+            const flags = [];
+            const flagRx = /\{\{(\w[\w-]*)=([^$}][^}]*)\}\}/g;
+            while ((m = flagRx.exec(content)) !== null) {
+                flags.push(m[1] + ' = <code>' + m[2] + '</code>');
+            }
+            // Empty fields: {{field=}}
+            const emptyRx = /\{\{(\w[\w-]*)=\}\}/g;
+            while ((m = emptyRx.exec(content)) !== null) {
+                flags.push(m[1] + ' = <i>(empty)</i>');
+            }
+            // Bare fields (e.g. charname=X)
+            const bareRx = /(?:^|\s)(\w+)=([^\s{][^\s]*)/g;
+            while ((m = bareRx.exec(content)) !== null) {
+                if (!m[0].includes('{{')) flags.push(m[1] + ' = <code>' + m[2] + '</code> (bare)');
+            }
+            if (rollRefs.length) out += '<b>Roll fields:</b><br>' + rollRefs.join('<br>') + '<br>';
+            if (flags.length) out += '<b>Value fields:</b><br>' + flags.join('<br>') + '<br>';
+            out += '<b>Inline rolls:</b> ' + inlinerolls.length + '<br>';
+            out += '<b>Raw content:</b> <code>' + content.slice(0, 300) + '</code>';
+            whisper(out);
+            return;
+        }
+
         const template = msg.rolltemplate;
         const content = msg.content;
         const inlinerolls = msg.inlinerolls;
@@ -312,6 +352,12 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
             return;
         }
 
+        if (args[0] === 'dissect') {
+            dissectArmed = true;
+            whisper('Armed. Next roll template will be dissected.');
+            return;
+        }
+
         if (args[0] === 'reload') {
             loadRulesFromHandouts();
             whisper('Rules reloaded.');
@@ -375,6 +421,7 @@ default:
             `<code>!rollcapture status</code> — Show status<br>` +
             `<code>!rollcapture rules</code> — List loaded rules<br>` +
             `<code>!rollcapture rule &lt;name&gt;</code> — Open or create a rule handout<br>` +
+            `<code>!rollcapture dissect</code> — Dissect the next roll (shows all fields)<br>` +
             `<code>!rollcapture reload</code> — Reload rules from handouts`);
     };
 
