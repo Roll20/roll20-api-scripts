@@ -1169,7 +1169,10 @@ var Mirror = Mirror || (() => {
         html += '<h2>Using with Anchor</h2>';
         html += '<p>Use <code>--exclude anchor</code> on tokens that also use Anchor for spatial sync. This prevents overlap.</p>';
         html += '<p><code>!mirror chain --exclude anchor</code> — sync everything except Anchor-managed props.</p>';
-        hh.set('notes', html);    const generateDevDocs = (msg) => {
+        hh.set('notes', html);
+    };
+
+    const generateDevDocs = (msg) => {
         var name = 'Help: ' + SCRIPT_NAME + '/Scripting API';
         var hh = findObjs({ type: 'handout', name: name })[0];
         if (!hh) hh = createObj('handout', { name: name, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
