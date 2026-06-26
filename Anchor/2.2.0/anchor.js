@@ -443,13 +443,16 @@ var Anchor = Anchor || (() => {
             : ALL_COMPONENTS;
         toAdd.forEach(c => locked.add(c));
 
-        // If both left and top are locked, set lockMovement on the token
+        // If both left and top are locked AND tracked, set lockMovement on the token
         if (locked.has('left') && locked.has('top')) {
-            const obj = getObj('graphic', childId);
-            if (obj && !obj.get('lockMovement')) {
-                obj.set('lockMovement', true);
-                if (!s.placementLockedByAnchor) s.placementLockedByAnchor = {};
-                s.placementLockedByAnchor[childId] = true;
+            const info = s.anchorInfoByChildId[childId];
+            if (info && 'left' in info && 'top' in info) {
+                const obj = getObj('graphic', childId);
+                if (obj && !obj.get('lockMovement')) {
+                    obj.set('lockMovement', true);
+                    if (!s.placementLockedByAnchor) s.placementLockedByAnchor = {};
+                    s.placementLockedByAnchor[childId] = true;
+                }
             }
         }
     };
@@ -1676,10 +1679,44 @@ var Anchor = Anchor || (() => {
             // With no component flags: lock/unlock ALL components (tracked + pre-lock).
             if (flags.has('unlock')) {
                 const unlockComps = resolveComponentsOrNone(flags);
-                childIds.forEach(id => unlockComponents(id, unlockComps));
+                childIds.forEach(id => {
+                    const s = state[SCRIPT_NAME];
+                    const isChild = id in s.anchorInfoByChildId;
+                    const isParent = id in s.anchorChildrenByAnchorId;
+                    if (isChild && isParent && !flags.has('--up') && !flags.has('--down')) {
+                        reply(msg, 'Error', 'Token is both parent and child. Use <code>--up</code> (unlock own parent link) or <code>--down</code> (unlock children).');
+                        return;
+                    }
+                    if (flags.has('--down') && isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => unlockComponents(cid, unlockComps));
+                    } else if (flags.has('--up') && isChild) {
+                        unlockComponents(id, unlockComps);
+                    } else if (isChild) {
+                        unlockComponents(id, unlockComps);
+                    } else if (isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => unlockComponents(cid, unlockComps));
+                    }
+                });
             } else if (flags.has('lock')) {
                 const lockComps = resolveComponentsOrNone(flags);
-                childIds.forEach(id => lockComponents(id, lockComps));
+                childIds.forEach(id => {
+                    const s = state[SCRIPT_NAME];
+                    const isChild = id in s.anchorInfoByChildId;
+                    const isParent = id in s.anchorChildrenByAnchorId;
+                    if (isChild && isParent && !flags.has('--up') && !flags.has('--down')) {
+                        reply(msg, 'Error', 'Token is both parent and child. Use <code>--up</code> (lock own parent link) or <code>--down</code> (lock children).');
+                        return;
+                    }
+                    if (flags.has('--down') && isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => lockComponents(cid, lockComps));
+                    } else if (flags.has('--up') && isChild) {
+                        lockComponents(id, lockComps);
+                    } else if (isChild) {
+                        lockComponents(id, lockComps);
+                    } else if (isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => lockComponents(cid, lockComps));
+                    }
+                });
             }
 
             // Track / untrack / retrack — modify which components are tracked
