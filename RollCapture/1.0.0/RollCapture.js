@@ -1,4 +1,4 @@
-// RollCapture v0.1.0 — Generic roll result extraction/storage for Roll20
+// RollCapture v1.0.0 — Generic roll result extraction/storage for Roll20
 // Detects rolls via chat:message, extracts values per configurable rules,
 // and emits captured data to registered consumer callbacks.
 
@@ -6,7 +6,7 @@ const RollCapture = (() => { // eslint-disable-line no-unused-vars
     'use strict';
 
     const SCRIPT_NAME = 'RollCapture';
-    const SCRIPT_VERSION = '0.1.0';
+    const SCRIPT_VERSION = '1.0.0';
     const KEYWORDS = ['template:', 'name_field:', 'char_field:', 'when:', 'default:'];
     const CMD = '!rollcapture';
 
