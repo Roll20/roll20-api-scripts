@@ -465,24 +465,12 @@ var Anchor = Anchor || (() => {
         const s = state[SCRIPT_NAME];
         if (!components || Object.keys(components).length === 0) {
             delete s.lockedObjects[childId];
-            // Clear lockMovement if we set it
-            if (s.placementLockedByAnchor && s.placementLockedByAnchor[childId]) {
-                const obj = getObj('graphic', childId);
-                if (obj) obj.set('lockMovement', false);
-                delete s.placementLockedByAnchor[childId];
-            }
-            return;
+        } else {
+            const locked = getLockedComponents(childId);
+            Object.keys(components).forEach(c => locked.delete(c));
+            if (locked.size === 0) delete s.lockedObjects[childId];
         }
-        const locked = getLockedComponents(childId);
-        Object.keys(components).forEach(c => locked.delete(c));
-        if (locked.size === 0) delete s.lockedObjects[childId];
-
-        // Clear lockMovement if left or top is no longer locked
-        if ((!locked.has('left') || !locked.has('top')) && s.placementLockedByAnchor && s.placementLockedByAnchor[childId]) {
-            const obj = getObj('graphic', childId);
-            if (obj) obj.set('lockMovement', false);
-            delete s.placementLockedByAnchor[childId];
-        }
+        clearPlacementLockIfNeeded(childId);
     };
 
     /**
@@ -565,6 +553,24 @@ var Anchor = Anchor || (() => {
                     break;
             }
         });
+        clearPlacementLockIfNeeded(childId);
+    };
+
+    /**
+     * Clear lockMovement if we set it and conditions no longer hold
+     * (left+top must both be tracked AND locked).
+     */
+    const clearPlacementLockIfNeeded = (childId) => {
+        const s = state[SCRIPT_NAME];
+        if (!s.placementLockedByAnchor || !s.placementLockedByAnchor[childId]) return;
+        const info = s.anchorInfoByChildId[childId];
+        const locked = getLockedComponents(childId);
+        const bothTrackedAndLocked = info && 'left' in info && 'top' in info && locked.has('left') && locked.has('top');
+        if (!bothTrackedAndLocked) {
+            const obj = getObj('graphic', childId);
+            if (obj) obj.set('lockMovement', false);
+            delete s.placementLockedByAnchor[childId];
+        }
     };
 
     /**
@@ -589,6 +595,7 @@ var Anchor = Anchor || (() => {
                 delete s.objectStates[childId];
             }
             delete s.lockedObjects[childId];
+            clearPlacementLockIfNeeded(childId);
             return;
         }
 
