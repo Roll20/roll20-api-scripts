@@ -187,7 +187,7 @@ var Anchor = Anchor || (() => {
         'remove', 'lock', 'unlock', 'center', 'update', 'info',
         'track', 'untrack', 'retrack',
         'chain', 'unchain',
-        'ignore-selected', 'persist', 'new',
+        'ignore-selected', 'persist', 'new', 'up', 'down',
         'config',
         '--help',
     ];
@@ -1578,7 +1578,29 @@ var Anchor = Anchor || (() => {
 
             // Remove
             if (flags.has('remove')) {
-                childIds.forEach(id => setAnchor(id, undefined));
+                childIds.forEach(id => {
+                    const s = state[SCRIPT_NAME];
+                    const isChild = id in s.anchorInfoByChildId;
+                    const isParent = id in s.anchorChildrenByAnchorId;
+                    if (isChild && isParent) {
+                        // Both — remove both directions unless up/down specified
+                        if (flags.has('up')) {
+                            setAnchor(id, undefined);
+                        } else if (flags.has('down')) {
+                            const children = [...(s.anchorChildrenByAnchorId[id] || [])];
+                            children.forEach(cid => setAnchor(cid, undefined));
+                        } else {
+                            setAnchor(id, undefined);
+                            const children = [...(s.anchorChildrenByAnchorId[id] || [])];
+                            children.forEach(cid => setAnchor(cid, undefined));
+                        }
+                    } else if (isParent) {
+                        const children = [...(s.anchorChildrenByAnchorId[id] || [])];
+                        children.forEach(cid => setAnchor(cid, undefined));
+                    } else {
+                        setAnchor(id, undefined);
+                    }
+                });
             }
 
             // Center
