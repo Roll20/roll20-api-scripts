@@ -5437,6 +5437,4 @@ on('ready', () => {
     'use strict';
     Sequence.checkInstall();
     Sequence.registerEventHandlers();
-    Object.assign(Sequence, Sequence.API);
-    delete Sequence.API;
 });
