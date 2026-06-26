@@ -2340,6 +2340,21 @@ var Anchor = Anchor || (() => {
             hh.set('notes', html);
         })();
 
+        // State migration: normalize pixel offsets to anchor-size-relative (v2.2.1)
+        (() => {
+            const s = state[SCRIPT_NAME];
+            if (s.schemaVersion >= 2.21) return;
+            Object.entries(s.anchorInfoByChildId || {}).forEach(([childId, info]) => {
+                const anchor = getObj('graphic', info.anchor_id);
+                if (!anchor) return;
+                const aW = anchor.get('width');
+                const aH = anchor.get('height');
+                if ('left' in info && aW > 0) info.left = info.left / aW;
+                if ('top' in info && aH > 0) info.top = info.top / aH;
+            });
+            s.schemaVersion = 2.21;
+        })();
+
         log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
     };
 
