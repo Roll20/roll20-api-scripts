@@ -1585,16 +1585,15 @@ var Anchor = Anchor || (() => {
                     const isChild = id in s.anchorInfoByChildId;
                     const isParent = id in s.anchorChildrenByAnchorId;
                     if (isChild && isParent) {
-                        // Both — remove both directions unless up/down specified
+                        // Both — require disambiguation
                         if (flags.has('--up')) {
                             setAnchor(id, undefined);
                         } else if (flags.has('--down')) {
                             const children = Object.keys(s.anchorChildrenByAnchorId[id] || {});
                             children.forEach(cid => setAnchor(cid, undefined));
                         } else {
-                            setAnchor(id, undefined);
-                            const children = Object.keys(s.anchorChildrenByAnchorId[id] || {});
-                            children.forEach(cid => setAnchor(cid, undefined));
+                            reply(msg, 'Error', 'Token is both parent and child. Use <code>--up</code> (remove from parent) or <code>--down</code> (unanchor children).');
+                            return;
                         }
                     } else if (isParent) {
                         const children = Object.keys(s.anchorChildrenByAnchorId[id] || {});
@@ -1644,8 +1643,15 @@ var Anchor = Anchor || (() => {
                     const isParent = id in s.anchorChildrenByAnchorId;
                     if (flags.has('--down') && isParent) {
                         Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => addTrackedComponents(cid, comps));
+                    } else if (flags.has('--up') && isChild) {
+                        addTrackedComponents(id, comps);
+                    } else if (isChild && isParent) {
+                        reply(msg, 'Error', 'Token is both parent and child. Use <code>--up</code> (modify own parent link) or <code>--down</code> (modify children).');
+                        return;
                     } else if (isChild) {
                         addTrackedComponents(id, comps);
+                    } else if (isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => addTrackedComponents(cid, comps));
                     } else {
                         reply(msg, 'Error', `${id} is not anchored. Use !anchor to establish a relationship first.`);
                     }
@@ -1660,8 +1666,15 @@ var Anchor = Anchor || (() => {
                     const isParent = id in s.anchorChildrenByAnchorId;
                     if (flags.has('--down') && isParent) {
                         Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => removeTrackedComponents(cid, comps));
+                    } else if (flags.has('--up') && isChild) {
+                        removeTrackedComponents(id, comps);
+                    } else if (isChild && isParent) {
+                        reply(msg, 'Error', 'Token is both parent and child. Use <code>--up</code> (modify own parent link) or <code>--down</code> (modify children).');
+                        return;
                     } else if (isChild) {
                         removeTrackedComponents(id, comps);
+                    } else if (isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => removeTrackedComponents(cid, comps));
                     }
                 });
             }
