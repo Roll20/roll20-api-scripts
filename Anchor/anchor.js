@@ -1607,14 +1607,35 @@ var Anchor = Anchor || (() => {
             // Center
             if (flags.has('center')) {
                 childIds.forEach(id => {
-                    const info = state[SCRIPT_NAME].anchorInfoByChildId[id];
-                    if (!info) return;
-                    if ('left' in info)        info.left        = 0;
-                    if ('top' in info)         info.top         = 0;
-                    if ('rotation' in info)    info.rotation    = 0;
-                    if ('widthRatio' in info)  info.widthRatio  = 1;
-                    if ('heightRatio' in info) info.heightRatio = 1;
-                    applyAnchorToChild(id);
+                    const s = state[SCRIPT_NAME];
+                    const isChild = id in s.anchorInfoByChildId;
+                    const isParent = id in s.anchorChildrenByAnchorId;
+
+                    if (isChild && isParent && !flags.has('--up') && !flags.has('--down')) {
+                        reply(msg, 'Error', 'Token is both parent and child. Use <code>--up</code> (center on parent) or <code>--down</code> (center children on self).');
+                        return;
+                    }
+
+                    const centerChild = (cid) => {
+                        const info = s.anchorInfoByChildId[cid];
+                        if (!info) return;
+                        if ('left' in info)        info.left        = 0;
+                        if ('top' in info)         info.top         = 0;
+                        if ('rotation' in info)    info.rotation    = 0;
+                        if ('widthRatio' in info)  info.widthRatio  = 1;
+                        if ('heightRatio' in info) info.heightRatio = 1;
+                        applyAnchorToChild(cid);
+                    };
+
+                    if (flags.has('--down') && isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => centerChild(cid));
+                    } else if (flags.has('--up') && isChild) {
+                        centerChild(id);
+                    } else if (isChild) {
+                        centerChild(id);
+                    } else if (isParent) {
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => centerChild(cid));
+                    }
                 });
             }
 
