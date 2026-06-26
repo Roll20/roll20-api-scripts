@@ -179,6 +179,8 @@ var Anchor = Anchor || (() => {
         '-flipv': 'anchor-flipv',
         '-fliph': 'anchor-fliph',
         '-z':     'anchor-z',
+        '--persist': 'persist',
+        '--ignore-selected': 'ignore-selected',
     };
 
     const ALL_COMMAND_FLAGS = [
@@ -187,7 +189,7 @@ var Anchor = Anchor || (() => {
         'remove', 'lock', 'unlock', 'center', 'update', 'info',
         'track', 'untrack', 'retrack',
         'chain', 'unchain',
-        'ignore-selected', 'persist', 'new', 'up', 'down',
+        'ignore-selected', 'persist', '--new', '--up', '--down',
         'config',
         '--help',
     ];
@@ -1518,7 +1520,7 @@ var Anchor = Anchor || (() => {
             // If there's no valid graphic as the first arg, all otherArgs are child IDs.
             const ACTION_FLAGS = ['remove', 'lock', 'unlock', 'center', 'update', 'info', 'track', 'untrack', 'retrack', 'chain', 'unchain'];
             const hasAction = ACTION_FLAGS.some(f => flags.has(f));
-            const isNewAnchor = !hasAction && (Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.has('new') || flags.size === 0);
+            const isNewAnchor = !hasAction && (Object.keys(FLAG_EXPANSIONS).some(f => flags.has(f)) || flags.has('--new') || flags.size === 0);
             const firstArgIsAnchor = isNewAnchor &&
                 !flags.has('remove') &&
                 otherArgs.length > 0 &&
@@ -1540,12 +1542,12 @@ var Anchor = Anchor || (() => {
                 if (otherArgs.length > 0 && isValidGraphic(otherArgs[0])) {
                     // Use the supplied existing token as the anchor
                     anchorId = otherArgs[0];
-                } else if (!flags.has('new') && childIds.length > 1) {
+                } else if (!flags.has('--new') && childIds.length > 1) {
                     // Selection-based: first selected = parent, rest = children
                     anchorId = childIds.shift();
-                } else if (childIds.length === 1 && getAnchor(childIds[0]) && !flags.has('new')) {
+                } else if (childIds.length === 1 && getAnchor(childIds[0]) && !flags.has('--new')) {
                     // Single token already anchored — modify existing (handled below by lock/track)
-                    reply(msg, 'Info', 'Token is already anchored. Use lock/unlock/track/untrack to modify, or <code>new</code> to create a new parent.');
+                    reply(msg, 'Info', 'Token is already anchored. Use lock/unlock/track/untrack to modify, or <code>--new</code> to create a new parent.');
                     return;
                 } else {
                     // Auto-create invisible anchor (single selected or --new flag)
@@ -1584,9 +1586,9 @@ var Anchor = Anchor || (() => {
                     const isParent = id in s.anchorChildrenByAnchorId;
                     if (isChild && isParent) {
                         // Both — remove both directions unless up/down specified
-                        if (flags.has('up')) {
+                        if (flags.has('--up')) {
                             setAnchor(id, undefined);
-                        } else if (flags.has('down')) {
+                        } else if (flags.has('--down')) {
                             const children = [...(s.anchorChildrenByAnchorId[id] || [])];
                             children.forEach(cid => setAnchor(cid, undefined));
                         } else {
@@ -1637,19 +1639,30 @@ var Anchor = Anchor || (() => {
             if (flags.has('track')) {
                 const comps = resolveComponents(flags);
                 childIds.forEach(id => {
-                    if (!(id in state[SCRIPT_NAME].anchorInfoByChildId)) {
+                    const s = state[SCRIPT_NAME];
+                    const isChild = id in s.anchorInfoByChildId;
+                    const isParent = id in s.anchorChildrenByAnchorId;
+                    if (flags.has('--down') && isParent) {
+                        (s.anchorChildrenByAnchorId[id] || []).forEach(cid => addTrackedComponents(cid, comps));
+                    } else if (isChild) {
+                        addTrackedComponents(id, comps);
+                    } else {
                         reply(msg, 'Error', `${id} is not anchored. Use !anchor to establish a relationship first.`);
-                        return;
                     }
-                    addTrackedComponents(id, comps);
                 });
             }
 
             if (flags.has('untrack')) {
                 const comps = resolveComponents(flags);
                 childIds.forEach(id => {
-                    if (!(id in state[SCRIPT_NAME].anchorInfoByChildId)) return;
-                    removeTrackedComponents(id, comps);
+                    const s = state[SCRIPT_NAME];
+                    const isChild = id in s.anchorInfoByChildId;
+                    const isParent = id in s.anchorChildrenByAnchorId;
+                    if (flags.has('--down') && isParent) {
+                        (s.anchorChildrenByAnchorId[id] || []).forEach(cid => removeTrackedComponents(cid, comps));
+                    } else if (isChild) {
+                        removeTrackedComponents(id, comps);
+                    }
                 });
             }
 
