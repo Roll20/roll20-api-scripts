@@ -1,5 +1,5 @@
 // =============================================================================
-// Anchor v2.2.0
+// Anchor v2.2.1
 // Last Updated: 2026-06-26
 // Author: Kenan Millet
 //
@@ -102,7 +102,7 @@ var Anchor = Anchor || (() => {
     // -------------------------------------------------------------------------
 
     const SCRIPT_NAME    = 'Anchor';
-    const SCRIPT_VERSION = '2.2.0';
+    const SCRIPT_VERSION = '2.2.1';
     const CMD_TOKEN      = '!anchor';
 
     const DEFAULTS = {
@@ -225,10 +225,11 @@ var Anchor = Anchor || (() => {
     /**
      * Build a 3×3 transform matrix for a graphic's current position + rotation.
      */
-    const buildTransform = (left, top, rotationDeg) => {
+    const buildTransform = (left, top, rotationDeg, scaleX, scaleY) => {
         let m = MatrixMath.identity(3);
         m = MatrixMath.multiply(m, MatrixMath.translate([left, top]));
         m = MatrixMath.multiply(m, MatrixMath.rotate(toRad(rotationDeg)));
+        m = MatrixMath.multiply(m, MatrixMath.scale([scaleX, scaleY]));
         return m;
     };
 
@@ -323,10 +324,13 @@ var Anchor = Anchor || (() => {
         const info = { id: childId, anchor_id: anchorId };
 
         if (components.left || components.top) {
-            // Express child position in anchor-local frame (undo anchor rotation)
+            // Express child position in anchor-local frame (undo rotation + scale)
             const relTransform = MatrixMath.multiply(
-                MatrixMath.rotate(toRad(-aRot)),
-                MatrixMath.translate([cLeft - aLeft, cTop - aTop])
+                MatrixMath.scale([aW > 0 ? 1/aW : 1, aH > 0 ? 1/aH : 1]),
+                MatrixMath.multiply(
+                    MatrixMath.rotate(toRad(-aRot)),
+                    MatrixMath.translate([cLeft - aLeft, cTop - aTop])
+                )
             );
             if (components.left)  info.left     = relTransform[2][0];
             if (components.top)   info.top      = relTransform[2][1];
@@ -746,7 +750,8 @@ var Anchor = Anchor || (() => {
 
         if (('left' in info || 'top' in info) && (shouldApply('left') || shouldApply('top'))) {
             const anchorTransform = buildTransform(
-                anchor.get('left'), anchor.get('top'), anchor.get('rotation')
+                anchor.get('left'), anchor.get('top'), anchor.get('rotation'),
+                anchor.get('width'), anchor.get('height')
             );
 
             // Mirror offsets when flip components are tracked and anchor is flipped.
