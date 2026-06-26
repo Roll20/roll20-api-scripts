@@ -1589,15 +1589,15 @@ var Anchor = Anchor || (() => {
                         if (flags.has('--up')) {
                             setAnchor(id, undefined);
                         } else if (flags.has('--down')) {
-                            const children = [...(s.anchorChildrenByAnchorId[id] || [])];
+                            const children = Object.keys(s.anchorChildrenByAnchorId[id] || {});
                             children.forEach(cid => setAnchor(cid, undefined));
                         } else {
                             setAnchor(id, undefined);
-                            const children = [...(s.anchorChildrenByAnchorId[id] || [])];
+                            const children = Object.keys(s.anchorChildrenByAnchorId[id] || {});
                             children.forEach(cid => setAnchor(cid, undefined));
                         }
                     } else if (isParent) {
-                        const children = [...(s.anchorChildrenByAnchorId[id] || [])];
+                        const children = Object.keys(s.anchorChildrenByAnchorId[id] || {});
                         children.forEach(cid => setAnchor(cid, undefined));
                     } else {
                         setAnchor(id, undefined);
@@ -1643,7 +1643,7 @@ var Anchor = Anchor || (() => {
                     const isChild = id in s.anchorInfoByChildId;
                     const isParent = id in s.anchorChildrenByAnchorId;
                     if (flags.has('--down') && isParent) {
-                        (s.anchorChildrenByAnchorId[id] || []).forEach(cid => addTrackedComponents(cid, comps));
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => addTrackedComponents(cid, comps));
                     } else if (isChild) {
                         addTrackedComponents(id, comps);
                     } else {
@@ -1659,7 +1659,7 @@ var Anchor = Anchor || (() => {
                     const isChild = id in s.anchorInfoByChildId;
                     const isParent = id in s.anchorChildrenByAnchorId;
                     if (flags.has('--down') && isParent) {
-                        (s.anchorChildrenByAnchorId[id] || []).forEach(cid => removeTrackedComponents(cid, comps));
+                        Object.keys(s.anchorChildrenByAnchorId[id] || {}).forEach(cid => removeTrackedComponents(cid, comps));
                     } else if (isChild) {
                         removeTrackedComponents(id, comps);
                     }
