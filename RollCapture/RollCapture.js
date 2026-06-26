@@ -2,7 +2,7 @@
 // Detects rolls via chat:message, extracts values per configurable rules,
 // and emits captured data to registered consumer callbacks.
 
-const RollCapture = (() => { // eslint-disable-line no-unused-vars
+var RollCapture = RollCapture || (() => { // eslint-disable-line no-unused-vars
     'use strict';
 
     const SCRIPT_NAME = 'RollCapture';
@@ -447,17 +447,24 @@ default:
         });
     };
 
-    on('ready', () => {
+    const checkInstall = () => {
         loadRulesFromHandouts();
-        registerEventHandlers();
         log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
         sendChat('', `!${SCRIPT_NAME.toLowerCase()}-ready`, null, { noarchive: true });
-    });
+    };
 
     return {
+        checkInstall,
+        registerEventHandlers,
         onCapture,
-        getCapturedValue: () => null, // placeholder — consumers store their own way
-        getLastCapture: () => null,    // placeholder
+        getCapturedValue: () => null,
+        getLastCapture: () => null,
         registerRule: (ruleObj) => rules.push(ruleObj),
     };
 })();
+
+on('ready', () => {
+    'use strict';
+    RollCapture.checkInstall();
+    RollCapture.registerEventHandlers();
+});
