@@ -112,13 +112,15 @@ Remove anchor relationships from tokens.
 ### Locking and Unlocking
 
 ```
-!anchor lock [component flags] [--ignore-selected] [child_id...]
-!anchor unlock [component flags] [--ignore-selected] [child_id...]
+!anchor lock [component flags] [--up] [--down] [--ignore-selected] [child_id...]
+!anchor unlock [component flags] [--up] [--down] [--ignore-selected] [child_id...]
 ```
 
-**Lock** freezes components — manual moves are undone every poll tick, and anchor changes to those components are ignored. With no component flags, locks all components.
+**Lock** freezes components — manual moves are undone every poll tick, and anchor changes to those components are ignored. With no component flags, locks all components. When both left+top are tracked and locked, `lockMovement` is set on the token to prevent dragging entirely.
 
 **Unlock** releases components. With no component flags, unlocks everything.
+
+**`--down`** — when a parent is selected, apply to all children. **`--up`** — apply to own parent link. Required when token is both parent and child.
 
 Components can be locked before they are tracked ("pre-locked") — they will activate automatically when tracking is added via `track`.
 
