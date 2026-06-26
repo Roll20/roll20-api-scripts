@@ -442,18 +442,23 @@ var Anchor = Anchor || (() => {
             ? Object.keys(components)
             : ALL_COMPONENTS;
         toAdd.forEach(c => locked.add(c));
+        setPlacementLockIfNeeded(childId);
+    };
 
-        // If both left and top are locked AND tracked, set lockMovement on the token
-        if (locked.has('left') && locked.has('top')) {
-            const info = s.anchorInfoByChildId[childId];
-            if (info && 'left' in info && 'top' in info) {
-                const obj = getObj('graphic', childId);
-                if (obj && !obj.get('lockMovement')) {
-                    obj.set('lockMovement', true);
-                    if (!s.placementLockedByAnchor) s.placementLockedByAnchor = {};
-                    s.placementLockedByAnchor[childId] = true;
-                }
-            }
+    /**
+     * Set lockMovement if both left+top are tracked AND locked and we haven't already.
+     */
+    const setPlacementLockIfNeeded = (childId) => {
+        const s = state[SCRIPT_NAME];
+        const info = s.anchorInfoByChildId[childId];
+        if (!info || !('left' in info) || !('top' in info)) return;
+        const locked = getLockedComponents(childId);
+        if (!locked.has('left') || !locked.has('top')) return;
+        const obj = getObj('graphic', childId);
+        if (obj && !obj.get('lockMovement')) {
+            obj.set('lockMovement', true);
+            if (!s.placementLockedByAnchor) s.placementLockedByAnchor = {};
+            s.placementLockedByAnchor[childId] = true;
         }
     };
 
@@ -521,6 +526,7 @@ var Anchor = Anchor || (() => {
                     break;
             }
         });
+        setPlacementLockIfNeeded(childId);
     };
 
     /**
