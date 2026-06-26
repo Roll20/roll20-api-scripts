@@ -442,6 +442,16 @@ var Anchor = Anchor || (() => {
             ? Object.keys(components)
             : ALL_COMPONENTS;
         toAdd.forEach(c => locked.add(c));
+
+        // If both left and top are locked, set lockMovement on the token
+        if (locked.has('left') && locked.has('top')) {
+            const obj = getObj('graphic', childId);
+            if (obj && !obj.get('lockMovement')) {
+                obj.set('lockMovement', true);
+                if (!s.placementLockedByAnchor) s.placementLockedByAnchor = {};
+                s.placementLockedByAnchor[childId] = true;
+            }
+        }
     };
 
     /**
@@ -452,11 +462,24 @@ var Anchor = Anchor || (() => {
         const s = state[SCRIPT_NAME];
         if (!components || Object.keys(components).length === 0) {
             delete s.lockedObjects[childId];
+            // Clear lockMovement if we set it
+            if (s.placementLockedByAnchor && s.placementLockedByAnchor[childId]) {
+                const obj = getObj('graphic', childId);
+                if (obj) obj.set('lockMovement', false);
+                delete s.placementLockedByAnchor[childId];
+            }
             return;
         }
         const locked = getLockedComponents(childId);
         Object.keys(components).forEach(c => locked.delete(c));
         if (locked.size === 0) delete s.lockedObjects[childId];
+
+        // Clear lockMovement if left or top is no longer locked
+        if ((!locked.has('left') || !locked.has('top')) && s.placementLockedByAnchor && s.placementLockedByAnchor[childId]) {
+            const obj = getObj('graphic', childId);
+            if (obj) obj.set('lockMovement', false);
+            delete s.placementLockedByAnchor[childId];
+        }
     };
 
     /**
