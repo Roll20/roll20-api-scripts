@@ -14,10 +14,11 @@ Generic roll result extraction for Roll20. Listens to roll template messages, ex
 ## Quick Start
 
 1. Install RollCapture
-2. Run `!rollcapture rule D&D 5E Skills` to create a rule handout
-3. Edit the handout with your capture rules
-4. Run `!rollcapture reload`
-5. Roll a skill check — captured values fire matching abilities
+2. Run `!rollcapture dissect` then make a roll — shows all template fields and values (helps you write rules)
+3. Run `!rollcapture rule D&D 5E Skills` to create a rule handout
+4. Edit the handout with your capture rules
+5. Run `!rollcapture reload`
+6. Roll a skill check — captured values fire matching abilities
 
 ## Rule Format
 
@@ -78,6 +79,7 @@ Use `${rollname}` and `${capturename}` (e.g. `${result}`) in ability actions for
 | `!rollcapture status` | Show status |
 | `!rollcapture rules` | List loaded rules with links |
 | `!rollcapture rule <name>` | Open or create a rule handout |
+| `!rollcapture dissect` | Dissect the next roll (shows all fields and values) |
 | `!rollcapture reload` | Reload rules from handouts |
 
 ## API (for other scripts)
