@@ -96,6 +96,16 @@ This syncs everything *except* what Anchor manages (left, top, rotation, width, 
 Mirror.align(tokenId, { ifLinked: true })  // push linked props to dependents
 ```
 
+## Changelog
+
+### v1.1.0
+- `--ignore-selected` flag: skip current selection, use only explicit IDs
+- Auto `lockMovement` when left+top are hard-linked on a child token
+- `lockMovement` cleared when unlinked or left/top removed from link
+
+### v1.0.0
+- Initial release
+
 ## License
 
 MIT
