@@ -2716,6 +2716,7 @@ var Gaslight = Gaslight || (() => {
         createHelpHandout();
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
+        if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length > 0) buildTriggerMap();
     };
 
     /**
