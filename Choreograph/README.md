@@ -294,6 +294,16 @@ Choreograph.registerSyncParticipant('MyScript', {
 
 Each participant only receives entries matching their registered command patterns. If none match, the participant is not called.
 
+## Changelog
+
+### v1.0.0
+- Revamped `!choreograph example` command: fuzzy search by name and plugin, tiered sorting, bold match highlights
+- Generation now uses `!choreograph example!` (button-triggered only)
+- Treat `msg.playerid === 'API'` as GM for API-originated commands
+
+### v0.2
+- Initial release
+
 ## License
 
 MIT
