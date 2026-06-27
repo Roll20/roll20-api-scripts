@@ -49,4 +49,5 @@
 - [ ] On-demand page cloning (if TruePageCopy exposes API)
 
 ## Known Issues
+- WORKAROUND: Temporarily sets Fetch `playerscanids=true` during script execution because API sendChat sets `playerid='API'` and Fetch denies character access. Remove when Fetch treats API as GM-equivalent (reported to timmaugh).
 - linkedTokens accumulates duplicates on repeated splits (cosmetic, deduped at use)

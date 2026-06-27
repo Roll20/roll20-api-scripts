@@ -2417,8 +2417,22 @@ var Gaslight = Gaslight || (() => {
             case 'config':  doConfig(msg, args);  break;
             case 'eval':    doEval(msg, args);    break;
             case 'status':  doStatus(msg);        break;
-            case '--script-lock': scripting = true; return;
-            case '--script-unlock': scripting = false; return;
+            case '--script-lock':
+                scripting = true;
+                // WORKAROUND: API sendChat sets playerid='API', Fetch denies char access.
+                // Temporarily enable playerscanids. TODO: remove when Fetch treats API as GM.
+                if (state.Fetch && state.Fetch.settings) {
+                    state[SCRIPT_NAME]._fetchPcidBackup = state.Fetch.settings.playerscanids;
+                    state.Fetch.settings.playerscanids = true;
+                }
+                return;
+            case '--script-unlock':
+                scripting = false;
+                if (state.Fetch && state.Fetch.settings && state[SCRIPT_NAME].hasOwnProperty('_fetchPcidBackup')) {
+                    state.Fetch.settings.playerscanids = state[SCRIPT_NAME]._fetchPcidBackup;
+                    delete state[SCRIPT_NAME]._fetchPcidBackup;
+                }
+                return;
             case '--assign-capture': {
                 // Format: --assign-capture <rollName> <charId> <cap=val> ...
                 var acRollName = args[0];
@@ -2694,6 +2708,11 @@ var Gaslight = Gaslight || (() => {
 
     const checkInstall = () => {
         ensureState();
+        // Crash recovery: revert Fetch playerscanids if we crashed mid-script
+        if (state[SCRIPT_NAME].hasOwnProperty('_fetchPcidBackup') && state.Fetch && state.Fetch.settings) {
+            state.Fetch.settings.playerscanids = state[SCRIPT_NAME]._fetchPcidBackup;
+            delete state[SCRIPT_NAME]._fetchPcidBackup;
+        }
         createHelpHandout();
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
