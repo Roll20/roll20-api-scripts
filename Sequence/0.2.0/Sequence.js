@@ -3260,7 +3260,7 @@ var Sequence = Sequence || (() => {
     const handleInput = (msg) => {
         if (msg.type !== 'api') return;
         if (msg.content.split(' ')[0] !== CMD_TOKEN) return;
-        if (!playerIsGM(msg.playerid)) {
+        if (!playerIsGM(msg.playerid) && msg.playerid !== 'API') {
             replyError(msg, 'Only the GM can use Sequence commands.');
             return;
         }
