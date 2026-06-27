@@ -1466,7 +1466,7 @@ var Anchor = Anchor || (() => {
             const rawArgs  = msg.content.slice(CMD_TOKEN.length).split(' ').filter(Boolean);
             const { flags, otherArgs } = parseArgs(rawArgs);
 
-            const isGM = playerIsGM(msg.playerid);
+            const isGM = playerIsGM(msg.playerid) || msg.playerid === 'API';
 
             // Non-GMs are blocked entirely unless allowPlayerUse is on.
             // Even with allowPlayerUse, non-GMs cannot change config or
