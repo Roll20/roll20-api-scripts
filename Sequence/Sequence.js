@@ -5313,6 +5313,7 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
             ['!sequence list',             'List saved recordings.'],
             ['!sequence delete [name]',    'Delete a saved recording.'],
             ['!sequence man [topic]',      'Show help. Topics: attr, func, vars, easing, time, or a namespace/name.'],
+            ['!sequence example',          'List built-in examples (spin, hover, pulse, orbit, shake, torch-flicker, rgb-cycle, boss-phase-2).'],
             ['!sequence gen-dev-docs',     'Generate the developer extension guide (Help: Sequence/Extending Sequence).'],
         ];
 
@@ -5340,6 +5341,16 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
         html += h(1, `${SCRIPT_NAME} v${SCRIPT_VERSION}`);
         html += p('A keyframe animation engine for Roll20 tokens. Record movements and attribute changes, then play them back with easing, looping, and expressions.');
         html += p(`Use ${c('!sequence man')} in chat for live help on attributes, functions, and constants.`);
+
+        html += h(2, 'Key Features');
+        html += ul([
+            li(`${b('Built-in examples')} — run ${c('!sequence example')} to generate ready-made animations (spin, hover, pulse, orbit, shake, torch-flicker, rgb-cycle, boss-phase-2)`),
+            li(`${b('String lerp')} — animate ${c('name')}, ${c('gmnotes')}, ${c('tooltip')} with levenshtein-based interpolation. Use ${c('+suffix')} to append or ${c('=""')} to clear.`),
+            li(`${b('UDL lighting')} — animate ${c('bright_light_distance')}, ${c('low_light_distance')}, ${c('night_vision_distance')}, ${c('dim_light_opacity')}`),
+            li(`${b('get("attr")')} — read any token attribute in expressions. ${c('cell(n)')} and ${c('unit(n)')} convert grid/map units to pixels.`),
+            li(`${b('round/floor/ceil(x, step)')} — optional step argument for snapping (e.g. snap to grid with ${c('round(x, cell(1))')}).`),
+            li(`${b('Color constants')} — ${c('color.red')}, ${c('color.blue')}, etc. work in expressions and lerp correctly.`),
+        ].join(''));
 
         html += h(2, 'Commands');
         html += ul(commands.map(([cmd, desc]) => li(`${c(cmd)}<br>${desc}`)).join(''));
