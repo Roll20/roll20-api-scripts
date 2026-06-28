@@ -1,6 +1,6 @@
 // =============================================================================
-// Sequence v0.2.0
-// Last Updated: 2026-06-01
+// Sequence v1.0.0
+// Last Updated: 2026-06-28
 // Author: Kenan Millet
 //
 // Description:
@@ -83,7 +83,7 @@ var Sequence = Sequence || (() => {
     const SCRIPT_VERSION = '1.0.0';
     const CMD_TOKEN      = '!sequence';
     const HANDOUT_PREFIX = '[Sequence] ';
-    const HANDOUT_SCHED_PREFIX = '[Schedule] ';
+
 
     // =========================================================================
     // Example Registry
@@ -98,8 +98,16 @@ var Sequence = Sequence || (() => {
             log(`${SCRIPT_NAME}: [${src}] registerExample — missing name or recording`);
             return false;
         }
-        if (EXT_EXAMPLES[name]) return false;
-        EXT_EXAMPLES[name] = { name, description, source: src, recording, onGenerate: struct.onGenerate || null };
+        if (EXT_EXAMPLES[`${src}/${name}`]) return false;
+        const attrCols = struct.attrCols || (() => {
+            const cols = new Set();
+            (recording.keyframes || []).forEach(kf => {
+                Object.keys(kf.deltas || {}).forEach(a => cols.add(a));
+                Object.keys(kf.easings || {}).forEach(a => { if (!a.includes(':')) cols.add(a); });
+            });
+            return [...cols];
+        })();
+        EXT_EXAMPLES[`${src}/${name}`] = { name, description, source: src, recording, attrCols, onGenerate: struct.onGenerate || null };
         return true;
     };
 
@@ -326,6 +334,71 @@ var Sequence = Sequence || (() => {
         },
     });
 
+    // ── String lerp via Levenshtein edit steps ─────────────────────────────
+    const levenshteinOps = (a, b) => {
+        const m = a.length, n = b.length;
+        const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+        for (let i = 0; i <= m; i++) dp[i][0] = i;
+        for (let j = 0; j <= n; j++) dp[0][j] = j;
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                if (a[i - 1] === b[j - 1]) dp[i][j] = dp[i - 1][j - 1];
+                else dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+            }
+        }
+        // Backtrack to get ordered operations
+        const ops = [];
+        let i = m, j = n;
+        while (i > 0 || j > 0) {
+            if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) { i--; j--; }
+            else if (j > 0 && (i === 0 || dp[i][j] === dp[i][j - 1] + 1)) {
+                ops.push({ type: 'ins', pos: i, ch: b[j - 1] }); j--;
+            } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
+                ops.push({ type: 'sub', pos: i - 1, ch: b[j - 1] }); i--; j--;
+            } else if (i > 0) {
+                ops.push({ type: 'del', pos: i - 1 }); i--;
+            } else { break; }
+        }
+        ops.reverse();
+        return ops;
+    };
+
+    const applyOps = (str, ops, count) => {
+        let chars = str.split('');
+        let offset = 0;
+        for (let i = 0; i < count && i < ops.length; i++) {
+            const op = ops[i];
+            const pos = op.pos + offset;
+            if (op.type === 'sub') { chars[pos] = op.ch; }
+            else if (op.type === 'ins') { chars.splice(pos, 0, op.ch); offset++; }
+            else if (op.type === 'del') { chars.splice(pos, 1); offset--; }
+        }
+        return chars.join('');
+    };
+
+    const lerpString = (a, b, t) => {
+        if (a === b || t <= 0) return a;
+        if (t >= 1) return b;
+        const sa = String(a || ''), sb = String(b || '');
+        // Fast path: pure append (b starts with a)
+        if (sb.startsWith(sa)) {
+            const suffix = sb.slice(sa.length);
+            const chars = Math.round(t * suffix.length);
+            return sa + suffix.slice(0, chars);
+        }
+        // Fast path: pure truncate (a starts with b)
+        if (sa.startsWith(sb)) {
+            const excess = sa.length - sb.length;
+            const removed = Math.round(t * excess);
+            return sa.slice(0, sa.length - removed);
+        }
+        // General case: levenshtein
+        const ops = levenshteinOps(sa, sb);
+        if (ops.length === 0) return sb;
+        const step = Math.round(t * ops.length);
+        return applyOps(sa, ops, step);
+    };
+
     const registerEnum = (name, objectType = 'graphic', description = '', enumValues = [], examples = []) => registerAttribute(SCRIPT_NAME, {
         name, namespace: 'core', objectType,
         description: description || `Token ${name} (enumerated value).`,
@@ -350,6 +423,38 @@ var Sequence = Sequence || (() => {
         },
     });
 
+    const registerString = (name, objectType = 'graphic', description = '', examples = []) => registerAttribute(SCRIPT_NAME, {
+        name, namespace: 'core', objectType,
+        description: description || `Token ${name} (free-text string, lerps via edit distance).`,
+        valueType:   'string',
+        examples:    examples.length ? examples : [`=hello  set ${name} to "hello"`],
+        startWatch: null,
+        stopWatch:  null,
+        get:    (obj) => obj.get(name),
+        set:    (obj, val) => obj.set(name, val),
+        diff:   (prev, curr) => {
+            if (curr === prev || curr === null || curr === undefined) return null;
+            return String(curr);
+        },
+        apply:  (obj, val) => obj.set(name, (obj.get(name) || '') + val),
+        lerp:   lerpString,
+        identity: () => ({ delta: '' }),
+        format: (val) => val === '' ? '=""' : `+${val}`,
+        parse:  (str) => {
+            const s = String(str).trim();
+            if (s.startsWith('=')) {
+                const inner = s.slice(1).trim();
+                // Quoted string literal — strip quotes
+                if (/^"[^"]*"$/.test(inner) || /^'[^']*'$/.test(inner)) return { abs: inner.slice(1, -1) };
+                // Expression (contains identifiers or function calls)
+                if (/[A-Za-z(]/.test(inner)) return { expr: inner, mode: 'abs' };
+                return { abs: inner };
+            }
+            if (s.startsWith('+')) return { delta: s.slice(1) };
+            return { abs: s };
+        },
+    });
+
     // Color lerp in RGB space
     const hexToRgb = (hex) => {
         const h = hex.replace(/^#/, '');
@@ -361,9 +466,9 @@ var Sequence = Sequence || (() => {
             .toString(16).padStart(2, '0')).join('');
     const lerpColor = (a, b, t) => {
         if (!a || !b) return b || a;
-        // Handle 'transparent' special value
-        const aStr = a instanceof Color ? a.toString() : a;
-        const bStr = b instanceof Color ? b.toString() : b;
+        const toStr = (v) => (v && typeof v === 'object' && v.toHex) ? v.toHex() : String(v);
+        const aStr = toStr(a);
+        const bStr = toStr(b);
         if (aStr === 'transparent' || bStr === 'transparent') return t < 0.5 ? aStr : bStr;
         const [ar, ag, ab2] = hexToRgb(aStr);
         const [br, bg, bb]  = hexToRgb(bStr);
@@ -393,7 +498,12 @@ var Sequence = Sequence || (() => {
         format: (val) => `=${val}`,
         parse:  (str) => {
             const s = String(str).trim();
-            return { abs: s.startsWith('=') ? s.slice(1) : s };
+            if (s.startsWith('=')) {
+                const inner = s.slice(1).trim();
+                if (/[A-Za-z(]/.test(inner) && !(/^#[0-9a-fA-F]{3,8}$/.test(inner))) return { expr: inner, mode: 'abs' };
+                return { abs: inner };
+            }
+            return { abs: s };
         },
     });
 
@@ -418,11 +528,15 @@ var Sequence = Sequence || (() => {
     // Numeric — auras and lighting
     registerNumeric('aura1_radius', 'graphic', 'Radius of aura 1 in pixels.');
     registerNumeric('aura2_radius', 'graphic', 'Radius of aura 2 in pixels.');
-    registerNumeric('light_radius',    'graphic', 'Bright light emission radius.');
-    registerNumeric('light_dimradius', 'graphic', 'Dim light emission radius (negative = start of dim within bright radius).');
+    registerNumeric('light_radius',    'graphic', 'Legacy bright light emission radius.');
+    registerNumeric('light_dimradius', 'graphic', 'Legacy dim light emission radius.');
     registerNumeric('light_angle',     'graphic', 'Angle of emitted light cone in degrees.');
     registerNumeric('light_losangle',  'graphic', 'Angle of token line-of-sight cone in degrees.');
     registerNumeric('adv_fow_view_distance', 'graphic', 'Advanced fog of war view distance.');
+    registerNumeric('bright_light_distance', 'graphic', 'UDL bright light distance (ft).');
+    registerNumeric('low_light_distance',    'graphic', 'UDL dim/low light distance (ft).');
+    registerNumeric('night_vision_distance',  'graphic', 'UDL night vision distance (ft).');
+    registerNumeric('dim_light_opacity',      'graphic', 'UDL dim light opacity (0.0–1.0).');
 
     // Rotation — special shortest-path delta logic
     registerAttribute(SCRIPT_NAME, {
@@ -490,9 +604,9 @@ var Sequence = Sequence || (() => {
     // Enum / String
     registerEnum('layer',       'graphic', 'Map layer the token is on.',
         ['objects','map','gm','walls'], ['=objects', '=map', '=gm', '=walls']);
-    registerEnum('name',        'graphic', 'Token display name.');
-    registerEnum('gmnotes',     'graphic', 'GM-only notes on the token.');
-    registerEnum('tooltip',     'graphic', 'Tooltip text shown on hover.');
+    registerString('name',        'graphic', 'Token display name.');
+    registerString('gmnotes',     'graphic', 'GM-only notes on the token.');
+    registerString('tooltip',     'graphic', 'Tooltip text shown on hover.');
     registerEnum('bar1_link',   'graphic', 'Character attribute linked to bar 1.');
     registerEnum('bar2_link',   'graphic', 'Character attribute linked to bar 2.');
     registerEnum('bar3_link',   'graphic', 'Character attribute linked to bar 3.');
@@ -902,6 +1016,8 @@ var Sequence = Sequence || (() => {
         // Replace numbers and operators with spaces so identifiers don't
         // concatenate — e.g. 'rand(orig-50,orig+50)' → 'rand orig  orig '
         let spaced = expr
+            // Strip string literals (single or double quoted)
+            .replace(/"[^"]*"|'[^']*'/g, ' ')
             // Full numeric literal pattern:
             // optional sign, then: int, float, .float, or scientific (1e5, 2.5e-3, .5e+10)
             .replace(/[+\-]?(\d+\.?\d*|\.\d+)([eE][+\-]?\d+)?/g, ' ')
@@ -1021,6 +1137,7 @@ var Sequence = Sequence || (() => {
                 };
             }
             if (node === null || typeof node !== 'object') return node;
+            if (node.toHex) return node; // Color instances pass through
             var wrapped = {};
             Object.keys(node).forEach(function(k) {
                 var childKey = regKey ? regKey + '/' + k : 'core/' + k;
@@ -1039,7 +1156,7 @@ var Sequence = Sequence || (() => {
 
         const _result = eval(_scopeDecls + '(' + body + ')');
         // Coerce Color instances to strings so Roll20 attribute setters work
-        return _result instanceof Color ? _result.toString() : _result;
+        return (_result && typeof _result === 'object' && _result.toHex) ? _result.toHex() : _result;
     };
 
     /**
@@ -1300,9 +1417,9 @@ var Sequence = Sequence || (() => {
             fn: (ctx, v, lo, hi) => Math.min(Math.max(v, lo), hi),
         },
         { name:'abs',   namespace:'core', description:'Absolute value.',        args:[{name:'x',type:'number'}], returns:'number', examples:['=abs(prev)'], fn: (ctx, x) => Math.abs(x)   },
-        { name:'round', namespace:'core', description:'Round to nearest integer.',args:[{name:'x',type:'number'}], returns:'integer',examples:['=round(prev+0.5)'], fn: (ctx, x) => Math.round(x) },
-        { name:'floor', namespace:'core', description:'Round down to integer.',   args:[{name:'x',type:'number'}], returns:'integer',examples:['=floor(rand(0,4))'], fn: (ctx, x) => Math.floor(x) },
-        { name:'ceil',  namespace:'core', description:'Round up to integer.',     args:[{name:'x',type:'number'}], returns:'integer',examples:['=ceil(rand(0,4))'],  fn: (ctx, x) => Math.ceil(x)  },
+        { name:'round', namespace:'core', description:'Round to nearest step (default 1).',args:[{name:'x',type:'number'},{name:'step',type:'number',optional:true}], returns:'number',examples:['=round(prev+0.5)','=round(orig*1.2, grid(1))'], fn: (ctx, x, step) => { const s = step || 1; return Math.round(x / s) * s; } },
+        { name:'floor', namespace:'core', description:'Round down to step (default 1).',   args:[{name:'x',type:'number'},{name:'step',type:'number',optional:true}], returns:'number',examples:['=floor(rand(0,4))'], fn: (ctx, x, step) => { const s = step || 1; return Math.floor(x / s) * s; } },
+        { name:'ceil',  namespace:'core', description:'Round up to step (default 1).',     args:[{name:'x',type:'number'},{name:'step',type:'number',optional:true}], returns:'number',examples:['=ceil(rand(0,4))'],  fn: (ctx, x, step) => { const s = step || 1; return Math.ceil(x / s) * s; } },
         { name:'min',   namespace:'core', description:'Minimum of two or more values.', args:[{name:'...values',type:'number'}], returns:'number', examples:['=min(prev+10,orig+100)'], fn: (ctx, ...args) => Math.min(...args) },
         { name:'max',   namespace:'core', description:'Maximum of two or more values.', args:[{name:'...values',type:'number'}], returns:'number', examples:['=max(prev-10,orig-100)'], fn: (ctx, ...args) => Math.max(...args) },
         { name:'sqrt',  namespace:'core', description:'Square root.',    args:[{name:'x',type:'number'}], returns:'number', examples:['=sqrt(prev)'], fn: (ctx, x) => Math.sqrt(x)  },
@@ -1316,6 +1433,30 @@ var Sequence = Sequence || (() => {
         registerValueFunction(SCRIPT_NAME, reg);
         registerTimingFunction(SCRIPT_NAME, reg);
     });
+
+    // ── Unit conversion functions (value context only — need token page) ─────
+    const _getPage = (ctx) => {
+        if (!ctx || !ctx.obj) return null;
+        return getObj('page', ctx.obj.get('_pageid'));
+    };
+    [
+        {
+            name: 'cell', namespace: 'core', contexts: ['value'],
+            description: 'Converts grid cells to pixels. cell(1) = one grid cell width in px.',
+            args: [{ name: 'n', type: 'number', description: 'Number of grid cells' }],
+            returns: 'number',
+            examples: ['=cell(4)  4 grid cells in pixels', '=round(orig * 1.2, cell(1))  snap to grid'],
+            fn: (ctx, n) => { const p = _getPage(ctx); const si = p ? parseFloat(p.get('snapping_increment')) || 1 : 1; return n * si * 70; },
+        },
+        {
+            name: 'unit', namespace: 'core', contexts: ['value'],
+            description: 'Converts map-scale units (ft/m/etc.) to pixels.',
+            args: [{ name: 'n', type: 'number', description: 'Distance in page scale units' }],
+            returns: 'number',
+            examples: ['=unit(5)  5ft in pixels', '=unit(30)  30ft movement range'],
+            fn: (ctx, n) => { const p = _getPage(ctx); const sn = p ? parseFloat(p.get('scale_number')) || 5 : 5; return (n / sn) * 70; },
+        },
+    ].forEach(reg => registerValueFunction(SCRIPT_NAME, reg));
 
     // ── Color functions ───────────────────────────────────────────────────────
     [
@@ -1451,6 +1592,25 @@ var Sequence = Sequence || (() => {
             returns: 'number',
             examples: ['=color.getLightness(orig)'],
             fn: (ctx, c) => { const col = toColor(c); return col ? col.toHsl().l : 0; },
+        },
+        {
+            name: 'get', namespace: 'core', contexts: ['value'],
+            description: 'Reads the current value of any registered attribute on the token.',
+            args: [{ name: 'name', type: 'string', description: 'Attribute name (e.g. "bar1_max")' }],
+            returns: 'any',
+            examples: ['=get("bar1_max") * 1.2  heal to 120% of max', '=get("bar1_value") + 10  current HP + 10'],
+            fn: (ctx, attrName) => {
+                const reg = getAttrReg(attrName);
+                if (reg && ctx.obj) {
+                    const val = reg.get(ctx.obj);
+                    return reg.valueType === 'number' ? (parseFloat(val) || 0) : val;
+                }
+                if (ctx.obj) {
+                    const val = ctx.obj.get(attrName);
+                    return val !== undefined && val !== '' ? (isNaN(val) ? val : parseFloat(val)) : 0;
+                }
+                return 0;
+            },
         },
     ].forEach(reg => registerValueFunction(SCRIPT_NAME, reg));
 
@@ -2380,6 +2540,7 @@ var Sequence = Sequence || (() => {
      */
     const loadRecording = (name, callback) => {
         if (recordingCache[name]) {
+            recordingCache[name].recording.name = name;
             callback(recordingCache[name]);
             return;
         }
@@ -2409,6 +2570,7 @@ var Sequence = Sequence || (() => {
                 + `keyframes=${kfCount}, `
                 + `attrCols=${result.attrCols.join(',')}`);
             recordingCache[name] = result;
+            result.recording.name = name;
             callback(result);
         });
     };
@@ -2551,6 +2713,7 @@ var Sequence = Sequence || (() => {
         for (let i = 0; i < kfs.length; i++) {
             resolveKfTime(pb, kfs, i);
         }
+        pb.duration = kfs.length > 0 ? (pb.resolvedTimes[kfs.length - 1] || 0) : 0;
     };
 
     /**
@@ -2676,8 +2839,13 @@ var Sequence = Sequence || (() => {
             const reg = getAttrReg(attrName);
             if (!reg) return;
             const val = reg.get(obj);
-            // Sanitize: numeric attrs default to 0 if empty/NaN
-            initialState[attrName] = (reg.valueType === 'number' && (val === '' || val === null || val === undefined || isNaN(val))) ? 0 : val;
+            // Sanitize: numeric attrs default to 0 if empty/NaN, parseFloat if string
+            if (reg.valueType === 'number') {
+                const n = parseFloat(val);
+                initialState[attrName] = isNaN(n) ? 0 : n;
+            } else {
+                initialState[attrName] = val;
+            }
         });
 
         const pb = {
@@ -2694,7 +2862,7 @@ var Sequence = Sequence || (() => {
             easing:        opts.easing  || null,
             onlyAttrs:     opts.only    || null,
             skipAttrs:     opts.exclude || null,
-            duration:      recording.duration || 0,
+            duration:      0,
             paused:        false,
             pausedAt:      null,
             preview:       opts.preview  || false,
@@ -2712,7 +2880,8 @@ var Sequence = Sequence || (() => {
         const shadow = makeShadow(initialState);
         const runningStates = [Object.assign({}, shadow._state)];
         keyframes.forEach(kf => {
-            Object.entries(kf.deltas || {}).forEach(([attrName, parsed]) => {
+            const resolved = resolveDeltas(kf.deltas, initialState, shadow._state, obj, {}, 0, {});
+            Object.entries(resolved || {}).forEach(([attrName, parsed]) => {
                 if (!parsed) return;
                 const reg = getAttrReg(attrName);
                 if (!reg) return;
@@ -2900,8 +3069,6 @@ var Sequence = Sequence || (() => {
             });
         });
 
-        const prevAbsState = stateAt(prevIdx);
-
         const batchSet = {};
         lerpAttrs.forEach(attrName => {
             if (pb.onlyAttrs && !pb.onlyAttrs.includes(attrName)) return;
@@ -2910,76 +3077,113 @@ var Sequence = Sequence || (() => {
             const reg     = getAttrReg(attrName);
             if (!reg || !reg.lerp) return;
 
-            const prevVal = prevAbsState[attrName];
+            // Per-attribute segment: find the prev and next keyframes that
+            // actually define a delta for this attribute (not the global prevIdx/nextIdx)
+            let attrPrevIdx = -1;
+            let attrNextIdx = kfs.length;
+            for (let i = 0; i < kfs.length; i++) {
+                const rt = pb.resolvedTimes[i] !== undefined
+                    ? pb.resolvedTimes[i] : (typeof kfs[i].time === 'number' ? kfs[i].time : Infinity);
+                const hasDelta = kfs[i].deltas && attrName in kfs[i].deltas;
+                if (rt <= t && hasDelta) attrPrevIdx = i;
+                else if (rt > t && hasDelta && attrNextIdx === kfs.length) attrNextIdx = i;
+            }
+
+            const attrPrevState = stateAt(attrPrevIdx);
+            const prevVal = attrPrevState[attrName];
             if (prevVal === undefined) return;
 
             let interpolated;
-            if (nextIdx < kfs.length) {
-                const nextKf = kfs[nextIdx];
-                const hasDeltaForAttr = nextKf.deltas && attrName in nextKf.deltas;
-                if (hasDeltaForAttr) {
-                    // Resolve expression if needed to get the target value
-                    let nextParsed = nextKf.deltas[attrName];
-                    if (nextParsed && nextParsed.expr) {
-                        const srcEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
-                            ? kfs[prevIdx].easings[attrName]
-                            : (pb.currentEasings[attrName] || pb.easing || 'linear');
-                        const isContinuous = srcEasing === 'continuous';
-                        const orig = pb.initialState[attrName] !== undefined ? pb.initialState[attrName] : 0;
-                        const prev = prevAbsState[attrName] !== undefined ? prevAbsState[attrName] : orig;
+            if (attrNextIdx < kfs.length) {
+                const nextKf = kfs[attrNextIdx];
+                // Resolve expression if needed to get the target value
+                let nextParsed = nextKf.deltas[attrName];
+                if (nextParsed && nextParsed.expr) {
+                    const srcEasing = attrPrevIdx >= 0 && kfs[attrPrevIdx].easings && kfs[attrPrevIdx].easings[attrName]
+                        ? kfs[attrPrevIdx].easings[attrName]
+                        : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                    const isContinuous = srcEasing === 'continuous';
+                    const orig = pb.initialState[attrName] !== undefined ? pb.initialState[attrName] : 0;
+                    const prev = attrPrevState[attrName] !== undefined ? attrPrevState[attrName] : orig;
 
-                        // Per-segment memo cache for function memoization
-                        const memoKey = `${nextIdx}:${attrName}`;
+                    // Per-segment memo cache for function memoization
+                    const memoKey = `${attrNextIdx}:${attrName}`;
+                    if (!pb.memoCache) pb.memoCache = {};
+                    if (!pb.memoCache[memoKey]) pb.memoCache[memoKey] = {};
+                    const memo = pb.memoCache[memoKey];
+
+                    try {
+                        const val = evalExpr(nextParsed.expr, orig, prev, undefined,
+                            { obj, reg, t: tNorm, memo, isContinuousSegment: isContinuous, cumulative: pb.cumulative || {} });
+                        let resolved = nextParsed.mode === 'abs' ? { abs: val }
+                            : nextParsed.mode === 'mul' ? { delta: val }
+                            : { delta: (nextParsed.sign || 1) * val };
+                        // In continuous segments, use resolved value directly (no lerp)
+                        if (isContinuous) {
+                            const shadow = makeShadow(attrPrevState);
+                            if ('abs' in resolved)        reg.set(shadow, resolved.abs);
+                            else if ('delta' in resolved) reg.apply(shadow, resolved.delta);
+                            interpolated = shadow._state[attrName];
+                        } else {
+                            // Non-continuous: memoization ensures same result each tick,
+                            // so we can use it as the lerp target
+                            nextParsed = resolved;
+                        }
+                    } catch(e) {
+                        log(`${SCRIPT_NAME}: lerp expr error for ${attrName}: ${e.message}`);
+                    }
+                }
+                if (interpolated === undefined) {
+                    // Normal lerp path (non-continuous expressions or non-expression deltas)
+                    const shadow = makeShadow(attrPrevState);
+                    if (nextParsed && 'abs' in nextParsed)        reg.set(shadow, nextParsed.abs);
+                    else if (nextParsed && 'delta' in nextParsed) reg.apply(shadow, nextParsed.delta);
+                    const nextVal    = shadow._state[attrName];
+                    const attrPrevTime = attrPrevIdx >= 0
+                        ? (pb.resolvedTimes[attrPrevIdx] !== undefined ? pb.resolvedTimes[attrPrevIdx] : (typeof kfs[attrPrevIdx].time === 'number' ? kfs[attrPrevIdx].time : 0))
+                        : 0;
+                    const attrNextTime = pb.resolvedTimes[attrNextIdx] !== undefined
+                        ? pb.resolvedTimes[attrNextIdx]
+                        : (typeof nextKf.time === 'number' ? nextKf.time : attrPrevTime);
+                    const segDur     = attrNextTime - attrPrevTime;
+                    const segElapsed = t - attrPrevTime;
+                    const segT       = segDur > 0 ? segElapsed / segDur : 1;
+                    const lerpEasing = attrPrevIdx >= 0 && kfs[attrPrevIdx].easings && kfs[attrPrevIdx].easings[attrName]
+                        ? kfs[attrPrevIdx].easings[attrName]
+                        : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                    interpolated = reg.lerp(prevVal, nextVal, getEasing(lerpEasing)(segT));
+                }
+            } else {
+                // Past the last keyframe for this attribute — apply its final value
+                if (attrPrevIdx >= 0) {
+                    const lastParsed = kfs[attrPrevIdx].deltas && kfs[attrPrevIdx].deltas[attrName];
+                    if (lastParsed && lastParsed.expr) {
+                        // Resolve expression for the final state
+                        const orig = pb.initialState[attrName] !== undefined ? pb.initialState[attrName] : 0;
+                        const prevState = attrPrevIdx > 0 ? stateAt(attrPrevIdx - 1) : pb.runningStates[0];
+                        const prev = prevState[attrName] !== undefined ? prevState[attrName] : orig;
+                        const memoKey = `final:${attrPrevIdx}:${attrName}`;
                         if (!pb.memoCache) pb.memoCache = {};
                         if (!pb.memoCache[memoKey]) pb.memoCache[memoKey] = {};
-                        const memo = pb.memoCache[memoKey];
-
                         try {
-                            const val = evalExpr(nextParsed.expr, orig, prev, undefined,
-                                { obj, reg, t: tNorm, memo, isContinuousSegment: isContinuous, cumulative: pb.cumulative || {} });
-                            let resolved = nextParsed.mode === 'abs' ? { abs: val }
-                                : nextParsed.mode === 'mul' ? { delta: val }
-                                : { delta: (nextParsed.sign || 1) * val };
-                            // In continuous segments, use resolved value directly (no lerp)
-                            if (isContinuous) {
-                                const shadow = makeShadow(prevAbsState);
-                                if ('abs' in resolved)        reg.set(shadow, resolved.abs);
-                                else if ('delta' in resolved) reg.apply(shadow, resolved.delta);
-                                interpolated = shadow._state[attrName];
-                            } else {
-                                // Non-continuous: memoization ensures same result each tick,
-                                // so we can use it as the lerp target
-                                nextParsed = resolved;
-                            }
+                            const val = evalExpr(lastParsed.expr, orig, prev, undefined,
+                                { obj, reg, t: tNorm, memo: pb.memoCache[memoKey], isContinuousSegment: false, cumulative: pb.cumulative || {} });
+                            const resolved = lastParsed.mode === 'abs' ? { abs: val }
+                                : lastParsed.mode === 'mul' ? { delta: val }
+                                : { delta: (lastParsed.sign || 1) * val };
+                            const shadow = makeShadow(attrPrevState);
+                            if ('abs' in resolved)        reg.set(shadow, resolved.abs);
+                            else if ('delta' in resolved) reg.apply(shadow, resolved.delta);
+                            interpolated = shadow._state[attrName];
                         } catch(e) {
-                            log(`${SCRIPT_NAME}: lerp expr error for ${attrName}: ${e.message}`);
+                            interpolated = prevVal;
                         }
-                    }
-                    if (interpolated === undefined) {
-                        // Normal lerp path (non-continuous expressions or non-expression deltas)
-                        const shadow = makeShadow(prevAbsState);
-                        if (nextParsed && 'abs' in nextParsed)        reg.set(shadow, nextParsed.abs);
-                        else if (nextParsed && 'delta' in nextParsed) reg.apply(shadow, nextParsed.delta);
-                        const nextVal    = shadow._state[attrName];
-                        const prevTime   = prevIdx >= 0
-                            ? (pb.resolvedTimes[prevIdx] !== undefined ? pb.resolvedTimes[prevIdx] : (typeof kfs[prevIdx].time === 'number' ? kfs[prevIdx].time : 0))
-                            : 0;
-                        const nextTime   = pb.resolvedTimes[nextIdx] !== undefined
-                            ? pb.resolvedTimes[nextIdx]
-                            : (typeof nextKf.time === 'number' ? nextKf.time : prevTime);
-                        const segDur     = nextTime - prevTime;
-                        const segElapsed = t - prevTime;
-                        const segT       = segDur > 0 ? segElapsed / segDur : 1;
-                        const lerpEasing = prevIdx >= 0 && kfs[prevIdx].easings && kfs[prevIdx].easings[attrName]
-                            ? kfs[prevIdx].easings[attrName]
-                            : (pb.currentEasings[attrName] || pb.easing || 'linear');
-                        interpolated = reg.lerp(prevVal, nextVal, getEasing(lerpEasing)(segT));
+                    } else {
+                        interpolated = prevVal;
                     }
                 } else {
                     interpolated = prevVal;
                 }
-            } else {
-                interpolated = prevVal;
             }
 
             // Collect position attrs for batching with rotation nudge
@@ -2987,9 +3191,13 @@ var Sequence = Sequence || (() => {
                 if (interpolated !== undefined) batchSet[attrName] = interpolated;
             } else if (attrName === 'rotation') {
                 if (reg.valueType === 'number' && isNaN(interpolated)) return;
-                // Always put rotation in batchSet so it goes out with position
-                // in a single obj.set() call — prevents nudge from overwriting it
                 batchSet.rotation = ((interpolated % 360) + 360) % 360;
+            } else if (reg.namespace === 'core') {
+                if (reg.valueType === 'number' && isNaN(interpolated)) return;
+                if (interpolated && typeof interpolated === 'object') {
+                    interpolated = interpolated.toHex ? interpolated.toHex() : String(interpolated);
+                }
+                batchSet[attrName] = interpolated;
             } else {
                 if (reg.valueType === 'number' && isNaN(interpolated)) return;
                 reg.set(obj, interpolated);
@@ -3000,12 +3208,18 @@ var Sequence = Sequence || (() => {
         const hasPositionLerp = lerpAttrs.has('left') || lerpAttrs.has('top');
         const hasRealRotation = (() => {
             if (!lerpAttrs.has('rotation')) return false;
-            if (nextIdx >= kfs.length) return false;
-            const d = kfs[nextIdx].deltas && kfs[nextIdx].deltas['rotation'];
-            if (!d) return false;
-            if ('abs' in d) return true;
-            if ('delta' in d) return d.delta !== 0;
-            return !!d.expr;
+            // Find next keyframe that defines rotation
+            for (let i = 0; i < kfs.length; i++) {
+                const rt = pb.resolvedTimes[i] !== undefined
+                    ? pb.resolvedTimes[i] : (typeof kfs[i].time === 'number' ? kfs[i].time : Infinity);
+                if (rt <= t) continue;
+                const d = kfs[i].deltas && kfs[i].deltas['rotation'];
+                if (!d) continue;
+                if ('abs' in d) return true;
+                if ('delta' in d) return d.delta !== 0;
+                return !!d.expr;
+            }
+            return false;
         })();
 
         // Batch position updates with rotation nudge in a single obj.set()
@@ -3017,8 +3231,8 @@ var Sequence = Sequence || (() => {
                 const nudged = rot + 0.001 * pb.rotNudgeDir;
                 if (!isNaN(nudged)) batchSet.rotation = nudged;
             }
-            // Strip any NaN values before sending to Firebase
-            Object.keys(batchSet).forEach(k => { if (isNaN(batchSet[k])) delete batchSet[k]; });
+            // Strip any NaN numeric values before sending to Firebase
+            Object.keys(batchSet).forEach(k => { if (typeof batchSet[k] === 'number' && isNaN(batchSet[k])) delete batchSet[k]; });
             if (Object.keys(batchSet).length > 0) obj.set(batchSet);
         } else if (hasPositionLerp && !hasRealRotation && !stopping) {
             const rot = parseFloat(obj.get('rotation')) || 0;
@@ -3199,7 +3413,11 @@ var Sequence = Sequence || (() => {
 
             let html = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
             html += `${tokenThumb}<b>${escHtml(tokenName)}</b><br>`;
-            if (displayName) html += `Recording: <b>${escHtml(displayName)}</b><br>`;
+            if (displayName) {
+                const handout = findHandout(displayName);
+                const openLink = handout ? ` <a href="http://journal.roll20.net/handout/${handout.get('id')}">[open]</a>` : '';
+                html += `Recording: <b>${escHtml(displayName)}</b>${openLink}<br>`;
+            }
             html += `Status: <b>${status}</b>`;
             if (pb) html += ` &nbsp; ${elapsed}ms / ${dur}ms`;
             html += `<br><br>`;
@@ -3227,6 +3445,7 @@ var Sequence = Sequence || (() => {
                 // ── Stopped / ready controls ──────────────────────────────
                 if (displayName) {
                     html += btnHtml('▶ Play',    `${CMD_TOKEN} play ${escArg(displayName)} ignore-selected ${objId}`);
+                    html += btnHtml('🔁 Loop',   `${CMD_TOKEN} play ${escArg(displayName)} --loop ignore-selected ${objId}`);
                     html += btnHtml('👁 Preview', `${CMD_TOKEN} preview ${escArg(displayName)} ignore-selected ${objId}`);
                 }
                 // Revert only shown if there's a state to revert to
@@ -4354,7 +4573,8 @@ var Sequence = Sequence || (() => {
                         if (exists) {
                             out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence example! ${ex.name}">🔄 Regen</a> `;
                             out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence play ${recName}">▶ Play</a> `;
-                            out += `<a href="http://journal.roll20.net/handout/${exists.get('id')}">[Open]</a>`;
+                            out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence play ${recName} --loop">🔁 Loop</a> `;
+                            out += `<a href="http://journal.roll20.net/handout/${exists.get('id')}">[open]</a>`;
                         } else {
                             out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence example! ${ex.name}">+ Generate</a>`;
                         }
@@ -4367,18 +4587,25 @@ var Sequence = Sequence || (() => {
 
             if (cmd === 'example!') {
                 const exName = args[0];
-                const ex = EXT_EXAMPLES[exName];
+                const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
                 if (!ex) {
                     replyError(msg, `No example named "${exName}". Use <code>!sequence example</code> to see all.`);
                     return;
                 }
                 const recName = `example-${exName}`;
-                const handoutName = `${HANDOUT_PREFIX}${recName}`;
-                let hh = findObjs({ type: 'handout', name: handoutName })[0];
-                if (!hh) hh = createObj('handout', { name: handoutName, inplayerjournals: 'all' });
-                hh.set('notes', ex.recording);
+                const rec = ex.recording;
+                const attrCols = ex.attrCols || Object.keys((rec.keyframes && rec.keyframes[0] && rec.keyframes[0].easings) || {});
+                const handout = getOrCreateHandout(recName);
+                handout.set('archived', true);
+                setHandoutNotes(handout, generateHandoutHtml(recName, rec, attrCols), recName);
+                recordingCache[recName] = { recording: rec, attrCols };
                 if (typeof ex.onGenerate === 'function') ex.onGenerate(recName);
-                reply(msg, 'Examples', `Generated <b>${recName}</b>. Select a token and run <code>!sequence play ${recName}</code>.`);
+                const handoutId = handout.get('id');
+                let outMsg = `Generated <b>${recName}</b>.<br>`;
+                outMsg += btnHtml('▶ Play', `!sequence play ${recName}`) + ' ';
+                outMsg += btnHtml('🔁 Loop', `!sequence play ${recName} --loop`) + ' ';
+                outMsg += `<a href="http://journal.roll20.net/handout/${handoutId}">[open]</a>`;
+                reply(msg, 'Examples', outMsg);
                 return;
             }
 
@@ -5339,9 +5566,95 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
 
         // Signal extensions that Sequence is ready to accept registrations.
         // Extensions that loaded before Sequence listen for this; extensions
+        registerBuiltinExamples();
+
         // that loaded after can call Sequence.register* directly since
         // Sequence is already defined by the time their on('ready') runs.
         sendChat('', `!${SCRIPT_NAME.toLowerCase()}-ready`, null, { noarchive: true });
+    };
+
+    // =========================================================================
+    // Built-in Examples
+    // =========================================================================
+
+    const registerBuiltinExamples = () => {
+        registerExample(SCRIPT_NAME, {
+            name: 'spin',
+            description: 'Continuous rotation. Simple looping animation.',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0, type: 'change', deltas: {}, easings: { rotation: 'continuous' } },
+                { time: 3000, type: 'change', deltas: { rotation: { expr: 'orig + t * 360', mode: 'abs' } }, easings: {} },
+            ]},
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'hover',
+            description: 'Gentle vertical bob. Floating/levitating tokens.',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0, type: 'change', deltas: {}, easings: { top: 'continuous' } },
+                { time: 2000, type: 'change', deltas: { top: { expr: 'orig + sin(t * TAU) * unit(2)', mode: 'abs' } }, easings: {} },
+            ]},
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'pulse',
+            description: 'Scale up and down rhythmically. Highlight or heartbeat effect.',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0, type: 'change', deltas: {}, easings: { width: 'continuous', height: 'continuous' } },
+                { time: 1500, type: 'change', deltas: { width: { expr: 'orig * (1 + sin(t * TAU) * 0.15)', mode: 'abs' }, height: { expr: 'orig * (1 + sin(t * TAU) * 0.15)', mode: 'abs' } }, easings: {} },
+            ]},
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'orbit',
+            description: 'Circular path around original position. Shows trig expressions.',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
+                { time: 5000, type: 'change', deltas: { left: { expr: 'orig + cos(t * TAU) * cell(1)', mode: 'abs' }, top: { expr: 'orig + sin(t * TAU) * cell(1)', mode: 'abs' } }, easings: {} },
+            ]},
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'shake',
+            description: 'Decaying tremor. Starts violent, mellows out.',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
+                { time: 1000, type: 'change', deltas: { left: { expr: 'orig + sin(t * TAU * 8) * unit(3) * (1 - t)', mode: 'abs' }, top: { expr: 'orig + cos(t * TAU * 6) * unit(2) * (1 - t)', mode: 'abs' } }, easings: {} },
+            ]},
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'torch-flicker',
+            description: 'Light radius jitters like a real flame. Atmospheric lighting (supports both legacy and UDL).',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0,                                         type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' } }, easings: { bright_light_distance: 'linear', low_light_distance: 'linear', light_radius: 'linear', light_dimradius: 'linear' } },
+                { time: { isExpr: true, rel: 'rand(80, 200)' },    type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' } }, easings: {} },
+                { time: { isExpr: true, rel: 'rand(100, 250)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' } }, easings: {} },
+                { time: { isExpr: true, rel: 'rand(-60, 180)' },    type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' } }, easings: {} },
+                { time: { isExpr: true, rel: 'rand(120, 1200)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' } }, easings: {} },
+                { time: { isExpr: true, rel: 'rand(-80, 220)' },    type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' } }, easings: {} },
+                { time: { isExpr: true, rel: 'rand(-100, 250)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' } }, easings: {} },
+                { time: { isExpr: true, rel: 'rand(200, 1800)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' } }, easings: {} },
+            ]},
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'rgb-cycle',
+            description: 'Rainbow tint color rotation. Demonstrates color expression animation.',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0, type: 'change', deltas: {}, easings: { tint_color: 'continuous' } },
+                { time: 4000, type: 'change', deltas: { tint_color: { expr: 'color.hsl(t * 360, 100, 50)', mode: 'abs' } }, easings: {} },
+            ]},
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'boss-phase-2',
+            description: 'Multi-attribute boss transformation: grows, heals past full, light intensifies, tint shifts black to red, name gains a title. Keyframe showcase.',
+            recording: { objectType: 'graphic', notes: '', keyframes: [
+                { time: 0, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 }, bar1_value: { expr: 'orig', mode: 'abs' }, light_radius: { expr: 'orig', mode: 'abs' }, tint_color: { expr: 'color.black', mode: 'abs' }, name: { abs: '' } }, easings: { width: 'ease-out-back', height: 'ease-out-back', bar1_value: 'ease-in-quad', light_radius: 'ease-in-quad', tint_color: 'linear', name: 'ease-out-quad' } },
+                { time: 6000, type: 'change', deltas: { width: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, height: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, bar1_value: { expr: 'round(get("bar1_max") * 1.2)', mode: 'abs' }, light_radius: { abs: '40' }, tint_color: { expr: 'color.red', mode: 'abs' }, name: { expr: '"Mighty " + orig + ", The Reborn"', mode: 'abs' } }, easings: {} },
+            ]},
+        });
     };
 
     const registerEventHandlers = () => {
@@ -5391,67 +5704,6 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                             ctx.done();
                         }
                     }, 100);
-                },
-            });
-
-            // Register example scenes
-            Choreograph.registerExample(SCRIPT_NAME, {
-                name: 'scatter',
-                description: 'Tokens scatter outward with staggered animation playback.',
-                onGenerate: () => {
-                    const rec = {
-                        name: 'scatter', objectType: 'graphic', duration: 1000, notes: '',
-                        keyframes: [
-                            { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
-                            { time: 1000, type: 'change', deltas: { left: { expr: 'orig + cos(freeze(rand(0, TAU))) * 100', mode: 'abs' }, top: { expr: 'orig + sin(freeze(rand(0, TAU))) * 100', mode: 'abs' } }, easings: {} },
-                        ],
-                    };
-                    const attrCols = ['left', 'top'];
-                    const handout = getOrCreateHandout('scatter');
-                    setHandoutNotes(handout, generateHandoutHtml('scatter', rec, attrCols), 'scatter');
-                    recordingCache['scatter'] = { recording: rec, attrCols };
-                    log(`${SCRIPT_NAME}: generated "scatter" recording handout for example`);
-                },
-                scene: {
-                    notes: 'Tokens scatter in random directions. Recording auto-generated.',
-                    params: [
-                        { name: 'anim', type: 'text', default: 'scatter', description: 'Sequence recording name' },
-                    ],
-                    variables: [],
-                    rows: [
-                        { filter: '*', delay: 'stagger(rank("left"), 500)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Staggered playback' },
-                    ],
-                },
-            });
-
-            Choreograph.registerExample(SCRIPT_NAME, {
-                name: 'wave',
-                description: 'Plays a pulse animation in a wave across tokens sorted by position.',
-                onGenerate: () => {
-                    const rec = {
-                        name: 'pulse', objectType: 'graphic', duration: 800, notes: '',
-                        keyframes: [
-                            { time: 0,   type: 'change', deltas: { width: { delta: 1.3 }, height: { delta: 1.3 } }, easings: { width: 'sine', height: 'sine' } },
-                            { time: 400, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 } }, easings: { width: '~sine', height: '~sine' } },
-                            { time: 800, type: 'change', deltas: {}, easings: {} },
-                        ],
-                    };
-                    const attrCols = ['width', 'height'];
-                    const handout = getOrCreateHandout('pulse');
-                    setHandoutNotes(handout, generateHandoutHtml('pulse', rec, attrCols), 'pulse');
-                    recordingCache['pulse'] = { recording: rec, attrCols };
-                    log(`${SCRIPT_NAME}: generated "pulse" recording handout for example`);
-                },
-                scene: {
-                    notes: 'Tokens pulse (grow/shrink) in a wave. Recording auto-generated.',
-                    params: [
-                        { name: 'anim', type: 'text', default: 'pulse', description: 'Sequence recording name' },
-                        { name: 'interval', type: 'number', default: '300', description: 'Ms between each token' },
-                    ],
-                    variables: [],
-                    rows: [
-                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!sequence play ${anim} --silent ignore-selected ${tokenId}'], notes: 'Wave' },
-                    ],
                 },
             });
 
