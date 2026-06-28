@@ -728,7 +728,7 @@ var Sequence = Sequence || (() => {
     const s = () => state[SCRIPT_NAME];
 
     // In-memory cache of parsed recordings (populated on first play/edit access)
-    // { '<handout-id>': { name, duration, objectType, tracks: {...} } }
+    // { '<handout-id>': { name, duration, objectType, keyframes: [...] } }
     const recordingCache = {};
 
     // In-memory active recording sessions
@@ -1592,8 +1592,7 @@ var Sequence = Sequence || (() => {
 
     const generateHandoutHtml = (name, recording, attrCols) => {
         const { objectType = 'graphic', duration = 0, notes = '' } = recording;
-        const tracks = recording.tracks || {};
-        const trackIds = Object.keys(tracks);
+        const keyframes = recording.keyframes || [];
 
         // All registered interpolatable attribute names for the dropdown
         const allAttrs = getAllAttrNames(objectType);
@@ -1625,49 +1624,37 @@ var Sequence = Sequence || (() => {
         html += btnHtml('⚠ Delete', `${CMD_TOKEN} delete ${escArg(name)}`);
         html += `</div>`;
 
-        // ---- One table per track ----
-        trackIds.forEach((trackId, ti) => {
-            const track = tracks[trackId];
-            const label = track.label || (trackIds.length > 1 ? `Track ${ti + 1}` : '');
+        // ---- Keyframe table ----
+        html += `<div style="overflow-x:auto;width:100%;margin-bottom:4px;">`;
+        html += `<table style="${STYLE.table}">`;
 
-            if (label) html += `<b>${escHtml(label)}</b><br>`;
+        // Determine if there are any command keyframes
+        const hasCommands = keyframes.some(kf => kf.type === 'command');
 
-            html += `<div style="overflow-x:auto;width:100%;margin-bottom:4px;">`;
-            html += `<table style="${STYLE.table}">`;
-
-            // Determine if this track has any command keyframes
-            const hasCommands = (track.keyframes || []).some(kf => kf.type === 'command');
-
-            // Header row
-            html += '<tr>';
-            html += `<th style="${STYLE.th}">Time (ms)</th>`;
-            html += `<th style="${STYLE.th}">type</th>`;
-            if (hasCommands) {
-                html += `<th style="${STYLE.th}"><span data-attr="__command">command</span></th>`;
-                // Note: no remove button on command column — it's a system column
-                // that disappears automatically when no command keyframes remain
+        // Header row
+        html += '<tr>';
+        html += `<th style="${STYLE.th}">Time (ms)</th>`;
+        html += `<th style="${STYLE.th}">type</th>`;
+        if (hasCommands) {
+            html += `<th style="${STYLE.th}"><span data-attr="__command">command</span></th>`;
+        }
+        attrCols.forEach(attr => {
+            const reg     = getAttrReg(attr);
+            const canLerp = reg && reg.lerp !== null;
+            html += `<th style="${STYLE.th}"><span data-attr="${escHtml(attr)}">${escHtml(attr)}</span>`;
+            html += `<a href="${CMD_TOKEN} remove-attribute ${escArg(name)} ${escArg(attr)}" `
+                  + `style="${STYLE.btn};background:#900;padding:0 4px;margin-left:3px;">✕</a></th>`;
+            if (canLerp) {
+                html += `<th style="${STYLE.th}"><span data-attr="${escHtml(attr)}:easing">${escHtml(attr)}:easing</span></th>`;
             }
-            attrCols.forEach(attr => {
-                const reg     = getAttrReg(attr);
-                const canLerp = reg && reg.lerp !== null;
-                // Wrap attr name in span with data-attr marker so the parser
-                // can extract just the name without grabbing button text
-                // The remove button must be outside the span so Roll20's editor
-                // doesn't concatenate the ✕ text into the data-attr value on save
-                html += `<th style="${STYLE.th}"><span data-attr="${escHtml(attr)}">${escHtml(attr)}</span>`;
-                html += `<a href="${CMD_TOKEN} remove-attribute ${escArg(name)} ${escArg(attr)}" `
-                      + `style="${STYLE.btn};background:#900;padding:0 4px;margin-left:3px;">✕</a></th>`;
-                if (canLerp) {
-                    html += `<th style="${STYLE.th}"><span data-attr="${escHtml(attr)}:easing">${escHtml(attr)}:easing</span></th>`;
-                }
-            });
-            html += '</tr>';
+        });
+        html += '</tr>';
 
-            // Keyframe rows
-            // Track which attrs have already had a showEasingBtn row
-            const hadEasingAttr = new Set();
+        // Keyframe rows
+        // Track which attrs have already had a showEasingBtn row
+        const hadEasingAttr = new Set();
 
-            (track.keyframes || []).forEach((kf, ki) => {
+        keyframes.forEach((kf, ki) => {
                 const bg    = ki % 2 === 0 ? STYLE.td : STYLE.tdAlt;
                 const bgErr = 'padding:2px 5px;border:1px solid #c00;background:#fee;';
 
@@ -1758,7 +1745,7 @@ var Sequence = Sequence || (() => {
                         // EXCEPT: identity-delta rows themselves are NOT in a dead zone
                         // (they are the easing switch point for the next segment).
                         const isIdentity = isIdentityParsed(parsed, reg);
-                        const futureKfs  = (track.keyframes || []).slice(ki + 1);
+                        const futureKfs  = keyframes.slice(ki + 1);
                         const nextDeltaKf = futureKfs.find(fkf =>
                             fkf.deltas && attr in fkf.deltas &&
                             fkf.deltas[attr] !== null && fkf.deltas[attr] !== undefined
@@ -1819,7 +1806,6 @@ var Sequence = Sequence || (() => {
             });
 
             html += '</table></div>';
-        });
 
         // ---- Attribute key ----
         html += `<div style="font-size:10px;color:#666;margin-top:4px;">`;
@@ -1868,7 +1854,7 @@ var Sequence = Sequence || (() => {
 
     /**
      * Parse a recording handout's HTML back into a recording object.
-     * Returns { name, objectType, duration, notes, tracks, attrCols } or null on failure.
+     * Returns { name, objectType, duration, notes, keyframes, attrCols } or null on failure.
      */
     const parseHandout = (name, html) => {
         // Decode HTML entities then normalise Roll20-mangled markup.
@@ -1903,7 +1889,7 @@ var Sequence = Sequence || (() => {
             objectType: 'graphic',
             duration:   0,
             notes:      '',
-            tracks:     {},
+            keyframes:  [],
         };
         const attrCols = [];
 
@@ -1925,15 +1911,12 @@ var Sequence = Sequence || (() => {
         const notesVal = metaVal('Notes');
         if (notesVal) recording.notes = notesVal;
 
-        // Parse tables — each table is one track
+        // Parse tables — each table contributes keyframes to the recording
         const tableRe = /<table[^>]*>([\s\S]*?)<\/table>/gi;
         let tableMatch;
-        let trackIdx = 0;
 
         while ((tableMatch = tableRe.exec(body)) !== null) {
             const tableHtml = tableMatch[1];
-            const trackId   = `track-${trackIdx++}`;
-            const track     = { keyframes: [] };
 
             // Parse header row to get column order
             const headerMatch = tableHtml.match(/<tr[^>]*>([\s\S]*?)<\/tr>/i);
@@ -1994,7 +1977,7 @@ var Sequence = Sequence || (() => {
                 const isAbs = rawTime.startsWith('=');
 
                 if (!isRel && !isAbs) {
-                    track.keyframes.push({
+                    recording.keyframes.push({
                         time:    null,
                         type:    'parse-error',
                         error:   `Time must start with = (absolute) or + (relative): "${rawTime}"`,
@@ -2020,7 +2003,7 @@ var Sequence = Sequence || (() => {
                     } else if (/[A-Za-z(]/.test(inner)) {
                         parsedTime = { abs: inner, isExpr: true };
                     } else {
-                        track.keyframes.push({
+                        recording.keyframes.push({
                             time:    null,
                             type:    'parse-error',
                             error:   `Could not parse time value: "${rawTime}"`,
@@ -2126,21 +2109,17 @@ var Sequence = Sequence || (() => {
                 if (Object.keys(kf.deltas).length > 0 ||
                     kf.type === 'command' ||
                     kf.type === 'change') {
-                    track.keyframes.push(kf);
+                    recording.keyframes.push(kf);
                 }
             }
-
-            recording.tracks[trackId] = track;
         }
 
         // Compute duration from last keyframe — expression times treated as 0
         // (unknown until runtime) so duration may be underestimated for expr-timed recordings
         let maxTime = 0;
-        Object.values(recording.tracks).forEach(track => {
-            (track.keyframes || []).forEach(kf => {
-                const t = typeof kf.time === 'number' ? kf.time : 0;
-                if (t > maxTime) maxTime = t;
-            });
+        (recording.keyframes || []).forEach(kf => {
+            const t = typeof kf.time === 'number' ? kf.time : 0;
+            if (t > maxTime) maxTime = t;
         });
         recording.duration = maxTime;
 
@@ -2360,16 +2339,12 @@ var Sequence = Sequence || (() => {
      * Build a recording object from a session and save it to a handout.
      */
     const saveRecording = (name, session, callback) => {
-        const track = {
-            label:     '',
-            keyframes: session.keyframes,
-        };
         const recording = {
             name,
             objectType: 'graphic',
             duration:   session.duration || 0,
             notes:      '',
-            tracks:     { 'track-0': track },
+            keyframes:  session.keyframes,
         };
 
         const attrCols = session.recordAttrs.filter(attr =>
@@ -2428,12 +2403,10 @@ var Sequence = Sequence || (() => {
                 callback(null);
                 return;
             }
-            const trackCount = Object.keys(result.recording.tracks || {}).length;
-            const kfCount = Object.values(result.recording.tracks || {})
-                .reduce((sum, t) => sum + (t.keyframes || []).length, 0);
+            const kfCount = (result.recording.keyframes || []).length;
             log(`${SCRIPT_NAME}: loadRecording — "${name}" parsed OK: `
                 + `duration=${result.recording.duration}ms, `
-                + `tracks=${trackCount}, keyframes=${kfCount}, `
+                + `keyframes=${kfCount}, `
                 + `attrCols=${result.attrCols.join(',')}`);
             recordingCache[name] = result;
             callback(result);
@@ -2694,10 +2667,8 @@ var Sequence = Sequence || (() => {
         const obj = getObj('graphic', objId);
         if (!obj) return false;
 
-        const tracks   = recording.tracks || {};
-        const trackId  = opts.trackId || Object.keys(tracks)[0];
-        const track    = tracks[trackId];
-        if (!track || !track.keyframes || track.keyframes.length === 0) return false;
+        const keyframes = recording.keyframes || [];
+        if (keyframes.length === 0) return false;
 
         // Snapshot current state as the "zero point" for delta application
         const initialState = {};
@@ -2711,8 +2682,7 @@ var Sequence = Sequence || (() => {
 
         const pb = {
             recordingName: recording.name,
-            trackId,
-            keyframes:     track.keyframes,
+            keyframes,
             startTime:     Date.now() - (opts.offset || 0),
             speed:         opts.speed   || 1.0,
             loop:          opts.loop    || false,
@@ -2741,7 +2711,7 @@ var Sequence = Sequence || (() => {
         // runningStates[0] = initialState, runningStates[i+1] = after keyframe i.
         const shadow = makeShadow(initialState);
         const runningStates = [Object.assign({}, shadow._state)];
-        (track.keyframes || []).forEach(kf => {
+        keyframes.forEach(kf => {
             Object.entries(kf.deltas || {}).forEach(([attrName, parsed]) => {
                 if (!parsed) return;
                 const reg = getAttrReg(attrName);
@@ -3630,16 +3600,12 @@ var Sequence = Sequence || (() => {
                 loadRecording(recName, (result) => {
                     if (!result) { replyError(msg, `Could not parse "${recName}".`); return; }
                     const { recording, attrCols } = result;
-                    const trackIds = Object.keys(recording.tracks || {});
-                    const trackId  = trackIds[0] || 'track-0';
-                    if (!recording.tracks[trackId]) recording.tracks[trackId] = { keyframes: [] };
-                    const track = recording.tracks[trackId];
 
                     // Insert new blank keyframe then sort
                     const newKf = { time: parsedTime, type: 'change', deltas: {}, easings: {} };
-                    track.keyframes.push(newKf);
-                    track.keyframes = sortKeyframes(track.keyframes);
-                    attrCols.forEach(attrName => stripRedundantEasings(track.keyframes, attrName));
+                    recording.keyframes.push(newKf);
+                    recording.keyframes = sortKeyframes(recording.keyframes);
+                    attrCols.forEach(attrName => stripRedundantEasings(recording.keyframes, attrName));
 
                     recordingCache[recName] = { recording, attrCols };
                     const html = generateHandoutHtml(recName, recording, attrCols);
@@ -3661,22 +3627,19 @@ var Sequence = Sequence || (() => {
                 loadRecording(recName, (result) => {
                     if (!result) { replyError(msg, `Could not parse "${recName}".`); return; }
                     const { recording, attrCols } = result;
-                    let totalSorted = 0;
-                    Object.entries(recording.tracks || {}).forEach(([, track]) => {
-                        const before = JSON.stringify((track.keyframes || []).map(kf => kf.time));
-                        track.keyframes = sortKeyframes(track.keyframes || []);
-                        const after = JSON.stringify(track.keyframes.map(kf => kf.time));
-                        if (before !== after) totalSorted++;
-                        (attrCols || []).forEach(attrName => {
-                            stripRedundantEasings(track.keyframes, attrName);
-                        });
+                    const before = JSON.stringify((recording.keyframes || []).map(kf => kf.time));
+                    recording.keyframes = sortKeyframes(recording.keyframes || []);
+                    const after = JSON.stringify(recording.keyframes.map(kf => kf.time));
+                    const wasSorted = before !== after;
+                    (attrCols || []).forEach(attrName => {
+                        stripRedundantEasings(recording.keyframes, attrName);
                     });
                     recordingCache[recName] = { recording, attrCols };
                     const html = generateHandoutHtml(recName, recording, attrCols);
                     setHandoutNotes(handout, html, recName);
                     reply(msg, 'Sequence',
-                        totalSorted > 0
-                            ? `Sorted and refreshed "${recName}" — ${totalSorted} track(s) reordered.`
+                        wasSorted
+                            ? `Sorted and refreshed "${recName}" — keyframes reordered.`
                             : `Refreshed "${recName}" — already in order.`);
                 });
                 return;
@@ -3698,17 +3661,15 @@ var Sequence = Sequence || (() => {
                     if (!result) { replyError(msg, `Could not parse "${recName}".`); return; }
                     const { recording, attrCols } = result;
                     let found = false;
-                    Object.values(recording.tracks || {}).forEach(track => {
-                        (track.keyframes || []).forEach(kf => {
-                            if (!kfTimeMatches(kf, timeStr)) return;
-                            kf.easings = kf.easings || {};
-                            if (easing === 'linear' || easing === '') {
-                                delete kf.easings[attrName];
-                            } else {
-                                kf.easings[attrName] = easing;
-                            }
-                            found = true;
-                        });
+                    (recording.keyframes || []).forEach(kf => {
+                        if (!kfTimeMatches(kf, timeStr)) return;
+                        kf.easings = kf.easings || {};
+                        if (easing === 'linear' || easing === '') {
+                            delete kf.easings[attrName];
+                        } else {
+                            kf.easings[attrName] = easing;
+                        }
+                        found = true;
                     });
                     if (!found) {
                         replyError(msg, `No keyframe found at ${escHtml(timeStr)} in "${escHtml(recName)}".`);
@@ -3738,12 +3699,10 @@ var Sequence = Sequence || (() => {
                     if (!result) { replyError(msg, `Could not parse "${recName}".`); return; }
                     const { recording, attrCols } = result;
                     let found = false;
-                    Object.values(recording.tracks || {}).forEach(track => {
-                        (track.keyframes || []).forEach(kf => {
-                            if (!kfTimeMatches(kf, timeStr)) return;
-                            kf.command = cmdStr || null;
-                            found = true;
-                        });
+                    (recording.keyframes || []).forEach(kf => {
+                        if (!kfTimeMatches(kf, timeStr)) return;
+                        kf.command = cmdStr || null;
+                        found = true;
                     });
                     if (!found) {
                         replyError(msg, `No keyframe at ${escHtml(timeStr)} in "${escHtml(recName)}".`);
@@ -3778,12 +3737,10 @@ var Sequence = Sequence || (() => {
                     if (!result) { replyError(msg, `Could not parse "${recName}".`); return; }
                     const { recording, attrCols } = result;
                     let found = false;
-                    Object.values(recording.tracks || {}).forEach(track => {
-                        (track.keyframes || []).forEach(kf => {
-                            if (!kfTimeMatches(kf, timeStr)) return;
-                            kf.type = newType;
-                            found = true;
-                        });
+                    (recording.keyframes || []).forEach(kf => {
+                        if (!kfTimeMatches(kf, timeStr)) return;
+                        kf.type = newType;
+                        found = true;
                     });
                     if (!found) {
                         replyError(msg, `No keyframe found at ${escHtml(timeStr)} in "${escHtml(recName)}".`);
@@ -3814,13 +3771,11 @@ var Sequence = Sequence || (() => {
                 loadRecording(recName, (result) => {
                     if (!result) { replyError(msg, `Could not parse recording "${recName}".`); return; }
                     const { recording, attrCols } = result;
-                    const track = Object.values(recording.tracks || {})[0];
-                    if (!track) { replyError(msg, 'Recording has no tracks.'); return; }
                     // Insert sorted by time
                     const newKf = { time: timeMs, type: 'command', command: cmdStr, deltas: {}, easings: {} };
-                    const idx = track.keyframes.findIndex(kf => kf.time > timeMs);
-                    if (idx === -1) track.keyframes.push(newKf);
-                    else track.keyframes.splice(idx, 0, newKf);
+                    const idx = recording.keyframes.findIndex(kf => kf.time > timeMs);
+                    if (idx === -1) recording.keyframes.push(newKf);
+                    else recording.keyframes.splice(idx, 0, newKf);
                     recordingCache[recName] = { recording, attrCols };
                     const html = generateHandoutHtml(recName, recording, attrCols);
                     setHandoutNotes(handout, html, recName);
@@ -3876,11 +3831,9 @@ var Sequence = Sequence || (() => {
                     if (idx !== -1) {
                         attrCols.splice(idx, 1);
                         // Also strip deltas for this attr from all keyframes
-                        Object.values(recording.tracks || {}).forEach(track => {
-                            (track.keyframes || []).forEach(kf => {
-                                delete (kf.deltas || {})[attr];
-                                delete (kf.easings || {})[attr];
-                            });
+                        (recording.keyframes || []).forEach(kf => {
+                            delete (kf.deltas || {})[attr];
+                            delete (kf.easings || {})[attr];
                         });
                         recordingCache[name] = { recording, attrCols };
                     }
@@ -3910,8 +3863,7 @@ var Sequence = Sequence || (() => {
                     }
                     const { recording, attrCols } = result;
 
-                    const kfCount = Object.values(recording.tracks || {})
-                        .reduce((n, t) => n + (t.keyframes || []).length, 0);
+                    const kfCount = (recording.keyframes || []).length;
                     const html = generateHandoutHtml(name, recording, attrCols);
                     setHandoutNotes(handout, html, name);
                     reply(msg, 'Sequence', `Refreshed "${name}" — ${kfCount} keyframe(s).`);
@@ -4461,8 +4413,7 @@ var Sequence = Sequence || (() => {
     const validateRecording = (recording, attrCols) => {
         const errors = [];
 
-        Object.entries(recording.tracks || {}).forEach(([trackId, track]) => {
-            (track.keyframes || []).forEach((kf, ki) => {
+        (recording.keyframes || []).forEach((kf, ki) => {
                 // Parse-error rows are already flagged — just add to errors list
                 if (kf.type === 'parse-error') {
                     errors.push(`Row ${ki + 1} (${kf.time !== null ? kf.time + 'ms' : '?'}): ${kf.error}`);
@@ -4542,7 +4493,6 @@ var Sequence = Sequence || (() => {
                     }
                 });
             });
-        });
 
         return errors;
     };
@@ -4571,12 +4521,10 @@ var Sequence = Sequence || (() => {
 
             // Sort keyframes
             const getTime2 = (kf) => typeof kf.time === 'number' ? kf.time : 0;
-            Object.entries(recording.tracks || {}).forEach(([, track]) => {
-                (track.keyframes || []).sort((a, b) => getTime2(a) - getTime2(b));
-                // Strip redundant easing cells
-                (attrCols || []).forEach(attrName => {
-                    stripRedundantEasings(track.keyframes, attrName);
-                });
+            (recording.keyframes || []).sort((a, b) => getTime2(a) - getTime2(b));
+            // Strip redundant easing cells
+            (attrCols || []).forEach(attrName => {
+                stripRedundantEasings(recording.keyframes, attrName);
             });
 
             // Validate and annotate keyframes with errors
@@ -5453,10 +5401,10 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                 onGenerate: () => {
                     const rec = {
                         name: 'scatter', objectType: 'graphic', duration: 1000, notes: '',
-                        tracks: { 'track-0': { label: '', keyframes: [
+                        keyframes: [
                             { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
                             { time: 1000, type: 'change', deltas: { left: { expr: 'orig + cos(freeze(rand(0, TAU))) * 100', mode: 'abs' }, top: { expr: 'orig + sin(freeze(rand(0, TAU))) * 100', mode: 'abs' } }, easings: {} },
-                        ]}},
+                        ],
                     };
                     const attrCols = ['left', 'top'];
                     const handout = getOrCreateHandout('scatter');
@@ -5482,11 +5430,11 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
                 onGenerate: () => {
                     const rec = {
                         name: 'pulse', objectType: 'graphic', duration: 800, notes: '',
-                        tracks: { 'track-0': { label: '', keyframes: [
+                        keyframes: [
                             { time: 0,   type: 'change', deltas: { width: { delta: 1.3 }, height: { delta: 1.3 } }, easings: { width: 'sine', height: 'sine' } },
                             { time: 400, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 } }, easings: { width: '~sine', height: '~sine' } },
                             { time: 800, type: 'change', deltas: {}, easings: {} },
-                        ]}},
+                        ],
                     };
                     const attrCols = ['width', 'height'];
                     const handout = getOrCreateHandout('pulse');
