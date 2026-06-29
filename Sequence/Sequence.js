@@ -132,10 +132,12 @@ var Sequence = Sequence || (() => {
      * Required fields:
      * @param {string} struct.name       Display name for the example.
      * @param {object} struct.recording  Recording object containing keyframes to replay.
+     *                                   A recording contains: objectType (string), notes (string),
+     *                                   and a keyframes array where each keyframe has time, type,
+     *                                   deltas (attr→value map), and easings (attr→curve map).
      *
      * Optional fields:
      * @param {string}     struct.description  Human-readable description.
-     * @param {string[]}   struct.attrCols     Attribute columns to show. Auto-derived from recording if omitted.
      * @param {function}   struct.onGenerate   (handoutBody) => void — called when handout is generated.
      *
      * @returns {boolean} true on success, false if name/recording missing or duplicate.
@@ -727,12 +729,14 @@ var Sequence = Sequence || (() => {
      * @param {object} struct    Registration struct:
      *
      * Required fields:
-     * @param {string}   struct.name  Identifier (letters, digits, underscores, hyphens; no dots).
-     * @param {function} struct.fn    (t, ...args) => value, where t is 0–1.
+     * @param {string}   struct.name         Identifier (letters, digits, underscores, hyphens; no dots).
+     * @param {function} struct.fn           (t, ...args) => value, where t is 0–1.
+     * @param {string}   struct.description  One-line description.
      *
      * Optional fields:
-     * @param {string}   struct.description  One-line description.
-     * @param {Array}    struct.args         [{ name, type, description, optional, default, promptDefault }] for parameters.
+     * @param {Array}    struct.args         Array of arg objects, each with fields:
+     *                                       { name: string, type: string, description: string,
+     *                                         optional?: boolean, default?: any, promptDefault?: any }
      * @param {string[]} struct.examples     Example usage strings.
      * @param {string}   struct.label        Display label override.
      *
@@ -1312,38 +1316,33 @@ var Sequence = Sequence || (() => {
      * core functions can be called without namespace prefix.
      *
      * @param {string}          sourceId      Script name registering this function.
-     * @param {object|string}   structOrFn    Registration struct, or function name (shorthand).
-     * @param {function}        fn            Function implementation (shorthand only; ignored if structOrFn is object).
+     * @param {object}          reg           Registration struct.
      * @param {object}          scope         Expression scope object to install function into.
      * @param {object}          registry      Registry object to store metadata in.
      * @param {Set}             allowedRoots  Set of allowed root identifiers in expressions.
      * @param {string}          label         Label used in log messages (e.g. 'registerValueFunction').
      *
-     * Struct fields (when structOrFn is an object):
-     * @param {string}   structOrFn.name        Identifier (required).
-     * @param {string}   structOrFn.namespace   'core' or external namespace (default: 'core').
-     * @param {function} structOrFn.fn          Implementation (required).
-     * @param {string}   structOrFn.description One-line description.
-     * @param {Array}    structOrFn.args        [{ name, type, description, optional }] parameter descriptors.
-     * @param {string}   structOrFn.returns     Return type description.
-     * @param {Array}    structOrFn.examples    Example usage strings.
+     * Registration struct fields:
+     * @param {string}   reg.name        Identifier (required).
+     * @param {string}   reg.namespace   'core' or external namespace.
+     * @param {function} reg.fn          Implementation (required).
+     * @param {string}   reg.description One-line description.
+     * @param {Array}    reg.args        [{ name, type, description, optional }] parameter descriptors.
+     * @param {string}   reg.returns     Return type description.
+     * @param {Array}    reg.examples    Example usage strings.
      *
      * @returns {boolean} true on success, false on validation failure or duplicate.
      */
-    const _registerFn = (sourceId, structOrFn, fn, scope, registry, allowedRoots, label) => {
-        const src = sourceId || SCRIPT_NAME;
-        const reg = typeof structOrFn === 'string'
-            ? { name: structOrFn, fn, namespace: 'core' }
-            : structOrFn;
+    const _registerFn = (sourceId, reg, scope, registry, allowedRoots, label) => {
 
-        const { name, namespace = 'core' } = reg;
+        const { name, namespace } = reg;
 
         if (!validIdent(name)) {
-            log(`${SCRIPT_NAME}: [${src}] ${label} — invalid name "${name}"`);
+            log(`${SCRIPT_NAME}: [${sourceId}] ${label} — invalid name "${name}"`);
             return false;
         }
         if (!validNamespace(namespace)) {
-            log(`${SCRIPT_NAME}: [${src}] ${label} — invalid namespace "${namespace}"`);
+            log(`${SCRIPT_NAME}: [${sourceId}] ${label} — invalid namespace "${namespace}"`);
             return false;
         }
         const qualifiedName = namespace === 'core' ? name : `${namespace}.${name}`;
@@ -1354,8 +1353,8 @@ var Sequence = Sequence || (() => {
         nsParts.forEach(p => { checkNode = checkNode && checkNode[p]; });
         if (checkNode && checkNode[name]) {
             const existing = (registry[`${namespace}/${name}`] || {}).source || SCRIPT_NAME;
-            if (existing !== src)
-                log(`${SCRIPT_NAME}: [${src}] ${label} — "${qualifiedName}" already registered by [${existing}]`);
+            if (existing !== sourceId)
+                log(`${SCRIPT_NAME}: [${sourceId}] ${label} — "${qualifiedName}" already registered by [${existing}]`);
             return false;
         }
 
@@ -1364,7 +1363,7 @@ var Sequence = Sequence || (() => {
         reg.returns     = reg.returns     || 'number';
         reg.examples    = reg.examples    || [];
         reg.pure        = reg.pure !== undefined ? reg.pure : true;
-        reg.source      = src;
+        reg.source      = sourceId;
 
         insertIntoScope(scope, namespace, name, reg.fn);
         const rootName = nsParts.length > 0 ? nsParts[0] : name;
@@ -1380,12 +1379,24 @@ var Sequence = Sequence || (() => {
      * { orig, prev, curr, obj, cumulative }.
      *
      * @param {string}        sourceId    Script name registering this function.
-     * @param {object|string} structOrFn  Registration struct (see _registerFn), or function name string.
-     * @param {function}      [fn]        Function implementation (only when structOrFn is a string).
+     * @param {object}        reg         Registration struct:
+     *
+     * Required fields:
+     * @param {string}        reg.name        Identifier.
+     * @param {string}        reg.namespace   'core' or external namespace.
+     * @param {function}      reg.fn          Function implementation.
+     * @param {string}        reg.description One-line description.
+     *
+     * Optional fields:
+     * @param {Array}         reg.args        [{ name, type, description, optional }] parameter descriptors.
+     * @param {string}        reg.returns     Return type description.
+     * @param {Array}         reg.examples    Example usage strings.
+     * @param {boolean}       reg.pure        Whether function is pure (default: true).
+     *
      * @returns {boolean} true on success, false on validation failure or duplicate.
      */
-    const registerValueFunction = (sourceId, structOrFn, fn) =>
-        _registerFn(sourceId, structOrFn, fn, EXPR_SCOPE, FN_REGISTRY, EXPR_ALLOWED_ROOTS, 'registerValueFunction');
+    const registerValueFunction = (sourceId, reg) =>
+        _registerFn(sourceId, reg, EXPR_SCOPE, FN_REGISTRY, EXPR_ALLOWED_ROOTS, 'registerValueFunction');
 
     /**
      * Register a function for use in time expressions.
@@ -1393,12 +1404,24 @@ var Sequence = Sequence || (() => {
      * Must return a number (milliseconds).
      *
      * @param {string}        sourceId    Script name registering this function.
-     * @param {object|string} structOrFn  Registration struct (see _registerFn), or function name string.
-     * @param {function}      [fn]        Function implementation (only when structOrFn is a string).
+     * @param {object}        reg         Registration struct:
+     *
+     * Required fields:
+     * @param {string}        reg.name        Identifier.
+     * @param {string}        reg.namespace   'core' or external namespace.
+     * @param {function}      reg.fn          Function implementation.
+     * @param {string}        reg.description One-line description.
+     *
+     * Optional fields:
+     * @param {Array}         reg.args        [{ name, type, description, optional }] parameter descriptors.
+     * @param {string}        reg.returns     Return type description.
+     * @param {Array}         reg.examples    Example usage strings.
+     * @param {boolean}       reg.pure        Whether function is pure (default: true).
+     *
      * @returns {boolean} true on success, false on validation failure or duplicate.
      */
-    const registerTimingFunction = (sourceId, structOrFn, fn) =>
-        _registerFn(sourceId, structOrFn, fn, TIME_EXPR_SCOPE, TIME_FN_REGISTRY, TIME_ALLOWED_ROOTS, 'registerTimingFunction');
+    const registerTimingFunction = (sourceId, reg) =>
+        _registerFn(sourceId, reg, TIME_EXPR_SCOPE, TIME_FN_REGISTRY, TIME_ALLOWED_ROOTS, 'registerTimingFunction');
 
     // =========================================================================
     // Constant Registry
@@ -1414,14 +1437,14 @@ var Sequence = Sequence || (() => {
      * @param {object} reg       Registration struct:
      *
      * Required fields:
-     * @param {string} reg.name       Identifier (must be a valid JS identifier, no dots).
-     * @param {*}      reg.value      The constant value.
+     * @param {string}   reg.name        Identifier (must be a valid JS identifier, no dots).
+     * @param {*}        reg.value       The constant value.
+     * @param {string}   reg.namespace   Namespace (e.g. 'core' or your script's namespace).
+     * @param {string}   reg.description One-line description.
+     * @param {string[]} reg.contexts    Which expression contexts allow this: ['value','time'] or a subset.
      *
      * Optional fields:
-     * @param {string}   reg.namespace    Namespace (default: 'core').
-     * @param {string}   reg.description  One-line description.
-     * @param {string}   reg.type         Value type name for display (default: typeof value).
-     * @param {string[]} reg.contexts     Which expression contexts allow this: ['value','time'] (default: both).
+     * @param {string}   reg.type        Value type name for display (default: typeof value).
      *
      * @returns {boolean} true on success, false on validation failure or duplicate.
      */
@@ -5669,13 +5692,13 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
      * @param {object} opts      Options struct:
      *
      * Required fields:
-     * @param {Array}  opts.sections     Array of section descriptors to render in the handout.
+     * @param {string}   opts.description  Short description shown at top of handout.
+     * @param {Array}    opts.sections     Array of { namespace: string (required), description: string (required) }
+     *                                     objects — one per namespace to document.
      *
      * Optional fields:
      * @param {string}   opts.name         Extension name (used in handout title; defaults to sourceId).
-     * @param {string}   opts.description  Short description shown at top of handout.
      * @param {string}   opts.avatar       Avatar image URL (falls back to Sequence's icon).
-     * @param {string[]} opts.namespaces   Array of namespaces if extension uses multiple.
      *
      * Logs an error and returns early if opts.sections is empty.
      */
