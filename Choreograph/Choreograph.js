@@ -282,10 +282,20 @@ var Choreograph = Choreograph || (() => {
      * @param {function} [step.onBack]      Callback when stepping backward through this step. Receives (roles).
      *                                      Used to undo side effects of onContinue/onStart.
      */
-    const startGuide = (msg, sceneName, steps) => {
+    const startGuide = (msg, sceneName, steps, sceneRoles) => {
         const guideId = `guide-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        // Inherit min/max from scene roles if not explicitly set on step
+        const resolvedSteps = steps.map(step => {
+            if (!step.role || !sceneRoles) return step;
+            const roleDef = sceneRoles.find(r => r.name === step.role);
+            if (!roleDef) return step;
+            const merged = Object.assign({}, step);
+            if (merged.min == null && roleDef.min != null) merged.min = roleDef.min;
+            if (merged.max == null && roleDef.max != null) merged.max = roleDef.max;
+            return merged;
+        });
         activeGuides[guideId] = {
-            steps,
+            steps: resolvedSteps,
             currentStep: 0,
             roles: {},
             msg,
@@ -630,6 +640,20 @@ var Choreograph = Choreograph || (() => {
         });
         html += `</table>`;
 
+        // Roles table
+        if (scene.roles && scene.roles.length > 0) {
+            html += `<table style="border-collapse:collapse;width:100%;font-size:12px;margin-bottom:8px;">`;
+            html += `<tr><th style="${STYLE.th}">Role</th>`;
+            html += `<th style="${STYLE.th}">Min</th>`;
+            html += `<th style="${STYLE.th}">Max</th></tr>`;
+            scene.roles.forEach(r => {
+                html += `<tr><td style="${STYLE.td}">${escHtml(r.name)}</td>`;
+                html += `<td style="${STYLE.td}">${r.min != null ? r.min : ''}</td>`;
+                html += `<td style="${STYLE.td}">${r.max != null ? r.max : ''}</td></tr>`;
+            });
+            html += `</table>`;
+        }
+
         // Scene table
         html += `<table style="border-collapse:collapse;width:100%;font-size:12px;">`;
         html += `<tr><th style="${STYLE.th}">Filter</th>`;
@@ -724,6 +748,7 @@ var Choreograph = Choreograph || (() => {
             const isParamTable = headers.includes('name') && headers.includes('type');
             const isSceneTable = headers.includes('filter') && headers.some(h => h.startsWith('delay'));
             const isVarTable   = headers.includes('variable') && headers.includes('expression');
+            const isRoleTable  = headers.includes('role') && headers.includes('min');
 
             // Parse rows
             const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
@@ -774,6 +799,12 @@ var Choreograph = Choreograph || (() => {
                     };
                     if (whenIdx >= 0 && cells[whenIdx]) row.when = cells[whenIdx];
                     scene.rows.push(row);
+                } else if (isRoleTable && cells.length >= 1) {
+                    const role = { name: cells[0] || '' };
+                    if (cells[1]) role.min = parseInt(cells[1], 10) || undefined;
+                    if (cells[2]) role.max = parseInt(cells[2], 10) || undefined;
+                    if (!scene.roles) scene.roles = [];
+                    scene.roles.push(role);
                 }
             }
         });
@@ -1365,6 +1396,19 @@ var Choreograph = Choreograph || (() => {
         // Attach execution context for registered functions that need full cast access
         resolvedParams.__ctx = { allTokens: cast, castData };
 
+        // Validate role constraints (min/max)
+        if (scene.roles && scene.roles.length > 0 && castData && castData.roles) {
+            for (const roleDef of scene.roles) {
+                const assigned = (castData.roles[roleDef.name] || []).length;
+                if (roleDef.min && assigned < roleDef.min) {
+                    const errMsg = `Role "${roleDef.name}" requires at least ${roleDef.min} token(s) (got ${assigned}).`;
+                    if (msg) replyError(msg, errMsg);
+                    else log(`${SCRIPT_NAME}: ${errMsg}`);
+                    return null;
+                }
+            }
+        }
+
         // Precompute variables per token
         const tokenVars = {};
         if (scene.variables && scene.variables.length > 0) {
@@ -1857,6 +1901,21 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
+        // Helper: parse --role flags from message content and merge into castData
+        const mergeRoleFlags = (content, castData, castIds) => {
+            const roleRegex = /--role\s+(\S+)((?:\s+-(?!-)[A-Za-z0-9_-]+)+)/g;
+            let roleMatch;
+            while ((roleMatch = roleRegex.exec(content)) !== null) {
+                const roleName = roleMatch[1];
+                const roleIds = roleMatch[2].trim().split(/\s+/).filter(Boolean);
+                if (!castData.roles[roleName]) castData.roles[roleName] = [];
+                roleIds.forEach(id => {
+                    castData.roles[roleName].push(id);
+                    castIds.push(id);
+                });
+            }
+        };
+
         // ---- run ----
         if (cmd === 'run') {
             const name = args[0];
@@ -1908,11 +1967,23 @@ var Choreograph = Choreograph || (() => {
                         return;
                     }
 
-                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync', 'sync-timeout']);
+                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync', 'sync-timeout', 'role']);
                     const params = {};
                     Object.entries(opts).forEach(([k, v]) => {
                         if (!knownFlags.has(k) && typeof v === 'string') params[k] = v;
                     });
+
+                    // Enforce max on roles
+                    if (scene.roles && castData && castData.roles) {
+                        scene.roles.forEach(roleDef => {
+                            if (roleDef.max && castData.roles[roleDef.name]) {
+                                const arr = castData.roles[roleDef.name];
+                                if (arr.length > roleDef.max) {
+                                    castData.roles[roleDef.name] = arr.slice(-roleDef.max);
+                                }
+                            }
+                        });
+                    }
 
                     // Parse loop options
                     let loopOpts = null;
@@ -1971,22 +2042,16 @@ var Choreograph = Choreograph || (() => {
                         return;
                     }
                     getAllCastIds(castData).forEach(id => castIds.push(id));
+                    // Merge --role into loaded cast if present
+                    if (opts.role) {
+                        mergeRoleFlags(msg.content, castData, castIds);
+                    }
                     runWithCast(castData);
                 });
             } else if (opts.role) {
                 // --role <name> <ids...> — build ephemeral castData
                 const roleData = { roles: {} };
-                const roleRegex = /--role\s+(\S+)((?:\s+-(?!-)[A-Za-z0-9_-]+)+)/g;
-                let roleMatch;
-                while ((roleMatch = roleRegex.exec(msg.content)) !== null) {
-                    const roleName = roleMatch[1];
-                    const roleIds = roleMatch[2].trim().split(/\s+/).filter(Boolean);
-                    if (!roleData.roles[roleName]) roleData.roles[roleName] = [];
-                    roleIds.forEach(id => {
-                        roleData.roles[roleName].push(id);
-                        castIds.push(id);
-                    });
-                }
+                mergeRoleFlags(msg.content, roleData, castIds);
                 runWithCast(roleData);
             } else {
                 runWithCast(null);
@@ -2257,7 +2322,7 @@ var Choreograph = Choreograph || (() => {
             const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
             if (!ex) { replyError(msg, `No example named "${exName}".`); return; }
             if (!ex.guide || !ex.guide.length) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
-            startGuide(msg, `example-${exName}`, ex.guide);
+            startGuide(msg, `example-${exName}`, ex.guide, ex.scene && ex.scene.roles);
             return;
         }
         if (cmd === 'guide-continue') {
@@ -2306,7 +2371,7 @@ var Choreograph = Choreograph || (() => {
 
             // Start guide if the example defines one
             if (ex.guide && Array.isArray(ex.guide) && ex.guide.length > 0) {
-                startGuide(msg, sceneName, ex.guide);
+                startGuide(msg, sceneName, ex.guide, ex.scene && ex.scene.roles);
                 return;
             }
 
@@ -2960,6 +3025,42 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 }).map(t => t.get('id'));
             },
         });
+        registerFunction(SCRIPT_NAME, {
+            name: 'role', namespace: 'core', returns: 'token[]',
+            description: 'Shorthand for cast("role=<name>"). Returns tokens in the named role, sorted by distance.',
+            fn: (token, filteredTokens, params, roleName) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = roleName
+                    ? all.filter(t => evalFilter(`role=${roleName}`, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                });
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'role_ids', namespace: 'core', returns: 'string[]',
+            description: 'Shorthand for cast_ids("role=<name>"). Returns IDs of tokens in the named role, sorted by distance.',
+            fn: (token, filteredTokens, params, roleName) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = roleName
+                    ? all.filter(t => evalFilter(`role=${roleName}`, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                }).map(t => t.get('id'));
+            },
+        });
 
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
@@ -2984,18 +3085,22 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             name: 'arcane-barrage',
             description: 'Magic beams fire from a caster to each target in sequence. Shows multi-role guide + fxbetween + cast().',
             guide: [
-                { prompt: 'Select the caster token (where lightning originates).', role: 'caster', min: 1, max: 1 },
-                { prompt: 'Select 2+ target tokens to be struck.', role: 'targets', min: 2 },
+                { prompt: 'Select the caster token (where lightning originates).', role: 'caster' },
+                { prompt: 'Select 2+ target tokens to be struck.', role: 'targets' },
             ],
             scene: {
                 notes: 'Lightning beam jumps from caster to each target in sequence.',
+                roles: [
+                    { name: 'caster', min: 1, max: 1 },
+                    { name: 'targets', min: 2 },
+                ],
                 params: [
                     { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
                 ],
                 variables: [],
                 rows: [
                     { filter: 'role=targets', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fxbetween beam-magic ${cast("role=caster")[0].get("left")} ${cast("role=caster")[0].get("top")} ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fxbetween beam-magic ${role("caster").first().left} ${role("caster").first().top} ${token.left} ${token.top} ${token.pageid}',
                         '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
                     ], notes: 'Beam from caster + burst at target' },
                 ],
@@ -3006,17 +3111,21 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             name: 'chain-lightning',
             description: 'Lightning chains from caster to nearest target, then jumps to the next. Shows when + --role recursion.',
             guide: [
-                { prompt: 'Select the caster token (starting point, never targeted).', role: 'caster', min: 1, max: 1 },
-                { prompt: 'Select 3+ targets for the lightning to chain through.', role: 'targets', min: 3, onContinue: (tokens, roles) => { if (tokens.includes(roles.caster[0])) return 'Caster token cannot be selected as a target'; } },
+                { prompt: 'Select the caster token (starting point, never targeted).', role: 'caster' },
+                { prompt: 'Select 3+ targets for the lightning to chain through.', role: 'targets', onContinue: (tokens, roles) => { if (tokens.includes(roles.caster[0])) return 'Caster token cannot be selected as a target'; } },
             ],
             scene: {
                 notes: 'Recursive chain: beam from conduit to nearest other target, burst, recurse with that target as new conduit.',
+                roles: [
+                    { name: 'caster', min: 1, max: 1 },
+                    { name: 'targets', min: 3 },
+                ],
                 params: [
                     { name: 'speed', type: 'number', default: '2', description: 'Travel speed (px/ms)' },
                     { name: 'jumps', type: 'number', default: '5', description: 'Max jumps remaining' },
                 ],
                 variables: [
-                    { name: 'next', expression: 'cast("role=targets").without(cast("role=caster")).first()' },
+                    { name: 'next', expression: 'role("targets").without(role("caster")).first()' },
                 ],
                 rows: [
                     { filter: 'role=caster', delay: '0', when: 'jumps > 0 && next', commands: [
@@ -3024,7 +3133,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                     ], notes: 'Beam to next target' },
                     { filter: 'role=caster', delay: 'Math.round(distance(next.left, next.top) / speed)', when: 'jumps > 0 && next', commands: [
                         '!choreograph fx burst-magic ${next.left} ${next.top} ${token.pageid}',
-                        '!choreograph run ${self} --role caster ${next.id} --role targets ${cast_ids("role=targets").join(" ")} --speed ${speed} --jumps ${jumps - 1}',
+                        '!choreograph run ${self} --role caster ${next.id} --role targets ${role_ids("targets").join(" ")} --speed ${speed} --jumps ${jumps - 1}',
                     ], notes: 'Burst + recurse with next as conduit' },
                 ],
             },
