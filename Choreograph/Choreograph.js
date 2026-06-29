@@ -1454,8 +1454,8 @@ var Choreograph = Choreograph || (() => {
         const finishScene = () => {
             const loop = instance.loop;
             if (!loop) {
-                // Show completion card
-                if (instance.playerid !== 'API') {
+                // Show completion card (only for top-level scenes)
+                if (instance.playerid !== 'API' && !instance.parentId) {
                     const sceneName = instance.name;
                     const sceneHandout = scenes().find(sceneName);
                     const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
@@ -1491,8 +1491,8 @@ var Choreograph = Choreograph || (() => {
                     executeChunk(0);
                 }
             } else {
-                // Loops exhausted — show completion card
-                if (instance.playerid !== 'API') {
+                // Loops exhausted — show completion card (only for top-level scenes)
+                if (instance.playerid !== 'API' && !instance.parentId) {
                     const sceneName = instance.name;
                     const sceneHandout = scenes().find(sceneName);
                     const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
@@ -1903,8 +1903,8 @@ var Choreograph = Choreograph || (() => {
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
                     const inst = runningScenes[instanceId];
                     const iName = inst ? inst.instanceName : instanceId;
-                    // Only show status card for user-initiated runs
-                    if (msg.playerid !== 'API') {
+                    // Only show status card for user-initiated runs (not children/recursive)
+                    if (msg.playerid !== 'API' && !(inst && inst.parentId)) {
                         const sceneHandout = scenes().find(name);
                         const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
                         let castInfo = '';
