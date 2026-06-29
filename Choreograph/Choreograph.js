@@ -2179,6 +2179,7 @@ var Choreograph = Choreograph || (() => {
             if (!scene.rows) scene.rows = [];
 
             const handout = scenes().getOrCreate(sceneName);
+            handout.set('archived', true);
             setHandoutNotes(handout, generateSceneHtml(sceneName, scene));
             scenes().cache[sceneName] = scene;
 
