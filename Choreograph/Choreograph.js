@@ -256,8 +256,8 @@ var Choreograph = Choreograph || (() => {
             log(`${SCRIPT_NAME}: [${src}] registerExample — missing name or scene`);
             return false;
         }
-        if (EXT_EXAMPLES[name]) return false; // no-op on duplicate
-        EXT_EXAMPLES[name] = { name, description, source: src, scene, guide: struct.guide || null };
+        if (EXT_EXAMPLES[`${src}/${name}`]) return false;
+        EXT_EXAMPLES[`${src}/${name}`] = { name, description, source: src, scene, guide: struct.guide || null };
         return true;
     };
 
@@ -2102,7 +2102,7 @@ var Choreograph = Choreograph || (() => {
 
         if (cmd === 'guide') {
             const exName = args[0];
-            const ex = EXT_EXAMPLES[exName];
+            const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
             if (!ex) { replyError(msg, `No example named "${exName}".`); return; }
             if (!ex.guide || !ex.guide.length) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
             startGuide(msg, `example-${exName}`, ex.guide);
@@ -2121,7 +2121,7 @@ var Choreograph = Choreograph || (() => {
             // Generation triggered by button click
             const exName = args[0];
 
-            const ex = EXT_EXAMPLES[exName];
+            const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
             if (!ex) {
                 replyError(msg, `No example named "${exName}". Use <code>${CMD_TOKEN} example</code> to see all.`);
                 return;
