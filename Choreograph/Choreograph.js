@@ -269,7 +269,6 @@ var Choreograph = Choreograph || (() => {
 
     /**
      * Start a guide session from a steps array.
-     * Steps can be interactive (require selection + Continue) or automatic.
      *
      * Step object fields:
      * @param {string}   [step.prompt]      Instructions shown (required for interactive steps).
@@ -277,8 +276,11 @@ var Choreograph = Choreograph || (() => {
      * @param {string}   [step.role]        Assign selected tokens to this cast role.
      * @param {number}   [step.min]         Minimum selection count (interactive only).
      * @param {number}   [step.max]         Maximum selection count (interactive only).
-     * @param {function} [step.onStep]      Callback when step becomes active. Receives (roles).
-     * @param {function} [step.onContinue]  Callback when step completes. Receives (tokens, roles).
+     * @param {function} [step.onStart]     Callback when step is entered going forward. Receives (roles).
+     * @param {function} [step.onContinue]  Callback when step completes forward. Receives (tokens, roles).
+     *                                      Return a string to reject and retry.
+     * @param {function} [step.onBack]      Callback when stepping backward through this step. Receives (roles).
+     *                                      Used to undo side effects of onContinue/onStart.
      */
     const startGuide = (msg, sceneName, steps) => {
         const guideId = `guide-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -289,11 +291,11 @@ var Choreograph = Choreograph || (() => {
             msg,
             sceneName,
         };
-        advanceGuide(guideId);
+        enterStep(guideId);
         return guideId;
     };
 
-    const advanceGuide = (guideId) => {
+    const enterStep = (guideId) => {
         const g = activeGuides[guideId];
         if (!g) return;
 
@@ -307,18 +309,18 @@ var Choreograph = Choreograph || (() => {
 
         const step = g.steps[g.currentStep];
 
-        // Fire onStep callback
-        if (typeof step.onStep === 'function') step.onStep(g.roles);
+        // Fire onStart
+        if (typeof step.onStart === 'function') step.onStart(g.roles);
 
         // Auto steps advance immediately
         if (step.auto) {
             if (typeof step.onContinue === 'function') step.onContinue([], g.roles);
             g.currentStep++;
-            advanceGuide(guideId);
+            enterStep(guideId);
             return;
         }
 
-        // Interactive step — show prompt with Continue button
+        // Interactive step — show prompt
         let html = `<div style="background:#335;color:#fff;padding:8px;border-radius:4px;font-size:12px;">`;
         html += `<b>Setup</b> (step ${g.currentStep + 1}/${g.steps.length})<br><br>`;
         html += `${step.prompt}<br><br>`;
@@ -329,8 +331,8 @@ var Choreograph = Choreograph || (() => {
             html += `<i>Select ${parts.join(', ')} token${(step.max === 1 && step.min === 1) ? '' : 's'}</i><br><br>`;
         }
         html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId}`);
-        html += ` `;
-        html += btnHtml('✖ Cancel', `${CMD_TOKEN} guide-cancel ${guideId}`);
+        if (g.currentStep > 0) html += ` ${btnHtml('⬅ Back', `${CMD_TOKEN} guide-back ${guideId}`)}`;
+        html += ` ${btnHtml('✖ Cancel', `${CMD_TOKEN} guide-cancel ${guideId}`)}`;
         html += `</div>`;
         reply(g.msg, 'Guide', html, true);
     };
@@ -366,14 +368,45 @@ var Choreograph = Choreograph || (() => {
 
         // Advance
         g.currentStep++;
-        advanceGuide(guideId);
+        enterStep(guideId);
+    };
+
+    const handleGuideBack = (msg, guideId) => {
+        const g = activeGuides[guideId];
+        if (!g || g.currentStep <= 0) return;
+
+        // Undo current step's role assignment
+        const currentStep = g.steps[g.currentStep];
+        if (currentStep && currentStep.role) delete g.roles[currentStep.role];
+
+        // Step backward, calling onBack for each step we pass through
+        g.currentStep--;
+        const step = g.steps[g.currentStep];
+        if (typeof step.onBack === 'function') step.onBack(g.roles);
+        if (step.role) delete g.roles[step.role];
+
+        // If we backed into an auto step, keep backing up
+        if (step.auto && g.currentStep > 0) {
+            handleGuideBack(msg, guideId);
+            return;
+        }
+
+        // Re-enter this step
+        enterStep(guideId);
     };
 
     const handleGuideCancel = (msg, guideId) => {
-        if (activeGuides[guideId]) {
-            delete activeGuides[guideId];
-            reply(msg, 'Guide', 'Setup cancelled.');
+        const g = activeGuides[guideId];
+        if (!g) return;
+
+        // Undo all steps from current back to 0
+        for (let i = g.currentStep; i >= 0; i--) {
+            const step = g.steps[i];
+            if (typeof step.onBack === 'function') step.onBack(g.roles);
         }
+
+        delete activeGuides[guideId];
+        reply(msg, 'Guide', 'Setup cancelled.');
     };
 
     const generateExtensionHandout = (sourceId, opts = {}) => {
@@ -2110,6 +2143,10 @@ var Choreograph = Choreograph || (() => {
         }
         if (cmd === 'guide-continue') {
             handleGuideContinue(msg, args[0]);
+            return;
+        }
+        if (cmd === 'guide-back') {
+            handleGuideBack(msg, args[0]);
             return;
         }
         if (cmd === 'guide-cancel') {
