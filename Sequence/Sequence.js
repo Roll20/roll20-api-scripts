@@ -5181,6 +5181,32 @@ Sequence.registerAttributeGroup('Anchor', ['left', 'top', 'anchor.x'], { join: t
         html += p('Built-in groups: ' + c("['left','top']") + ', ' + c("['width','height']") + ', '
             + c("['light_radius','light_dimradius']") + ', ' + c("['bright_light_distance','low_light_distance']") + '.');
 
+        // ── Registering Examples ──────────────────────────────────────────────
+        html += hr() + h(2, 'Registering Examples');
+        html += p(`${c('Sequence.registerExample(sourceId, struct)')} — registers a built-in example that appears in ${c('!sequence example')}. `
+            + 'Examples are keyed by source + name, so multiple scripts can register examples with the same name without collision.');
+        html += p(b('Struct fields:'));
+        html += ul(
+            li(`${c('name')} — example name (used in ${c('!sequence example! <name>')})`),
+            li(`${c('description')} — shown in the example list`),
+            li(`${c('recording')} — the recording struct (${c('{ objectType, notes, keyframes: [...] }')}). ${c('attrCols')} is auto-derived from keyframe deltas/easings if not specified.`),
+            li(`${c('attrCols')} — (optional) explicit attribute column order`),
+            li(`${c('onGenerate')} — (optional) callback fired after the handout is created, for additional setup`),
+        );
+        html += pre(
+`Sequence.registerExample('MyScript', {
+    name: 'wobble',
+    description: 'Token wobbles side to side. Shows continuous rotation.',
+    recording: {
+        objectType: 'graphic', notes: '',
+        keyframes: [
+            { time: 0, type: 'change', deltas: {}, easings: { rotation: 'continuous' } },
+            { time: 2000, type: 'change', deltas: { rotation: { expr: 'orig + sin(t * TAU) * 15', mode: 'abs' } }, easings: {} },
+        ],
+    },
+});`
+        );
+
         // ── Generating the help handout ───────────────────────────────────────
         html += hr() + h(2, 'Generating a Help Handout');
         html += p(`${c('Sequence.generateExtensionHandout(sourceId, opts)')} — creates or updates ${c('Help: Sequence/&lt;name&gt;')} `
