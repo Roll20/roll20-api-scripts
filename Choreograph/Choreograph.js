@@ -300,10 +300,20 @@ var Choreograph = Choreograph || (() => {
         if (!g) return;
 
         if (g.currentStep >= g.steps.length) {
-            // All steps complete — auto-run the scene with collected roles as cast
-            const castIds = Object.values(g.roles).flat().map(t => t.get('id')).join(' ');
+            // All steps complete — create cast from roles and run
+            const castName = `${g.sceneName}-cast`;
+            const castRoles = {};
+            Object.entries(g.roles).forEach(([role, tokens]) => {
+                castRoles[role] = tokens.map(t => t.get('id'));
+            });
+            // Store cast
+            const castHandout = casts().getOrCreate(castName);
+            casts().cache[castName] = { roles: castRoles };
+            setHandoutNotes(castHandout, generateCastHtml(castName, castRoles));
+            castHandout.set('archived', true);
+            // Run with cast
             const syntheticMsg = Object.assign({}, g.msg, {
-                content: `${CMD_TOKEN} run ${g.sceneName} ignore-selected --id ${castIds}`,
+                content: `${CMD_TOKEN} run ${g.sceneName} ignore-selected --cast ${castName}`,
                 selected: [],
             });
             delete activeGuides[guideId];
@@ -2854,6 +2864,28 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 variables: [],
                 rows: [
                     { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: 'Staggered explosions' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'chain-lightning',
+            description: 'Lightning arcs from a caster to targets one by one. Shows multi-role guide + fxbetween.',
+            guide: [
+                { prompt: 'Select the caster token (where lightning originates).', role: 'caster', min: 1, max: 1 },
+                { prompt: 'Select 2+ target tokens to be struck.', role: 'targets', min: 2 },
+            ],
+            scene: {
+                notes: 'Lightning beam jumps from caster to each target in sequence.',
+                params: [
+                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: 'role="targets"', delay: 'stagger(rank("left"), interval)', commands: [
+                        '!choreograph fxbetween beam-magic ${actors("role=caster")[0].get("left")} ${actors("role=caster")[0].get("top")} ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
+                    ], notes: 'Beam from caster + burst at target' },
                 ],
             },
         });
