@@ -1262,6 +1262,41 @@ var Choreograph = Choreograph || (() => {
     const wrapToken = (rawToken, ctx) => rawToken ? new TokenProxy(rawToken, ctx) : null;
     const wrapTokens = (arr, ctx) => arr.map(t => wrapToken(t, ctx));
 
+    // LINQ-inspired enriched array — returned by cast(), role(), and token[] params
+    const itemId = (t) => {
+        if (typeof t === 'string' || typeof t === 'number') return t;
+        if (t && t._id) return t._id;
+        if (t && typeof t.get === 'function') return t.get('id');
+        return t;
+    };
+
+    const enrichArray = (arr) => {
+        arr.from = (other) => {
+            const ids = new Set((other || []).map(itemId));
+            return enrichArray(arr.filter(t => ids.has(itemId(t))));
+        };
+        arr.without = (other) => {
+            const ids = new Set((other || []).map(itemId));
+            return enrichArray(arr.filter(t => !ids.has(itemId(t))));
+        };
+        arr.where = (fn) => enrichArray(arr.filter(fn));
+        arr.select = (fn) => enrichArray(arr.map(fn));
+        arr.orderBy = (attr) => {
+            if (typeof attr === 'function') return enrichArray([...arr].sort((a, b) => attr(a) - attr(b)));
+            return enrichArray([...arr].sort((a, b) => {
+                const av = a && typeof a === 'object' ? (a[attr] !== undefined ? a[attr] : (a.get ? a.get(attr) : 0)) : a;
+                const bv = b && typeof b === 'object' ? (b[attr] !== undefined ? b[attr] : (b.get ? b.get(attr) : 0)) : b;
+                return (av || 0) - (bv || 0);
+            }));
+        };
+        arr.first = (n) => n === undefined ? arr[0] : enrichArray(arr.slice(0, n));
+        arr.last = (n) => n === undefined ? arr[arr.length - 1] : enrichArray(arr.slice(-n));
+        arr.any = (fn) => fn ? arr.some(fn) : arr.length > 0;
+        arr.count = (fn) => fn ? arr.filter(fn).length : arr.length;
+        arr.ids = () => enrichArray(arr.map(itemId));
+        return arr;
+    };
+
     // =========================================================================
     // Delay expression evaluation
     // =========================================================================
@@ -1283,41 +1318,7 @@ var Choreograph = Choreograph || (() => {
 
         // actors(filter?) — returns tokens sorted by distance from current token
         // actor_ids(filter?) — returns token ID strings
-        // LINQ-inspired enriched array — returned by actors() and similar
-        // Get a comparable identity from any item (token ID, or the value itself)
-        const itemId = (t) => {
-            if (typeof t === 'string' || typeof t === 'number') return t;
-            if (t && t._id) return t._id;
-            if (t && typeof t.get === 'function') return t.get('id');
-            return t;
-        };
-
-        const enrichArray = (arr) => {
-            arr.from = (other) => {
-                const ids = new Set((other || []).map(itemId));
-                return enrichArray(arr.filter(t => ids.has(itemId(t))));
-            };
-            arr.without = (other) => {
-                const ids = new Set((other || []).map(itemId));
-                return enrichArray(arr.filter(t => !ids.has(itemId(t))));
-            };
-            arr.where = (fn) => enrichArray(arr.filter(fn));
-            arr.select = (fn) => enrichArray(arr.map(fn));
-            arr.orderBy = (attr) => {
-                if (typeof attr === 'function') return enrichArray([...arr].sort((a, b) => attr(a) - attr(b)));
-                return enrichArray([...arr].sort((a, b) => {
-                    const av = a && typeof a === 'object' ? (a[attr] !== undefined ? a[attr] : (a.get ? a.get(attr) : 0)) : a;
-                    const bv = b && typeof b === 'object' ? (b[attr] !== undefined ? b[attr] : (b.get ? b.get(attr) : 0)) : b;
-                    return (av || 0) - (bv || 0);
-                }));
-            };
-            arr.first = (n) => n === undefined ? arr[0] : enrichArray(arr.slice(0, n));
-            arr.last = (n) => n === undefined ? arr[arr.length - 1] : enrichArray(arr.slice(-n));
-            arr.any = (fn) => fn ? arr.some(fn) : arr.length > 0;
-            arr.count = (fn) => fn ? arr.filter(fn).length : arr.length;
-            arr.ids = () => enrichArray(arr.map(itemId));
-            return arr;
-        };
+        // LINQ-inspired enriched array — uses module-level enrichArray/itemId
 
         const ctx = { tokens: filteredTokens, params };
 
@@ -1488,6 +1489,17 @@ var Choreograph = Choreograph || (() => {
             if (p.type === 'token' && val && typeof val === 'string') {
                 const obj = getObj('graphic', val);
                 if (obj) val = wrapToken(obj, { tokens: cast, params: resolvedParams });
+            } else if (p.type === 'token[]' && val && typeof val === 'string') {
+                val = enrichArray(parseCSV(val)
+                    .map(id => getObj('graphic', id.trim()))
+                    .filter(Boolean)
+                    .map(obj => wrapToken(obj, { tokens: cast, params: resolvedParams })));
+            } else if (p.type === 'path' && val && typeof val === 'string') {
+                val = getObj('path', val) || val;
+            } else if (p.type === 'path[]' && val && typeof val === 'string') {
+                val = enrichArray(parseCSV(val)
+                    .map(id => getObj('path', id.trim()))
+                    .filter(Boolean));
             }
             resolvedParams[p.name] = val;
         });
@@ -2419,8 +2431,9 @@ var Choreograph = Choreograph || (() => {
             const exName = args[0];
             const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
             if (!ex) { replyError(msg, `No example named "${exName}".`); return; }
-            if (!ex.guide || !ex.guide.length) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
-            startGuide(msg, `example-${exName}`, ex.guide, ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
+            const hasGuide = (ex.guide && ex.guide.length) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
+            if (!hasGuide) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
+            startGuide(msg, `example-${exName}`, ex.guide || [], ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
             return;
         }
         if (cmd === 'guide-continue') {
@@ -2460,16 +2473,18 @@ var Choreograph = Choreograph || (() => {
             const handout = scenes().getOrCreate(sceneName);
             handout.set('archived', true);
             let sceneHtml = generateSceneHtml(sceneName, scene);
-            if (ex.guide && ex.guide.length) {
+            const hasGuide = (ex.guide && ex.guide.length) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
+            if (hasGuide) {
                 const guideBtn = `<div style="margin-bottom:8px;">${btnHtml('🧭 Setup Guide', `${CMD_TOKEN} guide ${ex.name}`)}</div>`;
                 sceneHtml = guideBtn + sceneHtml;
             }
             setHandoutNotes(handout, sceneHtml);
             scenes().cache[sceneName] = scene;
 
-            // Start guide if the example defines one
-            if (ex.guide && Array.isArray(ex.guide) && ex.guide.length > 0) {
-                startGuide(msg, sceneName, ex.guide, ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
+            // Start guide if the example defines one or has promptable params
+            const hasGuideOrParams = (ex.guide && ex.guide.length > 0) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
+            if (hasGuideOrParams) {
+                startGuide(msg, sceneName, ex.guide || [], ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
                 return;
             }
 
