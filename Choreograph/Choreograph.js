@@ -634,11 +634,13 @@ var Choreograph = Choreograph || (() => {
         html += `<table style="border-collapse:collapse;width:100%;font-size:12px;">`;
         html += `<tr><th style="${STYLE.th}">Filter</th>`;
         html += `<th style="${STYLE.th}">Delay (ms)</th>`;
+        html += `<th style="${STYLE.th}">When</th>`;
         html += `<th style="${STYLE.th}">Command</th>`;
         html += `<th style="${STYLE.th}">Notes</th></tr>`;
         (scene.rows || []).forEach(row => {
             html += `<tr><td style="${STYLE.td}">${escHtml(row.filter)}</td>`;
             html += `<td style="${STYLE.td}">${escHtml(row.delay)}</td>`;
+            html += `<td style="${STYLE.td}">${escHtml(row.when || '')}</td>`;
             html += `<td style="${STYLE.td}">${escHtml((row.commands || [row.command]).join('\n'))}</td>`;
             html += `<td style="${STYLE.td}">${escHtml(row.notes)}</td></tr>`;
         });
@@ -750,8 +752,12 @@ var Choreograph = Choreograph || (() => {
                         expression: cells[1] || '',
                     });
                 } else if (isSceneTable && cells.length >= 2) {
+                    // Detect column layout by headers
+                    const whenIdx = headers.indexOf('when');
+                    const cmdIdx = whenIdx >= 0 ? whenIdx + 1 : 2;
+                    const notesIdx = cmdIdx + 1;
                     // Parse command cell: split on <p> boundaries for multi-command cells
-                    const rawCmd = rawCells[2] || '';
+                    const rawCmd = rawCells[cmdIdx] || '';
                     const commands = rawCmd
                         .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
                         .replace(/<\/?p[^>]*>/gi, '')
@@ -760,12 +766,14 @@ var Choreograph = Choreograph || (() => {
                         .split('\n')
                         .map(s => s.trim())
                         .filter(Boolean);
-                    scene.rows.push({
+                    const row = {
                         filter:   cells[0] || '',
                         delay:    cells[1] || '0',
                         commands: commands,
-                        notes:    cells[3] || '',
-                    });
+                        notes:    cells[notesIdx] || '',
+                    };
+                    if (whenIdx >= 0 && cells[whenIdx]) row.when = cells[whenIdx];
+                    scene.rows.push(row);
                 }
             }
         });
@@ -1245,6 +1253,22 @@ var Choreograph = Choreograph || (() => {
         }
     };
 
+    // General-purpose expression eval — preserves any return type
+    const evalExpr = (expr, scope) => {
+        if (!expr || !expr.trim()) return undefined;
+        const trimmed = expr.trim();
+        const decls = Object.keys(scope).map(k =>
+            `var ${k} = __scope["${k}"];`
+        ).join(' ');
+        try {
+            const __scope = scope;
+            return eval(decls + '(' + trimmed + ')');
+        } catch(e) {
+            log(`${SCRIPT_NAME}: expression error: ${e.message} (expr: "${trimmed}")`);
+            return undefined;
+        }
+    };
+
     // =========================================================================
     // Command template evaluation
     // =========================================================================
@@ -1351,7 +1375,7 @@ var Choreograph = Choreograph || (() => {
                 const vars = {};
                 scene.variables.forEach(v => {
                     if (!v.name || !v.expression) return;
-                    scope[v.name] = evalDelay(v.expression, scope);
+                    scope[v.name] = evalExpr(v.expression, scope);
                     vars[v.name] = scope[v.name];
                 });
                 tokenVars[token.get('id')] = vars;
@@ -1951,9 +1975,8 @@ var Choreograph = Choreograph || (() => {
                 });
             } else if (opts.role) {
                 // --role <name> <ids...> — build ephemeral castData
-                // opts.role may be a string (single) or handled via raw parsing
                 const roleData = { roles: {} };
-                const roleRegex = /--role\s+(\S+)((?:\s+-[A-Za-z0-9_-]+)+)/g;
+                const roleRegex = /--role\s+(\S+)((?:\s+-(?!-)[A-Za-z0-9_-]+)+)/g;
                 let roleMatch;
                 while ((roleMatch = roleRegex.exec(msg.content)) !== null) {
                     const roleName = roleMatch[1];
@@ -2975,6 +2998,34 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                         '!choreograph fxbetween beam-magic ${cast("role=caster")[0].get("left")} ${cast("role=caster")[0].get("top")} ${token.left} ${token.top} ${token.pageid}',
                         '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
                     ], notes: 'Beam from caster + burst at target' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'chain-lightning',
+            description: 'Lightning chains from caster to nearest target, then jumps to the next. Shows when + --role recursion.',
+            guide: [
+                { prompt: 'Select the caster token (starting point, never targeted).', role: 'caster', min: 1, max: 1 },
+                { prompt: 'Select 3+ targets for the lightning to chain through.', role: 'targets', min: 3, onContinue: (tokens, roles) => { if (tokens.includes(roles.caster[0])) return 'Caster token cannot be selected as a target'; } },
+            ],
+            scene: {
+                notes: 'Recursive chain: beam from conduit to nearest other target, burst, recurse with that target as new conduit.',
+                params: [
+                    { name: 'speed', type: 'number', default: '2', description: 'Travel speed (px/ms)' },
+                    { name: 'jumps', type: 'number', default: '5', description: 'Max jumps remaining' },
+                ],
+                variables: [
+                    { name: 'next', expression: 'cast("role=targets").without(cast("role=caster")).first()' },
+                ],
+                rows: [
+                    { filter: 'role=caster', delay: '0', when: 'jumps > 0 && next', commands: [
+                        '!choreograph fxbetween beam-magic ${token.left} ${token.top} ${next.left} ${next.top} ${token.pageid}',
+                    ], notes: 'Beam to next target' },
+                    { filter: 'role=caster', delay: 'Math.round(distance(next.left, next.top) / speed)', when: 'jumps > 0 && next', commands: [
+                        '!choreograph fx burst-magic ${next.left} ${next.top} ${token.pageid}',
+                        '!choreograph run ${self} --role caster ${next.id} --role targets ${cast_ids("role=targets").join(" ")} --speed ${speed} --jumps ${jumps - 1}',
+                    ], notes: 'Burst + recurse with next as conduit' },
                 ],
             },
         });
