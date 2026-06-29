@@ -1849,8 +1849,10 @@ var Choreograph = Choreograph || (() => {
                     const iName = inst ? inst.instanceName : instanceId;
                     // Only show status card for user-initiated runs
                     if (msg.playerid !== 'API') {
+                        const sceneHandout = scenes().find(name);
+                        const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
                         let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
-                        card += `<b>${escHtml(name)}</b> — ${cast.length} token(s)<br>`;
+                        card += `<b>${escHtml(name)}</b>${openLink} — ${cast.length} token(s)<br>`;
                         card += `Instance: <b>${escHtml(iName)}</b><br><br>`;
                         card += btnHtml('⏸ Pause', `${CMD_TOKEN} pause ${iName}`);
                         card += btnHtml('⏹ Stop', `${CMD_TOKEN} stop ${iName}`);
