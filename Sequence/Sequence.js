@@ -2653,14 +2653,17 @@ var Sequence = Sequence || (() => {
             keyframes:  session.keyframes,
         };
 
-        // Fill snapshot keyframes with identity deltas for all recorded attrs
-        const snapshotObj = objId ? getObj('graphic', objId) : null;
-        recording.keyframes.forEach(kf => {
+        // Clean snapshot keyframes: only keep attrs that changed in a
+        // non-snapshot keyframe BEFORE that snapshot's position.
+        recording.keyframes.forEach((kf, idx) => {
             if (!kf._snapshot) return;
-            session.recordAttrs.forEach(attr => {
-                const reg = getAttrReg(attr);
-                if (!reg || !reg.identity) return;
-                if (!(attr in kf.deltas)) kf.deltas[attr] = reg.identity(snapshotObj);
+            const changedBefore = new Set();
+            for (let i = 0; i < idx; i++) {
+                if (recording.keyframes[i]._snapshot) continue;
+                Object.keys(recording.keyframes[i].deltas || {}).forEach(a => changedBefore.add(a));
+            }
+            Object.keys(kf.deltas).forEach(attr => {
+                if (!changedBefore.has(attr)) delete kf.deltas[attr];
             });
             delete kf._snapshot;
         });
@@ -3697,10 +3700,13 @@ var Sequence = Sequence || (() => {
                     if (session.name) {
                         saveRecording(session.name, session, (handout) => {
                             const recipient = msg.who.split(' ')[0];
-                            sendChat(`${SCRIPT_NAME} [Record]`,
-                                `/w ${recipient} Stopped and saved `
-                                + `<b>${escHtml(session.name)}</b> — `
-                                + `${session.keyframes.length} keyframes, ${session.duration}ms.`);
+                            const handoutId = handout.get('id');
+                            let outMsg = `Stopped and saved <b>${escHtml(session.name)}</b> — `
+                                + `${session.keyframes.length} keyframes, ${session.duration}ms.<br>`;
+                            outMsg += btnHtml('▶ Play', `!sequence play ${escArg(session.name)}`) + ' ';
+                            outMsg += btnHtml('🔁 Loop', `!sequence play ${escArg(session.name)} --loop`) + ' ';
+                            outMsg += `<a href="http://journal.roll20.net/handout/${handoutId}">[open]</a>`;
+                            sendChat(`${SCRIPT_NAME} [Record]`, `/w ${recipient} ${outMsg}`);
                         }, id);
                     } else {
                         const recipient = msg.who.split(' ')[0];
@@ -3733,9 +3739,17 @@ var Sequence = Sequence || (() => {
                 objIds.forEach(id => {
                     const session = activeSessions[id];
                     if (!session || session.paused) return;
+                    const obj = getObj('graphic', id);
+                    if (!obj) return;
                     const time = Date.now() - session.startTime;
-                    const kf = { time, type: 'change', deltas: {}, easings: {}, _snapshot: true };
-                    session.keyframes.push(kf);
+                    const deltas = {};
+                    // Capture identity for ALL recorded attrs (pruned on save)
+                    session.recordAttrs.forEach(attr => {
+                        const reg = getAttrReg(attr);
+                        if (!reg || !reg.identity) return;
+                        deltas[attr] = reg.identity(obj);
+                    });
+                    session.keyframes.push({ time, type: 'change', deltas, easings: {}, _snapshot: true });
                 });
                 showRecordingMenu(msg, objIds);
                 return;
@@ -3766,11 +3780,14 @@ var Sequence = Sequence || (() => {
                         return;
                     }
                     delete s().unsavedSessions[id];
-                    saveRecording(name, session, () => {
-                        reply(msg, 'Record',
-
-                            `Saved recording "${name}". `
-                            + `${session.keyframes.length} keyframes, ${session.duration}ms.`);
+                    saveRecording(name, session, (handout) => {
+                        const handoutId = handout.get('id');
+                        let outMsg = `Saved recording <b>${escHtml(name)}</b> — `
+                            + `${session.keyframes.length} keyframes, ${session.duration}ms.<br>`;
+                        outMsg += btnHtml('▶ Play', `!sequence play ${escArg(name)}`) + ' ';
+                        outMsg += btnHtml('🔁 Loop', `!sequence play ${escArg(name)} --loop`) + ' ';
+                        outMsg += `<a href="http://journal.roll20.net/handout/${handoutId}">[open]</a>`;
+                        reply(msg, 'Record', outMsg);
                     }, id);
                 });
                 return;
