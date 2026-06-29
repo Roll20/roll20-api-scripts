@@ -123,6 +123,23 @@ var Sequence = Sequence || (() => {
         return true;
     };
 
+    /**
+     * Register a pre-built example recording for display in the Sequence help handout.
+     *
+     * @param {string} sourceId  Script name registering this example.
+     * @param {object} struct    Example struct:
+     *
+     * Required fields:
+     * @param {string} struct.name       Display name for the example.
+     * @param {object} struct.recording  Recording object containing keyframes to replay.
+     *
+     * Optional fields:
+     * @param {string}     struct.description  Human-readable description.
+     * @param {string[]}   struct.attrCols     Attribute columns to show. Auto-derived from recording if omitted.
+     * @param {function}   struct.onGenerate   (handoutBody) => void — called when handout is generated.
+     *
+     * @returns {boolean} true on success, false if name/recording missing or duplicate.
+     */
     const registerExample = (sourceId, struct) => {
         const src = sourceId || SCRIPT_NAME;
         const { name, description = '', recording } = struct;
@@ -704,15 +721,22 @@ var Sequence = Sequence || (() => {
 
     /**
      * Register a custom easing function.
-     * Easing names may contain hyphens since they are handout cell values,
-     * not JS identifiers.
+     * Easing names may contain hyphens since they are handout cell values, not JS identifiers.
      *
-     * Struct fields:
-     *   name        {string}   - identifier (may contain hyphens, no dots)
-     *   fn          {Function} - (t, ...args) => value  where t is 0-1
-     *   description {string}   - one-line description
-     *   args        {Array}    - [{ name, type, description, optional }] for params
-     *   examples    {string[]} - example usage strings
+     * @param {string} sourceId  Script name registering this easing.
+     * @param {object} struct    Registration struct:
+     *
+     * Required fields:
+     * @param {string}   struct.name  Identifier (letters, digits, underscores, hyphens; no dots).
+     * @param {function} struct.fn    (t, ...args) => value, where t is 0–1.
+     *
+     * Optional fields:
+     * @param {string}   struct.description  One-line description.
+     * @param {Array}    struct.args         [{ name, type, description, optional, default, promptDefault }] for parameters.
+     * @param {string[]} struct.examples     Example usage strings.
+     * @param {string}   struct.label        Display label override.
+     *
+     * @returns {boolean} true on success, false on validation failure or duplicate.
      */
     const registerEasing = (sourceId, struct) => {
         const src = sourceId || SCRIPT_NAME;
@@ -1282,22 +1306,30 @@ var Sequence = Sequence || (() => {
     };
 
     /**
-     * Register a playback function for use in keyframe expressions.
+     * Internal: shared validation and registration logic for value and timing functions.
      * Accepts either a struct or (name, fn) shorthand for quick registration.
+     * External functions use namespace.name() syntax in expressions;
+     * core functions can be called without namespace prefix.
      *
-     * Struct fields:
-     *   name        {string}   - identifier (required)
-     *   namespace   {string}   - 'core' or external namespace (default: 'core')
-     *   fn          {Function} - implementation (required)
-     *   description {string}   - one-line description
-     *   args        {Array}    - [{ name, type, description, optional }]
-     *   returns     {string}   - return type description
-     *   examples    {Array}    - example usage strings
+     * @param {string}          sourceId      Script name registering this function.
+     * @param {object|string}   structOrFn    Registration struct, or function name (shorthand).
+     * @param {function}        fn            Function implementation (shorthand only; ignored if structOrFn is object).
+     * @param {object}          scope         Expression scope object to install function into.
+     * @param {object}          registry      Registry object to store metadata in.
+     * @param {Set}             allowedRoots  Set of allowed root identifiers in expressions.
+     * @param {string}          label         Label used in log messages (e.g. 'registerValueFunction').
      *
-     * External functions use namespace.name() syntax in expressions.
-     * Core functions can be called without namespace prefix.
+     * Struct fields (when structOrFn is an object):
+     * @param {string}   structOrFn.name        Identifier (required).
+     * @param {string}   structOrFn.namespace   'core' or external namespace (default: 'core').
+     * @param {function} structOrFn.fn          Implementation (required).
+     * @param {string}   structOrFn.description One-line description.
+     * @param {Array}    structOrFn.args        [{ name, type, description, optional }] parameter descriptors.
+     * @param {string}   structOrFn.returns     Return type description.
+     * @param {Array}    structOrFn.examples    Example usage strings.
+     *
+     * @returns {boolean} true on success, false on validation failure or duplicate.
      */
-    // Shared validation and registration logic for both value and timing functions
     const _registerFn = (sourceId, structOrFn, fn, scope, registry, allowedRoots, label) => {
         const src = sourceId || SCRIPT_NAME;
         const reg = typeof structOrFn === 'string'
@@ -1344,15 +1376,26 @@ var Sequence = Sequence || (() => {
 
     /**
      * Register a function for use in value/delta expressions.
-     * Context: (ctx, ...args) where ctx has orig, prev, curr, obj, cumulative.
+     * The function receives (ctx, ...args) where ctx contains:
+     * { orig, prev, curr, obj, cumulative }.
+     *
+     * @param {string}        sourceId    Script name registering this function.
+     * @param {object|string} structOrFn  Registration struct (see _registerFn), or function name string.
+     * @param {function}      [fn]        Function implementation (only when structOrFn is a string).
+     * @returns {boolean} true on success, false on validation failure or duplicate.
      */
     const registerValueFunction = (sourceId, structOrFn, fn) =>
         _registerFn(sourceId, structOrFn, fn, EXPR_SCOPE, FN_REGISTRY, EXPR_ALLOWED_ROOTS, 'registerValueFunction');
 
     /**
      * Register a function for use in time expressions.
-     * Context: (ctx, ...args) where ctx has only prev and cumulative.
+     * The function receives (ctx, ...args) where ctx contains: { prev, cumulative }.
      * Must return a number (milliseconds).
+     *
+     * @param {string}        sourceId    Script name registering this function.
+     * @param {object|string} structOrFn  Registration struct (see _registerFn), or function name string.
+     * @param {function}      [fn]        Function implementation (only when structOrFn is a string).
+     * @returns {boolean} true on success, false on validation failure or duplicate.
      */
     const registerTimingFunction = (sourceId, structOrFn, fn) =>
         _registerFn(sourceId, structOrFn, fn, TIME_EXPR_SCOPE, TIME_FN_REGISTRY, TIME_ALLOWED_ROOTS, 'registerTimingFunction');
@@ -1365,14 +1408,22 @@ var Sequence = Sequence || (() => {
 
     /**
      * Register a named constant for use in expressions.
-     * Constants live in EXPR_SCOPE under their namespace like functions.
+     * Constants are installed into EXPR_SCOPE (and TIME_EXPR_SCOPE for numeric values).
      *
-     * Struct fields:
-     *   name        {string} - identifier (required)
-     *   namespace   {string} - namespace (default: 'core')
-     *   value       {any}    - the constant value (required)
-     *   description {string} - one-line description
-     *   type        {string} - value type name for display
+     * @param {string} sourceId  Script name registering this constant.
+     * @param {object} reg       Registration struct:
+     *
+     * Required fields:
+     * @param {string} reg.name       Identifier (must be a valid JS identifier, no dots).
+     * @param {*}      reg.value      The constant value.
+     *
+     * Optional fields:
+     * @param {string}   reg.namespace    Namespace (default: 'core').
+     * @param {string}   reg.description  One-line description.
+     * @param {string}   reg.type         Value type name for display (default: typeof value).
+     * @param {string[]} reg.contexts     Which expression contexts allow this: ['value','time'] (default: both).
+     *
+     * @returns {boolean} true on success, false on validation failure or duplicate.
      */
     const registerPlaybackConstant = (sourceId, reg) => {
         const src = sourceId || SCRIPT_NAME;
@@ -5611,16 +5662,22 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
     };
 
     /**
-     * Generate or update a Help: Sequence/<name> handout for an extension script.
-     * Call this from your extension's on('ready') after registering your
-     * attributes, functions, and constants with Sequence.
+     * Generate or update a "Help: Sequence/<name>" handout documenting an extension script.
+     * Call from your extension's on('ready') after registering attributes, functions, and constants.
      *
-     * @param {object} opts
-     *   name        {string}   - Extension name (used in handout title)
-     *   namespace   {string}   - Primary namespace to document (e.g. 'anim')
-     *   description {string}   - Short description shown at top of handout
-     *   avatar      {string}   - Optional avatar URL (falls back to Sequence's icon)
-     *   namespaces  {string[]} - Optional array of namespaces if extension uses multiple
+     * @param {string} sourceId  Script name generating the handout.
+     * @param {object} opts      Options struct:
+     *
+     * Required fields:
+     * @param {Array}  opts.sections     Array of section descriptors to render in the handout.
+     *
+     * Optional fields:
+     * @param {string}   opts.name         Extension name (used in handout title; defaults to sourceId).
+     * @param {string}   opts.description  Short description shown at top of handout.
+     * @param {string}   opts.avatar       Avatar image URL (falls back to Sequence's icon).
+     * @param {string[]} opts.namespaces   Array of namespaces if extension uses multiple.
+     *
+     * Logs an error and returns early if opts.sections is empty.
      */
     const generateExtensionHandout = (sourceId, opts = {}) => {
         const src = sourceId || SCRIPT_NAME;
