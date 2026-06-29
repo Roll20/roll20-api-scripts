@@ -89,7 +89,39 @@ var Sequence = Sequence || (() => {
     // Example Registry
     // =========================================================================
 
-    const EXT_EXAMPLES = {}; // { 'name': { name, description, source, recording, onGenerate } }
+    const EXT_EXAMPLES = {}; // { 'source/name': { name, description, source, recording, onGenerate } }
+
+    const ATTR_GROUPS = []; // [ ['left','top'], ['width','height'], ... ]
+
+    /**
+     * Register an attribute group. When any member changes during recording,
+     * all other members get identity deltas recorded at the same keyframe.
+     *
+     * @param {string}   sourceId  Script name
+     * @param {string[]} attrs     Attribute names (may include namespaced: 'anchor.x')
+     * @param {object}   [opts]    Options
+     * @param {boolean}  [opts.join=false]  If true, merge into existing group(s)
+     *                              containing any of these attrs instead of creating a new group.
+     */
+    const registerAttributeGroup = (sourceId, attrs, opts) => {
+        if (!Array.isArray(attrs) || attrs.length < 2) return false;
+        if (opts && opts.join) {
+            // Find all existing groups that share any member with attrs
+            const targets = ATTR_GROUPS.filter(g => attrs.some(a => g.includes(a)));
+            if (targets.length > 0) {
+                // Merge into the first matching group
+                attrs.forEach(a => { if (!targets[0].includes(a)) targets[0].push(a); });
+                // If multiple groups matched, merge them all into the first
+                for (let i = 1; i < targets.length; i++) {
+                    targets[i].forEach(a => { if (!targets[0].includes(a)) targets[0].push(a); });
+                    ATTR_GROUPS.splice(ATTR_GROUPS.indexOf(targets[i]), 1);
+                }
+                return true;
+            }
+        }
+        ATTR_GROUPS.push([...attrs]);
+        return true;
+    };
 
     const registerExample = (sourceId, struct) => {
         const src = sourceId || SCRIPT_NAME;
@@ -634,6 +666,12 @@ var Sequence = Sequence || (() => {
             return { abs: s.startsWith('=') ? s.slice(1) : s };
         },
     });
+
+    // ── Attribute groups (siblings recorded together for correct interpolation)
+    registerAttributeGroup(SCRIPT_NAME, ['left', 'top']);
+    registerAttributeGroup(SCRIPT_NAME, ['width', 'height']);
+    registerAttributeGroup(SCRIPT_NAME, ['light_radius', 'light_dimradius']);
+    registerAttributeGroup(SCRIPT_NAME, ['bright_light_distance', 'low_light_distance']);
 
     // =========================================================================
     // Easing Functions
@@ -1926,7 +1964,7 @@ var Sequence = Sequence || (() => {
                             const hasDelta = parsed !== null && parsed !== undefined;
                             const isFirstEasingRow = !hadEasingAttr.has(attr);
                             hadEasingAttr.add(attr);
-                            const displayEasing = easing || (hasDelta || isFirstEasingRow ? 'linear' : '');
+                            const displayEasing = easing || (hasDelta || isFirstEasingRow ? 'step' : '');
 
                             // Check if easing is parametric
                             const token = displayEasing ? parseEasingToken(displayEasing) : null;
@@ -2361,6 +2399,21 @@ var Sequence = Sequence || (() => {
         });
 
         if (!changed) return;
+
+        // Grouped attributes: when one member changes, record identity deltas
+        // for its siblings so linear easing produces correct interpolation.
+        ATTR_GROUPS.forEach(group => {
+            const anyChanged = group.some(a => a in deltas);
+            if (!anyChanged) return;
+            group.forEach(a => {
+                if (a in deltas) return;
+                if (!session.recordAttrs.includes(a)) return;
+                const reg = getAttrReg(a);
+                if (!reg || !reg.identity) return;
+                deltas[a] = reg.identity(obj);
+                session.lastSnapshot[a] = reg.get(obj);
+            });
+        });
 
         // For each attribute that changed in this event, if it has changed
         // before (i.e. it already appears in a prior keyframe), stamp an identity
@@ -3101,7 +3154,7 @@ var Sequence = Sequence || (() => {
                 if (nextParsed && nextParsed.expr) {
                     const srcEasing = attrPrevIdx >= 0 && kfs[attrPrevIdx].easings && kfs[attrPrevIdx].easings[attrName]
                         ? kfs[attrPrevIdx].easings[attrName]
-                        : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                        : (pb.currentEasings[attrName] || pb.easing || 'step');
                     const isContinuous = srcEasing === 'continuous';
                     const orig = pb.initialState[attrName] !== undefined ? pb.initialState[attrName] : 0;
                     const prev = attrPrevState[attrName] !== undefined ? attrPrevState[attrName] : orig;
@@ -3150,7 +3203,7 @@ var Sequence = Sequence || (() => {
                     const segT       = segDur > 0 ? segElapsed / segDur : 1;
                     const lerpEasing = attrPrevIdx >= 0 && kfs[attrPrevIdx].easings && kfs[attrPrevIdx].easings[attrName]
                         ? kfs[attrPrevIdx].easings[attrName]
-                        : (pb.currentEasings[attrName] || pb.easing || 'linear');
+                        : (pb.currentEasings[attrName] || pb.easing || 'step');
                     interpolated = reg.lerp(prevVal, nextVal, getEasing(lerpEasing)(segT));
                 }
             } else {
@@ -5753,6 +5806,7 @@ if (opacityReg) opacityReg.set(obj, 0.5);`
         registerPlaybackConstant,
         registerEasing,
         registerExample,
+        registerAttributeGroup,
         generateExtensionHandout,
 
         // Registry introspection — returns struct or null
