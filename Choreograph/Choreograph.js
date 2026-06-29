@@ -302,9 +302,12 @@ var Choreograph = Choreograph || (() => {
         if (g.currentStep >= g.steps.length) {
             // All steps complete — auto-run the scene with collected roles as cast
             const castIds = Object.values(g.roles).flat().map(t => t.get('id')).join(' ');
-            reply(g.msg, 'Guide', `Setup complete! Running <b>${escHtml(g.sceneName)}</b>...`);
-            sendChat('', `${CMD_TOKEN} run ${g.sceneName} ignore-selected --id ${castIds}`, null, { noarchive: true });
+            const syntheticMsg = Object.assign({}, g.msg, {
+                content: `${CMD_TOKEN} run ${g.sceneName} ignore-selected --id ${castIds}`,
+                selected: [],
+            });
             delete activeGuides[guideId];
+            handleInput(syntheticMsg);
             return;
         }
 
