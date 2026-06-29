@@ -2180,7 +2180,12 @@ var Choreograph = Choreograph || (() => {
 
             const handout = scenes().getOrCreate(sceneName);
             handout.set('archived', true);
-            setHandoutNotes(handout, generateSceneHtml(sceneName, scene));
+            let sceneHtml = generateSceneHtml(sceneName, scene);
+            if (ex.guide && ex.guide.length) {
+                const guideBtn = `<div style="margin-bottom:8px;">${btnHtml('🧭 Setup Guide', `${CMD_TOKEN} guide ${ex.name}`)}</div>`;
+                sceneHtml = guideBtn + sceneHtml;
+            }
+            setHandoutNotes(handout, sceneHtml);
             scenes().cache[sceneName] = scene;
 
             // Start guide if the example defines one
