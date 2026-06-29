@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.0] – 2026-06-29 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/8)
+
+### Added
+
+- **Death Save Integration** (Optional) — an off-by-default feature that distinguishes **dying** (configurable marker, default `skull`), **stable** (green marker, 3 successes), and **dead** (Red X, 3 failures) for player characters at 0 HP. NPCs are unaffected and keep the standard dead Red X.
+  - Automatic death-save tracking for supported sheets, so a checked or updated death-save value updates the token marker without any macro or manual refresh.
+  - Death Save Integration now appears in both the interactive `!aura` GM menu and the read-only `!aura settings` snapshot, with `!aura deathsaves` commands for enabling, watching, and configuring markers.
+  - Marker validation now warns the GM when the configured dying or stable marker tag does not exist in the current campaign.
+
+### Fixed
+
+- Upgrading from the interim PC dying marker build now preserves existing dying-marker settings.
+
+---
+
 ## [2.1.4] – 2026-06-15 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/7)
 
 ### Fixed

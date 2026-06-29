@@ -15,6 +15,7 @@
 - **Blood & Heal FX**: Spawns custom particle effects when tokens are hurt or healed.
 - **Automated Dead Status**: Automatically applies a configurable status marker (default: Red X) when a token reaching 0 HP.
 - **NPC vs PC Config**: Separate settings for players and NPCs, including nameplate visibility and health tracking toggles.
+- **Optional Death Save Integration**: An off-by-default feature that distinguishes **dying** (configurable marker), **stable** (green), and **dead** (Red X) player characters at 0 HP, with marker sync driven automatically from watched death-save attributes (works on both the D&D 2024 and 2014 sheets). See [Death Save Integration](#death-save-integration-optional).
 
 ---
 
@@ -67,6 +68,16 @@ When a command changes a setting, HealthColors re-whispers the interactive GM me
 | `!aura reset`                        | Resets the script's state to factory defaults.                                                                                |
 | `!aura reset-fx`                     | Rebuilds `-DefaultHeal` and `-DefaultHurt` custom FX objects.                                                                 |
 | `!aura reset-all`                    | Restores all settings to `DEFAULTS`, rebuilds default FX, and force-syncs tokens.                                             |
+| `!aura deathsaves on/off/toggle`     | Enables or disables the optional Death Save Integration.                                                                     |
+| `!aura deathsaves success <attr,…>`  | Sets the success attribute name(s) — single name or comma-separated checkbox list (default targets the D&D sheets).          |
+| `!aura deathsaves failure <attr,…>`  | Sets the failure attribute name(s) — single name or comma-separated checkbox list.                                          |
+| `!aura deathsaves dyingmarker <name>` | Sets the dying status marker (default `skull`; preserves case and any `::id`; a leading `status_` is stripped).             |
+| `!aura deathsaves markers`           | Lists the campaign's status-marker tags (custom markers like "Unconscious" show their exact `Name::id` tag).                 |
+| `!aura deathsaves attrs [filter]`    | Debug: whispers the selected character's legacy attributes (`name = value`), optionally filtered by name substring.          |
+| `!aura deathsaves watch [status|reset|off]` | Debug: shows watch status, or arms a live watcher for selected tokens using configured success/failure fields; whispers when values register/change/clear. |
+| `!aura deathsaves watchstatus` | Debug: reports currently configured watch fields and active watched characters. |
+| `!aura deathsaves stablemarker <name>` | Sets the stable status marker (default `green`; same format as `dyingmarker`).                                            |
+| `!aura deathsaves debug`             | Whispers a per-token diagnostic (token/character/HP/marker state) for the selected token(s).                                |
 
 ### HealthColor Palettes
 
@@ -74,6 +85,39 @@ When a command changes a setting, HealthColors re-whispers the interactive GM me
 - `colorblind`: High = Cyan, Mid = Orange, Low = Magenta, Dead = Black.
 - At exactly 0 HP, the script uses the palette dead color (`#000000`) for clear knockout state.
 - If HP is above 100%, the script still uses blue (`#0000FF`) for overflow/temporary HP visualization.
+
+---
+
+## Death Save Integration (Optional)
+
+An **optional, off-by-default** feature that distinguishes three states for **player characters** at 0 HP:
+
+- **Dying** — 0 HP, still rolling (default marker **skull**). To use a specific marker — e.g. the D&D **Unconscious** condition marker — run `!aura deathsaves markers` to get its exact tag (custom markers are usually `Name::id`), then `!aura deathsaves dyingmarker <tag>`. A bare name like `unconscious` won't render if the real tag includes an id.
+- **Stable** — 3 recorded successes while at 0 HP (default marker **green**).
+- **Dead** — 3 failures (existing **Red X** / `status_dead`).
+
+NPCs are unaffected and keep the standard dead Red X at 0 HP.
+
+### How marker sync works
+
+HealthColors watches the configured success/failure fields and updates markers automatically as those values change:
+
+1. Configure the attribute names if yours differ from the defaults (the defaults target the D&D sheets):
+   - `!aura deathsaves success deathsave_succ1,deathsave_succ2,deathsave_succ3`
+   - `!aura deathsaves failure deathsave_fail1,deathsave_fail2,deathsave_fail3`
+   - (A single counter attribute also works — just give one name.)
+2. Enable: `!aura deathsaves on`.
+3. Optional: run `!aura deathsaves watch` with selected token(s) to arm/refresh watcher baselines for debug/status visibility.
+4. In play: marker state updates automatically as watched death-save fields change (`3+` fails -> dead, `3+` successes -> stable, otherwise dying).
+
+### Behaviour
+
+- **PC drops to 0 HP** → starts as **dying** automatically.
+- **PC healed above 0 HP** → all death markers cleared automatically.
+- **Already-downed PC** (token moved, forced refresh) → marker left as last synced, so a dead/stable PC isn't reset to dying.
+- **Mixed checks (some successes and some failures)** -> marker follows rules in priority order: `3+` fails -> dead, else `3+` successes -> stable, else dying.
+- **All watched boxes cleared at 0 HP** -> current downed marker is preserved (prevents accidental reset/reclassification from sheet-wide clears).
+- The death sound (`!aura deadfx`) plays once when a PC becomes **dead** (3 failures).
 
 ---
 
