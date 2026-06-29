@@ -5160,6 +5160,27 @@ Sequence.registerPlaybackConstant('MyScript', {
 });`
         );
 
+        // ── Attribute Groups ──────────────────────────────────────────────────
+        html += hr() + h(2, 'Attribute Groups');
+        html += p(`${c('Sequence.registerAttributeGroup(sourceId, attrs, opts)')} — declares attributes that should be recorded together. `
+            + 'When any member of a group changes during recording, identity deltas are captured for all other members, '
+            + 'ensuring correct interpolation when easing is changed from step to linear.');
+        html += p(b('Parameters:'));
+        html += ul(
+            li(`${c('attrs')} — array of attribute names (at least 2). May include namespaced names (e.g. ${c("'anchor.x'")}). Attributes need not be registered yet.`),
+            li(`${c('opts.join')} — if ${c('true')}, merges into any existing group that shares a member. Otherwise creates an independent group.`),
+        );
+        html += pre(
+`// Independent group (default) — anchor attrs recorded together
+Sequence.registerAttributeGroup('Anchor', ['anchor.x', 'anchor.y']);
+
+// Join an existing group — extends the position group to include anchor.x
+Sequence.registerAttributeGroup('Anchor', ['left', 'top', 'anchor.x'], { join: true });
+// Result: ['left', 'top', 'anchor.x'] — any change records all three`
+        );
+        html += p('Built-in groups: ' + c("['left','top']") + ', ' + c("['width','height']") + ', '
+            + c("['light_radius','light_dimradius']") + ', ' + c("['bright_light_distance','low_light_distance']") + '.');
+
         // ── Generating the help handout ───────────────────────────────────────
         html += hr() + h(2, 'Generating a Help Handout');
         html += p(`${c('Sequence.generateExtensionHandout(sourceId, opts)')} — creates or updates ${c('Help: Sequence/&lt;name&gt;')} `

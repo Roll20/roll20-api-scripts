@@ -175,10 +175,12 @@ Other API scripts can register custom attributes, expression functions, constant
 
 The extension API entry points:
 - `Sequence.registerAttribute(sourceId, struct)`
+- `Sequence.registerAttributeGroup(sourceId, attrs, opts)` — group attrs for co-recording
 - `Sequence.registerValueFunction(sourceId, struct)`
 - `Sequence.registerTimingFunction(sourceId, struct)`
 - `Sequence.registerPlaybackConstant(sourceId, struct)`
 - `Sequence.registerEasing(sourceId, struct)`
+- `Sequence.registerExample(sourceId, struct)`
 - `Sequence.generateExtensionHandout(sourceId, opts)`
 
 Extensions should listen for the `!sequence-ready` chat signal before registering, and also register immediately if Sequence is already loaded when they initialise.
