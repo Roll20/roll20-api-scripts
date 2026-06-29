@@ -5181,6 +5181,43 @@ Sequence.registerAttributeGroup('Anchor', ['left', 'top', 'anchor.x'], { join: t
         html += p('Built-in groups: ' + c("['left','top']") + ', ' + c("['width','height']") + ', '
             + c("['light_radius','light_dimradius']") + ', ' + c("['bright_light_distance','low_light_distance']") + '.');
 
+        // ── Recording Struct ───────────────────────────────────────────────────
+        html += hr() + h(2, 'Recording Struct');
+        html += p('A recording is a plain object describing a keyframe animation. This is the data model used by '
+            + c('registerExample') + ' and stored internally when recordings are loaded from handouts.');
+        html += p(b('Top-level fields:'));
+        html += ul(
+            li(`${c('objectType')} — ${c("'graphic'")} (default). The Roll20 object type this recording targets.`),
+            li(`${c('notes')} — free-text description (shown in the handout metadata block).`),
+            li(`${c('keyframes')} — array of keyframe objects (see below).`),
+        );
+        html += p(b('Keyframe object:'));
+        html += ul(
+            li(`${c('time')} — timestamp in ms. Can be a number (${c('0')}, ${c('1000')}) or a time expression object (${c("{ isExpr: true, rel: 'rand(100,300)' }")}).`),
+            li(`${c('type')} — ${c("'change'")} (attribute changes) or ${c("'command'")} (fire a chat command).`),
+            li(`${c('deltas')} — object mapping attribute names to delta values.`),
+            li(`${c('easings')} — object mapping attribute names to easing curve names for the segment starting at this keyframe.`),
+            li(`${c('command')} — (type ${c("'command'")} only) the chat command string to fire.`),
+        );
+        html += p(b('Delta value formats:'));
+        html += ul(
+            li(`${c('{ delta: value }')} — relative change. For numeric attrs: additive. For scale attrs: multiplicative. For string attrs: append.`),
+            li(`${c('{ abs: value }')} — absolute set. Sets the attribute to this exact value.`),
+            li(`${c("{ expr: 'orig + sin(t * TAU) * 70', mode: 'abs' }")} — expression evaluated at runtime. `
+                + c('mode') + ' can be ' + c("'abs'") + ', ' + c("'mul'") + ', or ' + c("'add'") + '.'),
+        );
+        html += pre(
+`// Minimal recording: spin 360° over 3 seconds
+{
+    objectType: 'graphic',
+    notes: '',
+    keyframes: [
+        { time: 0,    type: 'change', deltas: {}, easings: { rotation: 'continuous' } },
+        { time: 3000, type: 'change', deltas: { rotation: { expr: 'orig + t * 360', mode: 'abs' } }, easings: {} },
+    ],
+}`
+        );
+
         // ── Registering Examples ──────────────────────────────────────────────
         html += hr() + h(2, 'Registering Examples');
         html += p(`${c('Sequence.registerExample(sourceId, struct)')} — registers a built-in example that appears in ${c('!sequence example')}. `
@@ -5189,8 +5226,7 @@ Sequence.registerAttributeGroup('Anchor', ['left', 'top', 'anchor.x'], { join: t
         html += ul(
             li(`${c('name')} — example name (used in ${c('!sequence example! <name>')})`),
             li(`${c('description')} — shown in the example list`),
-            li(`${c('recording')} — the recording struct (${c('{ objectType, notes, keyframes: [...] }')}). ${c('attrCols')} is auto-derived from keyframe deltas/easings if not specified.`),
-            li(`${c('attrCols')} — (optional) explicit attribute column order`),
+            li(`${c('recording')} — a recording struct (see above). Attribute columns are auto-derived from keyframe deltas and easings.`),
             li(`${c('onGenerate')} — (optional) callback fired after the handout is created, for additional setup`),
         );
         html += pre(
