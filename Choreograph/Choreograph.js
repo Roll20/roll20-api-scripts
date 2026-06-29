@@ -1396,6 +1396,18 @@ var Choreograph = Choreograph || (() => {
                 const delay = evalDelay(row.delay, scope);
                 if (!isFinite(delay)) return; // INF/SKIP
 
+                // Evaluate 'when' condition — skip if false
+                if (row.when) {
+                    try {
+                        const decls = Object.keys(scope).map(k => `var ${k} = __scope["${k}"];`).join(' ');
+                        const __scope = scope;
+                        if (!eval(decls + '(' + row.when + ')')) return;
+                    } catch(e) {
+                        log(`${SCRIPT_NAME}: when expression error: ${e.message} (expr: "${row.when}")`);
+                        return;
+                    }
+                }
+
                 const commands = row.commands || [row.command];
                 commands.forEach(cmdTemplate => {
                     const command = evalCommand(cmdTemplate, scope);
@@ -1937,6 +1949,22 @@ var Choreograph = Choreograph || (() => {
                     getAllCastIds(castData).forEach(id => castIds.push(id));
                     runWithCast(castData);
                 });
+            } else if (opts.role) {
+                // --role <name> <ids...> — build ephemeral castData
+                // opts.role may be a string (single) or handled via raw parsing
+                const roleData = { roles: {} };
+                const roleRegex = /--role\s+(\S+)((?:\s+-[A-Za-z0-9_-]+)+)/g;
+                let roleMatch;
+                while ((roleMatch = roleRegex.exec(msg.content)) !== null) {
+                    const roleName = roleMatch[1];
+                    const roleIds = roleMatch[2].trim().split(/\s+/).filter(Boolean);
+                    if (!roleData.roles[roleName]) roleData.roles[roleName] = [];
+                    roleIds.forEach(id => {
+                        roleData.roles[roleName].push(id);
+                        castIds.push(id);
+                    });
+                }
+                runWithCast(roleData);
             } else {
                 runWithCast(null);
             }
