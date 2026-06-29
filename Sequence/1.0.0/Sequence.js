@@ -5242,6 +5242,12 @@ Sequence.registerAttributeGroup('Anchor', ['left', 'top', 'anchor.x'], { join: t
     },
 });`
         );
+        html += p(b('Notes:'));
+        html += ul(
+            li('The handout is only created when the user clicks "Generate" — until then the example exists only in memory.'),
+            li(`The generated handout is named ${c('[Sequence] example-<name>')} and is archived by default to keep the journal clean.`),
+            li(`Use ${c('onGenerate')} to set up anything the recording depends on (e.g. creating a companion Choreograph scene, setting character attributes, or other external state).`),
+        );
 
         // ── Generating the help handout ───────────────────────────────────────
         html += hr() + h(2, 'Generating a Help Handout');
