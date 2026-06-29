@@ -355,8 +355,14 @@ var Choreograph = Choreograph || (() => {
         // Assign to role
         if (step.role) g.roles[step.role] = selected;
 
-        // Fire onContinue
-        if (typeof step.onContinue === 'function') step.onContinue(selected, g.roles);
+        // Fire onContinue — if it returns a string, treat as validation error
+        if (typeof step.onContinue === 'function') {
+            const err = step.onContinue(selected, g.roles);
+            if (typeof err === 'string') {
+                replyError(msg, err);
+                return;
+            }
+        }
 
         // Advance
         g.currentStep++;
@@ -2758,96 +2764,11 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
-            name: 'shockwave',
-            description: 'Propagates an echo outward from the nearest neighbor.',
-            scene: {
-                notes: 'Each token fires based on its distance rank from the nearest neighbor (actors()[1]).',
-                params: [
-                    { name: 'interval', type: 'number', default: '500', description: 'Ms between each token' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph echo 💥 Shockwave hits ${token.name}! (${actors().length} actors nearby)'], notes: 'Propagate' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'roll-call',
-            description: 'Tokens announce themselves one by one, sorted left to right.',
-            scene: {
-                notes: 'A simple stagger demo — each token echoes its name in order.',
-                params: [],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 800)', commands: ['!choreograph echo ${token.name} reporting in!'], notes: '' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'countdown',
-            description: 'Recursive countdown — echoes a number, then calls itself with n-1.',
-            scene: {
-                notes: 'Demonstrates scene chaining and recursion with sync.',
-                params: [
-                    { name: 'n', type: 'number', default: '5', description: 'Countdown start' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: '0', commands: ['!choreograph echo ${n}...'], notes: 'Echo current count' },
-                    { filter: '*', delay: 'sync', commands: [], notes: 'Wait' },
-                    { filter: '*', delay: '500', commands: ['${n > 1 ? "!choreograph run " + self + " --n " + (n - 1) : "!choreograph echo Liftoff!"}'], notes: 'Recurse or finish' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'spotlight',
-            description: 'Each token gets a moment in the spotlight — fires one at a time with a pause between.',
-            scene: {
-                notes: 'Uses sync to wait between each token\'s turn.',
-                params: [],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${token.name} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'elites-only',
-            description: 'Only tokens wider than 70px (large tokens) get the effect — demonstrates expression filters.',
-            scene: {
-                notes: 'Uses an expression filter: width > 70. Only large tokens fire.',
-                params: [],
-                variables: [],
-                rows: [
-                    { filter: 'width > 70', delay: '0', commands: ['!choreograph echo 🏆 ${token.name} is an elite! (width=${token.width})'], notes: 'Expression filter' },
-                    { filter: 'width <= 70', delay: '0', commands: ['!choreograph echo 🐜 ${token.name} is too small (width=${token.width})'], notes: 'Inverse' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'tidal-wave',
-            description: 'Tokens fire in a wave pattern based on horizontal position.',
-            scene: {
-                notes: 'Uses wave() for sinusoidal timing offset.',
-                params: [
-                    { name: 'wavelength', type: 'number', default: '500', description: 'Wave period in pixels' },
-                    { name: 'duration', type: 'number', default: '2000', description: 'Total wave duration in ms' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${token.name} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
             name: 'fireball',
-            description: 'Explosion FX propagates outward from the leftmost token.',
+            description: 'Fire explosions propagate outward from the leftmost token. Shows stagger + rank + FX.',
+            guide: [
+                { prompt: 'Select 3+ tokens to be hit by the fireball. Arrange them in a rough cluster.', role: 'cast', min: 3 },
+            ],
             scene: {
                 notes: 'Fire explosions staggered by position — looks like a spreading fireball.',
                 params: [
@@ -2855,122 +2776,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'chain-lightning',
-            description: 'Lightning beam jumps from each token to the next nearest.',
-            scene: {
-                notes: 'Beams connect tokens in order of proximity using fxbetween.',
-                params: [
-                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
-                        '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
-                    ], notes: 'Bolt + beam to nearest neighbor' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'battle-cry',
-            description: 'Tokens rally one by one with a ping, glow, and announcement.',
-            scene: {
-                notes: 'Staggered rally effect — each token pings, glows, and announces.',
-                params: [
-                    { name: 'interval', type: 'number', default: '800', description: 'Ms between each token' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph echo ⚔️ ${token.name} rallies!',
-                    ], notes: 'Ping + glow + announce' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'fireball',
-            description: 'Explosion FX propagates outward from the leftmost token.',
-            scene: {
-                notes: 'Fire explosions staggered by position.',
-                params: [
-                    { name: 'interval', type: 'number', default: '200', description: 'Ms between each explosion' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'chain-lightning',
-            description: 'Lightning beam jumps from each token to the next nearest.',
-            scene: {
-                notes: 'Beams connect tokens in order of proximity.',
-                params: [
-                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
-                        '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
-                    ], notes: 'Bolt + beam to nearest' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'battle-cry',
-            description: 'Tokens rally one by one with a ping, glow, and announcement.',
-            scene: {
-                notes: 'Staggered rally effect.',
-                params: [
-                    { name: 'interval', type: 'number', default: '800', description: 'Ms between each token' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph echo ⚔️ ${token.name} rallies!',
-                    ], notes: 'Ping + glow + announce' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'ripple-ping',
-            description: 'Cascading pings that propagate outward and decay in speed over distance.',
-            scene: {
-                notes: 'Pings the origin point, then recursively pings outward with decreasing speed. Pass --px/--py to set origin (defaults to center of cast).',
-                params: [
-                    { name: 'px', type: 'number', default: '0', description: 'Origin X (0 = auto-center)' },
-                    { name: 'py', type: 'number', default: '0', description: 'Origin Y (0 = auto-center)' },
-                    { name: 'speed', type: 'number', default: '0.4', description: 'Propagation speed (px/ms)' },
-                    { name: 'decay', type: 'number', default: '0.6', description: 'Speed multiplier each hop' },
-                    { name: 'minSpeed', type: 'number', default: '0.05', description: 'Stop when speed drops below this' },
-                ],
-                variables: [
-                    { name: 'cx', expression: 'px > 0 ? px : actors().reduce((s,t) => s + t.get("left"), 0) / count' },
-                    { name: 'cy', expression: 'py > 0 ? py : actors().reduce((s,t) => s + t.get("top"), 0) / count' },
-                ],
-                rows: [
-                    { filter: '*', delay: 'propagate(distance(cx, cy), speed)', commands: [
-                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph fx nova-holy ${token.left} ${token.top} ${token.pageid}',
-                        '${speed * decay >= minSpeed ? "!choreograph run " + self + " --px " + left + " --py " + top + " --speed " + (speed * decay) + " --decay " + decay + " --minSpeed " + minSpeed : ""}',
-                    ], notes: 'Ping + FX + recurse with decay' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: 'Staggered explosions' },
                 ],
             },
         });
