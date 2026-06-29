@@ -335,8 +335,13 @@ var Choreograph = Choreograph || (() => {
         }
 
         // Interactive step — show prompt
+        const interactiveSteps = g.steps.filter(s => !s.auto);
+        const interactiveIdx = interactiveSteps.indexOf(step) + 1;
+        const interactiveTotal = interactiveSteps.length;
+        const hasPriorInteractive = g.steps.slice(0, g.currentStep).some(s => !s.auto);
+
         let html = `<div style="background:#335;color:#fff;padding:8px;border-radius:4px;font-size:12px;">`;
-        html += `<b>${escHtml(g.sceneName)}</b> — Setup (step ${g.currentStep + 1}/${g.steps.length})<br><br>`;
+        html += `<b>${escHtml(g.sceneName)}</b> — Setup (step ${interactiveIdx}/${interactiveTotal})<br><br>`;
         html += `${step.prompt}<br><br>`;
         if (step.min || step.max) {
             const parts = [];
@@ -345,7 +350,7 @@ var Choreograph = Choreograph || (() => {
             html += `<i>Select ${parts.join(', ')} token${(step.max === 1 && step.min === 1) ? '' : 's'}</i><br><br>`;
         }
         html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId}`);
-        if (g.currentStep > 0) html += ` ${btnHtml('⬅ Back', `${CMD_TOKEN} guide-back ${guideId}`)}`;
+        if (hasPriorInteractive) html += ` ${btnHtml('⬅ Back', `${CMD_TOKEN} guide-back ${guideId}`)}`;
         html += ` ${btnHtml('✖ Cancel', `${CMD_TOKEN} guide-cancel ${guideId}`)}`;
         html += `</div>`;
         reply(g.msg, 'Guide', html, true);
@@ -961,7 +966,9 @@ var Choreograph = Choreograph || (() => {
         const eqIdx = c.indexOf('=');
         if (eqIdx !== -1) {
             const key = c.slice(0, eqIdx).toLowerCase();
-            const val = c.slice(eqIdx + 1);
+            const raw = c.slice(eqIdx + 1);
+            const val = (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
+                ? raw.slice(1, -1) : raw;
 
             if (key === 'layer') return token.get('layer') === val;
             if (key === 'id')    return token.get('id') === val;
@@ -1331,6 +1338,9 @@ var Choreograph = Choreograph || (() => {
             resolvedParams[p.name] = val;
         });
 
+        // Attach execution context for registered functions that need full cast access
+        resolvedParams.__ctx = { allTokens: cast, castData };
+
         // Precompute variables per token
         const tokenVars = {};
         if (scene.variables && scene.variables.length > 0) {
@@ -1420,6 +1430,8 @@ var Choreograph = Choreograph || (() => {
             queue,
             timers:   [],
             cast,
+            castName: (runtimeOpts && runtimeOpts.castName) || null,
+            castData: castData || null,
             params:   resolvedParams,
             state:    'running',
             startTime: Date.now(),
@@ -1448,10 +1460,11 @@ var Choreograph = Choreograph || (() => {
                     const sceneHandout = scenes().find(sceneName);
                     const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
                     const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                    const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
                     let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
                     card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
-                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected --id ${castIdStr}`);
-                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected --id ${castIdStr}`);
+                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
+                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
                     card += `</div>`;
                     const fakeMsg = { who: instance.who, playerid: instance.playerid };
                     reply(fakeMsg, 'Choreograph', card, true);
@@ -1484,10 +1497,11 @@ var Choreograph = Choreograph || (() => {
                     const sceneHandout = scenes().find(sceneName);
                     const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
                     const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                    const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
                     let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
                     card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
-                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected --id ${castIdStr}`);
-                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected --id ${castIdStr}`);
+                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
+                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
                     card += `</div>`;
                     const fakeMsg = { who: instance.who, playerid: instance.playerid };
                     reply(fakeMsg, 'Choreograph', card, true);
@@ -1883,6 +1897,7 @@ var Choreograph = Choreograph || (() => {
                         parent: opts.parent || null,
                         depth:  opts.depth !== undefined ? parseInt(opts.depth, 10) : 10,
                         syncTimeout: opts['sync-timeout'] ? parseInt(opts['sync-timeout'], 10) : 30000,
+                        castName: opts.cast || null,
                     };
 
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
@@ -1892,8 +1907,17 @@ var Choreograph = Choreograph || (() => {
                     if (msg.playerid !== 'API') {
                         const sceneHandout = scenes().find(name);
                         const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                        let castInfo = '';
+                        if (inst && inst.castName) {
+                            const castHandout = casts().find(inst.castName);
+                            castInfo = castHandout
+                                ? ` — <b>${escHtml(inst.castName)}</b> <a href="http://journal.roll20.net/handout/${castHandout.get('id')}">[open]</a>`
+                                : ` — ${escHtml(inst.castName)}`;
+                        }
+                        const looseCt = (inst && inst.castName) ? 0 : cast.length;
+                        if (looseCt > 0 && !(inst && inst.castName)) castInfo = ` — ${looseCt} token(s)`;
                         let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
-                        card += `<b>${escHtml(name)}</b>${openLink} — ${cast.length} token(s)<br>`;
+                        card += `<b>${escHtml(name)}</b>${openLink}${castInfo}<br>`;
                         card += `Instance: <b>${escHtml(iName)}</b><br><br>`;
                         card += btnHtml('⏸ Pause', `${CMD_TOKEN} pause ${iName}`);
                         card += btnHtml('⏹ Stop', `${CMD_TOKEN} stop ${iName}`);
@@ -2849,6 +2873,43 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             },
         });
 
+        registerFunction(SCRIPT_NAME, {
+            name: 'cast', namespace: 'core', returns: 'token[]',
+            description: 'All tokens in the full cast (ignoring row filter), optionally filtered by role. Sorted by distance from current token.',
+            fn: (token, filteredTokens, params, filterStr) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = filterStr
+                    ? all.filter(t => evalFilter(filterStr, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                });
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'cast_ids', namespace: 'core', returns: 'string[]',
+            description: 'Token IDs from the full cast (ignoring row filter), optionally filtered by role. Sorted by distance.',
+            fn: (token, filteredTokens, params, filterStr) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = filterStr
+                    ? all.filter(t => evalFilter(filterStr, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                }).map(t => t.get('id'));
+            },
+        });
+
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
             name: 'fireball',
@@ -2869,8 +2930,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         });
 
         registerExample(SCRIPT_NAME, {
-            name: 'chain-lightning',
-            description: 'Lightning arcs from a caster to targets one by one. Shows multi-role guide + fxbetween.',
+            name: 'arcane-barrage',
+            description: 'Magic beams fire from a caster to each target in sequence. Shows multi-role guide + fxbetween + cast().',
             guide: [
                 { prompt: 'Select the caster token (where lightning originates).', role: 'caster', min: 1, max: 1 },
                 { prompt: 'Select 2+ target tokens to be struck.', role: 'targets', min: 2 },
@@ -2882,8 +2943,8 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: 'role="targets"', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fxbetween beam-magic ${actors("role=caster")[0].get("left")} ${actors("role=caster")[0].get("top")} ${token.left} ${token.top} ${token.pageid}',
+                    { filter: 'role=targets', delay: 'stagger(rank("left"), interval)', commands: [
+                        '!choreograph fxbetween beam-magic ${cast("role=caster")[0].get("left")} ${cast("role=caster")[0].get("top")} ${token.left} ${token.top} ${token.pageid}',
                         '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
                     ], notes: 'Beam from caster + burst at target' },
                 ],
