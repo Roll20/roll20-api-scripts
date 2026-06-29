@@ -1432,6 +1432,20 @@ var Choreograph = Choreograph || (() => {
         const finishScene = () => {
             const loop = instance.loop;
             if (!loop) {
+                // Show completion card
+                if (instance.playerid !== 'API') {
+                    const sceneName = instance.name;
+                    const sceneHandout = scenes().find(sceneName);
+                    const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                    const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                    let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
+                    card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
+                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected --id ${castIdStr}`);
+                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected --id ${castIdStr}`);
+                    card += `</div>`;
+                    const fakeMsg = { who: instance.who, playerid: instance.playerid };
+                    reply(fakeMsg, 'Choreograph', card, true);
+                }
                 delete runningScenes[instanceId];
                 return;
             }
@@ -1454,6 +1468,20 @@ var Choreograph = Choreograph || (() => {
                     executeChunk(0);
                 }
             } else {
+                // Loops exhausted — show completion card
+                if (instance.playerid !== 'API') {
+                    const sceneName = instance.name;
+                    const sceneHandout = scenes().find(sceneName);
+                    const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                    const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                    let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
+                    card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
+                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected --id ${castIdStr}`);
+                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected --id ${castIdStr}`);
+                    card += `</div>`;
+                    const fakeMsg = { who: instance.who, playerid: instance.playerid };
+                    reply(fakeMsg, 'Choreograph', card, true);
+                }
                 delete runningScenes[instanceId];
             }
         };
