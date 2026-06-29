@@ -282,7 +282,7 @@ var Choreograph = Choreograph || (() => {
      * @param {function} [step.onBack]      Callback when stepping backward through this step. Receives (roles).
      *                                      Used to undo side effects of onContinue/onStart.
      */
-    const startGuide = (msg, sceneName, steps, sceneRoles) => {
+    const startGuide = (msg, sceneName, steps, sceneRoles, sceneParams) => {
         const guideId = `guide-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         // Inherit min/max from scene roles if not explicitly set on step
         const resolvedSteps = steps.map(step => {
@@ -294,10 +294,37 @@ var Choreograph = Choreograph || (() => {
             if (merged.max == null && roleDef.max != null) merged.max = roleDef.max;
             return merged;
         });
+
+        // Auto-generate param steps from scene params (skip 'cast' built-in)
+        const userParams = (sceneParams || []).filter(p => p.name !== 'cast');
+        if (userParams.length > 0) {
+            const selectionTypes = new Set(['token', 'token[]', 'path', 'path[]']);
+            const selectionParams = userParams.filter(p => selectionTypes.has(p.type));
+            const queryParams = userParams.filter(p => !selectionTypes.has(p.type));
+
+            // One step per selection-based param
+            selectionParams.forEach(p => {
+                resolvedSteps.push({
+                    prompt: `Select ${p.type.includes('[]') ? 'token(s)' : 'a token'} for <b>${escHtml(p.name)}</b>${p.description ? ' — ' + escHtml(p.description) : ''}.`,
+                    _paramSelect: p.name,
+                    _paramType: p.type,
+                });
+            });
+
+            // One combined step for all query-based params
+            if (queryParams.length > 0) {
+                resolvedSteps.push({
+                    prompt: 'Set parameters:',
+                    _paramQuery: queryParams,
+                });
+            }
+        }
+
         activeGuides[guideId] = {
             steps: resolvedSteps,
             currentStep: 0,
             roles: {},
+            params: {},
             msg,
             sceneName,
         };
@@ -321,9 +348,13 @@ var Choreograph = Choreograph || (() => {
             casts().cache[castName] = { roles: castRoles };
             setHandoutNotes(castHandout, generateCastHtml(castName, castRoles));
             castHandout.set('archived', true);
+            // Build param flags from collected values
+            const paramFlags = Object.entries(g.params || {})
+                .map(([k, v]) => `--${k} ${v}`)
+                .join(' ');
             // Run with cast
             const syntheticMsg = Object.assign({}, g.msg, {
-                content: `${CMD_TOKEN} run ${g.sceneName} ignore-selected --cast ${castName}`,
+                content: `${CMD_TOKEN} run ${g.sceneName} ignore-selected --cast ${castName}${paramFlags ? ' ' + paramFlags : ''}`,
                 selected: [],
             });
             delete activeGuides[guideId];
@@ -359,7 +390,28 @@ var Choreograph = Choreograph || (() => {
             if (step.max) parts.push(`max: ${step.max}`);
             html += `<i>Select ${parts.join(', ')} token${(step.max === 1 && step.min === 1) ? '' : 's'}</i><br><br>`;
         }
-        html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId}`);
+
+        // Build continue button — embed ?{} queries for param steps
+        if (step._paramQuery) {
+            // Show param descriptions
+            step._paramQuery.forEach(p => {
+                html += `<b>${escHtml(p.name)}</b>`;
+                if (p.default) html += ` [${escHtml(p.default)}]`;
+                if (p.description) html += ` — <i>${escHtml(p.description)}</i>`;
+                html += `<br>`;
+            });
+            html += `<br>`;
+            // Build button with ?{} macros for each param
+            const queryParts = step._paramQuery.map(p => {
+                const label = p.name;
+                const def = p.default || '';
+                if (p.type === 'boolean') return `--${p.name} ?{${label}|true|false}`;
+                return `--${p.name} ?{${label}|${def}}`;
+            }).join(' ');
+            html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId} ${queryParts}`);
+        } else {
+            html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId}`);
+        }
         if (hasPriorInteractive) html += ` ${btnHtml('⬅ Back', `${CMD_TOKEN} guide-back ${guideId}`)}`;
         html += ` ${btnHtml('✖ Cancel', `${CMD_TOKEN} guide-cancel ${guideId}`)}`;
         html += `</div>`;
@@ -372,6 +424,32 @@ var Choreograph = Choreograph || (() => {
 
         const step = g.steps[g.currentStep];
         const selected = (msg.selected || []).map(s => getObj(s._type, s._id)).filter(Boolean);
+
+        // Handle _paramSelect steps (token/path selection)
+        if (step._paramSelect) {
+            if (selected.length === 0) {
+                replyError(msg, `Select at least one token/path for "${step._paramSelect}", then click Continue.`);
+                return;
+            }
+            const ids = selected.map(t => t.get('id'));
+            g.params[step._paramSelect] = step._paramType.includes('[]') ? ids.join(',') : ids[0];
+            g.currentStep++;
+            enterStep(guideId);
+            return;
+        }
+
+        // Handle _paramQuery steps (parse --key value from msg.content)
+        if (step._paramQuery) {
+            const content = msg.content;
+            step._paramQuery.forEach(p => {
+                const re = new RegExp(`--${p.name}\\s+(\\S+)`);
+                const m = content.match(re);
+                if (m && m[1]) g.params[p.name] = m[1];
+            });
+            g.currentStep++;
+            enterStep(guideId);
+            return;
+        }
 
         // Validate selection count
         if (step.min && selected.length < step.min) {
@@ -506,6 +584,27 @@ var Choreograph = Choreograph || (() => {
     };
 
     const replyError = (msg, text) => reply(msg, 'Error', text);
+
+    // CSV-style array parser: splits on commas, respects double-quoted segments
+    const parseCSV = (str) => {
+        if (!str) return [];
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str[i];
+            if (ch === '"' && (i === 0 || str[i - 1] !== '\\')) {
+                inQuotes = !inQuotes;
+            } else if (ch === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += ch;
+            }
+        }
+        result.push(current.trim());
+        return result.filter(s => s.length > 0);
+    };
 
     const escHtml = (str) => String(str || '')
         .replace(/&/g, '&amp;')
@@ -1967,7 +2066,7 @@ var Choreograph = Choreograph || (() => {
                         return;
                     }
 
-                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync', 'sync-timeout', 'role']);
+                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync', 'sync-timeout', 'role', 'parent']);
                     const params = {};
                     Object.entries(opts).forEach(([k, v]) => {
                         if (!knownFlags.has(k) && typeof v === 'string') params[k] = v;
@@ -2006,12 +2105,11 @@ var Choreograph = Choreograph || (() => {
                         syncTimeout: opts['sync-timeout'] ? parseInt(opts['sync-timeout'], 10) : 30000,
                         castName: opts.cast || null,
                     };
-
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
                     const inst = runningScenes[instanceId];
                     const iName = inst ? inst.instanceName : instanceId;
                     // Only show status card for user-initiated runs (not children/recursive)
-                    if (msg.playerid !== 'API' && !(inst && inst.parentId)) {
+                    if (msg.playerid !== 'API' && !runtimeOpts.parent) {
                         const sceneHandout = scenes().find(name);
                         const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
                         let castInfo = '';
@@ -2322,7 +2420,7 @@ var Choreograph = Choreograph || (() => {
             const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
             if (!ex) { replyError(msg, `No example named "${exName}".`); return; }
             if (!ex.guide || !ex.guide.length) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
-            startGuide(msg, `example-${exName}`, ex.guide, ex.scene && ex.scene.roles);
+            startGuide(msg, `example-${exName}`, ex.guide, ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
             return;
         }
         if (cmd === 'guide-continue') {
@@ -2371,7 +2469,7 @@ var Choreograph = Choreograph || (() => {
 
             // Start guide if the example defines one
             if (ex.guide && Array.isArray(ex.guide) && ex.guide.length > 0) {
-                startGuide(msg, sceneName, ex.guide, ex.scene && ex.scene.roles);
+                startGuide(msg, sceneName, ex.guide, ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
                 return;
             }
 
