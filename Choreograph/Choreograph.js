@@ -326,7 +326,7 @@ var Choreograph = Choreograph || (() => {
 
         // Interactive step — show prompt
         let html = `<div style="background:#335;color:#fff;padding:8px;border-radius:4px;font-size:12px;">`;
-        html += `<b>Setup</b> (step ${g.currentStep + 1}/${g.steps.length})<br><br>`;
+        html += `<b>${escHtml(g.sceneName)}</b> — Setup (step ${g.currentStep + 1}/${g.steps.length})<br><br>`;
         html += `${step.prompt}<br><br>`;
         if (step.min || step.max) {
             const parts = [];
