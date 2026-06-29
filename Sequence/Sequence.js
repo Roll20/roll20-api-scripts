@@ -155,25 +155,33 @@ var Sequence = Sequence || (() => {
     /**
      * Register an attribute for recording/playback.
      *
-     * @param {object} reg
-     * @param {string}   reg.name        Attribute name (used as column header in handout)
-     * @param {string}   reg.namespace   'core' or external script name
-     * @param {string}   reg.objectType  Roll20 object type ('graphic', 'text', etc.)
-     * @param {function} reg.get         (obj) => current value
-     * @param {function} reg.set         (obj, val) => void  — for absolute (= prefix)
-     * @param {function} reg.diff        (prev, curr) => delta | null  (null = no change)
-     * @param {function} reg.apply       (obj, delta) => void  — for relative (+/- prefix)
-     * @param {function|null} reg.lerp   (a, b, t) => interpolated value, or null if not interpolatable
-     * @param {function} reg.format      (delta) => string for handout display
-     * @param {function} reg.parse       (str) => delta/value from handout string
-     * @param {function|null} reg.startWatch  (obj, notify) => void
-     *   Called when Sequence starts recording obj. subscribe to changes for
-     *   this attribute on obj and call notify(currVal) — just the current value,
-     *   no attribute name needed — whenever the attribute changes.
-     *   null for core attributes (covered by Roll20's change:graphic:<attr> events).
-     * @param {function|null} reg.stopWatch   (obj) => void
-     *   Called when Sequence stops recording obj. Clean up any subscriptions.
-     *   null for core attributes.
+     * @param {string}        sourceId  Script name registering this attribute.
+     * @param {object}        reg       Registration struct:
+     *
+     * Required fields:
+     * @param {string}        reg.name        Attribute name (used as column header in handout). Must be a valid JS identifier.
+     * @param {string}        reg.namespace   Script/module namespace. 'core' for built-in attrs, otherwise your script name.
+     * @param {string}        reg.objectType  Roll20 object type — 'graphic', 'text', etc.
+     * @param {string}        reg.description Human-readable description.
+     * @param {string}        reg.valueType   Type tag: 'number', 'scale', 'color', 'boolean', 'enum', 'string', or custom.
+     * @param {function}      reg.get         (obj) => current value
+     * @param {function}      reg.set         (obj, val) => void — for absolute (= prefix)
+     * @param {function}      reg.diff        (prev, curr) => delta | null (null = no change)
+     * @param {function}      reg.apply       (obj, delta) => void — for relative (+/- prefix)
+     * @param {function}      reg.format      (delta) => string for handout display
+     * @param {function}      reg.parse       (str) => { delta } | { abs } | { expr, mode } from handout string
+     *
+     * Optional fields:
+     * @param {string[]}      reg.enumValues  For enum types: array of valid values (used in dropdowns).
+     * @param {string[]}      reg.examples    Example cell values shown in docs.
+     * @param {function|null} reg.lerp        (a, b, t) => interpolated value. null = step-only (no interpolation).
+     * @param {function|null} reg.identity    (obj) => delta representing "no change". Defaults to (obj) => ({ abs: reg.get(obj) }).
+     *                                        Used in attribute groups and recording snapshots.
+     * @param {function|null} reg.startWatch  (obj, notify) => void — called when recording starts on obj.
+     *                                        Subscribe to changes and call notify(currVal) on change.
+     *                                        null for core attributes (covered by change:graphic:<attr> events).
+     * @param {function|null} reg.stopWatch   (obj) => void — called when recording stops. Clean up subscriptions.
+     *                                        null for core attributes.
      */
     // Validate an identifier segment — no dots, must be valid JS identifier
     const validIdent = (s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
@@ -199,9 +207,19 @@ var Sequence = Sequence || (() => {
             return false;
         }
 
-        reg.namespace   = reg.namespace   || 'core';
-        reg.description = reg.description || '';
-        reg.valueType   = reg.valueType   || 'number';
+        if (!reg.namespace) {
+            log(`${SCRIPT_NAME}: [${src}] registerAttribute — missing namespace for "${reg.name}"`);
+            return false;
+        }
+        if (!reg.description) {
+            log(`${SCRIPT_NAME}: [${src}] registerAttribute — missing description for "${reg.name}"`);
+            return false;
+        }
+        if (!reg.valueType) {
+            log(`${SCRIPT_NAME}: [${src}] registerAttribute — missing valueType for "${reg.name}"`);
+            return false;
+        }
+        reg.objectType  = reg.objectType  || 'graphic';
         reg.enumValues  = reg.enumValues  || null;
         reg.examples    = reg.examples    || [];
         // watchProp: Roll20 property to watch for change events.
@@ -220,6 +238,7 @@ var Sequence = Sequence || (() => {
         }
 
         reg.source = src;
+        if (!reg.identity) reg.identity = (obj) => ({ abs: reg.get(obj) });
         ATTR_REGISTRY[key] = reg;
 
         // Core attributes use bare name lookup; external use qualified name
@@ -2551,7 +2570,7 @@ var Sequence = Sequence || (() => {
     /**
      * Build a recording object from a session and save it to a handout.
      */
-    const saveRecording = (name, session, callback) => {
+    const saveRecording = (name, session, callback, objId) => {
         const recording = {
             name,
             objectType: 'graphic',
@@ -2559,6 +2578,18 @@ var Sequence = Sequence || (() => {
             notes:      '',
             keyframes:  session.keyframes,
         };
+
+        // Fill snapshot keyframes with identity deltas for all recorded attrs
+        const snapshotObj = objId ? getObj('graphic', objId) : null;
+        recording.keyframes.forEach(kf => {
+            if (!kf._snapshot) return;
+            session.recordAttrs.forEach(attr => {
+                const reg = getAttrReg(attr);
+                if (!reg || !reg.identity) return;
+                if (!(attr in kf.deltas)) kf.deltas[attr] = reg.identity(snapshotObj);
+            });
+            delete kf._snapshot;
+        });
 
         const attrCols = session.recordAttrs.filter(attr =>
             session.keyframes.some(kf => attr in kf.deltas)
@@ -3410,6 +3441,7 @@ var Sequence = Sequence || (() => {
                 } else {
                     html += btnHtml('⏸ Pause',  `${CMD_TOKEN} pause ignore-selected ${objId}`);
                 }
+                html += btnHtml('📸 Snapshot', `${CMD_TOKEN} snapshot ignore-selected ${objId}`);
                 html += btnHtml('⏹ Stop', `${CMD_TOKEN} stop ignore-selected ${objId}`);
             }
             html += btnHtml('🔄 Refresh', `${CMD_TOKEN} recording-menu ignore-selected ${objId}`);
@@ -3595,7 +3627,7 @@ var Sequence = Sequence || (() => {
                                 `/w ${recipient} Stopped and saved `
                                 + `<b>${escHtml(session.name)}</b> — `
                                 + `${session.keyframes.length} keyframes, ${session.duration}ms.`);
-                        });
+                        }, id);
                     } else {
                         const recipient = msg.who.split(' ')[0];
                         sendChat(`${SCRIPT_NAME} [Record]`,
@@ -3618,6 +3650,19 @@ var Sequence = Sequence || (() => {
 
             if (cmd === 'resume') {
                 objIds.forEach(id => resumeRecording(id));
+                showRecordingMenu(msg, objIds);
+                return;
+            }
+
+            // ----------------------------------------------------------------
+            if (cmd === 'snapshot') {
+                objIds.forEach(id => {
+                    const session = activeSessions[id];
+                    if (!session || session.paused) return;
+                    const time = Date.now() - session.startTime;
+                    const kf = { time, type: 'change', deltas: {}, easings: {}, _snapshot: true };
+                    session.keyframes.push(kf);
+                });
                 showRecordingMenu(msg, objIds);
                 return;
             }
@@ -3649,9 +3694,10 @@ var Sequence = Sequence || (() => {
                     delete s().unsavedSessions[id];
                     saveRecording(name, session, () => {
                         reply(msg, 'Record',
+
                             `Saved recording "${name}". `
                             + `${session.keyframes.length} keyframes, ${session.duration}ms.`);
-                    });
+                    }, id);
                 });
                 return;
             }
