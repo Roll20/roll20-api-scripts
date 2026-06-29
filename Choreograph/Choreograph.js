@@ -257,8 +257,117 @@ var Choreograph = Choreograph || (() => {
             return false;
         }
         if (EXT_EXAMPLES[name]) return false; // no-op on duplicate
-        EXT_EXAMPLES[name] = { name, description, source: src, scene, onGenerate: struct.onGenerate || null };
+        EXT_EXAMPLES[name] = { name, description, source: src, scene, guide: struct.guide || null };
         return true;
+    };
+
+    // =========================================================================
+    // Example Guide System
+    // =========================================================================
+
+    const activeGuides = {}; // { guideId: { steps, currentStep, roles, msg, sceneName } }
+
+    /**
+     * Start a guide session from a steps array.
+     * Steps can be interactive (require selection + Continue) or automatic.
+     *
+     * Step object fields:
+     * @param {string}   [step.prompt]      Instructions shown (required for interactive steps).
+     * @param {boolean}  [step.auto=false]  If true, fires immediately without waiting for user input.
+     * @param {string}   [step.role]        Assign selected tokens to this cast role.
+     * @param {number}   [step.min]         Minimum selection count (interactive only).
+     * @param {number}   [step.max]         Maximum selection count (interactive only).
+     * @param {function} [step.onStep]      Callback when step becomes active. Receives (roles).
+     * @param {function} [step.onContinue]  Callback when step completes. Receives (tokens, roles).
+     */
+    const startGuide = (msg, sceneName, steps) => {
+        const guideId = `guide-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        activeGuides[guideId] = {
+            steps,
+            currentStep: 0,
+            roles: {},
+            msg,
+            sceneName,
+        };
+        advanceGuide(guideId);
+        return guideId;
+    };
+
+    const advanceGuide = (guideId) => {
+        const g = activeGuides[guideId];
+        if (!g) return;
+
+        if (g.currentStep >= g.steps.length) {
+            // All steps complete
+            reply(g.msg, 'Guide', `Setup complete for <b>${escHtml(g.sceneName)}</b>. `
+                + btnHtml('▶ Run', `${CMD_TOKEN} run ${g.sceneName}`));
+            delete activeGuides[guideId];
+            return;
+        }
+
+        const step = g.steps[g.currentStep];
+
+        // Fire onStep callback
+        if (typeof step.onStep === 'function') step.onStep(g.roles);
+
+        // Auto steps advance immediately
+        if (step.auto) {
+            if (typeof step.onContinue === 'function') step.onContinue([], g.roles);
+            g.currentStep++;
+            advanceGuide(guideId);
+            return;
+        }
+
+        // Interactive step — show prompt with Continue button
+        let html = `<div style="background:#335;color:#fff;padding:8px;border-radius:4px;font-size:12px;">`;
+        html += `<b>Setup</b> (step ${g.currentStep + 1}/${g.steps.length})<br><br>`;
+        html += `${step.prompt}<br><br>`;
+        if (step.min || step.max) {
+            const parts = [];
+            if (step.min) parts.push(`min: ${step.min}`);
+            if (step.max) parts.push(`max: ${step.max}`);
+            html += `<i>Select ${parts.join(', ')} token${(step.max === 1 && step.min === 1) ? '' : 's'}</i><br><br>`;
+        }
+        html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId}`);
+        html += ` `;
+        html += btnHtml('✖ Cancel', `${CMD_TOKEN} guide-cancel ${guideId}`);
+        html += `</div>`;
+        reply(g.msg, 'Guide', html, true);
+    };
+
+    const handleGuideContinue = (msg, guideId) => {
+        const g = activeGuides[guideId];
+        if (!g) { replyError(msg, 'No active guide with that ID.'); return; }
+
+        const step = g.steps[g.currentStep];
+        const selected = (msg.selected || []).map(s => getObj(s._type, s._id)).filter(Boolean);
+
+        // Validate selection count
+        if (step.min && selected.length < step.min) {
+            replyError(msg, `Select at least ${step.min} token${step.min > 1 ? 's' : ''}, then click Continue.`);
+            return;
+        }
+        if (step.max && selected.length > step.max) {
+            replyError(msg, `Select at most ${step.max} token${step.max > 1 ? 's' : ''}, then click Continue.`);
+            return;
+        }
+
+        // Assign to role
+        if (step.role) g.roles[step.role] = selected;
+
+        // Fire onContinue
+        if (typeof step.onContinue === 'function') step.onContinue(selected, g.roles);
+
+        // Advance
+        g.currentStep++;
+        advanceGuide(guideId);
+    };
+
+    const handleGuideCancel = (msg, guideId) => {
+        if (activeGuides[guideId]) {
+            delete activeGuides[guideId];
+            reply(msg, 'Guide', 'Setup cancelled.');
+        }
     };
 
     const generateExtensionHandout = (sourceId, opts = {}) => {
@@ -1985,6 +2094,23 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
+        if (cmd === 'guide') {
+            const exName = args[0];
+            const ex = EXT_EXAMPLES[exName];
+            if (!ex) { replyError(msg, `No example named "${exName}".`); return; }
+            if (!ex.guide || !ex.guide.length) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
+            startGuide(msg, `example-${exName}`, ex.guide);
+            return;
+        }
+        if (cmd === 'guide-continue') {
+            handleGuideContinue(msg, args[0]);
+            return;
+        }
+        if (cmd === 'guide-cancel') {
+            handleGuideCancel(msg, args[0]);
+            return;
+        }
+
         if (cmd === 'example!') {
             // Generation triggered by button click
             const exName = args[0];
@@ -2010,8 +2136,11 @@ var Choreograph = Choreograph || (() => {
             setHandoutNotes(handout, generateSceneHtml(sceneName, scene));
             scenes().cache[sceneName] = scene;
 
-            // Call onGenerate hook if provided (e.g. to set up recordings)
-            if (typeof ex.onGenerate === 'function') ex.onGenerate(sceneName);
+            // Start guide if the example defines one
+            if (ex.guide && Array.isArray(ex.guide) && ex.guide.length > 0) {
+                startGuide(msg, sceneName, ex.guide);
+                return;
+            }
 
             reply(msg, 'Examples',
                 `Generated example scene "<b>${escHtml(sceneName)}</b>". `
