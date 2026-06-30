@@ -126,13 +126,21 @@ Color constants (`color.red`, `color.blue`, etc.) are also available — run `!s
 
 ## Built-in Functions
 
-`rand(min, max)`, `randInt(min, max)`, `pick(a, b, ...)`, `freeze(value)`, `clamp(v, lo, hi)`, `abs`, `round`, `floor`, `ceil`, `min`, `max`, `sqrt`, `pow`, `sin`, `cos`, `tan`, `log`, `exp`
+`rand(min, max)`, `randInt(min, max)`, `pick(a, b, ...)`, `freeze(value)`, `clamp(v, lo, hi)`, `abs`, `round(x [, step])`, `floor(x [, step])`, `ceil(x [, step])`, `min`, `max`, `sqrt`, `pow`, `sin`, `cos`, `tan`, `log`, `exp`, `get("attrName")`, `cell(n)`, `unit(n)`
 
 **`freeze(value)`** — memoizes its result for the duration of the segment. Use in `continuous` easing to stabilize impure values:
 ```
 =orig + freeze(rand(-50,50)) + cos(t * TAU) * 140
 ```
 This gives a stable random offset with continuous oscillation. The frozen value resets each loop cycle.
+
+**`get("attrName")`** — reads the current value of any registered attribute on the token. Example: `=get("bar1_max") * 1.2`
+
+**`cell(n)`** — converts grid cells to pixels. `=cell(4)` gives 4 grid cells in pixels. Useful for grid-snapped movements.
+
+**`unit(n)`** — converts map-scale units (ft/m/etc.) to pixels. `=unit(30)` converts 30ft to pixel distance.
+
+**`round(x, step)`, `floor(x, step)`, `ceil(x, step)`** — now accept an optional step argument for snapping. Example: `=round(orig * 1.2, cell(1))` snaps to grid.
 
 **Impure functions** (`rand`, `randInt`, `pick`) are automatically memoized in non-continuous segments (stable for the segment). In `continuous` segments they re-evaluate every tick — wrap in `freeze()` to stabilize.
 
@@ -155,6 +163,10 @@ Play with `--loop` for endless orbiting. `t` goes from 0→1 over the segment du
 
 All standard graphic token properties: `left`, `top`, `rotation`, `width`, `height`, `bar1_value`–`bar3_value`, `bar1_max`–`bar3_max`, `aura1_radius`, `aura2_radius`, `light_radius`, `light_dimradius`, `light_angle`, `light_losangle`, `tint_color`, `aura1_color`, `aura2_color`, `light_color`, `flipv`, `fliph`, `showname`, `layer`, and more.
 
+UDL lighting: `bright_light_distance`, `low_light_distance`, `night_vision_distance`, `dim_light_opacity`.
+
+String attributes (levenshtein-interpolated): `name`, `gmnotes`, `tooltip`. Support `+suffix` (append) and `=""` (set empty).
+
 Run `!sequence man attr` in chat for the full list.
 
 ## Extending Sequence
@@ -163,10 +175,12 @@ Other API scripts can register custom attributes, expression functions, constant
 
 The extension API entry points:
 - `Sequence.registerAttribute(sourceId, struct)`
+- `Sequence.registerAttributeGroup(sourceId, attrs, opts)` — group attrs for co-recording
 - `Sequence.registerValueFunction(sourceId, struct)`
 - `Sequence.registerTimingFunction(sourceId, struct)`
 - `Sequence.registerPlaybackConstant(sourceId, struct)`
 - `Sequence.registerEasing(sourceId, struct)`
+- `Sequence.registerExample(sourceId, struct)`
 - `Sequence.generateExtensionHandout(sourceId, opts)`
 
 Extensions should listen for the `!sequence-ready` chat signal before registering, and also register immediately if Sequence is already loaded when they initialise.
@@ -174,6 +188,30 @@ Extensions should listen for the `!sequence-ready` chat signal before registerin
 ## Recordings as Handouts
 
 Recordings are stored in handouts named `[Sequence] <name>` and are fully portable — copy a handout to another campaign to transfer an animation. Recordings are GM-only by default.
+
+## Built-in Examples
+
+Sequence ships with 8 built-in example recordings: `spin`, `hover`, `pulse`, `orbit`, `shake`, `torch-flicker`, `rgb-cycle`, `boss-phase-2`.
+
+Generate them via `!sequence example` and click the **+ Generate** button, or regenerate with **🔄 Regen**. Generated examples are archived as regular `[Sequence]` handouts you can edit, play, or loop directly from the example list.
+
+## Changelog
+
+### v1.0.0
+- **Flat keyframes** — removed multi-track architecture. Keyframes are now flat on the recording object (no more `tracks` wrapper).
+- **Built-in examples** — 8 example recordings (spin, hover, pulse, orbit, shake, torch-flicker, rgb-cycle, boss-phase-2) with Play/Loop buttons.
+- **Per-attribute lerp** — engine tracks segments per-attribute, so mixed keyframes interpolate correctly.
+- **String lerp** — new `registerString` type with levenshtein-based interpolation for `name`, `gmnotes`, `tooltip`. Supports `+suffix` (append) and `=""` (set empty).
+- **New expression functions** — `get("attrName")`, `cell(n)`, `unit(n)`. `round`/`floor`/`ceil` now accept optional step argument.
+- **UDL attributes** — `bright_light_distance`, `low_light_distance`, `night_vision_distance`, `dim_light_opacity`.
+- **Duration derived** — no longer stored in recording; derived from last keyframe time. Supports fully random timing via time expressions.
+- **Batch updates** — all core attributes set via single `obj.set({})` call per tick (fixes lighting not updating together).
+- **Color fixes** — color constants (`color.black`, `color.red`, etc.) now work in expressions and lerp correctly.
+- **UX** — Play/Loop buttons in example list and stopped playback menu. `[open]` link in playback menu.
+- **Removed** — `HANDOUT_SCHED_PREFIX` (dead code), multi-track architecture.
+
+### v0.2.0
+- Initial public release.
 
 ## License
 
