@@ -8,6 +8,7 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 - [Anchor](https://github.com/Roll20/roll20-api-scripts/tree/master/Anchor) (spatial sync)
 - [Mirror](https://github.com/Roll20/roll20-api-scripts/tree/master/Mirror) (property sync)
 - [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
+- [RollCapture](https://github.com/Roll20/roll20-api-scripts/tree/master/RollCapture) (optional, roll value extraction for scripting)
 
 ## Use Cases
 
@@ -65,11 +66,16 @@ Controlled by `gaslight_sync` character attribute:
 
 ## Command Relay
 
-Commands run on master page auto-relay to player pages:
-- **Path 1 (IDs in command)**: immediate cross-page via ID replacement
-- **Path 2 (selection only)**: queued, fires when GM navigates to target page
+Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages with token IDs replaced by their linked counterparts. This happens transparently — no configuration needed.
 
-Configure player auto-relay: `!gaslight config relay-add !token-mod`
+**Rules:**
+- Master-page tokens selected or IDs in command → auto-relay to all player pages
+- Player-page tokens involved → only relay if the command is in `relayCommands` list
+- Commands already relayed are not re-relayed (loop prevention)
+
+**Manual relay:** `!gaslight relay <views...> <!command>` — explicitly relay to specific views.
+
+**Player auto-relay:** `!gaslight config relay-add !token-mod` — allow player-page commands to relay to other pages.
 
 ## Staging
 
@@ -85,6 +91,54 @@ Group config stored as text objects on GM layer per page:
 group: mygroup
 player: GM
 ```
+
+## Scripting
+
+Reactive per-player automation. Scripts stored in handouts evaluate per-viewer per-target, firing API commands conditionally based on captured roll values or token properties.
+
+### Setup
+
+1. Create a handout with your script
+2. Place a pin on the master page and link it to the handout
+3. Add config to the pin's GM notes:
+```
+---GASLIGHT-SCRIPT---
+scope: token
+filter: has gl_stealth_result
+```
+
+### Script Example
+
+```
+// Hide NPC from players who can't beat its stealth
+!token-mod --ids @(target.token_id) --set {& if (any(@(viewer.passive_wisdom)) >= @(target.gl_stealth_result))} layer|objects {& else} layer|gmlayer {& end}
+```
+
+### Variables
+
+- `@(target.*)` — the NPC token being evaluated (resolved per viewer page)
+- `@(target.gl_*)` — captured values (token gmnotes override, character attribute fallback)
+
+### Aggregate Functions (required for viewer.*/gm.*)
+
+- `any(@(viewer.field)) op value` — true if any viewer token passes
+- `all(@(viewer.field)) op value` — true if all pass
+- `max(@(viewer.field))` — highest value (via MathOps)
+- `min(@(viewer.field))` — lowest value (via MathOps)
+- `join(@(viewer.token_id))` — space-separated IDs for `--ids` targeting
+
+### Triggers
+
+Scripts auto-detect triggers from `@(target.gl_*)` references. Override in pin GM notes:
+- `trigger: on change gl_stealth_result` — explicit trigger
+- `trigger: manual only` — only fires via `!gaslight eval`
+
+### Evaluation
+
+- `!gaslight eval` — evaluate selected pins
+- `!gaslight eval --all` — all pins in active groups
+- `!gaslight eval <handout name>` — all pins linked to that handout
+- Add `--dry-run` to preview without executing
 
 ## License
 

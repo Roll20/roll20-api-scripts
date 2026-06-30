@@ -1,6 +1,6 @@
 # Gaslight TODO
 
-## Done (v1.0.0)
+## Done (v1.0.0 — shipped in Gaslight branch PR)
 - [x] Pre-setup split with test-first behavior
 - [x] Merge (tear down Anchor + Mirror, unassign players)
 - [x] Anchor-mode sync (NPC + player tokens via chain-linking)
@@ -38,6 +38,7 @@
 - [ ] Focus-ping on split
 
 ## v2 Ideas
+- [ ] `!gaslight relay all --except <player>` flag
 - [ ] Config handout (editable in-game, live reload)
 - [ ] Group/page-level relay-command overrides
 - [ ] Config visibility toggle (hide gaslight text in HTML comment)
@@ -48,6 +49,5 @@
 - [ ] On-demand page cloning (if TruePageCopy exposes API)
 
 ## Known Issues
-- Relay Path 1 (selection-based) requires GM to navigate to target page
-- Roll20 limitation: sendChat as player carries their UI selection state
+- WORKAROUND: Temporarily sets Fetch `playerscanids=true` during script execution because API sendChat sets `playerid='API'` and Fetch denies character access. Remove when Fetch treats API as GM-equivalent (reported to timmaugh).
 - linkedTokens accumulates duplicates on repeated splits (cosmetic, deduped at use)
