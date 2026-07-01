@@ -1193,97 +1193,70 @@ var Gaslight = Gaslight || (() => {
         var tokens = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
         if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) first.'); return; }
 
-        var subCmd = (args[0] || '').toLowerCase();
-        var props = args.slice(1).join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-
-        switch (subCmd) {
-            case 'show': {
-                var results = tokens.map(function(t) {
-                    var raw = getSyncConfigRaw(t);
-                    var name = t.get('name') || t.get('id');
-                    return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
-                });
-                reply(msg, 'Sync', results.join('<br>'));
-                break;
-            }
-            case 'set': {
-                var value = props.join(', ');
-                tokens.forEach(function(t) { setSyncConfig(t, value); });
-                reply(msg, 'Sync', 'Set gaslight_sync to "' + value + '" on ' + tokens.length + ' token(s).');
-                break;
-            }
-            case 'add': {
-                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight sync add <props>'); return; }
-                tokens.forEach(function(t) {
-                    var raw = getSyncConfigRaw(t) || '';
-                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                    props.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
-                    setSyncConfig(t, existing.join(', '));
-                });
-                reply(msg, 'Sync', 'Added [' + props.join(', ') + '] to ' + tokens.length + ' token(s).');
-                break;
-            }
-            case 'remove': {
-                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight sync remove <props>'); return; }
-                tokens.forEach(function(t) {
-                    var raw = getSyncConfigRaw(t) || '';
-                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                    existing = existing.filter(function(p) { return props.indexOf(p) === -1; });
-                    setSyncConfig(t, existing.join(', '));
-                });
-                reply(msg, 'Sync', 'Removed [' + props.join(', ') + '] from ' + tokens.length + ' token(s).');
-                break;
-            }
-            case 'clear': {
-                tokens.forEach(function(t) {
-                    var notes = t.get('gmnotes') || '';
-                    try { notes = decodeURIComponent(notes); } catch(e) {}
-                    notes = notes.replace(/gaslight_sync:\s*.*\n?/, '');
-                    t.set('gmnotes', notes);
-                });
-                reply(msg, 'Sync', 'Cleared token-level gaslight_sync from ' + tokens.length + ' token(s). Will fall back to character attribute.');
-                break;
-            }
-            default:
-                reply(msg, 'Error', 'Usage: !gaslight sync [show|set|add|remove|clear] [props]');
+        // No args — show current config
+        if (args.length === 0) {
+            var results = tokens.map(function(t) {
+                var raw = getSyncConfigRaw(t);
+                var name = t.get('name') || t.get('id');
+                return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
+            });
+            reply(msg, 'Sync', results.join('<br>'));
+            return;
         }
+
+        var subCmd = args[0].toLowerCase();
+
+        // Reset — remove token-level override
+        if (subCmd === 'reset') {
+            tokens.forEach(function(t) {
+                var notes = t.get('gmnotes') || '';
+                try { notes = decodeURIComponent(notes); } catch(e) {}
+                notes = notes.replace(/gaslight_sync:\s*.*\n?/, '');
+                t.set('gmnotes', notes);
+            });
+            reply(msg, 'Sync', 'Reset token-level gaslight_sync on ' + tokens.length + ' token(s). Falling back to character attribute.');
+            return;
+        }
+
+        // "all" — explicitly sync everything
+        if (subCmd === 'all') {
+            tokens.forEach(function(t) { setSyncConfig(t, 'all'); });
+            reply(msg, 'Sync', 'Set to sync all properties on ' + tokens.length + ' token(s).');
+            return;
+        }
+
+        // Otherwise, treat all args as props to add to sync list
+        var props = args.join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        tokens.forEach(function(t) {
+            var raw = getSyncConfigRaw(t) || '';
+            var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            props.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
+            setSyncConfig(t, existing.join(', '));
+        });
+        reply(msg, 'Sync', 'Added [' + props.join(', ') + '] to sync on ' + tokens.length + ' token(s).');
     };
 
     const doDesync = (msg, args) => {
         var tokens = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
         if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) first.'); return; }
+        if (args.length === 0) { reply(msg, 'Error', 'Usage: !gaslight desync <props|all>'); return; }
 
-        var subCmd = (args[0] || '').toLowerCase();
-        var props = args.slice(1).join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-
-        switch (subCmd) {
-            case 'add': {
-                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight desync add <props>'); return; }
-                var excludeProps = props.map(function(p) { return p.startsWith('!') ? p : '!' + p; });
-                tokens.forEach(function(t) {
-                    var raw = getSyncConfigRaw(t) || '';
-                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                    excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
-                    setSyncConfig(t, existing.join(', '));
-                });
-                reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + tokens.length + ' token(s).');
-                break;
-            }
-            case 'remove': {
-                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight desync remove <props>'); return; }
-                var excludeProps = props.map(function(p) { return p.startsWith('!') ? p : '!' + p; });
-                tokens.forEach(function(t) {
-                    var raw = getSyncConfigRaw(t) || '';
-                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-                    existing = existing.filter(function(p) { return excludeProps.indexOf(p) === -1; });
-                    setSyncConfig(t, existing.join(', '));
-                });
-                reply(msg, 'Desync', 'Removed exclusion of [' + props.join(', ') + '] from ' + tokens.length + ' token(s).');
-                break;
-            }
-            default:
-                reply(msg, 'Error', 'Usage: !gaslight desync [add|remove] <props>');
+        // "all" — disable all syncing (set empty string = no sync)
+        if (args[0].toLowerCase() === 'all') {
+            tokens.forEach(function(t) { setSyncConfig(t, ''); });
+            reply(msg, 'Desync', 'Disabled all syncing on ' + tokens.length + ' token(s). Use <code>!gaslight sync reset</code> to restore.');
+            return;
         }
+
+        var props = args.join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        var excludeProps = props.map(function(p) { return p.startsWith('!') ? p : '!' + p; });
+        tokens.forEach(function(t) {
+            var raw = getSyncConfigRaw(t) || '';
+            var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
+            setSyncConfig(t, existing.join(', '));
+        });
+        reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + tokens.length + ' token(s).');
     };
 
     const doGroup = (msg, args) => {
