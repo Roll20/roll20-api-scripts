@@ -422,29 +422,19 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Read the gaslight_sync config for a token (from gmnotes) or character (fallback).
+     * Read the gaslight_sync config for a token (from gmnotes only).
      * Returns:
      *   null — not configured (default: sync all non-spatial)
      *   '' — explicitly empty (no sync)
      *   ['prop1','prop2',...] — specific props to sync
      */
-    const getGaslightSync = (tokenOrCharId) => {
-        // Accept either a token object or a character ID
+    const getGaslightSync = (token) => {
         var rawVal = null;
-        if (tokenOrCharId && typeof tokenOrCharId === 'object' && typeof tokenOrCharId.get === 'function') {
-            // Token object — read from gmnotes first
-            rawVal = getSyncConfigRaw(tokenOrCharId);
-            if (rawVal === null) {
-                // Fallback to character attribute
-                var charId = tokenOrCharId.get('represents');
-                if (charId) {
-                    var attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gaslight_sync' })[0];
-                    if (attr) rawVal = (attr.get('current') || '').trim();
-                }
-            }
-        } else if (typeof tokenOrCharId === 'string') {
-            // Legacy: character ID passed directly
-            var attr = findObjs({ _type: 'attribute', _characterid: tokenOrCharId, name: 'gaslight_sync' })[0];
+        if (token && typeof token === 'object' && typeof token.get === 'function') {
+            rawVal = getSyncConfigRaw(token);
+        } else if (typeof token === 'string') {
+            // Legacy: character ID — read attribute directly (used internally only)
+            var attr = findObjs({ _type: 'attribute', _characterid: token, name: 'gaslight_sync' })[0];
             if (!attr) return null;
             rawVal = (attr.get('current') || '').trim();
         }
@@ -1206,15 +1196,20 @@ var Gaslight = Gaslight || (() => {
 
         var subCmd = args[0].toLowerCase();
 
-        // Reset — remove token-level override
+        // Reset — re-copy from character attribute
         if (subCmd === 'reset') {
             tokens.forEach(function(t) {
-                var notes = t.get('gmnotes') || '';
-                try { notes = decodeURIComponent(notes); } catch(e) {}
-                notes = notes.replace(/gaslight_sync:\s*.*\n?/, '');
-                t.set('gmnotes', notes);
+                var charId = t.get('represents');
+                var charVal = '';
+                if (charId) {
+                    var attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gaslight_sync' })[0];
+                    if (attr && attr.get('current') !== undefined && attr.get('current') !== null) {
+                        charVal = attr.get('current').trim();
+                    }
+                }
+                setSyncConfig(t, charVal);
             });
-            reply(msg, 'Sync', 'Reset token-level gaslight_sync on ' + tokens.length + ' token(s). Falling back to character attribute.');
+            reply(msg, 'Sync', 'Reset gaslight_sync to character default on ' + tokens.length + ' token(s).');
             return;
         }
 
