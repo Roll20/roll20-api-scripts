@@ -38,7 +38,13 @@
 - [ ] Focus-ping on split
 
 ## v2 Ideas
-- [ ] Initiative HUD — optional on-canvas initiative display using tokens + text on the foreground layer (one per turn entry). Keeps GM from having to parse N copies of each token in the built-in tracker bar. Auto-updates on turn order changes.
+- [ ] GM HUD system — persistent on-canvas indicators, each toggled via `!gaslight hud <name> [on|off]`:
+  - `initiative` — on-canvas turn order display (tokens + text on foreground layer, one per entry). Deduplicates linked copies so GM sees a clean list.
+  - `view` — big text showing current relay state (OFF / ALL / player name)
+  - `links` — ascii-art boxes around linked tokens with sync/desync annotations
+  - `group` — active group indicator
+- [ ] Diff command (`!gaslight diff <player>`) — show what's different between master and a player's page
+- [ ] Batch operations — `--all` flag on sync/desync to affect all linked tokens on the page
 - [ ] `!gaslight relay all --except <player>` flag
 - [ ] Config handout (editable in-game, live reload)
 - [ ] Group/page-level relay-command overrides
