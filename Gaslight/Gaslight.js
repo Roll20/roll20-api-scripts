@@ -995,6 +995,9 @@ var Gaslight = Gaslight || (() => {
         // Establish links
         establishLinks(groupName, groupInfo, allLinks);
 
+        // Enable relay by default on split
+        s.view = 'master';
+
         var summary = 'Group "' + groupName + '" activated. ' +
             Object.keys(groupInfo.players).length + ' player(s), ' +
             allLinks.length + ' link(s) established.';
@@ -1283,18 +1286,26 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         if (args.length === 0) {
             // Show current view
-            var current = s.view ? Object.values(s.activeGroups).reduce(function(name, g) {
-                if (name) return name;
-                var entry = g.playerPages[s.view];
-                return entry ? entry.name : null;
-            }, null) || s.view : 'master';
+            var current;
+            if (s.view === null) current = 'off (relay disabled)';
+            else if (s.view === 'master') current = 'master (relay to all)';
+            else {
+                current = Object.values(s.activeGroups).reduce(function(name, g) {
+                    if (name) return name;
+                    var entry = g.playerPages[s.view];
+                    return entry ? entry.name : null;
+                }, null) || s.view;
+            }
             reply(msg, 'View', 'Current view: <b>' + current + '</b>');
             return;
         }
         var arg = args.join(' ').replace(/^["']|["']$/g, '');
-        if (arg.toLowerCase() === 'master' || arg.toLowerCase() === 'gm') {
+        if (arg.toLowerCase() === 'master' || arg.toLowerCase() === 'gm' || arg.toLowerCase() === 'all') {
+            s.view = 'master';
+            reply(msg, 'View', 'Switched to <b>master</b> view. Commands relay to all player pages.');
+        } else if (arg.toLowerCase() === 'none' || arg.toLowerCase() === 'off') {
             s.view = null;
-            reply(msg, 'View', 'Switched to <b>master</b> view. Commands target master tokens; use <code>!gaslight relay</code> for player targeting.');
+            reply(msg, 'View', 'Relay <b>disabled</b>. Commands stay on master only.');
         } else {
             // Resolve player
             var resolved = resolvePlayer(msg, arg, CMD + ' view');
@@ -2955,7 +2966,10 @@ var Gaslight = Gaslight || (() => {
         // Universal relay: master-page refs, no player-page refs
         if (masterTokens.length > 0 && !hasPlayerPageRef) {
             var viewPlayerId = s.view;
-            var targetPlayerIds = viewPlayerId ? [viewPlayerId] : Object.keys(activeEntry[1].playerPages);
+            if (!viewPlayerId) return; // view off — no relay
+            var targetPlayerIds = viewPlayerId === 'master'
+                ? Object.keys(activeEntry[1].playerPages)
+                : [viewPlayerId];
             executeRelay('player|' + msg.playerid, masterTokens, content, targetPlayerIds, false);
             return;
         }
