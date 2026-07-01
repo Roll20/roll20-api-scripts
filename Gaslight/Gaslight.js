@@ -389,23 +389,69 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Read the gaslight_sync character attribute.
+     * Read gaslight_sync from a token's gmnotes.
+     * Returns the raw string value, or null if not present.
+     */
+    const getSyncConfigRaw = (token) => {
+        var notes = token.get('gmnotes') || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
+        notes = notes.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
+        const match = notes.match(/gaslight_sync:\s*(.+)/);
+        return match ? match[1].trim() : null;
+    };
+
+    const setSyncConfig = (token, value) => {
+        var notes = token.get('gmnotes') || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
+        if (notes.match(/gaslight_sync:\s*.*/)) {
+            notes = notes.replace(/gaslight_sync:\s*.*/, 'gaslight_sync: ' + value);
+        } else {
+            notes = (notes ? notes + '\n' : '') + 'gaslight_sync: ' + value;
+        }
+        token.set('gmnotes', notes);
+    };
+
+    const autoPopulateSyncConfig = (token) => {
+        if (getSyncConfigRaw(token) !== null) return; // already has one
+        const charId = token.get('represents');
+        if (!charId) return;
+        const attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gaslight_sync' })[0];
+        if (attr && attr.get('current') !== undefined && attr.get('current') !== null) {
+            setSyncConfig(token, attr.get('current'));
+        }
+    };
+
+    /**
+     * Read the gaslight_sync config for a token (from gmnotes) or character (fallback).
      * Returns:
-     *   null — attribute absent (default: sync all non-spatial)
-     *   '' — attribute present but empty (no sync)
+     *   null — not configured (default: sync all non-spatial)
+     *   '' — explicitly empty (no sync)
      *   ['prop1','prop2',...] — specific props to sync
      */
-    const getGaslightSync = (charId) => {
-        if (!charId) return null;
-        var attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gaslight_sync' })[0];
-        if (!attr) return null;
-        var val = attr.get('current');
-        if (val === undefined || val === null) return null;
-        val = val.trim();
-        if (val === '') return '';
+    const getGaslightSync = (tokenOrCharId) => {
+        // Accept either a token object or a character ID
+        var rawVal = null;
+        if (tokenOrCharId && typeof tokenOrCharId === 'object' && typeof tokenOrCharId.get === 'function') {
+            // Token object — read from gmnotes first
+            rawVal = getSyncConfigRaw(tokenOrCharId);
+            if (rawVal === null) {
+                // Fallback to character attribute
+                var charId = tokenOrCharId.get('represents');
+                if (charId) {
+                    var attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gaslight_sync' })[0];
+                    if (attr) rawVal = (attr.get('current') || '').trim();
+                }
+            }
+        } else if (typeof tokenOrCharId === 'string') {
+            // Legacy: character ID passed directly
+            var attr = findObjs({ _type: 'attribute', _characterid: tokenOrCharId, name: 'gaslight_sync' })[0];
+            if (!attr) return null;
+            rawVal = (attr.get('current') || '').trim();
+        }
+        if (rawVal === null || rawVal === undefined) return null;
+        if (rawVal === '') return '';
         // Parse comma-separated props, resolve groups
-        // Prefix with ! to exclude (e.g. "!anchor" = everything except anchor props)
-        var parts = val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        var parts = rawVal.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
         var includes = [];
         var excludes = [];
         parts.forEach(function(p) {
@@ -686,8 +732,8 @@ var Gaslight = Gaslight || (() => {
 
             var ids = tokens.map(function(t) { return t.get('id'); });
 
-            // Check gaslight_sync attribute
-            var syncProps = getGaslightSync(repCharId);
+            // Check gaslight_sync — read from first token's gmnotes (falls back to character attr)
+            var syncProps = getGaslightSync(tokens[0]);
             // syncProps: null = default (base spatial), '' = no sync at all, array = specific
 
             // If empty string, skip all linking for this group
@@ -909,7 +955,7 @@ var Gaslight = Gaslight || (() => {
         // Auto-populate gaslight_link from character attributes
         var allPageIds = [groupInfo.master].concat(Object.values(groupInfo.players).map(function(p) { return p.pageId; }));
         allPageIds.forEach(function(pid) {
-            findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(autoPopulateLinkId);
+            findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(function(t) { autoPopulateLinkId(t); autoPopulateSyncConfig(t); });
         });
 
         // Resolve links
@@ -1143,6 +1189,103 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Unlink', tokens.length + ' token(s) unlinked.');
     };
 
+    const doSync = (msg, args) => {
+        var tokens = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
+        if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) first.'); return; }
+
+        var subCmd = (args[0] || '').toLowerCase();
+        var props = args.slice(1).join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+
+        switch (subCmd) {
+            case 'show': {
+                var results = tokens.map(function(t) {
+                    var raw = getSyncConfigRaw(t);
+                    var name = t.get('name') || t.get('id');
+                    return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
+                });
+                reply(msg, 'Sync', results.join('<br>'));
+                break;
+            }
+            case 'set': {
+                var value = props.join(', ');
+                tokens.forEach(function(t) { setSyncConfig(t, value); });
+                reply(msg, 'Sync', 'Set gaslight_sync to "' + value + '" on ' + tokens.length + ' token(s).');
+                break;
+            }
+            case 'add': {
+                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight sync add <props>'); return; }
+                tokens.forEach(function(t) {
+                    var raw = getSyncConfigRaw(t) || '';
+                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                    props.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
+                    setSyncConfig(t, existing.join(', '));
+                });
+                reply(msg, 'Sync', 'Added [' + props.join(', ') + '] to ' + tokens.length + ' token(s).');
+                break;
+            }
+            case 'remove': {
+                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight sync remove <props>'); return; }
+                tokens.forEach(function(t) {
+                    var raw = getSyncConfigRaw(t) || '';
+                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                    existing = existing.filter(function(p) { return props.indexOf(p) === -1; });
+                    setSyncConfig(t, existing.join(', '));
+                });
+                reply(msg, 'Sync', 'Removed [' + props.join(', ') + '] from ' + tokens.length + ' token(s).');
+                break;
+            }
+            case 'clear': {
+                tokens.forEach(function(t) {
+                    var notes = t.get('gmnotes') || '';
+                    try { notes = decodeURIComponent(notes); } catch(e) {}
+                    notes = notes.replace(/gaslight_sync:\s*.*\n?/, '');
+                    t.set('gmnotes', notes);
+                });
+                reply(msg, 'Sync', 'Cleared token-level gaslight_sync from ' + tokens.length + ' token(s). Will fall back to character attribute.');
+                break;
+            }
+            default:
+                reply(msg, 'Error', 'Usage: !gaslight sync [show|set|add|remove|clear] [props]');
+        }
+    };
+
+    const doDesync = (msg, args) => {
+        var tokens = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
+        if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) first.'); return; }
+
+        var subCmd = (args[0] || '').toLowerCase();
+        var props = args.slice(1).join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+
+        switch (subCmd) {
+            case 'add': {
+                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight desync add <props>'); return; }
+                var excludeProps = props.map(function(p) { return p.startsWith('!') ? p : '!' + p; });
+                tokens.forEach(function(t) {
+                    var raw = getSyncConfigRaw(t) || '';
+                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                    excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
+                    setSyncConfig(t, existing.join(', '));
+                });
+                reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + tokens.length + ' token(s).');
+                break;
+            }
+            case 'remove': {
+                if (props.length === 0) { reply(msg, 'Error', 'Usage: !gaslight desync remove <props>'); return; }
+                var excludeProps = props.map(function(p) { return p.startsWith('!') ? p : '!' + p; });
+                tokens.forEach(function(t) {
+                    var raw = getSyncConfigRaw(t) || '';
+                    var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+                    existing = existing.filter(function(p) { return excludeProps.indexOf(p) === -1; });
+                    setSyncConfig(t, existing.join(', '));
+                });
+                reply(msg, 'Desync', 'Removed exclusion of [' + props.join(', ') + '] from ' + tokens.length + ' token(s).');
+                break;
+            }
+            default:
+                reply(msg, 'Error', 'Usage: !gaslight desync [add|remove] <props>');
+        }
+    };
+
     const doGroup = (msg, args) => {
         if (args.length < 2) { reply(msg, 'Error', 'Usage: !gaslight group &lt;group&gt; &lt;player|GM&gt;'); return; }
         const groupName = args.shift();
@@ -1350,7 +1493,7 @@ var Gaslight = Gaslight || (() => {
             var groupDiscovered = discoverGroup(groupName);
             var allPageIds = [groupDiscovered.master].concat(Object.values(groupDiscovered.players).map(function(p) { return p.pageId; }));
             allPageIds.forEach(function(pid) {
-                findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(autoPopulateLinkId);
+                findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(function(t) { autoPopulateLinkId(t); autoPopulateSyncConfig(t); });
             });
             var allLinks = [];
             Object.values(groupDiscovered.players).forEach(function(pInfo) {
@@ -1399,7 +1542,7 @@ var Gaslight = Gaslight || (() => {
             var groupDiscovered = discoverGroup(groupName);
             var allPageIds = [groupDiscovered.master].concat(Object.values(groupDiscovered.players).map(function(p) { return p.pageId; }));
             allPageIds.forEach(function(pid) {
-                findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(autoPopulateLinkId);
+                findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' }).forEach(function(t) { autoPopulateLinkId(t); autoPopulateSyncConfig(t); });
             });
             var allLinks = [];
             Object.values(groupDiscovered.players).forEach(function(pInfo) {
@@ -2409,6 +2552,8 @@ var Gaslight = Gaslight || (() => {
             case 'test':    doTest(msg, args);    break;
             case 'link':    doLink(msg, args);    break;
             case 'unlink':  doUnlink(msg, args);  break;
+            case 'sync':    doSync(msg, args);    break;
+            case 'desync':  doDesync(msg, args);  break;
             case 'group':   doGroup(msg, args);   break;
             case 'ungroup': doUngroup(msg, args); break;
             case 'relay':   doRelay(msg, args);   break;
