@@ -35,7 +35,7 @@ var Gaslight = Gaslight || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Gaslight';
-    const SCRIPT_VERSION = '2.0.0';
+    const SCRIPT_VERSION = '2.1.0';
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
@@ -80,11 +80,15 @@ var Gaslight = Gaslight || (() => {
             state[SCRIPT_NAME] = {
                 activeGroups: {},
                 config: { autoCommit: false, relayCommands: [] },
-                view: null
+                view: 'master'
             };
         }
-        if (!state[SCRIPT_NAME].view) state[SCRIPT_NAME].view = null;
         if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
+        // Migration: v2.0.0 -> v2.1.0 — view null used to mean "relay to all", now null means "off"
+        if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
+            if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
+            state[SCRIPT_NAME].version = SCRIPT_VERSION;
+        }
     };
 
     // =========================================================================
