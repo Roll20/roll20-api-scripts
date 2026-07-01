@@ -1,0 +1,17 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "resolveJsonModule": true,
+    "jsx": "react",
+    "jsxFactory": "h"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/env.d.ts", "rollup.config.ts"],
+  "exclude": ["node_modules", "src/__tests__/**", "**/*.test.ts", "**/*.spec.ts", "**/*.mock.ts"]
+}
