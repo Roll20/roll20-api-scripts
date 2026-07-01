@@ -1,6 +1,6 @@
 // =============================================================================
-// Gaslight v2.0.0
-// Last Updated: 2026-06-25
+// Gaslight v2.1.0
+// Last Updated: 2026-06-30
 // Author: Kenan Millet
 //
 // Description:
