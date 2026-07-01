@@ -37,11 +37,13 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 | `!gaslight test <group>` | Dry-run linking resolution |
 | `!gaslight link [name\|new] [ids...]` | Manually link tokens |
 | `!gaslight unlink [ids...\|--group <group>]` | Remove links |
+| `!gaslight sync [props\|all\|reset]` | Manage sync whitelist per token |
+| `!gaslight desync [props\|all]` | Exclude props from sync per token |
+| `!gaslight view [master\|off\|<player>]` | Control command relay targeting |
+| `!gaslight relay <views...> <!command>` | Relay command to views |
 | `!gaslight group <group> <player\|GM>` | Assign page to group |
 | `!gaslight ungroup <group> <player\|GM\|--all>` | Remove page from group |
 | `!gaslight stage [players...]` | Propagate tokens to player pages |
-| `!gaslight view [player\|master]` | Switch relay view |
-| `!gaslight relay <views...> <!command>` | Relay command to views |
 | `!gaslight config [relay-add\|relay-remove\|relay-list] [cmds]` | Configure relay |
 | `!gaslight status` | Show state |
 | `!gaslight --help` | Command reference |
@@ -56,7 +58,7 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 
 ## Sync Behavior
 
-Controlled by `gaslight_sync` character attribute:
+Controlled by `gaslight_sync` in token GM notes (auto-populated from character attribute on token placement/split):
 - **Absent** → Anchor (spatial) + Mirror (all non-spatial)
 - **Empty** → no sync at all
 - **`"base"`** → Anchor only (position, rotation, scale, flip)
@@ -64,9 +66,30 @@ Controlled by `gaslight_sync` character attribute:
 - **`"!anchor"`** → Mirror everything except spatial
 - **`"anchor, !left"`** → Anchor minus left, Mirror nothing extra
 
+### Per-Token Sync Commands
+
+| Command | Description |
+|---------|-------------|
+| `!gaslight sync` | Show current sync config for selected token(s) |
+| `!gaslight sync <props>` | Add props to sync whitelist |
+| `!gaslight sync all` | Explicitly sync everything |
+| `!gaslight sync reset` | Re-copy from character attribute |
+| `!gaslight desync <props>` | Exclude specific props from sync |
+| `!gaslight desync all` | Disable all syncing (link preserved) |
+
 ## Command Relay
 
 Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages with token IDs replaced by their linked counterparts. This happens transparently — no configuration needed.
+
+### View Modes
+
+Control where commands relay to:
+
+| Command | Effect |
+|---------|--------|
+| `!gaslight view master` | Relay to all player pages (default on split) |
+| `!gaslight view off` | Relay disabled — changes stay on master only |
+| `!gaslight view <player>` | Relay only to that player's page |
 
 **Rules:**
 - Master-page tokens selected or IDs in command → auto-relay to all player pages
@@ -76,6 +99,18 @@ Any API command that references master-page linked tokens (via selection or toke
 **Manual relay:** `!gaslight relay <views...> <!command>` — explicitly relay to specific views.
 
 **Player auto-relay:** `!gaslight config relay-add !token-mod` — allow player-page commands to relay to other pages.
+
+## Initiative Tracking
+
+Gaslight automatically syncs the turn order across linked tokens:
+
+- **Add**: When a token is added to initiative, all linked copies are added at the same value
+- **Remove**: Removing a token removes all linked copies
+- **Value sync**: Initiative value changes propagate to all linked copies
+- **Auto-skip**: When the turn advances to a non-master linked token, Gaslight skips forward/backward to the next master or unlinked token
+- **Sort-aware**: After sorting initiative, groups are reordered with master tokens on top
+
+The GM only interacts with master-page tokens in the turn tracker. Players see their own copies on their page. Linked children are skipped automatically when advancing turns.
 
 ## Staging
 
