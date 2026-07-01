@@ -2864,6 +2864,239 @@ var Gaslight = Gaslight || (() => {
         }
     };
 
+    // =========================================================================
+    // Initiative Tracking — sync turn order across linked tokens
+    // =========================================================================
+
+    var _suppressTurnSync = false;
+
+    /**
+     * Get all linked token IDs for a given token across all active groups.
+     * Returns { linkedIds: [...], isMaster: bool, masterPageId: string|null }
+     */
+    const getLinkedInfo = (tokenId) => {
+        var s = state[SCRIPT_NAME];
+        var linkedIds = [];
+        var isMaster = false;
+        var masterPageId = null;
+        Object.values(s.activeGroups).forEach(function(active) {
+            var ids = active.linkedTokens[tokenId];
+            if (ids && ids.length > 0) {
+                linkedIds = linkedIds.concat(ids);
+                masterPageId = active.masterPageId;
+                var obj = getObj('graphic', tokenId);
+                if (obj && obj.get('_pageid') === active.masterPageId) isMaster = true;
+            }
+        });
+        return { linkedIds: linkedIds, isMaster: isMaster, masterPageId: masterPageId };
+    };
+
+    /**
+     * Determine if a token ID is a master token (on master page) in any active group.
+     */
+    const isMasterToken = (tokenId) => {
+        var s = state[SCRIPT_NAME];
+        var obj = getObj('graphic', tokenId);
+        if (!obj) return false;
+        var pageId = obj.get('_pageid');
+        return Object.values(s.activeGroups).some(function(active) {
+            return active.masterPageId === pageId && !!active.linkedTokens[tokenId];
+        });
+    };
+
+    /**
+     * Check if two token IDs are linked (in the same link group).
+     */
+    const areLinked = (tokenIdA, tokenIdB) => {
+        var info = getLinkedInfo(tokenIdA);
+        return info.linkedIds.indexOf(tokenIdB) !== -1;
+    };
+
+    /**
+     * Handle turnorder changes: sync linked tokens, apply [GM] tags, auto-skip children.
+     */
+    const onTurnOrderChanged = (obj, prev) => {
+        if (_suppressTurnSync) return;
+        var s = state[SCRIPT_NAME];
+        if (Object.keys(s.activeGroups).length === 0) return;
+
+        var newOrder = JSON.parse(obj.get('turnorder') || '[]');
+        var oldOrder = JSON.parse(prev.turnorder || '[]');
+
+        // Detect additions: entries in newOrder not in oldOrder
+        var oldIds = new Set(oldOrder.map(function(e) { return e.id; }));
+        var newIds = new Set(newOrder.map(function(e) { return e.id; }));
+        var added = newOrder.filter(function(e) { return e.id && e.id !== '-1' && !oldIds.has(e.id); });
+        var removed = oldOrder.filter(function(e) { return e.id && e.id !== '-1' && !newIds.has(e.id); });
+
+        var modified = false;
+
+        var modified = false;
+
+        // Handle additions: add linked counterparts
+        added.forEach(function(entry) {
+            var info = getLinkedInfo(entry.id);
+            if (info.linkedIds.length === 0) return;
+            // Add linked tokens that aren't already in the order
+            var existingIds = new Set(newOrder.map(function(e) { return e.id; }));
+            info.linkedIds.forEach(function(linkedId) {
+                if (existingIds.has(linkedId)) return;
+                var linkedObj = getObj('graphic', linkedId);
+                var pushEntry = { id: linkedId, pr: entry.pr };
+                if (linkedObj) pushEntry._pageid = linkedObj.get('_pageid');
+                newOrder.push(pushEntry);
+                modified = true;
+            });
+        });
+
+        // Handle removals: remove linked counterparts
+        removed.forEach(function(entry) {
+            var info = getLinkedInfo(entry.id);
+            if (info.linkedIds.length === 0) return;
+            var before = newOrder.length;
+            newOrder = newOrder.filter(function(e) {
+                return info.linkedIds.indexOf(e.id) === -1;
+            });
+            if (newOrder.length !== before) modified = true;
+        });
+
+        // Handle value changes: sync initiative values across linked tokens
+        newOrder.forEach(function(entry) {
+            if (!entry.id || entry.id === '-1') return;
+            var oldEntry = oldOrder.find(function(e) { return e.id === entry.id; });
+            if (!oldEntry || oldEntry.pr === entry.pr) return;
+            // Value changed — propagate to linked tokens
+            var info = getLinkedInfo(entry.id);
+            if (info.linkedIds.length === 0) return;
+            info.linkedIds.forEach(function(linkedId) {
+                var linkedEntry = newOrder.find(function(e) { return e.id === linkedId; });
+                if (linkedEntry && linkedEntry.pr !== entry.pr) {
+                    linkedEntry.pr = entry.pr;
+                    modified = true;
+                }
+            });
+        });
+
+        // Reorder: group linked tokens together, master first (only on additions)
+        if (added.length > 0) {
+            var reordered = reorderInitiative(newOrder);
+            if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
+                newOrder = reordered;
+                modified = true;
+            }
+        }
+
+        // Auto-skip: if turn advanced and new top is linked to the entry that just left the top
+        // Auto-skip: if current top is a linked non-master token, skip in the correct direction
+        if (newOrder.length > 1 && newOrder[0].id && newOrder[0].id !== '-1') {
+            var topId = newOrder[0].id;
+            var topInfo = getLinkedInfo(topId);
+            if (topInfo.linkedIds.length > 0 && !topInfo.isMaster) {
+                // Detect direction
+                var isForward = oldOrder.length > 0 && newOrder[newOrder.length - 1].id === oldOrder[0].id;
+                var isBackward = oldOrder.length > 0 && newOrder[0].id === oldOrder[oldOrder.length - 1].id;
+
+                var startId = topId;
+                var safety = newOrder.length;
+
+                if (isForward) {
+                    // Rotate forward: shift to end until master/unlinked is on top
+                    while (safety-- > 0 && newOrder.length > 1) {
+                        newOrder.push(newOrder.shift());
+                        var cId = newOrder[0].id;
+                        if (!cId || cId === '-1') break;
+                        if (cId === startId) break;
+                        var cInfo = getLinkedInfo(cId);
+                        if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                    }
+                    modified = true;
+                } else if (isBackward) {
+                    // Rotate backward: pop from end to front until master/unlinked is on top
+                    while (safety-- > 0 && newOrder.length > 1) {
+                        newOrder.unshift(newOrder.pop());
+                        var cId = newOrder[0].id;
+                        if (!cId || cId === '-1') break;
+                        if (cId === startId) break;
+                        var cInfo = getLinkedInfo(cId);
+                        if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                    }
+                    modified = true;
+                } else if (added.length === 0 && removed.length === 0) {
+                    // Neither forward nor backward and no add/remove — likely a sort; reorder groups
+                    var reordered = reorderInitiative(newOrder);
+                    if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
+                        newOrder = reordered;
+                        modified = true;
+                    }
+                }
+            }
+        } else if (added.length === 0 && removed.length === 0 && newOrder.length > 1) {
+            // No child on top, but check if sort happened (order changed without add/remove)
+            var isForward = oldOrder.length > 0 && newOrder[newOrder.length - 1].id === oldOrder[0].id;
+            var isBackward = oldOrder.length > 0 && newOrder[0].id === oldOrder[oldOrder.length - 1].id;
+            if (!isForward && !isBackward && JSON.stringify(newOrder) !== JSON.stringify(oldOrder)) {
+                var reordered = reorderInitiative(newOrder);
+                if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
+                    newOrder = reordered;
+                    modified = true;
+                }
+            }
+        }
+
+        if (modified) {
+            var finalJson = JSON.stringify(newOrder);
+            _suppressTurnSync = true;
+            Campaign().set('turnorder', finalJson);
+            _suppressTurnSync = false;
+        }
+    };
+
+    /**
+     * Reorder initiative: group linked tokens together with master first in each group.
+     */
+    const reorderInitiative = (order) => {
+        var s = state[SCRIPT_NAME];
+        var result = [];
+        var placed = new Set();
+
+        order.forEach(function(entry) {
+            if (placed.has(entry.id)) return;
+            if (!entry.id || entry.id === '-1') {
+                result.push(entry);
+                placed.add(entry.id);
+                return;
+            }
+
+            var info = getLinkedInfo(entry.id);
+            if (info.linkedIds.length === 0) {
+                // Not a linked token — just add it
+                result.push(entry);
+                placed.add(entry.id);
+                return;
+            }
+
+            // Find all entries in this link group
+            var groupIds = [entry.id].concat(info.linkedIds);
+            var groupEntries = order.filter(function(e) {
+                return groupIds.indexOf(e.id) !== -1 && !placed.has(e.id);
+            });
+
+            // Sort: master first, then children
+            groupEntries.sort(function(a, b) {
+                var aIsMaster = isMasterToken(a.id) ? 0 : 1;
+                var bIsMaster = isMasterToken(b.id) ? 0 : 1;
+                return aIsMaster - bIsMaster;
+            });
+
+            groupEntries.forEach(function(e) {
+                result.push(e);
+                placed.add(e.id);
+            });
+        });
+
+        return result;
+    };
+
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
@@ -2876,6 +3109,7 @@ var Gaslight = Gaslight || (() => {
         on('change:attribute', onAttributeChanged);
         on('change:graphic', onGraphicPropChanged);
         on('change:graphic:gmnotes', onGmNotesChanged);
+        on('change:campaign:turnorder', onTurnOrderChanged);
     };
 
     return { checkInstall, registerEventHandlers };
