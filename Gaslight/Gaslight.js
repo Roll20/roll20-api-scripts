@@ -80,10 +80,12 @@ var Gaslight = Gaslight || (() => {
             state[SCRIPT_NAME] = {
                 activeGroups: {},
                 config: { autoCommit: false, relayCommands: [] },
-                view: 'master'
+                view: 'master',
+                hud: { view: false }
             };
         }
         if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
+        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: false };
         // Migration: v2.0.0 -> v2.1.0 — view null used to mean "relay to all", now null means "off"
         if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
             if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
@@ -1002,6 +1004,9 @@ var Gaslight = Gaslight || (() => {
         // Enable relay by default on split
         s.view = 'master';
 
+        // Recreate HUD elements if enabled
+        if (s.hud.view) updateViewHud();
+
         var summary = 'Group "' + groupName + '" activated. ' +
             Object.keys(groupInfo.players).length + ' player(s), ' +
             allLinks.length + ' link(s) established.';
@@ -1073,6 +1078,9 @@ var Gaslight = Gaslight || (() => {
         });
 
         reply(msg, 'Merge', 'Merged ' + groupsToMerge.length + ' group(s). Players returned to shared page.');
+
+        // Destroy HUD elements (preference preserved, will recreate on next split)
+        removeViewHud();
     };
 
     const doTest = (msg, args) => {
@@ -1317,6 +1325,7 @@ var Gaslight = Gaslight || (() => {
             s.view = resolved.id;
             reply(msg, 'View', 'Switched to <b>' + resolved.name + '</b> view. Commands will auto-target their linked tokens.');
         }
+        updateViewHud();
     };
 
     /**
@@ -2555,6 +2564,7 @@ var Gaslight = Gaslight || (() => {
             case 'view':    doView(msg, args);    break;
             case 'stage':   doStage(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
+            case 'hud':     doHud(msg, args);     break;
             case 'eval':    doEval(msg, args);    break;
             case 'status':  doStatus(msg);        break;
             case '--script-lock':
@@ -2857,6 +2867,17 @@ var Gaslight = Gaslight || (() => {
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
         if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length > 0) buildTriggerMap();
+
+        // HUD recovery: if enabled but object is missing, recreate; if disabled but object exists, clean up
+        var s = state[SCRIPT_NAME];
+        if (s.hud.view) {
+            var existing = findHudElement('view');
+            if (!existing) updateViewHud();
+        } else if (s.hud.viewId) {
+            var orphan = getObj('text', s.hud.viewId);
+            if (orphan) orphan.remove();
+            s.hud.viewId = null;
+        }
     };
 
     /**
@@ -3240,6 +3261,180 @@ var Gaslight = Gaslight || (() => {
         return result;
     };
 
+    // =========================================================================
+    // HUD System — on-canvas indicators
+    // =========================================================================
+
+    const HUD_PREFIX = 'gaslight_hud_';
+
+    /**
+     * Get the master page ID from the first active group.
+     */
+    const getHudPageId = () => {
+        var s = state[SCRIPT_NAME];
+        var group = Object.values(s.activeGroups)[0];
+        return group ? group.masterPageId : null;
+    };
+
+    /**
+     * Find an existing HUD text object by stored ID.
+     */
+    const findHudElement = (name) => {
+        var s = state[SCRIPT_NAME];
+        var id = s.hud[name + 'Id'];
+        if (!id) return null;
+        return getObj('text', id) || null;
+    };
+
+    /**
+     * Create or update the view HUD element.
+     */
+    const updateViewHud = () => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.view) return;
+
+        var pageId = getHudPageId();
+        if (!pageId) return;
+
+        var page = getObj('page', pageId);
+        if (!page) return;
+
+        // Determine display text
+        var label;
+        if (s.view === null) {
+            label = '🔴 RELAY OFF';
+        } else if (s.view === 'master') {
+            label = '🟢 RELAY: ALL';
+        } else {
+            // Resolve player name
+            var playerName = s.view;
+            Object.values(s.activeGroups).forEach(function(g) {
+                var entry = g.playerPages[s.view];
+                if (entry && entry.name) playerName = entry.name;
+            });
+            label = '🔵 VIEW: ' + playerName;
+        }
+
+        // Find existing or create new
+        var existing = findHudElement('view');
+        if (existing) {
+            existing.set('text', label);
+        } else {
+            // Use stored position/size or defaults
+            var pos = (s.hud.viewPos) || {};
+            var pageWidth = page.get('width') * 70;
+            var obj = createObj('text', {
+                _pageid: pageId,
+                layer: 'foreground',
+                text: label,
+                left: pos.left || Math.round(pageWidth / 2),
+                top: pos.top || 100,
+                font_size: pos.font_size || 40,
+                color: '#ffffff',
+                font_family: 'Contrail One',
+            });
+            s.hud.viewId = obj.get('id');
+        }
+    };
+
+    /**
+     * Remove the view HUD element (programmatic). Clears ID first so destroy handler ignores it.
+     */
+    const removeViewHud = () => {
+        var s = state[SCRIPT_NAME];
+        var id = s.hud.viewId;
+        s.hud.viewId = null;
+        if (id) {
+            var obj = getObj('text', id);
+            if (obj) obj.remove();
+        }
+    };
+
+    /**
+     * Handle change:text — persist HUD element position/size if moved by GM.
+     */
+    const onHudTextChanged = (obj) => {
+        var s = state[SCRIPT_NAME];
+        var id = obj.get('id');
+        if (id === s.hud.viewId) {
+            s.hud.viewPos = {
+                left: obj.get('left'),
+                top: obj.get('top'),
+                font_size: obj.get('font_size'),
+            };
+        }
+    };
+
+    /**
+     * Handle destroy:text — if a HUD element is deleted, treat as turning it off.
+     */
+    const onHudTextDestroyed = (obj) => {
+        var s = state[SCRIPT_NAME];
+        var id = obj.get('id');
+        if (id === s.hud.viewId) {
+            s.hud.view = false;
+            s.hud.viewId = null;
+            sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>view</b> is now off');
+        }
+    };
+
+    /**
+     * Handle !gaslight hud command.
+     */
+    const doHud = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        if (args.length === 0) {
+            // Show current HUD state
+            var status = Object.entries(s.hud).filter(function(e) { return typeof e[1] === 'boolean'; }).map(function(e) {
+                return '<b>' + e[0] + '</b>: ' + (e[1] ? 'on' : 'off');
+            }).join('<br>');
+            reply(msg, 'HUD', status);
+            return;
+        }
+
+        var element = args[0].toLowerCase();
+        var toggle = args[1] ? args[1].toLowerCase() : null;
+
+        if (s.hud[element] === undefined) {
+            reply(msg, 'Error', 'Unknown HUD element: ' + element + '. Available: ' + Object.keys(s.hud).filter(function(k) { return typeof s.hud[k] === 'boolean'; }).join(', '));
+            return;
+        }
+
+        if (toggle === 'on') {
+            s.hud[element] = true;
+        } else if (toggle === 'off') {
+            s.hud[element] = false;
+        } else if (toggle === 'reset') {
+            // Clear stored position, turn on, move to defaults
+            delete s.hud[element + 'Pos'];
+            s.hud[element] = true;
+            if (element === 'view') {
+                var existing = findHudElement('view');
+                if (existing) {
+                    var pageId = getHudPageId();
+                    var page = pageId ? getObj('page', pageId) : null;
+                    var pageWidth = page ? page.get('width') * 70 : 1400;
+                    existing.set({ left: Math.round(pageWidth / 2), top: 100, font_size: 40 });
+                } else {
+                    updateViewHud();
+                }
+            }
+            reply(msg, 'HUD', '<b>' + element + '</b> reset to default position.');
+            return;
+        } else {
+            // Toggle
+            s.hud[element] = !s.hud[element];
+        }
+
+        // Apply
+        if (element === 'view') {
+            if (s.hud.view) updateViewHud();
+            else removeViewHud();
+        }
+
+        reply(msg, 'HUD', '<b>' + element + '</b> is now ' + (s.hud[element] ? 'on' : 'off'));
+    };
+
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
@@ -3253,6 +3448,8 @@ var Gaslight = Gaslight || (() => {
         on('change:graphic', onGraphicPropChanged);
         on('change:graphic:gmnotes', onGmNotesChanged);
         on('change:campaign:turnorder', onTurnOrderChanged);
+        on('change:text', onHudTextChanged);
+        on('destroy:text', onHudTextDestroyed);
     };
 
     return { checkInstall, registerEventHandlers };
