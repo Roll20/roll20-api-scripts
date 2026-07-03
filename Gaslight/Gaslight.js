@@ -3572,77 +3572,121 @@ var Gaslight = Gaslight || (() => {
         var frameBotEdge = frameTop + frameHeight / 2;
         var frameWidth = INIT_HUD_TOKEN_SIZE + 2 * INIT_HUD_PADDING;
 
-        // Match order entries to HUD entries: tokens by ID, customs sorted by current position
+        // Match order entries to HUD entries
         var tokenMap = {};
         data.entries.forEach(function(e) {
             if (e.sourceId && !e.sourceId.startsWith('custom:')) tokenMap[e.sourceId] = e;
         });
         var customEntries = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
 
-        // Sort customs by current Y position so they slide in the right direction
-        // Separate visible from hidden (off-screen at -5000)
-        var visibleCustoms = customEntries.filter(function(e) {
-            var obj = getObj('pin', e.tokenId);
-            return obj && obj.get('y') > -1000;
-        });
-        var hiddenCustoms = customEntries.filter(function(e) {
-            var obj = getObj('pin', e.tokenId);
-            return !obj || obj.get('y') <= -1000;
-        });
-        // Match visible customs to order slots by their current pr value
-        var sortedCustoms = [];
-        var usedVisible = new Set();
-        var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
-        customOrderEntries.forEach(function(orderEntry) {
-            var prVal = String(orderEntry.pr || '');
-            var match = visibleCustoms.findIndex(function(e, i) {
-                if (usedVisible.has(i)) return false;
+        if (direction === 'forward' || direction === 'backward') {
+            // Simple shift: move all custom pins/text by one slot
+            var shift = direction === 'forward'
+                ? -(INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING)
+                : (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING);
+            customEntries.forEach(function(e) {
+                var pin = getObj('pin', e.tokenId);
                 var txt = getObj('text', e.textId);
-                return txt && txt.get('text') === prVal;
+                if (pin) {
+                    var newY = pin.get('y') + shift;
+                    var visible = (newY - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge - 5) &&
+                                  (newY + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge + 5);
+                    pin.set({ x: visible ? frameLeft : -5000, y: visible ? newY : -5000 });
+                }
+                if (txt) {
+                    var newTop = txt.get('top') + shift;
+                    var visible = (newTop - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge - 5) &&
+                                  (newTop + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge + 5);
+                    txt.set({ top: newTop, color: visible ? '#ffffff' : 'transparent' });
+                }
             });
-            if (match !== -1) {
-                sortedCustoms.push(visibleCustoms[match]);
-                usedVisible.add(match);
-            } else if (hiddenCustoms.length > 0) {
-                sortedCustoms.push(hiddenCustoms.shift());
-            }
-        });
-        // Any remaining unmatched visible customs
-        visibleCustoms.forEach(function(e, i) {
-            if (!usedVisible.has(i)) sortedCustoms.push(e);
-        });
-        sortedCustoms = sortedCustoms.concat(hiddenCustoms);
-        var customIdx = 0;
 
-        order.forEach(function(entry, i) {
-            var isCustom = !entry.id || entry.id === '-1';
-            var hudEntry = isCustom ? sortedCustoms[customIdx++] : tokenMap[entry.id];
-            if (!hudEntry) return;
+            // Reflow only token entries by ID
+            order.forEach(function(entry, i) {
+                if (!entry.id || entry.id === '-1') return;
+                var hudEntry = tokenMap[entry.id];
+                if (!hudEntry) return;
 
-            var tok = getObj('graphic', hudEntry.tokenId) || getObj('pin', hudEntry.tokenId);
-            var txt = getObj('text', hudEntry.textId);
-            if (!tok) return;
+                var tok = getObj('graphic', hudEntry.tokenId);
+                var txt = getObj('text', hudEntry.textId);
+                if (!tok) return;
 
-            var yPos = frameTopEdge + INIT_HUD_PADDING + (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING) * i + INIT_HUD_TOKEN_SIZE / 2;
-            var visible = (yPos - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge - 5) &&
-                          (yPos + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge + 5);
+                var yPos = frameTopEdge + INIT_HUD_PADDING + (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING) * i + INIT_HUD_TOKEN_SIZE / 2;
+                var visible = (yPos - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge - 5) &&
+                              (yPos + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge + 5);
 
-            if (tok.get('type') === 'graphic') {
                 tok.set({ left: frameLeft, top: yPos, baseOpacity: visible ? 1 : 0, showname: visible });
-            } else {
-                // Pin: move off-screen if not visible, update title
-                tok.set({ x: visible ? frameLeft : -5000, y: visible ? yPos : -5000, title: entry.custom || 'Custom' });
-            }
-
-            if (txt) {
-                txt.set({
-                    left: frameLeft + frameWidth / 2 + 15,
-                    top: yPos,
-                    color: visible ? '#ffffff' : 'transparent',
-                    text: String(entry.pr || ''),
+                if (txt) {
+                    txt.set({
+                        left: frameLeft + frameWidth / 2 + 15,
+                        top: yPos,
+                        color: visible ? '#ffffff' : 'transparent',
+                        text: String(entry.pr || ''),
+                    });
+                }
+            });
+        } else {
+            // Full reflow (sort/add/remove): match customs by pr value
+            var visibleCustoms = customEntries.filter(function(e) {
+                var obj = getObj('pin', e.tokenId);
+                return obj && obj.get('y') > -1000;
+            });
+            var hiddenCustoms = customEntries.filter(function(e) {
+                var obj = getObj('pin', e.tokenId);
+                return !obj || obj.get('y') <= -1000;
+            });
+            var sortedCustoms = [];
+            var usedVisible = new Set();
+            var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+            customOrderEntries.forEach(function(orderEntry) {
+                var prVal = String(orderEntry.pr || '');
+                var match = visibleCustoms.findIndex(function(e, i) {
+                    if (usedVisible.has(i)) return false;
+                    var txt = getObj('text', e.textId);
+                    return txt && txt.get('text') === prVal;
                 });
-            }
-        });
+                if (match !== -1) {
+                    sortedCustoms.push(visibleCustoms[match]);
+                    usedVisible.add(match);
+                } else if (hiddenCustoms.length > 0) {
+                    sortedCustoms.push(hiddenCustoms.shift());
+                }
+            });
+            visibleCustoms.forEach(function(e, i) {
+                if (!usedVisible.has(i)) sortedCustoms.push(e);
+            });
+            sortedCustoms = sortedCustoms.concat(hiddenCustoms);
+            var customIdx = 0;
+
+            order.forEach(function(entry, i) {
+                var isCustom = !entry.id || entry.id === '-1';
+                var hudEntry = isCustom ? sortedCustoms[customIdx++] : tokenMap[entry.id];
+                if (!hudEntry) return;
+
+                var tok = getObj('graphic', hudEntry.tokenId) || getObj('pin', hudEntry.tokenId);
+                var txt = getObj('text', hudEntry.textId);
+                if (!tok) return;
+
+                var yPos = frameTopEdge + INIT_HUD_PADDING + (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING) * i + INIT_HUD_TOKEN_SIZE / 2;
+                var visible = (yPos - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge - 5) &&
+                              (yPos + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge + 5);
+
+                if (tok.get('type') === 'graphic') {
+                    tok.set({ left: frameLeft, top: yPos, baseOpacity: visible ? 1 : 0, showname: visible });
+                } else {
+                    tok.set({ x: visible ? frameLeft : -5000, y: visible ? yPos : -5000, title: entry.custom || 'Custom' });
+                }
+
+                if (txt) {
+                    txt.set({
+                        left: frameLeft + frameWidth / 2 + 15,
+                        top: yPos,
+                        color: visible ? '#ffffff' : 'transparent',
+                        text: String(entry.pr || ''),
+                    });
+                }
+            });
+        }
     };
 
     /**
