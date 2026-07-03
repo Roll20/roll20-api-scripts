@@ -3383,20 +3383,25 @@ var Gaslight = Gaslight || (() => {
 
     // ---- Initiative HUD ----
 
-    const INIT_HUD_TOKEN_SIZE = 50;
-    const INIT_HUD_TOKEN_PADDING = 30;
-    const INIT_HUD_V_PADDING = 15;
-    const INIT_HUD_H_PADDING = 10;
-
-    /**
-     * Calculate Y position for a HUD entry at a given slot index.
-     * For pins, add tokenSize/2 since their anchor is bottom-middle.
-     */
-    const hudSlotY = (frameTopEdge, index, tokenSize) => {
-        return frameTopEdge + tokenSize / 2 + (tokenSize + INIT_HUD_TOKEN_PADDING) * index;
+    const defaultInitHud = {
+        tokenSize: 50,
+        tokenPadding: 30,
+        vPadding: 15,
+        hPadding: 10,
+        textOffset: 15,
+        textFontSize: 16,
+        textFontFamily: 'Contrail One',
+        entries: [],
+        frameId: null,
+        pos: null,
+        frameSize: null,
     };
-    const hudPinY = (frameTopEdge, index, tokenSize) => {
-        return hudSlotY(frameTopEdge, index, tokenSize) + tokenSize / 2;
+
+    const hudSlotY = (frameTopEdge, index, tokenSize, tokenPadding) => {
+        return frameTopEdge + tokenSize / 2 + (tokenSize + tokenPadding) * index;
+    };
+    const hudPinY = (frameTopEdge, index, tokenSize, tokenPadding) => {
+        return hudSlotY(frameTopEdge, index, tokenSize, tokenPadding) + tokenSize / 2;
     };
 
     /**
@@ -3406,8 +3411,8 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         if (s.hud.initData && s.hud.initData.tokenSize) return s.hud.initData.tokenSize;
         var points = JSON.parse(frame.get('points') || '[]');
-        var frameWidth = points.length >= 2 ? points[1][0] - points[0][0] : INIT_HUD_TOKEN_SIZE + 2 * INIT_HUD_H_PADDING;
-        var hPad = (s.hud.initData && s.hud.initData.hPadding) || INIT_HUD_H_PADDING;
+        var frameWidth = points.length >= 2 ? points[1][0] - points[0][0] : defaultInitHud.tokenSize + 2 * defaultInitHud.hPadding;
+        var hPad = (s.hud.initData && s.hud.initData.hPadding) || defaultInitHud.hPadding;
         return Math.max(10, frameWidth - 2 * hPad);
     };
 
@@ -3453,17 +3458,16 @@ var Gaslight = Gaslight || (() => {
         if (!page) return;
 
         var order = getHudTurnOrder();
-        if (!s.hud.initData) {
-            s.hud.initData = { frameId: null, entries: [], pos: null, frameSize: null };
-        }
+        if (!s.hud.initData) s.hud.initData = {};
+        if (!s.hud.initData.entries) s.hud.initData.entries = [];
         var data = s.hud.initData;
 
-        var frameWidth = INIT_HUD_TOKEN_SIZE + 2 * INIT_HUD_H_PADDING;
+        var frameWidth = defaultInitHud.tokenSize + 2 * defaultInitHud.hPadding;
 
         // Create frame if missing
         if (!data.frameId || !getObj('pathv2', data.frameId)) {
             var pos = data.pos || { left: 100, top: Math.round(page.get('height') * 70 / 2) };
-            var frameHeight = 5 * INIT_HUD_TOKEN_SIZE + 4 * INIT_HUD_TOKEN_PADDING + 2 * INIT_HUD_V_PADDING;
+            var frameHeight = 5 * defaultInitHud.tokenSize + 4 * defaultInitHud.tokenPadding + 2 * defaultInitHud.vPadding;
             var frameSize = data.frameSize || { width: frameWidth, height: frameHeight };
             var frame = createFramePath(pageId, pos.left, pos.top, frameSize.width, frameSize.height);
             data.frameId = frame.get('id');
@@ -3535,9 +3539,9 @@ var Gaslight = Gaslight || (() => {
                     text: String(entry.pr || ''),
                     left: -5000,
                     top: -5000,
-                    font_size: 16,
+                    font_size: data.textFontSize || defaultInitHud.textFontSize,
                     color: '#ffffff',
-                    font_family: 'Contrail One',
+                    font_family: data.textFontFamily || defaultInitHud.textFontFamily,
                 });
 
                 data.entries.push({
@@ -3556,7 +3560,7 @@ var Gaslight = Gaslight || (() => {
                     layer: 'foreground',
                     imgsrc: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
                     left: frameLeft,
-                    top: frameTopEdge + INIT_HUD_TOKEN_PADDING + tokenSize / 2,
+                    top: frameTopEdge + (data.tokenPadding || defaultInitHud.tokenPadding) + tokenSize / 2,
                     width: tokenSize,
                     height: tokenSize,
                     showname: true,
@@ -3568,11 +3572,11 @@ var Gaslight = Gaslight || (() => {
                     _pageid: pageId,
                     layer: 'foreground',
                     text: String(entry.pr || ''),
-                    left: frameLeft + frameWidth / 2 + 15,
-                    top: frameTopEdge + INIT_HUD_TOKEN_PADDING + tokenSize / 2,
-                    font_size: 16,
+                    left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
+                    top: frameTopEdge + (data.tokenPadding || defaultInitHud.tokenPadding) + tokenSize / 2,
+                    font_size: data.textFontSize || defaultInitHud.textFontSize,
                     color: '#ffffff',
-                    font_family: 'Contrail One',
+                    font_family: data.textFontFamily || defaultInitHud.textFontFamily,
                 });
 
                 if (typeof Mirror !== 'undefined') {
@@ -3606,10 +3610,12 @@ var Gaslight = Gaslight || (() => {
         var frameTop = frame.get('y');
         var points = JSON.parse(frame.get('points') || '[]');
         var frameHeight = points.length >= 2 ? points[1][1] - points[0][1] : 510;
-        var frameTopEdge = frameTop - frameHeight / 2 + INIT_HUD_V_PADDING;
-        var frameBotEdge = frameTop + frameHeight / 2 - INIT_HUD_V_PADDING;
         var tokenSize = getHudTokenSize(frame);
-        var frameWidth = tokenSize + 2 * INIT_HUD_H_PADDING;
+        var tokenPadding = data.tokenPadding || defaultInitHud.tokenPadding;
+        var vPadding = data.vPadding || defaultInitHud.vPadding;
+        var frameTopEdge = frameTop - frameHeight / 2 + vPadding;
+        var frameBotEdge = frameTop + frameHeight / 2 - vPadding;
+        var frameWidth = points.length >= 2 ? points[1][0] - points[0][0] : tokenSize + 2 * (data.hPadding || defaultInitHud.hPadding);
 
         // Match order entries to HUD entries
         var tokenMap = {};
@@ -3621,8 +3627,8 @@ var Gaslight = Gaslight || (() => {
         if (direction === 'forward' || direction === 'backward') {
             // Simple shift: move all custom pins/text by one slot, wrap at edges
             var shift = direction === 'forward'
-                ? -(tokenSize + INIT_HUD_TOKEN_PADDING)
-                : (tokenSize + INIT_HUD_TOKEN_PADDING);
+                ? -(tokenSize + tokenPadding)
+                : (tokenSize + tokenPadding);
 
             // Gather all HUD text Y positions (tokens + customs)
             var allTextYs = data.entries.map(function(e) {
@@ -3668,14 +3674,14 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!tok) return;
 
-                var yPos = hudSlotY(frameTopEdge, i, tokenSize);
+                var yPos = hudSlotY(frameTopEdge, i, tokenSize, tokenPadding);
                 var visible = (yPos - tokenSize / 2 >= frameTopEdge) &&
                               (yPos + tokenSize / 2 <= frameBotEdge);
 
                 tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
                 if (txt) {
                     txt.set({
-                        left: frameLeft + frameWidth / 2 + 15,
+                        left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos,
                         color: visible ? '#ffffff' : 'transparent',
                         text: String(entry.pr || ''),
@@ -3724,19 +3730,19 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!tok) return;
 
-                var yPos = hudSlotY(frameTopEdge, i, tokenSize);
+                var yPos = hudSlotY(frameTopEdge, i, tokenSize, tokenPadding);
                 var visible = (yPos - tokenSize / 2 >= frameTopEdge) &&
                               (yPos + tokenSize / 2 <= frameBotEdge);
 
                 if (tok.get('type') === 'graphic') {
                     tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
                 } else {
-                    tok.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameTopEdge, i, tokenSize) : -5000, title: entry.custom || 'Custom' });
+                    tok.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameTopEdge, i, tokenSize, tokenPadding) : -5000, title: entry.custom || 'Custom' });
                 }
 
                 if (txt) {
                     txt.set({
-                        left: frameLeft + frameWidth / 2 + 15,
+                        left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos,
                         color: visible ? '#ffffff' : 'transparent',
                         text: String(entry.pr || ''),
@@ -3784,6 +3790,47 @@ var Gaslight = Gaslight || (() => {
                 top: obj.get('top'),
                 font_size: obj.get('font_size'),
             };
+        }
+        // Initiative HUD text moved or styled — update stored settings
+        if (s.hud.initiative && s.hud.initData && s.hud.initData.entries) {
+            var match = s.hud.initData.entries.find(function(e) { return e.textId === id; });
+            if (match) {
+                var data = s.hud.initData;
+                var frame = getObj('pathv2', data.frameId);
+                if (frame) {
+                    var frameLeft = frame.get('x');
+                    var pts = JSON.parse(frame.get('points') || '[]');
+                    var fw = pts.length >= 2 ? pts[1][0] - pts[0][0] : 70;
+                    var rightEdge = frameLeft + fw / 2;
+                    var newOffset = obj.get('left') - rightEdge;
+                    data.textOffset = newOffset;
+                    // Move all other texts to match offset
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('left', rightEdge + newOffset);
+                    });
+                }
+                // Font size/family changes
+                var newFontSize = obj.get('font_size');
+                var newFontFamily = obj.get('font_family');
+                if (newFontSize && newFontSize !== data.textFontSize) {
+                    data.textFontSize = newFontSize;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('font_size', newFontSize);
+                    });
+                }
+                if (newFontFamily && newFontFamily !== data.textFontFamily) {
+                    data.textFontFamily = newFontFamily;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('font_family', newFontFamily);
+                    });
+                }
+            }
         }
     };
 
@@ -3879,11 +3926,8 @@ var Gaslight = Gaslight || (() => {
                     updateViewHud();
                 }
             } else if (element === 'initiative') {
-                if (s.hud.initData) {
-                    s.hud.initData.pos = null;
-                    s.hud.initData.frameSize = null;
-                }
                 removeInitiativeHud();
+                s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
                 updateInitiativeHud();
             }
             reply(msg, 'HUD', '<b>' + element + '</b> reset to default position.');
@@ -3934,8 +3978,8 @@ var Gaslight = Gaslight || (() => {
                 // Width change logic: shrink → reduce padding first, then tokens; grow → grow padding
                 if (newWidth !== oldWidth) {
                     var delta = newWidth - oldWidth;
-                    var currentHPad = data.hPadding || INIT_HUD_H_PADDING;
-                    var currentTokenSize = data.tokenSize || INIT_HUD_TOKEN_SIZE;
+                    var currentHPad = data.hPadding || defaultInitHud.hPadding;
+                    var currentTokenSize = data.tokenSize || defaultInitHud.tokenSize;
                     var minHPad = 5;
 
                     if (delta < 0) {
@@ -3958,6 +4002,7 @@ var Gaslight = Gaslight || (() => {
                 // Save position and size to state
                 data.pos = { left: obj.get('x'), top: obj.get('y') };
                 data.frameSize = { width: newWidth, height: newHeight };
+                log(SCRIPT_NAME + ' DEBUG pathv2 change: calling reflow');
                 reflowInitiativeHud('none');
             }
         });
@@ -3973,7 +4018,7 @@ var Gaslight = Gaslight || (() => {
             if (newSize !== oldSize && newSize > 0) {
                 // Token resized — update token size, resize frame to fit
                 data.tokenSize = newSize;
-                var hPad = data.hPadding || INIT_HUD_H_PADDING;
+                var hPad = data.hPadding || defaultInitHud.hPadding;
                 var newFrameWidth = newSize + 2 * hPad;
                 // Update frame
                 var frame = getObj('pathv2', data.frameId);
