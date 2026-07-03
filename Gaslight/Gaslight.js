@@ -3391,6 +3391,11 @@ var Gaslight = Gaslight || (() => {
         textOffset: 15,
         textFontSize: 16,
         textFontFamily: 'Contrail One',
+        textColor: '#ffffff',
+        textStroke: '#000000',
+        frameStroke: '#ffffff',
+        frameFill: 'transparent',
+        frameStrokeWidth: 3,
         entries: [],
         frameId: null,
         pos: null,
@@ -3430,7 +3435,7 @@ var Gaslight = Gaslight || (() => {
     /**
      * Draw a rectangle path on the foreground layer.
      */
-    const createFramePath = (pageId, left, top, width, height) => {
+    const createFramePath = (pageId, left, top, width, height, data) => {
         return createObj('pathv2', {
             _pageid: pageId,
             layer: 'foreground',
@@ -3438,9 +3443,9 @@ var Gaslight = Gaslight || (() => {
             x: left,
             y: top,
             points: JSON.stringify([[0, 0], [width, height]]),
-            stroke: '#ffffff',
-            stroke_width: 3,
-            fill: 'transparent',
+            stroke: (data && data.frameStroke) || defaultInitHud.frameStroke,
+            stroke_width: (data && data.frameStrokeWidth) || defaultInitHud.frameStrokeWidth,
+            fill: (data && data.frameFill) || defaultInitHud.frameFill,
         });
     };
 
@@ -3469,7 +3474,7 @@ var Gaslight = Gaslight || (() => {
             var pos = data.pos || { left: 100, top: Math.round(page.get('height') * 70 / 2) };
             var frameHeight = 5 * defaultInitHud.tokenSize + 4 * defaultInitHud.tokenPadding + 2 * defaultInitHud.vPadding;
             var frameSize = data.frameSize || { width: frameWidth, height: frameHeight };
-            var frame = createFramePath(pageId, pos.left, pos.top, frameSize.width, frameSize.height);
+            var frame = createFramePath(pageId, pos.left, pos.top, frameSize.width, frameSize.height, data);
             data.frameId = frame.get('id');
             data.pos = pos;
             data.frameSize = frameSize;
@@ -3531,6 +3536,7 @@ var Gaslight = Gaslight || (() => {
                     useTextIcon: true,
                     textIcon: '',
                     scale: 2.0,
+                    tooltipVisibleTo: '',
                 });
 
                 var pinText = createObj('text', {
@@ -3540,7 +3546,8 @@ var Gaslight = Gaslight || (() => {
                     left: -5000,
                     top: -5000,
                     font_size: data.textFontSize || defaultInitHud.textFontSize,
-                    color: '#ffffff',
+                    color: data.textColor || defaultInitHud.textColor,
+                    stroke: data.textStroke || defaultInitHud.textStroke,
                     font_family: data.textFontFamily || defaultInitHud.textFontFamily,
                 });
 
@@ -3566,6 +3573,7 @@ var Gaslight = Gaslight || (() => {
                     showname: true,
                     name: sourceToken.get('name'),
                     baseOpacity: 1,
+                    isdrawing: true,
                 });
 
                 var hudText = createObj('text', {
@@ -3575,7 +3583,8 @@ var Gaslight = Gaslight || (() => {
                     left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                     top: frameTopEdge + (data.tokenPadding || defaultInitHud.tokenPadding) + tokenSize / 2,
                     font_size: data.textFontSize || defaultInitHud.textFontSize,
-                    color: '#ffffff',
+                    color: data.textColor || defaultInitHud.textColor,
+                    stroke: data.textStroke || defaultInitHud.textStroke,
                     font_family: data.textFontFamily || defaultInitHud.textFontFamily,
                 });
 
@@ -3661,7 +3670,7 @@ var Gaslight = Gaslight || (() => {
                 if (pin) {
                     pin.set({ x: visible ? frameLeft : -5000, y: visible ? newPinY : -5000 });
                 }
-                txt.set({ top: newSlotY, color: visible ? '#ffffff' : 'transparent' });
+                txt.set({ top: newSlotY, color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent' });
             });
 
             // Reflow only token entries by ID
@@ -3683,7 +3692,7 @@ var Gaslight = Gaslight || (() => {
                     txt.set({
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos,
-                        color: visible ? '#ffffff' : 'transparent',
+                        color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
                         text: String(entry.pr || ''),
                     });
                 }
@@ -3744,7 +3753,7 @@ var Gaslight = Gaslight || (() => {
                     txt.set({
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos,
-                        color: visible ? '#ffffff' : 'transparent',
+                        color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
                         text: String(entry.pr || ''),
                     });
                 }
@@ -3828,6 +3837,24 @@ var Gaslight = Gaslight || (() => {
                         if (e.textId === id) return;
                         var otherTxt = getObj('text', e.textId);
                         if (otherTxt) otherTxt.set('font_family', newFontFamily);
+                    });
+                }
+                var newColor = obj.get('color');
+                if (newColor && newColor !== 'transparent' && newColor !== data.textColor) {
+                    data.textColor = newColor;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt && otherTxt.get('color') !== 'transparent') otherTxt.set('color', newColor);
+                    });
+                }
+                var newStroke = obj.get('stroke');
+                if (newStroke && newStroke !== data.textStroke) {
+                    data.textStroke = newStroke;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('stroke', newStroke);
                     });
                 }
             }
@@ -4002,7 +4029,13 @@ var Gaslight = Gaslight || (() => {
                 // Save position and size to state
                 data.pos = { left: obj.get('x'), top: obj.get('y') };
                 data.frameSize = { width: newWidth, height: newHeight };
-                log(SCRIPT_NAME + ' DEBUG pathv2 change: calling reflow');
+                // Track frame styling
+                var stroke = obj.get('stroke');
+                var fill = obj.get('fill');
+                var strokeWidth = obj.get('stroke_width');
+                if (stroke !== undefined) data.frameStroke = stroke;
+                if (fill !== undefined) data.frameFill = fill;
+                if (strokeWidth !== undefined) data.frameStrokeWidth = strokeWidth;
                 reflowInitiativeHud('none');
             }
         });
