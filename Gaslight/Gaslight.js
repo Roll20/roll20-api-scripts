@@ -3934,17 +3934,62 @@ var Gaslight = Gaslight || (() => {
      */
     const doHud = (msg, args) => {
         var s = state[SCRIPT_NAME];
+        var hudElements = Object.keys(s.hud).filter(function(k) { return typeof s.hud[k] === 'boolean'; });
+        var toggleWords = new Set(['on', 'off', 'reset']);
+
         if (args.length === 0) {
-            // Show current HUD state
-            var status = Object.entries(s.hud).filter(function(e) { return typeof e[1] === 'boolean'; }).map(function(e) {
-                return '<b>' + e[0] + '</b>: ' + (e[1] ? 'on' : 'off');
-            }).join('<br>');
-            reply(msg, 'HUD', status);
+            // Toggle all elements
+            hudElements.forEach(function(el) { s.hud[el] = !s.hud[el]; });
+            hudElements.forEach(function(el) {
+                if (el === 'view') { if (s.hud.view) updateViewHud(); else removeViewHud(); }
+                if (el === 'initiative') { if (s.hud.initiative) updateInitiativeHud(); else removeInitiativeHud(); }
+            });
+            reply(msg, 'HUD', hudElements.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
+            return;
+        }
+
+        // Single arg that's a toggle word — apply to all elements
+        if (args.length === 1 && toggleWords.has(args[0].toLowerCase())) {
+            var toggle = args[0].toLowerCase();
+            hudElements.forEach(function(el) {
+                if (toggle === 'on') s.hud[el] = true;
+                else if (toggle === 'off') s.hud[el] = false;
+            });
+            if (toggle === 'reset') {
+                hudElements.forEach(function(el) { s.hud[el] = true; });
+                s.hud.viewData = {};
+                removeViewHud();
+                updateViewHud();
+                removeInitiativeHud();
+                s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
+                updateInitiativeHud();
+            } else {
+                hudElements.forEach(function(el) {
+                    if (el === 'view') { if (s.hud.view) updateViewHud(); else removeViewHud(); }
+                    if (el === 'initiative') { if (s.hud.initiative) updateInitiativeHud(); else removeInitiativeHud(); }
+                });
+            }
+            reply(msg, 'HUD', hudElements.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
             return;
         }
 
         var element = args[0].toLowerCase();
         var toggle = args[1] ? args[1].toLowerCase() : null;
+
+        // Aliases
+        var elementAliases = { init: 'initiative', turn: 'initiative', turns: 'initiative', relay: 'view' };
+        if (elementAliases[element]) element = elementAliases[element];
+        if (toggle && elementAliases[toggle]) toggle = elementAliases[toggle];
+
+        // Allow toggle before or after element: "hud reset initiative" or "hud initiative reset"
+        if (toggleWords.has(element) && toggle && s.hud[toggle] !== undefined) {
+            var tmp = element;
+            element = toggle;
+            toggle = tmp;
+        }
+
+        // Aliases (apply again after swap)
+        if (elementAliases[element]) element = elementAliases[element];
 
         if (s.hud[element] === undefined) {
             reply(msg, 'Error', 'Unknown HUD element: ' + element + '. Available: ' + Object.keys(s.hud).filter(function(k) { return typeof s.hud[k] === 'boolean'; }).join(', '));
@@ -4086,6 +4131,68 @@ var Gaslight = Gaslight || (() => {
                     data.frameSize = { width: newFrameWidth, height: frameHeight };
                 }
                 reflowInitiativeHud('none');
+            } else {
+                // Token dragged vertically — reorder initiative
+                var newTop = obj.get('top');
+                var oldTop = prev.top;
+                if (newTop !== oldTop) {
+                    var order = JSON.parse(Campaign().get('turnorder') || '[]');
+                    var sourceId = match.sourceId;
+                    var hudOrder = getHudTurnOrder();
+                    var currentIdx = hudOrder.findIndex(function(e) { return e.id === sourceId; });
+                    if (currentIdx === -1) { reflowInitiativeHud('none'); return; }
+
+                    // Determine target slot based on new Y position
+                    var frame = getObj('pathv2', data.frameId);
+                    if (!frame) return;
+                    var frameTop = frame.get('y');
+                    var pts = JSON.parse(frame.get('points') || '[]');
+                    var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
+                    var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
+                    var tknSize = data.tokenSize || defaultInitHud.tokenSize;
+                    var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
+                    var targetIdx = Math.round((newTop - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+                    targetIdx = Math.max(0, Math.min(hudOrder.length - 1, targetIdx));
+
+                    if (targetIdx !== currentIdx) {
+                        var sourceEntry = order.find(function(e) { return e.id === sourceId; });
+                        if (!sourceEntry) { reflowInitiativeHud('none'); return; }
+
+                        var targetHudEntry = hudOrder[targetIdx];
+                        var targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
+                        if (targetFullIdx === -1) { reflowInitiativeHud('none'); return; }
+
+                        // Remove source (and its linked children) from order
+                        var info = getLinkedInfo(sourceId);
+                        var groupIds = new Set([sourceId].concat(info.linkedIds));
+                        var removed = [];
+                        order = order.filter(function(e) {
+                            if (groupIds.has(e.id)) { removed.push(e); return false; }
+                            return true;
+                        });
+
+                        // Recalculate target index after removal
+                        targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
+                        if (targetFullIdx === -1) targetFullIdx = order.length;
+
+                        // Insert: if moving down, insert after target group; if up, insert before
+                        if (targetIdx > currentIdx) {
+                            var tInfo = getLinkedInfo(targetHudEntry.id);
+                            var tGroupSize = 1 + tInfo.linkedIds.filter(function(lid) {
+                                return order.some(function(e) { return e.id === lid; });
+                            }).length;
+                            var insertIdx = targetFullIdx + tGroupSize;
+                            removed.forEach(function(e, i) { order.splice(insertIdx + i, 0, e); });
+                        } else {
+                            removed.forEach(function(e, i) { order.splice(targetFullIdx + i, 0, e); });
+                        }
+
+                        _suppressTurnSync = true;
+                        Campaign().set('turnorder', JSON.stringify(order));
+                        _suppressTurnSync = false;
+                    }
+                    reflowInitiativeHud('none');
+                }
             }
         });
         on('destroy:pin', onHudGraphicDestroyed);
