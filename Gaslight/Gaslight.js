@@ -3419,10 +3419,10 @@ var Gaslight = Gaslight || (() => {
 
     const defaultInitHud = {
         tokenSize: 50,
-        tokenPadding: 30,
+        tokenPadding: 20,
         vPadding: 15,
         hPadding: 10,
-        textOffset: 15,
+        textOffset: 25,
         textFontSize: 16,
         textFontFamily: 'Contrail One',
         textColor: '#ffffff',
@@ -3430,6 +3430,10 @@ var Gaslight = Gaslight || (() => {
         frameStroke: '#ffffff',
         frameFill: 'transparent',
         frameStrokeWidth: 3,
+        highlightStroke: '#ffcc00',
+        highlightFill: 'transparent',
+        highlightStrokeWidth: 5,
+        currentTurnOffset: 0.5,
         entries: [],
         frameId: null,
         highlightId: null,
@@ -3507,7 +3511,7 @@ var Gaslight = Gaslight || (() => {
         // Create frame if missing
         if (!data.frameId || !getObj('pathv2', data.frameId)) {
             var pos = data.pos || { left: 100, top: Math.round(page.get('height') * 70 / 2) };
-            var frameHeight = 5 * defaultInitHud.tokenSize + 4 * defaultInitHud.tokenPadding + 2 * defaultInitHud.vPadding;
+            var frameHeight = 5.5 * (defaultInitHud.tokenSize + defaultInitHud.tokenPadding) + 2 * defaultInitHud.vPadding;
             var frameSize = data.frameSize || { width: frameWidth, height: frameHeight };
             var frame = createFramePath(pageId, pos.left, pos.top, frameSize.width, frameSize.height, data);
             data.frameId = frame.get('id');
@@ -3521,17 +3525,25 @@ var Gaslight = Gaslight || (() => {
         // Create highlight indicator if missing
         if (!data.highlightId || !getObj('pathv2', data.highlightId)) {
             var hlTokenSize = data.tokenSize || defaultInitHud.tokenSize;
-            var hlSize = hlTokenSize + 6;
+            var hlSize = hlTokenSize + 15;
+            var hlOffset = data.currentTurnOffset != null ? data.currentTurnOffset : defaultInitHud.currentTurnOffset;
+            var frameH = JSON.parse(frame.get('points') || '[]');
+            var fH = frameH.length >= 2 ? frameH[1][1] - frameH[0][1] : 510;
+            var vPadHL = data.vPadding || defaultInitHud.vPadding;
+            var usableTopHL = frame.get('y') - fH / 2 + hlTokenSize / 2 + vPadHL;
+            var usableBotHL = frame.get('y') + fH / 2 - hlTokenSize / 2 - vPadHL;
+            var hlY = usableTopHL + (usableBotHL - usableTopHL) * hlOffset;
             var highlight = createObj('pathv2', {
                 _pageid: pageId,
                 layer: 'foreground',
                 shape: 'rec',
                 x: frame.get('x'),
-                y: frame.get('y'),
+                y: hlY,
                 points: JSON.stringify([[0, 0], [hlSize, hlSize]]),
-                stroke: '#ffcc00',
-                stroke_width: 3,
-                fill: 'transparent',
+                stroke: data.highlightStroke || defaultInitHud.highlightStroke,
+                stroke_width: data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth,
+                fill: data.highlightFill || defaultInitHud.highlightFill,
+                rotation: 45,
             });
             data.highlightId = highlight.get('id');
         }
@@ -3588,7 +3600,7 @@ var Gaslight = Gaslight || (() => {
                     bgColor: 'transparent',
                     useTextIcon: true,
                     textIcon: '',
-                    scale: 2.0,
+                    scale: 1.75,
                     tooltipVisibleTo: '',
                 });
 
@@ -3677,12 +3689,18 @@ var Gaslight = Gaslight || (() => {
         var vPadding = data.vPadding || defaultInitHud.vPadding;
         var frameTopEdge = frameTop - frameHeight / 2 + vPadding;
         var frameBotEdge = frameTop + frameHeight / 2 - vPadding;
-        var frameCenter = frameTop; // current turn positioned at frame center
+        var frameCenter = (frameTopEdge + tokenSize / 2) + (frameBotEdge - frameTopEdge - tokenSize) * (data.currentTurnOffset != null ? data.currentTurnOffset : defaultInitHud.currentTurnOffset);
+        // Calculate how many slots fit below and above the indicator
+        var slotsBelow = 0;
+        var slotsAbove = 0;
+        var step = tokenSize + tokenPadding;
+        while (frameCenter + (slotsBelow + 1) * step + tokenSize / 2 <= frameBotEdge) slotsBelow++;
+        while (frameCenter - (slotsAbove + 1) * step - tokenSize / 2 >= frameTopEdge) slotsAbove++;
 
         // Update highlight position and size
         var highlight = data.highlightId ? getObj('pathv2', data.highlightId) : null;
         if (highlight) {
-            var hlSize = tokenSize + 6;
+            var hlSize = tokenSize + 15;
             highlight.set({
                 x: frameLeft,
                 y: frameCenter,
@@ -3769,10 +3787,9 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!tok) return;
 
-                var offset = i <= order.length / 2 ? i : i - order.length;
+                var offset = i <= slotsBelow ? i : i - order.length;
+                var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
-                var visible = (yPos - tokenSize / 2 >= frameTopEdge) &&
-                              (yPos + tokenSize / 2 <= frameBotEdge);
 
                 tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
                 if (txt) {
@@ -3826,10 +3843,9 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!tok) return;
 
-                var offset = i <= order.length / 2 ? i : i - order.length;
+                var offset = i <= slotsBelow ? i : i - order.length;
+                var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
-                var visible = (yPos - tokenSize / 2 >= frameTopEdge) &&
-                              (yPos + tokenSize / 2 <= frameBotEdge);
 
                 if (tok.get('type') === 'graphic') {
                     tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
@@ -4054,6 +4070,9 @@ var Gaslight = Gaslight || (() => {
             s.hud.initData.frameId = null;
             removeInitiativeHud();
             sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
+        } else if (obj.get('id') === s.hud.initData.highlightId) {
+            // Highlight deleted — just clear ID, will be recreated on next update
+            s.hud.initData.highlightId = null;
         }
     };
 
@@ -4233,6 +4252,30 @@ var Gaslight = Gaslight || (() => {
                 if (stroke !== undefined) data.frameStroke = stroke;
                 if (fill !== undefined) data.frameFill = fill;
                 if (strokeWidth !== undefined) data.frameStrokeWidth = strokeWidth;
+                reflowInitiativeHud('none');
+            } else if (obj.get('id') === s.hud.initData.highlightId) {
+                var data = s.hud.initData;
+                // Track highlight styling
+                var hlStroke = obj.get('stroke');
+                var hlFill = obj.get('fill');
+                var hlStrokeWidth = obj.get('stroke_width');
+                if (hlStroke !== undefined) data.highlightStroke = hlStroke;
+                if (hlFill !== undefined) data.highlightFill = hlFill;
+                if (hlStrokeWidth !== undefined) data.highlightStrokeWidth = hlStrokeWidth;
+                // Compute normalized Y offset (0=top+tokenSize/2+vPadding, 1=bottom-tokenSize/2-vPadding)
+                var frame = getObj('pathv2', data.frameId);
+                if (frame) {
+                    var fTop = frame.get('y');
+                    var fPts = JSON.parse(frame.get('points') || '[]');
+                    var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
+                    var tknSz = data.tokenSize || defaultInitHud.tokenSize;
+                    var vPad = data.vPadding || defaultInitHud.vPadding;
+                    var usableTop = fTop - fHeight / 2 + tknSz / 2 + vPad;
+                    var usableBot = fTop + fHeight / 2 - tknSz / 2 - vPad;
+                    var hlY = obj.get('y');
+                    var norm = (hlY - usableTop) / (usableBot - usableTop);
+                    data.currentTurnOffset = Math.max(0, Math.min(1, norm));
+                }
                 reflowInitiativeHud('none');
             }
         });
