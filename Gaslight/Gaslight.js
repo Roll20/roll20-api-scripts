@@ -3234,6 +3234,23 @@ var Gaslight = Gaslight || (() => {
             modified = true;
         }
 
+        // Apply round calculation for custom turns that reached the top via our rotation
+        // Only if we modified the order (if not modified, Roll20 handled it naturally and already applied the formula)
+        if (modified && newOrder.length > 0 && newOrder[0].id === '-1' && newOrder[0].formula) {
+            var topEntry = newOrder[0];
+            var oldTopId = oldOrder.length > 0 ? oldOrder[0].id : null;
+            // Only apply if the top changed (this custom turn just became active)
+            if (oldTopId !== '-1' || (oldOrder[0] && oldOrder[0].custom !== topEntry.custom)) {
+                var formula = topEntry.formula.trim();
+                var currentPr = parseFloat(topEntry.pr) || 0;
+                var val = parseFloat(formula.replace(/^[+-]/, '')) || 0;
+                var isAdd = formula.startsWith('+');
+                // Forward = apply normally, backward = apply inverse
+                if (hudDirection === 'backward') isAdd = !isAdd;
+                topEntry.pr = isAdd ? currentPr + val : currentPr - val;
+            }
+        }
+
         if (modified) {
             var finalJson = JSON.stringify(newOrder);
             _suppressTurnSync = true;
@@ -3716,6 +3733,27 @@ var Gaslight = Gaslight || (() => {
                     pin.set({ x: visible ? frameLeft : -5000, y: visible ? newPinY : -5000 });
                 }
                 txt.set({ top: newSlotY, color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent' });
+            });
+
+            // Update custom text values from current order based on position
+            var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+            customEntries.forEach(function(e) {
+                var txt = getObj('text', e.textId);
+                if (!txt) return;
+                var txtY = txt.get('top');
+                // Find which order slot this text is closest to
+                var bestOffset = null;
+                var bestDist = Infinity;
+                for (var ci = 0; ci < order.length; ci++) {
+                    if (order[ci].id && order[ci].id !== '-1') continue;
+                    var off = ci <= order.length / 2 ? ci : ci - order.length;
+                    var slotY = hudSlotY(frameCenter, off, tokenSize, tokenPadding);
+                    var dist = Math.abs(txtY - slotY);
+                    if (dist < bestDist) { bestDist = dist; bestOffset = ci; }
+                }
+                if (bestOffset !== null) {
+                    txt.set('text', String(order[bestOffset].pr || ''));
+                }
             });
 
             // Reflow only token entries by ID
@@ -4297,10 +4335,23 @@ var Gaslight = Gaslight || (() => {
                 if (newLeft !== oldLeft && verticalDrift < tknSizeH / 2 && horizontalEscape) {
                     var order = JSON.parse(Campaign().get('turnorder') || '[]');
                     var sourceId = match.sourceId;
-                    // Rotate until this token's master is at position 0
+                    var swipeDirection = newLeft > frameRightEdge ? 'forward' : 'backward';
+                    // Rotate until this token's master is at position 0, applying formulas along the way
                     var safety = order.length;
                     while (safety-- > 0 && order.length > 0 && order[0].id !== sourceId) {
-                        order.push(order.shift());
+                        // Apply formula to custom turns as we pass them
+                        if (order[0].id === '-1' && order[0].formula) {
+                            var f = order[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDirection === 'backward') add = !add;
+                            order[0].pr = (parseFloat(order[0].pr) || 0) + (add ? v : -v);
+                        }
+                        if (swipeDirection === 'forward') {
+                            order.push(order.shift());
+                        } else {
+                            order.unshift(order.pop());
+                        }
                     }
                     _suppressTurnSync = true;
                     Campaign().set('turnorder', JSON.stringify(order));
@@ -4415,17 +4466,33 @@ var Gaslight = Gaslight || (() => {
                 var frameLeftEdge = frameLeft - fw2 / 2;
 
                 if (newX > frameRightEdge || newX < frameLeftEdge) {
-                    // Find which custom turn this is in the full order
+                    var swipeDir = newX > frameRightEdge ? 'forward' : 'backward';
                     var fullOrder = JSON.parse(Campaign().get('turnorder') || '[]');
                     var customsInOrder = [];
                     fullOrder.forEach(function(e, i) { if (!e.id || e.id === '-1') customsInOrder.push(i); });
                     var customRank = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).findIndex(function(e) { return e.tokenId === obj.get('id'); });
                     if (customRank !== -1 && customsInOrder[customRank] !== undefined) {
                         var targetFullIdx = customsInOrder[customRank];
-                        // Rotate until this entry is at position 0
-                        var rotated = fullOrder.slice(targetFullIdx).concat(fullOrder.slice(0, targetFullIdx));
+                        // Calculate how many rotations needed
+                        var rotCount = swipeDir === 'forward'
+                            ? targetFullIdx
+                            : fullOrder.length - targetFullIdx;
+                        for (var ri = 0; ri < rotCount; ri++) {
+                            if (fullOrder[0].id === '-1' && fullOrder[0].formula) {
+                                var f = fullOrder[0].formula.trim();
+                                var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                                var add = f.startsWith('+');
+                                if (swipeDir === 'backward') add = !add;
+                                fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                            }
+                            if (swipeDir === 'forward') {
+                                fullOrder.push(fullOrder.shift());
+                            } else {
+                                fullOrder.unshift(fullOrder.pop());
+                            }
+                        }
                         _suppressTurnSync = true;
-                        Campaign().set('turnorder', JSON.stringify(rotated));
+                        Campaign().set('turnorder', JSON.stringify(fullOrder));
                         _suppressTurnSync = false;
                     }
                 }
