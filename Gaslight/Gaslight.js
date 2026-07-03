@@ -81,11 +81,12 @@ var Gaslight = Gaslight || (() => {
                 activeGroups: {},
                 config: { autoCommit: false, relayCommands: [] },
                 view: 'master',
-                hud: { view: false }
+                hud: { view: false, initiative: false }
             };
         }
         if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
-        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: false };
+        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: false, initiative: false };
+        if (state[SCRIPT_NAME].hud.initiative === undefined) state[SCRIPT_NAME].hud.initiative = false;
         // Migration: v2.0.0 -> v2.1.0 — view null used to mean "relay to all", now null means "off"
         if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
             if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
@@ -3210,6 +3211,9 @@ var Gaslight = Gaslight || (() => {
             Campaign().set('turnorder', finalJson);
             _suppressTurnSync = false;
         }
+
+        // Update initiative HUD if enabled
+        if (state[SCRIPT_NAME].hud.initiative) updateInitiativeHud();
     };
 
     /**
@@ -3350,6 +3354,228 @@ var Gaslight = Gaslight || (() => {
         }
     };
 
+    // ---- Initiative HUD ----
+
+    const INIT_HUD_TOKEN_SIZE = 50;
+    const INIT_HUD_PADDING = 10;
+
+    /**
+     * Get the deduped turn order (master tokens only, skip children).
+     */
+    const getHudTurnOrder = () => {
+        var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        return order.filter(function(entry) {
+            if (!entry.id || entry.id === '-1') return true;
+            return isMasterToken(entry.id);
+        });
+    };
+
+    /**
+     * Draw a rectangle path on the foreground layer.
+     */
+    const createFramePath = (pageId, left, top, width, height) => {
+        var hw = width / 2, hh = height / 2;
+        var pathData = JSON.stringify([
+            ['M', -hw, -hh],
+            ['L', hw, -hh],
+            ['L', hw, hh],
+            ['L', -hw, hh],
+            ['L', -hw, -hh]
+        ]);
+        return createObj('path', {
+            _pageid: pageId,
+            layer: 'foreground',
+            path: pathData,
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+            stroke: '#ffffff',
+            stroke_width: 3,
+            fill: 'transparent',
+            scaleX: 1,
+            scaleY: 1,
+        });
+    };
+
+    /**
+     * Build/rebuild the initiative HUD.
+     */
+    const updateInitiativeHud = () => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initiative) return;
+
+        var pageId = getHudPageId();
+        if (!pageId) return;
+
+        var page = getObj('page', pageId);
+        if (!page) return;
+
+        var order = getHudTurnOrder();
+        if (!s.hud.initData) {
+            s.hud.initData = { frameId: null, entries: [], pos: null, frameSize: null };
+        }
+        var data = s.hud.initData;
+
+        var frameWidth = INIT_HUD_TOKEN_SIZE + 2 * INIT_HUD_PADDING;
+
+        // Create frame if missing
+        if (!data.frameId || !getObj('path', data.frameId)) {
+            var pos = data.pos || { left: 100, top: Math.round(page.get('height') * 70 / 2) };
+            var frameHeight = (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING) * 6 + INIT_HUD_PADDING;
+            var frameSize = data.frameSize || { width: frameWidth, height: frameHeight };
+            var frame = createFramePath(pageId, pos.left, pos.top, frameSize.width, frameSize.height);
+            data.frameId = frame.get('id');
+            data.pos = pos;
+            data.frameSize = frameSize;
+        }
+
+        var frame = getObj('path', data.frameId);
+        if (!frame) return;
+
+        var frameLeft = frame.get('left');
+        var frameTop = frame.get('top');
+        var frameHeight = data.frameSize ? data.frameSize.height : frame.get('height');
+        var frameTopEdge = frameTop - frameHeight / 2;
+
+        // Remove old entries no longer in the order
+        var orderIds = order.map(function(e) { return e.id; });
+        var toRemove = [];
+        data.entries.forEach(function(entry, i) {
+            if (orderIds.indexOf(entry.sourceId) === -1) toRemove.push(i);
+        });
+        toRemove.reverse().forEach(function(i) {
+            var entry = data.entries[i];
+            var tok = getObj('graphic', entry.tokenId);
+            var txt = getObj('text', entry.textId);
+            if (tok) { if (typeof Mirror !== 'undefined') Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (txt) txt.remove();
+            data.entries.splice(i, 1);
+        });
+
+        // Add new entries not yet in the HUD
+        var existingSourceIds = data.entries.map(function(e) { return e.sourceId; });
+        order.forEach(function(entry) {
+            if (!entry.id || entry.id === '-1') return;
+            if (existingSourceIds.indexOf(entry.id) !== -1) return;
+
+            var sourceToken = getObj('graphic', entry.id);
+            if (!sourceToken) return;
+
+            var hudToken = createObj('graphic', {
+                _pageid: pageId,
+                layer: 'foreground',
+                imgsrc: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
+                left: frameLeft,
+                top: frameTopEdge + INIT_HUD_PADDING + INIT_HUD_TOKEN_SIZE / 2,
+                width: INIT_HUD_TOKEN_SIZE,
+                height: INIT_HUD_TOKEN_SIZE,
+                showname: true,
+                name: sourceToken.get('name'),
+                baseOpacity: 1,
+            });
+
+            var hudText = createObj('text', {
+                _pageid: pageId,
+                layer: 'foreground',
+                text: String(entry.pr || ''),
+                left: frameLeft + frameWidth / 2 + 15,
+                top: frameTopEdge + INIT_HUD_PADDING + INIT_HUD_TOKEN_SIZE / 2,
+                font_size: 16,
+                color: '#ffffff',
+                font_family: 'Contrail One',
+            });
+
+            // Mirror-link: sync name, status, tint
+            if (typeof Mirror !== 'undefined') {
+                Mirror.link([sourceToken.get('id'), hudToken.get('id')], ['name', 'statusmarkers', 'tint_color'], { soft: true });
+            }
+
+            data.entries.push({
+                sourceId: entry.id,
+                tokenId: hudToken.get('id'),
+                textId: hudText.get('id'),
+            });
+        });
+
+        reflowInitiativeHud();
+    };
+
+    /**
+     * Reflow initiative HUD: current turn at top, overflow hidden.
+     */
+    const reflowInitiativeHud = () => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initiative || !s.hud.initData) return;
+        var data = s.hud.initData;
+
+        var frame = getObj('path', data.frameId);
+        if (!frame) return;
+
+        var order = getHudTurnOrder();
+        var frameLeft = frame.get('left');
+        var frameTop = frame.get('top');
+        var frameHeight = data.frameSize ? data.frameSize.height : frame.get('height');
+        var frameTopEdge = frameTop - frameHeight / 2;
+        var frameBotEdge = frameTop + frameHeight / 2;
+        var frameWidth = INIT_HUD_TOKEN_SIZE + 2 * INIT_HUD_PADDING;
+
+        order.forEach(function(entry, i) {
+            if (!entry.id || entry.id === '-1') return;
+            var hudEntry = data.entries.find(function(e) { return e.sourceId === entry.id; });
+            if (!hudEntry) return;
+
+            var tok = getObj('graphic', hudEntry.tokenId);
+            var txt = getObj('text', hudEntry.textId);
+            if (!tok) return;
+
+            var yPos = frameTopEdge + INIT_HUD_PADDING + (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING) * i + INIT_HUD_TOKEN_SIZE / 2;
+
+            var visible = (yPos - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge - 5) &&
+                          (yPos + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge + 5);
+
+            tok.set({
+                left: frameLeft,
+                top: yPos,
+                baseOpacity: visible ? 1 : 0,
+                showname: visible,
+            });
+            if (txt) {
+                txt.set({
+                    left: frameLeft + frameWidth / 2 + 15,
+                    top: yPos,
+                    color: visible ? '#ffffff' : 'transparent',
+                });
+            }
+        });
+    };
+
+    /**
+     * Remove the initiative HUD (programmatic).
+     */
+    const removeInitiativeHud = () => {
+        var s = state[SCRIPT_NAME];
+        var data = s.hud.initData;
+        if (!data) return;
+
+        var frameId = data.frameId;
+        var entries = data.entries.slice();
+        // Clear IDs first so destroy handler ignores
+        data.frameId = null;
+        data.entries = [];
+
+        if (frameId) {
+            var frame = getObj('path', frameId);
+            if (frame) frame.remove();
+        }
+        entries.forEach(function(entry) {
+            var tok = getObj('graphic', entry.tokenId);
+            var txt = getObj('text', entry.textId);
+            if (tok) { if (typeof Mirror !== 'undefined') Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (txt) txt.remove();
+        });
+    };
+
     /**
      * Handle change:text — persist HUD element position/size if moved by GM.
      */
@@ -3375,6 +3601,44 @@ var Gaslight = Gaslight || (() => {
             s.hud.view = false;
             s.hud.viewId = null;
             sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>view</b> is now off');
+        }
+        // Initiative HUD text
+        if (s.hud.initData && s.hud.initData.entries) {
+            var match = s.hud.initData.entries.find(function(e) { return e.textId === id; });
+            if (match) {
+                s.hud.initiative = false;
+                removeInitiativeHud();
+                sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
+            }
+        }
+    };
+
+    /**
+     * Handle destroy:graphic — if an initiative HUD token is deleted, turn off.
+     */
+    const onHudGraphicDestroyed = (obj) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initData || !s.hud.initData.entries) return;
+        var id = obj.get('id');
+        var match = s.hud.initData.entries.find(function(e) { return e.tokenId === id; });
+        if (match) {
+            s.hud.initiative = false;
+            removeInitiativeHud();
+            sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
+        }
+    };
+
+    /**
+     * Handle destroy:path — if the initiative frame is deleted, turn off.
+     */
+    const onHudPathDestroyed = (obj) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initData) return;
+        if (obj.get('id') === s.hud.initData.frameId) {
+            s.hud.initiative = false;
+            s.hud.initData.frameId = null;
+            removeInitiativeHud();
+            sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
         }
     };
 
@@ -3418,6 +3682,13 @@ var Gaslight = Gaslight || (() => {
                 } else {
                     updateViewHud();
                 }
+            } else if (element === 'initiative') {
+                if (s.hud.initData) {
+                    s.hud.initData.pos = null;
+                    s.hud.initData.frameSize = null;
+                }
+                removeInitiativeHud();
+                updateInitiativeHud();
             }
             reply(msg, 'HUD', '<b>' + element + '</b> reset to default position.');
             return;
@@ -3430,6 +3701,9 @@ var Gaslight = Gaslight || (() => {
         if (element === 'view') {
             if (s.hud.view) updateViewHud();
             else removeViewHud();
+        } else if (element === 'initiative') {
+            if (s.hud.initiative) updateInitiativeHud();
+            else removeInitiativeHud();
         }
 
         reply(msg, 'HUD', '<b>' + element + '</b> is now ' + (s.hud[element] ? 'on' : 'off'));
@@ -3443,13 +3717,14 @@ var Gaslight = Gaslight || (() => {
         });
         registerWithRollCapture();
         on('add:graphic', onTokenAdded);
-        on('destroy:graphic', onTokenDestroyed);
         on('change:attribute', onAttributeChanged);
         on('change:graphic', onGraphicPropChanged);
         on('change:graphic:gmnotes', onGmNotesChanged);
         on('change:campaign:turnorder', onTurnOrderChanged);
         on('change:text', onHudTextChanged);
         on('destroy:text', onHudTextDestroyed);
+        on('destroy:graphic', function(obj) { onTokenDestroyed(obj); onHudGraphicDestroyed(obj); });
+        on('destroy:path', onHudPathDestroyed);
     };
 
     return { checkInstall, registerEventHandlers };
