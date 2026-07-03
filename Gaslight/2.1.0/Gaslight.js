@@ -1,6 +1,6 @@
 // =============================================================================
 // Gaslight v2.1.0
-// Last Updated: 2026-06-30
+// Last Updated: 2026-07-03
 // Author: Kenan Millet
 //
 // Description:
@@ -80,10 +80,13 @@ var Gaslight = Gaslight || (() => {
             state[SCRIPT_NAME] = {
                 activeGroups: {},
                 config: { autoCommit: false, relayCommands: [] },
-                view: 'master'
+                view: 'master',
+                hud: { view: true, initiative: true }
             };
         }
         if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
+        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: true, initiative: true };
+        if (state[SCRIPT_NAME].hud.initiative === undefined) state[SCRIPT_NAME].hud.initiative = false;
         // Migration: v2.0.0 -> v2.1.0 — view null used to mean "relay to all", now null means "off"
         if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
             if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
@@ -1000,7 +1003,12 @@ var Gaslight = Gaslight || (() => {
         establishLinks(groupName, groupInfo, allLinks);
 
         // Enable relay by default on split
+        var s = state[SCRIPT_NAME];
         s.view = 'master';
+
+        // Recreate HUD elements if enabled
+        if (s.hud.view) updateViewHud();
+        if (s.hud.initiative) updateInitiativeHud();
 
         var summary = 'Group "' + groupName + '" activated. ' +
             Object.keys(groupInfo.players).length + ' player(s), ' +
@@ -1073,6 +1081,10 @@ var Gaslight = Gaslight || (() => {
         });
 
         reply(msg, 'Merge', 'Merged ' + groupsToMerge.length + ' group(s). Players returned to shared page.');
+
+        // Destroy HUD elements (preference preserved, will recreate on next split)
+        removeViewHud();
+        removeInitiativeHud();
     };
 
     const doTest = (msg, args) => {
@@ -1317,6 +1329,7 @@ var Gaslight = Gaslight || (() => {
             s.view = resolved.id;
             reply(msg, 'View', 'Switched to <b>' + resolved.name + '</b> view. Commands will auto-target their linked tokens.');
         }
+        updateViewHud();
     };
 
     /**
@@ -1699,6 +1712,8 @@ var Gaslight = Gaslight || (() => {
         + '<code>' + CMD + ' unlink [ids...]</code> -- Unlink tokens<br>'
         + '<code>' + CMD + ' sync [props|all|reset]</code> -- Manage sync per token<br>'
         + '<code>' + CMD + ' desync [props|all]</code> -- Exclude props from sync<br>'
+        + '<code>' + CMD + ' sync [props|all|reset]</code> -- Manage sync per token<br>'
+        + '<code>' + CMD + ' desync [props|all]</code> -- Exclude props from sync<br>'
         + '<code>' + CMD + ' view [master|off|&lt;player&gt;]</code> -- Control relay targeting<br>'
         + '<code>' + CMD + ' relay &lt;views&gt; &lt;!cmd&gt;</code> -- Relay command to views<br>'
         + '<code>' + CMD + ' group &lt;group&gt; &lt;player|GM&gt;</code> -- Assign page<br>'
@@ -1711,7 +1726,12 @@ var Gaslight = Gaslight || (() => {
         + '<code>master</code> -- relay to all (default on split)<br>'
         + '<code>off</code> -- relay disabled (GM-only changes)<br>'
         + '<code>&lt;player&gt;</code> -- relay to one player only<br>'
-        + '<br><b>Initiative:</b> Linked tokens auto-sync in turn order. Non-master children are auto-skipped on turn advance.<br>';
+        + '<br><b>Initiative:</b> Linked tokens auto-sync in turn order. Non-master children are auto-skipped on turn advance.<br>'
+        + '<br><b>HUD:</b><br>'
+        + '<code>' + CMD + ' hud</code> -- toggle all elements<br>'
+        + '<code>' + CMD + ' hud [on|off|reset]</code> -- all elements<br>'
+        + '<code>' + CMD + ' hud [init|view] [on|off|reset]</code> -- specific element<br>'
+        + 'Aliases: init/turn/turns = initiative, relay = view<br>';
 
     // =========================================================================
     // Scripting Engine — Fetch Integration
@@ -2555,6 +2575,7 @@ var Gaslight = Gaslight || (() => {
             case 'view':    doView(msg, args);    break;
             case 'stage':   doStage(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
+            case 'hud':     doHud(msg, args);     break;
             case 'eval':    doEval(msg, args);    break;
             case 'status':  doStatus(msg);        break;
             case '--script-lock':
@@ -2857,6 +2878,17 @@ var Gaslight = Gaslight || (() => {
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
         if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length > 0) buildTriggerMap();
+
+        // HUD recovery: if enabled but object is missing, recreate; if disabled but object exists, clean up
+        var s = state[SCRIPT_NAME];
+        if (s.hud.view) {
+            var existing = findHudElement('view');
+            if (!existing) updateViewHud();
+        } else if (s.hud.viewId) {
+            var orphan = getObj('text', s.hud.viewId);
+            if (orphan) orphan.remove();
+            s.hud.viewId = null;
+        }
     };
 
     /**
@@ -3066,6 +3098,31 @@ var Gaslight = Gaslight || (() => {
         var newOrder = JSON.parse(obj.get('turnorder') || '[]');
         var oldOrder = JSON.parse(prev.turnorder || '[]');
 
+        // Detect direction early (before skip/reorder modifies newOrder)
+        var hudDirection = 'none';
+        if (oldOrder.length === newOrder.length && newOrder.length > 0) {
+            var targetEntry = newOrder.find(function(e) { return e.id && e.id !== '-1'; });
+            if (targetEntry) {
+                var newIdx = newOrder.indexOf(targetEntry);
+                var oldIdx = -1;
+                for (var oi = 0; oi < oldOrder.length; oi++) {
+                    if (oldOrder[oi].id === targetEntry.id) { oldIdx = oi; break; }
+                }
+                if (oldIdx !== -1 && oldIdx !== newIdx) {
+                    var rotAmount = oldIdx - newIdx;
+                    var len = newOrder.length;
+                    // Normalize rotation
+                    rotAmount = ((rotAmount % len) + len) % len;
+                    var rotated = newOrder.slice(len - rotAmount).concat(newOrder.slice(0, len - rotAmount));
+                    var oldIdStr = oldOrder.map(function(e) { return e.id; }).join(',');
+                    var rotIdStr = rotated.map(function(e) { return e.id; }).join(',');
+                    if (rotIdStr === oldIdStr) {
+                        hudDirection = rotAmount <= len / 2 ? 'forward' : 'backward';
+                    }
+                }
+            }
+        }
+
         // Detect additions: entries in newOrder not in oldOrder
         var oldIds = new Set(oldOrder.map(function(e) { return e.id; }));
         var newIds = new Set(newOrder.map(function(e) { return e.id; }));
@@ -3080,9 +3137,13 @@ var Gaslight = Gaslight || (() => {
         added.forEach(function(entry) {
             var info = getLinkedInfo(entry.id);
             if (info.linkedIds.length === 0) return;
-            // Add linked tokens that aren't already in the order
+            // Deduplicate linked IDs (can accumulate duplicates from repeated splits)
+            var uniqueLinkedIds = info.linkedIds.filter(function(id, i) { return info.linkedIds.indexOf(id) === i; });
+            // Only process if none of this entry's linked tokens are already in the order
             var existingIds = new Set(newOrder.map(function(e) { return e.id; }));
-            info.linkedIds.forEach(function(linkedId) {
+            var alreadyHasLinked = uniqueLinkedIds.some(function(lid) { return existingIds.has(lid); });
+            if (alreadyHasLinked) return;
+            uniqueLinkedIds.forEach(function(linkedId) {
                 if (existingIds.has(linkedId)) return;
                 var linkedObj = getObj('graphic', linkedId);
                 var pushEntry = { id: linkedId, pr: entry.pr };
@@ -3139,33 +3200,34 @@ var Gaslight = Gaslight || (() => {
                 var isForward = oldOrder.length > 0 && newOrder[newOrder.length - 1].id === oldOrder[0].id;
                 var isBackward = oldOrder.length > 0 && newOrder[0].id === oldOrder[oldOrder.length - 1].id;
 
-                var startId = topId;
-                var safety = newOrder.length;
+                if (isForward || isBackward) {
+                    var startId = topId;
+                    var safety = newOrder.length;
 
-                if (isForward) {
-                    // Rotate forward: shift to end until master/unlinked is on top
-                    while (safety-- > 0 && newOrder.length > 1) {
-                        newOrder.push(newOrder.shift());
-                        var cId = newOrder[0].id;
-                        if (!cId || cId === '-1') break;
-                        if (cId === startId) break;
-                        var cInfo = getLinkedInfo(cId);
-                        if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                    if (isForward) {
+                        // Rotate forward: shift to end until master/unlinked is on top
+                        while (safety-- > 0 && newOrder.length > 1) {
+                            newOrder.push(newOrder.shift());
+                            var cId = newOrder[0].id;
+                            if (!cId || cId === '-1') break;
+                            if (cId === startId) break;
+                            var cInfo = getLinkedInfo(cId);
+                            if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                        }
+                    } else {
+                        // Rotate backward: pop from end to front until master/unlinked is on top
+                        while (safety-- > 0 && newOrder.length > 1) {
+                            newOrder.unshift(newOrder.pop());
+                            var cId = newOrder[0].id;
+                            if (!cId || cId === '-1') break;
+                            if (cId === startId) break;
+                            var cInfo = getLinkedInfo(cId);
+                            if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                        }
                     }
                     modified = true;
-                } else if (isBackward) {
-                    // Rotate backward: pop from end to front until master/unlinked is on top
-                    while (safety-- > 0 && newOrder.length > 1) {
-                        newOrder.unshift(newOrder.pop());
-                        var cId = newOrder[0].id;
-                        if (!cId || cId === '-1') break;
-                        if (cId === startId) break;
-                        var cInfo = getLinkedInfo(cId);
-                        if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
-                    }
-                    modified = true;
-                } else if (added.length === 0 && removed.length === 0) {
-                    // Neither forward nor backward and no add/remove — likely a sort; reorder groups
+                } else {
+                    // Not forward/backward — manual drag. Reorder to group children after master.
                     var reordered = reorderInitiative(newOrder);
                     if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
                         newOrder = reordered;
@@ -3173,16 +3235,29 @@ var Gaslight = Gaslight || (() => {
                     }
                 }
             }
-        } else if (added.length === 0 && removed.length === 0 && newOrder.length > 1) {
-            // No child on top, but check if sort happened (order changed without add/remove)
-            var isForward = oldOrder.length > 0 && newOrder[newOrder.length - 1].id === oldOrder[0].id;
-            var isBackward = oldOrder.length > 0 && newOrder[0].id === oldOrder[oldOrder.length - 1].id;
-            if (!isForward && !isBackward && JSON.stringify(newOrder) !== JSON.stringify(oldOrder)) {
-                var reordered = reorderInitiative(newOrder);
-                if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
-                    newOrder = reordered;
-                    modified = true;
-                }
+        }
+
+        // Always ensure linked tokens are grouped below their master
+        var reordered = reorderInitiative(newOrder);
+        if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
+            newOrder = reordered;
+            modified = true;
+        }
+
+        // Apply round calculation for custom turns that reached the top via our rotation
+        // Only if we modified the order (if not modified, Roll20 handled it naturally and already applied the formula)
+        if (modified && newOrder.length > 0 && newOrder[0].id === '-1' && newOrder[0].formula) {
+            var topEntry = newOrder[0];
+            // Only apply if this custom turn was NOT already at the top
+            var wasAlreadyTop = oldOrder.length > 0 && oldOrder[0].id === '-1' && oldOrder[0].custom === topEntry.custom && oldOrder[0].pr === topEntry.pr;
+            if (!wasAlreadyTop) {
+                var formula = topEntry.formula.trim();
+                var currentPr = parseFloat(topEntry.pr) || 0;
+                var val = parseFloat(formula.replace(/^[+-]/, '')) || 0;
+                var isAdd = formula.startsWith('+');
+                // Forward = apply normally, backward = apply inverse
+                if (hudDirection === 'backward') isAdd = !isAdd;
+                topEntry.pr = isAdd ? currentPr + val : currentPr - val;
             }
         }
 
@@ -3191,6 +3266,11 @@ var Gaslight = Gaslight || (() => {
             _suppressTurnSync = true;
             Campaign().set('turnorder', finalJson);
             _suppressTurnSync = false;
+        }
+
+        // Update initiative HUD if enabled
+        if (state[SCRIPT_NAME].hud.initiative) {
+            updateInitiativeHud(hudDirection);
         }
     };
 
@@ -3206,7 +3286,7 @@ var Gaslight = Gaslight || (() => {
             if (placed.has(entry.id)) return;
             if (!entry.id || entry.id === '-1') {
                 result.push(entry);
-                placed.add(entry.id);
+                // Don't add '-1' to placed — multiple custom entries share this ID
                 return;
             }
 
@@ -3217,6 +3297,9 @@ var Gaslight = Gaslight || (() => {
                 placed.add(entry.id);
                 return;
             }
+
+            // Skip children — they'll be pulled in when we reach their master
+            if (!isMasterToken(entry.id)) return;
 
             // Find all entries in this link group
             var groupIds = [entry.id].concat(info.linkedIds);
@@ -3240,6 +3323,882 @@ var Gaslight = Gaslight || (() => {
         return result;
     };
 
+    // =========================================================================
+    // HUD System — on-canvas indicators
+    // =========================================================================
+
+    const HUD_PREFIX = 'gaslight_hud_';
+
+    /**
+     * Get the master page ID from the first active group.
+     */
+    const getHudPageId = () => {
+        var s = state[SCRIPT_NAME];
+        var group = Object.values(s.activeGroups)[0];
+        return group ? group.masterPageId : null;
+    };
+
+    /**
+     * Find an existing HUD text object by stored ID.
+     */
+    const findHudElement = (name) => {
+        var s = state[SCRIPT_NAME];
+        var id = s.hud[name + 'Id'];
+        if (!id) return null;
+        return getObj('text', id) || null;
+    };
+
+    /**
+     * Create or update the view HUD element.
+     */
+    const updateViewHud = () => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.view) return;
+
+        var pageId = getHudPageId();
+        if (!pageId) return;
+
+        var page = getObj('page', pageId);
+        if (!page) return;
+
+        // Determine display text
+        var label;
+        if (s.view === null) {
+            label = '🔴 RELAY OFF';
+        } else if (s.view === 'master') {
+            label = '🟢 RELAY: ALL';
+        } else {
+            // Resolve player name
+            var playerName = s.view;
+            Object.values(s.activeGroups).forEach(function(g) {
+                var entry = g.playerPages[s.view];
+                if (entry && entry.name) playerName = entry.name;
+            });
+            label = '🔵 VIEW: ' + playerName;
+        }
+
+        // Find existing or create new
+        var existing = findHudElement('view');
+        if (existing) {
+            existing.set('text', label);
+        } else {
+            // Use stored position/size or defaults
+            var vd = s.hud.viewData || {};
+            var pageWidth = page.get('width') * 70;
+            var obj = createObj('text', {
+                _pageid: pageId,
+                layer: 'foreground',
+                text: label,
+                left: Math.round((vd.leftNorm || defaultViewHud.leftNorm) * pageWidth),
+                top: vd.top || defaultViewHud.top,
+                font_size: vd.fontSize || defaultViewHud.fontSize,
+                color: vd.color || defaultViewHud.color,
+                stroke: vd.stroke || defaultViewHud.stroke,
+                font_family: vd.fontFamily || defaultViewHud.fontFamily,
+            });
+            s.hud.viewId = obj.get('id');
+        }
+    };
+
+    /**
+     * Remove the view HUD element (programmatic). Clears ID first so destroy handler ignores it.
+     */
+    const removeViewHud = () => {
+        var s = state[SCRIPT_NAME];
+        var id = s.hud.viewId;
+        s.hud.viewId = null;
+        if (id) {
+            var obj = getObj('text', id);
+            if (obj) obj.remove();
+        }
+    };
+
+    // ---- Initiative HUD ----
+
+    const defaultViewHud = {
+        leftNorm: 0.5,
+        top: 100,
+        fontSize: 40,
+        fontFamily: 'Contrail One',
+        color: '#ffffff',
+        stroke: '#000000',
+    };
+
+    const defaultInitHud = {
+        tokenSize: 50,
+        tokenPadding: 20,
+        vPadding: 15,
+        hPadding: 10,
+        textOffset: 25,
+        textFontSize: 16,
+        textFontFamily: 'Contrail One',
+        textColor: '#ffffff',
+        textStroke: '#000000',
+        frameStroke: '#ffffff',
+        frameFill: 'transparent',
+        frameStrokeWidth: 3,
+        highlightStroke: '#ffcc00',
+        highlightFill: 'transparent',
+        highlightStrokeWidth: 5,
+        currentTurnOffset: 0.5,
+        entries: [],
+        frameId: null,
+        highlightId: null,
+        pos: null,
+        frameSize: null,
+    };
+
+    const hudSlotY = (frameCenter, offset, tokenSize, tokenPadding) => {
+        return frameCenter + offset * (tokenSize + tokenPadding);
+    };
+    const hudPinY = (frameCenter, offset, tokenSize, tokenPadding) => {
+        return hudSlotY(frameCenter, offset, tokenSize, tokenPadding) + tokenSize / 2;
+    };
+
+    /**
+     * Compute token size from frame width or stored override.
+     */
+    const getHudTokenSize = (frame) => {
+        var s = state[SCRIPT_NAME];
+        if (s.hud.initData && s.hud.initData.tokenSize) return s.hud.initData.tokenSize;
+        var points = JSON.parse(frame.get('points') || '[]');
+        var frameWidth = points.length >= 2 ? points[1][0] - points[0][0] : defaultInitHud.tokenSize + 2 * defaultInitHud.hPadding;
+        var hPad = (s.hud.initData && s.hud.initData.hPadding) || defaultInitHud.hPadding;
+        return Math.max(10, frameWidth - 2 * hPad);
+    };
+
+    /**
+     * Get the deduped turn order (master tokens only, skip children).
+     */
+    const getHudTurnOrder = () => {
+        var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        return order.filter(function(entry) {
+            if (!entry.id || entry.id === '-1') return true;
+            return isMasterToken(entry.id);
+        });
+    };
+
+    /**
+     * Draw a rectangle path on the foreground layer.
+     */
+    const createFramePath = (pageId, left, top, width, height, data) => {
+        return createObj('pathv2', {
+            _pageid: pageId,
+            layer: 'foreground',
+            shape: 'rec',
+            x: left,
+            y: top,
+            points: JSON.stringify([[0, 0], [width, height]]),
+            stroke: (data && data.frameStroke) || defaultInitHud.frameStroke,
+            stroke_width: (data && data.frameStrokeWidth) || defaultInitHud.frameStrokeWidth,
+            fill: (data && data.frameFill) || defaultInitHud.frameFill,
+        });
+    };
+
+    /**
+     * Build/rebuild the initiative HUD.
+     */
+    const updateInitiativeHud = (direction) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initiative) return;
+
+        var pageId = getHudPageId();
+        if (!pageId) return;
+
+        var page = getObj('page', pageId);
+        if (!page) return;
+
+        var order = getHudTurnOrder();
+        if (!s.hud.initData) s.hud.initData = {};
+        if (!s.hud.initData.entries) s.hud.initData.entries = [];
+        var data = s.hud.initData;
+
+        var frameWidth = defaultInitHud.tokenSize + 2 * defaultInitHud.hPadding;
+
+        // Create frame if missing
+        if (!data.frameId || !getObj('pathv2', data.frameId)) {
+            var pos = data.pos || { left: 100, top: Math.round(page.get('height') * 70 / 2) };
+            var frameHeight = 5.5 * (defaultInitHud.tokenSize + defaultInitHud.tokenPadding) + 2 * defaultInitHud.vPadding;
+            var frameSize = data.frameSize || { width: frameWidth, height: frameHeight };
+            var frame = createFramePath(pageId, pos.left, pos.top, frameSize.width, frameSize.height, data);
+            data.frameId = frame.get('id');
+            data.pos = pos;
+            data.frameSize = frameSize;
+        }
+
+        var frame = getObj('pathv2', data.frameId);
+        if (!frame) return;
+
+        // Create highlight indicator if missing
+        if (!data.highlightId || !getObj('pathv2', data.highlightId)) {
+            var hlTokenSize = data.tokenSize || defaultInitHud.tokenSize;
+            var hlSize = hlTokenSize + 15;
+            var hlOffset = data.currentTurnOffset != null ? data.currentTurnOffset : defaultInitHud.currentTurnOffset;
+            var frameH = JSON.parse(frame.get('points') || '[]');
+            var fH = frameH.length >= 2 ? frameH[1][1] - frameH[0][1] : 510;
+            var vPadHL = data.vPadding || defaultInitHud.vPadding;
+            var usableTopHL = frame.get('y') - fH / 2 + hlTokenSize / 2 + vPadHL;
+            var usableBotHL = frame.get('y') + fH / 2 - hlTokenSize / 2 - vPadHL;
+            var hlY = usableTopHL + (usableBotHL - usableTopHL) * hlOffset;
+            var highlight = createObj('pathv2', {
+                _pageid: pageId,
+                layer: 'foreground',
+                shape: 'rec',
+                x: frame.get('x'),
+                y: hlY,
+                points: JSON.stringify([[0, 0], [hlSize, hlSize]]),
+                stroke: data.highlightStroke || defaultInitHud.highlightStroke,
+                stroke_width: data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth,
+                fill: data.highlightFill || defaultInitHud.highlightFill,
+                rotation: 45,
+            });
+            data.highlightId = highlight.get('id');
+        }
+
+        var tokenSize = getHudTokenSize(frame);
+        var frameLeft = frame.get('x');
+        var frameTop = frame.get('y');
+        var points = JSON.parse(frame.get('points') || '[]');
+        var frameHeight = points.length >= 2 ? points[1][1] - points[0][1] : 510;
+        var frameTopEdge = frameTop - frameHeight / 2;
+
+        // Remove old entries no longer in the order
+        // For tokens: match by ID. For customs: if order has fewer customs than we have, remove extras.
+        var orderTokenIds = order.filter(function(e) { return e.id && e.id !== '-1'; }).map(function(e) { return e.id; });
+        var orderCustomCount = order.filter(function(e) { return !e.id || e.id === '-1'; }).length;
+        var currentCustomCount = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).length;
+
+        var toRemove = [];
+        var customsToRemove = currentCustomCount - orderCustomCount;
+        data.entries.forEach(function(entry, i) {
+            if (entry.sourceId && entry.sourceId.startsWith('custom:')) {
+                if (customsToRemove > 0) { toRemove.push(i); customsToRemove--; }
+            } else if (orderTokenIds.indexOf(entry.sourceId) === -1) {
+                toRemove.push(i);
+            }
+        });
+        toRemove.reverse().forEach(function(i) {
+            var entry = data.entries[i];
+            var tok = getObj('graphic', entry.tokenId) || getObj('pin', entry.tokenId);
+            var txt = getObj('text', entry.textId);
+            // Splice first so destroy handler ignores
+            data.entries.splice(i, 1);
+            if (tok) { if (typeof Mirror !== 'undefined' && entry.sourceId && !entry.sourceId.startsWith('custom:')) Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (txt) txt.remove();
+        });
+
+        // Add new entries not yet in the HUD
+        var existingTokenIds = data.entries.filter(function(e) { return !e.sourceId.startsWith('custom:'); }).map(function(e) { return e.sourceId; });
+        var customsToAdd = orderCustomCount - data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).length;
+
+        order.forEach(function(entry) {
+            var isCustom = !entry.id || entry.id === '-1';
+
+            if (isCustom) {
+                if (customsToAdd <= 0) return;
+                customsToAdd--;
+
+                var hudPin = createObj('pin', {
+                    _pageid: pageId,
+                    x: frameLeft,
+                    y: -5000,
+                    title: entry.custom || 'Custom',
+                    shape: 'circle',
+                    bgColor: 'transparent',
+                    useTextIcon: true,
+                    textIcon: '',
+                    scale: 1.75,
+                    tooltipVisibleTo: '',
+                });
+
+                var pinText = createObj('text', {
+                    _pageid: pageId,
+                    layer: 'foreground',
+                    text: String(entry.pr || ''),
+                    left: -5000,
+                    top: -5000,
+                    font_size: data.textFontSize || defaultInitHud.textFontSize,
+                    color: data.textColor || defaultInitHud.textColor,
+                    stroke: data.textStroke || defaultInitHud.textStroke,
+                    font_family: data.textFontFamily || defaultInitHud.textFontFamily,
+                });
+
+                data.entries.push({
+                    sourceId: 'custom:' + Date.now() + ':' + Math.random().toString(36).slice(2, 6),
+                    tokenId: hudPin ? hudPin.get('id') : null,
+                    textId: pinText.get('id'),
+                });
+            } else {
+                if (existingTokenIds.indexOf(entry.id) !== -1) return;
+
+                var sourceToken = getObj('graphic', entry.id);
+                if (!sourceToken) return;
+
+                var hudToken = createObj('graphic', {
+                    _pageid: pageId,
+                    layer: 'foreground',
+                    imgsrc: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
+                    left: frameLeft,
+                    top: frameTopEdge + (data.tokenPadding || defaultInitHud.tokenPadding) + tokenSize / 2,
+                    width: tokenSize,
+                    height: tokenSize,
+                    showname: true,
+                    name: sourceToken.get('name'),
+                    baseOpacity: 1,
+                    isdrawing: true,
+                });
+
+                var hudText = createObj('text', {
+                    _pageid: pageId,
+                    layer: 'foreground',
+                    text: String(entry.pr || ''),
+                    left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
+                    top: frameTopEdge + (data.tokenPadding || defaultInitHud.tokenPadding) + tokenSize / 2,
+                    font_size: data.textFontSize || defaultInitHud.textFontSize,
+                    color: data.textColor || defaultInitHud.textColor,
+                    stroke: data.textStroke || defaultInitHud.textStroke,
+                    font_family: data.textFontFamily || defaultInitHud.textFontFamily,
+                });
+
+                if (typeof Mirror !== 'undefined') {
+                    Mirror.link([sourceToken.get('id'), hudToken.get('id')], ['name', 'statusmarkers', 'tint_color'], { soft: true });
+                }
+
+                data.entries.push({
+                    sourceId: entry.id,
+                    tokenId: hudToken.get('id'),
+                    textId: hudText.get('id'),
+                });
+            }
+        });
+
+        reflowInitiativeHud(direction);
+    };
+
+    /**
+     * Reflow initiative HUD: current turn at top, overflow hidden.
+     */
+    const reflowInitiativeHud = (direction) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initiative || !s.hud.initData) return;
+        var data = s.hud.initData;
+
+        var frame = getObj('pathv2', data.frameId);
+        if (!frame) return;
+
+        var order = getHudTurnOrder();
+        var frameLeft = frame.get('x');
+        var frameTop = frame.get('y');
+        var points = JSON.parse(frame.get('points') || '[]');
+        var frameHeight = points.length >= 2 ? points[1][1] - points[0][1] : 510;
+        var tokenSize = getHudTokenSize(frame);
+        var tokenPadding = data.tokenPadding || defaultInitHud.tokenPadding;
+        var vPadding = data.vPadding || defaultInitHud.vPadding;
+        var frameTopEdge = frameTop - frameHeight / 2 + vPadding;
+        var frameBotEdge = frameTop + frameHeight / 2 - vPadding;
+        var frameCenter = (frameTopEdge + tokenSize / 2) + (frameBotEdge - frameTopEdge - tokenSize) * (data.currentTurnOffset != null ? data.currentTurnOffset : defaultInitHud.currentTurnOffset);
+        // Calculate how many slots fit below and above the indicator
+        var slotsBelow = 0;
+        var slotsAbove = 0;
+        var step = tokenSize + tokenPadding;
+        while (frameCenter + (slotsBelow + 1) * step + tokenSize / 2 <= frameBotEdge) slotsBelow++;
+        while (frameCenter - (slotsAbove + 1) * step - tokenSize / 2 >= frameTopEdge) slotsAbove++;
+
+        // Update highlight position and size
+        var highlight = data.highlightId ? getObj('pathv2', data.highlightId) : null;
+        if (highlight) {
+            var hlSize = tokenSize + 15;
+            highlight.set({
+                x: frameLeft,
+                y: frameCenter,
+                points: JSON.stringify([[0, 0], [hlSize, hlSize]]),
+            });
+        }
+        var frameWidth = points.length >= 2 ? points[1][0] - points[0][0] : tokenSize + 2 * (data.hPadding || defaultInitHud.hPadding);
+
+        // Match order entries to HUD entries
+        var tokenMap = {};
+        data.entries.forEach(function(e) {
+            if (e.sourceId && !e.sourceId.startsWith('custom:')) tokenMap[e.sourceId] = e;
+        });
+        var customEntries = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
+
+        if (direction === 'forward' || direction === 'backward') {
+            // Simple shift: move all custom pins/text by one slot, wrap at edges
+            var shift = direction === 'forward'
+                ? -(tokenSize + tokenPadding)
+                : (tokenSize + tokenPadding);
+
+            // Gather all HUD text Y positions (tokens + customs)
+            var allTextYs = data.entries.map(function(e) {
+                var t = getObj('text', e.textId);
+                return t ? t.get('top') : null;
+            }).filter(function(y) { return y !== null; });
+            var minTextY = Math.min.apply(null, allTextYs);
+            var maxTextY = Math.max.apply(null, allTextYs);
+
+            customEntries.forEach(function(e) {
+                var pin = getObj('pin', e.tokenId);
+                var txt = getObj('text', e.textId);
+                if (!txt) return;
+                var currentY = txt.get('top');
+                var newSlotY;
+
+                if (direction === 'forward' && currentY === minTextY) {
+                    // Wrapping: place at where the current max will be after shift
+                    newSlotY = maxTextY;
+                } else if (direction === 'backward' && currentY === maxTextY) {
+                    // Wrapping: place at where the current min will be after shift
+                    newSlotY = minTextY;
+                } else {
+                    newSlotY = currentY + shift;
+                }
+
+                var visible = (newSlotY - tokenSize / 2 >= frameTopEdge) &&
+                              (newSlotY + tokenSize / 2 <= frameBotEdge);
+                var newPinY = newSlotY + tokenSize / 2;
+                if (pin) {
+                    pin.set({ x: visible ? frameLeft : -5000, y: visible ? newPinY : -5000 });
+                }
+                txt.set({ top: newSlotY, color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent' });
+            });
+
+            // Update custom text values from current order based on position
+            var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+            customEntries.forEach(function(e) {
+                var txt = getObj('text', e.textId);
+                if (!txt) return;
+                var txtY = txt.get('top');
+                // Find which order slot this text is closest to
+                var bestOffset = null;
+                var bestDist = Infinity;
+                for (var ci = 0; ci < order.length; ci++) {
+                    if (order[ci].id && order[ci].id !== '-1') continue;
+                    var off = ci <= order.length / 2 ? ci : ci - order.length;
+                    var slotY = hudSlotY(frameCenter, off, tokenSize, tokenPadding);
+                    var dist = Math.abs(txtY - slotY);
+                    if (dist < bestDist) { bestDist = dist; bestOffset = ci; }
+                }
+                if (bestOffset !== null) {
+                    txt.set('text', String(order[bestOffset].pr || ''));
+                }
+            });
+
+            // Reflow only token entries by ID
+            order.forEach(function(entry, i) {
+                if (!entry.id || entry.id === '-1') return;
+                var hudEntry = tokenMap[entry.id];
+                if (!hudEntry) return;
+
+                var tok = getObj('graphic', hudEntry.tokenId);
+                var txt = getObj('text', hudEntry.textId);
+                if (!tok) return;
+
+                var offset = i <= slotsBelow ? i : i - order.length;
+                var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
+                var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
+
+                tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
+                if (txt) {
+                    txt.set({
+                        left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
+                        top: yPos,
+                        color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
+                        text: String(entry.pr || ''),
+                    });
+                }
+            });
+        } else {
+            // Full reflow (sort/add/remove): match customs by pr value
+            var visibleCustoms = customEntries.filter(function(e) {
+                var obj = getObj('pin', e.tokenId);
+                return obj && obj.get('y') > -1000;
+            });
+            var hiddenCustoms = customEntries.filter(function(e) {
+                var obj = getObj('pin', e.tokenId);
+                return !obj || obj.get('y') <= -1000;
+            });
+            var sortedCustoms = [];
+            var usedVisible = new Set();
+            var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+            customOrderEntries.forEach(function(orderEntry) {
+                var prVal = String(orderEntry.pr || '');
+                var match = visibleCustoms.findIndex(function(e, i) {
+                    if (usedVisible.has(i)) return false;
+                    var txt = getObj('text', e.textId);
+                    return txt && txt.get('text') === prVal;
+                });
+                if (match !== -1) {
+                    sortedCustoms.push(visibleCustoms[match]);
+                    usedVisible.add(match);
+                } else if (hiddenCustoms.length > 0) {
+                    sortedCustoms.push(hiddenCustoms.shift());
+                }
+            });
+            visibleCustoms.forEach(function(e, i) {
+                if (!usedVisible.has(i)) sortedCustoms.push(e);
+            });
+            sortedCustoms = sortedCustoms.concat(hiddenCustoms);
+            var customIdx = 0;
+
+            order.forEach(function(entry, i) {
+                var isCustom = !entry.id || entry.id === '-1';
+                var hudEntry = isCustom ? sortedCustoms[customIdx++] : tokenMap[entry.id];
+                if (!hudEntry) return;
+
+                var tok = getObj('graphic', hudEntry.tokenId) || getObj('pin', hudEntry.tokenId);
+                var txt = getObj('text', hudEntry.textId);
+                if (!tok) return;
+
+                var offset = i <= slotsBelow ? i : i - order.length;
+                var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
+                var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
+
+                if (tok.get('type') === 'graphic') {
+                    tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
+                } else {
+                    tok.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000, title: entry.custom || 'Custom' });
+                }
+
+                if (txt) {
+                    txt.set({
+                        left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
+                        top: yPos,
+                        color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
+                        text: String(entry.pr || ''),
+                    });
+                }
+            });
+        }
+    };
+
+    /**
+     * Remove the initiative HUD (programmatic).
+     */
+    const removeInitiativeHud = () => {
+        var s = state[SCRIPT_NAME];
+        var data = s.hud.initData;
+        if (!data) return;
+
+        var frameId = data.frameId;
+        var highlightId = data.highlightId;
+        var entries = data.entries.slice();
+        // Clear IDs first so destroy handler ignores
+        data.frameId = null;
+        data.highlightId = null;
+        data.entries = [];
+
+        if (frameId) {
+            var frame = getObj('pathv2', frameId);
+            if (frame) frame.remove();
+        }
+        if (highlightId) {
+            var hl = getObj('pathv2', highlightId);
+            if (hl) hl.remove();
+        }
+        entries.forEach(function(entry) {
+            var tok = getObj('graphic', entry.tokenId) || getObj('pin', entry.tokenId);
+            var txt = getObj('text', entry.textId);
+            if (tok) { if (typeof Mirror !== 'undefined' && entry.sourceId && !entry.sourceId.startsWith('custom:')) Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (txt) txt.remove();
+        });
+    };
+
+    /**
+     * Handle change:text — persist HUD element position/size if moved by GM.
+     */
+    const onHudTextChanged = (obj) => {
+        var s = state[SCRIPT_NAME];
+        var id = obj.get('id');
+        if (id === s.hud.viewId) {
+            if (!s.hud.viewData) s.hud.viewData = {};
+            var vPageId = getHudPageId();
+            var vPage = vPageId ? getObj('page', vPageId) : null;
+            var vPageWidth = vPage ? vPage.get('width') * 70 : 1400;
+            s.hud.viewData.leftNorm = obj.get('left') / vPageWidth;
+            s.hud.viewData.top = obj.get('top');
+            s.hud.viewData.fontSize = obj.get('font_size');
+            s.hud.viewData.fontFamily = obj.get('font_family');
+            var vColor = obj.get('color');
+            if (vColor) s.hud.viewData.color = vColor;
+            var vStroke = obj.get('stroke');
+            if (vStroke) s.hud.viewData.stroke = vStroke;
+        }
+        // Initiative HUD text moved or styled — update stored settings
+        if (s.hud.initiative && s.hud.initData && s.hud.initData.entries) {
+            var match = s.hud.initData.entries.find(function(e) { return e.textId === id; });
+            if (match) {
+                var data = s.hud.initData;
+                var frame = getObj('pathv2', data.frameId);
+                if (frame) {
+                    var frameLeft = frame.get('x');
+                    var pts = JSON.parse(frame.get('points') || '[]');
+                    var fw = pts.length >= 2 ? pts[1][0] - pts[0][0] : 70;
+                    var rightEdge = frameLeft + fw / 2;
+                    var newOffset = obj.get('left') - rightEdge;
+                    data.textOffset = newOffset;
+                    // Move all other texts to match offset
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('left', rightEdge + newOffset);
+                    });
+                }
+                // Font size/family changes
+                var newFontSize = obj.get('font_size');
+                var newFontFamily = obj.get('font_family');
+                if (newFontSize && newFontSize !== data.textFontSize) {
+                    data.textFontSize = newFontSize;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('font_size', newFontSize);
+                    });
+                }
+                if (newFontFamily && newFontFamily !== data.textFontFamily) {
+                    data.textFontFamily = newFontFamily;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('font_family', newFontFamily);
+                    });
+                }
+                var newColor = obj.get('color');
+                if (newColor && newColor !== 'transparent' && newColor !== data.textColor) {
+                    data.textColor = newColor;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt && otherTxt.get('color') !== 'transparent') otherTxt.set('color', newColor);
+                    });
+                }
+                var newStroke = obj.get('stroke');
+                if (newStroke && newStroke !== data.textStroke) {
+                    data.textStroke = newStroke;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('stroke', newStroke);
+                    });
+                }
+            }
+        }
+    };
+
+    /**
+     * Handle destroy:text — if a HUD element is deleted, treat as turning it off.
+     */
+    const onHudTextDestroyed = (obj) => {
+        var s = state[SCRIPT_NAME];
+        var id = obj.get('id');
+        if (id === s.hud.viewId) {
+            s.hud.view = false;
+            s.hud.viewId = null;
+            sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>view</b> is now off');
+        }
+        // Initiative HUD text
+        if (s.hud.initData && s.hud.initData.entries) {
+            var data = s.hud.initData;
+            var matchIdx = data.entries.findIndex(function(e) { return e.textId === id; });
+            if (matchIdx !== -1) {
+                var match = data.entries[matchIdx];
+                // Remove associated token/pin
+                var tok = getObj('graphic', match.tokenId) || getObj('pin', match.tokenId);
+                if (tok) tok.remove();
+                // Remove from entries
+                data.entries.splice(matchIdx, 1);
+
+                // Remove from turn order
+                var order = JSON.parse(Campaign().get('turnorder') || '[]');
+                if (match.sourceId && !match.sourceId.startsWith('custom:')) {
+                    var info = getLinkedInfo(match.sourceId);
+                    var groupIds = new Set([match.sourceId].concat(info.linkedIds));
+                    order = order.filter(function(e) { return !groupIds.has(e.id); });
+                } else {
+                    var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
+                    if (customIdx !== -1) order.splice(customIdx, 1);
+                }
+                _suppressTurnSync = true;
+                Campaign().set('turnorder', JSON.stringify(order));
+                _suppressTurnSync = false;
+
+                reflowInitiativeHud('none');
+                sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
+            }
+        }
+    };
+
+    /**
+     * Handle destroy:graphic — if an initiative HUD token is deleted, turn off.
+     */
+    const onHudGraphicDestroyed = (obj) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initData || !s.hud.initData.entries) return;
+        var id = obj.get('id');
+        var data = s.hud.initData;
+        var matchIdx = data.entries.findIndex(function(e) { return e.tokenId === id; });
+        if (matchIdx === -1) return;
+
+        var match = data.entries[matchIdx];
+        // Remove associated text
+        var txt = getObj('text', match.textId);
+        if (txt) txt.remove();
+        // Remove from entries
+        data.entries.splice(matchIdx, 1);
+
+        // Remove from turn order
+        var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        if (match.sourceId && !match.sourceId.startsWith('custom:')) {
+            // Token — remove it and linked children from turn order
+            var info = getLinkedInfo(match.sourceId);
+            var groupIds = new Set([match.sourceId].concat(info.linkedIds));
+            order = order.filter(function(e) { return !groupIds.has(e.id); });
+        } else {
+            // Custom turn — remove first matching custom entry
+            var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
+            if (customIdx !== -1) order.splice(customIdx, 1);
+        }
+        _suppressTurnSync = true;
+        Campaign().set('turnorder', JSON.stringify(order));
+        _suppressTurnSync = false;
+
+        reflowInitiativeHud('none');
+        sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
+    };
+
+    /**
+     * Handle destroy:path — if the initiative frame is deleted, turn off.
+     */
+    const onHudPathDestroyed = (obj) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initData) return;
+        if (obj.get('id') === s.hud.initData.frameId) {
+            s.hud.initiative = false;
+            s.hud.initData.frameId = null;
+            removeInitiativeHud();
+            sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
+        } else if (obj.get('id') === s.hud.initData.highlightId) {
+            // Highlight deleted — just clear ID, will be recreated on next update
+            s.hud.initData.highlightId = null;
+        }
+    };
+
+    /**
+     * Handle !gaslight hud command.
+     */
+    const doHud = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        var hudElements = Object.keys(s.hud).filter(function(k) { return typeof s.hud[k] === 'boolean'; });
+        var toggleWords = new Set(['on', 'off', 'reset']);
+
+        if (args.length === 0) {
+            // Toggle all elements
+            hudElements.forEach(function(el) { s.hud[el] = !s.hud[el]; });
+            hudElements.forEach(function(el) {
+                if (el === 'view') { if (s.hud.view) updateViewHud(); else removeViewHud(); }
+                if (el === 'initiative') { if (s.hud.initiative) updateInitiativeHud(); else removeInitiativeHud(); }
+            });
+            reply(msg, 'HUD', hudElements.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
+            return;
+        }
+
+        // Single arg that's a toggle word — apply to all elements
+        if (args.length === 1 && toggleWords.has(args[0].toLowerCase())) {
+            var toggle = args[0].toLowerCase();
+            hudElements.forEach(function(el) {
+                if (toggle === 'on') s.hud[el] = true;
+                else if (toggle === 'off') s.hud[el] = false;
+            });
+            if (toggle === 'reset') {
+                hudElements.forEach(function(el) { s.hud[el] = true; });
+                s.hud.viewData = {};
+                removeViewHud();
+                updateViewHud();
+                removeInitiativeHud();
+                s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
+                updateInitiativeHud();
+            } else {
+                hudElements.forEach(function(el) {
+                    if (el === 'view') { if (s.hud.view) updateViewHud(); else removeViewHud(); }
+                    if (el === 'initiative') { if (s.hud.initiative) updateInitiativeHud(); else removeInitiativeHud(); }
+                });
+            }
+            reply(msg, 'HUD', hudElements.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
+            return;
+        }
+
+        var element = args[0].toLowerCase();
+        var toggle = args[1] ? args[1].toLowerCase() : null;
+
+        // Aliases
+        var elementAliases = { init: 'initiative', turn: 'initiative', turns: 'initiative', relay: 'view' };
+        if (elementAliases[element]) element = elementAliases[element];
+        if (toggle && elementAliases[toggle]) toggle = elementAliases[toggle];
+
+        // Allow toggle before or after element: "hud reset initiative" or "hud initiative reset"
+        if (toggleWords.has(element) && toggle && s.hud[toggle] !== undefined) {
+            var tmp = element;
+            element = toggle;
+            toggle = tmp;
+        }
+
+        // Aliases (apply again after swap)
+        if (elementAliases[element]) element = elementAliases[element];
+
+        if (s.hud[element] === undefined) {
+            reply(msg, 'Error', 'Unknown HUD element: ' + element + '. Available: ' + Object.keys(s.hud).filter(function(k) { return typeof s.hud[k] === 'boolean'; }).join(', '));
+            return;
+        }
+
+        if (toggle === 'on') {
+            s.hud[element] = true;
+        } else if (toggle === 'off') {
+            s.hud[element] = false;
+        } else if (toggle === 'reset') {
+            // Clear stored position, turn on, move to defaults
+            s.hud[element] = true;
+            if (element === 'view') {
+                s.hud.viewData = {};
+                var existing = findHudElement('view');
+                if (existing) {
+                    var pageId = getHudPageId();
+                    var page = pageId ? getObj('page', pageId) : null;
+                    var pageWidth = page ? page.get('width') * 70 : 1400;
+                    existing.set({
+                        left: Math.round(defaultViewHud.leftNorm * pageWidth),
+                        top: defaultViewHud.top,
+                        font_size: defaultViewHud.fontSize,
+                        font_family: defaultViewHud.fontFamily,
+                        color: defaultViewHud.color,
+                        stroke: defaultViewHud.stroke,
+                    });
+                } else {
+                    updateViewHud();
+                }
+            } else if (element === 'initiative') {
+                removeInitiativeHud();
+                s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
+                updateInitiativeHud();
+            }
+            reply(msg, 'HUD', '<b>' + element + '</b> reset to default position.');
+            return;
+        } else {
+            // Toggle
+            s.hud[element] = !s.hud[element];
+        }
+
+        // Apply
+        if (element === 'view') {
+            if (s.hud.view) updateViewHud();
+            else removeViewHud();
+        } else if (element === 'initiative') {
+            if (s.hud.initiative) updateInitiativeHud();
+            else removeInitiativeHud();
+        }
+
+        reply(msg, 'HUD', '<b>' + element + '</b> is now ' + (s.hud[element] ? 'on' : 'off'));
+    };
+
     const registerEventHandlers = () => {
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
@@ -3248,11 +4207,421 @@ var Gaslight = Gaslight || (() => {
         });
         registerWithRollCapture();
         on('add:graphic', onTokenAdded);
-        on('destroy:graphic', onTokenDestroyed);
         on('change:attribute', onAttributeChanged);
         on('change:graphic', onGraphicPropChanged);
         on('change:graphic:gmnotes', onGmNotesChanged);
         on('change:campaign:turnorder', onTurnOrderChanged);
+        on('change:text', onHudTextChanged);
+        on('destroy:text', onHudTextDestroyed);
+        on('destroy:graphic', function(obj) { onTokenDestroyed(obj); onHudGraphicDestroyed(obj); });
+        on('destroy:pathv2', onHudPathDestroyed);
+        on('change:pathv2', function(obj) {
+            var s = state[SCRIPT_NAME];
+            if (!s.hud.initiative || !s.hud.initData) return;
+            if (obj.get('id') === s.hud.initData.frameId) {
+                var data = s.hud.initData;
+                var points = JSON.parse(obj.get('points') || '[]');
+                var newWidth = points.length >= 2 ? points[1][0] - points[0][0] : 0;
+                var newHeight = points.length >= 2 ? points[1][1] - points[0][1] : 0;
+                var oldWidth = data.frameSize ? data.frameSize.width : newWidth;
+
+                // Width change logic: shrink → reduce padding first, then tokens; grow → grow padding
+                if (newWidth !== oldWidth) {
+                    var delta = newWidth - oldWidth;
+                    var currentHPad = data.hPadding || defaultInitHud.hPadding;
+                    var currentTokenSize = data.tokenSize || defaultInitHud.tokenSize;
+                    var minHPad = 5;
+
+                    if (delta < 0) {
+                        // Frame got narrower — reduce padding first, then shrink tokens
+                        var padReduction = Math.min(Math.abs(delta) / 2, currentHPad - minHPad);
+                        if (padReduction > 0) {
+                            data.hPadding = currentHPad - padReduction;
+                            delta += padReduction * 2; // remaining delta
+                        }
+                        if (delta < 0) {
+                            // Still need to shrink — reduce token size
+                            data.tokenSize = Math.max(10, currentTokenSize + delta);
+                        }
+                    } else {
+                        // Frame got wider — increase h_padding
+                        data.hPadding = currentHPad + delta / 2;
+                    }
+                }
+
+                // Save position and size to state
+                data.pos = { left: obj.get('x'), top: obj.get('y') };
+                data.frameSize = { width: newWidth, height: newHeight };
+                // Track frame styling
+                var stroke = obj.get('stroke');
+                var fill = obj.get('fill');
+                var strokeWidth = obj.get('stroke_width');
+                if (stroke !== undefined) data.frameStroke = stroke;
+                if (fill !== undefined) data.frameFill = fill;
+                if (strokeWidth !== undefined) data.frameStrokeWidth = strokeWidth;
+                reflowInitiativeHud('none');
+            } else if (obj.get('id') === s.hud.initData.highlightId) {
+                var data = s.hud.initData;
+                // Track highlight styling
+                var hlStroke = obj.get('stroke');
+                var hlFill = obj.get('fill');
+                var hlStrokeWidth = obj.get('stroke_width');
+                if (hlStroke !== undefined) data.highlightStroke = hlStroke;
+                if (hlFill !== undefined) data.highlightFill = hlFill;
+                if (hlStrokeWidth !== undefined) data.highlightStrokeWidth = hlStrokeWidth;
+                // Compute normalized Y offset (0=top+tokenSize/2+vPadding, 1=bottom-tokenSize/2-vPadding)
+                var frame = getObj('pathv2', data.frameId);
+                if (frame) {
+                    var fTop = frame.get('y');
+                    var fPts = JSON.parse(frame.get('points') || '[]');
+                    var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
+                    var tknSz = data.tokenSize || defaultInitHud.tokenSize;
+                    var vPad = data.vPadding || defaultInitHud.vPadding;
+                    var usableTop = fTop - fHeight / 2 + tknSz / 2 + vPad;
+                    var usableBot = fTop + fHeight / 2 - tknSz / 2 - vPad;
+                    var hlY = obj.get('y');
+                    var norm = (hlY - usableTop) / (usableBot - usableTop);
+                    data.currentTurnOffset = Math.max(0, Math.min(1, norm));
+                }
+                reflowInitiativeHud('none');
+            }
+        });
+        on('change:graphic', function(obj, prev) {
+            var s = state[SCRIPT_NAME];
+            if (!s.hud.initiative || !s.hud.initData) return;
+            var data = s.hud.initData;
+            // Check if this is a HUD token that was resized
+            var match = data.entries.find(function(e) { return e.tokenId === obj.get('id'); });
+            if (!match || match.sourceId.startsWith('custom:')) return;
+            var newSize = obj.get('width');
+            var oldSize = prev.width;
+            if (newSize !== oldSize && newSize > 0) {
+                // Token resized — update token size, resize frame to fit
+                data.tokenSize = newSize;
+                var hPad = data.hPadding || defaultInitHud.hPadding;
+                var newFrameWidth = newSize + 2 * hPad;
+                // Update frame
+                var frame = getObj('pathv2', data.frameId);
+                if (frame) {
+                    var points = JSON.parse(frame.get('points') || '[]');
+                    var frameHeight = points.length >= 2 ? points[1][1] - points[0][1] : 510;
+                    frame.set('points', JSON.stringify([[0, 0], [newFrameWidth, frameHeight]]));
+                    data.frameSize = { width: newFrameWidth, height: frameHeight };
+                }
+                reflowInitiativeHud('none');
+            } else {
+                // Token dragged vertically — reorder initiative
+                var newTop = obj.get('top');
+                var oldTop = prev.top;
+                var newLeft = obj.get('left');
+                var oldLeft = prev.left;
+                var frame = getObj('pathv2', data.frameId);
+                var frameLeft = frame ? frame.get('x') : 0;
+                var pts = frame ? JSON.parse(frame.get('points') || '[]') : [];
+                var fw = pts.length >= 2 ? pts[1][0] - pts[0][0] : 70;
+                var frameRightEdge = frameLeft + fw / 2;
+                var frameLeftEdge = frameLeft - fw / 2;
+                var horizontalEscape = newLeft > frameRightEdge || newLeft < frameLeftEdge;
+
+                if (newTop !== oldTop && !horizontalEscape) {
+                    var order = JSON.parse(Campaign().get('turnorder') || '[]');
+                    var sourceId = match.sourceId;
+                    var hudOrder = getHudTurnOrder();
+                    var currentIdx = hudOrder.findIndex(function(e) { return e.id === sourceId; });
+                    if (currentIdx === -1) { reflowInitiativeHud('none'); return; }
+
+                    // Determine target slot based on new Y position
+                    var frame = getObj('pathv2', data.frameId);
+                    if (!frame) return;
+                    var frameTop = frame.get('y');
+                    var pts = JSON.parse(frame.get('points') || '[]');
+                    var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
+                    var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
+                    var tknSize = data.tokenSize || defaultInitHud.tokenSize;
+                    var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
+                    var targetIdx = Math.round((newTop - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+                    targetIdx = Math.max(0, Math.min(hudOrder.length - 1, targetIdx));
+
+                    if (targetIdx !== currentIdx) {
+                        var sourceEntry = order.find(function(e) { return e.id === sourceId; });
+                        if (!sourceEntry) { reflowInitiativeHud('none'); return; }
+
+                        var targetHudEntry = hudOrder[targetIdx];
+                        var targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
+                        if (targetFullIdx === -1) { reflowInitiativeHud('none'); return; }
+
+                        // Remove source (and its linked children) from order
+                        var info = getLinkedInfo(sourceId);
+                        var groupIds = new Set([sourceId].concat(info.linkedIds));
+                        var removed = [];
+                        order = order.filter(function(e) {
+                            if (groupIds.has(e.id)) { removed.push(e); return false; }
+                            return true;
+                        });
+
+                        // Recalculate target index after removal
+                        targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
+                        if (targetFullIdx === -1) targetFullIdx = order.length;
+
+                        // Insert: if moving down, insert after target group; if up, insert before
+                        if (targetIdx > currentIdx) {
+                            var tInfo = getLinkedInfo(targetHudEntry.id);
+                            var tGroupSize = 1 + tInfo.linkedIds.filter(function(lid) {
+                                return order.some(function(e) { return e.id === lid; });
+                            }).length;
+                            var insertIdx = targetFullIdx + tGroupSize;
+                            removed.forEach(function(e, i) { order.splice(insertIdx + i, 0, e); });
+                        } else {
+                            removed.forEach(function(e, i) { order.splice(targetFullIdx + i, 0, e); });
+                        }
+
+                        _suppressTurnSync = true;
+                        Campaign().set('turnorder', JSON.stringify(order));
+                        _suppressTurnSync = false;
+                    }
+                    reflowInitiativeHud('none');
+                }
+
+                // Token dragged horizontally — make it this token's turn
+                var verticalDrift = Math.abs(newTop - oldTop);
+                var tknSizeH = data.tokenSize || defaultInitHud.tokenSize;
+                if (newLeft !== oldLeft && verticalDrift < tknSizeH / 2 && horizontalEscape) {
+                    var order = JSON.parse(Campaign().get('turnorder') || '[]');
+                    var sourceId = match.sourceId;
+                    var swipeDirection = newLeft > frameRightEdge ? 'forward' : 'backward';
+                    var isCurrentTurn = order.length > 0 && order[0].id === sourceId;
+
+                    if (isCurrentTurn) {
+                        // Current turn swiped — advance/retreat to next/prev master or custom
+                        if (swipeDirection === 'forward') {
+                            order.push(order.shift());
+                            // Skip past linked children
+                            var skip = order.length;
+                            while (skip-- > 0 && order[0] && order[0].id && order[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(order[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                order.push(order.shift());
+                            }
+                        } else {
+                            order.unshift(order.pop());
+                            // Skip backward past linked children
+                            var skip = order.length;
+                            while (skip-- > 0 && order[0] && order[0].id && order[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(order[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                order.unshift(order.pop());
+                            }
+                        }
+                        // Apply formula if new top is a custom
+                        if (order[0] && order[0].id === '-1' && order[0].formula) {
+                            var f = order[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDirection === 'backward') add = !add;
+                            order[0].pr = (parseFloat(order[0].pr) || 0) + (add ? v : -v);
+                        }
+                    } else {
+                        // Non-current turn — rotate until target is at position 0
+                        var safety = order.length;
+                        while (safety-- > 0 && order.length > 0 && order[0].id !== sourceId) {
+                            if (swipeDirection === 'forward') {
+                                order.push(order.shift());
+                            } else {
+                                order.unshift(order.pop());
+                            }
+                        }
+                        // Apply formula if the new top is a custom turn
+                        if (order[0] && order[0].id === '-1' && order[0].formula) {
+                            var f = order[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDirection === 'backward') add = !add;
+                            order[0].pr = (parseFloat(order[0].pr) || 0) + (add ? v : -v);
+                        }
+                    }
+                    _suppressTurnSync = true;
+                    Campaign().set('turnorder', JSON.stringify(order));
+                    _suppressTurnSync = false;
+                    reflowInitiativeHud('none');
+                } else if (!horizontalEscape) {
+                    reflowInitiativeHud('none');
+                }
+            }
+        });
+        on('destroy:pin', onHudGraphicDestroyed);
+        on('change:pin', function(obj, prev) {
+            var s = state[SCRIPT_NAME];
+            if (!s.hud.initiative || !s.hud.initData) return;
+            var data = s.hud.initData;
+            var match = data.entries.find(function(e) { return e.tokenId === obj.get('id'); });
+            if (!match) return;
+
+            var newY = obj.get('y');
+            var oldY = prev.y;
+
+            // Check if pin escaped horizontally (swipe, not reorder)
+            var newX = obj.get('x');
+            var frame = getObj('pathv2', data.frameId);
+            var horizontalEscapePin = false;
+            if (frame) {
+                var frameLeftPin = frame.get('x');
+                var ptsPin = JSON.parse(frame.get('points') || '[]');
+                var fwPin = ptsPin.length >= 2 ? ptsPin[1][0] - ptsPin[0][0] : 70;
+                horizontalEscapePin = newX > frameLeftPin + fwPin / 2 || newX < frameLeftPin - fwPin / 2;
+            }
+
+            // Pin dragged vertically — reorder custom turn in initiative
+            if (!horizontalEscapePin && newY !== oldY) {
+            var order = JSON.parse(Campaign().get('turnorder') || '[]');
+            var hudOrder = getHudTurnOrder();
+
+            // Find current index of this custom in the deduped order by matching text position
+            var txt = getObj('text', match.textId);
+            var currentIdx = -1;
+            if (txt) {
+                var frame = getObj('pathv2', data.frameId);
+                if (!frame) return;
+                var frameTop = frame.get('y');
+                var pts = JSON.parse(frame.get('points') || '[]');
+                var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
+                var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
+                var tknSize = data.tokenSize || defaultInitHud.tokenSize;
+                var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
+                currentIdx = Math.round((txt.get('top') - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+            }
+            if (currentIdx < 0 || currentIdx >= hudOrder.length) { reflowInitiativeHud('none'); return; }
+
+            // Determine target slot based on new pin Y (subtract pin offset)
+            var frame = getObj('pathv2', data.frameId);
+            if (!frame) return;
+            var frameTop = frame.get('y');
+            var pts = JSON.parse(frame.get('points') || '[]');
+            var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
+            var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
+            var tknSize = data.tokenSize || defaultInitHud.tokenSize;
+            var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
+            var slotY = newY - tknSize / 2; // undo pin offset
+            var targetIdx = Math.round((slotY - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+            targetIdx = Math.max(0, Math.min(hudOrder.length - 1, targetIdx));
+
+            if (targetIdx !== currentIdx) {
+                // Find the custom entry in the full order
+                var customEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+                var customIdx = 0;
+                var sourceFullIdx = -1;
+                for (var fi = 0; fi < order.length; fi++) {
+                    if (!order[fi].id || order[fi].id === '-1') {
+                        if (customIdx === (currentIdx - hudOrder.slice(0, currentIdx).filter(function(e) { return e.id && e.id !== '-1'; }).length)) {
+                            sourceFullIdx = fi;
+                            break;
+                        }
+                        customIdx++;
+                    }
+                }
+                if (sourceFullIdx === -1) { reflowInitiativeHud('none'); return; }
+
+                // Remove source from order
+                var removed = order.splice(sourceFullIdx, 1);
+
+                // Find target position in full order
+                var targetHudEntry = hudOrder[targetIdx];
+                var targetFullIdx;
+                if (!targetHudEntry.id || targetHudEntry.id === '-1') {
+                    // Targeting another custom — find it in the full order
+                    targetFullIdx = targetIdx > currentIdx ? sourceFullIdx : sourceFullIdx;
+                } else {
+                    targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
+                }
+                if (targetFullIdx === -1) targetFullIdx = order.length;
+
+                // Insert
+                if (targetIdx > currentIdx) {
+                    var tInfo = getLinkedInfo(targetHudEntry.id || '');
+                    var tGroupSize = (targetHudEntry.id && targetHudEntry.id !== '-1') ? 1 + tInfo.linkedIds.filter(function(lid) {
+                        return order.some(function(e) { return e.id === lid; });
+                    }).length : 1;
+                    order.splice(targetFullIdx + tGroupSize, 0, removed[0]);
+                } else {
+                    order.splice(targetFullIdx, 0, removed[0]);
+                }
+
+                _suppressTurnSync = true;
+                Campaign().set('turnorder', JSON.stringify(order));
+                _suppressTurnSync = false;
+            }
+            }
+
+            // Pin dragged horizontally — make it this turn's turn
+            var oldX = prev.x;
+            var verticalDrift = Math.abs(newY - oldY);
+            var tknSizeP = data.tokenSize || defaultInitHud.tokenSize;
+            if (newX !== oldX && verticalDrift < tknSizeP / 2 && horizontalEscapePin) {
+                var frameLeftH = frame.get('x');
+                var ptsH = JSON.parse(frame.get('points') || '[]');
+                var fwH = ptsH.length >= 2 ? ptsH[1][0] - ptsH[0][0] : 70;
+                var frameRightEdge = frameLeftH + fwH / 2;
+                var swipeDir = newX > frameRightEdge ? 'forward' : 'backward';
+                var fullOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+
+                var customsInOrder = [];
+                fullOrder.forEach(function(e, i) { if (!e.id || e.id === '-1') customsInOrder.push(i); });
+                var customRank = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).findIndex(function(e) { return e.tokenId === obj.get('id'); });
+                if (customRank !== -1 && customsInOrder[customRank] !== undefined) {
+                    var targetFullIdx = customsInOrder[customRank];
+                    if (targetFullIdx === 0) {
+                        // This pin is the current turn — advance/retreat to next/prev master or custom
+                        if (swipeDir === 'forward') {
+                            fullOrder.push(fullOrder.shift());
+                            var skip = fullOrder.length;
+                            while (skip-- > 0 && fullOrder[0] && fullOrder[0].id && fullOrder[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(fullOrder[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                fullOrder.push(fullOrder.shift());
+                            }
+                        } else {
+                            fullOrder.unshift(fullOrder.pop());
+                            var skip = fullOrder.length;
+                            while (skip-- > 0 && fullOrder[0] && fullOrder[0].id && fullOrder[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(fullOrder[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                fullOrder.unshift(fullOrder.pop());
+                            }
+                        }
+                        // Apply formula if new top is a custom
+                        if (fullOrder[0] && fullOrder[0].id === '-1' && fullOrder[0].formula) {
+                            var f = fullOrder[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDir === 'backward') add = !add;
+                            fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                        }
+                    } else {
+                        // Non-current pin — rotate to it
+                        var rotCount = swipeDir === 'forward' ? targetFullIdx : fullOrder.length - targetFullIdx;
+                        for (var ri = 0; ri < rotCount; ri++) {
+                            if (swipeDir === 'forward') {
+                                fullOrder.push(fullOrder.shift());
+                            } else {
+                                fullOrder.unshift(fullOrder.pop());
+                            }
+                        }
+                        // Apply formula if the new top is a custom turn
+                        if (fullOrder[0] && fullOrder[0].id === '-1' && fullOrder[0].formula) {
+                            var f = fullOrder[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDir === 'backward') add = !add;
+                            fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                        }
+                    }
+                }
+                _suppressTurnSync = true;
+                Campaign().set('turnorder', JSON.stringify(fullOrder));
+                _suppressTurnSync = false;
+            }
+
+            reflowInitiativeHud('none');
+        });
     };
 
     return { checkInstall, registerEventHandlers };
