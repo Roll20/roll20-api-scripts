@@ -3213,7 +3213,14 @@ var Gaslight = Gaslight || (() => {
         }
 
         // Update initiative HUD if enabled
-        if (state[SCRIPT_NAME].hud.initiative) updateInitiativeHud();
+        if (state[SCRIPT_NAME].hud.initiative) {
+            var hudDirection = 'none';
+            if (oldOrder.length > 0 && newOrder.length > 0) {
+                if (newOrder[newOrder.length - 1].id === oldOrder[0].id) hudDirection = 'forward';
+                else if (newOrder[0].id === oldOrder[oldOrder.length - 1].id) hudDirection = 'backward';
+            }
+            updateInitiativeHud(hudDirection);
+        }
     };
 
     /**
@@ -3357,7 +3364,7 @@ var Gaslight = Gaslight || (() => {
     // ---- Initiative HUD ----
 
     const INIT_HUD_TOKEN_SIZE = 50;
-    const INIT_HUD_PADDING = 10;
+    const INIT_HUD_PADDING = 30;
 
     /**
      * Get the deduped turn order (master tokens only, skip children).
@@ -3401,7 +3408,7 @@ var Gaslight = Gaslight || (() => {
     /**
      * Build/rebuild the initiative HUD.
      */
-    const updateInitiativeHud = () => {
+    const updateInitiativeHud = (direction) => {
         var s = state[SCRIPT_NAME];
         if (!s.hud.initiative) return;
 
@@ -3439,72 +3446,117 @@ var Gaslight = Gaslight || (() => {
         var frameTopEdge = frameTop - frameHeight / 2;
 
         // Remove old entries no longer in the order
-        var orderIds = order.map(function(e) { return e.id; });
+        // For tokens: match by ID. For customs: if order has fewer customs than we have, remove extras.
+        var orderTokenIds = order.filter(function(e) { return e.id && e.id !== '-1'; }).map(function(e) { return e.id; });
+        var orderCustomCount = order.filter(function(e) { return !e.id || e.id === '-1'; }).length;
+        var currentCustomCount = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).length;
+
         var toRemove = [];
+        var customsToRemove = currentCustomCount - orderCustomCount;
         data.entries.forEach(function(entry, i) {
-            if (orderIds.indexOf(entry.sourceId) === -1) toRemove.push(i);
+            if (entry.sourceId && entry.sourceId.startsWith('custom:')) {
+                if (customsToRemove > 0) { toRemove.push(i); customsToRemove--; }
+            } else if (orderTokenIds.indexOf(entry.sourceId) === -1) {
+                toRemove.push(i);
+            }
         });
         toRemove.reverse().forEach(function(i) {
             var entry = data.entries[i];
-            var tok = getObj('graphic', entry.tokenId);
+            var tok = getObj('graphic', entry.tokenId) || getObj('pin', entry.tokenId);
             var txt = getObj('text', entry.textId);
-            if (tok) { if (typeof Mirror !== 'undefined') Mirror.unlink([tok.get('id')]); tok.remove(); }
-            if (txt) txt.remove();
+            // Splice first so destroy handler ignores
             data.entries.splice(i, 1);
+            if (tok) { if (typeof Mirror !== 'undefined' && entry.sourceId && !entry.sourceId.startsWith('custom:')) Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (txt) txt.remove();
         });
 
         // Add new entries not yet in the HUD
-        var existingSourceIds = data.entries.map(function(e) { return e.sourceId; });
+        var existingTokenIds = data.entries.filter(function(e) { return !e.sourceId.startsWith('custom:'); }).map(function(e) { return e.sourceId; });
+        var customsToAdd = orderCustomCount - data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).length;
+
         order.forEach(function(entry) {
-            if (!entry.id || entry.id === '-1') return;
-            if (existingSourceIds.indexOf(entry.id) !== -1) return;
+            var isCustom = !entry.id || entry.id === '-1';
 
-            var sourceToken = getObj('graphic', entry.id);
-            if (!sourceToken) return;
+            if (isCustom) {
+                if (customsToAdd <= 0) return;
+                customsToAdd--;
 
-            var hudToken = createObj('graphic', {
-                _pageid: pageId,
-                layer: 'foreground',
-                imgsrc: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
-                left: frameLeft,
-                top: frameTopEdge + INIT_HUD_PADDING + INIT_HUD_TOKEN_SIZE / 2,
-                width: INIT_HUD_TOKEN_SIZE,
-                height: INIT_HUD_TOKEN_SIZE,
-                showname: true,
-                name: sourceToken.get('name'),
-                baseOpacity: 1,
-            });
+                var hudPin = createObj('pin', {
+                    _pageid: pageId,
+                    x: frameLeft,
+                    y: -5000,
+                    title: entry.custom || 'Custom',
+                    shape: 'square',
+                    bgColor: 'transparent',
+                    useTextIcon: true,
+                    textIcon: '',
+                });
 
-            var hudText = createObj('text', {
-                _pageid: pageId,
-                layer: 'foreground',
-                text: String(entry.pr || ''),
-                left: frameLeft + frameWidth / 2 + 15,
-                top: frameTopEdge + INIT_HUD_PADDING + INIT_HUD_TOKEN_SIZE / 2,
-                font_size: 16,
-                color: '#ffffff',
-                font_family: 'Contrail One',
-            });
+                var pinText = createObj('text', {
+                    _pageid: pageId,
+                    layer: 'foreground',
+                    text: String(entry.pr || ''),
+                    left: -5000,
+                    top: -5000,
+                    font_size: 16,
+                    color: '#ffffff',
+                    font_family: 'Contrail One',
+                });
 
-            // Mirror-link: sync name, status, tint
-            if (typeof Mirror !== 'undefined') {
-                Mirror.link([sourceToken.get('id'), hudToken.get('id')], ['name', 'statusmarkers', 'tint_color'], { soft: true });
+                data.entries.push({
+                    sourceId: 'custom:' + Date.now() + ':' + Math.random().toString(36).slice(2, 6),
+                    tokenId: hudPin ? hudPin.get('id') : null,
+                    textId: pinText.get('id'),
+                });
+            } else {
+                if (existingTokenIds.indexOf(entry.id) !== -1) return;
+
+                var sourceToken = getObj('graphic', entry.id);
+                if (!sourceToken) return;
+
+                var hudToken = createObj('graphic', {
+                    _pageid: pageId,
+                    layer: 'foreground',
+                    imgsrc: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
+                    left: frameLeft,
+                    top: frameTopEdge + INIT_HUD_PADDING + INIT_HUD_TOKEN_SIZE / 2,
+                    width: INIT_HUD_TOKEN_SIZE,
+                    height: INIT_HUD_TOKEN_SIZE,
+                    showname: true,
+                    name: sourceToken.get('name'),
+                    baseOpacity: 1,
+                });
+
+                var hudText = createObj('text', {
+                    _pageid: pageId,
+                    layer: 'foreground',
+                    text: String(entry.pr || ''),
+                    left: frameLeft + frameWidth / 2 + 15,
+                    top: frameTopEdge + INIT_HUD_PADDING + INIT_HUD_TOKEN_SIZE / 2,
+                    font_size: 16,
+                    color: '#ffffff',
+                    font_family: 'Contrail One',
+                });
+
+                if (typeof Mirror !== 'undefined') {
+                    Mirror.link([sourceToken.get('id'), hudToken.get('id')], ['name', 'statusmarkers', 'tint_color'], { soft: true });
+                }
+
+                data.entries.push({
+                    sourceId: entry.id,
+                    tokenId: hudToken.get('id'),
+                    textId: hudText.get('id'),
+                });
             }
-
-            data.entries.push({
-                sourceId: entry.id,
-                tokenId: hudToken.get('id'),
-                textId: hudText.get('id'),
-            });
         });
 
-        reflowInitiativeHud();
+        reflowInitiativeHud(direction);
     };
 
     /**
      * Reflow initiative HUD: current turn at top, overflow hidden.
      */
-    const reflowInitiativeHud = () => {
+    const reflowInitiativeHud = (direction) => {
         var s = state[SCRIPT_NAME];
         if (!s.hud.initiative || !s.hud.initData) return;
         var data = s.hud.initData;
@@ -3520,31 +3572,74 @@ var Gaslight = Gaslight || (() => {
         var frameBotEdge = frameTop + frameHeight / 2;
         var frameWidth = INIT_HUD_TOKEN_SIZE + 2 * INIT_HUD_PADDING;
 
+        // Match order entries to HUD entries: tokens by ID, customs sorted by current position
+        var tokenMap = {};
+        data.entries.forEach(function(e) {
+            if (e.sourceId && !e.sourceId.startsWith('custom:')) tokenMap[e.sourceId] = e;
+        });
+        var customEntries = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
+
+        // Sort customs by current Y position so they slide in the right direction
+        // Separate visible from hidden (off-screen at -5000)
+        var visibleCustoms = customEntries.filter(function(e) {
+            var obj = getObj('pin', e.tokenId);
+            return obj && obj.get('y') > -1000;
+        });
+        var hiddenCustoms = customEntries.filter(function(e) {
+            var obj = getObj('pin', e.tokenId);
+            return !obj || obj.get('y') <= -1000;
+        });
+        // Match visible customs to order slots by their current pr value
+        var sortedCustoms = [];
+        var usedVisible = new Set();
+        var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+        customOrderEntries.forEach(function(orderEntry) {
+            var prVal = String(orderEntry.pr || '');
+            var match = visibleCustoms.findIndex(function(e, i) {
+                if (usedVisible.has(i)) return false;
+                var txt = getObj('text', e.textId);
+                return txt && txt.get('text') === prVal;
+            });
+            if (match !== -1) {
+                sortedCustoms.push(visibleCustoms[match]);
+                usedVisible.add(match);
+            } else if (hiddenCustoms.length > 0) {
+                sortedCustoms.push(hiddenCustoms.shift());
+            }
+        });
+        // Any remaining unmatched visible customs
+        visibleCustoms.forEach(function(e, i) {
+            if (!usedVisible.has(i)) sortedCustoms.push(e);
+        });
+        sortedCustoms = sortedCustoms.concat(hiddenCustoms);
+        var customIdx = 0;
+
         order.forEach(function(entry, i) {
-            if (!entry.id || entry.id === '-1') return;
-            var hudEntry = data.entries.find(function(e) { return e.sourceId === entry.id; });
+            var isCustom = !entry.id || entry.id === '-1';
+            var hudEntry = isCustom ? sortedCustoms[customIdx++] : tokenMap[entry.id];
             if (!hudEntry) return;
 
-            var tok = getObj('graphic', hudEntry.tokenId);
+            var tok = getObj('graphic', hudEntry.tokenId) || getObj('pin', hudEntry.tokenId);
             var txt = getObj('text', hudEntry.textId);
             if (!tok) return;
 
             var yPos = frameTopEdge + INIT_HUD_PADDING + (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING) * i + INIT_HUD_TOKEN_SIZE / 2;
-
             var visible = (yPos - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge - 5) &&
                           (yPos + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge + 5);
 
-            tok.set({
-                left: frameLeft,
-                top: yPos,
-                baseOpacity: visible ? 1 : 0,
-                showname: visible,
-            });
+            if (tok.get('type') === 'graphic') {
+                tok.set({ left: frameLeft, top: yPos, baseOpacity: visible ? 1 : 0, showname: visible });
+            } else {
+                // Pin: move off-screen if not visible, update title
+                tok.set({ x: visible ? frameLeft : -5000, y: visible ? yPos : -5000, title: entry.custom || 'Custom' });
+            }
+
             if (txt) {
                 txt.set({
                     left: frameLeft + frameWidth / 2 + 15,
                     top: yPos,
                     color: visible ? '#ffffff' : 'transparent',
+                    text: String(entry.pr || ''),
                 });
             }
         });
@@ -3569,9 +3664,9 @@ var Gaslight = Gaslight || (() => {
             if (frame) frame.remove();
         }
         entries.forEach(function(entry) {
-            var tok = getObj('graphic', entry.tokenId);
+            var tok = getObj('graphic', entry.tokenId) || getObj('pin', entry.tokenId);
             var txt = getObj('text', entry.textId);
-            if (tok) { if (typeof Mirror !== 'undefined') Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (tok) { if (typeof Mirror !== 'undefined' && entry.sourceId && !entry.sourceId.startsWith('custom:')) Mirror.unlink([tok.get('id')]); tok.remove(); }
             if (txt) txt.remove();
         });
     };
@@ -3725,6 +3820,7 @@ var Gaslight = Gaslight || (() => {
         on('destroy:text', onHudTextDestroyed);
         on('destroy:graphic', function(obj) { onTokenDestroyed(obj); onHudGraphicDestroyed(obj); });
         on('destroy:path', onHudPathDestroyed);
+        on('destroy:pin', onHudGraphicDestroyed);
     };
 
     return { checkInstall, registerEventHandlers };
