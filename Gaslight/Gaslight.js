@@ -4196,6 +4196,97 @@ var Gaslight = Gaslight || (() => {
             }
         });
         on('destroy:pin', onHudGraphicDestroyed);
+        on('change:pin', function(obj, prev) {
+            var s = state[SCRIPT_NAME];
+            if (!s.hud.initiative || !s.hud.initData) return;
+            var data = s.hud.initData;
+            var match = data.entries.find(function(e) { return e.tokenId === obj.get('id'); });
+            if (!match) return;
+
+            var newY = obj.get('y');
+            var oldY = prev.y;
+            if (newY === oldY) return;
+
+            // Pin dragged vertically — reorder custom turn in initiative
+            var order = JSON.parse(Campaign().get('turnorder') || '[]');
+            var hudOrder = getHudTurnOrder();
+
+            // Find current index of this custom in the deduped order by matching text position
+            var txt = getObj('text', match.textId);
+            var currentIdx = -1;
+            if (txt) {
+                var frame = getObj('pathv2', data.frameId);
+                if (!frame) return;
+                var frameTop = frame.get('y');
+                var pts = JSON.parse(frame.get('points') || '[]');
+                var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
+                var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
+                var tknSize = data.tokenSize || defaultInitHud.tokenSize;
+                var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
+                currentIdx = Math.round((txt.get('top') - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+            }
+            if (currentIdx < 0 || currentIdx >= hudOrder.length) { reflowInitiativeHud('none'); return; }
+
+            // Determine target slot based on new pin Y (subtract pin offset)
+            var frame = getObj('pathv2', data.frameId);
+            if (!frame) return;
+            var frameTop = frame.get('y');
+            var pts = JSON.parse(frame.get('points') || '[]');
+            var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
+            var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
+            var tknSize = data.tokenSize || defaultInitHud.tokenSize;
+            var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
+            var slotY = newY - tknSize / 2; // undo pin offset
+            var targetIdx = Math.round((slotY - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+            targetIdx = Math.max(0, Math.min(hudOrder.length - 1, targetIdx));
+
+            if (targetIdx !== currentIdx) {
+                // Find the custom entry in the full order
+                var customEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+                var customIdx = 0;
+                var sourceFullIdx = -1;
+                for (var fi = 0; fi < order.length; fi++) {
+                    if (!order[fi].id || order[fi].id === '-1') {
+                        if (customIdx === (currentIdx - hudOrder.slice(0, currentIdx).filter(function(e) { return e.id && e.id !== '-1'; }).length)) {
+                            sourceFullIdx = fi;
+                            break;
+                        }
+                        customIdx++;
+                    }
+                }
+                if (sourceFullIdx === -1) { reflowInitiativeHud('none'); return; }
+
+                // Remove source from order
+                var removed = order.splice(sourceFullIdx, 1);
+
+                // Find target position in full order
+                var targetHudEntry = hudOrder[targetIdx];
+                var targetFullIdx;
+                if (!targetHudEntry.id || targetHudEntry.id === '-1') {
+                    // Targeting another custom — find it in the full order
+                    targetFullIdx = targetIdx > currentIdx ? sourceFullIdx : sourceFullIdx;
+                } else {
+                    targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
+                }
+                if (targetFullIdx === -1) targetFullIdx = order.length;
+
+                // Insert
+                if (targetIdx > currentIdx) {
+                    var tInfo = getLinkedInfo(targetHudEntry.id || '');
+                    var tGroupSize = (targetHudEntry.id && targetHudEntry.id !== '-1') ? 1 + tInfo.linkedIds.filter(function(lid) {
+                        return order.some(function(e) { return e.id === lid; });
+                    }).length : 1;
+                    order.splice(targetFullIdx + tGroupSize, 0, removed[0]);
+                } else {
+                    order.splice(targetFullIdx, 0, removed[0]);
+                }
+
+                _suppressTurnSync = true;
+                Campaign().set('turnorder', JSON.stringify(order));
+                _suppressTurnSync = false;
+            }
+            reflowInitiativeHud('none');
+        });
     };
 
     return { checkInstall, registerEventHandlers };
