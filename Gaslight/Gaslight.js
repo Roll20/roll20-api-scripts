@@ -3088,6 +3088,31 @@ var Gaslight = Gaslight || (() => {
         var newOrder = JSON.parse(obj.get('turnorder') || '[]');
         var oldOrder = JSON.parse(prev.turnorder || '[]');
 
+        // Detect direction early (before skip/reorder modifies newOrder)
+        var hudDirection = 'none';
+        if (oldOrder.length === newOrder.length && newOrder.length > 0) {
+            var targetEntry = newOrder.find(function(e) { return e.id && e.id !== '-1'; });
+            if (targetEntry) {
+                var newIdx = newOrder.indexOf(targetEntry);
+                var oldIdx = -1;
+                for (var oi = 0; oi < oldOrder.length; oi++) {
+                    if (oldOrder[oi].id === targetEntry.id) { oldIdx = oi; break; }
+                }
+                if (oldIdx !== -1 && oldIdx !== newIdx) {
+                    var rotAmount = oldIdx - newIdx;
+                    var len = newOrder.length;
+                    // Normalize rotation
+                    rotAmount = ((rotAmount % len) + len) % len;
+                    var rotated = newOrder.slice(len - rotAmount).concat(newOrder.slice(0, len - rotAmount));
+                    var oldIdStr = oldOrder.map(function(e) { return e.id; }).join(',');
+                    var rotIdStr = rotated.map(function(e) { return e.id; }).join(',');
+                    if (rotIdStr === oldIdStr) {
+                        hudDirection = rotAmount <= len / 2 ? 'forward' : 'backward';
+                    }
+                }
+            }
+        }
+
         // Detect additions: entries in newOrder not in oldOrder
         var oldIds = new Set(oldOrder.map(function(e) { return e.id; }));
         var newIds = new Set(newOrder.map(function(e) { return e.id; }));
@@ -3214,11 +3239,6 @@ var Gaslight = Gaslight || (() => {
 
         // Update initiative HUD if enabled
         if (state[SCRIPT_NAME].hud.initiative) {
-            var hudDirection = 'none';
-            if (oldOrder.length > 0 && newOrder.length > 0) {
-                if (newOrder[newOrder.length - 1].id === oldOrder[0].id) hudDirection = 'forward';
-                else if (newOrder[0].id === oldOrder[oldOrder.length - 1].id) hudDirection = 'backward';
-            }
             updateInitiativeHud(hudDirection);
         }
     };
@@ -3586,26 +3606,43 @@ var Gaslight = Gaslight || (() => {
         var customEntries = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
 
         if (direction === 'forward' || direction === 'backward') {
-            // Simple shift: move all custom pins/text by one slot
+            // Simple shift: move all custom pins/text by one slot, wrap at edges
             var shift = direction === 'forward'
                 ? -(INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING)
                 : (INIT_HUD_TOKEN_SIZE + INIT_HUD_PADDING);
+
+            // Gather all HUD text Y positions (tokens + customs)
+            var allTextYs = data.entries.map(function(e) {
+                var t = getObj('text', e.textId);
+                return t ? t.get('top') : null;
+            }).filter(function(y) { return y !== null; });
+            var minTextY = Math.min.apply(null, allTextYs);
+            var maxTextY = Math.max.apply(null, allTextYs);
+
             customEntries.forEach(function(e) {
                 var pin = getObj('pin', e.tokenId);
                 var txt = getObj('text', e.textId);
+                if (!txt) return;
+                var currentY = txt.get('top');
+                var newSlotY;
+
+                if (direction === 'forward' && currentY === minTextY) {
+                    // Wrapping: place at where the current max will be after shift
+                    newSlotY = maxTextY;
+                } else if (direction === 'backward' && currentY === maxTextY) {
+                    // Wrapping: place at where the current min will be after shift
+                    newSlotY = minTextY;
+                } else {
+                    newSlotY = currentY + shift;
+                }
+
+                var visible = (newSlotY - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge) &&
+                              (newSlotY + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge);
+                var newPinY = newSlotY + INIT_HUD_TOKEN_SIZE / 2;
                 if (pin) {
-                    var newPinY = pin.get('y') + shift;
-                    var slotY = newPinY - INIT_HUD_TOKEN_SIZE / 2; // slot center (for visibility check)
-                    var visible = (slotY - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge) &&
-                                  (slotY + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge);
                     pin.set({ x: visible ? frameLeft : -5000, y: visible ? newPinY : -5000 });
                 }
-                if (txt) {
-                    var newTop = txt.get('top') + shift;
-                    var visible = (newTop - INIT_HUD_TOKEN_SIZE / 2 >= frameTopEdge) &&
-                                  (newTop + INIT_HUD_TOKEN_SIZE / 2 <= frameBotEdge);
-                    txt.set({ top: newTop, color: visible ? '#ffffff' : 'transparent' });
-                }
+                txt.set({ top: newSlotY, color: visible ? '#ffffff' : 'transparent' });
             });
 
             // Reflow only token entries by ID
