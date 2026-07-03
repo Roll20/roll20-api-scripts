@@ -81,11 +81,11 @@ var Gaslight = Gaslight || (() => {
                 activeGroups: {},
                 config: { autoCommit: false, relayCommands: [] },
                 view: 'master',
-                hud: { view: false, initiative: false }
+                hud: { view: true, initiative: true }
             };
         }
         if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
-        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: false, initiative: false };
+        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: true, initiative: true };
         if (state[SCRIPT_NAME].hud.initiative === undefined) state[SCRIPT_NAME].hud.initiative = false;
         // Migration: v2.0.0 -> v2.1.0 — view null used to mean "relay to all", now null means "off"
         if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
