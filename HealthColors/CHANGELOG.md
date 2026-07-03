@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.2.1] – 2026-07-03
+
+### Added
+
+- Added `!aura deathsaves sync` to force an immediate death-save marker reconciliation for selected PCs after imports, sheet changes, or missed updates.
+- Added a one-time GM warning when a watched PC's death saves are not stored as legacy attributes. This calls out the Experimental (Jumpgate) sandbox requirement for live Beacon/D&D 2024 death-save reads and explains the failure mode on the Default sandbox.
+- Expanded `!aura deathsaves debug` so it now reports resolved watched-field values, sheet-item API availability, the selected character's legacy-attribute count, how many watched fields are stored as legacy attributes, and a Beacon/sandbox compatibility warning when none are.
+- Documented the Experimental (Jumpgate) sandbox requirement for Beacon/D&D 2024 death-save syncing in the README, including the known silently-reverting Roll20 dropdown issue.
+
+### Changed
+
+- Refined the Death Save Integration introduced in 2.2.0 so watch, sync, and debug flows now use alias-aware field resolution (`succ`/`success`, `fail`/`failure`) before evaluating marker state, improving compatibility across sheet variants without changing the GM-facing configuration model.
+- Added a lightweight 3-second polling pass for downed PCs so death-save markers stay current even on sheets that do not emit usable legacy `change:attribute` events.
+- Updated the fallback resolver to prefer Jumpgate `getSheetItem` reads for non-legacy death-save fields, while retaining the chat-parser probe only as a legacy-sandbox fallback.
+
+### Fixed
+
+- Fixed D&D 2024 / Beacon death-save syncing when equivalent sheet field names differ from the configured defaults by resolving configured watches through alias-aware lookups and probing only the still-unresolved aliases.
+- Fixed repeated Roll20 parser errors from fallback death-save probes by removing character-id references (`@{<id>|attr}`) and using safe character-name probes instead.
+- Fixed repeated startup and sync errors caused by asking Roll20 for death-save field names the current game sheet does not define. The resolver now keeps a persisted game-wide field-name status cache (`state.HealthColors.dsFieldStatus`) so proven-good names are reused, rejected names are not retried, and the cache is cleared automatically when the GM reconfigures death-save fields or manually resyncs after a sheet change.
+
 ## [2.2.0] – 2026-06-29 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/8)
 
 ### Added

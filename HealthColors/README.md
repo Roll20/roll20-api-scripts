@@ -15,7 +15,7 @@
 - **Blood & Heal FX**: Spawns custom particle effects when tokens are hurt or healed.
 - **Automated Dead Status**: Automatically applies a configurable status marker (default: Red X) when a token reaching 0 HP.
 - **NPC vs PC Config**: Separate settings for players and NPCs, including nameplate visibility and health tracking toggles.
-- **Optional Death Save Integration**: An off-by-default feature that distinguishes **dying** (configurable marker), **stable** (green), and **dead** (Red X) player characters at 0 HP, with marker sync driven automatically from watched death-save attributes (works on both the D&D 2024 and 2014 sheets). See [Death Save Integration](#death-save-integration-optional).
+- **Optional Death Save Integration**: An off-by-default feature that distinguishes **dying** (configurable marker), **stable** (green), and **dead** (Red X) player characters at 0 HP, with marker sync driven automatically from watched death-save attributes (works on both the D&D 2024 and 2014 sheets; 2024/Beacon sheets require the Experimental (Jumpgate) Mod sandbox). See [Death Save Integration](#death-save-integration-optional).
 
 ---
 
@@ -76,6 +76,7 @@ When a command changes a setting, HealthColors re-whispers the interactive GM me
 | `!aura deathsaves attrs [filter]`    | Debug: whispers the selected character's legacy attributes (`name = value`), optionally filtered by name substring.          |
 | `!aura deathsaves watch [status|reset|off]` | Debug: shows watch status, or arms a live watcher for selected tokens using configured success/failure fields; whispers when values register/change/clear. |
 | `!aura deathsaves watchstatus` | Debug: reports currently configured watch fields and active watched characters. |
+| `!aura deathsaves sync` | Forces an immediate marker resync for selected tokens using configured success/failure fields (useful after imports/migrations). |
 | `!aura deathsaves stablemarker <name>` | Sets the stable status marker (default `green`; same format as `dyingmarker`).                                            |
 | `!aura deathsaves debug`             | Whispers a per-token diagnostic (token/character/HP/marker state) for the selected token(s).                                |
 
@@ -108,7 +109,16 @@ HealthColors watches the configured success/failure fields and updates markers a
    - (A single counter attribute also works — just give one name.)
 2. Enable: `!aura deathsaves on`.
 3. Optional: run `!aura deathsaves watch` with selected token(s) to arm/refresh watcher baselines for debug/status visibility.
-4. In play: marker state updates automatically as watched death-save fields change (`3+` fails -> dead, `3+` successes -> stable, otherwise dying).
+4. Optional: run `!aura deathsaves sync` with selected token(s) to force an immediate marker reconciliation.
+5. In play: marker state updates automatically as watched death-save fields change (`3+` fails -> dead, `3+` successes -> stable, otherwise dying).
+
+### D&D 2024 / Beacon sheets — sandbox requirement
+
+On Beacon-model sheets (e.g. D&D 2024), the death-save checkboxes are **not** legacy attributes; HealthColors reads them with Roll20's sheet-item API (`getSheetItem`). That API only returns **live** values on the **Experimental (Jumpgate)** Mod sandbox:
+
+- Switch via **Game Settings → Mod (API) Scripts → API Sandbox Version → Experimental**, then **Restart Server**.
+- Verify the API console startup banner says `EXPERIMENTAL`, not `[DEFAULT …]`. A known Roll20 issue can silently revert the selection — if the banner still says DEFAULT, toggle Default → restart → Experimental → restart.
+- On the Default sandbox, reads return sheet defaults (often all `0`), so markers cannot track the sheet. The Mod server cannot detect its own sandbox version, so HealthColors whispers a one-time GM notice when it finds a watched PC whose death saves are not legacy attributes, and `!aura deathsaves debug` reports the storage/API facts per token.
 
 ### Behaviour
 
