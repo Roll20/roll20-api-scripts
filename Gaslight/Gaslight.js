@@ -3352,17 +3352,18 @@ var Gaslight = Gaslight || (() => {
             existing.set('text', label);
         } else {
             // Use stored position/size or defaults
-            var pos = (s.hud.viewPos) || {};
+            var vd = s.hud.viewData || {};
             var pageWidth = page.get('width') * 70;
             var obj = createObj('text', {
                 _pageid: pageId,
                 layer: 'foreground',
                 text: label,
-                left: pos.left || Math.round(pageWidth / 2),
-                top: pos.top || 100,
-                font_size: pos.font_size || 40,
-                color: '#ffffff',
-                font_family: 'Contrail One',
+                left: Math.round((vd.leftNorm || defaultViewHud.leftNorm) * pageWidth),
+                top: vd.top || defaultViewHud.top,
+                font_size: vd.fontSize || defaultViewHud.fontSize,
+                color: vd.color || defaultViewHud.color,
+                stroke: vd.stroke || defaultViewHud.stroke,
+                font_family: vd.fontFamily || defaultViewHud.fontFamily,
             });
             s.hud.viewId = obj.get('id');
         }
@@ -3382,6 +3383,15 @@ var Gaslight = Gaslight || (() => {
     };
 
     // ---- Initiative HUD ----
+
+    const defaultViewHud = {
+        leftNorm: 0.5,
+        top: 100,
+        fontSize: 40,
+        fontFamily: 'Contrail One',
+        color: '#ffffff',
+        stroke: '#000000',
+    };
 
     const defaultInitHud = {
         tokenSize: 50,
@@ -3794,11 +3804,18 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         var id = obj.get('id');
         if (id === s.hud.viewId) {
-            s.hud.viewPos = {
-                left: obj.get('left'),
-                top: obj.get('top'),
-                font_size: obj.get('font_size'),
-            };
+            if (!s.hud.viewData) s.hud.viewData = {};
+            var vPageId = getHudPageId();
+            var vPage = vPageId ? getObj('page', vPageId) : null;
+            var vPageWidth = vPage ? vPage.get('width') * 70 : 1400;
+            s.hud.viewData.leftNorm = obj.get('left') / vPageWidth;
+            s.hud.viewData.top = obj.get('top');
+            s.hud.viewData.fontSize = obj.get('font_size');
+            s.hud.viewData.fontFamily = obj.get('font_family');
+            var vColor = obj.get('color');
+            if (vColor) s.hud.viewData.color = vColor;
+            var vStroke = obj.get('stroke');
+            if (vStroke) s.hud.viewData.stroke = vStroke;
         }
         // Initiative HUD text moved or styled — update stored settings
         if (s.hud.initiative && s.hud.initData && s.hud.initData.entries) {
@@ -3940,15 +3957,22 @@ var Gaslight = Gaslight || (() => {
             s.hud[element] = false;
         } else if (toggle === 'reset') {
             // Clear stored position, turn on, move to defaults
-            delete s.hud[element + 'Pos'];
             s.hud[element] = true;
             if (element === 'view') {
+                s.hud.viewData = {};
                 var existing = findHudElement('view');
                 if (existing) {
                     var pageId = getHudPageId();
                     var page = pageId ? getObj('page', pageId) : null;
                     var pageWidth = page ? page.get('width') * 70 : 1400;
-                    existing.set({ left: Math.round(pageWidth / 2), top: 100, font_size: 40 });
+                    existing.set({
+                        left: Math.round(defaultViewHud.leftNorm * pageWidth),
+                        top: defaultViewHud.top,
+                        font_size: defaultViewHud.fontSize,
+                        font_family: defaultViewHud.fontFamily,
+                        color: defaultViewHud.color,
+                        stroke: defaultViewHud.stroke,
+                    });
                 } else {
                     updateViewHud();
                 }
