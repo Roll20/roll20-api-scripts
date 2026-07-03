@@ -1003,6 +1003,7 @@ var Gaslight = Gaslight || (() => {
         establishLinks(groupName, groupInfo, allLinks);
 
         // Enable relay by default on split
+        var s = state[SCRIPT_NAME];
         s.view = 'master';
 
         // Recreate HUD elements if enabled
@@ -3238,9 +3239,9 @@ var Gaslight = Gaslight || (() => {
         // Only if we modified the order (if not modified, Roll20 handled it naturally and already applied the formula)
         if (modified && newOrder.length > 0 && newOrder[0].id === '-1' && newOrder[0].formula) {
             var topEntry = newOrder[0];
-            var oldTopId = oldOrder.length > 0 ? oldOrder[0].id : null;
-            // Only apply if the top changed (this custom turn just became active)
-            if (oldTopId !== '-1' || (oldOrder[0] && oldOrder[0].custom !== topEntry.custom)) {
+            // Only apply if this custom turn was NOT already at the top
+            var wasAlreadyTop = oldOrder.length > 0 && oldOrder[0].id === '-1' && oldOrder[0].custom === topEntry.custom && oldOrder[0].pr === topEntry.pr;
+            if (!wasAlreadyTop) {
                 var formula = topEntry.formula.trim();
                 var currentPr = parseFloat(topEntry.pr) || 0;
                 var val = parseFloat(formula.replace(/^[+-]/, '')) || 0;
@@ -4336,21 +4337,54 @@ var Gaslight = Gaslight || (() => {
                     var order = JSON.parse(Campaign().get('turnorder') || '[]');
                     var sourceId = match.sourceId;
                     var swipeDirection = newLeft > frameRightEdge ? 'forward' : 'backward';
-                    // Rotate until this token's master is at position 0, applying formulas along the way
-                    var safety = order.length;
-                    while (safety-- > 0 && order.length > 0 && order[0].id !== sourceId) {
-                        // Apply formula to custom turns as we pass them
-                        if (order[0].id === '-1' && order[0].formula) {
+                    var isCurrentTurn = order.length > 0 && order[0].id === sourceId;
+
+                    if (isCurrentTurn) {
+                        // Current turn swiped — advance/retreat to next/prev master or custom
+                        if (swipeDirection === 'forward') {
+                            order.push(order.shift());
+                            // Skip past linked children
+                            var skip = order.length;
+                            while (skip-- > 0 && order[0] && order[0].id && order[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(order[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                order.push(order.shift());
+                            }
+                        } else {
+                            order.unshift(order.pop());
+                            // Skip backward past linked children
+                            var skip = order.length;
+                            while (skip-- > 0 && order[0] && order[0].id && order[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(order[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                order.unshift(order.pop());
+                            }
+                        }
+                        // Apply formula if new top is a custom
+                        if (order[0] && order[0].id === '-1' && order[0].formula) {
                             var f = order[0].formula.trim();
                             var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
                             var add = f.startsWith('+');
                             if (swipeDirection === 'backward') add = !add;
                             order[0].pr = (parseFloat(order[0].pr) || 0) + (add ? v : -v);
                         }
-                        if (swipeDirection === 'forward') {
-                            order.push(order.shift());
-                        } else {
-                            order.unshift(order.pop());
+                    } else {
+                        // Non-current turn — rotate until target is at position 0
+                        var safety = order.length;
+                        while (safety-- > 0 && order.length > 0 && order[0].id !== sourceId) {
+                            if (swipeDirection === 'forward') {
+                                order.push(order.shift());
+                            } else {
+                                order.unshift(order.pop());
+                            }
+                        }
+                        // Apply formula if the new top is a custom turn
+                        if (order[0] && order[0].id === '-1' && order[0].formula) {
+                            var f = order[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDirection === 'backward') add = !add;
+                            order[0].pr = (parseFloat(order[0].pr) || 0) + (add ? v : -v);
                         }
                     }
                     _suppressTurnSync = true;
@@ -4372,9 +4406,20 @@ var Gaslight = Gaslight || (() => {
 
             var newY = obj.get('y');
             var oldY = prev.y;
-            if (newY === oldY) return;
+
+            // Check if pin escaped horizontally (swipe, not reorder)
+            var newX = obj.get('x');
+            var frame = getObj('pathv2', data.frameId);
+            var horizontalEscapePin = false;
+            if (frame) {
+                var frameLeftPin = frame.get('x');
+                var ptsPin = JSON.parse(frame.get('points') || '[]');
+                var fwPin = ptsPin.length >= 2 ? ptsPin[1][0] - ptsPin[0][0] : 70;
+                horizontalEscapePin = newX > frameLeftPin + fwPin / 2 || newX < frameLeftPin - fwPin / 2;
+            }
 
             // Pin dragged vertically — reorder custom turn in initiative
+            if (!horizontalEscapePin && newY !== oldY) {
             var order = JSON.parse(Campaign().get('turnorder') || '[]');
             var hudOrder = getHudTurnOrder();
 
@@ -4452,50 +4497,75 @@ var Gaslight = Gaslight || (() => {
                 Campaign().set('turnorder', JSON.stringify(order));
                 _suppressTurnSync = false;
             }
+            }
 
             // Pin dragged horizontally — make it this turn's turn
-            var newX = obj.get('x');
             var oldX = prev.x;
-            var verticalDrift = Math.abs(obj.get('y') - prev.y);
+            var verticalDrift = Math.abs(newY - oldY);
             var tknSizeP = data.tokenSize || defaultInitHud.tokenSize;
-            if (newX !== oldX && verticalDrift < tknSizeP / 2 && frame) {
-                var frameLeft = frame.get('x');
-                var pts2 = JSON.parse(frame.get('points') || '[]');
-                var fw2 = pts2.length >= 2 ? pts2[1][0] - pts2[0][0] : 70;
-                var frameRightEdge = frameLeft + fw2 / 2;
-                var frameLeftEdge = frameLeft - fw2 / 2;
+            if (newX !== oldX && verticalDrift < tknSizeP / 2 && horizontalEscapePin) {
+                var frameLeftH = frame.get('x');
+                var ptsH = JSON.parse(frame.get('points') || '[]');
+                var fwH = ptsH.length >= 2 ? ptsH[1][0] - ptsH[0][0] : 70;
+                var frameRightEdge = frameLeftH + fwH / 2;
+                var swipeDir = newX > frameRightEdge ? 'forward' : 'backward';
+                var fullOrder = JSON.parse(Campaign().get('turnorder') || '[]');
 
-                if (newX > frameRightEdge || newX < frameLeftEdge) {
-                    var swipeDir = newX > frameRightEdge ? 'forward' : 'backward';
-                    var fullOrder = JSON.parse(Campaign().get('turnorder') || '[]');
-                    var customsInOrder = [];
-                    fullOrder.forEach(function(e, i) { if (!e.id || e.id === '-1') customsInOrder.push(i); });
-                    var customRank = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).findIndex(function(e) { return e.tokenId === obj.get('id'); });
-                    if (customRank !== -1 && customsInOrder[customRank] !== undefined) {
-                        var targetFullIdx = customsInOrder[customRank];
-                        // Calculate how many rotations needed
-                        var rotCount = swipeDir === 'forward'
-                            ? targetFullIdx
-                            : fullOrder.length - targetFullIdx;
-                        for (var ri = 0; ri < rotCount; ri++) {
-                            if (fullOrder[0].id === '-1' && fullOrder[0].formula) {
-                                var f = fullOrder[0].formula.trim();
-                                var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
-                                var add = f.startsWith('+');
-                                if (swipeDir === 'backward') add = !add;
-                                fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                var customsInOrder = [];
+                fullOrder.forEach(function(e, i) { if (!e.id || e.id === '-1') customsInOrder.push(i); });
+                var customRank = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).findIndex(function(e) { return e.tokenId === obj.get('id'); });
+                if (customRank !== -1 && customsInOrder[customRank] !== undefined) {
+                    var targetFullIdx = customsInOrder[customRank];
+                    if (targetFullIdx === 0) {
+                        // This pin is the current turn — advance/retreat to next/prev master or custom
+                        if (swipeDir === 'forward') {
+                            fullOrder.push(fullOrder.shift());
+                            var skip = fullOrder.length;
+                            while (skip-- > 0 && fullOrder[0] && fullOrder[0].id && fullOrder[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(fullOrder[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                fullOrder.push(fullOrder.shift());
                             }
+                        } else {
+                            fullOrder.unshift(fullOrder.pop());
+                            var skip = fullOrder.length;
+                            while (skip-- > 0 && fullOrder[0] && fullOrder[0].id && fullOrder[0].id !== '-1') {
+                                var cInfo = getLinkedInfo(fullOrder[0].id);
+                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
+                                fullOrder.unshift(fullOrder.pop());
+                            }
+                        }
+                        // Apply formula if new top is a custom
+                        if (fullOrder[0] && fullOrder[0].id === '-1' && fullOrder[0].formula) {
+                            var f = fullOrder[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDir === 'backward') add = !add;
+                            fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                        }
+                    } else {
+                        // Non-current pin — rotate to it
+                        var rotCount = swipeDir === 'forward' ? targetFullIdx : fullOrder.length - targetFullIdx;
+                        for (var ri = 0; ri < rotCount; ri++) {
                             if (swipeDir === 'forward') {
                                 fullOrder.push(fullOrder.shift());
                             } else {
                                 fullOrder.unshift(fullOrder.pop());
                             }
                         }
-                        _suppressTurnSync = true;
-                        Campaign().set('turnorder', JSON.stringify(fullOrder));
-                        _suppressTurnSync = false;
+                        // Apply formula if the new top is a custom turn
+                        if (fullOrder[0] && fullOrder[0].id === '-1' && fullOrder[0].formula) {
+                            var f = fullOrder[0].formula.trim();
+                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                            var add = f.startsWith('+');
+                            if (swipeDir === 'backward') add = !add;
+                            fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                        }
                     }
                 }
+                _suppressTurnSync = true;
+                Campaign().set('turnorder', JSON.stringify(fullOrder));
+                _suppressTurnSync = false;
             }
 
             reflowInitiativeHud('none');
