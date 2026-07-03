@@ -3176,17 +3176,11 @@ var Gaslight = Gaslight || (() => {
             }
         }
 
-        // Reorder detection: if order changed without forward/backward/add/remove, regroup
-        if (added.length === 0 && removed.length === 0 && newOrder.length > 1 && !modified) {
-            var isForward2 = oldOrder.length > 0 && newOrder[newOrder.length - 1].id === oldOrder[0].id;
-            var isBackward2 = oldOrder.length > 0 && newOrder[0].id === oldOrder[oldOrder.length - 1].id;
-            if (!isForward2 && !isBackward2 && JSON.stringify(newOrder) !== JSON.stringify(oldOrder)) {
-                var reordered = reorderInitiative(newOrder);
-                if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
-                    newOrder = reordered;
-                    modified = true;
-                }
-            }
+        // Always ensure linked tokens are grouped below their master
+        var reordered = reorderInitiative(newOrder);
+        if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
+            newOrder = reordered;
+            modified = true;
         }
 
         if (modified) {
