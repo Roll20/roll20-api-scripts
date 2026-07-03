@@ -3891,11 +3891,32 @@ var Gaslight = Gaslight || (() => {
         }
         // Initiative HUD text
         if (s.hud.initData && s.hud.initData.entries) {
-            var match = s.hud.initData.entries.find(function(e) { return e.textId === id; });
-            if (match) {
-                s.hud.initiative = false;
-                removeInitiativeHud();
-                sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
+            var data = s.hud.initData;
+            var matchIdx = data.entries.findIndex(function(e) { return e.textId === id; });
+            if (matchIdx !== -1) {
+                var match = data.entries[matchIdx];
+                // Remove associated token/pin
+                var tok = getObj('graphic', match.tokenId) || getObj('pin', match.tokenId);
+                if (tok) tok.remove();
+                // Remove from entries
+                data.entries.splice(matchIdx, 1);
+
+                // Remove from turn order
+                var order = JSON.parse(Campaign().get('turnorder') || '[]');
+                if (match.sourceId && !match.sourceId.startsWith('custom:')) {
+                    var info = getLinkedInfo(match.sourceId);
+                    var groupIds = new Set([match.sourceId].concat(info.linkedIds));
+                    order = order.filter(function(e) { return !groupIds.has(e.id); });
+                } else {
+                    var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
+                    if (customIdx !== -1) order.splice(customIdx, 1);
+                }
+                _suppressTurnSync = true;
+                Campaign().set('turnorder', JSON.stringify(order));
+                _suppressTurnSync = false;
+
+                reflowInitiativeHud('none');
+                sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
             }
         }
     };
@@ -3907,12 +3928,35 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         if (!s.hud.initData || !s.hud.initData.entries) return;
         var id = obj.get('id');
-        var match = s.hud.initData.entries.find(function(e) { return e.tokenId === id; });
-        if (match) {
-            s.hud.initiative = false;
-            removeInitiativeHud();
-            sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
+        var data = s.hud.initData;
+        var matchIdx = data.entries.findIndex(function(e) { return e.tokenId === id; });
+        if (matchIdx === -1) return;
+
+        var match = data.entries[matchIdx];
+        // Remove associated text
+        var txt = getObj('text', match.textId);
+        if (txt) txt.remove();
+        // Remove from entries
+        data.entries.splice(matchIdx, 1);
+
+        // Remove from turn order
+        var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        if (match.sourceId && !match.sourceId.startsWith('custom:')) {
+            // Token — remove it and linked children from turn order
+            var info = getLinkedInfo(match.sourceId);
+            var groupIds = new Set([match.sourceId].concat(info.linkedIds));
+            order = order.filter(function(e) { return !groupIds.has(e.id); });
+        } else {
+            // Custom turn — remove first matching custom entry
+            var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
+            if (customIdx !== -1) order.splice(customIdx, 1);
         }
+        _suppressTurnSync = true;
+        Campaign().set('turnorder', JSON.stringify(order));
+        _suppressTurnSync = false;
+
+        reflowInitiativeHud('none');
+        sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
     };
 
     /**
