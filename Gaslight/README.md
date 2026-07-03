@@ -112,6 +112,39 @@ Gaslight automatically syncs the turn order across linked tokens:
 
 The GM only interacts with master-page tokens in the turn tracker. Players see their own copies on their page. Linked children are skipped automatically when advancing turns.
 
+## HUD
+
+On-canvas indicators on the master page foreground layer. Toggle with `!gaslight hud [element] [on|off|reset]`.
+
+### Elements
+
+| Element | Description |
+|---------|-------------|
+| `view` (alias: `relay`) | Shows current relay state: ALL / OFF / player name |
+| `initiative` (aliases: `init`, `turn`, `turns`) | Visual initiative tracker with frame, tokens, and current turn indicator |
+
+### Initiative HUD Features
+
+- **Frame**: resizable rectangle containing initiative entries
+- **Current turn indicator**: rotated diamond showing whose turn it is (movable to set position)
+- **Token entries**: mirrored copies of master tokens (syncs name, status, tint)
+- **Custom turn entries**: pins with titles for custom initiative entries
+- **Overflow**: entries outside the frame are hidden automatically
+- **Drag to reorder**: drag a token/pin vertically between others to change initiative order
+- **Swipe to change turn**: drag a token/pin horizontally past the frame edge to make it the current turn
+- **Round calculation**: custom turn formulas applied when entering the top via rotation
+- **Delete entry**: deleting a HUD token/pin removes it from initiative (deleting the frame turns HUD off)
+- **Fully customizable**: frame stroke/fill, text color/stroke/font, token size derived from frame width, all positions persist
+
+### Commands
+
+- `!gaslight hud` — toggle all elements
+- `!gaslight hud on` — turn all on
+- `!gaslight hud off` — turn all off
+- `!gaslight hud reset` — reset all to defaults (turns on)
+- `!gaslight hud initiative` — toggle initiative
+- `!gaslight hud reset view` — reset just view element
+
 ## Staging
 
 - `!gaslight stage` — propagate selected tokens to all player pages

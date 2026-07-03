@@ -37,12 +37,22 @@
 - [ ] View + relay with both paths
 - [ ] Focus-ping on split
 
+## Done (v2.1.0)
+- [x] Initiative tracking (add/remove/sync/reorder/direction-aware skip)
+- [x] Token-level gaslight_sync (gmnotes, same pattern as gaslight_link)
+- [x] !gaslight sync / !gaslight desync commands
+- [x] !gaslight view off (relay disabled mode)
+- [x] GM HUD system — persistent on-canvas indicators:
+  - [x] `view` — relay state indicator (fully customizable styling, normalized position)
+  - [x] `initiative` — on-canvas turn order (frame + mirrored tokens + custom pins + highlight)
+    - Drag to reorder, swipe to change turn, round calculation formulas
+    - Customizable: frame/highlight styling, token size, padding, text offset/font/color
+    - Current turn indicator movable (sets Y offset for current turn position)
+    - Slot-based visibility, overflow hidden
+- [x] State migration v2.0.0 → v2.1.0
+
 ## v2 Ideas
-- [ ] GM HUD system — persistent on-canvas indicators, each toggled via `!gaslight hud <name> [on|off]`:
-  - `initiative` — on-canvas turn order display (tokens + text on foreground layer, one per entry). Deduplicates linked copies so GM sees a clean list.
-  - `view` — big text showing current relay state (OFF / ALL / player name)
-  - `links` — ascii-art boxes around linked tokens with sync/desync annotations
-  - `group` — active group indicator
+- [ ] HUD `links` element — visual overlay showing linked tokens with sync/desync annotations
 - [ ] Diff command (`!gaslight diff <player>`) — show what's different between master and a player's page
 - [ ] Batch operations — `--all` flag on sync/desync to affect all linked tokens on the page
 - [ ] `!gaslight relay all --except <player>` flag

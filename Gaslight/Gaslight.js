@@ -1712,6 +1712,8 @@ var Gaslight = Gaslight || (() => {
         + '<code>' + CMD + ' unlink [ids...]</code> -- Unlink tokens<br>'
         + '<code>' + CMD + ' sync [props|all|reset]</code> -- Manage sync per token<br>'
         + '<code>' + CMD + ' desync [props|all]</code> -- Exclude props from sync<br>'
+        + '<code>' + CMD + ' sync [props|all|reset]</code> -- Manage sync per token<br>'
+        + '<code>' + CMD + ' desync [props|all]</code> -- Exclude props from sync<br>'
         + '<code>' + CMD + ' view [master|off|&lt;player&gt;]</code> -- Control relay targeting<br>'
         + '<code>' + CMD + ' relay &lt;views&gt; &lt;!cmd&gt;</code> -- Relay command to views<br>'
         + '<code>' + CMD + ' group &lt;group&gt; &lt;player|GM&gt;</code> -- Assign page<br>'
@@ -1724,7 +1726,12 @@ var Gaslight = Gaslight || (() => {
         + '<code>master</code> -- relay to all (default on split)<br>'
         + '<code>off</code> -- relay disabled (GM-only changes)<br>'
         + '<code>&lt;player&gt;</code> -- relay to one player only<br>'
-        + '<br><b>Initiative:</b> Linked tokens auto-sync in turn order. Non-master children are auto-skipped on turn advance.<br>';
+        + '<br><b>Initiative:</b> Linked tokens auto-sync in turn order. Non-master children are auto-skipped on turn advance.<br>'
+        + '<br><b>HUD:</b><br>'
+        + '<code>' + CMD + ' hud</code> -- toggle all elements<br>'
+        + '<code>' + CMD + ' hud [on|off|reset]</code> -- all elements<br>'
+        + '<code>' + CMD + ' hud [init|view] [on|off|reset]</code> -- specific element<br>'
+        + 'Aliases: init/turn/turns = initiative, relay = view<br>';
 
     // =========================================================================
     // Scripting Engine — Fetch Integration
