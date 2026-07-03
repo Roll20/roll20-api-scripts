@@ -4179,7 +4179,17 @@ var Gaslight = Gaslight || (() => {
                 // Token dragged vertically — reorder initiative
                 var newTop = obj.get('top');
                 var oldTop = prev.top;
-                if (newTop !== oldTop) {
+                var newLeft = obj.get('left');
+                var oldLeft = prev.left;
+                var frame = getObj('pathv2', data.frameId);
+                var frameLeft = frame ? frame.get('x') : 0;
+                var pts = frame ? JSON.parse(frame.get('points') || '[]') : [];
+                var fw = pts.length >= 2 ? pts[1][0] - pts[0][0] : 70;
+                var frameRightEdge = frameLeft + fw / 2;
+                var frameLeftEdge = frameLeft - fw / 2;
+                var horizontalEscape = newLeft > frameRightEdge || newLeft < frameLeftEdge;
+
+                if (newTop !== oldTop && !horizontalEscape) {
                     var order = JSON.parse(Campaign().get('turnorder') || '[]');
                     var sourceId = match.sourceId;
                     var hudOrder = getHudTurnOrder();
@@ -4235,6 +4245,25 @@ var Gaslight = Gaslight || (() => {
                         Campaign().set('turnorder', JSON.stringify(order));
                         _suppressTurnSync = false;
                     }
+                    reflowInitiativeHud('none');
+                }
+
+                // Token dragged horizontally — make it this token's turn
+                var verticalDrift = Math.abs(newTop - oldTop);
+                var tknSizeH = data.tokenSize || defaultInitHud.tokenSize;
+                if (newLeft !== oldLeft && verticalDrift < tknSizeH / 2 && horizontalEscape) {
+                    var order = JSON.parse(Campaign().get('turnorder') || '[]');
+                    var sourceId = match.sourceId;
+                    // Rotate until this token's master is at position 0
+                    var safety = order.length;
+                    while (safety-- > 0 && order.length > 0 && order[0].id !== sourceId) {
+                        order.push(order.shift());
+                    }
+                    _suppressTurnSync = true;
+                    Campaign().set('turnorder', JSON.stringify(order));
+                    _suppressTurnSync = false;
+                    reflowInitiativeHud('none');
+                } else if (!horizontalEscape) {
                     reflowInitiativeHud('none');
                 }
             }
@@ -4329,6 +4358,36 @@ var Gaslight = Gaslight || (() => {
                 Campaign().set('turnorder', JSON.stringify(order));
                 _suppressTurnSync = false;
             }
+
+            // Pin dragged horizontally — make it this turn's turn
+            var newX = obj.get('x');
+            var oldX = prev.x;
+            var verticalDrift = Math.abs(obj.get('y') - prev.y);
+            var tknSizeP = data.tokenSize || defaultInitHud.tokenSize;
+            if (newX !== oldX && verticalDrift < tknSizeP / 2 && frame) {
+                var frameLeft = frame.get('x');
+                var pts2 = JSON.parse(frame.get('points') || '[]');
+                var fw2 = pts2.length >= 2 ? pts2[1][0] - pts2[0][0] : 70;
+                var frameRightEdge = frameLeft + fw2 / 2;
+                var frameLeftEdge = frameLeft - fw2 / 2;
+
+                if (newX > frameRightEdge || newX < frameLeftEdge) {
+                    // Find which custom turn this is in the full order
+                    var fullOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                    var customsInOrder = [];
+                    fullOrder.forEach(function(e, i) { if (!e.id || e.id === '-1') customsInOrder.push(i); });
+                    var customRank = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).findIndex(function(e) { return e.tokenId === obj.get('id'); });
+                    if (customRank !== -1 && customsInOrder[customRank] !== undefined) {
+                        var targetFullIdx = customsInOrder[customRank];
+                        // Rotate until this entry is at position 0
+                        var rotated = fullOrder.slice(targetFullIdx).concat(fullOrder.slice(0, targetFullIdx));
+                        _suppressTurnSync = true;
+                        Campaign().set('turnorder', JSON.stringify(rotated));
+                        _suppressTurnSync = false;
+                    }
+                }
+            }
+
             reflowInitiativeHud('none');
         });
     };
