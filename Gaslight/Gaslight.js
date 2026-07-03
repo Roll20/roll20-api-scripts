@@ -1008,6 +1008,7 @@ var Gaslight = Gaslight || (() => {
 
         // Recreate HUD elements if enabled
         if (s.hud.view) updateViewHud();
+        if (s.hud.initiative) updateInitiativeHud();
 
         var summary = 'Group "' + groupName + '" activated. ' +
             Object.keys(groupInfo.players).length + ' player(s), ' +
@@ -1083,6 +1084,7 @@ var Gaslight = Gaslight || (() => {
 
         // Destroy HUD elements (preference preserved, will recreate on next split)
         removeViewHud();
+        removeInitiativeHud();
     };
 
     const doTest = (msg, args) => {
