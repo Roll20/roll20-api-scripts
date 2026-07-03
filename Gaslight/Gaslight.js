@@ -3127,9 +3127,13 @@ var Gaslight = Gaslight || (() => {
         added.forEach(function(entry) {
             var info = getLinkedInfo(entry.id);
             if (info.linkedIds.length === 0) return;
-            // Add linked tokens that aren't already in the order
+            // Deduplicate linked IDs (can accumulate duplicates from repeated splits)
+            var uniqueLinkedIds = info.linkedIds.filter(function(id, i) { return info.linkedIds.indexOf(id) === i; });
+            // Only process if none of this entry's linked tokens are already in the order
             var existingIds = new Set(newOrder.map(function(e) { return e.id; }));
-            info.linkedIds.forEach(function(linkedId) {
+            var alreadyHasLinked = uniqueLinkedIds.some(function(lid) { return existingIds.has(lid); });
+            if (alreadyHasLinked) return;
+            uniqueLinkedIds.forEach(function(linkedId) {
                 if (existingIds.has(linkedId)) return;
                 var linkedObj = getObj('graphic', linkedId);
                 var pushEntry = { id: linkedId, pr: entry.pr };
@@ -3255,7 +3259,7 @@ var Gaslight = Gaslight || (() => {
             if (placed.has(entry.id)) return;
             if (!entry.id || entry.id === '-1') {
                 result.push(entry);
-                placed.add(entry.id);
+                // Don't add '-1' to placed — multiple custom entries share this ID
                 return;
             }
 
@@ -3408,15 +3412,16 @@ var Gaslight = Gaslight || (() => {
         frameStrokeWidth: 3,
         entries: [],
         frameId: null,
+        highlightId: null,
         pos: null,
         frameSize: null,
     };
 
-    const hudSlotY = (frameTopEdge, index, tokenSize, tokenPadding) => {
-        return frameTopEdge + tokenSize / 2 + (tokenSize + tokenPadding) * index;
+    const hudSlotY = (frameCenter, offset, tokenSize, tokenPadding) => {
+        return frameCenter + offset * (tokenSize + tokenPadding);
     };
-    const hudPinY = (frameTopEdge, index, tokenSize, tokenPadding) => {
-        return hudSlotY(frameTopEdge, index, tokenSize, tokenPadding) + tokenSize / 2;
+    const hudPinY = (frameCenter, offset, tokenSize, tokenPadding) => {
+        return hudSlotY(frameCenter, offset, tokenSize, tokenPadding) + tokenSize / 2;
     };
 
     /**
@@ -3492,6 +3497,24 @@ var Gaslight = Gaslight || (() => {
 
         var frame = getObj('pathv2', data.frameId);
         if (!frame) return;
+
+        // Create highlight indicator if missing
+        if (!data.highlightId || !getObj('pathv2', data.highlightId)) {
+            var hlTokenSize = data.tokenSize || defaultInitHud.tokenSize;
+            var hlSize = hlTokenSize + 6;
+            var highlight = createObj('pathv2', {
+                _pageid: pageId,
+                layer: 'foreground',
+                shape: 'rec',
+                x: frame.get('x'),
+                y: frame.get('y'),
+                points: JSON.stringify([[0, 0], [hlSize, hlSize]]),
+                stroke: '#ffcc00',
+                stroke_width: 3,
+                fill: 'transparent',
+            });
+            data.highlightId = highlight.get('id');
+        }
 
         var tokenSize = getHudTokenSize(frame);
         var frameLeft = frame.get('x');
@@ -3634,6 +3657,18 @@ var Gaslight = Gaslight || (() => {
         var vPadding = data.vPadding || defaultInitHud.vPadding;
         var frameTopEdge = frameTop - frameHeight / 2 + vPadding;
         var frameBotEdge = frameTop + frameHeight / 2 - vPadding;
+        var frameCenter = frameTop; // current turn positioned at frame center
+
+        // Update highlight position and size
+        var highlight = data.highlightId ? getObj('pathv2', data.highlightId) : null;
+        if (highlight) {
+            var hlSize = tokenSize + 6;
+            highlight.set({
+                x: frameLeft,
+                y: frameCenter,
+                points: JSON.stringify([[0, 0], [hlSize, hlSize]]),
+            });
+        }
         var frameWidth = points.length >= 2 ? points[1][0] - points[0][0] : tokenSize + 2 * (data.hPadding || defaultInitHud.hPadding);
 
         // Match order entries to HUD entries
@@ -3693,7 +3728,8 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!tok) return;
 
-                var yPos = hudSlotY(frameTopEdge, i, tokenSize, tokenPadding);
+                var offset = i <= order.length / 2 ? i : i - order.length;
+                var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
                 var visible = (yPos - tokenSize / 2 >= frameTopEdge) &&
                               (yPos + tokenSize / 2 <= frameBotEdge);
 
@@ -3749,14 +3785,15 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!tok) return;
 
-                var yPos = hudSlotY(frameTopEdge, i, tokenSize, tokenPadding);
+                var offset = i <= order.length / 2 ? i : i - order.length;
+                var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
                 var visible = (yPos - tokenSize / 2 >= frameTopEdge) &&
                               (yPos + tokenSize / 2 <= frameBotEdge);
 
                 if (tok.get('type') === 'graphic') {
                     tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
                 } else {
-                    tok.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameTopEdge, i, tokenSize, tokenPadding) : -5000, title: entry.custom || 'Custom' });
+                    tok.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000, title: entry.custom || 'Custom' });
                 }
 
                 if (txt) {
@@ -3780,14 +3817,20 @@ var Gaslight = Gaslight || (() => {
         if (!data) return;
 
         var frameId = data.frameId;
+        var highlightId = data.highlightId;
         var entries = data.entries.slice();
         // Clear IDs first so destroy handler ignores
         data.frameId = null;
+        data.highlightId = null;
         data.entries = [];
 
         if (frameId) {
             var frame = getObj('pathv2', frameId);
             if (frame) frame.remove();
+        }
+        if (highlightId) {
+            var hl = getObj('pathv2', highlightId);
+            if (hl) hl.remove();
         }
         entries.forEach(function(entry) {
             var tok = getObj('graphic', entry.tokenId) || getObj('pin', entry.tokenId);
