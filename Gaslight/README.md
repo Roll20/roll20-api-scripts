@@ -9,6 +9,7 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 - [Mirror](https://github.com/Roll20/roll20-api-scripts/tree/master/Mirror) (property sync)
 - [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
 - [RollCapture](https://github.com/Roll20/roll20-api-scripts/tree/master/RollCapture) (optional, roll value extraction for scripting)
+- [ZeroFrame] (https://github.com/Roll20/roll20-api-scripts/tree/master/ZeroFrame) (optional, but highly recommended for use with SelectManager)
 
 ## Use Cases
 
