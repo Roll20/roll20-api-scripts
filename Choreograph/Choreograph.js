@@ -524,7 +524,6 @@ var Choreograph = Choreograph || (() => {
         if (!hh) {
             hh = createObj('handout', {
                 name:             handoutName,
-                inplayerjournals: 'all',
                 archived:         false,
             });
         }
@@ -650,7 +649,6 @@ var Choreograph = Choreograph || (() => {
             if (existing) return existing;
             return createObj('handout', {
                 name:             HandoutCache.handoutNametag(this.tag, name),
-                inplayerjournals: '',
                 archived:         false,
             });
         };
@@ -2699,7 +2697,7 @@ var Choreograph = Choreograph || (() => {
             const handoutName = `Help: ${SCRIPT_NAME}/Extending Choreograph`;
             let hh = findObjs({ type: 'handout', name: handoutName })[0];
             if (!hh) {
-                hh = createObj('handout', { name: handoutName, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
+                hh = createObj('handout', { name: handoutName, archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
             }
 
             const h = (n, t) => `<h${n}>${t}</h${n}>`;
@@ -3300,7 +3298,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             const helpName = `Help: ${SCRIPT_NAME}`;
             let hh = findObjs({ type: 'handout', name: helpName })[0];
             if (!hh) {
-                hh = createObj('handout', { name: helpName, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
+                hh = createObj('handout', { name: helpName, archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
             }
 
             const h = (n, t) => `<h${n}>${t}</h${n}>`;
