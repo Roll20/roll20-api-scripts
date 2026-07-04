@@ -1,6 +1,6 @@
 // =============================================================================
 // Choreograph v1.0.0
-// Last Updated: 2026-06-27
+// Last Updated: 2026-07-04
 // Author: Kenan Millet
 //
 // Description:
@@ -256,9 +256,264 @@ var Choreograph = Choreograph || (() => {
             log(`${SCRIPT_NAME}: [${src}] registerExample — missing name or scene`);
             return false;
         }
-        if (EXT_EXAMPLES[name]) return false; // no-op on duplicate
-        EXT_EXAMPLES[name] = { name, description, source: src, scene, onGenerate: struct.onGenerate || null };
+        if (EXT_EXAMPLES[`${src}/${name}`]) return false;
+        EXT_EXAMPLES[`${src}/${name}`] = { name, description, source: src, scene, guide: struct.guide || null };
         return true;
+    };
+
+    // =========================================================================
+    // Example Guide System
+    // =========================================================================
+
+    const activeGuides = {}; // { guideId: { steps, currentStep, roles, msg, sceneName } }
+
+    /**
+     * Start a guide session from a steps array.
+     *
+     * Step object fields:
+     * @param {string}   [step.prompt]      Instructions shown (required for interactive steps).
+     * @param {boolean}  [step.auto=false]  If true, fires immediately without waiting for user input.
+     * @param {string}   [step.role]        Assign selected tokens to this cast role.
+     * @param {number}   [step.min]         Minimum selection count (interactive only).
+     * @param {number}   [step.max]         Maximum selection count (interactive only).
+     * @param {function} [step.onStart]     Callback when step is entered going forward. Receives (roles).
+     * @param {function} [step.onContinue]  Callback when step completes forward. Receives (tokens, roles).
+     *                                      Return a string to reject and retry.
+     * @param {function} [step.onBack]      Callback when stepping backward through this step. Receives (roles).
+     *                                      Used to undo side effects of onContinue/onStart.
+     */
+    const startGuide = (msg, sceneName, steps, sceneRoles, sceneParams) => {
+        const guideId = `guide-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        // Inherit min/max from scene roles if not explicitly set on step
+        const resolvedSteps = steps.map(step => {
+            if (!step.role || !sceneRoles) return step;
+            const roleDef = sceneRoles.find(r => r.name === step.role);
+            if (!roleDef) return step;
+            const merged = Object.assign({}, step);
+            if (merged.min == null && roleDef.min != null) merged.min = roleDef.min;
+            if (merged.max == null && roleDef.max != null) merged.max = roleDef.max;
+            return merged;
+        });
+
+        // Auto-generate param steps from scene params (skip 'cast' built-in)
+        const userParams = (sceneParams || []).filter(p => p.name !== 'cast');
+        if (userParams.length > 0) {
+            const selectionTypes = new Set(['token', 'token[]', 'path', 'path[]']);
+            const selectionParams = userParams.filter(p => selectionTypes.has(p.type));
+            const queryParams = userParams.filter(p => !selectionTypes.has(p.type));
+
+            // One step per selection-based param
+            selectionParams.forEach(p => {
+                resolvedSteps.push({
+                    prompt: `Select ${p.type.includes('[]') ? 'token(s)' : 'a token'} for <b>${escHtml(p.name)}</b>${p.description ? ' — ' + escHtml(p.description) : ''}.`,
+                    _paramSelect: p.name,
+                    _paramType: p.type,
+                });
+            });
+
+            // One combined step for all query-based params
+            if (queryParams.length > 0) {
+                resolvedSteps.push({
+                    prompt: 'Set parameters:',
+                    _paramQuery: queryParams,
+                });
+            }
+        }
+
+        activeGuides[guideId] = {
+            steps: resolvedSteps,
+            currentStep: 0,
+            roles: {},
+            params: {},
+            msg,
+            sceneName,
+        };
+        enterStep(guideId);
+        return guideId;
+    };
+
+    const enterStep = (guideId) => {
+        const g = activeGuides[guideId];
+        if (!g) return;
+
+        if (g.currentStep >= g.steps.length) {
+            // All steps complete — create cast from roles and run
+            const castName = `${g.sceneName}-cast`;
+            const castRoles = {};
+            Object.entries(g.roles).forEach(([role, tokens]) => {
+                castRoles[role] = tokens.map(t => t.get('id'));
+            });
+            // Store cast
+            const castHandout = casts().getOrCreate(castName);
+            casts().cache[castName] = { roles: castRoles };
+            setHandoutNotes(castHandout, generateCastHtml(castName, castRoles));
+            castHandout.set('archived', true);
+            // Build param flags from collected values
+            const paramFlags = Object.entries(g.params || {})
+                .map(([k, v]) => `--${k} ${v}`)
+                .join(' ');
+            // Run with cast
+            const syntheticMsg = Object.assign({}, g.msg, {
+                content: `${CMD_TOKEN} run ${g.sceneName} ignore-selected --cast ${castName}${paramFlags ? ' ' + paramFlags : ''}`,
+                selected: [],
+            });
+            delete activeGuides[guideId];
+            handleInput(syntheticMsg);
+            return;
+        }
+
+        const step = g.steps[g.currentStep];
+
+        // Fire onStart
+        if (typeof step.onStart === 'function') step.onStart(g.roles);
+
+        // Auto steps advance immediately
+        if (step.auto) {
+            if (typeof step.onContinue === 'function') step.onContinue([], g.roles);
+            g.currentStep++;
+            enterStep(guideId);
+            return;
+        }
+
+        // Interactive step — show prompt
+        const interactiveSteps = g.steps.filter(s => !s.auto);
+        const interactiveIdx = interactiveSteps.indexOf(step) + 1;
+        const interactiveTotal = interactiveSteps.length;
+        const hasPriorInteractive = g.steps.slice(0, g.currentStep).some(s => !s.auto);
+
+        let html = `<div style="background:#335;color:#fff;padding:8px;border-radius:4px;font-size:12px;">`;
+        html += `<b>${escHtml(g.sceneName)}</b> — Setup (step ${interactiveIdx}/${interactiveTotal})<br><br>`;
+        html += `${step.prompt}<br><br>`;
+        if (step.min || step.max) {
+            const parts = [];
+            if (step.min) parts.push(`min: ${step.min}`);
+            if (step.max) parts.push(`max: ${step.max}`);
+            html += `<i>Select ${parts.join(', ')} token${(step.max === 1 && step.min === 1) ? '' : 's'}</i><br><br>`;
+        }
+
+        // Build continue button — embed ?{} queries for param steps
+        if (step._paramQuery) {
+            // Show param descriptions
+            step._paramQuery.forEach(p => {
+                html += `<b>${escHtml(p.name)}</b>`;
+                if (p.default) html += ` [${escHtml(p.default)}]`;
+                if (p.description) html += ` — <i>${escHtml(p.description)}</i>`;
+                html += `<br>`;
+            });
+            html += `<br>`;
+            // Build button with ?{} macros for each param
+            const queryParts = step._paramQuery.map(p => {
+                const label = p.name;
+                const def = p.default || '';
+                if (p.type === 'boolean') return `--${p.name} ?{${label}|true|false}`;
+                return `--${p.name} ?{${label}|${def}}`;
+            }).join(' ');
+            html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId} ${queryParts}`);
+        } else {
+            html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId}`);
+        }
+        if (hasPriorInteractive) html += ` ${btnHtml('⬅ Back', `${CMD_TOKEN} guide-back ${guideId}`)}`;
+        html += ` ${btnHtml('✖ Cancel', `${CMD_TOKEN} guide-cancel ${guideId}`)}`;
+        html += `</div>`;
+        reply(g.msg, 'Guide', html, true);
+    };
+
+    const handleGuideContinue = (msg, guideId) => {
+        const g = activeGuides[guideId];
+        if (!g) { replyError(msg, 'No active guide with that ID.'); return; }
+
+        const step = g.steps[g.currentStep];
+        const selected = (msg.selected || []).map(s => getObj(s._type, s._id)).filter(Boolean);
+
+        // Handle _paramSelect steps (token/path selection)
+        if (step._paramSelect) {
+            if (selected.length === 0) {
+                replyError(msg, `Select at least one token/path for "${step._paramSelect}", then click Continue.`);
+                return;
+            }
+            const ids = selected.map(t => t.get('id'));
+            g.params[step._paramSelect] = step._paramType.includes('[]') ? ids.join(',') : ids[0];
+            g.currentStep++;
+            enterStep(guideId);
+            return;
+        }
+
+        // Handle _paramQuery steps (parse --key value from msg.content)
+        if (step._paramQuery) {
+            const content = msg.content;
+            step._paramQuery.forEach(p => {
+                const re = new RegExp(`--${p.name}\\s+(\\S+)`);
+                const m = content.match(re);
+                if (m && m[1]) g.params[p.name] = m[1];
+            });
+            g.currentStep++;
+            enterStep(guideId);
+            return;
+        }
+
+        // Validate selection count
+        if (step.min && selected.length < step.min) {
+            replyError(msg, `Select at least ${step.min} token${step.min > 1 ? 's' : ''}, then click Continue.`);
+            return;
+        }
+        if (step.max && selected.length > step.max) {
+            replyError(msg, `Select at most ${step.max} token${step.max > 1 ? 's' : ''}, then click Continue.`);
+            return;
+        }
+
+        // Assign to role
+        if (step.role) g.roles[step.role] = selected;
+
+        // Fire onContinue — if it returns a string, treat as validation error
+        if (typeof step.onContinue === 'function') {
+            const err = step.onContinue(selected, g.roles);
+            if (typeof err === 'string') {
+                replyError(msg, err);
+                return;
+            }
+        }
+
+        // Advance
+        g.currentStep++;
+        enterStep(guideId);
+    };
+
+    const handleGuideBack = (msg, guideId) => {
+        const g = activeGuides[guideId];
+        if (!g || g.currentStep <= 0) return;
+
+        // Undo current step's role assignment
+        const currentStep = g.steps[g.currentStep];
+        if (currentStep && currentStep.role) delete g.roles[currentStep.role];
+
+        // Step backward, calling onBack for each step we pass through
+        g.currentStep--;
+        const step = g.steps[g.currentStep];
+        if (typeof step.onBack === 'function') step.onBack(g.roles);
+        if (step.role) delete g.roles[step.role];
+
+        // If we backed into an auto step, keep backing up
+        if (step.auto && g.currentStep > 0) {
+            handleGuideBack(msg, guideId);
+            return;
+        }
+
+        // Re-enter this step
+        enterStep(guideId);
+    };
+
+    const handleGuideCancel = (msg, guideId) => {
+        const g = activeGuides[guideId];
+        if (!g) return;
+
+        // Undo all steps from current back to 0
+        for (let i = g.currentStep; i >= 0; i--) {
+            const step = g.steps[i];
+            if (typeof step.onBack === 'function') step.onBack(g.roles);
+        }
+
+        delete activeGuides[guideId];
+        reply(msg, 'Guide', 'Setup cancelled.');
     };
 
     const generateExtensionHandout = (sourceId, opts = {}) => {
@@ -269,7 +524,6 @@ var Choreograph = Choreograph || (() => {
         if (!hh) {
             hh = createObj('handout', {
                 name:             handoutName,
-                inplayerjournals: 'all',
                 archived:         false,
             });
         }
@@ -330,6 +584,27 @@ var Choreograph = Choreograph || (() => {
 
     const replyError = (msg, text) => reply(msg, 'Error', text);
 
+    // CSV-style array parser: splits on commas, respects double-quoted segments
+    const parseCSV = (str) => {
+        if (!str) return [];
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str[i];
+            if (ch === '"' && (i === 0 || str[i - 1] !== '\\')) {
+                inQuotes = !inQuotes;
+            } else if (ch === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += ch;
+            }
+        }
+        result.push(current.trim());
+        return result.filter(s => s.length > 0);
+    };
+
     const escHtml = (str) => String(str || '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -374,7 +649,6 @@ var Choreograph = Choreograph || (() => {
             if (existing) return existing;
             return createObj('handout', {
                 name:             HandoutCache.handoutNametag(this.tag, name),
-                inplayerjournals: '',
                 archived:         false,
             });
         };
@@ -463,15 +737,31 @@ var Choreograph = Choreograph || (() => {
         });
         html += `</table>`;
 
+        // Roles table
+        if (scene.roles && scene.roles.length > 0) {
+            html += `<table style="border-collapse:collapse;width:100%;font-size:12px;margin-bottom:8px;">`;
+            html += `<tr><th style="${STYLE.th}">Role</th>`;
+            html += `<th style="${STYLE.th}">Min</th>`;
+            html += `<th style="${STYLE.th}">Max</th></tr>`;
+            scene.roles.forEach(r => {
+                html += `<tr><td style="${STYLE.td}">${escHtml(r.name)}</td>`;
+                html += `<td style="${STYLE.td}">${r.min != null ? r.min : ''}</td>`;
+                html += `<td style="${STYLE.td}">${r.max != null ? r.max : ''}</td></tr>`;
+            });
+            html += `</table>`;
+        }
+
         // Scene table
         html += `<table style="border-collapse:collapse;width:100%;font-size:12px;">`;
         html += `<tr><th style="${STYLE.th}">Filter</th>`;
         html += `<th style="${STYLE.th}">Delay (ms)</th>`;
+        html += `<th style="${STYLE.th}">When</th>`;
         html += `<th style="${STYLE.th}">Command</th>`;
         html += `<th style="${STYLE.th}">Notes</th></tr>`;
         (scene.rows || []).forEach(row => {
             html += `<tr><td style="${STYLE.td}">${escHtml(row.filter)}</td>`;
             html += `<td style="${STYLE.td}">${escHtml(row.delay)}</td>`;
+            html += `<td style="${STYLE.td}">${escHtml(row.when || '')}</td>`;
             html += `<td style="${STYLE.td}">${escHtml((row.commands || [row.command]).join('\n'))}</td>`;
             html += `<td style="${STYLE.td}">${escHtml(row.notes)}</td></tr>`;
         });
@@ -555,6 +845,7 @@ var Choreograph = Choreograph || (() => {
             const isParamTable = headers.includes('name') && headers.includes('type');
             const isSceneTable = headers.includes('filter') && headers.some(h => h.startsWith('delay'));
             const isVarTable   = headers.includes('variable') && headers.includes('expression');
+            const isRoleTable  = headers.includes('role') && headers.includes('min');
 
             // Parse rows
             const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
@@ -583,8 +874,12 @@ var Choreograph = Choreograph || (() => {
                         expression: cells[1] || '',
                     });
                 } else if (isSceneTable && cells.length >= 2) {
+                    // Detect column layout by headers
+                    const whenIdx = headers.indexOf('when');
+                    const cmdIdx = whenIdx >= 0 ? whenIdx + 1 : 2;
+                    const notesIdx = cmdIdx + 1;
                     // Parse command cell: split on <p> boundaries for multi-command cells
-                    const rawCmd = rawCells[2] || '';
+                    const rawCmd = rawCells[cmdIdx] || '';
                     const commands = rawCmd
                         .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
                         .replace(/<\/?p[^>]*>/gi, '')
@@ -593,12 +888,20 @@ var Choreograph = Choreograph || (() => {
                         .split('\n')
                         .map(s => s.trim())
                         .filter(Boolean);
-                    scene.rows.push({
+                    const row = {
                         filter:   cells[0] || '',
                         delay:    cells[1] || '0',
                         commands: commands,
-                        notes:    cells[3] || '',
-                    });
+                        notes:    cells[notesIdx] || '',
+                    };
+                    if (whenIdx >= 0 && cells[whenIdx]) row.when = cells[whenIdx];
+                    scene.rows.push(row);
+                } else if (isRoleTable && cells.length >= 1) {
+                    const role = { name: cells[0] || '' };
+                    if (cells[1]) role.min = parseInt(cells[1], 10) || undefined;
+                    if (cells[2]) role.max = parseInt(cells[2], 10) || undefined;
+                    if (!scene.roles) scene.roles = [];
+                    scene.roles.push(role);
                 }
             }
         });
@@ -799,7 +1102,9 @@ var Choreograph = Choreograph || (() => {
         const eqIdx = c.indexOf('=');
         if (eqIdx !== -1) {
             const key = c.slice(0, eqIdx).toLowerCase();
-            const val = c.slice(eqIdx + 1);
+            const raw = c.slice(eqIdx + 1);
+            const val = (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
+                ? raw.slice(1, -1) : raw;
 
             if (key === 'layer') return token.get('layer') === val;
             if (key === 'id')    return token.get('id') === val;
@@ -955,6 +1260,41 @@ var Choreograph = Choreograph || (() => {
     const wrapToken = (rawToken, ctx) => rawToken ? new TokenProxy(rawToken, ctx) : null;
     const wrapTokens = (arr, ctx) => arr.map(t => wrapToken(t, ctx));
 
+    // LINQ-inspired enriched array — returned by cast(), role(), and token[] params
+    const itemId = (t) => {
+        if (typeof t === 'string' || typeof t === 'number') return t;
+        if (t && t._id) return t._id;
+        if (t && typeof t.get === 'function') return t.get('id');
+        return t;
+    };
+
+    const enrichArray = (arr) => {
+        arr.from = (other) => {
+            const ids = new Set((other || []).map(itemId));
+            return enrichArray(arr.filter(t => ids.has(itemId(t))));
+        };
+        arr.without = (other) => {
+            const ids = new Set((other || []).map(itemId));
+            return enrichArray(arr.filter(t => !ids.has(itemId(t))));
+        };
+        arr.where = (fn) => enrichArray(arr.filter(fn));
+        arr.select = (fn) => enrichArray(arr.map(fn));
+        arr.orderBy = (attr) => {
+            if (typeof attr === 'function') return enrichArray([...arr].sort((a, b) => attr(a) - attr(b)));
+            return enrichArray([...arr].sort((a, b) => {
+                const av = a && typeof a === 'object' ? (a[attr] !== undefined ? a[attr] : (a.get ? a.get(attr) : 0)) : a;
+                const bv = b && typeof b === 'object' ? (b[attr] !== undefined ? b[attr] : (b.get ? b.get(attr) : 0)) : b;
+                return (av || 0) - (bv || 0);
+            }));
+        };
+        arr.first = (n) => n === undefined ? arr[0] : enrichArray(arr.slice(0, n));
+        arr.last = (n) => n === undefined ? arr[arr.length - 1] : enrichArray(arr.slice(-n));
+        arr.any = (fn) => fn ? arr.some(fn) : arr.length > 0;
+        arr.count = (fn) => fn ? arr.filter(fn).length : arr.length;
+        arr.ids = () => enrichArray(arr.map(itemId));
+        return arr;
+    };
+
     // =========================================================================
     // Delay expression evaluation
     // =========================================================================
@@ -976,41 +1316,7 @@ var Choreograph = Choreograph || (() => {
 
         // actors(filter?) — returns tokens sorted by distance from current token
         // actor_ids(filter?) — returns token ID strings
-        // LINQ-inspired enriched array — returned by actors() and similar
-        // Get a comparable identity from any item (token ID, or the value itself)
-        const itemId = (t) => {
-            if (typeof t === 'string' || typeof t === 'number') return t;
-            if (t && t._id) return t._id;
-            if (t && typeof t.get === 'function') return t.get('id');
-            return t;
-        };
-
-        const enrichArray = (arr) => {
-            arr.from = (other) => {
-                const ids = new Set((other || []).map(itemId));
-                return enrichArray(arr.filter(t => ids.has(itemId(t))));
-            };
-            arr.without = (other) => {
-                const ids = new Set((other || []).map(itemId));
-                return enrichArray(arr.filter(t => !ids.has(itemId(t))));
-            };
-            arr.where = (fn) => enrichArray(arr.filter(fn));
-            arr.select = (fn) => enrichArray(arr.map(fn));
-            arr.orderBy = (attr) => {
-                if (typeof attr === 'function') return enrichArray([...arr].sort((a, b) => attr(a) - attr(b)));
-                return enrichArray([...arr].sort((a, b) => {
-                    const av = a && typeof a === 'object' ? (a[attr] !== undefined ? a[attr] : (a.get ? a.get(attr) : 0)) : a;
-                    const bv = b && typeof b === 'object' ? (b[attr] !== undefined ? b[attr] : (b.get ? b.get(attr) : 0)) : b;
-                    return (av || 0) - (bv || 0);
-                }));
-            };
-            arr.first = (n) => n === undefined ? arr[0] : enrichArray(arr.slice(0, n));
-            arr.last = (n) => n === undefined ? arr[arr.length - 1] : enrichArray(arr.slice(-n));
-            arr.any = (fn) => fn ? arr.some(fn) : arr.length > 0;
-            arr.count = (fn) => fn ? arr.filter(fn).length : arr.length;
-            arr.ids = () => enrichArray(arr.map(itemId));
-            return arr;
-        };
+        // LINQ-inspired enriched array — uses module-level enrichArray/itemId
 
         const ctx = { tokens: filteredTokens, params };
 
@@ -1073,6 +1379,22 @@ var Choreograph = Choreograph || (() => {
         } catch(e) {
             log(`${SCRIPT_NAME}: delay expression error: ${e.message} (expr: "${trimmed}")`);
             return Infinity;
+        }
+    };
+
+    // General-purpose expression eval — preserves any return type
+    const evalExpr = (expr, scope) => {
+        if (!expr || !expr.trim()) return undefined;
+        const trimmed = expr.trim();
+        const decls = Object.keys(scope).map(k =>
+            `var ${k} = __scope["${k}"];`
+        ).join(' ');
+        try {
+            const __scope = scope;
+            return eval(decls + '(' + trimmed + ')');
+        } catch(e) {
+            log(`${SCRIPT_NAME}: expression error: ${e.message} (expr: "${trimmed}")`);
+            return undefined;
         }
     };
 
@@ -1165,9 +1487,36 @@ var Choreograph = Choreograph || (() => {
             if (p.type === 'token' && val && typeof val === 'string') {
                 const obj = getObj('graphic', val);
                 if (obj) val = wrapToken(obj, { tokens: cast, params: resolvedParams });
+            } else if (p.type === 'token[]' && val && typeof val === 'string') {
+                val = enrichArray(parseCSV(val)
+                    .map(id => getObj('graphic', id.trim()))
+                    .filter(Boolean)
+                    .map(obj => wrapToken(obj, { tokens: cast, params: resolvedParams })));
+            } else if (p.type === 'path' && val && typeof val === 'string') {
+                val = getObj('path', val) || val;
+            } else if (p.type === 'path[]' && val && typeof val === 'string') {
+                val = enrichArray(parseCSV(val)
+                    .map(id => getObj('path', id.trim()))
+                    .filter(Boolean));
             }
             resolvedParams[p.name] = val;
         });
+
+        // Attach execution context for registered functions that need full cast access
+        resolvedParams.__ctx = { allTokens: cast, castData };
+
+        // Validate role constraints (min/max)
+        if (scene.roles && scene.roles.length > 0 && castData && castData.roles) {
+            for (const roleDef of scene.roles) {
+                const assigned = (castData.roles[roleDef.name] || []).length;
+                if (roleDef.min && assigned < roleDef.min) {
+                    const errMsg = `Role "${roleDef.name}" requires at least ${roleDef.min} token(s) (got ${assigned}).`;
+                    if (msg) replyError(msg, errMsg);
+                    else log(`${SCRIPT_NAME}: ${errMsg}`);
+                    return null;
+                }
+            }
+        }
 
         // Precompute variables per token
         const tokenVars = {};
@@ -1179,7 +1528,7 @@ var Choreograph = Choreograph || (() => {
                 const vars = {};
                 scene.variables.forEach(v => {
                     if (!v.name || !v.expression) return;
-                    scope[v.name] = evalDelay(v.expression, scope);
+                    scope[v.name] = evalExpr(v.expression, scope);
                     vars[v.name] = scope[v.name];
                 });
                 tokenVars[token.get('id')] = vars;
@@ -1224,6 +1573,18 @@ var Choreograph = Choreograph || (() => {
                 const delay = evalDelay(row.delay, scope);
                 if (!isFinite(delay)) return; // INF/SKIP
 
+                // Evaluate 'when' condition — skip if false
+                if (row.when) {
+                    try {
+                        const decls = Object.keys(scope).map(k => `var ${k} = __scope["${k}"];`).join(' ');
+                        const __scope = scope;
+                        if (!eval(decls + '(' + row.when + ')')) return;
+                    } catch(e) {
+                        log(`${SCRIPT_NAME}: when expression error: ${e.message} (expr: "${row.when}")`);
+                        return;
+                    }
+                }
+
                 const commands = row.commands || [row.command];
                 commands.forEach(cmdTemplate => {
                     const command = evalCommand(cmdTemplate, scope);
@@ -1258,6 +1619,8 @@ var Choreograph = Choreograph || (() => {
             queue,
             timers:   [],
             cast,
+            castName: (runtimeOpts && runtimeOpts.castName) || null,
+            castData: castData || null,
             params:   resolvedParams,
             state:    'running',
             startTime: Date.now(),
@@ -1280,6 +1643,21 @@ var Choreograph = Choreograph || (() => {
         const finishScene = () => {
             const loop = instance.loop;
             if (!loop) {
+                // Show completion card (only for top-level scenes)
+                if (instance.playerid !== 'API' && !instance.parentId) {
+                    const sceneName = instance.name;
+                    const sceneHandout = scenes().find(sceneName);
+                    const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                    const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                    const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
+                    let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
+                    card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
+                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
+                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
+                    card += `</div>`;
+                    const fakeMsg = { who: instance.who, playerid: instance.playerid };
+                    reply(fakeMsg, 'Choreograph', card, true);
+                }
                 delete runningScenes[instanceId];
                 return;
             }
@@ -1302,6 +1680,21 @@ var Choreograph = Choreograph || (() => {
                     executeChunk(0);
                 }
             } else {
+                // Loops exhausted — show completion card (only for top-level scenes)
+                if (instance.playerid !== 'API' && !instance.parentId) {
+                    const sceneName = instance.name;
+                    const sceneHandout = scenes().find(sceneName);
+                    const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                    const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                    const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
+                    let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
+                    card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
+                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
+                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
+                    card += `</div>`;
+                    const fakeMsg = { who: instance.who, playerid: instance.playerid };
+                    reply(fakeMsg, 'Choreograph', card, true);
+                }
                 delete runningScenes[instanceId];
             }
         };
@@ -1617,6 +2010,21 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
+        // Helper: parse --role flags from message content and merge into castData
+        const mergeRoleFlags = (content, castData, castIds) => {
+            const roleRegex = /--role\s+(\S+)((?:\s+-(?!-)[A-Za-z0-9_-]+)+)/g;
+            let roleMatch;
+            while ((roleMatch = roleRegex.exec(content)) !== null) {
+                const roleName = roleMatch[1];
+                const roleIds = roleMatch[2].trim().split(/\s+/).filter(Boolean);
+                if (!castData.roles[roleName]) castData.roles[roleName] = [];
+                roleIds.forEach(id => {
+                    castData.roles[roleName].push(id);
+                    castIds.push(id);
+                });
+            }
+        };
+
         // ---- run ----
         if (cmd === 'run') {
             const name = args[0];
@@ -1668,11 +2076,23 @@ var Choreograph = Choreograph || (() => {
                         return;
                     }
 
-                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync', 'sync-timeout']);
+                    const knownFlags = new Set(['id', 'force', 'loop', 'depth', 'page', 'cast', 'sync', 'sync-timeout', 'role', 'parent']);
                     const params = {};
                     Object.entries(opts).forEach(([k, v]) => {
                         if (!knownFlags.has(k) && typeof v === 'string') params[k] = v;
                     });
+
+                    // Enforce max on roles
+                    if (scene.roles && castData && castData.roles) {
+                        scene.roles.forEach(roleDef => {
+                            if (roleDef.max && castData.roles[roleDef.name]) {
+                                const arr = castData.roles[roleDef.name];
+                                if (arr.length > roleDef.max) {
+                                    castData.roles[roleDef.name] = arr.slice(-roleDef.max);
+                                }
+                            }
+                        });
+                    }
 
                     // Parse loop options
                     let loopOpts = null;
@@ -1693,15 +2113,26 @@ var Choreograph = Choreograph || (() => {
                         parent: opts.parent || null,
                         depth:  opts.depth !== undefined ? parseInt(opts.depth, 10) : 10,
                         syncTimeout: opts['sync-timeout'] ? parseInt(opts['sync-timeout'], 10) : 30000,
+                        castName: opts.cast || null,
                     };
-
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
                     const inst = runningScenes[instanceId];
                     const iName = inst ? inst.instanceName : instanceId;
-                    // Only show status card for user-initiated runs
-                    if (msg.playerid !== 'API') {
+                    // Only show status card for user-initiated runs (not children/recursive)
+                    if (msg.playerid !== 'API' && !runtimeOpts.parent) {
+                        const sceneHandout = scenes().find(name);
+                        const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                        let castInfo = '';
+                        if (inst && inst.castName) {
+                            const castHandout = casts().find(inst.castName);
+                            castInfo = castHandout
+                                ? ` — <b>${escHtml(inst.castName)}</b> <a href="http://journal.roll20.net/handout/${castHandout.get('id')}">[open]</a>`
+                                : ` — ${escHtml(inst.castName)}`;
+                        }
+                        const looseCt = (inst && inst.castName) ? 0 : cast.length;
+                        if (looseCt > 0 && !(inst && inst.castName)) castInfo = ` — ${looseCt} token(s)`;
                         let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
-                        card += `<b>${escHtml(name)}</b> — ${cast.length} token(s)<br>`;
+                        card += `<b>${escHtml(name)}</b>${openLink}${castInfo}<br>`;
                         card += `Instance: <b>${escHtml(iName)}</b><br><br>`;
                         card += btnHtml('⏸ Pause', `${CMD_TOKEN} pause ${iName}`);
                         card += btnHtml('⏹ Stop', `${CMD_TOKEN} stop ${iName}`);
@@ -1719,8 +2150,17 @@ var Choreograph = Choreograph || (() => {
                         return;
                     }
                     getAllCastIds(castData).forEach(id => castIds.push(id));
+                    // Merge --role into loaded cast if present
+                    if (opts.role) {
+                        mergeRoleFlags(msg.content, castData, castIds);
+                    }
                     runWithCast(castData);
                 });
+            } else if (opts.role) {
+                // --role <name> <ids...> — build ephemeral castData
+                const roleData = { roles: {} };
+                mergeRoleFlags(msg.content, roleData, castIds);
+                runWithCast(roleData);
             } else {
                 runWithCast(null);
             }
@@ -1985,11 +2425,33 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
+        if (cmd === 'guide') {
+            const exName = args[0];
+            const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
+            if (!ex) { replyError(msg, `No example named "${exName}".`); return; }
+            const hasGuide = (ex.guide && ex.guide.length) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
+            if (!hasGuide) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
+            startGuide(msg, `example-${exName}`, ex.guide || [], ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
+            return;
+        }
+        if (cmd === 'guide-continue') {
+            handleGuideContinue(msg, args[0]);
+            return;
+        }
+        if (cmd === 'guide-back') {
+            handleGuideBack(msg, args[0]);
+            return;
+        }
+        if (cmd === 'guide-cancel') {
+            handleGuideCancel(msg, args[0]);
+            return;
+        }
+
         if (cmd === 'example!') {
             // Generation triggered by button click
             const exName = args[0];
 
-            const ex = EXT_EXAMPLES[exName];
+            const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
             if (!ex) {
                 replyError(msg, `No example named "${exName}". Use <code>${CMD_TOKEN} example</code> to see all.`);
                 return;
@@ -2007,11 +2469,22 @@ var Choreograph = Choreograph || (() => {
             if (!scene.rows) scene.rows = [];
 
             const handout = scenes().getOrCreate(sceneName);
-            setHandoutNotes(handout, generateSceneHtml(sceneName, scene));
+            handout.set('archived', true);
+            let sceneHtml = generateSceneHtml(sceneName, scene);
+            const hasGuide = (ex.guide && ex.guide.length) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
+            if (hasGuide) {
+                const guideBtn = `<div style="margin-bottom:8px;">${btnHtml('🧭 Setup Guide', `${CMD_TOKEN} guide ${ex.name}`)}</div>`;
+                sceneHtml = guideBtn + sceneHtml;
+            }
+            setHandoutNotes(handout, sceneHtml);
             scenes().cache[sceneName] = scene;
 
-            // Call onGenerate hook if provided (e.g. to set up recordings)
-            if (typeof ex.onGenerate === 'function') ex.onGenerate(sceneName);
+            // Start guide if the example defines one or has promptable params
+            const hasGuideOrParams = (ex.guide && ex.guide.length > 0) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
+            if (hasGuideOrParams) {
+                startGuide(msg, sceneName, ex.guide || [], ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
+                return;
+            }
 
             reply(msg, 'Examples',
                 `Generated example scene "<b>${escHtml(sceneName)}</b>". `
@@ -2224,7 +2697,7 @@ var Choreograph = Choreograph || (() => {
             const handoutName = `Help: ${SCRIPT_NAME}/Extending Choreograph`;
             let hh = findObjs({ type: 'handout', name: handoutName })[0];
             if (!hh) {
-                hh = createObj('handout', { name: handoutName, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
+                hh = createObj('handout', { name: handoutName, archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
             }
 
             const h = (n, t) => `<h${n}>${t}</h${n}>`;
@@ -2627,98 +3100,86 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             },
         });
 
+        registerFunction(SCRIPT_NAME, {
+            name: 'cast', namespace: 'core', returns: 'token[]',
+            description: 'All tokens in the full cast (ignoring row filter), optionally filtered by role. Sorted by distance from current token.',
+            fn: (token, filteredTokens, params, filterStr) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = filterStr
+                    ? all.filter(t => evalFilter(filterStr, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                });
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'cast_ids', namespace: 'core', returns: 'string[]',
+            description: 'Token IDs from the full cast (ignoring row filter), optionally filtered by role. Sorted by distance.',
+            fn: (token, filteredTokens, params, filterStr) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = filterStr
+                    ? all.filter(t => evalFilter(filterStr, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                }).map(t => t.get('id'));
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'role', namespace: 'core', returns: 'token[]',
+            description: 'Shorthand for cast("role=<name>"). Returns tokens in the named role, sorted by distance.',
+            fn: (token, filteredTokens, params, roleName) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = roleName
+                    ? all.filter(t => evalFilter(`role=${roleName}`, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                });
+            },
+        });
+        registerFunction(SCRIPT_NAME, {
+            name: 'role_ids', namespace: 'core', returns: 'string[]',
+            description: 'Shorthand for cast_ids("role=<name>"). Returns IDs of tokens in the named role, sorted by distance.',
+            fn: (token, filteredTokens, params, roleName) => {
+                const ctx = params.__ctx || {};
+                const all = ctx.allTokens || filteredTokens;
+                const cd  = ctx.castData || null;
+                const set = roleName
+                    ? all.filter(t => evalFilter(`role=${roleName}`, t, cd))
+                    : all;
+                const tx = token.get('left'), ty = token.get('top');
+                return [...set].sort((a, b) => {
+                    const da = Math.pow(a.get('left') - tx, 2) + Math.pow(a.get('top') - ty, 2);
+                    const db = Math.pow(b.get('left') - tx, 2) + Math.pow(b.get('top') - ty, 2);
+                    return da - db;
+                }).map(t => t.get('id'));
+            },
+        });
+
         // ── Built-in example scenes ───────────────────────────────────────
         registerExample(SCRIPT_NAME, {
-            name: 'shockwave',
-            description: 'Propagates an echo outward from the nearest neighbor.',
-            scene: {
-                notes: 'Each token fires based on its distance rank from the nearest neighbor (actors()[1]).',
-                params: [
-                    { name: 'interval', type: 'number', default: '500', description: 'Ms between each token' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph echo 💥 Shockwave hits ${token.name}! (${actors().length} actors nearby)'], notes: 'Propagate' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'roll-call',
-            description: 'Tokens announce themselves one by one, sorted left to right.',
-            scene: {
-                notes: 'A simple stagger demo — each token echoes its name in order.',
-                params: [],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 800)', commands: ['!choreograph echo ${token.name} reporting in!'], notes: '' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'countdown',
-            description: 'Recursive countdown — echoes a number, then calls itself with n-1.',
-            scene: {
-                notes: 'Demonstrates scene chaining and recursion with sync.',
-                params: [
-                    { name: 'n', type: 'number', default: '5', description: 'Countdown start' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: '0', commands: ['!choreograph echo ${n}...'], notes: 'Echo current count' },
-                    { filter: '*', delay: 'sync', commands: [], notes: 'Wait' },
-                    { filter: '*', delay: '500', commands: ['${n > 1 ? "!choreograph run " + self + " --n " + (n - 1) : "!choreograph echo Liftoff!"}'], notes: 'Recurse or finish' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'spotlight',
-            description: 'Each token gets a moment in the spotlight — fires one at a time with a pause between.',
-            scene: {
-                notes: 'Uses sync to wait between each token\'s turn.',
-                params: [],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), 2000)', commands: ['!choreograph echo ✨ ${token.name} takes the spotlight! ✨'], notes: 'Staggered spotlight' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'elites-only',
-            description: 'Only tokens wider than 70px (large tokens) get the effect — demonstrates expression filters.',
-            scene: {
-                notes: 'Uses an expression filter: width > 70. Only large tokens fire.',
-                params: [],
-                variables: [],
-                rows: [
-                    { filter: 'width > 70', delay: '0', commands: ['!choreograph echo 🏆 ${token.name} is an elite! (width=${token.width})'], notes: 'Expression filter' },
-                    { filter: 'width <= 70', delay: '0', commands: ['!choreograph echo 🐜 ${token.name} is too small (width=${token.width})'], notes: 'Inverse' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'tidal-wave',
-            description: 'Tokens fire in a wave pattern based on horizontal position.',
-            scene: {
-                notes: 'Uses wave() for sinusoidal timing offset.',
-                params: [
-                    { name: 'wavelength', type: 'number', default: '500', description: 'Wave period in pixels' },
-                    { name: 'duration', type: 'number', default: '2000', description: 'Total wave duration in ms' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'wave(left, wavelength, duration)', commands: ['!choreograph echo 🌊 ${token.name} hit by wave at ${Math.round(wave(left, wavelength, duration))}ms'], notes: 'Wave timing' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
             name: 'fireball',
-            description: 'Explosion FX propagates outward from the leftmost token.',
+            description: 'Fire explosions propagate outward from the leftmost token. Shows stagger + rank + FX.',
+            guide: [
+                { prompt: 'Select 3+ tokens to be hit by the fireball. Arrange them in a rough cluster.', role: 'cast', min: 3 },
+            ],
             scene: {
                 notes: 'Fire explosions staggered by position — looks like a spreading fireball.',
                 params: [
@@ -2726,122 +3187,65 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                 ],
                 variables: [],
                 rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
+                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: 'Staggered explosions' },
+                ],
+            },
+        });
+
+        registerExample(SCRIPT_NAME, {
+            name: 'arcane-barrage',
+            description: 'Magic beams fire from a caster to each target in sequence. Shows multi-role guide + fxbetween + cast().',
+            guide: [
+                { prompt: 'Select the caster token (where lightning originates).', role: 'caster' },
+                { prompt: 'Select 2+ target tokens to be struck.', role: 'targets' },
+            ],
+            scene: {
+                notes: 'Lightning beam jumps from caster to each target in sequence.',
+                roles: [
+                    { name: 'caster', min: 1, max: 1 },
+                    { name: 'targets', min: 2 },
+                ],
+                params: [
+                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
+                ],
+                variables: [],
+                rows: [
+                    { filter: 'role=targets', delay: 'stagger(rank("left"), interval)', commands: [
+                        '!choreograph fxbetween beam-magic ${role("caster").first().left} ${role("caster").first().top} ${token.left} ${token.top} ${token.pageid}',
+                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
+                    ], notes: 'Beam from caster + burst at target' },
                 ],
             },
         });
 
         registerExample(SCRIPT_NAME, {
             name: 'chain-lightning',
-            description: 'Lightning beam jumps from each token to the next nearest.',
+            description: 'Lightning chains from caster to nearest target, then jumps to the next. Shows when + --role recursion.',
+            guide: [
+                { prompt: 'Select the caster token (starting point, never targeted).', role: 'caster' },
+                { prompt: 'Select 3+ targets for the lightning to chain through.', role: 'targets', onContinue: (tokens, roles) => { if (tokens.includes(roles.caster[0])) return 'Caster token cannot be selected as a target'; } },
+            ],
             scene: {
-                notes: 'Beams connect tokens in order of proximity using fxbetween.',
+                notes: 'Recursive chain: beam from conduit to nearest other target, burst, recurse with that target as new conduit.',
+                roles: [
+                    { name: 'caster', min: 1, max: 1 },
+                    { name: 'targets', min: 3 },
+                ],
                 params: [
-                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
-                        '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
-                    ], notes: 'Bolt + beam to nearest neighbor' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'battle-cry',
-            description: 'Tokens rally one by one with a ping, glow, and announcement.',
-            scene: {
-                notes: 'Staggered rally effect — each token pings, glows, and announces.',
-                params: [
-                    { name: 'interval', type: 'number', default: '800', description: 'Ms between each token' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph echo ⚔️ ${token.name} rallies!',
-                    ], notes: 'Ping + glow + announce' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'fireball',
-            description: 'Explosion FX propagates outward from the leftmost token.',
-            scene: {
-                notes: 'Fire explosions staggered by position.',
-                params: [
-                    { name: 'interval', type: 'number', default: '200', description: 'Ms between each explosion' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: '' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'chain-lightning',
-            description: 'Lightning beam jumps from each token to the next nearest.',
-            scene: {
-                notes: 'Beams connect tokens in order of proximity.',
-                params: [
-                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
-                        '${actors().length > 1 ? "!choreograph fxbetween beam-magic " + left + " " + top + " " + actors()[1].get("left") + " " + actors()[1].get("top") : ""}',
-                    ], notes: 'Bolt + beam to nearest' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'battle-cry',
-            description: 'Tokens rally one by one with a ping, glow, and announcement.',
-            scene: {
-                notes: 'Staggered rally effect.',
-                params: [
-                    { name: 'interval', type: 'number', default: '800', description: 'Ms between each token' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph fx glow-holy ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph echo ⚔️ ${token.name} rallies!',
-                    ], notes: 'Ping + glow + announce' },
-                ],
-            },
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'ripple-ping',
-            description: 'Cascading pings that propagate outward and decay in speed over distance.',
-            scene: {
-                notes: 'Pings the origin point, then recursively pings outward with decreasing speed. Pass --px/--py to set origin (defaults to center of cast).',
-                params: [
-                    { name: 'px', type: 'number', default: '0', description: 'Origin X (0 = auto-center)' },
-                    { name: 'py', type: 'number', default: '0', description: 'Origin Y (0 = auto-center)' },
-                    { name: 'speed', type: 'number', default: '0.4', description: 'Propagation speed (px/ms)' },
-                    { name: 'decay', type: 'number', default: '0.6', description: 'Speed multiplier each hop' },
-                    { name: 'minSpeed', type: 'number', default: '0.05', description: 'Stop when speed drops below this' },
+                    { name: 'speed', type: 'number', default: '2', description: 'Travel speed (px/ms)' },
+                    { name: 'jumps', type: 'number', default: '5', description: 'Max jumps remaining' },
                 ],
                 variables: [
-                    { name: 'cx', expression: 'px > 0 ? px : actors().reduce((s,t) => s + t.get("left"), 0) / count' },
-                    { name: 'cy', expression: 'py > 0 ? py : actors().reduce((s,t) => s + t.get("top"), 0) / count' },
+                    { name: 'next', expression: 'role("targets").without(role("caster")).first()' },
                 ],
                 rows: [
-                    { filter: '*', delay: 'propagate(distance(cx, cy), speed)', commands: [
-                        '!choreograph ping ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph fx nova-holy ${token.left} ${token.top} ${token.pageid}',
-                        '${speed * decay >= minSpeed ? "!choreograph run " + self + " --px " + left + " --py " + top + " --speed " + (speed * decay) + " --decay " + decay + " --minSpeed " + minSpeed : ""}',
-                    ], notes: 'Ping + FX + recurse with decay' },
+                    { filter: 'role=caster', delay: '0', when: 'jumps > 0 && next', commands: [
+                        '!choreograph fxbetween beam-magic ${token.left} ${token.top} ${next.left} ${next.top} ${token.pageid}',
+                    ], notes: 'Beam to next target' },
+                    { filter: 'role=caster', delay: 'Math.round(distance(next.left, next.top) / speed)', when: 'jumps > 0 && next', commands: [
+                        '!choreograph fx burst-magic ${next.left} ${next.top} ${token.pageid}',
+                        '!choreograph run ${self} --role caster ${next.id} --role targets ${role_ids("targets").join(" ")} --speed ${speed} --jumps ${jumps - 1}',
+                    ], notes: 'Burst + recurse with next as conduit' },
                 ],
             },
         });
@@ -2894,7 +3298,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             const helpName = `Help: ${SCRIPT_NAME}`;
             let hh = findObjs({ type: 'handout', name: helpName })[0];
             if (!hh) {
-                hh = createObj('handout', { name: helpName, inplayerjournals: 'all', archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
+                hh = createObj('handout', { name: helpName, archived: false, avatar: 'https://files.d20.io/images/127392204/tAiDP73rpSKQobEYm5QZUw/thumb.png?15878425385' });
             }
 
             const h = (n, t) => `<h${n}>${t}</h${n}>`;
