@@ -7,9 +7,11 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 - Roll20 Pro subscription (API access required)
 - [Anchor](https://github.com/Roll20/roll20-api-scripts/tree/master/Anchor) (spatial sync)
 - [Mirror](https://github.com/Roll20/roll20-api-scripts/tree/master/Mirror) (property sync)
-- [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
 - [RollCapture](https://github.com/Roll20/roll20-api-scripts/tree/master/RollCapture) (optional, roll value extraction for scripting)
-- [ZeroFrame] (https://github.com/Roll20/roll20-api-scripts/tree/master/ZeroFrame) (optional, but highly recommended for use with SelectManager)
+- [ZeroFrame] (https://github.com/Roll20/roll20-api-scripts/tree/master/ZeroFrame) (needed for the following other required scripts)
+- [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
+- [APILogic](https://github.com/Roll20/roll20-api-scripts/tree/master/APILogic) (conditional branching in scripts)
+- [Fetch](https://github.com/Roll20/roll20-api-scripts/tree/master/Fetch) (access attributes in scripts)
 
 ## Use Cases
 
