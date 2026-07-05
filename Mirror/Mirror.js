@@ -31,17 +31,50 @@ var Mirror = Mirror || (() => {
 
     // All syncable graphic properties
     const ALL_PROPS = [
+        // Spatial
         'left', 'top', 'width', 'height', 'rotation',
         'flipv', 'fliph', 'layer',
-        'bar1_value', 'bar1_max', 'bar2_value', 'bar2_max', 'bar3_value', 'bar3_max',
-        'aura1_radius', 'aura1_color', 'aura1_square',
-        'aura2_radius', 'aura2_color', 'aura2_square',
-        'tint_color', 'statusmarkers', 'name', 'showname',
+        // Bars
+        'bar1_value', 'bar1_max', 'bar1_link',
+        'bar2_value', 'bar2_max', 'bar2_link',
+        'bar3_value', 'bar3_max', 'bar3_link',
+        'bar4_value', 'bar4_max', 'bar4_link',
+        'bar_location', 'compact_bar',
+        // Bar visibility
+        'showplayers_bar1', 'showplayers_bar2', 'showplayers_bar3', 'showplayers_bar4',
+        'playersedit_bar1', 'playersedit_bar2', 'playersedit_bar3', 'playersedit_bar4',
+        'bar1_num_permission', 'bar2_num_permission', 'bar3_num_permission', 'bar4_num_permission',
+        // Name
+        'name', 'showname', 'showplayers_name', 'playersedit_name',
+        // Auras
+        'aura1_radius', 'aura1_color', 'aura1_square', 'aura1_options',
+        'aura2_radius', 'aura2_color', 'aura2_square', 'aura2_options',
+        'showplayers_aura1', 'showplayers_aura2',
+        'playersedit_aura1', 'playersedit_aura2',
+        // Appearance
+        'tint_color', 'statusmarkers', 'baseOpacity',
+        'isdrawing', 'currentSide',
+        // Tooltip
+        'tooltip', 'show_tooltip',
+        // UDL Light (emission)
+        'emits_bright_light', 'bright_light_distance',
+        'emits_low_light', 'low_light_distance', 'dim_light_opacity',
+        'has_directional_bright_light', 'directional_bright_light_center', 'directional_bright_light_total',
+        'has_directional_dim_light', 'directional_dim_light_center', 'directional_dim_light_total',
+        'lightColor',
+        // UDL Vision (sight)
+        'has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
+        'night_vision_effect', 'light_sensitivity_multiplier',
+        'has_limit_field_of_vision', 'limit_field_of_vision_center', 'limit_field_of_vision_total',
+        'has_limit_field_of_night_vision', 'limit_field_of_night_vision_center', 'limit_field_of_night_vision_total',
+        // Legacy Dynamic Lighting
         'light_radius', 'light_dimradius', 'light_angle', 'light_otherplayers',
         'light_hassight', 'light_losangle', 'light_multiplier',
-        'has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
-        'emits_bright_light', 'bright_light_distance', 'emits_low_light', 'low_light_distance',
-        'baseOpacity', 'currentSide'
+        'adv_fow_view_distance',
+        // Movement / interaction
+        'lockMovement', 'disableSnapping', 'disableTokenMenu',
+        // Foreground layer
+        'fadeOnOverlap', 'fadeOpacity', 'renderAsScenery'
     ];
 
     // Property groups
@@ -49,14 +82,34 @@ var Mirror = Mirror || (() => {
         position: ['left', 'top'],
         size: ['width', 'height'],
         spatial: ['left', 'top', 'rotation', 'width', 'height'],
-        bars: ['bar1_value', 'bar1_max', 'bar2_value', 'bar2_max', 'bar3_value', 'bar3_max'],
-        light: ['light_radius', 'light_dimradius', 'light_angle', 'light_otherplayers',
-                'light_hassight', 'light_losangle', 'light_multiplier',
-                'has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
-                'emits_bright_light', 'bright_light_distance', 'emits_low_light', 'low_light_distance'],
-        auras: ['aura1_radius', 'aura1_color', 'aura1_square', 'aura2_radius', 'aura2_color', 'aura2_square'],
+        bars: ['bar1_value', 'bar1_max', 'bar1_link',
+               'bar2_value', 'bar2_max', 'bar2_link',
+               'bar3_value', 'bar3_max', 'bar3_link',
+               'bar4_value', 'bar4_max', 'bar4_link',
+               'bar_location', 'compact_bar',
+               'showplayers_bar1', 'showplayers_bar2', 'showplayers_bar3', 'showplayers_bar4',
+               'playersedit_bar1', 'playersedit_bar2', 'playersedit_bar3', 'playersedit_bar4',
+               'bar1_num_permission', 'bar2_num_permission', 'bar3_num_permission', 'bar4_num_permission'],
+        name: ['name', 'showname', 'showplayers_name', 'playersedit_name'],
+        auras: ['aura1_radius', 'aura1_color', 'aura1_square', 'aura1_options',
+                'aura2_radius', 'aura2_color', 'aura2_square', 'aura2_options',
+                'showplayers_aura1', 'showplayers_aura2',
+                'playersedit_aura1', 'playersedit_aura2'],
+        light: ['emits_bright_light', 'bright_light_distance',
+                'emits_low_light', 'low_light_distance', 'dim_light_opacity',
+                'has_directional_bright_light', 'directional_bright_light_center', 'directional_bright_light_total',
+                'has_directional_dim_light', 'directional_dim_light_center', 'directional_dim_light_total',
+                'lightColor',
+                'light_radius', 'light_dimradius', 'light_angle', 'light_otherplayers',
+                'light_losangle', 'light_multiplier', 'adv_fow_view_distance'],
+        sight: ['has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
+                'night_vision_effect', 'light_sensitivity_multiplier',
+                'light_hassight',
+                'has_limit_field_of_vision', 'limit_field_of_vision_center', 'limit_field_of_vision_total',
+                'has_limit_field_of_night_vision', 'limit_field_of_night_vision_center', 'limit_field_of_night_vision_total'],
         flip: ['flipv', 'fliph'],
-        anchor: ['left', 'top', 'width', 'height', 'rotation', 'flipv', 'fliph', 'layer']
+        anchor: ['left', 'top', 'width', 'height', 'rotation', 'flipv', 'fliph', 'layer'],
+        tooltip: ['tooltip', 'show_tooltip']
     };
 
     // =========================================================================
