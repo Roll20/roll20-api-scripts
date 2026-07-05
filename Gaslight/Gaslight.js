@@ -2098,6 +2098,7 @@ var Gaslight = Gaslight || (() => {
 
     // triggerMap: attributeName → [{ pinId, pageId }]
     var triggerMap = {};
+    var knownScriptPins = []; // cached pin IDs + handout links from last buildTriggerMap
 
     /**
      * Parse a script's conditional blocks to find referenced attributes for auto-triggering.
@@ -2130,6 +2131,7 @@ var Gaslight = Gaslight || (() => {
      */
     const buildTriggerMap = () => {
         triggerMap = {};
+        knownScriptPins = [];
         var s = state[SCRIPT_NAME];
 
         Object.values(s.activeGroups).forEach(function(group) {
@@ -2137,6 +2139,7 @@ var Gaslight = Gaslight || (() => {
             allPageIds.forEach(function(pageId) {
                 var pins = findScriptPins(pageId);
                 pins.forEach(function(pin) {
+                    knownScriptPins.push({ pinId: pin.get('_id'), pageId: pageId, handoutId: pin.get('link') || null });
                     parsePinConfig(pin, function(config) {
                         if (!config) return;
                         var explicitTriggers = config.triggers.filter(function(t) { return t.startsWith('on change '); }).map(function(t) { return t.slice(10).trim(); });
@@ -2164,6 +2167,43 @@ var Gaslight = Gaslight || (() => {
                         }
                     });
                 });
+            });
+        });
+    };
+
+    /**
+     * Rebuild triggerMap using cached pin IDs (works in non-chat contexts where findObjs fails for pins).
+     * Uses getObj('pin', id) which works in all contexts.
+     */
+    const rebuildTriggerMapFromCache = () => {
+        if (knownScriptPins.length === 0) return;
+        triggerMap = {};
+        knownScriptPins.forEach(function(cached) {
+            var pin = getObj('pin', cached.pinId);
+            if (!pin) return;
+            parsePinConfig(pin, function(config) {
+                if (!config) return;
+                var explicitTriggers = config.triggers.filter(function(t) { return t.startsWith('on change '); }).map(function(t) { return t.slice(10).trim(); });
+                var manualOnly = config.triggers.some(function(t) { return t === 'manual only'; });
+                if (manualOnly) return;
+
+                if (explicitTriggers.length > 0) {
+                    explicitTriggers.forEach(function(field) {
+                        if (!triggerMap[field]) triggerMap[field] = [];
+                        triggerMap[field].push({ pinId: cached.pinId, pageId: cached.pageId });
+                    });
+                } else {
+                    getPinScript(pin, function(content) {
+                        if (!content) return;
+                        var autoTriggers = parseTriggersFromScript(content);
+                        var ignored = config.triggers.filter(function(t) { return t.startsWith('ignore '); }).map(function(t) { return t.slice(7).trim(); });
+                        autoTriggers = autoTriggers.filter(function(t) { return ignored.indexOf(t) === -1; });
+                        autoTriggers.forEach(function(field) {
+                            if (!triggerMap[field]) triggerMap[field] = [];
+                            triggerMap[field].push({ pinId: cached.pinId, pageId: cached.pageId });
+                        });
+                    });
+                }
             });
         });
     };
@@ -4914,6 +4954,67 @@ var Gaslight = Gaslight || (() => {
             }
 
             reflowInitiativeHud('none');
+        });
+
+        // --- TriggerMap auto-rebuild ---
+
+        // Helper: check if a page belongs to any active group
+        var isActivePage = function(pageId) {
+            var s = state[SCRIPT_NAME];
+            return Object.values(s.activeGroups).some(function(g) {
+                if (g.masterPageId === pageId) return true;
+                return Object.values(g.playerPages).some(function(p) { return p.pageId === pageId; });
+            });
+        };
+
+        // 1. Handout notes change → rebuild triggerMap from cache
+        on('change:handout:notes', function(obj) {
+            var s = state[SCRIPT_NAME];
+            if (Object.keys(s.activeGroups).length === 0) return;
+            var handoutId = obj.get('_id');
+            if (knownScriptPins.some(function(p) { return p.handoutId === handoutId; })) {
+                rebuildTriggerMapFromCache();
+            }
+        });
+
+        // 2. Pin gmnotes change → rebuild from cache if pin is known
+        on('change:pin:gmNotes', function(obj) {
+            if (Object.keys(state[SCRIPT_NAME].activeGroups).length === 0) return;
+            if (knownScriptPins.some(function(p) { return p.pinId === obj.get('_id'); })) {
+                rebuildTriggerMapFromCache();
+            }
+        });
+
+        // 3. Pin link/linkType change → rebuild from cache
+        on('change:pin:link', function(obj) {
+            if (Object.keys(state[SCRIPT_NAME].activeGroups).length === 0) return;
+            // Update cache entry with new handout link
+            var pinId = obj.get('_id');
+            var cached = knownScriptPins.find(function(p) { return p.pinId === pinId; });
+            if (cached) {
+                cached.handoutId = obj.get('link') || null;
+                rebuildTriggerMapFromCache();
+            } else if (isActivePage(obj.get('_pageid')) && obj.get('link') && obj.get('linkType') === 'handout') {
+                // New script pin — add to cache and rebuild
+                knownScriptPins.push({ pinId: pinId, pageId: obj.get('_pageid'), handoutId: obj.get('link') });
+                rebuildTriggerMapFromCache();
+            }
+        });
+        on('change:pin:linkType', function(obj) {
+            if (Object.keys(state[SCRIPT_NAME].activeGroups).length === 0) return;
+            if (knownScriptPins.some(function(p) { return p.pinId === obj.get('_id'); })) {
+                rebuildTriggerMapFromCache();
+            }
+        });
+
+        // 4. New pin added to active page → add to cache and rebuild
+        on('add:pin', function(obj) {
+            if (Object.keys(state[SCRIPT_NAME].activeGroups).length === 0) return;
+            if (!isActivePage(obj.get('_pageid'))) return;
+            if (obj.get('link') && obj.get('linkType') === 'handout') {
+                knownScriptPins.push({ pinId: obj.get('_id'), pageId: obj.get('_pageid'), handoutId: obj.get('link') });
+                rebuildTriggerMapFromCache();
+            }
         });
     };
 
