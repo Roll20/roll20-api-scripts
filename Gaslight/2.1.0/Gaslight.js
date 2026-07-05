@@ -1,6 +1,6 @@
 // =============================================================================
 // Gaslight v2.1.0
-// Last Updated: 2026-07-03
+// Last Updated: 2026-07-05
 // Author: Kenan Millet
 //
 // Description:
@@ -21,9 +21,13 @@
 //   !gaslight group <name> <player|GM>          Assign page to group
 //   !gaslight ungroup <name> <player|--all>     Remove page from group
 //   !gaslight stage [players...]                Propagate tokens to player pages
-//   !gaslight view [player|master]              Switch relay view target
+//   !gaslight sync [props|all|reset]            Manage sync per token
+//   !gaslight desync [props|all]                Exclude props from sync
+//   !gaslight var [--silent] [actions...]       Read/set/unset gl_ variables
+//   !gaslight view [player|master|off]          Switch relay view target
 //   !gaslight relay <views...> <!command>       Manually relay command to views
 //   !gaslight config [relay-add|remove|list]    Configure auto-relay commands
+//   !gaslight hud [on|off|reset] [element]      Toggle HUD elements
 //   !gaslight eval [--dry-run] [--all|<name>]   Evaluate script pins
 //   !gaslight status                            Show current state
 //   !gaslight --help                            Command reference
@@ -365,6 +369,9 @@ var Gaslight = Gaslight || (() => {
         pagesToCloneTo.forEach(function(targetPageId) {
             var imgsrc = token.get('imgsrc');
             if (!imgsrc) return;
+
+            // Create with minimal props (spatial + identity + gmnotes)
+            // Mirror.align handles synced properties after linking is established
             var newToken = createObj('graphic', {
                 _subtype: 'token',
                 pageid: targetPageId,
@@ -374,10 +381,13 @@ var Gaslight = Gaslight || (() => {
                 width: token.get('width'),
                 height: token.get('height'),
                 rotation: token.get('rotation'),
+                flipv: token.get('flipv'),
+                fliph: token.get('fliph'),
                 layer: token.get('layer'),
                 name: token.get('name'),
                 represents: token.get('represents') || '',
-                controlledby: token.get('controlledby') || ''
+                controlledby: token.get('controlledby') || '',
+                gmnotes: token.get('gmnotes') || ''
             });
             if (newToken) setLinkId(newToken, getLinkId(token));
             cloned++;
@@ -737,9 +747,9 @@ var Gaslight = Gaslight || (() => {
             if (syncProps === '') return;
 
             // Determine which props go to Anchor vs Mirror
-            var allAnchorProps = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph', 'layer'];
+            var allAnchorProps = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
             var needsAnchor = true;
-            var anchorComponents = null; // null = use Anchor defaults
+            var anchorComponents = null; // null = use allAnchorProps as default
             var mirrorProps = null; // null = all non-anchor
             if (Array.isArray(syncProps)) {
                 var anchorRequested = syncProps.filter(function(p) { return allAnchorProps.indexOf(p) !== -1; });
@@ -751,6 +761,11 @@ var Gaslight = Gaslight || (() => {
                     anchorRequested.forEach(function(p) { anchorComponents[p] = true; });
                 }
                 mirrorProps = mirrorRequested.length > 0 ? mirrorRequested : false;
+            }
+            // Always pass explicit components — never let Anchor default to ALL_COMPONENTS
+            if (!anchorComponents) {
+                anchorComponents = {};
+                allAnchorProps.forEach(function(p) { anchorComponents[p] = true; });
             }
 
             // Set up Anchor links (spatial sync)
@@ -805,11 +820,15 @@ var Gaslight = Gaslight || (() => {
             // Set up Mirror chain for non-spatial property sync
             if (typeof Mirror !== 'undefined' && mirrorProps !== false) {
                 if (mirrorProps === null) {
-                    // Default: sync all minus whatever Anchor is handling
+                    // Default: sync all minus anchor and sight (sight stripped from children)
                     var mirrorExcludes = anchorComponents ? Object.keys(anchorComponents) : allAnchorProps;
+                    // Also exclude sight unless explicitly included in gaslight_sync
+                    if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS && Mirror.PROP_GROUPS.sight) {
+                        mirrorExcludes = mirrorExcludes.concat(Mirror.PROP_GROUPS.sight);
+                    }
                     Mirror.chainLink(ids, null, mirrorExcludes);
                 } else if (Array.isArray(mirrorProps) && mirrorProps.length > 0) {
-                    // Specific non-spatial props
+                    // Specific non-spatial props (user explicitly chose what to sync)
                     Mirror.chainLink(ids, mirrorProps);
                 }
             }
@@ -1273,6 +1292,254 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + tokens.length + ' token(s).');
     };
 
+    /**
+     * Read/set/unset gl_* variables on token gmnotes or character sheet.
+     * Supports chained actions: --get, --set, --del, --setch, --delch
+     * After mutations, propagates to linked tokens and triggers eval (unless --silent).
+     *
+     * Usage: !gaslight var [--silent] [actions...]
+     *   --get <name>          Read gl_<name> (token gmnotes priority, fallback to char)
+     *   --set <name> <value>  Set gl_<name> on token gmnotes
+     *   --del <name>          Remove gl_<name> from token gmnotes
+     *   --setch <name> <value> Set gl_<name> on character sheet attribute
+     *   --delch <name>        Remove gl_<name> from character sheet attribute
+     */
+    const doVar = (msg, args) => {
+        var silent = args.indexOf('--silent') !== -1;
+        args = args.filter(function(a) { return a !== '--silent'; });
+
+        var tokens = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
+        if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) first.'); return; }
+        if (args.length === 0) { reply(msg, 'Error', 'Usage: !gaslight var [--silent] --get|--set|--del|--setch|--delch &lt;name&gt; [value]'); return; }
+
+        // Parse chained actions
+        var actions = [];
+        var i = 0;
+        while (i < args.length) {
+            var action = args[i].toLowerCase();
+            if (action === '--get') {
+                if (i + 1 >= args.length) { reply(msg, 'Error', '--get requires a name.'); return; }
+                actions.push({ type: 'get', name: args[i + 1] });
+                i += 2;
+            } else if (action === '--set') {
+                if (i + 2 >= args.length) { reply(msg, 'Error', '--set requires a name and value.'); return; }
+                actions.push({ type: 'set', name: args[i + 1], value: args[i + 2] });
+                i += 3;
+            } else if (action === '--del') {
+                if (i + 1 >= args.length) { reply(msg, 'Error', '--del requires a name.'); return; }
+                actions.push({ type: 'del', name: args[i + 1] });
+                i += 2;
+            } else if (action === '--setch') {
+                if (i + 2 >= args.length) { reply(msg, 'Error', '--setch requires a name and value.'); return; }
+                actions.push({ type: 'setch', name: args[i + 1], value: args[i + 2] });
+                i += 3;
+            } else if (action === '--delch') {
+                if (i + 1 >= args.length) { reply(msg, 'Error', '--delch requires a name.'); return; }
+                actions.push({ type: 'delch', name: args[i + 1] });
+                i += 2;
+            } else {
+                reply(msg, 'Error', 'Unknown action: ' + args[i] + '. Expected --get, --set, --del, --setch, or --delch.');
+                return;
+            }
+        }
+
+        // Normalize names — ensure gl_ prefix
+        actions.forEach(function(a) {
+            if (!a.name.startsWith('gl_')) a.name = 'gl_' + a.name;
+        });
+
+        var s = state[SCRIPT_NAME];
+        var output = [];
+        var mutatedTokenGmnotes = false;
+        var mutatedCharAttrs = false;
+
+        tokens.forEach(function(t) {
+            var tokenName = t.get('name') || t.get('id');
+            var tokenId = t.get('id');
+            var onMaster = Object.values(s.activeGroups).some(function(active) { return t.get('_pageid') === active.masterPageId; });
+
+            // Determine which tokens to read from / write to based on view
+            var resolveViewTargets = function() {
+                if (!onMaster) return [t]; // non-master: operate on itself only
+                if (s.view === null) return [t]; // off: master only
+                if (s.view === 'master') {
+                    // All linked tokens including master
+                    var targets = [t];
+                    Object.values(s.activeGroups).forEach(function(active) {
+                        var allLinked = (active.linkedTokens[tokenId] || []).slice();
+                        Object.entries(active.linkedTokens).forEach(function(entry) {
+                            if (entry[1].indexOf(tokenId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                        });
+                        allLinked.filter(function(id, idx, arr) { return arr.indexOf(id) === idx && id !== tokenId; }).forEach(function(id) {
+                            var linked = getObj('graphic', id);
+                            if (linked) targets.push(linked);
+                        });
+                    });
+                    return targets;
+                }
+                // Specific player: find their linked copy
+                var playerTargets = [];
+                Object.values(s.activeGroups).forEach(function(active) {
+                    var targetPageId = active.playerPages[s.view] ? active.playerPages[s.view].pageId : null;
+                    if (!targetPageId) return;
+                    var allLinked = (active.linkedTokens[tokenId] || []).slice();
+                    Object.entries(active.linkedTokens).forEach(function(entry) {
+                        if (entry[1].indexOf(tokenId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                    });
+                    allLinked.filter(function(id, idx, arr) { return arr.indexOf(id) === idx && id !== tokenId; }).forEach(function(id) {
+                        var linked = getObj('graphic', id);
+                        if (linked && linked.get('_pageid') === targetPageId) playerTargets.push(linked);
+                    });
+                });
+                return playerTargets.length > 0 ? playerTargets : [t];
+            };
+
+            // For --get: read from view targets
+            var getTargets = resolveViewTargets();
+            // For --set/--del: write to view targets (master included only if view is master or off)
+            var writeTargets;
+            if (!onMaster || s.view === null || s.view === 'master') {
+                writeTargets = resolveViewTargets();
+            } else {
+                // view is a specific player: only write to that player's copy, not master
+                writeTargets = resolveViewTargets();
+            }
+
+            // Process --get actions against getTargets
+            actions.forEach(function(a) {
+                if (a.type !== 'get') return;
+                if (s.view === 'master' && onMaster && getTargets.length > 1) {
+                    // Compact format: show all values
+                    var vals = getTargets.map(function(target) {
+                        var tNotes = target.get('gmnotes') || '';
+                        try { tNotes = decodeURIComponent(tNotes); } catch(e) {}
+                        var val = readGlField(tNotes, a.name);
+                        if (!val) {
+                            var charId = target.get('represents');
+                            if (charId) val = getAttrByName(charId, a.name) || '';
+                        }
+                        var pageName = 'master';
+                        Object.values(s.activeGroups).forEach(function(active) {
+                            if (target.get('_pageid') === active.masterPageId) pageName = 'master';
+                            Object.entries(active.playerPages).forEach(function(e) {
+                                if (target.get('_pageid') === e[1].pageId) pageName = e[1].name || e[0];
+                            });
+                        });
+                        return pageName + ': ' + (val || '<i>∅</i>');
+                    });
+                    output.push('<b>' + tokenName + '</b> ' + a.name + ' — ' + vals.join(', '));
+                } else {
+                    var target = getTargets[0];
+                    var tNotes = target.get('gmnotes') || '';
+                    try { tNotes = decodeURIComponent(tNotes); } catch(e) {}
+                    var val = readGlField(tNotes, a.name);
+                    if (!val) {
+                        var charId = target.get('represents');
+                        if (charId) val = getAttrByName(charId, a.name) || '';
+                    }
+                    output.push('<b>' + tokenName + '</b> ' + a.name + ' = ' + (val || '<i>(not set)</i>'));
+                }
+            });
+
+            // Process --set/--del/--setch/--delch against writeTargets
+            var prevGmnotes_original = t.get('gmnotes') || '';
+            writeTargets.forEach(function(target) {
+                var prevGmnotes = target.get('gmnotes') || '';
+                var notes = prevGmnotes;
+                try { notes = decodeURIComponent(notes); } catch(e) {}
+                var gmnotesChanged = false;
+
+                actions.forEach(function(a) {
+                    if (a.type === 'set') {
+                        var rx = new RegExp(a.name + '\\s*[=:]\\s*[^\\n]*');
+                        if (notes.match(rx)) {
+                            notes = notes.replace(rx, a.name + ': ' + a.value);
+                        } else {
+                            notes = (notes ? notes + '\n' : '') + a.name + ': ' + a.value;
+                        }
+                        gmnotesChanged = true;
+                    } else if (a.type === 'del') {
+                        notes = notes.replace(new RegExp('\\n?' + a.name + '\\s*[=:]\\s*[^\\n]*'), '');
+                        gmnotesChanged = true;
+                    } else if (a.type === 'setch') {
+                        var charId = target.get('represents');
+                        if (!charId) return;
+                        var attr = findObjs({ _type: 'attribute', _characterid: charId, name: a.name })[0];
+                        if (attr) { attr.set('current', a.value); }
+                        else { createObj('attribute', { characterid: charId, name: a.name, current: a.value }); }
+                        mutatedCharAttrs = true;
+                    } else if (a.type === 'delch') {
+                        var charId = target.get('represents');
+                        if (!charId) return;
+                        var attr = findObjs({ _type: 'attribute', _characterid: charId, name: a.name })[0];
+                        if (attr) attr.remove();
+                        mutatedCharAttrs = true;
+                    }
+                });
+
+                if (gmnotesChanged) {
+                    target.set('gmnotes', notes);
+                    mutatedTokenGmnotes = true;
+                }
+            });
+
+            // Trigger script evaluation once, scoped to view (unless --silent)
+            if (mutatedTokenGmnotes && !silent) {
+                // Pick the right token to trigger from based on view
+                var triggerTarget;
+                if (!onMaster || s.view === null || s.view === 'master') {
+                    triggerTarget = t; // master token: evaluates for all viewers
+                } else {
+                    // Specific player view: trigger from their copy so eval scopes to that viewer
+                    triggerTarget = writeTargets[0] || t;
+                }
+                onGmNotesChanged(triggerTarget, { gmnotes: prevGmnotes_original });
+            }
+
+            // Trigger eval for char attr mutations (scripts may resolve from char)
+            if (mutatedCharAttrs && !silent) {
+                var changedFields = actions.filter(function(a) { return a.type === 'setch' || a.type === 'delch'; }).map(function(a) { return a.name; });
+                changedFields.forEach(function(field) {
+                    var entries = triggerMap[field];
+                    if (!entries || entries.length === 0) return;
+                    var masterTokenId = null;
+                    Object.values(s.activeGroups).forEach(function(active) {
+                        var allLinked = (active.linkedTokens[tokenId] || []).slice();
+                        Object.entries(active.linkedTokens).forEach(function(entry) {
+                            if (entry[1].indexOf(tokenId) !== -1) allLinked = allLinked.concat([entry[0]]).concat(entry[1]);
+                        });
+                        allLinked.filter(function(id, idx) { return allLinked.indexOf(id) === idx; }).forEach(function(id) {
+                            var tok = getObj('graphic', id);
+                            if (tok && tok.get('_pageid') === active.masterPageId) masterTokenId = id;
+                        });
+                        if (t.get('_pageid') === active.masterPageId) masterTokenId = tokenId;
+                    });
+                    entries.forEach(function(entry) {
+                        var pin = getObj('pin', entry.pinId);
+                        if (!pin) return;
+                        var fakeMsg = { playerid: 'API', who: 'API', type: 'api' };
+                        evaluatePins([pin], fakeMsg, false, masterTokenId, t.get('_pageid'));
+                    });
+                });
+            }
+        });
+
+        // Build summary
+        var hasMutations = actions.some(function(a) { return a.type !== 'get'; });
+        if (output.length > 0) {
+            reply(msg, 'Var', output.join('<br>'));
+        }
+        if (hasMutations) {
+            var summary = actions.filter(function(a) { return a.type !== 'get'; }).map(function(a) {
+                if (a.type === 'set') return 'set ' + a.name + ' = ' + a.value;
+                if (a.type === 'del') return 'del ' + a.name;
+                if (a.type === 'setch') return 'setch ' + a.name + ' = ' + a.value;
+                if (a.type === 'delch') return 'delch ' + a.name;
+            }).join(', ');
+            reply(msg, 'Var', summary + ' on ' + tokens.length + ' token(s).' + (silent ? ' (silent)' : ''));
+        }
+    };
+
     const doGroup = (msg, args) => {
         if (args.length < 2) { reply(msg, 'Error', 'Usage: !gaslight group &lt;group&gt; &lt;player|GM&gt;'); return; }
         const groupName = args.shift();
@@ -1468,7 +1735,12 @@ var Gaslight = Gaslight || (() => {
                 else reply(msg, 'Warning', 'Player "' + name + '" not found in group.');
             });
         } else {
-            targetPlayerIds = Object.keys(groupInfo.players);
+            // Default: follow current view target
+            if (s.view && s.view !== 'master' && groupInfo.players[s.view]) {
+                targetPlayerIds = [s.view];
+            } else {
+                targetPlayerIds = Object.keys(groupInfo.players);
+            }
         }
 
         if (targetPlayerIds.length === 0) { reply(msg, 'Error', 'No valid target players.'); return; }
@@ -1497,6 +1769,13 @@ var Gaslight = Gaslight || (() => {
                 links.forEach(function(l) { if (l.target) allLinks.push(l); });
             });
             establishLinks(groupName, groupDiscovered, allLinks);
+
+            // Align synced properties from source tokens to newly linked children
+            if (typeof Mirror !== 'undefined' && Mirror.align) {
+                tokens.forEach(function(token) {
+                    Mirror.align(token.get('id'), { ifLinked: true });
+                });
+            }
         }
 
         reply(msg, 'Stage', 'Staged ' + staged + ' token(s) to ' + targetPlayerIds.length + ' player page(s).');
@@ -1546,6 +1825,11 @@ var Gaslight = Gaslight || (() => {
                 links.forEach(function(l) { if (l.target) allLinks.push(l); });
             });
             establishLinks(groupName, groupDiscovered, allLinks);
+
+            // Align synced properties from source to newly linked children
+            if (typeof Mirror !== 'undefined' && Mirror.align) {
+                Mirror.align(obj.get('id'), { ifLinked: true });
+            }
         }, 500);
     };
 
@@ -1712,8 +1996,7 @@ var Gaslight = Gaslight || (() => {
         + '<code>' + CMD + ' unlink [ids...]</code> -- Unlink tokens<br>'
         + '<code>' + CMD + ' sync [props|all|reset]</code> -- Manage sync per token<br>'
         + '<code>' + CMD + ' desync [props|all]</code> -- Exclude props from sync<br>'
-        + '<code>' + CMD + ' sync [props|all|reset]</code> -- Manage sync per token<br>'
-        + '<code>' + CMD + ' desync [props|all]</code> -- Exclude props from sync<br>'
+        + '<code>' + CMD + ' var [--silent] [actions...]</code> -- Read/set/unset gl_ vars<br>'
         + '<code>' + CMD + ' view [master|off|&lt;player&gt;]</code> -- Control relay targeting<br>'
         + '<code>' + CMD + ' relay &lt;views&gt; &lt;!cmd&gt;</code> -- Relay command to views<br>'
         + '<code>' + CMD + ' group &lt;group&gt; &lt;player|GM&gt;</code> -- Assign page<br>'
@@ -2431,9 +2714,12 @@ var Gaslight = Gaslight || (() => {
                     var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
                     if (gmPlayer) senderId = gmPlayer.get('_id');
                 }
-                sendChat('', CMD + ' --script-lock', null, { noarchive: true });
-                sendChat(getPlayerName(senderId), fullCmd);
-                sendChat('', CMD + ' --script-unlock', null, { noarchive: true });
+                var batch = '!{{\n'
+                    + CMD + ' --script-lock\n'
+                    + fullCmd + ' {& select ' + viewerTarget.get('id') + '}\n'
+                    + '(^)!^gaslight --script-unlock\n'
+                    + '}}';
+                sendChat(getPlayerName(senderId), batch);
             }
         }
     };
@@ -2569,6 +2855,7 @@ var Gaslight = Gaslight || (() => {
             case 'unlink':  doUnlink(msg, args);  break;
             case 'sync':    doSync(msg, args);    break;
             case 'desync':  doDesync(msg, args);  break;
+            case 'var':     doVar(msg, args);     break;
             case 'group':   doGroup(msg, args);   break;
             case 'ungroup': doUngroup(msg, args); break;
             case 'relay':   doRelay(msg, args);   break;

@@ -42,6 +42,7 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 | `!gaslight unlink [ids...\|--group <group>]` | Remove links |
 | `!gaslight sync [props\|all\|reset]` | Manage sync whitelist per token |
 | `!gaslight desync [props\|all]` | Exclude props from sync per token |
+| `!gaslight var [--silent] [actions...]` | Read/set/unset gl_* variables |
 | `!gaslight view [master\|off\|<player>]` | Control command relay targeting |
 | `!gaslight relay <views...> <!command>` | Relay command to views |
 | `!gaslight group <group> <player\|GM>` | Assign page to group |
@@ -79,6 +80,42 @@ Controlled by `gaslight_sync` in token GM notes (auto-populated from character a
 | `!gaslight sync reset` | Re-copy from character attribute |
 | `!gaslight desync <props>` | Exclude specific props from sync |
 | `!gaslight desync all` | Disable all syncing (link preserved) |
+
+### gl_* Variables (`!gaslight var`)
+
+Read, set, or unset `gl_*` variables on tokens (gmnotes) or character sheets. Actions are chainable in a single command. Respects the current view for reads and writes.
+
+**Actions:**
+
+| Action | Description |
+|--------|-------------|
+| `--get <name>` | Read value (token gmnotes priority, fallback to character attribute) |
+| `--set <name> <value>` | Set on token gmnotes |
+| `--del <name>` | Remove from token gmnotes |
+| `--setch <name> <value>` | Set on character sheet attribute |
+| `--delch <name>` | Remove from character sheet attribute |
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--silent` | Don't trigger script evaluation after setting |
+
+**View behavior (master token selected):**
+- `view master` → read/write all linked copies (compact display for `--get`)
+- `view <player>` → read/write only that player's copy
+- `view off` → read/write master token only
+
+**Examples:**
+```
+!gaslight var --set stealth_result 15
+!gaslight var --get stealth_result
+!gaslight var --set stealth_result 20 --setch stealth_dc 12
+!gaslight var --del stealth_result --delch stealth_dc
+!gaslight var --silent --set stealth_result 25
+```
+
+The `gl_` prefix is implicit — `stealth_result` and `gl_stealth_result` both map to `gl_stealth_result`.
 
 ## Command Relay
 
@@ -150,8 +187,10 @@ On-canvas indicators on the master page foreground layer. Toggle with `!gaslight
 
 ## Staging
 
-- `!gaslight stage` — propagate selected tokens to all player pages
+- `!gaslight stage` — propagate selected tokens to player pages (follows current view; all if view is master/off)
+- `!gaslight stage <player>` — propagate to a specific player's page
 - `gaslight_stage = 1` character attribute — auto-propagate on placement
+- Staged tokens inherit all synced properties via Mirror after linking
 - Linked tokens cascade-delete when removed
 
 ## Configuration Storage
