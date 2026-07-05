@@ -855,7 +855,7 @@ var Gaslight = Gaslight || (() => {
      * Expects N+1 pages with the same name (or name prefix). Assigns master + players.
      */
     const doSetup = (msg, args) => {
-        if (args.length < 1) { reply(msg, 'Error', 'Usage: !gaslight setup &lt;group_name&gt; [--selected | player names...]'); return; }
+        if (args.length < 1) { reply(msg, 'Error', 'Usage: !gaslight setup &lt;group_name&gt; [players...]'); return; }
         var groupName = args.shift();
 
         // Determine players: selected tokens + named args, fallback to party tags
@@ -2843,7 +2843,13 @@ var Gaslight = Gaslight || (() => {
         if (msg.content.split(' ')[0] !== CMD) return;
         if (!playerIsGM(msg.playerid) && msg.playerid !== 'API') return;
 
-        const args = msg.content.slice(CMD.length).trim().split(/\s+/).filter(Boolean);
+        const rawArgs = msg.content.slice(CMD.length).trim();
+        const args = [];
+        var argRx = /"([^"]*)"|'([^']*)'|`([^`]*)`|(\S+)/g;
+        var argMatch;
+        while ((argMatch = argRx.exec(rawArgs)) !== null) {
+            args.push(argMatch[1] !== undefined ? argMatch[1] : argMatch[2] !== undefined ? argMatch[2] : argMatch[3] !== undefined ? argMatch[3] : argMatch[4]);
+        }
         const sub = (args.shift() || '').toLowerCase();
 
         switch (sub) {
