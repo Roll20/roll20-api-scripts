@@ -7,8 +7,11 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 - Roll20 Pro subscription (API access required)
 - [Anchor](https://github.com/Roll20/roll20-api-scripts/tree/master/Anchor) (spatial sync)
 - [Mirror](https://github.com/Roll20/roll20-api-scripts/tree/master/Mirror) (property sync)
-- [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
 - [RollCapture](https://github.com/Roll20/roll20-api-scripts/tree/master/RollCapture) (optional, roll value extraction for scripting)
+- [ZeroFrame] (https://github.com/Roll20/roll20-api-scripts/tree/master/ZeroFrame) (needed for the following other required scripts)
+- [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
+- [APILogic](https://github.com/Roll20/roll20-api-scripts/tree/master/APILogic) (conditional branching in scripts)
+- [Fetch](https://github.com/Roll20/roll20-api-scripts/tree/master/Fetch) (access attributes in scripts)
 
 ## Use Cases
 
@@ -37,11 +40,14 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 | `!gaslight test <group>` | Dry-run linking resolution |
 | `!gaslight link [name\|new] [ids...]` | Manually link tokens |
 | `!gaslight unlink [ids...\|--group <group>]` | Remove links |
+| `!gaslight sync [props\|all\|reset]` | Manage sync whitelist per token |
+| `!gaslight desync [props\|all]` | Exclude props from sync per token |
+| `!gaslight var [--silent] [actions...]` | Read/set/unset gl_* variables |
+| `!gaslight view [master\|off\|<player>]` | Control command relay targeting |
+| `!gaslight relay <views...> <!command>` | Relay command to views |
 | `!gaslight group <group> <player\|GM>` | Assign page to group |
 | `!gaslight ungroup <group> <player\|GM\|--all>` | Remove page from group |
 | `!gaslight stage [players...]` | Propagate tokens to player pages |
-| `!gaslight view [player\|master]` | Switch relay view |
-| `!gaslight relay <views...> <!command>` | Relay command to views |
 | `!gaslight config [relay-add\|relay-remove\|relay-list] [cmds]` | Configure relay |
 | `!gaslight status` | Show state |
 | `!gaslight --help` | Command reference |
@@ -56,7 +62,7 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 
 ## Sync Behavior
 
-Controlled by `gaslight_sync` character attribute:
+Controlled by `gaslight_sync` in token GM notes (auto-populated from character attribute on token placement/split):
 - **Absent** → Anchor (spatial) + Mirror (all non-spatial)
 - **Empty** → no sync at all
 - **`"base"`** → Anchor only (position, rotation, scale, flip)
@@ -64,9 +70,66 @@ Controlled by `gaslight_sync` character attribute:
 - **`"!anchor"`** → Mirror everything except spatial
 - **`"anchor, !left"`** → Anchor minus left, Mirror nothing extra
 
+### Per-Token Sync Commands
+
+| Command | Description |
+|---------|-------------|
+| `!gaslight sync` | Show current sync config for selected token(s) |
+| `!gaslight sync <props>` | Add props to sync whitelist |
+| `!gaslight sync all` | Explicitly sync everything |
+| `!gaslight sync reset` | Re-copy from character attribute |
+| `!gaslight desync <props>` | Exclude specific props from sync |
+| `!gaslight desync all` | Disable all syncing (link preserved) |
+
+### gl_* Variables (`!gaslight var`)
+
+Read, set, or unset `gl_*` variables on tokens (gmnotes) or character sheets. Actions are chainable in a single command. Respects the current view for reads and writes.
+
+**Actions:**
+
+| Action | Description |
+|--------|-------------|
+| `--get <name>` | Read value (token gmnotes priority, fallback to character attribute) |
+| `--set <name> <value>` | Set on token gmnotes |
+| `--del <name>` | Remove from token gmnotes |
+| `--setch <name> <value>` | Set on character sheet attribute |
+| `--delch <name>` | Remove from character sheet attribute |
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--silent` | Don't trigger script evaluation after setting |
+
+**View behavior (master token selected):**
+- `view master` → read/write all linked copies (compact display for `--get`)
+- `view <player>` → read/write only that player's copy
+- `view off` → read/write master token only
+
+**Examples:**
+```
+!gaslight var --set stealth_result 15
+!gaslight var --get stealth_result
+!gaslight var --set stealth_result 20 --setch stealth_dc 12
+!gaslight var --del stealth_result --delch stealth_dc
+!gaslight var --silent --set stealth_result 25
+```
+
+The `gl_` prefix is implicit — `stealth_result` and `gl_stealth_result` both map to `gl_stealth_result`.
+
 ## Command Relay
 
 Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages with token IDs replaced by their linked counterparts. This happens transparently — no configuration needed.
+
+### View Modes
+
+Control where commands relay to:
+
+| Command | Effect |
+|---------|--------|
+| `!gaslight view master` | Relay to all player pages (default on split) |
+| `!gaslight view off` | Relay disabled — changes stay on master only |
+| `!gaslight view <player>` | Relay only to that player's page |
 
 **Rules:**
 - Master-page tokens selected or IDs in command → auto-relay to all player pages
@@ -77,10 +140,57 @@ Any API command that references master-page linked tokens (via selection or toke
 
 **Player auto-relay:** `!gaslight config relay-add !token-mod` — allow player-page commands to relay to other pages.
 
+## Initiative Tracking
+
+Gaslight automatically syncs the turn order across linked tokens:
+
+- **Add**: When a token is added to initiative, all linked copies are added at the same value
+- **Remove**: Removing a token removes all linked copies
+- **Value sync**: Initiative value changes propagate to all linked copies
+- **Auto-skip**: When the turn advances to a non-master linked token, Gaslight skips forward/backward to the next master or unlinked token
+- **Sort-aware**: After sorting initiative, groups are reordered with master tokens on top
+
+The GM only interacts with master-page tokens in the turn tracker. Players see their own copies on their page. Linked children are skipped automatically when advancing turns.
+
+## HUD
+
+On-canvas indicators on the master page foreground layer. Toggle with `!gaslight hud [element] [on|off|reset]`.
+
+### Elements
+
+| Element | Description |
+|---------|-------------|
+| `view` (alias: `relay`) | Shows current relay state: ALL / OFF / player name |
+| `initiative` (aliases: `init`, `turn`, `turns`) | Visual initiative tracker with frame, tokens, and current turn indicator |
+
+### Initiative HUD Features
+
+- **Frame**: resizable rectangle containing initiative entries
+- **Current turn indicator**: rotated diamond showing whose turn it is (movable to set position)
+- **Token entries**: mirrored copies of master tokens (syncs name, status, tint)
+- **Custom turn entries**: pins with titles for custom initiative entries
+- **Overflow**: entries outside the frame are hidden automatically
+- **Drag to reorder**: drag a token/pin vertically between others to change initiative order
+- **Swipe to change turn**: drag a token/pin horizontally past the frame edge to make it the current turn
+- **Round calculation**: custom turn formulas applied when entering the top via rotation
+- **Delete entry**: deleting a HUD token/pin removes it from initiative (deleting the frame turns HUD off)
+- **Fully customizable**: frame stroke/fill, text color/stroke/font, token size derived from frame width, all positions persist
+
+### Commands
+
+- `!gaslight hud` — toggle all elements
+- `!gaslight hud on` — turn all on
+- `!gaslight hud off` — turn all off
+- `!gaslight hud reset` — reset all to defaults (turns on)
+- `!gaslight hud initiative` — toggle initiative
+- `!gaslight hud reset view` — reset just view element
+
 ## Staging
 
-- `!gaslight stage` — propagate selected tokens to all player pages
+- `!gaslight stage` — propagate selected tokens to player pages (follows current view; all if view is master/off)
+- `!gaslight stage <player>` — propagate to a specific player's page
 - `gaslight_stage = 1` character attribute — auto-propagate on placement
+- Staged tokens inherit all synced properties via Mirror after linking
 - Linked tokens cascade-delete when removed
 
 ## Configuration Storage
