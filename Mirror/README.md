@@ -39,9 +39,12 @@ Flat property syncing between Roll20 tokens. No transforms, no offsets — when 
 | `spatial` | left, top, rotation, width, height |
 | `position` | left, top |
 | `size` | width, height |
-| `bars` | bar1-3 value + max |
-| `light` | All light/vision properties |
-| `auras` | aura1-2 radius, color, square |
+| `bars` | bar1-4 value + max + link, bar_location, compact_bar, showplayers/playersedit/num_permission |
+| `name` | name, showname, showplayers_name, playersedit_name |
+| `light` | UDL emission (bright/low/directional/color) + legacy (radius, dimradius, angle, etc.) |
+| `sight` | UDL vision (bright_light_vision, night_vision, field of vision limits) |
+| `auras` | aura1-2 radius, color, square, options, showplayers, playersedit |
+| `tooltip` | tooltip, show_tooltip |
 | `flip` | flipv, fliph |
 | `anchor` | spatial + flip + layer (for `--exclude` when using Anchor) |
 
@@ -97,6 +100,12 @@ Mirror.align(tokenId, { ifLinked: true })  // push linked props to dependents
 ```
 
 ## Changelog
+
+### v1.1.1
+- Comprehensive `ALL_PROPS` update: bar4, bar links, visibility/edit permissions, tooltip, UDL directional light, UDL vision limits, foreground layer props, lockMovement, isdrawing, aura options
+- Split `light` group into `light` (emission only) and `sight` (vision only)
+- New groups: `name`, `tooltip`, `sight`
+- `bars` group now includes links, location, compact_bar, visibility, permissions
 
 ### v1.1.0
 - `--ignore-selected` flag: skip current selection, use only explicit IDs
