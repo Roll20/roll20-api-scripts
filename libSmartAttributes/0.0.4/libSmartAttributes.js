@@ -13,7 +13,6 @@ var libSmartAttributes = (function () {
         if (userAttr !== null && userAttr !== undefined) {
             return userAttr;
         }
-        log(`Attribute ${name} not found on character ${characterId}`);
         return undefined;
     }
     async function setAttribute(characterId, name, value, type = "current", options) {

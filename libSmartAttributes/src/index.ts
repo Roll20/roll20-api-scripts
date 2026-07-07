@@ -17,7 +17,6 @@ async function getAttribute(
     return userAttr;
   }
 
-  log(`Attribute ${name} not found on character ${characterId}`);
   return undefined;
 };
 
