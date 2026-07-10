@@ -8,7 +8,7 @@ type Prettify<T> = {
 interface Roll20Object<T extends Record<string, any>> {
   /** The unique ID of this object */
   id: string;
-  properties: Prettify<T & { id: string }>;
+  properties: Prettify<T & { _id: string }>;
 
   /**
    * Get an attribute of the object
@@ -218,7 +218,10 @@ type CharacterProperties = {
   _defaulttoken: string;
 };
 
-declare type Roll20Character = Prettify<Roll20Object<CharacterProperties>>;
+declare type Roll20Character = Prettify<Roll20Object<CharacterProperties> & {
+  /** Experimental: legacy Roll20 attributes vs Beacon sheet */
+  sheetEnvironment?: "legacy" | "beacon";
+}>;
 
 // Attribute type with proper properties
 type AttributeProperties = {
@@ -507,7 +510,7 @@ type FindObjsOptions = {
  *   name: "target"
  * }, {caseInsensitive: true});
  */
-declare function findObjs<T extends keyof Roll20ObjectTypeToInstance>(attrs: Partial<Roll20ObjectTypeToInstance[T]["properties"]> & { _type: T }, options?: FindObjsOptions): Roll20ObjectTypeToInstance[T][];
+declare function findObjs<T extends Roll20ObjectType>(attrs: Partial<Roll20ObjectTypeToInstance[T]["properties"]> & { _type: T }, options?: FindObjsOptions): Roll20ObjectTypeToInstance[T][];
 
 /**
  * Filters Roll20 objects by executing the callback function on each object
@@ -554,7 +557,11 @@ declare function getAllObjs(): Roll20Object<AnyRoll20Object>[];
  */
 declare function getAttrByName(character_id: string, attribute_name: string, value_type?: "current" | "max"): string;
 
-type SheetItemOptions = { allowThrow?: boolean };
+type SheetItemOptions = {
+  allowThrow?: boolean,
+  createAttr?: boolean,
+  withWorker?: boolean
+};
 type SheetItemValueTYpe = "current" | "max";
 
 /**
