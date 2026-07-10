@@ -13,7 +13,7 @@ import {
 import { checkHelpMessage, handleHelpCommand } from "./help";
 import { getCharName } from "./helpers";
 import { processInlinerolls, normalizeTemplateRollProperties } from "./inlinerolls";
-import { extractMessageFromRollTemplate, parseMessage, validateMessage } from "./message";
+import { extractMessageFromRollTemplate, normalizeMultilineCommand, parseMessage, validateMessage } from "./message";
 import { processModifications } from "./modifications";
 import { checkPermissions } from "./permissions";
 import { expandRepeatingRowDeletes, getAllRepOrders, getAllSectionNames } from "./repeating";
@@ -244,6 +244,7 @@ export function registerHandlers() {
       if (!inlineMessage) return;
       msg.content = inlineMessage;
     }
+    msg.content = normalizeMultilineCommand(msg.content);
     msg.content = normalizeTemplateRollProperties(msg.content);
     msg.content = processInlinerolls(msg);
     const debugReset = msg.content.startsWith("!setattrs-debugreset");

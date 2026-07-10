@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   extractMessageFromRollTemplate,
+  normalizeMultilineCommand,
   parseMessage,
 } from "../../modules/message";
 
@@ -719,6 +720,103 @@ describe("message", () => {
           expect(result.changes[0].current).toBe("'missing end quote");
         });
       });
+    });
+  });
+
+  describe("normalizeMultilineCommand", () => {
+    const DIVINE_CONTENT = "Starting at 7th level, when a creature within 5 feet of you takes damage, you can use your reaction to magically substitute your own health for that of the target creature, causing that creature not to take the damage. Instead, you take the damage. This damage to you can't be reduced or prevented in any way.";
+
+    const MULTILINE_API_STRING = "!setattr {{<br/>\n--sel<br/>\n--replace<br/>\n--repeating_classfeature_-create_name|Divine Allegience<br/>\n--repeating_classfeature_-create_content|" + DIVINE_CONTENT + "<br/>\n--repeating_classfeature_-create_content_toggle|1<br/>\n}}";
+
+    const FLAT_COMMAND = "!setattr --sel --replace --repeating_classfeature_-create_name|Divine Allegience --repeating_classfeature_-create_content|" + DIVINE_CONTENT + " --repeating_classfeature_-create_content_toggle|1";
+
+    it("strips <br/> and unwraps the trailing {{ }} block", () => {
+      const normalized = normalizeMultilineCommand(MULTILINE_API_STRING);
+      expect(normalized).not.toContain("<br/>");
+      expect(normalized).not.toContain("{{");
+      expect(normalized).not.toContain("}}");
+      expect(normalized.startsWith("!setattr")).toBe(true);
+    });
+
+    it("leaves a plain single-line command unchanged", () => {
+      expect(normalizeMultilineCommand(FLAT_COMMAND)).toBe(FLAT_COMMAND);
+    });
+
+    it("unescapes escaped braces in the body", () => {
+      const message = "!setattr {{\n--sel\n--notes|value with \\{braces\\}\n}}";
+      const normalized = normalizeMultilineCommand(message);
+      expect(normalized).toContain("value with {braces}");
+      expect(normalized).not.toContain("\\{");
+      expect(normalized).not.toContain("\\}");
+    });
+
+    it("unwraps blocks that have trailing whitespace before }}", () => {
+      const message = "!setattr {{\n--sel\n--hp|1\n }}";
+      const normalized = normalizeMultilineCommand(message);
+      const result = parseMessage(normalized);
+      expect(result?.operation).toBe("setattr");
+      expect(result?.targeting).toContain("sel");
+    });
+  });
+
+  describe("parseMessage multiline commands", () => {
+    const DIVINE_CONTENT = "Starting at 7th level, when a creature within 5 feet of you takes damage, you can use your reaction to magically substitute your own health for that of the target creature, causing that creature not to take the damage. Instead, you take the damage. This damage to you can't be reduced or prevented in any way.";
+
+    const MULTILINE_API_STRING = "!setattr {{<br/>\n--sel<br/>\n--replace<br/>\n--repeating_classfeature_-create_name|Divine Allegience<br/>\n--repeating_classfeature_-create_content|" + DIVINE_CONTENT + "<br/>\n--repeating_classfeature_-create_content_toggle|1<br/>\n}}";
+
+    const FLAT_COMMAND = "!setattr --sel --replace --repeating_classfeature_-create_name|Divine Allegience --repeating_classfeature_-create_content|" + DIVINE_CONTENT + " --repeating_classfeature_-create_content_toggle|1";
+
+    it("parses the API-shaped multiline command", () => {
+      const result = parse(MULTILINE_API_STRING);
+      expect(result.operation).toBe("setattr");
+      expect(result.targeting).toContain("sel");
+      expect(result.options.replace).toBe(true);
+
+      const byName = Object.fromEntries(
+        result.changes
+          .filter(change => change.name)
+          .map(change => [change.name, change.current]),
+      );
+      expect(byName["repeating_classfeature_-create_name"]).toBe("Divine Allegience");
+      expect(byName["repeating_classfeature_-create_content"]).toBe(DIVINE_CONTENT);
+      expect(byName["repeating_classfeature_-create_content_toggle"]).toBe("1");
+    });
+
+    it("produces the same result as the flat single-line command", () => {
+      const multiline = parse(MULTILINE_API_STRING);
+      const flat = parse(FLAT_COMMAND);
+      expect(multiline.operation).toBe(flat.operation);
+      expect(multiline.targeting).toEqual(flat.targeting);
+      expect(multiline.options).toEqual(flat.options);
+      expect(multiline.changes).toEqual(flat.changes);
+    });
+  });
+
+  describe("multiline normalization preserves roll templates", () => {
+    const createMockMessage = (content: string): Roll20ChatMessage => ({
+      content,
+      who: "TestPlayer",
+      type: "general",
+      playerid: "player123",
+      rolltemplate: undefined,
+      inlinerolls: undefined,
+      selected: undefined,
+    });
+
+    it("does not alter an extracted roll-template command", () => {
+      const msg = createMockMessage(
+        "&{template:default} {{name=Fireball Damage}} !setattr --mod --name @{target|character_name} --silent --hp|-{{damage=[[8d6]]}}!!! {{effect=Fire damage}}",
+      );
+      const extracted = extractMessageFromRollTemplate(msg);
+      expect(extracted).not.toBe(false);
+      const normalized = normalizeMultilineCommand(extracted as string);
+      expect(normalized).toBe(extracted);
+      expect(normalized).toContain("{{damage=[[8d6]]}}");
+    });
+
+    it("leaves an extracted damage property untouched (no unwrap)", () => {
+      const content = "!setattr --silent --mod --hp|-{{damage=$[[0]]}}";
+      expect(normalizeMultilineCommand(content)).toBe(content);
     });
   });
 });

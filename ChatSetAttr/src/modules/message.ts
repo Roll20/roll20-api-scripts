@@ -36,6 +36,17 @@ export function extractMessageFromRollTemplate(msg: Roll20ChatMessage): string |
   return false;
 };
 
+// Roll20 delivers multiline commands wrapped in `{{ ... }}` with HTML line
+// breaks (`<br/>`). This mirrors ChatSetAttr 1.10's `parseOpts` preprocessing so
+// a `{{ }}`-wrapped multiline command parses identically to its flat form.
+export function normalizeMultilineCommand(content: string): string {
+  return content
+    .replace(/<br\/>/g, "")
+    .replace(/\s+$/g, "")
+    .replace(/\s*{{((?:.|\n)*)\s+}}$/, " $1")
+    .replace(/\\([{}])/g, "$1");
+};
+
 // #region Message Parsing
 function extractOperation(parts: string[]): Command | undefined {
   if (parts.length === 0) {
@@ -85,6 +96,7 @@ function includesATarget(part: string): boolean {
 };
 
 export function parseMessage(content: string) {
+  content = normalizeMultilineCommand(content);
   const parts = splitMessage(content);
   let operation = extractOperation(parts);
   if (!operation) {

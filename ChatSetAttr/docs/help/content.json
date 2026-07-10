@@ -465,6 +465,51 @@
       ]
     },
     {
+      "id": "multiline-commands",
+      "title": "Multiline Commands",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Long commands can be spread across multiple lines for readability by wrapping the entire body of options in double curly braces `{{ }}`. When Roll20 sends a multiline message to the API, ChatSetAttr strips the line breaks and the surrounding braces before parsing, so a `{{ }}`-wrapped command behaves identically to the same command written on a single line."
+        },
+        {
+          "type": "paragraph",
+          "text": "**Single-line form:**"
+        },
+        {
+          "type": "codeBlock",
+          "lines": [
+            "!setattr --sel --replace --repeating_classfeature_-create_name|Some Feature --repeating_classfeature_-create_content|Some long content to set in the body of this class feature. --repeating_classfeature_-create_content_toggle|1"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "**Equivalent multiline form:**"
+        },
+        {
+          "type": "codeBlock",
+          "lines": [
+            "!setattr {{",
+            "--sel",
+            "--replace",
+            "--repeating_classfeature_-create_name|Some Feature",
+            "--repeating_classfeature_-create_content|Some long content to set in the body of this class feature.",
+            "--repeating_classfeature_-create_content_toggle|1",
+            "}}"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Escaped braces `\\{` and `\\}` inside the body are unescaped to literal `{` and `}` after the wrapper is removed, so you can still include braces in attribute values."
+        },
+        {
+          "type": "note",
+          "text": "**Whitespace limitation:** The closing `}}` must be preceded by whitespace (a space or a line break) for the block to be unwrapped. Placing each option on its own line satisfies this automatically, but writing the last value directly against the closing braces (for example `...value}}`) will not be recognized as a multiline command. Keep the closing `}}` on its own line or leave a space before it.",
+          "emphasis": true
+        }
+      ]
+    },
+    {
       "id": "modifier-options",
       "title": "Modifier Options",
       "blocks": [

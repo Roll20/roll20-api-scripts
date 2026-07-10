@@ -1701,6 +1701,51 @@ var ChatSetAttr = (function (exports) {
     		]
     	},
     	{
+    		id: "multiline-commands",
+    		title: "Multiline Commands",
+    		blocks: [
+    			{
+    				type: "paragraph",
+    				text: "Long commands can be spread across multiple lines for readability by wrapping the entire body of options in double curly braces `{{ }}`. When Roll20 sends a multiline message to the API, ChatSetAttr strips the line breaks and the surrounding braces before parsing, so a `{{ }}`-wrapped command behaves identically to the same command written on a single line."
+    			},
+    			{
+    				type: "paragraph",
+    				text: "**Single-line form:**"
+    			},
+    			{
+    				type: "codeBlock",
+    				lines: [
+    					"!setattr --sel --replace --repeating_classfeature_-create_name|Some Feature --repeating_classfeature_-create_content|Some long content to set in the body of this class feature. --repeating_classfeature_-create_content_toggle|1"
+    				]
+    			},
+    			{
+    				type: "paragraph",
+    				text: "**Equivalent multiline form:**"
+    			},
+    			{
+    				type: "codeBlock",
+    				lines: [
+    					"!setattr {{",
+    					"--sel",
+    					"--replace",
+    					"--repeating_classfeature_-create_name|Some Feature",
+    					"--repeating_classfeature_-create_content|Some long content to set in the body of this class feature.",
+    					"--repeating_classfeature_-create_content_toggle|1",
+    					"}}"
+    				]
+    			},
+    			{
+    				type: "paragraph",
+    				text: "Escaped braces `\\{` and `\\}` inside the body are unescaped to literal `{` and `}` after the wrapper is removed, so you can still include braces in attribute values."
+    			},
+    			{
+    				type: "note",
+    				text: "**Whitespace limitation:** The closing `}}` must be preceded by whitespace (a space or a line break) for the block to be unwrapped. Placing each option on its own line satisfies this automatically, but writing the last value directly against the closing braces (for example `...value}}`) will not be recognized as a multiline command. Keep the closing `}}` on its own line or leave a space before it.",
+    				emphasis: true
+    			}
+    		]
+    	},
+    	{
     		id: "modifier-options",
     		title: "Modifier Options",
     		blocks: [
@@ -2513,7 +2558,7 @@ var ChatSetAttr = (function (exports) {
         return renderHelpHtml(loadHelpDocument(), handoutID);
     }
 
-    var updatedAt = 1781657828941;
+    var updatedAt = 1783723898022;
     var contentRevision = {
     	updatedAt: updatedAt
     };
@@ -2698,6 +2743,16 @@ var ChatSetAttr = (function (exports) {
         }
         return false;
     }
+    // Roll20 delivers multiline commands wrapped in `{{ ... }}` with HTML line
+    // breaks (`<br/>`). This mirrors ChatSetAttr 1.10's `parseOpts` preprocessing so
+    // a `{{ }}`-wrapped multiline command parses identically to its flat form.
+    function normalizeMultilineCommand(content) {
+        return content
+            .replace(/<br\/>/g, "")
+            .replace(/\s+$/g, "")
+            .replace(/\s*{{((?:.|\n)*)\s+}}$/, " $1")
+            .replace(/\\([{}])/g, "$1");
+    }
     // #region Message Parsing
     function extractOperation(parts) {
         if (parts.length === 0) {
@@ -2746,6 +2801,7 @@ var ChatSetAttr = (function (exports) {
         return false;
     }
     function parseMessage(content) {
+        content = normalizeMultilineCommand(content);
         const parts = splitMessage(content);
         let operation = extractOperation(parts);
         if (!operation) {
@@ -3582,6 +3638,7 @@ var ChatSetAttr = (function (exports) {
                     return;
                 msg.content = inlineMessage;
             }
+            msg.content = normalizeMultilineCommand(msg.content);
             msg.content = normalizeTemplateRollProperties(msg.content);
             msg.content = processInlinerolls(msg);
             const debugReset = msg.content.startsWith("!setattrs-debugreset");

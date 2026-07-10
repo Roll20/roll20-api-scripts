@@ -11,14 +11,15 @@ ChatSetAttr is a Roll20 Mod API script that allows users to create, modify, or d
 3. [Beacon Computed Values](#beacon-computed-values)
 4. [Target Selection](#target-selection)
 5. [Attribute Syntax](#attribute-syntax)
-6. [Modifier Options](#modifier-options)
-7. [Output Control Options](#output-control-options)
-8. [Inline Roll Integration](#inline-roll-integration)
-9. [Repeating Section Support](#repeating-section-support)
-10. [Special Value Expressions](#special-value-expressions)
-11. [Global Configuration](#global-configuration)
-12. [Complete Examples](#complete-examples)
-13. [For Developers](#for-developers)
+6. [Multiline Commands](#multiline-commands)
+7. [Modifier Options](#modifier-options)
+8. [Output Control Options](#output-control-options)
+9. [Inline Roll Integration](#inline-roll-integration)
+10. [Repeating Section Support](#repeating-section-support)
+11. [Special Value Expressions](#special-value-expressions)
+12. [Global Configuration](#global-configuration)
+13. [Complete Examples](#complete-examples)
+14. [For Developers](#for-developers)
 
 ## Basic Usage
 
@@ -244,6 +245,32 @@ The syntax for specifying attributes is:
 ```
 --strength#15
 ```
+
+## Multiline Commands
+
+Long commands can be spread across multiple lines for readability by wrapping the entire body of options in double curly braces `{{ }}`. When Roll20 sends a multiline message to the API, ChatSetAttr strips the line breaks and the surrounding braces before parsing, so a `{{ }}`-wrapped command behaves identically to the same command written on a single line.
+
+**Single-line form:**
+
+```
+!setattr --sel --replace --repeating_classfeature_-create_name|Some Feature --repeating_classfeature_-create_content|Some long content to set in the body of this class feature. --repeating_classfeature_-create_content_toggle|1
+```
+
+**Equivalent multiline form:**
+
+```
+!setattr {{
+--sel
+--replace
+--repeating_classfeature_-create_name|Some Feature
+--repeating_classfeature_-create_content|Some long content to set in the body of this class feature.
+--repeating_classfeature_-create_content_toggle|1
+}}
+```
+
+Escaped braces `\{` and `\}` inside the body are unescaped to literal `{` and `}` after the wrapper is removed, so you can still include braces in attribute values.
+
+> **Note:** **Whitespace limitation:** The closing `}}` must be preceded by whitespace (a space or a line break) for the block to be unwrapped. Placing each option on its own line satisfies this automatically, but writing the last value directly against the closing braces (for example `...value}}`) will not be recognized as a multiline command. Keep the closing `}}` on its own line or leave a space before it.
 
 ## Modifier Options
 
