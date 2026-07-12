@@ -362,6 +362,10 @@ var ScriptKit = ScriptKit || (() => {
             log(SCRIPT_NAME + ': registerExample requires a name.');
             return false;
         }
+        if (!struct.handout && (!struct.guide || struct.guide.length === 0)) {
+            log(SCRIPT_NAME + ': registerExample "' + struct.name + '" requires a handout, a guide, or both.');
+            return false;
+        }
 
         // Queue if target not yet registered
         if (!registrations[targetScript]) {
@@ -1140,14 +1144,18 @@ var ScriptKit = ScriptKit || (() => {
                 out += html.indent(2) + '• ' + html.underline(highlightMatch(ex.name, nameFilter || ''));
                 if (ex.description) out += ' — ' + highlightMatch(ex.description, descFilter || '');
                 out += ' ';
-                if (exists) {
-                    out += html.button('🔄 Regen', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name) + ' ';
-                    if (ex.guide && ex.guide.length > 0) {
-                        out += html.button('🧭 Guide', reg.command + ' ' + reg.aliases.guide + ' ' + ex.name) + ' ';
+                if (ex.handout || reg.exampleHandler) {
+                    if (exists) {
+                        out += html.button('🔄 Regen', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name) + ' ';
+                        if (ex.guide && ex.guide.length > 0) {
+                            out += html.button('🧭 Guide', reg.command + ' ' + reg.aliases.guide + ' ' + ex.name) + ' ';
+                        }
+                        out += html.handoutLink('[Open]', exists.get('id'));
+                    } else {
+                        out += html.button('+ Generate', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name);
                     }
-                    out += html.handoutLink('[Open]', exists.get('id'));
-                } else {
-                    out += html.button('+ Generate', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name);
+                } else if (ex.guide && ex.guide.length > 0) {
+                    out += html.button('🧭 Guide', reg.command + ' ' + reg.aliases.guide + ' ' + ex.name);
                 }
                 out += html.br();
             });
