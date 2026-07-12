@@ -1768,6 +1768,9 @@ var Choreograph = Choreograph || (() => {
         if (msg.type !== 'api') return;
         if (msg.content.split(' ')[0] !== CMD_TOKEN) return;
 
+        // Delegate to ScriptKit framework for examples/guide commands
+        if (typeof ScriptKit !== 'undefined' && ScriptKit.handleInput(msg)) return;
+
         // Permission check — GM or API always allowed
         if (!playerIsGM(msg.playerid) && msg.playerid !== 'API') {
             replyError(msg, 'Only the GM can use Choreograph commands.');
@@ -1800,7 +1803,8 @@ var Choreograph = Choreograph || (() => {
         });
 
         // ---- help / --help ----
-        if (cmd === 'help' || cmd === '--help') {
+        // ---- help (legacy — kept for comparison) ----
+        if (cmd === 'help-legacy' || cmd === '--help-legacy') {
             reply(msg, SCRIPT_NAME, `<b>${SCRIPT_NAME} v${SCRIPT_VERSION}</b><br><br>`
                 + `<b>Scene commands:</b><br>`
                 + `${CMD_TOKEN} run &lt;name&gt; [flags] — execute a scene<br>`
@@ -2511,8 +2515,8 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
-        // ---- man ----
-        if (cmd === 'man') {
+        // ---- man (legacy — kept for comparison) ----
+        if (cmd === 'man-legacy') {
             const topic = args[0] || '';
 
             if (!topic) {
@@ -3173,81 +3177,528 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
             },
         });
 
-        // ── Built-in example scenes ───────────────────────────────────────
-        registerExample(SCRIPT_NAME, {
-            name: 'fireball',
-            description: 'Fire explosions propagate outward from the leftmost token. Shows stagger + rank + FX.',
-            guide: [
-                { prompt: 'Select 3+ tokens to be hit by the fireball. Arrange them in a rough cluster.', role: 'cast', min: 3 },
-            ],
-            scene: {
-                notes: 'Fire explosions staggered by position — looks like a spreading fireball.',
-                params: [
-                    { name: 'interval', type: 'number', default: '200', description: 'Ms between each explosion' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: 'Staggered explosions' },
-                ],
-            },
-        });
+        // ── Built-in example scenes (via ScriptKit framework) ─────────────────
+        const registerWithScriptKit = () => {
+            if (typeof ScriptKit === 'undefined') return;
+            const html = ScriptKit.html;
 
-        registerExample(SCRIPT_NAME, {
-            name: 'arcane-barrage',
-            description: 'Magic beams fire from a caster to each target in sequence. Shows multi-role guide + fxbetween + cast().',
-            guide: [
-                { prompt: 'Select the caster token (where lightning originates).', role: 'caster' },
-                { prompt: 'Select 2+ target tokens to be struck.', role: 'targets' },
-            ],
-            scene: {
-                notes: 'Lightning beam jumps from caster to each target in sequence.',
-                roles: [
-                    { name: 'caster', min: 1, max: 1 },
-                    { name: 'targets', min: 2 },
-                ],
-                params: [
-                    { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
-                ],
-                variables: [],
-                rows: [
-                    { filter: 'role=targets', delay: 'stagger(rank("left"), interval)', commands: [
-                        '!choreograph fxbetween beam-magic ${role("caster").first().left} ${role("caster").first().top} ${token.left} ${token.top} ${token.pageid}',
-                        '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
-                    ], notes: 'Beam from caster + burst at target' },
-                ],
-            },
-        });
+            ScriptKit.register(SCRIPT_NAME, {
+                command: CMD_TOKEN,
+                tag: 'Scene',
+                version: SCRIPT_VERSION,
+                newSince: '1.0.0',
+                help: {
+                    description: 'Meta-sequencer for Roll20 tokens. Define scenes in handouts — filter tokens, compute per-token timing, and fire commands at the right moments.',
+                    quickStart: [
+                        html.code('!choreograph new myScene') + ' — creates a blank scene handout.',
+                        'Open the ' + html.bold('[Scene] myScene') + ' handout. Add rows to the Scene Table: set a Filter (e.g. ' + html.code('*') + '), a Delay expression (e.g. ' + html.code('stagger(rank("left"), 200)') + '), and a Command template (e.g. ' + html.code('!sequence play sparkle --target ${token.id}') + ').',
+                        'Select tokens and run ' + html.code('!choreograph run myScene') + '.',
+                    ],
+                    changelog: [
+                        { version: '1.0.0', changes: [
+                            'Revamped example command with fuzzy search, tiered sorting, and bold highlights',
+                            'Interactive setup guide wizard for examples (multi-step, roles, params)',
+                            'when field for conditional row execution',
+                            '--role flag for ad-hoc role assignment at run time',
+                            'role()/role_ids()/cast()/cast_ids() expression functions',
+                            'token[]/path[] parameters enriched with TokenProxy',
+                        ]},
+                        { version: '0.2', changes: [
+                            'TokenProxy — dot-notation access to all token properties',
+                            'LINQ-style array methods (.from, .without, .where, .orderBy, .first, .last, .select)',
+                            'Dynamic man/help generation from registries',
+                            'role=X filter for cast roles',
+                        ]},
+                    ],
+                    commands: [
+                        { syntax: 'run <name> [flags]', description: 'Execute a scene', version: '0.1', details: 'Runs the named scene on selected tokens (or cast).', items: [
+                            { name: '--loop', description: 'Loop indefinitely (sync between cycles)', version: '0.1' },
+                            { name: '--loop N', description: 'Loop N times (immediate restart)', version: '0.1' },
+                            { name: '--loop N --sync', description: 'Loop N times (sync between cycles)', version: '0.1' },
+                            { name: '--page [id]', description: 'Populate cast from all tokens on a page', version: '0.1' },
+                            { name: '--id <ids...>', description: 'Populate cast from explicit token IDs', version: '0.1' },
+                            { name: '--cast <name>', description: 'Populate cast from a saved cast', version: '0.1' },
+                            { name: 'ignore-selected', description: 'Don\'t include selected tokens in cast', version: '0.1' },
+                            { name: '--depth N', description: 'Max chaining depth (default: 10)', version: '0.1' },
+                            { name: '--sync-timeout <ms>', description: 'Sync timeout in ms (default: 30000)', version: '0.1' },
+                            { name: '--role <name> <ids...>', description: 'Assign tokens to a role at run time', version: '1.0.0' },
+                            { name: '--<param> <value>', description: 'Bind a scene parameter value', version: '0.1' },
+                        ]},
+                        { syntax: 'new <name>', description: 'Create blank scene handout', version: '0.1' },
+                        { syntax: 'list [query]', description: 'List scenes (fuzzy search)', version: '0.1' },
+                        { syntax: 'edit <name>', description: 'Open scene handout', version: '0.1' },
+                        { syntax: 'delete <name>', description: 'Delete a scene', version: '0.1' },
+                        { syntax: 'refresh <name>', description: 'Regenerate handout from cache', version: '0.1' },
+                        { syntax: 'add-row <name>', description: 'Add blank row to scene table', version: '0.1' },
+                        { group: 'Playback', commands: [
+                            { syntax: 'stop [name]', description: 'Stop running scene(s)', version: '0.1' },
+                            { syntax: 'pause [name]', description: 'Pause running scene(s)', version: '0.1' },
+                            { syntax: 'resume [name]', description: 'Resume paused scene(s)', version: '0.1' },
+                            { syntax: 'status', description: 'Show all running scenes', version: '0.1' },
+                        ]},
+                        { group: 'Cast', commands: [
+                            { syntax: 'cast add/remove/list/show/delete', description: 'Manage casts', version: '0.1' },
+                        ]},
+                    ],
+                    topics: {
+                        handout: {
+                            title: 'Scene Handout Structure',
+                            description: 'How scene handouts are organized',
+                            version: '0.1',
+                            body: 'Each scene is stored in a ' + html.code('[Scene] <name>') + ' handout with three HTML tables that Choreograph parses. You can edit them directly in the handout editor.',
+                            items: [
+                                { name: 'Parameter Table', description: 'Name | Type | Default | Description — scene inputs bound at run time', version: '0.1' },
+                                { name: 'Variables Table', description: 'Variable | Expression — computed once per token before execution', version: '0.1' },
+                                { name: 'Scene Table', description: 'Filter | Delay | Command | Notes — the choreography rows', version: '0.1' },
+                            ],
+                        },
+                        flow: {
+                            title: 'How It All Connects',
+                            description: 'The execution pipeline from run to command',
+                            version: '0.1',
+                            body: html.bold('1. Cast assembly') + ' — You run ' + html.code('!choreograph run myScene') + ' with tokens selected. These become the ' + html.italic('cast') + '. Parameters are bound from --flags.' + html.br()
+                                + html.bold('2. Variables computed') + ' — For each token in the cast, the Variables table is evaluated top-to-bottom. Each variable can reference params, earlier variables, and the token itself.' + html.br()
+                                + html.bold('3. Row processing') + ' — Each row in the Scene Table is processed:' + html.br()
+                                + html.indent(4) + '• The ' + html.bold('Filter') + ' selects which cast members this row applies to.' + html.br()
+                                + html.indent(4) + '• The ' + html.bold('When') + ' condition (if any) is checked per-token — falsy = skip.' + html.br()
+                                + html.indent(4) + '• The ' + html.bold('Delay') + ' expression is evaluated per-token to compute milliseconds.' + html.br()
+                                + html.indent(4) + '• After the delay fires, the ' + html.bold('Command') + ' template is evaluated per-token and sent to chat.' + html.br()
+                                + html.bold('4. All rows fire in parallel') + ' — rows don\'t wait for each other unless you use ' + html.code('sync') + ' to create coordination points.' + html.paragraph('')
+                                + html.bold('Example trace:') + ' Scene has ' + html.code('speed') + ' param (default 2). Variable ' + html.code('dist = distance(350, 350)') + ' computes per-token. Delay ' + html.code('dist / speed') + ' staggers by distance. Command ' + html.code('!sequence play sparkle --target ${token.id}') + ' fires per-token when its delay expires.',
+                        },
+                        example: {
+                            title: 'Example Scene',
+                            description: 'A complete scene showing all pieces working together',
+                            version: '0.1',
+                            body: html.bold('Propagating burst') + ' — a sparkle effect radiates outward from a center point, hitting nearby tokens first.' + html.paragraph('')
+                                + html.bold('Parameters:') + html.br()
+                                + html.indent(4) + html.code('speed') + ' — number, default ' + html.code('2') + ' (pixels per ms)' + html.br()
+                                + html.indent(4) + html.code('origin') + ' — token, default ' + html.code('selected') + ' (center point)' + html.paragraph('')
+                                + html.bold('Variables:') + html.br()
+                                + html.indent(4) + html.code('dist') + ' = ' + html.code('distance(origin.left, origin.top)') + html.paragraph('')
+                                + html.bold('Scene Table:') + html.br()
+                                + html.indent(4) + 'Row 1: Filter ' + html.code('*') + ' | Delay ' + html.code('dist / speed') + ' | Command ' + html.code('!sequence play sparkle --target ${token.id}') + html.br()
+                                + html.indent(4) + 'Row 2: Filter ' + html.code('*') + ' | Delay ' + html.code('dist / speed + 500') + ' | Command ' + html.code('!sequence play fade-out --target ${token.id}') + html.paragraph('')
+                                + html.bold('Result:') + ' Tokens near the origin sparkle first, with the burst rippling outward. 500ms after each sparkle, that token fades out.',
+                        },
+                        filters: {
+                            title: 'Filters',
+                            description: 'Filter syntax for selecting tokens',
+                            version: '0.1',
+                            details: 'Filters determine which tokens in the cast are affected by a scene row. Each row in the scene table has a filter column that selects a subset of the cast.',
+                            body: 'Space-separated conditions within a cell are AND. Multiple rows provide OR. Empty filter = no tokens match.',
+                            items: [
+                                { name: '*', description: 'All tokens', version: '0.1' },
+                                { name: 'layer=X', description: 'On layer X', version: '0.1' },
+                                { name: 'name=X*', description: 'Name glob match (supports * wildcard)', version: '0.1' },
+                                { name: 'id=-ABC123', description: 'Specific token ID', version: '0.1' },
+                                { name: 'role=X', description: 'Has role X in the cast', version: '0.2' },
+                                { name: 'status=X', description: 'Has status marker X', version: '0.1' },
+                                { name: '!prefix', description: 'Negation (e.g. !layer=gm)', version: '0.1' },
+                            ],
+                        },
+                        delay: {
+                            title: 'Delay Expressions',
+                            description: 'Per-token timing expressions',
+                            version: '0.1',
+                            details: 'Each row has a delay column containing a JavaScript expression evaluated per-token. The expression must return a number (milliseconds), INF/SKIP to exclude a token, or sync to wait for all participants before continuing.',
+                            body: () => 'Return: number (ms), INF/SKIP, or sync.' + html.paragraph('')
+                                + html.bold('Token Variables:') + ' ' + TOKEN_VAR_DEFS.filter(d => d.namespace === 'core').map(d => d.name).join(', ') + ', self, plus params/computed vars.' + html.br()
+                                + html.bold('Constants:') + ' ' + Object.values(EXT_CONSTANTS).filter(r => r.namespace === 'core').map(r => r.name).join(', '),
+                            items: [
+                                { name: 'rank("attr")', description: 'Sort position of current token in filtered set', version: '0.1' },
+                                { name: 'distance(x, y)', description: 'Pixel distance from token to point (or ' + html.code('distance(orig)') + ')', version: '0.1' },
+                                { name: 'propagate(dist, speed)', description: 'dist / speed', version: '0.1' },
+                                { name: 'stagger(rank, interval)', description: 'rank × interval', version: '0.1' },
+                                { name: 'rand(min, max)', description: 'Random number in range', version: '0.1' },
+                                { name: 'randInt(min, max)', description: 'Random integer in range', version: '0.1' },
+                                { name: 'clamp(v, lo, hi)', description: 'Clamp value to range', version: '0.1' },
+                                { name: 'actors(filter?)', description: 'Tokens passing filter, sorted by distance', version: '0.1' },
+                                { name: 'actor_ids(filter?)', description: 'Token IDs passing filter, sorted by distance', version: '0.1' },
+                                { name: 'sync', description: 'Wait for all sync participants before continuing', version: '0.1' },
+                                { name: 'INF / SKIP', description: 'Skip this token (infinite delay)', version: '0.1' },
+                            ],
+                        },
+                        commands: {
+                            title: 'Command Templates',
+                            description: 'How to write command templates in scene rows',
+                            version: '0.1',
+                            details: 'Each row in the scene table has a command column. Commands are API calls (starting with !) that fire when a token\'s delay expires. Template literals allow dynamic values computed per-token.',
+                            body: 'Use ' + html.code('${expr}') + ' for substitutions. Evaluated as JS template literals. All variables, params, computed variables, and functions are in scope.' + html.paragraph('')
+                                + 'Multiple commands per cell: put each on a new line in the handout cell. They fire simultaneously for that token.',
+                            items: [
+                                { name: '${token.id}', description: 'Current token ID', version: '0.1' },
+                                { name: '${token.left}', description: 'Token X position (TokenProxy)', version: '0.2' },
+                                { name: '${token.name}', description: 'Token display name', version: '0.2' },
+                                { name: '${self}', description: 'Current scene name (for recursion/chaining)', version: '0.1' },
+                                { name: '${count}', description: 'Number of tokens matching this row\'s filter', version: '0.1' },
+                                { name: '${myVar}', description: 'Any computed variable or parameter by name', version: '0.1' },
+                                { name: '${actors().first().id}', description: 'ID of the nearest other token in the filtered set', version: '0.1' },
+                                { name: '${role("targets").first().id}', description: 'ID of the nearest token in a role', version: '1.0.0' },
+                                { name: '${role_ids("targets").join(" ")}', description: 'Space-separated list of all target IDs', version: '1.0.0' },
+                                { name: '${Math.round(dist / speed)}', description: 'Any JS expression (computed inline)', version: '0.1' },
+                            ],
+                        },
+                        cast: {
+                            title: 'Cast Management',
+                            description: 'Saving and managing token groups',
+                            version: '0.1',
+                            details: 'Casts are saved token groups stored in [Cast] handouts. They persist across sessions and can assign tokens to named roles for filtering. Use --cast in run to use a saved cast instead of selection.',
+                            body: 'Stored in ' + html.code('[Cast] <name>') + ' handouts. Use ' + html.code('--cast <name>') + ' in run to load. Tokens default to selected if no --cast/--page/--id is given.',
+                            items: [
+                                { name: 'cast add <name> [--role R]', syntax: '!choreograph cast add <name> [--role R]', description: 'Add selected tokens to cast (optionally to a role)', version: '0.1' },
+                                { name: 'cast remove <name> [--role R]', syntax: '!choreograph cast remove <name> [--role R]', description: 'Remove tokens from cast', version: '0.1' },
+                                { name: 'cast list', syntax: '!choreograph cast list', description: 'List all saved casts', version: '0.1' },
+                                { name: 'cast show <name>', syntax: '!choreograph cast show <name>', description: 'Show cast members and roles', version: '0.1' },
+                                { name: 'cast delete <name>', syntax: '!choreograph cast delete <name>', description: 'Delete a saved cast', version: '0.1' },
+                            ],
+                        },
+                        castexpr: {
+                            title: 'Cast Expressions',
+                            description: 'Accessing cast and role data in expressions',
+                            version: '0.1',
+                            details: 'These functions are available in delay expressions and command templates. They return enriched arrays with LINQ methods for chaining.',
+                            body: 'Use these in delay/command expressions to access the full cast or specific roles. All return arrays sorted by distance from the current token.',
+                            items: [
+                                { name: 'cast()', description: 'Full cast array (all tokens in the scene run)', version: '1.0.0' },
+                                { name: 'cast_ids()', description: 'Full cast ID array', version: '1.0.0' },
+                                { name: 'role("name")', description: 'Tokens in a specific role (enriched array)', version: '1.0.0' },
+                                { name: 'role_ids("name")', description: 'Token IDs in a specific role', version: '1.0.0' },
+                            ],
+                        },
+                        sync: {
+                            title: 'Sync',
+                            description: 'Waiting for participants to complete',
+                            version: '0.1',
+                            details: 'Sync creates coordination points within a scene. When a row uses sync as its delay, execution pauses until all registered sync participants (like Sequence animations) report completion. This gates phase transitions on actual animation end rather than estimated timing.',
+                            body: 'Use ' + html.code('sync') + ' as a delay value. Waits for all registered sync participants to signal completion before continuing.' + html.paragraph('')
+                                + 'Useful for gating recursion or phase transitions on animation completion.',
+                        },
+                        loop: {
+                            title: 'Looping',
+                            description: 'Repeating scene execution',
+                            version: '0.1',
+                            details: 'Looping repeats the entire scene. Expressions re-evaluate each cycle, so randomized delays and staggering produce different results each iteration. Only top-level scenes can loop — child scenes spawned via chaining cannot.',
+                            items: [
+                                { name: '--loop', description: 'Loop indefinitely, sync between cycles', version: '0.1' },
+                                { name: '--loop N', description: 'Loop N times, immediate restart', version: '0.1' },
+                                { name: '--loop N --sync', description: 'Loop N times, sync between cycles', version: '0.1' },
+                            ],
+                            body: 'Top-level only. Children cannot loop. Expressions re-evaluate each cycle.',
+                        },
+                        chain: {
+                            title: 'Scene Chaining',
+                            description: 'Recursion and scene composition',
+                            version: '0.1',
+                            details: 'Scenes can spawn other scenes (or themselves) via command templates. This enables recursive patterns like chain-lightning that bounce between targets. Depth is capped (default 10) to prevent infinite recursion.',
+                            body: 'At depth 0, child spawns are skipped. Children cannot use ' + html.code('--loop') + '.',
+                            items: [
+                                { name: 'self', description: 'Resolves to current scene name', version: '0.1' },
+                                { name: '--parent', description: 'Auto-injected parent scene reference', version: '0.1' },
+                                { name: '--depth N', description: 'Max chaining depth (default: 10)', version: '0.1' },
+                            ],
+                        },
+                        when: {
+                            title: 'Row Conditions',
+                            description: 'Conditional row execution',
+                            version: '1.0.0',
+                            details: 'The when field is a JavaScript expression evaluated per-token. If it returns falsy, the row is skipped for that token. Combined with recursion, this enables patterns like "keep jumping until jumps runs out."',
+                            body: 'Add a ' + html.code('when') + ' expression to a scene row. The row only executes for tokens where the expression evaluates to truthy.' + html.paragraph('')
+                                + 'Example: ' + html.code('jumps > 0 && next'),
+                        },
+                        params: {
+                            title: 'Parameter Types',
+                            description: 'Types available for scene parameters',
+                            version: '0.1',
+                            details: 'Parameters are defined in the scene handout\'s Parameter table. They configure the scene at run time via --flags or the guide wizard. Type determines how values are resolved (e.g. token IDs are looked up as Roll20 objects).',
+                            body: 'Append [] for arrays (e.g. token[], number[]). ' + html.code('cast') + ' is built-in (token[], default: selected). Params without defaults are required at run time.',
+                            items: [
+                                { name: 'number', description: 'Numeric value', version: '0.1' },
+                                { name: 'text', description: 'String value', version: '0.1' },
+                                { name: 'boolean', description: 'true/false', version: '0.1' },
+                                { name: 'token', description: 'Token reference (resolved from ID)', version: '0.1' },
+                                { name: 'path', description: 'Path reference', version: '0.1' },
+                                { name: 'sequence', description: 'Sequence recording name', version: '0.1' },
+                                { name: 'scene', description: 'Choreograph scene name', version: '0.1' },
+                                { name: 'role', description: 'Cast role name', version: '1.0.0' },
+                            ],
+                        },
+                        vars: {
+                            title: 'Variables',
+                            description: 'Computed variables in scene tables',
+                            version: '0.1',
+                            details: 'Variables are computed once per token before any rows execute. They can reference parameters, other variables (defined earlier), and all built-in functions. Use them in delay expressions and command templates.',
+                            body: 'Defined in the Variables table (Variable | Expression). Computed once per token before execution. Later variables can reference earlier ones. Available in all delay expressions and command templates.',
+                        },
+                        tokenproxy: {
+                            title: 'TokenProxy',
+                            description: 'Dot-notation access to token properties',
+                            version: '0.2',
+                            details: 'TokenProxy wraps Roll20 graphic objects so you can access properties with dot notation in expressions instead of calling get(). Token parameters (type token) are also TokenProxy instances, so param.left works.',
+                            body: 'The ' + html.code('token') + ' object provides access to all token properties via dot notation. Token parameters (type ' + html.code('token') + ') are also TokenProxy instances.',
+                            items: [
+                                { name: 'token.id', description: 'Token ID', version: '0.2' },
+                                { name: 'token.name', description: 'Token display name', version: '0.2' },
+                                { name: 'token.left / token.top', description: 'Token position', version: '0.2' },
+                                { name: 'token.width / token.height', description: 'Token dimensions', version: '0.2' },
+                                { name: 'token.rotation', description: 'Token rotation', version: '0.2' },
+                                { name: 'token.layer', description: 'Token layer', version: '0.2' },
+                                { name: 'token.pageid', description: 'Token page ID', version: '0.2' },
+                                { name: 'token.bar1_value', description: 'Bar values (bar1-3)', version: '0.2' },
+                            ],
+                        },
+                        linq: {
+                            title: 'Array Methods (LINQ)',
+                            description: 'Chainable array operations on token sets',
+                            version: '0.2',
+                            details: 'Arrays returned by actors(), role(), cast(), and other set-returning functions are enriched with LINQ-style methods for filtering, sorting, and projecting without manual iteration.',
+                            body: 'Arrays returned by ' + html.code('actors()') + ', ' + html.code('role()') + ', etc. have extra methods:',
+                            items: [
+                                { name: '.from(other)', description: 'Intersection — keep only items in both arrays', version: '0.2' },
+                                { name: '.without(other)', description: 'Exclusion — remove items in other', version: '0.2' },
+                                { name: '.where(fn)', description: 'Filter (alias for .filter())', version: '0.2' },
+                                { name: '.orderBy(attr)', description: 'Sort by attribute name or function', version: '0.2' },
+                                { name: '.first(n?)', description: 'First element or first N elements', version: '0.2' },
+                                { name: '.last(n?)', description: 'Last element or last N elements', version: '0.2' },
+                                { name: '.select(fn)', description: 'Map/project elements', version: '0.2' },
+                            ],
+                        },
+                        roles: {
+                            title: 'Roles',
+                            description: 'Ad-hoc role assignment and filtering',
+                            version: '1.0.0',
+                            details: 'Roles are lightweight labels assigned to tokens at run time. Unlike casts (which are persisted), roles exist only for the duration of a scene run. They enable patterns like "caster hits targets" without pre-configuring casts.',
+                            body: 'Assign tokens to roles at runtime with ' + html.code('--role <name> <ids>') + '. Filter with ' + html.code('role=X') + '. Access in expressions with ' + html.code('role("name")') + ' and ' + html.code('role_ids("name")') + '.',
+                            items: [
+                                { name: '--role <name> <ids...>', description: 'Assign tokens to a role at run time', version: '1.0.0' },
+                                { name: 'role("name")', description: 'Get tokens in role (returns enriched array)', version: '1.0.0' },
+                                { name: 'role_ids("name")', description: 'Get token IDs in role', version: '1.0.0' },
+                            ],
+                        },
+                        troubleshooting: {
+                            title: 'Troubleshooting',
+                            description: 'Common issues and error behavior',
+                            version: '0.1',
+                            body: html.bold('Expression errors') + ' — If a delay or variable expression throws, that token is skipped for that row. An error is whispered to the GM with the expression and error message.' + html.paragraph('')
+                                + html.bold('Empty filter match') + ' — If a filter matches no tokens, the row does nothing (no error). This is intentional for conditional scenes.' + html.paragraph('')
+                                + html.bold('Missing parameters') + ' — If a required parameter (no default) is not provided at run time, the scene aborts with an error listing the missing params.' + html.paragraph('')
+                                + html.bold('Depth limit reached') + ' — At depth 0, any ' + html.code('!choreograph run') + ' commands in the scene table are silently skipped. Increase ' + html.code('--depth') + ' if legitimate recursion is being cut short.' + html.paragraph('')
+                                + html.bold('Sync timeout') + ' — If a sync participant doesn\'t signal completion within the timeout (default 30s), the scene continues without it. Adjust with ' + html.code('--sync-timeout') + '.' + html.paragraph('')
+                                + html.bold('Scene not found') + ' — Check that the handout is named exactly ' + html.code('[Scene] <name>') + ' and hasn\'t been renamed. Use ' + html.code('!choreograph list') + ' to see available scenes.' + html.paragraph('')
+                                + html.bold('Tokens not moving/animating') + ' — Choreograph only fires commands; it doesn\'t move tokens itself. Make sure the target script (e.g. Sequence) is installed and the command syntax is correct.',
+                        },
+                        api: {
+                            title: 'Extension API',
+                            description: 'How to extend Choreograph from other scripts',
+                            version: '0.1',
+                            handouts: 'dev',
+                            details: 'Other scripts can extend Choreograph by registering custom functions, token variables, constants, parameter types, lifecycle hooks, and sync participants. Extensions appear in man pages and the dev handout automatically.',
+                            items: [
+                                { name: 'registerFunction(src, struct)', syntax: 'Choreograph.registerFunction(src, struct)', description: 'Add a function to delay/command expressions', version: '0.1' },
+                                { name: 'registerTokenVariable(src, struct)', syntax: 'Choreograph.registerTokenVariable(src, struct)', description: 'Add a per-token variable', version: '0.1' },
+                                { name: 'registerConstant(src, struct)', syntax: 'Choreograph.registerConstant(src, struct)', description: 'Add a constant', version: '0.1' },
+                                { name: 'registerParameterType(src, struct)', syntax: 'Choreograph.registerParameterType(src, struct)', description: 'Add a custom parameter type', version: '0.1' },
+                                { name: 'registerLifecycleHook(src, struct)', syntax: 'Choreograph.registerLifecycleHook(src, struct)', description: 'Hook into scene lifecycle events', version: '0.1' },
+                                { name: 'registerSyncParticipant(src, struct)', syntax: 'Choreograph.registerSyncParticipant(src, struct)', description: 'Register for sync coordination', version: '0.1' },
+                                { name: 'generateExtensionHandout(src, opts)', syntax: 'Choreograph.generateExtensionHandout(src, opts)', description: 'Generate developer docs handout', version: '0.1' },
+                            ],
+                            body: 'Run ' + html.code('!choreograph gen-dev-docs') + ' for the full developer guide.',
+                        },
+                        func: {
+                            title: 'Registered Functions',
+                            description: 'Functions available in delay/command expressions',
+                            version: '0.1',
+                            body: () => {
+                                const regs = Object.values(EXT_FUNCTIONS);
+                                if (regs.length === 0) return html.italic('No functions registered.');
+                                let out = '';
+                                regs.forEach(r => {
+                                    const ns = r.namespace === 'core' ? '' : html.bold(html.escape(r.namespace) + '.');
+                                    const argList = (r.args || []).map(a => a.name).join(', ');
+                                    const purity = r.pure === false ? ' [unstable]' : '';
+                                    out += ns + html.bold(html.escape(r.name) + '(' + argList + ')') + ' → ' + html.italic(html.escape(r.returns || 'any')) + purity + html.br();
+                                    if (r.description) out += html.escape(r.description) + html.br();
+                                    out += html.br();
+                                });
+                                return out;
+                            },
+                        },
+                        tokenvar: {
+                            title: 'Token Variables',
+                            description: 'Registered per-token variables',
+                            version: '0.1',
+                            body: () => {
+                                const regs = Object.values(EXT_TOKEN_VARS);
+                                if (regs.length === 0) return html.italic('No token variables registered.');
+                                let out = '';
+                                regs.forEach(r => {
+                                    const ns = r.namespace === 'core' ? '' : html.bold(html.escape(r.namespace) + '.');
+                                    out += ns + html.bold(html.escape(r.name));
+                                    if (r.description) out += ' — ' + html.escape(r.description);
+                                    out += html.br();
+                                });
+                                return out;
+                            },
+                        },
+                        const: {
+                            title: 'Constants',
+                            description: 'Registered constants',
+                            version: '0.1',
+                            body: () => {
+                                const regs = Object.values(EXT_CONSTANTS);
+                                if (regs.length === 0) return html.italic('No constants registered.');
+                                let out = '';
+                                regs.forEach(r => {
+                                    const ns = r.namespace === 'core' ? '' : html.bold(html.escape(r.namespace) + '.');
+                                    out += ns + html.bold(html.escape(r.name)) + ' = ' + html.code(html.escape(String(r.value)));
+                                    if (r.description) out += ' — ' + html.escape(r.description);
+                                    out += html.br();
+                                });
+                                return out;
+                            },
+                        },
+                    },
+                },
+                exampleHandler: (example, msg) => {
+                    const sceneName = example.source + '/example-' + example.name;
+                    const scene = Object.assign({ name: sceneName }, example.scene);
+                    if (!scene.params) scene.params = [];
+                    if (!scene.params.find(p => p.name === 'cast')) {
+                        scene.params.unshift({ name: 'cast', type: 'token[]', default: 'selected', description: 'Tokens to run the scene on (built-in)' });
+                    }
+                    if (!scene.variables) scene.variables = [];
+                    if (!scene.rows) scene.rows = [];
+                    const html = generateSceneHtml(sceneName, scene);
+                    // Cache the scene so Choreograph can run it
+                    scenes().cache[sceneName] = scene;
+                    return { notes: html, archived: true };
+                },
+                onComplete: (ctx) => {
+                    // Build cast from selections._roles and run the scene
+                    const sceneName = ctx.example.source + '/example-' + ctx.example.name;
+                    const roles = ctx.selections._roles || {};
+                    if (Object.keys(roles).length > 0) {
+                        const castName = sceneName + '-cast';
+                        const castRoles = {};
+                        Object.entries(roles).forEach(([role, tokens]) => {
+                            castRoles[role] = (Array.isArray(tokens) ? tokens : [tokens]).map(t => t.get('id'));
+                        });
+                        const castHandout = casts().getOrCreate(castName);
+                        casts().cache[castName] = { roles: castRoles };
+                        setHandoutNotes(castHandout, generateCastHtml(castName, castRoles));
+                        castHandout.set('archived', true);
+                        // Build param flags
+                        const paramFlags = Object.entries(ctx.params || {})
+                            .map(([k, v]) => '--' + k + ' ' + v)
+                            .join(' ');
+                        const syntheticMsg = Object.assign({}, ctx.msg, {
+                            content: CMD_TOKEN + ' run ' + sceneName + ' ignore-selected --cast ' + castName + (paramFlags ? ' ' + paramFlags : ''),
+                            selected: [],
+                        });
+                        handleInput(syntheticMsg);
+                    }
+                },
+            });
 
-        registerExample(SCRIPT_NAME, {
-            name: 'chain-lightning',
-            description: 'Lightning chains from caster to nearest target, then jumps to the next. Shows when + --role recursion.',
-            guide: [
-                { prompt: 'Select the caster token (starting point, never targeted).', role: 'caster' },
-                { prompt: 'Select 3+ targets for the lightning to chain through.', role: 'targets', onContinue: (tokens, roles) => { if (tokens.includes(roles.caster[0])) return 'Caster token cannot be selected as a target'; } },
-            ],
-            scene: {
-                notes: 'Recursive chain: beam from conduit to nearest other target, burst, recurse with that target as new conduit.',
-                roles: [
-                    { name: 'caster', min: 1, max: 1 },
-                    { name: 'targets', min: 3 },
-                ],
-                params: [
-                    { name: 'speed', type: 'number', default: '2', description: 'Travel speed (px/ms)' },
-                    { name: 'jumps', type: 'number', default: '5', description: 'Max jumps remaining' },
-                ],
-                variables: [
-                    { name: 'next', expression: 'role("targets").without(role("caster")).first()' },
-                ],
-                rows: [
-                    { filter: 'role=caster', delay: '0', when: 'jumps > 0 && next', commands: [
-                        '!choreograph fxbetween beam-magic ${token.left} ${token.top} ${next.left} ${next.top} ${token.pageid}',
-                    ], notes: 'Beam to next target' },
-                    { filter: 'role=caster', delay: 'Math.round(distance(next.left, next.top) / speed)', when: 'jumps > 0 && next', commands: [
-                        '!choreograph fx burst-magic ${next.left} ${next.top} ${token.pageid}',
-                        '!choreograph run ${self} --role caster ${next.id} --role targets ${role_ids("targets").join(" ")} --speed ${speed} --jumps ${jumps - 1}',
-                    ], notes: 'Burst + recurse with next as conduit' },
-                ],
-            },
+            // Adapt guide steps: Choreograph uses `role`, Tutorial uses `select`+`as`+`role`
+            const adaptGuide = (guide) => {
+                if (!guide) return [];
+                return guide.map(step => {
+                    const adapted = Object.assign({}, step);
+                    if (step.role && !step.select) {
+                        adapted.select = (step.max === 1 && step.min === 1) ? 'token' : 'tokens';
+                        adapted.as = step.role;
+                    }
+                    // Adapt onContinue signature: Choreograph's is (tokens, roles), Tutorial's is (ctx)
+                    if (step.onContinue) {
+                        const origFn = step.onContinue;
+                        adapted.onContinue = (ctx) => origFn(ctx.selected, ctx.selections._roles || {});
+                    }
+                    return adapted;
+                });
+            };
+
+            ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'fireball',
+                description: 'Fire explosions propagate outward from the leftmost token. Shows stagger + rank + FX.',
+                guide: adaptGuide([
+                    { prompt: 'Select 3+ tokens to be hit by the fireball. Arrange them in a rough cluster.', role: 'cast', min: 3 },
+                ]),
+                scene: {
+                    notes: 'Fire explosions staggered by position — looks like a spreading fireball.',
+                    params: [
+                        { name: 'interval', type: 'number', default: '200', description: 'Ms between each explosion' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: 'Staggered explosions' },
+                    ],
+                },
+            });
+
+            ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'arcane-barrage',
+                description: 'Magic beams fire from a caster to each target in sequence. Shows multi-role guide + fxbetween + cast().',
+                guide: adaptGuide([
+                    { prompt: 'Select the caster token (where lightning originates).', role: 'caster', min: 1, max: 1 },
+                    { prompt: 'Select 2+ target tokens to be struck.', role: 'targets', min: 2 },
+                ]),
+                scene: {
+                    notes: 'Lightning beam jumps from caster to each target in sequence.',
+                    roles: [
+                        { name: 'caster', min: 1, max: 1 },
+                        { name: 'targets', min: 2 },
+                    ],
+                    params: [
+                        { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
+                    ],
+                    variables: [],
+                    rows: [
+                        { filter: 'role=targets', delay: 'stagger(rank("left"), interval)', commands: [
+                            '!choreograph fxbetween beam-magic ${role("caster").first().left} ${role("caster").first().top} ${token.left} ${token.top} ${token.pageid}',
+                            '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
+                        ], notes: 'Beam from caster + burst at target' },
+                    ],
+                },
+            });
+
+            ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
+                name: 'chain-lightning',
+                description: 'Lightning chains from caster to nearest target, then jumps to the next. Shows when + --role recursion.',
+                guide: adaptGuide([
+                    { prompt: 'Select the caster token (starting point, never targeted).', role: 'caster', min: 1, max: 1 },
+                    { prompt: 'Select 3+ targets for the lightning to chain through.', role: 'targets', min: 3, onContinue: (tokens, roles) => { if (tokens.includes(roles.caster[0])) return 'Caster token cannot be selected as a target'; } },
+                ]),
+                scene: {
+                    notes: 'Recursive chain: beam from conduit to nearest other target, burst, recurse with that target as new conduit.',
+                    roles: [
+                        { name: 'caster', min: 1, max: 1 },
+                        { name: 'targets', min: 3 },
+                    ],
+                    params: [
+                        { name: 'speed', type: 'number', default: '2', description: 'Travel speed (px/ms)' },
+                        { name: 'jumps', type: 'number', default: '5', description: 'Max jumps remaining' },
+                    ],
+                    variables: [
+                        { name: 'next', expression: 'role("targets").without(role("caster")).first()' },
+                    ],
+                    rows: [
+                        { filter: 'role=caster', delay: '0', when: 'jumps > 0 && next', commands: [
+                            '!choreograph fxbetween beam-magic ${token.left} ${token.top} ${next.left} ${next.top} ${token.pageid}',
+                        ], notes: 'Beam to next target' },
+                        { filter: 'role=caster', delay: 'Math.round(distance(next.left, next.top) / speed)', when: 'jumps > 0 && next', commands: [
+                            '!choreograph fx burst-magic ${next.left} ${next.top} ${token.pageid}',
+                            '!choreograph run ${self} --role caster ${next.id} --role targets ${role_ids("targets").join(" ")} --speed ${speed} --jumps ${jumps - 1}',
+                        ], notes: 'Burst + recurse with next as conduit' },
+                    ],
+                },
+            });
+        };
+
+        // Try immediately + listen for ready signal
+        registerWithScriptKit();
+        on('chat:message', function(msg) {
+            if (msg.type === 'api' && msg.content === '!scriptkit-ready') registerWithScriptKit();
         });
 
         // Register Choreograph with itself for child cascading
@@ -3294,6 +3745,9 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         });
 
         // Generate Help: Choreograph handout
+        // Legacy help handout generation (disabled — ScriptKit handles this now)
+        // To generate the old-style handout, uncomment below:
+        /*
         (() => {
             const helpName = `Help: ${SCRIPT_NAME}`;
             let hh = findObjs({ type: 'handout', name: helpName })[0];
@@ -3396,6 +3850,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
 
             hh.set('notes', html);
         })();
+        */
 
         log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
 
