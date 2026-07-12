@@ -1300,11 +1300,12 @@ var ScriptKit = ScriptKit || (() => {
             html.bold(html.escape(g.handoutName || g.example.name)) + ' — Setup (step ' + interactiveIdx + '/' + interactiveTotal + ')' + html.paragraph('')
             + step.prompt + html.paragraph('')
             + (step.select ? (() => {
-                const isMulti = step.select === 'tokens' || step.select === 'paths';
+                const plural = !step.max || step.max > 1;
+                const label = step.select + (plural ? 's' : '');
                 const parts = [];
                 if (step.min) parts.push('min: ' + step.min);
                 if (step.max) parts.push('max: ' + step.max);
-                return parts.length > 0 ? html.italic('Select ' + parts.join(', ') + (isMulti ? ' tokens' : ' token')) + html.paragraph('') : '';
+                return parts.length > 0 ? html.italic('Select ' + parts.join(', ') + ' ' + label) + html.paragraph('') : '';
             })() : '')
             + (step.query ? (() => {
                 const queries = Array.isArray(step.query) ? step.query : [step.query];
@@ -1340,20 +1341,29 @@ var ScriptKit = ScriptKit || (() => {
 
         // Handle select steps
         if (step.select) {
-            const isMulti = step.select === 'tokens' || step.select === 'paths';
-            if (selected.length === 0) {
-                replyError(msg, g.source, 'Select at least one token, then click Continue.');
+            const selectType = step.select;
+            const isSubtype = selectType === 'token' || selectType === 'card';
+            const matchType = isSubtype ? 'graphic' : selectType;
+            const filtered = selected.filter(obj => {
+                if (obj.get('_type') !== matchType) return false;
+                if (isSubtype && obj.get('_subtype') !== selectType) return false;
+                return true;
+            });
+            const plural = !step.max || step.max > 1;
+            const label = selectType + (plural ? 's' : '');
+            if (filtered.length === 0) {
+                replyError(msg, g.source, 'Select at least one ' + selectType + ', then click Continue.');
                 return;
             }
-            if (step.min && selected.length < step.min) {
-                replyError(msg, g.source, 'Select at least ' + step.min + ' token(s), then click Continue.');
+            if (step.min && filtered.length < step.min) {
+                replyError(msg, g.source, 'Select at least ' + step.min + ' ' + label + ', then click Continue.');
                 return;
             }
-            if (step.max && selected.length > step.max) {
-                replyError(msg, g.source, 'Select at most ' + step.max + ' token(s), then click Continue.');
+            if (step.max && filtered.length > step.max) {
+                replyError(msg, g.source, 'Select at most ' + step.max + ' ' + label + ', then click Continue.');
                 return;
             }
-            g.selections[step.as] = isMulti ? selected : selected[0];
+            g.selections[step.as] = plural ? filtered : filtered[0];
         }
 
         // Handle query steps (parse --key value from msg.content)
