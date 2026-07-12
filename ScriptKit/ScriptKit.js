@@ -955,7 +955,8 @@ var ScriptKit = ScriptKit || (() => {
                     } else {
                         if (c.deleted) return;
                         var badge = '';
-                        if (isNewVersion(c.version, reg)) badge = ' ' + html.newBadge();
+                        var cmdIsNew = isNewVersion(c.version, reg);
+                        if (cmdIsNew) badge = ' ' + html.newBadge();
                         if (c.deprecated) badge = ' ' + html.deprecatedBadge();
                         if (mode === 'dev' && c.version) badge += ' ' + html.version(c.version);
                         result += '<p>' + html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(c.description) + badge + '</p>';
@@ -965,7 +966,7 @@ var ScriptKit = ScriptKit || (() => {
                             c.items.forEach(item => {
                                 if (item.deleted) return;
                                 var iBadge = '';
-                                if (isNewVersion(item.version, reg)) iBadge = ' ' + html.newBadge();
+                                if (!cmdIsNew && isNewVersion(item.version, reg)) iBadge = ' ' + html.newBadge();
                                 if (item.deprecated) iBadge = ' ' + html.deprecatedBadge();
                                 if (mode === 'dev' && item.version) iBadge += ' ' + html.version(item.version);
                                 result += '<li>' + html.code(item.name) + ' — ' + html.escape(item.description) + iBadge + '</li>';
@@ -984,7 +985,8 @@ var ScriptKit = ScriptKit || (() => {
         filteredTopicKeys.forEach(k => {
             var t = topics[k];
             var badge = '';
-            if (isNewVersion(t.version, reg)) badge = ' ' + html.newBadge();
+            var topicIsNew = isNewVersion(t.version, reg);
+            if (topicIsNew) badge = ' ' + html.newBadge();
             if (t.deprecated) badge = ' ' + html.deprecatedBadge();
             if (mode === 'dev' && t.version) badge += ' ' + html.version(t.version);
             out += '<h2>' + html.escape(t.title || k) + badge + '</h2>';
@@ -998,7 +1000,7 @@ var ScriptKit = ScriptKit || (() => {
                 t.items.forEach(item => {
                     if (item.deleted) return;
                     var iBadge = '';
-                    if (isNewVersion(item.version, reg)) iBadge = ' ' + html.newBadge();
+                    if (!topicIsNew && isNewVersion(item.version, reg)) iBadge = ' ' + html.newBadge();
                     if (item.deprecated) iBadge = ' ' + html.deprecatedBadge();
                     if (mode === 'dev' && item.version) iBadge += ' ' + html.version(item.version);
                     out += '<p>' + html.bold(html.escape(item.name)) + iBadge;
