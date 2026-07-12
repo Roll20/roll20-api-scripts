@@ -925,7 +925,7 @@ var ScriptKit = ScriptKit || (() => {
             if (Array.isArray(qs)) out += html.orderedList(qs);
             else out += '<div>' + qs + '</div>';
         } else if (hasExamples) {
-            out += '<p>' + examplesBtn + ' — ready-made scenes you can install and learn from.</p>';
+            out += '<p>' + examplesBtn + ' — ready-made examples you can install and learn from.</p>';
         }
 
         // What's New
@@ -1020,7 +1020,7 @@ var ScriptKit = ScriptKit || (() => {
         if (reg.aliases && reg.aliases.examples) {
             var examplesForScript = Object.values(examples).filter(e => e.target === scriptName);
             if (examplesForScript.length > 0) {
-                out += '<hr><p>' + html.button('📖 Browse Examples', reg.command + ' ' + reg.aliases.examples, { background: '#444', fontSize: '11px' }) + ' — ' + examplesForScript.length + ' ready-made scene' + (examplesForScript.length === 1 ? '' : 's') + ' available.</p>';
+                out += '<hr><p>' + html.button('📖 Browse Examples', reg.command + ' ' + reg.aliases.examples, { background: '#444', fontSize: '11px' }) + ' — ' + examplesForScript.length + ' ready-made example' + (examplesForScript.length === 1 ? '' : 's') + ' available.</p>';
             }
         }
 
