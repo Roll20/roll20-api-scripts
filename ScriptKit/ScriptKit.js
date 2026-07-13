@@ -1335,7 +1335,7 @@ var ScriptKit = ScriptKit || (() => {
         const hasPriorInteractive = g.steps.slice(0, g.currentStep).some(s => !s.auto && s !== HANDOUT_STEP);
 
         // Compute hue-rotated background color for this step
-        const hueIncrement = 360 / (interactiveTotal || 1);
+        const hueIncrement = Math.max(60, 360 / (interactiveTotal || 1)) + 15;
         const stepHue = (g._hue + (interactiveIdx - 1) * hueIncrement) % 360;
         // Convert HSL(hue, 30%, 20%) to hex for Roll20 compatibility
         const h = stepHue / 360, s = 0.3, l = 0.2;
