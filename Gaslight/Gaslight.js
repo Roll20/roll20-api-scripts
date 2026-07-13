@@ -370,8 +370,7 @@ var Gaslight = Gaslight || (() => {
             var imgsrc = token.get('imgsrc');
             if (!imgsrc) return;
 
-            // Create with minimal props (spatial + identity + gmnotes)
-            // Mirror.align handles synced properties after linking is established
+            // Create with spatial + identity + gmnotes (minimum for Anchor/linking to work)
             var newToken = createObj('graphic', {
                 _subtype: 'token',
                 pageid: targetPageId,
@@ -2982,6 +2981,14 @@ var Gaslight = Gaslight || (() => {
                 reply(msg, 'Eval', '<b>Pin:</b> ' + headerContent);
                 break;
             }
+            case '--dump-token': {
+                var sel = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
+                sel.forEach(function(obj) {
+                    log(SCRIPT_NAME + ' [dump-token ' + obj.get('id') + ']: ' + JSON.stringify(obj));
+                });
+                reply(msg, 'Debug', 'Dumped ' + sel.length + ' token(s) to API console.');
+                break;
+            }
             case '--dump-html': {
                 // Debug: dump raw content to console for selected pins/tokens or named character
                 if (args.length > 0) {
@@ -3183,7 +3190,7 @@ var Gaslight = Gaslight || (() => {
             '<p><b>Setup:</b> Create a handout with your script. Place a pin on the master page, link it to the handout. Add config to the pin\'s GM notes:</p>',
             '<pre>---GASLIGHT-SCRIPT---\nscope: token\nfilter: has gl_stealth_result</pre>',
             '<p><b>Script syntax:</b></p>',
-            '<pre>// Comments start with //\n!token-mod --ids @(target.token_id) --set {& if (any(@(viewer.passive_wisdom)) >= @(target.gl_stealth_result))} layer|objects {& else} layer|gmlayer {& end}</pre>',
+            '<pre>// Comments start with //\n!token-mod --set {& if (any(@(viewer.passive_wisdom)) >= @(target.gl_stealth_result))} layer|objects {& else} layer|gmlayer {& end}</pre>',
             '<p><b>Variables:</b></p>',
             '<ul>',
             '<li><code>@(target.*)</code> — the token being evaluated (linked per viewer page)</li>',
@@ -3213,6 +3220,7 @@ var Gaslight = Gaslight || (() => {
         ScriptKit.register(SCRIPT_NAME, {
             version: SCRIPT_VERSION,
             command: CMD,
+            tag: 'GLS',
             aliases: { help: ['help', '--help'], man: 'man', examples: 'examples', whatsnew: 'whatsnew', genHelp: 'gen-help', genDev: 'gen-dev-docs' },
             newSince: '2.1.0',
             help: {
@@ -3243,37 +3251,78 @@ var Gaslight = Gaslight || (() => {
                 ],
                 commands: [
                     { group: 'Core', commands: [
-                        { syntax: 'setup <group> [--selected | player1 player2 ...]', description: 'Quick-configure group from duplicate pages', version: '2.0.0',
-                          details: 'Auto-detects page copies by name, assigns master + player pages, configures the group. Optionally specify which players to include.' },
+                        { syntax: 'setup <group> [players...]', description: 'Quick-configure group from duplicate pages', version: '2.0.0',
+                          details: 'Auto-detects page copies by name, assigns master + player pages. Players resolved from selected tokens or named explicitly.',
+                          items: [
+                              { name: '<group>', description: 'Name for the group configuration', version: '2.0.0' },
+                              { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
+                          ]},
                         { syntax: 'split <group> [--force]', description: 'Activate a prepared group', version: '1.0.0',
-                          details: 'Links tokens across pages, moves players to individual pages, begins syncing. Runs test-first unless --force.' },
+                          details: 'Links tokens across pages, moves players to individual pages, begins syncing. Runs test-first unless --force.',
+                          items: [
+                              { name: '--force', description: 'Skip the automatic test and split immediately', version: '1.0.0' },
+                          ]},
                         { syntax: 'merge [group]', description: 'Tear down links, return players to shared page', version: '1.0.0' },
                         { syntax: 'test <group>', description: 'Dry-run linking resolution', version: '1.0.0',
                           details: 'Shows which tokens would link via each resolution step (1-4) without activating anything.' },
                         { syntax: 'status', description: 'Show configured groups, active splits, linked token counts', version: '1.0.0' },
                     ]},
                     { group: 'Token Linking', commands: [
-                        { syntax: 'link [<name>|new] [ids...]', description: 'Set gaslight_link on tokens', version: '1.0.0',
-                          details: 'Assigns a shared link ID to selected tokens + explicit IDs. Use "new" to auto-generate a fresh ID.' },
+                        { syntax: 'link [<name>|new] [ids...]', description: 'Set gaslight_link on selected + explicit tokens', version: '1.0.0',
+                          details: 'Assigns a shared link ID. "new" generates a fresh ID. First non-ID arg is the link name.' },
                         { syntax: 'unlink [ids...|--group <g>]', description: 'Remove gaslight_link from tokens', version: '1.0.0' },
-                        { syntax: 'sync [ids...]', description: 'Enable sync for selected tokens', version: '2.1.0' },
-                        { syntax: 'desync [ids...]', description: 'Disable sync for selected tokens', version: '2.1.0' },
+                        { syntax: 'sync [all|reset|<props...>]', description: 'Show or modify sync config for selected tokens', version: '2.1.0',
+                          details: 'Overrides the token\'s gaslight_sync config without changing the character attribute. Use "reset" to re-read from the character.',
+                          items: [
+                              { name: '(no args)', description: 'Show the current gaslight_sync config for each selected token', version: '2.1.0' },
+                              { name: 'all', description: 'Explicitly sync all properties', version: '2.1.0' },
+                              { name: 'reset', description: 'Re-copy sync config from the character\'s gaslight_sync attribute', version: '2.1.0' },
+                              { name: '<props...>', description: 'Add specific properties to the sync list (comma or space separated)', version: '2.1.0' },
+                          ]},
+                        { syntax: 'desync <props...|all>', description: 'Exclude properties from sync on selected tokens', version: '2.1.0',
+                          items: [
+                              { name: 'all', description: 'Disable all property syncing (set empty config)', version: '2.1.0' },
+                              { name: '<props...>', description: 'Add !prop exclusions (e.g. desync tint_color bar3_value)', version: '2.1.0' },
+                          ]},
                     ]},
                     { group: 'Page Configuration', commands: [
-                        { syntax: 'group <name> <player|GM>', description: 'Assign current page to a group', version: '1.0.0' },
-                        { syntax: 'ungroup <name> <player|GM|--all>', description: 'Remove page from group', version: '1.0.0' },
-                        { syntax: 'stage [players...]', description: 'Propagate selected tokens to player pages and link', version: '1.1.0',
-                          details: 'Clones tokens to all configured player pages with automatic linking. View-aware in v2.1.0.' },
-                        { syntax: 'view [player|master]', description: 'Switch relay view target', version: '2.0.0' },
+                        { syntax: 'group <group> <player|GM>', description: 'Assign current page to a group', version: '1.0.0' },
+                        { syntax: 'ungroup <group> <player|GM|--all>', description: 'Remove page from group', version: '1.0.0' },
+                        { syntax: 'stage', description: 'Propagate selected tokens to player pages and link', version: '1.1.0',
+                          details: 'Select tokens on a gaslighted page. Clones to all other pages in the group with automatic linking.' },
+                        { syntax: 'view [player|master|off]', description: 'Show or switch relay view target', version: '2.0.0',
+                          details: 'Controls which page(s) receive relayed commands and where var writes go. Affects auto-relay, manual relay, and var command targeting.',
+                          items: [
+                              { name: '(no args)', description: 'Show the current view target', version: '2.0.0' },
+                              { name: 'master / gm / all', description: 'Relay commands to all player pages', version: '2.0.0' },
+                              { name: 'off / none', description: 'Disable auto-relay entirely', version: '2.0.0' },
+                              { name: '<player>', description: 'Relay only to a specific player\'s page', version: '2.0.0' },
+                          ]},
                     ]},
                     { group: 'Relay & Automation', commands: [
-                        { syntax: 'relay <views...> <!command>', description: 'Manually relay a command to specific views', version: '2.0.0',
-                          details: 'Views: player names, "all", "master"/"GM". Token IDs in the command are swapped with linked counterparts per page.' },
+                        { syntax: 'relay <views...> <command>', description: 'Relay a command to specific views (select tokens first)', version: '2.0.0',
+                          details: 'Views: player names, "all", "master"/"gm". Token IDs in the command are swapped with linked counterparts per page.' },
                         { syntax: 'config [relay-add|relay-remove|relay-list] [commands...]', description: 'Configure auto-relay command list', version: '2.0.0' },
                         { syntax: 'eval [--dry-run] [--all|<handout>]', description: 'Evaluate script pins', version: '2.0.0',
-                          details: 'Selected pins, all pins, or by handout name. --dry-run previews without executing.' },
-                        { syntax: 'var <token_id|selected> <key> [value]', description: 'Get/set gl_* variables on tokens', version: '2.1.0' },
-                        { syntax: 'hud [on|off|refresh]', description: 'Toggle persistent status HUD', version: '2.1.0' },
+                          details: 'Select pins, or use --all for all active pages, or name a handout. --dry-run previews without executing.' },
+                        { syntax: 'var [--silent] --set|--get|--del <name> [value]', description: 'Get/set/delete gl_* variables on selected tokens', version: '2.1.0',
+                          details: 'Actions can be chained in one call (e.g. --set a 1 --set b 2 --del c). Names are auto-prefixed with gl_ if missing. View-aware: writes target the current view\'s linked tokens.',
+                          items: [
+                              { name: '--set <name> <value>', description: 'Set a gl_* field in token GM notes', version: '2.1.0' },
+                              { name: '--get <name>', description: 'Read the current value (from GM notes or character attribute)', version: '2.1.0' },
+                              { name: '--del <name>', description: 'Remove the field from token GM notes', version: '2.1.0' },
+                              { name: '--setch <name> <value>', description: 'Set on the character attribute (shared across all tokens)', version: '2.1.0' },
+                              { name: '--delch <name>', description: 'Delete the character attribute', version: '2.1.0' },
+                              { name: '--silent', description: 'Don\'t trigger script re-evaluation after the change', version: '2.1.0' },
+                          ]},
+                        { syntax: 'hud [<element>] [on|off|reset]', description: 'Toggle HUD elements', version: '2.1.0',
+                          items: [
+                              { name: '(no args)', description: 'Toggle all HUD elements on/off', version: '2.1.0' },
+                              { name: 'view', description: 'The view/relay status indicator', version: '2.1.0' },
+                              { name: 'initiative', description: 'The initiative tracker HUD', version: '2.1.0' },
+                              { name: 'on / off', description: 'Explicitly enable or disable', version: '2.1.0' },
+                              { name: 'reset', description: 'Clear stored position and recreate from defaults', version: '2.1.0' },
+                          ]},
                     ]},
                 ],
                 topics: {
@@ -3312,7 +3361,7 @@ var Gaslight = Gaslight || (() => {
                             { name: '@(target.field)', description: 'Reference a target token field (bar values, GM notes gl_* vars)', version: '2.0.0' },
                             { name: '@(viewer.field)', description: 'Reference the viewer\'s token field', version: '2.0.0' },
                             { name: '@(gm.field)', description: 'Reference the GM master token field', version: '2.0.0' },
-                            { name: '{& if condition}...{& endif}', description: 'Conditional block — evaluates per viewer', version: '2.0.0' },
+                            { name: '{& if condition}...{& end}', description: 'Conditional block — evaluates per viewer', version: '2.0.0' },
                             { name: '{& select target_id}', description: 'Target selection (SelectManager integration)', version: '2.0.0' },
                             { name: 'any(), all(), max(), min()', description: 'Aggregate functions across viewer tokens', version: '2.0.0' },
                             { name: 'join()', description: 'Space-separated IDs of matching viewer tokens', version: '2.0.0' },
@@ -3348,7 +3397,7 @@ var Gaslight = Gaslight || (() => {
                         description: 'Persistent on-screen status display',
                         version: '2.1.0',
                         body: 'The HUD shows the current Gaslight state (active group, view target, linked token count) as a persistent text element on the GM layer.' + html.paragraph('')
-                            + html.code('!gaslight hud on') + ' / ' + html.code('!gaslight hud off') + ' to toggle. ' + html.code('!gaslight hud refresh') + ' to force update.',
+                            + html.code('!gaslight hud on') + ' / ' + html.code('!gaslight hud off') + ' to toggle. ' + html.code('!gaslight hud reset') + ' to recreate from defaults.',
                     },
                     troubleshooting: {
                         title: 'Troubleshooting',
@@ -3364,54 +3413,148 @@ var Gaslight = Gaslight || (() => {
             },
         });
 
+        // Pin validation helper for guide steps
+        const validatePin = (ctx) => {
+            var pin = ctx.selected[0];
+            if (!pin || pin.get('_type') !== 'pin') return 'Select the map pin you just placed.';
+            var pinPage = pin.get('_pageid');
+            var onMaster = Object.values(state[SCRIPT_NAME].activeGroups || {}).some(g => g.masterPageId === pinPage);
+            if (!onMaster) return 'That pin is not on a master page. Place it on the master page of your active gaslight group.';
+            if (ctx.handoutName) {
+                var linkedHandout = pin.get('link');
+                if (linkedHandout) {
+                    var ho = getObj('handout', linkedHandout);
+                    if (!ho || ho.get('name') !== ctx.handoutName) return 'That pin is not linked to the generated handout. Drag the "' + ctx.handoutName + '" handout onto the page to create the correct pin.';
+                }
+            }
+        };
+
         // Register examples
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
-            name: 'stealth',
-            description: 'Hide/show NPCs per player based on passive perception vs stealth DC',
+            name: 'first-map',
+            description: 'Walk through setting up your first gaslighted map (no handout generated)',
             guide: [
-                { type: 'select', prompt: 'Select the NPC tokens that can stealth', key: 'targets' },
-                { type: 'query', prompt: 'What attribute holds the viewer\'s passive perception?', key: 'percField', default: 'passive_wisdom' },
+                { prompt: 'This guide walks you through creating your first **per-player split**. No handout is generated — just follow the steps and click Continue when ready.' },
+                { prompt: 'Create your **master page** with all tokens placed (NPCs, players, objects). This is the "truth" page.' },
+                { prompt: 'Duplicate the page once per player using Roll20\'s built-in **Duplicate Page**. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.' },
+                { prompt: 'Select all party tokens on the master page and run `!gaslight setup mygroup`. This auto-detects the duplicates, assigns each to a player, and configures the group.',
+                  onContinue: () => {
+                      var groups = discoverAllGroups();
+                      if (Object.keys(groups).length === 0) return 'No group configured yet. Run !gaslight setup <name> first.';
+                  }
+                },
+                { prompt: 'Run `!gaslight test mygroup`. This dry-runs the linking without activating. Verify tokens link correctly (*Step 1* = explicit link, *Step 2* = character+name match).' },
+                { prompt: 'Run `!gaslight split mygroup`. This activates the group — players are moved to individual pages and tokens begin syncing.',
+                  onContinue: () => {
+                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run !gaslight split <group> first.';
+                  }
+                },
+                { prompt: '**Done!** Move tokens on the master page — they\'ll sync to all player pages. Make per-player changes on individual pages (hide/show tokens, swap images, etc). When finished: `!gaslight merge`' },
             ],
-            handout: {
-                notes: [
-                    '<h3>Stealth — Per-Player Visibility</h3>',
-                    '<p>Hides or shows NPC tokens based on each player\'s passive perception vs the token\'s stealth DC stored in <code>gl_stealth_result</code>.</p>',
-                    '<h4>Setup</h4>',
-                    '<ol>',
-                    '<li>Set <code>gl_stealth_result</code> on target NPCs (via <code>!gaslight var</code> or RollCapture).</li>',
-                    '<li>Ensure player characters have a <code>passive_wisdom</code> attribute (or your chosen perception field).</li>',
-                    '<li>Place a map pin on the page titled with this handout name.</li>',
-                    '</ol>',
-                    '<h4>Script</h4>',
-                    '<pre>{& select @(target.token_id)}\n!token-mod --ids @(target.token_id) --set {& if any(@(viewer.passive_wisdom)) >= @(target.gl_stealth_result)}layer|objects{& else}layer|gmlayer{& endif}</pre>',
-                    '<h4>Trigger</h4>',
-                    '<p>Auto-triggers on <code>gl_stealth_result</code> change. Set a stealth DC with <code>!gaslight var selected gl_stealth_result 15</code>.</p>',
-                ].join('\n'),
-            },
+        });
+
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'stealth',
+            description: 'Hide/show NPCs per player based on passive perception vs stealth DC (RollCapture)',
+            guide: [
+                { prompt: 'This example requires **RollCapture** to capture stealth rolls.',
+                  onContinue: () => {
+                      if (typeof RollCapture === 'undefined') return 'RollCapture is not installed. Install it from the one-click menu first.';
+                  }
+                },
+                { prompt: 'Run `!rollcapture dissect` in chat, then roll stealth for any NPC. This shows you the template fields available for capture.' },
+                { prompt: 'Create a RollCapture rule for skills. Run `!rollcapture rule skills` — this creates a *[RC] skills* handout. Open it in the journal.' },
+                { prompt: 'Add the line `template: <name>` — where `<name>` is the roll template shown by dissect (e.g. "simple", "atk", "npc").' },
+                { prompt: 'Add the line `name_field: <field>` — where `<field>` is the template field containing the skill name (e.g. "rname", "name"). This is how RollCapture identifies which skill was rolled.' },
+                { prompt: 'Add the line `result: <field>` — where `<field>` is the inline roll field holding the total (e.g. "r1", "roll1").' },
+                { prompt: 'Save the handout and run `!rollcapture reload` to load your new rule.',
+                  onEnter: (ctx, advance) => {
+                      ctx._rcReloadHandler = (msg) => {
+                          if (msg.type === 'api' && msg.content === '!rollcapture reload') advance();
+                      };
+                      on('chat:message', ctx._rcReloadHandler);
+                  },
+                  onExit: (ctx) => {
+                      if (ctx._rcReloadHandler) off('chat:message', ctx._rcReloadHandler);
+                  }
+                },
+                { prompt: 'What does your character sheet call a stealth roll? This should match the value in the `name_field` when you roll stealth (e.g. "hide", "stealth").',
+                  query: { name: 'rollname', default: 'stealth' }
+                },
+                { prompt: 'What is the **passive perception** attribute on player characters? (e.g. `passive_wisdom`, `passive_perception`)',
+                  query: { name: 'perception', default: 'passive_wisdom' }
+                },
+                ScriptKit.handout(),
+                { prompt: (ctx) => 'The script handout has been generated. Find **' + ctx.handoutName + '** from the journal and **drag it onto the master page** to create a map pin. Select the pin.',
+                  select: 'pin', as: 'pin', min: 1, max: 1,
+                  onContinue: validatePin
+                },
+                { prompt: '**Test:** Select an NPC token and roll stealth. RollCapture captures the result, which triggers this script. Players whose passive perception is lower than the roll should no longer see the NPC on their page.' },
+            ],
+            handout: (ctx) => ({
+                notes: '!token-mod --set {& if any(@(viewer.' + ctx.params.perception + '[-999])) >= @(target.gl_' + ctx.params.rollname + '_result[0])}layer|objects{& else}layer|gmlayer{& end}',
+                archived: false,
+            }),
         });
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'truesight',
-            description: 'Reveal true forms to viewers with truesight (swap token images)',
+            description: 'Reveal true forms to viewers with truesight (swap token side)',
             guide: [
-                { type: 'select', prompt: 'Select the disguised/illusory tokens', key: 'targets' },
-                { type: 'query', prompt: 'URL of the true form token image', key: 'trueImgsrc' },
+                { prompt: 'Select one or more **multi-sided tokens** that represent disguised creatures. *Side 1* = disguised appearance, *side 2* = true form.',
+                  select: 'token', as: 'disguised', min: 1,
+                  onContinue: (ctx) => {
+                      var tokens = Array.isArray(ctx.selected) ? ctx.selected : [ctx.selected];
+                      var notMultiSided = tokens.filter(t => {
+                          var sides = t.get('sides');
+                          return !sides || sides.split('|').filter(Boolean).length < 2;
+                      });
+                      if (notMultiSided.length > 0) {
+                          var names = notMultiSided.map(t => t.get('name') || t.get('id')).join(', ');
+                          return 'These tokens are not multi-sided: ' + names + '. Set up multiple sides on them first.';
+                      }
+                  }
+                },
+                { prompt: 'Run `!gaslight var --setch can_disguise 1` with those tokens still selected. This marks them as targets for the truesight script.',
+                  onContinue: (ctx) => {
+                      var tokens = Array.isArray(ctx.selections.disguised) ? ctx.selections.disguised : [ctx.selections.disguised];
+                      var missing = tokens.filter(t => {
+                          var charId = t.get('represents');
+                          if (!charId) return true;
+                          var attr = findObjs({ _type: 'attribute', _characterid: charId, name: 'gl_can_disguise' })[0];
+                          return !attr || attr.get('current') !== '1';
+                      });
+                      if (missing.length > 0) {
+                          var names = missing.map(t => t.get('name') || t.get('id')).join(', ');
+                          return 'These tokens do not have gl_can_disguise = 1 on their character: ' + names + '. Run `!gaslight var --setch can_disguise 1` (`--setch`, not `--set`) with them selected.';
+                      }
+                  }
+                },
+                { prompt: 'Now select viewer tokens that have **truesight** and run `!gaslight var --set truesight 1`.',
+                  select: 'token', as: 'viewers', min: 1,
+                  onContinue: (ctx) => {
+                      var tokens = Array.isArray(ctx.selected) ? ctx.selected : [ctx.selected];
+                      var missing = tokens.filter(t => {
+                          var notes = t.get('gmnotes') || '';
+                          try { notes = decodeURIComponent(notes); } catch(e) {}
+                          return notes.indexOf('gl_truesight') === -1 || notes.indexOf('gl_truesight: 1') === -1;
+                      });
+                      if (missing.length > 0) {
+                          var names = missing.map(t => t.get('name') || t.get('id')).join(', ');
+                          return 'These tokens do not have gl_truesight set: ' + names + '. Run `!gaslight var --set truesight 1` with them selected.';
+                      }
+                  }
+                },
+                ScriptKit.handout(),
+                { prompt: (ctx) => 'Find **' + ctx.handoutName + '** from the journal and **drag it onto the master page** to create a map pin. Select the pin.',
+                  select: 'pin', as: 'pin', min: 1, max: 1,
+                  onContinue: validatePin
+                },
+                { prompt: '**Test:** Run `!gaslight eval --all`. Viewers with truesight should see *side 2* (true form) on disguised tokens.' },
             ],
             handout: {
-                notes: [
-                    '<h3>Truesight — Reveal True Forms</h3>',
-                    '<p>Swaps token image to reveal the true form when a viewer has <code>gl_truesight = 1</code>. Use for changelings, illusions, disguised NPCs.</p>',
-                    '<h4>Setup</h4>',
-                    '<ol>',
-                    '<li>Set <code>gl_truesight = 1</code> on viewer tokens that have truesight.</li>',
-                    '<li>Store the disguised image URL in <code>gl_false_img</code> and true form in <code>gl_true_img</code> on target tokens.</li>',
-                    '<li>Place a map pin on the page titled with this handout name.</li>',
-                    '</ol>',
-                    '<h4>Script</h4>',
-                    '<pre>{& select @(target.token_id)}\n!token-mod --ids @(target.token_id) --set {& if any(@(viewer.gl_truesight)) == 1}imgsrc|@(target.gl_true_img){& else}imgsrc|@(target.gl_false_img){& endif}</pre>',
-                    '<h4>Trigger</h4>',
-                    '<p>Auto-triggers on <code>gl_truesight</code> change. Grant truesight with <code>!gaslight var selected gl_truesight 1</code>.</p>',
-                ].join('\n'),
+                notes: '!token-mod --set {& if @(target.gl_can_disguise[0]) == 1 && any(@(viewer.gl_truesight[0])) == 1}currentSide|1{& else}currentSide|0{& end}',
+                gmnotes: '---GASLIGHT-SCRIPT---\nfilter: has gl_can_disguise',
             },
         });
 
@@ -3419,54 +3562,30 @@ var Gaslight = Gaslight || (() => {
             name: 'winds-of-magic',
             description: 'Show magical auras only to viewers with second sight (via StatusFX)',
             guide: [
-                { type: 'select', prompt: 'Select the magically-aura\'d tokens', key: 'targets' },
-                { type: 'query', prompt: 'Status marker to use for the aura', key: 'marker', default: 'blue' },
+                { prompt: 'Select a token and apply the **status marker** you want to represent the magical aura. Then select that token.',
+                  select: 'token', as: 'markerToken', min: 1, max: 1,
+                  onContinue: (ctx) => {
+                      var token = Array.isArray(ctx.selected) ? ctx.selected[0] : ctx.selected;
+                      var markers = (token.get('statusmarkers') || '').split(',').filter(Boolean);
+                      if (markers.length === 0) return 'That token has no status markers applied. Apply the marker you want to use for the aura, then select the token.';
+                      // Store the first marker found
+                      ctx.params._marker = markers[0].replace(/@\d+$/, ''); // strip badge number if any
+                  }
+                },
+                { prompt: 'Select aura-radiating tokens and run `!gaslight var --set magical 1`.' },
+                { prompt: 'Select tokens that can perceive magic and run `!gaslight var --setch second_sight 1`.' },
+                { prompt: '*Optional:* Install **StatusFX** for animated particle effects on the status marker.' },
+                ScriptKit.handout(),
+                { prompt: (ctx) => 'Find **' + ctx.handoutName + '** from the journal and **drag it onto the master page** to create a map pin. Select the pin.',
+                  select: 'pin', as: 'pin', min: 1, max: 1,
+                  onContinue: validatePin
+                },
+                { prompt: (ctx) => '**Test:** Run `!gaslight eval --all`. Viewers with second sight should see the **' + (ctx.params._marker || 'blue') + '** status marker on magical tokens.' },
             ],
-            handout: {
-                notes: [
-                    '<h3>Winds of Magic — Selective Auras</h3>',
-                    '<p>Shows a status marker (which StatusFX can animate as particles) only to viewers that have <code>gl_second_sight = 1</code>. Others see no aura.</p>',
-                    '<h4>Prerequisites</h4>',
-                    '<p>StatusFX (optional) — for animated particle effects on the status marker.</p>',
-                    '<h4>Setup</h4>',
-                    '<ol>',
-                    '<li>Set <code>gl_second_sight = 1</code> on tokens that can perceive magic.</li>',
-                    '<li>Set <code>gl_magical = 1</code> on tokens that radiate magical aura.</li>',
-                    '<li>Place a map pin on the page titled with this handout name.</li>',
-                    '</ol>',
-                    '<h4>Script</h4>',
-                    '<pre>{& select @(target.token_id)}\n{& if @(target.gl_magical) == 1}\n!token-mod --ids @(target.token_id) --set {& if any(@(viewer.gl_second_sight)) == 1}statusmarkers|+blue{& else}statusmarkers|-blue{& endif}\n{& endif}</pre>',
-                    '<h4>Trigger</h4>',
-                    '<p>Auto-triggers on <code>gl_second_sight</code> and <code>gl_magical</code> changes.</p>',
-                ].join('\n'),
-            },
-        });
-
-        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
-            name: 'proximity-reveal',
-            description: 'Reveal hidden tokens when a player gets close (via triggered action)',
-            guide: [
-                { type: 'auto', text: 'This example requires a Roll20 Triggered Action to set gl_revealed when a player enters proximity.' },
-                { type: 'select', prompt: 'Select the hidden tokens to reveal on proximity', key: 'targets' },
-            ],
-            handout: {
-                notes: [
-                    '<h3>Proximity Reveal — Distance-Based Discovery</h3>',
-                    '<p>Hidden tokens become visible when a player token moves close enough. Uses a Roll20 Triggered Action to set <code>gl_revealed</code>, then Gaslight\'s scripting engine handles the layer swap.</p>',
-                    '<h4>Setup</h4>',
-                    '<ol>',
-                    '<li>Create a Roll20 Triggered Action on the hidden token: when a player token enters proximity (e.g. 2 squares), fire <code>!gaslight var TOKEN_ID gl_revealed 1</code>.</li>',
-                    '<li>Place a map pin on the page titled with this handout name.</li>',
-                    '<li>Hidden tokens start on the GM layer.</li>',
-                    '</ol>',
-                    '<h4>Script</h4>',
-                    '<pre>{& select @(target.token_id)}\n!token-mod --ids @(target.token_id) --set {& if @(target.gl_revealed) == 1}layer|objects{& else}layer|gmlayer{& endif}</pre>',
-                    '<h4>Trigger</h4>',
-                    '<p>Triggers on <code>gl_revealed</code> change. The triggered action sets this when proximity is entered.</p>',
-                    '<h4>Notes</h4>',
-                    '<p>This is a non-per-player example — all players see the reveal simultaneously. For per-player proximity (only the approaching player sees it), use viewer-scoped conditions instead.</p>',
-                ].join('\n'),
-            },
+            handout: (ctx) => ({
+                notes: '!token-mod --set {& if @(target.gl_magical[0]) == 1 && any(@(viewer.gl_second_sight[0])) == 1}statusmarkers|+' + (ctx.params._marker || 'blue') + '{& else}statusmarkers|-' + (ctx.params._marker || 'blue') + '{& end}',
+                archived: false,
+            }),
         });
     };
 
@@ -4808,10 +4927,11 @@ var Gaslight = Gaslight || (() => {
         on('chat:message', function(msg) {
             if (msg.type === 'api' && msg.content === '!rollcapture-ready') registerWithRollCapture();
         });
+        registerWithRollCapture();
         on('chat:message', function(msg) {
             if (msg.type === 'api' && msg.content === '!scriptkit-ready') registerWithScriptKit();
         });
-        registerWithRollCapture();
+        registerWithScriptKit();
         on('add:graphic', onTokenAdded);
         on('change:attribute', onAttributeChanged);
         on('change:graphic', onGraphicPropChanged);
@@ -5291,12 +5411,12 @@ var Gaslight = Gaslight || (() => {
         });
     };
 
-    return { checkInstall, registerEventHandlers, registerWithScriptKit };
+    return { checkInstall, registerEventHandlers };
 })();
 
 on('ready', () => {
     'use strict';
     Gaslight.checkInstall();
     Gaslight.registerEventHandlers();
-    Gaslight.registerWithScriptKit();
 });
+
