@@ -65,6 +65,15 @@ var ScriptKit = ScriptKit || (() => {
         list: (items, style) => html._tag('ul', items.map(i => '<li>' + i + '</li>').join(''), style),
         orderedList: (items, style) => html._tag('ol', items.map(i => '<li>' + i + '</li>').join(''), style),
         section: (title, content) => html.bold(title) + html.br() + content,
+        format: (str) => {
+            if (!str) return '';
+            var out = html.escape(str);
+            out = out.replace(/```([^`]+)```/g, '<pre>$1</pre>');
+            out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+            out = out.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+            out = out.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+            return out;
+        },
         button: (label, command, style) => {
             var defaultStyle = { background: '#333', color: '#fff', padding: '1px 6px', borderRadius: '3px', textDecoration: 'none' };
             var merged = style ? Object.assign({}, defaultStyle, style) : defaultStyle;
@@ -1353,7 +1362,7 @@ var ScriptKit = ScriptKit || (() => {
 
         let prompt = html.div(
             html.bold(html.escape(g.handoutName || g.example.name)) + ' — Setup (step ' + interactiveIdx + '/' + interactiveTotal + ')' + html.paragraph('')
-            + html.escape(step.prompt) + html.paragraph('')
+            + html.format(step.prompt) + html.paragraph('')
             + (step.select ? (() => {
                 const plural = !step.max || step.max > 1;
                 const label = step.select + (plural ? 's' : '');
