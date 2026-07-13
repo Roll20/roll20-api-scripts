@@ -1251,6 +1251,7 @@ var ScriptKit = ScriptKit || (() => {
             params: {},
             _lastQueryValues: {},
             _queryErrors: {},
+            _hue: Math.floor(Math.random() * 360),
             msg: msg,
             handoutName: handoutName,
             source: scriptName,
@@ -1328,14 +1329,26 @@ var ScriptKit = ScriptKit || (() => {
         }
 
         // Interactive step — show prompt
-        const interactiveSteps = g.steps.filter(s => !s.auto);
+        const interactiveSteps = g.steps.filter(s => !s.auto && s !== HANDOUT_STEP);
         const interactiveIdx = interactiveSteps.indexOf(step) + 1;
         const interactiveTotal = interactiveSteps.length;
-        const hasPriorInteractive = g.steps.slice(0, g.currentStep).some(s => !s.auto);
+        const hasPriorInteractive = g.steps.slice(0, g.currentStep).some(s => !s.auto && s !== HANDOUT_STEP);
+
+        // Compute hue-rotated background color for this step
+        const hueIncrement = 360 / (interactiveTotal || 1);
+        const stepHue = (g._hue + (interactiveIdx - 1) * hueIncrement) % 360;
+        const bgColor = 'hsl(' + Math.round(stepHue) + ', 30%, 20%)';
+
+        // Call onEnter if present, pass advance callback
+        if (typeof step.onEnter === 'function') {
+            const advance = () => { handleGuideContinue(g.msg, guideId, []); };
+            const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, advance: advance };
+            step.onEnter(ctx, advance);
+        }
 
         let prompt = html.div(
             html.bold(html.escape(g.handoutName || g.example.name)) + ' — Setup (step ' + interactiveIdx + '/' + interactiveTotal + ')' + html.paragraph('')
-            + step.prompt + html.paragraph('')
+            + html.escape(step.prompt) + html.paragraph('')
             + (step.select ? (() => {
                 const plural = !step.max || step.max > 1;
                 const label = step.select + (plural ? 's' : '');
@@ -1375,7 +1388,7 @@ var ScriptKit = ScriptKit || (() => {
             })() : html.button('✅ Continue', g.reg.command + ' ' + g.reg.aliases.guideContinue + ' ' + guideId))
             + (hasPriorInteractive ? ' ' + html.button('⬅ Back', g.reg.command + ' ' + g.reg.aliases.guideBack + ' ' + guideId) : '')
             + ' ' + html.button('✖ Cancel', g.reg.command + ' ' + g.reg.aliases.guideCancel + ' ' + guideId),
-            { background: '#335', color: '#fff', padding: '8px', borderRadius: '4px', fontSize: '12px' }
+            { background: bgColor, color: '#fff', padding: '8px', borderRadius: '4px', fontSize: '12px' }
         );
 
         reply(g.msg, g.source, 'Guide', prompt);
@@ -1486,6 +1499,13 @@ var ScriptKit = ScriptKit || (() => {
     const handleGuideBack = (msg, guideId) => {
         const g = activeGuides[guideId];
         if (!g || g.currentStep <= 0) return;
+
+        // Call onExit on the step we're leaving
+        const leavingStep = g.steps[g.currentStep];
+        if (leavingStep && typeof leavingStep.onExit === 'function') {
+            const ctx = { selections: g.selections, params: g.params, msg: msg, handoutName: g.handoutName };
+            leavingStep.onExit(ctx);
+        }
 
         // Undo current step
         const currentStep = g.steps[g.currentStep];
