@@ -103,7 +103,7 @@ var ScriptKit = ScriptKit || (() => {
         sendChat(scriptName + (tag ? ' [' + tag + ']' : ''), '/w "' + recipient + '" ' + text, null, { noarchive: true });
     };
 
-    const replyError = (msg, scriptName, text) => reply(msg, scriptName, 'Error', text);
+    const replyError = (msg, scriptName, text) => reply(msg, scriptName, 'Error', html.format(text));
 
     const setHandoutNotes = (handout, notes) => {
         // Retry pattern for Roll20's async handout issues
