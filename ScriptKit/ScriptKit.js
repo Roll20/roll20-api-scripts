@@ -1337,7 +1337,12 @@ var ScriptKit = ScriptKit || (() => {
         // Compute hue-rotated background color for this step
         const hueIncrement = 360 / (interactiveTotal || 1);
         const stepHue = (g._hue + (interactiveIdx - 1) * hueIncrement) % 360;
-        const bgColor = 'hsl(' + Math.round(stepHue) + ', 30%, 20%)';
+        // Convert HSL(hue, 30%, 20%) to hex for Roll20 compatibility
+        const h = stepHue / 360, s = 0.3, l = 0.2;
+        const hue2rgb = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1/6) return p + (q - p) * 6 * t; if (t < 1/2) return q; if (t < 2/3) return p + (q - p) * (2/3 - t) * 6; return p; };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+        const r = Math.round(hue2rgb(p, q, h + 1/3) * 255), gr = Math.round(hue2rgb(p, q, h) * 255), b = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+        const bgColor = '#' + ((1 << 24) + (r << 16) + (gr << 8) + b).toString(16).slice(1);
 
         // Call onEnter if present, pass advance callback
         if (typeof step.onEnter === 'function') {
