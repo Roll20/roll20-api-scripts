@@ -451,7 +451,7 @@ var ScriptKit = ScriptKit || (() => {
             return true;
         }
         if (matchAlias(reg.aliases.guideContinue)) {
-            handleGuideContinue(msg, args[0]);
+            handleGuideContinue(msg, args[0], args.slice(1));
             return true;
         }
         if (matchAlias(reg.aliases.guideBack)) {
@@ -1364,11 +1364,11 @@ var ScriptKit = ScriptKit || (() => {
                     var def = lastVals[q.name] !== undefined ? lastVals[q.name] : (q.default !== undefined && q.default !== null ? q.default : '');
                     if (q.options) {
                         var opts = q.options.map(o => typeof o === 'string' ? o + ',' + o : o.label + ',' + o.value).join('|');
-                        return '--' + q.name + ' ?{' + q.name + '|' + opts + '}';
+                        return '--' + q.name + ' `?{' + q.name + '|' + opts + '}`';
                     }
-                    if (q.type === Boolean) return '--' + q.name + ' ?{' + q.name + '|true|false}';
-                    if (def !== '') return '--' + q.name + ' ?{' + q.name + '|' + def + '}';
-                    return '--' + q.name + ' ?{' + q.name + '}';
+                    if (q.type === Boolean) return '--' + q.name + ' `?{' + q.name + '|true|false}`';
+                    if (def !== '') return '--' + q.name + ' `?{' + q.name + '|' + def + '}`';
+                    return '--' + q.name + ' `?{' + q.name + '}`';
                 }).join(' ');
                 qOut += html.button('✅ Continue', g.reg.command + ' ' + g.reg.aliases.guideContinue + ' ' + guideId + ' ' + queryParts);
                 return qOut;
@@ -1381,7 +1381,7 @@ var ScriptKit = ScriptKit || (() => {
         reply(g.msg, g.source, 'Guide', prompt);
     };
 
-    const handleGuideContinue = (msg, guideId) => {
+    const handleGuideContinue = (msg, guideId, queryArgs) => {
         const g = activeGuides[guideId];
         if (!g) { replyError(msg, SCRIPT_NAME, 'No active guide with that ID.'); return; }
 
@@ -1415,18 +1415,18 @@ var ScriptKit = ScriptKit || (() => {
             g.selections[step.as] = plural ? filtered : filtered[0];
         }
 
-        // Handle query steps (parse --key value from msg.content, coerce types)
+        // Handle query steps (parse --key value from pre-parsed args, coerce types)
         if (step.query) {
             const queries = Array.isArray(step.query) ? step.query : [step.query];
-            const content = msg.content;
             if (!g._lastQueryValues) g._lastQueryValues = {};
             var queryErrors = {};
             var coercedValues = {};
 
             queries.forEach(q => {
-                const re = new RegExp('--' + q.name + '\\s+(\\S+)');
-                const match = content.match(re);
-                var raw = match && match[1] ? match[1] : undefined;
+                // Find --name in queryArgs, value is the next arg
+                var raw = undefined;
+                var idx = (queryArgs || []).indexOf('--' + q.name);
+                if (idx !== -1 && idx + 1 < queryArgs.length) raw = queryArgs[idx + 1];
 
                 if (raw === undefined) {
                     if (q.default !== undefined && q.default !== null) {
