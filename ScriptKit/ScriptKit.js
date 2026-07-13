@@ -1249,6 +1249,8 @@ var ScriptKit = ScriptKit || (() => {
             currentStep: 0,
             selections: {},
             params: {},
+            _lastQueryValues: {},
+            _queryErrors: {},
             msg: msg,
             handoutName: handoutName,
             source: scriptName,
@@ -1344,23 +1346,28 @@ var ScriptKit = ScriptKit || (() => {
             })() : '')
             + (step.query ? (() => {
                 const queries = Array.isArray(step.query) ? step.query : [step.query];
+                const lastVals = g._lastQueryValues || {};
+                const errors = g._queryErrors || {};
                 let qOut = '';
                 queries.forEach(q => {
+                    if (errors[q.name]) qOut += html.span('⚠ ' + html.escape(errors[q.name]), { color: '#c33' }) + ' ';
                     qOut += html.bold(html.escape(q.name));
                     if (q.options) qOut += ' [dropdown]';
-                    else if (q.default) qOut += ' [' + html.escape(q.default) + ']';
+                    else if (lastVals[q.name] !== undefined) qOut += ' [' + html.escape(lastVals[q.name]) + ']';
+                    else if (q.default !== undefined && q.default !== null) qOut += ' [' + html.escape(String(q.default)) + ']';
                     if (q.description) qOut += ' — ' + html.italic(html.escape(q.description));
                     qOut += html.br();
                 });
                 qOut += html.br();
-                // TODO: escape |, and , in query option labels/values to prevent mangling Roll20 ?{} syntax
+                // TODO: escape | and , in query option labels/values to prevent mangling Roll20 ?{} syntax
                 const queryParts = queries.map(q => {
+                    var def = lastVals[q.name] !== undefined ? lastVals[q.name] : (q.default !== undefined && q.default !== null ? q.default : '');
                     if (q.options) {
                         var opts = q.options.map(o => typeof o === 'string' ? o + ',' + o : o.label + ',' + o.value).join('|');
                         return '--' + q.name + ' ?{' + q.name + '|' + opts + '}';
                     }
-                    if (q.type === 'boolean') return '--' + q.name + ' ?{' + q.name + '|true|false}';
-                    if (q.default !== undefined && q.default !== null) return '--' + q.name + ' ?{' + q.name + '|' + q.default + '}';
+                    if (q.type === Boolean) return '--' + q.name + ' ?{' + q.name + '|true|false}';
+                    if (def !== '') return '--' + q.name + ' ?{' + q.name + '|' + def + '}';
                     return '--' + q.name + ' ?{' + q.name + '}';
                 }).join(' ');
                 qOut += html.button('✅ Continue', g.reg.command + ' ' + g.reg.aliases.guideContinue + ' ' + guideId + ' ' + queryParts);
@@ -1408,16 +1415,52 @@ var ScriptKit = ScriptKit || (() => {
             g.selections[step.as] = plural ? filtered : filtered[0];
         }
 
-        // Handle query steps (parse --key value from msg.content)
+        // Handle query steps (parse --key value from msg.content, coerce types)
         if (step.query) {
             const queries = Array.isArray(step.query) ? step.query : [step.query];
             const content = msg.content;
+            if (!g._lastQueryValues) g._lastQueryValues = {};
+            var queryErrors = {};
+            var coercedValues = {};
+
             queries.forEach(q => {
                 const re = new RegExp('--' + q.name + '\\s+(\\S+)');
                 const match = content.match(re);
-                if (match && match[1]) g.params[q.name] = match[1];
-                else if (q.default) g.params[q.name] = q.default;
+                var raw = match && match[1] ? match[1] : undefined;
+
+                if (raw === undefined) {
+                    if (q.default !== undefined && q.default !== null) {
+                        coercedValues[q.name] = q.default;
+                        g._lastQueryValues[q.name] = String(q.default);
+                    } else {
+                        queryErrors[q.name] = 'Required';
+                    }
+                    return;
+                }
+
+                g._lastQueryValues[q.name] = raw;
+
+                // Normalize type to a coercion function
+                var coerce = q.type || String;
+                if (coerce === Boolean) coerce = (v) => { if (v !== 'true' && v !== 'false') throw 'Must be true or false'; return v === 'true'; };
+                if (coerce === Number) coerce = (v) => { var n = Number(v); if (isNaN(n)) throw 'Invalid number'; return n; };
+
+                try {
+                    coercedValues[q.name] = coerce(raw);
+                } catch (e) {
+                    queryErrors[q.name] = typeof e === 'string' ? e : (e.message || 'Invalid value');
+                }
             });
+
+            if (Object.keys(queryErrors).length > 0) {
+                g._queryErrors = queryErrors;
+                enterStep(guideId);
+                return;
+            }
+
+            // All passed — store coerced values in params, clear errors
+            Object.assign(g.params, coercedValues);
+            g._queryErrors = {};
         }
 
         // Role assignment (Choreograph compatibility)
