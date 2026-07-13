@@ -1360,9 +1360,12 @@ var ScriptKit = ScriptKit || (() => {
             step.onEnter(ctx, advance);
         }
 
+        const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName };
+        const promptText = typeof step.prompt === 'function' ? step.prompt(ctx) : step.prompt;
+
         let prompt = html.div(
             html.bold(html.escape(g.handoutName || g.example.name)) + ' — Setup (step ' + interactiveIdx + '/' + interactiveTotal + ')' + html.paragraph('')
-            + html.format(step.prompt) + html.paragraph('')
+            + html.format(promptText) + html.paragraph('')
             + (step.select ? (() => {
                 const plural = !step.max || step.max > 1;
                 const label = step.select + (plural ? 's' : '');
