@@ -1265,7 +1265,10 @@ var ScriptKit = ScriptKit || (() => {
         const ex = g.example;
         const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName };
         const handoutData = typeof ex.handout === 'function' ? ex.handout(ctx) : ex.handout;
-        if (!handoutData) return;
+        if (!handoutData) {
+            log(SCRIPT_NAME + ': handout step in "' + ex.name + '" but no handout data provided.');
+            return;
+        }
         const handler = reg.exampleHandler || defaultExampleHandler;
         const result = handler(Object.assign({}, ex, { handout: handoutData }), g.msg);
         const handoutName = getHandoutName(reg.tag, ex.source, ex.name, result);
