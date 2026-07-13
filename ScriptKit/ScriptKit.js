@@ -1619,6 +1619,17 @@ var ScriptKit = ScriptKit || (() => {
         handleInput,
         html,
         handout: () => HANDOUT_STEP,
+        waitForCommand: (cmd) => ({
+            onEnter: (ctx, advance) => {
+                ctx._waitHandler = (msg) => {
+                    if (msg.type === 'api' && msg.content.split(' ').slice(0, cmd.split(' ').length).join(' ') === cmd) advance();
+                };
+                on('chat:message', ctx._waitHandler);
+            },
+            onExit: (ctx) => {
+                if (ctx._waitHandler) { off('chat:message', ctx._waitHandler); delete ctx._waitHandler; }
+            },
+        }),
         getHandoutName,
         startGuide: (msg, scriptName, example, handoutName) => {
             const reg = registrations[scriptName];
