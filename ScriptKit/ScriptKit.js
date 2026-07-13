@@ -1347,14 +1347,21 @@ var ScriptKit = ScriptKit || (() => {
                 let qOut = '';
                 queries.forEach(q => {
                     qOut += html.bold(html.escape(q.name));
-                    if (q.default) qOut += ' [' + html.escape(q.default) + ']';
+                    if (q.options) qOut += ' [dropdown]';
+                    else if (q.default) qOut += ' [' + html.escape(q.default) + ']';
                     if (q.description) qOut += ' — ' + html.italic(html.escape(q.description));
                     qOut += html.br();
                 });
                 qOut += html.br();
+                // TODO: escape |, and , in query option labels/values to prevent mangling Roll20 ?{} syntax
                 const queryParts = queries.map(q => {
+                    if (q.options) {
+                        var opts = q.options.map(o => typeof o === 'string' ? o + ',' + o : o.label + ',' + o.value).join('|');
+                        return '--' + q.name + ' ?{' + q.name + '|' + opts + '}';
+                    }
                     if (q.type === 'boolean') return '--' + q.name + ' ?{' + q.name + '|true|false}';
-                    return '--' + q.name + ' ?{' + q.name + '|' + (q.default || '') + '}';
+                    if (q.default !== undefined && q.default !== null) return '--' + q.name + ' ?{' + q.name + '|' + q.default + '}';
+                    return '--' + q.name + ' ?{' + q.name + '}';
                 }).join(' ');
                 qOut += html.button('✅ Continue', g.reg.command + ' ' + g.reg.aliases.guideContinue + ' ' + guideId + ' ' + queryParts);
                 return qOut;
