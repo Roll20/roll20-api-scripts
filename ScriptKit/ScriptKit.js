@@ -1355,7 +1355,10 @@ var ScriptKit = ScriptKit || (() => {
 
         // Call onEnter if present, pass advance callback
         if (typeof step.onEnter === 'function') {
-            const advance = () => { handleGuideContinue(g.msg, guideId, []); };
+            const advance = (error) => {
+                if (typeof error === 'string') { replyError(g.msg, g.source, error); return; }
+                handleGuideContinue(g.msg, guideId, []);
+            };
             const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, advance: advance };
             step.onEnter(ctx, advance);
         }
