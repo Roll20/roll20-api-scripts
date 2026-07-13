@@ -3468,15 +3468,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: 'Add the line `name_field: <field>` — where `<field>` is the template field containing the skill name (e.g. "rname", "name"). This is how RollCapture identifies which skill was rolled.' },
                 { prompt: 'Add the line `result: <field>` — where `<field>` is the inline roll field holding the total (e.g. "r1", "roll1").' },
                 { prompt: 'Save the handout and run `!rollcapture reload` to load your new rule.',
-                  onEnter: (ctx, advance) => {
-                      ctx._rcReloadHandler = (msg) => {
-                          if (msg.type === 'api' && msg.content === '!rollcapture reload') advance();
-                      };
-                      on('chat:message', ctx._rcReloadHandler);
-                  },
-                  onExit: (ctx) => {
-                      if (ctx._rcReloadHandler) off('chat:message', ctx._rcReloadHandler);
-                  }
+                  ...ScriptKit.waitForCommand('!rollcapture reload')
                 },
                 { prompt: 'What does your character sheet call a stealth roll? This should match the value in the `name_field` when you roll stealth (e.g. "hide", "stealth").',
                   query: { name: 'rollname', default: 'stealth' }
