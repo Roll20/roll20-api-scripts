@@ -17,6 +17,7 @@ var ScriptKit = ScriptKit || (() => {
     'use strict';
 
     const SCRIPT_NAME = 'ScriptKit';
+    const HANDOUT_STEP = Object.freeze({ auto: true });
 
     // =========================================================================
     // Registry
@@ -1194,36 +1195,27 @@ var ScriptKit = ScriptKit || (() => {
             return;
         }
 
-        // Determine if we need a handout
-        const handler = reg.exampleHandler || (ex.handout ? defaultExampleHandler : null);
-        let handout = null;
-        let handoutName = null;
+        const handoutName = ex.handout ? getHandoutName(reg.tag, ex.source, ex.name, null) : null;
 
-        if (handler) {
-            const result = handler(ex, msg);
-            handoutName = getHandoutName(reg.tag, ex.source, ex.name, result);
-
-            handout = findObjs({ type: 'handout', name: handoutName })[0];
-            if (!handout) {
-                handout = createObj('handout', { name: handoutName });
-            }
-            if (result.notes) setHandoutNotes(handout, result.notes);
-            if (result.gmnotes) handout.set('gmnotes', result.gmnotes);
-            if (result.avatar) handout.set('avatar', result.avatar);
-            if (result.inplayerjournals !== undefined) handout.set('inplayerjournals', result.inplayerjournals);
-            if (result.archived !== undefined) handout.set('archived', result.archived);
-        }
-
-        // Start guide if available
+        // Build effective guide steps — inject _generate step if not explicitly placed
         const hasGuide = ex.guide && ex.guide.length > 0;
-        if (hasGuide) {
-            startGuide(msg, scriptName, reg, ex, handoutName);
-            return;
+        const hasExplicitGenerate = hasGuide && ex.guide.some(s => s === HANDOUT_STEP);
+
+        if (hasGuide && !hasExplicitGenerate && ex.handout) {
+            // Auto-inject: function handout → append, object handout → prepend
+            if (typeof ex.handout === 'function') {
+                ex._effectiveGuide = ex.guide.concat([HANDOUT_STEP]);
+            } else {
+                ex._effectiveGuide = [HANDOUT_STEP].concat(ex.guide);
+            }
+        } else if (!hasGuide && ex.handout) {
+            // No guide at all — just a handout step
+            ex._effectiveGuide = [HANDOUT_STEP];
+        } else {
+            ex._effectiveGuide = ex.guide || [];
         }
 
-        let outMsg = 'Generated ' + html.bold(html.escape(handoutName || ex.name)) + '.';
-        if (handout) outMsg += ' ' + html.handoutLink('[Open]', handout.get('id'));
-        reply(msg, scriptName, 'Examples', outMsg);
+        startGuide(msg, scriptName, reg, ex, handoutName);
     };
 
     // =========================================================================
@@ -1249,8 +1241,8 @@ var ScriptKit = ScriptKit || (() => {
     const startGuide = (msg, scriptName, reg, example, handoutName) => {
         const guideId = 'guide-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
 
-        // Process steps — expand param-based steps if example has params
-        const steps = (example.guide || []).slice();
+        // Process steps — use _effectiveGuide if set by generateExample, otherwise guide
+        const steps = (example._effectiveGuide || example.guide || []).slice();
 
         activeGuides[guideId] = {
             steps: steps,
@@ -1265,6 +1257,28 @@ var ScriptKit = ScriptKit || (() => {
         };
 
         enterStep(guideId);
+    };
+
+    const performDeferredGeneration = (g) => {
+        const reg = registrations[g.source];
+        if (!reg) return;
+        const ex = g.example;
+        const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName };
+        const handoutData = typeof ex.handout === 'function' ? ex.handout(ctx) : ex.handout;
+        if (!handoutData) return;
+        const handler = reg.exampleHandler || defaultExampleHandler;
+        const result = handler(Object.assign({}, ex, { handout: handoutData }), g.msg);
+        const handoutName = getHandoutName(reg.tag, ex.source, ex.name, result);
+        g.handoutName = handoutName;
+        var handout = findObjs({ type: 'handout', name: handoutName })[0];
+        if (!handout) {
+            handout = createObj('handout', { name: handoutName });
+        }
+        if (result.notes) setHandoutNotes(handout, result.notes);
+        if (result.gmnotes) handout.set('gmnotes', result.gmnotes);
+        if (result.avatar) handout.set('avatar', result.avatar);
+        if (result.inplayerjournals !== undefined) handout.set('inplayerjournals', result.inplayerjournals);
+        if (result.archived !== undefined) handout.set('archived', result.archived);
     };
 
     const enterStep = (guideId) => {
@@ -1287,6 +1301,14 @@ var ScriptKit = ScriptKit || (() => {
                 enterStep(guideId);
                 return;
             }
+        }
+
+        // Handout step — create/update the handout at this point
+        if (step === HANDOUT_STEP) {
+            performDeferredGeneration(g);
+            g.currentStep++;
+            enterStep(guideId);
+            return;
         }
 
         // Auto steps advance immediately
@@ -1503,6 +1525,7 @@ var ScriptKit = ScriptKit || (() => {
         registerExample,
         handleInput,
         html,
+        handout: () => HANDOUT_STEP,
         getHandoutName,
         startGuide: (msg, scriptName, example, handoutName) => {
             const reg = registrations[scriptName];
