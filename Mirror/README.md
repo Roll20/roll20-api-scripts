@@ -28,8 +28,9 @@ Flat property syncing between Roll20 tokens. No transforms, no offsets — when 
 | `!mirror align [--up\|--down] [--linked\|--unlinked] [--if-linked] [props]` | Align tokens |
 | `!mirror config [exclude\|include\|reset] [props]` | Global excludes |
 | `!mirror status` | Show links for selected tokens |
-| `!mirror gen-dev-docs` | Generate scripting API handout |
-| `!mirror --help` | Command reference |
+| `!mirror help` | Command reference (via ScriptKit) |
+| `!mirror man <query>` | Search help topics (via ScriptKit) |
+| `!mirror gen-dev-docs` | Generate developer API handout (via ScriptKit) |
 
 ## Property Groups
 
@@ -44,7 +45,8 @@ Flat property syncing between Roll20 tokens. No transforms, no offsets — when 
 | `light` | UDL emission (bright/low/directional/color) + legacy (radius, dimradius, angle, etc.) |
 | `sight` | UDL vision (bright_light_vision, night_vision, field of vision limits) |
 | `auras` | aura1-2 radius, color, square, options, showplayers, playersedit |
-| `tooltip` | tooltip, show_tooltip |
+| `tooltip` | tooltip, show_tooltip, gm_only_tooltip |
+| `reactions` | interactionTriggered, interactionManualReset, fadeOnOverlap, fadeOpacity |
 | `flip` | flipv, fliph |
 | `anchor` | spatial + flip + layer (for `--exclude` when using Anchor) |
 
@@ -100,6 +102,13 @@ Mirror.align(tokenId, { ifLinked: true })  // push linked props to dependents
 ```
 
 ## Changelog
+
+### v1.2.0
+- ScriptKit integration: `help`, `man`, `whatsnew`, `gen-dev-docs` commands via ScriptKit
+- Auto-generated user help handout
+- Added properties: `sides`, `interactionTriggered`, `interactionManualReset`, `renderAsDarkness`, `gm_only_tooltip`, `night_vision_tint`
+- New property groups: `tooltip` (expanded with `gm_only_tooltip`), `reactions`
+- Removed legacy `--help` handler (now handled by ScriptKit alongside `help`)
 
 ### v1.1.1
 - Comprehensive `ALL_PROPS` update: bar4, bar links, visibility/edit permissions, tooltip, UDL directional light, UDL vision limits, foreground layer props, lockMovement, isdrawing, aura options
