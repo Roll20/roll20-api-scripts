@@ -1,6 +1,6 @@
 // =============================================================================
-// Mirror v1.1.1
-// Last Updated: 2026-07-05
+// Mirror v1.1.2
+// Last Updated: 2026-07-17
 // Author: Kenan Millet
 //
 // Description:
@@ -26,7 +26,7 @@ var Mirror = Mirror || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Mirror';
-    const SCRIPT_VERSION = '1.1.1';
+    const SCRIPT_VERSION = '1.1.2';
     const CMD            = '!mirror';
 
     // All syncable graphic properties
@@ -53,9 +53,9 @@ var Mirror = Mirror || (() => {
         'playersedit_aura1', 'playersedit_aura2',
         // Appearance
         'tint_color', 'statusmarkers', 'baseOpacity',
-        'isdrawing', 'currentSide',
+        'isdrawing', 'currentSide', 'sides',
         // Tooltip
-        'tooltip', 'show_tooltip',
+        'tooltip', 'show_tooltip', 'gm_only_tooltip',
         // UDL Light (emission)
         'emits_bright_light', 'bright_light_distance',
         'emits_low_light', 'low_light_distance', 'dim_light_opacity',
@@ -64,7 +64,7 @@ var Mirror = Mirror || (() => {
         'lightColor',
         // UDL Vision (sight)
         'has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
-        'night_vision_effect', 'light_sensitivity_multiplier',
+        'night_vision_effect', 'night_vision_tint', 'light_sensitivity_multiplier',
         'has_limit_field_of_vision', 'limit_field_of_vision_center', 'limit_field_of_vision_total',
         'has_limit_field_of_night_vision', 'limit_field_of_night_vision_center', 'limit_field_of_night_vision_total',
         // Legacy Dynamic Lighting
@@ -74,7 +74,9 @@ var Mirror = Mirror || (() => {
         // Movement / interaction
         'lockMovement', 'disableSnapping', 'disableTokenMenu',
         // Foreground layer
-        'fadeOnOverlap', 'fadeOpacity', 'renderAsScenery'
+        'fadeOnOverlap', 'fadeOpacity', 'renderAsScenery', 'renderAsDarkness',
+        // Reactions
+        'interactionTriggered', 'interactionManualReset'
     ];
 
     // Property groups
@@ -103,13 +105,14 @@ var Mirror = Mirror || (() => {
                 'light_radius', 'light_dimradius', 'light_angle', 'light_otherplayers',
                 'light_losangle', 'light_multiplier', 'adv_fow_view_distance'],
         sight: ['has_bright_light_vision', 'has_night_vision', 'night_vision_distance',
-                'night_vision_effect', 'light_sensitivity_multiplier',
+                'night_vision_effect', 'night_vision_tint', 'light_sensitivity_multiplier',
                 'light_hassight',
                 'has_limit_field_of_vision', 'limit_field_of_vision_center', 'limit_field_of_vision_total',
                 'has_limit_field_of_night_vision', 'limit_field_of_night_vision_center', 'limit_field_of_night_vision_total'],
         flip: ['flipv', 'fliph'],
         anchor: ['left', 'top', 'width', 'height', 'rotation', 'flipv', 'fliph', 'layer'],
-        tooltip: ['tooltip', 'show_tooltip']
+        tooltip: ['tooltip', 'show_tooltip', 'gm_only_tooltip'],
+        reactions: ['interactionTriggered', 'interactionManualReset', 'fadeOnOverlap', 'fadeOpacity']
     };
 
     // =========================================================================
