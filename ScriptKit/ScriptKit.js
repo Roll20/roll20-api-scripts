@@ -1008,11 +1008,11 @@ var ScriptKit = ScriptKit || (() => {
             return h === mode;
         };
 
-        // Auto-inject Extension API topic for dev handout unless explicitly set to null
-        if (mode === 'dev' && !topics.hasOwnProperty('extensionApi')) {
-            topics.extensionApi = {
-                title: 'Extension API',
-                description: 'How other scripts can extend ' + scriptName,
+        // Auto-inject ScriptKit examples topic for dev handout unless explicitly set to null
+        if (mode === 'dev' && !topics.hasOwnProperty('scriptKit')) {
+            topics.scriptKit = {
+                title: 'Registering Examples',
+                description: 'How to register examples for ' + scriptName + ' that show off your script\'s integration',
                 handouts: 'dev',
                 body: 'Other scripts can register examples targeting **' + scriptName + '**:\n\n'
                     + '```ScriptKit.' + scriptName + '.registerExample(\'YourScript\', {\n'
@@ -1975,7 +1975,7 @@ on('ready', () => {
                     version: '1.0.0',
                     body: '`ScriptKit.register()` automatically sends `!<command>-ready` to chat. Other scripts listen for this to know when your script is available for direct API calls.\n\nExample registration does NOT require the ready signal — the Proxy queues automatically regardless of load order.',
                 },
-                extensionApi: null,
+                scriptKit: null,
             }
         }
     });
