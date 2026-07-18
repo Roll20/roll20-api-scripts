@@ -86,14 +86,12 @@ type|<i>transparent,wall,oneWay</i>
         return Campaign().get('playerpageid');
     };
 
-    const fixColor = c =>
-    {
-        if(/^[0-9a-f]{6}$/i.test(c))
-        {
-            return '#' + c;
-        }
-        return c;
-    };
+const fixColor = c => {
+    if (/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(c)) {
+        return '#' + c;
+    }
+    return c;
+};
 
     const parseOptions = content =>
     {
@@ -444,13 +442,3 @@ type|<i>transparent,wall,oneWay</i>
     });
 
 })();
-// This is just a sample script. Paste your real code (javascript or HTML) here.
-
-if('this_is' == /an_example/)
-{
-    of_beautifier();
-}
-else
-{
-    var a = b ? (c % d) : e[f];
-}
