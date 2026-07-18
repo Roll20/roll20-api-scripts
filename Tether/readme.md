@@ -39,7 +39,9 @@ Tether supports optional parameters in any order.
 Supports named colors or hexadecimal values:
 
 `!tether color|red`
+
 `!tether color|#00ff00`
+
 `!tether color|00ff00`
 
 
