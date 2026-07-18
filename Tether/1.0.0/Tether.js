@@ -3,7 +3,7 @@ const Tether = (() =>
     'use strict';
 
     const SCRIPT = 'Tether';
-    const VERSION = '1.0';
+    const VERSION = '1.1';
 
     const DEFAULTS = {
         width: 5,
@@ -13,6 +13,11 @@ const Tether = (() =>
     };
 
     const VALID_LAYERS = ['objects', 'gmlayer', 'map', 'walls', 'foreground'];
+
+    // How long to wait after 'ready' before checking links, and how many
+    // times to retry before concluding a linked token is genuinely gone
+    // (as opposed to just not being loaded into the sandbox cache yet).
+    const READY_RETRY_DELAYS = [2000, 5000, 10000, 20000];
 
     const checkInstall = () =>
     {
@@ -86,12 +91,12 @@ type|<i>transparent,wall,oneWay</i>
         return Campaign().get('playerpageid');
     };
 
-const fixColor = c => {
-    if (/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(c)) {
-        return '#' + c;
-    }
-    return c;
-};
+    const fixColor = c => {
+        if (/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(c)) {
+            return '#' + c;
+        }
+        return c;
+    };
 
     const parseOptions = content =>
     {
@@ -152,8 +157,7 @@ const fixColor = c => {
         };
     };
 
-    const updateLink = link =>
-    {
+    const redrawLink = link => {
 
         link.width ||= DEFAULTS.width;
         link.color ||= DEFAULTS.color;
@@ -163,20 +167,14 @@ const fixColor = c => {
         const a = getObj('graphic', link.a);
         const b = getObj('graphic', link.b);
 
-        if(!a || !b)
-        {
-            const old = getObj('pathv2', link.path);
-            if(old) old.remove();
-            return false;
-        }
+        if (!a || !b) return false;
 
         const old = getObj('pathv2', link.path);
-        if(old) old.remove();
+        if (old) old.remove();
 
         const e = getEndpoints(a, b);
 
-        const path = createObj('pathv2',
-        {
+        const path = createObj('pathv2', {
             _pageid: a.get('_pageid'),
             shape: 'pol',
             points: JSON.stringify(e.points),
@@ -189,24 +187,71 @@ const fixColor = c => {
             barrierType: link.type
         });
 
-        if(!path)
-        {
-            return true;
+        if (path) {
+            link.path = path.get('_id');
         }
-
-        link.path = path.get('_id');
 
         return true;
     };
 
-
-
-    const cleanup = () =>
-    {
+    const redrawAll = () => {
         const s = state[SCRIPT];
-        if(!s || !s.links) return;
+        if (!s || !s.links) return;
+        s.links.forEach(redrawLink);
+    };
 
-        s.links = s.links.filter(updateLink);
+    const pruneLinksForToken = id => {
+        const s = state[SCRIPT];
+        if (!s || !s.links) return;
+
+        s.links = s.links.filter(link => {
+            const match = link.a === id || link.b === id;
+            if (match) {
+                const p = getObj('pathv2', link.path);
+                if (p) p.remove();
+            }
+            return !match;
+        });
+    };
+
+    const reconcileAtReady = (attempt = 0) => {
+        const s = state[SCRIPT];
+        if (!s || !s.links || s.links.length === 0) return;
+
+        const stillMissing = [];
+
+        s.links.forEach(link => {
+            const ok = redrawLink(link);
+            if (!ok) stillMissing.push(link);
+        });
+
+        if (stillMissing.length === 0) return;
+
+        if (attempt + 1 < READY_RETRY_DELAYS.length) {
+            setTimeout(
+                () => reconcileAtReady(attempt + 1),
+                READY_RETRY_DELAYS[attempt + 1]
+            );
+            return;
+        }
+
+        // Exhausted retries - these tokens are genuinely gone, safe to prune.
+        const missingIds = new Set();
+        stillMissing.forEach(link => {
+            if (!getObj('graphic', link.a)) missingIds.add(link.a);
+            if (!getObj('graphic', link.b)) missingIds.add(link.b);
+        });
+
+        state[SCRIPT].links = state[SCRIPT].links.filter(link => {
+            const dead = missingIds.has(link.a) || missingIds.has(link.b);
+            if (dead) {
+                const p = getObj('pathv2', link.path);
+                if (p) p.remove();
+            }
+            return !dead;
+        });
+
+        log(`${SCRIPT}: pruned ${missingIds.size} tether(s) with missing tokens after ${attempt + 1} checks.`);
     };
 
     const findLink = (id1, id2) =>
@@ -215,9 +260,8 @@ const fixColor = c => {
             (link.a === id2 && link.b === id1)
         );
 
-    const addLink = (a, b, opts, pageid) =>
+    const addLink = (a, b, opts) =>
     {
-
         const id1 = a.get('_id');
         const id2 = b.get('_id');
 
@@ -225,55 +269,32 @@ const fixColor = c => {
 
         if(existing)
         {
-
             existing.width = opts.width;
             existing.color = opts.color;
             existing.layer = opts.layer;
             existing.type = opts.type;
 
-            const path = getObj('pathv2', existing.path);
-
-            if(path)
-            {
-                path.set(
-                {
-                    stroke: opts.color,
-                    stroke_width: opts.width,
-                    layer: opts.layer,
-                    barrierType: opts.type
-                });
-            }
-
+            redrawLink(existing);
             return;
         }
 
-        const e = getEndpoints(a, b);
-
-        const path = createObj('pathv2',
-        {
-            _pageid: pageid,
-            shape: 'pol',
-            points: JSON.stringify(e.points),
-            x: e.x,
-            y: e.y,
-            stroke: opts.color,
-            stroke_width: opts.width,
-            fill: 'transparent',
-            layer: opts.layer,
-            barrierType: opts.type
-        });
-
-        state[SCRIPT].links.push(
+        const link =
         {
             a: id1,
             b: id2,
-            path: path.get('_id'),
+            path: null,
             width: opts.width,
             color: opts.color,
             layer: opts.layer,
             type: opts.type
-        });
+        };
+
+        state[SCRIPT].links.push(link);
+
+        redrawLink(link);
     };
+
+
     const removeLink = (id1, id2) =>
     {
 
@@ -337,11 +358,13 @@ const fixColor = c => {
         });
 
     };
+
     on('chat:message', msg =>
     {
 
         if(msg.type !== 'api') return;
 
+        checkInstall();
 
         if(msg.content.trim().toLowerCase() === '!tether help')
         {
@@ -368,12 +391,7 @@ const fixColor = c => {
 
             const opts = parseOptions(msg.content);
 
-            addLink(
-                a,
-                b,
-                opts,
-                getPageForPlayer(msg.playerid)
-            );
+            addLink(a, b, opts);
         }
 
         if(msg.content.startsWith('!untether'))
@@ -426,19 +444,32 @@ const fixColor = c => {
 
     on('change:graphic:left', obj =>
     {
-        cleanup();
+        redrawAll();
     });
 
     on('change:graphic:top', obj =>
     {
-        cleanup();
+        redrawAll();
+    });
+
+    on('destroy:graphic', obj =>
+    {
+        checkInstall();
+        pruneLinksForToken(obj.id);
     });
 
     on('ready', () =>
     {
         checkInstall();
-        cleanup();
+
+        log(`Tether state: ${JSON.stringify(state[SCRIPT])}`);
+
+        setTimeout(() => {
+            reconcileAtReady(0);
+        }, READY_RETRY_DELAYS[0]);
+
         log(`${SCRIPT} v${VERSION} Ready`);
     });
+
 
 })();
