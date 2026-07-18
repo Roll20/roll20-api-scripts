@@ -37,7 +37,8 @@
   },
   "conflicts": [
     "Concentration",
-    "DeathTracker"
+    "DeathTracker",
+    "Other scripts that modify NPC HP or use bar1_value"
   ],
   "commands": [
     "!ga-status",
