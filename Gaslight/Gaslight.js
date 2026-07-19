@@ -4626,8 +4626,8 @@ var Gaslight = Gaslight || (() => {
                     _pageid: pageId,
                     layer: 'foreground',
                     text: String(entry.pr || ''),
-                    left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
-                    top: frameTopEdge + (data.tokenPadding || defaultInitHud.tokenPadding) + tokenSize / 2,
+                    left: 0,
+                    top: 0,
                     font_size: data.textFontSize || defaultInitHud.textFontSize,
                     color: data.textColor || defaultInitHud.textColor,
                     stroke: data.textStroke || defaultInitHud.textStroke,
@@ -4643,8 +4643,13 @@ var Gaslight = Gaslight || (() => {
             }
         });
 
-        reflowInitiativeHud(direction);
-        updateTurnReticle();
+        if (direction === undefined) {
+            // Initial creation — delay reflow to give Roll20 time to register objects
+            setTimeout(function() { reflowInitiativeHud('none'); updateTurnReticle(); }, 100);
+        } else {
+            reflowInitiativeHud(direction);
+            updateTurnReticle();
+        }
     };
 
     /**
@@ -4839,6 +4844,41 @@ var Gaslight = Gaslight || (() => {
                 }
             });
         }
+
+        // DEBUG: log slot/pin/text positions (re-read after set)
+        var dbgSlots = [];
+        var dbgPins = [];
+        var dbgTexts = [];
+        for (var di = 0; di < data.entries.length; di++) {
+            var dOffset = di <= slotsBelow ? di : di - data.entries.length;
+            var dVisible = Math.abs(dOffset) <= (dOffset >= 0 ? slotsBelow : slotsAbove);
+            if (dVisible) dbgSlots.push({ idx: di, offset: dOffset, slotY: hudSlotY(frameCenter, dOffset, tokenSize, tokenPadding), pinY: hudPinY(frameCenter, dOffset, tokenSize, tokenPadding), pinId: data.entries[di].tokenId, textId: data.entries[di].textId });
+        }
+        data.entries.forEach(function(e, i) {
+            var pin = getObj('pin', e.tokenId);
+            var txt = getObj('text', e.textId);
+            if (pin && pin.get('x') > -1000) dbgPins.push({ idx: i, id: e.tokenId, x: pin.get('x'), y: pin.get('y') });
+            if (txt && txt.get('color') !== 'transparent') dbgTexts.push({ idx: i, id: e.textId, left: txt.get('left'), top: txt.get('top'), text: txt.get('text') });
+        });
+        log(SCRIPT_NAME + ' [reflow] direction=' + direction + ' frameCenter=' + frameCenter + ' slotsAbove=' + slotsAbove + ' slotsBelow=' + slotsBelow + ' textVOffset=' + (data.textVOffset || 0));
+        log(SCRIPT_NAME + ' [reflow] expected=' + JSON.stringify(dbgSlots));
+        log(SCRIPT_NAME + ' [reflow] pins=' + JSON.stringify(dbgPins));
+        log(SCRIPT_NAME + ' [reflow] texts=' + JSON.stringify(dbgTexts));
+
+        // Delayed re-read to compare actual client state
+        var capturedEntries = data.entries.slice();
+        setTimeout(function() {
+            var dbgPins2 = [];
+            var dbgTexts2 = [];
+            capturedEntries.forEach(function(e, i) {
+                var pin = getObj('pin', e.tokenId);
+                var txt = getObj('text', e.textId);
+                if (pin && pin.get('x') > -1000) dbgPins2.push({ idx: i, id: e.tokenId, x: pin.get('x'), y: pin.get('y') });
+                if (txt && txt.get('color') !== 'transparent') dbgTexts2.push({ idx: i, id: e.textId, left: txt.get('left'), top: txt.get('top'), text: txt.get('text') });
+            });
+            log(SCRIPT_NAME + ' [reflow +5s] pins=' + JSON.stringify(dbgPins2));
+            log(SCRIPT_NAME + ' [reflow +5s] texts=' + JSON.stringify(dbgTexts2));
+        }, 5000);
     };
 
     /**
@@ -4879,6 +4919,7 @@ var Gaslight = Gaslight || (() => {
     const onHudTextChanged = (obj) => {
         var s = state[SCRIPT_NAME];
         var id = obj.get('id');
+        log(SCRIPT_NAME + ' [TEXT CHANGE EVENT] t=' + Date.now() + ' id=' + id + ' top=' + obj.get('top') + ' left=' + obj.get('left'));
         if (id === s.hud.viewId) {
             if (!s.hud.viewData) s.hud.viewData = {};
             var vPageId = getHudPageId();
@@ -4966,27 +5007,34 @@ var Gaslight = Gaslight || (() => {
                 var newTop = obj.get('top');
                 var tokenSize = data.tokenSize || defaultInitHud.tokenSize;
                 var tokenPadding = data.tokenPadding || defaultInitHud.tokenPadding;
-                var frame = getObj('pathv2', data.frameId);
-                if (frame) {
+                var highlight = data.highlightId ? getObj('pathv2', data.highlightId) : null;
+                var frame = data.frameId ? getObj('pathv2', data.frameId) : null;
+                if (highlight && frame) {
+                    var hlY = highlight.get('y');
                     var frameTop = frame.get('y');
                     var fPts = JSON.parse(frame.get('points') || '[]');
                     var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
                     var vPadding = data.vPadding || defaultInitHud.vPadding;
-                    var frameTopEdge = frameTop - fHeight / 2 + vPadding;
-                    // Find this entry's slot index
+                    var step = tokenSize + tokenPadding;
+                    // Find this entry's offset in the circular order
                     var entryIdx = data.entries.indexOf(match);
-                    var slotY = frameTopEdge + tokenSize / 2 + entryIdx * (tokenSize + tokenPadding);
+                    var numEntries = data.entries.length;
+                    var slotsBelow = 0;
+                    while (hlY + (slotsBelow + 1) * step + tokenSize / 2 <= frameTop + fHeight / 2 - vPadding) slotsBelow++;
+                    var entryOffset = entryIdx <= slotsBelow ? entryIdx : entryIdx - numEntries;
+                    var slotY = hudSlotY(hlY, entryOffset, tokenSize, tokenPadding);
                     var vOffset = newTop - slotY;
-                    if (Math.abs(vOffset - (data.textVOffset || 0)) > 1) {
+                    if (newTop === 0) {
+                        // Text at creation position — ignore
+                    } else if (Math.abs(vOffset - (data.textVOffset || 0)) > 1) {
                         data.textVOffset = vOffset;
                         data.entries.forEach(function(e) {
                             if (e.textId === id) return;
+                            var otherIdx = data.entries.indexOf(e);
+                            var otherOffset = otherIdx <= slotsBelow ? otherIdx : otherIdx - numEntries;
+                            var otherSlotY = hudSlotY(hlY, otherOffset, tokenSize, tokenPadding);
                             var otherTxt = getObj('text', e.textId);
-                            if (otherTxt) {
-                                var otherIdx = data.entries.indexOf(e);
-                                var otherSlotY = frameTopEdge + tokenSize / 2 + otherIdx * (tokenSize + tokenPadding);
-                                otherTxt.set('top', otherSlotY + vOffset);
-                            }
+                            if (otherTxt) otherTxt.set('top', otherSlotY + vOffset);
                         });
                     }
                 }
@@ -5424,6 +5472,10 @@ var Gaslight = Gaslight || (() => {
     };
 
     const registerEventHandlers = () => {
+        // DEBUG: test if add:text and change:text fire on API creation
+        on('add:text', function(obj) {
+            log(SCRIPT_NAME + ' [TEXT ADD EVENT] t=' + Date.now() + ' id=' + obj.get('id') + ' top=' + obj.get('top') + ' left=' + obj.get('left'));
+        });
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
         on('chat:message', function(msg) {
