@@ -4205,6 +4205,13 @@ var Gaslight = Gaslight || (() => {
 
     const HUD_PREFIX = 'gaslight_hud_';
 
+    var _hudCreatedIds = new Set();
+    const createHudObj = (type, props) => {
+        var obj = createObj(type, props);
+        if (obj) _hudCreatedIds.add(obj.get('id'));
+        return obj;
+    };
+
     /**
      * Get the master page ID from the first active group.
      */
@@ -4269,7 +4276,7 @@ var Gaslight = Gaslight || (() => {
                 rotation: reticleRotation,
             });
         } else {
-            reticle = createObj('pathv2', {
+            reticle = createHudObj('pathv2', {
                 _pageid: pageId,
                 layer: 'foreground',
                 shape: 'rec',
@@ -4350,7 +4357,7 @@ var Gaslight = Gaslight || (() => {
             // Use stored position/size or defaults
             var vd = s.hud.viewData || {};
             var pageWidth = page.get('width') * 70;
-            var obj = createObj('text', {
+            var obj = createHudObj('text', {
                 _pageid: pageId,
                 layer: 'foreground',
                 text: label,
@@ -4448,7 +4455,7 @@ var Gaslight = Gaslight || (() => {
      * Draw a rectangle path on the foreground layer.
      */
     const createFramePath = (pageId, left, top, width, height, data) => {
-        return createObj('pathv2', {
+        return createHudObj('pathv2', {
             _pageid: pageId,
             layer: 'foreground',
             shape: 'rec',
@@ -4506,7 +4513,7 @@ var Gaslight = Gaslight || (() => {
             var usableTopHL = frame.get('y') - fH / 2 + hlTokenSize / 2 + vPadHL;
             var usableBotHL = frame.get('y') + fH / 2 - hlTokenSize / 2 - vPadHL;
             var hlY = usableTopHL + (usableBotHL - usableTopHL) * hlOffset;
-            var highlight = createObj('pathv2', {
+            var highlight = createHudObj('pathv2', {
                 _pageid: pageId,
                 layer: 'foreground',
                 shape: 'rec',
@@ -4564,7 +4571,7 @@ var Gaslight = Gaslight || (() => {
                 if (customsToAdd <= 0) return;
                 customsToAdd--;
 
-                var hudPin = createObj('pin', {
+                var hudPin = createHudObj('pin', {
                     _pageid: pageId,
                     x: frameLeft,
                     y: -5000,
@@ -4577,7 +4584,7 @@ var Gaslight = Gaslight || (() => {
                     visibleTo: 'all',
                 });
 
-                var pinText = createObj('text', {
+                var pinText = createHudObj('text', {
                     _pageid: pageId,
                     layer: 'foreground',
                     text: String(entry.pr || ''),
@@ -4601,7 +4608,7 @@ var Gaslight = Gaslight || (() => {
                 var sourceToken = getObj('graphic', entry.id);
                 if (!sourceToken) return;
 
-                var hudPin = createObj('pin', {
+                var hudPin = createHudObj('pin', {
                     _pageid: pageId,
                     x: frameLeft,
                     y: -5000,
@@ -4614,7 +4621,7 @@ var Gaslight = Gaslight || (() => {
                     visibleTo: 'all',
                 });
 
-                var hudText = createObj('text', {
+                var hudText = createHudObj('text', {
                     _pageid: pageId,
                     layer: 'foreground',
                     text: String(entry.pr || ''),
@@ -4981,9 +4988,7 @@ var Gaslight = Gaslight || (() => {
                     var entryOffset = entryIdx <= slotsBelow ? entryIdx : entryIdx - numEntries;
                     var slotY = hudSlotY(hlY, entryOffset, tokenSize, tokenPadding);
                     var vOffset = newTop - slotY;
-                    if (newTop === 0) {
-                        // Text at creation position — ignore
-                    } else if (Math.abs(vOffset - (data.textVOffset || 0)) > 1) {
+                    if (Math.abs(vOffset - (data.textVOffset || 0)) > 1) {
                         data.textVOffset = vOffset;
                         data.entries.forEach(function(e) {
                             if (e.textId === id) return;
@@ -5016,11 +5021,10 @@ var Gaslight = Gaslight || (() => {
             var matchIdx = data.entries.findIndex(function(e) { return e.textId === id; });
             if (matchIdx !== -1) {
                 var match = data.entries[matchIdx];
-                // Remove associated pin
+                // Splice entry first to prevent cascading destroy handlers from re-matching
+                data.entries.splice(matchIdx, 1);
                 var pin = getObj('pin', match.tokenId);
                 if (pin) pin.remove();
-                // Remove from entries
-                data.entries.splice(matchIdx, 1);
 
                 // Remove from turn order
                 var order = JSON.parse(Campaign().get('turnorder') || '[]');
@@ -5052,11 +5056,10 @@ var Gaslight = Gaslight || (() => {
         if (matchIdx === -1) return;
 
         var match = data.entries[matchIdx];
-        // Remove associated text
+        // Splice entry first — associated text will be orphaned and cleaned up on next reflow
+        data.entries.splice(matchIdx, 1);
         var txt = getObj('text', match.textId);
         if (txt) txt.remove();
-        // Remove from entries
-        data.entries.splice(matchIdx, 1);
 
         // Remove from turn order
         var order = JSON.parse(Campaign().get('turnorder') || '[]');
@@ -5256,6 +5259,8 @@ var Gaslight = Gaslight || (() => {
     const hudRegistry = {
         view: {
             aliases: ['relay'],
+            stateKey: 'viewData',
+            defaults: {},
             enable: function() { updateViewHud(); },
             disable: function() { removeViewHud(); },
             reset: function() {
@@ -5278,9 +5283,9 @@ var Gaslight = Gaslight || (() => {
                     updateViewHud();
                 }
             },
-            owns: function(id) {
+            ids: function() {
                 var s = state[SCRIPT_NAME];
-                return s.hud.viewId === id;
+                return s.hud.viewId ? [s.hud.viewId] : [];
             },
             events: {
                 text: { change: onHudTextChanged, destroy: onHudTextDestroyed },
@@ -5288,21 +5293,22 @@ var Gaslight = Gaslight || (() => {
         },
         initiative: {
             aliases: ['init', 'turn', 'turns'],
+            stateKey: 'initData',
+            defaults: function() { return Object.assign({}, defaultInitHud, { entries: [] }); },
             enable: function() { updateInitiativeHud(); },
             disable: function() { removeInitiativeHud(); },
-            reset: function() {
-                var s = state[SCRIPT_NAME];
-                removeInitiativeHud();
-                s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
-                updateInitiativeHud();
-            },
-            owns: function(id) {
+            ids: function() {
                 var s = state[SCRIPT_NAME];
                 var data = s.hud.initData;
-                if (!data) return false;
-                if (id === data.frameId || id === data.highlightId) return true;
-                if (data.entries && data.entries.some(function(e) { return e.tokenId === id || e.textId === id; })) return true;
-                return false;
+                if (!data) return [];
+                var result = [];
+                if (data.frameId) result.push(data.frameId);
+                if (data.highlightId) result.push(data.highlightId);
+                if (data.entries) data.entries.forEach(function(e) {
+                    if (e.tokenId) result.push(e.tokenId);
+                    if (e.textId) result.push(e.textId);
+                });
+                return result;
             },
             events: {
                 pathv2: {
@@ -5321,25 +5327,42 @@ var Gaslight = Gaslight || (() => {
         },
         reticle: {
             aliases: ['indicator', 'current'],
-            enable: function() { updateTurnReticle(); },
-            disable: function() { removeTurnReticle(); },
-            reset: function() {
+            stateKey: 'reticleData',
+            defaults: function() {
                 var s = state[SCRIPT_NAME];
                 var data = s.hud.initData || {};
                 var hlRot = data.highlightRotation != null ? data.highlightRotation : 45;
-                removeTurnReticle();
-                s.hud.reticleData = { rotationOffset: -hlRot };
-                updateTurnReticle();
+                return { rotationOffset: -hlRot };
             },
-            owns: function(id) {
+            enable: function() { updateTurnReticle(); },
+            disable: function() { removeTurnReticle(); },
+            ids: function() {
                 var s = state[SCRIPT_NAME];
-                return s.hud.reticleData && s.hud.reticleData.id === id;
+                return s.hud.reticleData && s.hud.reticleData.id ? [s.hud.reticleData.id] : [];
             },
             events: {
                 pathv2: { change: onReticleChanged, destroy: onHudPathDestroyed },
             },
         },
     };
+
+    // Generic owns check derived from ids()
+    Object.keys(hudRegistry).forEach(function(key) {
+        var entry = hudRegistry[key];
+        if (!entry.owns) {
+            entry.owns = function(id) { return entry.ids().indexOf(id) !== -1; };
+        }
+        // Generic reset if not overridden: disable → reset state → enable
+        if (!entry.reset) {
+            entry.reset = function() {
+                var s = state[SCRIPT_NAME];
+                entry.disable();
+                var defs = typeof entry.defaults === 'function' ? entry.defaults() : Object.assign({}, entry.defaults);
+                s.hud[entry.stateKey] = defs;
+                entry.enable();
+            };
+        }
+    });
 
     const resolveHudElement = (name) => {
         if (hudRegistry[name]) return name;
@@ -5458,8 +5481,10 @@ var Gaslight = Gaslight || (() => {
         });
         Object.keys(hudEventHandlers).forEach(function(key) {
             on(key, function(obj, prev) {
+                var id = obj.get('id');
+                if (key.startsWith('change:') && _hudCreatedIds.delete(id)) return;
                 hudEventHandlers[key].forEach(function(entry) {
-                    if (hudRegistry[entry.element].owns(obj.get('id'))) {
+                    if (hudRegistry[entry.element].owns(id)) {
                         entry.handler(obj, prev);
                     }
                 });
