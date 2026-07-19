@@ -342,12 +342,36 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
+     * Test whether an imgsrc can be used with createObj.
+     * Creates a temporary token, checks if it succeeded, deletes it immediately.
+     * @param {string} imgsrc - URL to test
+     * @param {string} pageid - page to create the test token on
+     * @returns {boolean} true if the imgsrc is valid for API token creation
+     */
+    const canCreateWithImgsrc = (imgsrc, pageid) => {
+        if (!imgsrc) return false;
+        var test = createObj('graphic', {
+            _subtype: 'token',
+            pageid: pageid,
+            imgsrc: imgsrc,
+            left: -1000, top: -1000, width: 10, height: 10,
+            layer: 'gmlayer'
+        });
+        if (test) {
+            test.remove();
+            return true;
+        }
+        return false;
+    };
+
+    /**
      * Stage a single token to target pages using 3-step logic.
-     * Returns number of clones created.
+     * Returns { cloned: number, failed: boolean, name: string, imgsrc: string }
      */
     const stageTokenToPages = (token, targetPageIds) => {
         var linkId = getLinkId(token);
         var pagesToCloneTo = [];
+        var result = { cloned: 0, failed: false, name: token.get('name') || '(unnamed)', imgsrc: '' };
 
         if (linkId) {
             // Step 1-2: find pages missing a token with this gaslight_link
@@ -365,7 +389,6 @@ var Gaslight = Gaslight || (() => {
             pagesToCloneTo = targetPageIds;
         }
 
-        var cloned = 0;
         pagesToCloneTo.forEach(function(targetPageId) {
             var imgsrc = token.get('imgsrc');
             if (!imgsrc) return;
@@ -388,10 +411,15 @@ var Gaslight = Gaslight || (() => {
                 controlledby: token.get('controlledby') || '',
                 gmnotes: token.get('gmnotes') || ''
             });
-            if (newToken) setLinkId(newToken, getLinkId(token));
-            cloned++;
+            if (newToken) {
+                setLinkId(newToken, getLinkId(token));
+                result.cloned++;
+            } else {
+                result.failed = true;
+                result.imgsrc = imgsrc;
+            }
         });
-        return cloned;
+        return result;
     };
 
     const autoPopulateLinkId = (token) => {
@@ -1745,6 +1773,7 @@ var Gaslight = Gaslight || (() => {
         if (targetPlayerIds.length === 0) { reply(msg, 'Error', 'No valid target players.'); return; }
 
         var staged = 0;
+        var marketplaceFailures = [];
         tokens.forEach(function(token) {
             var sourcePageId = token.get('_pageid');
             var targetPages = targetPlayerIds
@@ -1752,7 +1781,9 @@ var Gaslight = Gaslight || (() => {
                 .filter(function(pid) { return pid !== sourcePageId; });
             // Include master if source is not master
             if (sourcePageId !== groupInfo.master) targetPages.push(groupInfo.master);
-            staged += stageTokenToPages(token, targetPages);
+            var result = stageTokenToPages(token, targetPages);
+            staged += result.cloned;
+            if (result.failed) marketplaceFailures.push(result);
         });
 
         // Re-run linking for this group to pick up the new tokens
@@ -1778,6 +1809,21 @@ var Gaslight = Gaslight || (() => {
         }
 
         reply(msg, 'Stage', 'Staged ' + staged + ' token(s) to ' + targetPlayerIds.length + ' player page(s).');
+
+        if (marketplaceFailures.length > 0) {
+            var failMsg = '<b>⚠️ ' + marketplaceFailures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
+            marketplaceFailures.forEach(function(f) {
+                failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
+                    + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
+                    + '<small>' + f.name + '</small></div>';
+            });
+            failMsg += '<br><br><b>To fix:</b><ol>'
+                + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets → Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
+                + '<li>Replace the token(s) on the master page with the library copy (drag from your library).</li>'
+                + '<li>Re-run <code>!gaslight stage</code> with the new token(s) selected.</li>'
+                + '</ol>';
+            reply(msg, 'Stage', failMsg);
+        }
     };
 
     /**
@@ -2410,6 +2456,9 @@ var Gaslight = Gaslight || (() => {
         var tokens = findObjs({ _type: 'graphic', _pageid: pageId, _subtype: 'token' });
         var filter = config.filter.toLowerCase();
         if (filter === 'all') return tokens;
+        if (filter === 'characters') {
+            return tokens.filter(function(t) { return !!t.get('represents'); });
+        }
         if (filter === 'npc') {
             return tokens.filter(function(t) {
                 var charId = t.get('represents');
@@ -2683,20 +2732,10 @@ var Gaslight = Gaslight || (() => {
         evaluationContext.viewerPlayerId = viewerPlayerId; // no linked copy on this viewer's page
 
         var content = scriptContent;
-        // Resolve @(target.gl_*) ourselves since Fetch compProps don't fire for sendChat messages
-        content = content.replace(/@\(target\.(gl_[a-zA-Z0-9_]+)\)/g, function(match, field) {
-            var val = '';
-            if (config.scope === 'token') {
-                val = readGlField(viewerTarget.get('gmnotes'), field);
-            }
-            if (!val) {
-                var charId = viewerTarget.get('represents');
-                val = charId ? (getAttrByName(charId, field) || '') : '';
-            }
-            return val;
-        });
         // Replace remaining @(target.*) with token ID — Fetch resolves native props
         content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
+        // Replace @(gm_target.*) with master page token ID
+        content = content.replace(/@\(gm_target\./g, '@(' + targetToken.get('id') + '.');
         // Resolve viewer tokens for aggregation
         var viewerTokens = findObjs({ _type: 'graphic', _pageid: viewerPageId, _subtype: 'token' }).filter(function(t) {
             var cid = t.get('represents');
@@ -3216,7 +3255,6 @@ var Gaslight = Gaslight || (() => {
 
     const registerWithScriptKit = () => {
         if (typeof ScriptKit === 'undefined') return;
-        const html = ScriptKit.html;
         ScriptKit.register(SCRIPT_NAME, {
             version: SCRIPT_VERSION,
             command: CMD,
@@ -3228,10 +3266,10 @@ var Gaslight = Gaslight || (() => {
                 quickStart: [
                     'Create your master page with all tokens placed.',
                     'Duplicate it once per player (Roll20 built-in Duplicate Page).',
-                    'Select party tokens on the master page, run ' + html.code('!gaslight setup mygroup') + ' — auto-detects duplicates, assigns pages, configures the group.',
-                    html.code('!gaslight test mygroup') + ' — dry-run showing how tokens will link. Fix any warnings.',
-                    html.code('!gaslight split mygroup') + ' — activates the group: links tokens, moves players, begins syncing.',
-                    'When done: ' + html.code('!gaslight merge') + ' — tears down all links, returns players.',
+                    'Select party tokens on the master page, run `!gaslight setup mygroup` — auto-detects duplicates, assigns pages, configures the group.',
+                    '`!gaslight test mygroup` — dry-run showing how tokens will link. Fix any warnings.',
+                    '`!gaslight split mygroup` — activates the group: links tokens, moves players, begins syncing.',
+                    'When done: `!gaslight merge` — tears down all links, returns players.',
                 ],
                 changelog: [
                     { version: '2.1.0', changes: [
@@ -3343,7 +3381,7 @@ var Gaslight = Gaslight || (() => {
                         description: 'How token properties stay synchronized',
                         version: '1.0.0',
                         details: 'Spatial sync (position, size, rotation) uses Anchor. Property sync (bars, status, tint) uses Mirror. Both respect the gaslight_sync attribute.',
-                        body: 'Set ' + html.code('gaslight_sync') + ' on a character to control which properties sync. Supports include/exclude syntax:',
+                        body: 'Set `gaslight_sync` on a character to control which properties sync. Supports include/exclude syntax:',
                         items: [
                             { name: 'gaslight_sync = *', description: 'Sync everything (default)', version: '1.0.0' },
                             { name: 'gaslight_sync = bar1 bar2 statusmarkers', description: 'Only sync listed properties', version: '1.0.0' },
@@ -3371,7 +3409,7 @@ var Gaslight = Gaslight || (() => {
                         title: 'Triggers',
                         description: 'How scripts auto-evaluate on changes',
                         version: '2.0.0',
-                        body: 'Scripts auto-detect triggers from ' + html.code('@(target.gl_*)') + ' references in ' + html.code('{& if}') + ' blocks. Override in pin GM notes:',
+                        body: 'Scripts auto-detect triggers from `@(target.gl_*)` references in `{& if}` blocks. Override in pin GM notes:',
                         items: [
                             { name: 'trigger: on change gl_stealth_result', description: 'Explicit trigger on specific field change', version: '2.0.0' },
                             { name: 'trigger: manual only', description: 'Only evaluate when manually run via eval command', version: '2.0.0' },
@@ -3382,32 +3420,26 @@ var Gaslight = Gaslight || (() => {
                         description: 'Cross-page command forwarding',
                         version: '2.0.0',
                         details: 'Commands targeting master-page tokens can auto-relay to all player pages with token IDs swapped for linked counterparts. Configure which commands relay with the config command.',
-                        body: 'Add commands to the relay list with ' + html.code('!gaslight config relay-add !token-mod !aura') + '. Commands fired on the master page automatically relay to player pages with correct token IDs.',
+                        body: 'Add commands to the relay list with `!gaslight config relay-add !token-mod !aura`. Commands fired on the master page automatically relay to player pages with correct token IDs.',
                     },
                     staging: {
                         title: 'Staging',
                         description: 'Adding tokens to an active split',
                         version: '1.1.0',
                         details: 'Stage propagates selected tokens from master to all player pages with automatic linking. Tokens with gaslight_stage=1 on their character auto-stage when added to the page.',
-                        body: 'Select tokens on the master page and run ' + html.code('!gaslight stage') + '. Tokens are cloned to each player page, linked, and synced.' + html.paragraph('')
-                            + 'Set ' + html.code('gaslight_stage = 1') + ' on a character attribute for auto-staging whenever that character\'s token is added to a gaslighted page.',
+                        body: 'Select tokens on the master page and run `!gaslight stage`. Tokens are cloned to each player page, linked, and synced.\n\nSet `gaslight_stage = 1` on a character attribute for auto-staging whenever that character\'s token is added to a gaslighted page.',
                     },
                     hud: {
                         title: 'HUD',
                         description: 'Persistent on-screen status display',
                         version: '2.1.0',
-                        body: 'The HUD shows the current Gaslight state (active group, view target, linked token count) as a persistent text element on the GM layer.' + html.paragraph('')
-                            + html.code('!gaslight hud on') + ' / ' + html.code('!gaslight hud off') + ' to toggle. ' + html.code('!gaslight hud reset') + ' to recreate from defaults.',
+                        body: 'The HUD shows the current Gaslight state (active group, view target, linked token count) as a persistent text element on the GM layer.\n\n`!gaslight hud on` / `!gaslight hud off` to toggle. `!gaslight hud reset` to recreate from defaults.',
                     },
                     troubleshooting: {
                         title: 'Troubleshooting',
                         description: 'Common issues and solutions',
                         version: '1.0.0',
-                        body: html.bold('Tokens not linking') + ' — Run ' + html.code('!gaslight test <group>') + ' to see resolution steps. Ensure tokens share a character (represents) or have matching gaslight_link IDs.' + html.paragraph('')
-                            + html.bold('Movement not syncing') + ' — Check that Anchor is installed and the token isn\'t excluded by gaslight_sync. Verify the group is active with ' + html.code('!gaslight status') + '.' + html.paragraph('')
-                            + html.bold('Relay not working') + ' — Confirm the command is in the relay list: ' + html.code('!gaslight config relay-list') + '. Commands must start with ! to be intercepted.' + html.paragraph('')
-                            + html.bold('Scripts not evaluating') + ' — Pin must be on a page with an active split. Check pin title matches handout name. Run ' + html.code('!gaslight eval --dry-run') + ' to debug.' + html.paragraph('')
-                            + html.bold('Players see the same thing') + ' — Make sure the group is actually split (' + html.code('!gaslight status') + '). Player-specific changes must be made on the player\'s page, not the master.',
+                        body: '**Tokens not linking** — Run `!gaslight test <group>` to see resolution steps. Ensure tokens share a character (represents) or have matching gaslight_link IDs.\n\n**Movement not syncing** — Check that Anchor is installed and the token isn\'t excluded by gaslight_sync. Verify the group is active with `!gaslight status`.\n\n**Relay not working** — Confirm the command is in the relay list: `!gaslight config relay-list`. Commands must start with ! to be intercepted.\n\n**Scripts not evaluating** — Pin must be on a page with an active split. Check pin title matches handout name. Run `!gaslight eval --dry-run` to debug.\n\n**Players see the same thing** — Make sure the group is actually split (`!gaslight status`). Player-specific changes must be made on the player\'s page, not the master.',
                     },
                 },
             },
@@ -3443,7 +3475,6 @@ var Gaslight = Gaslight || (() => {
                       if (Object.keys(groups).length === 0) return 'No group configured yet. Run !gaslight setup <name> first.';
                   }
                 },
-                { prompt: 'Run `!gaslight test mygroup`. This dry-runs the linking without activating. Verify tokens link correctly (*Step 1* = explicit link, *Step 2* = character+name match).' },
                 { prompt: 'Run `!gaslight split mygroup`. This activates the group — players are moved to individual pages and tokens begin syncing.',
                   onContinue: () => {
                       if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run !gaslight split <group> first.';
@@ -3576,6 +3607,41 @@ var Gaslight = Gaslight || (() => {
             ],
             handout: (ctx) => ({
                 notes: '!token-mod --set {& if @(target.gl_magical[0]) == 1 && any(@(viewer.gl_second_sight[0])) == 1}statusmarkers|+' + (ctx.params._marker || 'blue') + '{& else}statusmarkers|-' + (ctx.params._marker || 'blue') + '{& end}',
+                archived: false,
+            }),
+        });
+
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'madness',
+            description: 'An afflicted player sees all tokens as enemies — allies swap to a chosen enemy image',
+            guide: [
+                { prompt: 'Select a token that has the **status marker** you want to represent madness applied to it (e.g. "screaming"). This marker will trigger the effect when placed on a viewer\'s token.',
+                  select: 'token', as: 'markerToken', min: 1, max: 1,
+                  onContinue: (ctx) => {
+                      var token = Array.isArray(ctx.selected) ? ctx.selected[0] : ctx.selected;
+                      var markers = (token.get('statusmarkers') || '').split(',').filter(Boolean);
+                      if (markers.length === 0) return 'That token has no status markers applied. Apply the marker you want to use for madness, then select the token.';
+                      ctx.params._marker = markers[0].replace(/@\d+$/, '');
+                  }
+                },
+                { prompt: 'Select an **enemy token** whose image will replace all other tokens for the afflicted viewer.',
+                  select: 'token', as: 'enemyToken', min: 1, max: 1,
+                  onContinue: (ctx) => {
+                      var token = Array.isArray(ctx.selected) ? ctx.selected[0] : ctx.selected;
+                      ctx.params._enemyId = token.get('id');
+                  }
+                },
+                { prompt: (ctx) => 'To afflict a player, apply the **' + ctx.params._marker + '** status marker to their viewer token. Remove it to cure them.\n\nThe script will automatically store and restore original images.' },
+                ScriptKit.handout(),
+                { prompt: (ctx) => 'Find **' + ctx.handoutName + '** from the journal and **drag it onto the master page** to create a map pin. Select the pin.',
+                  select: 'pin', as: 'pin', min: 1, max: 1,
+                  onContinue: validatePin
+                },
+                { prompt: (ctx) => '**Test:** Apply the **' + ctx.params._marker + '** marker to a viewer token, then run `!gaslight eval --all`. All tokens on that viewer\'s page should swap to the enemy image. Remove the marker and re-eval to restore.' },
+            ],
+            handout: (ctx) => ({
+                notes: '!token-mod --set {& if ([madness] any(@(viewer.statusmarkers)) ~ "' + ctx.params._marker + '") && !(any(@(viewer.token_id)) = @(target.token_id))}imgsrc|' + ctx.params._enemyId + ' tint_color|#000000 name|ŧ̈́h̶̛ë̵̡ý̸̲{& else}imgsrc|@(gm_target.token_id) tint_color|transparent name|@(gm_target.name){& end}',
+                gmnotes: '---GASLIGHT-SCRIPT---\nfilter: characters\ntrigger: on change statusmarkers',
                 archived: false,
             }),
         });
@@ -4293,11 +4359,11 @@ var Gaslight = Gaslight || (() => {
         });
         toRemove.reverse().forEach(function(i) {
             var entry = data.entries[i];
-            var tok = getObj('graphic', entry.tokenId) || getObj('pin', entry.tokenId);
+            var pin = getObj('pin', entry.tokenId);
             var txt = getObj('text', entry.textId);
             // Splice first so destroy handler ignores
             data.entries.splice(i, 1);
-            if (tok) { if (typeof Mirror !== 'undefined' && entry.sourceId && !entry.sourceId.startsWith('custom:')) Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (pin) pin.remove();
             if (txt) txt.remove();
         });
 
@@ -4321,8 +4387,8 @@ var Gaslight = Gaslight || (() => {
                     bgColor: 'transparent',
                     useTextIcon: true,
                     textIcon: '',
-                    scale: 1.75,
-                    tooltipVisibleTo: '',
+                    scale: 1.25,
+                    visibleTo: 'all',
                 });
 
                 var pinText = createObj('text', {
@@ -4348,18 +4414,17 @@ var Gaslight = Gaslight || (() => {
                 var sourceToken = getObj('graphic', entry.id);
                 if (!sourceToken) return;
 
-                var hudToken = createObj('graphic', {
+                var hudPin = createObj('pin', {
                     _pageid: pageId,
-                    layer: 'foreground',
-                    imgsrc: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
-                    left: frameLeft,
-                    top: frameTopEdge + (data.tokenPadding || defaultInitHud.tokenPadding) + tokenSize / 2,
-                    width: tokenSize,
-                    height: tokenSize,
-                    showname: true,
-                    name: sourceToken.get('name'),
-                    baseOpacity: 1,
-                    isdrawing: true,
+                    x: frameLeft,
+                    y: -5000,
+                    title: sourceToken.get('name') || '',
+                    shape: 'circle',
+                    bgColor: 'transparent',
+                    customizationType: 'image',
+                    pinImage: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
+                    scale: 1.25,
+                    visibleTo: 'all',
                 });
 
                 var hudText = createObj('text', {
@@ -4374,13 +4439,9 @@ var Gaslight = Gaslight || (() => {
                     font_family: data.textFontFamily || defaultInitHud.textFontFamily,
                 });
 
-                if (typeof Mirror !== 'undefined') {
-                    Mirror.link([sourceToken.get('id'), hudToken.get('id')], ['name', 'statusmarkers', 'tint_color'], { soft: true });
-                }
-
                 data.entries.push({
                     sourceId: entry.id,
-                    tokenId: hudToken.get('id'),
+                    tokenId: hudPin ? hudPin.get('id') : null,
                     textId: hudText.get('id'),
                 });
             }
@@ -4504,15 +4565,15 @@ var Gaslight = Gaslight || (() => {
                 var hudEntry = tokenMap[entry.id];
                 if (!hudEntry) return;
 
-                var tok = getObj('graphic', hudEntry.tokenId);
+                var pin = getObj('pin', hudEntry.tokenId);
                 var txt = getObj('text', hudEntry.textId);
-                if (!tok) return;
+                if (!pin) return;
 
                 var offset = i <= slotsBelow ? i : i - order.length;
                 var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
 
-                tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
+                pin.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000 });
                 if (txt) {
                     txt.set({
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
@@ -4560,19 +4621,16 @@ var Gaslight = Gaslight || (() => {
                 var hudEntry = isCustom ? sortedCustoms[customIdx++] : tokenMap[entry.id];
                 if (!hudEntry) return;
 
-                var tok = getObj('graphic', hudEntry.tokenId) || getObj('pin', hudEntry.tokenId);
+                var pin = getObj('pin', hudEntry.tokenId);
                 var txt = getObj('text', hudEntry.textId);
-                if (!tok) return;
+                if (!pin) return;
 
                 var offset = i <= slotsBelow ? i : i - order.length;
                 var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
 
-                if (tok.get('type') === 'graphic') {
-                    tok.set({ left: frameLeft, top: yPos, width: tokenSize, height: tokenSize, baseOpacity: visible ? 1 : 0, showname: visible });
-                } else {
-                    tok.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000, title: entry.custom || 'Custom' });
-                }
+                pin.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000 });
+                if (isCustom) pin.set('title', entry.custom || 'Custom');
 
                 if (txt) {
                     txt.set({
@@ -5188,84 +5246,109 @@ var Gaslight = Gaslight || (() => {
                 horizontalEscapePin = newX > frameLeftPin + fwPin / 2 || newX < frameLeftPin - fwPin / 2;
             }
 
-            // Pin dragged vertically — reorder custom turn in initiative
+            // Pin dragged vertically — reorder turn in initiative
             if (!horizontalEscapePin && newY !== oldY) {
             var order = JSON.parse(Campaign().get('turnorder') || '[]');
             var hudOrder = getHudTurnOrder();
+            var isCustomEntry = match.sourceId && match.sourceId.startsWith('custom:');
 
-            // Find current index of this custom in the deduped order by matching text position
-            var txt = getObj('text', match.textId);
+            // Find current index in hudOrder
             var currentIdx = -1;
-            if (txt) {
-                var frame = getObj('pathv2', data.frameId);
-                if (!frame) return;
-                var frameTop = frame.get('y');
-                var pts = JSON.parse(frame.get('points') || '[]');
-                var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
-                var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
-                var tknSize = data.tokenSize || defaultInitHud.tokenSize;
-                var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
-                currentIdx = Math.round((txt.get('top') - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+            if (isCustomEntry) {
+                // For customs, find rank among customs and map to hudOrder position
+                var customsInData = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
+                var myCustomRank = customsInData.findIndex(function(e) { return e.tokenId === obj.get('id'); });
+                if (myCustomRank !== -1) {
+                    var cCount = 0;
+                    for (var hi = 0; hi < hudOrder.length; hi++) {
+                        if (!hudOrder[hi].id || hudOrder[hi].id === '-1') {
+                            if (cCount === myCustomRank) { currentIdx = hi; break; }
+                            cCount++;
+                        }
+                    }
+                }
+            } else {
+                currentIdx = hudOrder.findIndex(function(e) { return e.id === match.sourceId; });
             }
             if (currentIdx < 0 || currentIdx >= hudOrder.length) { reflowInitiativeHud('none'); return; }
 
-            // Determine target slot based on new pin Y (subtract pin offset)
-            var frame = getObj('pathv2', data.frameId);
-            if (!frame) return;
-            var frameTop = frame.get('y');
-            var pts = JSON.parse(frame.get('points') || '[]');
-            var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
-            var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
+            // Determine target slot based on drag delta
             var tknSize = data.tokenSize || defaultInitHud.tokenSize;
             var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
-            var slotY = newY - tknSize / 2; // undo pin offset
-            var targetIdx = Math.round((slotY - fTopEdge - tknSize / 2) / (tknSize + tknPad));
+            var deltaSlots = Math.round((newY - oldY) / (tknSize + tknPad));
+            var targetIdx = currentIdx + deltaSlots;
+            // Wrap around circular turn order
+            if (targetIdx < 0) targetIdx = hudOrder.length + targetIdx;
+            if (targetIdx >= hudOrder.length) targetIdx = targetIdx - hudOrder.length;
             targetIdx = Math.max(0, Math.min(hudOrder.length - 1, targetIdx));
 
             if (targetIdx !== currentIdx) {
-                // Find the custom entry in the full order
-                var customEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
-                var customIdx = 0;
+                // Find source entry in the full order
                 var sourceFullIdx = -1;
-                for (var fi = 0; fi < order.length; fi++) {
-                    if (!order[fi].id || order[fi].id === '-1') {
-                        if (customIdx === (currentIdx - hudOrder.slice(0, currentIdx).filter(function(e) { return e.id && e.id !== '-1'; }).length)) {
-                            sourceFullIdx = fi;
-                            break;
+                if (isCustomEntry) {
+                    // Find the Nth custom in full order (where N = this custom's rank)
+                    var customsInData = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
+                    var myRank = customsInData.findIndex(function(e) { return e.tokenId === obj.get('id'); });
+                    var cIdx = 0;
+                    for (var fi = 0; fi < order.length; fi++) {
+                        if (!order[fi].id || order[fi].id === '-1') {
+                            if (cIdx === myRank) { sourceFullIdx = fi; break; }
+                            cIdx++;
                         }
-                        customIdx++;
                     }
+                } else {
+                    sourceFullIdx = order.findIndex(function(e) { return e.id === match.sourceId; });
                 }
                 if (sourceFullIdx === -1) { reflowInitiativeHud('none'); return; }
 
-                // Remove source from order
-                var removed = order.splice(sourceFullIdx, 1);
+                log(SCRIPT_NAME + ' [init-reorder] BEFORE: ' + JSON.stringify(order.map(function(e) { return e.custom || e.id; })));
+                log(SCRIPT_NAME + ' [init-reorder] sourceId=' + match.sourceId + ' isCustom=' + isCustomEntry + ' currentIdx=' + currentIdx + ' targetIdx=' + targetIdx + ' sourceFullIdx=' + sourceFullIdx);
+
+                // Remove source group from order (master + linked tokens)
+                var sourceGroupSize = 1;
+                if (!isCustomEntry) {
+                    var sInfo = getLinkedInfo(match.sourceId);
+                    sourceGroupSize = 1 + sInfo.linkedIds.filter(function(lid) {
+                        return order.some(function(e) { return e.id === lid; });
+                    }).length;
+                }
+                var removed = order.splice(sourceFullIdx, sourceGroupSize);
 
                 // Find target position in full order
                 var targetHudEntry = hudOrder[targetIdx];
-                var targetFullIdx;
+                var targetFullIdx = -1;
                 if (!targetHudEntry.id || targetHudEntry.id === '-1') {
-                    // Targeting another custom — find it in the full order
-                    targetFullIdx = targetIdx > currentIdx ? sourceFullIdx : sourceFullIdx;
+                    // Targeting a custom — find the Nth custom in the full order
+                    var targetCustomRank = hudOrder.slice(0, targetIdx + 1).filter(function(e) { return !e.id || e.id === '-1'; }).length - 1;
+                    var cCount = 0;
+                    for (var fi = 0; fi < order.length; fi++) {
+                        if (!order[fi].id || order[fi].id === '-1') {
+                            if (cCount === targetCustomRank) { targetFullIdx = fi; break; }
+                            cCount++;
+                        }
+                    }
                 } else {
                     targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
                 }
                 if (targetFullIdx === -1) targetFullIdx = order.length;
 
-                // Insert
+                log(SCRIPT_NAME + ' [init-reorder] targetHudEntry=' + JSON.stringify(targetHudEntry) + ' targetFullIdx=' + targetFullIdx);
+
+                // Insert: when moving down, place after target group; when moving up, place before target
                 if (targetIdx > currentIdx) {
                     var tInfo = getLinkedInfo(targetHudEntry.id || '');
                     var tGroupSize = (targetHudEntry.id && targetHudEntry.id !== '-1') ? 1 + tInfo.linkedIds.filter(function(lid) {
                         return order.some(function(e) { return e.id === lid; });
                     }).length : 1;
-                    order.splice(targetFullIdx + tGroupSize, 0, removed[0]);
+                    order.splice.apply(order, [targetFullIdx + tGroupSize, 0].concat(removed));
                 } else {
-                    order.splice(targetFullIdx, 0, removed[0]);
+                    order.splice.apply(order, [targetFullIdx, 0].concat(removed));
                 }
 
                 _suppressTurnSync = true;
                 Campaign().set('turnorder', JSON.stringify(order));
                 _suppressTurnSync = false;
+                log(SCRIPT_NAME + ' [init-reorder] AFTER: ' + JSON.stringify(order.map(function(e) { return e.custom || e.id; })));
             }
             }
 
@@ -5281,11 +5364,20 @@ var Gaslight = Gaslight || (() => {
                 var swipeDir = newX > frameRightEdge ? 'forward' : 'backward';
                 var fullOrder = JSON.parse(Campaign().get('turnorder') || '[]');
 
-                var customsInOrder = [];
-                fullOrder.forEach(function(e, i) { if (!e.id || e.id === '-1') customsInOrder.push(i); });
-                var customRank = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).findIndex(function(e) { return e.tokenId === obj.get('id'); });
-                if (customRank !== -1 && customsInOrder[customRank] !== undefined) {
-                    var targetFullIdx = customsInOrder[customRank];
+                // Find this entry's position in the full order
+                var targetFullIdx = -1;
+                if (match.sourceId && match.sourceId.startsWith('custom:')) {
+                    var customsInOrder = [];
+                    fullOrder.forEach(function(e, i) { if (!e.id || e.id === '-1') customsInOrder.push(i); });
+                    var customRank = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).findIndex(function(e) { return e.tokenId === obj.get('id'); });
+                    if (customRank !== -1 && customsInOrder[customRank] !== undefined) {
+                        targetFullIdx = customsInOrder[customRank];
+                    }
+                } else {
+                    targetFullIdx = fullOrder.findIndex(function(e) { return e.id === match.sourceId; });
+                }
+
+                if (targetFullIdx !== -1) {
                     if (targetFullIdx === 0) {
                         // This pin is the current turn — advance/retreat to next/prev master or custom
                         if (swipeDir === 'forward') {
@@ -5314,7 +5406,7 @@ var Gaslight = Gaslight || (() => {
                             fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
                         }
                     } else {
-                        // Non-current pin — rotate to it
+                        // Non-current pin — rotate to it, applying formulas to customs passed along the way
                         var rotCount = swipeDir === 'forward' ? targetFullIdx : fullOrder.length - targetFullIdx;
                         for (var ri = 0; ri < rotCount; ri++) {
                             if (swipeDir === 'forward') {
@@ -5322,14 +5414,14 @@ var Gaslight = Gaslight || (() => {
                             } else {
                                 fullOrder.unshift(fullOrder.pop());
                             }
-                        }
-                        // Apply formula if the new top is a custom turn
-                        if (fullOrder[0] && fullOrder[0].id === '-1' && fullOrder[0].formula) {
-                            var f = fullOrder[0].formula.trim();
-                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
-                            var add = f.startsWith('+');
-                            if (swipeDir === 'backward') add = !add;
-                            fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                            // Apply formula if we landed on a custom turn during rotation
+                            if (fullOrder[0] && (!fullOrder[0].id || fullOrder[0].id === '-1') && fullOrder[0].formula) {
+                                var f = fullOrder[0].formula.trim();
+                                var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
+                                var add = f.startsWith('+');
+                                if (swipeDir === 'backward') add = !add;
+                                fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
+                            }
                         }
                     }
                 }
@@ -5339,6 +5431,22 @@ var Gaslight = Gaslight || (() => {
             }
 
             reflowInitiativeHud('none');
+
+            // Scale change — adjust all HUD pins to match and update tokenSize
+            var newScale = obj.get('scale');
+            var oldScale = prev.scale;
+            if (newScale !== oldScale && newScale != null) {
+                newScale = Math.max(0.25, Math.min(2.0, newScale));
+                obj.set('scale', newScale);
+                var baseTokenSize = defaultInitHud.tokenSize;
+                data.tokenSize = Math.round(baseTokenSize * newScale);
+                // Apply scale to all HUD entry pins
+                data.entries.forEach(function(e) {
+                    var pin = getObj('pin', e.tokenId);
+                    if (pin) pin.set('scale', newScale);
+                });
+                reflowInitiativeHud('none');
+            }
         });
 
         // --- TriggerMap auto-rebuild ---
