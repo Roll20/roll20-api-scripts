@@ -89,8 +89,9 @@ var Gaslight = Gaslight || (() => {
             };
         }
         if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
-        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: true, initiative: true };
+        if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: true, initiative: true, reticle: true };
         if (state[SCRIPT_NAME].hud.initiative === undefined) state[SCRIPT_NAME].hud.initiative = false;
+        if (state[SCRIPT_NAME].hud.reticle === undefined) state[SCRIPT_NAME].hud.reticle = true;
         // Migration: v2.0.0 -> v2.1.0 — view null used to mean "relay to all", now null means "off"
         if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
             if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
@@ -2289,6 +2290,14 @@ var Gaslight = Gaslight || (() => {
                 evaluatePins([pin], fakeMsg, false);
             });
         });
+
+        // Update turn indicator if the tracked token moved or resized
+        var s = state[SCRIPT_NAME];
+        if (s.hud.initData && s.hud.initData.turnIndicatorTokenId === obj.get('id')) {
+            if (changed.indexOf('left') !== -1 || changed.indexOf('top') !== -1 || changed.indexOf('width') !== -1 || changed.indexOf('height') !== -1) {
+                updateTurnIndicator();
+            }
+        }
     };
     const onGmNotesChanged = (obj, prev) => {
         if (!prev || !prev.gmnotes) return;
@@ -2950,6 +2959,7 @@ var Gaslight = Gaslight || (() => {
             case 'stage':   doStage(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
             case 'hud':     doHud(msg, args);     break;
+            case 'init':    doInit(msg, args);    break;
             case 'eval':    doEval(msg, args);    break;
             case 'status':  doStatus(msg);        break;
             case '--script-lock':
@@ -3849,13 +3859,21 @@ var Gaslight = Gaslight || (() => {
     /**
      * Determine if a token ID is a master token (on master page) in any active group.
      */
-    const isMasterToken = (tokenId) => {
+    const isOnMasterPage = (tokenId) => {
         var s = state[SCRIPT_NAME];
         var obj = getObj('graphic', tokenId);
         if (!obj) return false;
         var pageId = obj.get('_pageid');
         return Object.values(s.activeGroups).some(function(active) {
-            return active.masterPageId === pageId && !!active.linkedTokens[tokenId];
+            return active.masterPageId === pageId;
+        });
+    };
+
+    const isMasterToken = (tokenId) => {
+        var s = state[SCRIPT_NAME];
+        if (!isOnMasterPage(tokenId)) return false;
+        return Object.values(s.activeGroups).some(function(active) {
+            return !!active.linkedTokens[tokenId];
         });
     };
 
@@ -4103,6 +4121,92 @@ var Gaslight = Gaslight || (() => {
         return result;
     };
 
+    /**
+     * !gaslight init [sync] [trim]
+     * sync (default): ensure all linked tokens are in initiative, grouped with masters first.
+     * trim: remove entries for tokens that no longer exist.
+     * Both can be combined: trim runs first, then sync.
+     */
+    const doInit = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        var doTrim = args.indexOf('trim') !== -1;
+        var doSync = args.indexOf('sync') !== -1 || args.length === 0 || (args.length === 1 && doTrim);
+
+        var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        if (order.length === 0) { reply(msg, 'Init', 'Turn order is empty.'); return; }
+
+        var trimmed = 0;
+        var added = 0;
+        var warnings = [];
+
+        // Trim: remove entries for tokens that no longer exist
+        if (doTrim) {
+            var before = order.length;
+            order = order.filter(function(e) {
+                if (!e.id || e.id === '-1') return true;
+                return !!getObj('graphic', e.id);
+            });
+            trimmed = before - order.length;
+        }
+
+        // Sync: add missing linked tokens, add missing masters, regroup
+        if (doSync) {
+            var existingIds = new Set(order.map(function(e) { return e.id; }));
+            var toAdd = [];
+
+            order.forEach(function(entry) {
+                if (!entry.id || entry.id === '-1') return;
+                var info = getLinkedInfo(entry.id);
+                if (info.linkedIds.length === 0) {
+                    if (isOnMasterPage(entry.id)) {
+                        var token = getObj('graphic', entry.id);
+                        var name = token ? (token.get('name') || entry.id) : entry.id;
+                        warnings.push(name + ' is in initiative but has no linked tokens (not staged?)');
+                    }
+                    return;
+                }
+
+                // Add master if missing
+                if (!isMasterToken(entry.id)) {
+                    var masterId = info.linkedIds.find(function(lid) { return isMasterToken(lid); });
+                    if (masterId && !existingIds.has(masterId)) {
+                        var masterObj = getObj('graphic', masterId);
+                        toAdd.push({ id: masterId, pr: entry.pr, _pageid: masterObj ? masterObj.get('_pageid') : undefined });
+                        existingIds.add(masterId);
+                        added++;
+                    }
+                }
+
+                // Add missing linked copies
+                info.linkedIds.forEach(function(linkedId) {
+                    if (existingIds.has(linkedId)) return;
+                    var linkedObj = getObj('graphic', linkedId);
+                    if (!linkedObj) return;
+                    toAdd.push({ id: linkedId, pr: entry.pr, _pageid: linkedObj.get('_pageid') });
+                    existingIds.add(linkedId);
+                    added++;
+                });
+            });
+
+            order = order.concat(toAdd);
+            order = reorderInitiative(order);
+        }
+
+        _suppressTurnSync = true;
+        Campaign().set('turnorder', JSON.stringify(order));
+        _suppressTurnSync = false;
+
+        var parts = [];
+        if (doTrim) parts.push(trimmed + ' stale entry(s) trimmed');
+        if (doSync) parts.push(added + ' entry(s) added');
+        var out = parts.join(', ') + '.';
+        if (warnings.length > 0) {
+            out += '<br><br>⚠️ ' + warnings.join('<br>⚠️ ');
+        }
+        reply(msg, 'Init', out);
+        if (s.hud.initiative) updateInitiativeHud();
+    };
+
     // =========================================================================
     // HUD System — on-canvas indicators
     // =========================================================================
@@ -4116,6 +4220,87 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         var group = Object.values(s.activeGroups)[0];
         return group ? group.masterPageId : null;
+    };
+
+    /**
+     * Update or create the current-turn indicator (pathv2 rectangle around the current turn's token).
+     */
+    const updateTurnIndicator = () => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initiative || !s.hud.reticle) return;
+        if (!s.hud.initData) s.hud.initData = {};
+        var data = s.hud.initData;
+
+        var pageId = getHudPageId();
+        if (!pageId) { removeTurnIndicator(); return; }
+
+        // Find current turn master token
+        var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        if (order.length === 0) { removeTurnIndicator(); return; }
+
+        var topEntry = order[0];
+        if (!topEntry.id || topEntry.id === '-1') { removeTurnIndicator(); return; }
+
+        // Find the master token for this entry
+        var tokenId = topEntry.id;
+        if (!isMasterToken(tokenId)) {
+            var info = getLinkedInfo(tokenId);
+            var masterId = info.linkedIds.find(function(lid) { return isMasterToken(lid); });
+            if (masterId) tokenId = masterId;
+        }
+
+        var token = getObj('graphic', tokenId);
+        if (!token || token.get('_pageid') !== pageId) { removeTurnIndicator(); return; }
+
+        var x = token.get('left');
+        var y = token.get('top');
+        var w = token.get('width');
+        var h = token.get('height');
+        var stroke = data.highlightStroke || defaultInitHud.highlightStroke;
+        var strokeWidth = data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth;
+
+        // Create or update
+        var indicator = data.turnIndicatorId ? getObj('pathv2', data.turnIndicatorId) : null;
+        if (indicator) {
+            indicator.set({
+                x: x,
+                y: y,
+                points: JSON.stringify([[0, 0], [w, h]]),
+                stroke: stroke,
+                stroke_width: strokeWidth,
+            });
+        } else {
+            indicator = createObj('pathv2', {
+                _pageid: pageId,
+                layer: 'foreground',
+                shape: 'rec',
+                x: x,
+                y: y,
+                points: JSON.stringify([[0, 0], [w, h]]),
+                stroke: stroke,
+                stroke_width: strokeWidth,
+                fill: 'transparent',
+            });
+            if (indicator) data.turnIndicatorId = indicator.get('id');
+        }
+
+        // Track which token we're following
+        data.turnIndicatorTokenId = tokenId;
+    };
+
+    /**
+     * Remove the current-turn indicator.
+     */
+    const removeTurnIndicator = () => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initData) return;
+        var data = s.hud.initData;
+        if (data.turnIndicatorId) {
+            var indicator = getObj('pathv2', data.turnIndicatorId);
+            if (indicator) indicator.remove();
+            delete data.turnIndicatorId;
+        }
+        delete data.turnIndicatorTokenId;
     };
 
     /**
@@ -4448,6 +4633,7 @@ var Gaslight = Gaslight || (() => {
         });
 
         reflowInitiativeHud(direction);
+        updateTurnIndicator();
     };
 
     /**
@@ -4652,6 +4838,8 @@ var Gaslight = Gaslight || (() => {
         var data = s.hud.initData;
         if (!data) return;
 
+        removeTurnIndicator();
+
         var frameId = data.frameId;
         var highlightId = data.highlightId;
         var entries = data.entries.slice();
@@ -4852,6 +5040,12 @@ var Gaslight = Gaslight || (() => {
         } else if (obj.get('id') === s.hud.initData.highlightId) {
             // Highlight deleted — just clear ID, will be recreated on next update
             s.hud.initData.highlightId = null;
+        } else if (obj.get('id') === s.hud.initData.turnIndicatorId) {
+            // Turn indicator deleted — turn off reticle
+            s.hud.initData.turnIndicatorId = null;
+            s.hud.initData.turnIndicatorTokenId = null;
+            s.hud.reticle = false;
+            sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Turn reticle disabled. Use <code>!gaslight hud reticle on</code> to re-enable.');
         }
     };
 
@@ -4889,10 +5083,12 @@ var Gaslight = Gaslight || (() => {
                 removeInitiativeHud();
                 s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
                 updateInitiativeHud();
+                updateTurnIndicator();
             } else {
                 hudElements.forEach(function(el) {
                     if (el === 'view') { if (s.hud.view) updateViewHud(); else removeViewHud(); }
                     if (el === 'initiative') { if (s.hud.initiative) updateInitiativeHud(); else removeInitiativeHud(); }
+                    if (el === 'reticle') { if (s.hud.reticle) updateTurnIndicator(); else removeTurnIndicator(); }
                 });
             }
             reply(msg, 'HUD', hudElements.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
@@ -4903,7 +5099,7 @@ var Gaslight = Gaslight || (() => {
         var toggle = args[1] ? args[1].toLowerCase() : null;
 
         // Aliases
-        var elementAliases = { init: 'initiative', turn: 'initiative', turns: 'initiative', relay: 'view' };
+        var elementAliases = { init: 'initiative', turn: 'initiative', turns: 'initiative', relay: 'view', indicator: 'reticle' };
         if (elementAliases[element]) element = elementAliases[element];
         if (toggle && elementAliases[toggle]) toggle = elementAliases[toggle];
 
@@ -4951,6 +5147,9 @@ var Gaslight = Gaslight || (() => {
                 removeInitiativeHud();
                 s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
                 updateInitiativeHud();
+            } else if (element === 'reticle') {
+                removeTurnIndicator();
+                updateTurnIndicator();
             }
             reply(msg, 'HUD', '<b>' + element + '</b> reset to default position.');
             return;
@@ -4966,6 +5165,9 @@ var Gaslight = Gaslight || (() => {
         } else if (element === 'initiative') {
             if (s.hud.initiative) updateInitiativeHud();
             else removeInitiativeHud();
+        } else if (element === 'reticle') {
+            if (s.hud.reticle) updateTurnIndicator();
+            else removeTurnIndicator();
         }
 
         reply(msg, 'HUD', '<b>' + element + '</b> is now ' + (s.hud[element] ? 'on' : 'off'));
@@ -5045,6 +5247,12 @@ var Gaslight = Gaslight || (() => {
                 if (hlStroke !== undefined) data.highlightStroke = hlStroke;
                 if (hlFill !== undefined) data.highlightFill = hlFill;
                 if (hlStrokeWidth !== undefined) data.highlightStrokeWidth = hlStrokeWidth;
+                // Sync to turn indicator
+                var ti = data.turnIndicatorId ? getObj('pathv2', data.turnIndicatorId) : null;
+                if (ti) {
+                    if (hlStroke !== undefined) ti.set('stroke', hlStroke);
+                    if (hlStrokeWidth !== undefined) ti.set('stroke_width', hlStrokeWidth);
+                }
                 // Compute normalized Y offset (0=top+tokenSize/2+vPadding, 1=bottom-tokenSize/2-vPadding)
                 var frame = getObj('pathv2', data.frameId);
                 if (frame) {
@@ -5060,6 +5268,19 @@ var Gaslight = Gaslight || (() => {
                     data.currentTurnOffset = Math.max(0, Math.min(1, norm));
                 }
                 reflowInitiativeHud('none');
+            } else if (obj.get('id') === s.hud.initData.turnIndicatorId) {
+                var data = s.hud.initData;
+                // Sync styling between turn indicator and HUD highlight
+                var tiStroke = obj.get('stroke');
+                var tiStrokeWidth = obj.get('stroke_width');
+                if (tiStroke !== undefined) data.highlightStroke = tiStroke;
+                if (tiStrokeWidth !== undefined) data.highlightStrokeWidth = tiStrokeWidth;
+                // Update the HUD highlight to match
+                var hl = data.highlightId ? getObj('pathv2', data.highlightId) : null;
+                if (hl) {
+                    if (tiStroke !== undefined) hl.set('stroke', tiStroke);
+                    if (tiStrokeWidth !== undefined) hl.set('stroke_width', tiStrokeWidth);
+                }
             }
         });
         on('change:graphic', function(obj, prev) {
@@ -5429,6 +5650,7 @@ var Gaslight = Gaslight || (() => {
             }
 
             reflowInitiativeHud('none');
+            updateTurnIndicator();
 
             // Scale change — adjust all HUD pins to match and update tokenSize
             var newScale = obj.get('scale');
