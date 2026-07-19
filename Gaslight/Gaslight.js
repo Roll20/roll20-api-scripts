@@ -4845,40 +4845,6 @@ var Gaslight = Gaslight || (() => {
             });
         }
 
-        // DEBUG: log slot/pin/text positions (re-read after set)
-        var dbgSlots = [];
-        var dbgPins = [];
-        var dbgTexts = [];
-        for (var di = 0; di < data.entries.length; di++) {
-            var dOffset = di <= slotsBelow ? di : di - data.entries.length;
-            var dVisible = Math.abs(dOffset) <= (dOffset >= 0 ? slotsBelow : slotsAbove);
-            if (dVisible) dbgSlots.push({ idx: di, offset: dOffset, slotY: hudSlotY(frameCenter, dOffset, tokenSize, tokenPadding), pinY: hudPinY(frameCenter, dOffset, tokenSize, tokenPadding), pinId: data.entries[di].tokenId, textId: data.entries[di].textId });
-        }
-        data.entries.forEach(function(e, i) {
-            var pin = getObj('pin', e.tokenId);
-            var txt = getObj('text', e.textId);
-            if (pin && pin.get('x') > -1000) dbgPins.push({ idx: i, id: e.tokenId, x: pin.get('x'), y: pin.get('y') });
-            if (txt && txt.get('color') !== 'transparent') dbgTexts.push({ idx: i, id: e.textId, left: txt.get('left'), top: txt.get('top'), text: txt.get('text') });
-        });
-        log(SCRIPT_NAME + ' [reflow] direction=' + direction + ' frameCenter=' + frameCenter + ' slotsAbove=' + slotsAbove + ' slotsBelow=' + slotsBelow + ' textVOffset=' + (data.textVOffset || 0));
-        log(SCRIPT_NAME + ' [reflow] expected=' + JSON.stringify(dbgSlots));
-        log(SCRIPT_NAME + ' [reflow] pins=' + JSON.stringify(dbgPins));
-        log(SCRIPT_NAME + ' [reflow] texts=' + JSON.stringify(dbgTexts));
-
-        // Delayed re-read to compare actual client state
-        var capturedEntries = data.entries.slice();
-        setTimeout(function() {
-            var dbgPins2 = [];
-            var dbgTexts2 = [];
-            capturedEntries.forEach(function(e, i) {
-                var pin = getObj('pin', e.tokenId);
-                var txt = getObj('text', e.textId);
-                if (pin && pin.get('x') > -1000) dbgPins2.push({ idx: i, id: e.tokenId, x: pin.get('x'), y: pin.get('y') });
-                if (txt && txt.get('color') !== 'transparent') dbgTexts2.push({ idx: i, id: e.textId, left: txt.get('left'), top: txt.get('top'), text: txt.get('text') });
-            });
-            log(SCRIPT_NAME + ' [reflow +5s] pins=' + JSON.stringify(dbgPins2));
-            log(SCRIPT_NAME + ' [reflow +5s] texts=' + JSON.stringify(dbgTexts2));
-        }, 5000);
     };
 
     /**
@@ -4919,7 +4885,6 @@ var Gaslight = Gaslight || (() => {
     const onHudTextChanged = (obj) => {
         var s = state[SCRIPT_NAME];
         var id = obj.get('id');
-        log(SCRIPT_NAME + ' [TEXT CHANGE EVENT] t=' + Date.now() + ' id=' + id + ' top=' + obj.get('top') + ' left=' + obj.get('left'));
         if (id === s.hud.viewId) {
             if (!s.hud.viewData) s.hud.viewData = {};
             var vPageId = getHudPageId();
@@ -5472,10 +5437,6 @@ var Gaslight = Gaslight || (() => {
     };
 
     const registerEventHandlers = () => {
-        // DEBUG: test if add:text and change:text fire on API creation
-        on('add:text', function(obj) {
-            log(SCRIPT_NAME + ' [TEXT ADD EVENT] t=' + Date.now() + ' id=' + obj.get('id') + ' top=' + obj.get('top') + ' left=' + obj.get('left'));
-        });
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
         on('chat:message', function(msg) {
