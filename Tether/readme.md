@@ -12,13 +12,14 @@ Tether creates persistent visual connections between tokens on the Roll20 VTT. C
 - **Custom Styling** — Adjust width, color, layer, and Dynamic Lighting barrier type
 - **Range-Aware Behavior** — Optionally set a distance threshold and choose how the tether reacts as tokens approach or exceed it: fade out, auto-remove, change color, or scale opacity/width smoothly with distance
 - **Grid-Aware Distance** — Threshold distance is measured using the page's own grid scale and diagonal-counting rule (D&D 5E, Pathfinder/3.5E, Manhattan, or Euclidean), so it stays accurate across differently configured maps
+- **Tether by Token ID** — Pair a selected token with one you can't select (e.g. an enemy you don't control) using `target|`
 - **Debug Command** — Inspect the exact computed distance and preview a tether's effective color/width before committing to settings
 - **PathV2 Support** — Uses the latest Roll20 path system
 
 ## Getting Started
 
 1. **Install the script** in your campaign
-2. **Select exactly two tokens**
+2. **Select exactly two tokens** (or select one and use `target|` — see below)
 3. **Run:** `!tether`
 4. Move either token and the tether will automatically follow
 5. To remove the connection, select the same two tokens and run: `!untether`
@@ -102,18 +103,37 @@ Controls what happens once a tether's `threshold` is passed. Only relevant when 
 | `attenuate` | The line's opacity scales smoothly with distance: full opacity when the tokens are within 5 units of each other, fading down to 20% opacity as they approach the threshold, then fully transparent once it's exceeded. Reverses smoothly as they close the distance again. |
 | `stretch` | Same distance-based scaling as `attenuate`, but affects line width instead of opacity — full width when close, tapering to a width of 1 at the threshold, then staying at width 1 (fully transparent) once exceeded. |
 
+### Target
+
+Pair your one selected token with another token by ID, instead of selecting both:
+
+`!tether target|-N1abcXYZsomeTokenId`
+
+This is meant to be used with Roll20's Target roll query, which prompts you to click any visible token regardless of whether you control it — letting players tether to tokens they couldn't otherwise select (an NPC, a monster, an object controlled by the GM):
+
+`!tether target|@{target|token_id}`
+
+Requirements:
+
+- Exactly **one** token must be selected on the tabletop; the other endpoint comes from `target|`.
+- The target token ID is trusted as given — Tether doesn't check whether you'd normally be allowed to select it. This is intentional, since `@{target|token_id}` already limits you to tokens you can see on the map.
+- The target must be a different token than the one selected; pairing a token with itself is rejected with an error.
+
+`target|` works the same way with `!untether` and `!tether-debug` — select one token and pair it with `target|` instead of selecting two.
+
 ## Debug
 
 Preview the distance calculation and, optionally, what a threshold/exceeds combination would actually render — without creating a tether:
 
 `!tether-debug`
 `!tether-debug threshold|60 exceeds|attenuate color|00ff00`
+`!tether-debug target|@{target|token_id}`
 
-Select exactly two tokens and run the command; results are whispered privately. Useful for confirming grid math on a page before committing to a threshold value.
+Select exactly two tokens (or one token plus `target|`) and run the command; results are whispered privately. Useful for confirming grid math on a page before committing to a threshold value.
 
 ## Removing Tethers
 
-`!untether` — remove the tether between exactly two selected tokens
+`!untether` — remove the tether between exactly two selected tokens (or one selected token plus `target|`)
 `!untether selected` — remove every tether involving any of the selected tokens
 `!untether all` — remove every tether on the current page
 
@@ -140,6 +160,9 @@ Select exactly two tokens and run the command; results are whispered privately. 
 *Aura link that thins out as range increases:*
 `!tether threshold|40 exceeds|stretch color|ffcc00 width|8`
 
+*Tether to a token you don't control:*
+`!tether target|@{target|token_id} color|ff00ff`
+
 *Check the math before setting a threshold:*
 `!tether-debug threshold|60 exceeds|attenuate color|00ff00`
 
@@ -151,6 +174,7 @@ Select exactly two tokens and run the command; results are whispered privately. 
 - Leashes with a maximum range
 - Creature bonds that weaken with distance
 - Proximity-based traps or wards (`exceeds|delete`)
+- Player-cast effects linking to NPC or monster tokens (`target|`)
 - Visual effects between tokens
 - Moveable dynamic lighting barriers
 - Any situation where two objects need to remain visually linked, with or without a range limit

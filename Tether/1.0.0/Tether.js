@@ -3,7 +3,7 @@ const Tether = (() =>
     'use strict';
 
     const SCRIPT = 'Tether';
-    const VERSION = '1.0';
+    const VERSION = '1.0.0';
 
     const DEFAULTS = {
         width: 5,
@@ -11,7 +11,8 @@ const Tether = (() =>
         layer: 'objects',
         type: 'transparent',
         threshold: null,
-        exceeds: 'off'
+        exceeds: 'off',
+        target: null
     };
 
     const VALID_LAYERS = ['objects', 'gmlayer', 'map', 'walls', 'foreground'];
@@ -52,7 +53,7 @@ const Tether = (() =>
 <div style="border:1px solid #666;background:#ccc;color:#111;padding:8px;border-radius:5px;font-size:12px;">
 <b><span style = "font-size:16px;">Tether</span></b>
 <br>
-Connect two selected tokens with an updating path.
+Connect two tokens with an updating path. Select two, or select one and use target|.
 <br><br>
 
 <b>Create:</b>
@@ -73,11 +74,13 @@ type|<i>transparent,wall,oneWay</i>
 threshold|<i>60</i> (distance in the page's scale units)
 <br>
 exceeds|<i>off,delete,attenuate,stretch,</i> or a hex color
+<br>
+target|<i>token_id</i> (e.g. &#64;{target|token_id}) - select 1 token, pair it with this one
 <br><br>
 
 <b>Remove:</b>
 <br>
-!untether - remove selected pair
+!untether - remove selected pair (or select 1 + target|)
 <br>
 !untether selected - remove all tethers involving selected tokens
 <br>
@@ -86,8 +89,9 @@ exceeds|<i>off,delete,attenuate,stretch,</i> or a hex color
 
 <b>Debug:</b>
 <br>
-!tether-debug [options] - select 2 tokens to see computed distance and, if
-threshold|/exceeds| are included, a preview of the effective draw values
+!tether-debug [options] - select 2 tokens (or 1 + target|) to see computed
+distance and, if threshold|/exceeds| are included, a preview of the effective
+draw values
 </div>`;
 
         sendChat(
@@ -306,10 +310,56 @@ threshold|/exceeds| are included, a preview of the effective draw values
                     }
                     break;
                 }
+
+                case 'target':
+                    // Token ids are case-sensitive - val (unlike key) was
+                    // never lowercased, so this is safe to use as-is.
+                    opts.target = val;
+                    break;
             }
         });
 
         return opts;
+    };
+
+    // Resolves the two graphics a command should act on, supporting both the
+    // classic "select exactly two tokens" flow and target|<token_id>, which
+    // lets a player tether to a token they can't select (e.g. one they don't
+    // control) by pairing it with a single selected token. Trusts the given
+    // id as-is - this is intended to be fed via @{target|token_id}, which
+    // itself only lets a player click a token they can already see.
+    const resolvePairFromMessage = msg =>
+    {
+        const opts = parseOptions(msg.content);
+
+        if (opts.target)
+        {
+            if (!msg.selected || msg.selected.length !== 1)
+            {
+                return { error: 'Select exactly one token when using target|.' };
+            }
+
+            const a = getObj('graphic', msg.selected[0]._id);
+            const b = getObj('graphic', opts.target);
+
+            if (!a) return { error: 'Selected token could not be found.' };
+            if (!b) return { error: 'Target token could not be found.' };
+            if (a.id === b.id) return { error: 'target| must be a different token than the one selected.' };
+
+            return { a, b, opts };
+        }
+
+        if (!msg.selected || msg.selected.length !== 2)
+        {
+            return { error: 'Select exactly two tokens, or use target|<token_id>.' };
+        }
+
+        const a = getObj('graphic', msg.selected[0]._id);
+        const b = getObj('graphic', msg.selected[1]._id);
+
+        if (!a || !b) return { error: 'Selected tokens could not be found.' };
+
+        return { a, b, opts };
     };
 
     const getEndpoints = (a, b) =>
@@ -620,23 +670,17 @@ threshold|/exceeds| are included, a preview of the effective draw values
 
         if(msg.content.startsWith('!tether-debug'))
         {
-            if(!msg.selected || msg.selected.length !== 2)
+            const resolved = resolvePairFromMessage(msg);
+            if(resolved.error)
             {
-                sendChat(SCRIPT, '/w gm Select exactly two tokens.');
+                sendChat(SCRIPT, `/w gm ${resolved.error}`);
                 return;
             }
 
-            const a = getObj('graphic', msg.selected[0]._id);
-            const b = getObj('graphic', msg.selected[1]._id);
-
-            if(!a || !b)
-            {
-                return;
-            }
+            const { a, b, opts } = resolved;
 
             const settings = getPageSettings(a.get('_pageid'));
             const distance = getDistance(a, b);
-            const opts = parseOptions(msg.content);
 
             let preview = '';
             if(opts.threshold != null)
@@ -675,23 +719,14 @@ threshold|/exceeds| are included, a preview of the effective draw values
         if(msg.content.startsWith('!tether'))
         {
 
-            if(!msg.selected || msg.selected.length !== 2)
+            const resolved = resolvePairFromMessage(msg);
+            if(resolved.error)
             {
-                sendChat(SCRIPT, '/w gm Select exactly two tokens.');
+                sendChat(SCRIPT, `/w gm ${resolved.error}`);
                 return;
             }
 
-            const a = getObj('graphic', msg.selected[0]._id);
-            const b = getObj('graphic', msg.selected[1]._id);
-
-            if(!a || !b)
-            {
-                return;
-            }
-
-            const opts = parseOptions(msg.content);
-
-            addLink(a, b, opts);
+            addLink(resolved.a, resolved.b, resolved.opts);
         }
 
         if(msg.content.startsWith('!untether'))
@@ -722,19 +757,20 @@ threshold|/exceeds| are included, a preview of the effective draw values
                     break;
 
 
-                default:
-
-                    if(!msg.selected || msg.selected.length !== 2)
+                default: {
+                    const resolved = resolvePairFromMessage(msg);
+                    if(resolved.error)
                     {
-                        sendChat(SCRIPT, '/w gm Select exactly two tokens.');
+                        sendChat(SCRIPT, `/w gm ${resolved.error}`);
                         return;
                     }
 
                     removeLink(
-                        msg.selected[0]._id,
-                        msg.selected[1]._id
+                        resolved.a.get('_id'),
+                        resolved.b.get('_id')
                     );
                     break;
+                }
             }
         }
 
