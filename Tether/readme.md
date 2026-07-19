@@ -1,15 +1,18 @@
 # Tether
 
-Tether creates persistent visual connections between tokens on the Roll20 VTT. Connect two tokens with a dynamic PathV2 line that follows them as they move.
+Tether creates persistent visual connections between tokens on the Roll20 VTT. Connect two tokens with a dynamic PathV2 line that follows them as they move — and optionally reacts as they drift apart.
 
 ## Key Features
 
 - **Dynamic Token Connections** — Link two tokens with a line that automatically follows movement
 - **Multiple Tethers** — Create any number of simultaneous connections
-- **Persistent State** — Tethers survive API restarts
-- **Automatic Cleanup** — Removes connections when either token or its path no longer exists
-- **Editable Tethers** — Run `!tether` again on an existing connection to update its appearance
+- **Persistent State** — Tethers survive API restarts, with retry-based reconciliation so momentary sandbox load delays never wipe out valid tethers
+- **Automatic Cleanup** — Removes connections the instant either token is deleted, and prunes any that went stale while the sandbox was offline
+- **Editable Tethers** — Run `!tether` again on an existing connection to update its appearance or range settings
 - **Custom Styling** — Adjust width, color, layer, and Dynamic Lighting barrier type
+- **Range-Aware Behavior** — Optionally set a distance threshold and choose how the tether reacts as tokens approach or exceed it: fade out, auto-remove, change color, or scale opacity/width smoothly with distance
+- **Grid-Aware Distance** — Threshold distance is measured using the page's own grid scale and diagonal-counting rule (D&D 5E, Pathfinder/3.5E, Manhattan, or Euclidean), so it stays accurate across differently configured maps
+- **Debug Command** — Inspect the exact computed distance and preview a tether's effective color/width before committing to settings
 - **PathV2 Support** — Uses the latest Roll20 path system
 
 ## Getting Started
@@ -18,8 +21,7 @@ Tether creates persistent visual connections between tokens on the Roll20 VTT. C
 2. **Select exactly two tokens**
 3. **Run:** `!tether`
 4. Move either token and the tether will automatically follow
-5. To remove the connection, select the same two tokens and run:`!untether`
-
+5. To remove the connection, select the same two tokens and run: `!untether`
 
 ## Options
 
@@ -33,26 +35,20 @@ Tether supports optional parameters in any order.
 *Default:*
 `width|5`
 
-
 ### Color
 
-Supports named colors or hexadecimal values:
-
-`!tether color|red`
+Supports hexadecimal values, with or without a leading `#`:
 
 `!tether color|#00ff00`
-
 `!tether color|00ff00`
 
-
-Hex colors without `#` are automatically corrected.
+Hex colors without `#` are automatically corrected. An optional two-digit alpha suffix is also supported (e.g. `color|00ff00cc`) and is used as the tether's base opacity when `threshold`/`exceeds` are in play.
 
 ### Layer
 
 Choose where the tether appears:
 
 `!tether layer|objects`
-
 
 Supported layers:
 
@@ -66,13 +62,11 @@ Default:
 
 `layer|objects`
 
-
 ### Dynamic Lighting Barrier Type
 
 Set the PathV2 barrier type:
 
 `!tether type|wall`
-
 
 Supported values:
 
@@ -84,14 +78,52 @@ Default:
 
 `type|transparent`
 
+### Threshold
+
+Set a maximum distance for the tether, measured in the page's own scale units (e.g. feet):
+
+`!tether threshold|60`
+
+Distance is measured between the two tokens' centerpoints using the page's actual grid settings — `diagonaltype`, `scale_number`, and `snapping_increment` — so a `threshold|60` on a standard 5ft-per-square D&D page means 60ft/12 squares, correctly accounting for diagonal movement.
+
+If `threshold` isn't set, the tether always renders normally regardless of distance — this is fully backward compatible with tethers created before this option existed.
+
+### Exceeds
+
+Controls what happens once a tether's `threshold` is passed. Only relevant when `threshold` is also set:
+
+`!tether threshold|60 exceeds|attenuate`
+
+| Value | Behavior |
+|---|---|
+| `off` *(default)* | The line becomes fully transparent past the threshold but the tether stays active; it returns to its normal color the moment the tokens are back in range. |
+| `delete` | The tether is automatically removed — as if `!untether` were run — the instant the threshold is exceeded. Other tethers on either token are unaffected. |
+| a hex color | The line switches to this color past the threshold, and reverts to the tether's normal color when back in range. |
+| `attenuate` | The line's opacity scales smoothly with distance: full opacity when the tokens are within 5 units of each other, fading down to 20% opacity as they approach the threshold, then fully transparent once it's exceeded. Reverses smoothly as they close the distance again. |
+| `stretch` | Same distance-based scaling as `attenuate`, but affects line width instead of opacity — full width when close, tapering to a width of 1 at the threshold, then staying at width 1 (fully transparent) once exceeded. |
+
+## Debug
+
+Preview the distance calculation and, optionally, what a threshold/exceeds combination would actually render — without creating a tether:
+
+`!tether-debug`
+`!tether-debug threshold|60 exceeds|attenuate color|00ff00`
+
+Select exactly two tokens and run the command; results are whispered privately. Useful for confirming grid math on a page before committing to a threshold value.
+
+## Removing Tethers
+
+`!untether` — remove the tether between exactly two selected tokens
+`!untether selected` — remove every tether involving any of the selected tokens
+`!untether all` — remove every tether on the current page
 
 ## Examples
 
 *Basic tether:*
 `!tether`
 
-*Thick red tether:*
-`!tether width|10 color|red`
+*Thick green tether:*
+`!tether width|10 color|00ff00`
 
 *Thin green tether:*
 `!tether width|2 color|00ff00`
@@ -99,17 +131,29 @@ Default:
 *Dynamic Lighting wall:*
 `!tether layer|walls type|wall color|ffffff width|5`
 
+*Leash that snaps once a creature strays too far:*
+`!tether threshold|30 exceeds|delete color|ff0000`
+
+*Bond that visibly weakens with distance:*
+`!tether threshold|60 exceeds|attenuate color|00aaff width|4`
+
+*Aura link that thins out as range increases:*
+`!tether threshold|40 exceeds|stretch color|ffcc00 width|8`
+
+*Check the math before setting a threshold:*
+`!tether-debug threshold|60 exceeds|attenuate color|00ff00`
 
 ## Perfect For
 
 - Magical connections
 - Spell effects
 - Chains and restraints
-- Leashes
-- Creature bonds
+- Leashes with a maximum range
+- Creature bonds that weaken with distance
+- Proximity-based traps or wards (`exceeds|delete`)
 - Visual effects between tokens
 - Moveable dynamic lighting barriers
-- Any situation where two objects need to remain visually linked
+- Any situation where two objects need to remain visually linked, with or without a range limit
 
 ## Installation
 
