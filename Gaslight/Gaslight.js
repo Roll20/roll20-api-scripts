@@ -5301,8 +5301,7 @@ var Gaslight = Gaslight || (() => {
                 }
                 if (sourceFullIdx === -1) { reflowInitiativeHud('none'); return; }
 
-                log(SCRIPT_NAME + ' [init-reorder] BEFORE: ' + JSON.stringify(order.map(function(e) { return e.custom || e.id; })));
-                log(SCRIPT_NAME + ' [init-reorder] sourceId=' + match.sourceId + ' isCustom=' + isCustomEntry + ' currentIdx=' + currentIdx + ' targetIdx=' + targetIdx + ' sourceFullIdx=' + sourceFullIdx);
+
 
                 // Remove source group from order (master + linked tokens)
                 var sourceGroupSize = 1;
@@ -5332,7 +5331,7 @@ var Gaslight = Gaslight || (() => {
                 }
                 if (targetFullIdx === -1) targetFullIdx = order.length;
 
-                log(SCRIPT_NAME + ' [init-reorder] targetHudEntry=' + JSON.stringify(targetHudEntry) + ' targetFullIdx=' + targetFullIdx);
+
 
                 // Insert: when moving down, place after target group; when moving up, place before target
                 if (targetIdx > currentIdx) {
@@ -5348,7 +5347,6 @@ var Gaslight = Gaslight || (() => {
                 _suppressTurnSync = true;
                 Campaign().set('turnorder', JSON.stringify(order));
                 _suppressTurnSync = false;
-                log(SCRIPT_NAME + ' [init-reorder] AFTER: ' + JSON.stringify(order.map(function(e) { return e.custom || e.id; })));
             }
             }
 
