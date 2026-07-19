@@ -2293,9 +2293,9 @@ var Gaslight = Gaslight || (() => {
 
         // Update turn indicator if the tracked token moved or resized
         var s = state[SCRIPT_NAME];
-        if (s.hud.initData && s.hud.initData.turnIndicatorTokenId === obj.get('id')) {
+        if (s.hud.initData && s.hud.reticleData && s.hud.reticleData.tokenId === obj.get('id')) {
             if (changed.indexOf('left') !== -1 || changed.indexOf('top') !== -1 || changed.indexOf('width') !== -1 || changed.indexOf('height') !== -1) {
-                updateTurnIndicator();
+                updateTurnReticle();
             }
         }
     };
@@ -4225,21 +4225,23 @@ var Gaslight = Gaslight || (() => {
     /**
      * Update or create the current-turn indicator (pathv2 rectangle around the current turn's token).
      */
-    const updateTurnIndicator = () => {
+    const updateTurnReticle = () => {
         var s = state[SCRIPT_NAME];
         if (!s.hud.initiative || !s.hud.reticle) return;
         if (!s.hud.initData) s.hud.initData = {};
+        if (!s.hud.reticleData) s.hud.reticleData = {};
         var data = s.hud.initData;
+        var rd = s.hud.reticleData;
 
         var pageId = getHudPageId();
-        if (!pageId) { removeTurnIndicator(); return; }
+        if (!pageId) { removeTurnReticle(); return; }
 
         // Find current turn master token
         var order = JSON.parse(Campaign().get('turnorder') || '[]');
-        if (order.length === 0) { removeTurnIndicator(); return; }
+        if (order.length === 0) { removeTurnReticle(); return; }
 
         var topEntry = order[0];
-        if (!topEntry.id || topEntry.id === '-1') { removeTurnIndicator(); return; }
+        if (!topEntry.id || topEntry.id === '-1') { removeTurnReticle(); return; }
 
         // Find the master token for this entry
         var tokenId = topEntry.id;
@@ -4250,27 +4252,32 @@ var Gaslight = Gaslight || (() => {
         }
 
         var token = getObj('graphic', tokenId);
-        if (!token || token.get('_pageid') !== pageId) { removeTurnIndicator(); return; }
+        if (!token || token.get('_pageid') !== pageId) { removeTurnReticle(); return; }
 
-        var x = token.get('left');
-        var y = token.get('top');
-        var w = token.get('width');
-        var h = token.get('height');
-        var stroke = data.highlightStroke || defaultInitHud.highlightStroke;
-        var strokeWidth = data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth;
+        var tokenW = token.get('width');
+        var tokenH = token.get('height');
+        var x = token.get('left') + (rd.xOffset || 0) * tokenW;
+        var y = token.get('top') + (rd.yOffset || 0) * tokenH;
+        var w = tokenW * (rd.widthScale || 1);
+        var h = tokenH * (rd.heightScale || 1);
+        var stroke = rd.stroke || data.highlightStroke || defaultInitHud.highlightStroke;
+        var strokeWidth = rd.strokeWidth || data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth;
+        var hlRotation = data.highlightRotation != null ? data.highlightRotation : 45;
+        var reticleRotation = hlRotation + (rd.rotationOffset != null ? rd.rotationOffset : -hlRotation);
 
         // Create or update
-        var indicator = data.turnIndicatorId ? getObj('pathv2', data.turnIndicatorId) : null;
-        if (indicator) {
-            indicator.set({
+        var reticle = rd.id ? getObj('pathv2', rd.id) : null;
+        if (reticle) {
+            reticle.set({
                 x: x,
                 y: y,
                 points: JSON.stringify([[0, 0], [w, h]]),
                 stroke: stroke,
                 stroke_width: strokeWidth,
+                rotation: reticleRotation,
             });
         } else {
-            indicator = createObj('pathv2', {
+            reticle = createObj('pathv2', {
                 _pageid: pageId,
                 layer: 'foreground',
                 shape: 'rec',
@@ -4280,27 +4287,28 @@ var Gaslight = Gaslight || (() => {
                 stroke: stroke,
                 stroke_width: strokeWidth,
                 fill: 'transparent',
+                rotation: reticleRotation,
             });
-            if (indicator) data.turnIndicatorId = indicator.get('id');
+            if (reticle) rd.id = reticle.get('id');
         }
 
         // Track which token we're following
-        data.turnIndicatorTokenId = tokenId;
+        rd.tokenId = tokenId;
     };
 
     /**
      * Remove the current-turn indicator.
      */
-    const removeTurnIndicator = () => {
+    const removeTurnReticle = () => {
         var s = state[SCRIPT_NAME];
-        if (!s.hud.initData) return;
-        var data = s.hud.initData;
-        if (data.turnIndicatorId) {
-            var indicator = getObj('pathv2', data.turnIndicatorId);
-            if (indicator) indicator.remove();
-            delete data.turnIndicatorId;
+        if (!s.hud.reticleData) return;
+        var rd = s.hud.reticleData;
+        if (rd.id) {
+            var reticle = getObj('pathv2', rd.id);
+            delete rd.id;
+            if (reticle) reticle.remove();
         }
-        delete data.turnIndicatorTokenId;
+        delete rd.tokenId;
     };
 
     /**
@@ -4515,7 +4523,7 @@ var Gaslight = Gaslight || (() => {
                 stroke: data.highlightStroke || defaultInitHud.highlightStroke,
                 stroke_width: data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth,
                 fill: data.highlightFill || defaultInitHud.highlightFill,
-                rotation: 45,
+                rotation: data.highlightRotation != null ? data.highlightRotation : 45,
             });
             data.highlightId = highlight.get('id');
         }
@@ -4633,7 +4641,7 @@ var Gaslight = Gaslight || (() => {
         });
 
         reflowInitiativeHud(direction);
-        updateTurnIndicator();
+        updateTurnReticle();
     };
 
     /**
@@ -4838,8 +4846,6 @@ var Gaslight = Gaslight || (() => {
         var data = s.hud.initData;
         if (!data) return;
 
-        removeTurnIndicator();
-
         var frameId = data.frameId;
         var highlightId = data.highlightId;
         var entries = data.entries.slice();
@@ -4857,9 +4863,9 @@ var Gaslight = Gaslight || (() => {
             if (hl) hl.remove();
         }
         entries.forEach(function(entry) {
-            var tok = getObj('graphic', entry.tokenId) || getObj('pin', entry.tokenId);
+            var pin = getObj('pin', entry.tokenId);
             var txt = getObj('text', entry.textId);
-            if (tok) { if (typeof Mirror !== 'undefined' && entry.sourceId && !entry.sourceId.startsWith('custom:')) Mirror.unlink([tok.get('id')]); tok.remove(); }
+            if (pin) pin.remove();
             if (txt) txt.remove();
         });
     };
@@ -4962,9 +4968,9 @@ var Gaslight = Gaslight || (() => {
             var matchIdx = data.entries.findIndex(function(e) { return e.textId === id; });
             if (matchIdx !== -1) {
                 var match = data.entries[matchIdx];
-                // Remove associated token/pin
-                var tok = getObj('graphic', match.tokenId) || getObj('pin', match.tokenId);
-                if (tok) tok.remove();
+                // Remove associated pin
+                var pin = getObj('pin', match.tokenId);
+                if (pin) pin.remove();
                 // Remove from entries
                 data.entries.splice(matchIdx, 1);
 
@@ -4989,7 +4995,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle destroy:graphic — if an initiative HUD token is deleted, turn off.
+     * Handle destroy:pin — if an initiative HUD pin is deleted, remove from turn order.
      */
     const onHudGraphicDestroyed = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5040,10 +5046,10 @@ var Gaslight = Gaslight || (() => {
         } else if (obj.get('id') === s.hud.initData.highlightId) {
             // Highlight deleted — just clear ID, will be recreated on next update
             s.hud.initData.highlightId = null;
-        } else if (obj.get('id') === s.hud.initData.turnIndicatorId) {
+        } else if (s.hud.reticleData && obj.get('id') === s.hud.reticleData.id) {
             // Turn indicator deleted — turn off reticle
-            s.hud.initData.turnIndicatorId = null;
-            s.hud.initData.turnIndicatorTokenId = null;
+            s.hud.reticleData.id = null;
+            s.hud.reticleData.tokenId = null;
             s.hud.reticle = false;
             sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Turn reticle disabled. Use <code>!gaslight hud reticle on</code> to re-enable.');
         }
@@ -5052,80 +5058,13 @@ var Gaslight = Gaslight || (() => {
     /**
      * Handle !gaslight hud command.
      */
-    const doHud = (msg, args) => {
-        var s = state[SCRIPT_NAME];
-        var hudElements = Object.keys(s.hud).filter(function(k) { return typeof s.hud[k] === 'boolean'; });
-        var toggleWords = new Set(['on', 'off', 'reset']);
-
-        if (args.length === 0) {
-            // Toggle all elements
-            hudElements.forEach(function(el) { s.hud[el] = !s.hud[el]; });
-            hudElements.forEach(function(el) {
-                if (el === 'view') { if (s.hud.view) updateViewHud(); else removeViewHud(); }
-                if (el === 'initiative') { if (s.hud.initiative) updateInitiativeHud(); else removeInitiativeHud(); }
-            });
-            reply(msg, 'HUD', hudElements.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
-            return;
-        }
-
-        // Single arg that's a toggle word — apply to all elements
-        if (args.length === 1 && toggleWords.has(args[0].toLowerCase())) {
-            var toggle = args[0].toLowerCase();
-            hudElements.forEach(function(el) {
-                if (toggle === 'on') s.hud[el] = true;
-                else if (toggle === 'off') s.hud[el] = false;
-            });
-            if (toggle === 'reset') {
-                hudElements.forEach(function(el) { s.hud[el] = true; });
-                s.hud.viewData = {};
-                removeViewHud();
-                updateViewHud();
-                removeInitiativeHud();
-                s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
-                updateInitiativeHud();
-                updateTurnIndicator();
-            } else {
-                hudElements.forEach(function(el) {
-                    if (el === 'view') { if (s.hud.view) updateViewHud(); else removeViewHud(); }
-                    if (el === 'initiative') { if (s.hud.initiative) updateInitiativeHud(); else removeInitiativeHud(); }
-                    if (el === 'reticle') { if (s.hud.reticle) updateTurnIndicator(); else removeTurnIndicator(); }
-                });
-            }
-            reply(msg, 'HUD', hudElements.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
-            return;
-        }
-
-        var element = args[0].toLowerCase();
-        var toggle = args[1] ? args[1].toLowerCase() : null;
-
-        // Aliases
-        var elementAliases = { init: 'initiative', turn: 'initiative', turns: 'initiative', relay: 'view', indicator: 'reticle' };
-        if (elementAliases[element]) element = elementAliases[element];
-        if (toggle && elementAliases[toggle]) toggle = elementAliases[toggle];
-
-        // Allow toggle before or after element: "hud reset initiative" or "hud initiative reset"
-        if (toggleWords.has(element) && toggle && s.hud[toggle] !== undefined) {
-            var tmp = element;
-            element = toggle;
-            toggle = tmp;
-        }
-
-        // Aliases (apply again after swap)
-        if (elementAliases[element]) element = elementAliases[element];
-
-        if (s.hud[element] === undefined) {
-            reply(msg, 'Error', 'Unknown HUD element: ' + element + '. Available: ' + Object.keys(s.hud).filter(function(k) { return typeof s.hud[k] === 'boolean'; }).join(', '));
-            return;
-        }
-
-        if (toggle === 'on') {
-            s.hud[element] = true;
-        } else if (toggle === 'off') {
-            s.hud[element] = false;
-        } else if (toggle === 'reset') {
-            // Clear stored position, turn on, move to defaults
-            s.hud[element] = true;
-            if (element === 'view') {
+    const hudRegistry = {
+        view: {
+            aliases: ['relay'],
+            enable: function() { updateViewHud(); },
+            disable: function() { removeViewHud(); },
+            reset: function() {
+                var s = state[SCRIPT_NAME];
                 s.hud.viewData = {};
                 var existing = findHudElement('view');
                 if (existing) {
@@ -5143,31 +5082,112 @@ var Gaslight = Gaslight || (() => {
                 } else {
                     updateViewHud();
                 }
-            } else if (element === 'initiative') {
+            },
+        },
+        initiative: {
+            aliases: ['init', 'turn', 'turns'],
+            enable: function() { updateInitiativeHud(); },
+            disable: function() { removeInitiativeHud(); },
+            reset: function() {
+                var s = state[SCRIPT_NAME];
                 removeInitiativeHud();
                 s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
                 updateInitiativeHud();
-            } else if (element === 'reticle') {
-                removeTurnIndicator();
-                updateTurnIndicator();
+            },
+        },
+        reticle: {
+            aliases: ['indicator', 'current'],
+            enable: function() { updateTurnReticle(); },
+            disable: function() { removeTurnReticle(); },
+            reset: function() {
+                var s = state[SCRIPT_NAME];
+                var data = s.hud.initData || {};
+                var hlRot = data.highlightRotation != null ? data.highlightRotation : 45;
+                removeTurnReticle();
+                s.hud.reticleData = { rotationOffset: -hlRot };
+                updateTurnReticle();
+            },
+        },
+    };
+
+    const resolveHudElement = (name) => {
+        if (hudRegistry[name]) return name;
+        for (var key in hudRegistry) {
+            if (hudRegistry[key].aliases && hudRegistry[key].aliases.indexOf(name) !== -1) return key;
+        }
+        return null;
+    };
+
+    const doHud = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        var elementNames = Object.keys(hudRegistry);
+        var toggleWords = new Set(['on', 'off', 'reset']);
+
+        if (args.length === 0) {
+            // Toggle all elements
+            elementNames.forEach(function(el) {
+                s.hud[el] = !s.hud[el];
+                if (s.hud[el]) hudRegistry[el].enable();
+                else hudRegistry[el].disable();
+            });
+            reply(msg, 'HUD', elementNames.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
+            return;
+        }
+
+        // Single arg that's a toggle word — apply to all elements
+        if (args.length === 1 && toggleWords.has(args[0].toLowerCase())) {
+            var toggle = args[0].toLowerCase();
+            if (toggle === 'reset') {
+                elementNames.forEach(function(el) {
+                    s.hud[el] = true;
+                    hudRegistry[el].reset();
+                });
+            } else {
+                elementNames.forEach(function(el) {
+                    s.hud[el] = (toggle === 'on');
+                    if (s.hud[el]) hudRegistry[el].enable();
+                    else hudRegistry[el].disable();
+                });
             }
-            reply(msg, 'HUD', '<b>' + element + '</b> reset to default position.');
+            reply(msg, 'HUD', elementNames.map(function(el) { return '<b>' + el + '</b>: ' + (s.hud[el] ? 'on' : 'off'); }).join('<br>'));
+            return;
+        }
+
+        var element = args[0].toLowerCase();
+        var toggle = args[1] ? args[1].toLowerCase() : null;
+
+        // Resolve aliases
+        element = resolveHudElement(element) || element;
+        if (toggle) toggle = resolveHudElement(toggle) || toggle;
+
+        // Allow toggle before or after element: "hud reset initiative" or "hud initiative reset"
+        if (toggleWords.has(element) && toggle && hudRegistry[toggle]) {
+            var tmp = element;
+            element = toggle;
+            toggle = tmp;
+        }
+
+        if (!hudRegistry[element]) {
+            reply(msg, 'Error', 'Unknown HUD element: ' + element + '. Available: ' + elementNames.join(', '));
+            return;
+        }
+
+        if (toggle === 'on') {
+            s.hud[element] = true;
+            hudRegistry[element].enable();
+        } else if (toggle === 'off') {
+            s.hud[element] = false;
+            hudRegistry[element].disable();
+        } else if (toggle === 'reset') {
+            s.hud[element] = true;
+            hudRegistry[element].reset();
+            reply(msg, 'HUD', '<b>' + element + '</b> reset to defaults.');
             return;
         } else {
             // Toggle
             s.hud[element] = !s.hud[element];
-        }
-
-        // Apply
-        if (element === 'view') {
-            if (s.hud.view) updateViewHud();
-            else removeViewHud();
-        } else if (element === 'initiative') {
-            if (s.hud.initiative) updateInitiativeHud();
-            else removeInitiativeHud();
-        } else if (element === 'reticle') {
-            if (s.hud.reticle) updateTurnIndicator();
-            else removeTurnIndicator();
+            if (s.hud[element]) hudRegistry[element].enable();
+            else hudRegistry[element].disable();
         }
 
         reply(msg, 'HUD', '<b>' + element + '</b> is now ' + (s.hud[element] ? 'on' : 'off'));
@@ -5191,9 +5211,9 @@ var Gaslight = Gaslight || (() => {
         on('change:campaign:turnorder', onTurnOrderChanged);
         on('change:text', onHudTextChanged);
         on('destroy:text', onHudTextDestroyed);
-        on('destroy:graphic', function(obj) { onTokenDestroyed(obj); onHudGraphicDestroyed(obj); });
+        on('destroy:graphic', function(obj) { onTokenDestroyed(obj); });
         on('destroy:pathv2', onHudPathDestroyed);
-        on('change:pathv2', function(obj) {
+        on('change:pathv2', function(obj, prev) {
             var s = state[SCRIPT_NAME];
             if (!s.hud.initiative || !s.hud.initData) return;
             if (obj.get('id') === s.hud.initData.frameId) {
@@ -5240,18 +5260,25 @@ var Gaslight = Gaslight || (() => {
                 reflowInitiativeHud('none');
             } else if (obj.get('id') === s.hud.initData.highlightId) {
                 var data = s.hud.initData;
-                // Track highlight styling
+                // Track highlight styling (parent/source of truth)
                 var hlStroke = obj.get('stroke');
                 var hlFill = obj.get('fill');
                 var hlStrokeWidth = obj.get('stroke_width');
                 if (hlStroke !== undefined) data.highlightStroke = hlStroke;
                 if (hlFill !== undefined) data.highlightFill = hlFill;
                 if (hlStrokeWidth !== undefined) data.highlightStrokeWidth = hlStrokeWidth;
-                // Sync to turn indicator
-                var ti = data.turnIndicatorId ? getObj('pathv2', data.turnIndicatorId) : null;
+                var hlRotation = obj.get('rotation');
+                if (hlRotation !== undefined) data.highlightRotation = hlRotation;
+                // Cascade to reticle if not overridden
+                var rd = s.hud.reticleData || {};
+                var ti = rd.id ? getObj('pathv2', rd.id) : null;
                 if (ti) {
-                    if (hlStroke !== undefined) ti.set('stroke', hlStroke);
-                    if (hlStrokeWidth !== undefined) ti.set('stroke_width', hlStrokeWidth);
+                    if (hlStroke !== undefined && !rd.stroke) ti.set('stroke', hlStroke);
+                    if (hlStrokeWidth !== undefined && !rd.strokeWidth) ti.set('stroke_width', hlStrokeWidth);
+                    if (hlRotation !== undefined) {
+                        var reticleOffset = rd.rotationOffset != null ? rd.rotationOffset : -(data.highlightRotation != null ? data.highlightRotation : 45);
+                        ti.set('rotation', hlRotation + reticleOffset);
+                    }
                 }
                 // Compute normalized Y offset (0=top+tokenSize/2+vPadding, 1=bottom-tokenSize/2-vPadding)
                 var frame = getObj('pathv2', data.frameId);
@@ -5268,180 +5295,66 @@ var Gaslight = Gaslight || (() => {
                     data.currentTurnOffset = Math.max(0, Math.min(1, norm));
                 }
                 reflowInitiativeHud('none');
-            } else if (obj.get('id') === s.hud.initData.turnIndicatorId) {
-                var data = s.hud.initData;
-                // Sync styling between turn indicator and HUD highlight
+            } else if (s.hud.reticleData && obj.get('id') === s.hud.reticleData.id) {
+                var rd = s.hud.reticleData;
+                var data = s.hud.initData || {};
+                // Check if reticle properties are overrides or match the highlight (inherit)
                 var tiStroke = obj.get('stroke');
                 var tiStrokeWidth = obj.get('stroke_width');
-                if (tiStroke !== undefined) data.highlightStroke = tiStroke;
-                if (tiStrokeWidth !== undefined) data.highlightStrokeWidth = tiStrokeWidth;
-                // Update the HUD highlight to match
-                var hl = data.highlightId ? getObj('pathv2', data.highlightId) : null;
-                if (hl) {
-                    if (tiStroke !== undefined) hl.set('stroke', tiStroke);
-                    if (tiStrokeWidth !== undefined) hl.set('stroke_width', tiStrokeWidth);
+                var tiRotation = obj.get('rotation');
+                if (tiStroke !== undefined) {
+                    if (tiStroke === (data.highlightStroke || defaultInitHud.highlightStroke)) { rd.stroke = null; }
+                    else { rd.stroke = tiStroke; }
                 }
-            }
-        });
-        on('change:graphic', function(obj, prev) {
-            var s = state[SCRIPT_NAME];
-            if (!s.hud.initiative || !s.hud.initData) return;
-            var data = s.hud.initData;
-            // Check if this is a HUD token that was resized
-            var match = data.entries.find(function(e) { return e.tokenId === obj.get('id'); });
-            if (!match || match.sourceId.startsWith('custom:')) return;
-            var newSize = obj.get('width');
-            var oldSize = prev.width;
-            if (newSize !== oldSize && newSize > 0) {
-                // Token resized — update token size, resize frame to fit
-                data.tokenSize = newSize;
-                var hPad = data.hPadding || defaultInitHud.hPadding;
-                var newFrameWidth = newSize + 2 * hPad;
-                // Update frame
-                var frame = getObj('pathv2', data.frameId);
-                if (frame) {
-                    var points = JSON.parse(frame.get('points') || '[]');
-                    var frameHeight = points.length >= 2 ? points[1][1] - points[0][1] : 510;
-                    frame.set('points', JSON.stringify([[0, 0], [newFrameWidth, frameHeight]]));
-                    data.frameSize = { width: newFrameWidth, height: frameHeight };
+                if (tiStrokeWidth !== undefined) {
+                    if (tiStrokeWidth === (data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth)) { rd.strokeWidth = null; }
+                    else { rd.strokeWidth = tiStrokeWidth; }
                 }
-                reflowInitiativeHud('none');
-            } else {
-                // Token dragged vertically — reorder initiative
-                var newTop = obj.get('top');
-                var oldTop = prev.top;
-                var newLeft = obj.get('left');
-                var oldLeft = prev.left;
-                var frame = getObj('pathv2', data.frameId);
-                var frameLeft = frame ? frame.get('x') : 0;
-                var pts = frame ? JSON.parse(frame.get('points') || '[]') : [];
-                var fw = pts.length >= 2 ? pts[1][0] - pts[0][0] : 70;
-                var frameRightEdge = frameLeft + fw / 2;
-                var frameLeftEdge = frameLeft - fw / 2;
-                var horizontalEscape = newLeft > frameRightEdge || newLeft < frameLeftEdge;
-
-                if (newTop !== oldTop && !horizontalEscape) {
-                    var order = JSON.parse(Campaign().get('turnorder') || '[]');
-                    var sourceId = match.sourceId;
-                    var hudOrder = getHudTurnOrder();
-                    var currentIdx = hudOrder.findIndex(function(e) { return e.id === sourceId; });
-                    if (currentIdx === -1) { reflowInitiativeHud('none'); return; }
-
-                    // Determine target slot based on new Y position
-                    var frame = getObj('pathv2', data.frameId);
-                    if (!frame) return;
-                    var frameTop = frame.get('y');
-                    var pts = JSON.parse(frame.get('points') || '[]');
-                    var fHeight = pts.length >= 2 ? pts[1][1] - pts[0][1] : 510;
-                    var fTopEdge = frameTop - fHeight / 2 + (data.vPadding || defaultInitHud.vPadding);
-                    var tknSize = data.tokenSize || defaultInitHud.tokenSize;
-                    var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
-                    var targetIdx = Math.round((newTop - fTopEdge - tknSize / 2) / (tknSize + tknPad));
-                    targetIdx = Math.max(0, Math.min(hudOrder.length - 1, targetIdx));
-
-                    if (targetIdx !== currentIdx) {
-                        var sourceEntry = order.find(function(e) { return e.id === sourceId; });
-                        if (!sourceEntry) { reflowInitiativeHud('none'); return; }
-
-                        var targetHudEntry = hudOrder[targetIdx];
-                        var targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
-                        if (targetFullIdx === -1) { reflowInitiativeHud('none'); return; }
-
-                        // Remove source (and its linked children) from order
-                        var info = getLinkedInfo(sourceId);
-                        var groupIds = new Set([sourceId].concat(info.linkedIds));
-                        var removed = [];
-                        order = order.filter(function(e) {
-                            if (groupIds.has(e.id)) { removed.push(e); return false; }
-                            return true;
-                        });
-
-                        // Recalculate target index after removal
-                        targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
-                        if (targetFullIdx === -1) targetFullIdx = order.length;
-
-                        // Insert: if moving down, insert after target group; if up, insert before
-                        if (targetIdx > currentIdx) {
-                            var tInfo = getLinkedInfo(targetHudEntry.id);
-                            var tGroupSize = 1 + tInfo.linkedIds.filter(function(lid) {
-                                return order.some(function(e) { return e.id === lid; });
-                            }).length;
-                            var insertIdx = targetFullIdx + tGroupSize;
-                            removed.forEach(function(e, i) { order.splice(insertIdx + i, 0, e); });
-                        } else {
-                            removed.forEach(function(e, i) { order.splice(targetFullIdx + i, 0, e); });
-                        }
-
-                        _suppressTurnSync = true;
-                        Campaign().set('turnorder', JSON.stringify(order));
-                        _suppressTurnSync = false;
+                if (tiRotation !== undefined) {
+                    // Store as offset from highlight rotation
+                    var hlRot = data.highlightRotation != null ? data.highlightRotation : 45;
+                    rd.rotationOffset = tiRotation - hlRot;
+                }
+                // Track proportional size relative to tracked token
+                var tiPoints = JSON.parse(obj.get('points') || '[]');
+                var prevPoints = prev && prev.points ? JSON.parse(prev.points) : tiPoints;
+                var wasResized = JSON.stringify(tiPoints) !== JSON.stringify(prevPoints);
+                if (wasResized && tiPoints.length >= 2 && rd.tokenId) {
+                    var token = getObj('graphic', rd.tokenId);
+                    if (token) {
+                        var tokenW = token.get('width');
+                        var tokenH = token.get('height');
+                        var reticleW = tiPoints[1][0] - tiPoints[0][0];
+                        var reticleH = tiPoints[1][1] - tiPoints[0][1];
+                        if (tokenW > 0) rd.widthScale = reticleW / tokenW;
+                        if (tokenH > 0) rd.heightScale = reticleH / tokenH;
+                        // Snap back to stored offset position after resize
+                        var targetX = token.get('left') + (rd.xOffset || 0) * tokenW;
+                        var targetY = token.get('top') + (rd.yOffset || 0) * tokenH;
+                        obj.set({ x: targetX, y: targetY });
                     }
-                    reflowInitiativeHud('none');
                 }
-
-                // Token dragged horizontally — make it this token's turn
-                var verticalDrift = Math.abs(newTop - oldTop);
-                var tknSizeH = data.tokenSize || defaultInitHud.tokenSize;
-                if (newLeft !== oldLeft && verticalDrift < tknSizeH / 2 && horizontalEscape) {
-                    var order = JSON.parse(Campaign().get('turnorder') || '[]');
-                    var sourceId = match.sourceId;
-                    var swipeDirection = newLeft > frameRightEdge ? 'forward' : 'backward';
-                    var isCurrentTurn = order.length > 0 && order[0].id === sourceId;
-
-                    if (isCurrentTurn) {
-                        // Current turn swiped — advance/retreat to next/prev master or custom
-                        if (swipeDirection === 'forward') {
-                            order.push(order.shift());
-                            // Skip past linked children
-                            var skip = order.length;
-                            while (skip-- > 0 && order[0] && order[0].id && order[0].id !== '-1') {
-                                var cInfo = getLinkedInfo(order[0].id);
-                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
-                                order.push(order.shift());
-                            }
-                        } else {
-                            order.unshift(order.pop());
-                            // Skip backward past linked children
-                            var skip = order.length;
-                            while (skip-- > 0 && order[0] && order[0].id && order[0].id !== '-1') {
-                                var cInfo = getLinkedInfo(order[0].id);
-                                if (cInfo.linkedIds.length === 0 || cInfo.isMaster) break;
-                                order.unshift(order.pop());
-                            }
-                        }
-                        // Apply formula if new top is a custom
-                        if (order[0] && order[0].id === '-1' && order[0].formula) {
-                            var f = order[0].formula.trim();
-                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
-                            var add = f.startsWith('+');
-                            if (swipeDirection === 'backward') add = !add;
-                            order[0].pr = (parseFloat(order[0].pr) || 0) + (add ? v : -v);
-                        }
-                    } else {
-                        // Non-current turn — rotate until target is at position 0
-                        var safety = order.length;
-                        while (safety-- > 0 && order.length > 0 && order[0].id !== sourceId) {
-                            if (swipeDirection === 'forward') {
-                                order.push(order.shift());
-                            } else {
-                                order.unshift(order.pop());
-                            }
-                        }
-                        // Apply formula if the new top is a custom turn
-                        if (order[0] && order[0].id === '-1' && order[0].formula) {
-                            var f = order[0].formula.trim();
-                            var v = parseFloat(f.replace(/^[+-]/, '')) || 0;
-                            var add = f.startsWith('+');
-                            if (swipeDirection === 'backward') add = !add;
-                            order[0].pr = (parseFloat(order[0].pr) || 0) + (add ? v : -v);
+                // Track proportional position offset from token center (move without resize)
+                if (!wasResized && rd.tokenId) {
+                    var tiX = obj.get('x');
+                    var tiY = obj.get('y');
+                    var token = getObj('graphic', rd.tokenId);
+                    if (token) {
+                        var tokenW = token.get('width');
+                        var tokenH = token.get('height');
+                        var dx = tiX - token.get('left');
+                        var dy = tiY - token.get('top');
+                        var deadzone = 3; // pixels
+                        var maxThreshold = Math.max(tokenW, tokenH) * 1.5;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < deadzone) {
+                            rd.xOffset = null;
+                            rd.yOffset = null;
+                        } else if (dist <= maxThreshold) {
+                            rd.xOffset = tokenW > 0 ? dx / tokenW : 0;
+                            rd.yOffset = tokenH > 0 ? dy / tokenH : 0;
                         }
                     }
-                    _suppressTurnSync = true;
-                    Campaign().set('turnorder', JSON.stringify(order));
-                    _suppressTurnSync = false;
-                    reflowInitiativeHud('none');
-                } else if (!horizontalEscape) {
-                    reflowInitiativeHud('none');
                 }
             }
         });
@@ -5650,7 +5563,7 @@ var Gaslight = Gaslight || (() => {
             }
 
             reflowInitiativeHud('none');
-            updateTurnIndicator();
+            updateTurnReticle();
 
             // Scale change — adjust all HUD pins to match and update tokenSize
             var newScale = obj.get('scale');
@@ -5739,4 +5652,3 @@ on('ready', () => {
     Gaslight.checkInstall();
     Gaslight.registerEventHandlers();
 });
-
