@@ -3833,8 +3833,6 @@ var Gaslight = Gaslight || (() => {
     // Initiative Tracking — sync turn order across linked tokens
     // =========================================================================
 
-    var _suppressTurnSync = false;
-
     /**
      * Get all linked token IDs for a given token across all active groups.
      * Returns { linkedIds: [...], isMaster: bool, masterPageId: string|null }
@@ -3889,7 +3887,6 @@ var Gaslight = Gaslight || (() => {
      * Handle turnorder changes: sync linked tokens, apply [GM] tags, auto-skip children.
      */
     const onTurnOrderChanged = (obj, prev) => {
-        if (_suppressTurnSync) return;
         var s = state[SCRIPT_NAME];
         if (Object.keys(s.activeGroups).length === 0) return;
 
@@ -4061,9 +4058,7 @@ var Gaslight = Gaslight || (() => {
 
         if (modified) {
             var finalJson = JSON.stringify(newOrder);
-            _suppressTurnSync = true;
             Campaign().set('turnorder', finalJson);
-            _suppressTurnSync = false;
         }
 
         // Update initiative HUD if enabled
@@ -4191,10 +4186,7 @@ var Gaslight = Gaslight || (() => {
             order = order.concat(toAdd);
             order = reorderInitiative(order);
         }
-
-        _suppressTurnSync = true;
         Campaign().set('turnorder', JSON.stringify(order));
-        _suppressTurnSync = false;
 
         var parts = [];
         if (doTrim) parts.push(trimmed + ' stale entry(s) trimmed');
@@ -5040,9 +5032,7 @@ var Gaslight = Gaslight || (() => {
                     var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
                     if (customIdx !== -1) order.splice(customIdx, 1);
                 }
-                _suppressTurnSync = true;
                 Campaign().set('turnorder', JSON.stringify(order));
-                _suppressTurnSync = false;
 
                 reflowInitiativeHud('none');
                 sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
@@ -5080,9 +5070,7 @@ var Gaslight = Gaslight || (() => {
             var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
             if (customIdx !== -1) order.splice(customIdx, 1);
         }
-        _suppressTurnSync = true;
         Campaign().set('turnorder', JSON.stringify(order));
-        _suppressTurnSync = false;
 
         reflowInitiativeHud('none');
         sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
@@ -5595,10 +5583,7 @@ var Gaslight = Gaslight || (() => {
                 } else {
                     order.splice.apply(order, [targetFullIdx, 0].concat(removed));
                 }
-
-                _suppressTurnSync = true;
                 Campaign().set('turnorder', JSON.stringify(order));
-                _suppressTurnSync = false;
             }
             }
 
@@ -5675,9 +5660,7 @@ var Gaslight = Gaslight || (() => {
                         }
                     }
                 }
-                _suppressTurnSync = true;
                 Campaign().set('turnorder', JSON.stringify(fullOrder));
-                _suppressTurnSync = false;
             }
 
             reflowInitiativeHud('none');
