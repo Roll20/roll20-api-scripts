@@ -4368,6 +4368,7 @@ var Gaslight = Gaslight || (() => {
                 color: vd.color || defaultViewHud.color,
                 stroke: vd.stroke || defaultViewHud.stroke,
                 font_family: vd.fontFamily || defaultViewHud.fontFamily,
+                rotation: vd.rotation || 0,
             });
             s.hud.viewId = obj.get('id');
         }
@@ -4594,6 +4595,7 @@ var Gaslight = Gaslight || (() => {
                     color: data.textColor || defaultInitHud.textColor,
                     stroke: data.textStroke || defaultInitHud.textStroke,
                     font_family: data.textFontFamily || defaultInitHud.textFontFamily,
+                    rotation: data.textRotation || 0,
                 });
 
                 data.entries.push({
@@ -4630,6 +4632,7 @@ var Gaslight = Gaslight || (() => {
                     color: data.textColor || defaultInitHud.textColor,
                     stroke: data.textStroke || defaultInitHud.textStroke,
                     font_family: data.textFontFamily || defaultInitHud.textFontFamily,
+                    rotation: data.textRotation || 0,
                 });
 
                 data.entries.push({
@@ -4771,7 +4774,7 @@ var Gaslight = Gaslight || (() => {
                 if (txt) {
                     txt.set({
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
-                        top: yPos,
+                        top: yPos + (data.textVOffset || 0),
                         color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
                         text: String(entry.pr || ''),
                     });
@@ -4829,7 +4832,7 @@ var Gaslight = Gaslight || (() => {
                 if (txt) {
                     txt.set({
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
-                        top: yPos,
+                        top: yPos + (data.textVOffset || 0),
                         color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
                         text: String(entry.pr || ''),
                     });
@@ -4889,6 +4892,8 @@ var Gaslight = Gaslight || (() => {
             if (vColor) s.hud.viewData.color = vColor;
             var vStroke = obj.get('stroke');
             if (vStroke) s.hud.viewData.stroke = vStroke;
+            var vRotation = obj.get('rotation');
+            if (vRotation !== undefined) s.hud.viewData.rotation = vRotation;
         }
         // Initiative HUD text moved or styled — update stored settings
         if (s.hud.initiative && s.hud.initData && s.hud.initData.entries) {
@@ -4946,6 +4951,44 @@ var Gaslight = Gaslight || (() => {
                         var otherTxt = getObj('text', e.textId);
                         if (otherTxt) otherTxt.set('stroke', newStroke);
                     });
+                }
+                // Rotation propagation
+                var newRotation = obj.get('rotation');
+                if (newRotation !== undefined && newRotation !== data.textRotation) {
+                    data.textRotation = newRotation;
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('rotation', newRotation);
+                    });
+                }
+                // Vertical offset from slot position
+                var newTop = obj.get('top');
+                var tokenSize = data.tokenSize || defaultInitHud.tokenSize;
+                var tokenPadding = data.tokenPadding || defaultInitHud.tokenPadding;
+                var frame = getObj('pathv2', data.frameId);
+                if (frame) {
+                    var frameTop = frame.get('y');
+                    var fPts = JSON.parse(frame.get('points') || '[]');
+                    var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
+                    var vPadding = data.vPadding || defaultInitHud.vPadding;
+                    var frameTopEdge = frameTop - fHeight / 2 + vPadding;
+                    // Find this entry's slot index
+                    var entryIdx = data.entries.indexOf(match);
+                    var slotY = frameTopEdge + tokenSize / 2 + entryIdx * (tokenSize + tokenPadding);
+                    var vOffset = newTop - slotY;
+                    if (Math.abs(vOffset - (data.textVOffset || 0)) > 1) {
+                        data.textVOffset = vOffset;
+                        data.entries.forEach(function(e) {
+                            if (e.textId === id) return;
+                            var otherTxt = getObj('text', e.textId);
+                            if (otherTxt) {
+                                var otherIdx = data.entries.indexOf(e);
+                                var otherSlotY = frameTopEdge + tokenSize / 2 + otherIdx * (tokenSize + tokenPadding);
+                                otherTxt.set('top', otherSlotY + vOffset);
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -5056,6 +5099,157 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
+     * Handle frame pathv2 change — resize logic, position/style tracking.
+     */
+    const onFrameChanged = (obj, prev) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initiative || !s.hud.initData) return;
+        var data = s.hud.initData;
+        var points = JSON.parse(obj.get('points') || '[]');
+        var newWidth = points.length >= 2 ? points[1][0] - points[0][0] : 0;
+        var newHeight = points.length >= 2 ? points[1][1] - points[0][1] : 0;
+        var oldWidth = data.frameSize ? data.frameSize.width : newWidth;
+
+        if (newWidth !== oldWidth) {
+            var delta = newWidth - oldWidth;
+            var currentHPad = data.hPadding || defaultInitHud.hPadding;
+            var currentTokenSize = data.tokenSize || defaultInitHud.tokenSize;
+            var minHPad = 5;
+
+            if (delta < 0) {
+                var padReduction = Math.min(Math.abs(delta) / 2, currentHPad - minHPad);
+                if (padReduction > 0) {
+                    data.hPadding = currentHPad - padReduction;
+                    delta += padReduction * 2;
+                }
+                if (delta < 0) {
+                    data.tokenSize = Math.max(10, currentTokenSize + delta);
+                }
+            } else {
+                data.hPadding = currentHPad + delta / 2;
+            }
+        }
+
+        data.pos = { left: obj.get('x'), top: obj.get('y') };
+        data.frameSize = { width: newWidth, height: newHeight };
+        var stroke = obj.get('stroke');
+        var fill = obj.get('fill');
+        var strokeWidth = obj.get('stroke_width');
+        if (stroke !== undefined) data.frameStroke = stroke;
+        if (fill !== undefined) data.frameFill = fill;
+        if (strokeWidth !== undefined) data.frameStrokeWidth = strokeWidth;
+        reflowInitiativeHud('none');
+    };
+
+    /**
+     * Handle highlight pathv2 change — style tracking, cascade to reticle, Y offset.
+     */
+    const onHighlightChanged = (obj, prev) => {
+        var s = state[SCRIPT_NAME];
+        if (!s.hud.initiative || !s.hud.initData) return;
+        var data = s.hud.initData;
+        var hlStroke = obj.get('stroke');
+        var hlFill = obj.get('fill');
+        var hlStrokeWidth = obj.get('stroke_width');
+        if (hlStroke !== undefined) data.highlightStroke = hlStroke;
+        if (hlFill !== undefined) data.highlightFill = hlFill;
+        if (hlStrokeWidth !== undefined) data.highlightStrokeWidth = hlStrokeWidth;
+        var hlRotation = obj.get('rotation');
+        if (hlRotation !== undefined) data.highlightRotation = hlRotation;
+        // Cascade to reticle if not overridden
+        var rd = s.hud.reticleData || {};
+        var ti = rd.id ? getObj('pathv2', rd.id) : null;
+        if (ti) {
+            if (hlStroke !== undefined && !rd.stroke) ti.set('stroke', hlStroke);
+            if (hlStrokeWidth !== undefined && !rd.strokeWidth) ti.set('stroke_width', hlStrokeWidth);
+            if (hlRotation !== undefined) {
+                var reticleOffset = rd.rotationOffset != null ? rd.rotationOffset : -(data.highlightRotation != null ? data.highlightRotation : 45);
+                ti.set('rotation', hlRotation + reticleOffset);
+            }
+        }
+        // Compute normalized Y offset
+        var frame = getObj('pathv2', data.frameId);
+        if (frame) {
+            var fTop = frame.get('y');
+            var fPts = JSON.parse(frame.get('points') || '[]');
+            var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
+            var tknSz = data.tokenSize || defaultInitHud.tokenSize;
+            var vPad = data.vPadding || defaultInitHud.vPadding;
+            var usableTop = fTop - fHeight / 2 + tknSz / 2 + vPad;
+            var usableBot = fTop + fHeight / 2 - tknSz / 2 - vPad;
+            var hlY = obj.get('y');
+            var norm = (hlY - usableTop) / (usableBot - usableTop);
+            data.currentTurnOffset = Math.max(0, Math.min(1, norm));
+        }
+        reflowInitiativeHud('none');
+    };
+
+    /**
+     * Handle reticle pathv2 change — style override, size scale, position offset.
+     */
+    const onReticleChanged = (obj, prev) => {
+        var s = state[SCRIPT_NAME];
+        var rd = s.hud.reticleData;
+        if (!rd) return;
+        var data = s.hud.initData || {};
+        var tiStroke = obj.get('stroke');
+        var tiStrokeWidth = obj.get('stroke_width');
+        var tiRotation = obj.get('rotation');
+        if (tiStroke !== undefined) {
+            if (tiStroke === (data.highlightStroke || defaultInitHud.highlightStroke)) { rd.stroke = null; }
+            else { rd.stroke = tiStroke; }
+        }
+        if (tiStrokeWidth !== undefined) {
+            if (tiStrokeWidth === (data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth)) { rd.strokeWidth = null; }
+            else { rd.strokeWidth = tiStrokeWidth; }
+        }
+        if (tiRotation !== undefined) {
+            var hlRot = data.highlightRotation != null ? data.highlightRotation : 45;
+            rd.rotationOffset = tiRotation - hlRot;
+        }
+        // Track proportional size relative to tracked token
+        var tiPoints = JSON.parse(obj.get('points') || '[]');
+        var prevPoints = prev && prev.points ? JSON.parse(prev.points) : tiPoints;
+        var wasResized = JSON.stringify(tiPoints) !== JSON.stringify(prevPoints);
+        if (wasResized && tiPoints.length >= 2 && rd.tokenId) {
+            var token = getObj('graphic', rd.tokenId);
+            if (token) {
+                var tokenW = token.get('width');
+                var tokenH = token.get('height');
+                var reticleW = tiPoints[1][0] - tiPoints[0][0];
+                var reticleH = tiPoints[1][1] - tiPoints[0][1];
+                if (tokenW > 0) rd.widthScale = reticleW / tokenW;
+                if (tokenH > 0) rd.heightScale = reticleH / tokenH;
+                var targetX = token.get('left') + (rd.xOffset || 0) * tokenW;
+                var targetY = token.get('top') + (rd.yOffset || 0) * tokenH;
+                obj.set({ x: targetX, y: targetY });
+            }
+        }
+        // Track proportional position offset from token center (move without resize)
+        if (!wasResized && rd.tokenId) {
+            var tiX = obj.get('x');
+            var tiY = obj.get('y');
+            var token = getObj('graphic', rd.tokenId);
+            if (token) {
+                var tokenW = token.get('width');
+                var tokenH = token.get('height');
+                var dx = tiX - token.get('left');
+                var dy = tiY - token.get('top');
+                var deadzone = 3;
+                var maxThreshold = Math.max(tokenW, tokenH) * 1.5;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < deadzone) {
+                    rd.xOffset = null;
+                    rd.yOffset = null;
+                } else if (dist <= maxThreshold) {
+                    rd.xOffset = tokenW > 0 ? dx / tokenW : 0;
+                    rd.yOffset = tokenH > 0 ? dy / tokenH : 0;
+                }
+            }
+        }
+    };
+
+    /**
      * Handle !gaslight hud command.
      */
     const hudRegistry = {
@@ -5083,6 +5277,13 @@ var Gaslight = Gaslight || (() => {
                     updateViewHud();
                 }
             },
+            owns: function(id) {
+                var s = state[SCRIPT_NAME];
+                return s.hud.viewId === id;
+            },
+            events: {
+                text: { change: onHudTextChanged, destroy: onHudTextDestroyed },
+            },
         },
         initiative: {
             aliases: ['init', 'turn', 'turns'],
@@ -5093,6 +5294,28 @@ var Gaslight = Gaslight || (() => {
                 removeInitiativeHud();
                 s.hud.initData = Object.assign({}, defaultInitHud, { entries: [] });
                 updateInitiativeHud();
+            },
+            owns: function(id) {
+                var s = state[SCRIPT_NAME];
+                var data = s.hud.initData;
+                if (!data) return false;
+                if (id === data.frameId || id === data.highlightId) return true;
+                if (data.entries && data.entries.some(function(e) { return e.tokenId === id || e.textId === id; })) return true;
+                return false;
+            },
+            events: {
+                pathv2: {
+                    change: function(obj, prev) {
+                        var s = state[SCRIPT_NAME];
+                        var data = s.hud.initData;
+                        if (!data) return;
+                        if (obj.get('id') === data.frameId) onFrameChanged(obj, prev);
+                        else if (obj.get('id') === data.highlightId) onHighlightChanged(obj, prev);
+                    },
+                    destroy: onHudPathDestroyed,
+                },
+                pin: { change: null, destroy: onHudGraphicDestroyed },
+                text: { change: onHudTextChanged, destroy: onHudTextDestroyed },
             },
         },
         reticle: {
@@ -5106,6 +5329,13 @@ var Gaslight = Gaslight || (() => {
                 removeTurnReticle();
                 s.hud.reticleData = { rotationOffset: -hlRot };
                 updateTurnReticle();
+            },
+            owns: function(id) {
+                var s = state[SCRIPT_NAME];
+                return s.hud.reticleData && s.hud.reticleData.id === id;
+            },
+            events: {
+                pathv2: { change: onReticleChanged, destroy: onHudPathDestroyed },
             },
         },
     };
@@ -5209,156 +5439,31 @@ var Gaslight = Gaslight || (() => {
         on('change:graphic', onGraphicPropChanged);
         on('change:graphic:gmnotes', onGmNotesChanged);
         on('change:campaign:turnorder', onTurnOrderChanged);
-        on('change:text', onHudTextChanged);
-        on('destroy:text', onHudTextDestroyed);
         on('destroy:graphic', function(obj) { onTokenDestroyed(obj); });
-        on('destroy:pathv2', onHudPathDestroyed);
-        on('change:pathv2', function(obj, prev) {
-            var s = state[SCRIPT_NAME];
-            if (!s.hud.initiative || !s.hud.initData) return;
-            if (obj.get('id') === s.hud.initData.frameId) {
-                var data = s.hud.initData;
-                var points = JSON.parse(obj.get('points') || '[]');
-                var newWidth = points.length >= 2 ? points[1][0] - points[0][0] : 0;
-                var newHeight = points.length >= 2 ? points[1][1] - points[0][1] : 0;
-                var oldWidth = data.frameSize ? data.frameSize.width : newWidth;
 
-                // Width change logic: shrink → reduce padding first, then tokens; grow → grow padding
-                if (newWidth !== oldWidth) {
-                    var delta = newWidth - oldWidth;
-                    var currentHPad = data.hPadding || defaultInitHud.hPadding;
-                    var currentTokenSize = data.tokenSize || defaultInitHud.tokenSize;
-                    var minHPad = 5;
-
-                    if (delta < 0) {
-                        // Frame got narrower — reduce padding first, then shrink tokens
-                        var padReduction = Math.min(Math.abs(delta) / 2, currentHPad - minHPad);
-                        if (padReduction > 0) {
-                            data.hPadding = currentHPad - padReduction;
-                            delta += padReduction * 2; // remaining delta
-                        }
-                        if (delta < 0) {
-                            // Still need to shrink — reduce token size
-                            data.tokenSize = Math.max(10, currentTokenSize + delta);
-                        }
-                    } else {
-                        // Frame got wider — increase h_padding
-                        data.hPadding = currentHPad + delta / 2;
-                    }
-                }
-
-                // Save position and size to state
-                data.pos = { left: obj.get('x'), top: obj.get('y') };
-                data.frameSize = { width: newWidth, height: newHeight };
-                // Track frame styling
-                var stroke = obj.get('stroke');
-                var fill = obj.get('fill');
-                var strokeWidth = obj.get('stroke_width');
-                if (stroke !== undefined) data.frameStroke = stroke;
-                if (fill !== undefined) data.frameFill = fill;
-                if (strokeWidth !== undefined) data.frameStrokeWidth = strokeWidth;
-                reflowInitiativeHud('none');
-            } else if (obj.get('id') === s.hud.initData.highlightId) {
-                var data = s.hud.initData;
-                // Track highlight styling (parent/source of truth)
-                var hlStroke = obj.get('stroke');
-                var hlFill = obj.get('fill');
-                var hlStrokeWidth = obj.get('stroke_width');
-                if (hlStroke !== undefined) data.highlightStroke = hlStroke;
-                if (hlFill !== undefined) data.highlightFill = hlFill;
-                if (hlStrokeWidth !== undefined) data.highlightStrokeWidth = hlStrokeWidth;
-                var hlRotation = obj.get('rotation');
-                if (hlRotation !== undefined) data.highlightRotation = hlRotation;
-                // Cascade to reticle if not overridden
-                var rd = s.hud.reticleData || {};
-                var ti = rd.id ? getObj('pathv2', rd.id) : null;
-                if (ti) {
-                    if (hlStroke !== undefined && !rd.stroke) ti.set('stroke', hlStroke);
-                    if (hlStrokeWidth !== undefined && !rd.strokeWidth) ti.set('stroke_width', hlStrokeWidth);
-                    if (hlRotation !== undefined) {
-                        var reticleOffset = rd.rotationOffset != null ? rd.rotationOffset : -(data.highlightRotation != null ? data.highlightRotation : 45);
-                        ti.set('rotation', hlRotation + reticleOffset);
-                    }
-                }
-                // Compute normalized Y offset (0=top+tokenSize/2+vPadding, 1=bottom-tokenSize/2-vPadding)
-                var frame = getObj('pathv2', data.frameId);
-                if (frame) {
-                    var fTop = frame.get('y');
-                    var fPts = JSON.parse(frame.get('points') || '[]');
-                    var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
-                    var tknSz = data.tokenSize || defaultInitHud.tokenSize;
-                    var vPad = data.vPadding || defaultInitHud.vPadding;
-                    var usableTop = fTop - fHeight / 2 + tknSz / 2 + vPad;
-                    var usableBot = fTop + fHeight / 2 - tknSz / 2 - vPad;
-                    var hlY = obj.get('y');
-                    var norm = (hlY - usableTop) / (usableBot - usableTop);
-                    data.currentTurnOffset = Math.max(0, Math.min(1, norm));
-                }
-                reflowInitiativeHud('none');
-            } else if (s.hud.reticleData && obj.get('id') === s.hud.reticleData.id) {
-                var rd = s.hud.reticleData;
-                var data = s.hud.initData || {};
-                // Check if reticle properties are overrides or match the highlight (inherit)
-                var tiStroke = obj.get('stroke');
-                var tiStrokeWidth = obj.get('stroke_width');
-                var tiRotation = obj.get('rotation');
-                if (tiStroke !== undefined) {
-                    if (tiStroke === (data.highlightStroke || defaultInitHud.highlightStroke)) { rd.stroke = null; }
-                    else { rd.stroke = tiStroke; }
-                }
-                if (tiStrokeWidth !== undefined) {
-                    if (tiStrokeWidth === (data.highlightStrokeWidth || defaultInitHud.highlightStrokeWidth)) { rd.strokeWidth = null; }
-                    else { rd.strokeWidth = tiStrokeWidth; }
-                }
-                if (tiRotation !== undefined) {
-                    // Store as offset from highlight rotation
-                    var hlRot = data.highlightRotation != null ? data.highlightRotation : 45;
-                    rd.rotationOffset = tiRotation - hlRot;
-                }
-                // Track proportional size relative to tracked token
-                var tiPoints = JSON.parse(obj.get('points') || '[]');
-                var prevPoints = prev && prev.points ? JSON.parse(prev.points) : tiPoints;
-                var wasResized = JSON.stringify(tiPoints) !== JSON.stringify(prevPoints);
-                if (wasResized && tiPoints.length >= 2 && rd.tokenId) {
-                    var token = getObj('graphic', rd.tokenId);
-                    if (token) {
-                        var tokenW = token.get('width');
-                        var tokenH = token.get('height');
-                        var reticleW = tiPoints[1][0] - tiPoints[0][0];
-                        var reticleH = tiPoints[1][1] - tiPoints[0][1];
-                        if (tokenW > 0) rd.widthScale = reticleW / tokenW;
-                        if (tokenH > 0) rd.heightScale = reticleH / tokenH;
-                        // Snap back to stored offset position after resize
-                        var targetX = token.get('left') + (rd.xOffset || 0) * tokenW;
-                        var targetY = token.get('top') + (rd.yOffset || 0) * tokenH;
-                        obj.set({ x: targetX, y: targetY });
-                    }
-                }
-                // Track proportional position offset from token center (move without resize)
-                if (!wasResized && rd.tokenId) {
-                    var tiX = obj.get('x');
-                    var tiY = obj.get('y');
-                    var token = getObj('graphic', rd.tokenId);
-                    if (token) {
-                        var tokenW = token.get('width');
-                        var tokenH = token.get('height');
-                        var dx = tiX - token.get('left');
-                        var dy = tiY - token.get('top');
-                        var deadzone = 3; // pixels
-                        var maxThreshold = Math.max(tokenW, tokenH) * 1.5;
-                        var dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < deadzone) {
-                            rd.xOffset = null;
-                            rd.yOffset = null;
-                        } else if (dist <= maxThreshold) {
-                            rd.xOffset = tokenW > 0 ? dx / tokenW : 0;
-                            rd.yOffset = tokenH > 0 ? dy / tokenH : 0;
-                        }
-                    }
-                }
-            }
+        // HUD registry event routing
+        var hudEventHandlers = {};
+        Object.keys(hudRegistry).forEach(function(element) {
+            var events = hudRegistry[element].events;
+            if (!events) return;
+            Object.keys(events).forEach(function(objType) {
+                Object.keys(events[objType]).forEach(function(event) {
+                    if (!events[objType][event]) return;
+                    var key = event + ':' + objType;
+                    if (!hudEventHandlers[key]) hudEventHandlers[key] = [];
+                    hudEventHandlers[key].push({ element: element, handler: events[objType][event] });
+                });
+            });
         });
-        on('destroy:pin', onHudGraphicDestroyed);
+        Object.keys(hudEventHandlers).forEach(function(key) {
+            on(key, function(obj, prev) {
+                hudEventHandlers[key].forEach(function(entry) {
+                    if (hudRegistry[entry.element].owns(obj.get('id'))) {
+                        entry.handler(obj, prev);
+                    }
+                });
+            });
+        });
         on('change:pin', function(obj, prev) {
             var s = state[SCRIPT_NAME];
             if (!s.hud.initiative || !s.hud.initData) return;
