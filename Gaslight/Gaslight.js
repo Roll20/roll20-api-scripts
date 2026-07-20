@@ -1120,8 +1120,11 @@ var Gaslight = Gaslight || (() => {
             }
 
             var psp = Campaign().get('playerspecificpages') || {};
-            Object.keys(active.playerPages).forEach(function(playerId) {
-                delete psp[playerId];
+            // Remove all players assigned to any page in this group
+            var groupPageIds = new Set([active.masterPageId]);
+            Object.values(active.playerPages).forEach(function(p) { groupPageIds.add(p.pageId); });
+            Object.keys(psp).forEach(function(playerId) {
+                if (groupPageIds.has(psp[playerId])) delete psp[playerId];
             });
             Campaign().set('playerspecificpages', Object.keys(psp).length > 0 ? psp : false);
             delete s.activeGroups[gn];
@@ -1130,8 +1133,7 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Merge', 'Merged ' + groupsToMerge.length + ' group(s). Players returned to shared page.');
 
         // Destroy HUD elements (preference preserved, will recreate on next split)
-        removeViewHud();
-        removeInitiativeHud();
+        Object.keys(hudRegistry).forEach(function(el) { hudRegistry[el].disable(); });
     };
 
     const doTest = (msg, args) => {
