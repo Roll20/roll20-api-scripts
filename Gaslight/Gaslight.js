@@ -3476,6 +3476,36 @@ var Gaslight = Gaslight || (() => {
         // Register examples
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'getting-started',
+            description: 'Set up your first per-player split: pages, setup, split, and merge (guide only)',
+            guide: [
+                { prompt: 'This guide walks you through creating your first **per-player split**.\n\nYou\'ll need at least 2 players in your game, but those players do not need to be online.' },
+                { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" — all changes start here.' },
+                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.' },
+                { prompt: 'Navigate to the master page and run `!gaslight setup mygroup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup mygroup` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup mygroup "Player1" "Player2" ...` with no selection — uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup mygroup` with no selection — uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player.',
+                  ...ScriptKit.waitForCommand('!gaslight setup'),
+                  onContinue: () => {
+                      var groups = discoverAllGroups();
+                      if (Object.keys(groups).length === 0) return 'No group configured yet. Run `!gaslight setup <name>` using one of the methods above.';
+                  }
+                },
+                { prompt: 'Now run:\n\n`!gaslight split mygroup`\n\nThis activates the group — players are moved to their individual pages and token syncing begins.',
+                  ...ScriptKit.waitForCommand('!gaslight split'),
+                  onContinue: () => {
+                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first.';
+                  }
+                },
+                { prompt: 'You may notice a **HUD** appeared on the master page. We\'ll cover that in a later example. For now, disable it with:\n\n`!gaslight hud off`',
+                  ...ScriptKit.waitForCommand('!gaslight hud')
+                },
+                { prompt: 'Your split is now active. Try moving an **NPC token** on the master page — it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else — useful for hiding tokens, swapping images, or showing per-player information.' },
+                { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages — players can move their own tokens and everyone sees it (bidirectional).' },
+                { prompt: 'When you\'re done with the split (e.g. combat ends, scene changes), run:\n\n`!gaslight merge`.\n\nThis tears down all links and returns players to the banner page.' },
+                { prompt: '**That\'s the basics!** From here, explore the other examples to learn more about how to use gaslight.', offerExamples: ['core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
+            ],
+        });
+
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'stealth',
             description: 'Hide/show NPCs per player based on passive perception vs stealth DC (RollCapture)',
             guide: [
