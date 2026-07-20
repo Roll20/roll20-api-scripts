@@ -4446,10 +4446,43 @@ var Gaslight = Gaslight || (() => {
      * Get the deduped turn order (master tokens only, skip children).
      */
     const getHudTurnOrder = () => {
+        var s = state[SCRIPT_NAME];
         var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        // Collect all page IDs belonging to active groups
+        var groupPageIds = new Set();
+        Object.values(s.activeGroups).forEach(function(active) {
+            groupPageIds.add(active.masterPageId);
+            Object.values(active.playerPages).forEach(function(p) { groupPageIds.add(p.pageId); });
+        });
+        // Track which linked groups we've already included (by master ID or first seen ID)
+        var seenGroups = new Set();
         return order.filter(function(entry) {
-            if (!entry.id || entry.id === '-1') return true;
-            return isMasterToken(entry.id);
+            if (!entry.id || entry.id === '-1') return true; // customs always
+            var token = getObj('graphic', entry.id);
+            if (!token) return false; // stale entry
+            var pageId = token.get('_pageid');
+            if (!groupPageIds.has(pageId)) return false; // not on a group page
+            // Check if this token is part of a linked group
+            var info = getLinkedInfo(entry.id);
+            if (info.linkedIds.length === 0) return true; // unlinked token, always show
+            // For linked tokens: only show if this is the master, or if master isn't in the order
+            if (isMasterToken(entry.id)) {
+                seenGroups.add(entry.id);
+                return true;
+            }
+            // It's a child — check if its master is in the order
+            var masterId = info.linkedIds.find(function(lid) { return isMasterToken(lid); });
+            if (masterId && seenGroups.has(masterId)) return false; // master already shown
+            if (masterId && order.some(function(e) { return e.id === masterId; })) {
+                seenGroups.add(masterId);
+                return false; // master is in order, it will be shown when we reach it
+            }
+            // No master in order — show this child as representative
+            if (!seenGroups.has(entry.id)) {
+                seenGroups.add(entry.id);
+                return true;
+            }
+            return false;
         });
     };
 
