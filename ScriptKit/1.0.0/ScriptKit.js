@@ -1343,21 +1343,6 @@ var ScriptKit = ScriptKit || (() => {
         const matches = (body, filter) => filter ? (body || '').toLowerCase().indexOf(filter) !== -1 : true;
         const isExact = (body, filter) => filter ? (body || '').toLowerCase() === filter : false;
 
-        const highlightMatch = (text, filter) => {
-            if (!filter) return html.escape(text);
-            const lower = text.toLowerCase();
-            let result = '', lastIdx = 0, idx = lower.indexOf(filter);
-            if (idx === -1) return html.escape(text);
-            while (idx !== -1) {
-                result += html.escape(text.slice(lastIdx, idx));
-                result += html.bold(html.escape(text.slice(idx, idx + filter.length)));
-                lastIdx = idx + filter.length;
-                idx = lower.indexOf(filter, lastIdx);
-            }
-            result += html.escape(text.slice(lastIdx));
-            return result;
-        };
-
         // Tier matching
         const tier1 = [], tier2 = [], tier3 = [];
         const tier1Sources = new Set();
@@ -1408,29 +1393,51 @@ var ScriptKit = ScriptKit || (() => {
         groups.forEach(g => {
             out += html.bold(html.escape(g.source) + ':') + html.br();
             g.items.forEach(ex => {
-                const hasHandler = reg.exampleHandler || ex.handout;
-                const handoutName = hasHandler ? getHandoutName(reg.tag, ex.source, ex.name, null) : null;
-                const exists = handoutName ? findObjs({ type: 'handout', name: handoutName })[0] : null;
-                out += html.indent(2) + '• ' + html.underline(highlightMatch(ex.name, nameFilter || ''));
-                if (ex.description) out += ' — ' + highlightMatch(ex.description, descFilter || '');
-                out += ' ';
-                if (ex.handout || reg.exampleHandler) {
-                    if (exists) {
-                        out += html.button('🔄 Regen', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name) + ' ';
-                        if (ex.guide && ex.guide.length > 0) {
-                            out += html.button('🧭 Guide', reg.command + ' ' + reg.aliases.guide + ' ' + ex.name) + ' ';
-                        }
-                        out += html.handoutLink('[Open]', exists.get('id'));
-                    } else {
-                        out += html.button('+ Generate', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name);
-                    }
-                } else if (ex.guide && ex.guide.length > 0) {
-                    out += html.button('🧭 Guide', reg.command + ' ' + reg.aliases.guide + ' ' + ex.name);
-                }
-                out += html.br();
+                out += html.indent(2) + '• ' + renderExampleEntry(ex, reg, nameFilter, descFilter) + html.br();
             });
         });
         reply(msg, scriptName, 'Examples', out);
+    };
+
+    /**
+     * Render a single example entry with name, description, and action buttons.
+     */
+    const renderExampleEntry = (ex, reg, nameHighlight, descHighlight) => {
+        const highlightMatch = (text, filter) => {
+            if (!filter) return html.escape(text);
+            const lower = text.toLowerCase();
+            let result = '', lastIdx = 0, idx = lower.indexOf(filter);
+            if (idx === -1) return html.escape(text);
+            while (idx !== -1) {
+                result += html.escape(text.slice(lastIdx, idx));
+                result += html.bold(html.escape(text.slice(idx, idx + filter.length)));
+                lastIdx = idx + filter.length;
+                idx = lower.indexOf(filter, lastIdx);
+            }
+            result += html.escape(text.slice(lastIdx));
+            return result;
+        };
+
+        const hasHandler = reg.exampleHandler || ex.handout;
+        const handoutName = hasHandler ? getHandoutName(reg.tag, ex.source, ex.name, null) : null;
+        const exists = handoutName ? findObjs({ type: 'handout', name: handoutName })[0] : null;
+        var entry = html.underline(highlightMatch(ex.name, nameHighlight || ''));
+        if (ex.description) entry += ' — ' + highlightMatch(ex.description, descHighlight || '');
+        entry += ' ';
+        if (ex.handout || reg.exampleHandler) {
+            if (exists) {
+                entry += html.button('🔄 Regen', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name) + ' ';
+                if (ex.guide && ex.guide.length > 0) {
+                    entry += html.button('🧭 Guide', reg.command + ' ' + reg.aliases.guide + ' ' + ex.name) + ' ';
+                }
+                entry += html.handoutLink('[Open]', exists.get('id'));
+            } else {
+                entry += html.button('+ Generate', reg.command + ' ' + reg.aliases.generate + ' ' + ex.name);
+            }
+        } else if (ex.guide && ex.guide.length > 0) {
+            entry += html.button('🧭 Guide', reg.command + ' ' + reg.aliases.guide + ' ' + ex.name);
+        }
+        return entry;
     };
 
     // =========================================================================
@@ -1666,7 +1673,17 @@ var ScriptKit = ScriptKit || (() => {
                 return qOut;
             })() : html.button('✅ Continue', g.reg.command + ' ' + g.reg.aliases.guideContinue + ' ' + guideId))
             + (hasPriorInteractive ? ' ' + html.button('⬅ Back', g.reg.command + ' ' + g.reg.aliases.guideBack + ' ' + guideId) : '')
-            + ' ' + html.button('✖ Cancel', g.reg.command + ' ' + g.reg.aliases.guideCancel + ' ' + guideId),
+            + ' ' + html.button('✖ Cancel', g.reg.command + ' ' + g.reg.aliases.guideCancel + ' ' + guideId)
+            + (step.offerExamples ? (() => {
+                var offered = '';
+                offered += html.paragraph('') + html.bold('What\'s Next?') + html.br();
+                step.offerExamples.forEach(function(name) {
+                    var ex = Object.values(examples).find(function(e) { return e.name === name && e.target === g.source; });
+                    if (!ex) return;
+                    offered += '• ' + renderExampleEntry(ex, g.reg) + html.br();
+                });
+                return offered;
+            })() : ''),
             { background: bgColor, color: '#fff', padding: '8px', borderRadius: '4px', fontSize: '12px' }
         );
 
@@ -2031,6 +2048,7 @@ on('ready', () => {
                         { name: 'auto: true', description: 'Skip without user interaction (not counted in step total)', version: '1.0.0' },
                         { name: 'ScriptKit.handout()', description: 'Sentinel step — generates handout at this point in the guide', version: '1.0.0' },
                         { name: '...ScriptKit.waitForCommand(cmd)', description: 'Spread onto step — auto-advances when cmd detected in chat', version: '1.0.0' },
+                        { name: 'offerExamples', description: 'Array of example names — renders "What\'s Next?" buttons below the step', version: '1.0.0' },
                     ],
                 },
                 guideAnnotations: {

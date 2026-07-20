@@ -261,6 +261,14 @@ Guides are interactive multi-step wizards that walk users through setup. Each st
 }
 ```
 
+**`offerExamples`** — array of example names. Renders a "What's Next?" section below the step with buttons to start each listed example:
+
+```js
+{ prompt: '**Done!** Try these next:',
+  offerExamples: ['core-mechanics', 'initiative-hud', 'relay']
+}
+```
+
 ### Examples: Handouts
 
 The `handout` field on an example defines what gets created in the journal. It can be a static object or a function that receives `ctx` after guide completion.
