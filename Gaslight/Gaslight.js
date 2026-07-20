@@ -4198,7 +4198,22 @@ var Gaslight = Gaslight || (() => {
             out += '<br><br>⚠️ ' + warnings.join('<br>⚠️ ');
         }
         reply(msg, 'Init', out);
-        if (s.hud.initiative) updateInitiativeHud();
+        if (s.hud.initiative) {
+            // Refresh tags on existing entries
+            if (s.hud.initData && s.hud.initData.entries) {
+                s.hud.initData.entries.forEach(function(e) {
+                    if (e.sourceId.startsWith('custom:')) return;
+                    var pin = getObj('pin', e.tokenId);
+                    if (!pin) return;
+                    var tagStr = computeHudTag(e.sourceId);
+                    var sourceToken = getObj('graphic', e.sourceId);
+                    var name = sourceToken ? (sourceToken.get('name') || '') : '';
+                    pin.set('title', ((tagStr ? '⚠️ ' : '') + name).trim());
+                    pin.set('notes', tagStr || '');
+                });
+            }
+            updateInitiativeHud();
+        }
     };
 
     // =========================================================================
@@ -4487,6 +4502,43 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
+     * Compute the tag string for a HUD entry (which views are missing this token's turn).
+     * Returns '' if present on all views, or a "Missing from" list.
+     */
+    const computeHudTag = (sourceId) => {
+        var s = state[SCRIPT_NAME];
+        var order = JSON.parse(Campaign().get('turnorder') || '[]');
+        var activeGroup = Object.values(s.activeGroups)[0];
+        if (!activeGroup) return '';
+
+        // Get all view names: GM + each player
+        var allViews = ['GM'];
+        var viewPageMap = { GM: activeGroup.masterPageId };
+        Object.entries(activeGroup.playerPages).forEach(function(entry) {
+            var name = entry[1].name || entry[0].slice(0, 6);
+            allViews.push(name);
+            viewPageMap[name] = entry[1].pageId;
+        });
+
+        // Find which pages have a turn for this token (or its linked copies)
+        var info = getLinkedInfo(sourceId);
+        var groupIds = new Set([sourceId].concat(info.linkedIds));
+        var pagesWithTurn = new Set();
+        order.forEach(function(e) {
+            if (groupIds.has(e.id)) {
+                var token = getObj('graphic', e.id);
+                if (token) pagesWithTurn.add(token.get('_pageid'));
+            }
+        });
+
+        // Find which views are missing
+        var missingViews = allViews.filter(function(v) { return !pagesWithTurn.has(viewPageMap[v]); });
+
+        if (missingViews.length === 0) return ''; // on all views
+        return 'No Turns For:\n' + missingViews.map(function(v) { return v.length > 70 ? v.slice(0, 67) + '...' : v; }).join('\n');
+    };
+
+    /**
      * Draw a rectangle path on the foreground layer.
      */
     const createFramePath = (pageId, left, top, width, height, data) => {
@@ -4617,6 +4669,7 @@ var Gaslight = Gaslight || (() => {
                     textIcon: '',
                     scale: 1.25,
                     visibleTo: 'all',
+                    notesDesynced: true,
                 });
 
                 var pinText = createHudObj('text', {
@@ -4643,17 +4696,22 @@ var Gaslight = Gaslight || (() => {
                 var sourceToken = getObj('graphic', entry.id);
                 if (!sourceToken) return;
 
+                var tagStr = computeHudTag(entry.id);
+                var pinTitle = ((tagStr ? '⚠️ ' : '') + (sourceToken.get('name') || '')).trim();
+
                 var hudPin = createHudObj('pin', {
                     _pageid: pageId,
                     x: frameLeft,
                     y: -5000,
-                    title: sourceToken.get('name') || '',
+                    title: pinTitle,
                     shape: 'circle',
                     bgColor: 'transparent',
                     customizationType: 'image',
                     pinImage: sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png'),
                     scale: 1.25,
                     visibleTo: 'all',
+                    notesDesynced: true,
+                    notes: tagStr || '',
                 });
 
                 var hudText = createHudObj('text', {
