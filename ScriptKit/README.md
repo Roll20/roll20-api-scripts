@@ -385,6 +385,36 @@ ScriptKit.register('MyScript', {
 3. User runs `!myscript migrate` → stored `down` strings for v1.2.0 and v1.1.0 are eval'd against a working copy
 4. All succeed → state committed, version updated to v1.0.0
 
+### Guide Annotations
+
+Draw temporary shapes on the map during guide steps to highlight elements for the user. Annotations auto-clear when the guide advances to the next step, and are persisted in state for crash recovery.
+
+```js
+// In a guide step's onEnter:
+onEnter: (ctx) => {
+    ScriptKit.ping(pageId, x, y, { player: gmPlayer, color: '#00ff00' });
+    ScriptKit.annotate(pageId, 'circle', x, y, { radius: 50, color: '#ff0000' });
+    ScriptKit.annotate(pageId, 'arrow', targetX, targetY, { fromX: startX, fromY: startY });
+    ScriptKit.annotate(pageId, 'rect', x, y, { width: 100, height: 60 });
+}
+```
+
+**`ScriptKit.ping(pageId, x, y, opts)`** — Ping the map and move camera.
+- `player` — Player object (used for playerId, visibleTo, and color swap)
+- `color` — Temporarily changes player color for a colored ping
+- `moveAll` — Move all players' views (default: true)
+- `visibleTo` — Player ID(s) who can see the ping
+
+**`ScriptKit.annotate(pageId, shape, x, y, opts)`** — Draw a temporary pathv2.
+- **Shapes:** `'circle'`, `'arrow'`, `'line'`, `'rect'`
+- **Common opts:** `color` (default `'#ff0000'`), `strokeWidth` (default 3), `fill` (default `'transparent'`)
+- **Circle:** `radius` (default 40)
+- **Arrow:** `fromX`, `fromY` (tail position), `chevronDepth`, `chevronWidth`
+- **Line:** `fromX`, `fromY` (start position)
+- **Rect:** `width` (default 80), `height` (default 80)
+
+**`ScriptKit.clearAnnotations()`** — Remove all active annotations manually.
+
 ### MOTD (Message of the Day)
 
 Display a random tip to the GM on sandbox startup. Helps with feature discoverability.

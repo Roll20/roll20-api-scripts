@@ -1,6 +1,6 @@
 // =============================================================================
 // ScriptKit v1.0.0
-// Last Updated: 2026-07-17
+// Last Updated: 2026-07-20
 // Author: Kenan Millet
 //
 // Description:
@@ -31,6 +31,107 @@ var ScriptKit = ScriptKit || (() => {
 
     // { guideId: { steps, currentStep, selections, params, msg, handoutName, source, onComplete } }
     const activeGuides = {};
+
+    // Guide annotation system — temporary visual aids that auto-clear between steps
+    // Stored in state for crash recovery
+    var _annotations = [];
+
+    const clearAnnotations = () => {
+        _annotations.forEach(function(id) {
+            var obj = getObj('pathv2', id);
+            if (obj) obj.remove();
+        });
+        _annotations = [];
+        if (state.ScriptKit) state.ScriptKit._annotations = [];
+    };
+
+    const guideAnnotate = (pageId, shape, x, y, opts) => {
+        opts = opts || {};
+
+        // Compute shape-specific geometry
+        var points, cx = x, cy = y, pathShape;
+        if (shape === 'circle') {
+            var r = opts.radius || 40;
+            points = [[0, 0], [r * 2, r * 2]];
+            pathShape = 'eli';
+        } else if (shape === 'arrow' || shape === 'line') {
+            var fromX = opts.fromX != null ? opts.fromX : x - 50;
+            var fromY = opts.fromY != null ? opts.fromY : y - 50;
+            var dx = x - fromX;
+            var dy = y - fromY;
+            var len = Math.sqrt(dx * dx + dy * dy) || 1;
+            var ux = dx / len;
+            var uy = dy / len;
+            var pts;
+            if (shape === 'arrow') {
+                var chevDepth = opts.chevronDepth || len * 0.2;
+                var chevWidth = opts.chevronWidth || chevDepth * 0.6;
+                // Chevron points: two points offset from the tip along and perpendicular to the shaft
+                var backX = x - ux * chevDepth;
+                var backY = y - uy * chevDepth;
+                var h1x = backX - uy * chevWidth;
+                var h1y = backY + ux * chevWidth;
+                var h2x = backX + uy * chevWidth;
+                var h2y = backY - ux * chevWidth;
+                pts = [[fromX, fromY], [x, y], [h1x, h1y], [x, y], [h2x, h2y]];
+            } else {
+                pts = [[fromX, fromY], [x, y]];
+            }
+            var minX = Math.min.apply(null, pts.map(function(p) { return p[0]; }));
+            var minY = Math.min.apply(null, pts.map(function(p) { return p[1]; }));
+            var maxX = Math.max.apply(null, pts.map(function(p) { return p[0]; }));
+            var maxY = Math.max.apply(null, pts.map(function(p) { return p[1]; }));
+            cx = (minX + maxX) / 2;
+            cy = (minY + maxY) / 2;
+            points = pts.map(function(p) { return [p[0] - cx, p[1] - cy]; });
+            pathShape = 'pol';
+        } else if (shape === 'rect') {
+            var rw = opts.width || 80;
+            var rh = opts.height || 80;
+            points = [[0, 0], [rw, rh]];
+            pathShape = 'rec';
+        } else {
+            return null;
+        }
+
+        // Create with unified properties
+        var obj = createObj('pathv2', {
+            _pageid: pageId,
+            layer: 'foreground',
+            shape: pathShape,
+            x: cx, y: cy,
+            points: JSON.stringify(points),
+            stroke: opts.color || '#ff0000',
+            stroke_width: opts.strokeWidth || 3,
+            fill: opts.fill || 'transparent',
+        });
+
+        if (obj) {
+            _annotations.push(obj.get('id'));
+            if (state.ScriptKit) state.ScriptKit._annotations = _annotations.slice();
+        }
+        return obj;
+    };
+
+    const guidePing = (pageId, x, y, opts) => {
+        opts = opts || {};
+        var player = opts.player || null;
+        var playerId = player ? player.get('id') : (opts.playerId || null);
+        var moveAll = opts.moveAll !== false;
+        var visibleTo = opts.visibleTo || playerId || undefined;
+        var color = opts.color || null;
+
+        if (color && player) {
+            var originalColor = player.get('color');
+            player.set('color', color);
+            setTimeout(function() {
+                sendPing(x, y, pageId, playerId, moveAll, visibleTo);
+                setTimeout(function() { player.set('color', originalColor); }, 200);
+            }, 100);
+        } else {
+            sendPing(x, y, pageId, playerId, moveAll, visibleTo);
+        }
+    };
 
     // =========================================================================
     // HTML Helpers
@@ -1456,6 +1557,7 @@ var ScriptKit = ScriptKit || (() => {
     const enterStep = (guideId) => {
         const g = activeGuides[guideId];
         if (!g) return;
+        clearAnnotations();
 
         if (g.currentStep >= g.steps.length) {
             // All steps complete — call onComplete
@@ -1776,6 +1878,9 @@ var ScriptKit = ScriptKit || (() => {
         handleInput,
         html,
         handout: () => HANDOUT_STEP,
+        ping: guidePing,
+        annotate: guideAnnotate,
+        clearAnnotations: clearAnnotations,
         waitForCommand: (cmd) => ({
             onEnter: (ctx, advance) => {
                 ctx._waitHandler = (msg) => {
@@ -1813,6 +1918,14 @@ var ScriptKit = ScriptKit || (() => {
 
 on('ready', () => {
     'use strict';
+    // Clean up any annotations from a previous session/crash
+    if (state.ScriptKit && state.ScriptKit._annotations && state.ScriptKit._annotations.length > 0) {
+        state.ScriptKit._annotations.forEach(function(id) {
+            var obj = getObj('pathv2', id);
+            if (obj) obj.remove();
+        });
+        state.ScriptKit._annotations = [];
+    }
     on('chat:message', (msg) => {
         if (msg.type === 'api' && msg.content.split(' ')[0] === '!scriptkit') {
             ScriptKit.handleInput(msg);
@@ -1918,6 +2031,23 @@ on('ready', () => {
                         { name: 'auto: true', description: 'Skip without user interaction (not counted in step total)', version: '1.0.0' },
                         { name: 'ScriptKit.handout()', description: 'Sentinel step — generates handout at this point in the guide', version: '1.0.0' },
                         { name: '...ScriptKit.waitForCommand(cmd)', description: 'Spread onto step — auto-advances when cmd detected in chat', version: '1.0.0' },
+                    ],
+                },
+                guideAnnotations: {
+                    title: 'Guide Annotations',
+                    description: 'Temporary visual aids for interactive guides',
+                    handouts: 'dev',
+                    version: '1.0.0',
+                    body: 'Draw temporary shapes on the map during guide steps to highlight elements. Annotations auto-clear on step transition and are persisted in state for crash recovery.',
+                    items: [
+                        { name: 'ScriptKit.ping(pageId, x, y, opts)', description: 'Ping the map and move camera. opts: { player, color, moveAll, visibleTo, playerId }', version: '1.0.0' },
+                        { name: 'ScriptKit.annotate(pageId, shape, x, y, opts)', description: 'Draw a temporary pathv2. Returns the object. Shapes: circle, arrow, line, rect', version: '1.0.0' },
+                        { name: 'ScriptKit.clearAnnotations()', description: 'Remove all active annotations manually', version: '1.0.0' },
+                        { name: 'circle opts', description: 'radius (default 40), color, strokeWidth, fill', version: '1.0.0' },
+                        { name: 'arrow opts', description: 'fromX, fromY (tail position), chevronDepth, chevronWidth, color, strokeWidth, fill', version: '1.0.0' },
+                        { name: 'line opts', description: 'fromX, fromY (start position), color, strokeWidth, fill', version: '1.0.0' },
+                        { name: 'rect opts', description: 'width (default 80), height (default 80), color, strokeWidth, fill', version: '1.0.0' },
+                        { name: 'ping opts.color', description: 'Temporarily swaps player color before pinging (100ms delay, restores after 200ms)', version: '1.0.0' },
                     ],
                 },
                 handouts: {
