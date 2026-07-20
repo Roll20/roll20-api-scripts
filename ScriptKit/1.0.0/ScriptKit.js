@@ -1900,13 +1900,17 @@ var ScriptKit = ScriptKit || (() => {
         clearAnnotations: clearAnnotations,
         waitForCommand: (cmd) => ({
             onEnter: (ctx, advance) => {
-                ctx._waitHandler = (msg) => {
-                    if (msg.type === 'api' && msg.content.split(' ').slice(0, cmd.split(' ').length).join(' ') === cmd) advance();
-                };
-                on('chat:message', ctx._waitHandler);
+                ctx._waitFired = false;
+                on('chat:message', (msg) => {
+                    if (ctx._waitFired) return;
+                    if (msg.type === 'api' && msg.content.split(' ').slice(0, cmd.split(' ').length).join(' ') === cmd) {
+                        ctx._waitFired = true;
+                        advance();
+                    }
+                });
             },
             onExit: (ctx) => {
-                if (ctx._waitHandler) { off('chat:message', ctx._waitHandler); delete ctx._waitHandler; }
+                ctx._waitFired = true;
             },
         }),
         getHandoutName,
