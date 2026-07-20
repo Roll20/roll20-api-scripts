@@ -3474,27 +3474,6 @@ var Gaslight = Gaslight || (() => {
         };
 
         // Register examples
-        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
-            name: 'first-map',
-            description: 'Walk through setting up your first gaslighted map (no handout generated)',
-            guide: [
-                { prompt: 'This guide walks you through creating your first **per-player split**. No handout is generated — just follow the steps and click Continue when ready.' },
-                { prompt: 'Create your **master page** with all tokens placed (NPCs, players, objects). This is the "truth" page.' },
-                { prompt: 'Duplicate the page once per player using Roll20\'s built-in **Duplicate Page**. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.' },
-                { prompt: 'Select all party tokens on the master page and run `!gaslight setup mygroup`. This auto-detects the duplicates, assigns each to a player, and configures the group.',
-                  onContinue: () => {
-                      var groups = discoverAllGroups();
-                      if (Object.keys(groups).length === 0) return 'No group configured yet. Run !gaslight setup <name> first.';
-                  }
-                },
-                { prompt: 'Run `!gaslight split mygroup`. This activates the group — players are moved to individual pages and tokens begin syncing.',
-                  onContinue: () => {
-                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run !gaslight split <group> first.';
-                  }
-                },
-                { prompt: '**Done!** Move tokens on the master page — they\'ll sync to all player pages. Make per-player changes on individual pages (hide/show tokens, swap images, etc). When finished: `!gaslight merge`' },
-            ],
-        });
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'stealth',
