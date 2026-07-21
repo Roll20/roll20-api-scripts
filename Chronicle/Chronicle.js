@@ -7,14 +7,14 @@ const Chronicle = (() => {
   // Config
   // ==================================================
   const scriptName = 'Chronicle';
-  const version = '1.0.4';
+  const version = '1.0.5';
   //Changelog
+  // 1.0.5 changed send to chat for grid to 7 day span instead of a hard-coded 7-day week, and improved navigation and display.
   // 1.0.4 Fixed Mode display issues from Roll20 Dark/Light mode, Added Send to Chat behavior for Timeline view.
   // 1.0.3 Corrected reversion in default calendar definitions
   // 1.0.2 Added Interannual Day code to handle Traveller Imperial Calendar
   // 1.0.1 Added custom weather and Climate options, made some display changes including parsing of images and links in the display. Fixed firefox Display bug.
   // 1.0.0 Debut
-
   const lastUpdate = Math.floor(Date.now() / 1000);
   const schemaVersion = 0.1;
 
@@ -361,6 +361,7 @@ const Chronicle = (() => {
     container: 'background: #1a1a1a; color: #eeeeee; padding: 10px; border: 1px solid #555555; border-radius: 5px; font-family: "Helvetica Neue", Arial, sans-serif; margin: -30px;',
     chatOutput: 'background: #4a4a4a; color: #eeeeee; padding: 8px 12px; border-left: 6px solid #6b8cae; border-top: 1px solid #6b8cae; border-right: 1px solid #6b8cae; border-bottom: 1px solid #6b8cae; border-radius: 3px; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 13px; margin: 2px 0;',
     header: 'background: #2d2d2d; color: #eeeeee; padding: 10px; margin: -10px -10px 10px -10px; border-bottom: 2px solid #555555; font-weight: bold; font-size: 16px;',
+    headerColor: '#eeeeee',
     table: 'width: 100%; border-collapse: collapse; margin: 10px 0;',
     tableCell: 'border: 1px solid #555555; padding: 5px; text-align: center; color: #eeeeee; vertical-align: top;',
     calendarDay: 'width: 14.28%; min-height: 60px; vertical-align: top; border: 1px solid #555555; padding: 2px; position: relative; cursor: pointer; background: #2d2d2d; color: #eeeeee;',
@@ -380,6 +381,7 @@ const Chronicle = (() => {
     container: { background: '#eeeeee', color: '#111111', border: '1px solid #cccccc' },
     chatOutput: { background: '#dddddd', color: '#111111', 'border-left': '6px solid #4a7ac2', 'border-top': '1px solid #4a7ac2', 'border-right': '1px solid #4a7ac2', 'border-bottom': '1px solid #4a7ac2' },
     header: { background: '#f5f5f5', color: '#111111', border: '2px solid #cccccc' },
+    headerColor: '#111111',
     tableCell: { border: '1px solid #cccccc', color: '#111111' },
     calendarDay: { background: '#eeeeee', color: '#111111', border: '1px solid #cccccc' },
     calendarDayOtherMonth: { background: '#eeeeee', color: '#111111', border: '1px solid #cccccc' },
@@ -398,6 +400,7 @@ const Chronicle = (() => {
     container: { background: '#f4e8d0', color: '#2c1810', border: '1px solid #8b6f47' },
     chatOutput: { background: '#e8d4b0', color: '#2c1810', 'border-left': '6px solid #8b4513', 'border-top': '1px solid #8b4513', 'border-right': '1px solid #8b4513', 'border-bottom': '1px solid #8b4513' },
     header: { background: '#e8d4b0', color: '#2c1810', border: '2px solid #8b6f47' },
+    headerColor: '#2c1810',
     tableCell: { border: '1px solid #8b6f47', color: '#2c1810' },
     calendarDay: { background: '#f4e8d0', color: '#2c1810', border: '1px solid #8b6f47' },
     calendarDayOtherMonth: { background: '#f4e8d0', color: '#2c1810', border: '1px solid #8b6f47' },
@@ -2221,14 +2224,7 @@ const Chronicle = (() => {
       const CSS_CURRENT = getCSS();
       const modes = [
         { key: 'calendar', label: 'Calendar' },
-        { key: 'design', label: 'Design' },
         { key: 'timeline', label: 'Timeline' }
-      ];
-
-      const themes = [
-        { key: 'light', label: '☀️' },
-        { key: 'dark', label: '🌙' },
-        { key: 'fantasy', label: '📜' }
       ];
 
       let html = '<div style="' + CSS_CURRENT.header + 'padding: 10px; margin: -10px -10px 10px -10px;">';
@@ -2236,24 +2232,21 @@ const Chronicle = (() => {
       
       html += '<span style="float: right;">';
       
-      // Mode buttons (inline)
+      // Mode buttons (Calendar, Timeline)
       modes.forEach(m => {
         const style = m.key === currentMode ? CSS_CURRENT.button + 'font-weight: bold;' : CSS_CURRENT.button;
         html += Output.makeButton(m.label, `!chr --mode ${m.key}`, style);
       });
       
-      html += '<span style="margin: 0 8px;">|</span>';
-      
-      // Theme buttons (inline, same size as mode buttons)
-      themes.forEach(t => {
-        html += Output.makeButton(t.label, `!chr --theme ${t.key}`, CSS_CURRENT.button);
-      });
-      
-      html += '<span style="margin: 0 8px;">|</span>';
-      
-      // Utility buttons (inline, same size)
-      html += Output.makeButton('Help', '!chr --help', CSS_CURRENT.button);
+      // Send to Chat button
       html += Output.makeButton('Send to Chat', `!chr --chat ${currentMode}`, CSS_CURRENT.button);
+      
+      html += '<span style="margin: 0 8px;">|</span>';
+      
+      // Design and Help buttons
+      const designStyle = currentMode === 'design' ? CSS_CURRENT.button + 'font-weight: bold;' : CSS_CURRENT.button;
+      html += Output.makeButton('Design', `!chr --mode design`, designStyle);
+      html += Output.makeButton('?', '!chr --help', CSS_CURRENT.button);
       
       html += '</span>'; // Close float:right span
       html += '</div>';
@@ -2987,7 +2980,24 @@ const Chronicle = (() => {
       const calendar = data.calendar || DataModels.createCalendar('New Calendar');
 
       let html = '<div style="padding: 10px;">';
-      html += '<h2>Calendar Design</h2>';
+      
+      // Theme Controls (on separate line)
+      const themes = [
+        { key: 'light', label: '☀️ Light', value: 'light' },
+        { key: 'dark', label: '🌙 Dark', value: 'dark' },
+        { key: 'fantasy', label: '📜 Fantasy', value: 'fantasy' }
+      ];
+      const currentTheme = State.config().theme || 'dark';
+      
+      html += '<div style="margin-bottom: 15px; text-align: right;">';
+      html += '<strong>Theme Controls:</strong> ';
+      themes.forEach(t => {
+        const style = t.value === currentTheme ? CSS_CURRENT.button + 'font-weight: bold;' : CSS_CURRENT.button;
+        html += Output.makeButton(t.label, `!chr --theme ${t.value}`, style);
+      });
+      html += '</div>';
+      
+      html += '<h2 style="color: ' + CSS_CURRENT.headerColor + ';">Calendar Design</h2>';
 
       // Calendar selection
       html += '<div style="margin: 20px 0;">';
@@ -3045,7 +3055,7 @@ const Chronicle = (() => {
 
       // Basic settings
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Basic Settings</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Basic Settings</h3>';
       html += `<p><strong>Calendar Name:</strong> ${calendar.name} `;
       html += Output.makeButton('Edit', `!chr --savename ?{Calendar Name|${calendar.name}}`, CSS_CURRENT.buttonSmall);
       html += '</p>';
@@ -3059,7 +3069,7 @@ const Chronicle = (() => {
 
       // Months
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Months</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Months</h3>';
       if (calendar.months.length === 0) {
         html += '<p><em>No months defined</em></p>';
       } else {
@@ -3100,7 +3110,7 @@ const Chronicle = (() => {
 
       // Weekday names
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Weekday Names</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Weekday Names</h3>';
       html += '<p>' + calendar.weeks.weekdayNames.join(', ') + '</p>';
       const weekdayStr = calendar.weeks.weekdayNames.join(',');
       html += Output.makeButton('Edit Weekdays', `!chr --saveweekdays ?{Weekday Names (comma-separated)|${weekdayStr}}`, CSS_CURRENT.button);
@@ -3108,7 +3118,7 @@ const Chronicle = (() => {
 
       // Holidays
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Holidays</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Holidays</h3>';
       if (!calendar.holidays || calendar.holidays.length === 0) {
         html += '<p><em>No holidays defined</em></p>';
       } else {
@@ -3163,7 +3173,7 @@ const Chronicle = (() => {
 
       // Special Days
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Special Days</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Special Days</h3>';
       html += '<p style="font-size: 11px; font-style: italic;">Intercalary days (like Midsummer, leap days) that occur outside normal month/week structure</p>';
       const specialDays = calendar.interMonthDays || [];
       if (specialDays.length === 0) {
@@ -3239,7 +3249,7 @@ const Chronicle = (() => {
 
       // Interannual Days
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Interannual Days (Year Holidays)</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Interannual Days (Year Holidays)</h3>';
       const interannualDays = calendar.interannualDays || [];
       
       if (interannualDays.length === 0) {
@@ -3293,7 +3303,7 @@ const Chronicle = (() => {
       html += '</div>';
       html += '</div>';
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Moons</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Moons</h3>';
       const moons = data.moons;
       if (!moons || moons.length === 0) {
         html += '<p><em>No moons defined</em></p>';
@@ -3347,7 +3357,7 @@ const Chronicle = (() => {
 
       // Climate
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Climate</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Climate</h3>';
       if (calendar.climate) {
         html += `<p><strong>${calendar.climate.climate_name}</strong> (${calendar.climate.koppen_code})</p>`;
         html += `<p><em>${calendar.climate.biome_hint}</em></p>`;
@@ -3398,7 +3408,7 @@ const Chronicle = (() => {
 
       // Seasons
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Seasons & Equinoxes</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Seasons & Equinoxes</h3>';
       html += `<p><strong>Vernal Equinox:</strong> Day ${calendar.seasons.vernalEquinox} of ${calendar.daysInYear} `;
       html += Output.makeButton('Edit', 
         `!chr --setvernalequinox ?{Day of Year for Vernal Equinox|${calendar.seasons.vernalEquinox}}`, 
@@ -3424,7 +3434,7 @@ const Chronicle = (() => {
 
       // Leap Years
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<h3>Leap Years</h3>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Leap Years</h3>';
       html += `<p><strong>Enabled:</strong> ${calendar.leapYears.enabled ? 'Yes' : 'No'} `;
       html += Output.makeButton('Toggle', `!chr --toggleleap`, CSS_CURRENT.buttonSmall);
       html += '</p>';
@@ -3933,7 +3943,7 @@ const Chronicle = (() => {
                 
                 html += `<div style="margin-bottom: 8px; padding: 5px; background: var(--bg-secondary); border-left: 3px solid ${CSS_CURRENT.holiday};">`;
                 html += '<div style="margin-bottom: 5px;">';
-                html += e.content;
+                html += MarkdownParser.renderAsHtml(e.content, calendar, {sendToChat: true});
                 // Elapsed time button floating right
                 html += `<a style="${CSS_CURRENT.tag} float: right;" href="!chr --setfeatureddate ${e.dateRef.year}|${e.dateRef.month}|${e.dateRef.day}">${elapsedText}</a>`;
                 html += '</div>';
@@ -3974,7 +3984,7 @@ const Chronicle = (() => {
                 
                 html += `<div style="margin-bottom: 8px; padding: 5px; background: var(--bg-secondary); border-left: 3px solid #888;">`;
                 html += '<div style="margin-bottom: 5px;">';
-                html += n.content;
+                html += MarkdownParser.renderAsHtml(n.content, calendar, {sendToChat: true});
                 // Elapsed time button floating right
                 html += `<a style="${CSS_CURRENT.tag} float: right;" href="!chr --setfeatureddate ${n.dateRef.year}|${n.dateRef.month}|${n.dateRef.day}">${elapsedText}</a>`;
                 html += '</div>';
@@ -4010,7 +4020,7 @@ const Chronicle = (() => {
                 }
                 
                 html += '<div style="margin-bottom: 3px; position: relative;">';
-                html += item.content;
+                html += MarkdownParser.renderAsHtml(item.content, calendar, {sendToChat: true});
                 html += `<a style="${CSS_CURRENT.tag} float: right; margin-left: 10px;" href="!chr --setfeatureddate ${item.date.year}|${item.date.month}|${item.date.day}">${elapsedText}</a>`;
                 html += '</div>';
               }
@@ -7037,57 +7047,371 @@ const Chronicle = (() => {
                     output += '</ul>';
                   }
 
-                  // Week context (simplified calendar)
+                  // Week context - 7 day grid centered on featured date (3 before, featured in middle, 3 after)
                   const daysInWeek = calendar.weeks.daysInWeek;
-                  const daysInMonth = DateUtils.getDaysInMonth(currentDate.month, currentDate.year, calendar);
-                  const currentAbsDay = DateUtils.toAbsoluteDay(currentDate, calendar);
-                  const currentWeekday = (currentAbsDay - 1) % daysInWeek;
-                  const weekStart = currentDate.day - currentWeekday;
-
-                  output += '<div style="margin-top:10px;"><strong>This Week:</strong></div>';
+                  
+                  output += '<div style="margin-top:10px;"><strong>7 Day Span:</strong></div>';
                   output += '<table style="width:100%;border-collapse:collapse;font-size:10px;margin:5px 0;">';
       
-                  // Weekday headers
+                  // Helper to convert absolute day back to date (accounts for both interannual and intercalary days)
+                  const absDateToDateRef = (absDay) => {
+                    if (absDay <= 0) return { year: 1, month: 1, day: 1 };
+                    
+                    let year = 1;
+                    let dayCount = absDay;
+                    
+                    // Find the year
+                    while (dayCount > DateUtils.getDaysInYear(year, calendar)) {
+                      dayCount -= DateUtils.getDaysInYear(year, calendar);
+                      year++;
+                    }
+                    
+                    // Check if it's an interannual (beginning) day
+                    const interannualDays = calendar.interannualDays || [];
+                    for (let iday of interannualDays) {
+                      if (iday.position === 'beginning') {
+                        const iabsDay = DateUtils.getAbsDayOfInterannualDay(iday.position, iday.order, calendar);
+                        if (dayCount === iabsDay) {
+                          return { year: year, isInterannual: true, position: iday.position, order: iday.order };
+                        }
+                      }
+                    }
+                    
+                    // Account for beginning interannual offset
+                    const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
+                    let adjustedDay = dayCount - beginningInterannualCount;
+                    
+                    // Find the month and day
+                    let month = 1;
+                    while (month <= calendar.months.length) {
+                      const daysInMonth = DateUtils.getDaysInMonth(month, year, calendar);
+                      
+                      if (adjustedDay <= daysInMonth) {
+                        // Check for intercalary days after this day
+                        const interCalDays = calendar.interMonthDays || [];
+                        for (let icd of interCalDays) {
+                          if (icd.afterDay === adjustedDay && icd.afterMonth === month) {
+                            return { year: year, month: month, day: adjustedDay, specialDayId: icd.id, isIntercalaryFollowing: true };
+                          }
+                        }
+                        // Regular day
+                        return { year: year, month: month, day: adjustedDay > 0 ? adjustedDay : 1 };
+                      }
+                      
+                      adjustedDay -= daysInMonth;
+                      
+                      // Check for intercalary days after this month
+                      const interCalDays = calendar.interMonthDays || [];
+                      const interCalAfter = interCalDays.filter(icd => icd.afterMonth === month && icd.afterDay >= daysInMonth);
+                      
+                      if (interCalAfter.length > 0 && adjustedDay > 0 && adjustedDay <= interCalAfter.length) {
+                        const icd = interCalAfter[adjustedDay - 1];
+                        return { year: year, month: month, day: daysInMonth, specialDayId: icd.id, isSpecialDay: true };
+                      }
+                      
+                      adjustedDay -= interCalAfter.length;
+                      month++;
+                    }
+                    
+                    // Check for ending interannual days
+                    for (let iday of interannualDays) {
+                      if (iday.position === 'end') {
+                        const iabsDay = DateUtils.getAbsDayOfInterannualDay(iday.position, iday.order, calendar);
+                        if (dayCount === iabsDay) {
+                          return { year: year, isInterannual: true, position: iday.position, order: iday.order };
+                        }
+                      }
+                    }
+                    
+                    // Fallback
+                    return { year: year, month: 1, day: 1 };
+                  };
+                  
+                  // Helper function to convert day 31 to intercalary if it exists
+                  const normalizeDate = (date) => {
+                    if (date.isIntercalary || date.isInterannual) return date;
+                    
+                    const daysInMonth = DateUtils.getDaysInMonth(date.month, date.year, calendar);
+                    if (date.day > daysInMonth) {
+                      // This is representing an intercalary day - find it
+                      const icd = (calendar.interMonthDays || []).find(d => 
+                        d.position.afterMonth === date.month && d.position.afterDay === daysInMonth
+                      );
+                      if (icd) {
+                        return {
+                          year: date.year,
+                          month: date.month,
+                          day: date.day,
+                          isIntercalary: true,
+                          specialDayId: icd.id
+                        };
+                      }
+                    }
+                    return date;
+                  };
+                  
+                  // Helper function to step forward/backward one day at a time, handling intercalary days
+                  const stepDate = (date, steps) => {
+                    let current = normalizeDate(JSON.parse(JSON.stringify(date)));
+                    const direction = steps > 0 ? 1 : -1;
+                    let remaining = Math.abs(steps);
+                    
+                    while (remaining > 0) {
+                      if (direction > 0) {
+                        // Stepping forward
+                        if (current.isIntercalary && current.specialDayId) {
+                          // Move from intercalary to next month day 1
+                          const icd = (calendar.interMonthDays || []).find(d => d.id === current.specialDayId);
+                          if (icd && icd.position.afterMonth !== undefined) {
+                            current.month = icd.position.afterMonth + 1;
+                            if (current.month > calendar.months.length) {
+                              current.month = 1;
+                              current.year++;
+                            }
+                          }
+                          current.day = 1;
+                          current.isIntercalary = false;
+                          current.specialDayId = undefined;
+                        } else if (current.isInterannual) {
+                          // Move from interannual to next month day 1
+                          current.month = (current.position === 'end') ? current.month + 1 : 1;
+                          if (current.month > calendar.months.length) {
+                            current.month = 1;
+                            current.year++;
+                          }
+                          current.day = 1;
+                          current.isInterannual = false;
+                          current.position = undefined;
+                          current.order = undefined;
+                        } else {
+                          const daysInMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                          
+                          // Check if there's an intercalary day after this day in this month
+                          const interCalDays = (calendar.interMonthDays || []).filter(icd => 
+                            icd.position.afterMonth === current.month && icd.position.afterDay === current.day
+                          );
+                          
+                          if (interCalDays.length > 0) {
+                            // Move to intercalary day
+                            current.specialDayId = interCalDays[0].id;
+                            current.isIntercalary = true;
+                          } else if (current.day < daysInMonth) {
+                            // Regular next day (not at month end)
+                            current.day++;
+                          } else {
+                            // At last day of month, check for intercalary after this day
+                            const interCalAfterDay = (calendar.interMonthDays || []).find(icd => 
+                              icd.position.afterMonth === current.month && icd.position.afterDay === current.day
+                            );
+                            
+                            if (interCalAfterDay) {
+                              // Move to intercalary day
+                              current.specialDayId = interCalAfterDay.id;
+                              current.isIntercalary = true;
+                            } else if (current.month === calendar.months.length) {
+                              // At last day of last month - check for end of year interannual day
+                              const endOfYearDay = (calendar.interannualDays || []).find(iad => 
+                                iad.position === 'end'
+                              );
+                              if (endOfYearDay) {
+                                // Move to end of year interannual day
+                                current.month = calendar.months.length;
+                                current.day = undefined;
+                                current.isInterannual = true;
+                                current.position = 'end';
+                                current.order = endOfYearDay.order;
+                              } else {
+                                // Move to next month (which is month 1 of next year)
+                                current.month = 1;
+                                current.year++;
+                                current.day = 1;
+                              }
+                            } else {
+                              // Move to next month
+                              current.month++;
+                              current.day = 1;
+                            }
+                          }
+                        }
+                      } else {
+                        // Stepping backward
+                        if (current.isIntercalary) {
+                          // Move back to the day before the intercalary
+                          const icd = (calendar.interMonthDays || []).find(d => d.id === current.specialDayId);
+                          if (icd) {
+                            current.month = icd.position.afterMonth;
+                            current.day = icd.position.afterDay;
+                            current.isIntercalary = false;
+                            current.specialDayId = undefined;
+                          }
+                        } else if (current.isInterannual) {
+                          // Move back to last day of previous month/year
+                          if (current.position === 'beginning') {
+                            // At beginning of year - go to last month of previous year
+                            current.year--;
+                            current.month = calendar.months.length;
+                          } else {
+                            // At end of year - go to last month of current year  
+                            current.month = calendar.months.length;
+                          }
+                          const daysInLastMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                          current.day = daysInLastMonth;
+                          current.isInterannual = false;
+                          current.position = undefined;
+                          current.order = undefined;
+                        } else if (current.day === 1) {
+                          // At first day of month
+                          if (current.month === 1) {
+                            // At first day of year - check for beginning of year interannual day
+                            const beginningOfYearDay = (calendar.interannualDays || []).find(iad => 
+                              iad.position === 'beginning'
+                            );
+                            if (beginningOfYearDay) {
+                              // Move to beginning of year interannual day (in current year)
+                              current.month = 1;
+                              current.day = undefined;
+                              current.isInterannual = true;
+                              current.position = 'beginning';
+                              current.order = beginningOfYearDay.order;
+                            } else {
+                              // Move to last day of previous month (last month of previous year)
+                              current.month = calendar.months.length;
+                              current.year--;
+                              current.day = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                            }
+                          } else {
+                            // At first day of other months
+                            current.month--;
+                            const daysInPrevMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                            
+                            // Check for intercalary after the last day of previous month
+                            const interCalBeforeMonth = (calendar.interMonthDays || []).find(icd => 
+                              icd.position.afterMonth === current.month && icd.position.afterDay === daysInPrevMonth
+                            );
+                            
+                            if (interCalBeforeMonth) {
+                              current.specialDayId = interCalBeforeMonth.id;
+                              current.isIntercalary = true;
+                            } else {
+                              current.day = daysInPrevMonth;
+                            }
+                          }
+                        } else {
+                          // Regular day stepping backward
+                          // Check if there's an intercalary before the current day
+                          const interCalBeforeDay = (calendar.interMonthDays || []).find(icd => 
+                            icd.position.afterMonth === current.month && icd.position.afterDay === (current.day - 1)
+                          );
+                          
+                          if (interCalBeforeDay) {
+                            current.specialDayId = interCalBeforeDay.id;
+                            current.isIntercalary = true;
+                          } else {
+                            current.day--;
+                          }
+                        }
+                      }
+                      remaining--;
+                    }
+                    return current;
+                  };
+      
+                  // Pre-calculate all 7 dates for header alignment
+                  const normalizedCurrentDate = normalizeDate(currentDate);
+                  const sevenDayDates = [];
+                  for (let offset = -3; offset <= 3; offset++) {
+                    sevenDayDates.push(stepDate(normalizedCurrentDate, offset));
+                  }
+      
+                  // Weekday headers - use actual weekdays of the dates or intercalary names
                   output += '<tr>';
-                  for (let i = 0; i < Math.min(daysInWeek, 7); i++) {
-                    const dayName = calendar.weeks.weekdayNames[i] || i;
-                    output += `<th style="border:1px solid #666;padding:2px;vertical-align:top;">${dayName.substr(0, 2)}</th>`;
+                  for (let i = 0; i < 7; i++) {
+                    const date = sevenDayDates[i];
+                    let headerName = '';
+                    
+                    if (date.isInterannual) {
+                      const interannualDay = (calendar.interannualDays || []).find(d => 
+                        d.position === date.position && d.order === date.order
+                      );
+                      headerName = interannualDay ? interannualDay.name.substr(0, 3) : '???';
+                    } else if (date.isIntercalary && date.specialDayId) {
+                      const icd = (calendar.interMonthDays || []).find(d => d.id === date.specialDayId);
+                      headerName = icd ? icd.name.substr(0, 3) : '???';
+                    } else {
+                      const absDay = DateUtils.toAbsoluteDay(date, calendar);
+                      const weekdayIndex = (absDay - 1) % daysInWeek;
+                      const dayName = calendar.weeks.weekdayNames[weekdayIndex] || weekdayIndex;
+                      headerName = dayName.substr(0, 3);
+                    }
+                    output += `<th style="border:1px solid #666;padding:2px;vertical-align:top;">${headerName}</th>`;
                   }
                   output += '</tr>';
 
                   output += '<tr>';
-                  for (let i = 0; i < Math.min(daysInWeek, 7); i++) {
-                    const day = weekStart + i;
-                    if (day < 1 || day > daysInMonth) {
-                      output += '<td style="border:1px solid #666;padding:2px;opacity:0.3;vertical-align:top;">-</td>';
+                  
+                  // Render cells using pre-calculated dates
+                  for (let i = 0; i < 7; i++) {
+                    const targetDate = sevenDayDates[i];
+                    
+                    const isToday = targetDate.isInterannual 
+                      ? (currentDate.isInterannual && targetDate.position === currentDate.position && targetDate.order === currentDate.order && targetDate.year === currentDate.year)
+                      : targetDate.isIntercalary
+                        ? (currentDate.isIntercalary && targetDate.specialDayId === currentDate.specialDayId && targetDate.year === currentDate.year)
+                        : (!currentDate.isInterannual && !currentDate.isIntercalary && targetDate.month === currentDate.month && targetDate.day === currentDate.day && targetDate.year === currentDate.year);
+                    
+                    const style = isToday ? 
+                      'border:2px solid #6b8cae;padding:1px;font-weight:bold;vertical-align:top;background:#5a5a5a;' : 
+                      'border:1px solid #666;padding:2px;vertical-align:top;';
+                    
+                    let cellContent = '';
+                    if (targetDate.isInterannual) {
+                      const interannualDay = (calendar.interannualDays || []).find(d => 
+                        d.position === targetDate.position && d.order === targetDate.order
+                      );
+                      cellContent = interannualDay ? interannualDay.name.substr(0, 3) : '???';
+                    } else if (targetDate.isIntercalary && targetDate.specialDayId) {
+                      const icd = (calendar.interMonthDays || []).find(d => d.id === targetDate.specialDayId);
+                      cellContent = icd ? icd.name.substr(0, 3) : '???';
                     } else {
-                      const isToday = day === currentDate.day;
-                      const style = isToday ? 
-                        'border:2px solid #6b8cae;padding:1px;font-weight:bold;vertical-align:top;background:#5a5a5a;' : 
-                        'border:1px solid #666;padding:2px;vertical-align:top;';
-          
-                      output += `<td style="${style}"><div>${day}</div>`;
-          
-                      // Moon phases (SVG, visible moons only)
-                      if (moons && moons.length > 0) {
-                        const date = {year: currentDate.year, month: currentDate.month, day: day};
-                        const phases = MoonPhaseCalculator.getAllPhases(moons, date, calendar);
-                        if (phases.length > 0) {
-                          output += `<div style="font-size:8px;">`;
-                          phases.forEach(p => output += p.html);
-                          output += `</div>`;
-                        }
-                      }
-          
-                      // Weather emoji
-                      const w = weather.find(ww => ww.dateRef.year === currentDate.year && ww.dateRef.month === currentDate.month && ww.dateRef.day === day);
-                      if (w) {
-                        const weatherEmoji = w.emoji || WeatherGenerator.getWeatherEmoji(w.description);
-                        output += `<div style="font-size:8px;">${weatherEmoji}</div>`;
-                      }
-          
-                      output += '</td>';
+                      cellContent = targetDate.day.toString();
                     }
+                    
+                    output += `<td style="${style}"><div>${cellContent}</div>`;
+                    
+                    // Moon phases (for regular and intercalary dates, not interannual)
+                    if (!targetDate.isInterannual && moons && moons.length > 0) {
+                      const phases = MoonPhaseCalculator.getAllPhases(moons, targetDate, calendar);
+                      if (phases.length > 0) {
+                        output += `<div style="font-size:8px;">`;
+                        phases.forEach(p => output += p.html);
+                        output += `</div>`;
+                      }
+                    }
+                    
+                    // Weather emoji in frame (reduced size)
+                    const w = weather.find(ww => {
+                      if (targetDate.isInterannual) {
+                        return ww.dateRef.isInterannual && 
+                               ww.dateRef.position === targetDate.position && 
+                               ww.dateRef.order === targetDate.order &&
+                               ww.dateRef.year === targetDate.year;
+                      } else if (targetDate.isIntercalary && targetDate.specialDayId) {
+                        return ww.dateRef.specialDayId === targetDate.specialDayId &&
+                               ww.dateRef.year === targetDate.year;
+                      } else {
+                        return !ww.dateRef.isInterannual && !ww.dateRef.isIntercalary &&
+                               ww.dateRef.year === targetDate.year && 
+                               ww.dateRef.month === targetDate.month && 
+                               ww.dateRef.day === targetDate.day;
+                      }
+                    });
+                    if (w) {
+                      const weatherEmoji = w.emoji || WeatherGenerator.getWeatherEmoji(w.description);
+                      const emojiStyle = CSS_CURRENT.emojiCircle.replace('float: right;', '').replace('float:right;', '') + 'display: inline-block; margin-top: 2px; padding:3px 1px; font-size: 14px;';
+                      output += `<div style="${emojiStyle}">${weatherEmoji}</div>`;
+                    }
+                    
+                    output += '</td>';
                   }
                   output += '</tr></table>';
 
@@ -7231,7 +7555,9 @@ const Chronicle = (() => {
           }
           
           if (d.isInterannual) {
-            const interannualDay = DateUtils.getInterannualDayInfo(d.position, d.order, calendar);
+            const interannualDay = (calendar.interannualDays || []).find(iad => 
+              iad.position === d.position && iad.order === d.order
+            );
             dateCell += interannualDay ? interannualDay.name : 'Unknown';
           } else if (d.month && d.day) {
             if (d.month !== lastMonth) {
