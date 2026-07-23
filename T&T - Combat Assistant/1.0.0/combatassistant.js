@@ -48,6 +48,11 @@ const CombatAssistant = (() => {
         '!ca'
     ]);
 
+    const PLAYER_ALLOWED_ACTIONS = Object.freeze({
+        use: true,
+        rollinit: true
+    });
+
     const INITIATIVE_BATCH_TIMERS = {};
     let SCRIPT_ACTIVE = false;
 
@@ -2173,8 +2178,9 @@ const CombatAssistant = (() => {
             const rawTitle = titleMatch ? Utils.cleanRoll20Label(htmlText(titleMatch[1])) : '';
             if (!rawTitle) return null;
             const textSource = htmlText(source);
-            const isHealing = /data-rollSubcategory="(?:Healing|Heal)"/i.test(source) || /\b(healing|heal)\b/i.test(rawTitle) || /\b(healing|heal)\s+breakdown\b/i.test(textSource);
-            const isTempHealing = isHealing && (/\btemporary\s+hit\s+points?\b/i.test(rawTitle) || /\btemporary\s+hit\s+points?\b/i.test(textSource) || /\btemp(?:orary)?\s+hp\b/i.test(textSource));
+            const isTemporaryHitPoints = /\btemporary\s+hit\s+points?\b/i.test(rawTitle) || /\btemporary\s+hit\s+points?\b/i.test(textSource) || /\btemp(?:orary)?\s*hp\b/i.test(textSource);
+            const isHealing = isTemporaryHitPoints || /data-rollSubcategory="(?:Healing|Heal)"/i.test(source) || /\b(healing|heal)\b/i.test(rawTitle) || /\b(healing|heal)\s+breakdown\b/i.test(textSource);
+            const isTempHealing = isTemporaryHitPoints;
             const isDamage = !isHealing && (/header__title[^"]*--damage/i.test(titleMatch[0]) || /data-rollSubcategory="Damage"/i.test(source));
             const attackName = Utils.cleanRoll20Label(rawTitle.replace(/\s+(Damage|Healing|Heal)\s*$/i, '').trim());
             const resultMatch = source.match(/data-result="([+-]?\d+(?:\.\d+)?)"/i);
@@ -2226,11 +2232,30 @@ const CombatAssistant = (() => {
             };
         },
 
+        extractSaveDetailsFromText(text) {
+            const source = Utils.stripHtml(String(text || '')).replace(/\s+/g, ' ').trim();
+            if (!source) return { saveDc: 0, saveAbility: '', halfOnSuccess: false };
+            const saveDcMatch = source.match(/\bDC\s*([0-9]+)/i) || source.match(/\b(?:difficulty\s+class)\s*([0-9]+)/i);
+            const abilityPattern = '(strength|dexterity|constitution|intelligence|wisdom|charisma|str|dex|con|int|wis|cha)';
+            const saveAbilityMatch =
+                source.match(new RegExp('\\bDC\\s*[0-9]+\\s+' + abilityPattern + '\\s+(?:saving\\s+throw|save)\\b', 'i')) ||
+                source.match(new RegExp('\\b' + abilityPattern + '\\s+(?:saving\\s+throw|save)\\b', 'i')) ||
+                source.match(new RegExp('\\b(?:saving\\s+throw|save)\\b\\s*[:\\-]?\\s*' + abilityPattern + '\\b', 'i'));
+            const halfOnSuccess = /\bOn\s+Successful\s+Save\s*:\s*(?:Half|Half\s+as\s+much)\s+damage\b/i.test(source) ||
+                /\bhalf\s+(?:as\s+much\s+)?damage\b/i.test(source);
+            return {
+                saveDc: saveDcMatch ? Math.max(0, Utils.toInt(saveDcMatch[1], 0)) : 0,
+                saveAbility: saveAbilityMatch ? CombatService.normalizeAbilityName(saveAbilityMatch[1]) : '',
+                halfOnSuccess
+            };
+        },
+
         parseAttackRoll(msg, fields, advanced) {
             const content = String(msg.content || '');
             if (advanced && advanced.isAttack && advanced.attackTotal !== null) {
                 return {
                     total: Math.max(0, Utils.toInt(advanced.attackTotal, 0)),
+                    hasAttackRoll: true,
                     mode: 'normal',
                     rolls: [],
                     saveDc: advanced.saveDc || 0,
@@ -2248,14 +2273,22 @@ const CombatAssistant = (() => {
             const resolvedRoll = this.resolve2014TemplateD20Roll(msg, fields, content, r1Value, r2Value);
             const saveDcField = fields.savedc || fields.save_dc || fields.dc || fields.spelldc || '';
             const saveDcTotal = saveDcField ? this.fieldTotal(msg, saveDcField) : null;
-            const saveDc = Math.max(0, Utils.toInt(saveDcTotal !== null ? saveDcTotal : saveDcField, 0));
-            const saveAbility = fields.saveattr || fields.saveability || fields.save_ability || fields.savetype || '';
+            const textSave = this.extractSaveDetailsFromText([
+                fields.savedesc,
+                fields.save_success,
+                fields.description,
+                fields.desc,
+                content
+            ].filter(Boolean).join(' '));
+            const saveDc = Math.max(0, Utils.toInt(saveDcTotal !== null ? saveDcTotal : saveDcField, 0)) || textSave.saveDc;
+            const saveAbility = fields.saveattr || fields.saveability || fields.save_ability || fields.savetype || textSave.saveAbility || '';
             let total = resolvedRoll.total;
             const natural = resolvedRoll.natural;
             const mode = resolvedRoll.mode;
             if (total === null && saveDc > 0) total = saveDc;
             return {
                 total,
+                hasAttackRoll: resolvedRoll.total !== null && resolvedRoll.total !== undefined,
                 natural,
                 isCritical: natural === 20,
                 mode,
@@ -2263,7 +2296,7 @@ const CombatAssistant = (() => {
                 naturalRolls: resolvedRoll.naturalRolls,
                 saveDc,
                 saveAbility,
-                halfOnSuccess: /half/i.test(String(fields.savedesc || fields.save_success || fields.description || '')),
+                halfOnSuccess: /half/i.test(String(fields.savedesc || fields.save_success || fields.description || '')) || textSave.halfOnSuccess,
                 halfOnSuccessKnown: saveDc > 0
             };
         },
@@ -2346,7 +2379,9 @@ const CombatAssistant = (() => {
                 ? damageRolls.reduce((sum, entry) => sum + Math.max(0, Utils.toInt(entry.total, 0)), 0)
                 : Math.max(0, Utils.toInt(advanced && advanced.damageTotal, 0));
             const hasDamage = damageRolls.length > 0 || (advanced && advanced.isDamage);
-            const explicitHealing = (advanced && advanced.isHealing) || /\b(healing|heal)\b/i.test(String(fields.dmg1type || fields.damage_type || fields.damagetype || fields.hldmgtype || fields.healingtype || fields.rname || fields.name || ''));
+            const healingSignalText = String(fields.dmg1type || fields.damage_type || fields.damagetype || fields.hldmgtype || fields.healingtype || fields.rname || fields.name || '');
+            const temporaryHitPointsSignal = /\btemporary\s+hit\s+points?\b/i.test(healingSignalText) || /\btemporary\s+hit\s+points?\b/i.test(content) || /\btemp(?:orary)?\s*hp\b/i.test(healingSignalText) || /\btemp(?:orary)?\s*hp\b/i.test(content);
+            const explicitHealing = (advanced && advanced.isHealing) || temporaryHitPointsSignal || /\b(healing|heal)\b/i.test(healingSignalText);
             const rollLabelText = [
                 msg.rolltemplate,
                 explicitAttackNameSource,
@@ -2389,8 +2424,9 @@ const CombatAssistant = (() => {
                 isAttack: !!looksLikeAttack,
                 isDamage: !!looksLikeDamage && !explicitHealing,
                 isHealing: !!explicitHealing,
-                isTempHealing: !!(advanced && advanced.isTempHealing) || /temp(?:orary)?\s*hp|temporary\s+hit\s+points/i.test(content),
+                isTempHealing: !!(advanced && advanced.isTempHealing) || temporaryHitPointsSignal,
                 attackTotal: Math.max(0, Utils.toInt(attack.total, 0)),
+                hasAttackRoll: !!attack.hasAttackRoll,
                 attackNatural: attack.natural,
                 isCritical: !!attack.isCritical,
                 rollMode: attack.mode || 'normal',
@@ -3042,6 +3078,44 @@ const CombatAssistant = (() => {
             return true;
         },
 
+        shouldOfferAttackAndSavePrompts(result) {
+            if (!result || result.isHealing) return false;
+            const attackTotal = Math.max(0, Utils.toInt(result.attackTotal, 0));
+            const saveDc = Math.max(0, Utils.toInt(result.saveDc, 0));
+            const saveAbility = CombatService.normalizeAbilityName(result.saveAbility || '');
+            const damageRolls = Array.isArray(result.damageRolls) ? result.damageRolls : [];
+            const damageTotal = Math.max(0, Utils.toInt(result.damageTotal, 0));
+            return !!result.hasAttackRoll && attackTotal > 0 && saveDc > 0 && !!saveAbility && (damageRolls.length > 0 || damageTotal > 0);
+        },
+
+        attackPromptVariant(result) {
+            return Object.assign({}, result || {}, {
+                isSaveAttack: false,
+                saveDc: 0,
+                saveAbility: '',
+                halfOnSuccess: false,
+                halfOnSuccessKnown: false
+            });
+        },
+
+        savePromptVariant(result) {
+            return Object.assign({}, result || {}, {
+                isSaveAttack: true,
+                saveAbility: CombatService.normalizeAbilityName(result && result.saveAbility || ''),
+                saveDc: Math.max(0, Utils.toInt(result && result.saveDc, 0))
+            });
+        },
+
+        sendAttackDamagePrompts(result) {
+            if (this.shouldOfferAttackAndSavePrompts(result)) {
+                R20.whisper('GM', Render.showAttackDamagePrompt(this.attackPromptVariant(result)));
+                R20.whisper('GM', Render.showAttackDamagePrompt(this.savePromptVariant(result)));
+                return;
+            }
+            R20.whisper('GM', Render.showAttackDamagePrompt(result));
+            this.sendPlayerPrompt(result);
+        },
+
         async handleChatMessage(msg) {
             if (!RuntimeConfig.get('CHAT_TRACKING')) return;
             const parsed = this.parseMessage(msg);
@@ -3069,8 +3143,7 @@ const CombatAssistant = (() => {
             }
 
             if (parsed.isAttack && parsed.isDamage) {
-                R20.whisper('GM', Render.showAttackDamagePrompt(parsed));
-                this.sendPlayerPrompt(parsed);
+                this.sendAttackDamagePrompts(parsed);
                 this.rememberAttack(parsed);
                 return;
             }
@@ -3086,6 +3159,7 @@ const CombatAssistant = (() => {
                     tokenImgsrc: (prior && prior.tokenImgsrc) || parsed.tokenImgsrc,
                     attackName: (prior && prior.attackName) || parsed.attackName,
                     attackTotal: Math.max(0, Utils.toInt(prior && prior.attackTotal, parsed.attackTotal || 0)),
+                    hasAttackRoll: !!((prior && prior.hasAttackRoll) || parsed.hasAttackRoll),
                     rollMode: (prior && prior.rollMode) || parsed.rollMode,
                     saveDc: Math.max(0, Utils.toInt(parsed.saveDc || (prior && prior.saveDc), 0)),
                     saveAbility: parsed.saveAbility || (prior && prior.saveAbility) || '',
@@ -3093,8 +3167,7 @@ const CombatAssistant = (() => {
                     halfOnSuccess: !!(parsed.halfOnSuccess || (prior && prior.halfOnSuccess)),
                     halfOnSuccessKnown: !!(parsed.halfOnSuccessKnown || (prior && prior.halfOnSuccessKnown))
                 });
-                R20.whisper('GM', Render.showAttackDamagePrompt(result));
-                this.sendPlayerPrompt(result);
+                this.sendAttackDamagePrompts(result);
                 if (prior) this.clearRecentAttack(prior);
             }
         }
@@ -3107,6 +3180,7 @@ const CombatAssistant = (() => {
         normalizeDamageType(type) {
             const raw = String(type || '').trim().toLowerCase();
             if (!raw || raw === '-' || raw === 'none') return 'normal';
+            if (/\btemporary\s+hit\s+points?\b/i.test(raw) || /\btemp(?:orary)?\s*hp\b/i.test(raw) || /\btemp\s+healing\b/i.test(raw)) return 'temp healing';
             const known = Object.keys(CONFIG.DAMAGE_TYPE_COLORS);
             for (let i = 0; i < known.length; i += 1) {
                 if (raw === known[i] || raw.indexOf(known[i]) >= 0) return known[i];
@@ -4136,6 +4210,24 @@ const CombatAssistant = (() => {
             return { ok: false, message: 'This action is not enabled for players.' };
         },
 
+        isPlayerAllowedAction(action) {
+            return !!PLAYER_ALLOWED_ACTIONS[String(action || '').trim().toLowerCase()];
+        },
+
+        canUsePlayerActionRequest(ctx, request) {
+            if (ctx.isGM) return true;
+            const payload = request && request.payload ? request.payload : {};
+            const sourceTokenId = String(request && request.sourceTokenId || payload.casterTokenId || '').trim();
+            const sourceCharacterId = String(request && request.sourceCharacterId || request && request.characterId || payload.casterCharacterId || '').trim();
+            const sourceToken = sourceTokenId ? R20.getTokenById(sourceTokenId) : null;
+            const sourceCharacter = sourceToken
+                ? R20.getCharacterFromToken(sourceToken)
+                : (sourceCharacterId ? getObj('character', sourceCharacterId) : null);
+            if (sourceToken && R20.tokenIsControlledByPlayer(sourceToken, sourceCharacter, ctx.playerId)) return true;
+            const access = R20.getCharacterAccessFlags(sourceCharacter, ctx.playerId, ctx.isGM);
+            return !!access.controlAccess;
+        },
+
         getNativeRollRecipients(token, character) {
             const playerRecipients = R20.isPlayerControlledToken(token, character) ? R20.getTokenControllerDisplayNames(token, character) : [];
             return Utils.uniqueNames(['GM'].concat(playerRecipients));
@@ -4368,6 +4460,10 @@ const CombatAssistant = (() => {
         async handle(ctx) {
             const args = ctx.args || [];
             const action = String(args[0] || 'menu').trim().toLowerCase();
+            if (!ctx.isGM && !this.isPlayerAllowedAction(action)) {
+                Render.sendWhisperMessage(ctx.who, 'Permission Denied', 'Only the GM can use Combat Assistant commands. Use generated player buttons for attacks, healing, and saving throws.', 'failure');
+                return;
+            }
             if (action === 'menu') {
                 Render.showMenu(ctx.who);
                 return;
@@ -4443,6 +4539,10 @@ const CombatAssistant = (() => {
             const request = State.getPlayerActionRequest(actionId);
             if (!request || request.used) {
                 Render.sendWhisperMessage(ctx.who, 'Action Expired', 'This single-use button has already been used or expired.', 'warning');
+                return;
+            }
+            if (!this.canUsePlayerActionRequest(ctx, request)) {
+                Render.sendWhisperMessage(ctx.who, 'Permission Denied', 'This player action belongs to a token you do not control.', 'failure');
                 return;
             }
             if (!targetId) {
