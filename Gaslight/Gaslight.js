@@ -92,7 +92,7 @@ var Gaslight = Gaslight || (() => {
         if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: true, initiative: true, reticle: true };
         if (state[SCRIPT_NAME].hud.initiative === undefined) state[SCRIPT_NAME].hud.initiative = false;
         if (state[SCRIPT_NAME].hud.reticle === undefined) state[SCRIPT_NAME].hud.reticle = true;
-        // Migration: v2.0.0 -> v2.1.0 — view null used to mean "relay to all", now null means "off"
+        // Migration: v2.0.0 -> v2.1.0 â€” view null used to mean "relay to all", now null means "off"
         if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
             if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
             state[SCRIPT_NAME].version = SCRIPT_VERSION;
@@ -100,7 +100,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Config Storage — GM layer text objects
+    // Config Storage â€” GM layer text objects
     // =========================================================================
 
     const getConfigsOnPage = (pageId) => {
@@ -264,7 +264,7 @@ var Gaslight = Gaslight || (() => {
             return null;
         }
 
-        // Ambiguous — show disambiguation buttons
+        // Ambiguous â€” show disambiguation buttons
         var out = 'Multiple players named "' + playerArg + '":<br>';
         matches.forEach(function(p) {
             var chars = findObjs({ _type: 'character' }).filter(function(c) {
@@ -288,7 +288,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Token GM Notes — gaslight_link
+    // Token GM Notes â€” gaslight_link
     // =========================================================================
 
     const getLinkId = (token) => {
@@ -469,16 +469,16 @@ var Gaslight = Gaslight || (() => {
     /**
      * Read the gaslight_sync config for a token (from gmnotes only).
      * Returns:
-     *   null — not configured (default: sync all non-spatial)
-     *   '' — explicitly empty (no sync)
-     *   ['prop1','prop2',...] — specific props to sync
+     *   null â€” not configured (default: sync all non-spatial)
+     *   '' â€” explicitly empty (no sync)
+     *   ['prop1','prop2',...] â€” specific props to sync
      */
     const getGaslightSync = (token) => {
         var rawVal = null;
         if (token && typeof token === 'object' && typeof token.get === 'function') {
             rawVal = getSyncConfigRaw(token);
         } else if (typeof token === 'string') {
-            // Legacy: character ID — read attribute directly (used internally only)
+            // Legacy: character ID â€” read attribute directly (used internally only)
             var attr = findObjs({ _type: 'attribute', _characterid: token, name: 'gaslight_sync' })[0];
             if (!attr) return null;
             rawVal = (attr.get('current') || '').trim();
@@ -589,7 +589,7 @@ var Gaslight = Gaslight || (() => {
             }
         });
 
-        // Step 4: unlinked — only master-page represents tokens
+        // Step 4: unlinked â€” only master-page represents tokens
         unmatchedSources.forEach(src => {
             if (!results.some(r => r.source.get('id') === src.get('id'))) {
                 if (src.get('represents')) {
@@ -686,7 +686,7 @@ var Gaslight = Gaslight || (() => {
         const controlledBy = character.get('controlledby') || '';
         if (!controlledBy) return null;
         if (controlledBy === 'all') {
-            // All players control it — return first group player as representative
+            // All players control it â€” return first group player as representative
             var firstPlayer = Object.keys(groupInfo.players)[0];
             return firstPlayer || null;
         }
@@ -747,7 +747,7 @@ var Gaslight = Gaslight || (() => {
 
             // Find all controlling player IDs in the group for this token
             var controllerIds = [];
-            // Check the character's controlledby — use first token's character as representative
+            // Check the character's controlledby â€” use first token's character as representative
             var repCharId = null;
             for (var i = 0; i < tokens.length; i++) {
                 if (tokens[i].get('represents')) { repCharId = tokens[i].get('represents'); break; }
@@ -767,7 +767,7 @@ var Gaslight = Gaslight || (() => {
 
             var ids = tokens.map(function(t) { return t.get('id'); });
 
-            // Check gaslight_sync — read from first token's gmnotes (falls back to character attr)
+            // Check gaslight_sync â€” read from first token's gmnotes (falls back to character attr)
             var syncProps = getGaslightSync(tokens[0]);
             // syncProps: null = default (base spatial), '' = no sync at all, array = specific
 
@@ -790,7 +790,7 @@ var Gaslight = Gaslight || (() => {
                 }
                 mirrorProps = mirrorRequested.length > 0 ? mirrorRequested : false;
             }
-            // Always pass explicit components — never let Anchor default to ALL_COMPONENTS
+            // Always pass explicit components â€” never let Anchor default to ALL_COMPONENTS
             if (!anchorComponents) {
                 anchorComponents = {};
                 allAnchorProps.forEach(function(p) { anchorComponents[p] = true; });
@@ -1154,7 +1154,7 @@ var Gaslight = Gaslight || (() => {
                     var tgtName = l.target.get('name') || l.target.get('id');
                     out += '? ' + srcName + ' ? ' + tgtName + ' (step ' + l.step + ')<br>';
                 } else {
-                    out += '?? ' + srcName + ' — no match found<br>';
+                    out += '?? ' + srcName + ' â€” no match found<br>';
                 }
             });
             if (links.length === 0) out += '(no linkable tokens)<br>';
@@ -1395,12 +1395,12 @@ var Gaslight = Gaslight || (() => {
 
         var label = useDefault ? 'character default' : 'token';
 
-        // No args — show current config
+        // No args â€” show current config
         if (args.length === 0) {
             var results = tokens.map(function(t) {
                 var raw = getVal(t);
                 var name = t.get('name') || t.get('id');
-                return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
+                return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default â€” sync all)</i>' : raw || '<i>(empty â€” no sync)</i>');
             });
             reply(msg, 'Sync', results.join('<br>'));
             return;
@@ -1408,7 +1408,7 @@ var Gaslight = Gaslight || (() => {
 
         var subCmd = args[0].toLowerCase();
 
-        // Reset — re-copy from character attribute (only makes sense for token mode)
+        // Reset â€” re-copy from character attribute (only makes sense for token mode)
         if (subCmd === 'reset') {
             if (useDefault) { reply(msg, 'Error', 'Reset only applies to token sync, not --default.'); return; }
             tokens.forEach(function(t) {
@@ -1426,7 +1426,7 @@ var Gaslight = Gaslight || (() => {
             return;
         }
 
-        // "all" — explicitly sync everything
+        // "all" â€” explicitly sync everything
         if (subCmd === 'all') {
             tokens.forEach(function(t) { setVal(t, 'all'); });
             reply(msg, 'Sync', 'Set to sync all properties on ' + tokens.length + ' ' + label + '(s).');
@@ -1472,7 +1472,7 @@ var Gaslight = Gaslight || (() => {
 
         if (args.length === 0) { reply(msg, 'Error', 'Usage: !gaslight desync [--default] <props|all>'); return; }
 
-        // "all" — disable all syncing (set empty string = no sync)
+        // "all" â€” disable all syncing (set empty string = no sync)
         if (args[0].toLowerCase() === 'all') {
             tokens.forEach(function(t) { setVal(t, ''); });
             reply(msg, 'Desync', 'Disabled all syncing on ' + tokens.length + ' ' + label + '(s).' + (useDefault ? '' : ' Use <code>!gaslight sync reset</code> to restore.'));
@@ -1541,7 +1541,7 @@ var Gaslight = Gaslight || (() => {
             }
         }
 
-        // Normalize names — ensure gl_ prefix
+        // Normalize names â€” ensure gl_ prefix
         actions.forEach(function(a) {
             if (!a.name.startsWith('gl_')) a.name = 'gl_' + a.name;
         });
@@ -1623,9 +1623,9 @@ var Gaslight = Gaslight || (() => {
                                 if (target.get('_pageid') === e[1].pageId) pageName = e[1].name || e[0];
                             });
                         });
-                        return pageName + ': ' + (val || '<i>Ø</i>');
+                        return pageName + ': ' + (val || '<i>Ã˜</i>');
                     });
-                    output.push('<b>' + tokenName + '</b> ' + a.name + ' — ' + vals.join(', '));
+                    output.push('<b>' + tokenName + '</b> ' + a.name + ' â€” ' + vals.join(', '));
                 } else {
                     var target = getTargets[0];
                     var tNotes = target.get('gmnotes') || '';
@@ -2258,7 +2258,7 @@ var Gaslight = Gaslight || (() => {
         + 'Aliases: init/turn/turns = initiative, relay = view<br>';
 
     // =========================================================================
-    // Scripting Engine — Fetch Integration
+    // Scripting Engine â€” Fetch Integration
     // =========================================================================
 
     // Module-level evaluation context for Fetch compProp resolution
@@ -2334,7 +2334,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Scripting Engine — Trigger Map
+    // Scripting Engine â€” Trigger Map
     // =========================================================================
 
     // triggerMap: attributeName ? [{ pinId, pageId }]
@@ -2350,7 +2350,7 @@ var Gaslight = Gaslight || (() => {
         // Strip HTML for parsing
         var text = content.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
-        // Find content inside {& if ...} blocks (simple regex — catches most cases)
+        // Find content inside {& if ...} blocks (simple regex â€” catches most cases)
         var ifRx = /\{&\s*if\s+(.+?)\}/gi;
         var match;
         while ((match = ifRx.exec(text)) !== null) {
@@ -2450,7 +2450,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle attribute changes — check trigger map and re-evaluate affected pins.
+     * Handle attribute changes â€” check trigger map and re-evaluate affected pins.
      */
     const onAttributeChanged = (obj) => {
         var attrName = obj.get('name');
@@ -2466,7 +2466,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle token property changes — check trigger map for graphic properties.
+     * Handle token property changes â€” check trigger map for graphic properties.
      */
     const onGraphicPropChanged = (obj, prev) => {
         var changed = Object.keys(prev).filter(function(k) { return !k.startsWith('_') && prev[k] !== obj.get(k) && k !== 'gmnotes'; });
@@ -2936,7 +2936,7 @@ var Gaslight = Gaslight || (() => {
         evaluationContext.viewerPlayerId = viewerPlayerId; // no linked copy on this viewer's page
 
         var content = scriptContent;
-        // Replace remaining @(target.*) with token ID — Fetch resolves native props
+        // Replace remaining @(target.*) with token ID â€” Fetch resolves native props
         content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
         // Replace @(gm_target.*) with master page token ID
         content = content.replace(/@\(gm_target\./g, '@(' + targetToken.get('id') + '.');
@@ -3306,7 +3306,7 @@ var Gaslight = Gaslight || (() => {
             });
         }
 
-        // Token assignment — only count tokens representing this character
+        // Token assignment â€” only count tokens representing this character
         var tokens = selected.map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
             return t && t.get('represents') === charId;
         });
@@ -3382,33 +3382,33 @@ var Gaslight = Gaslight || (() => {
             '<ol>',
             '<li>Create your master page with all tokens placed.</li>',
             '<li>Duplicate it once per player (Roll20 built-in Duplicate Page).</li>',
-            '<li>Select party tokens on the master page, run: <code>!gaslight setup mygroup</code> — this auto-detects duplicates, assigns pages to players, and configures the group.</li>',
-            '<li>Run <code>!gaslight test mygroup</code> — dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
-            '<li>Run <code>!gaslight split mygroup</code> — activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
-            '<li>When done: <code>!gaslight merge</code> — tears down all links, returns players to the banner page.</li>',
+            '<li>Select party tokens on the master page, run: <code>!gaslight setup mygroup</code> â€” this auto-detects duplicates, assigns pages to players, and configures the group.</li>',
+            '<li>Run <code>!gaslight test mygroup</code> â€” dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
+            '<li>Run <code>!gaslight split mygroup</code> â€” activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
+            '<li>When done: <code>!gaslight merge</code> â€” tears down all links, returns players to the banner page.</li>',
             '</ol>',
             '<h3>Commands</h3>',
-            '<p><code>!gaslight setup &lt;group&gt;</code> — Quick-configure from duplicate pages</p>',
-            '<p><code>!gaslight split &lt;group&gt; [--force]</code> — Activate group</p>',
-            '<p><code>!gaslight merge [group]</code> — Tear down links, return players</p>',
-            '<p><code>!gaslight test &lt;group&gt;</code> — Dry-run linking</p>',
-            '<p><code>!gaslight link [name|new] [ids...]</code> — Manually link tokens</p>',
-            '<p><code>!gaslight unlink [ids...|--group &lt;g&gt;]</code> — Remove links</p>',
-            '<p><code>!gaslight group &lt;g&gt; &lt;player|GM&gt;</code> — Assign page to group</p>',
-            '<p><code>!gaslight ungroup &lt;g&gt; &lt;player|--all&gt;</code> — Remove from group</p>',
-            '<p><code>!gaslight stage [players...]</code> — Propagate tokens to player pages</p>',
-            '<p><code>!gaslight view [player|master]</code> — Switch relay view</p>',
-            '<p><code>!gaslight relay &lt;views&gt; &lt;!command&gt;</code> — Relay command to specific views</p>',
-            '<p><code>!gaslight config [relay-add|relay-remove|relay-list]</code> — Configure relay commands</p>',
-            '<p><code>!gaslight eval [--dry-run] [--all|&lt;handout&gt;]</code> — Evaluate script pins</p>',
-            '<p><code>!gaslight status</code> — Show state</p>',
+            '<p><code>!gaslight setup &lt;group&gt;</code> â€” Quick-configure from duplicate pages</p>',
+            '<p><code>!gaslight split &lt;group&gt; [--force]</code> â€” Activate group</p>',
+            '<p><code>!gaslight merge [group]</code> â€” Tear down links, return players</p>',
+            '<p><code>!gaslight test &lt;group&gt;</code> â€” Dry-run linking</p>',
+            '<p><code>!gaslight link [name|new] [ids...]</code> â€” Manually link tokens</p>',
+            '<p><code>!gaslight unlink [ids...|--group &lt;g&gt;]</code> â€” Remove links</p>',
+            '<p><code>!gaslight group &lt;g&gt; &lt;player|GM&gt;</code> â€” Assign page to group</p>',
+            '<p><code>!gaslight ungroup &lt;g&gt; &lt;player|--all&gt;</code> â€” Remove from group</p>',
+            '<p><code>!gaslight stage [players...]</code> â€” Propagate tokens to player pages</p>',
+            '<p><code>!gaslight view [player|master]</code> â€” Switch relay view</p>',
+            '<p><code>!gaslight relay &lt;views&gt; &lt;!command&gt;</code> â€” Relay command to specific views</p>',
+            '<p><code>!gaslight config [relay-add|relay-remove|relay-list]</code> â€” Configure relay commands</p>',
+            '<p><code>!gaslight eval [--dry-run] [--all|&lt;handout&gt;]</code> â€” Evaluate script pins</p>',
+            '<p><code>!gaslight status</code> â€” Show state</p>',
             '<h3>Auto-Relay</h3>',
             '<p>Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages. Token IDs in the command are replaced with their linked counterparts on each page. No configuration needed.</p>',
             '<p><b>Player-page commands are page-local by default.</b> A command run against tokens on a player page only affects that page. To have player-page commands relay to other player pages and master, add them to relay-commands: <code>!gaslight config relay-add !token-mod</code></p>',
             '<h3>Selective Relay</h3>',
             '<p>Use <code>!gaslight relay</code> to send a command to specific players only. Useful when you are on a player page or want to exclude certain players:</p>',
-            '<p><code>!gaslight relay Alice Bob !token-mod --set layer|objects</code> — only Alice and Bob see a door open; Charlie does not.</p>',
-            '<p><code>!gaslight relay all !token-mod --set bar1_value|10</code> — relay to all player pages (useful when running from a player page instead of master).</p>',
+            '<p><code>!gaslight relay Alice Bob !token-mod --set layer|objects</code> â€” only Alice and Bob see a door open; Charlie does not.</p>',
+            '<p><code>!gaslight relay all !token-mod --set bar1_value|10</code> â€” relay to all player pages (useful when running from a player page instead of master).</p>',
             '<h3>Token Linking</h3>',
             '<p>Tokens are linked across pages automatically by:</p>',
             '<ol>',
@@ -3419,15 +3419,15 @@ var Gaslight = Gaslight || (() => {
             '<h3>Sync Control</h3>',
             '<p>Set the <code>gaslight_sync</code> attribute on a character to control what stays in sync:</p>',
             '<ul>',
-            '<li><b>Absent</b> — full sync (position + all properties). Default for most tokens.</li>',
-            '<li><b>Empty</b> — no sync at all. Use for tokens that are completely independent per player (e.g. a hallucination only one player sees).</li>',
-            '<li><code>base</code> — position/rotation/scale only. Use for NPCs whose appearance differs per player (e.g. a disguised shapechanger) but still moves together.</li>',
-            '<li><code>base, bars</code> — position + HP/bars. Use for enemies with different names or art per player but shared health pools.</li>',
-            '<li><code>base, bars, light</code> — position + HP + light. Standard for most combat tokens where you want per-player auras/names but shared position and health.</li>',
-            '<li><code>!anchor</code> — sync all properties except position. Use for a token that appears in different locations per player (e.g. an illusory wall) but keeps the same stats.</li>',
+            '<li><b>Absent</b> â€” full sync (position + all properties). Default for most tokens.</li>',
+            '<li><b>Empty</b> â€” no sync at all. Use for tokens that are completely independent per player (e.g. a hallucination only one player sees).</li>',
+            '<li><code>base</code> â€” position/rotation/scale only. Use for NPCs whose appearance differs per player (e.g. a disguised shapechanger) but still moves together.</li>',
+            '<li><code>base, bars</code> â€” position + HP/bars. Use for enemies with different names or art per player but shared health pools.</li>',
+            '<li><code>base, bars, light</code> â€” position + HP + light. Standard for most combat tokens where you want per-player auras/names but shared position and health.</li>',
+            '<li><code>!anchor</code> â€” sync all properties except position. Use for a token that appears in different locations per player (e.g. an illusory wall) but keeps the same stats.</li>',
             '</ul>',
             '<h3>Staging</h3>',
-            '<p><b>Token changes and deletion propagate automatically</b> across linked pages. However, <b>token creation does not</b> — new tokens placed on one page are not automatically copied to others.</p>',
+            '<p><b>Token changes and deletion propagate automatically</b> across linked pages. However, <b>token creation does not</b> â€” new tokens placed on one page are not automatically copied to others.</p>',
             '<p>Use <code>!gaslight stage</code> with tokens selected to duplicate them to all player pages and link them. Alternatively, set <code>gaslight_stage = 1</code> on a character to auto-stage whenever a token representing that character is placed.</p>',
             '<h3>Scripting</h3>',
             '<p>Gaslight scripts are reactive automation stored in handouts, activated via pins on the map. Scripts evaluate per-viewer per-target and fire API commands conditionally.</p>',
@@ -3437,16 +3437,16 @@ var Gaslight = Gaslight || (() => {
             '<pre>// Comments start with //\n!token-mod --set {& if (any(@(viewer.passive_wisdom)) >= @(target.gl_stealth_result))} layer|objects {& else} layer|gmlayer {& end}</pre>',
             '<p><b>Variables:</b></p>',
             '<ul>',
-            '<li><code>@(target.*)</code> — the token being evaluated (linked per viewer page)</li>',
-            '<li><code>@(target.gl_*)</code> — captured values (falls back to character attribute)</li>',
+            '<li><code>@(target.*)</code> â€” the token being evaluated (linked per viewer page)</li>',
+            '<li><code>@(target.gl_*)</code> â€” captured values (falls back to character attribute)</li>',
             '</ul>',
             '<p><b>Aggregate functions</b> (required for viewer.*/gm.*):</p>',
             '<ul>',
-            '<li><code>any(@(viewer.field)) op value</code> — true if any viewer token passes</li>',
-            '<li><code>all(@(viewer.field)) op value</code> — true if all pass</li>',
-            '<li><code>max(@(viewer.field))</code> — highest value across viewer tokens</li>',
-            '<li><code>min(@(viewer.field))</code> — lowest value</li>',
-            '<li><code>join(@(viewer.token_id))</code> — space-separated IDs for commands</li>',
+            '<li><code>any(@(viewer.field)) op value</code> â€” true if any viewer token passes</li>',
+            '<li><code>all(@(viewer.field)) op value</code> â€” true if all pass</li>',
+            '<li><code>max(@(viewer.field))</code> â€” highest value across viewer tokens</li>',
+            '<li><code>min(@(viewer.field))</code> â€” lowest value</li>',
+            '<li><code>join(@(viewer.token_id))</code> â€” space-separated IDs for commands</li>',
             '</ul>',
             '<p><b>Triggers:</b> Scripts auto-detect triggers from <code>@(target.gl_*)</code> references. Override with pin GM notes: <code>trigger: on change gl_stealth_result</code> or <code>trigger: manual only</code>.</p>',
             '<p><b>Evaluation:</b> <code>!gaslight eval</code> (selected pins), <code>!gaslight eval --all</code>, or <code>!gaslight eval &lt;handout name&gt;</code>. Add <code>--dry-run</code> to preview without executing.</p>',
@@ -3467,14 +3467,14 @@ var Gaslight = Gaslight || (() => {
             aliases: { help: ['help', '--help'], man: 'man', examples: 'examples', whatsnew: 'whatsnew', genHelp: 'gen-help', genDev: 'gen-dev-docs' },
             newSince: '2.1.0',
             help: {
-                description: 'Per-player map perception. Split players onto individual page copies with synchronized tokens — each player can see different things while movement stays consistent.',
+                description: 'Per-player map perception. Split players onto individual page copies with synchronized tokens â€” each player can see different things while movement stays consistent.',
                 quickStart: [
                     'Create your master page with all tokens placed.',
                     'Duplicate it once per player (Roll20 built-in Duplicate Page).',
-                    'Select party tokens on the master page, run `!gaslight setup mygroup` — auto-detects duplicates, assigns pages, configures the group.',
-                    '`!gaslight test mygroup` — dry-run showing how tokens will link. Fix any warnings.',
-                    '`!gaslight split mygroup` — activates the group: links tokens, moves players, begins syncing.',
-                    'When done: `!gaslight merge` — tears down all links, returns players.',
+                    'Select party tokens on the master page, run `!gaslight setup mygroup` â€” auto-detects duplicates, assigns pages, configures the group.',
+                    '`!gaslight test mygroup` â€” dry-run showing how tokens will link. Fix any warnings.',
+                    '`!gaslight split mygroup` â€” activates the group: links tokens, moves players, begins syncing.',
+                    'When done: `!gaslight merge` â€” tears down all links, returns players.',
                 ],
                 changelog: [
                     { version: '2.1.0', changes: [
@@ -3485,7 +3485,7 @@ var Gaslight = Gaslight || (() => {
                         'Scripting engine fixes: anchor component fix, triggerMap auto-rebuild',
                     ]},
                     { version: '2.0.0', changes: [
-                        'Scripting engine — reactive per-player automation via map pins',
+                        'Scripting engine â€” reactive per-player automation via map pins',
                         'RollCapture integration for automatic trigger evaluation',
                         'Auto-relay system for cross-page command forwarding',
                         'Aggregation functions: any(), all(), max(), min(), join()',
@@ -3498,7 +3498,7 @@ var Gaslight = Gaslight || (() => {
                           details: 'Auto-detects page copies by name, assigns master + player pages. Players resolved from selected tokens or named explicitly.',
                           items: [
                               { name: '<group>', description: 'Name for the group configuration', version: '2.0.0' },
-                              { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
+                              { name: '[players...]', description: 'Player names to include (optional â€” auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
                           ]},
                         { syntax: 'split <group> [--force]', description: 'Activate a prepared group', version: '1.0.0',
                           details: 'Links tokens across pages, moves players to individual pages, begins syncing. Runs test-first unless --force.',
@@ -3578,7 +3578,7 @@ var Gaslight = Gaslight || (() => {
                             { name: 'Step 1: gaslight_link', description: 'Explicit match via gaslight_link ID in token GM notes', version: '1.0.0' },
                             { name: 'Step 2: represents + name', description: 'Same character + token name (unique pair per page)', version: '1.0.0' },
                             { name: 'Step 3: represents + fingerprint', description: 'Same character + position/property fingerprint', version: '1.0.0' },
-                            { name: 'Step 4: Unlinked', description: 'Has represents but no match found — not synced', version: '1.0.0' },
+                            { name: 'Step 4: Unlinked', description: 'Has represents but no match found â€” not synced', version: '1.0.0' },
                         ],
                     },
                     sync: {
@@ -3599,12 +3599,12 @@ var Gaslight = Gaslight || (() => {
                         description: 'Reactive per-player automation via map pins',
                         version: '2.0.0',
                         details: 'Scripts are stored in handouts and activated by placing map pins on the page. Each pin evaluates per-viewer per-target with conditional logic to fire different commands for different players.',
-                        body: 'Create a handout with script content. Place a map pin on the page — title it with the handout name (prefix [GLS] is stripped). The pin evaluates whenever triggered attributes change.',
+                        body: 'Create a handout with script content. Place a map pin on the page â€” title it with the handout name (prefix [GLS] is stripped). The pin evaluates whenever triggered attributes change.',
                         items: [
                             { name: '@(target.field)', description: 'Reference a target token field (bar values, GM notes gl_* vars)', version: '2.0.0' },
                             { name: '@(viewer.field)', description: 'Reference the viewer\'s token field', version: '2.0.0' },
                             { name: '@(gm.field)', description: 'Reference the GM master token field', version: '2.0.0' },
-                            { name: '{& if condition}...{& end}', description: 'Conditional block — evaluates per viewer', version: '2.0.0' },
+                            { name: '{& if condition}...{& end}', description: 'Conditional block â€” evaluates per viewer', version: '2.0.0' },
                             { name: '{& select target_id}', description: 'Target selection (SelectManager integration)', version: '2.0.0' },
                             { name: 'any(), all(), max(), min()', description: 'Aggregate functions across viewer tokens', version: '2.0.0' },
                             { name: 'join()', description: 'Space-separated IDs of matching viewer tokens', version: '2.0.0' },
@@ -3644,7 +3644,7 @@ var Gaslight = Gaslight || (() => {
                         title: 'Troubleshooting',
                         description: 'Common issues and solutions',
                         version: '1.0.0',
-                        body: '**Tokens not linking** — Run `!gaslight test <group>` to see resolution steps. Ensure tokens share a character (represents) or have matching gaslight_link IDs.\n\n**Movement not syncing** — Check that Anchor is installed and the token isn\'t excluded by gaslight_sync. Verify the group is active with `!gaslight status`.\n\n**Relay not working** — Confirm the command is in the relay list: `!gaslight config relay-list`. Commands must start with ! to be intercepted.\n\n**Scripts not evaluating** — Pin must be on a page with an active split. Check pin title matches handout name. Run `!gaslight eval --dry-run` to debug.\n\n**Players see the same thing** — Make sure the group is actually split (`!gaslight status`). Player-specific changes must be made on the player\'s page, not the master.',
+                        body: '**Tokens not linking** â€” Run `!gaslight test <group>` to see resolution steps. Ensure tokens share a character (represents) or have matching gaslight_link IDs.\n\n**Movement not syncing** â€” Check that Anchor is installed and the token isn\'t excluded by gaslight_sync. Verify the group is active with `!gaslight status`.\n\n**Relay not working** â€” Confirm the command is in the relay list: `!gaslight config relay-list`. Commands must start with ! to be intercepted.\n\n**Scripts not evaluating** â€” Pin must be on a page with an active split. Check pin title matches handout name. Run `!gaslight eval --dry-run` to debug.\n\n**Players see the same thing** â€” Make sure the group is actually split (`!gaslight status`). Player-specific changes must be made on the player\'s page, not the master.',
                     },
                 },
             },
@@ -3673,16 +3673,16 @@ var Gaslight = Gaslight || (() => {
             description: 'Set up your first per-player split: pages, setup, split, and merge (guide only)',
             guide: [
                 { prompt: 'This guide walks you through creating your first **per-player split**.\n\nYou\'ll need at least 2 players in your game, but those players do not need to be online.' },
-                { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" — all changes start here.' },
-                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.' },
-                { prompt: 'Navigate to the master page and run `!gaslight setup mygroup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup mygroup` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup mygroup "Player1" "Player2" ...` with no selection — uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup mygroup` with no selection — uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player.',
+                { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" â€” all changes start here.' },
+                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are â€” the *"Copy of"* prefix is how Gaslight auto-detects them.' },
+                { prompt: 'Navigate to the master page and run `!gaslight setup mygroup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup mygroup` â€” uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup mygroup "Player1" "Player2" ...` with no selection â€” uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup mygroup` with no selection â€” uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player.',
                   ...ScriptKit.waitForCommand('!gaslight setup'),
                   onContinue: () => {
                       var groups = discoverAllGroups();
                       if (Object.keys(groups).length === 0) return 'No group configured yet. Run `!gaslight setup <name>` using one of the methods above.';
                   }
                 },
-                { prompt: 'Now run:\n\n`!gaslight split mygroup`\n\nThis activates the group — players are moved to their individual pages and token syncing begins.',
+                { prompt: 'Now run:\n\n`!gaslight split mygroup`\n\nThis activates the group â€” players are moved to their individual pages and token syncing begins.',
                   ...ScriptKit.waitForCommand('!gaslight split'),
                   onContinue: () => {
                       if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first.';
@@ -3691,8 +3691,8 @@ var Gaslight = Gaslight || (() => {
                 { prompt: 'You may notice a **HUD** appeared on the master page. We\'ll cover that in a later example. For now, disable it with:\n\n`!gaslight hud off`',
                   ...ScriptKit.waitForCommand('!gaslight hud')
                 },
-                { prompt: 'Your split is now active. Try moving an **NPC token** on the master page — it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else — useful for hiding tokens, swapping images, or showing per-player information.' },
-                { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages — players can move their own tokens and everyone sees it (bidirectional).' },
+                { prompt: 'Your split is now active. Try moving an **NPC token** on the master page â€” it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else â€” useful for hiding tokens, swapping images, or showing per-player information.' },
+                { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages â€” players can move their own tokens and everyone sees it (bidirectional).' },
                 { prompt: 'When you\'re done with the split (e.g. combat ends, scene changes), run:\n\n`!gaslight merge`.\n\nThis tears down all links and returns players to the banner page.' },
                 { prompt: '**That\'s the basics!** From here, explore the other examples to learn more about how to use gaslight.', offerExamples: ['core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
             ],
@@ -3703,7 +3703,7 @@ var Gaslight = Gaslight || (() => {
             description: 'Staging, linking, syncing, and token lifecycle',
             source: SCRIPT_NAME,
             guide: [
-                { prompt: '**Core Mechanics** — This guide walks through the fundamental operations that make Gaslight tick: staging tokens, managing links, controlling sync, and what happens when tokens are deleted.\n\n**Prerequisite:** You need an active split. If you haven\'t set one up yet, run the **getting-started** guide first.',
+                { prompt: '**Core Mechanics** â€” This guide walks through the fundamental operations that make Gaslight tick: staging tokens, managing links, controlling sync, and what happens when tokens are deleted.\n\n**Prerequisite:** You need an active split. If you haven\'t set one up yet, run the **getting-started** guide first.',
                   onContinue: () => {
                       if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first, or complete the getting-started guide.';
                   }
@@ -3724,11 +3724,11 @@ var Gaslight = Gaslight || (() => {
                       if (!allStaged) return 'The previously selected token has not been staged yet. Select it and run `!gaslight stage`.';
                   }
                 },
-                { prompt: 'Your token is now staged — copies exist on each player page and sync automatically.\n\nYou can also set a **default** so tokens representing a character auto-stage whenever placed on a gaslighted page:\n\n`!gaslight stage --default on`\n\nTo remove the default: `!gaslight stage --default off`' },
+                { prompt: 'Your token is now staged â€” copies exist on each player page and sync automatically.\n\nYou can also set a **default** so tokens representing a character auto-stage whenever placed on a gaslighted page:\n\n`!gaslight stage --default on`\n\nTo remove the default: `!gaslight stage --default off`' },
                 { prompt: '**Unlinking** disconnects a player\'s copy from the master without deleting it. Useful for making permanent per-player differences.\n\nSelect a staged token on the master page and run:\n\n`!gaslight unlink`',
                   ...ScriptKit.waitForCommand('!gaslight unlink')
                 },
-                { prompt: 'The player copy now lives independently — changes on the master won\'t reach it.' },
+                { prompt: 'The player copy now lives independently â€” changes on the master won\'t reach it.' },
                 { prompt: '**Relinking** re-establishes the connection. Select the same master token and run:\n\n`!gaslight link`\n\nThe player copy snaps back to match the master.',
                   ...ScriptKit.waitForCommand('!gaslight link')
                 },
@@ -3738,8 +3738,8 @@ var Gaslight = Gaslight || (() => {
                 { prompt: '**Resyncing** resumes sync for a desynced property. The player copy snaps back to the master\'s current value.\n\nSelect the same token and run:\n\n`!gaslight sync left,top`',
                   ...ScriptKit.waitForCommand('!gaslight sync')
                 },
-                { prompt: 'You can also set sync/desync **defaults** on a character so new tokens inherit the config:\n\n`!gaslight sync --default all` — sync everything (the default)\n`!gaslight sync --default left,top,bar1_value` — sync only these props\n`!gaslight desync --default left,top` — exclude position from sync\n`!gaslight desync --default all` — disable all syncing by default\n\nUse `!gaslight sync reset` on a token to re-read the character default.' },
-                { prompt: '**Token deletion behavior:**\n\n• Delete a **parent token** (master page, or controlling player\'s page for PCs) ? all linked copies are removed\n• Delete a **non-parent copy** (e.g. an NPC on a player page) ? only that copy is removed, others remain' },
+                { prompt: 'You can also set sync/desync **defaults** on a character so new tokens inherit the config:\n\n`!gaslight sync --default all` â€” sync everything (the default)\n`!gaslight sync --default left,top,bar1_value` â€” sync only these props\n`!gaslight desync --default left,top` â€” exclude position from sync\n`!gaslight desync --default all` â€” disable all syncing by default\n\nUse `!gaslight sync reset` on a token to re-read the character default.' },
+                { prompt: '**Token deletion behavior:**\n\nâ€¢ Delete a **parent token** (master page, or controlling player\'s page for PCs) ? all linked copies are removed\nâ€¢ Delete a **non-parent copy** (e.g. an NPC on a player page) ? only that copy is removed, others remain' },
                 { prompt: '**That\'s the core!** You now know how to stage, link/unlink, sync/desync, and manage token lifecycle.\n\nNext, learn how the initiative HUD works or how to relay commands to player pages.',
                   offerExamples: ['initiative-hud', 'relay', 'scripting']
                 },
@@ -3748,10 +3748,10 @@ var Gaslight = Gaslight || (() => {
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'initiative-hud',
-            description: 'Interactive initiative tracker HUD — gestures, customization, reticle',
+            description: 'Interactive initiative tracker HUD â€” gestures, customization, reticle',
             source: SCRIPT_NAME,
             guide: [
-                { prompt: '**Initiative HUD** — This guide walks through the on-screen initiative tracker: how to interact with it, customize its appearance, and use the current turn reticle.\n\n**Prerequisites:** You need an active split with the HUD enabled.',
+                { prompt: '**Initiative HUD** â€” This guide walks through the on-screen initiative tracker: how to interact with it, customize its appearance, and use the current turn reticle.\n\n**Prerequisites:** You need an active split with the HUD enabled.',
                   onContinue: () => {
                       var s = state[SCRIPT_NAME];
                       if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
@@ -3776,7 +3776,7 @@ var Gaslight = Gaslight || (() => {
                       if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
                   }
                 },
-                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (? in the toolbar). Drag tokens in or use the tracker\'s initiative button.\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative — we\'ll cover that later.',
+                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (? in the toolbar). Drag tokens in or use the tracker\'s initiative button.\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative â€” we\'ll cover that later.',
                   onEnter: (ctx, advance) => {
                       ctx._turnFired = false;
                       on('change:campaign:turnorder', function() {
@@ -3792,8 +3792,8 @@ var Gaslight = Gaslight || (() => {
                       if (entries.length < 6) return 'Only ' + entries.length + ' token(s) in the HUD. Add at least 6.';
                   }
                 },
-                { prompt: '**Why duplicates?**\n\nYou may notice the Roll20 Turn Tracker panel shows what appears to be duplicate entries — multiple entries for the same combatant. This is because each linked token (one per player page) has its own turn order entry.\n\nThe HUD **deduplicates** these automatically and shows one pin per combatant. The raw turn order is correct — it\'s just how Gaslight tracks initiative across pages.' },
-                { prompt: '**HUD Layout — The Frame:**\n\nThe large rectangle behind the HUD is the **frame**. It defines the HUD\'s position and how many slots are visible. You\'ll learn how to customize it later.',
+                { prompt: '**Why duplicates?**\n\nYou may notice the Roll20 Turn Tracker panel shows what appears to be duplicate entries â€” multiple entries for the same combatant. This is because each linked token (one per player page) has its own turn order entry.\n\nThe HUD **deduplicates** these automatically and shows one pin per combatant. The raw turn order is correct â€” it\'s just how Gaslight tracks initiative across pages.' },
+                { prompt: '**HUD Layout â€” The Frame:**\n\nThe large rectangle behind the HUD is the **frame**. It defines the HUD\'s position and how many slots are visible. You\'ll learn how to customize it later.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3809,7 +3809,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', x + w / 2, y + h / 2, { fromX: x + w / 2 + 100, fromY: y + h / 2 + 100, color: '#ff0000' });
                   }
                 },
-                { prompt: '**HUD Layout — The Diamond:**\n\nThe diamond-shaped highlight marks the **current turn**. The pin inside it is the active combatant.',
+                { prompt: '**HUD Layout â€” The Diamond:**\n\nThe diamond-shaped highlight marks the **current turn**. The pin inside it is the active combatant.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3823,7 +3823,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', x - 80, y, { fromX: x - 180, fromY: y, color: '#ff0000' });
                   }
                 },
-                { prompt: '**HUD Layout — The Pins:**\n\nEach pin represents one combatant. Pins **above** the diamond have already gone this round; pins **below** are upcoming turns. The HUD scrolls to keep the current turn visible.',
+                { prompt: '**HUD Layout â€” The Pins:**\n\nEach pin represents one combatant. Pins **above** the diamond have already gone this round; pins **below** are upcoming turns. The HUD scrolls to keep the current turn visible.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3853,7 +3853,7 @@ var Gaslight = Gaslight || (() => {
                       });
                   }
                 },
-                { prompt: '**Gestures — Next turn:**\n\nSwipe the **current turn** pin (the one inside the diamond) to the **right** to advance to the next combatant.\n\nTry it now.',
+                { prompt: '**Gestures â€” Next turn:**\n\nSwipe the **current turn** pin (the one inside the diamond) to the **right** to advance to the next combatant.\n\nTry it now.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3870,7 +3870,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', center.x + 100, center.y, { fromX: center.x + 20, fromY: center.y, color: '#00ff00' });
                   }
                 },
-                { prompt: '**Gestures — Previous turn:**\n\nSwipe the **current turn** pin to the **left** to go back to the previous combatant.\n\nTry it now.',
+                { prompt: '**Gestures â€” Previous turn:**\n\nSwipe the **current turn** pin to the **left** to go back to the previous combatant.\n\nTry it now.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3886,7 +3886,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', center.x - 100, center.y, { fromX: center.x - 20, fromY: center.y, color: '#ff4444' });
                   }
                 },
-                { prompt: '**Gestures — Jump to turn:**\n\nSwipe any **non-current** pin to the **right** to jump forward to that combatant\'s turn. Swipe **left** to jump backward to it.\n\nTry swiping a non-current pin.',
+                { prompt: '**Gestures â€” Jump to turn:**\n\nSwipe any **non-current** pin to the **right** to jump forward to that combatant\'s turn. Swipe **left** to jump backward to it.\n\nTry swiping a non-current pin.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3909,7 +3909,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', center.x + 100, center.y, { fromX: center.x + 20, fromY: center.y, color: '#00ff00' });
                   }
                 },
-                { prompt: '**Gestures — Reordering:**\n\nDrag a HUD pin **up or down** to reorder it in initiative. The pin will snap into its new position.\n\nTry dragging a pin to a different slot.',
+                { prompt: '**Gestures â€” Reordering:**\n\nDrag a HUD pin **up or down** to reorder it in initiative. The pin will snap into its new position.\n\nTry dragging a pin to a different slot.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3925,12 +3925,16 @@ var Gaslight = Gaslight || (() => {
                       var pin = visible[visible.length - 1];
                       var pageId = pin.pin.get('_pageid');
                       var center = toPinCenter(pin.pin);
+                      var frameX = frame ? frame.get('x') : center.x;
+                      var fwPts = frame ? JSON.parse(frame.get('points') || '[]') : [];
+                      var fw = fwPts.length >= 2 ? Math.abs(fwPts[1][0] - fwPts[0][0]) : 70;
+                      var arrowX = frameX - fw / 2;
                       ScriptKit.ping(pageId, center.x, center.y, { color: 'transparent', moveAll: true, player: ctx.player });
-                      ScriptKit.annotate(pageId, 'arrow', center.x, center.y - 80, { fromX: center.x, fromY: center.y - 10, color: '#00ccff' });
-                      ScriptKit.annotate(pageId, 'arrow', center.x, center.y + 80, { fromX: center.x, fromY: center.y + 10, color: '#00ccff' });
+                      ScriptKit.annotate(pageId, 'arrow', arrowX, center.y - 80, { fromX: arrowX, fromY: center.y - 10, color: '#00ccff' });
+                      ScriptKit.annotate(pageId, 'arrow', arrowX, center.y + 80, { fromX: arrowX, fromY: center.y + 10, color: '#00ccff' });
                   }
                 },
-                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.\n\n• **Drag up/down** on the reticle to offset it from the token\n• **Resize** the reticle to change its proportional size\n• **Rotate** it to add a rotation offset\n• **Delete** the reticle to turn it off (or `!gaslight hud reticle off`)',
+                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.\n\nâ€¢ **Drag up/down** on the reticle to offset it from the token\nâ€¢ **Resize** the reticle to change its proportional size\nâ€¢ **Rotate** it to add a rotation offset\nâ€¢ **Delete** the reticle to turn it off (or `!gaslight hud reticle off`)',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.reticleData;
@@ -3942,14 +3946,14 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.ping(pageId, x, y, { color: 'transparent', moveAll: true, player: ctx.player });
                   }
                 },
-                { prompt: '**Customization — Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nTry resizing one of the pins.' },
-                { prompt: '**Customization — Text:**\n\nThe initiative value text next to each pin can be customized:\n\n• Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 — all will update to match\n• **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\n• **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.' },
-                { prompt: '**The Frame — Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame — some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins.' },
-                { prompt: '**The Frame — Diamond position:**\n\nYou can drag the **diamond highlight up or down** within the frame to shift where the current turn is displayed. Pins above and below will adjust accordingly.\n\nTry moving the diamond to a different position in the frame.' },
-                { prompt: '**The Frame — Other customization:**\n\nThe frame supports additional tweaks:\n\n• **Drag** the frame to move the entire HUD\n• **Resize horizontally** to adjust padding between pins\n• Change the frame\'s **stroke color** or **fill** directly in Roll20\'s shape properties\n\nThe **diamond** can also be customized:\n\n• Change its **color**, **stroke width**, **fill**, or **rotation** directly in Roll20\'s shape properties\n\nThe HUD remembers all of these choices.' },
-                { prompt: '**Reticle — Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45° (so the diamond\'s 45° rotation becomes the reticle\'s 90°, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.' },
-                { prompt: '**Gestures — Removing:**\n\nDelete a HUD pin to remove that combatant from initiative. Try deleting one now.' },
-                { prompt: '**Clearing initiative:**\n\nNow clear the rest of the initiative — delete the remaining HUD pins or clear initiative from Roll20\'s Turn Tracker panel.\n\nClear initiative before continuing.',
+                { prompt: '**Customization â€” Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nTry resizing one of the pins.' },
+                { prompt: '**Customization â€” Text:**\n\nThe initiative value text next to each pin can be customized:\n\nâ€¢ Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 â€” all will update to match\nâ€¢ **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\nâ€¢ **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.' },
+                { prompt: '**The Frame â€” Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame â€” some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins.' },
+                { prompt: '**The Frame â€” Diamond position:**\n\nYou can drag the **diamond highlight up or down** within the frame to shift where the current turn is displayed. Pins above and below will adjust accordingly.\n\nTry moving the diamond to a different position in the frame.' },
+                { prompt: '**The Frame â€” Other customization:**\n\nThe frame supports additional tweaks:\n\nâ€¢ **Drag** the frame to move the entire HUD\nâ€¢ **Resize horizontally** to adjust padding between pins\nâ€¢ Change the frame\'s **stroke color** or **fill** directly in Roll20\'s shape properties\n\nThe **diamond** can also be customized:\n\nâ€¢ Change its **color**, **stroke width**, **fill**, or **rotation** directly in Roll20\'s shape properties\n\nThe HUD remembers all of these choices.' },
+                { prompt: '**Reticle â€” Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45Â° (so the diamond\'s 45Â° rotation becomes the reticle\'s 90Â°, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.' },
+                { prompt: '**Gestures â€” Removing:**\n\nDelete a HUD pin to remove that combatant from initiative. Try deleting one now.' },
+                { prompt: '**Clearing initiative:**\n\nNow clear the rest of the initiative â€” delete the remaining HUD pins or clear initiative from Roll20\'s Turn Tracker panel.\n\nClear initiative before continuing.',
                   when: () => {
                       var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
                       return turnOrder.length > 0;
@@ -3967,7 +3971,7 @@ var Gaslight = Gaslight || (() => {
                       if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
                   }
                 },
-                { prompt: '**Plugin-added initiative:**\n\nIf you use a plugin (GroupInitiative, etc.) to roll initiative, go ahead and use it now.\n\nIf you don\'t have one, select token(s) and click **Continue** — Gaslight will add them to initiative for you.',
+                { prompt: '**Plugin-added initiative:**\n\nIf you use a plugin (GroupInitiative, etc.) to roll initiative, go ahead and use it now.\n\nIf you don\'t have one, select token(s) and click **Continue** â€” Gaslight will add them to initiative for you.',
                   onContinue: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var entries = (s.hud.initData && s.hud.initData.entries) || [];
@@ -3985,13 +3989,13 @@ var Gaslight = Gaslight || (() => {
                       Campaign().set('turnorder', JSON.stringify(turnOrder));
                   }
                 },
-                { prompt: '**The problem:** When a plugin adds tokens to initiative, it sets `Campaign().set(\'turnorder\')` — but Gaslight cannot detect that change automatically.\n\nTo sync the HUD with the current turn order, run:\n\n`!gaslight init`\n\nThis is needed whenever initiative changes via a plugin (not via the HUD gestures).',
+                { prompt: '**The problem:** When a plugin adds tokens to initiative, it sets `Campaign().set(\'turnorder\')` â€” but Gaslight cannot detect that change automatically.\n\nTo sync the HUD with the current turn order, run:\n\n`!gaslight init`\n\nThis is needed whenever initiative changes via a plugin (not via the HUD gestures).',
                   ...ScriptKit.waitForCommand('!gaslight init')
                 },
-                { prompt: '**Reset:**\n\nIf the HUD ever gets into a weird state (misplaced elements, corrupted data), you can reset it:\n\n`!gaslight hud init reset` — destroys and recreates the initiative HUD from defaults\n`!gaslight hud reticle reset` — destroys and recreates the reticle from defaults\n\nThis preserves your turn order but resets all visual customization.' },
-                { prompt: '**Toggling on/off:**\n\nYou can disable the HUD without losing your settings:\n\n`!gaslight hud init off` — hides the initiative HUD (turn order still works normally)\n`!gaslight hud init on` — shows it again with your saved customization\n`!gaslight hud reticle off` / `on` — same for the reticle independently\n`!gaslight hud off` / `on` — toggles all HUD elements at once' },
+                { prompt: '**Reset:**\n\nIf the HUD ever gets into a weird state (misplaced elements, corrupted data), you can reset it:\n\n`!gaslight hud init reset` â€” destroys and recreates the initiative HUD from defaults\n`!gaslight hud reticle reset` â€” destroys and recreates the reticle from defaults\n\nThis preserves your turn order but resets all visual customization.' },
+                { prompt: '**Toggling on/off:**\n\nYou can disable the HUD without losing your settings:\n\n`!gaslight hud init off` â€” hides the initiative HUD (turn order still works normally)\n`!gaslight hud init on` â€” shows it again with your saved customization\n`!gaslight hud reticle off` / `on` â€” same for the reticle independently\n`!gaslight hud off` / `on` â€” toggles all HUD elements at once' },
                 { prompt: '**?? Tags:**\n\nIf a token in initiative doesn\'t exist on all player pages, its HUD pin shows a ?? icon in the title. Click the pin to see which players can\'t see it.\n\nThis usually means the token hasn\'t been staged to all pages. Run `!gaslight stage` with it selected to fix it.' },
-                { prompt: '**Commands reference:**\n\n`!gaslight hud init on|off|reset` — toggle/reset the initiative HUD\n`!gaslight hud reticle on|off|reset` — toggle/reset the reticle\n`!gaslight init` — sync turn order into HUD\n`!gaslight init sync` — add missing linked tokens\n`!gaslight init trim` — remove stale entries\n\n**That\'s the initiative HUD!**',
+                { prompt: '**Commands reference:**\n\n`!gaslight hud init on|off|reset` â€” toggle/reset the initiative HUD\n`!gaslight hud reticle on|off|reset` â€” toggle/reset the reticle\n`!gaslight init` â€” sync turn order into HUD\n`!gaslight init sync` â€” add missing linked tokens\n`!gaslight init trim` â€” remove stale entries\n\n**That\'s the initiative HUD!**',
                   offerExamples: ['relay', 'scripting']
                 },
             ],
@@ -4007,10 +4011,10 @@ var Gaslight = Gaslight || (() => {
                   }
                 },
                 { prompt: 'Run `!rollcapture dissect` in chat, then roll stealth for any NPC. This shows you the template fields available for capture.' },
-                { prompt: 'Create a RollCapture rule for skills. Run `!rollcapture rule skills` — this creates a *[RC] skills* handout. Open it in the journal.' },
-                { prompt: 'Add the line `template: <name>` — where `<name>` is the roll template shown by dissect (e.g. "simple", "atk", "npc").' },
-                { prompt: 'Add the line `name_field: <field>` — where `<field>` is the template field containing the skill name (e.g. "rname", "name"). This is how RollCapture identifies which skill was rolled.' },
-                { prompt: 'Add the line `result: <field>` — where `<field>` is the inline roll field holding the total (e.g. "r1", "roll1").' },
+                { prompt: 'Create a RollCapture rule for skills. Run `!rollcapture rule skills` â€” this creates a *[RC] skills* handout. Open it in the journal.' },
+                { prompt: 'Add the line `template: <name>` â€” where `<name>` is the roll template shown by dissect (e.g. "simple", "atk", "npc").' },
+                { prompt: 'Add the line `name_field: <field>` â€” where `<field>` is the template field containing the skill name (e.g. "rname", "name"). This is how RollCapture identifies which skill was rolled.' },
+                { prompt: 'Add the line `result: <field>` â€” where `<field>` is the inline roll field holding the total (e.g. "r1", "roll1").' },
                 { prompt: 'Save the handout and run `!rollcapture reload` to load your new rule.',
                   ...ScriptKit.waitForCommand('!rollcapture reload')
                 },
@@ -4126,7 +4130,7 @@ var Gaslight = Gaslight || (() => {
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'madness',
-            description: 'An afflicted player sees all tokens as enemies — allies swap to a chosen enemy image',
+            description: 'An afflicted player sees all tokens as enemies â€” allies swap to a chosen enemy image',
             guide: [
                 { prompt: 'Select a token that has the **status marker** you want to represent madness applied to it (e.g. "screaming"). This marker will trigger the effect when placed on a viewer\'s token.',
                   select: 'token', as: 'markerToken', min: 1, max: 1,
@@ -4153,7 +4157,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: (ctx) => '**Test:** Apply the **' + ctx.params._marker + '** marker to a viewer token, then run `!gaslight eval --all`. All tokens on that viewer\'s page should swap to the enemy image. Remove the marker and re-eval to restore.' },
             ],
             handout: (ctx) => ({
-                notes: '!token-mod --set {& if ([madness] any(@(viewer.statusmarkers)) ~ "' + ctx.params._marker + '") && !(any(@(viewer.token_id)) = @(target.token_id))}imgsrc|' + ctx.params._enemyId + ' tint_color|#000000 name|t¨´h??ë??ý?_{& else}imgsrc|@(gm_target.token_id) tint_color|transparent name|@(gm_target.name){& end}',
+                notes: '!token-mod --set {& if ([madness] any(@(viewer.statusmarkers)) ~ "' + ctx.params._marker + '") && !(any(@(viewer.token_id)) = @(target.token_id))}imgsrc|' + ctx.params._enemyId + ' tint_color|#000000 name|tÂ¨Â´h??Ã«??Ã½?_{& else}imgsrc|@(gm_target.token_id) tint_color|transparent name|@(gm_target.name){& end}',
                 gmnotes: '---GASLIGHT-SCRIPT---\nfilter: characters\ntrigger: on change statusmarkers',
                 archived: false,
             }),
@@ -4344,7 +4348,7 @@ var Gaslight = Gaslight || (() => {
         // Universal relay: master-page refs, no player-page refs
         if (masterTokens.length > 0 && !hasPlayerPageRef) {
             var viewPlayerId = s.view;
-            if (!viewPlayerId) return; // view off — no relay
+            if (!viewPlayerId) return; // view off â€” no relay
             var targetPlayerIds = viewPlayerId === 'master'
                 ? Object.keys(activeEntry[1].playerPages)
                 : [viewPlayerId];
@@ -4370,7 +4374,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Initiative Tracking — sync turn order across linked tokens
+    // Initiative Tracking â€” sync turn order across linked tokens
     // =========================================================================
 
     /**
@@ -4504,7 +4508,7 @@ var Gaslight = Gaslight || (() => {
             if (!entry.id || entry.id === '-1') return;
             var oldEntry = oldOrder.find(function(e) { return e.id === entry.id; });
             if (!oldEntry || oldEntry.pr === entry.pr) return;
-            // Value changed — propagate to linked tokens
+            // Value changed â€” propagate to linked tokens
             var info = getLinkedInfo(entry.id);
             if (info.linkedIds.length === 0) return;
             info.linkedIds.forEach(function(linkedId) {
@@ -4562,7 +4566,7 @@ var Gaslight = Gaslight || (() => {
                     }
                     modified = true;
                 } else {
-                    // Not forward/backward — manual drag. Reorder to group children after master.
+                    // Not forward/backward â€” manual drag. Reorder to group children after master.
                     var reordered = reorderInitiative(newOrder);
                     if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
                         newOrder = reordered;
@@ -4619,19 +4623,19 @@ var Gaslight = Gaslight || (() => {
             if (placed.has(entry.id)) return;
             if (!entry.id || entry.id === '-1') {
                 result.push(entry);
-                // Don't add '-1' to placed — multiple custom entries share this ID
+                // Don't add '-1' to placed â€” multiple custom entries share this ID
                 return;
             }
 
             var info = getLinkedInfo(entry.id);
             if (info.linkedIds.length === 0) {
-                // Not a linked token — just add it
+                // Not a linked token â€” just add it
                 result.push(entry);
                 placed.add(entry.id);
                 return;
             }
 
-            // Skip children — they'll be pulled in when we reach their master
+            // Skip children â€” they'll be pulled in when we reach their master
             if (!isMasterToken(entry.id)) return;
 
             // Find all entries in this link group
@@ -4755,7 +4759,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // HUD System — on-canvas indicators
+    // HUD System â€” on-canvas indicators
     // =========================================================================
 
     const HUD_PREFIX = 'gaslight_hud_';
@@ -5066,14 +5070,14 @@ var Gaslight = Gaslight || (() => {
                 seenGroups.add(entry.id);
                 return true;
             }
-            // It's a child — check if its master is in the order
+            // It's a child â€” check if its master is in the order
             var masterId = info.linkedIds.find(function(lid) { return isMasterToken(lid); });
             if (masterId && seenGroups.has(masterId)) return false; // master already shown
             if (masterId && order.some(function(e) { return e.id === masterId; })) {
                 seenGroups.add(masterId);
                 return false; // master is in order, it will be shown when we reach it
             }
-            // No master in order — show this child as representative
+            // No master in order â€” show this child as representative
             if (!seenGroups.has(entry.id)) {
                 seenGroups.add(entry.id);
                 return true;
@@ -5321,7 +5325,7 @@ var Gaslight = Gaslight || (() => {
         });
 
         if (direction === undefined) {
-            // Initial creation — delay reflow to give Roll20 time to register objects
+            // Initial creation â€” delay reflow to give Roll20 time to register objects
             setTimeout(function() { reflowInitiativeHud('none'); updateTurnReticle(); }, 100);
         } else {
             reflowInitiativeHud(direction);
@@ -5374,12 +5378,12 @@ var Gaslight = Gaslight || (() => {
                 // We can fit one more. Shift diamond toward the side with more slots.
                 var shiftAmount;
                 if (slotsBelow >= slotsAbove) {
-                    // More below (or equal) — shift down to make room above
+                    // More below (or equal) â€” shift down to make room above
                     shiftAmount = Math.min(step - extraAbove, extraBelow);
                     frameCenter += shiftAmount;
                     slotsAbove++;
                 } else {
-                    // More above — shift up to make room below
+                    // More above â€” shift up to make room below
                     shiftAmount = Math.min(step - extraBelow, extraAbove);
                     frameCenter -= shiftAmount;
                     slotsBelow++;
@@ -5599,7 +5603,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle change:text — persist HUD element position/size if moved by GM.
+     * Handle change:text â€” persist HUD element position/size if moved by GM.
      */
     const onHudTextChanged = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5620,7 +5624,7 @@ var Gaslight = Gaslight || (() => {
             var vRotation = obj.get('rotation');
             if (vRotation !== undefined) s.hud.viewData.rotation = vRotation;
         }
-        // Initiative HUD text moved or styled — update stored settings
+        // Initiative HUD text moved or styled â€” update stored settings
         if (s.hud.initiative && s.hud.initData && s.hud.initData.entries) {
             var match = s.hud.initData.entries.find(function(e) { return e.textId === id; });
             if (match) {
@@ -5725,7 +5729,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle destroy:text — if a HUD element is deleted, treat as turning it off.
+     * Handle destroy:text â€” if a HUD element is deleted, treat as turning it off.
      */
     const onHudTextDestroyed = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5765,7 +5769,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle destroy:pin — if an initiative HUD pin is deleted, remove from turn order.
+     * Handle destroy:pin â€” if an initiative HUD pin is deleted, remove from turn order.
      */
     const onHudGraphicDestroyed = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5776,7 +5780,7 @@ var Gaslight = Gaslight || (() => {
         if (matchIdx === -1) return;
 
         var match = data.entries[matchIdx];
-        // Splice entry first — associated text will be orphaned and cleaned up on next reflow
+        // Splice entry first â€” associated text will be orphaned and cleaned up on next reflow
         data.entries.splice(matchIdx, 1);
         var txt = getObj('text', match.textId);
         if (txt) txt.remove();
@@ -5784,12 +5788,12 @@ var Gaslight = Gaslight || (() => {
         // Remove from turn order
         var order = JSON.parse(Campaign().get('turnorder') || '[]');
         if (match.sourceId && !match.sourceId.startsWith('custom:')) {
-            // Token — remove it and linked children from turn order
+            // Token â€” remove it and linked children from turn order
             var info = getLinkedInfo(match.sourceId);
             var groupIds = new Set([match.sourceId].concat(info.linkedIds));
             order = order.filter(function(e) { return !groupIds.has(e.id); });
         } else {
-            // Custom turn — remove first matching custom entry
+            // Custom turn â€” remove first matching custom entry
             var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
             if (customIdx !== -1) order.splice(customIdx, 1);
         }
@@ -5800,7 +5804,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle destroy:path — if the initiative frame is deleted, turn off.
+     * Handle destroy:path â€” if the initiative frame is deleted, turn off.
      */
     const onHudPathDestroyed = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5811,10 +5815,10 @@ var Gaslight = Gaslight || (() => {
             removeInitiativeHud();
             sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
         } else if (obj.get('id') === s.hud.initData.highlightId) {
-            // Highlight deleted — just clear ID, will be recreated on next update
+            // Highlight deleted â€” just clear ID, will be recreated on next update
             s.hud.initData.highlightId = null;
         } else if (s.hud.reticleData && obj.get('id') === s.hud.reticleData.id) {
-            // Turn indicator deleted — turn off reticle
+            // Turn indicator deleted â€” turn off reticle
             s.hud.reticleData.id = null;
             s.hud.reticleData.tokenId = null;
             s.hud.reticle = false;
@@ -5823,7 +5827,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle frame pathv2 change — resize logic, position/style tracking.
+     * Handle frame pathv2 change â€” resize logic, position/style tracking.
      */
     const onFrameChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
@@ -5866,7 +5870,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle highlight pathv2 change — style tracking, cascade to reticle, Y offset.
+     * Handle highlight pathv2 change â€” style tracking, cascade to reticle, Y offset.
      */
     const onHighlightChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
@@ -5909,7 +5913,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle reticle pathv2 change — style override, size scale, position offset.
+     * Handle reticle pathv2 change â€” style override, size scale, position offset.
      */
     const onReticleChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
@@ -6108,7 +6112,7 @@ var Gaslight = Gaslight || (() => {
             return;
         }
 
-        // Single arg that's a toggle word — apply to all elements
+        // Single arg that's a toggle word â€” apply to all elements
         if (args.length === 1 && toggleWords.has(args[0].toLowerCase())) {
             var toggle = args[0].toLowerCase();
             if (toggle === 'reset') {
@@ -6231,7 +6235,7 @@ var Gaslight = Gaslight || (() => {
                 horizontalEscapePin = newX > frameLeftPin + fwPin / 2 || newX < frameLeftPin - fwPin / 2;
             }
 
-            // Pin dragged vertically — reorder turn in initiative
+            // Pin dragged vertically â€” reorder turn in initiative
             if (!horizontalEscapePin && newY !== oldY) {
                 var order = JSON.parse(Campaign().get('turnorder') || '[]');
                 var hudOrder = getHudTurnOrder();
@@ -6293,10 +6297,10 @@ var Gaslight = Gaslight || (() => {
                 var insertBeforeIdx = -1; // hudOrder idx to insert before
 
                 if (newY <= others[0].y) {
-                    // Above all others — insert before the topmost pin
+                    // Above all others â€” insert before the topmost pin
                     insertBeforeIdx = others[0].idx;
                 } else if (newY >= others[others.length - 1].y) {
-                    // Below all others — insert after the bottommost pin
+                    // Below all others â€” insert after the bottommost pin
                     insertAfterIdx = others[others.length - 1].idx;
                 } else {
                     // Between two pins
@@ -6415,7 +6419,7 @@ var Gaslight = Gaslight || (() => {
                 }
             }
 
-            // Pin dragged horizontally — make it this turn's turn
+            // Pin dragged horizontally â€” make it this turn's turn
             var oldX = prev.x;
             var verticalDrift = Math.abs(newY - oldY);
             var tknSizeP = data.tokenSize || defaultInitHud.tokenSize;
@@ -6442,7 +6446,7 @@ var Gaslight = Gaslight || (() => {
 
                 if (targetFullIdx !== -1) {
                     if (targetFullIdx === 0) {
-                        // This pin is the current turn — advance/retreat to next/prev master or custom
+                        // This pin is the current turn â€” advance/retreat to next/prev master or custom
                         if (swipeDir === 'forward') {
                             fullOrder.push(fullOrder.shift());
                             var skip = fullOrder.length;
@@ -6469,7 +6473,7 @@ var Gaslight = Gaslight || (() => {
                             fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
                         }
                     } else {
-                        // Non-current pin — rotate to it, applying formulas to customs passed along the way
+                        // Non-current pin â€” rotate to it, applying formulas to customs passed along the way
                         var rotCount = swipeDir === 'forward' ? targetFullIdx : fullOrder.length - targetFullIdx;
                         for (var ri = 0; ri < rotCount; ri++) {
                             if (swipeDir === 'forward') {
@@ -6494,7 +6498,7 @@ var Gaslight = Gaslight || (() => {
             reflowInitiativeHud('none');
             updateTurnReticle();
 
-            // Scale change — adjust all HUD pins to match and update tokenSize
+            // Scale change â€” adjust all HUD pins to match and update tokenSize
             var newScale = obj.get('scale');
             var oldScale = prev.scale;
             if (newScale !== oldScale && newScale != null) {
@@ -6549,7 +6553,7 @@ var Gaslight = Gaslight || (() => {
                 cached.handoutId = obj.get('link') || null;
                 rebuildTriggerMapFromCache();
             } else if (isActivePage(obj.get('_pageid')) && obj.get('link') && obj.get('linkType') === 'handout') {
-                // New script pin — add to cache and rebuild
+                // New script pin â€” add to cache and rebuild
                 knownScriptPins.push({ pinId: pinId, pageId: obj.get('_pageid'), handoutId: obj.get('link') });
                 rebuildTriggerMapFromCache();
             }
