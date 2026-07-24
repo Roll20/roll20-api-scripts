@@ -1,4 +1,4 @@
-Ôªø// =============================================================================
+// =============================================================================
 // Gaslight v2.1.0
 // Last Updated: 2026-07-05
 // Author: Kenan Millet
@@ -92,7 +92,7 @@ var Gaslight = Gaslight || (() => {
         if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: true, initiative: true, reticle: true };
         if (state[SCRIPT_NAME].hud.initiative === undefined) state[SCRIPT_NAME].hud.initiative = false;
         if (state[SCRIPT_NAME].hud.reticle === undefined) state[SCRIPT_NAME].hud.reticle = true;
-        // Migration: v2.0.0 -> v2.1.0 ‚Äî view null used to mean "relay to all", now null means "off"
+        // Migration: v2.0.0 -> v2.1.0 ó view null used to mean "relay to all", now null means "off"
         if (!state[SCRIPT_NAME].version || state[SCRIPT_NAME].version < '2.1.0') {
             if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
             state[SCRIPT_NAME].version = SCRIPT_VERSION;
@@ -100,7 +100,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Config Storage ‚Äî GM layer text objects
+    // Config Storage ó GM layer text objects
     // =========================================================================
 
     const getConfigsOnPage = (pageId) => {
@@ -164,7 +164,7 @@ var Gaslight = Gaslight || (() => {
 
     const discoverGroup = (groupName) => {
         const pages = findObjs({ _type: 'page' });
-        const result = { master: null, players: {} }; // players keyed by playerid ‚Üí { pageId, name }
+        const result = { master: null, players: {} }; // players keyed by playerid ? { pageId, name }
         pages.forEach(page => {
             const cfg = getGroupConfigOnPage(page.get('_id'), groupName);
             if (!cfg) return;
@@ -264,7 +264,7 @@ var Gaslight = Gaslight || (() => {
             return null;
         }
 
-        // Ambiguous ‚Äî show disambiguation buttons
+        // Ambiguous ó show disambiguation buttons
         var out = 'Multiple players named "' + playerArg + '":<br>';
         matches.forEach(function(p) {
             var chars = findObjs({ _type: 'character' }).filter(function(c) {
@@ -288,7 +288,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Token GM Notes ‚Äî gaslight_link
+    // Token GM Notes ó gaslight_link
     // =========================================================================
 
     const getLinkId = (token) => {
@@ -469,16 +469,16 @@ var Gaslight = Gaslight || (() => {
     /**
      * Read the gaslight_sync config for a token (from gmnotes only).
      * Returns:
-     *   null ‚Äî not configured (default: sync all non-spatial)
-     *   '' ‚Äî explicitly empty (no sync)
-     *   ['prop1','prop2',...] ‚Äî specific props to sync
+     *   null ó not configured (default: sync all non-spatial)
+     *   '' ó explicitly empty (no sync)
+     *   ['prop1','prop2',...] ó specific props to sync
      */
     const getGaslightSync = (token) => {
         var rawVal = null;
         if (token && typeof token === 'object' && typeof token.get === 'function') {
             rawVal = getSyncConfigRaw(token);
         } else if (typeof token === 'string') {
-            // Legacy: character ID ‚Äî read attribute directly (used internally only)
+            // Legacy: character ID ó read attribute directly (used internally only)
             var attr = findObjs({ _type: 'attribute', _characterid: token, name: 'gaslight_sync' })[0];
             if (!attr) return null;
             rawVal = (attr.get('current') || '').trim();
@@ -589,7 +589,7 @@ var Gaslight = Gaslight || (() => {
             }
         });
 
-        // Step 4: unlinked ‚Äî only master-page represents tokens
+        // Step 4: unlinked ó only master-page represents tokens
         unmatchedSources.forEach(src => {
             if (!results.some(r => r.source.get('id') === src.get('id'))) {
                 if (src.get('represents')) {
@@ -610,8 +610,8 @@ var Gaslight = Gaslight || (() => {
         const allPageIds = [groupInfo.master].concat(Object.values(groupInfo.players).map(function(p) { return p.pageId; }));
 
         // Collect all gaslight_link IDs and their page locations
-        const linkIdPages = {}; // linkId ‚Üí Set of pageIds
-        const linkIdDupes = {}; // pageId ‚Üí Set of linkIds that appear more than once
+        const linkIdPages = {}; // linkId ? Set of pageIds
+        const linkIdDupes = {}; // pageId ? Set of linkIds that appear more than once
         allPageIds.forEach(function(pid) {
             var tokens = findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' });
             var seenOnPage = {};
@@ -656,7 +656,7 @@ var Gaslight = Gaslight || (() => {
         if (warnings.length === 0) return '';
         var out = '<br><b>Warnings:</b><br>';
         warnings.forEach(function(w) {
-            var icon = w.severity === 'error' ? 'üî¥' : w.severity === 'warning' ? 'üü°' : '‚ÑπÔ∏è';
+            var icon = w.severity === 'error' ? '??' : w.severity === 'warning' ? '??' : '??';
             out += icon + ' ' + w.message + '<br>';
         });
         return out;
@@ -686,7 +686,7 @@ var Gaslight = Gaslight || (() => {
         const controlledBy = character.get('controlledby') || '';
         if (!controlledBy) return null;
         if (controlledBy === 'all') {
-            // All players control it ‚Äî return first group player as representative
+            // All players control it ó return first group player as representative
             var firstPlayer = Object.keys(groupInfo.players)[0];
             return firstPlayer || null;
         }
@@ -747,7 +747,7 @@ var Gaslight = Gaslight || (() => {
 
             // Find all controlling player IDs in the group for this token
             var controllerIds = [];
-            // Check the character's controlledby ‚Äî use first token's character as representative
+            // Check the character's controlledby ó use first token's character as representative
             var repCharId = null;
             for (var i = 0; i < tokens.length; i++) {
                 if (tokens[i].get('represents')) { repCharId = tokens[i].get('represents'); break; }
@@ -767,7 +767,7 @@ var Gaslight = Gaslight || (() => {
 
             var ids = tokens.map(function(t) { return t.get('id'); });
 
-            // Check gaslight_sync ‚Äî read from first token's gmnotes (falls back to character attr)
+            // Check gaslight_sync ó read from first token's gmnotes (falls back to character attr)
             var syncProps = getGaslightSync(tokens[0]);
             // syncProps: null = default (base spatial), '' = no sync at all, array = specific
 
@@ -790,7 +790,7 @@ var Gaslight = Gaslight || (() => {
                 }
                 mirrorProps = mirrorRequested.length > 0 ? mirrorRequested : false;
             }
-            // Always pass explicit components ‚Äî never let Anchor default to ALL_COMPONENTS
+            // Always pass explicit components ó never let Anchor default to ALL_COMPONENTS
             if (!anchorComponents) {
                 anchorComponents = {};
                 allAnchorProps.forEach(function(p) { anchorComponents[p] = true; });
@@ -975,7 +975,7 @@ var Gaslight = Gaslight || (() => {
             var playerName = player ? player.get('_displayname') : pid;
             page.set('name', masterName + ' (' + playerName + ')');
             setConfigOnPage(page.get('_id'), groupName, { player: playerName, playerid: pid });
-            assignments.push(playerName + ' ‚Üí ' + page.get('name'));
+            assignments.push(playerName + ' ? ' + page.get('name'));
         });
 
         var out = 'Group "<b>' + groupName + '</b>" set up:<br>';
@@ -1023,7 +1023,7 @@ var Gaslight = Gaslight || (() => {
             var out = '<b>Split Test: ' + groupName + '</b><br>';
             out += allLinks.length + ' link(s) would be established.<br>';
             if (unlinkWarnings.length > 0) {
-                out += '<br>üü° ' + unlinkWarnings.length + ' token(s) could not be linked: ' +
+                out += '<br>?? ' + unlinkWarnings.length + ' token(s) could not be linked: ' +
                     unlinkWarnings.map(function(w) { return w.source.get('name') || w.source.get('id'); }).join(', ') + '<br>';
             }
             out += formatWarnings(globalWarnings);
@@ -1146,15 +1146,15 @@ var Gaslight = Gaslight || (() => {
         var out = '<b>Link Test: ' + groupName + '</b><br>';
         Object.entries(groupInfo.players).forEach(function(entry) {
             var playerId = entry[0], pInfo = entry[1];
-            out += '<br><b>Master ‚Üí ' + pInfo.name + ':</b><br>';
+            out += '<br><b>Master ? ' + pInfo.name + ':</b><br>';
             var links = resolveLinks(groupInfo.master, pInfo.pageId);
             links.forEach(function(l) {
                 var srcName = l.source.get('name') || l.source.get('id');
                 if (l.target) {
                     var tgtName = l.target.get('name') || l.target.get('id');
-                    out += '‚úì ' + srcName + ' ‚Üí ' + tgtName + ' (step ' + l.step + ')<br>';
+                    out += '? ' + srcName + ' ? ' + tgtName + ' (step ' + l.step + ')<br>';
                 } else {
-                    out += 'üü° ' + srcName + ' ‚Äî no match found<br>';
+                    out += '?? ' + srcName + ' ó no match found<br>';
                 }
             });
             if (links.length === 0) out += '(no linkable tokens)<br>';
@@ -1395,12 +1395,12 @@ var Gaslight = Gaslight || (() => {
 
         var label = useDefault ? 'character default' : 'token';
 
-        // No args ‚Äî show current config
+        // No args ó show current config
         if (args.length === 0) {
             var results = tokens.map(function(t) {
                 var raw = getVal(t);
                 var name = t.get('name') || t.get('id');
-                return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default ‚Äî sync all)</i>' : raw || '<i>(empty ‚Äî no sync)</i>');
+                return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default ó sync all)</i>' : raw || '<i>(empty ó no sync)</i>');
             });
             reply(msg, 'Sync', results.join('<br>'));
             return;
@@ -1408,7 +1408,7 @@ var Gaslight = Gaslight || (() => {
 
         var subCmd = args[0].toLowerCase();
 
-        // Reset ‚Äî re-copy from character attribute (only makes sense for token mode)
+        // Reset ó re-copy from character attribute (only makes sense for token mode)
         if (subCmd === 'reset') {
             if (useDefault) { reply(msg, 'Error', 'Reset only applies to token sync, not --default.'); return; }
             tokens.forEach(function(t) {
@@ -1426,7 +1426,7 @@ var Gaslight = Gaslight || (() => {
             return;
         }
 
-        // "all" ‚Äî explicitly sync everything
+        // "all" ó explicitly sync everything
         if (subCmd === 'all') {
             tokens.forEach(function(t) { setVal(t, 'all'); });
             reply(msg, 'Sync', 'Set to sync all properties on ' + tokens.length + ' ' + label + '(s).');
@@ -1472,7 +1472,7 @@ var Gaslight = Gaslight || (() => {
 
         if (args.length === 0) { reply(msg, 'Error', 'Usage: !gaslight desync [--default] <props|all>'); return; }
 
-        // "all" ‚Äî disable all syncing (set empty string = no sync)
+        // "all" ó disable all syncing (set empty string = no sync)
         if (args[0].toLowerCase() === 'all') {
             tokens.forEach(function(t) { setVal(t, ''); });
             reply(msg, 'Desync', 'Disabled all syncing on ' + tokens.length + ' ' + label + '(s).' + (useDefault ? '' : ' Use <code>!gaslight sync reset</code> to restore.'));
@@ -1541,7 +1541,7 @@ var Gaslight = Gaslight || (() => {
             }
         }
 
-        // Normalize names ‚Äî ensure gl_ prefix
+        // Normalize names ó ensure gl_ prefix
         actions.forEach(function(a) {
             if (!a.name.startsWith('gl_')) a.name = 'gl_' + a.name;
         });
@@ -1623,9 +1623,9 @@ var Gaslight = Gaslight || (() => {
                                 if (target.get('_pageid') === e[1].pageId) pageName = e[1].name || e[0];
                             });
                         });
-                        return pageName + ': ' + (val || '<i>‚àÖ</i>');
+                        return pageName + ': ' + (val || '<i>ÿ</i>');
                     });
-                    output.push('<b>' + tokenName + '</b> ' + a.name + ' ‚Äî ' + vals.join(', '));
+                    output.push('<b>' + tokenName + '</b> ' + a.name + ' ó ' + vals.join(', '));
                 } else {
                     var target = getTargets[0];
                     var tNotes = target.get('gmnotes') || '';
@@ -2007,14 +2007,14 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Stage', 'Staged ' + staged + ' token(s) to ' + targetPlayerIds.length + ' player page(s).');
 
         if (marketplaceFailures.length > 0) {
-            var failMsg = '<b>‚ö†Ô∏è ' + marketplaceFailures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
+            var failMsg = '<b>?? ' + marketplaceFailures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
             marketplaceFailures.forEach(function(f) {
                 failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
                     + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
                     + '<small>' + f.name + '</small></div>';
             });
             failMsg += '<br><br><b>To fix:</b><ol>'
-                + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets ‚Üí Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
+                + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets ? Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
                 + '<li>Replace the token(s) on the master page with the library copy (drag from your library).</li>'
                 + '<li>Re-run <code>!gaslight stage</code> with the new token(s) selected.</li>'
                 + '</ol>';
@@ -2218,7 +2218,7 @@ var Gaslight = Gaslight || (() => {
             if (!entry[1].master) dangling.push(entry[0]);
         });
         if (dangling.length > 0) {
-            var out = '‚ö†Ô∏è Dangling groups with no master page:<br>';
+            var out = '?? Dangling groups with no master page:<br>';
             dangling.forEach(function(gn) {
                 out += '<b>' + gn + '</b>: ';
                 out += '<code>!gaslight ungroup ' + gn + ' --all</code> to remove, or ';
@@ -2258,7 +2258,7 @@ var Gaslight = Gaslight || (() => {
         + 'Aliases: init/turn/turns = initiative, relay = view<br>';
 
     // =========================================================================
-    // Scripting Engine ‚Äî Fetch Integration
+    // Scripting Engine ó Fetch Integration
     // =========================================================================
 
     // Module-level evaluation context for Fetch compProp resolution
@@ -2334,10 +2334,10 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Scripting Engine ‚Äî Trigger Map
+    // Scripting Engine ó Trigger Map
     // =========================================================================
 
-    // triggerMap: attributeName ‚Üí [{ pinId, pageId }]
+    // triggerMap: attributeName ? [{ pinId, pageId }]
     var triggerMap = {};
     var knownScriptPins = []; // cached pin IDs + handout links from last buildTriggerMap
 
@@ -2350,7 +2350,7 @@ var Gaslight = Gaslight || (() => {
         // Strip HTML for parsing
         var text = content.replace(/<\/p>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
-        // Find content inside {& if ...} blocks (simple regex ‚Äî catches most cases)
+        // Find content inside {& if ...} blocks (simple regex ó catches most cases)
         var ifRx = /\{&\s*if\s+(.+?)\}/gi;
         var match;
         while ((match = ifRx.exec(text)) !== null) {
@@ -2450,7 +2450,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle attribute changes ‚Äî check trigger map and re-evaluate affected pins.
+     * Handle attribute changes ó check trigger map and re-evaluate affected pins.
      */
     const onAttributeChanged = (obj) => {
         var attrName = obj.get('name');
@@ -2466,7 +2466,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle token property changes ‚Äî check trigger map for graphic properties.
+     * Handle token property changes ó check trigger map for graphic properties.
      */
     const onGraphicPropChanged = (obj, prev) => {
         var changed = Object.keys(prev).filter(function(k) { return !k.startsWith('_') && prev[k] !== obj.get(k) && k !== 'gmnotes'; });
@@ -2551,7 +2551,7 @@ var Gaslight = Gaslight || (() => {
     // =========================================================================
 
     /**
-     * Read a handout's notes content (async ‚Üí callback pattern).
+     * Read a handout's notes content (async ? callback pattern).
      * Returns content via callback since Roll20 requires it for notes/gmnotes.
      */
     const getHandoutContent = (handoutId, callback) => {
@@ -2719,7 +2719,7 @@ var Gaslight = Gaslight || (() => {
      * Evaluate a script for a specific target token and viewer.
      * Resolves target to the linked copy on the viewer's page.
      */
-    // ‚îÄ‚îÄ‚îÄ Viewer Aggregation ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ
+    // --- Viewer Aggregation ----------------------------------------------------
 
     const OPS = ['>=', '<=', '!=', '!~', '=', '~', '>', '<'];
 
@@ -2936,7 +2936,7 @@ var Gaslight = Gaslight || (() => {
         evaluationContext.viewerPlayerId = viewerPlayerId; // no linked copy on this viewer's page
 
         var content = scriptContent;
-        // Replace remaining @(target.*) with token ID ‚Äî Fetch resolves native props
+        // Replace remaining @(target.*) with token ID ó Fetch resolves native props
         content = content.replace(/@\(target\./g, '@(' + viewerTarget.get('id') + '.');
         // Replace @(gm_target.*) with master page token ID
         content = content.replace(/@\(gm_target\./g, '@(' + targetToken.get('id') + '.');
@@ -2969,11 +2969,11 @@ var Gaslight = Gaslight || (() => {
 
         // Error check: bare @(viewer.*) or @(gm.*) without aggregate
         if (content.indexOf('@(viewer.') !== -1) {
-            whisper('‚ö†Ô∏è Script error: <code>@(viewer.*)</code> must be inside any(), all(), max(), or min()');
+            whisper('?? Script error: <code>@(viewer.*)</code> must be inside any(), all(), max(), or min()');
             return;
         }
         if (content.indexOf('@(gm.') !== -1) {
-            whisper('‚ö†Ô∏è Script error: <code>@(gm.*)</code> must be inside any(), all(), max(), or min()');
+            whisper('?? Script error: <code>@(gm.*)</code> must be inside any(), all(), max(), or min()');
             return;
         }
 
@@ -3306,7 +3306,7 @@ var Gaslight = Gaslight || (() => {
             });
         }
 
-        // Token assignment ‚Äî only count tokens representing this character
+        // Token assignment ó only count tokens representing this character
         var tokens = selected.map(function(sel) { return getObj(sel._type, sel._id); }).filter(function(t) {
             return t && t.get('represents') === charId;
         });
@@ -3382,33 +3382,33 @@ var Gaslight = Gaslight || (() => {
             '<ol>',
             '<li>Create your master page with all tokens placed.</li>',
             '<li>Duplicate it once per player (Roll20 built-in Duplicate Page).</li>',
-            '<li>Select party tokens on the master page, run: <code>!gaslight setup mygroup</code> ‚Äî this auto-detects duplicates, assigns pages to players, and configures the group.</li>',
-            '<li>Run <code>!gaslight test mygroup</code> ‚Äî dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
-            '<li>Run <code>!gaslight split mygroup</code> ‚Äî activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
-            '<li>When done: <code>!gaslight merge</code> ‚Äî tears down all links, returns players to the banner page.</li>',
+            '<li>Select party tokens on the master page, run: <code>!gaslight setup mygroup</code> ó this auto-detects duplicates, assigns pages to players, and configures the group.</li>',
+            '<li>Run <code>!gaslight test mygroup</code> ó dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
+            '<li>Run <code>!gaslight split mygroup</code> ó activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
+            '<li>When done: <code>!gaslight merge</code> ó tears down all links, returns players to the banner page.</li>',
             '</ol>',
             '<h3>Commands</h3>',
-            '<p><code>!gaslight setup &lt;group&gt;</code> ‚Äî Quick-configure from duplicate pages</p>',
-            '<p><code>!gaslight split &lt;group&gt; [--force]</code> ‚Äî Activate group</p>',
-            '<p><code>!gaslight merge [group]</code> ‚Äî Tear down links, return players</p>',
-            '<p><code>!gaslight test &lt;group&gt;</code> ‚Äî Dry-run linking</p>',
-            '<p><code>!gaslight link [name|new] [ids...]</code> ‚Äî Manually link tokens</p>',
-            '<p><code>!gaslight unlink [ids...|--group &lt;g&gt;]</code> ‚Äî Remove links</p>',
-            '<p><code>!gaslight group &lt;g&gt; &lt;player|GM&gt;</code> ‚Äî Assign page to group</p>',
-            '<p><code>!gaslight ungroup &lt;g&gt; &lt;player|--all&gt;</code> ‚Äî Remove from group</p>',
-            '<p><code>!gaslight stage [players...]</code> ‚Äî Propagate tokens to player pages</p>',
-            '<p><code>!gaslight view [player|master]</code> ‚Äî Switch relay view</p>',
-            '<p><code>!gaslight relay &lt;views&gt; &lt;!command&gt;</code> ‚Äî Relay command to specific views</p>',
-            '<p><code>!gaslight config [relay-add|relay-remove|relay-list]</code> ‚Äî Configure relay commands</p>',
-            '<p><code>!gaslight eval [--dry-run] [--all|&lt;handout&gt;]</code> ‚Äî Evaluate script pins</p>',
-            '<p><code>!gaslight status</code> ‚Äî Show state</p>',
+            '<p><code>!gaslight setup &lt;group&gt;</code> ó Quick-configure from duplicate pages</p>',
+            '<p><code>!gaslight split &lt;group&gt; [--force]</code> ó Activate group</p>',
+            '<p><code>!gaslight merge [group]</code> ó Tear down links, return players</p>',
+            '<p><code>!gaslight test &lt;group&gt;</code> ó Dry-run linking</p>',
+            '<p><code>!gaslight link [name|new] [ids...]</code> ó Manually link tokens</p>',
+            '<p><code>!gaslight unlink [ids...|--group &lt;g&gt;]</code> ó Remove links</p>',
+            '<p><code>!gaslight group &lt;g&gt; &lt;player|GM&gt;</code> ó Assign page to group</p>',
+            '<p><code>!gaslight ungroup &lt;g&gt; &lt;player|--all&gt;</code> ó Remove from group</p>',
+            '<p><code>!gaslight stage [players...]</code> ó Propagate tokens to player pages</p>',
+            '<p><code>!gaslight view [player|master]</code> ó Switch relay view</p>',
+            '<p><code>!gaslight relay &lt;views&gt; &lt;!command&gt;</code> ó Relay command to specific views</p>',
+            '<p><code>!gaslight config [relay-add|relay-remove|relay-list]</code> ó Configure relay commands</p>',
+            '<p><code>!gaslight eval [--dry-run] [--all|&lt;handout&gt;]</code> ó Evaluate script pins</p>',
+            '<p><code>!gaslight status</code> ó Show state</p>',
             '<h3>Auto-Relay</h3>',
             '<p>Any API command that references master-page linked tokens (via selection or token IDs in the command) is automatically relayed to all player pages. Token IDs in the command are replaced with their linked counterparts on each page. No configuration needed.</p>',
             '<p><b>Player-page commands are page-local by default.</b> A command run against tokens on a player page only affects that page. To have player-page commands relay to other player pages and master, add them to relay-commands: <code>!gaslight config relay-add !token-mod</code></p>',
             '<h3>Selective Relay</h3>',
             '<p>Use <code>!gaslight relay</code> to send a command to specific players only. Useful when you are on a player page or want to exclude certain players:</p>',
-            '<p><code>!gaslight relay Alice Bob !token-mod --set layer|objects</code> ‚Äî only Alice and Bob see a door open; Charlie does not.</p>',
-            '<p><code>!gaslight relay all !token-mod --set bar1_value|10</code> ‚Äî relay to all player pages (useful when running from a player page instead of master).</p>',
+            '<p><code>!gaslight relay Alice Bob !token-mod --set layer|objects</code> ó only Alice and Bob see a door open; Charlie does not.</p>',
+            '<p><code>!gaslight relay all !token-mod --set bar1_value|10</code> ó relay to all player pages (useful when running from a player page instead of master).</p>',
             '<h3>Token Linking</h3>',
             '<p>Tokens are linked across pages automatically by:</p>',
             '<ol>',
@@ -3419,15 +3419,15 @@ var Gaslight = Gaslight || (() => {
             '<h3>Sync Control</h3>',
             '<p>Set the <code>gaslight_sync</code> attribute on a character to control what stays in sync:</p>',
             '<ul>',
-            '<li><b>Absent</b> ‚Äî full sync (position + all properties). Default for most tokens.</li>',
-            '<li><b>Empty</b> ‚Äî no sync at all. Use for tokens that are completely independent per player (e.g. a hallucination only one player sees).</li>',
-            '<li><code>base</code> ‚Äî position/rotation/scale only. Use for NPCs whose appearance differs per player (e.g. a disguised shapechanger) but still moves together.</li>',
-            '<li><code>base, bars</code> ‚Äî position + HP/bars. Use for enemies with different names or art per player but shared health pools.</li>',
-            '<li><code>base, bars, light</code> ‚Äî position + HP + light. Standard for most combat tokens where you want per-player auras/names but shared position and health.</li>',
-            '<li><code>!anchor</code> ‚Äî sync all properties except position. Use for a token that appears in different locations per player (e.g. an illusory wall) but keeps the same stats.</li>',
+            '<li><b>Absent</b> ó full sync (position + all properties). Default for most tokens.</li>',
+            '<li><b>Empty</b> ó no sync at all. Use for tokens that are completely independent per player (e.g. a hallucination only one player sees).</li>',
+            '<li><code>base</code> ó position/rotation/scale only. Use for NPCs whose appearance differs per player (e.g. a disguised shapechanger) but still moves together.</li>',
+            '<li><code>base, bars</code> ó position + HP/bars. Use for enemies with different names or art per player but shared health pools.</li>',
+            '<li><code>base, bars, light</code> ó position + HP + light. Standard for most combat tokens where you want per-player auras/names but shared position and health.</li>',
+            '<li><code>!anchor</code> ó sync all properties except position. Use for a token that appears in different locations per player (e.g. an illusory wall) but keeps the same stats.</li>',
             '</ul>',
             '<h3>Staging</h3>',
-            '<p><b>Token changes and deletion propagate automatically</b> across linked pages. However, <b>token creation does not</b> ‚Äî new tokens placed on one page are not automatically copied to others.</p>',
+            '<p><b>Token changes and deletion propagate automatically</b> across linked pages. However, <b>token creation does not</b> ó new tokens placed on one page are not automatically copied to others.</p>',
             '<p>Use <code>!gaslight stage</code> with tokens selected to duplicate them to all player pages and link them. Alternatively, set <code>gaslight_stage = 1</code> on a character to auto-stage whenever a token representing that character is placed.</p>',
             '<h3>Scripting</h3>',
             '<p>Gaslight scripts are reactive automation stored in handouts, activated via pins on the map. Scripts evaluate per-viewer per-target and fire API commands conditionally.</p>',
@@ -3437,16 +3437,16 @@ var Gaslight = Gaslight || (() => {
             '<pre>// Comments start with //\n!token-mod --set {& if (any(@(viewer.passive_wisdom)) >= @(target.gl_stealth_result))} layer|objects {& else} layer|gmlayer {& end}</pre>',
             '<p><b>Variables:</b></p>',
             '<ul>',
-            '<li><code>@(target.*)</code> ‚Äî the token being evaluated (linked per viewer page)</li>',
-            '<li><code>@(target.gl_*)</code> ‚Äî captured values (falls back to character attribute)</li>',
+            '<li><code>@(target.*)</code> ó the token being evaluated (linked per viewer page)</li>',
+            '<li><code>@(target.gl_*)</code> ó captured values (falls back to character attribute)</li>',
             '</ul>',
             '<p><b>Aggregate functions</b> (required for viewer.*/gm.*):</p>',
             '<ul>',
-            '<li><code>any(@(viewer.field)) op value</code> ‚Äî true if any viewer token passes</li>',
-            '<li><code>all(@(viewer.field)) op value</code> ‚Äî true if all pass</li>',
-            '<li><code>max(@(viewer.field))</code> ‚Äî highest value across viewer tokens</li>',
-            '<li><code>min(@(viewer.field))</code> ‚Äî lowest value</li>',
-            '<li><code>join(@(viewer.token_id))</code> ‚Äî space-separated IDs for commands</li>',
+            '<li><code>any(@(viewer.field)) op value</code> ó true if any viewer token passes</li>',
+            '<li><code>all(@(viewer.field)) op value</code> ó true if all pass</li>',
+            '<li><code>max(@(viewer.field))</code> ó highest value across viewer tokens</li>',
+            '<li><code>min(@(viewer.field))</code> ó lowest value</li>',
+            '<li><code>join(@(viewer.token_id))</code> ó space-separated IDs for commands</li>',
             '</ul>',
             '<p><b>Triggers:</b> Scripts auto-detect triggers from <code>@(target.gl_*)</code> references. Override with pin GM notes: <code>trigger: on change gl_stealth_result</code> or <code>trigger: manual only</code>.</p>',
             '<p><b>Evaluation:</b> <code>!gaslight eval</code> (selected pins), <code>!gaslight eval --all</code>, or <code>!gaslight eval &lt;handout name&gt;</code>. Add <code>--dry-run</code> to preview without executing.</p>',
@@ -3467,14 +3467,14 @@ var Gaslight = Gaslight || (() => {
             aliases: { help: ['help', '--help'], man: 'man', examples: 'examples', whatsnew: 'whatsnew', genHelp: 'gen-help', genDev: 'gen-dev-docs' },
             newSince: '2.1.0',
             help: {
-                description: 'Per-player map perception. Split players onto individual page copies with synchronized tokens ‚Äî each player can see different things while movement stays consistent.',
+                description: 'Per-player map perception. Split players onto individual page copies with synchronized tokens ó each player can see different things while movement stays consistent.',
                 quickStart: [
                     'Create your master page with all tokens placed.',
                     'Duplicate it once per player (Roll20 built-in Duplicate Page).',
-                    'Select party tokens on the master page, run `!gaslight setup mygroup` ‚Äî auto-detects duplicates, assigns pages, configures the group.',
-                    '`!gaslight test mygroup` ‚Äî dry-run showing how tokens will link. Fix any warnings.',
-                    '`!gaslight split mygroup` ‚Äî activates the group: links tokens, moves players, begins syncing.',
-                    'When done: `!gaslight merge` ‚Äî tears down all links, returns players.',
+                    'Select party tokens on the master page, run `!gaslight setup mygroup` ó auto-detects duplicates, assigns pages, configures the group.',
+                    '`!gaslight test mygroup` ó dry-run showing how tokens will link. Fix any warnings.',
+                    '`!gaslight split mygroup` ó activates the group: links tokens, moves players, begins syncing.',
+                    'When done: `!gaslight merge` ó tears down all links, returns players.',
                 ],
                 changelog: [
                     { version: '2.1.0', changes: [
@@ -3485,7 +3485,7 @@ var Gaslight = Gaslight || (() => {
                         'Scripting engine fixes: anchor component fix, triggerMap auto-rebuild',
                     ]},
                     { version: '2.0.0', changes: [
-                        'Scripting engine ‚Äî reactive per-player automation via map pins',
+                        'Scripting engine ó reactive per-player automation via map pins',
                         'RollCapture integration for automatic trigger evaluation',
                         'Auto-relay system for cross-page command forwarding',
                         'Aggregation functions: any(), all(), max(), min(), join()',
@@ -3498,7 +3498,7 @@ var Gaslight = Gaslight || (() => {
                           details: 'Auto-detects page copies by name, assigns master + player pages. Players resolved from selected tokens or named explicitly.',
                           items: [
                               { name: '<group>', description: 'Name for the group configuration', version: '2.0.0' },
-                              { name: '[players...]', description: 'Player names to include (optional ‚Äî auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
+                              { name: '[players...]', description: 'Player names to include (optional ó auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
                           ]},
                         { syntax: 'split <group> [--force]', description: 'Activate a prepared group', version: '1.0.0',
                           details: 'Links tokens across pages, moves players to individual pages, begins syncing. Runs test-first unless --force.',
@@ -3578,7 +3578,7 @@ var Gaslight = Gaslight || (() => {
                             { name: 'Step 1: gaslight_link', description: 'Explicit match via gaslight_link ID in token GM notes', version: '1.0.0' },
                             { name: 'Step 2: represents + name', description: 'Same character + token name (unique pair per page)', version: '1.0.0' },
                             { name: 'Step 3: represents + fingerprint', description: 'Same character + position/property fingerprint', version: '1.0.0' },
-                            { name: 'Step 4: Unlinked', description: 'Has represents but no match found ‚Äî not synced', version: '1.0.0' },
+                            { name: 'Step 4: Unlinked', description: 'Has represents but no match found ó not synced', version: '1.0.0' },
                         ],
                     },
                     sync: {
@@ -3599,12 +3599,12 @@ var Gaslight = Gaslight || (() => {
                         description: 'Reactive per-player automation via map pins',
                         version: '2.0.0',
                         details: 'Scripts are stored in handouts and activated by placing map pins on the page. Each pin evaluates per-viewer per-target with conditional logic to fire different commands for different players.',
-                        body: 'Create a handout with script content. Place a map pin on the page ‚Äî title it with the handout name (prefix [GLS] is stripped). The pin evaluates whenever triggered attributes change.',
+                        body: 'Create a handout with script content. Place a map pin on the page ó title it with the handout name (prefix [GLS] is stripped). The pin evaluates whenever triggered attributes change.',
                         items: [
                             { name: '@(target.field)', description: 'Reference a target token field (bar values, GM notes gl_* vars)', version: '2.0.0' },
                             { name: '@(viewer.field)', description: 'Reference the viewer\'s token field', version: '2.0.0' },
                             { name: '@(gm.field)', description: 'Reference the GM master token field', version: '2.0.0' },
-                            { name: '{& if condition}...{& end}', description: 'Conditional block ‚Äî evaluates per viewer', version: '2.0.0' },
+                            { name: '{& if condition}...{& end}', description: 'Conditional block ó evaluates per viewer', version: '2.0.0' },
                             { name: '{& select target_id}', description: 'Target selection (SelectManager integration)', version: '2.0.0' },
                             { name: 'any(), all(), max(), min()', description: 'Aggregate functions across viewer tokens', version: '2.0.0' },
                             { name: 'join()', description: 'Space-separated IDs of matching viewer tokens', version: '2.0.0' },
@@ -3644,7 +3644,7 @@ var Gaslight = Gaslight || (() => {
                         title: 'Troubleshooting',
                         description: 'Common issues and solutions',
                         version: '1.0.0',
-                        body: '**Tokens not linking** ‚Äî Run `!gaslight test <group>` to see resolution steps. Ensure tokens share a character (represents) or have matching gaslight_link IDs.\n\n**Movement not syncing** ‚Äî Check that Anchor is installed and the token isn\'t excluded by gaslight_sync. Verify the group is active with `!gaslight status`.\n\n**Relay not working** ‚Äî Confirm the command is in the relay list: `!gaslight config relay-list`. Commands must start with ! to be intercepted.\n\n**Scripts not evaluating** ‚Äî Pin must be on a page with an active split. Check pin title matches handout name. Run `!gaslight eval --dry-run` to debug.\n\n**Players see the same thing** ‚Äî Make sure the group is actually split (`!gaslight status`). Player-specific changes must be made on the player\'s page, not the master.',
+                        body: '**Tokens not linking** ó Run `!gaslight test <group>` to see resolution steps. Ensure tokens share a character (represents) or have matching gaslight_link IDs.\n\n**Movement not syncing** ó Check that Anchor is installed and the token isn\'t excluded by gaslight_sync. Verify the group is active with `!gaslight status`.\n\n**Relay not working** ó Confirm the command is in the relay list: `!gaslight config relay-list`. Commands must start with ! to be intercepted.\n\n**Scripts not evaluating** ó Pin must be on a page with an active split. Check pin title matches handout name. Run `!gaslight eval --dry-run` to debug.\n\n**Players see the same thing** ó Make sure the group is actually split (`!gaslight status`). Player-specific changes must be made on the player\'s page, not the master.',
                     },
                 },
             },
@@ -3673,16 +3673,16 @@ var Gaslight = Gaslight || (() => {
             description: 'Set up your first per-player split: pages, setup, split, and merge (guide only)',
             guide: [
                 { prompt: 'This guide walks you through creating your first **per-player split**.\n\nYou\'ll need at least 2 players in your game, but those players do not need to be online.' },
-                { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" ‚Äî all changes start here.' },
-                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are ‚Äî the *"Copy of"* prefix is how Gaslight auto-detects them.' },
-                { prompt: 'Navigate to the master page and run `!gaslight setup mygroup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup mygroup` ‚Äî uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup mygroup "Player1" "Player2" ...` with no selection ‚Äî uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup mygroup` with no selection ‚Äî uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player.',
+                { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" ó all changes start here.' },
+                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are ó the *"Copy of"* prefix is how Gaslight auto-detects them.' },
+                { prompt: 'Navigate to the master page and run `!gaslight setup mygroup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup mygroup` ó uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup mygroup "Player1" "Player2" ...` with no selection ó uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup mygroup` with no selection ó uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player.',
                   ...ScriptKit.waitForCommand('!gaslight setup'),
                   onContinue: () => {
                       var groups = discoverAllGroups();
                       if (Object.keys(groups).length === 0) return 'No group configured yet. Run `!gaslight setup <name>` using one of the methods above.';
                   }
                 },
-                { prompt: 'Now run:\n\n`!gaslight split mygroup`\n\nThis activates the group ‚Äî players are moved to their individual pages and token syncing begins.',
+                { prompt: 'Now run:\n\n`!gaslight split mygroup`\n\nThis activates the group ó players are moved to their individual pages and token syncing begins.',
                   ...ScriptKit.waitForCommand('!gaslight split'),
                   onContinue: () => {
                       if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first.';
@@ -3691,8 +3691,8 @@ var Gaslight = Gaslight || (() => {
                 { prompt: 'You may notice a **HUD** appeared on the master page. We\'ll cover that in a later example. For now, disable it with:\n\n`!gaslight hud off`',
                   ...ScriptKit.waitForCommand('!gaslight hud')
                 },
-                { prompt: 'Your split is now active. Try moving an **NPC token** on the master page ‚Äî it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else ‚Äî useful for hiding tokens, swapping images, or showing per-player information.' },
-                { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages ‚Äî players can move their own tokens and everyone sees it (bidirectional).' },
+                { prompt: 'Your split is now active. Try moving an **NPC token** on the master page ó it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else ó useful for hiding tokens, swapping images, or showing per-player information.' },
+                { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages ó players can move their own tokens and everyone sees it (bidirectional).' },
                 { prompt: 'When you\'re done with the split (e.g. combat ends, scene changes), run:\n\n`!gaslight merge`.\n\nThis tears down all links and returns players to the banner page.' },
                 { prompt: '**That\'s the basics!** From here, explore the other examples to learn more about how to use gaslight.', offerExamples: ['core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
             ],
@@ -3703,7 +3703,7 @@ var Gaslight = Gaslight || (() => {
             description: 'Staging, linking, syncing, and token lifecycle',
             source: SCRIPT_NAME,
             guide: [
-                { prompt: '**Core Mechanics** ‚Äî This guide walks through the fundamental operations that make Gaslight tick: staging tokens, managing links, controlling sync, and what happens when tokens are deleted.\n\n**Prerequisite:** You need an active split. If you haven\'t set one up yet, run the **getting-started** guide first.',
+                { prompt: '**Core Mechanics** ó This guide walks through the fundamental operations that make Gaslight tick: staging tokens, managing links, controlling sync, and what happens when tokens are deleted.\n\n**Prerequisite:** You need an active split. If you haven\'t set one up yet, run the **getting-started** guide first.',
                   onContinue: () => {
                       if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first, or complete the getting-started guide.';
                   }
@@ -3724,11 +3724,11 @@ var Gaslight = Gaslight || (() => {
                       if (!allStaged) return 'The previously selected token has not been staged yet. Select it and run `!gaslight stage`.';
                   }
                 },
-                { prompt: 'Your token is now staged ‚Äî copies exist on each player page and sync automatically.\n\nYou can also set a **default** so tokens representing a character auto-stage whenever placed on a gaslighted page:\n\n`!gaslight stage --default on`\n\nTo remove the default: `!gaslight stage --default off`' },
+                { prompt: 'Your token is now staged ó copies exist on each player page and sync automatically.\n\nYou can also set a **default** so tokens representing a character auto-stage whenever placed on a gaslighted page:\n\n`!gaslight stage --default on`\n\nTo remove the default: `!gaslight stage --default off`' },
                 { prompt: '**Unlinking** disconnects a player\'s copy from the master without deleting it. Useful for making permanent per-player differences.\n\nSelect a staged token on the master page and run:\n\n`!gaslight unlink`',
                   ...ScriptKit.waitForCommand('!gaslight unlink')
                 },
-                { prompt: 'The player copy now lives independently ‚Äî changes on the master won\'t reach it.' },
+                { prompt: 'The player copy now lives independently ó changes on the master won\'t reach it.' },
                 { prompt: '**Relinking** re-establishes the connection. Select the same master token and run:\n\n`!gaslight link`\n\nThe player copy snaps back to match the master.',
                   ...ScriptKit.waitForCommand('!gaslight link')
                 },
@@ -3738,8 +3738,8 @@ var Gaslight = Gaslight || (() => {
                 { prompt: '**Resyncing** resumes sync for a desynced property. The player copy snaps back to the master\'s current value.\n\nSelect the same token and run:\n\n`!gaslight sync left,top`',
                   ...ScriptKit.waitForCommand('!gaslight sync')
                 },
-                { prompt: 'You can also set sync/desync **defaults** on a character so new tokens inherit the config:\n\n`!gaslight sync --default all` ‚Äî sync everything (the default)\n`!gaslight sync --default left,top,bar1_value` ‚Äî sync only these props\n`!gaslight desync --default left,top` ‚Äî exclude position from sync\n`!gaslight desync --default all` ‚Äî disable all syncing by default\n\nUse `!gaslight sync reset` on a token to re-read the character default.' },
-                { prompt: '**Token deletion behavior:**\n\n‚Ä¢ Delete a **parent token** (master page, or controlling player\'s page for PCs) ‚Üí all linked copies are removed\n‚Ä¢ Delete a **non-parent copy** (e.g. an NPC on a player page) ‚Üí only that copy is removed, others remain' },
+                { prompt: 'You can also set sync/desync **defaults** on a character so new tokens inherit the config:\n\n`!gaslight sync --default all` ó sync everything (the default)\n`!gaslight sync --default left,top,bar1_value` ó sync only these props\n`!gaslight desync --default left,top` ó exclude position from sync\n`!gaslight desync --default all` ó disable all syncing by default\n\nUse `!gaslight sync reset` on a token to re-read the character default.' },
+                { prompt: '**Token deletion behavior:**\n\nï Delete a **parent token** (master page, or controlling player\'s page for PCs) ? all linked copies are removed\nï Delete a **non-parent copy** (e.g. an NPC on a player page) ? only that copy is removed, others remain' },
                 { prompt: '**That\'s the core!** You now know how to stage, link/unlink, sync/desync, and manage token lifecycle.\n\nNext, learn how the initiative HUD works or how to relay commands to player pages.',
                   offerExamples: ['initiative-hud', 'relay', 'scripting']
                 },
@@ -3748,17 +3748,17 @@ var Gaslight = Gaslight || (() => {
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'initiative-hud',
-            description: 'Interactive initiative tracker HUD ‚Äî gestures, customization, reticle',
+            description: 'Interactive initiative tracker HUD ó gestures, customization, reticle',
             source: SCRIPT_NAME,
             guide: [
-                { prompt: '**Initiative HUD** ‚Äî This guide walks through the on-screen initiative tracker: how to interact with it, customize its appearance, and use the current turn reticle.\n\n**Prerequisites:** You need an active split with the HUD enabled.',
+                { prompt: '**Initiative HUD** ó This guide walks through the on-screen initiative tracker: how to interact with it, customize its appearance, and use the current turn reticle.\n\n**Prerequisites:** You need an active split with the HUD enabled.',
                   onContinue: () => {
                       var s = state[SCRIPT_NAME];
                       if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
                       if (!s.hud.initiative) return 'Initiative HUD is disabled. Run `!gaslight hud init on` to enable it.';
                   }
                 },
-                { prompt: 'Before we begin, clear any existing entries from the turn order. You can do this from Roll20\'s Turn Tracker panel (‚öô).\n\nClear the turn order and click Continue.',
+                { prompt: 'Before we begin, clear any existing entries from the turn order. You can do this from Roll20\'s Turn Tracker panel (?).\n\nClear the turn order and click Continue.',
                   when: () => {
                       var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
                       return turnOrder.length > 0;
@@ -3776,7 +3776,7 @@ var Gaslight = Gaslight || (() => {
                       if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
                   }
                 },
-                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (‚öô in the toolbar). Drag tokens in or use the tracker\'s initiative button.\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative ‚Äî we\'ll cover that later.',
+                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (? in the toolbar). Drag tokens in or use the tracker\'s initiative button.\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative ó we\'ll cover that later.',
                   onEnter: (ctx, advance) => {
                       ctx._turnFired = false;
                       on('change:campaign:turnorder', function() {
@@ -3792,8 +3792,8 @@ var Gaslight = Gaslight || (() => {
                       if (entries.length < 6) return 'Only ' + entries.length + ' token(s) in the HUD. Add at least 6.';
                   }
                 },
-                { prompt: '**Why duplicates?**\n\nYou may notice the Roll20 Turn Tracker panel shows what appears to be duplicate entries ‚Äî multiple entries for the same combatant. This is because each linked token (one per player page) has its own turn order entry.\n\nThe HUD **deduplicates** these automatically and shows one pin per combatant. The raw turn order is correct ‚Äî it\'s just how Gaslight tracks initiative across pages.' },
-                { prompt: '**HUD Layout ‚Äî The Frame:**\n\nThe large rectangle behind the HUD is the **frame**. It defines the HUD\'s position and how many slots are visible. You\'ll learn how to customize it later.',
+                { prompt: '**Why duplicates?**\n\nYou may notice the Roll20 Turn Tracker panel shows what appears to be duplicate entries ó multiple entries for the same combatant. This is because each linked token (one per player page) has its own turn order entry.\n\nThe HUD **deduplicates** these automatically and shows one pin per combatant. The raw turn order is correct ó it\'s just how Gaslight tracks initiative across pages.' },
+                { prompt: '**HUD Layout ó The Frame:**\n\nThe large rectangle behind the HUD is the **frame**. It defines the HUD\'s position and how many slots are visible. You\'ll learn how to customize it later.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3809,7 +3809,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', x + w / 2, y + h / 2, { fromX: x + w / 2 + 100, fromY: y + h / 2 + 100, color: '#ff0000' });
                   }
                 },
-                { prompt: '**HUD Layout ‚Äî The Diamond:**\n\nThe diamond-shaped highlight marks the **current turn**. The pin inside it is the active combatant.',
+                { prompt: '**HUD Layout ó The Diamond:**\n\nThe diamond-shaped highlight marks the **current turn**. The pin inside it is the active combatant.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3823,7 +3823,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', x - 80, y, { fromX: x - 180, fromY: y, color: '#ff0000' });
                   }
                 },
-                { prompt: '**HUD Layout ‚Äî The Pins:**\n\nEach pin represents one combatant. Pins **above** the diamond have already gone this round; pins **below** are upcoming turns. The HUD scrolls to keep the current turn visible.',
+                { prompt: '**HUD Layout ó The Pins:**\n\nEach pin represents one combatant. Pins **above** the diamond have already gone this round; pins **below** are upcoming turns. The HUD scrolls to keep the current turn visible.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3853,7 +3853,7 @@ var Gaslight = Gaslight || (() => {
                       });
                   }
                 },
-                { prompt: '**Gestures ‚Äî Next turn:**\n\nSwipe the **current turn** pin (the one inside the diamond) to the **right** to advance to the next combatant.\n\nTry it now.',
+                { prompt: '**Gestures ó Next turn:**\n\nSwipe the **current turn** pin (the one inside the diamond) to the **right** to advance to the next combatant.\n\nTry it now.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3870,7 +3870,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', center.x + 100, center.y, { fromX: center.x + 20, fromY: center.y, color: '#00ff00' });
                   }
                 },
-                { prompt: '**Gestures ‚Äî Previous turn:**\n\nSwipe the **current turn** pin to the **left** to go back to the previous combatant.\n\nTry it now.',
+                { prompt: '**Gestures ó Previous turn:**\n\nSwipe the **current turn** pin to the **left** to go back to the previous combatant.\n\nTry it now.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3886,7 +3886,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', center.x - 100, center.y, { fromX: center.x - 20, fromY: center.y, color: '#ff4444' });
                   }
                 },
-                { prompt: '**Gestures ‚Äî Jump to turn:**\n\nSwipe any **non-current** pin to the **right** to jump forward to that combatant\'s turn. Swipe **left** to jump backward to it.\n\nTry swiping a non-current pin.',
+                { prompt: '**Gestures ó Jump to turn:**\n\nSwipe any **non-current** pin to the **right** to jump forward to that combatant\'s turn. Swipe **left** to jump backward to it.\n\nTry swiping a non-current pin.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3909,7 +3909,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', center.x + 100, center.y, { fromX: center.x + 20, fromY: center.y, color: '#00ff00' });
                   }
                 },
-                { prompt: '**Gestures ‚Äî Reordering:**\n\nDrag a HUD pin **up or down** to reorder it in initiative. The pin will snap into its new position.\n\nTry dragging a pin to a different slot.',
+                { prompt: '**Gestures ó Reordering:**\n\nDrag a HUD pin **up or down** to reorder it in initiative. The pin will snap into its new position.\n\nTry dragging a pin to a different slot.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.initData;
@@ -3930,7 +3930,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', center.x, center.y + 80, { fromX: center.x, fromY: center.y + 10, color: '#00ccff' });
                   }
                 },
-                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.\n\n‚Ä¢ **Drag up/down** on the reticle to offset it from the token\n‚Ä¢ **Resize** the reticle to change its proportional size\n‚Ä¢ **Rotate** it to add a rotation offset\n‚Ä¢ **Delete** the reticle to turn it off (or `!gaslight hud reticle off`)',
+                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.\n\nï **Drag up/down** on the reticle to offset it from the token\nï **Resize** the reticle to change its proportional size\nï **Rotate** it to add a rotation offset\nï **Delete** the reticle to turn it off (or `!gaslight hud reticle off`)',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.reticleData;
@@ -3942,14 +3942,14 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.ping(pageId, x, y, { color: 'transparent', moveAll: true, player: ctx.player });
                   }
                 },
-                { prompt: '**Customization ‚Äî Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nTry resizing one of the pins.' },
-                { prompt: '**Customization ‚Äî Text:**\n\nThe initiative value text next to each pin can be customized:\n\n‚Ä¢ Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 ‚Äî all will update to match\n‚Ä¢ **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\n‚Ä¢ **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.' },
-                { prompt: '**The Frame ‚Äî Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame ‚Äî some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins.' },
-                { prompt: '**The Frame ‚Äî Diamond position:**\n\nYou can drag the **diamond highlight up or down** within the frame to shift where the current turn is displayed. Pins above and below will adjust accordingly.\n\nTry moving the diamond to a different position in the frame.' },
-                { prompt: '**The Frame ‚Äî Other customization:**\n\nThe frame supports additional tweaks:\n\n‚Ä¢ **Drag** the frame to move the entire HUD\n‚Ä¢ **Resize horizontally** to adjust padding between pins\n‚Ä¢ Change the frame\'s **stroke color** or **fill** directly in Roll20\'s shape properties\n\nThe **diamond** can also be customized:\n\n‚Ä¢ Change its **color**, **stroke width**, **fill**, or **rotation** directly in Roll20\'s shape properties\n\nThe HUD remembers all of these choices.' },
-                { prompt: '**Reticle ‚Äî Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45¬∞ (so the diamond\'s 45¬∞ rotation becomes the reticle\'s 90¬∞, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.' },
-                { prompt: '**Gestures ‚Äî Removing:**\n\nDelete a HUD pin to remove that combatant from initiative. Try deleting one now.' },
-                { prompt: '**Clearing initiative:**\n\nNow clear the rest of the initiative ‚Äî delete the remaining HUD pins or clear initiative from Roll20\'s Turn Tracker panel.\n\nClear initiative before continuing.',
+                { prompt: '**Customization ó Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nTry resizing one of the pins.' },
+                { prompt: '**Customization ó Text:**\n\nThe initiative value text next to each pin can be customized:\n\nï Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 ó all will update to match\nï **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\nï **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.' },
+                { prompt: '**The Frame ó Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame ó some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins.' },
+                { prompt: '**The Frame ó Diamond position:**\n\nYou can drag the **diamond highlight up or down** within the frame to shift where the current turn is displayed. Pins above and below will adjust accordingly.\n\nTry moving the diamond to a different position in the frame.' },
+                { prompt: '**The Frame ó Other customization:**\n\nThe frame supports additional tweaks:\n\nï **Drag** the frame to move the entire HUD\nï **Resize horizontally** to adjust padding between pins\nï Change the frame\'s **stroke color** or **fill** directly in Roll20\'s shape properties\n\nThe **diamond** can also be customized:\n\nï Change its **color**, **stroke width**, **fill**, or **rotation** directly in Roll20\'s shape properties\n\nThe HUD remembers all of these choices.' },
+                { prompt: '**Reticle ó Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45∞ (so the diamond\'s 45∞ rotation becomes the reticle\'s 90∞, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.' },
+                { prompt: '**Gestures ó Removing:**\n\nDelete a HUD pin to remove that combatant from initiative. Try deleting one now.' },
+                { prompt: '**Clearing initiative:**\n\nNow clear the rest of the initiative ó delete the remaining HUD pins or clear initiative from Roll20\'s Turn Tracker panel.\n\nClear initiative before continuing.',
                   when: () => {
                       var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
                       return turnOrder.length > 0;
@@ -3967,7 +3967,7 @@ var Gaslight = Gaslight || (() => {
                       if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
                   }
                 },
-                { prompt: '**Plugin-added initiative:**\n\nIf you use a plugin (GroupInitiative, etc.) to roll initiative, go ahead and use it now.\n\nIf you don\'t have one, select token(s) and click **Continue** ‚Äî Gaslight will add them to initiative for you.',
+                { prompt: '**Plugin-added initiative:**\n\nIf you use a plugin (GroupInitiative, etc.) to roll initiative, go ahead and use it now.\n\nIf you don\'t have one, select token(s) and click **Continue** ó Gaslight will add them to initiative for you.',
                   onContinue: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var entries = (s.hud.initData && s.hud.initData.entries) || [];
@@ -3985,13 +3985,13 @@ var Gaslight = Gaslight || (() => {
                       Campaign().set('turnorder', JSON.stringify(turnOrder));
                   }
                 },
-                { prompt: '**The problem:** When a plugin adds tokens to initiative, it sets `Campaign().set(\'turnorder\')` ‚Äî but Gaslight cannot detect that change automatically.\n\nTo sync the HUD with the current turn order, run:\n\n`!gaslight init`\n\nThis is needed whenever initiative changes via a plugin (not via the HUD gestures).',
+                { prompt: '**The problem:** When a plugin adds tokens to initiative, it sets `Campaign().set(\'turnorder\')` ó but Gaslight cannot detect that change automatically.\n\nTo sync the HUD with the current turn order, run:\n\n`!gaslight init`\n\nThis is needed whenever initiative changes via a plugin (not via the HUD gestures).',
                   ...ScriptKit.waitForCommand('!gaslight init')
                 },
-                { prompt: '**Reset:**\n\nIf the HUD ever gets into a weird state (misplaced elements, corrupted data), you can reset it:\n\n`!gaslight hud init reset` ‚Äî destroys and recreates the initiative HUD from defaults\n`!gaslight hud reticle reset` ‚Äî destroys and recreates the reticle from defaults\n\nThis preserves your turn order but resets all visual customization.' },
-                { prompt: '**Toggling on/off:**\n\nYou can disable the HUD without losing your settings:\n\n`!gaslight hud init off` ‚Äî hides the initiative HUD (turn order still works normally)\n`!gaslight hud init on` ‚Äî shows it again with your saved customization\n`!gaslight hud reticle off` / `on` ‚Äî same for the reticle independently\n`!gaslight hud off` / `on` ‚Äî toggles all HUD elements at once' },
-                { prompt: '**‚ö†Ô∏è Tags:**\n\nIf a token in initiative doesn\'t exist on all player pages, its HUD pin shows a ‚ö†Ô∏è icon in the title. Click the pin to see which players can\'t see it.\n\nThis usually means the token hasn\'t been staged to all pages. Run `!gaslight stage` with it selected to fix it.' },
-                { prompt: '**Commands reference:**\n\n`!gaslight hud init on|off|reset` ‚Äî toggle/reset the initiative HUD\n`!gaslight hud reticle on|off|reset` ‚Äî toggle/reset the reticle\n`!gaslight init` ‚Äî sync turn order into HUD\n`!gaslight init sync` ‚Äî add missing linked tokens\n`!gaslight init trim` ‚Äî remove stale entries\n\n**That\'s the initiative HUD!**',
+                { prompt: '**Reset:**\n\nIf the HUD ever gets into a weird state (misplaced elements, corrupted data), you can reset it:\n\n`!gaslight hud init reset` ó destroys and recreates the initiative HUD from defaults\n`!gaslight hud reticle reset` ó destroys and recreates the reticle from defaults\n\nThis preserves your turn order but resets all visual customization.' },
+                { prompt: '**Toggling on/off:**\n\nYou can disable the HUD without losing your settings:\n\n`!gaslight hud init off` ó hides the initiative HUD (turn order still works normally)\n`!gaslight hud init on` ó shows it again with your saved customization\n`!gaslight hud reticle off` / `on` ó same for the reticle independently\n`!gaslight hud off` / `on` ó toggles all HUD elements at once' },
+                { prompt: '**?? Tags:**\n\nIf a token in initiative doesn\'t exist on all player pages, its HUD pin shows a ?? icon in the title. Click the pin to see which players can\'t see it.\n\nThis usually means the token hasn\'t been staged to all pages. Run `!gaslight stage` with it selected to fix it.' },
+                { prompt: '**Commands reference:**\n\n`!gaslight hud init on|off|reset` ó toggle/reset the initiative HUD\n`!gaslight hud reticle on|off|reset` ó toggle/reset the reticle\n`!gaslight init` ó sync turn order into HUD\n`!gaslight init sync` ó add missing linked tokens\n`!gaslight init trim` ó remove stale entries\n\n**That\'s the initiative HUD!**',
                   offerExamples: ['relay', 'scripting']
                 },
             ],
@@ -4007,10 +4007,10 @@ var Gaslight = Gaslight || (() => {
                   }
                 },
                 { prompt: 'Run `!rollcapture dissect` in chat, then roll stealth for any NPC. This shows you the template fields available for capture.' },
-                { prompt: 'Create a RollCapture rule for skills. Run `!rollcapture rule skills` ‚Äî this creates a *[RC] skills* handout. Open it in the journal.' },
-                { prompt: 'Add the line `template: <name>` ‚Äî where `<name>` is the roll template shown by dissect (e.g. "simple", "atk", "npc").' },
-                { prompt: 'Add the line `name_field: <field>` ‚Äî where `<field>` is the template field containing the skill name (e.g. "rname", "name"). This is how RollCapture identifies which skill was rolled.' },
-                { prompt: 'Add the line `result: <field>` ‚Äî where `<field>` is the inline roll field holding the total (e.g. "r1", "roll1").' },
+                { prompt: 'Create a RollCapture rule for skills. Run `!rollcapture rule skills` ó this creates a *[RC] skills* handout. Open it in the journal.' },
+                { prompt: 'Add the line `template: <name>` ó where `<name>` is the roll template shown by dissect (e.g. "simple", "atk", "npc").' },
+                { prompt: 'Add the line `name_field: <field>` ó where `<field>` is the template field containing the skill name (e.g. "rname", "name"). This is how RollCapture identifies which skill was rolled.' },
+                { prompt: 'Add the line `result: <field>` ó where `<field>` is the inline roll field holding the total (e.g. "r1", "roll1").' },
                 { prompt: 'Save the handout and run `!rollcapture reload` to load your new rule.',
                   ...ScriptKit.waitForCommand('!rollcapture reload')
                 },
@@ -4126,7 +4126,7 @@ var Gaslight = Gaslight || (() => {
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'madness',
-            description: 'An afflicted player sees all tokens as enemies ‚Äî allies swap to a chosen enemy image',
+            description: 'An afflicted player sees all tokens as enemies ó allies swap to a chosen enemy image',
             guide: [
                 { prompt: 'Select a token that has the **status marker** you want to represent madness applied to it (e.g. "screaming"). This marker will trigger the effect when placed on a viewer\'s token.',
                   select: 'token', as: 'markerToken', min: 1, max: 1,
@@ -4153,7 +4153,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: (ctx) => '**Test:** Apply the **' + ctx.params._marker + '** marker to a viewer token, then run `!gaslight eval --all`. All tokens on that viewer\'s page should swap to the enemy image. Remove the marker and re-eval to restore.' },
             ],
             handout: (ctx) => ({
-                notes: '!token-mod --set {& if ([madness] any(@(viewer.statusmarkers)) ~ "' + ctx.params._marker + '") && !(any(@(viewer.token_id)) = @(target.token_id))}imgsrc|' + ctx.params._enemyId + ' tint_color|#000000 name|≈ßÃàÃÅhÃ∂Ãõ√´ÃµÃ°√ΩÃ∏Ã≤{& else}imgsrc|@(gm_target.token_id) tint_color|transparent name|@(gm_target.name){& end}',
+                notes: '!token-mod --set {& if ([madness] any(@(viewer.statusmarkers)) ~ "' + ctx.params._marker + '") && !(any(@(viewer.token_id)) = @(target.token_id))}imgsrc|' + ctx.params._enemyId + ' tint_color|#000000 name|t®¥h??Î??˝?_{& else}imgsrc|@(gm_target.token_id) tint_color|transparent name|@(gm_target.name){& end}',
                 gmnotes: '---GASLIGHT-SCRIPT---\nfilter: characters\ntrigger: on change statusmarkers',
                 archived: false,
             }),
@@ -4270,8 +4270,8 @@ var Gaslight = Gaslight || (() => {
     /**
      * Universal relay interceptor. Automatically relays commands to linked tokens:
      * - If selected tokens or IDs in command reference master-page linked tokens
-     *   AND no player-page tokens are selected/referenced ‚Üí relay to all player pages.
-     * - If player-page tokens are involved ‚Üí only relay if command is in relayCommands.
+     *   AND no player-page tokens are selected/referenced ? relay to all player pages.
+     * - If player-page tokens are involved ? only relay if command is in relayCommands.
      */
     const viewInterceptor = (msg) => {
         if (msg.type !== 'api') return;
@@ -4344,7 +4344,7 @@ var Gaslight = Gaslight || (() => {
         // Universal relay: master-page refs, no player-page refs
         if (masterTokens.length > 0 && !hasPlayerPageRef) {
             var viewPlayerId = s.view;
-            if (!viewPlayerId) return; // view off ‚Äî no relay
+            if (!viewPlayerId) return; // view off ó no relay
             var targetPlayerIds = viewPlayerId === 'master'
                 ? Object.keys(activeEntry[1].playerPages)
                 : [viewPlayerId];
@@ -4370,7 +4370,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // Initiative Tracking ‚Äî sync turn order across linked tokens
+    // Initiative Tracking ó sync turn order across linked tokens
     // =========================================================================
 
     /**
@@ -4504,7 +4504,7 @@ var Gaslight = Gaslight || (() => {
             if (!entry.id || entry.id === '-1') return;
             var oldEntry = oldOrder.find(function(e) { return e.id === entry.id; });
             if (!oldEntry || oldEntry.pr === entry.pr) return;
-            // Value changed ‚Äî propagate to linked tokens
+            // Value changed ó propagate to linked tokens
             var info = getLinkedInfo(entry.id);
             if (info.linkedIds.length === 0) return;
             info.linkedIds.forEach(function(linkedId) {
@@ -4562,7 +4562,7 @@ var Gaslight = Gaslight || (() => {
                     }
                     modified = true;
                 } else {
-                    // Not forward/backward ‚Äî manual drag. Reorder to group children after master.
+                    // Not forward/backward ó manual drag. Reorder to group children after master.
                     var reordered = reorderInitiative(newOrder);
                     if (JSON.stringify(reordered) !== JSON.stringify(newOrder)) {
                         newOrder = reordered;
@@ -4619,19 +4619,19 @@ var Gaslight = Gaslight || (() => {
             if (placed.has(entry.id)) return;
             if (!entry.id || entry.id === '-1') {
                 result.push(entry);
-                // Don't add '-1' to placed ‚Äî multiple custom entries share this ID
+                // Don't add '-1' to placed ó multiple custom entries share this ID
                 return;
             }
 
             var info = getLinkedInfo(entry.id);
             if (info.linkedIds.length === 0) {
-                // Not a linked token ‚Äî just add it
+                // Not a linked token ó just add it
                 result.push(entry);
                 placed.add(entry.id);
                 return;
             }
 
-            // Skip children ‚Äî they'll be pulled in when we reach their master
+            // Skip children ó they'll be pulled in when we reach their master
             if (!isMasterToken(entry.id)) return;
 
             // Find all entries in this link group
@@ -4733,7 +4733,7 @@ var Gaslight = Gaslight || (() => {
         if (doSync) parts.push(added + ' entry(s) added');
         var out = parts.join(', ') + '.';
         if (warnings.length > 0) {
-            out += '<br><br>‚ö†Ô∏è ' + warnings.join('<br>‚ö†Ô∏è ');
+            out += '<br><br>?? ' + warnings.join('<br>?? ');
         }
         reply(msg, 'Init', out);
         if (s.hud.initiative) {
@@ -4746,7 +4746,7 @@ var Gaslight = Gaslight || (() => {
                     var tagStr = computeHudTag(e.sourceId);
                     var sourceToken = getObj('graphic', e.sourceId);
                     var name = sourceToken ? (sourceToken.get('name') || '') : '';
-                    pin.set('title', ((tagStr ? '‚ö†Ô∏è ' : '') + name).trim());
+                    pin.set('title', ((tagStr ? '?? ' : '') + name).trim());
                     pin.set('notes', tagStr || '');
                 });
             }
@@ -4755,7 +4755,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     // =========================================================================
-    // HUD System ‚Äî on-canvas indicators
+    // HUD System ó on-canvas indicators
     // =========================================================================
 
     const HUD_PREFIX = 'gaslight_hud_';
@@ -4891,9 +4891,9 @@ var Gaslight = Gaslight || (() => {
         // Determine display text
         var label;
         if (s.view === null) {
-            label = 'üî¥ RELAY OFF';
+            label = '?? RELAY OFF';
         } else if (s.view === 'master') {
-            label = 'üü¢ RELAY: ALL';
+            label = '?? RELAY: ALL';
         } else {
             // Resolve player name
             var playerName = s.view;
@@ -4901,7 +4901,7 @@ var Gaslight = Gaslight || (() => {
                 var entry = g.playerPages[s.view];
                 if (entry && entry.name) playerName = entry.name;
             });
-            label = 'üîµ VIEW: ' + playerName;
+            label = '?? VIEW: ' + playerName;
         }
 
         // Find existing or create new
@@ -4954,7 +4954,7 @@ var Gaslight = Gaslight || (() => {
 
     /**
      * Convert a pin's x/y (the "point" where the teardrop points) to its visual center.
-     * Pin scale 0.25 = 10px, scale 2.0 = 80px ‚Üí size = scale * 40.
+     * Pin scale 0.25 = 10px, scale 2.0 = 80px ? size = scale * 40.
      * Visual center is offset upward by half the pin's visual height.
      */
     const toPinCenter = (pin) => {
@@ -5005,36 +5005,25 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Compute proportionally distributed offsets for HUD entries.
-     * Entry 0 = offset 0 (diamond). Remaining entries alternate below/above
-     * proportional to available slots on each side.
-     * If one side runs out of room, stack on the other side.
-     * Returns an array of offsets, one per entry.
+     * Compute how many slots should be above vs below the diamond,
+     * distributing proportionally based on available space on each side.
+     * Returns { above, below } counts.
      */
-    const computeHudOffsets = (count, slotsBelow, slotsAbove) => {
-        var offsets = [0];
-        var below = 0, above = 0;
+    const computeHudSlotDistribution = (count, slotsBelow, slotsAbove) => {
+        // Entry 0 is in the diamond. Remaining entries fill below then above proportionally.
+        var remaining = Math.min(count - 1, slotsBelow + slotsAbove);
+        if (remaining <= 0) return { below: 0, above: 0 };
         var totalSlots = slotsBelow + slotsAbove;
-        if (totalSlots === 0) return offsets;
-
-        for (var i = 1; i < count; i++) {
-            // Determine which side should get the next entry based on fill ratio
-            var belowRatio = slotsBelow > 0 ? below / slotsBelow : 1;
-            var aboveRatio = slotsAbove > 0 ? above / slotsAbove : 1;
-
-            if (belowRatio <= aboveRatio) {
-                // Below is less filled proportionally ‚Äî try below
-                if (below < slotsBelow) { below++; offsets.push(below); }
-                else if (above < slotsAbove) { above++; offsets.push(-above); }
-                else offsets.push(below + above + 1); // overflow (hidden)
-            } else {
-                // Above is less filled proportionally ‚Äî try above
-                if (above < slotsAbove) { above++; offsets.push(-above); }
-                else if (below < slotsBelow) { below++; offsets.push(below); }
-                else offsets.push(below + above + 1); // overflow (hidden)
-            }
+        if (totalSlots === 0) return { below: 0, above: 0 };
+        var below = Math.min(slotsBelow, Math.round(remaining * slotsBelow / totalSlots));
+        var above = Math.min(slotsAbove, remaining - below);
+        // If rounding left us short, add to whichever side has room
+        while (below + above < remaining) {
+            if (below < slotsBelow) below++;
+            else if (above < slotsAbove) above++;
+            else break;
         }
-        return offsets;
+        return { below: below, above: above };
     };
 
     /**
@@ -5077,14 +5066,14 @@ var Gaslight = Gaslight || (() => {
                 seenGroups.add(entry.id);
                 return true;
             }
-            // It's a child ‚Äî check if its master is in the order
+            // It's a child ó check if its master is in the order
             var masterId = info.linkedIds.find(function(lid) { return isMasterToken(lid); });
             if (masterId && seenGroups.has(masterId)) return false; // master already shown
             if (masterId && order.some(function(e) { return e.id === masterId; })) {
                 seenGroups.add(masterId);
                 return false; // master is in order, it will be shown when we reach it
             }
-            // No master in order ‚Äî show this child as representative
+            // No master in order ó show this child as representative
             if (!seenGroups.has(entry.id)) {
                 seenGroups.add(entry.id);
                 return true;
@@ -5293,7 +5282,7 @@ var Gaslight = Gaslight || (() => {
                 if (!sourceToken) return;
 
                 var tagStr = computeHudTag(entry.id);
-                var pinTitle = ((tagStr ? '‚ö†Ô∏è ' : '') + (sourceToken.get('name') || '')).trim();
+                var pinTitle = ((tagStr ? '?? ' : '') + (sourceToken.get('name') || '')).trim();
 
                 var hudPin = createHudObj('pin', {
                     _pageid: pageId,
@@ -5332,7 +5321,7 @@ var Gaslight = Gaslight || (() => {
         });
 
         if (direction === undefined) {
-            // Initial creation ‚Äî delay reflow to give Roll20 time to register objects
+            // Initial creation ó delay reflow to give Roll20 time to register objects
             setTimeout(function() { reflowInitiativeHud('none'); updateTurnReticle(); }, 100);
         } else {
             reflowInitiativeHud(direction);
@@ -5385,12 +5374,12 @@ var Gaslight = Gaslight || (() => {
                 // We can fit one more. Shift diamond toward the side with more slots.
                 var shiftAmount;
                 if (slotsBelow >= slotsAbove) {
-                    // More below (or equal) ‚Äî shift down to make room above
+                    // More below (or equal) ó shift down to make room above
                     shiftAmount = Math.min(step - extraAbove, extraBelow);
                     frameCenter += shiftAmount;
                     slotsAbove++;
                 } else {
-                    // More above ‚Äî shift up to make room below
+                    // More above ó shift up to make room below
                     shiftAmount = Math.min(step - extraBelow, extraAbove);
                     frameCenter -= shiftAmount;
                     slotsBelow++;
@@ -5479,7 +5468,9 @@ var Gaslight = Gaslight || (() => {
             });
 
             // Reflow only token entries by ID
-            var tokenOffsets = computeHudOffsets(order.length, slotsBelow, slotsAbove);
+            var tokenDist = computeHudSlotDistribution(order.length, slotsBelow, slotsAbove);
+            var tUsedBelow = tokenDist.below;
+            var tUsedAbove = tokenDist.above;
             order.forEach(function(entry, i) {
                 if (!entry.id || entry.id === '-1') return;
                 var hudEntry = tokenMap[entry.id];
@@ -5489,8 +5480,11 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!pin) return;
 
-                var offset = tokenOffsets[i] !== undefined ? tokenOffsets[i] : i;
-                var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
+                var offset;
+                if (i === 0) offset = 0;
+                else if (i <= tUsedBelow) offset = i;
+                else offset = -(tUsedBelow + tUsedAbove - i + 1);
+                var visible = (i === 0) || (i <= tUsedBelow) || (i <= tUsedBelow + tUsedAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
 
                 pin.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000 });
@@ -5536,7 +5530,9 @@ var Gaslight = Gaslight || (() => {
             sortedCustoms = sortedCustoms.concat(hiddenCustoms);
             var customIdx = 0;
 
-            var offsets = computeHudOffsets(order.length, slotsBelow, slotsAbove);
+            var offsets = computeHudSlotDistribution(order.length, slotsBelow, slotsAbove);
+            var usedBelow = offsets.below;
+            var usedAbove = offsets.above;
             order.forEach(function(entry, i) {
                 var isCustom = !entry.id || entry.id === '-1';
                 var hudEntry = isCustom ? sortedCustoms[customIdx++] : tokenMap[entry.id];
@@ -5546,8 +5542,12 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!pin) return;
 
-                var offset = offsets[i] !== undefined ? offsets[i] : i;
-                var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
+                // Sequential: 0 = diamond, 1..usedBelow = below, above entries in order (last = closest to diamond)
+                var offset;
+                if (i === 0) offset = 0;
+                else if (i <= usedBelow) offset = i;
+                else offset = -(usedBelow + usedAbove - i + 1);
+                var visible = (i === 0) || (i <= usedBelow) || (i <= usedBelow + usedAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
 
                 pin.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000 });
@@ -5599,7 +5599,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle change:text ‚Äî persist HUD element position/size if moved by GM.
+     * Handle change:text ó persist HUD element position/size if moved by GM.
      */
     const onHudTextChanged = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5620,7 +5620,7 @@ var Gaslight = Gaslight || (() => {
             var vRotation = obj.get('rotation');
             if (vRotation !== undefined) s.hud.viewData.rotation = vRotation;
         }
-        // Initiative HUD text moved or styled ‚Äî update stored settings
+        // Initiative HUD text moved or styled ó update stored settings
         if (s.hud.initiative && s.hud.initData && s.hud.initData.entries) {
             var match = s.hud.initData.entries.find(function(e) { return e.textId === id; });
             if (match) {
@@ -5725,7 +5725,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle destroy:text ‚Äî if a HUD element is deleted, treat as turning it off.
+     * Handle destroy:text ó if a HUD element is deleted, treat as turning it off.
      */
     const onHudTextDestroyed = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5765,7 +5765,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle destroy:pin ‚Äî if an initiative HUD pin is deleted, remove from turn order.
+     * Handle destroy:pin ó if an initiative HUD pin is deleted, remove from turn order.
      */
     const onHudGraphicDestroyed = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5776,7 +5776,7 @@ var Gaslight = Gaslight || (() => {
         if (matchIdx === -1) return;
 
         var match = data.entries[matchIdx];
-        // Splice entry first ‚Äî associated text will be orphaned and cleaned up on next reflow
+        // Splice entry first ó associated text will be orphaned and cleaned up on next reflow
         data.entries.splice(matchIdx, 1);
         var txt = getObj('text', match.textId);
         if (txt) txt.remove();
@@ -5784,12 +5784,12 @@ var Gaslight = Gaslight || (() => {
         // Remove from turn order
         var order = JSON.parse(Campaign().get('turnorder') || '[]');
         if (match.sourceId && !match.sourceId.startsWith('custom:')) {
-            // Token ‚Äî remove it and linked children from turn order
+            // Token ó remove it and linked children from turn order
             var info = getLinkedInfo(match.sourceId);
             var groupIds = new Set([match.sourceId].concat(info.linkedIds));
             order = order.filter(function(e) { return !groupIds.has(e.id); });
         } else {
-            // Custom turn ‚Äî remove first matching custom entry
+            // Custom turn ó remove first matching custom entry
             var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
             if (customIdx !== -1) order.splice(customIdx, 1);
         }
@@ -5800,7 +5800,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle destroy:path ‚Äî if the initiative frame is deleted, turn off.
+     * Handle destroy:path ó if the initiative frame is deleted, turn off.
      */
     const onHudPathDestroyed = (obj) => {
         var s = state[SCRIPT_NAME];
@@ -5811,10 +5811,10 @@ var Gaslight = Gaslight || (() => {
             removeInitiativeHud();
             sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> <b>initiative</b> is now off');
         } else if (obj.get('id') === s.hud.initData.highlightId) {
-            // Highlight deleted ‚Äî just clear ID, will be recreated on next update
+            // Highlight deleted ó just clear ID, will be recreated on next update
             s.hud.initData.highlightId = null;
         } else if (s.hud.reticleData && obj.get('id') === s.hud.reticleData.id) {
-            // Turn indicator deleted ‚Äî turn off reticle
+            // Turn indicator deleted ó turn off reticle
             s.hud.reticleData.id = null;
             s.hud.reticleData.tokenId = null;
             s.hud.reticle = false;
@@ -5823,7 +5823,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle frame pathv2 change ‚Äî resize logic, position/style tracking.
+     * Handle frame pathv2 change ó resize logic, position/style tracking.
      */
     const onFrameChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
@@ -5866,7 +5866,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle highlight pathv2 change ‚Äî style tracking, cascade to reticle, Y offset.
+     * Handle highlight pathv2 change ó style tracking, cascade to reticle, Y offset.
      */
     const onHighlightChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
@@ -5909,7 +5909,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * Handle reticle pathv2 change ‚Äî style override, size scale, position offset.
+     * Handle reticle pathv2 change ó style override, size scale, position offset.
      */
     const onReticleChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
@@ -6072,7 +6072,7 @@ var Gaslight = Gaslight || (() => {
         if (!entry.owns) {
             entry.owns = function(id) { return entry.ids().indexOf(id) !== -1; };
         }
-        // Generic reset if not overridden: disable ‚Üí reset state ‚Üí enable
+        // Generic reset if not overridden: disable ? reset state ? enable
         if (!entry.reset) {
             entry.reset = function() {
                 var s = state[SCRIPT_NAME];
@@ -6108,7 +6108,7 @@ var Gaslight = Gaslight || (() => {
             return;
         }
 
-        // Single arg that's a toggle word ‚Äî apply to all elements
+        // Single arg that's a toggle word ó apply to all elements
         if (args.length === 1 && toggleWords.has(args[0].toLowerCase())) {
             var toggle = args[0].toLowerCase();
             if (toggle === 'reset') {
@@ -6231,108 +6231,191 @@ var Gaslight = Gaslight || (() => {
                 horizontalEscapePin = newX > frameLeftPin + fwPin / 2 || newX < frameLeftPin - fwPin / 2;
             }
 
-            // Pin dragged vertically ‚Äî reorder turn in initiative
+            // Pin dragged vertically ó reorder turn in initiative
             if (!horizontalEscapePin && newY !== oldY) {
-            var order = JSON.parse(Campaign().get('turnorder') || '[]');
-            var hudOrder = getHudTurnOrder();
-            var isCustomEntry = match.sourceId && match.sourceId.startsWith('custom:');
+                var order = JSON.parse(Campaign().get('turnorder') || '[]');
+                var hudOrder = getHudTurnOrder();
+                var isCustomEntry = match.sourceId && match.sourceId.startsWith('custom:');
 
-            // Find current index in hudOrder
-            var currentIdx = -1;
-            if (isCustomEntry) {
-                // For customs, find rank among customs and map to hudOrder position
-                var customsInData = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
-                var myCustomRank = customsInData.findIndex(function(e) { return e.tokenId === obj.get('id'); });
-                if (myCustomRank !== -1) {
-                    var cCount = 0;
-                    for (var hi = 0; hi < hudOrder.length; hi++) {
-                        if (!hudOrder[hi].id || hudOrder[hi].id === '-1') {
-                            if (cCount === myCustomRank) { currentIdx = hi; break; }
-                            cCount++;
-                        }
-                    }
-                }
-            } else {
-                currentIdx = hudOrder.findIndex(function(e) { return e.id === match.sourceId; });
-            }
-            if (currentIdx < 0 || currentIdx >= hudOrder.length) { reflowInitiativeHud('none'); return; }
-
-            // Determine target slot based on drag delta
-            var tknSize = data.tokenSize || defaultInitHud.tokenSize;
-            var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
-            var deltaSlots = Math.round((newY - oldY) / (tknSize + tknPad));
-            var targetIdx = currentIdx + deltaSlots;
-            // Wrap around circular turn order
-            if (targetIdx < 0) targetIdx = hudOrder.length + targetIdx;
-            if (targetIdx >= hudOrder.length) targetIdx = targetIdx - hudOrder.length;
-            targetIdx = Math.max(0, Math.min(hudOrder.length - 1, targetIdx));
-
-            if (targetIdx !== currentIdx) {
-                // Find source entry in the full order
-                var sourceFullIdx = -1;
+                // Find current index in hudOrder
+                var currentIdx = -1;
                 if (isCustomEntry) {
-                    // Find the Nth custom in full order (where N = this custom's rank)
+                    // For customs, find rank among customs and map to hudOrder position
                     var customsInData = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
-                    var myRank = customsInData.findIndex(function(e) { return e.tokenId === obj.get('id'); });
-                    var cIdx = 0;
-                    for (var fi = 0; fi < order.length; fi++) {
-                        if (!order[fi].id || order[fi].id === '-1') {
-                            if (cIdx === myRank) { sourceFullIdx = fi; break; }
-                            cIdx++;
+                    var myCustomRank = customsInData.findIndex(function(e) { return e.tokenId === obj.get('id'); });
+                    if (myCustomRank !== -1) {
+                        var cCount = 0;
+                        for (var hi = 0; hi < hudOrder.length; hi++) {
+                            if (!hudOrder[hi].id || hudOrder[hi].id === '-1') {
+                                if (cCount === myCustomRank) { currentIdx = hi; break; }
+                                cCount++;
+                            }
                         }
                     }
                 } else {
-                    sourceFullIdx = order.findIndex(function(e) { return e.id === match.sourceId; });
+                    currentIdx = hudOrder.findIndex(function(e) { return e.id === match.sourceId; });
                 }
-                if (sourceFullIdx === -1) { reflowInitiativeHud('none'); return; }
+                if (currentIdx < 0 || currentIdx >= hudOrder.length) { reflowInitiativeHud('none'); return; }
 
+                // Build a map of hudOrder index ? current visual Y position
+                var tknSize = data.tokenSize || defaultInitHud.tokenSize;
+                var tknPad = data.tokenPadding || defaultInitHud.tokenPadding;
+                var pinYByIdx = [];
+                hudOrder.forEach(function(entry, idx) {
+                    var hudEntry;
+                    if (!entry.id || entry.id === '-1') {
+                        var customsInData2 = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); });
+                        var cRank = hudOrder.slice(0, idx + 1).filter(function(e) { return !e.id || e.id === '-1'; }).length - 1;
+                        hudEntry = customsInData2[cRank];
+                    } else {
+                        hudEntry = data.entries.find(function(e) { return e.sourceId === entry.id; });
+                    }
+                    if (hudEntry) {
+                        var pin2 = getObj('pin', hudEntry.tokenId);
+                        pinYByIdx.push({ idx: idx, y: pin2 ? pin2.get('y') : -5000 });
+                    } else {
+                        pinYByIdx.push({ idx: idx, y: -5000 });
+                    }
+                });
 
+                // Sort visible pins by Y to get visual order (top to bottom)
+                var visiblePins = pinYByIdx.filter(function(p) { return p.y > -1000; });
+                visiblePins.sort(function(a, b) { return a.y - b.y; });
 
-                // Remove source group from order (master + linked tokens)
-                var sourceGroupSize = 1;
-                if (!isCustomEntry) {
-                    var sInfo = getLinkedInfo(match.sourceId);
-                    sourceGroupSize = 1 + sInfo.linkedIds.filter(function(lid) {
-                        return order.some(function(e) { return e.id === lid; });
-                    }).length;
-                }
-                var removed = order.splice(sourceFullIdx, sourceGroupSize);
+                // Minimum drag threshold
+                if (Math.abs(newY - oldY) < (tknSize + tknPad) / 3) { reflowInitiativeHud('none'); return; }
 
-                // Find target position in full order
-                var targetHudEntry = hudOrder[targetIdx];
-                var targetFullIdx = -1;
-                if (!targetHudEntry.id || targetHudEntry.id === '-1') {
-                    // Targeting a custom ‚Äî find the Nth custom in the full order
-                    var targetCustomRank = hudOrder.slice(0, targetIdx + 1).filter(function(e) { return !e.id || e.id === '-1'; }).length - 1;
-                    var cCount = 0;
-                    for (var fi = 0; fi < order.length; fi++) {
-                        if (!order[fi].id || order[fi].id === '-1') {
-                            if (cCount === targetCustomRank) { targetFullIdx = fi; break; }
-                            cCount++;
+                // Find which two pins the dragged pin is between (excluding itself)
+                var others = visiblePins.filter(function(p) { return p.idx !== currentIdx; });
+                if (others.length === 0) { reflowInitiativeHud('none'); return; }
+
+                var insertAfterIdx = -1;  // hudOrder idx to insert after
+                var insertBeforeIdx = -1; // hudOrder idx to insert before
+
+                if (newY <= others[0].y) {
+                    // Above all others ó insert before the topmost pin
+                    insertBeforeIdx = others[0].idx;
+                } else if (newY >= others[others.length - 1].y) {
+                    // Below all others ó insert after the bottommost pin
+                    insertAfterIdx = others[others.length - 1].idx;
+                } else {
+                    // Between two pins
+                    for (var vi = 0; vi < others.length - 1; vi++) {
+                        if (newY >= others[vi].y && newY <= others[vi + 1].y) {
+                            insertAfterIdx = others[vi].idx;
+                            insertBeforeIdx = others[vi + 1].idx;
+                            break;
                         }
                     }
-                } else {
-                    targetFullIdx = order.findIndex(function(e) { return e.id === targetHudEntry.id; });
                 }
-                if (targetFullIdx === -1) targetFullIdx = order.length;
 
+                // Skip if no valid insertion found or same position
+                var targetIdx = insertAfterIdx !== -1 ? insertAfterIdx : insertBeforeIdx;
+                if (targetIdx === -1 || targetIdx === currentIdx) { reflowInitiativeHud('none'); return; }
 
+                if (true) {
 
-                // Insert: when moving down, place after target group; when moving up, place before target
-                if (targetIdx > currentIdx) {
-                    var tInfo = getLinkedInfo(targetHudEntry.id || '');
-                    var tGroupSize = (targetHudEntry.id && targetHudEntry.id !== '-1') ? 1 + tInfo.linkedIds.filter(function(lid) {
-                        return order.some(function(e) { return e.id === lid; });
-                    }).length : 1;
-                    order.splice.apply(order, [targetFullIdx + tGroupSize, 0].concat(removed));
-                } else {
-                    order.splice.apply(order, [targetFullIdx, 0].concat(removed));
+                    // Collapse turn order to one entry per combatant, preserving group info
+                    var collapsed = [];
+                    var groupMap = {}; // collapsed index ? array of full entries for that group
+                    var seen = new Set();
+                    order.forEach(function(entry) {
+                        if (!entry.id || entry.id === '-1') {
+                            var ci = collapsed.length;
+                            collapsed.push(entry);
+                            groupMap[ci] = [entry];
+                            return;
+                        }
+                        // Find the master for this token
+                        var masterId = entry.id;
+                        if (!isMasterToken(entry.id)) {
+                            var info = getLinkedInfo(entry.id);
+                            var mid = info.linkedIds.find(function(lid) { return isMasterToken(lid); });
+                            if (mid) masterId = mid;
+                        }
+                        if (seen.has(masterId)) {
+                            // Add to existing group
+                            var existingIdx = collapsed.findIndex(function(e) { return e._masterId === masterId; });
+                            if (existingIdx !== -1) groupMap[existingIdx].push(entry);
+                            return;
+                        }
+                        seen.add(masterId);
+                        var ci = collapsed.length;
+                        var colEntry = Object.assign({}, entry, { _masterId: masterId });
+                        collapsed.push(colEntry);
+                        groupMap[ci] = [entry];
+                    });
+
+                    // Find source and target in collapsed order
+                    var colSourceIdx = collapsed.findIndex(function(e) {
+                        if (isCustomEntry) return e.id === '-1' || !e.id; // TODO: custom rank matching
+                        return e._masterId === match.sourceId || e.id === match.sourceId;
+                    });
+                    if (colSourceIdx === -1) { reflowInitiativeHud('none'); return; }
+
+                    // Determine insertion point in collapsed order
+                    var colTargetIdx;
+                    if (insertAfterIdx === -1) {
+                        // Insert before the target
+                        colTargetIdx = collapsed.findIndex(function(e) {
+                            var hEntry = hudOrder[insertBeforeIdx];
+                            if (!hEntry.id || hEntry.id === '-1') return !e.id || e.id === '-1';
+                            return e._masterId === hEntry.id || e.id === hEntry.id;
+                        });
+                        if (colTargetIdx === -1) colTargetIdx = 0;
+                    } else {
+                        // Insert after the target
+                        var afterEntry = hudOrder[insertAfterIdx];
+                        colTargetIdx = collapsed.findIndex(function(e) {
+                            if (!afterEntry.id || afterEntry.id === '-1') return !e.id || e.id === '-1';
+                            return e._masterId === afterEntry.id || e.id === afterEntry.id;
+                        });
+                        if (colTargetIdx === -1) colTargetIdx = collapsed.length - 1;
+                        colTargetIdx++; // insert AFTER
+                    }
+
+                    // Remove source from collapsed
+                    var removedGroup = groupMap[colSourceIdx];
+                    collapsed.splice(colSourceIdx, 1);
+                    // Adjust target index if source was before target
+                    if (colSourceIdx < colTargetIdx) colTargetIdx--;
+                    // Rebuild groupMap indices after removal
+                    var newGroupMap = {};
+                    var gi = 0;
+                    Object.keys(groupMap).sort(function(a, b) { return Number(a) - Number(b); }).forEach(function(key) {
+                        if (Number(key) === colSourceIdx) return;
+                        newGroupMap[gi] = groupMap[key];
+                        gi++;
+                    });
+
+                    // Insert at target position
+                    collapsed.splice(colTargetIdx, 0, { _placeholder: true });
+                    // Rebuild final groupMap
+                    var finalGroupMap = {};
+                    var fgi = 0;
+                    Object.keys(newGroupMap).sort(function(a, b) { return Number(a) - Number(b); }).forEach(function(key) {
+                        var idx = Number(key);
+                        if (idx >= colTargetIdx) idx++;
+                        finalGroupMap[idx] = newGroupMap[key];
+                        fgi++;
+                    });
+                    finalGroupMap[colTargetIdx] = removedGroup;
+
+                    // Expand back to full order
+                    var newOrder = [];
+                    for (var ci = 0; ci < collapsed.length; ci++) {
+                        var group = finalGroupMap[ci];
+                        if (group) group.forEach(function(e) { newOrder.push(e); });
+                    }
+
+                    // Clean up temp properties
+                    newOrder.forEach(function(e) { delete e._masterId; delete e._placeholder; });
+
+                    Campaign().set('turnorder', JSON.stringify(newOrder));
                 }
-                Campaign().set('turnorder', JSON.stringify(order));
-            }
             }
 
-            // Pin dragged horizontally ‚Äî make it this turn's turn
+            // Pin dragged horizontally ó make it this turn's turn
             var oldX = prev.x;
             var verticalDrift = Math.abs(newY - oldY);
             var tknSizeP = data.tokenSize || defaultInitHud.tokenSize;
@@ -6359,7 +6442,7 @@ var Gaslight = Gaslight || (() => {
 
                 if (targetFullIdx !== -1) {
                     if (targetFullIdx === 0) {
-                        // This pin is the current turn ‚Äî advance/retreat to next/prev master or custom
+                        // This pin is the current turn ó advance/retreat to next/prev master or custom
                         if (swipeDir === 'forward') {
                             fullOrder.push(fullOrder.shift());
                             var skip = fullOrder.length;
@@ -6386,7 +6469,7 @@ var Gaslight = Gaslight || (() => {
                             fullOrder[0].pr = (parseFloat(fullOrder[0].pr) || 0) + (add ? v : -v);
                         }
                     } else {
-                        // Non-current pin ‚Äî rotate to it, applying formulas to customs passed along the way
+                        // Non-current pin ó rotate to it, applying formulas to customs passed along the way
                         var rotCount = swipeDir === 'forward' ? targetFullIdx : fullOrder.length - targetFullIdx;
                         for (var ri = 0; ri < rotCount; ri++) {
                             if (swipeDir === 'forward') {
@@ -6411,7 +6494,7 @@ var Gaslight = Gaslight || (() => {
             reflowInitiativeHud('none');
             updateTurnReticle();
 
-            // Scale change ‚Äî adjust all HUD pins to match and update tokenSize
+            // Scale change ó adjust all HUD pins to match and update tokenSize
             var newScale = obj.get('scale');
             var oldScale = prev.scale;
             if (newScale !== oldScale && newScale != null) {
@@ -6438,7 +6521,7 @@ var Gaslight = Gaslight || (() => {
             });
         };
 
-        // 1. Handout notes change ‚Üí rebuild triggerMap from cache
+        // 1. Handout notes change ? rebuild triggerMap from cache
         on('change:handout:notes', function(obj) {
             var s = state[SCRIPT_NAME];
             if (Object.keys(s.activeGroups).length === 0) return;
@@ -6448,7 +6531,7 @@ var Gaslight = Gaslight || (() => {
             }
         });
 
-        // 2. Pin gmnotes change ‚Üí rebuild from cache if pin is known
+        // 2. Pin gmnotes change ? rebuild from cache if pin is known
         on('change:pin:gmNotes', function(obj) {
             if (Object.keys(state[SCRIPT_NAME].activeGroups).length === 0) return;
             if (knownScriptPins.some(function(p) { return p.pinId === obj.get('_id'); })) {
@@ -6456,7 +6539,7 @@ var Gaslight = Gaslight || (() => {
             }
         });
 
-        // 3. Pin link/linkType change ‚Üí rebuild from cache
+        // 3. Pin link/linkType change ? rebuild from cache
         on('change:pin:link', function(obj) {
             if (Object.keys(state[SCRIPT_NAME].activeGroups).length === 0) return;
             // Update cache entry with new handout link
@@ -6466,7 +6549,7 @@ var Gaslight = Gaslight || (() => {
                 cached.handoutId = obj.get('link') || null;
                 rebuildTriggerMapFromCache();
             } else if (isActivePage(obj.get('_pageid')) && obj.get('link') && obj.get('linkType') === 'handout') {
-                // New script pin ‚Äî add to cache and rebuild
+                // New script pin ó add to cache and rebuild
                 knownScriptPins.push({ pinId: pinId, pageId: obj.get('_pageid'), handoutId: obj.get('link') });
                 rebuildTriggerMapFromCache();
             }
@@ -6478,7 +6561,7 @@ var Gaslight = Gaslight || (() => {
             }
         });
 
-        // 4. New pin added to active page ‚Üí add to cache and rebuild
+        // 4. New pin added to active page ? add to cache and rebuild
         on('add:pin', function(obj) {
             if (Object.keys(state[SCRIPT_NAME].activeGroups).length === 0) return;
             if (!isActivePage(obj.get('_pageid'))) return;
