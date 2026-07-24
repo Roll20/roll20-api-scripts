@@ -2006,6 +2006,47 @@ var Gaslight = Gaslight || (() => {
 
         reply(msg, 'Stage', 'Staged ' + staged + ' token(s) to ' + targetPlayerIds.length + ' player page(s).');
 
+        // Add linked copies to initiative if the staged token is already in the turn order
+        if (staged > 0) {
+            var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+            var turnIds = new Set(turnOrder.map(function(e) { return e.id; }));
+            var added = 0;
+            tokens.forEach(function(token) {
+                var tokenId = token.get('id');
+                if (!turnIds.has(tokenId)) return;
+                var entry = turnOrder.find(function(e) { return e.id === tokenId; });
+                if (!entry) return;
+                var info = getLinkedInfo(tokenId);
+                info.linkedIds.forEach(function(lid) {
+                    if (turnIds.has(lid)) return;
+                    var linkedObj = getObj('graphic', lid);
+                    if (!linkedObj) return;
+                    turnOrder.push({ id: lid, pr: entry.pr, custom: entry.custom || '', _pageid: linkedObj.get('_pageid') });
+                    turnIds.add(lid);
+                    added++;
+                });
+            });
+            if (added > 0) {
+                turnOrder = reorderInitiative(turnOrder);
+                Campaign().set('turnorder', JSON.stringify(turnOrder));
+                if (s.hud.initiative) {
+                    if (s.hud.initData && s.hud.initData.entries) {
+                        s.hud.initData.entries.forEach(function(e) {
+                            if (e.sourceId.startsWith('custom:')) return;
+                            var pin = getObj('pin', e.tokenId);
+                            if (!pin) return;
+                            var tagStr = computeHudTag(e.sourceId);
+                            var sourceToken = getObj('graphic', e.sourceId);
+                            var name = sourceToken ? (sourceToken.get('name') || '') : '';
+                            pin.set('title', ((tagStr ? '⚠️ ' : '') + name).trim());
+                            pin.set('notes', tagStr || '');
+                        });
+                    }
+                    updateInitiativeHud();
+                }
+            }
+        }
+
         if (marketplaceFailures.length > 0) {
             var failMsg = '<b>⚠️ ' + marketplaceFailures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
             marketplaceFailures.forEach(function(f) {
