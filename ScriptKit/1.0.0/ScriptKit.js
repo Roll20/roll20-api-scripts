@@ -1540,7 +1540,7 @@ var ScriptKit = ScriptKit || (() => {
         const reg = registrations[g.source];
         if (!reg) return;
         const ex = g.example;
-        const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName };
+        const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, player: getObj('player', g.msg.playerid) };
         const handoutData = typeof ex.handout === 'function' ? ex.handout(ctx) : ex.handout;
         if (!handoutData) {
             log(SCRIPT_NAME + ': handout step in "' + ex.name + '" but no handout data provided.');
@@ -1576,7 +1576,7 @@ var ScriptKit = ScriptKit || (() => {
 
         // Conditional step — check 'when'
         if (typeof step.when === 'function') {
-            const ctx = { selections: g.selections, params: g.params, msg: g.msg };
+            const ctx = { selections: g.selections, params: g.params, msg: g.msg, player: getObj('player', g.msg.playerid) };
             if (!step.when(ctx)) {
                 g.currentStep++;
                 enterStep(guideId);
@@ -1595,7 +1595,7 @@ var ScriptKit = ScriptKit || (() => {
         // Auto steps advance immediately
         if (step.auto) {
             if (typeof step.action === 'function') {
-                const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName };
+                const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, player: getObj('player', g.msg.playerid) };
                 step.action(ctx);
             }
             g.currentStep++;
@@ -1625,11 +1625,11 @@ var ScriptKit = ScriptKit || (() => {
                 if (typeof error === 'string') { replyError(g.msg, g.source, error); return; }
                 handleGuideContinue(g.msg, guideId, []);
             };
-            const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, advance: advance };
+            const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, advance: advance, player: getObj('player', g.msg.playerid) };
             step.onEnter(ctx, advance);
         }
 
-        const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName };
+        const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, player: getObj('player', g.msg.playerid) };
         const promptText = typeof step.prompt === 'function' ? step.prompt(ctx) : step.prompt;
 
         let prompt = html.div(
@@ -1780,7 +1780,7 @@ var ScriptKit = ScriptKit || (() => {
 
         // onContinue callback — if it returns a string, treat as validation error
         if (typeof step.onContinue === 'function') {
-            const ctx = { selections: g.selections, params: g.params, selected: selected, msg: msg };
+            const ctx = { selections: g.selections, params: g.params, selected: selected, msg: msg, player: getObj('player', msg.playerid) };
             const err = step.onContinue(ctx);
             if (typeof err === 'string') {
                 replyError(msg, g.source, err);
@@ -1799,7 +1799,7 @@ var ScriptKit = ScriptKit || (() => {
         // Call onExit on the step we're leaving
         const leavingStep = g.steps[g.currentStep];
         if (leavingStep && typeof leavingStep.onExit === 'function') {
-            const ctx = { selections: g.selections, params: g.params, msg: msg, handoutName: g.handoutName };
+            const ctx = { selections: g.selections, params: g.params, msg: msg, handoutName: g.handoutName, player: getObj('player', msg.playerid) };
             leavingStep.onExit(ctx);
         }
 
@@ -1814,7 +1814,7 @@ var ScriptKit = ScriptKit || (() => {
 
         // onBack callback
         if (typeof step.onBack === 'function') {
-            const ctx = { selections: g.selections, params: g.params, msg: msg };
+            const ctx = { selections: g.selections, params: g.params, msg: msg, player: getObj('player', msg.playerid) };
             step.onBack(ctx);
         }
 
@@ -1839,7 +1839,7 @@ var ScriptKit = ScriptKit || (() => {
         for (let i = g.currentStep; i >= 0; i--) {
             const step = g.steps[i];
             if (typeof step.onBack === 'function') {
-                const ctx = { selections: g.selections, params: g.params, msg: msg };
+                const ctx = { selections: g.selections, params: g.params, msg: msg, player: getObj('player', msg.playerid) };
                 step.onBack(ctx);
             }
         }
