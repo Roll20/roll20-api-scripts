@@ -1,4 +1,4 @@
-// =============================================================================
+﻿// =============================================================================
 // Gaslight v2.1.0
 // Last Updated: 2026-07-05
 // Author: Kenan Millet
@@ -3747,6 +3747,257 @@ var Gaslight = Gaslight || (() => {
         });
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'initiative-hud',
+            description: 'Interactive initiative tracker HUD — gestures, customization, reticle',
+            source: SCRIPT_NAME,
+            guide: [
+                { prompt: '**Initiative HUD** — This guide walks through the on-screen initiative tracker: how to interact with it, customize its appearance, and use the current turn reticle.\n\n**Prerequisites:** You need an active split with the HUD enabled.',
+                  onContinue: () => {
+                      var s = state[SCRIPT_NAME];
+                      if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
+                      if (!s.hud.initiative) return 'Initiative HUD is disabled. Run `!gaslight hud init on` to enable it.';
+                  }
+                },
+                { prompt: 'Before we begin, clear any existing entries from the turn order. You can do this from Roll20\'s Turn Tracker panel (⚙).\n\nClear the turn order and click Continue.',
+                  when: () => {
+                      var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                      return turnOrder.length > 0;
+                  },
+                  onEnter: (ctx, advance) => {
+                      ctx._clearFired = false;
+                      on('change:campaign:turnorder', function() {
+                          if (ctx._clearFired) return;
+                          var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                          if (turnOrder.length === 0) { ctx._clearFired = true; advance(); }
+                      });
+                  },
+                  onContinue: () => {
+                      var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                      if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
+                  }
+                },
+                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (⚙ in the toolbar). Drag tokens in or use the tracker\'s initiative button.\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative — we\'ll cover that later.',
+                  onEnter: (ctx, advance) => {
+                      ctx._turnFired = false;
+                      on('change:campaign:turnorder', function() {
+                          if (ctx._turnFired) return;
+                          var s = state[SCRIPT_NAME];
+                          var entries = (s.hud.initData && s.hud.initData.entries) || [];
+                          if (entries.length >= 6) { ctx._turnFired = true; advance(); }
+                      });
+                  },
+                  onContinue: () => {
+                      var s = state[SCRIPT_NAME];
+                      var entries = (s.hud.initData && s.hud.initData.entries) || [];
+                      if (entries.length < 6) return 'Only ' + entries.length + ' token(s) in the HUD. Add at least 6.';
+                  }
+                },
+                { prompt: '**Why duplicates?**\n\nYou may notice the Roll20 Turn Tracker panel shows what appears to be duplicate entries — multiple entries for the same combatant. This is because each linked token (one per player page) has its own turn order entry.\n\nThe HUD **deduplicates** these automatically and shows one pin per combatant. The raw turn order is correct — it\'s just how Gaslight tracks initiative across pages.' },
+                { prompt: '**HUD Layout — The Frame:**\n\nThe large rectangle behind the HUD is the **frame**. It defines the HUD\'s position and how many slots are visible. You\'ll learn how to customize it later.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.initData;
+                      if (!d || !d.frameId) return;
+                      var frame = getObj('pathv2', d.frameId);
+                      if (!frame) return;
+                      var pageId = frame.get('_pageid');
+                      var x = frame.get('x'), y = frame.get('y');
+                      var points = JSON.parse(frame.get('points') || '[]');
+                      var w = points.length >= 2 ? Math.abs(points[1][0] - points[0][0]) : 100;
+                      var h = points.length >= 2 ? Math.abs(points[1][1] - points[0][1]) : 500;
+                      ScriptKit.ping(pageId, x, y, { color: 'transparent', moveAll: true, player: ctx.player });
+                      ScriptKit.annotate(pageId, 'arrow', x + w / 2, y + h / 2, { fromX: x + w / 2 + 100, fromY: y + h / 2 + 100, color: '#ff0000' });
+                  }
+                },
+                { prompt: '**HUD Layout — The Diamond:**\n\nThe diamond-shaped highlight marks the **current turn**. The pin inside it is the active combatant.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.initData;
+                      if (!d || !d.highlightId) return;
+                      var hl = getObj('pathv2', d.highlightId);
+                      if (!hl) return;
+                      var pageId = hl.get('_pageid');
+                      var x = hl.get('x'), y = hl.get('y');
+                      var color = (d.highlightStroke || defaultInitHud.highlightStroke);
+                      ScriptKit.ping(pageId, x, y, { color: color, moveAll: true, player: ctx.player });
+                      ScriptKit.annotate(pageId, 'arrow', x - 80, y, { fromX: x - 180, fromY: y, color: '#ff0000' });
+                  }
+                },
+                { prompt: '**HUD Layout — The Pins:**\n\nEach pin represents one combatant. Pins **above** the diamond have already gone this round; pins **below** are upcoming turns. The HUD scrolls to keep the current turn visible.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.initData;
+                      if (!d || !d.entries || d.entries.length === 0) return;
+                      // Get frame bounds to filter visible pins
+                      var frame = d.frameId ? getObj('pathv2', d.frameId) : null;
+                      var frameY = frame ? frame.get('y') : 0;
+                      var points = frame ? JSON.parse(frame.get('points') || '[]') : [];
+                      var frameH = points.length >= 2 ? Math.abs(points[1][1] - points[0][1]) : 5000;
+                      var minY = frameY - frameH / 2;
+                      var maxY = frameY + frameH / 2;
+                      // Gather pins within frame bounds, sorted top to bottom
+                      var pins = d.entries.map(function(e) {
+                          var p = getObj('pin', e.tokenId);
+                          if (!p) return null;
+                          var center = toPinCenter(p);
+                          return { x: center.x, y: center.y, rawY: p.get('y'), pageId: p.get('_pageid') };
+                      }).filter(function(p) { return p && p.rawY >= minY && p.rawY <= maxY; });
+                      pins.sort(function(a, b) { return a.y - b.y; });
+                      // Pan to the frame center first
+                      var frameX = frame ? frame.get('x') : (pins[0] ? pins[0].x : 0);
+                      ScriptKit.ping(pins[0].pageId, frameX, frameY, { color: 'transparent', moveAll: true, player: ctx.player });
+                      pins.forEach(function(p, i) {
+                          setTimeout(function() {
+                              ScriptKit.ping(p.pageId, p.x, p.y, { color: '#ff0000', moveAll: false, player: ctx.player });
+                          }, (i + 1) * 500);
+                      });
+                  }
+                },
+                { prompt: '**Gestures — Next turn:**\n\nSwipe the **current turn** pin (the one inside the diamond) to the **right** to advance to the next combatant.\n\nTry it now.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.initData;
+                      if (!d || !d.highlightId || !d.entries || d.entries.length === 0) return;
+                      var hl = getObj('pathv2', d.highlightId);
+                      if (!hl) return;
+                      var pageId = hl.get('_pageid');
+                      // Find the current turn pin (closest to highlight Y)
+                      var hlY = hl.get('y');
+                      var current = d.entries.map(function(e) { var p = getObj('pin', e.tokenId); return p ? { pin: p, y: p.get('y') } : null; }).filter(Boolean).sort(function(a, b) { return Math.abs(a.y - hlY) - Math.abs(b.y - hlY); })[0];
+                      if (!current) return;
+                      var center = toPinCenter(current.pin);
+                      ScriptKit.ping(pageId, center.x, center.y, { color: 'transparent', moveAll: true, player: ctx.player });
+                      ScriptKit.annotate(pageId, 'arrow', center.x + 100, center.y, { fromX: center.x + 20, fromY: center.y, color: '#00ff00' });
+                  }
+                },
+                { prompt: '**Gestures — Previous turn:**\n\nSwipe the **current turn** pin to the **left** to go back to the previous combatant.\n\nTry it now.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.initData;
+                      if (!d || !d.highlightId || !d.entries || d.entries.length === 0) return;
+                      var hl = getObj('pathv2', d.highlightId);
+                      if (!hl) return;
+                      var pageId = hl.get('_pageid');
+                      var hlY = hl.get('y');
+                      var current = d.entries.map(function(e) { var p = getObj('pin', e.tokenId); return p ? { pin: p, y: p.get('y') } : null; }).filter(Boolean).sort(function(a, b) { return Math.abs(a.y - hlY) - Math.abs(b.y - hlY); })[0];
+                      if (!current) return;
+                      var center = toPinCenter(current.pin);
+                      ScriptKit.ping(pageId, center.x, center.y, { color: 'transparent', moveAll: true, player: ctx.player });
+                      ScriptKit.annotate(pageId, 'arrow', center.x - 100, center.y, { fromX: center.x - 20, fromY: center.y, color: '#ff4444' });
+                  }
+                },
+                { prompt: '**Gestures — Jump to turn:**\n\nSwipe any **non-current** pin to the **right** to jump forward to that combatant\'s turn. Swipe **left** to jump backward to it.\n\nTry swiping a non-current pin.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.initData;
+                      if (!d || !d.highlightId || !d.entries || d.entries.length < 2) return;
+                      var hl = getObj('pathv2', d.highlightId);
+                      if (!hl) return;
+                      var pageId = hl.get('_pageid');
+                      var hlY = hl.get('y');
+                      var frame = d.frameId ? getObj('pathv2', d.frameId) : null;
+                      var frameY = frame ? frame.get('y') : 0;
+                      var points = frame ? JSON.parse(frame.get('points') || '[]') : [];
+                      var frameH = points.length >= 2 ? Math.abs(points[1][1] - points[0][1]) : 5000;
+                      var minY = frameY - frameH / 2;
+                      var maxY = frameY + frameH / 2;
+                      // Find a non-current pin that's in the frame (smallest Y = topmost)
+                      var nonCurrent = d.entries.map(function(e) { var p = getObj('pin', e.tokenId); return p ? { pin: p, y: p.get('y') } : null; }).filter(function(e) { return e && Math.abs(e.y - hlY) > 30 && e.y >= minY && e.y <= maxY; }).sort(function(a, b) { return a.y - b.y; })[0];
+                      if (!nonCurrent) return;
+                      var center = toPinCenter(nonCurrent.pin);
+                      ScriptKit.ping(pageId, center.x, center.y, { color: '#ff0000', moveAll: false, player: ctx.player });
+                      ScriptKit.annotate(pageId, 'arrow', center.x + 100, center.y, { fromX: center.x + 20, fromY: center.y, color: '#00ff00' });
+                  }
+                },
+                { prompt: '**Gestures — Reordering:**\n\nDrag a HUD pin **up or down** to reorder it in initiative. The pin will snap into its new position.\n\nTry dragging a pin to a different slot.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.initData;
+                      if (!d || !d.entries || d.entries.length < 2) return;
+                      var frame = d.frameId ? getObj('pathv2', d.frameId) : null;
+                      var frameY = frame ? frame.get('y') : 0;
+                      var points = frame ? JSON.parse(frame.get('points') || '[]') : [];
+                      var frameH = points.length >= 2 ? Math.abs(points[1][1] - points[0][1]) : 5000;
+                      var minY = frameY - frameH / 2;
+                      var maxY = frameY + frameH / 2;
+                      var visible = d.entries.map(function(e) { var p = getObj('pin', e.tokenId); return p ? { pin: p, y: p.get('y') } : null; }).filter(function(e) { return e && e.y >= minY && e.y <= maxY; });
+                      if (visible.length < 2) return;
+                      var pin = visible[visible.length - 1];
+                      var pageId = pin.pin.get('_pageid');
+                      var center = toPinCenter(pin.pin);
+                      ScriptKit.ping(pageId, center.x, center.y, { color: 'transparent', moveAll: true, player: ctx.player });
+                      ScriptKit.annotate(pageId, 'arrow', center.x, center.y - 80, { fromX: center.x, fromY: center.y - 10, color: '#00ccff' });
+                      ScriptKit.annotate(pageId, 'arrow', center.x, center.y + 80, { fromX: center.x, fromY: center.y + 10, color: '#00ccff' });
+                  }
+                },
+                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.\n\n• **Drag up/down** on the reticle to offset it from the token\n• **Resize** the reticle to change its proportional size\n• **Rotate** it to add a rotation offset\n• **Delete** the reticle to turn it off (or `!gaslight hud reticle off`)',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var d = s.hud.reticleData;
+                      if (!d || !d.id) return;
+                      var reticle = getObj('pathv2', d.id);
+                      if (!reticle) return;
+                      var pageId = reticle.get('_pageid');
+                      var x = reticle.get('x'), y = reticle.get('y');
+                      ScriptKit.ping(pageId, x, y, { color: 'transparent', moveAll: true, player: ctx.player });
+                  }
+                },
+                { prompt: '**Customization — Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nTry resizing one of the pins.' },
+                { prompt: '**Customization — Text:**\n\nThe initiative value text next to each pin can be customized:\n\n• Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 — all will update to match\n• **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\n• **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.' },
+                { prompt: '**The Frame — Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame — some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins.' },
+                { prompt: '**The Frame — Diamond position:**\n\nYou can drag the **diamond highlight up or down** within the frame to shift where the current turn is displayed. Pins above and below will adjust accordingly.\n\nTry moving the diamond to a different position in the frame.' },
+                { prompt: '**The Frame — Other customization:**\n\nThe frame supports additional tweaks:\n\n• **Drag** the frame to move the entire HUD\n• **Resize horizontally** to adjust padding between pins\n• Change the frame\'s **stroke color** or **fill** directly in Roll20\'s shape properties\n\nThe **diamond** can also be customized:\n\n• Change its **color**, **stroke width**, **fill**, or **rotation** directly in Roll20\'s shape properties\n\nThe HUD remembers all of these choices.' },
+                { prompt: '**Reticle — Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45° (so the diamond\'s 45° rotation becomes the reticle\'s 90°, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.' },
+                { prompt: '**Gestures — Removing:**\n\nDelete a HUD pin to remove that combatant from initiative. Try deleting one now.' },
+                { prompt: '**Clearing initiative:**\n\nNow clear the rest of the initiative — delete the remaining HUD pins or clear initiative from Roll20\'s Turn Tracker panel.\n\nClear initiative before continuing.',
+                  when: () => {
+                      var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                      return turnOrder.length > 0;
+                  },
+                  onEnter: (ctx, advance) => {
+                      ctx._clearFired = false;
+                      on('change:campaign:turnorder', function() {
+                          if (ctx._clearFired) return;
+                          var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                          if (turnOrder.length === 0) { ctx._clearFired = true; advance(); }
+                      });
+                  },
+                  onContinue: () => {
+                      var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                      if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
+                  }
+                },
+                { prompt: '**Plugin-added initiative:**\n\nIf you use a plugin (GroupInitiative, etc.) to roll initiative, go ahead and use it now.\n\nIf you don\'t have one, select token(s) and click **Continue** — Gaslight will add them to initiative for you.',
+                  onContinue: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var entries = (s.hud.initData && s.hud.initData.entries) || [];
+                      if (entries.length > 0) return 'HUD still has pins from before. Clear initiative first (previous step).';
+                      var turnOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+                      if (turnOrder.length >= 1) return; // Plugin already added them
+                      var tokens = (ctx.msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
+                      if (tokens.length === 0) return 'No tokens in initiative and none selected. Either use a plugin or select token(s).';
+                      // Add selected tokens to initiative
+                      tokens.forEach(function(t) {
+                          var roll = Math.ceil(Math.random() * 20);
+                          turnOrder.push({ id: t.get('id'), pr: roll, custom: '', _pageid: t.get('_pageid') });
+                      });
+                      turnOrder.sort(function(a, b) { return (b.pr || 0) - (a.pr || 0); });
+                      Campaign().set('turnorder', JSON.stringify(turnOrder));
+                  }
+                },
+                { prompt: '**The problem:** When a plugin adds tokens to initiative, it sets `Campaign().set(\'turnorder\')` — but Gaslight cannot detect that change automatically.\n\nTo sync the HUD with the current turn order, run:\n\n`!gaslight init`\n\nThis is needed whenever initiative changes via a plugin (not via the HUD gestures).',
+                  ...ScriptKit.waitForCommand('!gaslight init')
+                },
+                { prompt: '**Reset:**\n\nIf the HUD ever gets into a weird state (misplaced elements, corrupted data), you can reset it:\n\n`!gaslight hud init reset` — destroys and recreates the initiative HUD from defaults\n`!gaslight hud reticle reset` — destroys and recreates the reticle from defaults\n\nThis preserves your turn order but resets all visual customization.' },
+                { prompt: '**Toggling on/off:**\n\nYou can disable the HUD without losing your settings:\n\n`!gaslight hud init off` — hides the initiative HUD (turn order still works normally)\n`!gaslight hud init on` — shows it again with your saved customization\n`!gaslight hud reticle off` / `on` — same for the reticle independently\n`!gaslight hud off` / `on` — toggles all HUD elements at once' },
+                { prompt: '**⚠️ Tags:**\n\nIf a token in initiative doesn\'t exist on all player pages, its HUD pin shows a ⚠️ icon in the title. Click the pin to see which players can\'t see it.\n\nThis usually means the token hasn\'t been staged to all pages. Run `!gaslight stage` with it selected to fix it.' },
+                { prompt: '**Commands reference:**\n\n`!gaslight hud init on|off|reset` — toggle/reset the initiative HUD\n`!gaslight hud reticle on|off|reset` — toggle/reset the reticle\n`!gaslight init` — sync turn order into HUD\n`!gaslight init sync` — add missing linked tokens\n`!gaslight init trim` — remove stale entries\n\n**That\'s the initiative HUD!**',
+                  offerExamples: ['relay', 'scripting']
+                },
+            ],
+        });
+
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'stealth',
             description: 'Hide/show NPCs per player based on passive perception vs stealth DC (RollCapture)',
             guide: [
@@ -4699,6 +4950,27 @@ var Gaslight = Gaslight || (() => {
         fontFamily: 'Contrail One',
         color: '#ffffff',
         stroke: '#000000',
+    };
+
+    /**
+     * Convert a pin's x/y (the "point" where the teardrop points) to its visual center.
+     * Pin scale 0.25 = 10px, scale 2.0 = 80px → size = scale * 40.
+     * Visual center is offset upward by half the pin's visual height.
+     */
+    const toPinCenter = (pin) => {
+        var scale = pin.get('scale') || 1;
+        var size = scale * 40;
+        return { x: pin.get('x'), y: pin.get('y') - size / 2 };
+    };
+
+    /**
+     * Convert a target center coordinate to the pin x/y that would place
+     * the pin's visual center at that point.
+     */
+    const toPinPosition = (x, y, scale) => {
+        scale = scale || 1;
+        var size = scale * 40;
+        return { x: x, y: y + size / 2 };
     };
 
     const defaultInitHud = {
@@ -6077,8 +6349,7 @@ var Gaslight = Gaslight || (() => {
             if (newScale !== oldScale && newScale != null) {
                 newScale = Math.max(0.25, Math.min(2.0, newScale));
                 obj.set('scale', newScale);
-                var baseTokenSize = defaultInitHud.tokenSize;
-                data.tokenSize = Math.round(baseTokenSize * newScale);
+                data.tokenSize = Math.round(40 * newScale);
                 // Apply scale to all HUD entry pins
                 data.entries.forEach(function(e) {
                     var pin = getObj('pin', e.tokenId);
