@@ -4310,6 +4310,17 @@ var Gaslight = Gaslight || (() => {
             if (target) target.remove();
         });
         destroying = false;
+
+        // Update initiative HUD if the deleted tokens were in the turn order
+        if (s.hud.initiative) {
+            var allRemovedIds = new Set([tokenId].concat(linkedIds));
+            var order = JSON.parse(Campaign().get('turnorder') || '[]');
+            var newOrder = order.filter(function(e) { return !allRemovedIds.has(e.id); });
+            if (newOrder.length !== order.length) {
+                Campaign().set('turnorder', JSON.stringify(newOrder));
+                updateInitiativeHud();
+            }
+        }
     };
 
     /**
