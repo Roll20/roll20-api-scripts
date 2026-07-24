@@ -5005,6 +5005,39 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
+     * Compute proportionally distributed offsets for HUD entries.
+     * Entry 0 = offset 0 (diamond). Remaining entries alternate below/above
+     * proportional to available slots on each side.
+     * If one side runs out of room, stack on the other side.
+     * Returns an array of offsets, one per entry.
+     */
+    const computeHudOffsets = (count, slotsBelow, slotsAbove) => {
+        var offsets = [0];
+        var below = 0, above = 0;
+        var totalSlots = slotsBelow + slotsAbove;
+        if (totalSlots === 0) return offsets;
+
+        for (var i = 1; i < count; i++) {
+            // Determine which side should get the next entry based on fill ratio
+            var belowRatio = slotsBelow > 0 ? below / slotsBelow : 1;
+            var aboveRatio = slotsAbove > 0 ? above / slotsAbove : 1;
+
+            if (belowRatio <= aboveRatio) {
+                // Below is less filled proportionally — try below
+                if (below < slotsBelow) { below++; offsets.push(below); }
+                else if (above < slotsAbove) { above++; offsets.push(-above); }
+                else offsets.push(below + above + 1); // overflow (hidden)
+            } else {
+                // Above is less filled proportionally — try above
+                if (above < slotsAbove) { above++; offsets.push(-above); }
+                else if (below < slotsBelow) { below++; offsets.push(below); }
+                else offsets.push(below + above + 1); // overflow (hidden)
+            }
+        }
+        return offsets;
+    };
+
+    /**
      * Compute token size from frame width or stored override.
      */
     const getHudTokenSize = (frame) => {
@@ -5158,7 +5191,11 @@ var Gaslight = Gaslight || (() => {
             var vPadHL = data.vPadding || defaultInitHud.vPadding;
             var usableTopHL = frame.get('y') - fH / 2 + hlTokenSize / 2 + vPadHL;
             var usableBotHL = frame.get('y') + fH / 2 - hlTokenSize / 2 - vPadHL;
-            var hlY = usableTopHL + (usableBotHL - usableTopHL) * hlOffset;
+            var hlStep = hlTokenSize + (data.tokenPadding || defaultInitHud.tokenPadding);
+            var hlMid = (usableTopHL + usableBotHL) / 2;
+            var rawHlCenter = usableTopHL + (usableBotHL - usableTopHL) * hlOffset;
+            var hlSlotFromCenter = hlStep > 0 ? Math.round((rawHlCenter - hlMid) / hlStep) : 0;
+            var hlY = hlMid + hlSlotFromCenter * hlStep;
             var highlight = createHudObj('pathv2', {
                 _pageid: pageId,
                 layer: 'foreground',
@@ -5324,13 +5361,42 @@ var Gaslight = Gaslight || (() => {
         var vPadding = data.vPadding || defaultInitHud.vPadding;
         var frameTopEdge = frameTop - frameHeight / 2 + vPadding;
         var frameBotEdge = frameTop + frameHeight / 2 - vPadding;
-        var frameCenter = (frameTopEdge + tokenSize / 2) + (frameBotEdge - frameTopEdge - tokenSize) * (data.currentTurnOffset != null ? data.currentTurnOffset : defaultInitHud.currentTurnOffset);
+        var step = tokenSize + tokenPadding;
+        var frameMid = (frameTopEdge + frameBotEdge) / 2;
+        var rawOffset = data.currentTurnOffset != null ? data.currentTurnOffset : defaultInitHud.currentTurnOffset;
+        var rawCenter = (frameTopEdge + tokenSize / 2) + (frameBotEdge - frameTopEdge - tokenSize) * rawOffset;
+        // Snap to nearest slot from frame center
+        var slotFromCenter = step > 0 ? Math.round((rawCenter - frameMid) / step) : 0;
+        var frameCenter = frameMid + slotFromCenter * step;
         // Calculate how many slots fit below and above the indicator
         var slotsBelow = 0;
         var slotsAbove = 0;
-        var step = tokenSize + tokenPadding;
         while (frameCenter + (slotsBelow + 1) * step + tokenSize / 2 <= frameBotEdge) slotsBelow++;
         while (frameCenter - (slotsAbove + 1) * step - tokenSize / 2 >= frameTopEdge) slotsAbove++;
+
+        // Temporary diamond offset: if there are hidden entries and the combined
+        // "extra" space (fractional leftover on each side) can fit one more slot,
+        // shift the diamond to make room.
+        var totalVisible = 1 + slotsBelow + slotsAbove;
+        if (order.length > totalVisible) {
+            var extraBelow = frameBotEdge - (frameCenter + slotsBelow * step + tokenSize / 2);
+            var extraAbove = (frameCenter - slotsAbove * step - tokenSize / 2) - frameTopEdge;
+            if (extraBelow + extraAbove >= step) {
+                // We can fit one more. Shift diamond toward the side with more slots.
+                var shiftAmount;
+                if (slotsBelow >= slotsAbove) {
+                    // More below (or equal) — shift down to make room above
+                    shiftAmount = Math.min(step - extraAbove, extraBelow);
+                    frameCenter += shiftAmount;
+                    slotsAbove++;
+                } else {
+                    // More above — shift up to make room below
+                    shiftAmount = Math.min(step - extraBelow, extraAbove);
+                    frameCenter -= shiftAmount;
+                    slotsBelow++;
+                }
+            }
+        }
 
         // Update highlight position and size
         var highlight = data.highlightId ? getObj('pathv2', data.highlightId) : null;
@@ -5413,6 +5479,7 @@ var Gaslight = Gaslight || (() => {
             });
 
             // Reflow only token entries by ID
+            var tokenOffsets = computeHudOffsets(order.length, slotsBelow, slotsAbove);
             order.forEach(function(entry, i) {
                 if (!entry.id || entry.id === '-1') return;
                 var hudEntry = tokenMap[entry.id];
@@ -5422,7 +5489,7 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!pin) return;
 
-                var offset = i <= slotsBelow ? i : i - order.length;
+                var offset = tokenOffsets[i] !== undefined ? tokenOffsets[i] : i;
                 var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
 
@@ -5469,6 +5536,7 @@ var Gaslight = Gaslight || (() => {
             sortedCustoms = sortedCustoms.concat(hiddenCustoms);
             var customIdx = 0;
 
+            var offsets = computeHudOffsets(order.length, slotsBelow, slotsAbove);
             order.forEach(function(entry, i) {
                 var isCustom = !entry.id || entry.id === '-1';
                 var hudEntry = isCustom ? sortedCustoms[customIdx++] : tokenMap[entry.id];
@@ -5478,7 +5546,7 @@ var Gaslight = Gaslight || (() => {
                 var txt = getObj('text', hudEntry.textId);
                 if (!pin) return;
 
-                var offset = i <= slotsBelow ? i : i - order.length;
+                var offset = offsets[i] !== undefined ? offsets[i] : i;
                 var visible = Math.abs(offset) <= (offset >= 0 ? slotsBelow : slotsAbove);
                 var yPos = hudSlotY(frameCenter, offset, tokenSize, tokenPadding);
 
