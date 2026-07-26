@@ -4037,7 +4037,50 @@ var Gaslight = Gaslight || (() => {
                 { prompt: '**Toggling on/off:**\n\nYou can disable the HUD without losing your settings:\n\n`!gaslight hud init off` — hides the initiative HUD (turn order still works normally)\n`!gaslight hud init on` — shows it again with your saved customization\n`!gaslight hud reticle off` / `on` — same for the reticle independently\n`!gaslight hud off` / `on` — toggles all HUD elements at once' },
                 { prompt: '**⚠️ Tags:**\n\nIf a token in initiative doesn\'t exist on all player pages, its HUD pin shows a ⚠️ icon in the title. Click the pin to see which players can\'t see it.\n\nThis usually means the token hasn\'t been staged to all pages. Run `!gaslight stage` with it selected to fix it.' },
                 { prompt: '**Commands reference:**\n\n`!gaslight hud init on|off|reset` — toggle/reset the initiative HUD\n`!gaslight hud reticle on|off|reset` — toggle/reset the reticle\n`!gaslight init` — sync turn order into HUD\n`!gaslight init sync` — add missing linked tokens\n`!gaslight init trim` — remove stale entries\n\n**That\'s the initiative HUD!**',
-                  offerExamples: ['relay', 'scripting']
+                  offerExamples: ['core-mechanics', 'relay', 'scripting']
+                },
+            ],
+        });
+
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'relay',
+            description: 'Command relay, view targeting, and the view HUD',
+            source: SCRIPT_NAME,
+            guide: [
+                { prompt: '**Relay** — This guide walks you through how commands propagate across pages.\n\n**Prerequisite:** You need an active split with at least one staged token.',
+                  onContinue: () => {
+                      var s = state[SCRIPT_NAME];
+                      if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
+                  }
+                },
+                { prompt: '**Try auto-relay:**\n\nSelect a **staged token on the master page** and run any command against it (e.g. `!token-mod --set bar1_value|10` if you have TokenMod, or any other API command that targets tokens).\n\nThen navigate to a player\'s page — you\'ll see the command affected their copy too. That\'s auto-relay: any command referencing a master-page token ID automatically propagates to all player pages.' },
+                { prompt: '**Enable the View HUD:**\n\nThe view HUD shows the current relay status as text on the master page. If it\'s not already visible, enable it:\n\n`!gaslight hud view on`\n\nYou\'ll see a status label appear on the master page (e.g. "🟢 RELAY: ALL").',
+                  ...ScriptKit.waitForCommand('!gaslight hud view')
+                },
+                { prompt: '**Disable relay:**\n\nBy default, the view is set to `all` — commands relay to every player page. Let\'s turn it off first to see the difference:\n\n`!gaslight view off`\n\nNotice the View HUD updates to show relay is disabled.',
+                  ...ScriptKit.waitForCommand('!gaslight view')
+                },
+                { prompt: '**Try a command with relay off:**\n\nSelect a staged token on the master page and run a command against it (e.g. `!token-mod --set bar1_value|+15`).\n\nNavigate to a player\'s page — their copy was **not** affected. With view `off`, commands stay on master only.' },
+                { prompt: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var names = [];
+                      Object.values(s.activeGroups).forEach(function(g) {
+                          Object.values(g.playerPages).forEach(function(p) { if (p.name && names.indexOf(p.name) === -1) names.push(p.name); });
+                      });
+                      var examples = names.length > 0 ? names.map(function(n) { return '`!gaslight view "' + n + '"`'; }).join(' or ') : '`!gaslight view "<player name>"`';
+                      return '**Switch to a specific player:**\n\nNow target a single player:\n\n' + examples;
+                  },
+                  ...ScriptKit.waitForCommand('!gaslight view')
+                },
+                { prompt: '**Try a command with a player view:**\n\nSelect the same staged token on the master page and run a command against it.\n\nNavigate to that player\'s page — only their copy was affected. Other players\' copies remain unchanged.' },
+                { prompt: '**Switch to all:**\n\nNow switch to relaying to everyone:\n\n`!gaslight view all`\n\nThe View HUD updates again.',
+                  ...ScriptKit.waitForCommand('!gaslight view')
+                },
+                { prompt: '**Try a command with view all:**\n\nRun the same command again with a staged token selected. Now check multiple player pages — all copies were affected. This is the default behavior.' },
+                { prompt: '**Manual relay:**\n\nTo relay a command to specific players (overriding the current view), select a master token and run:\n\n`!gaslight relay all !token-mod --set bar1_value|5`\n\nYou can also target specific players:\n\n`!gaslight relay "<player name>" !token-mod --set statusmarkers|dead`' },
+                { prompt: '**Player-page relay:**\n\nBy default, commands run on a **player page** only affect that page. To make a command also relay from player pages, add it to the relay list:\n\n`!gaslight config relay-add !token-mod`\n\nRemove with: `!gaslight config relay-remove !token-mod`\nView the list: `!gaslight config relay-list`' },
+                { prompt: '**What doesn\'t relay:**\n\n• `!gaslight`, `!mirror`, and `!anchor` commands never auto-relay\n• Commands with no tokens selected don\'t relay unless a master token id is specified in their parameters\n• Commands run while view is `off` don\'t relay\n\n**That\'s relay!** You can now run commands from the master page and have them affect all (or specific) player views automatically.',
+                  offerExamples: ['core-mechanics', 'initiative-hud', 'scripting']
                 },
             ],
         });
