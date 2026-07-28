@@ -1447,3 +1447,11 @@ Mirror:
 RollCapture:
   - "RollCapture"
   - "Utility"
+
+ScriptKit:
+  - "ScriptKit"
+  - "Utility"
+
+Tether:
+  - "Tether"
+  - "Utility"
