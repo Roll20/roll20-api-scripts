@@ -1,0 +1,17 @@
+{
+    "name": "ScriptKit",
+    "script": "ScriptKit.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "Generic framework library for Roll20 API scripts. Not a standalone script — provides infrastructure for other scripts to build on.\n\nFeatures:\n- **Help & Man system** — Structured command reference with grouped commands, searchable topics, version badges, and What's New display\n- **Handout generation** — Auto-generated help handouts on version bump with Quick Start, commands, topics, and examples footer\n- **Examples & Guides** — Interactive multi-step setup wizards with token/pin selection, query prompts with type coercion, and validation\n- **State migrations** — Semver-based sequential up/down migrations with auto-upgrade and manual rollback\n- **Ready signal coordination** — `!scriptkit-ready` broadcast for load-order-independent registration\n- **HTML helpers** — Full suite of formatting functions (escape, bold, italic, code, table, button, format with markdown support)\n\nScripts register via `ScriptKit.register(name, opts)` and gain help, man, examples, whatsnew, and handout generation commands automatically.\n\nFor script developers — see the generated Help handout or run `!<command> help` after registering.",
+    "authors": "Kenan Millet",
+    "roll20userid": "2614613",
+    "dependencies": [],
+    "modifies": {
+        "handout": "read, write",
+        "character": "read",
+        "attribute": "read"
+    },
+    "conflicts": [],
+    "useroptions": []
+}
