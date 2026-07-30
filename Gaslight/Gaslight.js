@@ -3016,24 +3016,23 @@ var Gaslight = Gaslight || (() => {
             return l && (l.startsWith('!') || l.startsWith('{&'));
         });
 
-        var dryRunPrefix = dryRun ? 
+        var dryRunPrefix = dryRun ?
             CMD + ' --echo ' + viewerPlayerId + ' ' + viewerTarget.get('id') + ' ' :
             '';
         var selectSuffix = ' {& select ' + viewerTarget.get('id') + '}\n';
-        var fullCmd = lines.join(selectSuffix + dryRunPrefix);
-        if (fullCmd) {
-            var senderId = msg.playerid;
-            if (senderId === 'API') {
-                var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
-                if (gmPlayer) senderId = gmPlayer.get('_id');
-            }
-            var batch = '!{{\n'
-                + CMD + ' --script-lock\n'
-                + dryRunPrefix + fullCmd + selectSuffix
-                + '(^)!^gaslight --script-unlock\n'
-                + '}}';
-            sendChat(getPlayerName(senderId), batch);
+        var fullCmd = dryRunPrefix + lines.join(selectSuffix + dryRunPrefix) + selectSuffix;
+
+        var senderId = msg.playerid;
+        if (senderId === 'API') {
+            var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
+            if (gmPlayer) senderId = gmPlayer.get('_id');
         }
+        var batch = '!{{\n'
+            + CMD + ' --script-lock\n'
+            + fullCmd
+            + '(^)!^gaslight --script-unlock\n'
+            + '}}';
+        sendChat(getPlayerName(senderId), batch);
     };
 
     /**
@@ -3041,6 +3040,7 @@ var Gaslight = Gaslight || (() => {
      */
     const evaluatePins = (pins, msg, dryRun, targetTokenId, sourcePageId) => {
         var s = state[SCRIPT_NAME];
+        var evalStart = Date.now();
         pins.forEach(function(pin) {
             var pageId = pin.get('_pageid');
 
@@ -6264,6 +6264,7 @@ var Gaslight = Gaslight || (() => {
     };
 
     const registerEventHandlers = () => {
+
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
         on('chat:message', function(msg) {
