@@ -4234,7 +4234,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: (ctx) => '**Test:** Apply the **' + ctx.params._marker + '** marker to a viewer token, then run `!gaslight eval --all`. All tokens on that viewer\'s page should swap to the enemy image. Remove the marker and re-eval to restore.' },
             ],
             handout: (ctx) => ({
-                notes: '!token-mod --set {& if ([madness] any(@(viewer.statusmarkers)) ~ "' + ctx.params._marker + '") && !(any(@(viewer.token_id)) = @(target.token_id))}imgsrc|' + ctx.params._enemyId + ' tint_color|#000000 name|ŧ̈́h̶̛ë̵̡ý̸̲{& else}imgsrc|@(gm_target.token_id) tint_color|transparent name|@(gm_target.name){& end}',
+                notes: '!token-mod --set {& if ([madness] any(@(viewer.statusmarkers)) ~ "' + ctx.params._marker + '") && !(any(@(viewer.token_id)) = @(target.token_id))}imgsrc|' + ctx.params._enemyId + ' tint_color|#000000 name|"i̒̋̃̑͝_͓̘̝̾̈̿s̵͔̤͚̬͔͉̼̞̦̲̑͊́̏̌̀̿͐ͣ̅͂̃͊͐ͦͤ̊ t̶̴̟̺̲̻̼̼̗̜̤̱̬͍̭̍ͭ͊̿ͮͬ̊̄̋̍̉̾͠_͎͔͍̻̩̣̌ͤͩ̿̾ͮḩ̛͈̫͚̺̼̻̦͔͊ͥͥ̄̅_̛͙ͭaṱ̨̩͈̘̻͚͖̺͕͔̹̱̫̠͙̳̖͕̠͙͆̍̋̍ͨͪͭ̓̂̂̀ͬͬ̃̽̈́̐̃ͯ̽̚͢͢͝ m̶̴̷̧͚̖̼͎͙̹̟̠͎̼̺͓̺̭̄̅͌̿̅̉̂͛̀̏͆̒̇̀̇ͬ̿̋ͮ̓̋̈͘͘͟ȩ̶̵̛̘̬̗̹̟̟̰͎̦͓̹͈͍̘̻ͦ̒̉̉̾̿̇̂̋ͬ́̄̆ͧ͌͊́̈́ͭͪ͛̈̚̚͟͝ͅ"{& else}imgsrc|@(gm_target.token_id) tint_color|transparent name|"@(gm_target.name)"{& end}',
                 gmnotes: '---GASLIGHT-SCRIPT---\nfilter: characters\ntrigger: on change statusmarkers',
                 archived: false,
             }),
