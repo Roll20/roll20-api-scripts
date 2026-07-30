@@ -3040,7 +3040,6 @@ var Gaslight = Gaslight || (() => {
      */
     const evaluatePins = (pins, msg, dryRun, targetTokenId, sourcePageId) => {
         var s = state[SCRIPT_NAME];
-        var evalStart = Date.now();
         pins.forEach(function(pin) {
             var pageId = pin.get('_pageid');
 
@@ -6264,7 +6263,6 @@ var Gaslight = Gaslight || (() => {
     };
 
     const registerEventHandlers = () => {
-
         on('chat:message', handleInput);
         on('chat:message', viewInterceptor);
         on('chat:message', function(msg) {
