@@ -3691,7 +3691,7 @@ var Gaslight = Gaslight || (() => {
                         title: 'HUD',
                         description: 'Persistent on-screen status display',
                         version: '2.1.0',
-                        body: 'The HUD shows the current Gaslight state (active group, view target, linked token count) as a persistent text element on the GM layer.\n\n`!gaslight hud on` / `!gaslight hud off` to toggle. `!gaslight hud reset` to recreate from defaults.',
+                        body: 'The HUD provides on-screen elements on the master page foreground layer.\n\n**Elements:**\n- `view` - relay status text (ALL / OFF / player name)\n- `initiative` - pin-based turn tracker with gestures (swipe, drag-to-reorder, delete)\n- `reticle` - rectangle highlighting current turn token on the map\n\n**Gestures (initiative):**\n- Swipe pin right = next turn, left = previous turn\n- Drag pin up/down = reorder in initiative\n- Delete pin = remove from initiative\n- Resize pin = scale all pins\n- Resize frame vertically = show more/fewer slots\n- Drag diamond = change current turn position in frame\n\n`!gaslight hud on` / `off` / `reset` to control. Element-specific: `!gaslight hud init reset`.',
                     },
                     troubleshooting: {
                         title: 'Troubleshooting',
