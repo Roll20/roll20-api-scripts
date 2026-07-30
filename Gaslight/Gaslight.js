@@ -4112,12 +4112,14 @@ var Gaslight = Gaslight || (() => {
             name: 'stealth',
             description: 'Hide/show NPCs per player based on passive perception vs stealth DC (RollCapture)',
             guide: [
-                { prompt: 'This example requires **RollCapture** to capture stealth rolls.',
+                { prompt: '**Stealth** — This script automatically hides/shows NPCs based on whether each player\'s passive perception beats the NPC\'s stealth roll. Requires **RollCapture** to detect stealth rolls.\n\nClick Continue to verify RollCapture is installed.',
                   onContinue: () => {
                       if (typeof RollCapture === 'undefined') return 'RollCapture is not installed. Install it from the one-click menu first.';
                   }
                 },
-                { prompt: 'Run `!rollcapture dissect` in chat, then roll stealth for any NPC. This shows you the template fields available for capture.' },
+                { prompt: '**Configure RollCapture:**\n\nRun `!rollcapture dissect` in chat, then roll stealth for any NPC. This shows you the template fields available for capture.',
+                  ...ScriptKit.waitForCommand('!rollcapture dissect')
+                },
                 { prompt: 'Create a RollCapture rule for skills. Run `!rollcapture rule skills` — this creates a *[RC] skills* handout. Open it in the journal.' },
                 { prompt: 'Add the line `template: <name>` — where `<name>` is the roll template shown by dissect (e.g. "simple", "atk", "npc").' },
                 { prompt: 'Add the line `name_field: <field>` — where `<field>` is the template field containing the skill name (e.g. "rname", "name"). This is how RollCapture identifies which skill was rolled.' },
@@ -4148,7 +4150,7 @@ var Gaslight = Gaslight || (() => {
             name: 'truesight',
             description: 'Reveal true forms to viewers with truesight (swap token side)',
             guide: [
-                { prompt: 'Select one or more **multi-sided tokens** that represent disguised creatures. *Side 1* = disguised appearance, *side 2* = true form.',
+                { prompt: '**Truesight** — This script swaps multi-sided tokens between their disguised appearance (side 1) and true form (side 2) based on whether the viewer has truesight.\n\nSelect one or more **multi-sided tokens** that represent disguised creatures. *Side 1* = disguised, *side 2* = true form.',
                   select: 'token', as: 'disguised', min: 1,
                   onContinue: (ctx) => {
                       var tokens = Array.isArray(ctx.selected) ? ctx.selected : [ctx.selected];
@@ -4163,6 +4165,7 @@ var Gaslight = Gaslight || (() => {
                   }
                 },
                 { prompt: 'Run `!gaslight var --setch can_disguise 1` with those tokens still selected. This marks them as targets for the truesight script.',
+                  ...ScriptKit.waitForCommand('!gaslight var'),
                   onContinue: (ctx) => {
                       var tokens = Array.isArray(ctx.selections.disguised) ? ctx.selections.disguised : [ctx.selections.disguised];
                       var missing = tokens.filter(t => {
@@ -4178,6 +4181,7 @@ var Gaslight = Gaslight || (() => {
                   }
                 },
                 { prompt: 'Now select viewer tokens that have **truesight** and run `!gaslight var --set truesight 1`.',
+                  ...ScriptKit.waitForCommand('!gaslight var'),
                   select: 'token', as: 'viewers', min: 1,
                   onContinue: (ctx) => {
                       var tokens = Array.isArray(ctx.selected) ? ctx.selected : [ctx.selected];
@@ -4209,7 +4213,7 @@ var Gaslight = Gaslight || (() => {
             name: 'madness',
             description: 'An afflicted player sees all tokens as enemies — allies swap to a chosen enemy image',
             guide: [
-                { prompt: 'Select a token that has the **status marker** you want to represent madness applied to it (e.g. "screaming"). This marker will trigger the effect when placed on a viewer\'s token.',
+                { prompt: '**Madness** — When a player is "afflicted" (via a status marker), all other tokens on their page swap to a chosen enemy image with a dark tint and garbled names. Removing the marker restores everything.\n\nSelect a token that has the **status marker** you want to represent madness applied to it (e.g. "screaming"). This marker will trigger the effect when placed on a viewer\'s token.',
                   select: 'token', as: 'markerToken', min: 1, max: 1,
                   onContinue: (ctx) => {
                       var token = Array.isArray(ctx.selected) ? ctx.selected[0] : ctx.selected;
