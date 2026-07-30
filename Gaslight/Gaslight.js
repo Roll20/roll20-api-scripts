@@ -4090,7 +4090,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: '**Character variable:**\n\nNow select a **player character token** and set second sight on the character sheet (so it applies to all their tokens):\n\n`!gaslight var --setch second_sight 1`\n\nThe `--setch` flag sets it on the character, not the individual token.',
                   ...ScriptKit.waitForCommand('!gaslight var')
                 },
-                { prompt: '**The script handout (1/2):**\n\nCreate a new **handout** in your journal. Give it a prefix of "[GLS]" and a name (e.g. "[GLS] Winds of Magic").\n\nIn the **Description & Notes** of the handout, paste this script:\n\n```!token-mod --set {& if @(target.gl_magical[0]) = 1 && any(@(viewer.gl_second_sight[0])) = 1}statusmarkers|+blue{& else}statusmarkers|-blue{& end}```\n\nThis adds the `blue` status marker to tokens that are magical — but only on pages where the viewer has second sight. Otherwise it removes it.\n\nClick Continue when done.' },
+                { prompt: '**The script handout (1/2):**\n\nCreate a new **handout** in your journal. Give it a prefix of "[GLS]" and a name (e.g. "[GLS] Winds of Magic").\n\nIn the **Description & Notes** of the handout, paste this script:\n\n```!token-mod --set {& if @(target.gl_magical[0]) = 1 && any(@(viewer.gl_second_sight[0])) = 1}statusmarkers|+half-haze{& else}statusmarkers|-half-haze{& end}```\n\nThis adds the `half-haze` status marker to tokens that are magical — but only on pages where the viewer has second sight. Otherwise it removes it.\n\nClick Continue when done.' },
                 { prompt: '**The script handout (2/2):**\n\nIn the **GM Notes**, type:\n\n```filter: all\ntrigger: gl_magical, gl_second_sight```\n\n• `filter: all` — evaluates against every staged token\n• `trigger:` — auto-re-evaluates when either variable changes\n\nClick Continue when the handout is configured.' },
                 { prompt: '**The Pin:**\n\nDrag the script handout onto the master page to create a map pin. This pin represents the script and will be used to trigger evaluations.' },
                 { prompt: '**Evaluate:**\n\nRun:\n\n`!gaslight eval --all`\n\nThis evaluates the script for every token. The NPC you marked as magical should now have the `blue` status marker on the player page(s) where the viewer has second sight — and NOT on pages where they don\'t.\n\nCheck both player pages to confirm.',
@@ -4204,36 +4204,6 @@ var Gaslight = Gaslight || (() => {
                 notes: '!token-mod --set {& if @(target.gl_can_disguise[0]) = 1 && any(@(viewer.gl_truesight[0])) = 1}currentSide|1{& else}currentSide|0{& end}',
                 gmnotes: '---GASLIGHT-SCRIPT---\nfilter: has gl_can_disguise',
             },
-        });
-
-        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
-            name: 'winds-of-magic',
-            description: 'Show magical auras only to viewers with second sight (via StatusFX)',
-            guide: [
-                { prompt: 'Select a token and apply the **status marker** you want to represent the magical aura. Then select that token.',
-                  select: 'token', as: 'markerToken', min: 1, max: 1,
-                  onContinue: (ctx) => {
-                      var token = Array.isArray(ctx.selected) ? ctx.selected[0] : ctx.selected;
-                      var markers = (token.get('statusmarkers') || '').split(',').filter(Boolean);
-                      if (markers.length === 0) return 'That token has no status markers applied. Apply the marker you want to use for the aura, then select the token.';
-                      // Store the first marker found
-                      ctx.params._marker = markers[0].replace(/@\d+$/, ''); // strip badge number if any
-                  }
-                },
-                { prompt: 'Select aura-radiating tokens and run `!gaslight var --set magical 1`.' },
-                { prompt: 'Select tokens that can perceive magic and run `!gaslight var --setch second_sight 1`.' },
-                { prompt: '*Optional:* Install **StatusFX** for animated particle effects on the status marker.' },
-                ScriptKit.handout(),
-                { prompt: (ctx) => 'Find **' + ctx.handoutName + '** from the journal and **drag it onto the master page** to create a map pin. Select the pin.',
-                  select: 'pin', as: 'pin', min: 1, max: 1,
-                  onContinue: validatePin
-                },
-                { prompt: (ctx) => '**Test:** Run `!gaslight eval --all`. Viewers with second sight should see the **' + (ctx.params._marker || 'blue') + '** status marker on magical tokens.' },
-            ],
-            handout: (ctx) => ({
-                notes: '!token-mod --set {& if @(target.gl_magical[0]) = 1 && any(@(viewer.gl_second_sight[0])) = 1}statusmarkers|+' + (ctx.params._marker || 'blue') + '{& else}statusmarkers|-' + (ctx.params._marker || 'blue') + '{& end}',
-                archived: false,
-            }),
         });
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
