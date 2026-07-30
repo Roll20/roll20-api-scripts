@@ -2477,6 +2477,7 @@ var Gaslight = Gaslight || (() => {
                 } else {
                     getPinScript(pin, function(content) {
                         if (!content) return;
+                        registerCompPropsFromScript(content);
                         var autoTriggers = parseTriggersFromScript(content);
                         var ignored = config.triggers.filter(function(t) { return t.startsWith('ignore '); }).map(function(t) { return t.slice(7).trim(); });
                         autoTriggers = autoTriggers.filter(function(t) { return ignored.indexOf(t) === -1; });
@@ -3025,25 +3026,23 @@ var Gaslight = Gaslight || (() => {
             return l && (l.startsWith('!') || l.startsWith('{&'));
         });
 
-        if (dryRun) {
-            lines.forEach(function(l) {
-                sendChat('player|' + msg.playerid, CMD + ' --echo ' + viewerPlayerId + ' ' + viewerTarget.get('id') + ' ' + l);
-            });
-        } else {
-            var fullCmd = lines.join('\n');
-            if (fullCmd) {
-                var senderId = msg.playerid;
-                if (senderId === 'API') {
-                    var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
-                    if (gmPlayer) senderId = gmPlayer.get('_id');
-                }
-                var batch = '!{{\n'
-                    + CMD + ' --script-lock\n'
-                    + fullCmd + ' {& select ' + viewerTarget.get('id') + '}\n'
-                    + '(^)!^gaslight --script-unlock\n'
-                    + '}}';
-                sendChat(getPlayerName(senderId), batch);
+        var dryRunPrefix = dryRun ? 
+            CMD + ' --echo ' + viewerPlayerId + ' ' + viewerTarget.get('id') + ' ' :
+            '';
+        var selectSuffix = ' {& select ' + viewerTarget.get('id') + '}\n';
+        var fullCmd = lines.join(selectSuffix + dryRunPrefix);
+        if (fullCmd) {
+            var senderId = msg.playerid;
+            if (senderId === 'API') {
+                var gmPlayer = findObjs({ _type: 'player' }).find(function(p) { return playerIsGM(p.get('_id')); });
+                if (gmPlayer) senderId = gmPlayer.get('_id');
             }
+            var batch = '!{{\n'
+                + CMD + ' --script-lock\n'
+                + dryRunPrefix + fullCmd + selectSuffix
+                + '(^)!^gaslight --script-unlock\n'
+                + '}}';
+            sendChat(getPlayerName(senderId), batch);
         }
     };
 
@@ -4086,6 +4085,41 @@ var Gaslight = Gaslight || (() => {
         });
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'scripting',
+            description: 'Gaslight Scripts — build a "winds of magic" script step by step',
+            source: SCRIPT_NAME,
+            guide: [
+                { prompt: '**Scripting** — This guide walks you through building a Gaslight Script from scratch. We\'ll create a "Winds of Magic" effect: certain tokens radiate a magical aura (status marker) that only players with "second sight" can see.\n\n**Prerequisite:** You need an active split with staged tokens.',
+                  onContinue: () => {
+                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
+                  }
+                },
+                { prompt: '**Variables:**\n\nGaslight uses `gl_` prefixed variables to drive scripts. We need two:\n\n• `gl_magical` — marks a token as radiating magical energy\n• `gl_second_sight` — marks a character as able to perceive magic\n\nSelect a staged NPC token on the master page and run:\n\n`!gaslight var --set magical 1`',
+                  ...ScriptKit.waitForCommand('!gaslight var')
+                },
+                { prompt: '**Character variable:**\n\nNow select a **player character token** and set second sight on the character sheet (so it applies to all their tokens):\n\n`!gaslight var --setch second_sight 1`\n\nThe `--setch` flag sets it on the character, not the individual token.',
+                  ...ScriptKit.waitForCommand('!gaslight var')
+                },
+                { prompt: '**The script handout (1/2):**\n\nCreate a new **handout** in your journal. Give it a prefix of "[GLS]" and a name (e.g. "[GLS] Winds of Magic").\n\nIn the **Description & Notes** of the handout, paste this script:\n\n```!token-mod --ids @(target.id) --set {& if @(target.gl_magical) == 1 && any(@(viewer.gl_second_sight)) == 1}statusmarkers|+blue{& else}statusmarkers|-blue{& end}```\n\nThis adds the `blue` status marker to tokens that are magical — but only on pages where the viewer has second sight. Otherwise it removes it.\n\nClick Continue when done.' },
+                { prompt: '**The script handout (2/2):**\n\nIn the **GM Notes**, type:\n\n```filter: all\ntrigger: gl_magical, gl_second_sight```\n\n• `filter: all` — evaluates against every staged token\n• `trigger:` — auto-re-evaluates when either variable changes\n\nClick Continue when the handout is configured.' },
+                { prompt: '**The Pin:**\n\nDrag the script handout onto the master page to create a map pin. This pin represents the script and will be used to trigger evaluations.' },
+                { prompt: '**Evaluate:**\n\nRun:\n\n`!gaslight eval --all`\n\nThis evaluates the script for every token. The NPC you marked as magical should now have the `blue` status marker on the player page(s) where the viewer has second sight — and NOT on pages where they don\'t.\n\nCheck both player pages to confirm.',
+                  ...ScriptKit.waitForCommand('!gaslight eval')
+                },
+                { prompt: '**Test the trigger (1/2):**\n\nSelect the player character token and remove their second sight:\n\n`!gaslight var --delch second_sight`\n\nBecause `trigger: gl_second_sight` is set, the script **automatically re-evaluates**. The blue marker should disappear from that player\'s view.\n\nRestore it: `!gaslight var --setch second_sight 1`',
+                  ...ScriptKit.waitForCommand('!gaslight var')
+                },
+                { prompt: '**Test the trigger (2/2):**\n\nSelect the NPC token on the master page and remove their magical status:\n\n`!gaslight var --del magical`\n\nBecause `trigger: gl_magical` is set, the script **automatically re-evaluates**. The blue marker should disappear from that player\'s view.\n\nRestore it: `!gaslight var --setch magical 1`',
+                  ...ScriptKit.waitForCommand('!gaslight var')
+                },
+                { prompt: '**Debugging:**\n\nIf something doesn\'t work, use dry-run to see what would execute:\n\n`!gaslight eval --dry-run --all`\n\nThis shows the fully-expanded commands after variable substitution, so you can verify the logic without changing anything.' },
+                { prompt: '**Key concepts:**\n\n• `@(target.*)` — the token being evaluated (master copy)\n• `@(viewer.*)` — the viewing player\'s copy (use inside `any()`/`all()`)\n• `@(gm_target.*)` — always resolves to the master token\n• `any(@(viewer.gl_x))` — true if ANY viewer has the value\n• `all(@(viewer.gl_x))` — true if ALL viewers have the value\n• `{& if}` / `{& else}` / `{& end}` — conditional blocks\n• `--set` vs `--setch` — token variable vs character variable\n• `trigger:` — comma-separated list of variables that auto-trigger re-evaluation\n\nSee the other applied examples for more complex scripts.',
+                  offerExamples: ['core-mechanics', 'initiative-hud', 'relay', 'stealth', 'truesight', 'madness']
+                },
+            ],
+        });
+
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'stealth',
             description: 'Hide/show NPCs per player based on passive perception vs stealth DC (RollCapture)',
             guide: [
@@ -4258,7 +4292,10 @@ var Gaslight = Gaslight || (() => {
         // createHelpHandout(); // Replaced by ScriptKit gen-help
         log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
-        if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length > 0) buildTriggerMap();
+        if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length > 0) {
+            buildTriggerMap();
+            registerAllCompProps();
+        }
 
         // HUD recovery: if enabled but object is missing, recreate; if disabled but object exists, clean up
         var s = state[SCRIPT_NAME];
