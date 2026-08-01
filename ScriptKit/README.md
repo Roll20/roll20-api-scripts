@@ -446,7 +446,51 @@ ScriptKit.register('MyScript', {
 
 A random tip is whispered to the GM once per sandbox restart, styled as a compact card.
 
+### Dynamic Handout Content
+
+If your script has help topics with dynamic content (e.g. listing registered extensions from other scripts), the handout generated at startup may be incomplete — other scripts register their extensions after yours.
+
+**Step 1: Use function bodies** — topics with `body: () => ...` are evaluated at render time. Chat commands (`man`) always show live data. Without function bodies, content is static and regeneration has no effect.
+
+```js
+topics: {
+    registeredFunctions: {
+        title: 'Registered Functions',
+        body: () => {
+            const fns = Object.values(MY_REGISTRY);
+            if (fns.length === 0) return '*None registered.*';
+            return fns.map(f => '**' + f.name + '()** — ' + f.description).join('\n');
+        },
+    }
+}
+```
+
+**Step 2: Trigger regeneration** — call `ScriptKit.updateHandout()` after extensions finish registering. It debounces by default (2s), so repeated calls within the window only fire once:
+
+```js
+// Call this at the end of each successful extension registration
+const onExtensionRegistered = () => {
+    if (typeof ScriptKit !== 'undefined') ScriptKit.updateHandout('MyScript', 'usr');
+};
+```
+
+**`ScriptKit.generateHandout(scriptName, mode, delay?)`** — Schedule handout generation/regeneration (debounced, default 2000ms). Creates the handout if it doesn't exist. `mode` is required: `'usr'` or `'dev'`.
+
+**`ScriptKit.updateHandout(scriptName, mode, delay?)`** — Same as above, but no-op if the handout doesn't exist yet. Use this when you don't want to create handouts that the user hasn't explicitly requested.
+
+**`ScriptKit.generateHandoutImmediately(scriptName, mode)`** — Generate synchronously, no debounce.
+
+**`ScriptKit.updateHandoutImmediately(scriptName, mode)`** — Regenerate synchronously, only if exists.
+
 ## Changelog
+
+### v1.1.0
+- Prevent double-registration (same script calling `register()` twice is now a no-op)
+- Added `ScriptKit.generateHandout(scriptName, mode, delay?)` — debounced handout generation (default 2s)
+- Added `ScriptKit.updateHandout(scriptName, mode, delay?)` — debounced, only if handout exists
+- Added `ScriptKit.generateHandoutImmediately(scriptName, mode)` — synchronous generation
+- Added `ScriptKit.updateHandoutImmediately(scriptName, mode)` — synchronous, only if exists
+- Added `SCRIPT_VERSION` constant
 
 ### v1.0.0
 - Initial release
