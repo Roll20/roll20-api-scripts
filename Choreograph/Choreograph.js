@@ -46,7 +46,12 @@ var Choreograph = Choreograph || (() => {
     const EXT_PARAM_TYPES    = {}; // { 'typeName': { name, description, parse, validate } }
     const EXT_LIFECYCLE      = []; // [{ source, commands: [RegExp], start, stop, pause, resume }]
     const EXT_SYNC           = []; // [{ source, commands: [RegExp], waiting: fn }]
-    const EXT_EXAMPLES       = {}; // { 'name': { name, description, source, scene } }
+
+    // Schedule help handout regeneration after extensions register
+    const scheduleHandoutRegen = () => {
+        if (typeof ScriptKit === 'undefined') return;
+        ScriptKit.updateHandout(SCRIPT_NAME, 'usr');
+    };
 
     const validIdent = (s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s);
 
@@ -68,6 +73,7 @@ var Choreograph = Choreograph || (() => {
             return false;
         }
         EXT_FUNCTIONS[key] = Object.assign({ namespace, source: src, pure: true, description: '', args: [], returns: 'any', examples: [] }, struct);
+        scheduleHandoutRegen();
         return true;
     };
 
@@ -89,6 +95,7 @@ var Choreograph = Choreograph || (() => {
             return false;
         }
         EXT_TOKEN_VARS[key] = Object.assign({ namespace, source: src, description: '' }, struct);
+        scheduleHandoutRegen();
         return true;
     };
 
@@ -109,6 +116,7 @@ var Choreograph = Choreograph || (() => {
             return false;
         }
         EXT_PARAM_TYPES[name] = Object.assign({ source: src, description: '', validate: null }, struct);
+        scheduleHandoutRegen();
         return true;
     };
 
@@ -130,6 +138,7 @@ var Choreograph = Choreograph || (() => {
             return false;
         }
         EXT_CONSTANTS[key] = Object.assign({ namespace, source: src, description: '', type: typeof value }, struct);
+        scheduleHandoutRegen();
         return true;
     };
 
@@ -249,272 +258,8 @@ var Choreograph = Choreograph || (() => {
      * @param {object} struct - { name, description, scene }
      *   scene: { notes, params, variables, rows } (same shape as parseScene output)
      */
-    const registerExample = (sourceId, struct) => {
-        const src = sourceId || SCRIPT_NAME;
-        const { name, description = '', scene } = struct;
-        if (!name || !scene) {
-            log(`${SCRIPT_NAME}: [${src}] registerExample — missing name or scene`);
-            return false;
-        }
-        if (EXT_EXAMPLES[`${src}/${name}`]) return false;
-        EXT_EXAMPLES[`${src}/${name}`] = { name, description, source: src, scene, guide: struct.guide || null };
-        return true;
-    };
 
-    // =========================================================================
-    // Example Guide System
-    // =========================================================================
 
-    const activeGuides = {}; // { guideId: { steps, currentStep, roles, msg, sceneName } }
-
-    /**
-     * Start a guide session from a steps array.
-     *
-     * Step object fields:
-     * @param {string}   [step.prompt]      Instructions shown (required for interactive steps).
-     * @param {boolean}  [step.auto=false]  If true, fires immediately without waiting for user input.
-     * @param {string}   [step.role]        Assign selected tokens to this cast role.
-     * @param {number}   [step.min]         Minimum selection count (interactive only).
-     * @param {number}   [step.max]         Maximum selection count (interactive only).
-     * @param {function} [step.onStart]     Callback when step is entered going forward. Receives (roles).
-     * @param {function} [step.onContinue]  Callback when step completes forward. Receives (tokens, roles).
-     *                                      Return a string to reject and retry.
-     * @param {function} [step.onBack]      Callback when stepping backward through this step. Receives (roles).
-     *                                      Used to undo side effects of onContinue/onStart.
-     */
-    const startGuide = (msg, sceneName, steps, sceneRoles, sceneParams) => {
-        const guideId = `guide-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        // Inherit min/max from scene roles if not explicitly set on step
-        const resolvedSteps = steps.map(step => {
-            if (!step.role || !sceneRoles) return step;
-            const roleDef = sceneRoles.find(r => r.name === step.role);
-            if (!roleDef) return step;
-            const merged = Object.assign({}, step);
-            if (merged.min == null && roleDef.min != null) merged.min = roleDef.min;
-            if (merged.max == null && roleDef.max != null) merged.max = roleDef.max;
-            return merged;
-        });
-
-        // Auto-generate param steps from scene params (skip 'cast' built-in)
-        const userParams = (sceneParams || []).filter(p => p.name !== 'cast');
-        if (userParams.length > 0) {
-            const selectionTypes = new Set(['token', 'token[]', 'path', 'path[]']);
-            const selectionParams = userParams.filter(p => selectionTypes.has(p.type));
-            const queryParams = userParams.filter(p => !selectionTypes.has(p.type));
-
-            // One step per selection-based param
-            selectionParams.forEach(p => {
-                resolvedSteps.push({
-                    prompt: `Select ${p.type.includes('[]') ? 'token(s)' : 'a token'} for <b>${escHtml(p.name)}</b>${p.description ? ' — ' + escHtml(p.description) : ''}.`,
-                    _paramSelect: p.name,
-                    _paramType: p.type,
-                });
-            });
-
-            // One combined step for all query-based params
-            if (queryParams.length > 0) {
-                resolvedSteps.push({
-                    prompt: 'Set parameters:',
-                    _paramQuery: queryParams,
-                });
-            }
-        }
-
-        activeGuides[guideId] = {
-            steps: resolvedSteps,
-            currentStep: 0,
-            roles: {},
-            params: {},
-            msg,
-            sceneName,
-        };
-        enterStep(guideId);
-        return guideId;
-    };
-
-    const enterStep = (guideId) => {
-        const g = activeGuides[guideId];
-        if (!g) return;
-
-        if (g.currentStep >= g.steps.length) {
-            // All steps complete — create cast from roles and run
-            const castName = `${g.sceneName}-cast`;
-            const castRoles = {};
-            Object.entries(g.roles).forEach(([role, tokens]) => {
-                castRoles[role] = tokens.map(t => t.get('id'));
-            });
-            // Store cast
-            const castHandout = casts().getOrCreate(castName);
-            casts().cache[castName] = { roles: castRoles };
-            setHandoutNotes(castHandout, generateCastHtml(castName, castRoles));
-            castHandout.set('archived', true);
-            // Build param flags from collected values
-            const paramFlags = Object.entries(g.params || {})
-                .map(([k, v]) => `--${k} ${v}`)
-                .join(' ');
-            // Run with cast
-            const syntheticMsg = Object.assign({}, g.msg, {
-                content: `${CMD_TOKEN} run ${g.sceneName} ignore-selected --cast ${castName}${paramFlags ? ' ' + paramFlags : ''}`,
-                selected: [],
-            });
-            delete activeGuides[guideId];
-            handleInput(syntheticMsg);
-            return;
-        }
-
-        const step = g.steps[g.currentStep];
-
-        // Fire onStart
-        if (typeof step.onStart === 'function') step.onStart(g.roles);
-
-        // Auto steps advance immediately
-        if (step.auto) {
-            if (typeof step.onContinue === 'function') step.onContinue([], g.roles);
-            g.currentStep++;
-            enterStep(guideId);
-            return;
-        }
-
-        // Interactive step — show prompt
-        const interactiveSteps = g.steps.filter(s => !s.auto);
-        const interactiveIdx = interactiveSteps.indexOf(step) + 1;
-        const interactiveTotal = interactiveSteps.length;
-        const hasPriorInteractive = g.steps.slice(0, g.currentStep).some(s => !s.auto);
-
-        let html = `<div style="background:#335;color:#fff;padding:8px;border-radius:4px;font-size:12px;">`;
-        html += `<b>${escHtml(g.sceneName)}</b> — Setup (step ${interactiveIdx}/${interactiveTotal})<br><br>`;
-        html += `${step.prompt}<br><br>`;
-        if (step.min || step.max) {
-            const parts = [];
-            if (step.min) parts.push(`min: ${step.min}`);
-            if (step.max) parts.push(`max: ${step.max}`);
-            html += `<i>Select ${parts.join(', ')} token${(step.max === 1 && step.min === 1) ? '' : 's'}</i><br><br>`;
-        }
-
-        // Build continue button — embed ?{} queries for param steps
-        if (step._paramQuery) {
-            // Show param descriptions
-            step._paramQuery.forEach(p => {
-                html += `<b>${escHtml(p.name)}</b>`;
-                if (p.default) html += ` [${escHtml(p.default)}]`;
-                if (p.description) html += ` — <i>${escHtml(p.description)}</i>`;
-                html += `<br>`;
-            });
-            html += `<br>`;
-            // Build button with ?{} macros for each param
-            const queryParts = step._paramQuery.map(p => {
-                const label = p.name;
-                const def = p.default || '';
-                if (p.type === 'boolean') return `--${p.name} ?{${label}|true|false}`;
-                return `--${p.name} ?{${label}|${def}}`;
-            }).join(' ');
-            html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId} ${queryParts}`);
-        } else {
-            html += btnHtml('✅ Continue', `${CMD_TOKEN} guide-continue ${guideId}`);
-        }
-        if (hasPriorInteractive) html += ` ${btnHtml('⬅ Back', `${CMD_TOKEN} guide-back ${guideId}`)}`;
-        html += ` ${btnHtml('✖ Cancel', `${CMD_TOKEN} guide-cancel ${guideId}`)}`;
-        html += `</div>`;
-        reply(g.msg, 'Guide', html, true);
-    };
-
-    const handleGuideContinue = (msg, guideId) => {
-        const g = activeGuides[guideId];
-        if (!g) { replyError(msg, 'No active guide with that ID.'); return; }
-
-        const step = g.steps[g.currentStep];
-        const selected = (msg.selected || []).map(s => getObj(s._type, s._id)).filter(Boolean);
-
-        // Handle _paramSelect steps (token/path selection)
-        if (step._paramSelect) {
-            if (selected.length === 0) {
-                replyError(msg, `Select at least one token/path for "${step._paramSelect}", then click Continue.`);
-                return;
-            }
-            const ids = selected.map(t => t.get('id'));
-            g.params[step._paramSelect] = step._paramType.includes('[]') ? ids.join(',') : ids[0];
-            g.currentStep++;
-            enterStep(guideId);
-            return;
-        }
-
-        // Handle _paramQuery steps (parse --key value from msg.content)
-        if (step._paramQuery) {
-            const content = msg.content;
-            step._paramQuery.forEach(p => {
-                const re = new RegExp(`--${p.name}\\s+(\\S+)`);
-                const m = content.match(re);
-                if (m && m[1]) g.params[p.name] = m[1];
-            });
-            g.currentStep++;
-            enterStep(guideId);
-            return;
-        }
-
-        // Validate selection count
-        if (step.min && selected.length < step.min) {
-            replyError(msg, `Select at least ${step.min} token${step.min > 1 ? 's' : ''}, then click Continue.`);
-            return;
-        }
-        if (step.max && selected.length > step.max) {
-            replyError(msg, `Select at most ${step.max} token${step.max > 1 ? 's' : ''}, then click Continue.`);
-            return;
-        }
-
-        // Assign to role
-        if (step.role) g.roles[step.role] = selected;
-
-        // Fire onContinue — if it returns a string, treat as validation error
-        if (typeof step.onContinue === 'function') {
-            const err = step.onContinue(selected, g.roles);
-            if (typeof err === 'string') {
-                replyError(msg, err);
-                return;
-            }
-        }
-
-        // Advance
-        g.currentStep++;
-        enterStep(guideId);
-    };
-
-    const handleGuideBack = (msg, guideId) => {
-        const g = activeGuides[guideId];
-        if (!g || g.currentStep <= 0) return;
-
-        // Undo current step's role assignment
-        const currentStep = g.steps[g.currentStep];
-        if (currentStep && currentStep.role) delete g.roles[currentStep.role];
-
-        // Step backward, calling onBack for each step we pass through
-        g.currentStep--;
-        const step = g.steps[g.currentStep];
-        if (typeof step.onBack === 'function') step.onBack(g.roles);
-        if (step.role) delete g.roles[step.role];
-
-        // If we backed into an auto step, keep backing up
-        if (step.auto && g.currentStep > 0) {
-            handleGuideBack(msg, guideId);
-            return;
-        }
-
-        // Re-enter this step
-        enterStep(guideId);
-    };
-
-    const handleGuideCancel = (msg, guideId) => {
-        const g = activeGuides[guideId];
-        if (!g) return;
-
-        // Undo all steps from current back to 0
-        for (let i = g.currentStep; i >= 0; i--) {
-            const step = g.steps[i];
-            if (typeof step.onBack === 'function') step.onBack(g.roles);
-        }
-
-        delete activeGuides[guideId];
-        reply(msg, 'Guide', 'Setup cancelled.');
-    };
 
     const generateExtensionHandout = (sourceId, opts = {}) => {
         const src = sourceId || SCRIPT_NAME;
@@ -2303,199 +2048,7 @@ var Choreograph = Choreograph || (() => {
         }
 
         // ---- example ----
-        if (cmd === 'example' || cmd === 'examples') {
-            // Parse search filters: script:<text>, name:<text>, desc:<text>, or bare <text> (matches name+desc)
-            let pluginFilter = null;
-            let nameFilter = null;
-            let descFilter = null;
-            const filterArgs = [];
-            args.forEach(a => {
-                if (a.toLowerCase().startsWith('script:')) pluginFilter = a.slice(7).toLowerCase();
-                else if (a.toLowerCase().startsWith('name:')) nameFilter = a.slice(5).toLowerCase();
-                else if (a.toLowerCase().startsWith('desc:')) descFilter = a.slice(5).toLowerCase();
-                else filterArgs.push(a);
-            });
-            let remainingFilter = filterArgs.length > 0 ?filterArgs.join(' ').toLowerCase() : null;
-            nameFilter = nameFilter || remainingFilter;
-            descFilter = descFilter || remainingFilter;
 
-            const examples = Object.values(EXT_EXAMPLES);
-            if (examples.length === 0) {
-                reply(msg, 'Examples', 'No examples registered.');
-                return;
-            }
-
-            // Highlight matched portion in a name
-            const activeNameFilter = nameFilter || '';
-            const highlightMatch = (text, filter) => {
-                if (!filter) return escHtml(text);
-                const lower = text.toLowerCase();
-                let result = '';
-                let lastIdx = 0;
-                let idx = lower.indexOf(filter);
-                if (idx === -1) return escHtml(text);
-                while (idx !== -1) {
-                    result += escHtml(text.slice(lastIdx, idx));
-                    result += '<b>' + escHtml(text.slice(idx, idx + filter.length)) + '</b>';
-                    lastIdx = idx + filter.length;
-                    idx = lower.indexOf(filter, lastIdx);
-                }
-                result += escHtml(text.slice(lastIdx));
-                return result;
-            };
-
-            // Separate exact matches from fuzzy
-            // Tier 1: exact plugin matches (all examples from that plugin)
-            // Tier 2: exact name matches from non-tier1 scripts
-            // Tier 3: fuzzy matches from non-tier1 scripts, alphabetical
-            const tier1 = [], tier2 = [], tier3 = [];
-            const tier1Sources = new Set();
-            const hasSearch = pluginFilter || nameFilter || descFilter;
-
-            const matches = (body, filter) => {
-                const b = body.toLowerCase() || '';
-                if (filter) return b.indexOf(filter) !== -1;
-                return true;
-            };
-            const exact = (body, filter) => {
-                const b = body.toLowerCase() || '';
-                if (filter) return b === filter;
-                return false;
-            };
-
-            if (pluginFilter) {
-                examples.forEach(ex => {
-                    if (ex.source.toLowerCase() === pluginFilter) {
-                        tier1.push(ex);
-                        tier1Sources.add(ex.source);
-                    }
-                });
-            }
-
-            examples.forEach(ex => {
-                if (tier1Sources.has(ex.source)) return;
-                if (pluginFilter && ex.source.toLowerCase().indexOf(pluginFilter) === -1) return;
-                if (!hasSearch) { tier3.push(ex); return; }
-                if (!matches(ex.name, nameFilter) && !matches(ex.description, descFilter)) return;
-                if (exact(ex.name, nameFilter) || exact(ex.description, descFilter)) tier2.push(ex);
-                else tier3.push(ex);
-            });
-
-            const allMatches = [...tier1, ...tier2, ...tier3];
-            if (allMatches.length === 0) {
-                reply(msg, 'Examples', 'No examples match that filter. Use <code>' + CMD_TOKEN + ' example</code> to see all.');
-                return;
-            }
-
-            // Group by source preserving tier order
-            const groups = [];
-            const groupMap = {};
-            allMatches.forEach(ex => {
-                if (!groupMap[ex.source]) {
-                    groupMap[ex.source] = [];
-                    groups.push({ source: ex.source, items: groupMap[ex.source] });
-                }
-                groupMap[ex.source].push(ex);
-            });
-            // Sort: tier1 sources first, then tier2, then tier3 alphabetical
-            const tier2Sources = new Set(tier2.map(ex => ex.source));
-            groups.sort((a, b) => {
-                const ta = tier1Sources.has(a.source) ? 0 : tier2Sources.has(a.source) ? 1 : 2;
-                const tb = tier1Sources.has(b.source) ? 0 : tier2Sources.has(b.source) ? 1 : 2;
-                if (ta !== tb) return ta - tb;
-                return a.source.localeCompare(b.source);
-            });
-
-            let out = `Filter: <code>${CMD_TOKEN} example &lt;search&gt;</code>, <code>script:&lt;name&gt;</code>, <code>name:&lt;name&gt;</code>, <code>desc:&lt;text&gt;</code><br><br>`;
-            groups.forEach(g => {
-                out += `<b>${escHtml(g.source)}:</b><br>`;
-                g.items.forEach(ex => {
-                    const sceneName = `example-${ex.name}`;
-                    const exists = scenes().find(sceneName);
-                    out += `&nbsp;&nbsp;• <u>${highlightMatch(ex.name, activeNameFilter)}</u>`;
-                    if (ex.description) out += ` — ${highlightMatch(ex.description, descFilter || '')}`;
-                    out += ' ';
-                    if (exists) {
-                        out += btnHtml('🔄 Regen', `${CMD_TOKEN} example! ${ex.name}`);
-                        out += btnHtml('▶ Run', `${CMD_TOKEN} run ${sceneName}`);
-                        out += ` <a href="http://journal.roll20.net/handout/${exists.get('id')}">[Open]</a>`;
-                    } else {
-                        out += btnHtml('+ Generate', `${CMD_TOKEN} example! ${ex.name}`);
-                    }
-                    out += `<br>`;
-                });
-            });
-            reply(msg, 'Examples', out);
-            return;
-        }
-
-        if (cmd === 'guide') {
-            const exName = args[0];
-            const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
-            if (!ex) { replyError(msg, `No example named "${exName}".`); return; }
-            const hasGuide = (ex.guide && ex.guide.length) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
-            if (!hasGuide) { replyError(msg, `Example "${exName}" has no setup guide.`); return; }
-            startGuide(msg, `example-${exName}`, ex.guide || [], ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
-            return;
-        }
-        if (cmd === 'guide-continue') {
-            handleGuideContinue(msg, args[0]);
-            return;
-        }
-        if (cmd === 'guide-back') {
-            handleGuideBack(msg, args[0]);
-            return;
-        }
-        if (cmd === 'guide-cancel') {
-            handleGuideCancel(msg, args[0]);
-            return;
-        }
-
-        if (cmd === 'example!') {
-            // Generation triggered by button click
-            const exName = args[0];
-
-            const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
-            if (!ex) {
-                replyError(msg, `No example named "${exName}". Use <code>${CMD_TOKEN} example</code> to see all.`);
-                return;
-            }
-
-            // Generate the scene handout
-            const sceneName = `example-${exName}`;
-            const scene = Object.assign({ name: sceneName }, ex.scene);
-            // Ensure cast param
-            if (!scene.params) scene.params = [];
-            if (!scene.params.find(p => p.name === 'cast')) {
-                scene.params.unshift({ name: 'cast', type: 'token[]', default: 'selected', description: 'Tokens to run the scene on (built-in)' });
-            }
-            if (!scene.variables) scene.variables = [];
-            if (!scene.rows) scene.rows = [];
-
-            const handout = scenes().getOrCreate(sceneName);
-            handout.set('archived', true);
-            let sceneHtml = generateSceneHtml(sceneName, scene);
-            const hasGuide = (ex.guide && ex.guide.length) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
-            if (hasGuide) {
-                const guideBtn = `<div style="margin-bottom:8px;">${btnHtml('🧭 Setup Guide', `${CMD_TOKEN} guide ${ex.name}`)}</div>`;
-                sceneHtml = guideBtn + sceneHtml;
-            }
-            setHandoutNotes(handout, sceneHtml);
-            scenes().cache[sceneName] = scene;
-
-            // Start guide if the example defines one or has promptable params
-            const hasGuideOrParams = (ex.guide && ex.guide.length > 0) || (ex.scene && ex.scene.params && ex.scene.params.some(p => p.name !== 'cast'));
-            if (hasGuideOrParams) {
-                startGuide(msg, sceneName, ex.guide || [], ex.scene && ex.scene.roles, ex.scene && ex.scene.params);
-                return;
-            }
-
-            reply(msg, 'Examples',
-                `Generated example scene "<b>${escHtml(sceneName)}</b>". `
-                + `<a href="http://journal.roll20.net/handout/${handout.get('id')}">[Open Handout]</a> `
-                + btnHtml('▶ Run', `${CMD_TOKEN} run ${sceneName}`));
-            return;
-        }
 
         // ---- status ----
         if (cmd === 'status') {
@@ -3180,19 +2733,28 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         // ── Built-in example scenes (via ScriptKit framework) ─────────────────
         const registerWithScriptKit = () => {
             if (typeof ScriptKit === 'undefined') return;
-            const html = ScriptKit.html;
 
             ScriptKit.register(SCRIPT_NAME, {
                 command: CMD_TOKEN,
                 tag: 'Scene',
                 version: SCRIPT_VERSION,
                 newSince: '1.0.0',
+                motd: [
+                    'Use `!choreograph examples` to browse interactive demos you can run immediately.',
+                    'The `sync` delay waits for animations to finish before continuing — great for phased effects.',
+                    'Use `--role caster <id>` to assign roles at run time without pre-saving a cast.',
+                    'Chain scenes recursively with `\\${self}` — combined with `when`, you can build bounce/jump effects.',
+                    'TokenProxy gives you `token.left`, `token.name`, etc. — no more `get()` calls in expressions.',
+                    'LINQ methods like `.first()`, `.without()`, `.orderBy()` chain on `actors()` and `role()` results.',
+                    'Use `!choreograph man <topic>` to search help — it fuzzy-matches across topics and items.',
+                    'Expressions re-evaluate each loop cycle, so `rand()` produces different results every iteration.',
+                ],
                 help: {
                     description: 'Meta-sequencer for Roll20 tokens. Define scenes in handouts — filter tokens, compute per-token timing, and fire commands at the right moments.',
                     quickStart: [
-                        html.code('!choreograph new myScene') + ' — creates a blank scene handout.',
-                        'Open the ' + html.bold('[Scene] myScene') + ' handout. Add rows to the Scene Table: set a Filter (e.g. ' + html.code('*') + '), a Delay expression (e.g. ' + html.code('stagger(rank("left"), 200)') + '), and a Command template (e.g. ' + html.code('!sequence play sparkle --target ${token.id}') + ').',
-                        'Select tokens and run ' + html.code('!choreograph run myScene') + '.',
+                        '`!choreograph new myScene` — creates a blank scene handout.',
+                        'Open the **[Scene] myScene** handout. Add rows to the Scene Table: set a Filter (e.g. `\\*`), a Delay expression (e.g. `stagger(rank("left"), 200)`), and a Command template (e.g. `!sequence play sparkle --target \\${token.id}`).',
+                        'Select tokens and run `!choreograph run myScene`.',
                     ],
                     changelog: [
                         { version: '1.0.0', changes: [
@@ -3245,7 +2807,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             title: 'Scene Handout Structure',
                             description: 'How scene handouts are organized',
                             version: '0.1',
-                            body: 'Each scene is stored in a ' + html.code('[Scene] <name>') + ' handout with three HTML tables that Choreograph parses. You can edit them directly in the handout editor.',
+                            body: 'Each scene is stored in a `[Scene] <name>` handout with three HTML tables that Choreograph parses. You can edit them directly in the handout editor.',
                             items: [
                                 { name: 'Parameter Table', description: 'Name | Type | Default | Description — scene inputs bound at run time', version: '0.1' },
                                 { name: 'Variables Table', description: 'Variable | Expression — computed once per token before execution', version: '0.1' },
@@ -3256,30 +2818,30 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             title: 'How It All Connects',
                             description: 'The execution pipeline from run to command',
                             version: '0.1',
-                            body: html.bold('1. Cast assembly') + ' — You run ' + html.code('!choreograph run myScene') + ' with tokens selected. These become the ' + html.italic('cast') + '. Parameters are bound from --flags.' + html.br()
-                                + html.bold('2. Variables computed') + ' — For each token in the cast, the Variables table is evaluated top-to-bottom. Each variable can reference params, earlier variables, and the token itself.' + html.br()
-                                + html.bold('3. Row processing') + ' — Each row in the Scene Table is processed:' + html.br()
-                                + html.indent(4) + '• The ' + html.bold('Filter') + ' selects which cast members this row applies to.' + html.br()
-                                + html.indent(4) + '• The ' + html.bold('When') + ' condition (if any) is checked per-token — falsy = skip.' + html.br()
-                                + html.indent(4) + '• The ' + html.bold('Delay') + ' expression is evaluated per-token to compute milliseconds.' + html.br()
-                                + html.indent(4) + '• After the delay fires, the ' + html.bold('Command') + ' template is evaluated per-token and sent to chat.' + html.br()
-                                + html.bold('4. All rows fire in parallel') + ' — rows don\'t wait for each other unless you use ' + html.code('sync') + ' to create coordination points.' + html.paragraph('')
-                                + html.bold('Example trace:') + ' Scene has ' + html.code('speed') + ' param (default 2). Variable ' + html.code('dist = distance(350, 350)') + ' computes per-token. Delay ' + html.code('dist / speed') + ' staggers by distance. Command ' + html.code('!sequence play sparkle --target ${token.id}') + ' fires per-token when its delay expires.',
+                            body: '**1. Cast assembly** — You run `!choreograph run myScene` with tokens selected. These become the *cast*. Parameters are bound from --flags.\n'
+                                + '**2. Variables computed** — For each token in the cast, the Variables table is evaluated top-to-bottom. Each variable can reference params, earlier variables, and the token itself.\n'
+                                + '**3. Row processing** — Each row in the Scene Table is processed:\n'
+                                + '    • The **Filter** selects which cast members this row applies to.\n'
+                                + '    • The **When** condition (if any) is checked per-token — falsy = skip.\n'
+                                + '    • The **Delay** expression is evaluated per-token to compute milliseconds.\n'
+                                + '    • After the delay fires, the **Command** template is evaluated per-token and sent to chat.\n'
+                                + '**4. All rows fire in parallel** — rows don\'t wait for each other unless you use `sync` to create coordination points.\n\n'
+                                + '**Example trace:** Scene has `speed` param (default 2). Variable `dist = distance(350, 350)` computes per-token. Delay `dist / speed` staggers by distance. Command `!sequence play sparkle --target \\${token.id}` fires per-token when its delay expires.',
                         },
                         example: {
                             title: 'Example Scene',
                             description: 'A complete scene showing all pieces working together',
                             version: '0.1',
-                            body: html.bold('Propagating burst') + ' — a sparkle effect radiates outward from a center point, hitting nearby tokens first.' + html.paragraph('')
-                                + html.bold('Parameters:') + html.br()
-                                + html.indent(4) + html.code('speed') + ' — number, default ' + html.code('2') + ' (pixels per ms)' + html.br()
-                                + html.indent(4) + html.code('origin') + ' — token, default ' + html.code('selected') + ' (center point)' + html.paragraph('')
-                                + html.bold('Variables:') + html.br()
-                                + html.indent(4) + html.code('dist') + ' = ' + html.code('distance(origin.left, origin.top)') + html.paragraph('')
-                                + html.bold('Scene Table:') + html.br()
-                                + html.indent(4) + 'Row 1: Filter ' + html.code('*') + ' | Delay ' + html.code('dist / speed') + ' | Command ' + html.code('!sequence play sparkle --target ${token.id}') + html.br()
-                                + html.indent(4) + 'Row 2: Filter ' + html.code('*') + ' | Delay ' + html.code('dist / speed + 500') + ' | Command ' + html.code('!sequence play fade-out --target ${token.id}') + html.paragraph('')
-                                + html.bold('Result:') + ' Tokens near the origin sparkle first, with the burst rippling outward. 500ms after each sparkle, that token fades out.',
+                            body: '**Propagating burst** — a sparkle effect radiates outward from a center point, hitting nearby tokens first.\n\n'
+                                + '**Parameters:**\n'
+                                + '    `speed` — number, default `2` (pixels per ms)\n'
+                                + '    `origin` — token, default `selected` (center point)\n\n'
+                                + '**Variables:**\n'
+                                + '    `dist` = `distance(origin.left, origin.top)`\n\n'
+                                + '**Scene Table:**\n'
+                                + '    Row 1: Filter `\\*` | Delay `dist / speed` | Command `!sequence play sparkle --target \\${token.id}`\n'
+                                + '    Row 2: Filter `\\*` | Delay `dist / speed + 500` | Command `!sequence play fade-out --target \\${token.id}`\n\n'
+                                + '**Result:** Tokens near the origin sparkle first, with the burst rippling outward. 500ms after each sparkle, that token fades out.',
                         },
                         filters: {
                             title: 'Filters',
@@ -3302,12 +2864,12 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Per-token timing expressions',
                             version: '0.1',
                             details: 'Each row has a delay column containing a JavaScript expression evaluated per-token. The expression must return a number (milliseconds), INF/SKIP to exclude a token, or sync to wait for all participants before continuing.',
-                            body: () => 'Return: number (ms), INF/SKIP, or sync.' + html.paragraph('')
-                                + html.bold('Token Variables:') + ' ' + TOKEN_VAR_DEFS.filter(d => d.namespace === 'core').map(d => d.name).join(', ') + ', self, plus params/computed vars.' + html.br()
-                                + html.bold('Constants:') + ' ' + Object.values(EXT_CONSTANTS).filter(r => r.namespace === 'core').map(r => r.name).join(', '),
+                            body: () => 'Return: number (ms), INF/SKIP, or sync.\n\n'
+                                + '**Token Variables:** ' + TOKEN_VAR_DEFS.filter(d => d.namespace === 'core').map(d => d.name).join(', ') + ', self, plus params/computed vars.\n'
+                                + '**Constants:** ' + Object.values(EXT_CONSTANTS).filter(r => r.namespace === 'core').map(r => r.name).join(', '),
                             items: [
                                 { name: 'rank("attr")', description: 'Sort position of current token in filtered set', version: '0.1' },
-                                { name: 'distance(x, y)', description: 'Pixel distance from token to point (or ' + html.code('distance(orig)') + ')', version: '0.1' },
+                                { name: 'distance(x, y)', description: 'Pixel distance from token to point (or `distance(orig)`)', version: '0.1' },
                                 { name: 'propagate(dist, speed)', description: 'dist / speed', version: '0.1' },
                                 { name: 'stagger(rank, interval)', description: 'rank × interval', version: '0.1' },
                                 { name: 'rand(min, max)', description: 'Random number in range', version: '0.1' },
@@ -3324,8 +2886,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'How to write command templates in scene rows',
                             version: '0.1',
                             details: 'Each row in the scene table has a command column. Commands are API calls (starting with !) that fire when a token\'s delay expires. Template literals allow dynamic values computed per-token.',
-                            body: 'Use ' + html.code('${expr}') + ' for substitutions. Evaluated as JS template literals. All variables, params, computed variables, and functions are in scope.' + html.paragraph('')
-                                + 'Multiple commands per cell: put each on a new line in the handout cell. They fire simultaneously for that token.',
+                            body: 'Use `\\${expr}` for substitutions. Evaluated as JS template literals. All variables, params, computed variables, and functions are in scope.\n\nMultiple commands per cell: put each on a new line in the handout cell. They fire simultaneously for that token.',
                             items: [
                                 { name: '${token.id}', description: 'Current token ID', version: '0.1' },
                                 { name: '${token.left}', description: 'Token X position (TokenProxy)', version: '0.2' },
@@ -3344,7 +2905,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Saving and managing token groups',
                             version: '0.1',
                             details: 'Casts are saved token groups stored in [Cast] handouts. They persist across sessions and can assign tokens to named roles for filtering. Use --cast in run to use a saved cast instead of selection.',
-                            body: 'Stored in ' + html.code('[Cast] <name>') + ' handouts. Use ' + html.code('--cast <name>') + ' in run to load. Tokens default to selected if no --cast/--page/--id is given.',
+                            body: 'Stored in `[Cast] <name>` handouts. Use `--cast <name>` in run to load. Tokens default to selected if no --cast/--page/--id is given.',
                             items: [
                                 { name: 'cast add <name> [--role R]', syntax: '!choreograph cast add <name> [--role R]', description: 'Add selected tokens to cast (optionally to a role)', version: '0.1' },
                                 { name: 'cast remove <name> [--role R]', syntax: '!choreograph cast remove <name> [--role R]', description: 'Remove tokens from cast', version: '0.1' },
@@ -3371,8 +2932,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Waiting for participants to complete',
                             version: '0.1',
                             details: 'Sync creates coordination points within a scene. When a row uses sync as its delay, execution pauses until all registered sync participants (like Sequence animations) report completion. This gates phase transitions on actual animation end rather than estimated timing.',
-                            body: 'Use ' + html.code('sync') + ' as a delay value. Waits for all registered sync participants to signal completion before continuing.' + html.paragraph('')
-                                + 'Useful for gating recursion or phase transitions on animation completion.',
+                            body: 'Use `sync` as a delay value. Waits for all registered sync participants to signal completion before continuing.\n\nUseful for gating recursion or phase transitions on animation completion.',
                         },
                         loop: {
                             title: 'Looping',
@@ -3391,7 +2951,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Recursion and scene composition',
                             version: '0.1',
                             details: 'Scenes can spawn other scenes (or themselves) via command templates. This enables recursive patterns like chain-lightning that bounce between targets. Depth is capped (default 10) to prevent infinite recursion.',
-                            body: 'At depth 0, child spawns are skipped. Children cannot use ' + html.code('--loop') + '.',
+                            body: 'At depth 0, child spawns are skipped. Children cannot use `--loop`.',
                             items: [
                                 { name: 'self', description: 'Resolves to current scene name', version: '0.1' },
                                 { name: '--parent', description: 'Auto-injected parent scene reference', version: '0.1' },
@@ -3403,15 +2963,14 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Conditional row execution',
                             version: '1.0.0',
                             details: 'The when field is a JavaScript expression evaluated per-token. If it returns falsy, the row is skipped for that token. Combined with recursion, this enables patterns like "keep jumping until jumps runs out."',
-                            body: 'Add a ' + html.code('when') + ' expression to a scene row. The row only executes for tokens where the expression evaluates to truthy.' + html.paragraph('')
-                                + 'Example: ' + html.code('jumps > 0 && next'),
+                            body: 'Add a `when` expression to a scene row. The row only executes for tokens where the expression evaluates to truthy.\n\nExample: `jumps > 0 && next`',
                         },
                         params: {
                             title: 'Parameter Types',
                             description: 'Types available for scene parameters',
                             version: '0.1',
                             details: 'Parameters are defined in the scene handout\'s Parameter table. They configure the scene at run time via --flags or the guide wizard. Type determines how values are resolved (e.g. token IDs are looked up as Roll20 objects).',
-                            body: 'Append [] for arrays (e.g. token[], number[]). ' + html.code('cast') + ' is built-in (token[], default: selected). Params without defaults are required at run time.',
+                            body: 'Append [] for arrays (e.g. token[], number[]). `cast` is built-in (token[], default: selected). Params without defaults are required at run time.',
                             items: [
                                 { name: 'number', description: 'Numeric value', version: '0.1' },
                                 { name: 'text', description: 'String value', version: '0.1' },
@@ -3435,7 +2994,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Dot-notation access to token properties',
                             version: '0.2',
                             details: 'TokenProxy wraps Roll20 graphic objects so you can access properties with dot notation in expressions instead of calling get(). Token parameters (type token) are also TokenProxy instances, so param.left works.',
-                            body: 'The ' + html.code('token') + ' object provides access to all token properties via dot notation. Token parameters (type ' + html.code('token') + ') are also TokenProxy instances.',
+                            body: 'The `token` object provides access to all token properties via dot notation. Token parameters (type `token`) are also TokenProxy instances.',
                             items: [
                                 { name: 'token.id', description: 'Token ID', version: '0.2' },
                                 { name: 'token.name', description: 'Token display name', version: '0.2' },
@@ -3452,7 +3011,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Chainable array operations on token sets',
                             version: '0.2',
                             details: 'Arrays returned by actors(), role(), cast(), and other set-returning functions are enriched with LINQ-style methods for filtering, sorting, and projecting without manual iteration.',
-                            body: 'Arrays returned by ' + html.code('actors()') + ', ' + html.code('role()') + ', etc. have extra methods:',
+                            body: 'Arrays returned by `actors()`, `role()`, etc. have extra methods:',
                             items: [
                                 { name: '.from(other)', description: 'Intersection — keep only items in both arrays', version: '0.2' },
                                 { name: '.without(other)', description: 'Exclusion — remove items in other', version: '0.2' },
@@ -3468,7 +3027,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             description: 'Ad-hoc role assignment and filtering',
                             version: '1.0.0',
                             details: 'Roles are lightweight labels assigned to tokens at run time. Unlike casts (which are persisted), roles exist only for the duration of a scene run. They enable patterns like "caster hits targets" without pre-configuring casts.',
-                            body: 'Assign tokens to roles at runtime with ' + html.code('--role <name> <ids>') + '. Filter with ' + html.code('role=X') + '. Access in expressions with ' + html.code('role("name")') + ' and ' + html.code('role_ids("name")') + '.',
+                            body: 'Assign tokens to roles at runtime with `--role <name> <ids>`. Filter with `role=X`. Access in expressions with `role("name")` and `role_ids("name")`.',
                             items: [
                                 { name: '--role <name> <ids...>', description: 'Assign tokens to a role at run time', version: '1.0.0' },
                                 { name: 'role("name")', description: 'Get tokens in role (returns enriched array)', version: '1.0.0' },
@@ -3479,13 +3038,13 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             title: 'Troubleshooting',
                             description: 'Common issues and error behavior',
                             version: '0.1',
-                            body: html.bold('Expression errors') + ' — If a delay or variable expression throws, that token is skipped for that row. An error is whispered to the GM with the expression and error message.' + html.paragraph('')
-                                + html.bold('Empty filter match') + ' — If a filter matches no tokens, the row does nothing (no error). This is intentional for conditional scenes.' + html.paragraph('')
-                                + html.bold('Missing parameters') + ' — If a required parameter (no default) is not provided at run time, the scene aborts with an error listing the missing params.' + html.paragraph('')
-                                + html.bold('Depth limit reached') + ' — At depth 0, any ' + html.code('!choreograph run') + ' commands in the scene table are silently skipped. Increase ' + html.code('--depth') + ' if legitimate recursion is being cut short.' + html.paragraph('')
-                                + html.bold('Sync timeout') + ' — If a sync participant doesn\'t signal completion within the timeout (default 30s), the scene continues without it. Adjust with ' + html.code('--sync-timeout') + '.' + html.paragraph('')
-                                + html.bold('Scene not found') + ' — Check that the handout is named exactly ' + html.code('[Scene] <name>') + ' and hasn\'t been renamed. Use ' + html.code('!choreograph list') + ' to see available scenes.' + html.paragraph('')
-                                + html.bold('Tokens not moving/animating') + ' — Choreograph only fires commands; it doesn\'t move tokens itself. Make sure the target script (e.g. Sequence) is installed and the command syntax is correct.',
+                            body: '**Expression errors** — If a delay or variable expression throws, that token is skipped for that row. An error is whispered to the GM with the expression and error message.\n\n'
+                                + '**Empty filter match** — If a filter matches no tokens, the row does nothing (no error). This is intentional for conditional scenes.\n\n'
+                                + '**Missing parameters** — If a required parameter (no default) is not provided at run time, the scene aborts with an error listing the missing params.\n\n'
+                                + '**Depth limit reached** — At depth 0, any `!choreograph run` commands in the scene table are silently skipped. Increase `--depth` if legitimate recursion is being cut short.\n\n'
+                                + '**Sync timeout** — If a sync participant doesn\'t signal completion within the timeout (default 30s), the scene continues without it. Adjust with `--sync-timeout`.\n\n'
+                                + '**Scene not found** — Check that the handout is named exactly `[Scene] <name>` and hasn\'t been renamed. Use `!choreograph list` to see available scenes.\n\n'
+                                + '**Tokens not moving/animating** — Choreograph only fires commands; it doesn\'t move tokens itself. Make sure the target script (e.g. Sequence) is installed and the command syntax is correct.',
                         },
                         api: {
                             title: 'Extension API',
@@ -3502,7 +3061,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                                 { name: 'registerSyncParticipant(src, struct)', syntax: 'Choreograph.registerSyncParticipant(src, struct)', description: 'Register for sync coordination', version: '0.1' },
                                 { name: 'generateExtensionHandout(src, opts)', syntax: 'Choreograph.generateExtensionHandout(src, opts)', description: 'Generate developer docs handout', version: '0.1' },
                             ],
-                            body: 'Run ' + html.code('!choreograph gen-dev-docs') + ' for the full developer guide.',
+                            body: 'Run `!choreograph gen-dev-docs` for the full developer guide.',
                         },
                         func: {
                             title: 'Registered Functions',
@@ -3510,15 +3069,15 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             version: '0.1',
                             body: () => {
                                 const regs = Object.values(EXT_FUNCTIONS);
-                                if (regs.length === 0) return html.italic('No functions registered.');
+                                if (regs.length === 0) return '*No functions registered.*';
                                 let out = '';
                                 regs.forEach(r => {
-                                    const ns = r.namespace === 'core' ? '' : html.bold(html.escape(r.namespace) + '.');
+                                    const ns = r.namespace === 'core' ? '' : '**' + r.namespace + '.**';
                                     const argList = (r.args || []).map(a => a.name).join(', ');
                                     const purity = r.pure === false ? ' [unstable]' : '';
-                                    out += ns + html.bold(html.escape(r.name) + '(' + argList + ')') + ' → ' + html.italic(html.escape(r.returns || 'any')) + purity + html.br();
-                                    if (r.description) out += html.escape(r.description) + html.br();
-                                    out += html.br();
+                                    out += ns + '**' + r.name + '(' + argList + ')** → *' + (r.returns || 'any') + '*' + purity + '\n';
+                                    if (r.description) out += r.description + '\n';
+                                    out += '\n';
                                 });
                                 return out;
                             },
@@ -3529,13 +3088,13 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             version: '0.1',
                             body: () => {
                                 const regs = Object.values(EXT_TOKEN_VARS);
-                                if (regs.length === 0) return html.italic('No token variables registered.');
+                                if (regs.length === 0) return '*No token variables registered.*';
                                 let out = '';
                                 regs.forEach(r => {
-                                    const ns = r.namespace === 'core' ? '' : html.bold(html.escape(r.namespace) + '.');
-                                    out += ns + html.bold(html.escape(r.name));
-                                    if (r.description) out += ' — ' + html.escape(r.description);
-                                    out += html.br();
+                                    const ns = r.namespace === 'core' ? '' : '**' + r.namespace + '.**';
+                                    out += ns + '**' + r.name + '**';
+                                    if (r.description) out += ' — ' + r.description;
+                                    out += '\n';
                                 });
                                 return out;
                             },
@@ -3546,13 +3105,13 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                             version: '0.1',
                             body: () => {
                                 const regs = Object.values(EXT_CONSTANTS);
-                                if (regs.length === 0) return html.italic('No constants registered.');
+                                if (regs.length === 0) return '*No constants registered.*';
                                 let out = '';
                                 regs.forEach(r => {
-                                    const ns = r.namespace === 'core' ? '' : html.bold(html.escape(r.namespace) + '.');
-                                    out += ns + html.bold(html.escape(r.name)) + ' = ' + html.code(html.escape(String(r.value)));
-                                    if (r.description) out += ' — ' + html.escape(r.description);
-                                    out += html.br();
+                                    const ns = r.namespace === 'core' ? '' : '**' + r.namespace + '.**';
+                                    out += ns + '**' + r.name + '** = `' + String(r.value) + '`';
+                                    if (r.description) out += ' — ' + r.description;
+                                    out += '\n';
                                 });
                                 return out;
                             },
@@ -3597,100 +3156,6 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
                         });
                         handleInput(syntheticMsg);
                     }
-                },
-            });
-
-            // Adapt guide steps: Choreograph uses `role`, Tutorial uses `select`+`as`+`role`
-            const adaptGuide = (guide) => {
-                if (!guide) return [];
-                return guide.map(step => {
-                    const adapted = Object.assign({}, step);
-                    if (step.role && !step.select) {
-                        adapted.select = (step.max === 1 && step.min === 1) ? 'token' : 'tokens';
-                        adapted.as = step.role;
-                    }
-                    // Adapt onContinue signature: Choreograph's is (tokens, roles), Tutorial's is (ctx)
-                    if (step.onContinue) {
-                        const origFn = step.onContinue;
-                        adapted.onContinue = (ctx) => origFn(ctx.selected, ctx.selections._roles || {});
-                    }
-                    return adapted;
-                });
-            };
-
-            ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
-                name: 'fireball',
-                description: 'Fire explosions propagate outward from the leftmost token. Shows stagger + rank + FX.',
-                guide: adaptGuide([
-                    { prompt: 'Select 3+ tokens to be hit by the fireball. Arrange them in a rough cluster.', role: 'cast', min: 3 },
-                ]),
-                scene: {
-                    notes: 'Fire explosions staggered by position — looks like a spreading fireball.',
-                    params: [
-                        { name: 'interval', type: 'number', default: '200', description: 'Ms between each explosion' },
-                    ],
-                    variables: [],
-                    rows: [
-                        { filter: '*', delay: 'stagger(rank("left"), interval)', commands: ['!choreograph fx explode-fire ${token.left} ${token.top} ${token.pageid}'], notes: 'Staggered explosions' },
-                    ],
-                },
-            });
-
-            ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
-                name: 'arcane-barrage',
-                description: 'Magic beams fire from a caster to each target in sequence. Shows multi-role guide + fxbetween + cast().',
-                guide: adaptGuide([
-                    { prompt: 'Select the caster token (where lightning originates).', role: 'caster', min: 1, max: 1 },
-                    { prompt: 'Select 2+ target tokens to be struck.', role: 'targets', min: 2 },
-                ]),
-                scene: {
-                    notes: 'Lightning beam jumps from caster to each target in sequence.',
-                    roles: [
-                        { name: 'caster', min: 1, max: 1 },
-                        { name: 'targets', min: 2 },
-                    ],
-                    params: [
-                        { name: 'interval', type: 'number', default: '300', description: 'Ms between each bolt' },
-                    ],
-                    variables: [],
-                    rows: [
-                        { filter: 'role=targets', delay: 'stagger(rank("left"), interval)', commands: [
-                            '!choreograph fxbetween beam-magic ${role("caster").first().left} ${role("caster").first().top} ${token.left} ${token.top} ${token.pageid}',
-                            '!choreograph fx burst-magic ${token.left} ${token.top} ${token.pageid}',
-                        ], notes: 'Beam from caster + burst at target' },
-                    ],
-                },
-            });
-
-            ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
-                name: 'chain-lightning',
-                description: 'Lightning chains from caster to nearest target, then jumps to the next. Shows when + --role recursion.',
-                guide: adaptGuide([
-                    { prompt: 'Select the caster token (starting point, never targeted).', role: 'caster', min: 1, max: 1 },
-                    { prompt: 'Select 3+ targets for the lightning to chain through.', role: 'targets', min: 3, onContinue: (tokens, roles) => { if (tokens.includes(roles.caster[0])) return 'Caster token cannot be selected as a target'; } },
-                ]),
-                scene: {
-                    notes: 'Recursive chain: beam from conduit to nearest other target, burst, recurse with that target as new conduit.',
-                    roles: [
-                        { name: 'caster', min: 1, max: 1 },
-                        { name: 'targets', min: 3 },
-                    ],
-                    params: [
-                        { name: 'speed', type: 'number', default: '2', description: 'Travel speed (px/ms)' },
-                        { name: 'jumps', type: 'number', default: '5', description: 'Max jumps remaining' },
-                    ],
-                    variables: [
-                        { name: 'next', expression: 'role("targets").without(role("caster")).first()' },
-                    ],
-                    rows: [
-                        { filter: 'role=caster', delay: '0', when: 'jumps > 0 && next', commands: [
-                            '!choreograph fxbetween beam-magic ${token.left} ${token.top} ${next.left} ${next.top} ${token.pageid}',
-                        ], notes: 'Beam to next target' },
-                        { filter: 'role=caster', delay: 'Math.round(distance(next.left, next.top) / speed)', when: 'jumps > 0 && next', commands: [
-                            '!choreograph fx burst-magic ${next.left} ${next.top} ${token.pageid}',
-                            '!choreograph run ${self} --role caster ${next.id} --role targets ${role_ids("targets").join(" ")} --speed ${speed} --jumps ${jumps - 1}',
-                        ], notes: 'Burst + recurse with next as conduit' },
-                    ],
                 },
             });
         };
@@ -3853,9 +3318,6 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         */
 
         log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
-
-        // Signal extensions that Choreograph is ready
-        sendChat('', `!${SCRIPT_NAME.toLowerCase()}-ready`, null, { noarchive: true });
     };
 
     const registerEventHandlers = () => {
@@ -3887,7 +3349,7 @@ if (typeof Choreograph !== 'undefined') doRegister();`);
         registerConstant,
         registerLifecycleHook,
         registerSyncParticipant,
-        registerExample,
+
         generateExtensionHandout,
         // Introspection
         getFunction:      (name) => EXT_FUNCTIONS[name] || null,
