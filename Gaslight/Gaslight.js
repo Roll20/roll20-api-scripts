@@ -1225,7 +1225,39 @@ var Gaslight = Gaslight || (() => {
         }
 
         tokens.forEach(function(t) { setLinkId(t, linkId); });
-        reply(msg, 'Link', tokens.length + ' token(s) linked as "' + linkId + '".');
+
+        // Re-establish links if tokens are in an active group
+        var s = state[SCRIPT_NAME];
+        var relinkCount = 0;
+        Object.entries(s.activeGroups).forEach(function(entry) {
+            var groupName = entry[0], active = entry[1];
+            var allPageIds = [active.masterPageId].concat(Object.values(active.playerPages).map(function(p) { return p.pageId; }));
+            var affectedTokens = tokens.filter(function(t) { return allPageIds.indexOf(t.get('_pageid')) !== -1; });
+            if (affectedTokens.length === 0) return;
+
+            // Re-resolve links for each player page
+            var newLinks = [];
+            Object.values(active.playerPages).forEach(function(pInfo) {
+                var links = resolveLinks(active.masterPageId, pInfo.pageId);
+                links.forEach(function(l) {
+                    if (!l.target) return;
+                    // Only include links involving the newly-linked tokens
+                    var srcId = l.source.get('id'), tgtId = l.target.get('id');
+                    if (affectedTokens.some(function(t) { return t.get('id') === srcId || t.get('id') === tgtId; })) {
+                        newLinks.push(l);
+                    }
+                });
+            });
+
+            if (newLinks.length > 0) {
+                var groupInfo = { master: active.masterPageId, players: active.playerPages };
+                establishLinks(groupName, groupInfo, newLinks);
+                relinkCount += newLinks.length;
+            }
+        });
+
+        var extra = relinkCount > 0 ? ' ' + relinkCount + ' link(s) re-established.' : '';
+        reply(msg, 'Link', tokens.length + ' token(s) linked as "' + linkId + '".' + extra);
     };
 
     const doUnlink = (msg, args) => {
