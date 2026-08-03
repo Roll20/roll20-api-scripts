@@ -332,6 +332,22 @@ Available via `ScriptKit.html`:
 | `list(items)` / `orderedList(items)` | `<ul>` / `<ol>` |
 | `handoutLink(text, id)` | Journal link |
 | `newBadge()` / `deprecatedBadge()` | Version badges |
+| `pingObjBtn(target, opts?)` | Clickable text button that pings an object's location |
+| `pingObjImg(target, opts?)` | Clickable token image that pings an object's location |
+
+**`pingObjBtn(target, opts)`** — Renders a styled button that runs `!scriptkit ping` when clicked.
+- `target` — Object ID string, or `{ pageid, x, y }`
+- `opts.color` — Ping color
+- `opts.moveAll` — Move all players' cameras
+- `opts.visibleTo` — Player ID(s) as string (comma-delimited) or array
+- `opts.label` — Button text (default: the object ID)
+- `opts.style` — CSS style overrides
+
+**`pingObjImg(target, opts)`** — Renders a token image thumbnail that pings when clicked. Falls back to `pingObjBtn` if no image.
+- Inherits all `pingObjBtn` options, plus:
+- `opts.imgsrc` — Token image URL (auto-converted to `/thumb.` for chat)
+- `opts.width` / `opts.height` — Thumbnail size in pixels (default: 40×40)
+- `opts.label` — Shown below the image as `<small>` text
 
 ### Query Type Coercion
 
@@ -423,6 +439,22 @@ onEnter: (ctx) => {
 
 **`ScriptKit.clearAnnotations()`** — Remove all active annotations manually.
 
+**`ScriptKit.pingCommand(target, opts)`** — Build a `!scriptkit ping` command string (for embedding in chat messages).
+- `target` — Object ID string, or `{ pageid, x, y }`
+- `opts.color` — Ping color
+- `opts.moveAll` — Move all players' cameras (flag present = true)
+- `opts.visibleTo` — Player ID(s) as comma-delimited string or array
+
+```js
+// Build a ping command for a token
+var cmd = ScriptKit.pingCommand(token.get('id'), { color: '#ff0000', moveAll: true });
+// → "!scriptkit ping -ABC123xyz --color #ff0000 --moveAll"
+
+// Build a ping command for coordinates
+var cmd = ScriptKit.pingCommand({ pageid: pageId, x: 350, y: 700 });
+// → "!scriptkit ping -PageId123 350 700"
+```
+
 ### MOTD (Message of the Day)
 
 Display a random tip to the GM on sandbox startup. Helps with feature discoverability.
@@ -483,6 +515,13 @@ const onExtensionRegistered = () => {
 **`ScriptKit.updateHandoutImmediately(scriptName, mode)`** — Regenerate synchronously, only if exists.
 
 ## Changelog
+
+### v1.2.0
+- Added `!scriptkit ping` chat command — pings an object's location by ID or by pageId/x/y coordinates
+- Added `ScriptKit.pingCommand(target, opts)` — builds a ping command string for embedding in chat links
+- Added `ScriptKit.html.pingObjBtn(target, opts)` — clickable text button that pings on click
+- Added `ScriptKit.html.pingObjImg(target, opts)` — clickable token image thumbnail that pings on click
+- `visibleTo` option now accepts an array of player IDs or a comma-delimited string
 
 ### v1.1.0
 - Prevent double-registration (same script calling `register()` twice is now a no-op)
