@@ -4121,6 +4121,7 @@ var Gaslight = Gaslight || (() => {
                       var s = state[SCRIPT_NAME];
                       if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
                       if (!s.hud.initiative) return 'Initiative HUD is disabled. Run `!gaslight hud init on` to enable it.';
+                      if (!s.hud.reticle) return 'Turn reticle is disabled. Run `!gaslight hud reticle on` to enable it.';
                   }
                 },
                 { prompt: 'Before we begin, clear any existing entries from the turn order. You can do this from Roll20\'s Turn Tracker panel (⚙).\n\nClear the turn order and click Continue.',
@@ -4299,7 +4300,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', arrowX, center.y + 80, { fromX: arrowX, fromY: center.y + 10, color: '#00ccff' });
                   }
                 },
-                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.\n\n• **Drag up/down** on the reticle to offset it from the token\n• **Resize** the reticle to change its proportional size\n• **Rotate** it to add a rotation offset\n• **Delete** the reticle to turn it off (or `!gaslight hud reticle off`)',
+                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.reticleData;
@@ -4311,12 +4312,50 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.ping(pageId, x, y, { color: 'transparent', moveAll: true, player: ctx.player });
                   }
                 },
-                { prompt: '**Customization — Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nTry resizing one of the pins.' },
-                { prompt: '**Customization — Text:**\n\nThe initiative value text next to each pin can be customized:\n\n• Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 — all will update to match\n• **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\n• **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.' },
-                { prompt: '**The Frame — Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame — some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins.' },
+                { prompt: '**The Frame — Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame — some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins. HUD elements are located on the foreground layer, so you need to go to that layer to adjust them.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var pageId = getHudPageId();
+                      if (pageId && s.hud.initData && s.hud.initData.frameId) {
+                          var obj = getObj('pathv2', s.hud.initData.frameId);
+                          if (obj) ScriptKit.ping(pageId, obj.get('x'), obj.get('y'), { player: ctx.player, color: '#4fc3f7', moveAll: true });
+                      }
+                  }
+                },
                 { prompt: '**The Frame — Diamond position:**\n\nYou can drag the **diamond highlight up or down** within the frame to shift where the current turn is displayed. Pins above and below will adjust accordingly.\n\nTry moving the diamond to a different position in the frame.' },
                 { prompt: '**The Frame — Other customization:**\n\nThe frame supports additional tweaks:\n\n• **Drag** the frame to move the entire HUD\n• **Resize horizontally** to adjust padding between pins\n• Change the frame\'s **stroke color** or **fill** directly in Roll20\'s shape properties\n\nThe **diamond** can also be customized:\n\n• Change its **color**, **stroke width**, **fill**, or **rotation** directly in Roll20\'s shape properties\n\nThe HUD remembers all of these choices.' },
-                { prompt: '**Reticle — Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45° (so the diamond\'s 45° rotation becomes the reticle\'s 90°, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.' },
+                { prompt: '**Reticle — Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45° (so the diamond\'s 45° rotation becomes the reticle\'s 90°, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.\n\nThe reticle can also have its positional offset from the token adjusted and you can delete it to toggle it off.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var pageId = getHudPageId();
+                      if (pageId && s.hud.reticleData && s.hud.reticleData.id) {
+                          var obj = getObj('pathv2', s.hud.reticleData.id);
+                          if (obj) ScriptKit.ping(pageId, obj.get('x'), obj.get('y'), { player: ctx.player, color: '#ff6600', moveAll: true });
+                      }
+                  }
+                },
+                { prompt: '**Customization — Pin Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nYou can resize pins by clicking the pin, selecting "Edit", then going to the Customization tab. Try resizing one of the pins.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var pageId = getHudPageId();
+                      if (pageId && s.hud.initData && s.hud.initData.entries && s.hud.initData.entries.length > 0) {
+                          var pinId = s.hud.initData.entries[0].tokenId;
+                          var pin = pinId ? getObj('pin', pinId) : null;
+                          if (pin) ScriptKit.ping(pageId, pin.get('x'), pin.get('y'), { player: ctx.player, color: '#4fc3f7', moveAll: true });
+                      }
+                  }
+                },
+                { prompt: '**Customization — HUD Text:**\n\nThe initiative value text next to each pin can be customized:\n\n• Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 — all will update to match\n• **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\n• **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var pageId = getHudPageId();
+                      if (pageId && s.hud.initData && s.hud.initData.entries && s.hud.initData.entries.length > 0) {
+                          var textId = s.hud.initData.entries[0].textId;
+                          var txt = textId ? getObj('text', textId) : null;
+                          if (txt) ScriptKit.ping(pageId, txt.get('left'), txt.get('top'), { player: ctx.player, color: '#ff00ff', moveAll: true });
+                      }
+                  }
+                },
                 { prompt: '**Gestures — Removing:**\n\nDelete a HUD pin to remove that combatant from initiative. Try deleting one now.' },
                 { prompt: '**Clearing initiative:**\n\nNow clear the rest of the initiative — delete the remaining HUD pins or clear initiative from Roll20\'s Turn Tracker panel.\n\nClear initiative before continuing.',
                   when: () => {
@@ -4375,11 +4414,19 @@ var Gaslight = Gaslight || (() => {
                   onContinue: () => {
                       var s = state[SCRIPT_NAME];
                       if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
+                      if (!s.hud.view) return 'View HUD is disabled. Run `!gaslight hud view on` to enable it.';
                   }
                 },
                 { prompt: '**Try auto-relay:**\n\nSelect a **staged token on the master page** and run any command against it (e.g. `!token-mod --set bar1_value|10` if you have TokenMod, or any other API command that targets tokens).\n\nThen navigate to a player\'s page — you\'ll see the command affected their copy too. That\'s auto-relay: any command referencing a master-page token ID automatically propagates to all player pages.' },
-                { prompt: '**Enable the View HUD:**\n\nThe view HUD shows the current relay status as text on the master page. If it\'s not already visible, enable it:\n\n`!gaslight hud view on`\n\nYou\'ll see a status label appear on the master page (e.g. "🟢 RELAY: ALL").',
-                  ...ScriptKit.waitForCommand('!gaslight hud view')
+                { prompt: '**The View HUD** shows the current relay status on the master page. It updates live as you change the relay target.',
+                  onEnter: (ctx) => {
+                      var s = state[SCRIPT_NAME];
+                      var pageId = getHudPageId();
+                      if (pageId && s.hud.viewId) {
+                          var viewObj = getObj('text', s.hud.viewId);
+                          if (viewObj) ScriptKit.ping(pageId, viewObj.get('left'), viewObj.get('top'), { player: ctx.player, color: '#00ff00', moveAll: true });
+                      }
+                  }
                 },
                 { prompt: '**Disable relay:**\n\nBy default, the view is set to `all` — commands relay to every player page. Let\'s turn it off first to see the difference:\n\n`!gaslight view off`\n\nNotice the View HUD updates to show relay is disabled.',
                   ...ScriptKit.waitForCommand('!gaslight view')
