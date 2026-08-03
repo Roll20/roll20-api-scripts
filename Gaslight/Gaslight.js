@@ -3857,7 +3857,10 @@ var Gaslight = Gaslight || (() => {
                         'Fix: Custom turns properly deduplicated using immutable key matching',
                         'Fix: pr=0 no longer displays as empty text',
                         'Fix: Batch additions no longer lost due to turn order race condition (debounced processing)',
+                        'Fix: Fetch compProp resolution returns token gmnotes value before character attribute fallback',
                         'Tutorial: guide pings on HUD elements and customization steps',
+                        'QoL: warnings/errors show clickable token images that ping location (requires ScriptKit 1.2.0)',
+                        'QoL: `!gaslight test` output condensed to summary + warnings only',
                     ]},
                     { version: '2.2.0', changes: [
                         'Initiative HUD: pin-based turn tracker with gesture controls (swipe, drag-to-reorder, delete)',

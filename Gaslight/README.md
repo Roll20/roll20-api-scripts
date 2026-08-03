@@ -297,7 +297,10 @@ Applied script examples (with handout generation):
 - Fix: Custom turns properly deduplicated (immutable key matching)
 - Fix: pr=0 no longer displays as empty text in HUD
 - Fix: Batch initiative additions no longer lost due to race condition (debounced processing)
+- Fix: Fetch compProp resolution now correctly returns token gmnotes value before character attribute fallback
 - Tutorial: guide pings on HUD elements and customization step transitions
+- QoL: warnings/errors show clickable token images that ping the token's location (requires ScriptKit 1.2.0)
+- QoL: `!gaslight test` output condensed to summary + warnings only
 
 ### v2.2.0
 - Initiative HUD: pin-based turn tracker with gesture controls
