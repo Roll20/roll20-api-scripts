@@ -44,6 +44,7 @@ var Gaslight = Gaslight || (() => {
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
     const GLS_TAG        = '[GLS]';
+    const ANCHOR_PROPS   = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
 
     // =========================================================================
     // Helpers
@@ -790,13 +791,12 @@ var Gaslight = Gaslight || (() => {
             if (syncProps === '') return;
 
             // Determine which props go to Anchor vs Mirror
-            var allAnchorProps = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
             var needsAnchor = true;
-            var anchorComponents = null; // null = use allAnchorProps as default
+            var anchorComponents = null; // null = use ANCHOR_PROPS as default
             var mirrorProps = null; // null = all non-anchor
             if (Array.isArray(syncProps)) {
-                var anchorRequested = syncProps.filter(function(p) { return allAnchorProps.indexOf(p) !== -1; });
-                var mirrorRequested = syncProps.filter(function(p) { return allAnchorProps.indexOf(p) === -1; });
+                var anchorRequested = syncProps.filter(function(p) { return ANCHOR_PROPS.indexOf(p) !== -1; });
+                var mirrorRequested = syncProps.filter(function(p) { return ANCHOR_PROPS.indexOf(p) === -1; });
                 needsAnchor = anchorRequested.length > 0;
                 // Pass specific components to Anchor if not the full default set
                 if (needsAnchor) {
@@ -808,7 +808,7 @@ var Gaslight = Gaslight || (() => {
             // Always pass explicit components — never let Anchor default to ALL_COMPONENTS
             if (!anchorComponents) {
                 anchorComponents = {};
-                allAnchorProps.forEach(function(p) { anchorComponents[p] = true; });
+                ANCHOR_PROPS.forEach(function(p) { anchorComponents[p] = true; });
             }
 
             // Set up Anchor links (spatial sync)
@@ -864,7 +864,7 @@ var Gaslight = Gaslight || (() => {
             if (typeof Mirror !== 'undefined' && mirrorProps !== false) {
                 if (mirrorProps === null) {
                     // Default: sync all minus anchor and sight (sight stripped from children)
-                    var mirrorExcludes = anchorComponents ? Object.keys(anchorComponents) : allAnchorProps;
+                    var mirrorExcludes = anchorComponents ? Object.keys(anchorComponents) : ANCHOR_PROPS;
                     // Also exclude sight unless explicitly included in gaslight_sync
                     if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS && Mirror.PROP_GROUPS.sight) {
                         mirrorExcludes = mirrorExcludes.concat(Mirror.PROP_GROUPS.sight);
@@ -1340,26 +1340,7 @@ var Gaslight = Gaslight || (() => {
             });
 
             // Determine if this is a parent token
-            var isParent = false;
-            if (activeGroup) {
-                if (tokenPageId === activeGroup.masterPageId) {
-                    isParent = true;
-                } else {
-                    var controlledBy = t.get('controlledby') || '';
-                    if (!controlledBy) {
-                        var charId = t.get('represents');
-                        var character = charId ? getObj('character', charId) : null;
-                        if (character) controlledBy = character.get('controlledby') || '';
-                    }
-                    if (controlledBy) {
-                        var controllerIds = controlledBy.split(',').map(function(c) { return c.trim(); }).filter(Boolean);
-                        var playerEntry = Object.entries(activeGroup.playerPages).find(function(e) {
-                            return controllerIds.indexOf(e[0]) !== -1 && e[1].pageId === tokenPageId;
-                        });
-                        if (playerEntry) isParent = true;
-                    }
-                }
-            }
+            var isParent = isParentToken(t);
 
             if (isParent && activeGroup) {
                 // Parent unlink: dissolve the entire link group
@@ -1491,6 +1472,132 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Sync', 'Added [' + props.join(', ') + '] to sync on ' + tokens.length + ' ' + label + '(s).');
     };
 
+    /**
+     * Determine if a token is a "parent" in any active group.
+     * A parent is: on the master page, OR on a player page controlled by that player.
+     */
+    const isParentToken = (token) => {
+        var s = state[SCRIPT_NAME];
+        var tokenId = token.get('id');
+        var tokenPageId = token.get('_pageid');
+        var result = false;
+        Object.values(s.activeGroups).forEach(function(active) {
+            if (result) return;
+            var inGroup = active.linkedTokens[tokenId] || Object.values(active.linkedTokens).some(function(peers) { return peers.indexOf(tokenId) !== -1; });
+            if (!inGroup) return;
+            if (tokenPageId === active.masterPageId) { result = true; return; }
+            var controlledBy = token.get('controlledby') || '';
+            if (!controlledBy) {
+                var charId = token.get('represents');
+                var character = charId ? getObj('character', charId) : null;
+                if (character) controlledBy = character.get('controlledby') || '';
+            }
+            if (controlledBy) {
+                var controllerIds = controlledBy.split(',').map(function(c) { return c.trim(); }).filter(Boolean);
+                if (Object.entries(active.playerPages).some(function(e) { return controllerIds.indexOf(e[0]) !== -1 && e[1].pageId === tokenPageId; })) result = true;
+            }
+        });
+        return result;
+    };
+
+    /**
+     * Tear down and re-establish Anchor/Mirror links for tokens in active groups.
+     * Used after sync config changes (desync/sync) to apply immediately.
+     */
+    const rebuildLinksForTokens = (tokens) => {
+        var s = state[SCRIPT_NAME];
+        var affectedGroups = {};
+        tokens.forEach(function(t) {
+            var tokenId = t.get('id');
+            Object.entries(s.activeGroups).forEach(function(entry) {
+                var groupName = entry[0], active = entry[1];
+                if (active.linkedTokens[tokenId] || Object.values(active.linkedTokens).some(function(peers) { return peers.indexOf(tokenId) !== -1; })) {
+                    if (!affectedGroups[groupName]) affectedGroups[groupName] = new Set();
+                    var allIds = [tokenId].concat(active.linkedTokens[tokenId] || []);
+                    Object.entries(active.linkedTokens).forEach(function(e) {
+                        if (e[1].indexOf(tokenId) !== -1) { allIds.push(e[0]); allIds = allIds.concat(e[1]); }
+                    });
+                    allIds.forEach(function(id) { affectedGroups[groupName].add(id); });
+                }
+            });
+        });
+
+        Object.entries(affectedGroups).forEach(function(entry) {
+            var groupName = entry[0], ids = [...entry[1]];
+            var active = s.activeGroups[groupName];
+
+            // Tear down existing Anchor/Mirror for these tokens
+            if (typeof Anchor !== 'undefined') {
+                ids.forEach(function(id) { Anchor.unchainAnchorObjs(id); });
+                ids.forEach(function(id) { Anchor.removeAnchor(id); });
+            }
+            if (typeof Mirror !== 'undefined') {
+                Mirror.unchain(ids);
+                Mirror.unlink(ids);
+            }
+            // Remove from linkedTokens tracking
+            ids.forEach(function(id) { delete active.linkedTokens[id]; });
+            ids.forEach(function(id) {
+                Object.keys(active.linkedTokens).forEach(function(key) {
+                    var idx = active.linkedTokens[key].indexOf(id);
+                    if (idx !== -1) active.linkedTokens[key].splice(idx, 1);
+                });
+            });
+
+            // Re-resolve and re-establish
+            var groupInfo = { master: active.masterPageId, players: active.playerPages };
+            var newLinks = [];
+            Object.values(active.playerPages).forEach(function(pInfo) {
+                var links = resolveLinks(active.masterPageId, pInfo.pageId);
+                links.forEach(function(l) {
+                    if (!l.target) return;
+                    var srcId = l.source.get('id'), tgtId = l.target.get('id');
+                    if (ids.indexOf(srcId) !== -1 || ids.indexOf(tgtId) !== -1) {
+                        newLinks.push(l);
+                    }
+                });
+            });
+            if (newLinks.length > 0) establishLinks(groupName, groupInfo, newLinks);
+        });
+    };
+
+    /**
+     * Given tokens, find the master-page parent tokens in their link groups.
+     * gaslight_sync is read from the master token by establishLinks.
+     */
+    const getParentTokens = (tokens) => {
+        var s = state[SCRIPT_NAME];
+        var result = [];
+        var seen = new Set();
+        tokens.forEach(function(t) {
+            var tokenId = t.get('id');
+            var found = false;
+            Object.values(s.activeGroups).forEach(function(active) {
+                if (found) return;
+                var allIds = [tokenId].concat(active.linkedTokens[tokenId] || []);
+                Object.entries(active.linkedTokens).forEach(function(e) {
+                    if (e[1].indexOf(tokenId) !== -1) { allIds.push(e[0]); allIds = allIds.concat(e[1]); }
+                });
+                allIds = [...new Set(allIds)];
+                var masterToken = null;
+                allIds.forEach(function(id) {
+                    var obj = getObj('graphic', id);
+                    if (obj && obj.get('_pageid') === active.masterPageId) masterToken = obj;
+                });
+                if (masterToken && !seen.has(masterToken.get('id'))) {
+                    seen.add(masterToken.get('id'));
+                    result.push(masterToken);
+                    found = true;
+                }
+            });
+            if (!found && !seen.has(tokenId)) {
+                seen.add(tokenId);
+                result.push(t);
+            }
+        });
+        return result;
+    };
+
     const doDesync = (msg, args) => {
         var tokens = (msg.selected || []).map(function(s) { return getObj(s._type, s._id); }).filter(Boolean);
         if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) first.'); return; }
@@ -1521,20 +1628,52 @@ var Gaslight = Gaslight || (() => {
 
         // "all" — disable all syncing (set empty string = no sync)
         if (args[0].toLowerCase() === 'all') {
-            tokens.forEach(function(t) { setVal(t, ''); });
-            reply(msg, 'Desync', 'Disabled all syncing on ' + tokens.length + ' ' + label + '(s).' + (useDefault ? '' : ' Use <code>!gaslight sync reset</code> to restore.'));
+            var parentTokens = getParentTokens(tokens);
+            parentTokens.forEach(function(t) { setVal(t, ''); });
+            rebuildLinksForTokens(parentTokens);
+            reply(msg, 'Desync', 'Disabled all syncing on ' + parentTokens.length + ' ' + label + '(s).' + (useDefault ? '' : ' Use <code>!gaslight sync reset</code> to restore.'));
             return;
         }
 
         var props = args.join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
         var excludeProps = props.map(function(p) { return p.startsWith('!') ? p : '!' + p; });
-        tokens.forEach(function(t) {
-            var raw = getVal(t) || '';
-            var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-            excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
-            setVal(t, existing.join(', '));
-        });
-        reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + tokens.length + ' ' + label + '(s).');
+        var s = state[SCRIPT_NAME];
+
+        // Separate into parents and children
+        var parents = tokens.filter(isParentToken);
+        var children = tokens.filter(function(t) { return !isParentToken(t); });
+
+        // Parents: write config to master token and rebuild
+        if (parents.length > 0) {
+            var parentMasters = getParentTokens(parents);
+            parentMasters.forEach(function(t) {
+                var raw = getVal(t) || '';
+                var existing = raw.split(',').map(function(x) { return x.trim(); }).filter(Boolean);
+                excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
+                setVal(t, existing.join(', '));
+            });
+            rebuildLinksForTokens(parentMasters);
+        }
+
+        // Children: surgically remove sync for just those tokens
+        if (children.length > 0) {
+            var spatialToRemove = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) !== -1; });
+            var nonSpatialToRemove = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) === -1; });
+            children.forEach(function(t) {
+                var childId = t.get('id');
+                if (spatialToRemove.length > 0 && typeof Anchor !== 'undefined') {
+                    var components = {};
+                    spatialToRemove.forEach(function(p) { components[p] = true; });
+                    Anchor.untrackComponents(childId, components);
+                }
+                if (nonSpatialToRemove.length > 0 && typeof Mirror !== 'undefined') {
+                    Mirror.unchain([childId], nonSpatialToRemove);
+                }
+            });
+        }
+
+        var total = parents.length + children.length;
+        reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + total + ' ' + label + '(s).');
     };
 
     /**
