@@ -365,6 +365,21 @@ var Gaslight = Gaslight || (() => {
         return false;
     };
 
+    const formatMarketplaceError = (failures, retryCommand) => {
+        var failMsg = '<b>⚠️ ' + failures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
+        failures.forEach(function(f) {
+            failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
+                + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
+                + '<small>' + f.name + '</small></div>';
+        });
+        failMsg += '<br><br><b>To fix:</b><ol>'
+            + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets → Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
+            + '<li>Replace the token(s) on the master page with the library copy (drag from your library).</li>'
+            + '<li>Re-run <code>' + retryCommand + '</code> with the new token(s) selected.</li>'
+            + '</ol>';
+        return failMsg;
+    };
+
     /**
      * Stage a single token to target pages using 3-step logic.
      * Returns { cloned: number, failed: boolean, name: string, imgsrc: string }
@@ -1952,6 +1967,18 @@ var Gaslight = Gaslight || (() => {
             if (val !== 'on' && val !== 'off') { reply(msg, 'Error', 'Usage: !gaslight stage --default on|off'); return; }
             var tokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
             if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) representing characters.'); return; }
+
+            // Check for marketplace images when enabling
+            if (val === 'on') {
+                var marketplaceFailures = tokens.filter(function(t) {
+                    return !canCreateWithImgsrc(t.get('imgsrc'), t.get('_pageid'));
+                }).map(function(t) { return { name: t.get('name') || '(unnamed)', imgsrc: t.get('imgsrc') }; });
+                if (marketplaceFailures.length > 0) {
+                    reply(msg, 'Stage', formatMarketplaceError(marketplaceFailures, '!gaslight stage --default on'));
+                    return;
+                }
+            }
+
             var count = 0;
             tokens.forEach(function(t) {
                 var charId = t.get('represents');
@@ -2080,18 +2107,7 @@ var Gaslight = Gaslight || (() => {
         }
 
         if (marketplaceFailures.length > 0) {
-            var failMsg = '<b>⚠️ ' + marketplaceFailures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
-            marketplaceFailures.forEach(function(f) {
-                failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
-                    + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
-                    + '<small>' + f.name + '</small></div>';
-            });
-            failMsg += '<br><br><b>To fix:</b><ol>'
-                + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets → Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
-                + '<li>Replace the token(s) on the master page with the library copy (drag from your library).</li>'
-                + '<li>Re-run <code>!gaslight stage</code> with the new token(s) selected.</li>'
-                + '</ol>';
-            reply(msg, 'Stage', failMsg);
+            reply(msg, 'Stage', formatMarketplaceError(marketplaceFailures, '!gaslight stage'));
         }
     };
 
