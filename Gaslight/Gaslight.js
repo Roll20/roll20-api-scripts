@@ -367,11 +367,17 @@ var Gaslight = Gaslight || (() => {
     };
 
     const formatMarketplaceError = (failures, retryCommand) => {
-        var failMsg = '<b>⚠️ ' + failures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
+        var failMsg = '<b>⚠️ ' + failures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br>';
+        if (failures.some(function(f) { return f.id; }) && typeof ScriptKit !== 'undefined') failMsg += '<small><i>Click a token image to ping its location.</i></small>';
+        failMsg += '<br>';
         failures.forEach(function(f) {
-            failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
-                + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
-                + '<small>' + f.name + '</small></div>';
+            if (f.id && typeof ScriptKit !== 'undefined') {
+                failMsg += ScriptKit.html.pingObjImg(f.id, { imgsrc: f.imgsrc, label: f.name, moveAll: true });
+            } else {
+                failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
+                    + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
+                    + '<small>' + f.name + '</small></div>';
+            }
         });
         failMsg += '<br><br><b>To fix:</b><ol>'
             + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets → Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
@@ -383,12 +389,12 @@ var Gaslight = Gaslight || (() => {
 
     /**
      * Stage a single token to target pages using 3-step logic.
-     * Returns { cloned: number, failed: boolean, name: string, imgsrc: string }
+     * Returns { cloned: number, failed: boolean, id: string, name: string, imgsrc: string }
      */
     const stageTokenToPages = (token, targetPageIds) => {
         var linkId = getLinkId(token);
         var pagesToCloneTo = [];
-        var result = { cloned: 0, failed: false, name: token.get('name') || '(unnamed)', imgsrc: '' };
+        var result = { cloned: 0, failed: false, id: token.get('id'), name: token.get('name') || '(unnamed)', imgsrc: '' };
 
         if (linkId) {
             // Step 1-2: find pages missing a token with this gaslight_link
@@ -619,14 +625,15 @@ var Gaslight = Gaslight || (() => {
 
     /**
      * Check for warning conditions across all pages in a group.
-     * Returns array of { message, severity } where severity is 'info'|'warning'|'error'.
+     * Returns array of { message, severity, tokens? } where severity is 'info'|'warning'|'error'.
      */
     const checkWarnings = (groupInfo) => {
         const warnings = [];
         const allPageIds = [groupInfo.master].concat(Object.values(groupInfo.players).map(function(p) { return p.pageId; }));
 
-        // Collect all gaslight_link IDs and their page locations
+        // Collect all gaslight_link IDs and their page locations + tokens
         const linkIdPages = {}; // linkId → Set of pageIds
+        const linkIdTokens = {}; // linkId → array of token objects
         const linkIdDupes = {}; // pageId → Set of linkIds that appear more than once
         allPageIds.forEach(function(pid) {
             var tokens = findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' });
@@ -636,6 +643,8 @@ var Gaslight = Gaslight || (() => {
                 if (!lid) return;
                 if (!linkIdPages[lid]) linkIdPages[lid] = new Set();
                 linkIdPages[lid].add(pid);
+                if (!linkIdTokens[lid]) linkIdTokens[lid] = [];
+                linkIdTokens[lid].push(t);
                 // Check for duplicates on same page
                 if (seenOnPage[lid]) {
                     if (!linkIdDupes[pid]) linkIdDupes[pid] = new Set();
@@ -651,7 +660,8 @@ var Gaslight = Gaslight || (() => {
             var page = getObj('page', pid);
             var pageName = page ? page.get('name') : pid;
             dupes.forEach(function(lid) {
-                warnings.push({ message: 'Duplicate gaslight_link "' + lid + '" on page "' + pageName + '"', severity: 'error' });
+                var dupeTokens = (linkIdTokens[lid] || []).filter(function(t) { return t.get('_pageid') === pid; });
+                warnings.push({ message: 'Duplicate gaslight_link on page "' + pageName + '"', severity: 'error', tokens: dupeTokens });
             });
         });
 
@@ -659,9 +669,9 @@ var Gaslight = Gaslight || (() => {
         Object.entries(linkIdPages).forEach(function(entry) {
             var lid = entry[0], pages = entry[1];
             if (pages.size === 1) {
-                warnings.push({ message: 'gaslight_link "' + lid + '" exists on only 1 page (likely mistake)', severity: 'warning' });
+                warnings.push({ message: 'exists on only 1 page (likely missing from player pages)', severity: 'warning', tokens: linkIdTokens[lid] || [] });
             } else if (pages.size < allPageIds.length) {
-                warnings.push({ message: 'gaslight_link "' + lid + '" missing from some pages', severity: 'info' });
+                warnings.push({ message: 'missing from some pages', severity: 'info', tokens: linkIdTokens[lid] || [] });
             }
         });
 
@@ -670,10 +680,20 @@ var Gaslight = Gaslight || (() => {
 
     const formatWarnings = (warnings) => {
         if (warnings.length === 0) return '';
-        var out = '<br><b>Warnings:</b><br>';
+        var hasTokens = warnings.some(function(w) { return w.tokens && w.tokens.length > 0; });
+        var out = '<br><b>Warnings:</b>';
+        if (hasTokens && typeof ScriptKit !== 'undefined') out += '<br><small><i>Click a token image to ping its location.</i></small>';
+        out += '<br>';
         warnings.forEach(function(w) {
             var icon = w.severity === 'error' ? '🔴' : w.severity === 'warning' ? '🟡' : 'ℹ️';
-            out += icon + ' ' + w.message + '<br>';
+            if (w.tokens && w.tokens.length > 0 && typeof ScriptKit !== 'undefined') {
+                var tokenImgs = w.tokens.map(function(t) {
+                    return ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 });
+                }).join(' ');
+                out += icon + ' ' + tokenImgs + ' — ' + w.message + '<br>';
+            } else {
+                out += icon + ' ' + w.message + '<br>';
+            }
         });
         return out;
     };
@@ -1038,8 +1058,16 @@ var Gaslight = Gaslight || (() => {
             var out = '<b>Split Test: ' + groupName + '</b><br>';
             out += allLinks.length + ' link(s) would be established.<br>';
             if (unlinkWarnings.length > 0) {
-                out += '<br>🟡 ' + unlinkWarnings.length + ' token(s) could not be linked: ' +
-                    unlinkWarnings.map(function(w) { return w.source.get('name') || w.source.get('id'); }).join(', ') + '<br>';
+                out += '<br>🟡 ' + unlinkWarnings.length + ' token(s) could not be linked:';
+                if (typeof ScriptKit !== 'undefined') out += '<br><small><i>Click a token image to ping its location.</i></small>';
+                out += '<br>' +
+                    unlinkWarnings.map(function(w) {
+                        var t = w.source;
+                        if (typeof ScriptKit !== 'undefined') {
+                            return ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true });
+                        }
+                        return t.get('name') || t.get('id');
+                    }).join(' ') + '<br>';
             }
             out += formatWarnings(globalWarnings);
             if (hasErrors) {
@@ -1076,8 +1104,16 @@ var Gaslight = Gaslight || (() => {
             Object.keys(groupInfo.players).length + ' player(s), ' +
             allLinks.length + ' link(s) established.';
         if (unlinkWarnings.length > 0) {
-            summary += '<br>' + unlinkWarnings.length + ' token(s) could not be linked: ' +
-                unlinkWarnings.map(function(w) { return w.source.get('name') || w.source.get('id'); }).join(', ');
+            summary += '<br>' + unlinkWarnings.length + ' token(s) could not be linked:';
+            if (typeof ScriptKit !== 'undefined') summary += '<br><small><i>Click a token image to ping its location.</i></small>';
+            summary += '<br>' +
+                unlinkWarnings.map(function(w) {
+                    var t = w.source;
+                    if (typeof ScriptKit !== 'undefined') {
+                        return ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true });
+                    }
+                    return t.get('name') || t.get('id');
+                }).join(' ');
         }
         summary += formatWarnings(globalWarnings);
         reply(msg, 'Split', summary);
@@ -1159,24 +1195,43 @@ var Gaslight = Gaslight || (() => {
         if (!groupInfo.master) { reply(msg, 'Error', 'No master page for group "' + groupName + '".'); return; }
 
         var out = '<b>Link Test: ' + groupName + '</b><br>';
+        var totalLinked = 0;
+        var unlinkWarnings = [];
+
         Object.entries(groupInfo.players).forEach(function(entry) {
             var playerId = entry[0], pInfo = entry[1];
-            out += '<br><b>Master → ' + pInfo.name + ':</b><br>';
             var links = resolveLinks(groupInfo.master, pInfo.pageId);
             links.forEach(function(l) {
-                var srcName = l.source.get('name') || l.source.get('id');
                 if (l.target) {
-                    var tgtName = l.target.get('name') || l.target.get('id');
-                    out += '✓ ' + srcName + ' → ' + tgtName + ' (step ' + l.step + ')<br>';
+                    totalLinked++;
                 } else {
-                    out += '🟡 ' + srcName + ' — no match found<br>';
+                    unlinkWarnings.push({ source: l.source, playerName: pInfo.name });
                 }
             });
-            if (links.length === 0) out += '(no linkable tokens)<br>';
         });
+
+        out += totalLinked + ' link(s) would be established across ' + Object.keys(groupInfo.players).length + ' player page(s).<br>';
+
+        if (unlinkWarnings.length > 0) {
+            if (typeof ScriptKit !== 'undefined') out += '<small><i>Click a token image to ping its location.</i></small><br>';
+            out += '<br>🟡 ' + unlinkWarnings.length + ' token(s) could not be linked:<br>';
+            unlinkWarnings.forEach(function(w) {
+                var t = w.source;
+                if (typeof ScriptKit !== 'undefined') {
+                    out += ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: (t.get('name') || t.get('id')) + ' (' + w.playerName + ')', moveAll: true }) + ' ';
+                } else {
+                    out += (t.get('name') || t.get('id')) + ' (' + w.playerName + '), ';
+                }
+            });
+            out += '<br>';
+        }
 
         // Global warnings
         out += formatWarnings(checkWarnings(groupInfo));
+
+        if (unlinkWarnings.length === 0 && checkWarnings(groupInfo).length === 0) {
+            out += '<br>✓ All tokens link successfully. Ready to split.';
+        }
 
         reply(msg, out);
     };
@@ -1428,7 +1483,10 @@ var Gaslight = Gaslight || (() => {
             var results = tokens.map(function(t) {
                 var raw = getVal(t);
                 var name = t.get('name') || t.get('id');
-                return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
+                var display = (typeof ScriptKit !== 'undefined')
+                    ? ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: name, moveAll: true, width: 30, height: 30 })
+                    : '<b>' + name + '</b>';
+                return display + ': ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
             });
             reply(msg, 'Sync', results.join('<br>'));
             return;
@@ -1830,6 +1888,9 @@ var Gaslight = Gaslight || (() => {
 
         tokens.forEach(function(t) {
             var tokenName = t.get('name') || t.get('id');
+            var tokenDisplay = (typeof ScriptKit !== 'undefined')
+                ? ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: tokenName, moveAll: true, width: 30, height: 30 })
+                : '<b>' + tokenName + '</b>';
             var tokenId = t.get('id');
             var onMaster = Object.values(s.activeGroups).some(function(active) { return t.get('_pageid') === active.masterPageId; });
 
@@ -1902,7 +1963,7 @@ var Gaslight = Gaslight || (() => {
                         });
                         return pageName + ': ' + (val || '<i>∅</i>');
                     });
-                    output.push('<b>' + tokenName + '</b> ' + a.name + ' — ' + vals.join(', '));
+                    output.push(tokenDisplay + ' ' + a.name + ' — ' + vals.join(', '));
                 } else {
                     var target = getTargets[0];
                     var tNotes = target.get('gmnotes') || '';
@@ -1912,7 +1973,7 @@ var Gaslight = Gaslight || (() => {
                         var charId = target.get('represents');
                         if (charId) val = getAttrByName(charId, a.name) || '';
                     }
-                    output.push('<b>' + tokenName + '</b> ' + a.name + ' = ' + (val || '<i>(not set)</i>'));
+                    output.push(tokenDisplay + ' ' + a.name + ' = ' + (val || '<i>(not set)</i>'));
                 }
             });
 
@@ -2202,7 +2263,7 @@ var Gaslight = Gaslight || (() => {
             if (val === 'on') {
                 var marketplaceFailures = tokens.filter(function(t) {
                     return !canCreateWithImgsrc(t.get('imgsrc'), t.get('_pageid'));
-                }).map(function(t) { return { name: t.get('name') || '(unnamed)', imgsrc: t.get('imgsrc') }; });
+                }).map(function(t) { return { id: t.get('id'), name: t.get('name') || '(unnamed)', imgsrc: t.get('imgsrc') }; });
                 if (marketplaceFailures.length > 0) {
                     reply(msg, 'Stage', formatMarketplaceError(marketplaceFailures, '!gaslight stage --default on'));
                     return;
@@ -4555,8 +4616,8 @@ var Gaslight = Gaslight || (() => {
                           return !sides || sides.split('|').filter(Boolean).length < 2;
                       });
                       if (notMultiSided.length > 0) {
-                          var names = notMultiSided.map(t => t.get('name') || t.get('id')).join(', ');
-                          return 'These tokens are not multi-sided: ' + names + '. Set up multiple sides on them first.';
+                          var names = notMultiSided.map(t => ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 })).join(' ');
+                          return ScriptKit.html.raw('These tokens are not multi-sided: ' + names + '<br>Set up multiple sides on them first.');
                       }
                   }
                 },
@@ -4571,8 +4632,8 @@ var Gaslight = Gaslight || (() => {
                           return !attr || attr.get('current') !== '1';
                       });
                       if (missing.length > 0) {
-                          var names = missing.map(t => t.get('name') || t.get('id')).join(', ');
-                          return 'These tokens do not have gl_can_disguise = 1 on their character: ' + names + '. Run `!gaslight var --setch can_disguise 1` (`--setch`, not `--set`) with them selected.';
+                          var names = missing.map(t => ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 })).join(' ');
+                          return ScriptKit.html.raw('These tokens do not have gl_can_disguise = 1 on their character: ' + names + '<br>Run <code>!gaslight var --setch can_disguise 1</code> (<code>--setch</code>, not <code>--set</code>) with them selected.');
                       }
                   }
                 },
@@ -4587,8 +4648,8 @@ var Gaslight = Gaslight || (() => {
                           return notes.indexOf('gl_truesight') === -1 || notes.indexOf('gl_truesight: 1') === -1;
                       });
                       if (missing.length > 0) {
-                          var names = missing.map(t => t.get('name') || t.get('id')).join(', ');
-                          return 'These tokens do not have gl_truesight set: ' + names + '. Run `!gaslight var --set truesight 1` with them selected.';
+                          var names = missing.map(t => ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 })).join(' ');
+                          return ScriptKit.html.raw('These tokens do not have gl_truesight set: ' + names + '<br>Run <code>!gaslight var --set truesight 1</code> with them selected.');
                       }
                   }
                 },
