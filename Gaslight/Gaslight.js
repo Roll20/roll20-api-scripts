@@ -6333,6 +6333,7 @@ var Gaslight = Gaslight || (() => {
         Campaign().set('turnorder', JSON.stringify(order));
 
         reflowInitiativeHud('none');
+        updateTurnReticle();
     };
 
     /**
