@@ -4020,7 +4020,41 @@ var Gaslight = Gaslight || (() => {
                   }
                 },
                 { prompt: 'You may notice a **HUD** appeared on the master page. We\'ll cover that in a later example. For now, disable it with:\n\n`!gaslight hud off`',
-                  ...ScriptKit.waitForCommand('!gaslight hud')
+                  when: () => Object.values(hudRegistry).some(function(e) { return e.isVisible(); }),
+                  onEnter: (ctx, advance) => {
+                      var s = state[SCRIPT_NAME];
+                      var pageId = getHudPageId();
+                      if (pageId) {
+                          var player = ctx.player;
+                          var delay = 0;
+                          // Ping view indicator
+                          if (s.hud.viewId) {
+                              var viewObj = getObj('text', s.hud.viewId);
+                              if (viewObj) {
+                                  setTimeout(function() { ScriptKit.ping(pageId, viewObj.get('left'), viewObj.get('top'), { player: player, color: '#00ff00', moveAll: true }); }, delay);
+                                  delay += 1500;
+                              }
+                          }
+                          // Ping initiative HUD frame
+                          if (s.hud.initData && s.hud.initData.frameId) {
+                              var frameObj = getObj('pathv2', s.hud.initData.frameId);
+                              if (frameObj) {
+                                  setTimeout(function() { ScriptKit.ping(pageId, frameObj.get('x'), frameObj.get('y'), { player: player, color: '#4fc3f7', moveAll: true }); }, delay);
+                                  delay += 1500;
+                              }
+                          }
+                          // Ping turn reticle
+                          if (s.hud.reticleData && s.hud.reticleData.id) {
+                              var reticleObj = getObj('pathv2', s.hud.reticleData.id);
+                              if (reticleObj) {
+                                  setTimeout(function() { ScriptKit.ping(pageId, reticleObj.get('x'), reticleObj.get('y'), { player: player, color: '#ff6600', moveAll: true }); }, delay);
+                              }
+                          }
+                      }
+                      // Wait for !gaslight hud command to advance
+                      ScriptKit.waitForCommand('!gaslight hud').onEnter(ctx, advance);
+                  },
+                  onExit: (ctx) => { ScriptKit.waitForCommand('!gaslight hud').onExit(ctx); }
                 },
                 { prompt: 'Your split is now active. Try moving an **NPC token** on the master page — it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else — useful for hiding tokens, swapping images, or showing per-player information.' },
                 { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages — players can move their own tokens and everyone sees it (bidirectional).' },
@@ -4107,7 +4141,7 @@ var Gaslight = Gaslight || (() => {
                       if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
                   }
                 },
-                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (⚙ in the toolbar). Drag tokens in or use the tracker\'s initiative button.\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative — we\'ll cover that later.',
+                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (⚙ in the toolbar). Add some turns to the turnOrder (preferably with actual values).\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative — we\'ll cover that later.',
                   onEnter: (ctx, advance) => {
                       ctx._turnFired = false;
                       on('change:campaign:turnorder', function() {
@@ -5555,6 +5589,35 @@ var Gaslight = Gaslight || (() => {
         if (!s.hud.initData.entries) s.hud.initData.entries = [];
         var data = s.hud.initData;
 
+        // If no turns, remove frame and highlight (will be recreated when turns are added)
+        if (order.length === 0) {
+            // Remove all entries
+            (data.entries || []).forEach(function(entry) {
+                var pin = getObj('pin', entry.tokenId);
+                var txt = getObj('text', entry.textId);
+                if (pin) pin.remove();
+                if (txt) txt.remove();
+            });
+            data.entries = [];
+            // Remove highlight (clear ID first so destroy handler ignores it)
+            if (data.highlightId) {
+                var hlId = data.highlightId;
+                delete data.highlightId;
+                var hl = getObj('pathv2', hlId);
+                if (hl) hl.remove();
+            }
+            // Remove frame (clear ID first so destroy handler ignores it)
+            if (data.frameId) {
+                var frId = data.frameId;
+                delete data.frameId;
+                var fr = getObj('pathv2', frId);
+                if (fr) fr.remove();
+            }
+            // Remove reticle
+            removeTurnReticle();
+            return;
+        }
+
         var frameWidth = defaultInitHud.tokenSize + 2 * defaultInitHud.hPadding;
 
         // Create frame if missing
@@ -6160,7 +6223,6 @@ var Gaslight = Gaslight || (() => {
                 Campaign().set('turnorder', JSON.stringify(order));
 
                 reflowInitiativeHud('none');
-                sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
             }
         }
     };
@@ -6197,7 +6259,6 @@ var Gaslight = Gaslight || (() => {
         Campaign().set('turnorder', JSON.stringify(order));
 
         reflowInitiativeHud('none');
-        sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
     };
 
     /**
@@ -6408,6 +6469,10 @@ var Gaslight = Gaslight || (() => {
                 var s = state[SCRIPT_NAME];
                 return s.hud.viewId ? [s.hud.viewId] : [];
             },
+            isVisible: function() {
+                var s = state[SCRIPT_NAME];
+                return !!(s.hud.viewId && getObj('text', s.hud.viewId));
+            },
             events: {
                 text: { change: onHudTextChanged, destroy: onHudTextDestroyed },
             },
@@ -6430,6 +6495,11 @@ var Gaslight = Gaslight || (() => {
                     if (e.textId) result.push(e.textId);
                 });
                 return result;
+            },
+            isVisible: function() {
+                var s = state[SCRIPT_NAME];
+                var data = s.hud.initData;
+                return !!(data && data.frameId && getObj('pathv2', data.frameId));
             },
             events: {
                 pathv2: {
@@ -6460,6 +6530,10 @@ var Gaslight = Gaslight || (() => {
             ids: function() {
                 var s = state[SCRIPT_NAME];
                 return s.hud.reticleData && s.hud.reticleData.id ? [s.hud.reticleData.id] : [];
+            },
+            isVisible: function() {
+                var s = state[SCRIPT_NAME];
+                return !!(s.hud.reticleData && s.hud.reticleData.id && getObj('pathv2', s.hud.reticleData.id));
             },
             events: {
                 pathv2: { change: onReticleChanged, destroy: onHudPathDestroyed },
