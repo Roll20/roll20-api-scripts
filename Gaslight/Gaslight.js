@@ -5523,6 +5523,16 @@ var Gaslight = Gaslight || (() => {
     /**
      * Get the deduped turn order (master tokens only, skip children).
      */
+    /**
+     * Generate a matching key for a turn order entry.
+     * Tokens: use id. Customs: use custom + formula + _pageid + pr.
+     * pr is included for customs because two customs can share the same immutable fields.
+     */
+    const turnEntryKey = (entry) => {
+        if (entry.id && entry.id !== '-1') return entry.id;
+        return 'custom§' + (entry.custom != null ? entry.custom : '') + '§' + (entry.formula != null ? entry.formula : '') + '§' + entry._pageid + '§' + entry.pr;
+    };
+
     const getHudTurnOrder = () => {
         var s = state[SCRIPT_NAME];
         var order = JSON.parse(Campaign().get('turnorder') || '[]');
@@ -5771,7 +5781,7 @@ var Gaslight = Gaslight || (() => {
                 var pinText = createHudObj('text', {
                     _pageid: pageId,
                     layer: 'foreground',
-                    text: String(entry.pr || ''),
+                    text: String(entry.pr != null ? entry.pr : ''),
                     left: -5000,
                     top: -5000,
                     font_size: data.textFontSize || defaultInitHud.textFontSize,
@@ -5785,6 +5795,7 @@ var Gaslight = Gaslight || (() => {
                     sourceId: 'custom:' + Date.now() + ':' + Math.random().toString(36).slice(2, 6),
                     tokenId: hudPin ? hudPin.get('id') : null,
                     textId: pinText.get('id'),
+                    key: turnEntryKey(entry),
                 });
             } else {
                 if (existingTokenIds.indexOf(entry.id) !== -1) return;
@@ -5813,7 +5824,7 @@ var Gaslight = Gaslight || (() => {
                 var hudText = createHudObj('text', {
                     _pageid: pageId,
                     layer: 'foreground',
-                    text: String(entry.pr || ''),
+                    text: String(entry.pr != null ? entry.pr : ''),
                     left: 0,
                     top: 0,
                     font_size: data.textFontSize || defaultInitHud.textFontSize,
@@ -5827,6 +5838,7 @@ var Gaslight = Gaslight || (() => {
                     sourceId: entry.id,
                     tokenId: hudPin ? hudPin.get('id') : null,
                     textId: hudText.get('id'),
+                    key: turnEntryKey(entry),
                 });
             }
         });
@@ -5957,24 +5969,29 @@ var Gaslight = Gaslight || (() => {
                 txt.set({ top: newSlotY, color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent' });
             });
 
-            // Update custom text values from current order based on position
-            var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
+            // Update custom text values from current order based on key
+            var usedOrderIndices = new Set();
             customEntries.forEach(function(e) {
                 var txt = getObj('text', e.textId);
                 if (!txt) return;
-                var txtY = txt.get('top');
-                // Find which order slot this text is closest to
-                var bestOffset = null;
-                var bestDist = Infinity;
-                for (var ci = 0; ci < order.length; ci++) {
-                    if (order[ci].id && order[ci].id !== '-1') continue;
-                    var off = ci <= order.length / 2 ? ci : ci - order.length;
-                    var slotY = hudSlotY(frameCenter, off, tokenSize, tokenPadding);
-                    var dist = Math.abs(txtY - slotY);
-                    if (dist < bestDist) { bestDist = dist; bestOffset = ci; }
+                // Try exact key match first
+                var matchIdx = order.findIndex(function(o, i) { return !usedOrderIndices.has(i) && turnEntryKey(o) === e.key; });
+                // Fallback: match by immutable parts (custom + formula + _pageid) if pr changed
+                if (matchIdx === -1) {
+                    var keyParts = e.key.split('§');
+                    var immutableKey = keyParts.slice(0, 4).join('§'); // custom§<name>§<formula>§<pageid>
+                    matchIdx = order.findIndex(function(o, i) {
+                        if (usedOrderIndices.has(i)) return false;
+                        if (o.id && o.id !== '-1') return false;
+                        return turnEntryKey(o).startsWith(immutableKey + '§');
+                    });
                 }
-                if (bestOffset !== null) {
-                    txt.set('text', String(order[bestOffset].pr || ''));
+                if (matchIdx !== -1) {
+                    usedOrderIndices.add(matchIdx);
+                    txt.set('text', String(order[matchIdx].pr != null ? order[matchIdx].pr : ''));
+                    // Keep key in sync
+                    var newKey = turnEntryKey(order[matchIdx]);
+                    if (e.key !== newKey) e.key = newKey;
                 }
             });
 
@@ -6004,7 +6021,7 @@ var Gaslight = Gaslight || (() => {
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos + (data.textVOffset || 0),
                         color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
-                        text: String(entry.pr || ''),
+                        text: String(entry.pr != null ? entry.pr : ''),
                     });
                 }
             });
@@ -6022,12 +6039,20 @@ var Gaslight = Gaslight || (() => {
             var usedVisible = new Set();
             var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
             customOrderEntries.forEach(function(orderEntry) {
-                var prVal = String(orderEntry.pr || '');
+                var orderKey = turnEntryKey(orderEntry);
                 var match = visibleCustoms.findIndex(function(e, i) {
                     if (usedVisible.has(i)) return false;
-                    var txt = getObj('text', e.textId);
-                    return txt && txt.get('text') === prVal;
+                    return e.key === orderKey;
                 });
+                // Fallback: match by pr if key doesn't match (legacy entries without key)
+                if (match === -1) {
+                    var prVal = String(orderEntry.pr != null ? orderEntry.pr : '');
+                    match = visibleCustoms.findIndex(function(e, i) {
+                        if (usedVisible.has(i)) return false;
+                        var txt = getObj('text', e.textId);
+                        return txt && txt.get('text') === prVal;
+                    });
+                }
                 if (match !== -1) {
                     sortedCustoms.push(visibleCustoms[match]);
                     usedVisible.add(match);
@@ -6064,12 +6089,15 @@ var Gaslight = Gaslight || (() => {
                 pin.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000 });
                 if (isCustom) pin.set('title', entry.custom || 'Custom');
 
+                // Keep key in sync with current turn order entry (pr may have changed)
+                if (hudEntry.key !== turnEntryKey(entry)) hudEntry.key = turnEntryKey(entry);
+
                 if (txt) {
                     txt.set({
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos + (data.textVOffset || 0),
                         color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
-                        text: String(entry.pr || ''),
+                        text: String(entry.pr != null ? entry.pr : ''),
                     });
                 }
             });
@@ -6222,18 +6250,7 @@ var Gaslight = Gaslight || (() => {
                     // Find display index from deduplicated turn order
                     var order = getHudTurnOrder();
                     var displayIdx = -1;
-                    if (match.sourceId && !match.sourceId.startsWith('custom:')) {
-                        displayIdx = order.findIndex(function(e) { return e.id === match.sourceId; });
-                    } else {
-                        var customCount = 0;
-                        var entryCustomIdx = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).indexOf(match);
-                        for (var oi = 0; oi < order.length; oi++) {
-                            if (!order[oi].id || order[oi].id === '-1') {
-                                if (customCount === entryCustomIdx) { displayIdx = oi; break; }
-                                customCount++;
-                            }
-                        }
-                    }
+                    displayIdx = order.findIndex(function(e) { return turnEntryKey(e) === match.key; });
 
                     if (displayIdx >= 0) {
                         var numEntries = order.length;
@@ -6291,7 +6308,8 @@ var Gaslight = Gaslight || (() => {
                     var groupIds = new Set([match.sourceId].concat(info.linkedIds));
                     order = order.filter(function(e) { return !groupIds.has(e.id); });
                 } else {
-                    var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
+                    var matchKey = match.key;
+                    var customIdx = order.findIndex(function(e) { return turnEntryKey(e) === matchKey; });
                     if (customIdx !== -1) order.splice(customIdx, 1);
                 }
                 Campaign().set('turnorder', JSON.stringify(order));
@@ -6326,8 +6344,9 @@ var Gaslight = Gaslight || (() => {
             var groupIds = new Set([match.sourceId].concat(info.linkedIds));
             order = order.filter(function(e) { return !groupIds.has(e.id); });
         } else {
-            // Custom turn — remove first matching custom entry
-            var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
+            // Custom turn — remove matching entry by key
+            var matchKey = match.key;
+            var customIdx = order.findIndex(function(e) { return turnEntryKey(e) === matchKey; });
             if (customIdx !== -1) order.splice(customIdx, 1);
         }
         Campaign().set('turnorder', JSON.stringify(order));
