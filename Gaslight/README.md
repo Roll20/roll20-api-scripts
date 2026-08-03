@@ -284,6 +284,29 @@ Applied script examples (with handout generation):
 - **truesight** - Reveal true forms to viewers with truesight
 - **madness** - Afflicted players see all tokens as enemies
 
+## Changelog
+
+### v2.2.1
+- Fix: `!gaslight link` re-establishes links for tokens in active groups
+- Fix: `!gaslight stage --default on` checks for marketplace images
+- Fix: `!gaslight desync` now applies immediately (parent rebuilds links, child uses surgical Anchor/Mirror)
+- Fix: `!gaslight sync` removes !excludes correctly, propagates config to all linked copies
+- Fix: HUD hides when turn order is empty, reappears when turns are added
+- Fix: HUD text offset no longer corrupts after turn advance
+- Fix: Turn reticle updates after pin deletion
+- Fix: Custom turns properly deduplicated (immutable key matching)
+- Fix: pr=0 no longer displays as empty text in HUD
+- Fix: Batch initiative additions no longer lost due to race condition (debounced processing)
+- Tutorial: guide pings on HUD elements and customization step transitions
+
+### v2.2.0
+- Initiative HUD: pin-based turn tracker with gesture controls
+- Current turn reticle
+- `!gaslight init` command
+- `--default` flags for stage, sync, desync
+- Interactive guide examples
+- ScriptKit integration
+
 ## License
 
 MIT
