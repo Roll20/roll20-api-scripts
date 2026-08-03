@@ -4908,12 +4908,29 @@ var Gaslight = Gaslight || (() => {
     /**
      * Handle turnorder changes: sync linked tokens, apply [GM] tags, auto-skip children.
      */
+    var _turnOrderDebounceId = null;
+    var _turnOrderPrev = null;
+
     const onTurnOrderChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
         if (Object.keys(s.activeGroups).length === 0) return;
 
-        var newOrder = JSON.parse(obj.get('turnorder') || '[]');
-        var oldOrder = JSON.parse(prev.turnorder || '[]');
+        // Capture prev from the first event in the batch
+        if (!_turnOrderDebounceId) {
+            _turnOrderPrev = JSON.parse(prev.turnorder || '[]');
+        }
+        if (_turnOrderDebounceId) clearTimeout(_turnOrderDebounceId);
+        _turnOrderDebounceId = setTimeout(function() {
+            _turnOrderDebounceId = null;
+            processTurnOrderChange(_turnOrderPrev);
+        }, 100);
+    };
+
+    const processTurnOrderChange = (oldOrder) => {
+        var s = state[SCRIPT_NAME];
+        if (Object.keys(s.activeGroups).length === 0) return;
+
+        var newOrder = JSON.parse(Campaign().get('turnorder') || '[]');
 
         // Detect direction early (before skip/reorder modifies newOrder)
         var hudDirection = 'none';
@@ -6295,6 +6312,28 @@ var Gaslight = Gaslight || (() => {
             var data = s.hud.initData;
             var matchIdx = data.entries.findIndex(function(e) { return e.textId === id; });
             if (matchIdx !== -1) {
+                // If a turn order change is pending, re-create the text and abort deletion
+                if (_turnOrderDebounceId) {
+                    var match = data.entries[matchIdx];
+                    var pageId = getHudPageId();
+                    if (pageId) {
+                        var newTxt = createHudObj('text', {
+                            _pageid: pageId,
+                            layer: 'foreground',
+                            text: obj.get('text') || '',
+                            left: obj.get('left') || 0,
+                            top: obj.get('top') || 0,
+                            font_size: data.textFontSize || defaultInitHud.textFontSize,
+                            color: data.textColor || defaultInitHud.textColor,
+                            stroke: data.textStroke || defaultInitHud.textStroke,
+                            font_family: data.textFontFamily || defaultInitHud.textFontFamily,
+                            rotation: data.textRotation || 0,
+                        });
+                        if (newTxt) match.textId = newTxt.get('id');
+                    }
+                    return;
+                }
+
                 var match = data.entries[matchIdx];
                 // Splice entry first to prevent cascading destroy handlers from re-matching
                 data.entries.splice(matchIdx, 1);
@@ -6329,6 +6368,38 @@ var Gaslight = Gaslight || (() => {
         var data = s.hud.initData;
         var matchIdx = data.entries.findIndex(function(e) { return e.tokenId === id; });
         if (matchIdx === -1) return;
+
+        // If a turn order change is pending, re-create the pin and abort deletion
+        if (_turnOrderDebounceId) {
+            var match = data.entries[matchIdx];
+            var pageId = getHudPageId();
+            if (pageId) {
+                var frame = getObj('pathv2', data.frameId);
+                var frameLeft = frame ? frame.get('x') : 100;
+                var sourceToken = match.sourceId && !match.sourceId.startsWith('custom:') ? getObj('graphic', match.sourceId) : null;
+                var pinOpts = {
+                    _pageid: pageId,
+                    x: frameLeft,
+                    y: obj.get('y') || -5000,
+                    title: sourceToken ? (sourceToken.get('name') || '') : (obj.get('title') || 'Custom'),
+                    shape: 'circle',
+                    bgColor: 'transparent',
+                    scale: 1.25,
+                    visibleTo: 'all',
+                    notesDesynced: true,
+                };
+                if (sourceToken) {
+                    pinOpts.customizationType = 'image';
+                    pinOpts.pinImage = sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png');
+                } else {
+                    pinOpts.useTextIcon = true;
+                    pinOpts.textIcon = '';
+                }
+                var newPin = createHudObj('pin', pinOpts);
+                if (newPin) match.tokenId = newPin.get('id');
+            }
+            return;
+        }
 
         var match = data.entries[matchIdx];
         // Splice entry first — associated text will be orphaned and cleaned up on next reflow
@@ -6785,6 +6856,12 @@ var Gaslight = Gaslight || (() => {
             var data = s.hud.initData;
             var match = data.entries.find(function(e) { return e.tokenId === obj.get('id'); });
             if (!match) return;
+
+            // If a turn order change is pending (debouncing), reject the gesture and snap back
+            if (_turnOrderDebounceId) {
+                obj.set({ x: prev.x, y: prev.y });
+                return;
+            }
 
             var newY = obj.get('y');
             var oldY = prev.y;
