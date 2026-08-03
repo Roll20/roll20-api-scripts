@@ -6142,14 +6142,19 @@ var Gaslight = Gaslight || (() => {
                     var pts = JSON.parse(frame.get('points') || '[]');
                     var fw = pts.length >= 2 ? pts[1][0] - pts[0][0] : 70;
                     var rightEdge = frameLeft + fw / 2;
-                    var newOffset = obj.get('left') - rightEdge;
-                    data.textOffset = newOffset;
-                    // Move all other texts to match offset
-                    data.entries.forEach(function(e) {
-                        if (e.textId === id) return;
-                        var otherTxt = getObj('text', e.textId);
-                        if (otherTxt) otherTxt.set('left', rightEdge + newOffset);
-                    });
+                    var expectedLeft = rightEdge + (data.textOffset || 15);
+                    var actualLeft = obj.get('left');
+                    // Only update offset if the user actually moved the text (not just changed style)
+                    if (Math.abs(actualLeft - expectedLeft) > 1) {
+                        var newOffset = actualLeft - rightEdge;
+                        data.textOffset = newOffset;
+                        // Move all other texts to match offset
+                        data.entries.forEach(function(e) {
+                            if (e.textId === id) return;
+                            var otherTxt = getObj('text', e.textId);
+                            if (otherTxt) otherTxt.set('left', rightEdge + newOffset);
+                        });
+                    }
                 }
                 // Font size/family changes
                 var newFontSize = obj.get('font_size');
@@ -6211,24 +6216,46 @@ var Gaslight = Gaslight || (() => {
                     var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
                     var vPadding = data.vPadding || defaultInitHud.vPadding;
                     var step = tokenSize + tokenPadding;
-                    // Find this entry's offset in the circular order
-                    var entryIdx = data.entries.indexOf(match);
-                    var numEntries = data.entries.length;
                     var slotsBelow = 0;
                     while (hlY + (slotsBelow + 1) * step + tokenSize / 2 <= frameTop + fHeight / 2 - vPadding) slotsBelow++;
-                    var entryOffset = entryIdx <= slotsBelow ? entryIdx : entryIdx - numEntries;
-                    var slotY = hudSlotY(hlY, entryOffset, tokenSize, tokenPadding);
-                    var vOffset = newTop - slotY;
-                    if (Math.abs(vOffset - (data.textVOffset || 0)) > 1) {
-                        data.textVOffset = vOffset;
-                        data.entries.forEach(function(e) {
-                            if (e.textId === id) return;
-                            var otherIdx = data.entries.indexOf(e);
-                            var otherOffset = otherIdx <= slotsBelow ? otherIdx : otherIdx - numEntries;
-                            var otherSlotY = hudSlotY(hlY, otherOffset, tokenSize, tokenPadding);
-                            var otherTxt = getObj('text', e.textId);
-                            if (otherTxt) otherTxt.set('top', otherSlotY + vOffset);
-                        });
+
+                    // Find display index from deduplicated turn order
+                    var order = getHudTurnOrder();
+                    var displayIdx = -1;
+                    if (match.sourceId && !match.sourceId.startsWith('custom:')) {
+                        displayIdx = order.findIndex(function(e) { return e.id === match.sourceId; });
+                    } else {
+                        var customCount = 0;
+                        var entryCustomIdx = data.entries.filter(function(e) { return e.sourceId && e.sourceId.startsWith('custom:'); }).indexOf(match);
+                        for (var oi = 0; oi < order.length; oi++) {
+                            if (!order[oi].id || order[oi].id === '-1') {
+                                if (customCount === entryCustomIdx) { displayIdx = oi; break; }
+                                customCount++;
+                            }
+                        }
+                    }
+
+                    if (displayIdx >= 0) {
+                        var numEntries = order.length;
+                        var entryOffset = displayIdx === 0 ? 0 : (displayIdx <= slotsBelow ? displayIdx : -(numEntries - displayIdx));
+                        var slotY = hudSlotY(hlY, entryOffset, tokenSize, tokenPadding);
+                        var expectedTop = slotY + (data.textVOffset || 0);
+                        var vOffset = newTop - slotY;
+                        if (Math.abs(newTop - expectedTop) > 1) {
+                            data.textVOffset = vOffset;
+                            data.entries.forEach(function(e) {
+                                if (e.textId === id) return;
+                                var otherDisplayIdx = -1;
+                                if (e.sourceId && !e.sourceId.startsWith('custom:')) {
+                                    otherDisplayIdx = order.findIndex(function(o) { return o.id === e.sourceId; });
+                                }
+                                if (otherDisplayIdx < 0) return;
+                                var otherOffset = otherDisplayIdx === 0 ? 0 : (otherDisplayIdx <= slotsBelow ? otherDisplayIdx : -(numEntries - otherDisplayIdx));
+                                var otherSlotY = hudSlotY(hlY, otherOffset, tokenSize, tokenPadding);
+                                var otherTxt = getObj('text', e.textId);
+                                if (otherTxt) otherTxt.set('top', otherSlotY + vOffset);
+                            });
+                        }
                     }
                 }
             }
