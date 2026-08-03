@@ -1456,20 +1456,97 @@ var Gaslight = Gaslight || (() => {
 
         // "all" — explicitly sync everything
         if (subCmd === 'all') {
-            tokens.forEach(function(t) { setVal(t, 'all'); });
-            reply(msg, 'Sync', 'Set to sync all properties on ' + tokens.length + ' ' + label + '(s).');
+            var parentTokens = getParentTokens(tokens);
+            parentTokens.forEach(function(t) {
+                setVal(t, 'all');
+                var info = getLinkedInfo(t.get('id'));
+                info.linkedIds.forEach(function(id) {
+                    var linked = getObj('graphic', id);
+                    if (linked) setVal(linked, 'all');
+                });
+            });
+            rebuildLinksForTokens(parentTokens);
+            reply(msg, 'Sync', 'Set to sync all properties on ' + parentTokens.length + ' ' + label + '(s).');
             return;
         }
 
-        // Otherwise, treat all args as props to add to sync list
+        // Otherwise, treat all args as props to re-enable sync for
         var props = args.join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-        tokens.forEach(function(t) {
+        var s = state[SCRIPT_NAME];
+
+        // Separate into parents and children
+        var parents = tokens.filter(isParentToken);
+        var children = tokens.filter(function(t) { return !isParentToken(t); });
+
+        // Helper to apply sync re-enable to a single token's config
+        var applySyncToConfig = function(t) {
             var raw = getVal(t) || '';
             var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-            props.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
-            setVal(t, existing.join(', '));
-        });
-        reply(msg, 'Sync', 'Added [' + props.join(', ') + '] to sync on ' + tokens.length + ' ' + label + '(s).');
+            var hasWhitelist = existing.some(function(e) { return !e.startsWith('!'); });
+            props.forEach(function(p) {
+                var excludeVersion = '!' + p;
+                var exIdx = existing.indexOf(excludeVersion);
+                if (exIdx !== -1) existing.splice(exIdx, 1);
+                if (hasWhitelist && existing.indexOf(p) === -1) existing.push(p);
+            });
+            if (existing.length === 0) {
+                // Remove gaslight_sync entirely (revert to character default)
+                var notes = t.get('gmnotes') || '';
+                try { notes = decodeURIComponent(notes); } catch(e) {}
+                notes = notes.replace(/\n?gaslight_sync:\s*.*/, '');
+                t.set('gmnotes', notes);
+            } else {
+                setVal(t, existing.join(', '));
+            }
+            return existing.length > 0 ? existing.join(', ') : null;
+        };
+
+        // Parents: apply to master + propagate to all linked copies, then rebuild
+        if (parents.length > 0) {
+            var parentMasters = getParentTokens(parents);
+            parentMasters.forEach(function(t) {
+                var newVal = applySyncToConfig(t);
+                // Propagate to all linked copies
+                var info = getLinkedInfo(t.get('id'));
+                info.linkedIds.forEach(function(id) {
+                    var linked = getObj('graphic', id);
+                    if (linked) {
+                        if (newVal) setVal(linked, newVal);
+                        else {
+                            var notes = linked.get('gmnotes') || '';
+                            try { notes = decodeURIComponent(notes); } catch(e) {}
+                            notes = notes.replace(/\n?gaslight_sync:\s*.*/, '');
+                            linked.set('gmnotes', notes);
+                        }
+                    }
+                });
+            });
+            rebuildLinksForTokens(parentMasters);
+        }
+
+        // Children: surgically re-add sync for just those tokens
+        if (children.length > 0) {
+            var spatialToAdd = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) !== -1; });
+            var nonSpatialToAdd = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) === -1; });
+            children.forEach(function(t) {
+                var childId = t.get('id');
+                applySyncToConfig(t);
+                if (spatialToAdd.length > 0 && typeof Anchor !== 'undefined') {
+                    var components = {};
+                    spatialToAdd.forEach(function(p) { components[p] = true; });
+                    Anchor.trackComponents(childId, components);
+                }
+                if (nonSpatialToAdd.length > 0 && typeof Mirror !== 'undefined') {
+                    // Re-add to chain with these props
+                    var info = getLinkedInfo(childId);
+                    var allIds = [childId].concat(info.linkedIds);
+                    Mirror.chainLink(allIds, nonSpatialToAdd);
+                }
+            });
+        }
+
+        var total = parents.length + children.length;
+        reply(msg, 'Sync', 'Re-enabled [' + props.join(', ') + '] sync on ' + tokens.length + ' ' + label + '(s).');
     };
 
     /**
@@ -1629,7 +1706,14 @@ var Gaslight = Gaslight || (() => {
         // "all" — disable all syncing (set empty string = no sync)
         if (args[0].toLowerCase() === 'all') {
             var parentTokens = getParentTokens(tokens);
-            parentTokens.forEach(function(t) { setVal(t, ''); });
+            parentTokens.forEach(function(t) {
+                setVal(t, '');
+                var info = getLinkedInfo(t.get('id'));
+                info.linkedIds.forEach(function(id) {
+                    var linked = getObj('graphic', id);
+                    if (linked) setVal(linked, '');
+                });
+            });
             rebuildLinksForTokens(parentTokens);
             reply(msg, 'Desync', 'Disabled all syncing on ' + parentTokens.length + ' ' + label + '(s).' + (useDefault ? '' : ' Use <code>!gaslight sync reset</code> to restore.'));
             return;
@@ -1650,7 +1734,14 @@ var Gaslight = Gaslight || (() => {
                 var raw = getVal(t) || '';
                 var existing = raw.split(',').map(function(x) { return x.trim(); }).filter(Boolean);
                 excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
-                setVal(t, existing.join(', '));
+                var newVal = existing.join(', ');
+                setVal(t, newVal);
+                // Propagate to all linked copies
+                var info = getLinkedInfo(t.get('id'));
+                info.linkedIds.forEach(function(id) {
+                    var linked = getObj('graphic', id);
+                    if (linked) setVal(linked, newVal);
+                });
             });
             rebuildLinksForTokens(parentMasters);
         }
