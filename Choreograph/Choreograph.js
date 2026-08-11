@@ -355,6 +355,7 @@ var Choreograph = Choreograph || (() => {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    const cellHtml = (str) => escHtml(str) || '<br>';
 
     // =========================================================================
     // Handout helpers
@@ -459,26 +460,28 @@ var Choreograph = Choreograph || (() => {
         html += `</div>`;
 
         // Parameter table
+        html += `<h3 style="font-family:monospace;font-size:14px;margin:4px 0;">Parameters</h3>`;
         html += `<table style="border-collapse:collapse;width:100%;font-size:12px;margin-bottom:8px;">`;
         html += `<tr><th style="${STYLE.th}">Name</th>`;
         html += `<th style="${STYLE.th}">Type</th>`;
         html += `<th style="${STYLE.th}">Default</th>`;
         html += `<th style="${STYLE.th}">Description</th></tr>`;
         (scene.params || []).forEach(p => {
-            html += `<tr><td style="${STYLE.td}">${escHtml(p.name)}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(p.type)}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(p.default || '')}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(p.description)}</td></tr>`;
+            html += `<tr><td style="${STYLE.td}">${cellHtml(p.name)}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml(p.type)}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml(p.default || '')}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml(p.description)}</td></tr>`;
         });
         html += `</table>`;
 
         // Variables table
+        html += `<h3 style="font-family:monospace;font-size:14px;margin:4px 0;">Variables</h3>`;
         html += `<table style="border-collapse:collapse;width:100%;font-size:12px;margin-bottom:8px;">`;
         html += `<tr><th style="${STYLE.th}">Variable</th>`;
         html += `<th style="${STYLE.th}">Expression</th></tr>`;
         (scene.variables || []).forEach(v => {
-            html += `<tr><td style="${STYLE.td}">${escHtml(v.name)}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(v.expression)}</td></tr>`;
+            html += `<tr><td style="${STYLE.td}">${cellHtml(v.name)}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml(v.expression)}</td></tr>`;
         });
         html += `</table>`;
 
@@ -489,14 +492,15 @@ var Choreograph = Choreograph || (() => {
             html += `<th style="${STYLE.th}">Min</th>`;
             html += `<th style="${STYLE.th}">Max</th></tr>`;
             scene.roles.forEach(r => {
-                html += `<tr><td style="${STYLE.td}">${escHtml(r.name)}</td>`;
-                html += `<td style="${STYLE.td}">${r.min != null ? r.min : ''}</td>`;
-                html += `<td style="${STYLE.td}">${r.max != null ? r.max : ''}</td></tr>`;
+                html += `<tr><td style="${STYLE.td}">${cellHtml(r.name)}</td>`;
+                html += `<td style="${STYLE.td}">${r.min != null ? r.min : '<br>'}</td>`;
+                html += `<td style="${STYLE.td}">${r.max != null ? r.max : '<br>'}</td></tr>`;
             });
             html += `</table>`;
         }
 
         // Scene table
+        html += `<h3 style="font-family:monospace;font-size:14px;margin:4px 0;">Scene</h3>`;
         html += `<table style="border-collapse:collapse;width:100%;font-size:12px;">`;
         html += `<tr><th style="${STYLE.th}">Filter</th>`;
         html += `<th style="${STYLE.th}">Delay (ms)</th>`;
@@ -504,11 +508,11 @@ var Choreograph = Choreograph || (() => {
         html += `<th style="${STYLE.th}">Command</th>`;
         html += `<th style="${STYLE.th}">Notes</th></tr>`;
         (scene.rows || []).forEach(row => {
-            html += `<tr><td style="${STYLE.td}">${escHtml(row.filter)}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(row.delay)}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(row.when || '')}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml((row.commands || [row.command]).join('\n'))}</td>`;
-            html += `<td style="${STYLE.td}">${escHtml(row.notes)}</td></tr>`;
+            html += `<tr><td style="${STYLE.td}">${cellHtml(row.filter)}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml(row.delay)}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml(row.when || '')}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml((row.commands || [row.command]).join('\n'))}</td>`;
+            html += `<td style="${STYLE.td}">${cellHtml(row.notes)}</td></tr>`;
         });
         html += `</table>`;
 
@@ -521,6 +525,9 @@ var Choreograph = Choreograph || (() => {
             notes: '',
             params: [
                 { name: 'cast', type: 'token[]', default: 'selected', description: 'Tokens to run the scene on (built-in)' },
+            ],
+            variables: [
+                { name: '', expression: '' },
             ],
             rows: [
                 { filter: '*', delay: '0', commands: [], notes: 'Example row — add your command here' },
@@ -607,6 +614,7 @@ var Choreograph = Choreograph || (() => {
                 }
 
                 if (isParamTable && cells.length >= 2) {
+                    if (cells.every(c => !c)) continue;
                     scene.params.push({
                         name:        cells[0] || '',
                         type:        cells[1] || 'text',
@@ -614,11 +622,13 @@ var Choreograph = Choreograph || (() => {
                         description: cells[3] || '',
                     });
                 } else if (isVarTable && cells.length >= 2) {
+                    if (cells.every(c => !c)) continue;
                     scene.variables.push({
                         name:       cells[0] || '',
                         expression: cells[1] || '',
                     });
                 } else if (isSceneTable && cells.length >= 2) {
+                    if (cells.every(c => !c)) continue;
                     // Detect column layout by headers
                     const whenIdx = headers.indexOf('when');
                     const cmdIdx = whenIdx >= 0 ? whenIdx + 1 : 2;
@@ -642,6 +652,7 @@ var Choreograph = Choreograph || (() => {
                     if (whenIdx >= 0 && cells[whenIdx]) row.when = cells[whenIdx];
                     scene.rows.push(row);
                 } else if (isRoleTable && cells.length >= 1) {
+                    if (cells.every(c => !c)) continue;
                     const role = { name: cells[0] || '' };
                     if (cells[1]) role.min = parseInt(cells[1], 10) || undefined;
                     if (cells[2]) role.max = parseInt(cells[2], 10) || undefined;
