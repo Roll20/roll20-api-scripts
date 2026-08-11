@@ -2281,8 +2281,9 @@ var Choreograph = Choreograph || (() => {
             name: 'actors', namespace: 'core', returns: 'token[]',
             description: 'Tokens sorted by distance from current token.',
             fn: (token, filteredTokens, params, filterStr) => {
+                const cd = params.__ctx ? params.__ctx.castData : null;
                 const set = filterStr
-                    ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
+                    ? filteredTokens.filter(t => evalFilter(filterStr, t, cd))
                     : filteredTokens;
                 const tx = token.get('left'), ty = token.get('top');
                 return [...set].sort((a, b) => {
@@ -2296,8 +2297,9 @@ var Choreograph = Choreograph || (() => {
             name: 'actor_ids', namespace: 'core', returns: 'string[]',
             description: 'Token IDs sorted by distance from current token.',
             fn: (token, filteredTokens, params, filterStr) => {
+                const cd = params.__ctx ? params.__ctx.castData : null;
                 const set = filterStr
-                    ? filteredTokens.filter(t => evalFilter(filterStr, t, null))
+                    ? filteredTokens.filter(t => evalFilter(filterStr, t, cd))
                     : filteredTokens;
                 const tx = token.get('left'), ty = token.get('top');
                 return [...set].sort((a, b) => {
@@ -2999,10 +3001,10 @@ var Choreograph = Choreograph || (() => {
                     + ScriptKit.html.table(
                         ['Variable', 'Expression'],
                         [
-                            ['<code>dist</code>', '<code>distance(actors("role=sacrifice")[0])</code>'],
+                            ['<code>dist</code>', '<code>distance(role("sacrifice")[0])</code>'],
                         ])
                     + '<br><b>What this does:</b><br>'
-                    + '• <code>actors("role=sacrifice")[0]</code> — gets the sacrifice token (nearest one in that role)<br>'
+                    + '• <code>role("sacrifice")[0]</code> — gets the nearest token in the "sacrifice" role<br>'
                     + '• <code>distance(...)</code> — computes pixel distance from the current token to the sacrifice<br>'
                     + '• The result is stored as <code>dist</code>, available in all delay expressions and commands for this token<br><br>'
                     + '<b>Save the handout</b>, then click Continue.'
@@ -3022,7 +3024,7 @@ var Choreograph = Choreograph || (() => {
                     + '<b>Save</b> and click Continue.'
                 ) },
                 { prompt: '**Run It**\n\nRun: `!choreograph run summoning --cast summoning`\n\nYou should see:\n1. The chanting rows fire as before (clockwise stagger)\n2. The new distance row fires with timing based on proximity — closer cultists first, farther ones later\n3. Each message shows the actual pixel distance',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                  ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: '**Command Templates: Full Power**\n\nThe `${...}` syntax in commands is a full JavaScript template literal. You have access to:\n\n• All computed variables (`dist`, etc.)\n• `token.left`, `token.top`, `token.id`, `token.name`, etc.\n• All functions: `rank()`, `distance()`, `rand()`, `actors()`, etc.\n• JS expressions: `${dist > 100 ? "far" : "close"}`\n• String methods: `${token.name.toUpperCase()}`\n\n**Key Takeaways:**\n• Variables table = per-token computed values\n• Variables cascade top-to-bottom (later vars can use earlier ones)\n• `distance(target)` + `propagate(dist, speed)` = ripple-outward timing\n• `!filter` = negation (exclude a role/name/layer)\n• `${expr}` in commands = full JS evaluation\n\nNext: we\'ll make the chanting loop with escalating intensity.',
                   offerExamples: ['looping-and-sync']
