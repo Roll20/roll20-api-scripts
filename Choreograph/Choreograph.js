@@ -2912,6 +2912,18 @@ var Choreograph = Choreograph || (() => {
         // Tutorial Examples (via ScriptKit)
         // =====================================================================
 
+        // Helper: generate a clickable handout link, or plain text if not found
+        const sceneLink = (name) => {
+            const h = scenes().find(name);
+            const display = `[Scene] ${name}`;
+            return h ? `<a href="http://journal.roll20.net/handout/${h.get('id')}">${display}</a>` : `<code>${display}</code>`;
+        };
+        const castLink = (name) => {
+            const h = casts().find(name);
+            const display = `[Cast] ${name}`;
+            return h ? `<a href="http://journal.roll20.net/handout/${h.get('id')}">${display}</a>` : `<code>${display}</code>`;
+        };
+
         ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
             name: 'your-first-scene',
             description: 'Create "The Summoning" — learn scenes, tables, filters, delay, and running.',
@@ -2926,7 +2938,15 @@ var Choreograph = Choreograph || (() => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Run `!choreograph new summoning`.';
                   }
                 },
-                { prompt: '**The Three Tables**\n\nOpen `[Scene] summoning` from your journal. You\'ll see:\n\n1. **Parameters** — inputs the scene accepts when run (e.g. `--speed 2`). The built-in `cast` parameter is your selected tokens.\n2. **Variables** — computed values evaluated *per token* at runtime (e.g. distance from center).\n3. **Scene Table** — the rows: **Filter** | **Delay** | **When** | **Command** | **Notes**\n\nEach row says: *"for tokens matching this **filter**, after this **delay**, and **when** these conditions are met, fire this **command** (the **Notes** is just for you to keep track of what is going on)."* All rows start simultaneously — the delay offsets them.\n\nClick Continue when you\'ve opened the handout.' },
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>The Three Tables</b><br><br>'
+                    + 'Open ' + sceneLink('summoning') + ' from your journal. You\'ll see:<br><br>'
+                    + '1. <b>Parameters</b> — inputs the scene accepts when run (e.g. <code>--speed 2</code>). The built-in <code>cast</code> parameter is your selected tokens.<br>'
+                    + '2. <b>Variables</b> — computed values evaluated <i>per token</i> at runtime (e.g. distance from center).<br>'
+                    + '3. <b>Scene Table</b> — the rows: <b>Filter</b> | <b>Delay</b> | <b>When</b> | <b>Command</b> | <b>Notes</b><br><br>'
+                    + 'Each row says: <i>"for tokens matching this <b>filter</b>, after this <b>delay</b>, and <b>when</b> these conditions are met, fire this <b>command</b> (the <b>Notes</b> is just for you to keep track of what is going on)."</i> All rows start simultaneously — the delay offsets them.<br><br>'
+                    + 'Click Continue when you\'ve opened the handout.'
+                ) },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Your First Rows</b><br><br>'
                     + 'In the Scene Table, replace the example row with three rows (leave <b>When</b> and <b>Notes</b> empty for now):<br><br>'
@@ -2956,7 +2976,12 @@ var Choreograph = Choreograph || (() => {
             name: 'roles-and-casts',
             description: 'Split cultists into role groups — each group chants a different phrase.',
             guide: [
-                { prompt: '**Roles & Casts**\n\nRight now all cultists chant the same three phrases in unison. Let\'s split them into three groups so each group speaks a different line of the incantation.\n\n**Prerequisite:** Complete the "Your First Scene" tutorial first. You should have `[Scene] summoning` and your cultist tokens.\n\nClick Continue to begin.',
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>Roles &amp; Casts</b><br><br>'
+                    + 'Right now all cultists chant the same three phrases in unison. Let\'s split them into three groups so each group speaks a different line of the incantation.<br><br>'
+                    + '<b>Prerequisite:</b> Complete the "Your First Scene" tutorial first. You should have ' + sceneLink('summoning') + ' and your cultist tokens.<br><br>'
+                    + 'Click Continue to begin.'
+                ),
                   onContinue: () => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Complete the "Your First Scene" tutorial first.';
                   }
@@ -2973,7 +2998,7 @@ var Choreograph = Choreograph || (() => {
                 },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Update the Scene</b><br><br>'
-                    + 'Open <code>[Scene] summoning</code> and change the Filter column on each row to target a specific role:<br><br>'
+                    + 'Open ' + sceneLink('summoning') + ' and change the Filter column on each row to target a specific role:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
@@ -2987,7 +3012,17 @@ var Choreograph = Choreograph || (() => {
                 { prompt: '**Run with the Cast**\n\nInstead of selecting tokens manually, use the saved cast:\n\n`!choreograph run summoning --cast summoning`\n\nYou should see each group chant its own phrase at its scheduled time.',
                   ...Choreograph.waitForScene('summoning'),
                 },
-                { prompt: '**Key Concepts:**\n\n• `!choreograph cast add <name> --role <role>` — assign selected tokens to a named role\n• `role=X` in the Filter column — only match tokens in that role\n• `--cast <name>` on run — load a saved cast instead of using selected tokens\n• Roles persist in a `[Cast] summoning` handout — edit it directly to reassign\n\n**Useful commands:**\n• `!choreograph cast show summoning` — view current assignments\n• `!choreograph cast remove summoning --role first` — remove tokens from a role\n\nIn the next tutorial, we\'ll add timing expressions so the cultists within each group activate one at a time, clockwise around the circle.',
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>Key Concepts:</b><br><br>'
+                    + '• <code>!choreograph cast add &lt;name&gt; --role &lt;role&gt;</code> — assign selected tokens to a named role<br>'
+                    + '• <code>role=X</code> in the Filter column — only match tokens in that role<br>'
+                    + '• <code>--cast &lt;name&gt;</code> on run — load a saved cast instead of using selected tokens<br>'
+                    + '• Roles persist in the ' + castLink('summoning') + ' handout — edit it directly to reassign<br><br>'
+                    + '<b>Useful commands:</b><br>'
+                    + '• <code>!choreograph cast show summoning</code> — view current assignments<br>'
+                    + '• <code>!choreograph cast remove summoning --role first</code> — remove tokens from a role<br><br>'
+                    + 'In the next tutorial, we\'ll add timing expressions so the cultists within each group activate one at a time, clockwise around the circle.'
+                ),
                   offerExamples: ['filters-and-delay']
                 },
             ],
@@ -2997,7 +3032,12 @@ var Choreograph = Choreograph || (() => {
             name: 'filters-and-delay',
             description: 'Stagger cultists clockwise with timing expressions and add chaotic energy effects.',
             guide: [
-                { prompt: '**Filters & Delay**\n\nThe cultist groups chant their phrases, but within each group everyone speaks at the same instant. Let\'s make them activate one at a time, sweeping clockwise around the circle.\n\n**Prerequisite:** Complete "Roles & Casts" first. You should have `[Scene] summoning` with role-based filters and a `[Cast] summoning`. At least one role needs 2+ tokens for staggering to be visible (6+ cultists total recommended).\n\nClick Continue to begin.',
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>Filters &amp; Delay</b><br><br>'
+                    + 'The cultist groups chant their phrases, but within each group everyone speaks at the same instant. Let\'s make them activate one at a time, sweeping clockwise around the circle.<br><br>'
+                    + '<b>Prerequisite:</b> Complete "Roles &amp; Casts" first. You should have ' + sceneLink('summoning') + ' with role-based filters and a ' + castLink('summoning') + '. At least one role needs 2+ tokens for staggering to be visible (6+ cultists total recommended).<br><br>'
+                    + 'Click Continue to begin.'
+                ),
                   onContinue: () => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Complete the previous tutorials first.';
                   }
@@ -3005,7 +3045,7 @@ var Choreograph = Choreograph || (() => {
                 { prompt: '**Timing Expressions**\n\nSo far, delays have been fixed numbers (ms). But delays can be *expressions* — evaluated per-token, producing different values for each.\n\nKey functions:\n• `rank("attr")` — this token\'s sort position (0-based) among filtered tokens, sorted by attribute\n• `stagger(position, interval)` — `position * interval` (spaces out execution)\n• `rand(min, max)` — random number in range\n• `propagate(distance, speed)` — `distance / speed`\n\nSince your cultists face the center, their `rotation` values increase clockwise. So `rank("rotation")` gives clockwise order!\n\nClick Continue.' },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Update the Delays</b><br><br>'
-                    + 'Open <code>[Scene] summoning</code> and update the Delay column:<br><br>'
+                    + 'Open ' + sceneLink('summoning') + ' and update the Delay column:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
@@ -3061,7 +3101,12 @@ var Choreograph = Choreograph || (() => {
             name: 'variables-and-templates',
             description: 'Compute distance from the sacrifice and use it in delays and commands.',
             guide: [
-                { prompt: '**Variables & Templates**\n\nThe cultists chant in clockwise order, but the ritual should intensify based on proximity to the sacrifice at the center. Let\'s add computed variables that measure distance from the sacrifice token.\n\n**Prerequisite:** Complete "Filters & Delay". You need `[Scene] summoning` and `[Cast] summoning` with roles.\n\nClick Continue to begin.',
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>Variables &amp; Templates</b><br><br>'
+                    + 'The cultists chant in clockwise order, but the ritual should intensify based on proximity to the sacrifice at the center. Let\'s add computed variables that measure distance from the sacrifice token.<br><br>'
+                    + '<b>Prerequisite:</b> Complete "Filters &amp; Delay". You need ' + sceneLink('summoning') + ' and ' + castLink('summoning') + ' with roles.<br><br>'
+                    + 'Click Continue to begin.'
+                ),
                   onContinue: () => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Complete the previous tutorials first.';
                   }
@@ -3072,7 +3117,7 @@ var Choreograph = Choreograph || (() => {
                 { prompt: '**Vary the Distances**\n\nFor this tutorial to look interesting, each cultist needs a slightly different distance from the sacrifice. Hold Alt and drag some cultists closer or farther from the center — make the circle a bit messy.\n\nThis ensures `propagate()` produces visibly different delays for each token.\n\nClick Continue when your cultists are at varied distances.' },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>The Parameters Table</b><br><br>'
-                    + 'Open <code>[Scene] summoning</code>. The first table is the <b>Parameters</b> table. It already has the built-in <code>cast</code> parameter.<br><br>'
+                    + 'Open ' + sceneLink('summoning') + '. The first table is the <b>Parameters</b> table. It already has the built-in <code>cast</code> parameter.<br><br>'
                     + 'Parameters are inputs you can pass at runtime with <code>--name value</code>. Let\'s add a <code>speed</code> parameter to control how fast effects propagate.<br><br>'
                     + 'Add this row to the Parameters table (leave Default empty):<br><br>'
                     + ScriptKit.html.table(
@@ -3087,7 +3132,7 @@ var Choreograph = Choreograph || (() => {
                 },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Add a Default</b><br><br>'
-                    + 'Open <code>[Scene] summoning</code> and add a default value to the speed parameter:<br><br>'
+                    + 'Open ' + sceneLink('summoning') + ' and add a default value to the speed parameter:<br><br>'
                     + ScriptKit.html.table(
                         ['Name', 'Type', 'Default', 'Description'],
                         [
@@ -3139,7 +3184,12 @@ var Choreograph = Choreograph || (() => {
             name: 'looping-and-when',
             description: 'Make the ritual chanting loop with sync gating between cycles.',
             guide: [
-                { prompt: '**Looping & Sync**\n\nThe summoning ritual should repeat — cultists chanting in cycles, energy building with each repetition. Choreograph\'s loop system handles this.\n\n**Prerequisite:** Complete "Variables & Templates". You need `[Scene] summoning` with roles, stagger delays, and the distance variable.\n\nClick Continue to begin.',
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>Looping &amp; When</b><br><br>'
+                    + 'The summoning ritual should repeat — cultists chanting in cycles, energy building with each repetition. Choreograph\'s loop system handles this.<br><br>'
+                    + '<b>Prerequisite:</b> Complete "Variables &amp; Templates". You need ' + sceneLink('summoning') + ' with roles, stagger delays, and the distance variable.<br><br>'
+                    + 'Click Continue to begin.'
+                ),
                   onContinue: () => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Complete the previous tutorials first.';
                   }
@@ -3147,7 +3197,7 @@ var Choreograph = Choreograph || (() => {
                 { prompt: () => ScriptKit.html.raw(
                     '<b>The When Column</b><br><br>'
                     + 'Before we loop, the echo commands from earlier will spam chat on every cycle. Let\'s disable them using the <b>When</b> column.<br><br>'
-                    + 'The When column is a JS expression — if it evaluates to falsy, the row is skipped for that token. Open <code>[Scene] summoning</code> and put <code>false</code> in the <b>When</b> column on the three echo rows:<br><br>'
+                    + 'The When column is a JS expression — if it evaluates to falsy, the row is skipped for that token. Open ' + sceneLink('summoning') + ' and put <code>false</code> in the <b>When</b> column on the three echo rows:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
@@ -3189,7 +3239,7 @@ var Choreograph = Choreograph || (() => {
                 },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Fill in the Climax Scene</b><br><br>'
-                    + 'Open <code>[Scene] summoning-climax</code> and set up an explosion effect:<br><br>'
+                    + 'Open ' + sceneLink('summoning-climax') + ' and set up an explosion effect:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
@@ -3214,7 +3264,7 @@ var Choreograph = Choreograph || (() => {
                 },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Fill in the Ritual Scene</b><br><br>'
-                    + 'Open <code>[Scene] ritual</code> and set up two rows:<br><br>'
+                    + 'Open ' + sceneLink('ritual') + ' and set up two rows:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
