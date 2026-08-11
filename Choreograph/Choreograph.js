@@ -1332,9 +1332,53 @@ var Choreograph = Choreograph || (() => {
 
         // For each row, evaluate filter on all cast, then compute delays
         scene.rows.forEach((row, rowIndex) => {
-            // Check for sync delay — only one sync entry per row
+            // Check for sync delay — creates a chunk boundary
             if (row.delay.trim().toLowerCase() === 'sync') {
                 queue.push({ time: -1, rowIndex, isSync: true });
+                // If the sync row has commands, queue them to fire after the sync resolves (time 0 in next chunk)
+                const commands = row.commands || [row.command];
+                const hasCommand = commands.some(c => c && c.trim());
+                if (hasCommand) {
+                    // Filter cast for this row
+                    const filtered = cast.filter(token => {
+                        const filterScope = buildTokenScope(token, cast, resolvedParams);
+                        Object.assign(filterScope, resolvedParams);
+                        Object.assign(filterScope, tokenVars[token.get('id')] || {});
+                        return evalFilter(row.filter, token, castData, filterScope);
+                    });
+                    filtered.forEach(token => {
+                        const scope = buildTokenScope(token, filtered, resolvedParams);
+                        Object.assign(scope, resolvedParams);
+                        Object.assign(scope, tokenVars[token.get('id')] || {});
+                        const tokenProxy = wrapToken(token, { tokens: filtered, params: resolvedParams });
+                        scope.token     = tokenProxy;
+                        scope.tokenId   = token.get('id');
+                        scope.tokenName = token.get('name') || '';
+                        scope.pageId    = token.get('_pageid');
+                        scope.self      = scene.name;
+                        scope.castName  = (runtimeOpts && runtimeOpts.castName) || '';
+                        scope.__parent  = instanceId;
+                        scope.__depth   = Math.max(0, ((runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10) - 1);
+
+                        // Evaluate 'when' condition
+                        if (row.when) {
+                            try {
+                                const decls = Object.keys(scope).map(k => `var ${k} = __scope["${k}"];`).join(' ');
+                                const __scope = scope;
+                                if (!eval(decls + '(' + row.when + ')')) return;
+                            } catch(e) {
+                                log(`${SCRIPT_NAME}: when expression error: ${e.message} (expr: "${row.when}")`);
+                                return;
+                            }
+                        }
+
+                        commands.forEach(cmdTemplate => {
+                            const command = evalCommand(cmdTemplate, scope);
+                            if (!command) return;
+                            queue.push({ time: 0, rowIndex, tokenId: token.get('id'), command });
+                        });
+                    });
+                }
                 return;
             }
 
@@ -1362,6 +1406,7 @@ var Choreograph = Choreograph || (() => {
                 scope.tokenName = token.get('name') || '';
                 scope.pageId    = token.get('_pageid');
                 scope.self      = scene.name;
+                scope.castName  = (runtimeOpts && runtimeOpts.castName) || '';
                 scope.__parent  = instanceId;
                 scope.__depth   = Math.max(0, ((runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10) - 1);
 
@@ -3093,7 +3138,7 @@ var Choreograph = Choreograph || (() => {
             name: 'chaining-and-recursion',
             description: 'Create a climax scene triggered by chaining — FX explosion when the ritual completes.',
             guide: [
-                { prompt: '**Chaining & Recursion**\n\nThe ritual builds to a climax — but the climax is a separate effect (explosion, reveal, etc.). Choreograph lets one scene **chain** into another, passing parameters between them.\n\n**Prerequisite:** Complete "Looping & Sync".\n\nClick Continue to begin.',
+                { prompt: '**Chaining & Recursion**\n\nThe ritual builds to a climax — but the climax is a separate effect. Choreograph lets one scene **chain** into another. We\'ll create a parent scene that orchestrates the full ritual: chanting loops, then the climax.\n\n**Prerequisite:** Complete "Looping & When".\n\nClick Continue to begin.',
                   onContinue: () => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Complete the previous tutorials first.';
                   }
@@ -3106,35 +3151,48 @@ var Choreograph = Choreograph || (() => {
                 },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Fill in the Climax Scene</b><br><br>'
-                    + 'Open <code>[Scene] summoning-climax</code> and set up a simple explosion effect:<br><br>'
+                    + 'Open <code>[Scene] summoning-climax</code> and set up an explosion effect:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
-                            ['<code>role=sacrifice</code>', '<code>0</code>', '', '<code>!choreograph fx nova-holy ${token.left} ${token.top}</code>', 'explosion'],
-                            ['<code>&#42;</code>', '<code>500</code>', '', '<code>!choreograph echo The ritual is complete! A being emerges from the void...</code>', 'reveal'],
+                            ['<code>role=sacrifice</code>', '<code>0</code>', '', '<code>!choreograph fx nova-holy ${token.id}</code>', 'explosion'],
+                            ['<code>!role=sacrifice</code>', '<code>propagate(dist, 0.2)</code>', '', '<code>!choreograph fx explode-magic ${token.id}</code>', 'ripple'],
                         ])
-                    + '<br>The climax scene targets the sacrifice token for the FX, then announces the result.<br><br>'
+                    + '<br>This needs the same variables as the summoning scene. Add to the Variables table:<br><br>'
+                    + ScriptKit.html.table(
+                        ['Variable', 'Expression'],
+                        [
+                            ['<code>sacrifice</code>', '<code>role("sacrifice")[0]</code>'],
+                            ['<code>dist</code>', '<code>distance(sacrifice)</code>'],
+                        ])
+                    + '<br>The climax fires a nova at the sacrifice, then magic explosions ripple outward to each cultist.<br><br>'
                     + '<b>Save the handout</b>, then click Continue.'
                 ) },
+                { prompt: '**Create the Parent Scene**\n\nRun: `!choreograph new ritual`\n\nThis will be the orchestrator — it chains the summoning loop into the climax.',
+                  ...ScriptKit.waitForCommand('!choreograph new'),
+                  onContinue: () => {
+                      if (!scenes().find('ritual')) return 'Scene "ritual" not found. Run `!choreograph new ritual`.';
+                  }
+                },
                 { prompt: () => ScriptKit.html.raw(
-                    '<b>Chain from the Main Scene</b><br><br>'
-                    + 'Open <code>[Scene] summoning</code> and add a final row that triggers the climax. We use the <b>When</b> column to ensure only one token fires it:<br><br>'
+                    '<b>Fill in the Ritual Scene</b><br><br>'
+                    + 'Open <code>[Scene] ritual</code> and set up two rows:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
-                            ['<code>role=sacrifice</code>', '<code>6000</code>', '', '<code>!choreograph run summoning-climax --cast summoning</code>', 'chain to climax'],
+                            ['<code>&#42;</code>', '<code>0</code>', '', '<code>!choreograph run summoning --cast ${castName} --loop 3</code>', 'chanting x3'],
+                            ['<code>&#42;</code>', '<code>sync</code>', '', '<code>!choreograph run summoning-climax --cast ${castName}</code>', 'climax'],
                         ])
                     + '<br><b>What\'s happening:</b><br>'
-                    + '• <code>role=sacrifice</code> — only the sacrifice token fires this row (so it only triggers once)<br>'
-                    + '• <code>6000</code> — waits 6 seconds (after all chanting finishes)<br>'
-                    + '• The command runs <code>summoning-climax</code> with the same cast<br>'
-                    + '• Choreograph auto-injects <code>--parent</code> and <code>--depth</code> for chain management<br><br>'
+                    + '• Row 1 runs the summoning scene 3 times (loops flow back-to-back)<br>'
+                    + '• Row 2 has delay <code>sync</code> — it waits for all previous commands to finish, then fires the climax<br>'
+                    + '• <code>${castName}</code> passes the current cast name to child scenes so they can look up role assignments<br><br>'
                     + '<b>Save</b> and click Continue.'
                 ) },
-                { prompt: '**Run the Complete Ritual**\n\nRun: `!choreograph run summoning --cast summoning`\n\nYou should see:\n1. Clockwise chanting from each group\n2. Random dark energy crackling\n3. Distance-based propagation\n4. After 6 seconds — the climax scene fires: nova FX + reveal message',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                { prompt: '**Run the Complete Ritual**\n\nRun: `!choreograph run ritual --cast summoning`\n\nYou should see:\n1. The summoning FX play 3 times (fire breath + dark energy each cycle)\n2. After all 3 cycles complete — the climax fires: nova at the sacrifice, then magic explosions ripple outward',
+                  ...Choreograph.waitForScene('ritual'),
                 },
-                { prompt: '**Chaining Concepts:**\n\n• Any `!choreograph run` in a command template chains to that scene\n• `--parent` and `--depth` are auto-injected (prevents infinite recursion)\n• `--depth 10` is the default max — at depth 0, child scenes are skipped\n• `${self}` in a command resolves to the current scene name (useful for recursive scenes)\n• Child scenes inherit the parent\'s cast if you pass `--cast`\n\n**The When Column:**\n\nThe When column is a JS expression. If it returns falsy, the row is skipped for that token:\n• `role=sacrifice` as a filter already limits *which* tokens fire\n• When is for more complex conditions: `dist < 100`, `token.name === "Leader"`, etc.\n• Combined with `${self}` and a decreasing counter param, you can build recursive patterns\n\n**Congratulations!** You\'ve built a complete multi-phase ritual summoning scene with roles, timing, variables, and chaining. From here, experiment with:\n• `--loop 3 --sync` on the main scene for repeated chants before the climax\n• `!sequence play` commands for smooth animations (requires Sequence)\n• `!token-mod` for visual changes (tint, size, layer, status markers)',
+                { prompt: '**Chaining Concepts:**\n\n• Any `!choreograph run` in a command template chains to that scene\n• `sync` delay = wait for all previous commands to finish before this row fires\n• `${castName}` resolves to the current cast name — pass it to child scenes with `--cast`\n• Tokens matching the row\'s filter are auto-selected as the child scene\'s cast\n• `--depth 10` is the default max recursion depth (prevents infinite loops)\n• `${self}` in a command resolves to the current scene name (useful for recursive scenes)\n\n**Congratulations!** You\'ve built a complete multi-phase ritual with roles, timing, variables, looping, and chaining. From here, experiment with:\n• `!sequence play` commands for smooth animations (requires Sequence)\n• Custom FX types for unique visuals\n• More complex scene hierarchies with multiple children',
                   offerExamples: ['your-first-scene', 'roles-and-casts', 'filters-and-delay', 'variables-and-templates', 'looping-and-when']
                 },
             ],
@@ -3168,16 +3226,31 @@ var Choreograph = Choreograph || (() => {
         registerSyncParticipant(SCRIPT_NAME, {
             commands: [/^!choreograph run /],
             waiting: (ctx) => {
-                const children = Object.values(runningScenes)
+                // Check immediately — child may already be registered (cached scene load is sync)
+                const immediateChildren = Object.values(runningScenes)
                     .filter(s => s.parentId === ctx.sceneInfo.instanceId);
-                if (children.length === 0) { ctx.done(); return; }
-                // Poll for children to finish
+                let childrenSeen = immediateChildren.length > 0;
+                // If children already appeared and disappeared, we're done
+                // (shouldn't happen on immediate check, but guard anyway)
+
+                // Poll for children to register and then finish
+                // (child scenes load async, so they may not be in runningScenes yet)
+                let attempts = 0;
                 const check = setInterval(() => {
-                    const remaining = Object.values(runningScenes)
+                    const children = Object.values(runningScenes)
                         .filter(s => s.parentId === ctx.sceneInfo.instanceId);
-                    if (remaining.length === 0) {
+                    if (children.length > 0) {
+                        childrenSeen = true;
+                    } else if (childrenSeen) {
+                        // Children were running and are now gone — done
                         clearInterval(check);
                         ctx.done();
+                        return;
+                    } else {
+                        attempts++;
+                        // Give children time to register (async handout load)
+                        if (attempts > 20) { clearInterval(check); ctx.done(); }
+                        return;
                     }
                 }, 100);
             },
