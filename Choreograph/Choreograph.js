@@ -2111,15 +2111,20 @@ var Choreograph = Choreograph || (() => {
 
         // ---- fx ----
         // Usage: !choreograph fx <type> <x> <y> [pageId]
-        // Or with selected: !choreograph fx <type> (at selected token location)
+        // Or: !choreograph fx <type> <id>
+        // Or with selected: !choreograph fx <type> (at selected token location/page)
         if (cmd === 'fx') {
             const fxType = args[0];
-            if (!fxType) { replyError(msg, 'Usage: !choreograph fx <type> [x y [pageId]] or with token selected'); return; }
+            if (!fxType) { replyError(msg, 'Usage: !choreograph fx <type> <x> <y> [pageId] or <type> <id> or <type> with token selected'); return; }
             let x, y, pageId;
             if (args.length >= 3) {
                 x = parseFloat(args[1]);
                 y = parseFloat(args[2]);
                 pageId = args[3] || undefined;
+            } else if (args.length === 2) {
+                // Single arg after type — try as token ID
+                const tok = getObj('graphic', args[1]);
+                if (tok) { x = tok.get('left'); y = tok.get('top'); pageId = tok.get('_pageid'); }
             }
             if (x === undefined || y === undefined) {
                 if (msg.selected && msg.selected.length > 0) {
@@ -2139,22 +2144,41 @@ var Choreograph = Choreograph || (() => {
 
         // ---- fxbetween ----
         // Usage: !choreograph fxbetween <type> <x1> <y1> <x2> <y2> [pageId]
-        // Or with 2 selected: !choreograph fxbetween <type>
+        // Or: !choreograph fxbetween <type> <from_id> <to_id>
+        // Or with 2 selected: !choreograph fxbetween <type> (from first to second selected token location/page)
         if (cmd === 'fxbetween') {
             const fxType = args[0];
-            if (!fxType) { replyError(msg, 'Usage: !choreograph fxbetween <type> [x1 y1 x2 y2]'); return; }
+            if (!fxType) { replyError(msg, 'Usage: !choreograph fxbetween <type> <x1> <y1> <x2> <y2> [pageId] or <type> <from_id> <to_id> or <type> with 2 tokens selected'); return; }
+            log(`${SCRIPT_NAME}: fxbetween — args: ${JSON.stringify(args)}, args.length: ${args.length}`);
             let p1, p2, pageId;
             if (args.length >= 5) {
                 p1 = { x: parseFloat(args[1]), y: parseFloat(args[2]) };
                 p2 = { x: parseFloat(args[3]), y: parseFloat(args[4]) };
                 pageId = args[5] || Campaign().get('playerpageid');
-            } else if (msg.selected && msg.selected.length >= 2) {
-                const t1 = getObj('graphic', msg.selected[0]._id);
-                const t2 = getObj('graphic', msg.selected[1]._id);
+                log(`${SCRIPT_NAME}: fxbetween — coord mode: p1=${JSON.stringify(p1)}, p2=${JSON.stringify(p2)}, pageId=${pageId}`);
+            } else if (args.length === 3) {
+                // Two args after type — try as token IDs
+                log(`${SCRIPT_NAME}: fxbetween — token ID mode: args[1]="${args[1]}", args[2]="${args[2]}"`);
+                const t1 = getObj('graphic', args[1]);
+                const t2 = getObj('graphic', args[2]);
+                log(`${SCRIPT_NAME}: fxbetween — t1=${!!t1}, t2=${!!t2}`);
                 if (t1 && t2) {
                     p1 = { x: t1.get('left'), y: t1.get('top') };
                     p2 = { x: t2.get('left'), y: t2.get('top') };
                     pageId = t1.get('_pageid');
+                    log(`${SCRIPT_NAME}: fxbetween — resolved: p1=${JSON.stringify(p1)}, p2=${JSON.stringify(p2)}, pageId=${pageId}`);
+                }
+            }
+            if (!p1 || !p2) {
+                log(`${SCRIPT_NAME}: fxbetween — falling through to selected, p1=${!!p1}, p2=${!!p2}`);
+                if (msg.selected && msg.selected.length >= 2) {
+                    const t1 = getObj('graphic', msg.selected[0]._id);
+                    const t2 = getObj('graphic', msg.selected[1]._id);
+                    if (t1 && t2) {
+                        p1 = { x: t1.get('left'), y: t1.get('top') };
+                        p2 = { x: t2.get('left'), y: t2.get('top') };
+                        pageId = t1.get('_pageid');
+                    }
                 }
             }
             if (p1 && p2) {
@@ -2994,36 +3018,38 @@ var Choreograph = Choreograph || (() => {
                 { prompt: '**Add a Sacrifice Token**\n\nPlace a token in the center of the cultist circle. This is the sacrifice — the focal point of the ritual.\n\nAdd it to the cast with a new role:\n\n`!choreograph cast add summoning --role sacrifice`\n\n(Select the center token first.)',
                   ...ScriptKit.waitForCommand('!choreograph cast')
                 },
+                { prompt: '**Vary the Distances**\n\nFor this tutorial to look interesting, each cultist needs a slightly different distance from the sacrifice. Hold Alt and drag some cultists closer or farther from the center — make the circle a bit messy.\n\nThis ensures `propagate()` produces visibly different delays for each token.\n\nClick Continue when your cultists are at varied distances.' },
                 { prompt: '**The Variables Table**\n\nOpen `[Scene] summoning`. The second table is the **Variables** table (two columns: **Variable** | **Expression**).\n\nVariables are computed *per token* before the scene runs. They can reference:\n• `token.left`, `token.top`, `token.name`, etc. — the current token\'s properties\n• Any registered function — `distance()`, `rank()`, `actors()`, `role_ids()`, etc.\n• Parameters passed at runtime\n• Earlier variables (evaluated top-to-bottom)\n\nClick Continue.' },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Add a Distance Variable</b><br><br>'
-                    + 'In the Variables table, add this row:<br><br>'
+                    + 'In the Variables table, add these rows:<br><br>'
                     + ScriptKit.html.table(
                         ['Variable', 'Expression'],
                         [
-                            ['<code>dist</code>', '<code>distance(role("sacrifice")[0])</code>'],
+                            ['<code>sacrifice</code>', '<code>role("sacrifice")[0]</code>'],
+                            ['<code>dist</code>', '<code>distance(sacrifice)</code>'],
                         ])
                     + '<br><b>What this does:</b><br>'
                     + '• <code>role("sacrifice")[0]</code> — gets the nearest token in the "sacrifice" role<br>'
-                    + '• <code>distance(...)</code> — computes pixel distance from the current token to the sacrifice<br>'
-                    + '• The result is stored as <code>dist</code>, available in all delay expressions and commands for this token<br><br>'
+                    + '• <code>distance(sacrifice)</code> — computes pixel distance from the current token to the sacrifice<br>'
+                    + '• Variables cascade: <code>dist</code> can reference the earlier <code>sacrifice</code> variable<br><br>'
                     + '<b>Save the handout</b>, then click Continue.'
                 ) },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Use Distance in a Command</b><br><br>'
-                    + 'Add a new row to the Scene Table that uses <code>dist</code> in the command. This echoes each cultist\'s distance from the center:<br><br>'
+                    + 'Add a new row to the Scene Table that uses <code>dist</code> in the delay. This fires a breath of fire from the sacrifice to each cultist:<br><br>'
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
-                            ['<code>!role=sacrifice</code>', '<code>propagate(dist, 0.2)</code>', '', '<code>!choreograph echo ${token.name} is ${Math.round(dist)}px from the sacrifice</code>', 'distance echo'],
+                            ['<code>!role=sacrifice</code>', '<code>propagate(dist, 0.2)</code>', '', '<code>!choreograph fxbetween breath-fire ${sacrifice.id} ${token.id}</code>', 'fire breath'],
                         ])
                     + '<br><b>What\'s new here:</b><br>'
                     + '• <code>!role=sacrifice</code> — negation filter: all tokens EXCEPT the sacrifice<br>'
                     + '• <code>propagate(dist, 0.2)</code> — delay = distance / speed, so farther tokens fire later<br>'
-                    + '• <code>${Math.round(dist)}</code> — use the variable in a command template with JS expressions<br><br>'
+                    + '• <code>${sacrifice.id}</code> — use the computed variable to get the sacrifice token\'s ID<br><br>'
                     + '<b>Save</b> and click Continue.'
                 ) },
-                { prompt: '**Run It**\n\nRun: `!choreograph run summoning --cast summoning`\n\nYou should see:\n1. The chanting rows fire as before (clockwise stagger)\n2. The new distance row fires with timing based on proximity — closer cultists first, farther ones later\n3. Each message shows the actual pixel distance',
+                { prompt: '**Run It**\n\nRun: `!choreograph run summoning --cast summoning`\n\nYou should see:\n1. The chanting rows fire as before (clockwise stagger)\n2. Fire breath shoots from the sacrifice to each cultist, staggered by distance — closer ones first\n3. The dark energy explosions fire chaotically on top',
                   ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: '**Command Templates: Full Power**\n\nThe `${...}` syntax in commands is a full JavaScript template literal. You have access to:\n\n• All computed variables (`dist`, etc.)\n• `token.left`, `token.top`, `token.id`, `token.name`, etc.\n• All functions: `rank()`, `distance()`, `rand()`, `actors()`, etc.\n• JS expressions: `${dist > 100 ? "far" : "close"}`\n• String methods: `${token.name.toUpperCase()}`\n\n**Key Takeaways:**\n• Variables table = per-token computed values\n• Variables cascade top-to-bottom (later vars can use earlier ones)\n• `distance(target)` + `propagate(dist, speed)` = ripple-outward timing\n• `!filter` = negation (exclude a role/name/layer)\n• `${expr}` in commands = full JS evaluation\n\nNext: we\'ll make the chanting loop with escalating intensity.',
