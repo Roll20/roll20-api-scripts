@@ -216,9 +216,9 @@ var ScriptKit = ScriptKit || (() => {
         },
         table: (headers, rows, style) => {
             var tableStyle = style ? html.style(style) : 'border-collapse:collapse';
-            var h = '<table style="' + tableStyle + '"><tr>' + headers.map(col => '<th style="border:1px solid #999;padding:2px 6px;">' + col + '</th>').join('') + '</tr>';
+            var h = '<div style="overflow-x:auto"><table style="' + tableStyle + '"><tr>' + headers.map(col => '<th style="border:1px solid #999;padding:2px 6px;white-space:nowrap">' + col + '</th>').join('') + '</tr>';
             h += rows.map(row => '<tr>' + row.map(cell => '<td style="border:1px solid #999;padding:2px 6px;">' + cell + '</td>').join('') + '</tr>').join('');
-            h += '</table>';
+            h += '</table></div>';
             return h;
         },
         /**
