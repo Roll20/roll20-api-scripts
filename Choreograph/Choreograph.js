@@ -2149,28 +2149,22 @@ var Choreograph = Choreograph || (() => {
         if (cmd === 'fxbetween') {
             const fxType = args[0];
             if (!fxType) { replyError(msg, 'Usage: !choreograph fxbetween <type> <x1> <y1> <x2> <y2> [pageId] or <type> <from_id> <to_id> or <type> with 2 tokens selected'); return; }
-            log(`${SCRIPT_NAME}: fxbetween — args: ${JSON.stringify(args)}, args.length: ${args.length}`);
             let p1, p2, pageId;
             if (args.length >= 5) {
                 p1 = { x: parseFloat(args[1]), y: parseFloat(args[2]) };
                 p2 = { x: parseFloat(args[3]), y: parseFloat(args[4]) };
                 pageId = args[5] || Campaign().get('playerpageid');
-                log(`${SCRIPT_NAME}: fxbetween — coord mode: p1=${JSON.stringify(p1)}, p2=${JSON.stringify(p2)}, pageId=${pageId}`);
             } else if (args.length === 3) {
                 // Two args after type — try as token IDs
-                log(`${SCRIPT_NAME}: fxbetween — token ID mode: args[1]="${args[1]}", args[2]="${args[2]}"`);
                 const t1 = getObj('graphic', args[1]);
                 const t2 = getObj('graphic', args[2]);
-                log(`${SCRIPT_NAME}: fxbetween — t1=${!!t1}, t2=${!!t2}`);
                 if (t1 && t2) {
                     p1 = { x: t1.get('left'), y: t1.get('top') };
                     p2 = { x: t2.get('left'), y: t2.get('top') };
                     pageId = t1.get('_pageid');
-                    log(`${SCRIPT_NAME}: fxbetween — resolved: p1=${JSON.stringify(p1)}, p2=${JSON.stringify(p2)}, pageId=${pageId}`);
                 }
             }
             if (!p1 || !p2) {
-                log(`${SCRIPT_NAME}: fxbetween — falling through to selected, p1=${!!p1}, p2=${!!p2}`);
                 if (msg.selected && msg.selected.length >= 2) {
                     const t1 = getObj('graphic', msg.selected[0]._id);
                     const t2 = getObj('graphic', msg.selected[1]._id);
@@ -3053,13 +3047,13 @@ var Choreograph = Choreograph || (() => {
                   ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: '**Command Templates: Full Power**\n\nThe `${...}` syntax in commands is a full JavaScript template literal. You have access to:\n\n• All computed variables (`dist`, etc.)\n• `token.left`, `token.top`, `token.id`, `token.name`, etc.\n• All functions: `rank()`, `distance()`, `rand()`, `actors()`, etc.\n• JS expressions: `${dist > 100 ? "far" : "close"}`\n• String methods: `${token.name.toUpperCase()}`\n\n**Key Takeaways:**\n• Variables table = per-token computed values\n• Variables cascade top-to-bottom (later vars can use earlier ones)\n• `distance(target)` + `propagate(dist, speed)` = ripple-outward timing\n• `!filter` = negation (exclude a role/name/layer)\n• `${expr}` in commands = full JS evaluation\n\nNext: we\'ll make the chanting loop with escalating intensity.',
-                  offerExamples: ['looping-and-sync']
+                  offerExamples: ['looping-and-when']
                 },
             ],
         });
 
         ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
-            name: 'looping-and-sync',
+            name: 'looping-and-when',
             description: 'Make the ritual chanting loop with sync gating between cycles.',
             guide: [
                 { prompt: '**Looping & Sync**\n\nThe summoning ritual should repeat — cultists chanting in cycles, energy building with each repetition. Choreograph\'s loop system handles this.\n\n**Prerequisite:** Complete "Variables & Templates". You need `[Scene] summoning` with roles, stagger delays, and the distance variable.\n\nClick Continue to begin.',
@@ -3067,15 +3061,29 @@ var Choreograph = Choreograph || (() => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Complete the previous tutorials first.';
                   }
                 },
-                { prompt: '**Loop Basics**\n\nLoop flags are added to the `run` command — they don\'t go in the handout:\n\n• `--loop` — repeat forever (until `!choreograph stop`)\n• `--loop 3` — repeat exactly 3 times, restart immediately\n• `--loop 3 --sync` — repeat 3 times, wait for ALL commands to finish before restarting\n\nExpressions **re-evaluate each cycle** — so `rand()` produces different results every iteration. The chant timing stays the same (deterministic), but the chaos energy row fires at new random times each loop.\n\nClick Continue.' },
-                { prompt: '**Try Looping**\n\nRun the scene with 3 loops and sync:\n\n`!choreograph run summoning --cast summoning --loop 3 --sync`\n\n`--sync` means each cycle waits for the previous one to fully complete before restarting. You should see the full chant sequence play out 3 times. Notice how the random "dark energy" row fires at different times each cycle.',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>The When Column</b><br><br>'
+                    + 'Before we loop, the echo commands from earlier will spam chat on every cycle. Let\'s disable them using the <b>When</b> column.<br><br>'
+                    + 'The When column is a JS expression — if it evaluates to falsy, the row is skipped for that token. Open <code>[Scene] summoning</code> and put <code>false</code> in the <b>When</b> column on the three echo rows:<br><br>'
+                    + ScriptKit.html.table(
+                        ['Filter', 'Delay', 'When', 'Command', 'Notes'],
+                        [
+                            ['<code>role=first</code>', '<code>...</code>', '<code>false</code>', '<code>!choreograph echo ...</code>', ''],
+                            ['<code>role=second</code>', '<code>...</code>', '<code>false</code>', '<code>!choreograph echo ...</code>', ''],
+                            ['<code>role=third</code>', '<code>...</code>', '<code>false</code>', '<code>!choreograph echo ...</code>', ''],
+                        ])
+                    + '<br>This leaves only the FX rows active — the fire breath and dark energy explosions.<br><br>'
+                    + '<b>Save the handout</b>, then click Continue.'
+                ) },
+                { prompt: '**Loop Basics**\n\nLoop flags are added to the `run` command — they don\'t go in the handout:\n\n• `--loop` — repeat forever (until `!choreograph stop`)\n• `--loop 3` — repeat exactly 3 times, restart immediately\n• `--loop 3 --sync` — repeat 3 times, wait for ALL commands to finish before restarting\n\nClick Continue.' },
+                { prompt: '**Try Looping**\n\nRun the scene with 3 loops and sync:\n\n`!choreograph run summoning --cast summoning --loop 3 --sync`\n\n`--sync` means each cycle waits for the previous one to fully complete before restarting. You should see the FX play out 3 times.',
+                  ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: '**Infinite Loop + Stop**\n\nFor ambience or sustained effects, use unbounded looping:\n\n`!choreograph run summoning --cast summoning --loop`\n\nThis loops forever. To stop it:\n\n`!choreograph stop`\n\n(Or click the stop button on the status card that appears.)\n\nTry running it in a loop, then stopping it after a few cycles.',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                  ...ScriptKit.waitForCommand('!choreograph stop')
                 },
-                { prompt: '**The SKIP Delay**\n\nSometimes you want a row to only fire on certain conditions. The special delay value `SKIP` causes a row to be skipped entirely for a token.\n\nYou can use it conditionally in an expression:\n\n`dist > 200 ? SKIP : propagate(dist, 0.2)`\n\nThis means: "If this token is more than 200px from the sacrifice, skip it. Otherwise, fire with propagation timing."\n\nThis is useful for limiting effects to nearby tokens. You don\'t need to add this to your scene right now — just know it exists for when you need conditional row execution.\n\nClick Continue.' },
-                { prompt: '**Key Takeaways:**\n\n• `--loop N --sync` — bounded loop with completion gating\n• `--loop` — infinite, stopped with `!choreograph stop`\n• Expressions re-evaluate each cycle (randomness varies per iteration)\n• `SKIP` — conditionally skip a row for a token based on an expression\n• Sync ensures all commands finish before the next cycle begins\n• Loop flags live on the run command, not in the handout — same scene can be run with or without looping\n\nNext: we\'ll split the climax into a separate child scene triggered by chaining.',
+                { prompt: '**Conditional When**\n\nYou can also use expressions in the When column to conditionally fire rows:\n\n`dist < 200`\n\nThis means: "Only fire this row for tokens closer than 200px to the sacrifice."\n\nThe When column has access to all the same variables and functions as the Delay column — computed variables, token properties, `rand()`, etc.\n\nClick Continue.' },
+                { prompt: '**Key Takeaways:**\n\n• When column — JS expression that gates whether a row fires (falsy = skip)\n• `false` in When = disabled row (useful for muting rows without deleting them)\n• `--loop N --sync` — bounded loop with completion gating\n• `--loop` — infinite, stopped with `!choreograph stop`\n• Sync ensures all commands finish before the next cycle begins\n• Loop flags live on the run command, not in the handout — same scene can be run with or without looping\n\nNext: we\'ll split the climax into a separate child scene triggered by chaining.',
                   offerExamples: ['chaining-and-recursion']
                 },
             ],
@@ -3127,7 +3135,7 @@ var Choreograph = Choreograph || (() => {
                   ...ScriptKit.waitForCommand('!choreograph run')
                 },
                 { prompt: '**Chaining Concepts:**\n\n• Any `!choreograph run` in a command template chains to that scene\n• `--parent` and `--depth` are auto-injected (prevents infinite recursion)\n• `--depth 10` is the default max — at depth 0, child scenes are skipped\n• `${self}` in a command resolves to the current scene name (useful for recursive scenes)\n• Child scenes inherit the parent\'s cast if you pass `--cast`\n\n**The When Column:**\n\nThe When column is a JS expression. If it returns falsy, the row is skipped for that token:\n• `role=sacrifice` as a filter already limits *which* tokens fire\n• When is for more complex conditions: `dist < 100`, `token.name === "Leader"`, etc.\n• Combined with `${self}` and a decreasing counter param, you can build recursive patterns\n\n**Congratulations!** You\'ve built a complete multi-phase ritual summoning scene with roles, timing, variables, and chaining. From here, experiment with:\n• `--loop 3 --sync` on the main scene for repeated chants before the climax\n• `!sequence play` commands for smooth animations (requires Sequence)\n• `!token-mod` for visual changes (tint, size, layer, status markers)',
-                  offerExamples: ['your-first-scene', 'roles-and-casts', 'filters-and-delay', 'variables-and-templates', 'looping-and-sync']
+                  offerExamples: ['your-first-scene', 'roles-and-casts', 'filters-and-delay', 'variables-and-templates', 'looping-and-when']
                 },
             ],
         });
