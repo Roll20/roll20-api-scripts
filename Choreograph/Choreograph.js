@@ -768,6 +768,28 @@ var Choreograph = Choreograph || (() => {
     // { instanceId: { id, name, queue, timers, cast, params, state, startTime, firedCommands, remaining } }
     const runningScenes = {};
 
+    // ---- Scene signals ----
+    const sceneStartListeners = [];
+    const sceneFinishListeners = [];
+
+    const emitSceneStart = (instance) => {
+        const info = { name: instance.name, instanceId: instance.id, cast: instance.cast, params: instance.params };
+        sceneStartListeners.forEach(fn => { try { fn(info); } catch (e) { log(`${SCRIPT_NAME}: onSceneStart listener error: ${e}`); } });
+    };
+    const emitSceneFinish = (instance) => {
+        const info = { name: instance.name, instanceId: instance.id, cast: instance.cast, params: instance.params };
+        sceneFinishListeners.forEach(fn => { try { fn(info); } catch (e) { log(`${SCRIPT_NAME}: onSceneFinish listener error: ${e}`); } });
+    };
+
+    const onSceneStart = (fn) => {
+        sceneStartListeners.push(fn);
+        return () => { const i = sceneStartListeners.indexOf(fn); if (i >= 0) sceneStartListeners.splice(i, 1); };
+    };
+    const onSceneFinish = (fn) => {
+        sceneFinishListeners.push(fn);
+        return () => { const i = sceneFinishListeners.indexOf(fn); if (i >= 0) sceneFinishListeners.splice(i, 1); };
+    };
+
     let instanceCounter = 0;
     const genInstanceId = () => `${SCRIPT_NAME}-${++instanceCounter}-${Date.now()}`;
 
@@ -1389,6 +1411,7 @@ var Choreograph = Choreograph || (() => {
             depth:    (runtimeOpts && runtimeOpts.depth !== undefined) ? runtimeOpts.depth : 10,
         };
         runningScenes[instanceId] = instance;
+        emitSceneStart(instance);
 
         // Register as child of parent
         if (instance.parentId && runningScenes[instance.parentId]) {
@@ -1401,19 +1424,22 @@ var Choreograph = Choreograph || (() => {
             if (!loop) {
                 // Show completion card (only for top-level scenes)
                 if (instance.playerid !== 'API' && !instance.parentId) {
-                    const sceneName = instance.name;
-                    const sceneHandout = scenes().find(sceneName);
-                    const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
-                    const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
-                    const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
-                    let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
-                    card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
-                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
-                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
-                    card += `</div>`;
-                    const fakeMsg = { who: instance.who, playerid: instance.playerid };
-                    reply(fakeMsg, 'Choreograph', card, true);
+                    setTimeout(() => {
+                        const sceneName = instance.name;
+                        const sceneHandout = scenes().find(sceneName);
+                        const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                        const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                        const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
+                        let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
+                        card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
+                        card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
+                        card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
+                        card += `</div>`;
+                        const fakeMsg = { who: instance.who, playerid: instance.playerid };
+                        reply(fakeMsg, 'Choreograph', card, true);
+                    }, 500);
                 }
+                emitSceneFinish(instance);
                 delete runningScenes[instanceId];
                 return;
             }
@@ -1438,19 +1464,22 @@ var Choreograph = Choreograph || (() => {
             } else {
                 // Loops exhausted — show completion card (only for top-level scenes)
                 if (instance.playerid !== 'API' && !instance.parentId) {
-                    const sceneName = instance.name;
-                    const sceneHandout = scenes().find(sceneName);
-                    const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
-                    const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
-                    const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
-                    let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
-                    card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
-                    card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
-                    card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
-                    card += `</div>`;
-                    const fakeMsg = { who: instance.who, playerid: instance.playerid };
-                    reply(fakeMsg, 'Choreograph', card, true);
+                    setTimeout(() => {
+                        const sceneName = instance.name;
+                        const sceneHandout = scenes().find(sceneName);
+                        const openLink = sceneHandout ? ` <a href="http://journal.roll20.net/handout/${sceneHandout.get('id')}">[open]</a>` : '';
+                        const castIdStr = (instance.cast || []).map(t => t.get ? t.get('id') : t).join(' ');
+                        const castFlag = instance.castName ? ` --cast ${instance.castName}` : '';
+                        let card = `<div style="background:#222;color:#fff;padding:6px;border-radius:4px;font-size:12px;">`;
+                        card += `<b>${escHtml(sceneName)}</b>${openLink} — Finished<br><br>`;
+                        card += btnHtml('▶ Replay', `${CMD_TOKEN} run ${sceneName} ignore-selected${castFlag} --id ${castIdStr}`);
+                        card += btnHtml('🔁 Loop', `${CMD_TOKEN} run ${sceneName} --loop ignore-selected${castFlag} --id ${castIdStr}`);
+                        card += `</div>`;
+                        const fakeMsg = { who: instance.who, playerid: instance.playerid };
+                        reply(fakeMsg, 'Choreograph', card, true);
+                    }, 500);
                 }
+                emitSceneFinish(instance);
                 delete runningScenes[instanceId];
             }
         };
@@ -2819,7 +2848,20 @@ var Choreograph = Choreograph || (() => {
                     + '<b>Save the handout</b>, then click Continue.'
                 ) },
                 { prompt: '**Run It!**\n\nSelect your cultist tokens, then run:\n\n`!choreograph run summoning`\n\nYou should see whispered messages appear one by one, staggered left-to-right: *"Cultist begins chanting..."*',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                  onEnter: (ctx, advance) => {
+                      ctx._waitFired = false;
+                      const unsubStart = Choreograph.onSceneStart((info) => {
+                          if (ctx._waitFired || info.name !== 'summoning') return;
+                          const unsubFinish = Choreograph.onSceneFinish((finishInfo) => {
+                              if (ctx._waitFired || finishInfo.instanceId !== info.instanceId) return;
+                              ctx._waitFired = true;
+                              unsubStart();
+                              unsubFinish();
+                              setTimeout(() => advance(), 750);
+                          });
+                      });
+                  },
+                  onExit: (ctx) => { ctx._waitFired = true; },
                 },
                 { prompt: '**What Just Happened?**\n\nChoreograph:\n1. Collected your selected tokens as the **cast**\n2. Evaluated each row\'s filter (`*` = all tokens)\n3. Fired each row\'s command at its delay — 0ms, 2000ms, 4000ms\n4. Substituted `${token.name}` with each token\'s actual name\n\n**Key Concepts:**\n• All rows start their timers simultaneously — delays offset them\n• Fixed delays (`0`, `2000`, `4000`) create sequential phases\n• Within a row, all matching tokens fire at the same time\n• `${...}` expressions are evaluated per-token\n\nRight now all cultists chant the same lines in unison. In the next tutorial, we\'ll split them into groups so each group chants a different phrase.',
                   offerExamples: ['roles-and-casts']
@@ -3118,6 +3160,9 @@ var Choreograph = Choreograph || (() => {
         registerSyncParticipant,
 
         generateExtensionHandout,
+        // Signals
+        onSceneStart,
+        onSceneFinish,
         // Introspection
         getFunction:      (name) => EXT_FUNCTIONS[name] || null,
         getVariable:      (name) => EXT_TOKEN_VARS[name] || null,
