@@ -2902,7 +2902,20 @@ var Choreograph = Choreograph || (() => {
                     + '<b>Save the handout</b>, then click Continue.'
                 ) },
                 { prompt: '**Run with the Cast**\n\nInstead of selecting tokens manually, use the saved cast:\n\n`!choreograph run summoning --cast summoning`\n\nYou should see each group chant its own phrase at its scheduled time.',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                  onEnter: (ctx, advance) => {
+                      ctx._waitFired = false;
+                      const unsubStart = Choreograph.onSceneStart((info) => {
+                          if (ctx._waitFired || info.name !== 'summoning') return;
+                          const unsubFinish = Choreograph.onSceneFinish((finishInfo) => {
+                              if (ctx._waitFired || finishInfo.instanceId !== info.instanceId) return;
+                              ctx._waitFired = true;
+                              unsubStart();
+                              unsubFinish();
+                              setTimeout(() => advance(), 750);
+                          });
+                      });
+                  },
+                  onExit: (ctx) => { ctx._waitFired = true; },
                 },
                 { prompt: '**Key Concepts:**\n\n• `!choreograph cast add <name> --role <role>` — assign selected tokens to a named role\n• `role=X` in the Filter column — only match tokens in that role\n• `--cast <name>` on run — load a saved cast instead of using selected tokens\n• Roles persist in a `[Cast] summoning` handout — edit it directly to reassign\n\n**Useful commands:**\n• `!choreograph cast show summoning` — view current assignments\n• `!choreograph cast remove summoning --role first` — remove tokens from a role\n\nIn the next tutorial, we\'ll add timing expressions so the cultists within each group activate one at a time, clockwise around the circle.',
                   offerExamples: ['filters-and-delay']
