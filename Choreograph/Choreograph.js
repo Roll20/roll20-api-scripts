@@ -1,6 +1,6 @@
 // =============================================================================
 // Choreograph v1.0.0
-// Last Updated: 2026-07-04
+// Last Updated: 2026-08-11
 // Author: Kenan Millet
 //
 // Description:
@@ -17,6 +17,8 @@
 //   !choreograph delete <name> [--force] Delete a scene
 //   !choreograph stop [name]            Stop running scene(s)
 //   !choreograph refresh <name>         Regenerate handout from cache
+//   !choreograph fx <type> <id|x y>    Spawn FX at token or coordinates
+//   !choreograph fxbetween <type> ...   Spawn FX between two points/tokens
 // =============================================================================
 
 /* global state, on, sendChat, getObj, createObj, findObjs, Campaign,
@@ -2475,7 +2477,7 @@ var Choreograph = Choreograph || (() => {
                     'TokenProxy gives you `token.left`, `token.name`, etc. — no more `get()` calls in expressions.',
                     'LINQ methods like `.first()`, `.without()`, `.orderBy()` chain on `actors()` and `role()` results.',
                     'Use `!choreograph man <topic>` to search help — it fuzzy-matches across topics and items.',
-                    'Expressions re-evaluate each loop cycle, so `rand()` produces different results every iteration.',
+                    'Chain scenes recursively and use `sync` delay to gate the next phase on child completion.',
                 ],
                 help: {
                     description: 'Meta-sequencer for Roll20 tokens. Define scenes in handouts — filter tokens, compute per-token timing, and fire commands at the right moments.',
@@ -2486,6 +2488,16 @@ var Choreograph = Choreograph || (() => {
                     ],
                     changelog: [
                         { version: '1.0.0', changes: [
+                            'Interactive tutorial series (6 guided walkthroughs building a ritual summoning scene)',
+                            'fx/fxbetween commands accept token IDs (no more manual coordinate lookup)',
+                            'sync delay rows now fire their command after sync resolves (not just barrier)',
+                            'Required parameter validation (missing params abort with error)',
+                            'onSceneStart/onSceneFinish signal system (public API)',
+                            'waitForScene() helper for tutorial/extension use',
+                            'castName scope variable for command templates',
+                            'Scene handout: section headers, empty row skipping, cell collapse fix',
+                            'Completion card delayed 500ms to not step on last command output',
+                            'Fix: actors()/actor_ids() now use castData for role-based filtering',
                             'Revamped example command with fuzzy search, tiered sorting, and bold highlights',
                             'Interactive setup guide wizard for examples (multi-step, roles, params)',
                             'when field for conditional row execution',
@@ -2530,6 +2542,16 @@ var Choreograph = Choreograph || (() => {
                         { syntax: 'add-row <name>', description: 'Add blank row to scene table', version: '0.1' },
                         { syntax: 'dump-html <name>', description: 'Dump raw handout HTML to API console', version: '0.1' },
                         { syntax: 'echo <text>', description: 'Debug: whisper text with timestamp', version: '0.1' },
+                        { syntax: 'fx <type> <id|x y> [pageId]', description: 'Spawn FX at a token or coordinates', version: '0.1', items: [
+                            { name: '<type>', description: 'FX type (e.g. explode-fire, nova-holy, burst-magic)', version: '0.1' },
+                            { name: '<id>', description: 'Token ID — spawns at token position/page', version: '1.0.0' },
+                            { name: '<x> <y>', description: 'Coordinates (requires pageId or selected token for page)', version: '0.1' },
+                        ]},
+                        { syntax: 'fxbetween <type> <from_id> <to_id>', description: 'Spawn directional FX between two tokens', version: '0.1', items: [
+                            { name: '<type>', description: 'Directional FX type (e.g. beam-fire, breath-magic)', version: '0.1' },
+                            { name: '<from_id> <to_id>', description: 'Token IDs for start and end points', version: '1.0.0' },
+                            { name: '<x1> <y1> <x2> <y2> [pageId]', description: 'Coordinate form (original syntax)', version: '0.1' },
+                        ]},
                         { group: 'Playback', commands: [
                             { syntax: 'stop [name]', description: 'Stop running scene(s)', version: '0.1' },
                             { syntax: 'pause [name]', description: 'Pause running scene(s)', version: '0.1' },
@@ -2631,6 +2653,7 @@ var Choreograph = Choreograph || (() => {
                                 { name: '${token.left}', description: 'Token X position (TokenProxy)', version: '0.2' },
                                 { name: '${token.name}', description: 'Token display name', version: '0.2' },
                                 { name: '${self}', description: 'Current scene name (for recursion/chaining)', version: '0.1' },
+                                { name: '${castName}', description: 'Current cast name (pass to child scenes with --cast)', version: '1.0.0' },
                                 { name: '${count}', description: 'Number of tokens matching this row\'s filter', version: '0.1' },
                                 { name: '${myVar}', description: 'Any computed variable or parameter by name', version: '0.1' },
                                 { name: '${actors().first().id}', description: 'ID of the nearest other token in the filtered set', version: '0.1' },
@@ -2677,20 +2700,20 @@ var Choreograph = Choreograph || (() => {
                             title: 'Looping',
                             description: 'Repeating scene execution',
                             version: '0.1',
-                            details: 'Looping repeats the entire scene. Expressions re-evaluate each cycle, so randomized delays and staggering produce different results each iteration. Only top-level scenes can loop — child scenes spawned via chaining cannot.',
+                            details: 'Looping repeats the entire scene. Only top-level scenes can loop indefinitely — child scenes spawned via chaining can use bounded loops (`--loop N`).',
                             items: [
                                 { name: '--loop', description: 'Loop indefinitely, sync between cycles', version: '0.1' },
                                 { name: '--loop N', description: 'Loop N times, immediate restart', version: '0.1' },
                                 { name: '--loop N --sync', description: 'Loop N times, sync between cycles', version: '0.1' },
                             ],
-                            body: 'Top-level only. Children cannot loop. Expressions re-evaluate each cycle.',
+                            body: 'Children can use bounded loops (`--loop N`). Infinite loops (`--loop`) are top-level only.',
                         },
                         chain: {
                             title: 'Scene Chaining',
                             description: 'Recursion and scene composition',
                             version: '0.1',
                             details: 'Scenes can spawn other scenes (or themselves) via command templates. This enables recursive patterns like chain-lightning that bounce between targets. Depth is capped (default 10) to prevent infinite recursion.',
-                            body: 'At depth 0, child spawns are skipped. Children cannot use `--loop`.',
+                            body: 'At depth 0, child spawns are skipped. Children can use bounded `--loop N` but not infinite `--loop`.',
                             items: [
                                 { name: 'self', description: 'Resolves to current scene name', version: '0.1' },
                                 { name: '--parent', description: 'Auto-injected parent scene reference', version: '0.1' },
@@ -2802,6 +2825,9 @@ var Choreograph = Choreograph || (() => {
                                 { name: 'registerLifecycleHook(src, struct)', syntax: 'Choreograph.registerLifecycleHook(src, struct)', description: 'Hook into scene lifecycle events', version: '0.1' },
                                 { name: 'registerSyncParticipant(src, struct)', syntax: 'Choreograph.registerSyncParticipant(src, struct)', description: 'Register for sync coordination', version: '0.1' },
                                 { name: 'generateExtensionHandout(src, opts)', syntax: 'Choreograph.generateExtensionHandout(src, opts)', description: 'Generate developer docs handout', version: '0.1' },
+                                { name: 'onSceneStart(fn)', syntax: 'Choreograph.onSceneStart(fn)', description: 'Subscribe to scene start events. Returns unsubscribe function.', version: '1.0.0' },
+                                { name: 'onSceneFinish(fn)', syntax: 'Choreograph.onSceneFinish(fn)', description: 'Subscribe to scene finish events. Returns unsubscribe function.', version: '1.0.0' },
+                                { name: 'waitForScene(name)', syntax: 'Choreograph.waitForScene(name)', description: 'Returns {onEnter, onExit} for ScriptKit guides — auto-advances when named scene finishes', version: '1.0.0' },
                             ],
                             body: 'Run `!choreograph gen-dev-docs` for the full developer guide.',
                         },
