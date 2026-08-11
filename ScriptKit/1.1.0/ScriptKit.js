@@ -1,6 +1,6 @@
 // =============================================================================
-// ScriptKit v1.2.0
-// Last Updated: 2026-08-03
+// ScriptKit v1.1.0
+// Last Updated: 2026-08-01
 // Author: Kenan Millet
 //
 // Description:
@@ -17,7 +17,7 @@ var ScriptKit = ScriptKit || (() => {
     'use strict';
 
     const SCRIPT_NAME = 'ScriptKit';
-    const SCRIPT_VERSION = '1.2.0';
+    const SCRIPT_VERSION = '1.1.0';
     const HANDOUT_STEP = Object.freeze({ auto: true });
 
     // =========================================================================
@@ -114,8 +114,6 @@ var ScriptKit = ScriptKit || (() => {
         return obj;
     };
 
-    var _pingColorState = {}; // playerId → { originalColor, pending }
-
     const guidePing = (pageId, x, y, opts) => {
         opts = opts || {};
         var player = opts.player || null;
@@ -125,22 +123,12 @@ var ScriptKit = ScriptKit || (() => {
         var color = opts.color || null;
 
         if (color && player) {
-            var pid = player.get('id');
-            if (!_pingColorState[pid]) {
-                _pingColorState[pid] = { originalColor: player.get('color'), pending: 0 };
-            }
-            _pingColorState[pid].pending++;
+            var originalColor = player.get('color');
             player.set('color', color);
             setTimeout(function() {
                 sendPing(x, y, pageId, playerId, moveAll, visibleTo);
-                setTimeout(function() {
-                    _pingColorState[pid].pending--;
-                    if (_pingColorState[pid].pending <= 0) {
-                        player.set('color', _pingColorState[pid].originalColor);
-                        delete _pingColorState[pid];
-                    }
-                }, 500);
-            }, 150);
+                setTimeout(function() { player.set('color', originalColor); }, 200);
+            }, 100);
         } else {
             sendPing(x, y, pageId, playerId, moveAll, visibleTo);
         }
@@ -216,46 +204,10 @@ var ScriptKit = ScriptKit || (() => {
         },
         table: (headers, rows, style) => {
             var tableStyle = style ? html.style(style) : 'border-collapse:collapse';
-            var h = '<div style="overflow-x:auto"><table style="' + tableStyle + '"><tr>' + headers.map(col => '<th style="border:1px solid #999;padding:2px 6px;white-space:nowrap">' + col + '</th>').join('') + '</tr>';
+            var h = '<table style="' + tableStyle + '"><tr>' + headers.map(col => '<th style="border:1px solid #999;padding:2px 6px;">' + col + '</th>').join('') + '</tr>';
             h += rows.map(row => '<tr>' + row.map(cell => '<td style="border:1px solid #999;padding:2px 6px;">' + cell + '</td>').join('') + '</tr>').join('');
-            h += '</table></div>';
+            h += '</table>';
             return h;
-        },
-        /**
-         * Clickable text button that pings an object's location.
-         * @param {string|object} target - Object ID string, or { pageid, x, y }
-         * @param {object} [opts] - color, moveAll, visibleTo, label, style
-         */
-        pingObjBtn: (target, opts) => {
-            opts = opts || {};
-            var cmd = pingCommand(target, opts);
-            var label = opts.label || (typeof target === 'string' ? target : 'Ping');
-            var defaultStyle = { background: '#333', color: '#fff', padding: '1px 6px', borderRadius: '3px', textDecoration: 'none' };
-            var merged = opts.style ? Object.assign({}, defaultStyle, opts.style) : defaultStyle;
-            return '<a style="' + html.style(merged) + '" href="' + cmd + '">' + label + '</a>';
-        },
-        /**
-         * Clickable token image that pings an object's location.
-         * @param {string|object} target - Object ID string, or { pageid, x, y }
-         * @param {object} [opts] - color, moveAll, visibleTo, imgsrc, width, height, label (shown below image or as fallback text)
-         */
-        pingObjImg: (target, opts) => {
-            opts = opts || {};
-            var cmd = pingCommand(target, opts);
-            var width = opts.width || 40;
-            var height = opts.height || 40;
-            var imgsrc = opts.imgsrc || null;
-            if (imgsrc) {
-                // Ensure thumb version for Roll20 chat rendering
-                imgsrc = imgsrc.replace(/\/(?:max|med|original)\.(png|jpg|jpeg|webp)/i, '/thumb.$1');
-                var imgStyle = 'width:' + width + 'px;height:' + height + 'px;border-radius:4px;';
-                var label = opts.label ? '<br><small>' + opts.label + '</small>' : '';
-                return '<a href="' + cmd + '" style="display:inline-block;vertical-align:middle;text-align:center;margin:2px;text-decoration:none;background:transparent;color:inherit;border:none;padding:0;">'
-                    + '<img src="' + imgsrc + '" style="' + imgStyle + '">' + label + '</a>';
-            }
-            // Fallback: text button
-            var fallbackLabel = opts.label || (typeof target === 'string' ? target.slice(0, 8) + '...' : 'Ping');
-            return html.pingObjBtn(target, Object.assign({}, opts, { label: fallbackLabel }));
         },
     };
 
@@ -274,7 +226,7 @@ var ScriptKit = ScriptKit || (() => {
         sendChat(scriptName + (tag ? ' [' + tag + ']' : ''), '/w "' + recipient + '" ' + text, null, { noarchive: true });
     };
 
-    const replyError = (msg, scriptName, text) => reply(msg, scriptName, 'Error', html.render(text));
+    const replyError = (msg, scriptName, text) => reply(msg, scriptName, 'Error', html.format(text));
 
     const setHandoutNotes = (handout, notes) => {
         // Retry pattern for Roll20's async handout issues
@@ -706,12 +658,6 @@ var ScriptKit = ScriptKit || (() => {
             args.push(m[1] !== undefined ? m[1] : m[2] !== undefined ? m[2] : m[3] !== undefined ? m[3] : m[4]);
         }
         const cmd = (args.shift() || '').toLowerCase();
-
-        // Internal subcommands (ScriptKit-only, not alias-routed)
-        if (scriptName === SCRIPT_NAME && cmd === 'ping') {
-            doPing(msg, args.join(' '));
-            return true;
-        }
 
         // Alias matcher — supports string or array of strings
         const matchAlias = (alias) => {
@@ -1690,7 +1636,7 @@ var ScriptKit = ScriptKit || (() => {
 
         let prompt = html.div(
             html.bold(html.escape(g.handoutName || g.example.name)) + ' — Setup (step ' + interactiveIdx + '/' + interactiveTotal + ')' + html.paragraph('')
-            + html.render(promptText) + html.paragraph('')
+            + html.format(promptText) + html.paragraph('')
             + (step.select ? (() => {
                 const plural = !step.max || step.max > 1;
                 const label = step.select + (plural ? 's' : '');
@@ -1834,15 +1780,11 @@ var ScriptKit = ScriptKit || (() => {
             g.selections._roles[step.role] = selected;
         }
 
-        // onContinue callback — if it returns a string or html.raw(), treat as validation error
+        // onContinue callback — if it returns a string, treat as validation error
         if (typeof step.onContinue === 'function') {
             const ctx = { selections: g.selections, params: g.params, selected: selected, msg: msg, player: getObj('player', msg.playerid) };
             const err = step.onContinue(ctx);
             if (typeof err === 'string') {
-                replyError(msg, g.source, err);
-                return;
-            }
-            if (err && err.__raw) {
                 replyError(msg, g.source, err);
                 return;
             }
@@ -1942,90 +1884,6 @@ var ScriptKit = ScriptKit || (() => {
     };
 
     // =========================================================================
-    // Ping Command
-    // =========================================================================
-
-    /**
-     * Build a !scriptkit ping command string.
-     * @param {string|object} target - An object ID string, or { pageid, x, y }
-     * @param {object} [opts] - Options: color, moveAll, visibleTo (string of comma-delimited IDs or array)
-     * @returns {string} The chat command string
-     */
-    const pingCommand = (target, opts) => {
-        opts = opts || {};
-        var cmd;
-        if (typeof target === 'string') {
-            cmd = '!scriptkit ping ' + target;
-        } else {
-            cmd = '!scriptkit ping ' + target.pageid + ' ' + target.x + ' ' + target.y;
-        }
-        if (opts.color) cmd += ' --color ' + opts.color;
-        if (opts.moveAll) cmd += ' --moveAll';
-        if (opts.visibleTo) {
-            // Normalize: array → comma-joined, strip all spaces
-            var vt = Array.isArray(opts.visibleTo) ? opts.visibleTo.join(',') : String(opts.visibleTo);
-            cmd += ' --visibleTo ' + vt.replace(/\s+/g, '');
-        }
-        return cmd;
-    };
-
-    /**
-     * Handle !scriptkit ping <id|pageId x y> [--color X] [--moveAll] [--visibleTo X,Y,Z]
-     */
-    const doPing = (msg, content) => {
-        var parts = content.split(/\s+/);
-        var positional = [];
-        var color = null;
-        var moveAll = false;
-        var visibleTo = null;
-
-        for (var i = 0; i < parts.length; i++) {
-            if (parts[i] === '--color' && i + 1 < parts.length) {
-                color = parts[++i];
-            } else if (parts[i] === '--moveAll') {
-                moveAll = true;
-            } else if (parts[i] === '--visibleTo' && i + 1 < parts.length) {
-                // Comma-delimited, no spaces (stripped by pingCommand)
-                visibleTo = parts[++i].split(',').filter(Boolean);
-            } else {
-                positional.push(parts[i]);
-            }
-        }
-
-        var pageId, x, y;
-
-        if (positional.length === 1) {
-            // Object ID mode — try graphic, then pin, then pathv2
-            var objId = positional[0];
-            var obj = getObj('graphic', objId) || getObj('pin', objId) || getObj('pathv2', objId);
-            if (!obj) {
-                sendChat('ScriptKit', '/w "' + msg.who.replace(/\s+\(GM\)$/, '') + '" Ping: object not found: ' + objId);
-                return;
-            }
-            pageId = obj.get('_pageid') || obj.get('pageid');
-            x = obj.get('left') !== undefined ? obj.get('left') : obj.get('x');
-            y = obj.get('top') !== undefined ? obj.get('top') : obj.get('y');
-        } else if (positional.length === 3) {
-            // Coordinate mode: pageId x y
-            pageId = positional[0];
-            x = parseFloat(positional[1]);
-            y = parseFloat(positional[2]);
-        } else {
-            sendChat('ScriptKit', '/w "' + msg.who.replace(/\s+\(GM\)$/, '') + '" Usage: !scriptkit ping &lt;objId&gt; | !scriptkit ping &lt;pageId&gt; &lt;x&gt; &lt;y&gt;');
-            return;
-        }
-
-        var player = getObj('player', msg.playerid);
-        guidePing(pageId, x, y, {
-            player: player,
-            playerId: msg.playerid,
-            color: color,
-            moveAll: moveAll,
-            visibleTo: visibleTo,
-        });
-    };
-
-    // =========================================================================
     // Public API
     // =========================================================================
 
@@ -2041,7 +1899,6 @@ var ScriptKit = ScriptKit || (() => {
         html,
         handout: () => HANDOUT_STEP,
         ping: guidePing,
-        pingCommand,
         annotate: guideAnnotate,
         clearAnnotations: clearAnnotations,
         waitForCommand: (cmd) => ({
@@ -2134,12 +1991,6 @@ on('ready', () => {
         help: {
             description: 'Generic framework library for Roll20 API scripts.',
             changelog: [
-                { version: '1.2.0', changes: [
-                    'Added `!scriptkit ping` command — ping an object by ID or by coordinates',
-                    'Added `ScriptKit.pingCommand(target, opts)` — build ping command strings for chat links',
-                    'Added `html.pingObjBtn(target, opts)` / `html.pingObjImg(target, opts)` — clickable ping buttons/images',
-                    '`visibleTo` now accepts array of player IDs or comma-delimited string',
-                ]},
                 { version: '1.1.0', changes: [
                     'Prevent double-registration (same script calling register() twice is now a no-op)',
                     'Added ScriptKit.generateHandout / updateHandout (debounced, default 2s) for deferred handout regeneration',
@@ -2250,7 +2101,6 @@ on('ready', () => {
                     body: 'Draw temporary shapes on the map during guide steps to highlight elements. Annotations auto-clear on step transition and are persisted in state for crash recovery.',
                     items: [
                         { name: 'ScriptKit.ping(pageId, x, y, opts)', description: 'Ping the map and move camera. opts: { player, color, moveAll, visibleTo, playerId }', version: '1.0.0' },
-                        { name: 'ScriptKit.pingCommand(target, opts)', description: 'Build a !scriptkit ping command string. target: objId string or { pageid, x, y }. opts: color, moveAll, visibleTo', version: '1.2.0' },
                         { name: 'ScriptKit.annotate(pageId, shape, x, y, opts)', description: 'Draw a temporary pathv2. Returns the object. Shapes: circle, arrow, line, rect', version: '1.0.0' },
                         { name: 'ScriptKit.clearAnnotations()', description: 'Remove all active annotations manually', version: '1.0.0' },
                         { name: 'circle opts', description: 'radius (default 40), color, strokeWidth, fill', version: '1.0.0' },
@@ -2284,8 +2134,6 @@ on('ready', () => {
                         { name: 'handoutLink(text, id)', description: 'Journal link', version: '1.0.0' },
                         { name: 'newBadge() / deprecatedBadge()', description: 'Version badge markers', version: '1.0.0' },
                         { name: 'style(obj)', description: 'Convert camelCase object to CSS string', version: '1.0.0' },
-                        { name: 'pingObjBtn(target, opts?)', description: 'Clickable text button that pings an object location. opts: color, moveAll, visibleTo, label, style', version: '1.2.0' },
-                        { name: 'pingObjImg(target, opts?)', description: 'Clickable token image that pings on click. opts: color, moveAll, visibleTo, imgsrc, width, height, label. Falls back to pingObjBtn', version: '1.2.0' },
                     ],
                 },
                 migrations: {

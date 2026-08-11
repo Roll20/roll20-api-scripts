@@ -332,6 +332,22 @@ Available via `ScriptKit.html`:
 | `list(items)` / `orderedList(items)` | `<ul>` / `<ol>` |
 | `handoutLink(text, id)` | Journal link |
 | `newBadge()` / `deprecatedBadge()` | Version badges |
+| `pingObjBtn(target, opts?)` | Clickable text button that pings an object's location |
+| `pingObjImg(target, opts?)` | Clickable token image that pings an object's location |
+
+**`pingObjBtn(target, opts)`** — Renders a styled button that runs `!scriptkit ping` when clicked.
+- `target` — Object ID string, or `{ pageid, x, y }`
+- `opts.color` — Ping color
+- `opts.moveAll` — Move all players' cameras
+- `opts.visibleTo` — Player ID(s) as string (comma-delimited) or array
+- `opts.label` — Button text (default: the object ID)
+- `opts.style` — CSS style overrides
+
+**`pingObjImg(target, opts)`** — Renders a token image thumbnail that pings when clicked. Falls back to `pingObjBtn` if no image.
+- Inherits all `pingObjBtn` options, plus:
+- `opts.imgsrc` — Token image URL (auto-converted to `/thumb.` for chat)
+- `opts.width` / `opts.height` — Thumbnail size in pixels (default: 40×40)
+- `opts.label` — Shown below the image as `<small>` text
 
 ### Query Type Coercion
 
@@ -423,6 +439,22 @@ onEnter: (ctx) => {
 
 **`ScriptKit.clearAnnotations()`** — Remove all active annotations manually.
 
+**`ScriptKit.pingCommand(target, opts)`** — Build a `!scriptkit ping` command string (for embedding in chat messages).
+- `target` — Object ID string, or `{ pageid, x, y }`
+- `opts.color` — Ping color
+- `opts.moveAll` — Move all players' cameras (flag present = true)
+- `opts.visibleTo` — Player ID(s) as comma-delimited string or array
+
+```js
+// Build a ping command for a token
+var cmd = ScriptKit.pingCommand(token.get('id'), { color: '#ff0000', moveAll: true });
+// → "!scriptkit ping -ABC123xyz --color #ff0000 --moveAll"
+
+// Build a ping command for coordinates
+var cmd = ScriptKit.pingCommand({ pageid: pageId, x: 350, y: 700 });
+// → "!scriptkit ping -PageId123 350 700"
+```
+
 ### MOTD (Message of the Day)
 
 Display a random tip to the GM on sandbox startup. Helps with feature discoverability.
@@ -446,7 +478,58 @@ ScriptKit.register('MyScript', {
 
 A random tip is whispered to the GM once per sandbox restart, styled as a compact card.
 
+### Dynamic Handout Content
+
+If your script has help topics with dynamic content (e.g. listing registered extensions from other scripts), the handout generated at startup may be incomplete — other scripts register their extensions after yours.
+
+**Step 1: Use function bodies** — topics with `body: () => ...` are evaluated at render time. Chat commands (`man`) always show live data. Without function bodies, content is static and regeneration has no effect.
+
+```js
+topics: {
+    registeredFunctions: {
+        title: 'Registered Functions',
+        body: () => {
+            const fns = Object.values(MY_REGISTRY);
+            if (fns.length === 0) return '*None registered.*';
+            return fns.map(f => '**' + f.name + '()** — ' + f.description).join('\n');
+        },
+    }
+}
+```
+
+**Step 2: Trigger regeneration** — call `ScriptKit.updateHandout()` after extensions finish registering. It debounces by default (2s), so repeated calls within the window only fire once:
+
+```js
+// Call this at the end of each successful extension registration
+const onExtensionRegistered = () => {
+    if (typeof ScriptKit !== 'undefined') ScriptKit.updateHandout('MyScript', 'usr');
+};
+```
+
+**`ScriptKit.generateHandout(scriptName, mode, delay?)`** — Schedule handout generation/regeneration (debounced, default 2000ms). Creates the handout if it doesn't exist. `mode` is required: `'usr'` or `'dev'`.
+
+**`ScriptKit.updateHandout(scriptName, mode, delay?)`** — Same as above, but no-op if the handout doesn't exist yet. Use this when you don't want to create handouts that the user hasn't explicitly requested.
+
+**`ScriptKit.generateHandoutImmediately(scriptName, mode)`** — Generate synchronously, no debounce.
+
+**`ScriptKit.updateHandoutImmediately(scriptName, mode)`** — Regenerate synchronously, only if exists.
+
 ## Changelog
+
+### v1.2.0
+- Added `!scriptkit ping` chat command — pings an object's location by ID or by pageId/x/y coordinates
+- Added `ScriptKit.pingCommand(target, opts)` — builds a ping command string for embedding in chat links
+- Added `ScriptKit.html.pingObjBtn(target, opts)` — clickable text button that pings on click
+- Added `ScriptKit.html.pingObjImg(target, opts)` — clickable token image thumbnail that pings on click
+- `visibleTo` option now accepts an array of player IDs or a comma-delimited string
+
+### v1.1.0
+- Prevent double-registration (same script calling `register()` twice is now a no-op)
+- Added `ScriptKit.generateHandout(scriptName, mode, delay?)` — debounced handout generation (default 2s)
+- Added `ScriptKit.updateHandout(scriptName, mode, delay?)` — debounced, only if handout exists
+- Added `ScriptKit.generateHandoutImmediately(scriptName, mode)` — synchronous generation
+- Added `ScriptKit.updateHandoutImmediately(scriptName, mode)` — synchronous, only if exists
+- Added `SCRIPT_VERSION` constant
 
 ### v1.0.0
 - Initial release
