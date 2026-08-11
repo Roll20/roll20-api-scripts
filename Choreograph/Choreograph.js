@@ -51,6 +51,7 @@ var Choreograph = Choreograph || (() => {
     // Schedule help handout regeneration after extensions register
     const scheduleHandoutRegen = () => {
         if (typeof ScriptKit === 'undefined') return;
+        if (typeof ScriptKit.updateHandout !== 'function') return;
         ScriptKit.updateHandout(SCRIPT_NAME, 'usr');
     };
 
