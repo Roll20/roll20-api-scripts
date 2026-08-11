@@ -7,8 +7,9 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 - Roll20 Pro subscription (API access required)
 - [Anchor](https://github.com/Roll20/roll20-api-scripts/tree/master/Anchor) (spatial sync)
 - [Mirror](https://github.com/Roll20/roll20-api-scripts/tree/master/Mirror) (property sync)
+- [ScriptKit](https://github.com/Roll20/roll20-api-scripts/tree/master/ScriptKit) (help system, examples, guides)
 - [RollCapture](https://github.com/Roll20/roll20-api-scripts/tree/master/RollCapture) (optional, roll value extraction for scripting)
-- [ZeroFrame] (https://github.com/Roll20/roll20-api-scripts/tree/master/ZeroFrame) (needed for the following other required scripts)
+- [ZeroFrame](https://github.com/Roll20/roll20-api-scripts/tree/master/ZeroFrame) (needed for the following other required scripts)
 - [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
 - [APILogic](https://github.com/Roll20/roll20-api-scripts/tree/master/APILogic) (conditional branching in scripts)
 - [Fetch](https://github.com/Roll20/roll20-api-scripts/tree/master/Fetch) (access attributes in scripts)
@@ -38,17 +39,20 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 | `!gaslight split <group> [--force]` | Activate group (test-first) |
 | `!gaslight merge [group]` | Tear down links, return players |
 | `!gaslight test <group>` | Dry-run linking resolution |
-| `!gaslight link [name\|new] [ids...]` | Manually link tokens |
-| `!gaslight unlink [ids...\|--group <group>]` | Remove links |
-| `!gaslight sync [props\|all\|reset]` | Manage sync whitelist per token |
-| `!gaslight desync [props\|all]` | Exclude props from sync per token |
+| `!gaslight stage [--default on\|off] [players...]` | Propagate tokens to player pages |
+| `!gaslight link [--default] [name\|new] [ids...]` | Manually link tokens |
+| `!gaslight unlink [ids...\|--group <group>]` | Remove links (asymmetric: parent cascades, non-parent detaches) |
+| `!gaslight sync [--default] [props\|all\|reset]` | Manage sync whitelist per token |
+| `!gaslight desync [--default] [props\|all]` | Exclude props from sync per token |
 | `!gaslight var [--silent] [actions...]` | Read/set/unset gl_* variables |
+| `!gaslight eval [--all] [--dry-run]` | Evaluate GLS scripts |
 | `!gaslight view [master\|off\|<player>]` | Control command relay targeting |
 | `!gaslight relay <views...> <!command>` | Relay command to views |
+| `!gaslight init [sync\|trim]` | Sync initiative with HUD |
+| `!gaslight hud [element] [on\|off\|reset]` | Toggle HUD elements |
+| `!gaslight config [relay-add\|relay-remove\|relay-list] [cmds]` | Configure relay |
 | `!gaslight group <group> <player\|GM>` | Assign page to group |
 | `!gaslight ungroup <group> <player\|GM\|--all>` | Remove page from group |
-| `!gaslight stage [players...]` | Propagate tokens to player pages |
-| `!gaslight config [relay-add\|relay-remove\|relay-list] [cmds]` | Configure relay |
 | `!gaslight status` | Show state |
 | `!gaslight --help` | Command reference |
 
@@ -149,8 +153,19 @@ Gaslight automatically syncs the turn order across linked tokens:
 - **Value sync**: Initiative value changes propagate to all linked copies
 - **Auto-skip**: When the turn advances to a non-master linked token, Gaslight skips forward/backward to the next master or unlinked token
 - **Sort-aware**: After sorting initiative, groups are reordered with master tokens on top
+- **Stage sync**: Staging a token mid-combat automatically adds its linked copies to initiative
 
 The GM only interacts with master-page tokens in the turn tracker. Players see their own copies on their page. Linked children are skipped automatically when advancing turns.
+
+### `!gaslight init`
+
+Sync the Roll20 turn order with the HUD. Needed after plugins add tokens to initiative (since `Campaign().set('turnorder')` is not detected automatically).
+
+| Command | Description |
+|---------|-------------|
+| `!gaslight init` | Sync + trim (default) |
+| `!gaslight init sync` | Add missing linked tokens to turn order |
+| `!gaslight init trim` | Remove stale entries for deleted tokens |
 
 ## HUD
 
@@ -162,6 +177,7 @@ On-canvas indicators on the master page foreground layer. Toggle with `!gaslight
 |---------|-------------|
 | `view` (alias: `relay`) | Shows current relay state: ALL / OFF / player name |
 | `initiative` (aliases: `init`, `turn`, `turns`) | Visual initiative tracker with frame, tokens, and current turn indicator |
+| `reticle` (aliases: `indicator`, `current`) | Rectangle highlighting the current turn token on the map |
 
 ### Initiative HUD Features
 
@@ -249,6 +265,50 @@ Scripts auto-detect triggers from `@(target.gl_*)` references. Override in pin G
 - `!gaslight eval --all` — all pins in active groups
 - `!gaslight eval <handout name>` — all pins linked to that handout
 - Add `--dry-run` to preview without executing
+
+## Interactive Guides
+
+Gaslight includes interactive guide-only examples that walk you through features step by step. Access them via ScriptKit:
+
+`!gaslight examples`
+
+Available guides:
+- **getting-started** - Setup, split, merge walkthrough
+- **core-mechanics** - Staging, linking, syncing, token lifecycle
+- **initiative-hud** - HUD gestures, customization, reticle
+- **relay** - Command relay, view targeting, view HUD
+- **scripting** - Build a "winds of magic" GLS script from scratch
+
+Applied script examples (with handout generation):
+- **stealth** - Hide/show NPCs per player via passive perception
+- **truesight** - Reveal true forms to viewers with truesight
+- **madness** - Afflicted players see all tokens as enemies
+
+## Changelog
+
+### v2.2.1
+- Fix: `!gaslight link` re-establishes links for tokens in active groups
+- Fix: `!gaslight stage --default on` checks for marketplace images
+- Fix: `!gaslight desync` now applies immediately (parent rebuilds links, child uses surgical Anchor/Mirror)
+- Fix: `!gaslight sync` removes !excludes correctly, propagates config to all linked copies
+- Fix: HUD hides when turn order is empty, reappears when turns are added
+- Fix: HUD text offset no longer corrupts after turn advance
+- Fix: Turn reticle updates after pin deletion
+- Fix: Custom turns properly deduplicated (immutable key matching)
+- Fix: pr=0 no longer displays as empty text in HUD
+- Fix: Batch initiative additions no longer lost due to race condition (debounced processing)
+- Fix: Fetch compProp resolution now correctly returns token gmnotes value before character attribute fallback
+- Tutorial: guide pings on HUD elements and customization step transitions
+- QoL: warnings/errors show clickable token images that ping the token's location (requires ScriptKit 1.2.0)
+- QoL: `!gaslight test` output condensed to summary + warnings only
+
+### v2.2.0
+- Initiative HUD: pin-based turn tracker with gesture controls
+- Current turn reticle
+- `!gaslight init` command
+- `--default` flags for stage, sync, desync
+- Interactive guide examples
+- ScriptKit integration
 
 ## License
 

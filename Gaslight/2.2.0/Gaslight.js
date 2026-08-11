@@ -1,6 +1,6 @@
 ﻿// =============================================================================
-// Gaslight v2.2.1
-// Last Updated: 2026-08-03
+// Gaslight v2.2.0
+// Last Updated: 2026-07-30
 // Author: Kenan Millet
 //
 // Description:
@@ -39,12 +39,11 @@ var Gaslight = Gaslight || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Gaslight';
-    const SCRIPT_VERSION = '2.2.1';
+    const SCRIPT_VERSION = '2.2.0';
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
     const GLS_TAG        = '[GLS]';
-    const ANCHOR_PROPS   = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
 
     // =========================================================================
     // Helpers
@@ -366,35 +365,14 @@ var Gaslight = Gaslight || (() => {
         return false;
     };
 
-    const formatMarketplaceError = (failures, retryCommand) => {
-        var failMsg = '<b>⚠️ ' + failures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br>';
-        if (failures.some(function(f) { return f.id; }) && typeof ScriptKit !== 'undefined') failMsg += '<small><i>Click a token image to ping its location.</i></small>';
-        failMsg += '<br>';
-        failures.forEach(function(f) {
-            if (f.id && typeof ScriptKit !== 'undefined') {
-                failMsg += ScriptKit.html.pingObjImg(f.id, { imgsrc: f.imgsrc, label: f.name, moveAll: true });
-            } else {
-                failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
-                    + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
-                    + '<small>' + f.name + '</small></div>';
-            }
-        });
-        failMsg += '<br><br><b>To fix:</b><ol>'
-            + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets → Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
-            + '<li>Replace the token(s) on the master page with the library copy (drag from your library).</li>'
-            + '<li>Re-run <code>' + retryCommand + '</code> with the new token(s) selected.</li>'
-            + '</ol>';
-        return failMsg;
-    };
-
     /**
      * Stage a single token to target pages using 3-step logic.
-     * Returns { cloned: number, failed: boolean, id: string, name: string, imgsrc: string }
+     * Returns { cloned: number, failed: boolean, name: string, imgsrc: string }
      */
     const stageTokenToPages = (token, targetPageIds) => {
         var linkId = getLinkId(token);
         var pagesToCloneTo = [];
-        var result = { cloned: 0, failed: false, id: token.get('id'), name: token.get('name') || '(unnamed)', imgsrc: '' };
+        var result = { cloned: 0, failed: false, name: token.get('name') || '(unnamed)', imgsrc: '' };
 
         if (linkId) {
             // Step 1-2: find pages missing a token with this gaslight_link
@@ -625,15 +603,14 @@ var Gaslight = Gaslight || (() => {
 
     /**
      * Check for warning conditions across all pages in a group.
-     * Returns array of { message, severity, tokens? } where severity is 'info'|'warning'|'error'.
+     * Returns array of { message, severity } where severity is 'info'|'warning'|'error'.
      */
     const checkWarnings = (groupInfo) => {
         const warnings = [];
         const allPageIds = [groupInfo.master].concat(Object.values(groupInfo.players).map(function(p) { return p.pageId; }));
 
-        // Collect all gaslight_link IDs and their page locations + tokens
+        // Collect all gaslight_link IDs and their page locations
         const linkIdPages = {}; // linkId → Set of pageIds
-        const linkIdTokens = {}; // linkId → array of token objects
         const linkIdDupes = {}; // pageId → Set of linkIds that appear more than once
         allPageIds.forEach(function(pid) {
             var tokens = findObjs({ _type: 'graphic', _pageid: pid, _subtype: 'token' });
@@ -643,8 +620,6 @@ var Gaslight = Gaslight || (() => {
                 if (!lid) return;
                 if (!linkIdPages[lid]) linkIdPages[lid] = new Set();
                 linkIdPages[lid].add(pid);
-                if (!linkIdTokens[lid]) linkIdTokens[lid] = [];
-                linkIdTokens[lid].push(t);
                 // Check for duplicates on same page
                 if (seenOnPage[lid]) {
                     if (!linkIdDupes[pid]) linkIdDupes[pid] = new Set();
@@ -660,8 +635,7 @@ var Gaslight = Gaslight || (() => {
             var page = getObj('page', pid);
             var pageName = page ? page.get('name') : pid;
             dupes.forEach(function(lid) {
-                var dupeTokens = (linkIdTokens[lid] || []).filter(function(t) { return t.get('_pageid') === pid; });
-                warnings.push({ message: 'Duplicate gaslight_link on page "' + pageName + '"', severity: 'error', tokens: dupeTokens });
+                warnings.push({ message: 'Duplicate gaslight_link "' + lid + '" on page "' + pageName + '"', severity: 'error' });
             });
         });
 
@@ -669,9 +643,9 @@ var Gaslight = Gaslight || (() => {
         Object.entries(linkIdPages).forEach(function(entry) {
             var lid = entry[0], pages = entry[1];
             if (pages.size === 1) {
-                warnings.push({ message: 'exists on only 1 page (likely missing from player pages)', severity: 'warning', tokens: linkIdTokens[lid] || [] });
+                warnings.push({ message: 'gaslight_link "' + lid + '" exists on only 1 page (likely mistake)', severity: 'warning' });
             } else if (pages.size < allPageIds.length) {
-                warnings.push({ message: 'missing from some pages', severity: 'info', tokens: linkIdTokens[lid] || [] });
+                warnings.push({ message: 'gaslight_link "' + lid + '" missing from some pages', severity: 'info' });
             }
         });
 
@@ -680,20 +654,10 @@ var Gaslight = Gaslight || (() => {
 
     const formatWarnings = (warnings) => {
         if (warnings.length === 0) return '';
-        var hasTokens = warnings.some(function(w) { return w.tokens && w.tokens.length > 0; });
-        var out = '<br><b>Warnings:</b>';
-        if (hasTokens && typeof ScriptKit !== 'undefined') out += '<br><small><i>Click a token image to ping its location.</i></small>';
-        out += '<br>';
+        var out = '<br><b>Warnings:</b><br>';
         warnings.forEach(function(w) {
             var icon = w.severity === 'error' ? '🔴' : w.severity === 'warning' ? '🟡' : 'ℹ️';
-            if (w.tokens && w.tokens.length > 0 && typeof ScriptKit !== 'undefined') {
-                var tokenImgs = w.tokens.map(function(t) {
-                    return ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 });
-                }).join(' ');
-                out += icon + ' ' + tokenImgs + ' — ' + w.message + '<br>';
-            } else {
-                out += icon + ' ' + w.message + '<br>';
-            }
+            out += icon + ' ' + w.message + '<br>';
         });
         return out;
     };
@@ -811,12 +775,13 @@ var Gaslight = Gaslight || (() => {
             if (syncProps === '') return;
 
             // Determine which props go to Anchor vs Mirror
+            var allAnchorProps = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
             var needsAnchor = true;
-            var anchorComponents = null; // null = use ANCHOR_PROPS as default
+            var anchorComponents = null; // null = use allAnchorProps as default
             var mirrorProps = null; // null = all non-anchor
             if (Array.isArray(syncProps)) {
-                var anchorRequested = syncProps.filter(function(p) { return ANCHOR_PROPS.indexOf(p) !== -1; });
-                var mirrorRequested = syncProps.filter(function(p) { return ANCHOR_PROPS.indexOf(p) === -1; });
+                var anchorRequested = syncProps.filter(function(p) { return allAnchorProps.indexOf(p) !== -1; });
+                var mirrorRequested = syncProps.filter(function(p) { return allAnchorProps.indexOf(p) === -1; });
                 needsAnchor = anchorRequested.length > 0;
                 // Pass specific components to Anchor if not the full default set
                 if (needsAnchor) {
@@ -828,7 +793,7 @@ var Gaslight = Gaslight || (() => {
             // Always pass explicit components — never let Anchor default to ALL_COMPONENTS
             if (!anchorComponents) {
                 anchorComponents = {};
-                ANCHOR_PROPS.forEach(function(p) { anchorComponents[p] = true; });
+                allAnchorProps.forEach(function(p) { anchorComponents[p] = true; });
             }
 
             // Set up Anchor links (spatial sync)
@@ -884,7 +849,7 @@ var Gaslight = Gaslight || (() => {
             if (typeof Mirror !== 'undefined' && mirrorProps !== false) {
                 if (mirrorProps === null) {
                     // Default: sync all minus anchor and sight (sight stripped from children)
-                    var mirrorExcludes = anchorComponents ? Object.keys(anchorComponents) : ANCHOR_PROPS;
+                    var mirrorExcludes = anchorComponents ? Object.keys(anchorComponents) : allAnchorProps;
                     // Also exclude sight unless explicitly included in gaslight_sync
                     if (typeof Mirror !== 'undefined' && Mirror.PROP_GROUPS && Mirror.PROP_GROUPS.sight) {
                         mirrorExcludes = mirrorExcludes.concat(Mirror.PROP_GROUPS.sight);
@@ -1058,16 +1023,8 @@ var Gaslight = Gaslight || (() => {
             var out = '<b>Split Test: ' + groupName + '</b><br>';
             out += allLinks.length + ' link(s) would be established.<br>';
             if (unlinkWarnings.length > 0) {
-                out += '<br>🟡 ' + unlinkWarnings.length + ' token(s) could not be linked:';
-                if (typeof ScriptKit !== 'undefined') out += '<br><small><i>Click a token image to ping its location.</i></small>';
-                out += '<br>' +
-                    unlinkWarnings.map(function(w) {
-                        var t = w.source;
-                        if (typeof ScriptKit !== 'undefined') {
-                            return ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true });
-                        }
-                        return t.get('name') || t.get('id');
-                    }).join(' ') + '<br>';
+                out += '<br>🟡 ' + unlinkWarnings.length + ' token(s) could not be linked: ' +
+                    unlinkWarnings.map(function(w) { return w.source.get('name') || w.source.get('id'); }).join(', ') + '<br>';
             }
             out += formatWarnings(globalWarnings);
             if (hasErrors) {
@@ -1104,16 +1061,8 @@ var Gaslight = Gaslight || (() => {
             Object.keys(groupInfo.players).length + ' player(s), ' +
             allLinks.length + ' link(s) established.';
         if (unlinkWarnings.length > 0) {
-            summary += '<br>' + unlinkWarnings.length + ' token(s) could not be linked:';
-            if (typeof ScriptKit !== 'undefined') summary += '<br><small><i>Click a token image to ping its location.</i></small>';
-            summary += '<br>' +
-                unlinkWarnings.map(function(w) {
-                    var t = w.source;
-                    if (typeof ScriptKit !== 'undefined') {
-                        return ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true });
-                    }
-                    return t.get('name') || t.get('id');
-                }).join(' ');
+            summary += '<br>' + unlinkWarnings.length + ' token(s) could not be linked: ' +
+                unlinkWarnings.map(function(w) { return w.source.get('name') || w.source.get('id'); }).join(', ');
         }
         summary += formatWarnings(globalWarnings);
         reply(msg, 'Split', summary);
@@ -1195,43 +1144,24 @@ var Gaslight = Gaslight || (() => {
         if (!groupInfo.master) { reply(msg, 'Error', 'No master page for group "' + groupName + '".'); return; }
 
         var out = '<b>Link Test: ' + groupName + '</b><br>';
-        var totalLinked = 0;
-        var unlinkWarnings = [];
-
         Object.entries(groupInfo.players).forEach(function(entry) {
             var playerId = entry[0], pInfo = entry[1];
+            out += '<br><b>Master → ' + pInfo.name + ':</b><br>';
             var links = resolveLinks(groupInfo.master, pInfo.pageId);
             links.forEach(function(l) {
+                var srcName = l.source.get('name') || l.source.get('id');
                 if (l.target) {
-                    totalLinked++;
+                    var tgtName = l.target.get('name') || l.target.get('id');
+                    out += '✓ ' + srcName + ' → ' + tgtName + ' (step ' + l.step + ')<br>';
                 } else {
-                    unlinkWarnings.push({ source: l.source, playerName: pInfo.name });
+                    out += '🟡 ' + srcName + ' — no match found<br>';
                 }
             });
+            if (links.length === 0) out += '(no linkable tokens)<br>';
         });
-
-        out += totalLinked + ' link(s) would be established across ' + Object.keys(groupInfo.players).length + ' player page(s).<br>';
-
-        if (unlinkWarnings.length > 0) {
-            if (typeof ScriptKit !== 'undefined') out += '<small><i>Click a token image to ping its location.</i></small><br>';
-            out += '<br>🟡 ' + unlinkWarnings.length + ' token(s) could not be linked:<br>';
-            unlinkWarnings.forEach(function(w) {
-                var t = w.source;
-                if (typeof ScriptKit !== 'undefined') {
-                    out += ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: (t.get('name') || t.get('id')) + ' (' + w.playerName + ')', moveAll: true }) + ' ';
-                } else {
-                    out += (t.get('name') || t.get('id')) + ' (' + w.playerName + '), ';
-                }
-            });
-            out += '<br>';
-        }
 
         // Global warnings
         out += formatWarnings(checkWarnings(groupInfo));
-
-        if (unlinkWarnings.length === 0 && checkWarnings(groupInfo).length === 0) {
-            out += '<br>✓ All tokens link successfully. Ready to split.';
-        }
 
         reply(msg, out);
     };
@@ -1295,39 +1225,7 @@ var Gaslight = Gaslight || (() => {
         }
 
         tokens.forEach(function(t) { setLinkId(t, linkId); });
-
-        // Re-establish links if tokens are in an active group
-        var s = state[SCRIPT_NAME];
-        var relinkCount = 0;
-        Object.entries(s.activeGroups).forEach(function(entry) {
-            var groupName = entry[0], active = entry[1];
-            var allPageIds = [active.masterPageId].concat(Object.values(active.playerPages).map(function(p) { return p.pageId; }));
-            var affectedTokens = tokens.filter(function(t) { return allPageIds.indexOf(t.get('_pageid')) !== -1; });
-            if (affectedTokens.length === 0) return;
-
-            // Re-resolve links for each player page
-            var newLinks = [];
-            Object.values(active.playerPages).forEach(function(pInfo) {
-                var links = resolveLinks(active.masterPageId, pInfo.pageId);
-                links.forEach(function(l) {
-                    if (!l.target) return;
-                    // Only include links involving the newly-linked tokens
-                    var srcId = l.source.get('id'), tgtId = l.target.get('id');
-                    if (affectedTokens.some(function(t) { return t.get('id') === srcId || t.get('id') === tgtId; })) {
-                        newLinks.push(l);
-                    }
-                });
-            });
-
-            if (newLinks.length > 0) {
-                var groupInfo = { master: active.masterPageId, players: active.playerPages };
-                establishLinks(groupName, groupInfo, newLinks);
-                relinkCount += newLinks.length;
-            }
-        });
-
-        var extra = relinkCount > 0 ? ' ' + relinkCount + ' link(s) re-established.' : '';
-        reply(msg, 'Link', tokens.length + ' token(s) linked as "' + linkId + '".' + extra);
+        reply(msg, 'Link', tokens.length + ' token(s) linked as "' + linkId + '".');
     };
 
     const doUnlink = (msg, args) => {
@@ -1395,7 +1293,26 @@ var Gaslight = Gaslight || (() => {
             });
 
             // Determine if this is a parent token
-            var isParent = isParentToken(t);
+            var isParent = false;
+            if (activeGroup) {
+                if (tokenPageId === activeGroup.masterPageId) {
+                    isParent = true;
+                } else {
+                    var controlledBy = t.get('controlledby') || '';
+                    if (!controlledBy) {
+                        var charId = t.get('represents');
+                        var character = charId ? getObj('character', charId) : null;
+                        if (character) controlledBy = character.get('controlledby') || '';
+                    }
+                    if (controlledBy) {
+                        var controllerIds = controlledBy.split(',').map(function(c) { return c.trim(); }).filter(Boolean);
+                        var playerEntry = Object.entries(activeGroup.playerPages).find(function(e) {
+                            return controllerIds.indexOf(e[0]) !== -1 && e[1].pageId === tokenPageId;
+                        });
+                        if (playerEntry) isParent = true;
+                    }
+                }
+            }
 
             if (isParent && activeGroup) {
                 // Parent unlink: dissolve the entire link group
@@ -1483,10 +1400,7 @@ var Gaslight = Gaslight || (() => {
             var results = tokens.map(function(t) {
                 var raw = getVal(t);
                 var name = t.get('name') || t.get('id');
-                var display = (typeof ScriptKit !== 'undefined')
-                    ? ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: name, moveAll: true, width: 30, height: 30 })
-                    : '<b>' + name + '</b>';
-                return display + ': ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
+                return '<b>' + name + '</b>: ' + (raw === null ? '<i>(default — sync all)</i>' : raw || '<i>(empty — no sync)</i>');
             });
             reply(msg, 'Sync', results.join('<br>'));
             return;
@@ -1514,223 +1428,20 @@ var Gaslight = Gaslight || (() => {
 
         // "all" — explicitly sync everything
         if (subCmd === 'all') {
-            var parentTokens = getParentTokens(tokens);
-            parentTokens.forEach(function(t) {
-                setVal(t, 'all');
-                var info = getLinkedInfo(t.get('id'));
-                info.linkedIds.forEach(function(id) {
-                    var linked = getObj('graphic', id);
-                    if (linked) setVal(linked, 'all');
-                });
-            });
-            rebuildLinksForTokens(parentTokens);
-            reply(msg, 'Sync', 'Set to sync all properties on ' + parentTokens.length + ' ' + label + '(s).');
+            tokens.forEach(function(t) { setVal(t, 'all'); });
+            reply(msg, 'Sync', 'Set to sync all properties on ' + tokens.length + ' ' + label + '(s).');
             return;
         }
 
-        // Otherwise, treat all args as props to re-enable sync for
+        // Otherwise, treat all args as props to add to sync list
         var props = args.join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-        var s = state[SCRIPT_NAME];
-
-        // Separate into parents and children
-        var parents = tokens.filter(isParentToken);
-        var children = tokens.filter(function(t) { return !isParentToken(t); });
-
-        // Helper to apply sync re-enable to a single token's config
-        var applySyncToConfig = function(t) {
+        tokens.forEach(function(t) {
             var raw = getVal(t) || '';
             var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-            var hasWhitelist = existing.some(function(e) { return !e.startsWith('!'); });
-            props.forEach(function(p) {
-                var excludeVersion = '!' + p;
-                var exIdx = existing.indexOf(excludeVersion);
-                if (exIdx !== -1) existing.splice(exIdx, 1);
-                if (hasWhitelist && existing.indexOf(p) === -1) existing.push(p);
-            });
-            if (existing.length === 0) {
-                // Remove gaslight_sync entirely (revert to character default)
-                var notes = t.get('gmnotes') || '';
-                try { notes = decodeURIComponent(notes); } catch(e) {}
-                notes = notes.replace(/\n?gaslight_sync:\s*.*/, '');
-                t.set('gmnotes', notes);
-            } else {
-                setVal(t, existing.join(', '));
-            }
-            return existing.length > 0 ? existing.join(', ') : null;
-        };
-
-        // Parents: apply to master + propagate to all linked copies, then rebuild
-        if (parents.length > 0) {
-            var parentMasters = getParentTokens(parents);
-            parentMasters.forEach(function(t) {
-                var newVal = applySyncToConfig(t);
-                // Propagate to all linked copies
-                var info = getLinkedInfo(t.get('id'));
-                info.linkedIds.forEach(function(id) {
-                    var linked = getObj('graphic', id);
-                    if (linked) {
-                        if (newVal) setVal(linked, newVal);
-                        else {
-                            var notes = linked.get('gmnotes') || '';
-                            try { notes = decodeURIComponent(notes); } catch(e) {}
-                            notes = notes.replace(/\n?gaslight_sync:\s*.*/, '');
-                            linked.set('gmnotes', notes);
-                        }
-                    }
-                });
-            });
-            rebuildLinksForTokens(parentMasters);
-        }
-
-        // Children: surgically re-add sync for just those tokens
-        if (children.length > 0) {
-            var spatialToAdd = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) !== -1; });
-            var nonSpatialToAdd = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) === -1; });
-            children.forEach(function(t) {
-                var childId = t.get('id');
-                applySyncToConfig(t);
-                if (spatialToAdd.length > 0 && typeof Anchor !== 'undefined') {
-                    var components = {};
-                    spatialToAdd.forEach(function(p) { components[p] = true; });
-                    Anchor.trackComponents(childId, components);
-                }
-                if (nonSpatialToAdd.length > 0 && typeof Mirror !== 'undefined') {
-                    // Re-add to chain with these props
-                    var info = getLinkedInfo(childId);
-                    var allIds = [childId].concat(info.linkedIds);
-                    Mirror.chainLink(allIds, nonSpatialToAdd);
-                }
-            });
-        }
-
-        var total = parents.length + children.length;
-        reply(msg, 'Sync', 'Re-enabled [' + props.join(', ') + '] sync on ' + tokens.length + ' ' + label + '(s).');
-    };
-
-    /**
-     * Determine if a token is a "parent" in any active group.
-     * A parent is: on the master page, OR on a player page controlled by that player.
-     */
-    const isParentToken = (token) => {
-        var s = state[SCRIPT_NAME];
-        var tokenId = token.get('id');
-        var tokenPageId = token.get('_pageid');
-        var result = false;
-        Object.values(s.activeGroups).forEach(function(active) {
-            if (result) return;
-            var inGroup = active.linkedTokens[tokenId] || Object.values(active.linkedTokens).some(function(peers) { return peers.indexOf(tokenId) !== -1; });
-            if (!inGroup) return;
-            if (tokenPageId === active.masterPageId) { result = true; return; }
-            var controlledBy = token.get('controlledby') || '';
-            if (!controlledBy) {
-                var charId = token.get('represents');
-                var character = charId ? getObj('character', charId) : null;
-                if (character) controlledBy = character.get('controlledby') || '';
-            }
-            if (controlledBy) {
-                var controllerIds = controlledBy.split(',').map(function(c) { return c.trim(); }).filter(Boolean);
-                if (Object.entries(active.playerPages).some(function(e) { return controllerIds.indexOf(e[0]) !== -1 && e[1].pageId === tokenPageId; })) result = true;
-            }
+            props.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
+            setVal(t, existing.join(', '));
         });
-        return result;
-    };
-
-    /**
-     * Tear down and re-establish Anchor/Mirror links for tokens in active groups.
-     * Used after sync config changes (desync/sync) to apply immediately.
-     */
-    const rebuildLinksForTokens = (tokens) => {
-        var s = state[SCRIPT_NAME];
-        var affectedGroups = {};
-        tokens.forEach(function(t) {
-            var tokenId = t.get('id');
-            Object.entries(s.activeGroups).forEach(function(entry) {
-                var groupName = entry[0], active = entry[1];
-                if (active.linkedTokens[tokenId] || Object.values(active.linkedTokens).some(function(peers) { return peers.indexOf(tokenId) !== -1; })) {
-                    if (!affectedGroups[groupName]) affectedGroups[groupName] = new Set();
-                    var allIds = [tokenId].concat(active.linkedTokens[tokenId] || []);
-                    Object.entries(active.linkedTokens).forEach(function(e) {
-                        if (e[1].indexOf(tokenId) !== -1) { allIds.push(e[0]); allIds = allIds.concat(e[1]); }
-                    });
-                    allIds.forEach(function(id) { affectedGroups[groupName].add(id); });
-                }
-            });
-        });
-
-        Object.entries(affectedGroups).forEach(function(entry) {
-            var groupName = entry[0], ids = [...entry[1]];
-            var active = s.activeGroups[groupName];
-
-            // Tear down existing Anchor/Mirror for these tokens
-            if (typeof Anchor !== 'undefined') {
-                ids.forEach(function(id) { Anchor.unchainAnchorObjs(id); });
-                ids.forEach(function(id) { Anchor.removeAnchor(id); });
-            }
-            if (typeof Mirror !== 'undefined') {
-                Mirror.unchain(ids);
-                Mirror.unlink(ids);
-            }
-            // Remove from linkedTokens tracking
-            ids.forEach(function(id) { delete active.linkedTokens[id]; });
-            ids.forEach(function(id) {
-                Object.keys(active.linkedTokens).forEach(function(key) {
-                    var idx = active.linkedTokens[key].indexOf(id);
-                    if (idx !== -1) active.linkedTokens[key].splice(idx, 1);
-                });
-            });
-
-            // Re-resolve and re-establish
-            var groupInfo = { master: active.masterPageId, players: active.playerPages };
-            var newLinks = [];
-            Object.values(active.playerPages).forEach(function(pInfo) {
-                var links = resolveLinks(active.masterPageId, pInfo.pageId);
-                links.forEach(function(l) {
-                    if (!l.target) return;
-                    var srcId = l.source.get('id'), tgtId = l.target.get('id');
-                    if (ids.indexOf(srcId) !== -1 || ids.indexOf(tgtId) !== -1) {
-                        newLinks.push(l);
-                    }
-                });
-            });
-            if (newLinks.length > 0) establishLinks(groupName, groupInfo, newLinks);
-        });
-    };
-
-    /**
-     * Given tokens, find the master-page parent tokens in their link groups.
-     * gaslight_sync is read from the master token by establishLinks.
-     */
-    const getParentTokens = (tokens) => {
-        var s = state[SCRIPT_NAME];
-        var result = [];
-        var seen = new Set();
-        tokens.forEach(function(t) {
-            var tokenId = t.get('id');
-            var found = false;
-            Object.values(s.activeGroups).forEach(function(active) {
-                if (found) return;
-                var allIds = [tokenId].concat(active.linkedTokens[tokenId] || []);
-                Object.entries(active.linkedTokens).forEach(function(e) {
-                    if (e[1].indexOf(tokenId) !== -1) { allIds.push(e[0]); allIds = allIds.concat(e[1]); }
-                });
-                allIds = [...new Set(allIds)];
-                var masterToken = null;
-                allIds.forEach(function(id) {
-                    var obj = getObj('graphic', id);
-                    if (obj && obj.get('_pageid') === active.masterPageId) masterToken = obj;
-                });
-                if (masterToken && !seen.has(masterToken.get('id'))) {
-                    seen.add(masterToken.get('id'));
-                    result.push(masterToken);
-                    found = true;
-                }
-            });
-            if (!found && !seen.has(tokenId)) {
-                seen.add(tokenId);
-                result.push(t);
-            }
-        });
-        return result;
+        reply(msg, 'Sync', 'Added [' + props.join(', ') + '] to sync on ' + tokens.length + ' ' + label + '(s).');
     };
 
     const doDesync = (msg, args) => {
@@ -1763,66 +1474,20 @@ var Gaslight = Gaslight || (() => {
 
         // "all" — disable all syncing (set empty string = no sync)
         if (args[0].toLowerCase() === 'all') {
-            var parentTokens = getParentTokens(tokens);
-            parentTokens.forEach(function(t) {
-                setVal(t, '');
-                var info = getLinkedInfo(t.get('id'));
-                info.linkedIds.forEach(function(id) {
-                    var linked = getObj('graphic', id);
-                    if (linked) setVal(linked, '');
-                });
-            });
-            rebuildLinksForTokens(parentTokens);
-            reply(msg, 'Desync', 'Disabled all syncing on ' + parentTokens.length + ' ' + label + '(s).' + (useDefault ? '' : ' Use <code>!gaslight sync reset</code> to restore.'));
+            tokens.forEach(function(t) { setVal(t, ''); });
+            reply(msg, 'Desync', 'Disabled all syncing on ' + tokens.length + ' ' + label + '(s).' + (useDefault ? '' : ' Use <code>!gaslight sync reset</code> to restore.'));
             return;
         }
 
         var props = args.join(',').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
         var excludeProps = props.map(function(p) { return p.startsWith('!') ? p : '!' + p; });
-        var s = state[SCRIPT_NAME];
-
-        // Separate into parents and children
-        var parents = tokens.filter(isParentToken);
-        var children = tokens.filter(function(t) { return !isParentToken(t); });
-
-        // Parents: write config to master token and rebuild
-        if (parents.length > 0) {
-            var parentMasters = getParentTokens(parents);
-            parentMasters.forEach(function(t) {
-                var raw = getVal(t) || '';
-                var existing = raw.split(',').map(function(x) { return x.trim(); }).filter(Boolean);
-                excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
-                var newVal = existing.join(', ');
-                setVal(t, newVal);
-                // Propagate to all linked copies
-                var info = getLinkedInfo(t.get('id'));
-                info.linkedIds.forEach(function(id) {
-                    var linked = getObj('graphic', id);
-                    if (linked) setVal(linked, newVal);
-                });
-            });
-            rebuildLinksForTokens(parentMasters);
-        }
-
-        // Children: surgically remove sync for just those tokens
-        if (children.length > 0) {
-            var spatialToRemove = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) !== -1; });
-            var nonSpatialToRemove = props.filter(function(p) { return ANCHOR_PROPS.indexOf(p) === -1; });
-            children.forEach(function(t) {
-                var childId = t.get('id');
-                if (spatialToRemove.length > 0 && typeof Anchor !== 'undefined') {
-                    var components = {};
-                    spatialToRemove.forEach(function(p) { components[p] = true; });
-                    Anchor.untrackComponents(childId, components);
-                }
-                if (nonSpatialToRemove.length > 0 && typeof Mirror !== 'undefined') {
-                    Mirror.unchain([childId], nonSpatialToRemove);
-                }
-            });
-        }
-
-        var total = parents.length + children.length;
-        reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + total + ' ' + label + '(s).');
+        tokens.forEach(function(t) {
+            var raw = getVal(t) || '';
+            var existing = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            excludeProps.forEach(function(p) { if (existing.indexOf(p) === -1) existing.push(p); });
+            setVal(t, existing.join(', '));
+        });
+        reply(msg, 'Desync', 'Excluded [' + props.join(', ') + '] from sync on ' + tokens.length + ' ' + label + '(s).');
     };
 
     /**
@@ -1888,9 +1553,6 @@ var Gaslight = Gaslight || (() => {
 
         tokens.forEach(function(t) {
             var tokenName = t.get('name') || t.get('id');
-            var tokenDisplay = (typeof ScriptKit !== 'undefined')
-                ? ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: tokenName, moveAll: true, width: 30, height: 30 })
-                : '<b>' + tokenName + '</b>';
             var tokenId = t.get('id');
             var onMaster = Object.values(s.activeGroups).some(function(active) { return t.get('_pageid') === active.masterPageId; });
 
@@ -1963,7 +1625,7 @@ var Gaslight = Gaslight || (() => {
                         });
                         return pageName + ': ' + (val || '<i>∅</i>');
                     });
-                    output.push(tokenDisplay + ' ' + a.name + ' — ' + vals.join(', '));
+                    output.push('<b>' + tokenName + '</b> ' + a.name + ' — ' + vals.join(', '));
                 } else {
                     var target = getTargets[0];
                     var tNotes = target.get('gmnotes') || '';
@@ -1973,7 +1635,7 @@ var Gaslight = Gaslight || (() => {
                         var charId = target.get('represents');
                         if (charId) val = getAttrByName(charId, a.name) || '';
                     }
-                    output.push(tokenDisplay + ' ' + a.name + ' = ' + (val || '<i>(not set)</i>'));
+                    output.push('<b>' + tokenName + '</b> ' + a.name + ' = ' + (val || '<i>(not set)</i>'));
                 }
             });
 
@@ -2258,18 +1920,6 @@ var Gaslight = Gaslight || (() => {
             if (val !== 'on' && val !== 'off') { reply(msg, 'Error', 'Usage: !gaslight stage --default on|off'); return; }
             var tokens = (msg.selected || []).map(function(sel) { return getObj(sel._type, sel._id); }).filter(Boolean);
             if (tokens.length === 0) { reply(msg, 'Error', 'Select token(s) representing characters.'); return; }
-
-            // Check for marketplace images when enabling
-            if (val === 'on') {
-                var marketplaceFailures = tokens.filter(function(t) {
-                    return !canCreateWithImgsrc(t.get('imgsrc'), t.get('_pageid'));
-                }).map(function(t) { return { id: t.get('id'), name: t.get('name') || '(unnamed)', imgsrc: t.get('imgsrc') }; });
-                if (marketplaceFailures.length > 0) {
-                    reply(msg, 'Stage', formatMarketplaceError(marketplaceFailures, '!gaslight stage --default on'));
-                    return;
-                }
-            }
-
             var count = 0;
             tokens.forEach(function(t) {
                 var charId = t.get('represents');
@@ -2398,7 +2048,18 @@ var Gaslight = Gaslight || (() => {
         }
 
         if (marketplaceFailures.length > 0) {
-            reply(msg, 'Stage', formatMarketplaceError(marketplaceFailures, '!gaslight stage'));
+            var failMsg = '<b>⚠️ ' + marketplaceFailures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br><br>';
+            marketplaceFailures.forEach(function(f) {
+                failMsg += '<div style="display:inline-block;vertical-align:middle;margin:4px;text-align:center;">'
+                    + '<img src="' + f.imgsrc + '" style="width:40px;height:40px;"><br>'
+                    + '<small>' + f.name + '</small></div>';
+            });
+            failMsg += '<br><br><b>To fix:</b><ol>'
+                + '<li>In the <b>Art Library</b> tab, find the asset under <b>Premium Assets → Marketplace Purchases</b>, right-click it (or the folder), and select <b>Copy to Library</b>.</li>'
+                + '<li>Replace the token(s) on the master page with the library copy (drag from your library).</li>'
+                + '<li>Re-run <code>!gaslight stage</code> with the new token(s) selected.</li>'
+                + '</ol>';
+            reply(msg, 'Stage', failMsg);
         }
     };
 
@@ -2664,7 +2325,6 @@ var Gaslight = Gaslight || (() => {
         var valFn = function(o) {
             // Token gmnotes first, fallback to character attribute
             var tokenVal = readGlField(o.gmnotes, fieldName);
-            if (tokenVal) return tokenVal;
             var charId = o.represents;
             var charVal = getAttrByName(charId, fieldName) || '';
             return charVal;
@@ -3846,22 +3506,6 @@ var Gaslight = Gaslight || (() => {
                     'When done: `!gaslight merge` — tears down all links, returns players.',
                 ],
                 changelog: [
-                    { version: '2.2.1', changes: [
-                        'Fix: `!gaslight link` re-establishes links for tokens in active groups',
-                        'Fix: `!gaslight stage --default on` checks for marketplace images',
-                        'Fix: `!gaslight desync` now applies immediately (parent rebuilds links, child uses Anchor.untrackComponents)',
-                        'Fix: `!gaslight sync` removes !excludes correctly, propagates to all linked copies',
-                        'Fix: HUD hides when turn order is empty, reappears when turns are added',
-                        'Fix: HUD text offset no longer corrupts after turn advance',
-                        'Fix: Turn reticle updates after pin deletion',
-                        'Fix: Custom turns properly deduplicated using immutable key matching',
-                        'Fix: pr=0 no longer displays as empty text',
-                        'Fix: Batch additions no longer lost due to turn order race condition (debounced processing)',
-                        'Fix: Fetch compProp resolution returns token gmnotes value before character attribute fallback',
-                        'Tutorial: guide pings on HUD elements and customization steps',
-                        'QoL: warnings/errors show clickable token images that ping location (requires ScriptKit 1.2.0)',
-                        'QoL: `!gaslight test` output condensed to summary + warnings only',
-                    ]},
                     { version: '2.2.0', changes: [
                         'Initiative HUD: pin-based turn tracker with gesture controls (swipe, drag-to-reorder, delete)',
                         'Current turn reticle: rectangle highlighting active combatant on the map',
@@ -4098,41 +3742,7 @@ var Gaslight = Gaslight || (() => {
                   }
                 },
                 { prompt: 'You may notice a **HUD** appeared on the master page. We\'ll cover that in a later example. For now, disable it with:\n\n`!gaslight hud off`',
-                  when: () => Object.values(hudRegistry).some(function(e) { return e.isVisible(); }),
-                  onEnter: (ctx, advance) => {
-                      var s = state[SCRIPT_NAME];
-                      var pageId = getHudPageId();
-                      if (pageId) {
-                          var player = ctx.player;
-                          var delay = 0;
-                          // Ping view indicator
-                          if (s.hud.viewId) {
-                              var viewObj = getObj('text', s.hud.viewId);
-                              if (viewObj) {
-                                  setTimeout(function() { ScriptKit.ping(pageId, viewObj.get('left'), viewObj.get('top'), { player: player, color: '#00ff00', moveAll: true }); }, delay);
-                                  delay += 1500;
-                              }
-                          }
-                          // Ping initiative HUD frame
-                          if (s.hud.initData && s.hud.initData.frameId) {
-                              var frameObj = getObj('pathv2', s.hud.initData.frameId);
-                              if (frameObj) {
-                                  setTimeout(function() { ScriptKit.ping(pageId, frameObj.get('x'), frameObj.get('y'), { player: player, color: '#4fc3f7', moveAll: true }); }, delay);
-                                  delay += 1500;
-                              }
-                          }
-                          // Ping turn reticle
-                          if (s.hud.reticleData && s.hud.reticleData.id) {
-                              var reticleObj = getObj('pathv2', s.hud.reticleData.id);
-                              if (reticleObj) {
-                                  setTimeout(function() { ScriptKit.ping(pageId, reticleObj.get('x'), reticleObj.get('y'), { player: player, color: '#ff6600', moveAll: true }); }, delay);
-                              }
-                          }
-                      }
-                      // Wait for !gaslight hud command to advance
-                      ScriptKit.waitForCommand('!gaslight hud').onEnter(ctx, advance);
-                  },
-                  onExit: (ctx) => { ScriptKit.waitForCommand('!gaslight hud').onExit(ctx); }
+                  ...ScriptKit.waitForCommand('!gaslight hud')
                 },
                 { prompt: 'Your split is now active. Try moving an **NPC token** on the master page — it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else — useful for hiding tokens, swapping images, or showing per-player information.' },
                 { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages — players can move their own tokens and everyone sees it (bidirectional).' },
@@ -4199,7 +3809,6 @@ var Gaslight = Gaslight || (() => {
                       var s = state[SCRIPT_NAME];
                       if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
                       if (!s.hud.initiative) return 'Initiative HUD is disabled. Run `!gaslight hud init on` to enable it.';
-                      if (!s.hud.reticle) return 'Turn reticle is disabled. Run `!gaslight hud reticle on` to enable it.';
                   }
                 },
                 { prompt: 'Before we begin, clear any existing entries from the turn order. You can do this from Roll20\'s Turn Tracker panel (⚙).\n\nClear the turn order and click Continue.',
@@ -4220,7 +3829,7 @@ var Gaslight = Gaslight || (() => {
                       if (turnOrder.length > 0) return 'Turn order still has ' + turnOrder.length + ' entry/entries. Clear them all first.';
                   }
                 },
-                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (⚙ in the toolbar). Add some turns to the turnOrder (preferably with actual values).\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative — we\'ll cover that later.',
+                { prompt: 'The HUD needs tokens in the turn order. Add **6 or more tokens** to Roll20\'s initiative tracker using the **built-in Turn Tracker** (⚙ in the toolbar). Drag tokens in or use the tracker\'s initiative button.\n\n**Do NOT use a plugin command** (like GroupInitiative, etc.) to roll initiative — we\'ll cover that later.',
                   onEnter: (ctx, advance) => {
                       ctx._turnFired = false;
                       on('change:campaign:turnorder', function() {
@@ -4378,7 +3987,7 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.annotate(pageId, 'arrow', arrowX, center.y + 80, { fromX: arrowX, fromY: center.y + 10, color: '#00ccff' });
                   }
                 },
-                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.',
+                { prompt: '**Current Turn Reticle:**\n\nThe rectangle on the map highlighting the current turn\'s token is the **reticle**. It follows the active combatant wherever they are.\n\n• **Drag up/down** on the reticle to offset it from the token\n• **Resize** the reticle to change its proportional size\n• **Rotate** it to add a rotation offset\n• **Delete** the reticle to turn it off (or `!gaslight hud reticle off`)',
                   onEnter: (ctx) => {
                       var s = state[SCRIPT_NAME];
                       var d = s.hud.reticleData;
@@ -4390,50 +3999,12 @@ var Gaslight = Gaslight || (() => {
                       ScriptKit.ping(pageId, x, y, { color: 'transparent', moveAll: true, player: ctx.player });
                   }
                 },
-                { prompt: '**The Frame — Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame — some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins. HUD elements are located on the foreground layer, so you need to go to that layer to adjust them.',
-                  onEnter: (ctx) => {
-                      var s = state[SCRIPT_NAME];
-                      var pageId = getHudPageId();
-                      if (pageId && s.hud.initData && s.hud.initData.frameId) {
-                          var obj = getObj('pathv2', s.hud.initData.frameId);
-                          if (obj) ScriptKit.ping(pageId, obj.get('x'), obj.get('y'), { player: ctx.player, color: '#4fc3f7', moveAll: true });
-                      }
-                  }
-                },
+                { prompt: '**Customization — Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nTry resizing one of the pins.' },
+                { prompt: '**Customization — Text:**\n\nThe initiative value text next to each pin can be customized:\n\n• Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 — all will update to match\n• **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\n• **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.' },
+                { prompt: '**The Frame — Vertical resize:**\n\nNotice that not all 6+ pins fit in the frame — some are hidden. **Resize the frame vertically** (drag its bottom edge down) to reveal more slots.\n\nTry making the frame taller to show all your pins.' },
                 { prompt: '**The Frame — Diamond position:**\n\nYou can drag the **diamond highlight up or down** within the frame to shift where the current turn is displayed. Pins above and below will adjust accordingly.\n\nTry moving the diamond to a different position in the frame.' },
                 { prompt: '**The Frame — Other customization:**\n\nThe frame supports additional tweaks:\n\n• **Drag** the frame to move the entire HUD\n• **Resize horizontally** to adjust padding between pins\n• Change the frame\'s **stroke color** or **fill** directly in Roll20\'s shape properties\n\nThe **diamond** can also be customized:\n\n• Change its **color**, **stroke width**, **fill**, or **rotation** directly in Roll20\'s shape properties\n\nThe HUD remembers all of these choices.' },
-                { prompt: '**Reticle — Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45° (so the diamond\'s 45° rotation becomes the reticle\'s 90°, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.\n\nThe reticle can also have its positional offset from the token adjusted and you can delete it to toggle it off.',
-                  onEnter: (ctx) => {
-                      var s = state[SCRIPT_NAME];
-                      var pageId = getHudPageId();
-                      if (pageId && s.hud.reticleData && s.hud.reticleData.id) {
-                          var obj = getObj('pathv2', s.hud.reticleData.id);
-                          if (obj) ScriptKit.ping(pageId, obj.get('x'), obj.get('y'), { player: ctx.player, color: '#ff6600', moveAll: true });
-                      }
-                  }
-                },
-                { prompt: '**Customization — Pin Scaling:**\n\nResize any HUD pin and all pins scale together. The padding between pins stays fixed.\n\nYou can resize pins by clicking the pin, selecting "Edit", then going to the Customization tab. Try resizing one of the pins.',
-                  onEnter: (ctx) => {
-                      var s = state[SCRIPT_NAME];
-                      var pageId = getHudPageId();
-                      if (pageId && s.hud.initData && s.hud.initData.entries && s.hud.initData.entries.length > 0) {
-                          var pinId = s.hud.initData.entries[0].tokenId;
-                          var pin = pinId ? getObj('pin', pinId) : null;
-                          if (pin) ScriptKit.ping(pageId, pin.get('x'), pin.get('y'), { player: ctx.player, color: '#4fc3f7', moveAll: true });
-                      }
-                  }
-                },
-                { prompt: '**Customization — HUD Text:**\n\nThe initiative value text next to each pin can be customized:\n\n• Change **font**, **size**, **color**, or **stroke** directly on any text element in Roll20 — all will update to match\n• **Drag** a text element to adjust its position relative to the frame (closer, further, up, down)\n• **Rotate** it to change the text angle\n\nTry changing the font or position of one of the text elements.',
-                  onEnter: (ctx) => {
-                      var s = state[SCRIPT_NAME];
-                      var pageId = getHudPageId();
-                      if (pageId && s.hud.initData && s.hud.initData.entries && s.hud.initData.entries.length > 0) {
-                          var textId = s.hud.initData.entries[0].textId;
-                          var txt = textId ? getObj('text', textId) : null;
-                          if (txt) ScriptKit.ping(pageId, txt.get('left'), txt.get('top'), { player: ctx.player, color: '#ff00ff', moveAll: true });
-                      }
-                  }
-                },
+                { prompt: '**Reticle — Inheritance:**\n\nThe reticle inherits its **color** and **stroke width** from the diamond. It also inherits **rotation**, offset by 45° (so the diamond\'s 45° rotation becomes the reticle\'s 90°, etc.).\n\nIf you changed the diamond\'s appearance in the previous steps, the reticle should reflect those changes.\n\nTo override the reticle independently, just change its properties directly. Once overridden, it stops inheriting that property from the diamond.' },
                 { prompt: '**Gestures — Removing:**\n\nDelete a HUD pin to remove that combatant from initiative. Try deleting one now.' },
                 { prompt: '**Clearing initiative:**\n\nNow clear the rest of the initiative — delete the remaining HUD pins or clear initiative from Roll20\'s Turn Tracker panel.\n\nClear initiative before continuing.',
                   when: () => {
@@ -4492,19 +4063,11 @@ var Gaslight = Gaslight || (() => {
                   onContinue: () => {
                       var s = state[SCRIPT_NAME];
                       if (Object.keys(s.activeGroups || {}).length === 0) return 'No active split detected. Complete the getting-started guide first.';
-                      if (!s.hud.view) return 'View HUD is disabled. Run `!gaslight hud view on` to enable it.';
                   }
                 },
                 { prompt: '**Try auto-relay:**\n\nSelect a **staged token on the master page** and run any command against it (e.g. `!token-mod --set bar1_value|10` if you have TokenMod, or any other API command that targets tokens).\n\nThen navigate to a player\'s page — you\'ll see the command affected their copy too. That\'s auto-relay: any command referencing a master-page token ID automatically propagates to all player pages.' },
-                { prompt: '**The View HUD** shows the current relay status on the master page. It updates live as you change the relay target.',
-                  onEnter: (ctx) => {
-                      var s = state[SCRIPT_NAME];
-                      var pageId = getHudPageId();
-                      if (pageId && s.hud.viewId) {
-                          var viewObj = getObj('text', s.hud.viewId);
-                          if (viewObj) ScriptKit.ping(pageId, viewObj.get('left'), viewObj.get('top'), { player: ctx.player, color: '#00ff00', moveAll: true });
-                      }
-                  }
+                { prompt: '**Enable the View HUD:**\n\nThe view HUD shows the current relay status as text on the master page. If it\'s not already visible, enable it:\n\n`!gaslight hud view on`\n\nYou\'ll see a status label appear on the master page (e.g. "🟢 RELAY: ALL").',
+                  ...ScriptKit.waitForCommand('!gaslight hud view')
                 },
                 { prompt: '**Disable relay:**\n\nBy default, the view is set to `all` — commands relay to every player page. Let\'s turn it off first to see the difference:\n\n`!gaslight view off`\n\nNotice the View HUD updates to show relay is disabled.',
                   ...ScriptKit.waitForCommand('!gaslight view')
@@ -4550,7 +4113,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: '**Character variable:**\n\nNow select a **player character token** and set second sight on the character sheet (so it applies to all their tokens):\n\n`!gaslight var --setch second_sight 1`\n\nThe `--setch` flag sets it on the character, not the individual token.',
                   ...ScriptKit.waitForCommand('!gaslight var')
                 },
-                { prompt: '**The script handout (1/2):**\n\nCreate a new **handout** in your journal. Give it a prefix of "[GLS]" and a name (e.g. `[GLS] Winds of Magic`).\n\nIn the **Description & Notes** of the handout, paste this script:\n\n```!token-mod --set {& if @(target.gl_magical[0]) = 1 && any(@(viewer.gl_second_sight[0])) = 1}statusmarkers|+half-haze{& else}statusmarkers|-half-haze{& end}```\n\nThis adds the `half-haze` status marker to tokens that are magical — but only on pages where the viewer has second sight. Otherwise it removes it.\n\nClick Continue when done.' },
+                { prompt: '**The script handout (1/2):**\n\nCreate a new **handout** in your journal. Give it a prefix of "[GLS]" and a name (e.g. "[GLS] Winds of Magic").\n\nIn the **Description & Notes** of the handout, paste this script:\n\n```!token-mod --set {& if @(target.gl_magical[0]) = 1 && any(@(viewer.gl_second_sight[0])) = 1}statusmarkers|+half-haze{& else}statusmarkers|-half-haze{& end}```\n\nThis adds the `half-haze` status marker to tokens that are magical — but only on pages where the viewer has second sight. Otherwise it removes it.\n\nClick Continue when done.' },
                 { prompt: '**The script handout (2/2):**\n\nIn the **GM Notes**, type:\n\n```filter: all\ntrigger: gl_magical, gl_second_sight```\n\n• `filter: all` — evaluates against every staged token\n• `trigger:` — auto-re-evaluates when either variable changes\n\nClick Continue when the handout is configured.' },
                 { prompt: '**The Pin:**\n\nDrag the script handout onto the master page to create a map pin. This pin represents the script and will be used to trigger evaluations.' },
                 { prompt: '**Evaluate:**\n\nRun:\n\n`!gaslight eval --all`\n\nThis evaluates the script for every token. The NPC you marked as magical should now have the `half-haze` status marker on the player page(s) where the viewer has second sight — and NOT on pages where they don\'t.\n\nCheck both player pages to confirm.',
@@ -4620,8 +4183,8 @@ var Gaslight = Gaslight || (() => {
                           return !sides || sides.split('|').filter(Boolean).length < 2;
                       });
                       if (notMultiSided.length > 0) {
-                          var names = notMultiSided.map(t => ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 })).join(' ');
-                          return ScriptKit.html.raw('These tokens are not multi-sided: ' + names + '<br>Set up multiple sides on them first.');
+                          var names = notMultiSided.map(t => t.get('name') || t.get('id')).join(', ');
+                          return 'These tokens are not multi-sided: ' + names + '. Set up multiple sides on them first.';
                       }
                   }
                 },
@@ -4636,8 +4199,8 @@ var Gaslight = Gaslight || (() => {
                           return !attr || attr.get('current') !== '1';
                       });
                       if (missing.length > 0) {
-                          var names = missing.map(t => ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 })).join(' ');
-                          return ScriptKit.html.raw('These tokens do not have gl_can_disguise = 1 on their character: ' + names + '<br>Run <code>!gaslight var --setch can_disguise 1</code> (<code>--setch</code>, not <code>--set</code>) with them selected.');
+                          var names = missing.map(t => t.get('name') || t.get('id')).join(', ');
+                          return 'These tokens do not have gl_can_disguise = 1 on their character: ' + names + '. Run `!gaslight var --setch can_disguise 1` (`--setch`, not `--set`) with them selected.';
                       }
                   }
                 },
@@ -4652,8 +4215,8 @@ var Gaslight = Gaslight || (() => {
                           return notes.indexOf('gl_truesight') === -1 || notes.indexOf('gl_truesight: 1') === -1;
                       });
                       if (missing.length > 0) {
-                          var names = missing.map(t => ScriptKit.html.pingObjImg(t.get('id'), { imgsrc: t.get('imgsrc'), label: t.get('name') || t.get('id'), moveAll: true, width: 30, height: 30 })).join(' ');
-                          return ScriptKit.html.raw('These tokens do not have gl_truesight set: ' + names + '<br>Run <code>!gaslight var --set truesight 1</code> with them selected.');
+                          var names = missing.map(t => t.get('name') || t.get('id')).join(', ');
+                          return 'These tokens do not have gl_truesight set: ' + names + '. Run `!gaslight var --set truesight 1` with them selected.';
                       }
                   }
                 },
@@ -4986,29 +4549,12 @@ var Gaslight = Gaslight || (() => {
     /**
      * Handle turnorder changes: sync linked tokens, apply [GM] tags, auto-skip children.
      */
-    var _turnOrderDebounceId = null;
-    var _turnOrderPrev = null;
-
     const onTurnOrderChanged = (obj, prev) => {
         var s = state[SCRIPT_NAME];
         if (Object.keys(s.activeGroups).length === 0) return;
 
-        // Capture prev from the first event in the batch
-        if (!_turnOrderDebounceId) {
-            _turnOrderPrev = JSON.parse(prev.turnorder || '[]');
-        }
-        if (_turnOrderDebounceId) clearTimeout(_turnOrderDebounceId);
-        _turnOrderDebounceId = setTimeout(function() {
-            _turnOrderDebounceId = null;
-            processTurnOrderChange(_turnOrderPrev);
-        }, 100);
-    };
-
-    const processTurnOrderChange = (oldOrder) => {
-        var s = state[SCRIPT_NAME];
-        if (Object.keys(s.activeGroups).length === 0) return;
-
-        var newOrder = JSON.parse(Campaign().get('turnorder') || '[]');
+        var newOrder = JSON.parse(obj.get('turnorder') || '[]');
+        var oldOrder = JSON.parse(prev.turnorder || '[]');
 
         // Detect direction early (before skip/reorder modifies newOrder)
         var hudDirection = 'none';
@@ -5618,16 +5164,6 @@ var Gaslight = Gaslight || (() => {
     /**
      * Get the deduped turn order (master tokens only, skip children).
      */
-    /**
-     * Generate a matching key for a turn order entry.
-     * Tokens: use id. Customs: use custom + formula + _pageid + pr.
-     * pr is included for customs because two customs can share the same immutable fields.
-     */
-    const turnEntryKey = (entry) => {
-        if (entry.id && entry.id !== '-1') return entry.id;
-        return 'custom§' + (entry.custom != null ? entry.custom : '') + '§' + (entry.formula != null ? entry.formula : '') + '§' + entry._pageid + '§' + entry.pr;
-    };
-
     const getHudTurnOrder = () => {
         var s = state[SCRIPT_NAME];
         var order = JSON.parse(Campaign().get('turnorder') || '[]');
@@ -5741,35 +5277,6 @@ var Gaslight = Gaslight || (() => {
         if (!s.hud.initData.entries) s.hud.initData.entries = [];
         var data = s.hud.initData;
 
-        // If no turns, remove frame and highlight (will be recreated when turns are added)
-        if (order.length === 0) {
-            // Remove all entries
-            (data.entries || []).forEach(function(entry) {
-                var pin = getObj('pin', entry.tokenId);
-                var txt = getObj('text', entry.textId);
-                if (pin) pin.remove();
-                if (txt) txt.remove();
-            });
-            data.entries = [];
-            // Remove highlight (clear ID first so destroy handler ignores it)
-            if (data.highlightId) {
-                var hlId = data.highlightId;
-                delete data.highlightId;
-                var hl = getObj('pathv2', hlId);
-                if (hl) hl.remove();
-            }
-            // Remove frame (clear ID first so destroy handler ignores it)
-            if (data.frameId) {
-                var frId = data.frameId;
-                delete data.frameId;
-                var fr = getObj('pathv2', frId);
-                if (fr) fr.remove();
-            }
-            // Remove reticle
-            removeTurnReticle();
-            return;
-        }
-
         var frameWidth = defaultInitHud.tokenSize + 2 * defaultInitHud.hPadding;
 
         // Create frame if missing
@@ -5876,7 +5383,7 @@ var Gaslight = Gaslight || (() => {
                 var pinText = createHudObj('text', {
                     _pageid: pageId,
                     layer: 'foreground',
-                    text: String(entry.pr != null ? entry.pr : ''),
+                    text: String(entry.pr || ''),
                     left: -5000,
                     top: -5000,
                     font_size: data.textFontSize || defaultInitHud.textFontSize,
@@ -5890,7 +5397,6 @@ var Gaslight = Gaslight || (() => {
                     sourceId: 'custom:' + Date.now() + ':' + Math.random().toString(36).slice(2, 6),
                     tokenId: hudPin ? hudPin.get('id') : null,
                     textId: pinText.get('id'),
-                    key: turnEntryKey(entry),
                 });
             } else {
                 if (existingTokenIds.indexOf(entry.id) !== -1) return;
@@ -5919,7 +5425,7 @@ var Gaslight = Gaslight || (() => {
                 var hudText = createHudObj('text', {
                     _pageid: pageId,
                     layer: 'foreground',
-                    text: String(entry.pr != null ? entry.pr : ''),
+                    text: String(entry.pr || ''),
                     left: 0,
                     top: 0,
                     font_size: data.textFontSize || defaultInitHud.textFontSize,
@@ -5933,7 +5439,6 @@ var Gaslight = Gaslight || (() => {
                     sourceId: entry.id,
                     tokenId: hudPin ? hudPin.get('id') : null,
                     textId: hudText.get('id'),
-                    key: turnEntryKey(entry),
                 });
             }
         });
@@ -6064,29 +5569,24 @@ var Gaslight = Gaslight || (() => {
                 txt.set({ top: newSlotY, color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent' });
             });
 
-            // Update custom text values from current order based on key
-            var usedOrderIndices = new Set();
+            // Update custom text values from current order based on position
+            var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
             customEntries.forEach(function(e) {
                 var txt = getObj('text', e.textId);
                 if (!txt) return;
-                // Try exact key match first
-                var matchIdx = order.findIndex(function(o, i) { return !usedOrderIndices.has(i) && turnEntryKey(o) === e.key; });
-                // Fallback: match by immutable parts (custom + formula + _pageid) if pr changed
-                if (matchIdx === -1) {
-                    var keyParts = e.key.split('§');
-                    var immutableKey = keyParts.slice(0, 4).join('§'); // custom§<name>§<formula>§<pageid>
-                    matchIdx = order.findIndex(function(o, i) {
-                        if (usedOrderIndices.has(i)) return false;
-                        if (o.id && o.id !== '-1') return false;
-                        return turnEntryKey(o).startsWith(immutableKey + '§');
-                    });
+                var txtY = txt.get('top');
+                // Find which order slot this text is closest to
+                var bestOffset = null;
+                var bestDist = Infinity;
+                for (var ci = 0; ci < order.length; ci++) {
+                    if (order[ci].id && order[ci].id !== '-1') continue;
+                    var off = ci <= order.length / 2 ? ci : ci - order.length;
+                    var slotY = hudSlotY(frameCenter, off, tokenSize, tokenPadding);
+                    var dist = Math.abs(txtY - slotY);
+                    if (dist < bestDist) { bestDist = dist; bestOffset = ci; }
                 }
-                if (matchIdx !== -1) {
-                    usedOrderIndices.add(matchIdx);
-                    txt.set('text', String(order[matchIdx].pr != null ? order[matchIdx].pr : ''));
-                    // Keep key in sync
-                    var newKey = turnEntryKey(order[matchIdx]);
-                    if (e.key !== newKey) e.key = newKey;
+                if (bestOffset !== null) {
+                    txt.set('text', String(order[bestOffset].pr || ''));
                 }
             });
 
@@ -6116,7 +5616,7 @@ var Gaslight = Gaslight || (() => {
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos + (data.textVOffset || 0),
                         color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
-                        text: String(entry.pr != null ? entry.pr : ''),
+                        text: String(entry.pr || ''),
                     });
                 }
             });
@@ -6134,20 +5634,12 @@ var Gaslight = Gaslight || (() => {
             var usedVisible = new Set();
             var customOrderEntries = order.filter(function(e) { return !e.id || e.id === '-1'; });
             customOrderEntries.forEach(function(orderEntry) {
-                var orderKey = turnEntryKey(orderEntry);
+                var prVal = String(orderEntry.pr || '');
                 var match = visibleCustoms.findIndex(function(e, i) {
                     if (usedVisible.has(i)) return false;
-                    return e.key === orderKey;
+                    var txt = getObj('text', e.textId);
+                    return txt && txt.get('text') === prVal;
                 });
-                // Fallback: match by pr if key doesn't match (legacy entries without key)
-                if (match === -1) {
-                    var prVal = String(orderEntry.pr != null ? orderEntry.pr : '');
-                    match = visibleCustoms.findIndex(function(e, i) {
-                        if (usedVisible.has(i)) return false;
-                        var txt = getObj('text', e.textId);
-                        return txt && txt.get('text') === prVal;
-                    });
-                }
                 if (match !== -1) {
                     sortedCustoms.push(visibleCustoms[match]);
                     usedVisible.add(match);
@@ -6184,15 +5676,12 @@ var Gaslight = Gaslight || (() => {
                 pin.set({ x: visible ? frameLeft : -5000, y: visible ? hudPinY(frameCenter, offset, tokenSize, tokenPadding) : -5000 });
                 if (isCustom) pin.set('title', entry.custom || 'Custom');
 
-                // Keep key in sync with current turn order entry (pr may have changed)
-                if (hudEntry.key !== turnEntryKey(entry)) hudEntry.key = turnEntryKey(entry);
-
                 if (txt) {
                     txt.set({
                         left: frameLeft + frameWidth / 2 + (data.textOffset || 15),
                         top: yPos + (data.textVOffset || 0),
                         color: visible ? (data.textColor || defaultInitHud.textColor) : 'transparent', stroke: visible ? (data.textStroke || defaultInitHud.textStroke) : 'transparent',
-                        text: String(entry.pr != null ? entry.pr : ''),
+                        text: String(entry.pr || ''),
                     });
                 }
             });
@@ -6265,19 +5754,14 @@ var Gaslight = Gaslight || (() => {
                     var pts = JSON.parse(frame.get('points') || '[]');
                     var fw = pts.length >= 2 ? pts[1][0] - pts[0][0] : 70;
                     var rightEdge = frameLeft + fw / 2;
-                    var expectedLeft = rightEdge + (data.textOffset || 15);
-                    var actualLeft = obj.get('left');
-                    // Only update offset if the user actually moved the text (not just changed style)
-                    if (Math.abs(actualLeft - expectedLeft) > 1) {
-                        var newOffset = actualLeft - rightEdge;
-                        data.textOffset = newOffset;
-                        // Move all other texts to match offset
-                        data.entries.forEach(function(e) {
-                            if (e.textId === id) return;
-                            var otherTxt = getObj('text', e.textId);
-                            if (otherTxt) otherTxt.set('left', rightEdge + newOffset);
-                        });
-                    }
+                    var newOffset = obj.get('left') - rightEdge;
+                    data.textOffset = newOffset;
+                    // Move all other texts to match offset
+                    data.entries.forEach(function(e) {
+                        if (e.textId === id) return;
+                        var otherTxt = getObj('text', e.textId);
+                        if (otherTxt) otherTxt.set('left', rightEdge + newOffset);
+                    });
                 }
                 // Font size/family changes
                 var newFontSize = obj.get('font_size');
@@ -6339,35 +5823,24 @@ var Gaslight = Gaslight || (() => {
                     var fHeight = fPts.length >= 2 ? fPts[1][1] - fPts[0][1] : 510;
                     var vPadding = data.vPadding || defaultInitHud.vPadding;
                     var step = tokenSize + tokenPadding;
+                    // Find this entry's offset in the circular order
+                    var entryIdx = data.entries.indexOf(match);
+                    var numEntries = data.entries.length;
                     var slotsBelow = 0;
                     while (hlY + (slotsBelow + 1) * step + tokenSize / 2 <= frameTop + fHeight / 2 - vPadding) slotsBelow++;
-
-                    // Find display index from deduplicated turn order
-                    var order = getHudTurnOrder();
-                    var displayIdx = -1;
-                    displayIdx = order.findIndex(function(e) { return turnEntryKey(e) === match.key; });
-
-                    if (displayIdx >= 0) {
-                        var numEntries = order.length;
-                        var entryOffset = displayIdx === 0 ? 0 : (displayIdx <= slotsBelow ? displayIdx : -(numEntries - displayIdx));
-                        var slotY = hudSlotY(hlY, entryOffset, tokenSize, tokenPadding);
-                        var expectedTop = slotY + (data.textVOffset || 0);
-                        var vOffset = newTop - slotY;
-                        if (Math.abs(newTop - expectedTop) > 1) {
-                            data.textVOffset = vOffset;
-                            data.entries.forEach(function(e) {
-                                if (e.textId === id) return;
-                                var otherDisplayIdx = -1;
-                                if (e.sourceId && !e.sourceId.startsWith('custom:')) {
-                                    otherDisplayIdx = order.findIndex(function(o) { return o.id === e.sourceId; });
-                                }
-                                if (otherDisplayIdx < 0) return;
-                                var otherOffset = otherDisplayIdx === 0 ? 0 : (otherDisplayIdx <= slotsBelow ? otherDisplayIdx : -(numEntries - otherDisplayIdx));
-                                var otherSlotY = hudSlotY(hlY, otherOffset, tokenSize, tokenPadding);
-                                var otherTxt = getObj('text', e.textId);
-                                if (otherTxt) otherTxt.set('top', otherSlotY + vOffset);
-                            });
-                        }
+                    var entryOffset = entryIdx <= slotsBelow ? entryIdx : entryIdx - numEntries;
+                    var slotY = hudSlotY(hlY, entryOffset, tokenSize, tokenPadding);
+                    var vOffset = newTop - slotY;
+                    if (Math.abs(vOffset - (data.textVOffset || 0)) > 1) {
+                        data.textVOffset = vOffset;
+                        data.entries.forEach(function(e) {
+                            if (e.textId === id) return;
+                            var otherIdx = data.entries.indexOf(e);
+                            var otherOffset = otherIdx <= slotsBelow ? otherIdx : otherIdx - numEntries;
+                            var otherSlotY = hudSlotY(hlY, otherOffset, tokenSize, tokenPadding);
+                            var otherTxt = getObj('text', e.textId);
+                            if (otherTxt) otherTxt.set('top', otherSlotY + vOffset);
+                        });
                     }
                 }
             }
@@ -6390,28 +5863,6 @@ var Gaslight = Gaslight || (() => {
             var data = s.hud.initData;
             var matchIdx = data.entries.findIndex(function(e) { return e.textId === id; });
             if (matchIdx !== -1) {
-                // If a turn order change is pending, re-create the text and abort deletion
-                if (_turnOrderDebounceId) {
-                    var match = data.entries[matchIdx];
-                    var pageId = getHudPageId();
-                    if (pageId) {
-                        var newTxt = createHudObj('text', {
-                            _pageid: pageId,
-                            layer: 'foreground',
-                            text: obj.get('text') || '',
-                            left: obj.get('left') || 0,
-                            top: obj.get('top') || 0,
-                            font_size: data.textFontSize || defaultInitHud.textFontSize,
-                            color: data.textColor || defaultInitHud.textColor,
-                            stroke: data.textStroke || defaultInitHud.textStroke,
-                            font_family: data.textFontFamily || defaultInitHud.textFontFamily,
-                            rotation: data.textRotation || 0,
-                        });
-                        if (newTxt) match.textId = newTxt.get('id');
-                    }
-                    return;
-                }
-
                 var match = data.entries[matchIdx];
                 // Splice entry first to prevent cascading destroy handlers from re-matching
                 data.entries.splice(matchIdx, 1);
@@ -6425,13 +5876,13 @@ var Gaslight = Gaslight || (() => {
                     var groupIds = new Set([match.sourceId].concat(info.linkedIds));
                     order = order.filter(function(e) { return !groupIds.has(e.id); });
                 } else {
-                    var matchKey = match.key;
-                    var customIdx = order.findIndex(function(e) { return turnEntryKey(e) === matchKey; });
+                    var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
                     if (customIdx !== -1) order.splice(customIdx, 1);
                 }
                 Campaign().set('turnorder', JSON.stringify(order));
 
                 reflowInitiativeHud('none');
+                sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
             }
         }
     };
@@ -6447,38 +5898,6 @@ var Gaslight = Gaslight || (() => {
         var matchIdx = data.entries.findIndex(function(e) { return e.tokenId === id; });
         if (matchIdx === -1) return;
 
-        // If a turn order change is pending, re-create the pin and abort deletion
-        if (_turnOrderDebounceId) {
-            var match = data.entries[matchIdx];
-            var pageId = getHudPageId();
-            if (pageId) {
-                var frame = getObj('pathv2', data.frameId);
-                var frameLeft = frame ? frame.get('x') : 100;
-                var sourceToken = match.sourceId && !match.sourceId.startsWith('custom:') ? getObj('graphic', match.sourceId) : null;
-                var pinOpts = {
-                    _pageid: pageId,
-                    x: frameLeft,
-                    y: obj.get('y') || -5000,
-                    title: sourceToken ? (sourceToken.get('name') || '') : (obj.get('title') || 'Custom'),
-                    shape: 'circle',
-                    bgColor: 'transparent',
-                    scale: 1.25,
-                    visibleTo: 'all',
-                    notesDesynced: true,
-                };
-                if (sourceToken) {
-                    pinOpts.customizationType = 'image';
-                    pinOpts.pinImage = sourceToken.get('imgsrc').replace(/\/(?:med|max|original)\.png/, '/thumb.png');
-                } else {
-                    pinOpts.useTextIcon = true;
-                    pinOpts.textIcon = '';
-                }
-                var newPin = createHudObj('pin', pinOpts);
-                if (newPin) match.tokenId = newPin.get('id');
-            }
-            return;
-        }
-
         var match = data.entries[matchIdx];
         // Splice entry first — associated text will be orphaned and cleaned up on next reflow
         data.entries.splice(matchIdx, 1);
@@ -6493,15 +5912,14 @@ var Gaslight = Gaslight || (() => {
             var groupIds = new Set([match.sourceId].concat(info.linkedIds));
             order = order.filter(function(e) { return !groupIds.has(e.id); });
         } else {
-            // Custom turn — remove matching entry by key
-            var matchKey = match.key;
-            var customIdx = order.findIndex(function(e) { return turnEntryKey(e) === matchKey; });
+            // Custom turn — remove first matching custom entry
+            var customIdx = order.findIndex(function(e) { return !e.id || e.id === '-1'; });
             if (customIdx !== -1) order.splice(customIdx, 1);
         }
         Campaign().set('turnorder', JSON.stringify(order));
 
         reflowInitiativeHud('none');
-        updateTurnReticle();
+        sendChat(SCRIPT_NAME, '/w gm <b>HUD:</b> Removed entry from initiative.');
     };
 
     /**
@@ -6712,10 +6130,6 @@ var Gaslight = Gaslight || (() => {
                 var s = state[SCRIPT_NAME];
                 return s.hud.viewId ? [s.hud.viewId] : [];
             },
-            isVisible: function() {
-                var s = state[SCRIPT_NAME];
-                return !!(s.hud.viewId && getObj('text', s.hud.viewId));
-            },
             events: {
                 text: { change: onHudTextChanged, destroy: onHudTextDestroyed },
             },
@@ -6738,11 +6152,6 @@ var Gaslight = Gaslight || (() => {
                     if (e.textId) result.push(e.textId);
                 });
                 return result;
-            },
-            isVisible: function() {
-                var s = state[SCRIPT_NAME];
-                var data = s.hud.initData;
-                return !!(data && data.frameId && getObj('pathv2', data.frameId));
             },
             events: {
                 pathv2: {
@@ -6773,10 +6182,6 @@ var Gaslight = Gaslight || (() => {
             ids: function() {
                 var s = state[SCRIPT_NAME];
                 return s.hud.reticleData && s.hud.reticleData.id ? [s.hud.reticleData.id] : [];
-            },
-            isVisible: function() {
-                var s = state[SCRIPT_NAME];
-                return !!(s.hud.reticleData && s.hud.reticleData.id && getObj('pathv2', s.hud.reticleData.id));
             },
             events: {
                 pathv2: { change: onReticleChanged, destroy: onHudPathDestroyed },
@@ -6934,12 +6339,6 @@ var Gaslight = Gaslight || (() => {
             var data = s.hud.initData;
             var match = data.entries.find(function(e) { return e.tokenId === obj.get('id'); });
             if (!match) return;
-
-            // If a turn order change is pending (debouncing), reject the gesture and snap back
-            if (_turnOrderDebounceId) {
-                obj.set({ x: prev.x, y: prev.y });
-                return;
-            }
 
             var newY = obj.get('y');
             var oldY = prev.y;
