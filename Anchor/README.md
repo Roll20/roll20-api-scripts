@@ -275,6 +275,14 @@ Anchor.getUnlocked(obj)
 // Lock/unlock components. Pass array of names, or null for all.
 Anchor.lock(obj, ['left', 'top'])
 Anchor.unlock(obj, ['rotation'])
+
+// Add component tracking to an existing child relationship.
+// components: { left: true, top: true, ... }
+Anchor.trackComponents(childId, components)
+
+// Remove component tracking from an existing child relationship.
+// Removes the stored offset data for those components.
+Anchor.untrackComponents(childId, components)
 ```
 
 ---
@@ -308,6 +316,10 @@ The public API changed:
 ---
 
 ## Changelog
+
+### v2.3.0
+- Exposed `Anchor.trackComponents(childId, components)` on public API — add component tracking to existing relationships
+- Exposed `Anchor.untrackComponents(childId, components)` on public API — remove specific component tracking without destroying the relationship
 
 ### v2.2.1
 - Fix: child position offset now scales with parent size (proper matrix transform with scale)
