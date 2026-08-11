@@ -790,6 +790,23 @@ var Choreograph = Choreograph || (() => {
         return () => { const i = sceneFinishListeners.indexOf(fn); if (i >= 0) sceneFinishListeners.splice(i, 1); };
     };
 
+    const waitForScene = (sceneName) => ({
+        onEnter: (ctx, advance) => {
+            ctx._waitFired = false;
+            const unsubStart = onSceneStart((info) => {
+                if (ctx._waitFired || info.name !== sceneName) return;
+                const unsubFinish = onSceneFinish((finishInfo) => {
+                    if (ctx._waitFired || finishInfo.instanceId !== info.instanceId) return;
+                    ctx._waitFired = true;
+                    unsubStart();
+                    unsubFinish();
+                    setTimeout(() => advance(), 750);
+                });
+            });
+        },
+        onExit: (ctx) => { ctx._waitFired = true; },
+    });
+
     let instanceCounter = 0;
     const genInstanceId = () => `${SCRIPT_NAME}-${++instanceCounter}-${Date.now()}`;
 
@@ -2823,7 +2840,9 @@ var Choreograph = Choreograph || (() => {
             description: 'Create "The Summoning" — learn scenes, tables, filters, delay, and running.',
             guide: [
                 { prompt: '**Welcome to Choreograph!**\n\nOver the next few tutorials, you\'ll build a complete **ritual summoning** scene step by step. Cultists chant, energy gathers, and a creature is summoned.\n\nThis first tutorial covers the fundamentals: creating a scene, understanding the three tables, and running it.\n\nClick Continue to begin.' },
-                { prompt: '**Setup: Place Your Tokens**\n\nBefore we create the scene, set up the stage. On your current page, place:\n\n• 3–6 tokens to serve as cultists (these will form the ritual circle) and give them names\n• Arrange them roughly in a circle\n• **Rotate each cultist to face generally toward the center** (select token, hold alt, and drag the rotation handle)\n\nThe rotation values will determine clockwise ordering later — this is important!\n\nClick Continue when your cultist tokens are placed and facing inward.' },
+                { prompt: '**Setup: Place Your Tokens**\n\nBefore we create the scene, set up the stage. On your current page, place:\n\n• **At least 6 tokens** to serve as cultists (minimum 4, but 6+ recommended so later tutorials can split them into groups)\n• Give them names\n• Arrange them roughly in a circle\n• **Rotate each cultist to face generally toward the center** (select token, hold alt, and drag the rotation handle)\n\nThe rotation values will determine clockwise ordering later — this is important!\n\n**Select all your cultist tokens** then click Continue.',
+                  select: 'token', min: 4, as: 'cultists',
+                },
                 { prompt: '**Create the Scene**\n\nRun `!choreograph new summoning` to create the scene handout.',
                   ...ScriptKit.waitForCommand('!choreograph new'),
                   onContinue: () => {
@@ -2848,20 +2867,7 @@ var Choreograph = Choreograph || (() => {
                     + '<b>Save the handout</b>, then click Continue.'
                 ) },
                 { prompt: '**Run It!**\n\nSelect your cultist tokens, then run:\n\n`!choreograph run summoning`\n\nYou should see whispered messages appear one by one, staggered left-to-right: *"Cultist begins chanting..."*',
-                  onEnter: (ctx, advance) => {
-                      ctx._waitFired = false;
-                      const unsubStart = Choreograph.onSceneStart((info) => {
-                          if (ctx._waitFired || info.name !== 'summoning') return;
-                          const unsubFinish = Choreograph.onSceneFinish((finishInfo) => {
-                              if (ctx._waitFired || finishInfo.instanceId !== info.instanceId) return;
-                              ctx._waitFired = true;
-                              unsubStart();
-                              unsubFinish();
-                              setTimeout(() => advance(), 750);
-                          });
-                      });
-                  },
-                  onExit: (ctx) => { ctx._waitFired = true; },
+                  ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: '**What Just Happened?**\n\nChoreograph:\n1. Collected your selected tokens as the **cast**\n2. Evaluated each row\'s filter (`*` = all tokens)\n3. Fired each row\'s command at its delay — 0ms, 2000ms, 4000ms\n4. Substituted `${token.name}` with each token\'s actual name\n\n**Key Concepts:**\n• All rows start their timers simultaneously — delays offset them\n• Fixed delays (`0`, `2000`, `4000`) create sequential phases\n• Within a row, all matching tokens fire at the same time\n• `${...}` expressions are evaluated per-token\n\nRight now all cultists chant the same lines in unison. In the next tutorial, we\'ll split them into groups so each group chants a different phrase.',
                   offerExamples: ['roles-and-casts']
@@ -2902,20 +2908,7 @@ var Choreograph = Choreograph || (() => {
                     + '<b>Save the handout</b>, then click Continue.'
                 ) },
                 { prompt: '**Run with the Cast**\n\nInstead of selecting tokens manually, use the saved cast:\n\n`!choreograph run summoning --cast summoning`\n\nYou should see each group chant its own phrase at its scheduled time.',
-                  onEnter: (ctx, advance) => {
-                      ctx._waitFired = false;
-                      const unsubStart = Choreograph.onSceneStart((info) => {
-                          if (ctx._waitFired || info.name !== 'summoning') return;
-                          const unsubFinish = Choreograph.onSceneFinish((finishInfo) => {
-                              if (ctx._waitFired || finishInfo.instanceId !== info.instanceId) return;
-                              ctx._waitFired = true;
-                              unsubStart();
-                              unsubFinish();
-                              setTimeout(() => advance(), 750);
-                          });
-                      });
-                  },
-                  onExit: (ctx) => { ctx._waitFired = true; },
+                  ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: '**Key Concepts:**\n\n• `!choreograph cast add <name> --role <role>` — assign selected tokens to a named role\n• `role=X` in the Filter column — only match tokens in that role\n• `--cast <name>` on run — load a saved cast instead of using selected tokens\n• Roles persist in a `[Cast] summoning` handout — edit it directly to reassign\n\n**Useful commands:**\n• `!choreograph cast show summoning` — view current assignments\n• `!choreograph cast remove summoning --role first` — remove tokens from a role\n\nIn the next tutorial, we\'ll add timing expressions so the cultists within each group activate one at a time, clockwise around the circle.',
                   offerExamples: ['filters-and-delay']
@@ -2927,7 +2920,7 @@ var Choreograph = Choreograph || (() => {
             name: 'filters-and-delay',
             description: 'Stagger cultists clockwise with timing expressions and add chaotic energy effects.',
             guide: [
-                { prompt: '**Filters & Delay**\n\nThe cultist groups chant their phrases, but within each group everyone speaks at the same instant. Let\'s make them activate one at a time, sweeping clockwise around the circle.\n\n**Prerequisite:** Complete "Roles & Casts" first. You should have `[Scene] summoning` with role-based filters and a `[Cast] summoning`.\n\nClick Continue to begin.',
+                { prompt: '**Filters & Delay**\n\nThe cultist groups chant their phrases, but within each group everyone speaks at the same instant. Let\'s make them activate one at a time, sweeping clockwise around the circle.\n\n**Prerequisite:** Complete "Roles & Casts" first. You should have `[Scene] summoning` with role-based filters and a `[Cast] summoning`. At least one role needs 2+ tokens for staggering to be visible (6+ cultists total recommended).\n\nClick Continue to begin.',
                   onContinue: () => {
                       if (!scenes().find('summoning')) return 'Scene "summoning" not found. Complete the previous tutorials first.';
                   }
@@ -2947,7 +2940,7 @@ var Choreograph = Choreograph || (() => {
                     + '<b>Save the handout</b>, then click Continue.'
                 ) },
                 { prompt: '**Test the Stagger**\n\nRun: `!choreograph run summoning --cast summoning`\n\nYou should see each group\'s cultists chant one at a time, sweeping clockwise — first group, then second, then third.',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                  ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Add a Chaotic Energy Row</b><br><br>'
@@ -2955,17 +2948,33 @@ var Choreograph = Choreograph || (() => {
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
-                            ['<code>&#42;</code>', '<code>rand(500, 5000)</code>', '', '<code>!choreograph echo &#x26;#x26;#x1F5F2; Dark energy crackles around ${token.name}!</code>', 'chaos'],
+                            ['<code>&#42;</code>', '<code>rand(500, 5000)</code>', '', '<code>!choreograph fx explode-death ${token.left} ${token.top}</code>', 'chaos'],
                         ])
                     + '<br>• <code>&#42;</code> matches all tokens regardless of role<br>'
                     + '• <code>rand(500, 5000)</code> gives each token a random delay between 0.5s and 5s<br>'
                     + '• This row runs in parallel with the chanting rows — overlapping effects!<br><br>'
                     + '<b>Save</b> and click Continue.'
                 ) },
-                { prompt: '**Run the Full Scene**\n\nRun: `!choreograph run summoning --cast summoning`\n\nNow you should see the clockwise chanting *plus* random dark energy messages firing chaotically on top.',
-                  ...ScriptKit.waitForCommand('!choreograph run')
+                { prompt: '**Run the Full Scene**\n\nRun: `!choreograph run summoning --cast summoning`\n\nNow you should see the clockwise chanting *plus* dark energy explosions firing chaotically around the tokens.',
+                  ...Choreograph.waitForScene('summoning'),
                 },
-                { prompt: '**Other Filter Syntax**\n\nYou\'ve used `*` (all) and `role=X` (by role). Other filters:\n\n• `name=Cultist*` — glob match on token name\n• `name=Cultist` — exact match\n• `!role=first` — negation (everyone EXCEPT role first)\n• `layer=objects` — only tokens on the objects layer\n• `token.left < 500` — expression filter (JS boolean)\n• Space-separated = AND: `role=first layer=objects`\n\nMultiple rows with different filters let you orchestrate complex parallel effects on different token subsets.\n\n**Key Takeaways:**\n• `stagger(rank("attr"), interval)` — sequential timing sorted by any attribute\n• `rand(min, max)` — randomized timing\n• Arithmetic works in delays: `2000 + stagger(...)`\n• `*` vs `role=X` vs `name=X` vs expressions — flexible targeting\n\nNext: we\'ll add a sacrifice token and compute distances from it.',
+                { prompt: () => {
+                    const helpHandout = findObjs({ type: 'handout', name: 'Help: Choreograph' })[0];
+                    const hId = helpHandout ? helpHandout.get('id') : '';
+                    return ScriptKit.html.raw(
+                        '<b>Key Takeaways</b><br><br>'
+                        + 'In this tutorial you used:<br><br>'
+                        + '• <code>stagger(rank("rotation"), 500)</code> — sequential timing sorted by token rotation (clockwise)<br>'
+                        + '• <code>rand(500, 5000)</code> — randomized timing for chaotic effects<br>'
+                        + '• Arithmetic in delays: <code>2000 + stagger(...)</code> — offset a group while staggering within it<br>'
+                        + '• <code>*</code> filter — target all tokens regardless of role<br>'
+                        + '• Multiple rows with different filters run in parallel<br><br>'
+                        + 'For the full list of filters and delay functions, see the help handout:<br>'
+                        + (hId ? '• <a href="http://journal.roll20.net/handout/' + hId + '/#Filters">Filters</a><br>' : '')
+                        + (hId ? '• <a href="http://journal.roll20.net/handout/' + hId + '/#Delay%20Expressions">Delay Expressions</a><br>' : '')
+                        + '<br>Next: we\'ll add a sacrifice token and compute distances from it.'
+                    );
+                },
                   offerExamples: ['variables-and-templates']
                 },
             ],
@@ -3176,6 +3185,7 @@ var Choreograph = Choreograph || (() => {
         // Signals
         onSceneStart,
         onSceneFinish,
+        waitForScene,
         // Introspection
         getFunction:      (name) => EXT_FUNCTIONS[name] || null,
         getVariable:      (name) => EXT_TOKEN_VARS[name] || null,
