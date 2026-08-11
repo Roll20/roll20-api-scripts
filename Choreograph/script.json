@@ -2,12 +2,13 @@
     "name": "Choreograph",
     "script": "Choreograph.js",
     "version": "1.0.0",
-    "previousversions": [],
+    "previousversions": ["0.2", "0.1"],
     "description": "[Wiki Page](https://wiki.roll20.net/Script:Choreograph)\n\nMeta-sequencer for Roll20 tokens. Define scenes in handouts -- filter tokens, compute per-token timing, and fire commands at the right moments. Designed to orchestrate animations and effects across groups of tokens with spatial propagation, staggering, and parameterizable timing.\n\nRequires: SelectManager.\n\nScenes are stored in [Scene] handouts, casts in [Cast] handouts.\n\n**Features:**\n- Interactive tutorial series (6 guided walkthroughs)\n- Scene chaining and recursion with sync gating\n- Cast system with named roles\n- Parameters, variables, and full JS expression evaluation\n- When column for conditional row execution\n- Built-in FX commands (fx, fxbetween) with token ID support\n- Extension API for other scripts to register functions, variables, hooks\n- Signal system (onSceneStart/onSceneFinish)\n\nCommands:\n- `!choreograph run <name> [flags]` -- Execute a scene\n- `!choreograph new <name>` -- Create blank scene handout\n- `!choreograph list [query]` -- List scenes (fuzzy search)\n- `!choreograph edit <name>` -- Open scene handout\n- `!choreograph delete <name>` -- Delete a scene\n- `!choreograph stop [name]` -- Stop running scene(s)\n- `!choreograph pause [name]` -- Pause running scene(s)\n- `!choreograph resume [name]` -- Resume paused scene(s)\n- `!choreograph status` -- Show all running scenes\n- `!choreograph fx <type> <id|x y> [id2|x2 y2]` -- Spawn FX (auto-detects point vs between)\n- `!choreograph cast add/remove/list/show/delete` -- Manage casts\n\nSee the Help: Choreograph handout (generated on startup) for full documentation.",
     "authors": "Kenan Millet",
     "roll20userid": "2614613",
     "dependencies": [
-        "SelectManager"
+        "SelectManager",
+        "ScriptKit"
     ],
     "modifies": {},
     "conflicts": [],
