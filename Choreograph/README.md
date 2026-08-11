@@ -38,8 +38,7 @@ Install from the Roll20 One-Click Script Library, or paste `Choreograph.js` into
 | `!choreograph dump-html <name>` | Dump raw handout HTML to console |
 | `!choreograph cast ...` | Manage casts (see Cast System) |
 | `!choreograph echo <text>` | Debug: whisper text with timestamp |
-| `!choreograph fx <type> <id\|x y>` | Spawn FX at a token or coordinates |
-| `!choreograph fxbetween <type> <id1> <id2>` | Spawn directional FX between two tokens |
+| `!choreograph fx <type> <id\|x y> [id2\|x2 y2]` | Spawn FX (auto-detects point vs between) |
 
 ### Run Flags
 
@@ -325,7 +324,7 @@ Each participant only receives entries matching their registered command pattern
 
 ### v1.0.0
 - Interactive tutorial series (6 guided walkthroughs building a ritual summoning scene)
-- `fx`/`fxbetween` commands accept token IDs (no more manual coordinate lookup)
+- Unified `fx` command: auto-detects spawnFx vs spawnFxBetweenPoints (accepts token IDs, coords, or selected)
 - `sync` delay rows now fire their command after sync resolves
 - Required parameter validation (missing params abort with error)
 - `onSceneStart`/`onSceneFinish` signal system (public API)

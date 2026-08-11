@@ -17,8 +17,7 @@
 //   !choreograph delete <name> [--force] Delete a scene
 //   !choreograph stop [name]            Stop running scene(s)
 //   !choreograph refresh <name>         Regenerate handout from cache
-//   !choreograph fx <type> <id|x y>    Spawn FX at token or coordinates
-//   !choreograph fxbetween <type> ...   Spawn FX between two points/tokens
+//   !choreograph fx <type> <id|x y> ...  Spawn FX (auto-detects point vs between)
 // =============================================================================
 
 /* global state, on, sendChat, getObj, createObj, findObjs, Campaign,
@@ -2169,73 +2168,76 @@ var Choreograph = Choreograph || (() => {
         }
 
         // ---- fx ----
-        // Usage: !choreograph fx <type> <x> <y> [pageId]
-        // Or: !choreograph fx <type> <id>
-        // Or with selected: !choreograph fx <type> (at selected token location/page)
+        // Usage: !choreograph fx <type_or_id> <x> <y> [<x2> <y2>] [pageId]
+        // Or: !choreograph fx <type_or_id> <id> [<id2>]
+        // Or with selected: !choreograph fx <type_or_id> (one or two tokens selected)
+        //
+        // Auto-detects spawnFx vs spawnFxBetweenPoints based on:
+        // 1. If only one point/token provided → always spawnFx
+        // 2. If prefab type → hardcoded table determines between-points
+        // 3. If custom FX (by ID or name) → checks definition.angle === -1
         if (cmd === 'fx') {
-            const fxType = args[0];
-            if (!fxType) { replyError(msg, 'Usage: !choreograph fx <type> <x> <y> [pageId] or <type> <id> or <type> with token selected'); return; }
-            let x, y, pageId;
-            if (args.length >= 3) {
-                x = parseFloat(args[1]);
-                y = parseFloat(args[2]);
-                pageId = args[3] || undefined;
-            } else if (args.length === 2) {
-                // Single arg after type — try as token ID
-                const tok = getObj('graphic', args[1]);
-                if (tok) { x = tok.get('left'); y = tok.get('top'); pageId = tok.get('_pageid'); }
-            }
-            if (x === undefined || y === undefined) {
-                if (msg.selected && msg.selected.length > 0) {
-                    const tok = getObj('graphic', msg.selected[0]._id);
-                    if (tok) { x = tok.get('left'); y = tok.get('top'); pageId = pageId || tok.get('_pageid'); }
-                }
-            }
-            if (!pageId && msg.selected && msg.selected.length > 0) {
-                const tok = getObj('graphic', msg.selected[0]._id);
-                if (tok) pageId = tok.get('_pageid');
-            }
-            if (x !== undefined && y !== undefined) {
-                spawnFx(x, y, fxType, pageId);
-            }
-            return;
-        }
+            const fxTypeArg = args[0];
+            if (!fxTypeArg) { replyError(msg, 'Usage: !choreograph fx <type> <id> [id2] or <type> <x> <y> [x2 y2] [pageId] or with token(s) selected'); return; }
 
-        // ---- fxbetween ----
-        // Usage: !choreograph fxbetween <type> <x1> <y1> <x2> <y2> [pageId]
-        // Or: !choreograph fxbetween <type> <from_id> <to_id>
-        // Or with 2 selected: !choreograph fxbetween <type> (from first to second selected token location/page)
-        if (cmd === 'fxbetween') {
-            const fxType = args[0];
-            if (!fxType) { replyError(msg, 'Usage: !choreograph fxbetween <type> <x1> <y1> <x2> <y2> [pageId] or <type> <from_id> <to_id> or <type> with 2 tokens selected'); return; }
+            // Parse points from args — strict mode separation
             let p1, p2, pageId;
-            if (args.length >= 5) {
-                p1 = { x: parseFloat(args[1]), y: parseFloat(args[2]) };
-                p2 = { x: parseFloat(args[3]), y: parseFloat(args[4]) };
-                pageId = args[5] || Campaign().get('playerpageid');
-            } else if (args.length === 3) {
-                // Two args after type — try as token IDs
-                const t1 = getObj('graphic', args[1]);
-                const t2 = getObj('graphic', args[2]);
-                if (t1 && t2) {
-                    p1 = { x: t1.get('left'), y: t1.get('top') };
-                    p2 = { x: t2.get('left'), y: t2.get('top') };
-                    pageId = t1.get('_pageid');
-                }
-            }
-            if (!p1 || !p2) {
-                if (msg.selected && msg.selected.length >= 2) {
+            const remaining = args.slice(1);
+
+            if (remaining.length === 0) {
+                // Selected mode: use selected tokens
+                if (msg.selected && msg.selected.length > 0) {
                     const t1 = getObj('graphic', msg.selected[0]._id);
+                    if (t1) { p1 = { x: t1.get('left'), y: t1.get('top') }; pageId = t1.get('_pageid'); }
+                }
+                if (msg.selected && msg.selected.length >= 2) {
                     const t2 = getObj('graphic', msg.selected[1]._id);
-                    if (t1 && t2) {
-                        p1 = { x: t1.get('left'), y: t1.get('top') };
-                        p2 = { x: t2.get('left'), y: t2.get('top') };
-                        pageId = t1.get('_pageid');
-                    }
+                    if (t2) { p2 = { x: t2.get('left'), y: t2.get('top') }; }
+                }
+            } else if (!isNaN(parseFloat(remaining[0]))) {
+                // Coordinate mode: all args are numbers
+                p1 = { x: parseFloat(remaining[0]), y: parseFloat(remaining[1]) };
+                if (remaining.length >= 4 && !isNaN(parseFloat(remaining[2])) && !isNaN(parseFloat(remaining[3]))) {
+                    p2 = { x: parseFloat(remaining[2]), y: parseFloat(remaining[3]) };
+                    pageId = remaining[4] || Campaign().get('playerpageid');
+                } else {
+                    pageId = remaining[2] || Campaign().get('playerpageid');
+                }
+            } else {
+                // Token ID mode: args are token IDs
+                const t1 = getObj('graphic', remaining[0]);
+                if (t1) { p1 = { x: t1.get('left'), y: t1.get('top') }; pageId = t1.get('_pageid'); }
+                if (remaining.length >= 2) {
+                    const t2 = getObj('graphic', remaining[1]);
+                    if (t2) { p2 = { x: t2.get('left'), y: t2.get('top') }; }
                 }
             }
-            if (p1 && p2) {
+
+            if (!p1) return; // no valid point resolved
+
+            // Resolve custom FX name to ID if needed
+            let fxType = fxTypeArg;
+            const prefabTypes = ['beam', 'bomb', 'breath', 'bubbling', 'burn', 'burst', 'explode', 'glow', 'missile', 'nova', 'splatter'];
+            const isPrefab = prefabTypes.some(t => fxTypeArg.startsWith(t + '-') || fxTypeArg === t);
+            if (!isPrefab) {
+                // Custom FX — resolve to ID
+                let fxObj;
+                if (fxTypeArg.startsWith('-')) {
+                    fxObj = getObj('custfx', fxTypeArg);
+                }
+                if (!fxObj) {
+                    const results = findObjs({ _type: 'custfx', name: fxTypeArg });
+                    if (results.length > 0) fxObj = results[0];
+                }
+                if (fxObj) fxType = fxObj.get('_id');
+            }
+
+            // If two points are available, use spawnFxBetweenPoints (works for all types).
+            // If only one point, use spawnFx (works for all types except beam/missile).
+            if (p2) {
                 spawnFxBetweenPoints(p1, p2, fxType, pageId);
+            } else {
+                spawnFx(p1.x, p1.y, fxType, pageId);
             }
             return;
         }
@@ -2542,15 +2544,11 @@ var Choreograph = Choreograph || (() => {
                         { syntax: 'add-row <name>', description: 'Add blank row to scene table', version: '0.1' },
                         { syntax: 'dump-html <name>', description: 'Dump raw handout HTML to API console', version: '0.1' },
                         { syntax: 'echo <text>', description: 'Debug: whisper text with timestamp', version: '0.1' },
-                        { syntax: 'fx <type> <id|x y> [pageId]', description: 'Spawn FX at a token or coordinates', version: '0.1', items: [
-                            { name: '<type>', description: 'FX type (e.g. explode-fire, nova-holy, burst-magic)', version: '0.1' },
-                            { name: '<id>', description: 'Token ID — spawns at token position/page', version: '1.0.0' },
-                            { name: '<x> <y>', description: 'Coordinates (requires pageId or selected token for page)', version: '0.1' },
-                        ]},
-                        { syntax: 'fxbetween <type> <from_id> <to_id>', description: 'Spawn directional FX between two tokens', version: '0.1', items: [
-                            { name: '<type>', description: 'Directional FX type (e.g. beam-fire, breath-magic)', version: '0.1' },
-                            { name: '<from_id> <to_id>', description: 'Token IDs for start and end points', version: '1.0.0' },
-                            { name: '<x1> <y1> <x2> <y2> [pageId]', description: 'Coordinate form (original syntax)', version: '0.1' },
+                        { syntax: 'fx <type> <id|x y> [id2|x2 y2] [pageId]', description: 'Spawn FX (auto-detects point vs between-points)', version: '0.1', items: [
+                            { name: '<type>', description: 'FX type (e.g. explode-fire, beam-magic) or custom FX ID/name', version: '0.1' },
+                            { name: '<id> [id2]', description: 'Token ID(s) — one for point FX, two for directional', version: '1.0.0' },
+                            { name: '<x> <y> [x2 y2]', description: 'Coordinates (one or two points)', version: '0.1' },
+                            { name: 'auto-detect', description: 'beam/breath/splatter → between-points; others → single point; custom FX checks angle === -1', version: '1.0.0' },
                         ]},
                         { group: 'Playback', commands: [
                             { syntax: 'stop [name]', description: 'Stop running scene(s)', version: '0.1' },
@@ -3189,7 +3187,7 @@ var Choreograph = Choreograph || (() => {
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
-                            ['<code>!role=sacrifice</code>', '<code>propagate(dist, speed)</code>', '', '<code>!choreograph fxbetween breath-fire ${sacrifice.id} ${token.id}</code>', 'fire breath'],
+                            ['<code>!role=sacrifice</code>', '<code>propagate(dist, speed)</code>', '', '<code>!choreograph fx breath-fire ${sacrifice.id} ${token.id}</code>', 'fire breath'],
                         ])
                     + '<br><b>What\'s new here:</b><br>'
                     + '• <code>!role=sacrifice</code> — negation filter: all tokens EXCEPT the sacrifice<br>'
