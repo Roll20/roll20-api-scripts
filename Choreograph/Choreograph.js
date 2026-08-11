@@ -1300,6 +1300,17 @@ var Choreograph = Choreograph || (() => {
         // Attach execution context for registered functions that need full cast access
         resolvedParams.__ctx = { allTokens: cast, castData };
 
+        // Validate required params (no default = required)
+        const missingParams = scene.params
+            .filter(p => p.name !== 'cast' && !p.default && resolvedParams[p.name] == null)
+            .map(p => p.name);
+        if (missingParams.length > 0) {
+            const errMsg = `Missing required parameter(s): ${missingParams.join(', ')}`;
+            if (msg) replyError(msg, errMsg);
+            else log(`${SCRIPT_NAME}: ${errMsg}`);
+            return null;
+        }
+
         // Validate role constraints (min/max)
         if (scene.roles && scene.roles.length > 0 && castData && castData.roles) {
             for (const roleDef of scene.roles) {
@@ -1942,6 +1953,7 @@ var Choreograph = Choreograph || (() => {
                         castName: opts.cast || null,
                     };
                     const instanceId = executeScene(scene, cast, params, msg, castData || null, loopOpts, runtimeOpts);
+                    if (!instanceId) return; // scene failed to start (missing params, role constraints, etc.)
                     const inst = runningScenes[instanceId];
                     const iName = inst ? inst.instanceName : instanceId;
                     // Only show status card for user-initiated runs (not children/recursive)
@@ -3058,7 +3070,33 @@ var Choreograph = Choreograph || (() => {
                   ...ScriptKit.waitForCommand('!choreograph cast')
                 },
                 { prompt: '**Vary the Distances**\n\nFor this tutorial to look interesting, each cultist needs a slightly different distance from the sacrifice. Hold Alt and drag some cultists closer or farther from the center — make the circle a bit messy.\n\nThis ensures `propagate()` produces visibly different delays for each token.\n\nClick Continue when your cultists are at varied distances.' },
-                { prompt: '**The Variables Table**\n\nOpen `[Scene] summoning`. The second table is the **Variables** table (two columns: **Variable** | **Expression**).\n\nVariables are computed *per token* before the scene runs. They can reference:\n• `token.left`, `token.top`, `token.name`, etc. — the current token\'s properties\n• Any registered function — `distance()`, `rank()`, `actors()`, `role_ids()`, etc.\n• Parameters passed at runtime\n• Earlier variables (evaluated top-to-bottom)\n\nClick Continue.' },
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>The Parameters Table</b><br><br>'
+                    + 'Open <code>[Scene] summoning</code>. The first table is the <b>Parameters</b> table. It already has the built-in <code>cast</code> parameter.<br><br>'
+                    + 'Parameters are inputs you can pass at runtime with <code>--name value</code>. Let\'s add a <code>speed</code> parameter to control how fast effects propagate.<br><br>'
+                    + 'Add this row to the Parameters table (leave Default empty):<br><br>'
+                    + ScriptKit.html.table(
+                        ['Name', 'Type', 'Default', 'Description'],
+                        [
+                            ['<code>speed</code>', '<code>number</code>', '', '<code>Propagation speed (px/ms)</code>'],
+                        ])
+                    + '<br><b>Save the handout</b>, then click Continue.'
+                ) },
+                { prompt: '**Required Parameters**\n\nTry running the scene without providing `--speed`:\n\n`!choreograph run summoning --cast summoning`\n\nYou should get an error: *"Missing required parameter(s): speed"*\n\nParameters without a default are **required** — the scene won\'t run unless you provide them. This is useful for parameters that have no sensible default.',
+                  ...ScriptKit.waitForCommand('!choreograph run')
+                },
+                { prompt: () => ScriptKit.html.raw(
+                    '<b>Add a Default</b><br><br>'
+                    + 'Open <code>[Scene] summoning</code> and add a default value to the speed parameter:<br><br>'
+                    + ScriptKit.html.table(
+                        ['Name', 'Type', 'Default', 'Description'],
+                        [
+                            ['<code>speed</code>', '<code>number</code>', '<code>0.2</code>', '<code>Propagation speed (px/ms)</code>'],
+                        ])
+                    + '<br>Now the scene will use <code>0.2</code> unless overridden at runtime with <code>--speed &lt;value&gt;</code>.<br><br>'
+                    + '<b>Save the handout</b>, then click Continue.'
+                ) },
+                { prompt: '**The Variables Table**\n\nThe second table is the **Variables** table (two columns: **Variable** | **Expression**).\n\nVariables are computed *per token* before the scene runs. They can reference:\n• `token.left`, `token.top`, `token.name`, etc. — the current token\'s properties\n• Any registered function — `distance()`, `rank()`, `actors()`, `role_ids()`, etc.\n• Parameters passed at runtime (like `speed`)\n• Earlier variables (evaluated top-to-bottom)\n\nClick Continue.' },
                 { prompt: () => ScriptKit.html.raw(
                     '<b>Add a Distance Variable</b><br><br>'
                     + 'In the Variables table, add these rows:<br><br>'
@@ -3080,18 +3118,18 @@ var Choreograph = Choreograph || (() => {
                     + ScriptKit.html.table(
                         ['Filter', 'Delay', 'When', 'Command', 'Notes'],
                         [
-                            ['<code>!role=sacrifice</code>', '<code>propagate(dist, 0.2)</code>', '', '<code>!choreograph fxbetween breath-fire ${sacrifice.id} ${token.id}</code>', 'fire breath'],
+                            ['<code>!role=sacrifice</code>', '<code>propagate(dist, speed)</code>', '', '<code>!choreograph fxbetween breath-fire ${sacrifice.id} ${token.id}</code>', 'fire breath'],
                         ])
                     + '<br><b>What\'s new here:</b><br>'
                     + '• <code>!role=sacrifice</code> — negation filter: all tokens EXCEPT the sacrifice<br>'
-                    + '• <code>propagate(dist, 0.2)</code> — delay = distance / speed, so farther tokens fire later<br>'
+                    + '• <code>propagate(dist, speed)</code> — delay = distance / speed, using the parameter we defined<br>'
                     + '• <code>${sacrifice.id}</code> — use the computed variable to get the sacrifice token\'s ID<br><br>'
                     + '<b>Save</b> and click Continue.'
                 ) },
                 { prompt: '**Run It**\n\nRun: `!choreograph run summoning --cast summoning`\n\nYou should see:\n1. The chanting rows fire as before (clockwise stagger)\n2. Fire breath shoots from the sacrifice to each cultist, staggered by distance — closer ones first\n3. The dark energy explosions fire chaotically on top',
                   ...Choreograph.waitForScene('summoning'),
                 },
-                { prompt: '**Command Templates: Full Power**\n\nThe `${...}` syntax in commands is a full JavaScript template literal. You have access to:\n\n• All computed variables (`dist`, etc.)\n• `token.left`, `token.top`, `token.id`, `token.name`, etc.\n• All functions: `rank()`, `distance()`, `rand()`, `actors()`, etc.\n• JS expressions: `${dist > 100 ? "far" : "close"}`\n• String methods: `${token.name.toUpperCase()}`\n\n**Key Takeaways:**\n• Variables table = per-token computed values\n• Variables cascade top-to-bottom (later vars can use earlier ones)\n• `distance(target)` + `propagate(dist, speed)` = ripple-outward timing\n• `!filter` = negation (exclude a role/name/layer)\n• `${expr}` in commands = full JS evaluation\n\nNext: we\'ll make the chanting loop with escalating intensity.',
+                { prompt: '**Command Templates: Full Power**\n\nThe `${...}` syntax in commands is a full JavaScript template literal. You have access to:\n\n• All computed variables (`dist`, etc.)\n• All parameters (`speed`, etc.)\n• `token.left`, `token.top`, `token.id`, `token.name`, etc.\n• All functions: `rank()`, `distance()`, `rand()`, `actors()`, etc.\n• JS expressions: `${dist > 100 ? "far" : "close"}`\n• String methods: `${token.name.toUpperCase()}`\n\n**Key Takeaways:**\n• Parameters table = inputs passed at runtime with `--name value`\n• No default = required (scene aborts with error if missing)\n• Variables table = per-token computed values\n• Variables cascade top-to-bottom (later vars can use earlier ones)\n• `distance(target)` + `propagate(dist, speed)` = ripple-outward timing\n• `!filter` = negation (exclude a role/name/layer)\n• `${expr}` in commands = full JS evaluation\n\nNext: we\'ll make the chanting loop with escalating intensity.',
                   offerExamples: ['looping-and-when']
                 },
             ],
