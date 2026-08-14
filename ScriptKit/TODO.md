@@ -14,6 +14,7 @@
 - [x] Version date tracking — changelog dates stored in state, current version auto-stamped
 - [x] `man` topics show 📖 link to handout section
 - [x] `!<plugin> changes` — show the full rendered changelog (not just new stuff)
+- [x] `ScriptKit.usage(msg, scriptName)` — smart unknown-command handler with fuzzy matching, prefix detection, topic suggestions
 
 ## Planned Features
 
@@ -30,5 +31,4 @@
 - [ ] Multi-script version tagging: allow `version` on items/topics/commands to be string, object `{ scriptName, version }`, or array — lets extension content get proper [new] badges based on the extending script's version
 
 ### Other
-- [ ] `ScriptKit.MyScript.usage(msg)` — fuzzy-match unknown subcommands and suggest "Did you mean X?"
 - [ ] `compareVersion` override in registration opts (custom comparator for [new] badges and migration direction)

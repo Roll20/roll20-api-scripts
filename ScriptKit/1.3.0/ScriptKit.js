@@ -2195,6 +2195,168 @@ var ScriptKit = ScriptKit || (() => {
     // =========================================================================
 
     // =========================================================================
+    // Usage (unknown command handler)
+    // =========================================================================
+
+    /**
+     * Keyboard-weighted Levenshtein distance.
+     * Adjacent key substitutions cost less than distant ones.
+     */
+    const levenshtein = (() => {
+        // QWERTY keyboard layout — adjacency map
+        const keyPos = {};
+        const rows = [['qwertyuiop', 0], ['asdfghjkl', 0.3], ['zxcvbnm', 0.9]];
+        rows.forEach(([row, off], r) => {
+            for (let c = 0; c < row.length; c++) keyPos[row[c]] = { r, c: c + off };
+        });
+        const keyDist = (a, b) => {
+            if (a === b) return 0;
+            const pa = keyPos[a], pb = keyPos[b];
+            if (!pa || !pb) return 2;
+            const dr = Math.abs(pa.r - pb.r), dc = Math.abs(pa.c - pb.c);
+            if (dr <= 1 && dc <= 1.3) return 0.5;  // neighbor
+            if (dr <= 1 && dc <= 2) return 1;       // nearby
+            return 2;                                // far
+        };
+        return (a, b) => {
+            const m = a.length, n = b.length;
+            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (a[i-1] === b[j-1]) {
+                        dp[i][j] = dp[i-1][j-1];
+                    } else {
+                        var subCost = dp[i-1][j-1] + keyDist(a[i-1], b[j-1]);
+                        var delCost = dp[i-1][j] + 1;
+                        var insCost = dp[i][j-1] + 1;
+                        dp[i][j] = Math.min(subCost, delCost, insCost);
+                    }
+                }
+            }
+            return dp[m][n];
+        };
+    })();
+
+    /**
+     * Handle unknown commands — suggest corrections, filtered help, or full help.
+     */
+    const handleUsage = (msg, scriptName) => {
+        const reg = registrations[scriptName];
+        if (!reg) return;
+
+        const content = msg.content.slice(reg.command.length).trim();
+        const cmdWord = content.split(/\s+/)[0].toLowerCase();
+        if (!cmdWord) { showHelp(msg, scriptName, reg, []); return; }
+
+        const helpData = reg.help;
+        if (!helpData) { reply(msg, scriptName, 'Error', 'Unknown command: ' + html.escape(cmdWord)); return; }
+
+        // Collect all known command first-words
+        var knownCmds = [];
+        var flatCmds = [];
+        var flatten = (items) => { items.forEach(c => { if (c.group) flatten(c.commands || []); else flatCmds.push(c); }); };
+        if (helpData.commands) flatten(helpData.commands);
+        flatCmds.forEach(c => {
+            if (!c.deleted && c.syntax) knownCmds.push(c.syntax.split(' ')[0].toLowerCase());
+        });
+        // Also include active aliases
+        Object.values(reg.aliases).forEach(a => {
+            if (!a) return;
+            if (Array.isArray(a)) a.forEach(v => knownCmds.push(v.toLowerCase()));
+            else knownCmds.push(a.toLowerCase());
+        });
+        knownCmds = [...new Set(knownCmds)];
+
+        // Also collect topic keys/titles for topic suggestions
+        var topicNames = [];
+        if (helpData.topics) {
+            Object.entries(helpData.topics).forEach(([k, t]) => {
+                if (!t || t.deleted) return;
+                topicNames.push({ key: k, title: t.title || k });
+            });
+        }
+
+        // 1. Fuzzy match against commands
+        // Threshold scales with input length: short inputs need closer matches
+        var maxDist = cmdWord.length <= 2 ? 1 : cmdWord.length <= 4 ? 1.5 : 2.5;
+        var suggestions = knownCmds
+            .map(c => {
+                var dist = levenshtein(cmdWord, c);
+                // Prefix match: if input is a prefix of the command, always suggest
+                if (c.startsWith(cmdWord)) dist = 0;
+                else if (cmdWord.startsWith(c)) dist -= c.length * 0.2;
+                return { cmd: c, dist: dist };
+            })
+            .filter(s => s.dist <= maxDist)
+            .sort((a, b) => a.dist - b.dist)
+            .slice(0, 3);
+
+        // Also check topics (prefix/substring only, no fuzzy)
+        var topicSuggestions = topicNames
+            .filter(t => {
+                var k = t.key.toLowerCase(), title = t.title.toLowerCase();
+                return k.startsWith(cmdWord) || title.startsWith(cmdWord) || k.indexOf(cmdWord) !== -1 || title.indexOf(cmdWord) !== -1;
+            })
+            .slice(0, 2);
+
+        if (suggestions.length > 0 || topicSuggestions.length > 0) {
+            let out = 'Unknown command: ' + html.code(cmdWord) + html.br() + html.br();
+            var manAlias = Array.isArray(reg.aliases.man) ? reg.aliases.man[0] : reg.aliases.man;
+            if (suggestions.length > 0) {
+                out += 'Did you mean:' + html.br();
+                suggestions.forEach(s => {
+                    var cmdEntry = flatCmds.find(c => !c.deleted && c.syntax && c.syntax.split(' ')[0].toLowerCase() === s.cmd);
+                    if (cmdEntry) {
+                        out += '• ' + html.code(reg.command + ' ' + cmdEntry.syntax) + ' — ' + html.escape(cmdEntry.description) + html.br();
+                    } else {
+                        out += '• ' + html.code(reg.command + ' ' + s.cmd) + html.br();
+                    }
+                });
+            }
+            if (topicSuggestions.length > 0 && manAlias) {
+                out += (suggestions.length > 0 ? html.br() + 'Or browse a topic:' : 'Did you mean this topic?') + html.br();
+                topicSuggestions.forEach(t => {
+                    out += '• ' + html.button(t.title, reg.command + ' ' + manAlias + ' ' + t.key) + html.br();
+                });
+            }
+            reply(msg, scriptName, 'Help', out);
+            return;
+        }
+
+        // 2. Filtered help — does the command word match anything in commands/topics?
+        var searchResults = [];
+        flatCmds.forEach(c => {
+            if (!c.deleted && c.syntax && (c.syntax.toLowerCase().indexOf(cmdWord) !== -1 || (c.description || '').toLowerCase().indexOf(cmdWord) !== -1)) {
+                searchResults.push(html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(c.description));
+            }
+        });
+        topicNames.forEach(t => {
+            if (t.key.toLowerCase().indexOf(cmdWord) !== -1 || t.title.toLowerCase().indexOf(cmdWord) !== -1) {
+                var manAlias = Array.isArray(reg.aliases.man) ? reg.aliases.man[0] : reg.aliases.man;
+                searchResults.push(html.button(t.title, reg.command + ' ' + (manAlias || 'man') + ' ' + t.key));
+            }
+        });
+
+        if (searchResults.length > 0) {
+            let out = 'Unknown command: ' + html.code(cmdWord) + html.br() + html.br();
+            out += 'Related:' + html.br();
+            out += html.list(searchResults.slice(0, 5));
+            reply(msg, scriptName, 'Help', out);
+            return;
+        }
+
+        // 3. Full help fallback — show error + button
+        var helpAlias = Array.isArray(reg.aliases.help) ? reg.aliases.help[0] : reg.aliases.help;
+        var out = 'Unknown command: ' + html.code(cmdWord) + html.br() + html.br();
+        if (helpAlias) {
+            out += html.button('📋 Show All Commands', reg.command + ' ' + helpAlias);
+        }
+        reply(msg, scriptName, 'Help', out);
+    };
+
+    // =========================================================================
     // Public API (Proxy-based for namespace access)
     // =========================================================================
 
@@ -2268,6 +2430,7 @@ var ScriptKit = ScriptKit || (() => {
             const reg = registrations[scriptName];
             return (reg && reg._handouts && reg._handouts.dev) || null;
         },
+        usage: (msg, scriptName) => handleUsage(msg, scriptName),
     };
 
     // Tutorial.Choreograph.registerExample('Sequence', { ... })
@@ -2320,6 +2483,7 @@ on('ready', () => {
                     'Version date tracking: changelog dates stored in state for date-based queries',
                     '`!<plugin> changes [search]` — full changelog command with text search',
                     'Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration',
+                    '`ScriptKit.usage(msg, scriptName)` — smart unknown-command handler with keyboard-weighted fuzzy matching, prefix detection, and topic suggestions',
                 ]},
                 { version: '1.2.0', date: '2026-08-03', changes: [
                     'Added `!scriptkit ping` command — ping an object by ID or by coordinates',

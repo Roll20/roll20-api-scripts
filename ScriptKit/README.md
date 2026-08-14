@@ -529,6 +529,7 @@ const onExtensionRegistered = () => {
 - Version date tracking: changelog `date` fields stored in state; current version auto-stamped on first registration
 - `!<plugin> changes [search]` — full changelog command with text search
 - Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration
+- `ScriptKit.usage(msg, scriptName)` — smart unknown-command handler: keyboard-weighted fuzzy suggestions, prefix matching, topic suggestions, progressive fallback
 - Updated registration log format (`ȘꝀ ⚙⚙`)
 
 ### v1.2.0
