@@ -328,6 +328,7 @@ var ScriptKit = ScriptKit || (() => {
                     help: ['help', '--help'],
                     man: 'man',
                     whatsnew: 'whatsnew',
+                    changes: 'changes',
                     genHelp: 'gen-help',
                     genDev: 'gen-dev-docs',
                     examples: 'examples',
@@ -343,6 +344,20 @@ var ScriptKit = ScriptKit || (() => {
                     var val = userAliases[k];
                     if (val !== undefined) defaults[k] = val;
                 });
+                // Auto-null aliases that conflict with registered commands
+                if (opts.help && opts.help.commands) {
+                    var flatCmds = [];
+                    var flatten = (items) => { items.forEach(c => { if (c.group) flatten(c.commands || []); else flatCmds.push(c); }); };
+                    flatten(opts.help.commands);
+                    var cmdFirstWords = new Set(flatCmds.filter(c => !c.deleted && c.syntax).map(c => c.syntax.split(' ')[0].toLowerCase()));
+                    Object.keys(defaults).forEach(k => {
+                        if (!defaults[k] || userAliases[k] !== undefined) return; // skip nulled or explicitly set
+                        var aliases = Array.isArray(defaults[k]) ? defaults[k] : [defaults[k]];
+                        if (aliases.some(a => cmdFirstWords.has(a.toLowerCase()))) {
+                            defaults[k] = null;
+                        }
+                    });
+                }
                 return defaults;
             })(),
             exampleHandler: opts.exampleHandler || null,
@@ -811,6 +826,10 @@ var ScriptKit = ScriptKit || (() => {
             showWhatsNew(msg, scriptName, reg, args);
             return true;
         }
+        if (matchAlias(reg.aliases.changes)) {
+            showChanges(msg, scriptName, reg, args);
+            return true;
+        }
         if (matchAlias(reg.aliases.genHelp)) {
             generateHelpHandout(msg, scriptName, reg, 'usr');
             return true;
@@ -885,6 +904,7 @@ var ScriptKit = ScriptKit || (() => {
             if (manAlias && helpData.topics && Object.keys(helpData.topics).length > 0) autoCommands.push({ syntax: manAlias + ' [topic]', description: 'Detailed help by topic' });
             if (reg.aliases.examples) autoCommands.push({ syntax: reg.aliases.examples, description: 'Browse examples' });
             if (reg.aliases.whatsnew) autoCommands.push({ syntax: reg.aliases.whatsnew, description: 'Show what\'s new in this version' });
+            if (reg.aliases.changes) autoCommands.push({ syntax: reg.aliases.changes + ' [search]', description: 'Full changelog (filterable)' });
             if (reg.aliases.genHelp) autoCommands.push({ syntax: reg.aliases.genHelp, description: 'Regenerate help handout' });
             if (reg.aliases.genDev) autoCommands.push({ syntax: reg.aliases.genDev, description: 'Generate dev docs handout' });
 
@@ -1233,6 +1253,48 @@ var ScriptKit = ScriptKit || (() => {
         }
 
         reply(msg, scriptName, 'What\'s New', out);
+    };
+
+    /**
+     * Show full changelog for a script (chat command). Optional search filter.
+     */
+    const showChanges = (msg, scriptName, reg, args) => {
+        const helpData = reg.help;
+        if (!helpData || !helpData.changelog || helpData.changelog.length === 0) {
+            reply(msg, scriptName, 'Changes', 'No changelog registered.');
+            return;
+        }
+
+        const search = args && args.length > 0 ? args.join(' ').toLowerCase() : null;
+        const changelog = helpData.changelog;
+
+        let out = html.bold(html.escape(scriptName) + ' — Changelog');
+        if (search) out += ' ' + html.small('(filter: "' + html.escape(search) + '")');
+        out += html.paragraph('');
+
+        let hasResults = false;
+        changelog.forEach(entry => {
+            const changes = Array.isArray(entry.changes) ? entry.changes : (entry.changes ? [entry.changes] : []);
+            let matchingChanges;
+            if (search) {
+                // Match on version or change text
+                const versionMatch = entry.version.toLowerCase().indexOf(search) !== -1;
+                matchingChanges = versionMatch ? changes : changes.filter(c => c.toLowerCase().indexOf(search) !== -1);
+                if (matchingChanges.length === 0) return;
+            } else {
+                matchingChanges = changes;
+            }
+            hasResults = true;
+            var dateStr = entry.date ? ' ' + html.small('(' + entry.date + ')') : '';
+            out += html.bold('v' + entry.version) + dateStr + html.br();
+            out += html.list(matchingChanges.map(c => html.escape(c)));
+        });
+
+        if (!hasResults) {
+            out += 'No changes matching "' + html.escape(search) + '".';
+        }
+
+        reply(msg, scriptName, 'Changes', out);
     };
 
     // =========================================================================
@@ -2256,6 +2318,8 @@ on('ready', () => {
                     '`!scriptkit whatsnew [date]` — consolidated whatsnew across all plugins with date filtering',
                     'Per-plugin `whatsnew` also accepts date argument',
                     'Version date tracking: changelog dates stored in state for date-based queries',
+                    '`!<plugin> changes [search]` — full changelog command with text search',
+                    'Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration',
                 ]},
                 { version: '1.2.0', date: '2026-08-03', changes: [
                     'Added `!scriptkit ping` command — ping an object by ID or by coordinates',

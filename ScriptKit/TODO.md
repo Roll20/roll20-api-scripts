@@ -13,11 +13,9 @@
 - [x] Per-plugin whatsnew accepts date argument
 - [x] Version date tracking — changelog dates stored in state, current version auto-stamped
 - [x] `man` topics show 📖 link to handout section
+- [x] `!<plugin> changes` — show the full rendered changelog (not just new stuff)
 
 ## Planned Features
-
-### Help System
-- [ ] `!<plugin> changes` — show the full rendered changelog (not just new stuff)
 
 ### MOTD
 - [ ] MOTD configuration menu: per-motd and per-plugin state toggling (A: never, B: per-plugin pool, C: global pool, D: inherit)

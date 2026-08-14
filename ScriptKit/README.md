@@ -527,6 +527,8 @@ const onExtensionRegistered = () => {
 - `!scriptkit whatsnew [date]` — consolidated whatsnew across all registered plugins, with optional date filtering
 - Per-plugin `whatsnew` also accepts a date argument (ISO or human-readable)
 - Version date tracking: changelog `date` fields stored in state; current version auto-stamped on first registration
+- `!<plugin> changes [search]` — full changelog command with text search
+- Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration
 - Updated registration log format (`ȘꝀ ⚙⚙`)
 
 ### v1.2.0
