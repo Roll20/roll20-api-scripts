@@ -2483,6 +2483,8 @@ var Choreograph = Choreograph || (() => {
                     'Use `!choreograph man <topic>` to search help — it fuzzy-matches across topics and items.',
                     'Chain scenes recursively and use `sync` delay to gate the next phase on child completion.',
                 ],
+                motdHeader: '🎬 **Choreograph** v' + SCRIPT_VERSION,
+                motdStyle: { borderLeft: '3px solid #7b1fa2' },
                 help: {
                     description: 'Meta-sequencer for Roll20 tokens. Define scenes in handouts — filter tokens, compute per-token timing, and fire commands at the right moments.',
                     quickStart: [
