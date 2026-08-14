@@ -3640,7 +3640,10 @@ var Gaslight = Gaslight || (() => {
                 break;
             }
             case '--help':  reply(msg, HELP_TEXT); break;
-            default:        reply(msg, HELP_TEXT); break;
+            default:
+                if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg);
+                else reply(msg, HELP_TEXT);
+                break;
         }
     };
 
@@ -3835,6 +3838,15 @@ var Gaslight = Gaslight || (() => {
             tag: 'GLS',
             aliases: { help: ['help', '--help'], man: 'man', examples: 'examples', whatsnew: 'whatsnew', genHelp: 'gen-help', genDev: 'gen-dev-docs' },
             newSince: '2.2.0',
+            motd: [
+                'Use `!gaslight test <group>` before splitting to catch linking issues early.',
+                'The `--default` flag on stage/sync/desync sets character-level config that applies automatically.',
+                'Use `!gaslight view <player>` to see exactly what a player sees — great for debugging illusions.',
+                'Scripts in `[GLS]` pins run reactively per-player — perfect for proximity reveals and conditional effects.',
+                'The HUD supports gesture controls: swipe to advance turns, drag to reorder, delete to remove.',
+            ],
+            motdHeader: '🎭 **Gaslight** v' + SCRIPT_VERSION,
+            motdStyle: { borderLeft: '3px solid #ff8f00' },
             help: {
                 description: 'Per-player map perception. Split players onto individual page copies with synchronized tokens — each player can see different things while movement stays consistent.',
                 quickStart: [
