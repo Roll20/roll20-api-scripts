@@ -178,7 +178,7 @@ var ScriptKit = ScriptKit || (() => {
         br: () => '<br>',
         indent: (n) => '&nbsp;'.repeat(n || 2),
         link: (text, url, style) => '<a' + (style ? ' style="' + html.style(style) + '"' : '') + ' href="' + url + '">' + text + '</a>',
-        handoutLink: (text, id, style) => '<a' + (style ? ' style="' + html.style(style) + '"' : '') + ' href="http://journal.roll20.net/handout/' + id + '">' + text + '</a>',
+        handoutLink: (text, id, style, anchor) => '<a' + (style ? ' style="' + html.style(style) + '"' : '') + ' href="http://journal.roll20.net/handout/' + id + (anchor ? '/#' + encodeURIComponent(anchor) : '') + '">' + text + '</a>',
         version: (ver, style) => html.sup('[v' + ver + ']', style),
         newBadge: (style) => html.sup('[new]', style ? style : { color: '#c33', fontWeight: 'bold' }),
         deprecatedBadge: (ver, style) => html.sup('[deprecated' + (ver ? ' v' + ver : '') + ']', style ? style : { color: '#323' }),
@@ -355,6 +355,7 @@ var ScriptKit = ScriptKit || (() => {
             newSince: opts.newSince || null,
             handoutMode: opts.handout || 'auto',  // 'auto' | 'update' | 'manual'
             devHandoutMode: opts.devHandout || 'update',  // 'auto' | 'update' | 'manual'
+            _handouts: { usr: null, dev: null },
         };
 
         // Drain pending queue for this script
@@ -380,29 +381,31 @@ var ScriptKit = ScriptKit || (() => {
             state[SCRIPT_NAME].versions[scriptName] = opts.version;
         }
 
+        var usrHandout = findObjs({ type: 'handout', name: 'Help: ' + scriptName })[0];
+        if (usrHandout) registrations[scriptName]._handouts.usr = usrHandout;
         // Auto-generate user help handout based on handoutMode ('auto' | 'update' | 'manual')
         if (opts.help && opts.version && registrations[scriptName].handoutMode !== 'manual') {
             ensureState();
             var storedVer = state[SCRIPT_NAME].versions[scriptName] || '0.0.0';
-            var existing = findObjs({ type: 'handout', name: 'Help: ' + scriptName })[0];
             var versionChanged = compareSemver(storedVer, opts.version) !== 0;
             var shouldGenerate = registrations[scriptName].handoutMode === 'auto'
-                ? (versionChanged || !existing)
-                : (versionChanged && existing);  // 'update' mode: only if exists AND version changed
+                ? (versionChanged || !usrHandout)
+                : (versionChanged && usrHandout);  // 'update' mode: only if exists AND version changed
             if (shouldGenerate) {
                 setTimeout(() => generateHelpHandout(null, scriptName, registrations[scriptName], 'usr'), 500);
             }
         }
 
+        var devHandout = findObjs({ type: 'handout', name: 'Help: ' + scriptName + '/Dev' })[0];
+        if (devHandout) registrations[scriptName]._handouts.dev = devHandout;
         // Auto-generate dev handout based on devHandoutMode ('auto' | 'update' | 'manual')
         if (opts.help && opts.version && registrations[scriptName].devHandoutMode !== 'manual') {
             ensureState();
             var storedVerDev = state[SCRIPT_NAME].versions[scriptName] || '0.0.0';
-            var existingDev = findObjs({ type: 'handout', name: 'Help: ' + scriptName + '/Dev' })[0];
             var versionChangedDev = compareSemver(storedVerDev, opts.version) !== 0;
             var shouldGenerateDev = registrations[scriptName].devHandoutMode === 'auto'
-                ? (versionChangedDev || !existingDev)
-                : (versionChangedDev && existingDev);
+                ? (versionChangedDev || !devHandout)
+                : (versionChangedDev && devHandout);
             if (shouldGenerateDev) {
                 setTimeout(() => generateHelpHandout(null, scriptName, registrations[scriptName], 'dev'), 600);
             }
@@ -1376,6 +1379,8 @@ var ScriptKit = ScriptKit || (() => {
             });
         }
         setHandoutNotes(handout, out);
+        // Cache the handout reference
+        if (reg._handouts) reg._handouts[mode === 'dev' ? 'dev' : 'usr'] = handout;
 
         if (msg) {
             reply(msg, scriptName, mode === 'dev' ? 'Dev Docs' : 'Help',
@@ -2109,6 +2114,14 @@ var ScriptKit = ScriptKit || (() => {
             if (!api._handoutTimers) api._handoutTimers = {};
             if (api._handoutTimers[key]) clearTimeout(api._handoutTimers[key]);
             api._handoutTimers[key] = setTimeout(() => { delete api._handoutTimers[key]; api.updateHandoutImmediately(scriptName, mode); }, delay);
+        },
+        getHelpHandout: (scriptName) => {
+            const reg = registrations[scriptName];
+            return (reg && reg._handouts && reg._handouts.usr) || null;
+        },
+        getDevHandout: (scriptName) => {
+            const reg = registrations[scriptName];
+            return (reg && reg._handouts && reg._handouts.dev) || null;
         },
     };
 
