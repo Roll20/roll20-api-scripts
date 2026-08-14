@@ -555,6 +555,7 @@ const onExtensionRegistered = () => {
 - Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration
 - `ScriptKit.usage(msg)` — smart unknown-command handler: keyboard-weighted fuzzy suggestions, prefix matching, topic suggestions, progressive fallback
 - `ScriptKit.usage(msg, command, reason)` — command-specific usage display with optional error reason
+- `!<plugin> motd` / `!scriptkit motd [plugin]` — on-demand random tip with no-repeat tracking, debounced single-tip startup delivery, derived button styling
 - Updated registration log format (`ȘꝀ ⚙⚙`)
 
 ### v1.2.0

@@ -20,6 +20,46 @@ var ScriptKit = ScriptKit || (() => {
     const SCRIPT_VERSION = '1.3.0';
     const HANDOUT_STEP = Object.freeze({ auto: true });
 
+    // In-memory MOTD tracking (resets on sandbox restart)
+    const motdSeen = {}; // { scriptName: Set of shown indices }
+
+    const pickMotd = (scriptName, motdArr) => {
+        if (!motdArr || motdArr.length === 0) return null;
+        if (!motdSeen[scriptName]) motdSeen[scriptName] = new Set();
+        var seen = motdSeen[scriptName];
+        if (seen.size >= motdArr.length) seen.clear();
+        var unseen = motdArr.map((_, i) => i).filter(i => !seen.has(i));
+        var idx = unseen[Math.floor(Math.random() * unseen.length)];
+        seen.add(idx);
+        return motdArr[idx];
+    };
+
+    const renderMotdCard = (scriptName, tip, reg, btnCmd) => {
+        var frameStyle = Object.assign(
+            { background: '#1a1a2e', color: '#eee', padding: '8px 12px', borderRadius: '4px', borderLeft: '3px solid #4fc3f7', fontSize: '12px', marginTop: '4px' },
+            (reg && reg.motdStyle) || {}
+        );
+        var version = reg ? reg.version : '';
+        var header = reg && reg.motdHeader
+            ? (typeof reg.motdHeader === 'function' ? reg.motdHeader(version) : reg.motdHeader)
+            : '💡 **' + scriptName + ' v' + version + '**';
+        var anotherCmd = btnCmd || (reg ? reg.command + ' motd' : '!scriptkit motd');
+        // Derive button style: explicit motdButtonStyle > derive from frame > default
+        var btnStyle = null;
+        if (reg && reg.motdButtonStyle) {
+            btnStyle = reg.motdButtonStyle;
+        } else {
+            var borderMatch = frameStyle.borderLeft?.match(/#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\)/);
+            btnStyle = {};
+            if (borderMatch) btnStyle.border = '1px solid ' + borderMatch[0];
+        }
+        var showAnotherBtn = html.br() + html.br() +'<div style="text-align:center">' + html.button('» Next Tip »', anotherCmd, btnStyle) + '</div>';
+        return html.div(
+            '<div style="text-align:center">' + html.render(header) + '</div>' + html.br() + html.render(tip) + showAnotherBtn,
+            frameStyle
+        );
+    };
+
     // =========================================================================
     // Registry
     // =========================================================================
@@ -329,6 +369,7 @@ var ScriptKit = ScriptKit || (() => {
                     man: 'man',
                     whatsnew: 'whatsnew',
                     changes: 'changes',
+                    motd: 'motd',
                     genHelp: 'gen-help',
                     genDev: 'gen-dev-docs',
                     examples: 'examples',
@@ -370,6 +411,10 @@ var ScriptKit = ScriptKit || (() => {
             newSince: opts.newSince || null,
             handoutMode: opts.handout || 'auto',  // 'auto' | 'update' | 'manual'
             devHandoutMode: opts.devHandout || 'update',  // 'auto' | 'update' | 'manual'
+            motd: opts.motd || null,
+            motdHeader: opts.motdHeader !== undefined ? opts.motdHeader : null,
+            motdStyle: opts.motdStyle || null,
+            motdButtonStyle: opts.motdButtonStyle || null,
             _handouts: { usr: null, dev: null },
         };
 
@@ -452,23 +497,21 @@ var ScriptKit = ScriptKit || (() => {
         // Send ready signal
         sendChat('', registrations[scriptName].command + '-ready', null, { noarchive: true });
 
-        // MOTD — whisper a random tip to GM on registration
+        // Startup MOTD — debounce: show one random tip 10s after last registration
         if (opts.motd && Array.isArray(opts.motd) && opts.motd.length > 0) {
-            setTimeout(() => {
-                var tip = opts.motd[Math.floor(Math.random() * opts.motd.length)];
-                var frameStyle = Object.assign(
-                    { background: '#1a1a2e', color: '#eee', padding: '8px 12px', borderRadius: '4px', borderLeft: '3px solid #4fc3f7', fontSize: '12px', marginTop: '4px' },
-                    opts.motdStyle || {}
-                );
-                var header = opts.motdHeader !== undefined
-                    ? (typeof opts.motdHeader === 'function' ? opts.motdHeader(opts.version) : opts.motdHeader)
-                    : '💡 **' + scriptName + ' v' + (opts.version || '') + '**';
-                var card = html.div(
-                    html.render(header) + html.br() + html.render(tip),
-                    frameStyle
-                );
-                sendChat(scriptName, '/w gm ' + card, null, { noarchive: true });
-            }, 1500);
+            if (register._motdTimer) clearTimeout(register._motdTimer);
+            register._motdTimer = setTimeout(() => {
+                delete register._motdTimer;
+                var pluginsWithMotd = Object.keys(registrations).filter(n => registrations[n].motd && registrations[n].motd.length > 0);
+                if (pluginsWithMotd.length === 0) return;
+                var randomPlugin = pluginsWithMotd[Math.floor(Math.random() * pluginsWithMotd.length)];
+                var rReg = registrations[randomPlugin];
+                var tip = pickMotd(randomPlugin, rReg.motd);
+                if (tip) {
+                    var card = renderMotdCard(randomPlugin, tip, rReg, '!scriptkit motd');
+                    sendChat(SCRIPT_NAME, '/w gm ' + card, null, { noarchive: true });
+                }
+            }, 10000);
         }
 
         return true;
@@ -767,6 +810,32 @@ var ScriptKit = ScriptKit || (() => {
             doPing(msg, args.join(' '));
             return true;
         }
+        if (scriptName === SCRIPT_NAME && cmd === 'motd') {
+            // Show a random motd from a specific plugin or the global pool
+            var targetPlugin = args.length > 0 ? args.join(' ') : null;
+            if (targetPlugin) {
+                // Specific plugin
+                var targetReg = registrations[targetPlugin];
+                if (!targetReg || !targetReg.motd || targetReg.motd.length === 0) {
+                    reply(msg, SCRIPT_NAME, 'Tip', 'No tips registered for ' + html.escape(targetPlugin) + '.');
+                    return true;
+                }
+                var tip = pickMotd(targetPlugin, targetReg.motd);
+                if (tip) reply(msg, SCRIPT_NAME, 'Tip', renderMotdCard(targetPlugin, tip, targetReg, '!scriptkit motd ' + targetPlugin));
+            } else {
+                // Global pool — pick a random plugin that has motds, then pick from it
+                var pluginsWithMotd = Object.keys(registrations).filter(n => registrations[n].motd && registrations[n].motd.length > 0);
+                if (pluginsWithMotd.length === 0) {
+                    reply(msg, SCRIPT_NAME, 'Tip', 'No tips registered across any plugins.');
+                    return true;
+                }
+                var randomPlugin = pluginsWithMotd[Math.floor(Math.random() * pluginsWithMotd.length)];
+                var rReg = registrations[randomPlugin];
+                var tip = pickMotd(randomPlugin, rReg.motd);
+                if (tip) reply(msg, SCRIPT_NAME, 'Tip', renderMotdCard(randomPlugin, tip, rReg, '!scriptkit motd'));
+            }
+            return true;
+        }
         if (scriptName === SCRIPT_NAME && cmd === 'whatsnew') {
             // Parse optional date argument
             var sinceDate = null;
@@ -828,6 +897,19 @@ var ScriptKit = ScriptKit || (() => {
         }
         if (matchAlias(reg.aliases.changes)) {
             showChanges(msg, scriptName, reg, args);
+            return true;
+        }
+        if (matchAlias(reg.aliases.motd)) {
+            var motdArr = reg.motd;
+            if (motdArr && motdArr.length > 0) {
+                var tip = pickMotd(scriptName, motdArr);
+                if (tip) {
+                    var card = renderMotdCard(scriptName, tip, reg);
+                    reply(msg, scriptName, 'Tip', card);
+                }
+            } else {
+                reply(msg, scriptName, 'Tip', 'No tips registered for ' + scriptName + '.');
+            }
             return true;
         }
         if (matchAlias(reg.aliases.genHelp)) {
@@ -905,6 +987,7 @@ var ScriptKit = ScriptKit || (() => {
             if (reg.aliases.examples) autoCommands.push({ syntax: reg.aliases.examples, description: 'Browse examples' });
             if (reg.aliases.whatsnew) autoCommands.push({ syntax: reg.aliases.whatsnew, description: 'Show what\'s new in this version' });
             if (reg.aliases.changes) autoCommands.push({ syntax: reg.aliases.changes + ' [search]', description: 'Full changelog (filterable)' });
+            if (reg.aliases.motd && reg.motd && reg.motd.length > 0) autoCommands.push({ syntax: reg.aliases.motd, description: 'Show a random tip' });
             if (reg.aliases.genHelp) autoCommands.push({ syntax: reg.aliases.genHelp, description: 'Regenerate help handout' });
             if (reg.aliases.genDev) autoCommands.push({ syntax: reg.aliases.genDev, description: 'Generate dev docs handout' });
 
@@ -2522,6 +2605,7 @@ on('ready', () => {
                     '`!<plugin> changes [search]` — full changelog command with text search',
                     'Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration',
                     '`ScriptKit.usage(msg, command?, reason?)` — smart unknown-command handler with keyboard-weighted fuzzy matching, prefix detection, and topic suggestions',
+                    '`!<plugin> motd` / `!scriptkit motd [plugin]` — on-demand motd with no-repeat tracking and debounced startup delivery',
                 ]},
                 { version: '1.2.0', date: '2026-08-03', changes: [
                     'Added `!scriptkit ping` command — ping an object by ID or by coordinates',
