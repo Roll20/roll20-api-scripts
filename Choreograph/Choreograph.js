@@ -2490,7 +2490,7 @@ var Choreograph = Choreograph || (() => {
                         'Select tokens and run `!choreograph run myScene`.',
                     ],
                     changelog: [
-                        { version: '1.0.0', changes: [
+                        { version: '1.0.0', date: '2026-08-11', changes: [
                             'Interactive tutorial series (6 guided walkthroughs building a ritual summoning scene)',
                             'fx/fxbetween commands accept token IDs (no more manual coordinate lookup)',
                             'sync delay rows now fire their command after sync resolves (not just barrier)',
@@ -2508,13 +2508,13 @@ var Choreograph = Choreograph || (() => {
                             'role()/role_ids()/cast()/cast_ids() expression functions',
                             'token[]/path[] parameters enriched with TokenProxy',
                         ]},
-                        { version: '0.2', changes: [
+                        { version: '0.2', date: '2026-06-12', changes: [
                             'TokenProxy — dot-notation access to all token properties',
                             'LINQ-style array methods (.from, .without, .where, .orderBy, .first, .last, .select)',
                             'Dynamic man/help generation from registries',
                             'role=X filter for cast roles',
                         ]},
-                        { version: '0.1', changes: [
+                        { version: '0.1', date: '2026-06-07', changes: [
                             'Initial release: run, new, list, edit, delete, stop, pause, resume, status',
                             'Scene handout format (params, variables, rows)',
                             'Cast system with roles',
