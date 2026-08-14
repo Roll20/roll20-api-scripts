@@ -981,7 +981,10 @@ var Mirror = Mirror || (() => {
             case 'align':   doAlign(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
             case 'status':  doStatus(msg);        break;
-            default:        reply(msg, 'Unknown command. Try `!mirror help`'); break;
+            default:
+                if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg);
+                else reply(msg, 'Unknown command. Try `!mirror help`');
+                break;
         }
     };
 
@@ -1196,6 +1199,15 @@ var Mirror = Mirror || (() => {
             command: CMD,
             handout: 'auto',
             devHandout: 'update',
+            motd: [
+                'Use `--align` when linking to instantly sync positions without waiting for a move.',
+                'The `anchor` property group keeps Mirror compatible with Anchor relationships.',
+                'Use `!mirror config exclude <props>` to globally prevent certain properties from syncing.',
+                'Chain mode syncs bidirectionally — any token in the ring can be the "source".',
+                'Hard links (default) revert child changes — use `--soft` if you want children to push updates too.',
+            ],
+            motdHeader: '🪞 **Mirror** v' + SCRIPT_VERSION,
+            motdStyle: { borderLeft: '3px solid #26c6da' },
             help: {
                 description: 'Flat property syncing between tokens. No transforms, no offsets — when a property changes on one token, the same value is copied to linked tokens.',
                 quickStart: [
