@@ -2243,7 +2243,8 @@ var Choreograph = Choreograph || (() => {
             return;
         }
 
-        replyError(msg, `Unknown command: ${cmd}. Commands: new, list, edit, delete, run, stop, refresh.`);
+        if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg, SCRIPT_NAME);
+        else replyError(msg, `Unknown command: ${cmd}. Commands: new, list, edit, delete, run, stop, refresh.`);
     };
 
     // =========================================================================
