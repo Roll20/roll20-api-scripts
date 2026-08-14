@@ -7,13 +7,16 @@
 - [x] Null topic guard in man command
 - [x] `ScriptKit.getHelpHandout(scriptName)` and `ScriptKit.getDevHandout(scriptName)` — cached handout lookup
 - [x] `html.handoutLink(text, id, style, anchor)` — optional anchor param for deep-linking to handout sections
+- [x] `help` should not inline topics list — replaced with Browse Topics button
+- [x] `help` auto-injected commands — now shows whatsnew, gen-help, gen-dev-docs (conditionally)
+- [x] `!scriptkit whatsnew [date]` — consolidated whatsnew across all registered plugins with date filtering
+- [x] Per-plugin whatsnew accepts date argument
+- [x] Version date tracking — changelog dates stored in state, current version auto-stamped
+- [x] `man` topics show 📖 link to handout section
 
 ## Planned Features
 
 ### Help System
-- [ ] `help` should not inline topics list — show a button that runs `man` (no args) to display topics separately
-- [ ] `help` auto-injected commands incomplete — should also show: whatsnew, changes, motd, gen-help, gen-dev-docs (conditionally based on enabled aliases)
-- [ ] `!scriptkit whatsnew` — consolidated whatsnew across all registered plugins
 - [ ] `!<plugin> changes` — show the full rendered changelog (not just new stuff)
 
 ### MOTD

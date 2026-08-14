@@ -520,6 +520,13 @@ const onExtensionRegistered = () => {
 - Fix: code/pre blocks (`backtick-delimited`) no longer have their content processed as markdown — asterisks and `[link](url)` syntax inside code spans are preserved
 - Fix: null topic entries no longer crash `man` command
 - `html.table`: wraps output in `overflow-x:auto` div for horizontal scrolling; headers use `white-space:nowrap`
+- `ScriptKit.getHelpHandout(scriptName)` / `ScriptKit.getDevHandout(scriptName)` — cached handout object lookup
+- `html.handoutLink(text, id, style, anchor)` — optional 4th param for deep-linking to handout sections
+- `man` topics display a 📖 link to the corresponding handout section
+- `help` command: inline topics list replaced with "Browse Topics" button; auto-injected commands now include `whatsnew`, `gen-help`, `gen-dev-docs`
+- `!scriptkit whatsnew [date]` — consolidated whatsnew across all registered plugins, with optional date filtering
+- Per-plugin `whatsnew` also accepts a date argument (ISO or human-readable)
+- Version date tracking: changelog `date` fields stored in state; current version auto-stamped on first registration
 - Updated registration log format (`ȘꝀ ⚙⚙`)
 
 ### v1.2.0

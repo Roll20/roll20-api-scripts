@@ -379,6 +379,23 @@ var ScriptKit = ScriptKit || (() => {
                 state[SCRIPT_NAME].previousVersions[scriptName] = currentStored;
             }
             state[SCRIPT_NAME].versions[scriptName] = opts.version;
+
+            // Track version dates
+            if (!state[SCRIPT_NAME].versionDates[scriptName]) state[SCRIPT_NAME].versionDates[scriptName] = {};
+            var vDates = state[SCRIPT_NAME].versionDates[scriptName];
+            // Store dates from changelog entries (canonical source for historical versions)
+            if (opts.help && opts.help.changelog) {
+                opts.help.changelog.forEach(function(entry) {
+                    if (entry.date && !vDates[entry.version]) {
+                        var parsed = new Date(entry.date).getTime();
+                        if (!isNaN(parsed)) vDates[entry.version] = parsed;
+                    }
+                });
+            }
+            // Auto-stamp current version if no date stored yet
+            if (!vDates[opts.version]) {
+                vDates[opts.version] = opts.versionDate ? new Date(opts.versionDate).getTime() : Date.now();
+            }
         }
 
         var usrHandout = findObjs({ type: 'handout', name: 'Help: ' + scriptName })[0];
@@ -411,7 +428,11 @@ var ScriptKit = ScriptKit || (() => {
             }
         }
 
-        if (opts.version) log(`ȘꝀ ⚙⚙ ${scriptName} version ${opts.version} ready.`);
+        if (opts.version) {
+            var _d = new Date(vDates[opts.version]);
+            var _ds = _d.getFullYear() + '/' + String(_d.getMonth() + 1).padStart(2, '0') + '/' + String(_d.getDate()).padStart(2, '0');
+            log(`ȘꝀ ⚙⚙ ${scriptName} version ${opts.version} (${_ds}) ready.`);
+        }
 
         // Send ready signal
         sendChat('', registrations[scriptName].command + '-ready', null, { noarchive: true });
@@ -447,6 +468,7 @@ var ScriptKit = ScriptKit || (() => {
         if (!state[SCRIPT_NAME].versions) state[SCRIPT_NAME].versions = {};
         if (!state[SCRIPT_NAME].previousVersions) state[SCRIPT_NAME].previousVersions = {};
         if (!state[SCRIPT_NAME].migrations) state[SCRIPT_NAME].migrations = {};
+        if (!state[SCRIPT_NAME].versionDates) state[SCRIPT_NAME].versionDates = {};
     };
 
     /**
@@ -730,6 +752,44 @@ var ScriptKit = ScriptKit || (() => {
             doPing(msg, args.join(' '));
             return true;
         }
+        if (scriptName === SCRIPT_NAME && cmd === 'whatsnew') {
+            // Parse optional date argument
+            var sinceDate = null;
+            if (args.length > 0) {
+                sinceDate = parseDate(args.join(' '));
+                if (!sinceDate) {
+                    reply(msg, SCRIPT_NAME, 'Error', 'Could not parse date: "' + html.escape(args.join(' ')) + '". Use ISO (2026-08-01) or human-readable (August 12, 2026).');
+                    return true;
+                }
+            }
+
+            // Consolidated whatsnew across all registered plugins
+            let out = html.bold('What\'s New — All Plugins');
+            if (sinceDate) out += ' ' + html.small('since ' + new Date(sinceDate).toLocaleDateString());
+            out += html.paragraph('');
+            let hasContent = false;
+            var dateArg = sinceDate ? ' ' + args.join(' ') : '';
+            Object.keys(registrations).forEach(name => {
+                const r = registrations[name];
+                if (name === SCRIPT_NAME || !r.help || !r.version) return;
+                var relevant = getRelevantChangelog(name, r, sinceDate);
+                if (relevant.length === 0) return;
+                hasContent = true;
+                out += html.bold(html.escape(name) + ' v' + r.version) + html.br();
+                var changes = [];
+                relevant.forEach(e => { if (Array.isArray(e.changes)) changes.push(...e.changes); });
+                if (changes.length > 0) out += html.list(changes.slice(0, 5).map(c => html.escape(c)));
+                if (changes.length > 5) out += html.small('...and ' + (changes.length - 5) + ' more') + html.br();
+                out += html.button('See Details', r.command + ' ' + (r.aliases.whatsnew || 'whatsnew') + dateArg) + html.paragraph('');
+            });
+            if (!hasContent) {
+                out += sinceDate
+                    ? 'No changes since ' + new Date(sinceDate).toLocaleDateString() + '.'
+                    : 'Nothing new across any registered plugins.';
+            }
+            reply(msg, SCRIPT_NAME, 'What\'s New', out);
+            return true;
+        }
 
         // Alias matcher — supports string or array of strings
         const matchAlias = (alias) => {
@@ -748,7 +808,7 @@ var ScriptKit = ScriptKit || (() => {
             return true;
         }
         if (matchAlias(reg.aliases.whatsnew)) {
-            showWhatsNew(msg, scriptName, reg);
+            showWhatsNew(msg, scriptName, reg, args);
             return true;
         }
         if (matchAlias(reg.aliases.genHelp)) {
@@ -824,6 +884,9 @@ var ScriptKit = ScriptKit || (() => {
             if (helpAlias) autoCommands.push({ syntax: helpAlias, description: 'Show this help' });
             if (manAlias && helpData.topics && Object.keys(helpData.topics).length > 0) autoCommands.push({ syntax: manAlias + ' [topic]', description: 'Detailed help by topic' });
             if (reg.aliases.examples) autoCommands.push({ syntax: reg.aliases.examples, description: 'Browse examples' });
+            if (reg.aliases.whatsnew) autoCommands.push({ syntax: reg.aliases.whatsnew, description: 'Show what\'s new in this version' });
+            if (reg.aliases.genHelp) autoCommands.push({ syntax: reg.aliases.genHelp, description: 'Regenerate help handout' });
+            if (reg.aliases.genDev) autoCommands.push({ syntax: reg.aliases.genDev, description: 'Generate dev docs handout' });
 
             var renderCommands = function(items, search, version, reg) {
                 var out = '';
@@ -857,30 +920,10 @@ var ScriptKit = ScriptKit || (() => {
             }
         }
 
-        // Topics summary (if man is available)
-        if (helpData.topics && Object.keys(helpData.topics).length > 0 && reg.aliases.man) {
-            var topicKeys = Object.keys(helpData.topics).filter(k => !helpData.topics[k].deleted);
-            if (search) {
-                topicKeys = topicKeys.filter(k => {
-                    var t = helpData.topics[k];
-                    return k.toLowerCase().indexOf(search) !== -1 ||
-                        (t.title || '').toLowerCase().indexOf(search) !== -1 ||
-                        (t.description || '').toLowerCase().indexOf(search) !== -1;
-                });
-            }
-            if (topicKeys.length > 0) {
-                var manCmd = Array.isArray(reg.aliases.man) ? reg.aliases.man[0] : reg.aliases.man;
-                out += html.line() + html.bold('Topics') + ' ' + html.small('(use ' + html.code(reg.command + ' ' + manCmd + ' <topic or search>') + ')') + html.br();
-                topicKeys.forEach(k => {
-                    var t = helpData.topics[k];
-                    var vTag = '';
-                    if (isNewVersion(t.version, reg)) vTag = ' ' + html.newBadge();
-                    if (t.deprecated) vTag = ' ' + html.deprecatedBadge();
-                    out += '• ' + html.bold(html.escape(t.title || k)) + vTag;
-                    if (t.description) out += ' — ' + html.escape(t.description);
-                    out += html.br();
-                });
-            }
+        // Topics button (if man is available)
+        if (helpData.topics && Object.keys(helpData.topics).filter(k => helpData.topics[k] && !helpData.topics[k].deleted).length > 0 && reg.aliases.man) {
+            var manCmd = Array.isArray(reg.aliases.man) ? reg.aliases.man[0] : reg.aliases.man;
+            out += html.line() + html.button('📖 Browse Topics', reg.command + ' ' + manCmd);
         }
 
         if (!out) {
@@ -1024,6 +1067,9 @@ var ScriptKit = ScriptKit || (() => {
     const renderManTopic = (msg, scriptName, reg, key, topic) => {
         let out = html.bold(html.escape(topic.title || key));
         if (topic.version) out += ' ' + html.italic('(v' + topic.version + ')');
+        // Link to handout section if handout exists
+        var helpHandout = reg._handouts && reg._handouts.usr;
+        if (helpHandout) out += ' ' + html.handoutLink('📖', helpHandout.get('id'), null, topic.title || key);
         out += html.br();
         if (topic.description) out += html.escape(topic.description) + html.br();
         out += html.br();
@@ -1080,73 +1126,110 @@ var ScriptKit = ScriptKit || (() => {
     };
 
     /**
+     * Parse a date string (ISO or human-readable). Returns timestamp or null.
+     */
+    const parseDate = (str) => {
+        if (!str) return null;
+        var t = new Date(str).getTime();
+        return isNaN(t) ? null : t;
+    };
+
+    /**
+     * Get relevant changelog entries for a plugin, filtered by date or version.
+     * @param {object} reg - registration object
+     * @param {number|null} sinceDate - timestamp threshold, or null for version-based
+     * @returns {Array} matching changelog entries
+     */
+    const getRelevantChangelog = (scriptName, reg, sinceDate) => {
+        const helpData = reg.help;
+        if (!helpData || !helpData.changelog) return [];
+        ensureState();
+        var pluginDates = (state[SCRIPT_NAME].versionDates || {})[scriptName] || {};
+        if (sinceDate) {
+            return helpData.changelog.filter(e => {
+                var d = pluginDates[e.version];
+                return d && d >= sinceDate;
+            });
+        }
+        return helpData.changelog.filter(e => isNewVersion(e.version, reg));
+    };
+
+    /**
      * Show what's new in current version (chat command).
      */
-    const showWhatsNew = (msg, scriptName, reg) => {
+    const showWhatsNew = (msg, scriptName, reg, args) => {
         const helpData = reg.help;
         if (!helpData) {
             reply(msg, scriptName, 'What\'s New', 'No help data registered.');
             return;
         }
 
+        // Parse optional date argument
+        var sinceDate = null;
+        if (args && args.length > 0) {
+            sinceDate = parseDate(args.join(' '));
+            if (!sinceDate) {
+                reply(msg, scriptName, 'Error', 'Could not parse date: "' + html.escape(args.join(' ')) + '".');
+                return;
+            }
+        }
+
         const version = reg.version;
         const commands = helpData.commands || [];
         const topics = helpData.topics || {};
 
-        let out = html.bold(html.escape(scriptName) + ' — What\'s New') + html.paragraph('');
+        let out = html.bold(html.escape(scriptName) + ' — What\'s New');
+        if (sinceDate) out += ' ' + html.small('since ' + new Date(sinceDate).toLocaleDateString());
+        out += html.paragraph('');
 
-        // Explicit changelog entries
-        if (helpData.changelog && helpData.changelog.length > 0) {
-            var relevant = helpData.changelog.filter(e => isNewVersion(e.version, reg));
-            if (relevant.length > 0) {
-                relevant.forEach(e => {
-                    out += html.bold('v' + e.version) + html.br();
-                    if (Array.isArray(e.changes)) {
-                        out += html.list(e.changes.map(c => html.escape(c)));
-                    } else if (e.changes) {
-                        out += html.escape(e.changes) + html.br();
-                    }
-                });
-                out += html.line();
+        // Changelog entries
+        var relevant = getRelevantChangelog(scriptName, reg, sinceDate);
+        if (relevant.length > 0) {
+            relevant.forEach(e => {
+                out += html.bold('v' + e.version) + html.br();
+                if (Array.isArray(e.changes)) {
+                    out += html.list(e.changes.map(c => html.escape(c)));
+                } else if (e.changes) {
+                    out += html.escape(e.changes) + html.br();
+                }
+            });
+            out += html.line();
+        }
+
+        // Auto-detected new items (only for version-based mode)
+        if (!sinceDate) {
+            var newItems = [];
+            var flatCommands = [];
+            var flattenCmds = (items) => { items.forEach(c => { if (c.group) flattenCmds(c.commands || []); else flatCommands.push(c); }); };
+            flattenCmds(commands);
+            flatCommands.forEach(c => {
+                if (!c.deleted && isNewVersion(c.version, reg)) {
+                    newItems.push(html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(c.description));
+                }
+            });
+            Object.entries(topics).forEach(([k, t]) => {
+                if (!t || t.deleted) return;
+                if (isNewVersion(t.version, reg)) {
+                    newItems.push(html.bold(t.title || k) + (t.description ? ' — ' + html.escape(t.description) : ''));
+                }
+                if (t.items) {
+                    t.items.forEach(item => {
+                        if (!item.deleted && isNewVersion(item.version, reg) && !isNewVersion(t.version, reg)) {
+                            newItems.push(html.bold(item.name) + ' in ' + html.italic(t.title || k) + (item.description ? ' — ' + item.description : ''));
+                        }
+                    });
+                }
+            });
+            if (newItems.length > 0) {
+                out += html.bold('New Features:') + html.br();
+                out += html.list(newItems);
             }
         }
 
-        // Auto-detected new items
-        var newItems = [];
-
-        // New commands
-        var flatCommands = [];
-        var flattenCmds = (items) => { items.forEach(c => { if (c.group) flattenCmds(c.commands || []); else flatCommands.push(c); }); };
-        flattenCmds(commands);
-        flatCommands.forEach(c => {
-            if (!c.deleted && isNewVersion(c.version, reg)) {
-                newItems.push(html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(c.description));
-            }
-        });
-
-        // New topics
-        Object.entries(topics).forEach(([k, t]) => {
-            if (!t || t.deleted) return;
-            if (isNewVersion(t.version, reg)) {
-                newItems.push(html.bold(t.title || k) + (t.description ? ' — ' + html.escape(t.description) : ''));
-            }
-            // New items within existing topics
-            if (t.items) {
-                t.items.forEach(item => {
-                    if (!item.deleted && isNewVersion(item.version, reg) && !isNewVersion(t.version, reg)) {
-                        newItems.push(html.bold(item.name) + ' in ' + html.italic(t.title || k) + (item.description ? ' — ' + item.description : ''));
-                    }
-                });
-            }
-        });
-
-        if (newItems.length > 0) {
-            out += html.bold('New Features:') + html.br();
-            out += html.list(newItems);
-        }
-
-        if (!newItems.length && !(helpData.changelog && helpData.changelog.length)) {
-            out += 'Nothing new since last version.';
+        if (out.indexOf('<li>') === -1 && out.indexOf('<hr>') === -1) {
+            out += sinceDate
+                ? 'No changes since ' + new Date(sinceDate).toLocaleDateString() + '.'
+                : 'Nothing new since last version.';
         }
 
         reply(msg, scriptName, 'What\'s New', out);
@@ -2162,22 +2245,37 @@ on('ready', () => {
         help: {
             description: 'Generic framework library for Roll20 API scripts.',
             changelog: [
-                { version: '1.3.0', changes: [
+                { version: '1.3.0', date: '2026-08-14', changes: [
                     'Fix: code/pre blocks no longer have their content processed as markdown (asterisks, links survive)',
                     'Fix: null topic entries no longer crash `man` command',
-                    'html.table: wrap in overflow-x:auto div, white-space:nowrap on headers',
-                    'Updated registration log format',
+                    '`html.table`: wrap in overflow-x:auto div for horizontal scrolling',
+                    '`ScriptKit.getHelpHandout(scriptName)` / `getDevHandout(scriptName)` — cached handout lookup',
+                    '`html.handoutLink` accepts optional anchor parameter for deep-linking to sections',
+                    '`man` topics show 📖 link to handout section',
+                    '`help` command: topics replaced with Browse Topics button; added whatsnew/gen-help/gen-dev-docs to auto-injected commands',
+                    '`!scriptkit whatsnew [date]` — consolidated whatsnew across all plugins with date filtering',
+                    'Per-plugin `whatsnew` also accepts date argument',
+                    'Version date tracking: changelog dates stored in state for date-based queries',
                 ]},
-                { version: '1.2.0', changes: [
+                { version: '1.2.0', date: '2026-08-03', changes: [
                     'Added `!scriptkit ping` command — ping an object by ID or by coordinates',
                     'Added `ScriptKit.pingCommand(target, opts)` — build ping command strings for chat links',
                     'Added `html.pingObjBtn(target, opts)` / `html.pingObjImg(target, opts)` — clickable ping buttons/images',
                     '`visibleTo` now accepts array of player IDs or comma-delimited string',
                 ]},
-                { version: '1.1.0', changes: [
+                { version: '1.1.0', date: '2026-08-01', changes: [
                     'Prevent double-registration (same script calling register() twice is now a no-op)',
                     'Added ScriptKit.generateHandout / updateHandout (debounced, default 2s) for deferred handout regeneration',
                     'Added ScriptKit.generateHandoutImmediately / updateHandoutImmediately for synchronous generation',
+                ]},
+                { version: '1.0.0', date: '2026-07-20', changes: [
+                    'Initial release',
+                    'Help/Man system with grouped commands, searchable topics, version badges',
+                    'Handout generation with Quick Start, What\'s New, examples footer',
+                    'Interactive guide engine with selection, queries, type coercion, validation',
+                    'State migrations with semver comparison, auto-upgrade, manual rollback',
+                    'HTML helpers with markdown formatting',
+                    'Ready signal coordination',
                 ]},
             ],
             topics: {
