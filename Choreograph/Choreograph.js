@@ -1665,7 +1665,7 @@ var Choreograph = Choreograph || (() => {
         // ---- new ----
         if (cmd === 'new') {
             const name = args[0];
-            if (!name) { replyError(msg, 'Usage: !choreograph new <name>'); return; }
+            if (!name) { ScriptKit.usage(msg, 'new', 'Missing scene name'); return; }
             if (scenes().find(name)) {
                 replyError(msg, `A scene named "${name}" already exists.`);
                 return;
@@ -1708,7 +1708,7 @@ var Choreograph = Choreograph || (() => {
         // ---- edit ----
         if (cmd === 'edit') {
             const name = args[0];
-            if (!name) { replyError(msg, 'Usage: !choreograph edit <name>'); return; }
+            if (!name) { ScriptKit.usage(msg, 'edit', 'Missing scene name'); return; }
             const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
             reply(msg, 'Choreograph',
@@ -1720,7 +1720,7 @@ var Choreograph = Choreograph || (() => {
         // ---- delete ----
         if (cmd === 'delete') {
             const name = args[0];
-            if (!name) { replyError(msg, 'Usage: !choreograph delete <name>'); return; }
+            if (!name) { ScriptKit.usage(msg, 'delete', 'Missing scene name'); return; }
             if (!flags.has('force')) {
                 reply(msg, 'Choreograph',
                     `Delete scene "${escHtml(name)}"? `
@@ -1801,7 +1801,7 @@ var Choreograph = Choreograph || (() => {
         // ---- refresh ----
         if (cmd === 'refresh') {
             const name = args[0];
-            if (!name) { replyError(msg, 'Usage: !choreograph refresh <name>'); return; }
+            if (!name) { ScriptKit.usage(msg, 'refresh', 'Missing scene name'); return; }
             const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
             delete scenes().cache[name];
@@ -1817,7 +1817,7 @@ var Choreograph = Choreograph || (() => {
         // ---- add-row ----
         if (cmd === 'add-row') {
             const name = args[0];
-            if (!name) { replyError(msg, 'Usage: !choreograph add-row <name>'); return; }
+            if (!name) { ScriptKit.usage(msg, 'add-row', 'Missing scene name'); return; }
             const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
             delete scenes().cache[name];
@@ -1834,7 +1834,7 @@ var Choreograph = Choreograph || (() => {
         // ---- dump-html ----
         if (cmd === 'dump-html') {
             const name = args[0];
-            if (!name) { replyError(msg, 'Usage: !choreograph dump-html <name>'); return; }
+            if (!name) { ScriptKit.usage(msg, 'dump-html', 'Missing scene name'); return; }
             const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
             getHandoutNotes(handout, (html) => {
@@ -1867,7 +1867,7 @@ var Choreograph = Choreograph || (() => {
         // ---- run ----
         if (cmd === 'run') {
             const name = args[0];
-            if (!name) { replyError(msg, 'Usage: !choreograph run <name>'); return; }
+            if (!name) { ScriptKit.usage(msg, 'run', 'Missing scene name'); return; }
             const handout = scenes().find(name);
             if (!handout) { replyError(msg, `No scene named "${name}" found.`); return; }
 
@@ -2029,7 +2029,7 @@ var Choreograph = Choreograph || (() => {
             }
 
             if (subCmd === 'show') {
-                if (!castName) { replyError(msg, 'Usage: !choreograph cast show <name>'); return; }
+                if (!castName) { ScriptKit.usage(msg, 'cast', 'Missing cast name'); return; }
                 casts().load(castName, (cast) => {
                     if (!cast) { replyError(msg, `No cast named "${castName}" found.`); return; }
                     let out = `<b>Cast: ${escHtml(castName)}</b><br>`;
@@ -2047,7 +2047,7 @@ var Choreograph = Choreograph || (() => {
             }
 
             if (subCmd === 'add') {
-                if (!castName) { replyError(msg, 'Usage: !choreograph cast add <name> [--role <role>]'); return; }
+                if (!castName) { ScriptKit.usage(msg, 'cast', 'Missing cast name'); return; }
                 const role = opts.role || '';
                 // Gather IDs from selection + --id + remaining args
                 const ids = [];
@@ -2078,7 +2078,7 @@ var Choreograph = Choreograph || (() => {
             }
 
             if (subCmd === 'remove') {
-                if (!castName) { replyError(msg, 'Usage: !choreograph cast remove <name> [--role <role>]'); return; }
+                if (!castName) { ScriptKit.usage(msg, 'cast', 'Missing cast name'); return; }
                 const role = opts.role;
                 // Gather IDs to remove
                 const ids = [];
@@ -2118,7 +2118,7 @@ var Choreograph = Choreograph || (() => {
             }
 
             if (subCmd === 'delete') {
-                if (!castName) { replyError(msg, 'Usage: !choreograph cast delete <name>'); return; }
+                if (!castName) { ScriptKit.usage(msg, 'cast', 'Missing cast name'); return; }
                 if (!flags.has('force')) {
                     reply(msg, 'Cast',
                         `Delete cast "${escHtml(castName)}"? `
@@ -2134,7 +2134,7 @@ var Choreograph = Choreograph || (() => {
                 return;
             }
 
-            replyError(msg, 'Usage: !choreograph cast <add|remove|list|show|delete> [name] [options]');
+            ScriptKit.usage(msg, 'cast', 'Unknown cast subcommand');
             return;
         }
 
@@ -2179,7 +2179,7 @@ var Choreograph = Choreograph || (() => {
         // 3. If custom FX (by ID or name) → checks definition.angle === -1
         if (cmd === 'fx') {
             const fxTypeArg = args[0];
-            if (!fxTypeArg) { replyError(msg, 'Usage: !choreograph fx <type> <id> [id2] or <type> <x> <y> [x2 y2] [pageId] or with token(s) selected'); return; }
+            if (!fxTypeArg) { ScriptKit.usage(msg, 'fx', 'Missing FX type'); return; }
 
             // Parse points from args — strict mode separation
             let p1, p2, pageId;
