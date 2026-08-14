@@ -2941,12 +2941,12 @@ var Choreograph = Choreograph || (() => {
         const sceneLink = (name) => {
             const h = scenes().find(name);
             const display = `[Scene] ${name}`;
-            return h ? `<a href="http://journal.roll20.net/handout/${h.get('id')}">${display}</a>` : `<code>${display}</code>`;
+            return h ? ScriptKit.html.handoutLink(display, h.get('id')) : `<code>${display}</code>`;
         };
         const castLink = (name) => {
             const h = casts().find(name);
             const display = `[Cast] ${name}`;
-            return h ? `<a href="http://journal.roll20.net/handout/${h.get('id')}">${display}</a>` : `<code>${display}</code>`;
+            return h ? ScriptKit.html.handoutLink(display, h.get('id')) : `<code>${display}</code>`;
         };
 
         ScriptKit.Choreograph.registerExample(SCRIPT_NAME, {
@@ -3101,7 +3101,7 @@ var Choreograph = Choreograph || (() => {
                   ...Choreograph.waitForScene('summoning'),
                 },
                 { prompt: () => {
-                    const helpHandout = findObjs({ type: 'handout', name: 'Help: Choreograph' })[0];
+                    const helpHandout = ScriptKit.getHelpHandout(SCRIPT_NAME);
                     const hId = helpHandout ? helpHandout.get('id') : '';
                     return ScriptKit.html.raw(
                         '<b>Key Takeaways</b><br><br>'
@@ -3112,8 +3112,8 @@ var Choreograph = Choreograph || (() => {
                         + '• <code>*</code> filter — target all tokens regardless of role<br>'
                         + '• Multiple rows with different filters run in parallel<br><br>'
                         + 'For the full list of filters and delay functions, see the help handout:<br>'
-                        + (hId ? '• <a href="http://journal.roll20.net/handout/' + hId + '/#Filters">Filters</a><br>' : '')
-                        + (hId ? '• <a href="http://journal.roll20.net/handout/' + hId + '/#Delay%20Expressions">Delay Expressions</a><br>' : '')
+                        + (hId ? '• ' + ScriptKit.html.handoutLink('Filters', hId, null, 'Filters') + '<br>' : '')
+                        + (hId ? '• ' + ScriptKit.html.handoutLink('Delay Expressions', hId, null, 'Delay Expressions') + '<br>' : '')
                         + '<br>Next: we\'ll add a sacrifice token and compute distances from it.'
                     );
                 },
