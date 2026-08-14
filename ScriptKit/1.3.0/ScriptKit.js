@@ -2242,15 +2242,44 @@ var ScriptKit = ScriptKit || (() => {
     /**
      * Handle unknown commands — suggest corrections, filtered help, or full help.
      */
-    const handleUsage = (msg, scriptName) => {
+    const handleUsage = (msg, scriptName, command, reason) => {
         const reg = registrations[scriptName];
         if (!reg) return;
+
+        const helpData = reg.help;
+
+        // If a specific command is provided, show its usage directly
+        if (command) {
+            var out = '';
+            if (reason) out += html.bold('⚠ ' + html.escape(reason)) + html.br() + html.br();
+            var cmdEntry = null;
+            if (helpData && helpData.commands) {
+                var flatCmds = [];
+                var flatten = (items) => { items.forEach(c => { if (c.group) flatten(c.commands || []); else flatCmds.push(c); }); };
+                flatten(helpData.commands);
+                cmdEntry = flatCmds.find(c => !c.deleted && c.syntax && c.syntax.split(' ')[0].toLowerCase() === command.toLowerCase());
+            }
+            if (cmdEntry) {
+                out += html.code(reg.command + ' ' + cmdEntry.syntax) + html.br();
+                out += html.escape(cmdEntry.description) + html.br();
+                if (cmdEntry.items && cmdEntry.items.length > 0) {
+                    out += html.br();
+                    cmdEntry.items.forEach(item => {
+                        if (item.deleted) return;
+                        out += '• ' + html.code(item.name) + ' — ' + html.escape(item.description) + html.br();
+                    });
+                }
+            } else {
+                out += html.code(reg.command + ' ' + command) + html.br();
+            }
+            reply(msg, scriptName, 'Usage', out);
+            return;
+        }
 
         const content = msg.content.slice(reg.command.length).trim();
         const cmdWord = content.split(/\s+/)[0].toLowerCase();
         if (!cmdWord) { showHelp(msg, scriptName, reg, []); return; }
 
-        const helpData = reg.help;
         if (!helpData) { reply(msg, scriptName, 'Error', 'Unknown command: ' + html.escape(cmdWord)); return; }
 
         // Collect all known command first-words
@@ -2430,7 +2459,7 @@ var ScriptKit = ScriptKit || (() => {
             const reg = registrations[scriptName];
             return (reg && reg._handouts && reg._handouts.dev) || null;
         },
-        usage: (msg, scriptName) => handleUsage(msg, scriptName),
+        usage: (msg, scriptName, command, reason) => handleUsage(msg, scriptName, command, reason),
     };
 
     // Tutorial.Choreograph.registerExample('Sequence', { ... })
