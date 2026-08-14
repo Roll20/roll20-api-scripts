@@ -1,6 +1,6 @@
 // =============================================================================
-// ScriptKit v1.2.0
-// Last Updated: 2026-08-03
+// ScriptKit v1.3.0
+// Last Updated: 2026-08-14
 // Author: Kenan Millet
 //
 // Description:
@@ -17,7 +17,7 @@ var ScriptKit = ScriptKit || (() => {
     'use strict';
 
     const SCRIPT_NAME = 'ScriptKit';
-    const SCRIPT_VERSION = '1.2.0';
+    const SCRIPT_VERSION = '1.3.0';
     const HANDOUT_STEP = Object.freeze({ auto: true });
 
     // =========================================================================
@@ -203,10 +203,23 @@ var ScriptKit = ScriptKit || (() => {
                 }
             }
             var out = html.escape(escaped);
-            out = out.replace(/```([^`]+)```/g, '<pre>$1</pre>');
-            out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+            // Extract code/pre spans into placeholders (protects content from markdown)
+            var codeSlots = [];
+            out = out.replace(/```([^`]+)```/g, function(_, content) {
+                codeSlots.push('<pre>' + content.replace(/\*/g, '&#42;').replace(/\[/g, '&#91;') + '</pre>');
+                return '\uFFFECODE' + (codeSlots.length - 1) + '\uFFFE';
+            });
+            out = out.replace(/`([^`]+)`/g, function(_, content) {
+                codeSlots.push('<code>' + content.replace(/\*/g, '&#42;').replace(/\[/g, '&#91;') + '</code>');
+                return '\uFFFECODE' + (codeSlots.length - 1) + '\uFFFE';
+            });
+            // Apply markdown (placeholders don't contain * so won't interfere)
             out = out.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
             out = out.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+            // Restore code/pre spans
+            out = out.replace(/\uFFFECODE(\d+)\uFFFE/g, function(_, idx) {
+                return codeSlots[parseInt(idx, 10)];
+            });
             return out;
         },
         button: (label, command, style) => {
@@ -394,6 +407,8 @@ var ScriptKit = ScriptKit || (() => {
                 setTimeout(() => generateHelpHandout(null, scriptName, registrations[scriptName], 'dev'), 600);
             }
         }
+
+        if (opts.version) log(`ȘꝀ ⚙⚙ ${scriptName} version ${opts.version} ready.`);
 
         // Send ready signal
         sendChat('', registrations[scriptName].command + '-ready', null, { noarchive: true });
@@ -890,7 +905,7 @@ var ScriptKit = ScriptKit || (() => {
         if (!search) {
             let out = html.bold(html.escape(scriptName) + ' — Topics:') + html.paragraph('');
             Object.entries(topics).forEach(([key, t]) => {
-                if (t.deleted) return;
+                if (!t || t.deleted) return;
                 out += '• ' + html.button(t.title || key, reg.command + ' ' + manCmd + ' ' + key);
                 if (t.description) out += ' — ' + html.escape(t.description);
                 out += html.br();
@@ -919,7 +934,7 @@ var ScriptKit = ScriptKit || (() => {
 
         // Tier 1b: exact title match
         const titleMatch = Object.entries(topics).find(([k, t]) =>
-            !t.deleted && (t.title || k).toLowerCase() === search
+            t && !t.deleted && (t.title || k).toLowerCase() === search
         );
         if (titleMatch) {
             renderManTopic(msg, scriptName, reg, titleMatch[0], titleMatch[1]);
@@ -929,7 +944,7 @@ var ScriptKit = ScriptKit || (() => {
         // Tier 2: search within topic items/body
         const results = [];
         Object.entries(topics).forEach(([key, t]) => {
-            if (t.deleted) return;
+            if (!t || t.deleted) return;
             // Check items array if present
             if (t.items && Array.isArray(t.items)) {
                 t.items.forEach(item => {
@@ -1108,7 +1123,7 @@ var ScriptKit = ScriptKit || (() => {
 
         // New topics
         Object.entries(topics).forEach(([k, t]) => {
-            if (t.deleted) return;
+            if (!t || t.deleted) return;
             if (isNewVersion(t.version, reg)) {
                 newItems.push(html.bold(t.title || k) + (t.description ? ' — ' + html.escape(t.description) : ''));
             }
@@ -2134,6 +2149,12 @@ on('ready', () => {
         help: {
             description: 'Generic framework library for Roll20 API scripts.',
             changelog: [
+                { version: '1.3.0', changes: [
+                    'Fix: code/pre blocks no longer have their content processed as markdown (asterisks, links survive)',
+                    'Fix: null topic entries no longer crash `man` command',
+                    'html.table: wrap in overflow-x:auto div, white-space:nowrap on headers',
+                    'Updated registration log format',
+                ]},
                 { version: '1.2.0', changes: [
                     'Added `!scriptkit ping` command — ping an object by ID or by coordinates',
                     'Added `ScriptKit.pingCommand(target, opts)` — build ping command strings for chat links',

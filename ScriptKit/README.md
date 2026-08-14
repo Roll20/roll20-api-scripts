@@ -516,6 +516,12 @@ const onExtensionRegistered = () => {
 
 ## Changelog
 
+### v1.3.0
+- Fix: code/pre blocks (`backtick-delimited`) no longer have their content processed as markdown — asterisks and `[link](url)` syntax inside code spans are preserved
+- Fix: null topic entries no longer crash `man` command
+- `html.table`: wraps output in `overflow-x:auto` div for horizontal scrolling; headers use `white-space:nowrap`
+- Updated registration log format (`ȘꝀ ⚙⚙`)
+
 ### v1.2.0
 - Added `!scriptkit ping` chat command — pings an object's location by ID or by pageId/x/y coordinates
 - Added `ScriptKit.pingCommand(target, opts)` — builds a ping command string for embedding in chat links
