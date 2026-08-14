@@ -2242,9 +2242,18 @@ var ScriptKit = ScriptKit || (() => {
     /**
      * Handle unknown commands — suggest corrections, filtered help, or full help.
      */
-    const handleUsage = (msg, scriptName, command, reason) => {
-        const reg = registrations[scriptName];
+    const handleUsage = (msg, commandOrName, reason) => {
+        // Auto-detect registration from msg.content command prefix
+        const cmdPrefix = (msg.content || '').split(/\s+/)[0];
+        var scriptName = null;
+        var reg = null;
+        Object.keys(registrations).forEach(name => {
+            if (registrations[name].command === cmdPrefix) { scriptName = name; reg = registrations[name]; }
+        });
         if (!reg) return;
+
+        // commandOrName is the specific command word (optional)
+        var command = commandOrName;
 
         const helpData = reg.help;
 
@@ -2459,7 +2468,7 @@ var ScriptKit = ScriptKit || (() => {
             const reg = registrations[scriptName];
             return (reg && reg._handouts && reg._handouts.dev) || null;
         },
-        usage: (msg, scriptName, command, reason) => handleUsage(msg, scriptName, command, reason),
+        usage: (msg, command, reason) => handleUsage(msg, command, reason),
     };
 
     // Tutorial.Choreograph.registerExample('Sequence', { ... })
@@ -2512,7 +2521,7 @@ on('ready', () => {
                     'Version date tracking: changelog dates stored in state for date-based queries',
                     '`!<plugin> changes [search]` — full changelog command with text search',
                     'Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration',
-                    '`ScriptKit.usage(msg, scriptName)` — smart unknown-command handler with keyboard-weighted fuzzy matching, prefix detection, and topic suggestions',
+                    '`ScriptKit.usage(msg, command?, reason?)` — smart unknown-command handler with keyboard-weighted fuzzy matching, prefix detection, and topic suggestions',
                 ]},
                 { version: '1.2.0', date: '2026-08-03', changes: [
                     'Added `!scriptkit ping` command — ping an object by ID or by coordinates',
@@ -2566,6 +2575,20 @@ on('ready', () => {
                         { name: 'exampleHandler', description: 'Custom (example, msg) => handoutFields function for non-default example generation', version: '1.0.0' },
                         { name: 'onComplete', description: 'Callback fired when any guide completes: (ctx) => void', version: '1.0.0' },
                         { name: 'onMigrationFailure', description: 'Callback on migration error: ({ version, direction, error, currentStoredVersion }) => void', version: '1.0.0' },
+                    ],
+                },
+                usage: {
+                    title: 'Unknown Command Handling',
+                    description: 'Smart suggestions for unrecognized commands',
+                    handouts: 'dev',
+                    version: '1.3.0',
+                    body: 'In your `handleInput`, delegate to ScriptKit first with `if (ScriptKit.handleInput(msg)) return;`. For unknown commands at the end of your handler, call `ScriptKit.usage(msg)` instead of showing a generic error.\n\n'
+                        + '**Fuzzy matching:** Keyboard-weighted Levenshtein (QWERTY adjacency), prefix detection, topic suggestions, then a "Show All Commands" button fallback.\n\n'
+                        + '**Command-specific usage:** Pass a command name to show its syntax and flags: `ScriptKit.usage(msg, "run", "Missing scene name")`',
+                    items: [
+                        { name: 'ScriptKit.usage(msg)', description: 'Unknown command — fuzzy match and suggest (auto-detects script from msg)', version: '1.3.0' },
+                        { name: 'ScriptKit.usage(msg, command)', description: 'Show registered usage for a specific command', version: '1.3.0' },
+                        { name: 'ScriptKit.usage(msg, command, reason)', description: 'Show usage with an error/reason message above', version: '1.3.0' },
                     ],
                 },
                 helpData: {

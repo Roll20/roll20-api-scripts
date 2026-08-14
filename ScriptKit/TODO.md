@@ -14,7 +14,7 @@
 - [x] Version date tracking — changelog dates stored in state, current version auto-stamped
 - [x] `man` topics show 📖 link to handout section
 - [x] `!<plugin> changes` — show the full rendered changelog (not just new stuff)
-- [x] `ScriptKit.usage(msg, scriptName)` — smart unknown-command handler with fuzzy matching, prefix detection, topic suggestions
+- [x] `ScriptKit.usage(msg, command?, reason?)` — smart unknown-command handler with fuzzy matching, prefix detection, topic suggestions
 
 ## Planned Features
 

@@ -89,12 +89,36 @@ const handleInput = (msg) => {
     if (msg.type !== 'api') return;
     if (msg.content.split(' ')[0] !== '!myscript') return;
 
-    // ScriptKit handles help, man, examples, whatsnew, gen-help, gen-dev-docs
+    // ScriptKit handles help, man, examples, whatsnew, changes, gen-help, gen-dev-docs
     if (typeof ScriptKit !== 'undefined' && ScriptKit.handleInput(msg)) return;
 
-    // ... your command handling
+    // ... your command handling ...
+
+    // Unknown command fallback — fuzzy suggestions
+    if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg);
 };
 ```
+
+### Unknown Command Handling
+
+`ScriptKit.usage(msg, command?, reason?)` provides smart feedback for unrecognized or misused commands. The script is auto-detected from the message's command prefix.
+
+```js
+// Unknown command — fuzzy match, suggest corrections, topic matches, or "Show All Commands" button
+ScriptKit.usage(msg);
+
+// Command-specific usage (e.g. missing required argument)
+ScriptKit.usage(msg, 'run', 'Missing scene name');
+```
+
+**Fuzzy matching features:**
+- Keyboard-weighted Levenshtein distance (QWERTY adjacency — nearby keys cost less)
+- Prefix detection — input that is a prefix of a command always suggests it
+- Length-scaled thresholds — short inputs require closer matches
+- Topic suggestions via prefix/substring (no fuzzy for topics)
+- Progressive fallback: suggestions → filtered results → "Show All Commands" button
+
+**Auto-conflict detection:** If a default alias (e.g. `changes`) matches one of your registered command syntaxes, ScriptKit auto-nulls that alias at registration time — your command takes priority without needing manual alias overrides.
 
 ### Ready Signal Pattern
 
@@ -529,7 +553,8 @@ const onExtensionRegistered = () => {
 - Version date tracking: changelog `date` fields stored in state; current version auto-stamped on first registration
 - `!<plugin> changes [search]` — full changelog command with text search
 - Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration
-- `ScriptKit.usage(msg, scriptName)` — smart unknown-command handler: keyboard-weighted fuzzy suggestions, prefix matching, topic suggestions, progressive fallback
+- `ScriptKit.usage(msg)` — smart unknown-command handler: keyboard-weighted fuzzy suggestions, prefix matching, topic suggestions, progressive fallback
+- `ScriptKit.usage(msg, command, reason)` — command-specific usage display with optional error reason
 - Updated registration log format (`ȘꝀ ⚙⚙`)
 
 ### v1.2.0
