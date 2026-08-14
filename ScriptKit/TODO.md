@@ -5,12 +5,10 @@
 - [x] Characters within code/pre blocks un-formatted (asterisks and links preserved inside backtick code spans)
 - [x] html.table: overflow-x:auto wrapper, white-space:nowrap on headers
 - [x] Null topic guard in man command
+- [x] `ScriptKit.getHelpHandout(scriptName)` and `ScriptKit.getDevHandout(scriptName)` — cached handout lookup
+- [x] `html.handoutLink(text, id, style, anchor)` — optional anchor param for deep-linking to handout sections
 
 ## Planned Features
-
-### Handout Helpers
-- [ ] `ScriptKit.getHelpHandout(scriptName)` and `ScriptKit.getDevHandout(scriptName)` — return the handout object for a given script
-- [ ] Extend `html.handoutLink(text, id, style)` to optionally accept a header/anchor name (e.g. `html.handoutLink(text, id, { anchor: 'Filters' })`) and generate an anchored link (`#HeaderName`)
 
 ### Help System
 - [ ] `help` should not inline topics list — show a button that runs `man` (no args) to display topics separately
