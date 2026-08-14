@@ -497,13 +497,45 @@ var ScriptKit = ScriptKit || (() => {
         // Send ready signal
         sendChat('', registrations[scriptName].command + '-ready', null, { noarchive: true });
 
-        // Startup MOTD — debounce: show one random tip 10s after last registration
-        if (opts.motd && Array.isArray(opts.motd) && opts.motd.length > 0) {
-            if (register._motdTimer) clearTimeout(register._motdTimer);
-            register._motdTimer = setTimeout(() => {
-                delete register._motdTimer;
-                var pluginsWithMotd = Object.keys(registrations).filter(n => registrations[n].motd && registrations[n].motd.length > 0);
-                if (pluginsWithMotd.length === 0) return;
+        // Startup debounce: 10s after last registration, show What's New card + random motd
+        if (register._startupTimer) clearTimeout(register._startupTimer);
+        register._startupTimer = setTimeout(() => {
+            delete register._startupTimer;
+            ensureState();
+            var lastSeen = state[SCRIPT_NAME].lastSeenVersions;
+
+            // What's New card — show if any plugin upgraded since last seen
+            var upgradedPlugins = [];
+            Object.keys(registrations).forEach(name => {
+                var r = registrations[name];
+                if (name === SCRIPT_NAME) return; // skip ScriptKit itself
+                if (!r.help || !r.help.changelog || !r.version) return;
+                var seen = lastSeen[name];
+                if (!seen) { lastSeen[name] = r.version; return; } // first install — store, no card
+                if (compareSemver(seen, r.version) >= 0) return; // already seen this version
+                // Collect changelog entries between lastSeen and current
+                var entries = r.help.changelog.filter(e => compareSemver(e.version, seen) > 0 && compareSemver(e.version, r.version) <= 0);
+                if (entries.length > 0) upgradedPlugins.push({ name, reg: r, entries });
+            });
+
+            if (upgradedPlugins.length > 0) {
+                var out = html.bold("What's New") + html.paragraph('');
+                upgradedPlugins.forEach(p => {
+                    out += html.bold(html.escape(p.name) + ' v' + p.reg.version) + html.br();
+                    var changes = [];
+                    p.entries.forEach(e => { if (Array.isArray(e.changes)) changes.push(...e.changes); });
+                    if (changes.length > 0) out += html.list(changes.slice(0, 5).map(c => html.escape(c)));
+                    if (changes.length > 5) out += html.small('...and ' + (changes.length - 5) + ' more') + html.br();
+                    if (p.reg.aliases && p.reg.aliases.whatsnew) out += html.button('See Details', p.reg.command + ' ' + p.reg.aliases.whatsnew) + html.br();
+                    out += html.br();
+                });
+                out += html.br() + '<div style="text-align:center">' + html.button('✓ Dismiss', '!scriptkit dismiss-whatsnew') + '</div>';
+                sendChat(SCRIPT_NAME, '/w gm ' + out, null, { noarchive: true });
+            }
+
+            // MOTD — one random tip from global pool
+            var pluginsWithMotd = Object.keys(registrations).filter(n => registrations[n].motd && registrations[n].motd.length > 0);
+            if (pluginsWithMotd.length > 0) {
                 var randomPlugin = pluginsWithMotd[Math.floor(Math.random() * pluginsWithMotd.length)];
                 var rReg = registrations[randomPlugin];
                 var tip = pickMotd(randomPlugin, rReg.motd);
@@ -511,8 +543,8 @@ var ScriptKit = ScriptKit || (() => {
                     var card = renderMotdCard(randomPlugin, tip, rReg, '!scriptkit motd');
                     sendChat(SCRIPT_NAME, '/w gm ' + card, null, { noarchive: true });
                 }
-            }, 10000);
-        }
+            }
+        }, 10000);
 
         return true;
     };
@@ -527,6 +559,7 @@ var ScriptKit = ScriptKit || (() => {
         if (!state[SCRIPT_NAME].previousVersions) state[SCRIPT_NAME].previousVersions = {};
         if (!state[SCRIPT_NAME].migrations) state[SCRIPT_NAME].migrations = {};
         if (!state[SCRIPT_NAME].versionDates) state[SCRIPT_NAME].versionDates = {};
+        if (!state[SCRIPT_NAME].lastSeenVersions) state[SCRIPT_NAME].lastSeenVersions = {};
     };
 
     /**
@@ -808,6 +841,14 @@ var ScriptKit = ScriptKit || (() => {
         // Internal subcommands (ScriptKit-only, not alias-routed)
         if (scriptName === SCRIPT_NAME && cmd === 'ping') {
             doPing(msg, args.join(' '));
+            return true;
+        }
+        if (scriptName === SCRIPT_NAME && cmd === 'dismiss-whatsnew') {
+            ensureState();
+            Object.keys(registrations).forEach(name => {
+                if (registrations[name].version) state[SCRIPT_NAME].lastSeenVersions[name] = registrations[name].version;
+            });
+            reply(msg, SCRIPT_NAME, 'What\'s New', 'Dismissed. You won\'t see these changes again until the next update.');
             return true;
         }
         if (scriptName === SCRIPT_NAME && cmd === 'motd') {
@@ -2606,6 +2647,7 @@ on('ready', () => {
                     'Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration',
                     '`ScriptKit.usage(msg, command?, reason?)` — smart unknown-command handler with keyboard-weighted fuzzy matching, prefix detection, and topic suggestions',
                     '`!<plugin> motd` / `!scriptkit motd [plugin]` — on-demand motd with no-repeat tracking and debounced startup delivery',
+                    'Consolidated "What\'s New" card on startup when plugins upgrade — dismissable, shows changes since last seen',
                 ]},
                 { version: '1.2.0', date: '2026-08-03', changes: [
                     'Added `!scriptkit ping` command — ping an object by ID or by coordinates',

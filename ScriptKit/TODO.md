@@ -17,12 +17,12 @@
 - [x] `ScriptKit.usage(msg, command?, reason?)` — smart unknown-command handler with fuzzy matching, prefix detection, topic suggestions
 - [x] `!<plugin> motd` / `!scriptkit motd [plugin]` — on-demand motd with no-repeat tracking, debounced startup, derived button styling
 - [x] MOTD batching: debounced delivery (10s after last registration), single tip from global pool
+- [x] Consolidated "What's New" card on startup: shows changes since last seen, dismissable
 
 ## Planned Features
 
 ### MOTD
 - [ ] MOTD configuration menu: per-motd and per-plugin state toggling (A: never, B: per-plugin pool, C: global pool, D: inherit)
-- [ ] Consolidated "What's New" card on startup: if any plugins upgraded, show a single card listing upgraded plugins with "See Changes" button
 
 ### State & Migrations
 - [ ] Rollback safety: brainstorm options for downgrade handling (throw, auto-run safe downs, disable handler)
