@@ -2477,7 +2477,7 @@ var Choreograph = Choreograph || (() => {
                     'Use `!choreograph examples` to browse interactive demos you can run immediately.',
                     'The `sync` delay waits for animations to finish before continuing — great for phased effects.',
                     'Use `--role caster <id>` to assign roles at run time without pre-saving a cast.',
-                    'Chain scenes recursively with `\\${self}` — combined with `when`, you can build bounce/jump effects.',
+                    'Chain scenes recursively with `${self}` — combined with `when`, you can build bounce/jump effects.',
                     'TokenProxy gives you `token.left`, `token.name`, etc. — no more `get()` calls in expressions.',
                     'LINQ methods like `.first()`, `.without()`, `.orderBy()` chain on `actors()` and `role()` results.',
                     'Use `!choreograph man <topic>` to search help — it fuzzy-matches across topics and items.',
@@ -2487,7 +2487,7 @@ var Choreograph = Choreograph || (() => {
                     description: 'Meta-sequencer for Roll20 tokens. Define scenes in handouts — filter tokens, compute per-token timing, and fire commands at the right moments.',
                     quickStart: [
                         '`!choreograph new myScene` — creates a blank scene handout.',
-                        'Open the **[Scene] myScene** handout. Add rows to the Scene Table: set a Filter (e.g. `\\*`), a Delay expression (e.g. `stagger(rank("left"), 200)`), and a Command template (e.g. `!sequence play sparkle --target \\${token.id}`).',
+                        'Open the **[Scene] myScene** handout. Add rows to the Scene Table: set a Filter (e.g. `*`), a Delay expression (e.g. `stagger(rank("left"), 200)`), and a Command template (e.g. `!sequence play sparkle --target ${token.id}`).',
                         'Select tokens and run `!choreograph run myScene`.',
                     ],
                     changelog: [
@@ -2586,7 +2586,7 @@ var Choreograph = Choreograph || (() => {
                                 + '    • The **Delay** expression is evaluated per-token to compute milliseconds.\n'
                                 + '    • After the delay fires, the **Command** template is evaluated per-token and sent to chat.\n'
                                 + '**4. All rows fire in parallel** — rows don\'t wait for each other unless you use `sync` to create coordination points.\n\n'
-                                + '**Example trace:** Scene has `speed` param (default 2). Variable `dist = distance(350, 350)` computes per-token. Delay `dist / speed` staggers by distance. Command `!sequence play sparkle --target \\${token.id}` fires per-token when its delay expires.',
+                                + '**Example trace:** Scene has `speed` param (default 2). Variable `dist = distance(350, 350)` computes per-token. Delay `dist / speed` staggers by distance. Command `!sequence play sparkle --target ${token.id}` fires per-token when its delay expires.',
                         },
                         example: {
                             title: 'Example Scene',
@@ -2599,8 +2599,8 @@ var Choreograph = Choreograph || (() => {
                                 + '**Variables:**\n'
                                 + '    `dist` = `distance(origin.left, origin.top)`\n\n'
                                 + '**Scene Table:**\n'
-                                + '    Row 1: Filter `\\*` | Delay `dist / speed` | Command `!sequence play sparkle --target \\${token.id}`\n'
-                                + '    Row 2: Filter `\\*` | Delay `dist / speed + 500` | Command `!sequence play fade-out --target \\${token.id}`\n\n'
+                                + '    Row 1: Filter `*` | Delay `dist / speed` | Command `!sequence play sparkle --target ${token.id}`\n'
+                                + '    Row 2: Filter `*` | Delay `dist / speed + 500` | Command `!sequence play fade-out --target ${token.id}`\n\n'
                                 + '**Result:** Tokens near the origin sparkle first, with the burst rippling outward. 500ms after each sparkle, that token fades out.',
                         },
                         filters: {
@@ -2647,7 +2647,7 @@ var Choreograph = Choreograph || (() => {
                             description: 'How to write command templates in scene rows',
                             version: '0.1',
                             details: 'Each row in the scene table has a command column. Commands are API calls (starting with !) that fire when a token\'s delay expires. Template literals allow dynamic values computed per-token.',
-                            body: 'Use `\\${expr}` for substitutions. Evaluated as JS template literals. All variables, params, computed variables, and functions are in scope.\n\nMultiple commands per cell: put each on a new line in the handout cell. They fire simultaneously for that token.',
+                            body: 'Use `${expr}` for substitutions. Evaluated as JS template literals. All variables, params, computed variables, and functions are in scope.\n\nMultiple commands per cell: put each on a new line in the handout cell. They fire simultaneously for that token.',
                             items: [
                                 { name: '${token.id}', description: 'Current token ID', version: '0.1' },
                                 { name: '${token.left}', description: 'Token X position (TokenProxy)', version: '0.2' },
