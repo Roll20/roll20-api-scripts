@@ -4687,6 +4687,20 @@ var Sequence = Sequence || (() => {
             tag: HANDOUT_TAG,
             aliases: {},
             newSince: '1.1.0',
+            motd: [
+                'Use `!sequence examples` to browse ready-made animations you can generate and play instantly.',
+                '`continuous` easing + the `t` variable = math-driven animations. Try `=orig + sin(t * TAU) * 140` for orbits.',
+                'Expressions support `get("attr")` to read any token property. Combine with `cell(n)` for grid-aware movement.',
+                'Use `freeze(rand(-50,50))` in continuous segments to randomize once per cycle instead of every tick.',
+                'Recordings are stored in handouts — copy a `[Sequence]` handout to another campaign to transfer an animation.',
+                'The `name` attribute supports string lerp — animate typed text with easing for dramatic reveals.',
+                'Use `!sequence man <topic>` to explore attributes, functions, constants, and easing curves interactively.',
+                'Other scripts can register custom attributes and functions with Sequence — run `!sequence gen-dev-docs` for the developer guide.',
+                'Add `--speed 0.5` to play at half speed, or `--speed 3` for triple. Combine with `--reverse` for rewind effects.',
+                'Color constants like `color.red`, `color.gold`, `color.hsl(h,s,l)` work in expressions and lerp smoothly.',
+            ],
+            motdHeader: '📹 **Sequence** v' + SCRIPT_VERSION,
+            motdStyle: { borderLeft: '3px solid #e91e63' },
             help: {
                 description: 'General-purpose keyframe animation engine for Roll20 tokens. Record movements and attribute changes in real time, then play them back with smooth interpolation, easing, looping, speed control, and expression-driven values.',
                 quickStart: [
