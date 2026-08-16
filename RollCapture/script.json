@@ -8,7 +8,9 @@
     "description": "[Wiki Page](https://wiki.roll20.net/Script:RollCapture)\n\nGeneric roll result extraction for Roll20. Listens to roll template messages, extracts values per configurable rules stored in handouts, and fires character abilities with captured values.\n\nFeatures:\n- Configurable capture rules via handouts tagged [RollCapture] or [RC]\n- Conditional extraction (when/default blocks)\n- Formulas: direct value, max(), min(), sum(), choose() (GM prompt)\n- Character ability firing: rc_any, rc_<rollname>, rc_default\n- onCapture API for programmatic consumers\n\n**v1.1.0 - New features:**\n- ScriptKit integration: help, man, whatsnew, motd, gen-help, gen-dev-docs\n\nCommands:\n- `!rollcapture status` -- Show loaded rules, callbacks, pending choices\n- `!rollcapture rules` -- List all loaded rule handouts\n- `!rollcapture rule <name>` -- Open or create a rule handout\n- `!rollcapture dissect` -- Arm next roll for field inspection (shows all template fields)\n- `!rollcapture reload` -- Reload rules from handouts",
     "authors": "Kenan Millet",
     "roll20userid": "2614613",
-    "dependencies": [],
+    "dependencies": [
+        "ScriptKit"
+    ],
     "modifies": {
         "character": "read",
         "ability": "read",
