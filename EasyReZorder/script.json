@@ -1,9 +1,11 @@
 {
     "name": "EasyReZorder",
     "script": "EasyReZorder.js",
-    "version": "1.0.0",
-    "previousversions": [],
-    "description": "[Wiki Page](https://wiki.roll20.net/Script:EasyReZorder)\n\nSimple z-order manipulation for Roll20 tokens, paths, and text objects. Move selected objects forward/backward by steps, to front/back, or ahead-of/behind a specific object.\n\nCommands:\n- `!z-order forward [n]` -- Move forward n steps\n- `!z-order backward [n]` -- Move backward n steps\n- `!z-order front` -- Bring to front\n- `!z-order back` -- Send to back\n- `!z-order ahead-of <id>` -- Move ahead of a specific object\n- `!z-order behind <id>` -- Move behind a specific object\n- `!z-order check` -- Show z-order index\n- `!z-order --help` -- Command reference\n\nOptionally integrates with Anchor -- after reordering, calls Anchor.updateZOrder() to propagate z-order changes to anchored children.",
+    "version": "1.1.0",
+    "previousversions": [
+        "1.0.0"
+    ],
+    "description": "[Wiki Page](https://wiki.roll20.net/Script:EasyReZorder)\n\nSimple z-order manipulation for Roll20 tokens, paths, and text objects. Move selected objects forward/backward by steps, to front/back, or ahead-of/behind a specific object.\n\n**v1.1.0 - New features:**\n- ScriptKit integration: help, man, whatsnew, motd, gen-help\n\nCommands:\n- `!easyrezorder forward [n]` -- Move forward n steps (default: 1)\n- `!easyrezorder backward [n]` -- Move backward n steps (default: 1)\n- `!easyrezorder front` -- Bring to front\n- `!easyrezorder back` -- Send to back\n- `!easyrezorder ahead-of <id>` -- Move ahead of a specific object\n- `!easyrezorder behind <id>` -- Move behind a specific object\n- `!easyrezorder check` -- Show z-order index of selected objects",
     "authors": "Kenan Millet",
     "roll20userid": "2614613",
     "dependencies": [],
