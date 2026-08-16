@@ -4856,8 +4856,16 @@ var Sequence = Sequence || (() => {
                             + '`Sequence.registerAttributeGroup(sourceId, attrs, opts)` — Group correlated attributes\n'
                             + '`Sequence.registerPlaybackConstant(sourceId, reg)` — Add a constant for expressions\n'
                             + '`Sequence.registerEasing(sourceId, reg)` — Add a custom easing curve\n'
-                            + '`Sequence.generateExtensionHandout(sourceId, opts)` — Generate a help handout for your extension\n'
-                            + '`ScriptKit.Sequence.registerExample(sourceId, struct)` — Register an example recording (via ScriptKit)\n\n'
+                            + '`Sequence.generateExtensionHandout(sourceId, opts)` — Generate a help handout for your extension\n\n'
+                            + '**Registering Examples (via ScriptKit):**\n\n'
+                            + '```ScriptKit.Sequence.registerExample(\'YourScript\', {\n'
+                            + '    name: \'my-animation\',\n'
+                            + '    description: \'What this example does\',\n'
+                            + '    recording: { objectType: \'graphic\', notes: \'\', keyframes: [...] },\n'
+                            + '    handout: { notes: \'\' },\n'
+                            + '});```\n\n'
+                            + 'The `recording` field contains the keyframe data. The `handout` field triggers handout generation via Sequence\'s custom example handler. '
+                            + 'Load order does not matter — ScriptKit queues examples automatically.\n\n'
                             + 'Use `!sequence man` in chat for live lookup of all registered attributes, functions, and constants.',
                     },
                     registeredAttrs: {
@@ -4940,7 +4948,7 @@ var Sequence = Sequence || (() => {
             },
             exampleHandler: (example, msg) => {
                 const rec = example.recording;
-                const recName = 'example-' + example.name;
+                const recName = example.source + '/example-' + example.name;
                 const attrCols = example.attrCols || (() => {
                     const cols = new Set();
                     (rec.keyframes || []).forEach(kf => {
@@ -4949,19 +4957,19 @@ var Sequence = Sequence || (() => {
                     });
                     return [...cols];
                 })();
-                const handout = getOrCreateHandout(recName);
-                handout.set('archived', true);
-                setHandoutNotes(handout, generateHandoutHtml(recName, rec, attrCols), recName);
                 recordingCache[recName] = { recording: rec, attrCols };
+                // Guard against onHandoutChanged re-parsing when ScriptKit writes the notes
+                handoutWriting.add(recName);
+                setTimeout(() => handoutWriting.delete(recName), 500);
                 return { notes: generateHandoutHtml(recName, rec, attrCols), archived: true };
             },
             onComplete: (ctx) => {
-                const recName = 'example-' + ctx.example.name;
+                const recName = ctx.example.source + '/example-' + ctx.example.name;
                 const recipient = ctx.msg.who.split(' ')[0];
                 const handout = findHandout(recName);
-                let out = `Generated <b>${recName}</b>.<br>`;
-                out += btnHtml('▶ Play', `!sequence play ${recName}`) + ' ';
-                out += btnHtml('🔁 Loop', `!sequence play ${recName} --loop`) + ' ';
+                let out = `Generated <b>${escHtml(recName)}</b>.<br>`;
+                out += btnHtml('▶ Play', `!sequence play ${escArg(recName)}`) + ' ';
+                out += btnHtml('🔁 Loop', `!sequence play ${escArg(recName)} --loop`) + ' ';
                 if (handout) out += `<a href="http://journal.roll20.net/handout/${handout.get('id')}">[open]</a>`;
                 sendChat(`${SCRIPT_NAME} [Examples]`, `/w ${recipient} ${out}`);
             },
@@ -5009,7 +5017,7 @@ var Sequence = Sequence || (() => {
               ]}},
             { name: 'boss-phase-2', description: 'Multi-attribute boss transformation: grows, heals, light intensifies, tint shifts, name gains a title.',
               recording: { objectType: 'graphic', notes: '', keyframes: [
-                  { time: 0, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 }, bar1_value: { expr: 'orig', mode: 'abs' }, light_radius: { expr: 'orig', mode: 'abs' }, tint_color: { expr: 'color.black', mode: 'abs' }, name: { abs: '' } }, easings: { width: 'ease-out-back', height: 'ease-out-back', bar1_value: 'ease-in-quad', light_radius: 'ease-in-quad', tint_color: 'linear', name: 'ease-out-quad' } },
+                  { time: 0, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 }, bar1_value: { expr: 'orig', mode: 'abs' }, light_radius: { expr: 'orig', mode: 'abs' }, tint_color: { expr: 'color.black', mode: 'abs' }, name: { abs: '' } }, easings: { width: 'expo', height: 'expo', bar1_value: 'quad', light_radius: 'quad', tint_color: 'linear', name: '~quad' } },
                   { time: 6000, type: 'change', deltas: { width: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, height: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, bar1_value: { expr: 'round(get("bar1_max") * 1.2)', mode: 'abs' }, light_radius: { abs: '40' }, tint_color: { expr: 'color.red', mode: 'abs' }, name: { expr: '"Mighty " + orig + ", The Reborn"', mode: 'abs' } }, easings: {} },
               ]}},
         ];
