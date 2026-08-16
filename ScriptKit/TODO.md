@@ -21,6 +21,22 @@
 
 ## Planned Features
 
+### Example Actions
+Custom buttons shown in the examples menu for already-generated examples. Allows scripts to provide contextual actions (e.g. Play/Loop for Sequence, Run for Choreograph) directly in the menu without requiring regeneration.
+
+Possible API:
+```js
+ScriptKit.MyScript.registerExample('MyScript', {
+    name: 'my-example',
+    actions: (example, handout) => [
+        { label: '▶ Play', command: '!sequence play ' + recName },
+        { label: '🔁 Loop', command: '!sequence play ' + recName + ' --loop' },
+    ],
+});
+```
+
+Actions render as buttons in the examples menu when the handout already exists, alongside Regen/Open.
+
 ### MOTD
 - [ ] MOTD configuration menu: per-motd and per-plugin state toggling (A: never, B: per-plugin pool, C: global pool, D: inherit)
 
