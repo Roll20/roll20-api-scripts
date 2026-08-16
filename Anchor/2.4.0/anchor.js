@@ -2299,11 +2299,11 @@ var Anchor = Anchor || (() => {
                         'Fix: layer component tracking',
                         'Fix: flip state synchronization edge cases',
                     ]},
-                    { version: '2.2.1', date: '2026-07-04', changes: [
+                    { version: '2.2.1', date: '2026-06-26', changes: [
                         'Polling-based enforcement for locked components',
                         'Config command for runtime settings',
                     ]},
-                    { version: '2.1.0', date: '2026-06-26', changes: [
+                    { version: '2.1.0', date: '2026-06-12', changes: [
                         'Scripting API: getPosition, setPosition, getRotation, setRotation, getScale, setScale',
                         'Flip tracking (flipv, fliph) as components',
                         'Integration with Sequence (anchor.left, anchor.top, anchor.rotation virtual attributes)',
