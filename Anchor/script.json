@@ -13,7 +13,10 @@
     "authors": "Kenan Millet",
     "roll20userid": "2614613",
     "dependencies": [
-        "MatrixMath"
+        "MatrixMath",
+        "ScriptKit",
+        "Sequence",
+        "Choreograph"
     ],
     "modifies": {
         "graphic.left": "read,write",
