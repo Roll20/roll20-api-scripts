@@ -4672,14 +4672,6 @@ var Sequence = Sequence || (() => {
         state[SCRIPT_NAME] = state[SCRIPT_NAME] || {};
         const st = state[SCRIPT_NAME];
         st.unsavedSessions = st.unsavedSessions || {};
-
-        log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
-
-        // Signal extensions that Sequence is ready to accept registrations.
-        // Extensions that loaded before Sequence listen for this; extensions
-        // that loaded after can call Sequence.register* directly since
-        // Sequence is already defined by the time their on('ready') runs.
-        sendChat('', `!${SCRIPT_NAME.toLowerCase()}-ready`, null, { noarchive: true });
     };
 
 
