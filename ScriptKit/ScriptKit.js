@@ -1,6 +1,6 @@
 // =============================================================================
 // ScriptKit v1.3.0
-// Last Updated: 2026-08-14
+// Last Updated: 2026-08-16
 // Author: Kenan Millet
 //
 // Description:
@@ -334,6 +334,13 @@ var ScriptKit = ScriptKit || (() => {
         handout.set('notes', notes);
         setTimeout(() => handout.set('notes', notes), 200);
     };
+
+    /**
+     * Resolve a registration field value. If the value is a function, call it
+     * (optionally passing ctx) and return the result. Otherwise return as-is.
+     * This enables lazy evaluation of any registration field.
+     */
+    const resolve = (value, ctx) => typeof value === 'function' ? value(ctx) : value;
 
     // =========================================================================
     // Registration API
@@ -1011,10 +1018,11 @@ var ScriptKit = ScriptKit || (() => {
         const version = reg.version;
 
         let out = '';
-        if (helpData.description) {
+        var helpDesc = resolve(helpData.description);
+        if (helpDesc) {
             out += html.bold(html.escape(scriptName));
             if (version) out += ' ' + html.small(html.bold('v' + version));
-            out += html.paragraph(html.small(helpData.description)) + html.line();
+            out += html.paragraph(html.small(helpDesc)) + html.line();
         }
 
         // Commands
@@ -1042,12 +1050,13 @@ var ScriptKit = ScriptKit || (() => {
                         }
                     } else {
                         if (c.deleted) return;
+                        var cDesc = resolve(c.description) || '';
                         if (search && (c.syntax || '').toLowerCase().indexOf(search) === -1 &&
-                            (c.description || '').toLowerCase().indexOf(search) === -1) return;
+                            cDesc.toLowerCase().indexOf(search) === -1) return;
                         var vTag = '';
                         if (isNewVersion(c.version, reg)) vTag = ' ' + html.newBadge();
                         if (c.deprecated) vTag = ' ' + html.deprecatedBadge();
-                        out += html.code(reg.command + ' ' + c.syntax) + vTag + ' — ' + html.escape(c.description) + html.br();
+                        out += html.code(reg.command + ' ' + c.syntax) + vTag + ' — ' + html.escape(cDesc) + html.br();
                     }
                 });
                 return out;
@@ -1064,10 +1073,18 @@ var ScriptKit = ScriptKit || (() => {
             }
         }
 
-        // Topics button (if man is available)
-        if (helpData.topics && Object.keys(helpData.topics).filter(k => helpData.topics[k] && !helpData.topics[k].deleted).length > 0 && reg.aliases.man) {
-            var manCmd = Array.isArray(reg.aliases.man) ? reg.aliases.man[0] : reg.aliases.man;
-            out += html.line() + html.button('📖 Browse Topics', reg.command + ' ' + manCmd);
+        // Topics button (if man is available — via alias or user-registered command)
+        if (helpData.topics && Object.keys(helpData.topics).filter(k => helpData.topics[k] && !helpData.topics[k].deleted).length > 0) {
+            var manCmd = reg.aliases.man ? (Array.isArray(reg.aliases.man) ? reg.aliases.man[0] : reg.aliases.man) : null;
+            // If man alias was auto-nulled but a user command handles it, find that command word
+            if (!manCmd && helpData.commands) {
+                var flatCmds = [];
+                var flattenC = (items) => { items.forEach(c => { if (c.group) flattenC(c.commands || []); else flatCmds.push(c); }); };
+                flattenC(helpData.commands);
+                var manEntry = flatCmds.find(c => !c.deleted && c.syntax && c.syntax.split(' ')[0].toLowerCase() === 'man');
+                if (manEntry) manCmd = manEntry.syntax.split(' ')[0];
+            }
+            if (manCmd) out += html.line() + html.button('📖 Browse Topics', reg.command + ' ' + manCmd);
         }
 
         if (!out) {
@@ -1096,8 +1113,9 @@ var ScriptKit = ScriptKit || (() => {
             let out = html.bold(html.escape(scriptName) + ' — Topics:') + html.paragraph('');
             Object.entries(topics).forEach(([key, t]) => {
                 if (!t || t.deleted) return;
-                out += '• ' + html.button(t.title || key, reg.command + ' ' + manCmd + ' ' + key);
-                if (t.description) out += ' — ' + html.escape(t.description);
+                out += '• ' + html.button(resolve(t.title) || key, reg.command + ' ' + manCmd + ' ' + key);
+                var tDesc = resolve(t.description);
+                if (tDesc) out += ' — ' + html.escape(tDesc);
                 out += html.br();
             });
             reply(msg, scriptName, 'Man', out);
@@ -1124,7 +1142,7 @@ var ScriptKit = ScriptKit || (() => {
 
         // Tier 1b: exact title match
         const titleMatch = Object.entries(topics).find(([k, t]) =>
-            t && !t.deleted && (t.title || k).toLowerCase() === search
+            t && !t.deleted && (resolve(t.title) || k).toLowerCase() === search
         );
         if (titleMatch) {
             renderManTopic(msg, scriptName, reg, titleMatch[0], titleMatch[1]);
@@ -1136,23 +1154,24 @@ var ScriptKit = ScriptKit || (() => {
         Object.entries(topics).forEach(([key, t]) => {
             if (!t || t.deleted) return;
             // Check items array if present
-            if (t.items && Array.isArray(t.items)) {
-                t.items.forEach(item => {
-                    const nameMatch = (item.name || '').toLowerCase().indexOf(search) !== -1;
-                    const descMatch = (item.description || '').toLowerCase().indexOf(search) !== -1;
+            var tItems = resolve(t.items);
+            if (tItems && Array.isArray(tItems)) {
+                tItems.forEach(item => {
+                    const nameMatch = (resolve(item.name) || '').toLowerCase().indexOf(search) !== -1;
+                    const descMatch = (resolve(item.description) || '').toLowerCase().indexOf(search) !== -1;
                     if (nameMatch || descMatch) {
                         results.push({ topicKey: key, topic: t, item: item, exact: nameMatch });
                     }
                 });
             }
             // Check body text
-            var bodyText = typeof t.body === 'function' ? '' : (t.body || '');
+            var bodyText = resolve(t.body) || '';
             if (bodyText && bodyText.toLowerCase().indexOf(search) !== -1) {
                 results.push({ topicKey: key, topic: t, item: null, exact: false });
             }
             // Check title/description
-            if ((t.title || '').toLowerCase().indexOf(search) !== -1 ||
-                (t.description || '').toLowerCase().indexOf(search) !== -1) {
+            if ((resolve(t.title) || '').toLowerCase().indexOf(search) !== -1 ||
+                (resolve(t.description) || '').toLowerCase().indexOf(search) !== -1) {
                 results.push({ topicKey: key, topic: t, item: null, exact: true });
             }
         });
@@ -1164,11 +1183,13 @@ var ScriptKit = ScriptKit || (() => {
         flatCommands.forEach(c => {
             if (c.deleted || !c.items) return;
             var cmdKey = c.syntax.split(' ')[0];
-            c.items.forEach(item => {
-                const nameMatch = (item.name || '').toLowerCase().indexOf(search) !== -1;
-                const descMatch = (item.description || '').toLowerCase().indexOf(search) !== -1;
+            var cItems = resolve(c.items);
+            if (!cItems) return;
+            cItems.forEach(item => {
+                const nameMatch = (resolve(item.name) || '').toLowerCase().indexOf(search) !== -1;
+                const descMatch = (resolve(item.description) || '').toLowerCase().indexOf(search) !== -1;
                 if (nameMatch || descMatch) {
-                    results.push({ topicKey: cmdKey, topic: { title: reg.command + ' ' + c.syntax, description: c.description }, item: item, exact: nameMatch, _cmd: c });
+                    results.push({ topicKey: cmdKey, topic: { title: reg.command + ' ' + c.syntax, description: resolve(c.description) }, item: item, exact: nameMatch, _cmd: c });
                 }
             });
         });
@@ -1190,15 +1211,18 @@ var ScriptKit = ScriptKit || (() => {
         const shown = new Set();
         results.sort((a, b) => (b.exact ? 1 : 0) - (a.exact ? 1 : 0));
         results.forEach(r => {
-            if (shown.has(r.topicKey + '/' + (r.item ? r.item.name : ''))) return;
-            shown.add(r.topicKey + '/' + (r.item ? r.item.name : ''));
+            if (shown.has(r.topicKey + '/' + (r.item ? resolve(r.item.name) : ''))) return;
+            shown.add(r.topicKey + '/' + (r.item ? resolve(r.item.name) : ''));
             if (r.item) {
-                out += '• ' + html.bold(html.escape(r.item.name));
-                if (r.item.description) out += ' — ' + html.escape(r.item.description).slice(0, 80);
-                out += html.br() + html.indent(2) + html.italic('in ' + html.button(r.topic.title || r.topicKey, reg.command + ' ' + manCmd + ' ' + r.topicKey)) + html.br();
+                out += '• ' + html.bold(html.escape(resolve(r.item.name)));
+                var rItemDesc = resolve(r.item.description);
+                if (rItemDesc) out += ' — ' + html.escape(rItemDesc).slice(0, 80);
+                var inLabel = r._cmd ? 'Commands: ' + r.topicKey : html.escape(resolve(r.topic.title) || r.topicKey);
+                out += html.br() + html.indent(2) + html.italic('in ' + html.button(inLabel, reg.command + ' ' + manCmd + ' ' + r.topicKey)) + html.br();
             } else {
-                out += '• ' + html.button(r.topic.title || r.topicKey, reg.command + ' ' + manCmd + ' ' + r.topicKey);
-                if (r.topic.description) out += ' — ' + html.escape(r.topic.description);
+                out += '• ' + html.button(html.escape(resolve(r.topic.title) || r.topicKey), reg.command + ' ' + manCmd + ' ' + r.topicKey);
+                var rTopicDesc = resolve(r.topic.description);
+                if (rTopicDesc) out += ' — ' + html.escape(rTopicDesc);
                 out += html.br();
             }
         });
@@ -1209,32 +1233,36 @@ var ScriptKit = ScriptKit || (() => {
      * Render a full man topic.
      */
     const renderManTopic = (msg, scriptName, reg, key, topic) => {
-        let out = html.bold(html.escape(topic.title || key));
+        let out = html.bold(html.escape(resolve(topic.title) || key));
         if (topic.version) out += ' ' + html.italic('(v' + topic.version + ')');
         // Link to handout section if handout exists
         var helpHandout = reg._handouts && reg._handouts.usr;
-        if (helpHandout) out += ' ' + html.handoutLink('📖', helpHandout.get('id'), null, topic.title || key);
+        if (helpHandout) out += ' ' + html.handoutLink('📖', helpHandout.get('id'), null, resolve(topic.title) || key);
         out += html.br();
-        if (topic.description) out += html.escape(topic.description) + html.br();
+        var topicDesc = resolve(topic.description);
+        if (topicDesc) out += html.escape(topicDesc) + html.br();
         out += html.br();
 
         // Render body (supports string or function)
         if (topic.body) {
-            var body = typeof topic.body === 'function' ? topic.body() : topic.body;
+            var body = resolve(topic.body);
             out += html.render(body) + html.paragraph('');
         }
 
         // Render items (structured entries within a topic)
-        if (topic.items && Array.isArray(topic.items)) {
-            topic.items.forEach(item => {
-                if (item.deleted) return;
+        var topicItems = resolve(topic.items);
+        if (topicItems && Array.isArray(topicItems)) {
+            topicItems.forEach(item => {
+                if (resolve(item.deleted)) return;
                 var vTag = '';
                 if (item.version && isNewVersion(item.version, reg)) vTag = ' ' + html.newBadge();
-                if (item.deprecated) vTag = ' ' + html.deprecatedBadge();
-                out += html.bold(html.escape(item.name)) + vTag;
-                if (item.syntax) out += ' ' + html.code(item.syntax);
+                if (resolve(item.deprecated)) vTag = ' ' + html.deprecatedBadge();
+                out += html.bold(html.escape(resolve(item.name))) + vTag;
+                var itemSyntax = resolve(item.syntax);
+                if (itemSyntax) out += ' ' + html.code(itemSyntax);
                 out += html.br();
-                if (item.description) out += html.render(item.description) + html.br();
+                var itemDesc = resolve(item.description);
+                if (itemDesc) out += html.render(itemDesc) + html.br();
                 out += html.br();
             });
         }
@@ -1249,19 +1277,23 @@ var ScriptKit = ScriptKit || (() => {
         let out = html.bold(html.code(reg.command + ' ' + cmd.syntax));
         if (cmd.version) out += ' ' + html.italic('(v' + cmd.version + ')');
         out += html.br();
-        if (cmd.description) out += html.escape(cmd.description) + html.br();
-        if (cmd.details) out += html.br() + html.render(cmd.details) + html.br();
+        var cmdDesc = resolve(cmd.description);
+        if (cmdDesc) out += html.escape(cmdDesc) + html.br();
+        var cmdDetails = resolve(cmd.details);
+        if (cmdDetails) out += html.br() + html.render(cmdDetails) + html.br();
         out += html.br();
 
-        if (cmd.items) {
-            cmd.items.forEach(item => {
-                if (item.deleted) return;
+        var cmdItems = resolve(cmd.items);
+        if (cmdItems) {
+            cmdItems.forEach(item => {
+                if (resolve(item.deleted)) return;
                 var vTag = '';
                 if (isNewVersion(item.version, reg)) vTag = ' ' + html.newBadge();
-                if (item.deprecated) vTag = ' ' + html.deprecatedBadge();
-                out += html.bold(html.escape(item.name)) + vTag;
+                if (resolve(item.deprecated)) vTag = ' ' + html.deprecatedBadge();
+                out += html.bold(html.escape(resolve(item.name))) + vTag;
                 out += html.br();
-                if (item.description) out += html.render(item.description) + html.br();
+                var itemDesc = resolve(item.description);
+                if (itemDesc) out += html.render(itemDesc) + html.br();
                 out += html.br();
             });
         }
@@ -1348,18 +1380,19 @@ var ScriptKit = ScriptKit || (() => {
             flattenCmds(commands);
             flatCommands.forEach(c => {
                 if (!c.deleted && isNewVersion(c.version, reg)) {
-                    newItems.push(html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(c.description));
+                    newItems.push(html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(resolve(c.description) || ''));
                 }
             });
             Object.entries(topics).forEach(([k, t]) => {
                 if (!t || t.deleted) return;
                 if (isNewVersion(t.version, reg)) {
-                    newItems.push(html.bold(t.title || k) + (t.description ? ' — ' + html.escape(t.description) : ''));
+                    newItems.push(html.bold(resolve(t.title) || k) + (resolve(t.description) ? ' — ' + html.escape(resolve(t.description)) : ''));
                 }
-                if (t.items) {
-                    t.items.forEach(item => {
-                        if (!item.deleted && isNewVersion(item.version, reg) && !isNewVersion(t.version, reg)) {
-                            newItems.push(html.bold(item.name) + ' in ' + html.italic(t.title || k) + (item.description ? ' — ' + item.description : ''));
+                var tItems = resolve(t.items);
+                if (tItems) {
+                    tItems.forEach(item => {
+                        if (!resolve(item.deleted) && isNewVersion(item.version, reg) && !isNewVersion(t.version, reg)) {
+                            newItems.push(html.bold(resolve(item.name)) + ' in ' + html.italic(resolve(t.title) || k) + (resolve(item.description) ? ' — ' + resolve(item.description) : ''));
                         }
                     });
                 }
@@ -1478,13 +1511,15 @@ var ScriptKit = ScriptKit || (() => {
         var flattenC = (items) => { items.forEach(c => { if (c.group) flattenC(c.commands || []); else flatCmds.push(c); }); };
         flattenC(commands);
         flatCmds.forEach(c => {
-            if (!c.deleted && isNewVersion(c.version, reg)) whatsNew.push(html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(c.description));
-            if (c.items) {
-                c.items.forEach(item => {
-                    if (!item.deleted && isNewVersion(item.version, reg) && !isNewVersion(c.version, reg)) {
-                        if (!whatsNewSeen[item.name]) {
-                            whatsNewSeen[item.name] = true;
-                            whatsNew.push(html.code(item.name) + ' in ' + html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(item.description));
+            if (!c.deleted && isNewVersion(c.version, reg)) whatsNew.push(html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(resolve(c.description) || ''));
+            var cItems = resolve(c.items);
+            if (cItems) {
+                cItems.forEach(item => {
+                    if (!resolve(item.deleted) && isNewVersion(item.version, reg) && !isNewVersion(c.version, reg)) {
+                        var iName = resolve(item.name);
+                        if (!whatsNewSeen[iName]) {
+                            whatsNewSeen[iName] = true;
+                            whatsNew.push(html.code(iName) + ' in ' + html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(resolve(item.description) || ''));
                         }
                     }
                 });
@@ -1492,12 +1527,14 @@ var ScriptKit = ScriptKit || (() => {
         });
         filteredTopicKeys.forEach(k => {
             var t = topics[k];
-            if (isNewVersion(t.version, reg)) whatsNew.push(html.bold(t.title || k) + (t.description ? ' — ' + html.escape(t.description) : ''));
-            if (t.items) {
-                t.items.forEach(item => {
-                    if (!item.deleted && isNewVersion(item.version, reg) && !whatsNewSeen[item.name]) {
-                        whatsNewSeen[item.name] = true;
-                        whatsNew.push(html.bold(item.name) + (item.description ? ' — ' + item.description : ''));
+            if (isNewVersion(t.version, reg)) whatsNew.push(html.bold(resolve(t.title) || k) + (resolve(t.description) ? ' — ' + html.escape(resolve(t.description)) : ''));
+            var tItems = resolve(t.items);
+            if (tItems) {
+                tItems.forEach(item => {
+                    var iName = resolve(item.name);
+                    if (!resolve(item.deleted) && isNewVersion(item.version, reg) && !whatsNewSeen[iName]) {
+                        whatsNewSeen[iName] = true;
+                        whatsNew.push(html.bold(iName) + (resolve(item.description) ? ' — ' + resolve(item.description) : ''));
                     }
                 });
             }
@@ -1511,10 +1548,11 @@ var ScriptKit = ScriptKit || (() => {
         Object.keys(topics).forEach(k => {
             var t = topics[k];
             if (!t) return;
-            if (t.deleted) removed.push(html.bold(t.title || k) + ' — removed in v' + t.deleted);
-            if (t.items) {
-                t.items.forEach(item => {
-                    if (item.deleted) removed.push(html.bold(item.name) + ' — removed in v' + item.deleted);
+            if (t.deleted) removed.push(html.bold(resolve(t.title) || k) + ' — removed in v' + t.deleted);
+            var tItems = resolve(t.items);
+            if (tItems) {
+                tItems.forEach(item => {
+                    if (resolve(item.deleted)) removed.push(html.bold(resolve(item.name)) + ' — removed in v' + resolve(item.deleted));
                 });
             }
         });
@@ -1522,7 +1560,8 @@ var ScriptKit = ScriptKit || (() => {
         // Render HTML
         var out = '';
         out += '<h1>' + html.escape(scriptName) + (version ? ' v' + version : '') + '</h1>';
-        if (helpData.description) out += '<p>' + html.render(helpData.description) + '</p>';
+        var handoutDesc = resolve(helpData.description);
+        if (handoutDesc) out += '<p>' + html.render(handoutDesc) + '</p>';
 
         // Quick Start / Examples callout (user handout only)
         var hasExamples = reg.aliases && reg.aliases.examples && Object.values(examples).filter(e => e.target === scriptName).length > 0;
@@ -1570,17 +1609,19 @@ var ScriptKit = ScriptKit || (() => {
                         if (cmdIsNew) badge = ' ' + html.newBadge();
                         if (c.deprecated) badge = ' ' + html.deprecatedBadge();
                         if (mode === 'dev' && c.version) badge += ' ' + html.version(c.version);
-                        result += '<p>' + html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(c.description) + badge + '</p>';
-                        if (c.details) result += '<p>' + html.render(c.details) + '</p>';
-                        if (c.items) {
+                        result += '<p>' + html.code(reg.command + ' ' + c.syntax) + ' — ' + html.escape(resolve(c.description) || '') + badge + '</p>';
+                        var cDetails = resolve(c.details);
+                        if (cDetails) result += '<p>' + html.render(cDetails) + '</p>';
+                        var cItems = resolve(c.items);
+                        if (cItems) {
                             result += '<ul>';
-                            c.items.forEach(item => {
-                                if (item.deleted) return;
+                            cItems.forEach(item => {
+                                if (resolve(item.deleted)) return;
                                 var iBadge = '';
                                 if (!cmdIsNew && isNewVersion(item.version, reg)) iBadge = ' ' + html.newBadge();
-                                if (item.deprecated) iBadge = ' ' + html.deprecatedBadge();
+                                if (resolve(item.deprecated)) iBadge = ' ' + html.deprecatedBadge();
                                 if (mode === 'dev' && item.version) iBadge += ' ' + html.version(item.version);
-                                result += '<li>' + html.code(item.name) + ' — ' + html.escape(item.description) + iBadge + '</li>';
+                                result += '<li>' + html.code(resolve(item.name)) + ' — ' + html.escape(resolve(item.description) || '') + iBadge + '</li>';
                             });
                             result += '</ul>';
                         }
@@ -1600,25 +1641,31 @@ var ScriptKit = ScriptKit || (() => {
             if (topicIsNew) badge = ' ' + html.newBadge();
             if (t.deprecated) badge = ' ' + html.deprecatedBadge();
             if (mode === 'dev' && t.version) badge += ' ' + html.version(t.version);
-            out += '<h2>' + html.escape(t.title || k) + badge + '</h2>';
-            if (t.description) out += '<p>' + html.escape(t.description) + '</p>';
-            if (t.details) out += '<p>' + html.render(t.details) + '</p>';
+            out += '<h2>' + html.escape(resolve(t.title) || k) + badge + '</h2>';
+            var tDesc = resolve(t.description);
+            if (tDesc) out += '<p>' + html.escape(tDesc) + '</p>';
+            var tDetails = resolve(t.details);
+            if (tDetails) out += '<p>' + html.render(tDetails) + '</p>';
             if (t.body) {
-                var body = typeof t.body === 'function' ? t.body() : t.body;
+                var body = resolve(t.body);
                 out += '<div>' + html.render(body) + '</div>';
             }
-            if (t.items) {
-                t.items.forEach(item => {
-                    if (item.deleted) return;
+            var tItems = resolve(t.items);
+            if (tItems) {
+                tItems.forEach(item => {
+                    if (resolve(item.deleted)) return;
                     var iBadge = '';
                     if (!topicIsNew && isNewVersion(item.version, reg)) iBadge = ' ' + html.newBadge();
-                    if (item.deprecated) iBadge = ' ' + html.deprecatedBadge();
+                    if (resolve(item.deprecated)) iBadge = ' ' + html.deprecatedBadge();
                     if (mode === 'dev' && item.version) iBadge += ' ' + html.version(item.version);
-                    out += '<p>' + html.bold(html.escape(item.name)) + iBadge;
-                    if (item.syntax) out += ' ' + html.code(item.syntax);
+                    out += '<p>' + html.bold(html.escape(resolve(item.name))) + iBadge;
+                    var itemSyntax = resolve(item.syntax);
+                    if (itemSyntax) out += ' ' + html.code(itemSyntax);
                     out += '</p>';
-                    if (item.description) out += '<p>' + html.render(item.description) + '</p>';
-                    if (item.details) out += '<p>' + html.render(item.details) + '</p>';
+                    var itemDesc = resolve(item.description);
+                    if (itemDesc) out += '<p>' + html.render(itemDesc) + '</p>';
+                    var itemDetails = resolve(item.details);
+                    if (itemDetails) out += '<p>' + html.render(itemDetails) + '</p>';
                 });
             }
         });
@@ -1975,21 +2022,25 @@ var ScriptKit = ScriptKit || (() => {
         }
 
         const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, player: getObj('player', g.msg.playerid) };
-        const promptText = typeof step.prompt === 'function' ? step.prompt(ctx) : step.prompt;
+        const promptText = resolve(step.prompt, ctx);
 
         let prompt = html.div(
             html.bold(html.escape(g.handoutName || g.example.name)) + ' — Setup (step ' + interactiveIdx + '/' + interactiveTotal + ')' + html.paragraph('')
             + html.render(promptText) + html.paragraph('')
-            + (step.select ? (() => {
-                const plural = !step.max || step.max > 1;
-                const label = step.select + (plural ? 's' : '');
+            + (resolve(step.select, ctx) ? (() => {
+                const stepSelect = resolve(step.select, ctx);
+                const stepMin = resolve(step.min, ctx);
+                const stepMax = resolve(step.max, ctx);
+                const plural = !stepMax || stepMax > 1;
+                const label = stepSelect + (plural ? 's' : '');
                 const parts = [];
-                if (step.min) parts.push('min: ' + step.min);
-                if (step.max) parts.push('max: ' + step.max);
+                if (stepMin) parts.push('min: ' + stepMin);
+                if (stepMax) parts.push('max: ' + stepMax);
                 return parts.length > 0 ? html.italic('Select ' + parts.join(', ') + ' ' + label) + html.paragraph('') : '';
             })() : '')
-            + (step.query ? (() => {
-                const queries = Array.isArray(step.query) ? step.query : [step.query];
+            + (resolve(step.query, ctx) ? (() => {
+                const stepQuery = resolve(step.query, ctx);
+                const queries = Array.isArray(stepQuery) ? stepQuery : [stepQuery];
                 const lastVals = g._lastQueryValues || {};
                 const errors = g._queryErrors || {};
                 let qOut = '';
@@ -2041,10 +2092,12 @@ var ScriptKit = ScriptKit || (() => {
 
         const step = g.steps[g.currentStep];
         const selected = (msg.selected || []).map(s => getObj(s._type, s._id)).filter(Boolean);
+        const ctx = { selections: g.selections, params: g.params, msg: g.msg, handoutName: g.handoutName, player: getObj('player', g.msg.playerid) };
 
         // Handle select steps
-        if (step.select) {
-            const selectType = step.select;
+        var stepSelect = resolve(step.select, ctx);
+        if (stepSelect) {
+            const selectType = stepSelect;
             const isSubtype = selectType === 'token' || selectType === 'card';
             const matchType = isSubtype ? 'graphic' : selectType;
             const filtered = selected.filter(obj => {
@@ -2052,26 +2105,29 @@ var ScriptKit = ScriptKit || (() => {
                 if (isSubtype && obj.get('_subtype') !== selectType) return false;
                 return true;
             });
-            const plural = !step.max || step.max > 1;
+            var stepMin = resolve(step.min, ctx);
+            var stepMax = resolve(step.max, ctx);
+            const plural = !stepMax || stepMax > 1;
             const label = selectType + (plural ? 's' : '');
             if (filtered.length === 0) {
                 replyError(msg, g.source, 'Select at least one ' + selectType + ', then click Continue.');
                 return;
             }
-            if (step.min && filtered.length < step.min) {
-                replyError(msg, g.source, 'Select at least ' + step.min + ' ' + label + ', then click Continue.');
+            if (stepMin && filtered.length < stepMin) {
+                replyError(msg, g.source, 'Select at least ' + stepMin + ' ' + label + ', then click Continue.');
                 return;
             }
-            if (step.max && filtered.length > step.max) {
-                replyError(msg, g.source, 'Select at most ' + step.max + ' ' + label + ', then click Continue.');
+            if (stepMax && filtered.length > stepMax) {
+                replyError(msg, g.source, 'Select at most ' + stepMax + ' ' + label + ', then click Continue.');
                 return;
             }
             g.selections[step.as] = plural ? filtered : filtered[0];
         }
 
         // Handle query steps (parse --key value from pre-parsed args, coerce types)
-        if (step.query) {
-            const queries = Array.isArray(step.query) ? step.query : [step.query];
+        var stepQuery = resolve(step.query, ctx);
+        if (stepQuery) {
+            const queries = Array.isArray(stepQuery) ? stepQuery : [stepQuery];
             if (!g._lastQueryValues) g._lastQueryValues = {};
             var queryErrors = {};
             var coercedValues = {};
@@ -2394,12 +2450,13 @@ var ScriptKit = ScriptKit || (() => {
             }
             if (cmdEntry) {
                 out += html.code(reg.command + ' ' + cmdEntry.syntax) + html.br();
-                out += html.escape(cmdEntry.description) + html.br();
-                if (cmdEntry.items && cmdEntry.items.length > 0) {
+                out += html.escape(resolve(cmdEntry.description) || '') + html.br();
+                var usageItems = resolve(cmdEntry.items);
+                if (usageItems && usageItems.length > 0) {
                     out += html.br();
-                    cmdEntry.items.forEach(item => {
-                        if (item.deleted) return;
-                        out += '• ' + html.code(item.name) + ' — ' + html.escape(item.description) + html.br();
+                    usageItems.forEach(item => {
+                        if (resolve(item.deleted)) return;
+                        out += '• ' + html.code(resolve(item.name)) + ' — ' + html.escape(resolve(item.description) || '') + html.br();
                     });
                 }
             } else {
@@ -2632,7 +2689,10 @@ on('ready', () => {
         help: {
             description: 'Generic framework library for Roll20 API scripts.',
             changelog: [
-                { version: '1.3.0', date: '2026-08-14', changes: [
+                { version: '1.3.0', date: '2026-08-16', changes: [
+                    'Lazy evaluation: all registration fields (`description`, `items`, `body`, `title`, `details`, `syntax`, `name`, etc.) can now be functions that return the expected value — evaluated on access',
+                    'Guide step fields (`select`, `query`, `min`, `max`) also support functions, receiving `ctx` as argument',
+                    'Man search now resolves dynamic `items` arrays, enabling searchable registry dumps',
                     'Fix: code/pre blocks no longer have their content processed as markdown (asterisks, links survive)',
                     'Fix: null topic entries no longer crash `man` command',
                     '`html.table`: wrap in overflow-x:auto div for horizontal scrolling',
@@ -2722,23 +2782,42 @@ on('ready', () => {
                     description: 'Defining commands, topics, and changelog',
                     handouts: 'dev',
                     version: '1.0.0',
-                    body: 'The `help` object defines what appears in chat help, man search, whatsnew, and generated handouts.',
+                    body: 'The `help` object defines what appears in chat help, man search, whatsnew, and generated handouts.\n\n**Lazy evaluation:** Any field (description, items, body, title, details, name, syntax, etc.) can be a function instead of a literal value. ScriptKit calls the function on access and uses the return value. This enables dynamic content that reflects the current state of your registries.',
                     items: [
-                        { name: 'description', description: 'Short text shown at top of help and handout', version: '1.0.0' },
+                        { name: 'description', description: 'Short text shown at top of help and handout. Can be a function.', version: '1.0.0' },
                         { name: 'quickStart', description: 'Array of strings — rendered as ordered list in handout', version: '1.0.0' },
                         { name: 'changelog', description: 'Array of { version, changes[] } — explicit whatsnew entries', version: '1.0.0' },
                         { name: 'commands', description: 'Array of { group, commands[] } — grouped command list', version: '1.0.0' },
                         { name: 'command.syntax', description: 'Usage string (e.g. "run <name> [--flag]")', version: '1.0.0' },
-                        { name: 'command.description', description: 'Short description for help list', version: '1.0.0' },
-                        { name: 'command.details', description: 'Longer explanation — handout only', version: '1.0.0' },
-                        { name: 'command.items', description: 'Sub-items (flags/args) — rendered as bullet list', version: '1.0.0' },
+                        { name: 'command.description', description: 'Short description for help list. Can be a function.', version: '1.0.0' },
+                        { name: 'command.details', description: 'Longer explanation — handout only. Can be a function.', version: '1.0.0' },
+                        { name: 'command.items', description: 'Sub-items (flags/args) — rendered as bullet list. Can be a function returning array.', version: '1.0.0' },
                         { name: 'command.version', description: 'Version when added — used for [new] badge', version: '1.0.0' },
                         { name: 'topics', description: 'Object keyed by id — detailed help topics for man/handout', version: '1.0.0' },
-                        { name: 'topic.title', description: 'Display title', version: '1.0.0' },
+                        { name: 'topic.title', description: 'Display title. Can be a function.', version: '1.0.0' },
                         { name: 'topic.body', description: 'Main content — string or () => string', version: '1.0.0' },
                         { name: 'topic.handouts', description: '"usr" (default) | "dev" | ["usr","dev"] | null (man-only)', version: '1.0.0' },
-                        { name: 'topic.items', description: 'Array of { name, description, version } sub-items', version: '1.0.0' },
+                        { name: 'topic.items', description: 'Array of { name, description, version } sub-items. Can be a function returning array.', version: '1.0.0' },
                     ],
+                },
+                lazyEval: {
+                    title: 'Lazy Evaluation',
+                    description: 'Using functions for dynamic registration fields',
+                    handouts: 'dev',
+                    version: '1.3.0',
+                    body: 'Any registration field can be a **function** instead of a static value. ScriptKit resolves it on access — calling the function and using the return value.\n\n'
+                        + 'This is useful for scripts with dynamic registries (e.g. listing all registered attributes, functions, or extensions) where the content isn\'t known until runtime.\n\n'
+                        + '**Help/Man/Handout fields** — called with no arguments:\n'
+                        + '`description`, `title`, `body`, `items`, `details`, `name`, `syntax`, `deleted`, `deprecated`\n\n'
+                        + '**Guide step fields** — called with `ctx` ({ selections, params, msg, handoutName, player }):\n'
+                        + '`prompt`, `select`, `query`, `min`, `max`\n\n'
+                        + '**Example:**\n'
+                        + '```items: () => Object.values(myRegistry).map(r => ({\n'
+                        + '    name: r.name,\n'
+                        + '    description: r.description,\n'
+                        + '    version: \'1.0.0\'\n'
+                        + '}))```\n\n'
+                        + 'This makes the items searchable via `man` and always up-to-date in handouts.',
                 },
                 examples: {
                     title: 'Registering Examples',
@@ -2762,7 +2841,7 @@ on('ready', () => {
                     description: 'Interactive wizard step API',
                     handouts: 'dev',
                     version: '1.0.0',
-                    body: 'Each step is an object with `prompt` (string or (ctx) => string, supports `` `code` ``, `**bold**`, `*italic*`).\n\n**ctx object:** `selections`, `params`, `msg`, `handoutName`, `selected`\n\nSteps render with hue-rotating backgrounds for visual progression. Errors support markdown formatting.',
+                    body: 'Each step is an object with `prompt` (string or (ctx) => string, supports `` `code` ``, `**bold**`, `*italic*`).\n\n**ctx object:** `selections`, `params`, `msg`, `handoutName`, `selected`\n\n**Lazy evaluation:** `prompt`, `select`, `query`, `min`, and `max` can all be functions receiving `ctx` — use this for steps that adapt based on earlier selections.\n\nSteps render with hue-rotating backgrounds for visual progression. Errors support markdown formatting.',
                     items: [
                         { name: 'prompt', description: 'String or (ctx) => string — step text with markdown support', version: '1.0.0' },
                         { name: 'select', description: 'Roll20 _type filter: "token", "card", "pin", "path"', version: '1.0.0' },
@@ -2863,8 +2942,8 @@ on('ready', () => {
                     handouts: 'dev',
                     version: '1.1.0',
                     body: 'If your script has topics with dynamic content (e.g. listing registered extensions), the handout generated at startup may be incomplete — other scripts register after yours.\n\n'
-                        + '**Step 1: Function bodies** — Use `body: () => ...` in topics. Chat commands (`man`) always evaluate live, giving users current info. Without this, content is static and regeneration has no effect.\n\n'
-                        + '**Step 2: Programmatic regeneration** — Call `ScriptKit.generateHandout()` or `ScriptKit.updateHandout()` after extensions finish registering. This re-renders the handout, invoking your function bodies with up-to-date data.\n\n'
+                        + '**Step 1: Function fields** — Use `body: () => ...` and/or `items: () => [...]` in topics. Chat commands (`man`) always evaluate live, giving users current info. Dynamic `items` are also searchable via `man`.\n\n'
+                        + '**Step 2: Programmatic regeneration** — Call `ScriptKit.generateHandout()` or `ScriptKit.updateHandout()` after extensions finish registering. This re-renders the handout, invoking your function fields with up-to-date data.\n\n'
                         + '**Pattern:** Debounce a timer in your extension registration functions. After the last registration, the timer fires and regenerates the handout once.',
                     items: [
                         { name: 'ScriptKit.generateHandout(scriptName, mode, delay?)', description: 'Schedule handout generation (debounced, default 2000ms). Creates handout if missing. Repeated calls reset the timer.', version: '1.1.0' },

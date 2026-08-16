@@ -146,6 +146,8 @@ on('chat:message',(msg) => {
 
 The `help` object defines what appears in `!cmd help`, `!cmd man`, `!cmd whatsnew`, and the generated handouts.
 
+**Lazy evaluation:** Any field in the help structure (`description`, `title`, `body`, `items`, `details`, `name`, `syntax`, `deleted`, `deprecated`) can be a **function** instead of a literal value. ScriptKit calls the function on access and uses the return value. This enables dynamic content that always reflects the current state of your registries — e.g. `items: () => myRegistry.map(r => ({ name: r.name, description: r.desc }))`. Dynamic items are searchable via `man`.
+
 ```js
 help: {
     description: 'Short description shown at the top of help.',
@@ -257,10 +259,10 @@ Guides are interactive multi-step wizards that walk users through setup. Each st
 | Field | Description |
 |-------|-------------|
 | `prompt` | String or `(ctx) => string`. Supports markdown: `` `code` ``, `**bold**`, `*italic*` |
-| `select` | Roll20 `_type` to filter selection: `'token'`, `'card'`, `'pin'`, `'path'` |
+| `select` | Roll20 `_type` to filter selection: `'token'`, `'card'`, `'pin'`, `'path'`. Can be `(ctx) => string`. |
 | `as` | Key to store selection in `ctx.selections` |
-| `min` / `max` | Selection count constraints |
-| `query` | Object or array: `{ name, default?, type?, options? }` |
+| `min` / `max` | Selection count constraints. Can be `(ctx) => number`. |
+| `query` | Object or array: `{ name, default?, type?, options? }`. Can be `(ctx) => object/array`. |
 | `onContinue` | `(ctx) => errorString?` — validate before advancing. Return a string to block with an error. |
 | `onEnter` | `(ctx, advance) => void` — called when step becomes active. `advance(error?)` to programmatically continue. |
 | `onExit` | `(ctx) => void` — called when leaving via Back. Clean up listeners, revert changes. |
@@ -541,6 +543,8 @@ const onExtensionRegistered = () => {
 ## Changelog
 
 ### v1.3.0
+- **Lazy evaluation** — all registration fields (`description`, `items`, `body`, `title`, `details`, `name`, `syntax`, etc.) can now optionally be functions that return the expected value. ScriptKit resolves them on access. Guide step fields (`select`, `query`, `min`, `max`) receive `ctx` when resolved.
+- Man search now resolves dynamic `items` arrays, enabling searchable registry dumps from function-based items
 - Fix: code/pre blocks (`backtick-delimited`) no longer have their content processed as markdown — asterisks and `[link](url)` syntax inside code spans are preserved
 - Fix: null topic entries no longer crash `man` command
 - `html.table`: wraps output in `overflow-x:auto` div for horizontal scrolling; headers use `white-space:nowrap`
