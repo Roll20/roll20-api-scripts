@@ -90,8 +90,6 @@ var Sequence = Sequence || (() => {
     // Example Registry
     // =========================================================================
 
-    const EXT_EXAMPLES = {}; // { 'source/name': { name, description, source, recording, onGenerate } }
-
     const ATTR_GROUPS = []; // [ ['left','top'], ['width','height'], ... ]
 
     /**
@@ -121,45 +119,6 @@ var Sequence = Sequence || (() => {
             }
         }
         ATTR_GROUPS.push([...attrs]);
-        return true;
-    };
-
-    /**
-     * Register a pre-built example recording for display in the Sequence help handout.
-     *
-     * @param {string} sourceId  Script name registering this example.
-     * @param {object} struct    Example struct:
-     *
-     * Required fields:
-     * @param {string} struct.name       Display name for the example.
-     * @param {object} struct.recording  Recording object containing keyframes to replay.
-     *                                   A recording contains: objectType (string), notes (string),
-     *                                   and a keyframes array where each keyframe has time, type,
-     *                                   deltas (attr→value map), and easings (attr→curve map).
-     *
-     * Optional fields:
-     * @param {string}     struct.description  Human-readable description.
-     * @param {function}   struct.onGenerate   (handoutBody) => void — called when handout is generated.
-     *
-     * @returns {boolean} true on success, false if name/recording missing or duplicate.
-     */
-    const registerExample = (sourceId, struct) => {
-        const src = sourceId || SCRIPT_NAME;
-        const { name, description = '', recording } = struct;
-        if (!name || !recording) {
-            log(`${SCRIPT_NAME}: [${src}] registerExample — missing name or recording`);
-            return false;
-        }
-        if (EXT_EXAMPLES[`${src}/${name}`]) return false;
-        const attrCols = struct.attrCols || (() => {
-            const cols = new Set();
-            (recording.keyframes || []).forEach(kf => {
-                Object.keys(kf.deltas || {}).forEach(a => cols.add(a));
-                Object.keys(kf.easings || {}).forEach(a => { if (!a.includes(':')) cols.add(a); });
-            });
-            return [...cols];
-        })();
-        EXT_EXAMPLES[`${src}/${name}`] = { name, description, source: src, recording, attrCols, onGenerate: struct.onGenerate || null };
         return true;
     };
 
@@ -638,7 +597,15 @@ var Sequence = Sequence || (() => {
         format: (d) => d >= 0 ? `+${d}` : `${d}`,
         parse:  (str) => {
             const s = String(str).trim();
-            if (s.startsWith('=')) return { abs: parseFloat(s.slice(1)) };
+            if (s.startsWith('=')) {
+                const inner = s.slice(1).trim();
+                if (/[A-Za-z(]/.test(inner)) return { expr: inner, mode: 'abs' };
+                return { abs: parseFloat(inner) };
+            }
+            if (/^[+\-]/.test(s) && /[A-Za-z(]/.test(s)) {
+                const sign = s[0] === '-' ? -1 : 1;
+                return { expr: s.slice(1).trim(), mode: 'add', sign };
+            }
             return { delta: parseFloat(s) };
         },
     });
@@ -4384,136 +4351,6 @@ var Sequence = Sequence || (() => {
                 return;
             }
 
-            // ----------------------------------------------------------------
-            // Examples
-            // ----------------------------------------------------------------
-            if (cmd === 'example' || cmd === 'examples') {
-                // Parse search filters
-                let scriptFilter = null, nameFilter = null, descFilter = null;
-                const filterArgs = [];
-                args.forEach(a => {
-                    if (a.toLowerCase().startsWith('script:')) scriptFilter = a.slice(7).toLowerCase();
-                    else if (a.toLowerCase().startsWith('name:')) nameFilter = a.slice(5).toLowerCase();
-                    else if (a.toLowerCase().startsWith('desc:')) descFilter = a.slice(5).toLowerCase();
-                    else filterArgs.push(a);
-                });
-                const remainingFilter = filterArgs.length > 0 ? filterArgs.join(' ').toLowerCase() : null;
-                nameFilter = nameFilter || remainingFilter;
-                descFilter = descFilter || remainingFilter;
-
-                const examples = Object.values(EXT_EXAMPLES);
-                if (examples.length === 0) {
-                    reply(msg, 'Examples', 'No examples registered.');
-                    return;
-                }
-
-                const hasSearch = scriptFilter || nameFilter || descFilter;
-                const matches = (body, filter) => filter ? (body || '').toLowerCase().indexOf(filter) !== -1 : true;
-                const isExact = (body, filter) => filter ? (body || '').toLowerCase() === filter : false;
-
-                const highlightMatch = (text, filter) => {
-                    if (!filter) return escHtml(text);
-                    const lower = text.toLowerCase();
-                    let result = '', lastIdx = 0, idx = lower.indexOf(filter);
-                    if (idx === -1) return escHtml(text);
-                    while (idx !== -1) {
-                        result += escHtml(text.slice(lastIdx, idx));
-                        result += '<b>' + escHtml(text.slice(idx, idx + filter.length)) + '</b>';
-                        lastIdx = idx + filter.length;
-                        idx = lower.indexOf(filter, lastIdx);
-                    }
-                    result += escHtml(text.slice(lastIdx));
-                    return result;
-                };
-
-                // Tier 1: exact script match, Tier 2: exact name, Tier 3: fuzzy
-                const tier1 = [], tier2 = [], tier3 = [];
-                const tier1Sources = new Set();
-
-                if (scriptFilter) {
-                    examples.forEach(ex => {
-                        if (ex.source.toLowerCase() === scriptFilter) {
-                            tier1.push(ex);
-                            tier1Sources.add(ex.source);
-                        }
-                    });
-                }
-                examples.forEach(ex => {
-                    if (tier1Sources.has(ex.source)) return;
-                    if (scriptFilter && ex.source.toLowerCase().indexOf(scriptFilter) === -1) return;
-                    if (!hasSearch) { tier3.push(ex); return; }
-                    if (!matches(ex.name, nameFilter) && !matches(ex.description, descFilter)) return;
-                    if (isExact(ex.name, nameFilter) || isExact(ex.description, descFilter)) tier2.push(ex);
-                    else tier3.push(ex);
-                });
-
-                const allMatches = [...tier1, ...tier2, ...tier3];
-                if (allMatches.length === 0) {
-                    reply(msg, 'Examples', 'No examples match. Use <code>!sequence example</code> to see all.');
-                    return;
-                }
-
-                const groups = [];
-                const groupMap = {};
-                allMatches.forEach(ex => {
-                    if (!groupMap[ex.source]) { groupMap[ex.source] = []; groups.push({ source: ex.source, items: groupMap[ex.source] }); }
-                    groupMap[ex.source].push(ex);
-                });
-                const tier2Sources = new Set(tier2.map(ex => ex.source));
-                groups.sort((a, b) => {
-                    const ta = tier1Sources.has(a.source) ? 0 : tier2Sources.has(a.source) ? 1 : 2;
-                    const tb = tier1Sources.has(b.source) ? 0 : tier2Sources.has(b.source) ? 1 : 2;
-                    if (ta !== tb) return ta - tb;
-                    return a.source.localeCompare(b.source);
-                });
-
-                let out = `Filter: <code>!sequence example &lt;search&gt;</code>, <code>script:</code>, <code>name:</code>, <code>desc:</code><br><br>`;
-                groups.forEach(g => {
-                    out += `<b>${escHtml(g.source)}:</b><br>`;
-                    g.items.forEach(ex => {
-                        const recName = `example-${ex.name}`;
-                        const exists = findObjs({ type: 'handout', name: `${HANDOUT_PREFIX}${recName}` })[0];
-                        out += `&nbsp;&nbsp;• <u>${highlightMatch(ex.name, nameFilter || '')}</u>`;
-                        if (ex.description) out += ` — ${highlightMatch(ex.description, descFilter || '')}`;
-                        out += ' ';
-                        if (exists) {
-                            out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence example! ${ex.name}">🔄 Regen</a> `;
-                            out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence play ${recName}">▶ Play</a> `;
-                            out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence play ${recName} --loop">🔁 Loop</a> `;
-                            out += `<a href="http://journal.roll20.net/handout/${exists.get('id')}">[open]</a>`;
-                        } else {
-                            out += `<a style="background:#333;color:#fff;padding:1px 4px;border-radius:3px;text-decoration:none;" href="!sequence example! ${ex.name}">+ Generate</a>`;
-                        }
-                        out += `<br>`;
-                    });
-                });
-                reply(msg, 'Examples', out);
-                return;
-            }
-
-            if (cmd === 'example!') {
-                const exName = args[0];
-                const ex = Object.values(EXT_EXAMPLES).find(e => e.name === exName);
-                if (!ex) {
-                    replyError(msg, `No example named "${exName}". Use <code>!sequence example</code> to see all.`);
-                    return;
-                }
-                const recName = `example-${exName}`;
-                const rec = ex.recording;
-                const attrCols = ex.attrCols || Object.keys((rec.keyframes && rec.keyframes[0] && rec.keyframes[0].easings) || {});
-                const handout = getOrCreateHandout(recName);
-                handout.set('archived', true);
-                setHandoutNotes(handout, generateHandoutHtml(recName, rec, attrCols), recName);
-                recordingCache[recName] = { recording: rec, attrCols };
-                if (typeof ex.onGenerate === 'function') ex.onGenerate(recName);
-                const handoutId = handout.get('id');
-                let outMsg = `Generated <b>${recName}</b>.<br>`;
-                outMsg += btnHtml('▶ Play', `!sequence play ${recName}`) + ' ';
-                outMsg += btnHtml('🔁 Loop', `!sequence play ${recName} --loop`) + ' ';
-                outMsg += `<a href="http://journal.roll20.net/handout/${handoutId}">[open]</a>`;
-                reply(msg, 'Examples', outMsg);
-                return;
-            }
 
             // ----------------------------------------------------------------
             if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg);
@@ -4840,96 +4677,11 @@ var Sequence = Sequence || (() => {
 
         // Signal extensions that Sequence is ready to accept registrations.
         // Extensions that loaded before Sequence listen for this; extensions
-        registerBuiltinExamples();
-
         // that loaded after can call Sequence.register* directly since
         // Sequence is already defined by the time their on('ready') runs.
         sendChat('', `!${SCRIPT_NAME.toLowerCase()}-ready`, null, { noarchive: true });
     };
 
-    // =========================================================================
-    // Built-in Examples
-    // =========================================================================
-
-    const registerBuiltinExamples = () => {
-        registerExample(SCRIPT_NAME, {
-            name: 'spin',
-            description: 'Continuous rotation. Simple looping animation.',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0, type: 'change', deltas: {}, easings: { rotation: 'continuous' } },
-                { time: 3000, type: 'change', deltas: { rotation: { expr: 'orig + t * 360', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'hover',
-            description: 'Gentle vertical bob. Floating/levitating tokens.',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0, type: 'change', deltas: {}, easings: { top: 'continuous' } },
-                { time: 2000, type: 'change', deltas: { top: { expr: 'orig + sin(t * TAU) * unit(2)', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'pulse',
-            description: 'Scale up and down rhythmically. Highlight or heartbeat effect.',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0, type: 'change', deltas: {}, easings: { width: 'continuous', height: 'continuous' } },
-                { time: 1500, type: 'change', deltas: { width: { expr: 'orig * (1 + sin(t * TAU) * 0.15)', mode: 'abs' }, height: { expr: 'orig * (1 + sin(t * TAU) * 0.15)', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'orbit',
-            description: 'Circular path around original position. Shows trig expressions.',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
-                { time: 5000, type: 'change', deltas: { left: { expr: 'orig + cos(t * TAU) * cell(1)', mode: 'abs' }, top: { expr: 'orig + sin(t * TAU) * cell(1)', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'shake',
-            description: 'Decaying tremor. Starts violent, mellows out.',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
-                { time: 1000, type: 'change', deltas: { left: { expr: 'orig + sin(t * TAU * 8) * unit(3) * (1 - t)', mode: 'abs' }, top: { expr: 'orig + cos(t * TAU * 6) * unit(2) * (1 - t)', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'torch-flicker',
-            description: 'Light radius jitters like a real flame. Atmospheric lighting (supports both legacy and UDL).',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0,                                         type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' } }, easings: { bright_light_distance: 'linear', low_light_distance: 'linear', light_radius: 'linear', light_dimradius: 'linear' } },
-                { time: { isExpr: true, rel: 'rand(80, 200)' },    type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' } }, easings: {} },
-                { time: { isExpr: true, rel: 'rand(100, 250)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' } }, easings: {} },
-                { time: { isExpr: true, rel: 'rand(-60, 180)' },    type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.7, 0.95)', mode: 'abs' } }, easings: {} },
-                { time: { isExpr: true, rel: 'rand(120, 1200)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' } }, easings: {} },
-                { time: { isExpr: true, rel: 'rand(-80, 220)' },    type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.8, 1.05)', mode: 'abs' } }, easings: {} },
-                { time: { isExpr: true, rel: 'rand(-100, 250)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' } }, easings: {} },
-                { time: { isExpr: true, rel: 'rand(200, 1800)' },   type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'rgb-cycle',
-            description: 'Rainbow tint color rotation. Demonstrates color expression animation.',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0, type: 'change', deltas: {}, easings: { tint_color: 'continuous' } },
-                { time: 4000, type: 'change', deltas: { tint_color: { expr: 'color.hsl(t * 360, 100, 50)', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-
-        registerExample(SCRIPT_NAME, {
-            name: 'boss-phase-2',
-            description: 'Multi-attribute boss transformation: grows, heals past full, light intensifies, tint shifts black to red, name gains a title. Keyframe showcase.',
-            recording: { objectType: 'graphic', notes: '', keyframes: [
-                { time: 0, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 }, bar1_value: { expr: 'orig', mode: 'abs' }, light_radius: { expr: 'orig', mode: 'abs' }, tint_color: { expr: 'color.black', mode: 'abs' }, name: { abs: '' } }, easings: { width: 'ease-out-back', height: 'ease-out-back', bar1_value: 'ease-in-quad', light_radius: 'ease-in-quad', tint_color: 'linear', name: 'ease-out-quad' } },
-                { time: 6000, type: 'change', deltas: { width: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, height: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, bar1_value: { expr: 'round(get("bar1_max") * 1.2)', mode: 'abs' }, light_radius: { abs: '40' }, tint_color: { expr: 'color.red', mode: 'abs' }, name: { expr: '"Mighty " + orig + ", The Reborn"', mode: 'abs' } }, easings: {} },
-            ]},
-        });
-    };
 
     // =========================================================================
     // ScriptKit Registration
@@ -4941,9 +4693,7 @@ var Sequence = Sequence || (() => {
             version: SCRIPT_VERSION,
             command: CMD_TOKEN,
             tag: HANDOUT_TAG,
-            aliases: {
-                examples: null,  // Sequence has its own examples system
-            },
+            aliases: {},
             newSince: '1.1.0',
             help: {
                 description: 'General-purpose keyframe animation engine for Roll20 tokens. Record movements and attribute changes in real time, then play them back with smooth interpolation, easing, looping, speed control, and expression-driven values.',
@@ -4979,7 +4729,7 @@ var Sequence = Sequence || (() => {
                         'Looping with reset and accumulate modes',
                         'Built-in examples: spin, hover, pulse, orbit, shake, torch-flicker, rgb-cycle, boss-phase-2',
                         'Handout-based recording storage (portable between campaigns)',
-                        'Extension API: registerAttribute, registerEasing, registerPlaybackConstant, registerExample',
+                        'Extension API: registerAttribute, registerEasing, registerPlaybackConstant',
                     ]},
                     { version: '0.2.0', date: '2026-06-01', changes: [
                         'Handout-based recording format with editable keyframe tables',
@@ -5036,8 +4786,6 @@ var Sequence = Sequence || (() => {
                         { syntax: 'refresh <name>', description: 'Regenerate handout from parsed cache', version: '1.0.0' },
                     ]},
                     { group: 'Reference', commands: [
-                        { syntax: 'example [search]', description: 'List built-in examples with Play/Loop buttons', version: '1.0.0' },
-                        { syntax: 'example! <name>', description: 'Generate an example recording handout', version: '1.0.0' },
                         { syntax: 'debug', description: 'Show active recording/playback sessions', version: '1.0.0' },
                         { syntax: 'dump-html <name>', description: 'Print raw handout HTML to API console', version: '1.0.0' },
                     ]},
@@ -5108,8 +4856,8 @@ var Sequence = Sequence || (() => {
                             + '`Sequence.registerAttributeGroup(sourceId, attrs, opts)` — Group correlated attributes\n'
                             + '`Sequence.registerPlaybackConstant(sourceId, reg)` — Add a constant for expressions\n'
                             + '`Sequence.registerEasing(sourceId, reg)` — Add a custom easing curve\n'
-                            + '`Sequence.registerExample(sourceId, struct)` — Register a pre-built example recording\n'
-                            + '`Sequence.generateExtensionHandout(sourceId, opts)` — Generate a help handout for your extension\n\n'
+                            + '`Sequence.generateExtensionHandout(sourceId, opts)` — Generate a help handout for your extension\n'
+                            + '`ScriptKit.Sequence.registerExample(sourceId, struct)` — Register an example recording (via ScriptKit)\n\n'
                             + 'Use `!sequence man` in chat for live lookup of all registered attributes, functions, and constants.',
                     },
                     registeredAttrs: {
@@ -5190,6 +4938,88 @@ var Sequence = Sequence || (() => {
                     },
                 },
             },
+            exampleHandler: (example, msg) => {
+                const rec = example.recording;
+                const recName = 'example-' + example.name;
+                const attrCols = example.attrCols || (() => {
+                    const cols = new Set();
+                    (rec.keyframes || []).forEach(kf => {
+                        Object.keys(kf.deltas || {}).forEach(a => cols.add(a));
+                        Object.keys(kf.easings || {}).forEach(a => { if (!a.includes(':')) cols.add(a); });
+                    });
+                    return [...cols];
+                })();
+                const handout = getOrCreateHandout(recName);
+                handout.set('archived', true);
+                setHandoutNotes(handout, generateHandoutHtml(recName, rec, attrCols), recName);
+                recordingCache[recName] = { recording: rec, attrCols };
+                return { notes: generateHandoutHtml(recName, rec, attrCols), archived: true };
+            },
+            onComplete: (ctx) => {
+                const recName = 'example-' + ctx.example.name;
+                const recipient = ctx.msg.who.split(' ')[0];
+                const handout = findHandout(recName);
+                let out = `Generated <b>${recName}</b>.<br>`;
+                out += btnHtml('▶ Play', `!sequence play ${recName}`) + ' ';
+                out += btnHtml('🔁 Loop', `!sequence play ${recName} --loop`) + ' ';
+                if (handout) out += `<a href="http://journal.roll20.net/handout/${handout.get('id')}">[open]</a>`;
+                sendChat(`${SCRIPT_NAME} [Examples]`, `/w ${recipient} ${out}`);
+            },
+        });
+
+        // ── Register built-in examples with ScriptKit ─────────────────────
+        const builtinExamples = [
+            { name: 'spin', description: 'Continuous rotation. Simple looping animation.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: {}, easings: { rotation: 'continuous' } },
+                  { time: 3000, type: 'change', deltas: { rotation: { expr: 'orig + t * 360', mode: 'abs' } }, easings: {} },
+              ]}},
+            { name: 'hover', description: 'Gentle vertical bob. Floating/levitating tokens.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: {}, easings: { top: 'continuous' } },
+                  { time: 2000, type: 'change', deltas: { top: { expr: 'orig + sin(t * TAU) * unit(2)', mode: 'abs' } }, easings: {} },
+              ]}},
+            { name: 'pulse', description: 'Scale up and down rhythmically. Highlight or heartbeat effect.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: {}, easings: { width: 'continuous', height: 'continuous' } },
+                  { time: 1500, type: 'change', deltas: { width: { expr: 'orig * (1 + sin(t * TAU) * 0.15)', mode: 'abs' }, height: { expr: 'orig * (1 + sin(t * TAU) * 0.15)', mode: 'abs' } }, easings: {} },
+              ]}},
+            { name: 'orbit', description: 'Circular path around original position. Shows trig expressions.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
+                  { time: 5000, type: 'change', deltas: { left: { expr: 'orig + cos(t * TAU) * cell(1)', mode: 'abs' }, top: { expr: 'orig + sin(t * TAU) * cell(1)', mode: 'abs' } }, easings: {} },
+              ]}},
+            { name: 'shake', description: 'Decaying tremor. Starts violent, mellows out.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: {}, easings: { left: 'continuous', top: 'continuous' } },
+                  { time: 1000, type: 'change', deltas: { left: { expr: 'orig + sin(t * TAU * 8) * unit(3) * (1 - t)', mode: 'abs' }, top: { expr: 'orig + cos(t * TAU * 6) * unit(2) * (1 - t)', mode: 'abs' } }, easings: {} },
+              ]}},
+            { name: 'torch-flicker', description: 'Light radius jitters like a real flame. Atmospheric lighting.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' } }, easings: { bright_light_distance: 'linear', low_light_distance: 'linear', light_radius: 'linear', light_dimradius: 'linear' } },
+                  { time: { isExpr: true, rel: 'rand(80, 200)' }, type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.75, 1.0)', mode: 'abs' } }, easings: {} },
+                  { time: { isExpr: true, rel: 'rand(100, 250)' }, type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.85, 1.1)', mode: 'abs' } }, easings: {} },
+                  { time: { isExpr: true, rel: 'rand(120, 1200)' }, type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.1)', mode: 'abs' } }, easings: {} },
+                  { time: { isExpr: true, rel: 'rand(200, 1800)' }, type: 'change', deltas: { bright_light_distance: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, low_light_distance: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, light_radius: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' }, light_dimradius: { expr: 'orig * rand(0.9, 1.0)', mode: 'abs' } }, easings: {} },
+              ]}},
+            { name: 'rgb-cycle', description: 'Rainbow tint color rotation. Demonstrates color expression animation.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: {}, easings: { tint_color: 'continuous' } },
+                  { time: 4000, type: 'change', deltas: { tint_color: { expr: 'color.hsl(t * 360, 100, 50)', mode: 'abs' } }, easings: {} },
+              ]}},
+            { name: 'boss-phase-2', description: 'Multi-attribute boss transformation: grows, heals, light intensifies, tint shifts, name gains a title.',
+              recording: { objectType: 'graphic', notes: '', keyframes: [
+                  { time: 0, type: 'change', deltas: { width: { delta: 1 }, height: { delta: 1 }, bar1_value: { expr: 'orig', mode: 'abs' }, light_radius: { expr: 'orig', mode: 'abs' }, tint_color: { expr: 'color.black', mode: 'abs' }, name: { abs: '' } }, easings: { width: 'ease-out-back', height: 'ease-out-back', bar1_value: 'ease-in-quad', light_radius: 'ease-in-quad', tint_color: 'linear', name: 'ease-out-quad' } },
+                  { time: 6000, type: 'change', deltas: { width: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, height: { expr: 'ceil(orig * 1.3, cell(1))', mode: 'abs' }, bar1_value: { expr: 'round(get("bar1_max") * 1.2)', mode: 'abs' }, light_radius: { abs: '40' }, tint_color: { expr: 'color.red', mode: 'abs' }, name: { expr: '"Mighty " + orig + ", The Reborn"', mode: 'abs' } }, easings: {} },
+              ]}},
+        ];
+        builtinExamples.forEach(ex => {
+            ScriptKit.Sequence.registerExample(SCRIPT_NAME, {
+                name: ex.name,
+                description: ex.description,
+                recording: ex.recording,
+                handout: { notes: '' },  // triggers handout generation via exampleHandler
+            });
         });
     };
 
@@ -5283,7 +5113,6 @@ var Sequence = Sequence || (() => {
         registerAttribute,
         registerPlaybackConstant,
         registerEasing,
-        registerExample,
         registerAttributeGroup,
         generateExtensionHandout,
 
