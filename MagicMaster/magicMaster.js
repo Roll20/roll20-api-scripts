@@ -124,14 +124,16 @@ API_Meta.MagicMaster={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
  *                     all of a type of item, or all items in the container.
  * v5.3.0  23/12/2025  Added encumbrance. Updated attrLookup() and resolveData() to use objects for 
  *                     optional parameters. Fixed viewing spell storing MIs in innanimate containers.
+ * v5.4.0  31/05/2026  Deleted Please Wait after viewing a spell or item.
+ * v5.4.2  20/07/2026  Fixed encumbrance calculation on Pick/Put (was wrong for storing items).
  */
  
 const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	'use strict';
-	const version = '5.3.0';
+	const version = '5.4.2';
 	const author = 'RED';
 	let   pending = null;
-	const lastUpdate = 1777318205;
+	const lastUpdate = 1786805106;
 		
 	/*
 	 * Define redirections for functions moved to the RPGMaster library
@@ -142,6 +144,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	const setAttr = (...a) => libRPGMaster.setAttr(...a);
 	const attrLookup = (...a) => libRPGMaster.newAttrLookup(...a);
 	const setAbility = (...a) => libRPGMaster.setAbility(...a);
+	const checkObjectExists = (...a) => libRPGMaster.checkObjectExists(...a);
 	const miSpellLookup = (...a) => libRPGMaster.miSpellLookup(...a);
 	const abilityLookup = (...a) => libRPGMaster.abilityLookup(...a);
 	const doDisplayAbility = (...a) => libRPGMaster.doDisplayAbility(...a);
@@ -171,6 +174,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	const getCharacter = (...a) => libRPGMaster.getCharacter(...a);
 	const characterLevel = (...a) => libRPGMaster.characterLevel(...a);
 	const caster = (...a) => libRPGMaster.caster(...a);
+	const checkValidSpell = (...a) => libRPGMaster.checkValidSpell(...a);
 	const getTokenValue = (...a) => libRPGMaster.getTokenValue(...a);
 	const classObjects = (...a) => libRPGMaster.classObjects(...a);
 	const updateCoins = (...a) => libRPGMaster.updateCoins(...a);
@@ -202,6 +206,8 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	const sendParsedMsg = (...m) => libRPGMaster.sendParsedMsg(...m);
 	const sendGMquery = (...m) => libRPGMaster.sendGMquery(...m);
 	const sendWait = (...m) => libRPGMaster.sendWait(...m);
+	const reportTimes = (...a) => libRPGMaster.reportTimes(...a);
+	const measureTime = (...a) => libRPGMaster.measureTime(...a);
 
 	/*
 	 * Handle for reference to character sheet field mapping table.
@@ -1061,54 +1067,11 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		notifyLibErr: true,
 		noWaitMsg: true,
 	};
-		
-/*	var MagicMaster_tmp = (function() {
-		var templates = {
-			button: _.template('<a style="display: inline-block; font-size: 100%; color: black; padding: 3px 3px 3px 3px; margin: 2px 2px 2px 2px; border: 1px solid black; border-radius: 0.5em; font-weight: bold; text-shadow: -1px -1px 1px #FFF, 1px -1px 1px #FFF, -1px 1px 1px #FFF, 1px 1px 1px #FFF; background-color: #C7D0D2;" href="<%= command %>"><%= text %></a>'),
-			confirm_box: _.template('<div style="font-weight: bold; background-color: #FFF; text-align: center; box-shadow: rgba(0,0,0,0.4) 3px 3px; border-radius: 1em; border: 1px solid black; margin: 5px 5px 5px 5px; padding: 2px 2px 2px 2px;">'
-					+ '<div style="border-bottom: 1px solid black;">'
-						+ '<%= message %>'
-					+ '</div>'
-					+ '<table style="text-align: center; width: 100%">'
-						+ '<tr>'
-							+ '<td>'
-								+ '<%= confirm_button %>'
-							+ '</td>'
-							+ '<td>'
-								+ '<%= reject_button %>'
-							+ '</td>'
-						+ '</tr>'
-					+ '</table>'
-				+ '</div>')
-			};
 
-		return {
-			getTemplate: function(tmpArgs, type) {
-				var retval;
-				
-				retval = _.find(templates, function(e,i) {
-					if (type === i) {
-						{return true;}
-					}
-				})(tmpArgs);
-				
-				return retval;
-			},
-			
-			hasTemplate: function(type) {
-				if (!type) 
-					{return false;}
-				return !!_.find(_.keys(templates), function(elem) {
-					{return (elem === type);}
-				});
-				
-			}
-		};
-	}());
-*/
 	/**
 	 * Init
 	 */
+	 
 	var init = function() {
 		try {
 			if (!state.MagicMaster)
@@ -1871,62 +1834,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		return levelSpells;
 	}
 	
-	/*
-	 * Check if the caster can actually cast the school/sphere of spell
-	 * selected to use or memorise
-	 */
-	 
-	const checkValidSpell = function( args ) {
-		
-		const isMU = args[0].includes('MU'),
-			  isPR = args[0].includes('PR'),
-			  tokenID = args[1],
-			  spell = args[5],
-			  charCS = getCharacter(tokenID),
-			  casterDef = caster(charCS, (isMU ? 'MU' : 'PR')),
-			  reAllowedSpells = {majorsphere:	reClassSpecs.majorsphere,
-								 minorsphere:	reClassSpecs.minorsphere,
-								 bannedsphere:	reClassSpecs.bannedsphere,
-			  },
-			  allowAll = state.MagicMaster.spellRules.allowAll;
-
-		if (!args[5] || !args[5].length) return 1;
-		
-		const spellSpec = abilityLookup( (isMU ? fields.MU_SpellsDB : fields.PR_SpellsDB), spell, charCS );
-		if (!spellSpec.obj) return 0;
-		let spellData = spellSpec.obj[1].body;
-		spellData = (spellData.match(reSpellData) || ['',''])[1];
-		spellData = parseData( spellData, reSpellSpecs );
-		let school = spellSpec.specs();
-		school = (!school || !school[0] || !school[0][4]) ? 'Invalid' : school[0][4];
-		school = (school ||'any').dbName().split('|');
-		const sphere = (spellData.sph || 'any').dbName().split('|');
-		const level = spellData.level || 1;
-		let casterSpec = abilityLookup( fields.ClassDB, casterDef.cl, charCS, true, false );
-		if (!casterSpec.obj) {
-			casterSpec = abilityLookup( fields.ClassDB, casterDef.ccl, charCS );
-		}
-		const test = (spellsPerLevel[casterDef.ccl] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')][level] && spellsPerLevel[casterDef.ccl][(isMU ? 'MU' : 'PR')][level][casterDef.lv]);
-		if (!casterSpec.obj || !test) return 0;
-
-		let casterData = casterSpec.obj[1].body;
-		casterData = (casterData.match(reClassData) || ['',''])[1];
-		casterData = parseData( casterData, reAllowedSpells );
-		const majorSpells = (casterData.sps.dbName() || '-').split('|');
-		const minorSpells = (casterData.spm.dbName() || '-').split('|');
-		const bannedSpells = (casterData.spb.dbName() || '-').split('|');
-		
-		let	banned, specialist, specStd;
-		return _.reduce( (isMU ? school : sphere), (r,s) => {
-			banned = !(s === 'any' || ((isMU || majorSpells.includes('any') || majorSpells.some(sph => s.startsWith(sph)) || (minorSpells.some(sph => s.startsWith(sph)) && level < 4)) && (isPR || !bannedSpells.some(sph => s.startsWith(sph)))));
-			specialist = isMU && majorSpells.includes(s);
-			specStd = isMU && !majorSpells.includes('any');
-//			log('checkValidSpell: r:'+r+', s:'+s+', isMU:'+isMU+', bannedSpells.some:'+bannedSpells.some(sph => s.startsWith(sph))+', specialist:'+specialist+', specStd:'+specStd+', allowAll:'+allowAll+', banned:'+banned);
-			
-			return ((!allowAll && (!r || banned)) ? 0 : (specialist ? 3 : (specStd ? 2 : r)));
-		},1);
-	}
-	
 	/**
 	 * Find an item identified as a Power, but which might actually 
 	 * be in a different database, as powers can be anything magical
@@ -2068,7 +1975,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	const setSpell = function( charCS, spellTables, altSpellTable, spellDB, spellName, r, c, lv, cost, msg, levelOrPerDay, castAsLvl='' ) {
 		
 		const isPower = spellDB.toUpperCase().includes('POWER');
-//			isMU = spellDB.toUpperCase().includes('MU'),
 		let newSpellObj, altValues, altSpellRow;
 
 		if (fields.GameVersion === 'AD&D1e') {
@@ -2350,7 +2256,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					if (isAdd && (_.isUndefined(spellName) || spellName === '-')) {
 						spellName = spellList.shift() || '';
 						spellHyphen = '-'+spellName.hyphened();
-//						log('changeMIspells: at shift, valueList = '+valueList);
 						valueItem = (valueList.shift() || '').split('.');
 						if (listType === 'POWER') {
 							setAttr( charCS, [fields.MIpowerPrefix[0]+MIname+spellHyphen+'+'+miRowID, 'current'], r );
@@ -2415,7 +2320,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 								setAttr( toCS, [indexField[0]+MIname+'-'+type+'+'+toRowID,fields.MIspellRows[1]], Array(spellList.split(',').length).fill(0).map((x,i)=>i).join() );
 								setAttr( toCS, [indexField[0]+MIname+'-'+type+'+'+toRowID,fields.MIspellCols[1]], Array(spellList.split(',').length).fill(-1).join() );
 							} else {
-//								log('moveSpell: calling changeMIspells to add to MI, with list '+spellList+' and values '+miSpellValues);
 								setAttr( toCS, [valuesField[0]+MIname+'+'+toRowID, valuesField[1]], changeMIspells( toCS, itemName, toIndex, toRowID, type, 'ADD', spellList, miSpellValues ));
 							}
 						}
@@ -2435,8 +2339,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					  doPR = type === 'PR' || type === 'ALL',
 					  doPW = type === 'PW' || type === 'ALL',
 					  spellbook = MIobj.obj && MIobj.obj[1] && reCastViewMIspellCmd.test(MIobj.obj[1].body) && !reCastMIspellCmd.test(MIobj.obj[1].body);
-					  
-//				log('moveMIspells: spellbook = '+spellbook+', cast button = '+reCastMIspellCmd.test(MIobj.obj[1].body));
 					  
 				let	oldCS = fromCS,
 					oldIndex = fromIndex,
@@ -2642,19 +2544,14 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				qty = parseInt(Items[table].tableLookup( fields[prefix+'qty'], i )) || 1;
 				trueType = Items[table].tableLookup( fields[prefix+'trueType'], i );
 				type = trueType || Items[table].tableLookup( fields[prefix+'type'], i ) || 'uncharged';
-//				log('calcWeight: name = '+name+', trueType = '+trueType+', type = '+type+', splitable = '+splitable.includes(type.toLowerCase()));
 				if (!splitable.includes(type.toLowerCase())) qty = 1;
 				data = resolveData( name,fields.MagicItemDB,reItemData,Items[table].character,{weight:reACSpecs.weight,encumber:reACSpecs.encumber,bag:reSpellSpecs.bag} ).parsed;
-//				log('calcWeight: item '+name+' data.bag = '+data.bag+', test result = '+(!_.isUndefined(data.bag) && data.bag != 0));
 				if (!_.isUndefined(data.bag) && data.bag.length) {
-//					log('calcWeight: item '+name+' data.weight = '+data.weight+', data.encumber = '+data.encumber);
 					if (!data.weight && data.encumber) {
 						data.weight = data.encumber;
 					} else {
 						bagObj = (findObjs({type:'character',name:name,controlledby:charCS.get('controlledby')}) || [])[0];
-//						log('calcWeight: !!bagObj = '+!!bagObj);
 						if (bagObj) {
-	//						log('calcWeight: found bagObj and making recursive call');
 							bagData = calcWeight( bagObj );
 							data.weight = (parseFloat(data.weight) || 1) + (parseFloat(bagData.weight) || 0);
 							if (_.isUndefined(data.encumber) || !data.encumber.length) data.encumber = data.weight;
@@ -2681,7 +2578,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * Return how full a character's Item Slots are
 	 */
 
-	const itemSlotData = function( tokenID, Items, senderId, calc=true ) {
+	const itemSlotData = function( tokenID, Items, senderId, calc=true ) {	// state
 		
 		return new Promise(resolve => {
 			let errFlag = false,
@@ -2699,7 +2596,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					const classMove = classObjs.reduce( (a,o) => Math.max(a,(parseInt(o.classData.move) || 0)), 0 );
 					const raceMove  = (resolveData( (attrLookup( charCS, fields.Race ) || 'Human'), fields.RaceDB, reRaceData, charCS, {move:reClassSpecs.move} ).parsed.move || 12);
 					setAttr( charCS, fields.BaseMove, Math.max(classMove,raceMove) );
-//					log('itemSlotData: raceMove = '+raceMove+', classMove = '+classMove);
 				}
 				
 				if (calc || !String(attrLookup( charCS, fields.Weight_total ) || '').length) {
@@ -2725,7 +2621,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				};
 
 				let strength = attrLookup( charCS, fields.Strength, {def:false} );
-		//		log('itemSlotData: strength = '+strength+', flag = '+state.MagicMaster.encumbrance+', Encumbrance stored field = '+attrLookup( charCS, fields.Encumbrance ));
 				if (state.MagicMaster.encumbrance && !_.isUndefined(strength)) {
 					const parsedStr = strength.match(/(\d+)(?:[\(\[](\d+)[\)\]])?/) || [null,null];
 					strength = parseInt(parsedStr[1]);
@@ -2737,10 +2632,8 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						strength = Math.min(25,strength);
 						weights = encumberDef.stepsStr[encumberDef.strengths.findIndex(s => s >= strength)];
 					}
-		//			log('itemSlotData: strength = '+strength+', extra = '+extra+', weights = '+weights);
 					if (!_.isUndefined(weights)) {
 						for (encumbrance = 0; encumbrance < 5 && tableEnc > weights[encumbrance]; encumbrance++ );
-		//				log('itemSlotData: encumbrance = '+encumbrance+', current weight = '+tableEnc+', max weight = '+weights[encumbrance]);
 						setAttr( charCS, fields.Weight_forStr, weights.join() );
 						setAttr( charCS, fields.Weight_label, encumberDef.labels[encumbrance].dispName() );
 						setAttr( charCS, fields.Weight_ACmod, encumberDef.ac[encumbrance] );
@@ -2750,7 +2643,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						move = Math.round(baseMove*([1,2/3,1/2,1/3,1/baseMove,0][encumbrance]));
 						moveMod = attrLookup( charCS, fields.MoveMod ) || '';
 						move = parseFloat(evalAttr(moveMod[0] === '=' ? moveMod.slice(1) : (isNaN(moveMod[0]) ? (move + moveMod) : (move+'+'+moveMod) ), charCS));
-//						log('itemSlotData: moveMod = '+moveMod+', move = '+move);
 						if ((Math.ceil(move) !== Math.ceil(parseFloat(attrLookup( charCS, fields.Move )))) || (encumbrance !== (parseInt(attrLookup( charCS, fields.Encumbrance )) || 99))) {
 							if (encumbrance === 0) {
 								if (oldEncumbrance !== 0) sendAPI( fields.roundMaster+' --removeTargetStatus '+tokenID+'|Encumbrance|noerror' );
@@ -2762,11 +2654,9 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 						};
 					};
 				} else if (!state.MagicMaster.encumbrance && (attrLookup( charCS, fields.Encumbrance ) != 0)) {
-		//			log('itemSlotData: flag is false but encumbered so removing status');
 					setAttr( charCS, fields.Encumbrance, 0 );
 					sendAPI( fields.roundMaster+' --removeTargetStatus '+tokenID+'|Encumbrance|noerror' );
 				};
-		//		log('itemSlotData: returning with count '+count+', weight '+Math.ceil(tableWt)+', encumberWt '+Math.ceil(tableEnc));
 			} catch (e) {
 				sendCatchError('MagicMaster',msg_orig[senderId],e);
 				errFlag = true;
@@ -2806,7 +2696,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			col = fields.PowersBaseCol+i;
 			table = getTableField( charCS, {}, fields.Powers_table, fields.Powers_name, col );
 			row = table.tableFind( fields.Powers_name, power );
-			if (!_.isUndefined(row)) i=fields.PowersCols;
+			if (!_.isUndefined(row)) break;
 //			log('powerRowCol: row '+row+', col '+col+', i '+i);
 		}
 		if (_.isUndefined(row)) col = undefined;
@@ -3405,7 +3295,10 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		let	spell,
+		const isNPC = !charCS.get('controlledby');
+		
+		let	spell, 
+			spellType = '',
 			noToMemorise = '1',
 			magicWord = 'spell',
 			spellTables = [],
@@ -3430,6 +3323,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			tableType = 'Wizard Spellbook';
 			editCmd = BT.EDIT_MUSPELLS;
 			memCmd = BT.MEM_MUSPELL;
+			spellType = 'ALL_RANDOM_MUSPELLS';
 			magicDB = fields.MU_SpellsDB;
 		} else {
 			levelLimit = 7;
@@ -3437,6 +3331,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			tableType = 'Priest Spellbook';
 			editCmd = BT.EDIT_PRSPELLS;
 			memCmd = BT.MEM_PRSPELL;
+			spellType = 'ALL_RANDOM_PRSPELLS';
 			magicDB = fields.PR_SpellsDB;
 		}
 		
@@ -3481,11 +3376,14 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 				changedSpell = renamed ? 'Display-'+spellToDisplay : spellToDisplay;
 			spell = getAbility( magicDB, spellToDisplay, charCS );
 			if (spell.obj) spell = greyOutButtons( tokenID, charCS, spell, (renamed ? changedSpell : ''), ('[Return to menu](!magic --button '+reviewCmd+'|'+tokenID+'|'+level +'|'+ spellRow +'|'+ spellCol +'|'+spellToMemorise+')') );
-			content += '...Optionally [Review '+spellToDisplay+'](!&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{'+spell.dB+'|'+changedSpell.hyphened()+'})}}';
+			content += '...Optionally [Review '+spellToDisplay+'](!&#13;'+sendToWho(charCS,senderId,false,true)+'&#37;{'+spell.dB+'|'+changedSpell.hyphened()+'})';
 		} else {
-			content += '...Optionally <span style='+design.grey_button+'>Review the '+magicWord+'</span>}}';
+			content += '...Optionally <span style='+design.grey_button+'>Review the '+magicWord+'</span>';
 		}
-		content	+= '{{desc1=2. Choose slot to use\n'
+		if ((isMU || isPR) && isNPC && playerIsGM(senderId)) {
+			content += '<br>or _memorise randomly_(!magic '+(isPower ? '--mem-all-powers ' : '--mem-all-spells '+spellType+'|')+tokenID+') from spellbooks. Repeat if so desired.';
+		};
+		content	+= '}}{{desc1=2. Choose slot to use\n'
 				+  (isPower ? '' : (makeEditNumberOfSpells(args,magicType,levelSpells[level].spells)))+'\n';
 		
 		// build the Spell list
@@ -3518,7 +3416,8 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		}
 		
 		const nextLevel = (level >= levelLimit) ? 1 : ((levelSpells[(level+1)].spells>0) ? (level+1) : 1);
-		const slotSpell = !selectedSlot ? '' : attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '';
+		const SpellsTable = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, spellCol );
+		const slotSpell = !selectedSlot ? '' : SpellsTable.tableLookup( fields.Spells_name, spellRow ) || '';
 
 		content += '}}{{desc2=...Then\n'
 				+  '3. '+(selectedBoth ? '[' : '<span style='+design.grey_button+'>')
@@ -3604,11 +3503,14 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					+ '{{desc=**1.Choose a spell to store**\n'+memSpells+'}}'
 					+ '{{desc1=**2.'+(isAny ? 'Optionally c' : 'C')+'hoose where to store it**\n'+(storedSpells || 'No spells currently stored')+'}}';
 
+		let SpellsTable = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, miCol );
+			SpellsTable = getTableField( charCS, SpellsTable, fields.Spells_table, (oldVer ? fields.Spells_macro : fields.Spells_msg), miCol );
+
 		if (spellButton >= 0) {
-			spellName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '-';
+			spellName = SpellsTable.tableLookup( fields.Spells_name, spellRow ) || '-';
 		}
 		if (MIbutton >= 0) {
-			MIspellName = attrLookup( charCS, (oldVer ? fields.Spells_macro : fields.Spells_msg), {tableDef:fields.Spells_table, row:MIrow, col:MIcol} ) || '-';
+			MIspellName = SpellsTable.tableLookup( (oldVer ? fields.Spells_macro : fields.Spells_msg), MIrow ) || '-';
 			if ((isAdd || isAny) && MIspellName === '-') MIbutton = -1;
 		}
 		let canStore = isAny || isChange || (isAdd && MIspellName === '-') || (spellName.dbName() == MIspellName.dbName()),
@@ -3677,15 +3579,17 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		let content = '&{template:'+fields.menuTemplate+'}{{name=';
 		if (!isPower) {content += 'What Spell is ' + tokenName + ' casting?}}{{subtitle=Casting '};
 		
+		let	SpellTable = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, spellCol );
+			SpellTable = getTableField( charCS, SpellTable, fields.Spells_table, fields.Spells_db, spellCol );
 		if (isPower) {
 			content += 'What Power is ' + tokenName + ' using?}}{{subtitle=Using Powers';
-			if (spellButton >= 0) {magicDB = attrLookup( charCS, fields.Spells_db, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || fields.PowersDB;}
+			if (spellButton >= 0) {magicDB = SpellTable.tableLookup( fields.Spells_db, spellRow ) || fields.PowersDB;}
 			magicWord = 'power';
 			selectCmd = isMI ? BT.MI_POWER : BT.POWER;
 			storeCmd = isMI ? BT.CAST_MIPOWER : BT.USE_POWER;
 		} else if (isMI) {
 			content += 'MI stored spells';
-			if (spellButton >= 0) {magicDB = attrLookup( charCS, fields.Spells_db, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || fields.MU_SpellsDB;}
+			if (spellButton >= 0) {magicDB = SpellTable.tableLookup( fields.Spells_db, spellRow ) || fields.MU_SpellsDB;}
 			selectCmd = charged ? BT.MI_SCROLL : BT.MI_SPELL;
 			storeCmd = charged ? BT.CAST_SCROLL : BT.CAST_MISPELL;
 			if (caster(charCS,'MU').clv > 0) {
@@ -3715,7 +3619,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		content += '}}{{section=' + (makeSpellList( senderId, tokenID, selectCmd, spellButton, true, submitted, '|'+charged, maxLevel )[0]);
 
 		if (spellButton >= 0) {
-			spellName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '-';
+			spellName = SpellTable.tableLookup( fields.Spells_name, spellRow ) || '-';
 			if (spellName.replace(reIgnore,'').length) {
 				spell = getAbility( magicDB, spellName, charCS );
 				learnText = (learn ? '&#123;{Learn=Try to [Learn this spell]&#40;!magic --learn-spell '+tokenID+'|'+spellName+'&#41;&#125;&#125;' : '');
@@ -3749,6 +3653,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			  tokenID = args[1],
 			  spellButton = args[2],
 			  learn = (String(args[3]) || '').toUpperCase() === 'LEARN',
+			  isGM = playerIsGM(senderId),
 			  curToken = getObj('graphic',tokenID),
 			  charCS = getCharacter(tokenID);
 			  
@@ -3762,7 +3667,8 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		}
 		
-		const title = isMI ? attrLookup( charCS, fields.ItemChosen ) : curToken.get('name');
+		const title = isMI ? attrLookup( charCS, fields.ItemChosen ) : curToken.get('name'),
+			  isNPC = !charCS.get('controlledby');
 		if (isPower) {
 			levelLimit = 1;
 			magicType = 'POWER';
@@ -3792,6 +3698,9 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					+ '{{subtitle=' + tableType + '}}'
 					+ '{{desc=' + ((makeSpellList( senderId, tokenID, viewCmd, spellButton, true ))[0] || 'No '+magicWord+'s currently memorised')
 					+ '}}{{desc1=Select the '+magicWord+' above that you want to view the details of.  It will not be cast and will remain in your memorised '+magicWord+' list.}}';
+		if ((isMU || isPR) && isNPC && isGM) {
+			content += '{{desc2=Or _re-memorise randomly_(!magic --mem-all-spells '+(isMU ? 'ALL_RANDOM_MUSPELLS' : 'ALL_RANDOM_PRSPELLS')+'|'+tokenID+') from spellbooks. Repeat if so desired.}}';
+		};
 		sendResponse( charCS, content, senderId, flags.feedbackName, flags.feedbackImg, tokenID );
 	};
 	
@@ -3985,7 +3894,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			}
 			if (isView) {
 				const slotData = await itemSlotData( tokenID, Items, senderId, false );
-//				log('makeViewUseMI: slotData = {{section11=[['+(attrLookup( charCS, fields.ItemContainerSize ) - slotData.count)+']] remaining slots. Total weight [['+slotData.weight+']]lbs}}');
 				content += '{{section11=[['+(attrLookup( charCS, fields.ItemContainerSize ) - slotData.count)+']] remaining slots. Total weight [['+slotData.weight+']]lbs}}';
 			}
 			menuType = (shortMenu ? 'long' : 'short');
@@ -4491,7 +4399,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			pickItems = getTableGroupField( pickCS, pickItems, fieldGroups.MI, 'chosen' );
 
 			let	putItems = getTableGroup( putCS, fieldGroups.MI );
-			const slotData = await itemSlotData(tokenID,putItems,senderId,false);
+			const slotData = await itemSlotData(putID,putItems,senderId,false);
 
 			let [foundButtons,foundTables] = tableGroupFind( pickItems, 'chosen', 1, true, true ),
 				chosen = !_.isUndefined(foundButtons) ? foundButtons.length : 0;
@@ -4956,7 +4864,8 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendError('Internal MagicMaster error');
 		} else if (args[0] == BT.MI_SPELL || args[0] == BT.MI_SCROLL || args[0].toUpperCase().includes('POWER')) {
 			const charCS = getCharacter(args[1]),
-				  storedLevel = attrLookup( charCS, fields.Spells_storedLevel, {tableDef:fields.Spells_table, row:args[3], col:args[4]} );
+				  storedLevel = getTableField( charCS, {}, fields.Spells_table, fields.Spells_storedLevel, args[4] ).tableLookup( fields.Spells_storedLevel, args[3] );
+
 			if (storedLevel && storedLevel > 0) {
 				setAttr( charCS, fields.CastingLevel, storedLevel );
 				setAttr( charCS, fields.MU_CastingLevel, storedLevel );
@@ -5234,7 +5143,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			args.shift();
 			const checkMacro = '&{template:RPGMdefault}{{name='+name+' Check vs Learn Spell}}{{Check Throw=Rolling [[?{Learn Spell roll|'+saveObj.roll+'}cf<'+(learnChance-1)+'cs>'+learnChance+']] vs. [[0+'+learnChance+']] target}}{{Result=Check Throw<='+learnChance+'}}{{desc=**'+name+'\'s target**[[0+'+save+']] to Learn Spell with [[0+'+specMod+']] change from specialism, [[0+'+saveMod+']] improvement from race, class & Magic Items, and [[0+'+saveAdj+']] improvement from current magic effects}}{{successcmd=!magic --button '+BT.LEARNT_MUSPELL+'|'+args.join('|')+'}}';
 			setAbility(charCS,'Do-not-use-Learn_Spell-save',checkMacro);
-			content += 'Can you learn the spell "'+spell+'"? [Assess your chance](~'+charCS.get('name')+'|Do-not-use-Learn_Spell-save)';
+			content += 'Can you learn the spell "'+spell+'"? [Assess your chance](~'+charCS.id+'|Do-not-use-Learn_Spell-save)';
 		} else {
 			setAttr(charCS,spellbook,((curList+'|'+spell).split('|').sort().join('|')));
 			content += 'The spell '+spell+' has been added to '+charCS.get('name')+'\'s spellbook.';
@@ -5337,6 +5246,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		const cmd = args[0],
 			  isMU = cmd.toUpperCase().includes('MU'),
 			  isPower = cmd.toUpperCase().includes('POWER'),
+			  isRandomList = cmd.toUpperCase().includes('RANDOM'),
 			  tokenID = args[1],
 			  charCS = getCharacter( tokenID );
 			
@@ -5395,7 +5305,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			storeList = false;
 			newList = [];
 			list = (attrLookup(charCS, [fields.Spellbook[0]+levelSpells[i].book, fields.Spellbook[1] ]) || '').split('|').filter(t=>!!t);
-			s = (isPower) ? list.length : levelSpells[i].spells;
+			s = parseInt((isPower) ? list.length : levelSpells[i].spells);
 			if (s > 0 && (!list || !list.join('').length || list.join('') == '-')) {
 				list = _.uniq(getMagicList( db, spTypeLists, (isPower ? 'power' : (isMU ? 'muspelll'+i : 'prspelll'+i)), senderId ).toLowerCase().split(/\,|\|/));
 				storeList = true;
@@ -5424,6 +5334,12 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			if (storeList) setAttr( charCS, [fields.Spellbook[0]+levelSpells[i].book, fields.Spellbook[1] ], _.uniq(newList.sort()).join('|'));
 			spellTables = [];
 		};
+		if (isRandomList) {
+			sendWait(senderId,0,'Magic handleMemAllPowers');
+			sendAPI('!magic --view-spell '+args[0]+'|'+tokenID);
+			return;
+		};
+		
 		if (silent) {
 			sendWait(senderId,0,'Magic handleMemAllPowers');
 			return;
@@ -5585,10 +5501,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					c = levelSpells[level].base;
 					for (w = 1; (w <= fields.SpellsCols) && (levelSpells[level].spells > 0); w++) {
 						if (_.isUndefined(spellTables[w])) {
-							spellTables[w] = {};
-						}
-						if (_.isUndefined(spellTables[w][fields.Spells_castValue[0]])) {
-							spellTables[w] = getTableField( charCS, spellTables[w], fields.Spells_table, fields.Spells_name, c );
+							spellTables[w] = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, c );
 							spellTables[w] = getTableField( charCS, spellTables[w], fields.Spells_table, fields.Spells_castValue, c );
 						}
 						valueObj = spellTables[w].tableLookup( fields.Spells_castValue, r, true, true );
@@ -5689,7 +5602,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 	 * in the [Submit] button of the menu.
 	 */
 
-	async function handleViewUseMI( args, isSilent, senderId, charges, chargeOverride='' ) {	// miData
+	async function handleViewUseMI( args, isSilent, senderId, charges, chargeOverride='' ) {
 		
 		if (isSilent) sendWait(senderId,0,'Magic handleViewUseMI');
 		
@@ -5911,12 +5824,11 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		let	content = '';
 			
 		if (spellButton >= 0) {
-			const spellName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:spellRow, col:spellCol} ) || '-';
+			const spellName = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, spellCol ).tableLookup( fields.Spells_name, spellRow ) || '-';
 			content += 'Selected '+spellName+' to store';
 		}
 		if (MIbutton >= 0) {
-//			const col = (fields.SpellsFirstColNum || MIcol != 1) ? MIcol : '';
-			const miName = attrLookup( charCS, fields.Spells_name, {tableDef:fields.Spells_table, row:MIrow, col:MIcol} ) || '-';
+			const miName = getTableField( charCS, {}, fields.Spells_table, fields.Spells_name, MIcol ).tableLookup( fields.Spells_name, MIrow ) || '-';
 			content += (spellButton >= 0 ? '' : 'Selected to store') + ' in the slot for '+miName;
 		}
 		makeStoreMIspell( args, senderId, content );
@@ -6361,8 +6273,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		
 //		await moveMIspells( senderId, charCS, itemRow, itemRowID, null, null, null, item, spellType );
 		
-//		log('handleChangeSpellStore: after moveMIspells, newList = '+newList+', currentList = '+currentList);
-		
 		if (del || rep) {
 			const index = currentList.findIndex((s,i) => (s === (rep ? repSpell : spell)) && (!rep || currentValues[i].split('.')[0] == 0));
 			if (rep) {
@@ -6390,8 +6300,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			await moveMIspells( senderId, charCS, itemRow, itemRowID, charCS, itemRow, itemRowID, item, spellType );
 		};
 
-//		log('handleChangeSpellStore: after adding, at '+storedSpellsAttr[0]+item+'+'+itemRowID+', currentList = '+currentList+', and stored currentList = '+attrLookup( charCS, [storedSpellsAttr[0]+item+'+'+itemRowID,storedSpellsAttr[1]]));
-		
 		if (retMenu === 'STORE-MI-SPELL') {
 			let SpellsTable = getTable( charCS, fieldGroups.SPELLS, spellCol );
 			if (SpellsTable.tableLookup( fields.Spells_castValue, spellRow ) != 0) {
@@ -6526,7 +6434,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			};
 		} else if (pickRow >=0) {
 			let [row,table] = tableGroupIndex( Items, pickRow );
-//			log('handleFlagPicks: row = '+row+', table = '+table+', chosen = '+Items[table].tableLookup( fields[fieldGroups[table].prefix+'chosen'], row ));
 			if (!_.isUndefined(row) && !_.isUndefined( name = Items[table].tableLookup( fields[fieldGroups[table].prefix+'name'], row, false ))) {
 				Items[table].tableSet( fields[fieldGroups[table].prefix+'chosen'], row, (Items[table].tableLookup( fields[fieldGroups[table].prefix+'chosen'], row ) == 1 ? 0 : 1 ));
 			};
@@ -8093,9 +8000,9 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		const spellRow = attrLookup( charCS, fields.SpellRowRef ),
 			  spellCol = attrLookup( charCS, fields.SpellColIndex ),
 			  firstColNum = isPower ? fields.PowersFirstColNum : fields.SpellsFirstColNum,
-			  col = (firstColNum || spellCol != 1) ? spellCol : '',
-			  spellCharges = parseInt((attrLookup( charCS, fields.Spells_castValue, {tableDef:(isPower ? fields.Powers_table[0] : fields.Spells_table[0]), row:spellRow, col:spellCol} ) || 0),10);
-			
+//			  col = (firstColNum || spellCol != 1) ? spellCol : '',
+			  spellCharges = parseInt(( getTableField( charCS, {}, fields.Spells_table, fields.Spells_castValue, spellCol ).tableLookup( fields.Spells_castValue, spellRow ) || 0),10);
+			  
 		if (spellCharges <= 0) {
 			sendParsedMsg( tokenID, messages.noMoreCharges, senderId );
 			return;
@@ -8206,7 +8113,8 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			sendError('Invalid power name when trying to set uses per day',msg_orig[senderId]);
 			return;
 		};
-		let upd = String(attrLookup( charCS, fields.Powers_castMax, {tableDef:fields.Powers_table,row:row,col:col} ));
+		let PowersTable = getTableField( charCS, {}, fields.Powers_table, fields.Powers_castMax, col ),
+			upd = String(PowersTable.tableLookup( fields.Powers_castMax, row ));
 		if (_.isUndefined(upd)) {
 			sendError('Invalid power object when trying to set uses per day',msg_orig[senderId]);
 			return;
@@ -9266,6 +9174,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 		if (!curToken){
 			sendDebug('doMIBagMenu: Invalid tokenID: ' + tokenID);
+			checkObjectExists( tokenID );
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		}
@@ -9429,6 +9338,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 		if (!charCS) {
 			sendDebug('doLightSourcesMenu: Invalid tokenID: ' + tokenID);
+			checkObjectExists( tokenID );
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		}
@@ -9565,18 +9475,16 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 
 		if (!charCS) {
 			sendDebug('doLightSource: Invalid tokenID: ' + tokenID);
+			checkObjectExists( tokenID );
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		}
-//		log('doLightSource: calling for '+(!curToken ? ('character '+charCS.get('name')) : ('token'+curToken.get('name')))+', lightSource '+newSource);
-
 		if (!curToken){
 			tokenList = filterObjs( obj => (!(obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token' || obj.get('represents') !== tokenID )));
 		} else {
 			let name = curToken.get('name'),
 				represents = curToken.get('represents');
 			tokenList = filterObjs( obj => (!(obj.get('type') !== 'graphic' || obj.get('subtype') !== 'token' || obj.get('represents') !== represents || obj.get('name') !== name)));
-//			log('doLightSource: specific token name = '+name+', tokenList has '+tokenList.length+' entries');
 		};
 		
 		for (const token of tokenList) {
@@ -9720,6 +9628,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 		if (!curToken || !charCS) {
 			sendDebug('doCopyCS: Invalid tokenID: ' + tokenID);
+			checkObjectExists( tokenID );
 			sendResponseError(senderId,'Invalid token specified');
 			return;
 		}
@@ -9883,8 +9792,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			let Tables = getTableGroupField( charCS, {}, fieldGroups.MI, 'trueName' );
 			let [table,index] = tableGroupFind( Tables, 'trueName', item );
 			if (!_.isUndefined(index)) {
-				Tables = getTableField( charCS, {}, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'qty'] );
-				qty = Tables.tableLookup( fields[fieldGroups[table].prefix+'qty'], index, false );
+				qty = getTableField( charCS, {}, fieldGroups[table].tableDef, fields[fieldGroups[table].prefix+'qty'] ).tableLookup( fields[fieldGroups[table].prefix+'qty'], index, false );
 			};
 		} else {
 			var levelSpells = shapeSpellbook( charCS, type );
@@ -9987,7 +9895,8 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		case BT.REVIEW_ALLITEMS_MI :
 		case BT.REVIEW_MIPOWER :
 		case 'GM-REVIEWMI' :
-			 
+			
+			sendWait( senderId, 0 );
 //			handleReviewSpell( args, senderId );
 			break;
 			
@@ -10110,6 +10019,7 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 		case 'REVIEW_POWERS':
 		case 'REVIEW_BOTH':
 		
+			
 			handleRevStore( args, senderId );
 			break;
 			
@@ -10233,11 +10143,6 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			makeGMonlyMImenu( args, senderId, '', (handler === 'GM-MIALPHAON') );
 			break;
 			
-/*		case 'GM-SETMICOST':
-		
-			handleChangeMItype( args, senderId );
-			break;
-*/			
 		case 'GM-CHANGEDISPCHARGES':
 		
 			handleChangeMIcharges( args, 'Displayed', senderId );
@@ -10443,16 +10348,13 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			return;
 		};
 		if (miName.length) {
-//			log('miName defined as '+miName);
 			let [miRow,miTable,miRowID] = tableGroupFind( Items, 'name', miName );
 			sendFeedback('Item '+miName+' is at row '+miRow+' of table '+miTable+', with the rowID = '+miRowID);
 		};
 		if (table.length && !isNaN(row)) {
-//			log('table is '+table+' and row is '+row);
 			sendFeedback('Table '+table+' row '+row+' has a rowID = '+Items[table].rowID(row));
 		};
 		if (!table.length && !isNaN(row)) {
-//			log('table should be empty but is '+table.length+' long as '+table+', row is '+row);
 			let [miRow,miTable,miRowID] = tableGroupIndex(Items,row);
 			sendFeedback('Group row '+row+' is in table '+miTable+' row '+miRow+', with ID '+miRowID);
 		};
@@ -10482,11 +10384,12 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 			
 			try {
 				if (!sendGMquery( 'magic', arg, senderId )) {
-				
+					const startCmd = Date.now();
 					cmd = (i<0 ? arg : arg.substring(0,i)).trim().toLowerCase();
 					argString = (i<0 ? '' : arg.substring(i+1).trim());
 					arg = argString.split('|');
 				
+					let measure = true;
 					switch (cmd.toLowerCase()) {
 					// RED: v1.213 If in debugging mode, allow debugger to execute GM
 					// type commands
@@ -10649,32 +10552,38 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					case 'handout':
 					case 'handouts':
 						if (isGM) updateHandouts(handouts,false,senderId);
+						measure = false;
 						break;
 					case 'hsq':
 					case 'handshake':
 						sendWait( senderId, 0, 'Magic --hsq' );
 						doHsQueryResponse(arg);
+						measure = false;
 						break;
 					case 'hsr':
 						sendWait( senderId, 0, 'Magic --hsr' );
 						doHandleHsResponse(arg);
+						measure = false;
 						break;
 					case 'button':
 						doButton(arg,senderId,selected);
 						break;
 					case 'help':
 						showHelp(senderId); 
+						measure = false;
 						break;
 					case 'relay':
 						doRelay(argString,senderId); 
 						break;
 					case 'debug':
 						// RED: v1.207 allow anyone to set debug and who to send debug messages to
+						measure = false;
 						doSetDebug(argString,senderId);
 						break;
 					case 'nowaitmsg':
 					case 'skip':
 						// RED: v4.1 added to allow viewed abilities to not execute certain live commands
+						measure = false;
 						break;
 					case 'get-rowid':
 						doGetRowInfo(arg);
@@ -10682,13 +10591,16 @@ const MagicMaster = (function() {	// eslint-disable-line no-unused-vars
 					default:
 						sendFeedback('<span style="color: red;">Invalid command " <b>'+msg.content+'</b> "</span>',flags.feedbackName);
 						showHelp(isGM); 
+						measure = false;
 						break;
 					}
+					if (measure) measureTime( 'Total Cmd', startCmd );
 				}
 			} catch (err) {
 				log('MagicMaster handleChatMsg: JavaScript '+err.name+': '+err.message+' while processing command '+cmd+' '+argString);
 				sendCatchError('MagicMaster',msg_orig[senderId],err);
 			}
+			if (!!state.magicMaster.debug) reportTimes('!magic --'+e);
 		}
 			
 		msg_orig[senderId] = msg;
