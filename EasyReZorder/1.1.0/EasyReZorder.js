@@ -264,7 +264,7 @@ var EasyReZorder = EasyReZorder || (() => {
                 'Works with tokens, paths, and text objects on any layer.',
             ],
             motdHeader: '📚 **EasyReZorder** v' + SCRIPT_VERSION,
-            motdStyle: { borderLeft: '3px solid #9c27b0' },
+            motdStyle: { borderLeft: '3px solid #1eeb40' },
             help: {
                 description: 'Simple z-order manipulation for Roll20 tokens, paths, and text. Move objects forward/backward by steps, to front/back, or relative to a specific object.',
                 changelog: [
