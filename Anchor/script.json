@@ -14,9 +14,7 @@
     "roll20userid": "2614613",
     "dependencies": [
         "MatrixMath",
-        "ScriptKit",
-        "Sequence",
-        "Choreograph"
+        "ScriptKit"
     ],
     "modifies": {
         "graphic.left": "read,write",
