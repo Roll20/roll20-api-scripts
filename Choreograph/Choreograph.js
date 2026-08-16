@@ -3372,8 +3372,6 @@ var Choreograph = Choreograph || (() => {
             },
         });
 
-
-        log(`-=> ${SCRIPT_NAME} v${SCRIPT_VERSION} Initialized <=-`);
     };
 
     const registerEventHandlers = () => {
