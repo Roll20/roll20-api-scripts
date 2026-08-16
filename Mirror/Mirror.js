@@ -1165,7 +1165,6 @@ var Mirror = Mirror || (() => {
 
     const checkInstall = () => {
         ensureState();
-        log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkConfigDrift();
     };
 

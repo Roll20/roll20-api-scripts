@@ -1,6 +1,6 @@
 // =============================================================================
-// Mirror v1.2.0
-// Last Updated: 2026-07-17
+// Mirror v1.2.1
+// Last Updated: 2026-08-14
 // Author: Kenan Millet
 //
 // Description:
@@ -26,7 +26,7 @@ var Mirror = Mirror || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Mirror';
-    const SCRIPT_VERSION = '1.2.0';
+    const SCRIPT_VERSION = '1.2.1';
     const CMD            = '!mirror';
 
     // All syncable graphic properties
@@ -981,7 +981,10 @@ var Mirror = Mirror || (() => {
             case 'align':   doAlign(msg, args);   break;
             case 'config':  doConfig(msg, args);  break;
             case 'status':  doStatus(msg);        break;
-            default:        reply(msg, 'Unknown command. Try `!mirror help`'); break;
+            default:
+                if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg);
+                else reply(msg, 'Unknown command. Try `!mirror help`');
+                break;
         }
     };
 
@@ -1162,7 +1165,6 @@ var Mirror = Mirror || (() => {
 
     const checkInstall = () => {
         ensureState();
-        log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkConfigDrift();
     };
 
@@ -1196,6 +1198,15 @@ var Mirror = Mirror || (() => {
             command: CMD,
             handout: 'auto',
             devHandout: 'update',
+            motd: [
+                'Use `--align` when linking to instantly sync positions without waiting for a move.',
+                'The `anchor` property group keeps Mirror compatible with Anchor relationships.',
+                'Use `!mirror config exclude <props>` to globally prevent certain properties from syncing.',
+                'Chain mode syncs bidirectionally — any token in the ring can be the "source".',
+                'Hard links (default) revert child changes — use `--soft` if you want children to push updates too.',
+            ],
+            motdHeader: '🪞 **Mirror** v' + SCRIPT_VERSION,
+            motdStyle: { borderLeft: '3px solid #26c6da' },
             help: {
                 description: 'Flat property syncing between tokens. No transforms, no offsets — when a property changes on one token, the same value is copied to linked tokens.',
                 quickStart: [
@@ -1342,12 +1353,15 @@ var Mirror = Mirror || (() => {
                     },
                 },
                 changelog: [
-                    { version: '1.2.0', changes: [
+                    { version: '1.2.1', date: '2026-08-14', changes: [
+                        'Added version dates to changelog for ScriptKit date-based whatsnew queries',
+                    ]},
+                    { version: '1.2.0', date: '2026-07-17', changes: [
                         'Added properties: sides, interactionTriggered, interactionManualReset, renderAsDarkness, gm_only_tooltip, night_vision_tint',
                         'Added property groups: tooltip, reactions',
                         'ScriptKit integration: help, man, handout generation',
                     ]},
-                    { version: '1.1.0', changes: [
+                    { version: '1.1.0', date: '2026-06-26', changes: [
                         'Added --align flag for link/chain creation',
                         'Added --exclude flag for prop filtering',
                         'Added align command with --up, --down, --linked, --unlinked, --if-linked',
@@ -1355,7 +1369,7 @@ var Mirror = Mirror || (() => {
                         'Added anchor property group for Anchor compatibility',
                         'Added addToChain and removeFromChain API methods',
                     ]},
-                    { version: '1.0.0', changes: [
+                    { version: '1.0.0', date: '2026-06-15', changes: [
                         'Initial release: link, unlink, chain, unchain, status',
                         'Hard/soft link modes',
                         'Property groups: all, spatial, position, size, bars, light, auras, flip',
