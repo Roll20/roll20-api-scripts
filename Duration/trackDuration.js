@@ -1,4 +1,4 @@
-/ Script:   trackDuration
+// Script:   TrackDuration
 // By:       Keith Curtis
 // Contact:  https://app.roll20.net/users/162065/keithcurtis
 // Base command: !duration
@@ -10,7 +10,7 @@ var Duration = Duration || (function () {
     // CONSTANTS
     // ─────────────────────────────────────────────
 
-    const SCRIPT_NAME    = 'Track Duration';
+    const SCRIPT_NAME    = 'TrackDuration';
     const VERSION        = '1.0.0';
     const STATE_KEY      = 'Duration';
 
