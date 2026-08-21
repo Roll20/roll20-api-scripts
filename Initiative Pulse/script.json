@@ -1,5 +1,5 @@
 {
-    "$schema": "https://github.com/Roll20/roll20-api-scripts/master/script.json.schema",
+    "$schema": "https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/script.json.schema",
     "name": "Initiative Pulse",
     "script": "InitiativePulse.js",
     "version": "1.0.0",
