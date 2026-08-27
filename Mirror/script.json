@@ -1,24 +1,29 @@
 {
     "name": "Mirror",
     "script": "Mirror.js",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "previousversions": [
-        "1.1.1",
+        "1.0.0",
         "1.1.0",
-        "1.0.0"
+        "1.1.1",
+        "1.2.0"
     ],
-    "description": "[Wiki Page](https://wiki.roll20.net/Script:Mirror)\n\nFlat property syncing between tokens. No transforms, no offsets -- when a property changes on one token, the same value is copied to linked tokens.\n\nSupports unidirectional (link) and bidirectional ring (chain) modes. Hard-lock by default for one-way links (child changes revert). Property groups for easy configuration.\n\nCommands:\n- `!mirror link [--soft] [--align] [--exclude props] [props] [ids...]` -- Unidirectional link\n- `!mirror unlink [props] [ids...]` -- Remove link\n- `!mirror chain [--align] [--exclude props] [props] [ids...]` -- Bidirectional chain\n- `!mirror unchain [props] [ids...]` -- Remove chain\n- `!mirror align [--up|--down] [--linked|--unlinked] [--if-linked] [props]` -- Align tokens\n- `!mirror config [exclude|include|reset] [props]` -- Global excludes\n- `!mirror status` -- Show links\n- `!mirror help` -- Command reference (via ScriptKit)",
+    "description": "[Wiki Page](https://wiki.roll20.net/Script:Mirror)\n\nFlat property syncing between tokens. No transforms, no offsets -- when a property changes on one token, the same value is copied to linked tokens.\n\nSupports unidirectional (link) and bidirectional ring (chain) modes. Hard-lock by default for one-way links (child changes revert). Property groups for easy configuration.\nCommands:\n- `!mirror link [--soft] [--align] [--exclude props] [props] [ids...]` -- Create a unidirectional link (hard-lock by default)\n- `!mirror unlink [props] [ids...]` -- Remove a link or add properties to its exclude list\n- `!mirror chain [--align] [--exclude props] [props] [ids...]` -- Create a bidirectional ring link (all members sync equally)\n- `!mirror unchain [props] [ids...]` -- Remove a chain or add excludes\n- `!mirror align [--up|--down] [--linked|--unlinked] [--if-linked] [props] [ids...]` -- One-time copy of property values between linked tokens\n- `!mirror config [exclude|include|reset] [props]` -- Manage global property excludes\n- `!mirror status` -- Show links for selected tokens",
     "authors": "Kenan Millet",
     "roll20userid": "2614613",
-    "dependencies": ["ScriptKit"],
+    "dependencies": [
+        "ScriptKit"
+    ],
     "modifies": {
         "graphic": "read, write"
     },
     "conflicts": [],
-    "useroptions": [{
-        "name": "Global Excludes",
-        "type": "text",
-        "default": "",
-        "description": "[Wiki Page](https://wiki.roll20.net/Script:Mirror)\n\nComma-separated list of properties excluded from the 'all' group by default (e.g. represents,imgsrc)"
-    }]
+    "useroptions": [
+        {
+            "name": "Global Excludes",
+            "type": "text",
+            "default": "",
+            "description": "Comma-separated list of properties excluded from the 'all' group by default (e.g. represents,imgsrc)"
+        }
+    ]
 }
