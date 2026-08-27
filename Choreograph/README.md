@@ -38,6 +38,7 @@ Install from the Roll20 One-Click Script Library, or paste `Choreograph.js` into
 | `!choreograph dump-html <name>` | Dump raw handout HTML to console |
 | `!choreograph cast ...` | Manage casts (see Cast System) |
 | `!choreograph echo <text>` | Debug: whisper text with timestamp |
+| `!choreograph fx <type> <id\|x y> [id2\|x2 y2]` | Spawn FX (auto-detects point vs between) |
 
 ### Run Flags
 
@@ -80,12 +81,12 @@ Computed once per token before execution. Later variables can reference earlier 
 
 ### Scene Table
 
-| Filter | Delay (ms) | Command | Notes |
-|--------|-----------|---------|-------|
-| `*` | `stagger(rank("left"), 200)` | `!sequence play ${anim} ignore-selected ${token.id}` | Main wave |
-| `layer=gm` | `INF` | | Skip GM tokens |
-| `role=hero` | `0` | `!sequence play charge ignore-selected ${token.id}` | Heroes react immediately |
-| `*` | `sync` | | Wait for all participants |
+| Filter | Delay (ms) | When | Command | Notes |
+|--------|-----------|------|---------|-------|
+| `*` | `stagger(rank("left"), 200)` | | `!sequence play ${anim} ignore-selected ${token.id}` | Main wave |
+| `layer=gm` | `INF` | | | Skip GM tokens |
+| `role=hero` | `0` | | `!sequence play charge ignore-selected ${token.id}` | Heroes react immediately |
+| `*` | `sync` | | `!choreograph run climax --cast ${castName}` | Wait then chain |
 
 ## Filters
 
@@ -104,7 +105,16 @@ Space-separated conditions within a cell are AND. Multiple rows provide OR.
 
 ## Delay Expressions
 
-Evaluated per-token. Must return a number (ms), `INF`/`SKIP` (skip this token), or `sync` (wait for all participants before continuing).
+Evaluated per-token. Must return a number (ms), `INF`/`SKIP` (skip this token), or `sync` (wait for all participants before continuing). A `sync` row with a command fires the command after the sync resolves.
+
+## When (Row Conditions)
+
+The When column is a JavaScript expression evaluated per-token. If it returns falsy, the row is skipped for that token.
+
+- `false` — disable a row entirely (useful for muting without deleting)
+- `dist < 200` — only fire for tokens within 200px
+- `token.name === "Leader"` — only fire for a specific token
+- Has access to all variables, params, and functions available in Delay expressions
 
 ### Token Variables
 
@@ -120,6 +130,7 @@ Evaluated per-token. Must return a number (ms), `INF`/`SKIP` (skip this token), 
 | `count` | Tokens passing this row's filter |
 | `INF` / `SKIP` | Infinity — skip this token |
 | `self` | Current scene name |
+| `castName` | Current cast name (for passing to child scenes) |
 | `tokenId` | *(deprecated)* Use `token.id` |
 | `tokenName` | *(deprecated)* Use `token.name` |
 
@@ -211,21 +222,31 @@ Scenes can call other scenes (or themselves) via the command column:
 ```
 
 - `self` resolves to the current scene name
+- `castName` resolves to the current cast name
 - `--parent` and `--depth` are auto-injected by the engine
 - At depth 0, child scene spawns are silently skipped
-- Child scenes cannot loop (`--loop` is top-level only)
+- Child scenes can use bounded loops (`--loop N`) but not infinite loops
 
 ## Sync
 
-Use `sync` as a delay value to wait for all registered sync participants to signal completion before continuing. Useful for waiting on animations to finish before the next phase of a scene.
+Use `sync` as a delay value to create a coordination point. The scene waits for all registered sync participants to signal completion before continuing.
+
+A `sync` row can also have a command — the command fires *after* the sync resolves. This makes it easy to gate a phase transition:
+
+```
+Row 1: Filter * | Delay 0         | Command: !choreograph run summoning --loop 3
+Row 2: Filter * | Delay sync      | Command: !choreograph run climax
+```
+
+Row 2 waits for Row 1's child scene to finish, then fires the climax.
 
 ## Looping
 
-- `--loop` — repeat indefinitely, syncing before each restart
+- `--loop` — repeat indefinitely, syncing before each restart (top-level only)
 - `--loop 5` — repeat 5 times, immediate restart between cycles
 - `--loop 5 --sync` — repeat 5 times, sync between cycles
 
-Expressions re-evaluate fresh each cycle.
+Child scenes can use bounded loops (`--loop N`). Infinite loops are top-level only.
 
 ## SelectManager Integration
 
@@ -243,6 +264,11 @@ Choreograph.registerParameterType(sourceId, struct)
 Choreograph.registerLifecycleHook(sourceId, struct)
 Choreograph.registerSyncParticipant(sourceId, struct)
 Choreograph.generateExtensionHandout(sourceId, opts)
+
+// Signals
+Choreograph.onSceneStart(fn)    // Subscribe to scene start. Returns unsubscribe fn.
+Choreograph.onSceneFinish(fn)   // Subscribe to scene finish. Returns unsubscribe fn.
+Choreograph.waitForScene(name)  // For ScriptKit guides: {onEnter, onExit} that auto-advances when scene finishes
 ```
 
 All registrations are source-deduplicated — calling the same registration from the same `sourceId` twice is a silent no-op.
@@ -293,6 +319,32 @@ Choreograph.registerSyncParticipant('MyScript', {
 ```
 
 Each participant only receives entries matching their registered command patterns. If none match, the participant is not called.
+
+## Changelog
+
+### v1.0.0
+- Interactive tutorial series (6 guided walkthroughs building a ritual summoning scene)
+- Unified `fx` command: auto-detects spawnFx vs spawnFxBetweenPoints (accepts token IDs, coords, or selected)
+- `sync` delay rows now fire their command after sync resolves
+- Required parameter validation (missing params abort with error)
+- `onSceneStart`/`onSceneFinish` signal system (public API)
+- `waitForScene()` helper for ScriptKit guides
+- `castName` scope variable for command templates
+- `when` field for conditional row execution
+- `--role` flag for ad-hoc role assignment at run time
+- `role()`/`role_ids()`/`cast()`/`cast_ids()` expression functions
+- Scene handout: section headers, empty row skipping, cell collapse fix
+- TokenProxy dot-notation access for all token properties
+- LINQ-style array methods on `actors()`, `role()`, `cast()` results
+- Revamped `!choreograph example` command with fuzzy search
+- Interactive setup guide wizard for examples
+- Extension API: registerFunction, registerTokenVariable, registerConstant, registerParameterType, registerLifecycleHook, registerSyncParticipant
+
+### v0.2
+- TokenProxy, LINQ arrays, dynamic help generation
+
+### v0.1
+- Initial release
 
 ## License
 
