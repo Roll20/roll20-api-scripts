@@ -1,0 +1,17 @@
+{
+  "name": "Locksmith",
+  "script": "Locksmith.js",
+  "version": "1.0.0",
+  "description": "**Locksmith** automates lock-picking and the Knock spell for D&D 5e games, working with both the legacy (5e) and Beacon (5.5e) character sheets.\n\nRoll20 has no native trigger for \"a player interacts with a locked door,\" so lock-picking has always meant manual GM adjudication. Locksmith closes that gap: a GM sets a difficulty (or marks a lock Unpickable or Magic-only) directly on a door or window, and from then on, a player's own Thieves' Tools roll - or a Knock spell - is automatically compared against the nearest locked door/window in range, with no extra command needed on the player's side.\n\nNo custom data storage is used for lock state - the difficulty is encoded directly into the door/window's own color property, so it survives page duplication, copy/paste, and everything else Roll20 already does to that property.\n\n**Key features**\n- Automatic resolution of Thieves' Tools rolls and the Knock spell against nearby locked doors/windows, on both the legacy and Beacon sheets\n- A GM menu (`!lock`) for setting a DC, marking a lock Unpickable or Magic-only, and toggling on-map status labels\n- A full keys and keyrings system: hand out a key to bypass a lock entirely, loot a key from treasure via a pasted macro, and a per-character `!keyring` report with Use/Give/Drop and a one-click \"try all my keys\" option\n- A one-click token action for `!keyring`, so players never need to type the command\n- A GM/player help handout (`!lock --help`), including screenshots and a table of contents\n\n**Getting started**\nRun `!lock` with a door or window selected to open the setup menu. Full documentation - GM setup and the player-facing experience - is available in-game via `!lock --help`, which creates a handout with everything covered above in more depth.\n\n**Commands**\n- `!lock` - open the setup menu (select doors/windows first for per-lock options)\n- `!lock --report-dc` - list every selected door/window's status, or the whole page if nothing is selected\n- `!lock --help` - create or refresh the help handout\n- `!keyring` (or `!lock --keyring`) - report the selected token's keys; requires a token to be selected\n\nEverything else (setting a DC, marking Unpickable/Magic, granting or looting a key, toggling map labels) is reached through buttons in the menu and reports above, not typed commands.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "dependencies": [],
+  "patreon": "https://www.patreon.com/c/KeithCurtis",
+  "modifies": {
+    "door": "read,write",
+    "window": "read,write",
+    "handout": "read,write"
+  },
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}
