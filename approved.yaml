@@ -1455,3 +1455,11 @@ ScriptKit:
 Tether:
   - "Tether"
   - "Utility"
+
+Locksmith:
+  - "Locksmith"
+  - "Utility"
+
+TrackDuration:
+  - "TrackDuration"
+  - "Utility"
