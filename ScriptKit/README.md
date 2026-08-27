@@ -89,12 +89,36 @@ const handleInput = (msg) => {
     if (msg.type !== 'api') return;
     if (msg.content.split(' ')[0] !== '!myscript') return;
 
-    // ScriptKit handles help, man, examples, whatsnew, gen-help, gen-dev-docs
+    // ScriptKit handles help, man, examples, whatsnew, changes, gen-help, gen-dev-docs
     if (typeof ScriptKit !== 'undefined' && ScriptKit.handleInput(msg)) return;
 
-    // ... your command handling
+    // ... your command handling ...
+
+    // Unknown command fallback — fuzzy suggestions
+    if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg);
 };
 ```
+
+### Unknown Command Handling
+
+`ScriptKit.usage(msg, command?, reason?)` provides smart feedback for unrecognized or misused commands. The script is auto-detected from the message's command prefix.
+
+```js
+// Unknown command — fuzzy match, suggest corrections, topic matches, or "Show All Commands" button
+ScriptKit.usage(msg);
+
+// Command-specific usage (e.g. missing required argument)
+ScriptKit.usage(msg, 'run', 'Missing scene name');
+```
+
+**Fuzzy matching features:**
+- Keyboard-weighted Levenshtein distance (QWERTY adjacency — nearby keys cost less)
+- Prefix detection — input that is a prefix of a command always suggests it
+- Length-scaled thresholds — short inputs require closer matches
+- Topic suggestions via prefix/substring (no fuzzy for topics)
+- Progressive fallback: suggestions → filtered results → "Show All Commands" button
+
+**Auto-conflict detection:** If a default alias (e.g. `changes`) matches one of your registered command syntaxes, ScriptKit auto-nulls that alias at registration time — your command takes priority without needing manual alias overrides.
 
 ### Ready Signal Pattern
 
@@ -121,6 +145,8 @@ on('chat:message',(msg) => {
 ### Registering Help Data
 
 The `help` object defines what appears in `!cmd help`, `!cmd man`, `!cmd whatsnew`, and the generated handouts.
+
+**Lazy evaluation:** Any field in the help structure (`description`, `title`, `body`, `items`, `details`, `name`, `syntax`, `deleted`, `deprecated`) can be a **function** instead of a literal value. ScriptKit calls the function on access and uses the return value. This enables dynamic content that always reflects the current state of your registries — e.g. `items: () => myRegistry.map(r => ({ name: r.name, description: r.desc }))`. Dynamic items are searchable via `man`.
 
 ```js
 help: {
@@ -233,10 +259,10 @@ Guides are interactive multi-step wizards that walk users through setup. Each st
 | Field | Description |
 |-------|-------------|
 | `prompt` | String or `(ctx) => string`. Supports markdown: `` `code` ``, `**bold**`, `*italic*` |
-| `select` | Roll20 `_type` to filter selection: `'token'`, `'card'`, `'pin'`, `'path'` |
+| `select` | Roll20 `_type` to filter selection: `'token'`, `'card'`, `'pin'`, `'path'`. Can be `(ctx) => string`. |
 | `as` | Key to store selection in `ctx.selections` |
-| `min` / `max` | Selection count constraints |
-| `query` | Object or array: `{ name, default?, type?, options? }` |
+| `min` / `max` | Selection count constraints. Can be `(ctx) => number`. |
+| `query` | Object or array: `{ name, default?, type?, options? }`. Can be `(ctx) => object/array`. |
 | `onContinue` | `(ctx) => errorString?` — validate before advancing. Return a string to block with an error. |
 | `onEnter` | `(ctx, advance) => void` — called when step becomes active. `advance(error?)` to programmatically continue. |
 | `onExit` | `(ctx) => void` — called when leaving via Back. Clean up listeners, revert changes. |
@@ -515,6 +541,27 @@ const onExtensionRegistered = () => {
 **`ScriptKit.updateHandoutImmediately(scriptName, mode)`** — Regenerate synchronously, only if exists.
 
 ## Changelog
+
+### v1.3.0
+- **Lazy evaluation** — all registration fields (`description`, `items`, `body`, `title`, `details`, `name`, `syntax`, etc.) can now optionally be functions that return the expected value. ScriptKit resolves them on access. Guide step fields (`select`, `query`, `min`, `max`) receive `ctx` when resolved.
+- Man search now resolves dynamic `items` arrays, enabling searchable registry dumps from function-based items
+- Fix: code/pre blocks (`backtick-delimited`) no longer have their content processed as markdown — asterisks and `[link](url)` syntax inside code spans are preserved
+- Fix: null topic entries no longer crash `man` command
+- `html.table`: wraps output in `overflow-x:auto` div for horizontal scrolling; headers use `white-space:nowrap`
+- `ScriptKit.getHelpHandout(scriptName)` / `ScriptKit.getDevHandout(scriptName)` — cached handout object lookup
+- `html.handoutLink(text, id, style, anchor)` — optional 4th param for deep-linking to handout sections
+- `man` topics display a 📖 link to the corresponding handout section
+- `help` command: inline topics list replaced with "Browse Topics" button; auto-injected commands now include `whatsnew`, `gen-help`, `gen-dev-docs`
+- `!scriptkit whatsnew [date]` — consolidated whatsnew across all registered plugins, with optional date filtering
+- Per-plugin `whatsnew` also accepts a date argument (ISO or human-readable)
+- Version date tracking: changelog `date` fields stored in state; current version auto-stamped on first registration
+- `!<plugin> changes [search]` — full changelog command with text search
+- Auto-conflict detection: default aliases matching registered command syntax are auto-nulled at registration
+- `ScriptKit.usage(msg)` — smart unknown-command handler: keyboard-weighted fuzzy suggestions, prefix matching, topic suggestions, progressive fallback
+- `ScriptKit.usage(msg, command, reason)` — command-specific usage display with optional error reason
+- `!<plugin> motd` / `!scriptkit motd [plugin]` — on-demand random tip with no-repeat tracking, debounced single-tip startup delivery, derived button styling
+- Consolidated "What's New" card on startup — shows changes since last seen when plugins upgrade, with dismissable "✓ Dismiss" button (`!scriptkit dismiss-whatsnew`)
+- Updated registration log format (`ȘꝀ ⚙⚙`)
 
 ### v1.2.0
 - Added `!scriptkit ping` chat command — pings an object's location by ID or by pageId/x/y coordinates
