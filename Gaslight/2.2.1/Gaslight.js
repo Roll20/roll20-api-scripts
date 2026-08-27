@@ -1,6 +1,6 @@
 ﻿// =============================================================================
-// Gaslight v2.2.1
-// Last Updated: 2026-08-03
+// Gaslight v2.2.2
+// Last Updated: 2026-08-14
 // Author: Kenan Millet
 //
 // Description:
@@ -39,7 +39,7 @@ var Gaslight = Gaslight || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Gaslight';
-    const SCRIPT_VERSION = '2.2.1';
+    const SCRIPT_VERSION = '2.2.2';
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
@@ -3640,7 +3640,10 @@ var Gaslight = Gaslight || (() => {
                 break;
             }
             case '--help':  reply(msg, HELP_TEXT); break;
-            default:        reply(msg, HELP_TEXT); break;
+            default:
+                if (typeof ScriptKit !== 'undefined') ScriptKit.usage(msg);
+                else reply(msg, HELP_TEXT);
+                break;
         }
     };
 
@@ -3835,6 +3838,15 @@ var Gaslight = Gaslight || (() => {
             tag: 'GLS',
             aliases: { help: ['help', '--help'], man: 'man', examples: 'examples', whatsnew: 'whatsnew', genHelp: 'gen-help', genDev: 'gen-dev-docs' },
             newSince: '2.2.0',
+            motd: [
+                'Use `!gaslight test <group>` before splitting to catch linking issues early.',
+                'The `--default` flag on stage/sync/desync sets character-level config that applies automatically.',
+                'Use `!gaslight view <player>` to see exactly what a player sees — great for debugging illusions.',
+                'Scripts in `[GLS]` pins run reactively per-player — perfect for proximity reveals and conditional effects.',
+                'The HUD supports gesture controls: swipe to advance turns, drag to reorder, delete to remove.',
+            ],
+            motdHeader: '🎭 **Gaslight** v' + SCRIPT_VERSION,
+            motdStyle: { borderLeft: '3px solid #ff8f00' },
             help: {
                 description: 'Per-player map perception. Split players onto individual page copies with synchronized tokens — each player can see different things while movement stays consistent.',
                 quickStart: [
@@ -3846,7 +3858,10 @@ var Gaslight = Gaslight || (() => {
                     'When done: `!gaslight merge` — tears down all links, returns players.',
                 ],
                 changelog: [
-                    { version: '2.2.1', changes: [
+                    { version: '2.2.2', date: '2026-08-14', changes: [
+                        'Added version dates to changelog for ScriptKit date-based whatsnew queries',
+                    ]},
+                    { version: '2.2.1', date: '2026-08-03', changes: [
                         'Fix: `!gaslight link` re-establishes links for tokens in active groups',
                         'Fix: `!gaslight stage --default on` checks for marketplace images',
                         'Fix: `!gaslight desync` now applies immediately (parent rebuilds links, child uses Anchor.untrackComponents)',
@@ -3862,7 +3877,7 @@ var Gaslight = Gaslight || (() => {
                         'QoL: warnings/errors show clickable token images that ping location (requires ScriptKit 1.2.0)',
                         'QoL: `!gaslight test` output condensed to summary + warnings only',
                     ]},
-                    { version: '2.2.0', changes: [
+                    { version: '2.2.0', date: '2026-07-30', changes: [
                         'Initiative HUD: pin-based turn tracker with gesture controls (swipe, drag-to-reorder, delete)',
                         'Current turn reticle: rectangle highlighting active combatant on the map',
                         '`!gaslight init` command: sync/trim linked tokens in initiative',
@@ -3873,14 +3888,14 @@ var Gaslight = Gaslight || (() => {
                         'ScriptKit integration: help, man, examples, annotations',
                         'GLS script fixes: compProp char-attr fallback, [default] regex, = operator',
                     ]},
-                    { version: '2.1.0', changes: [
+                    { version: '2.1.0', date: '2026-07-05', changes: [
                         'var command for managing gl_* variables on tokens',
                         'sync/desync commands for selective token sync control',
                         'HUD system for persistent on-screen status display',
                         'Stage improvements: view-awareness, auto-link after stage',
                         'Scripting engine fixes: anchor component fix, triggerMap auto-rebuild',
                     ]},
-                    { version: '2.0.0', changes: [
+                    { version: '2.0.0', date: '2026-06-25', changes: [
                         'Scripting engine — reactive per-player automation via map pins',
                         'RollCapture integration for automatic trigger evaluation',
                         'Auto-relay system for cross-page command forwarding',
@@ -4714,7 +4729,6 @@ var Gaslight = Gaslight || (() => {
             delete state[SCRIPT_NAME]._fetchPcidBackup;
         }
         // createHelpHandout(); // Replaced by ScriptKit gen-help
-        log('-=> ' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + ' Initialized <=-');
         checkDanglingGroups();
         if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length > 0) {
             buildTriggerMap();
