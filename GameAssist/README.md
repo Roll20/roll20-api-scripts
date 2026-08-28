@@ -488,7 +488,7 @@ Relative numbers use `+`, `-`, `*`, or `/`. Use a leading `=` for exact assignme
 
 Status-marker syntax is handled only by MarkerService. An unprefixed name or `+name` adds a marker, `-name` removes it, `!name` toggles it, and `=name` replaces the complete marker list after the replacement resolves successfully. Use `red:3` for a number, a registered custom display name, or an exact `Name::id` tag. In Roll20 query/button syntax, `Name;;id;3` is accepted for a numbered custom tag. Unrelated markers and their numbers are preserved unless an explicit replacement is requested.
 
-TokenAssist `1.3.0` includes exact saved-attribute and supported computed-value reports, exact or unambiguous controller-list editing, privacy-aware report recipients, relative color and dimming controls, relative or random multi-sided-token selection, and MarkerService-backed duplicate-index, conditional, relative-count, and minimum/maximum marker expressions. Unsupported or ambiguous operations are refused before unrelated requested changes are applied.
+TokenAssist `1.3.1` includes exact saved-attribute and supported computed-value reports, exact or unambiguous controller-list editing, privacy-aware report recipients, relative color and dimming controls, relative or random multi-sided-token selection, and MarkerService-backed duplicate-index, conditional, relative-count, and minimum/maximum marker expressions. Unsupported or ambiguous operations are refused before unrelated requested changes are applied.
 
 Persistent image-side stack editing, token-image replacement, and default-token writes remain outside this release because they modify longer-lived token assets and require a dedicated preview and recovery contract. TokenAssist also keeps its own help and public API rather than rebuilding TokenMod's help handout or publishing a global `TokenMod` compatibility object.
 
@@ -1567,6 +1567,7 @@ GameAssist.register('MyModule', function initMyModule() {
     events: ['chat:message'],
     prefixes: ['!mymod'],
     teardown: null,
+    resume: null,
     dependsOn: [],
     preserveRuntimeOnDisable: false,
     protectedConfigKeys: []
@@ -1578,6 +1579,7 @@ Important contracts:
 * Registration must happen before Roll20’s `ready` event.
 * `events`, `prefixes`, and `dependsOn` are metadata; they do **not** wire handlers automatically.
 * Modules still call `GameAssist.onEvent(...)` and/or `GameAssist.onCommand(...)`.
+* Ordinary module initializers register Roll20 handlers once. If `teardown` removes service observers, timers, or an exposed API, provide an idempotent `resume` callback to restore those resources on re-enable. It must not register new chat/event handlers. Initial setup still belongs to `initFn`; services retain their existing restart contract.
 * A module should persist only inside `state.GameAssist.<Module>`.
 * Dependencies may be reported as unverifiable if Roll20 does not expose script metadata.
 * Runtime is cleared on disable by default. Set `preserveRuntimeOnDisable: true` only when the module deliberately stores durable records there; NPCAssist uses this for death-history buckets and Arc records.
@@ -1759,7 +1761,7 @@ subscription.unsubscribe();
 
 | Method / Field | Result |
 | --- | --- |
-| `version` | TokenAssist component version (`1.3.0`). |
+| `version` | TokenAssist component version (`1.3.1`). |
 | `configSchemaVersion` | TokenAssist configuration schema (`1`). |
 | `reference` | Pinned TokenMod reference version, repository, commit, path, and blob. |
 | `isEnabled()` | Reports whether TokenAssist and MarkerService are both running. |
@@ -1777,7 +1779,7 @@ Use `GameAssist.MarkerService.observe(...)` when the integration needs every mar
 const roster = await GameAssist.InitiativeAssist.getRoster();
 ```
 
-The result retains the TurnTrackerService snapshot and adds InitiativeAssist classifications such as PC, NPC, object, death state, attention messages, resolved modifier, and reroll eligibility. The API is read-only in `1.0.6`; tracker mutations remain behind the guarded `!Init-` UX and TurnTrackerService authority.
+The result retains the TurnTrackerService snapshot and adds InitiativeAssist classifications such as PC, NPC, object, death state, attention messages, resolved modifier, and reroll eligibility. The API is read-only in `1.0.7`; tracker mutations remain behind the guarded `!Init-` UX and TurnTrackerService authority.
 
 ### 10.11 CombatAssist
 
@@ -1787,7 +1789,7 @@ The result retains the TurnTrackerService snapshot and adds InitiativeAssist cla
 const encounter = GameAssist.CombatAssist.getStatus();
 ```
 
-`version` reports CombatAssist `1.2.1`. `getStatus()` returns a defensive copy of the current encounter record or `null`; changing the returned object cannot alter saved GameAssist state. `combatEventSchemaVersion` reports schema 1, while `observe(callback, options)` and `clearObservers(owner)` expose immutable encounter and verified-turn events without giving consumers tracker-write authority. Tracker mutation remains behind GM-only Next, Previous, and confirmed Restore controls or the current player's token-bound End My Turn control, and every path uses TurnTrackerService authority. A recognized round counter is reported as the round source. Timer callbacks and native pings remain private module behavior and expose no mutation API.
+`version` reports CombatAssist `1.2.2`. `getStatus()` returns a defensive copy of the current encounter record or `null`; changing the returned object cannot alter saved GameAssist state. `combatEventSchemaVersion` reports schema 1, while `observe(callback, options)` and `clearObservers(owner)` expose immutable encounter and verified-turn events without giving consumers tracker-write authority. Tracker mutation remains behind GM-only Next, Previous, and confirmed Restore controls or the current player's token-bound End My Turn control, and every path uses TurnTrackerService authority. A recognized round counter is reported as the round source. Timer callbacks and native pings remain private module behavior and expose no mutation API.
 
 ### 10.12 WelcomeAssist
 
@@ -2265,7 +2267,7 @@ Select a disposable token and try:
 !ta-set aura1_radius|5 aura1_color|336699 aura1_options|circle
 ```
 
-Values containing spaces must be quoted. Players may use selected-token commands, but `--ids` remains restricted unless the GM enables it through `!token-assist --config players-can-ids|on` or `!ta-config players-can-ids|on`. TokenAssist 1.3.0 includes computed attribute reports, controller-list editing, color arithmetic, multi-sided-token selection, and advanced MarkerService expressions. Image-side stack editing, default-token writes, TokenMod's exact help-handout rebuilding, and a global TokenMod compatibility object remain outside its boundary and should produce a clear warning rather than a partial mutation.
+Values containing spaces must be quoted. Players may use selected-token commands, but `--ids` remains restricted unless the GM enables it through `!token-assist --config players-can-ids|on` or `!ta-config players-can-ids|on`. TokenAssist 1.3.1 includes computed attribute reports, controller-list editing, color arithmetic, multi-sided-token selection, and advanced MarkerService expressions. Image-side stack editing, default-token writes, TokenMod's exact help-handout rebuilding, and a global TokenMod compatibility object remain outside its boundary and should produce a clear warning rather than a partial mutation.
 
 ### 14.5 ConditionAssist Does Not Respond, Shows the Wrong Wording, or Uses the Wrong Marker
 
@@ -2741,7 +2743,7 @@ The roadmap is directional, not a promise. Items are labeled so implemented feat
 | MarkerService | **Implemented and accepted** | One toggleable service owns GameAssist marker resolution, mutation, preservation, and observation. Disabling it turns off dependent modules without disabling unrelated features. |
 | Bundled marker consumers | **Migrated** | NPCAssist 1.5.0, ConcentrationAssist 0.6.0, and DebugTools 0.3.1 no longer require standalone TokenMod. ConcentrationAssist supplies a portable built-in default, guided marker controls, the lifecycle contract used by EffectAssist, and optional private HealthService check offers; it accepts verified official-2014 save data and refuses unsupported or unreadable contracts instead of guessing `+0`. Equivalent linked sheet/token evidence no longer invalidates an otherwise current offer, while a real second HP change still does. Supported applied DebugTools damage supplies verified test evidence. |
 | ConditionAssist 1.0.5 | **Implemented and accepted** | Condition references with `!condition`, full-name aliases, and case-insensitive `!cond-<condition>` commands, accurate selected-token recognition, current-page condition/marker status, selectable 2014/2024 SRD wording, campaign edits, marker artwork, verified marker-toggling announcements, validated legacy import, MarkerService synchronization, compact navigation, GM/DM control aliases, and the shared Roll20 default-template presentation. |
-| TokenAssist 1.3.0 | **Implemented; expanded verification pending** | General token controls with bare `!token`, full-name `!tokenassist`, `!token-assist`, and `!ta` commands, longest-name-first alias routing, temporary support for older `!token-mod` macros, MarkerService-backed advanced expressions, controller/report routing, computed-value reports, relative color and lighting controls, multi-sided-token selection, duplicate-install protection, a compact action-focused GM/DM screen, an organized extended action library, a stable manual, and the shared Roll20 default-template presentation. |
+| TokenAssist 1.3.1 | **Implemented; expanded verification pending** | General token controls with bare `!token`, full-name `!tokenassist`, `!token-assist`, and `!ta` commands, longest-name-first alias routing, temporary support for older `!token-mod` macros, MarkerService-backed advanced expressions, controller/report routing, computed-value reports, relative color and lighting controls, multi-sided-token selection, duplicate-install protection, a compact action-focused GM/DM screen, an organized extended action library, a stable manual, and the shared Roll20 default-template presentation. |
 | Integrated architecture stabilization | **Complete** | Upgrade, migration, lifecycle, command, marker, documentation, and Roll20 sandbox checks passed under Issues #28 and #29. |
 | DM-configurable timezone | **Implemented; focused acceptance passed** | One validated table timezone controls readable timestamps and date-managed NPC Sessions while stored event instants remain absolute. The complete live module suite was not rerun for v0.1.5.1. |
 | TurnTrackerService 1.0.0 | **Implemented; live foundation passed** | Toggleable native-tracker snapshots, structural row classification, guarded lossless writes, observations, dependency cascading, and visible page-owned row creation passed the focused Roll20 checkpoint. |
@@ -2751,8 +2753,8 @@ The roadmap is directional, not a promise. Items are labeled so implemented feat
 | HealAssist 1.2.2 | **v2.0.0 sandbox candidate** | Disabled-by-default guided official-2014 healing includes direct target selection for one-recipient actions, recipient-count choices for multi-target actions, normal and maximum catalogs, default automatic verified application or optional review, private automatic-failure diagnostics, authorized sources, visible-PC targeting, retained private placement requests, and safe module-speaker fallback for public results. |
 | AttackAssist 1.1.0 | **v2.0.0 sandbox candidate** | Disabled-by-default official-2014 repeating-attack guidance includes stable row identity, compact direct native targeting, immediate sheet-setting submission by default, optional sheet/normal/advantage/disadvantage review, complete prompt-safe Classic-sheet formula materialization, visible native sheet roll cards, preflight refusal for unresolved prompts, incomplete fields, and unsafe dice expressions, one-use rolls, and no damage or combat-state writes. |
 | AlmanacAssist 2.0.5 | **Alpha Testing** | Includes layered Climate/Biome and local-detail setup, seasonal weather, saved-location recall, calendars, moons, reviewed travel, environments, and transactional 2014-sheet rests. Focused live Roll20 use was reported on 2026-08-27, and the grouped local regression sweep passed. Expanded campaign and upgrade testing continues; this is not a claim that every live acceptance case has passed. |
-| InitiativeAssist 1.0.6 | **Implemented; repair verification pending** | Mixed 2014/2024 initiative, full-name and short command aliases, public and private GM/DM start pages, private NPC evidence, GM-layer NPC batches, selected-character batches, roll options, selective rerolls, encounter groups, status, audit, compact navigation, and a stable manual through the case-insensitive `!Init-` namespace. The current repair preserves the inspected sheet contract in classified actor rows. |
-| CombatAssist 1.2.1 | **v2.0.0 integration candidate** | The accepted optional native-tracker layer opens its control center from bare `!combat` or `!combatassist` and retains native round-counter authority, conservative fallback rounds, preserved-round roster/reroll adoption, recovery, guarded movement, timers, pings, Ready/Delay records, bounded health evidence, optional NPCAssist handoff, and GM/DM controls. TurnTrackerService remains its only baseline prerequisite. |
+| InitiativeAssist 1.0.7 | **Implemented; repair verification pending** | Mixed 2014/2024 initiative, full-name and short command aliases, public and private GM/DM start pages, private NPC evidence, GM-layer NPC batches, selected-character batches, roll options, selective rerolls, encounter groups, status, audit, compact navigation, and a stable manual through the case-insensitive `!Init-` namespace. The current repair preserves the inspected sheet contract in classified actor rows. |
+| CombatAssist 1.2.2 | **v2.0.0 integration candidate** | The accepted optional native-tracker layer opens its control center from bare `!combat` or `!combatassist` and retains native round-counter authority, conservative fallback rounds, preserved-round roster/reroll adoption, recovery, guarded movement, timers, pings, Ready/Delay records, bounded health evidence, optional NPCAssist handoff, and GM/DM controls. TurnTrackerService remains its only baseline prerequisite. |
 | WelcomeAssist 0.1.6 | **Implemented and accepted** | Disabled-by-default post-bootstrap greeting with professional, built-in, campaign-custom, and mixed modes; private preview/configuration; bounded custom text; health-gated one-per-sandbox automatic output; shared Roll20-template controls; GM/DM status controls; a stable manual; short and full-name commands; and retained `!welcome-assist` compatibility. The public greeting card remains intentionally distinct from private controls. |
 | GM-private PC health alerts | **v2.0.0 sandbox candidate** | Optional HealthService consumer with 50%, 25%, and 10% downward-crossing controls, combined notices, hidden-by-default exact HP, and no NPC overlap. |
 | Configuration export | **Implemented, partial** | Versioned configuration-only snapshot; no import/restore. |
