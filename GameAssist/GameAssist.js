@@ -3,7 +3,7 @@
 GameAssist - Roll20 API Script
 Version: 2.0.0
 Last Updated: 2026-08-28 (America/New_York)
-Release scope: EffectAssist 2.5.4 duration-label repair, AttackAssist 1.1.0 crash-safe visible official-2014 roll submission, HealAssist 1.2.2 automatic verified healing with optional review and safe public results, HealthService 1.1.1 shared NPC HP-bar setup, SheetCapabilities 1.0.0 per-operation sheet contracts, TokenAssist 1.3.0 marker/controller/report expansion, InitiativeAssist 1.0.6 mixed-sheet actor repair, CombatAssist 1.2.1 encounter-ending repair, NPCAssist 1.5.0 encounter-summary handoff, handout identity/index support, AlmanacAssist 2.0.5 layered Current Settings, saved-location snapshots, compact world controls, seasonal weather, and reviewed travel, and regression repairs across the v2.0.0 module suite.
+Release scope: EffectAssist 2.5.4 duration-label repair, AttackAssist 1.1.0 crash-safe visible official-2014 roll submission, HealAssist 1.2.2 automatic verified healing with optional review and safe public results, HealthService 1.1.1 shared NPC HP-bar setup, SheetCapabilities 1.0.0 per-operation sheet contracts, TokenAssist 1.3.1 marker/controller/report expansion, InitiativeAssist 1.0.7 mixed-sheet actor repair, CombatAssist 1.2.2 encounter-ending repair, NPCAssist 1.5.0 encounter-summary handoff, handout identity/index support, AlmanacAssist 2.0.5 layered Current Settings, saved-location snapshots, compact world controls, seasonal weather, and reviewed travel, and regression repairs across the v2.0.0 module suite.
 Author: Mord Eagle
 License: MIT for original GameAssist code; see LICENSE and ATTRIBUTIONS.md
 Homepage: https://github.com/Mord-Eagle/GameAssist
@@ -21,9 +21,9 @@ calls GameAssist.enqueue(). This development package contains fifteen configurab
 - ConfigUI 0.2.5 - GM-only chat controls with service-first grouping, compact readable configuration summaries, module toggles, common options, and PC health alerts.
 - CritAssist 0.2.5.3 - Detects kept natural-1 attack dice and offers fumble/confirm menus with direct module recovery controls.
 - ConditionAssist 1.0.5 - Provides condition wording, artwork, announcements, marker controls, and full-name command aliases.
-- TokenAssist 1.3.0 - Provides general token controls through !token, !tokenassist, !token-assist, and !ta commands with compact GM navigation, an organized action library, longest-name-first alias routing, controller/report routing, computed-value reports, and MarkerService-backed marker expressions. Legacy !token-mod syntax remains only as a temporary migration alias.
-- InitiativeAssist 1.0.6 - Uses Roll20's native Turn Tracker for mixed-sheet initiative workflows and compact topic guidance.
-- CombatAssist 1.2.1 - Tracks encounters, native round counters, guarded turns, optional timers, private-safe pings, recoverable tracker changes, verified semantic progression events, bounded health evidence, and optional Ready/Delay signaling.
+- TokenAssist 1.3.1 - Provides general token controls through !token, !tokenassist, !token-assist, and !ta commands with compact GM navigation, an organized action library, longest-name-first alias routing, controller/report routing, computed-value reports, and MarkerService-backed marker expressions. Legacy !token-mod syntax remains only as a temporary migration alias.
+- InitiativeAssist 1.0.7 - Uses Roll20's native Turn Tracker for mixed-sheet initiative workflows and compact topic guidance.
+- CombatAssist 1.2.2 - Tracks encounters, native round counters, guarded turns, optional timers, private-safe pings, recoverable tracker changes, verified semantic progression events, bounded health evidence, and optional Ready/Delay signaling.
 - WelcomeAssist 0.1.6 - Optionally greets the table after a healthy GameAssist startup through short or full-name commands.
 - ConcentrationAssist 0.6.0 - Runs supported 2014 manual and private HP-loss-offered concentration checks, refuses unavailable save data instead of guessing, provides guided marker configuration, manages its configured marker, and exposes concentration lifecycle events.
 - NPCAssist 1.5.0 - Adds page-local NPC naming and GM-private Bloodied alerts to death markers, history, reports, audits, repair previews, Arc rosters, and optional CombatAssist encounter summaries on the shared NPC HP bar.
@@ -4046,7 +4046,9 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // CORE:OBJECT exposes the GameAssist singleton with metrics, logging, explicit
     // queue submission, contract-aware dependency diagnostics, registration helpers, and
     // safe enable/disable hooks. A refused dependency enable leaves prior configuration
-    // unchanged; existing command/event execution remains direct.
+    // unchanged; existing command/event execution remains direct. Module initializers
+    // wire permanent Roll20 handlers once; an optional resume hook restores resources
+    // that the module's teardown removes during a live disable/enable cycle.
     // -------------------------------------------------------------------------
     const GameAssist = {
         _metrics: {
@@ -4108,6 +4110,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             events = [],
             prefixes = [],
             teardown = null,
+            resume = null,
             dependsOn = [],
             preserveRuntimeOnDisable = false,
             service = false,
@@ -4124,6 +4127,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             MODULES[name] = {
                 initFn,
                 teardown,
+                resume,
                 enabled,
                 initialized: false,
                 active: false,
@@ -4417,18 +4421,21 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
                 branch.config.enabled = true;
                 branch.runtime = branch.runtime || {};
 
-                if (!m.wired) {
-                    try {
+                try {
+                    if (!m.wired) {
                         m.initFn();
                         m.wired = true;
-                    } catch (e) {
-                        m.initialized = false;
-                        m.active = false;
-                        branch.config.enabled = false;
-                        finish();
-                        this.handleError(name, e);
-                        return;
+                    } else if (typeof m.resume === 'function') {
+                        // Roll20 listeners remain wired once; restore only resources removed by teardown.
+                        m.resume();
                     }
+                } catch (e) {
+                    m.initialized = false;
+                    m.active = false;
+                    branch.config.enabled = false;
+                    finish();
+                    this.handleError(name, e);
+                    return;
                 }
 
                 m.initialized = true;
@@ -4614,6 +4621,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
         teardown: () => HealthService._setEnabled(false)
     });
     // --- Notes & Comments ---
+    // Changed (v2.0.0): Added an optional resume hook for modules whose teardown removes service observers, timers, or public APIs. Re-enabling restores those resources without registering duplicate Roll20 command/event listeners; failed reactivation remains disabled and retryable.
     // Changed (v2.0.0): Protected complete Roll20 query and attribute expressions inside template-rendered Mod-command buttons by deferring braces and pipe delimiters alongside their introducers; live prompts now survive until the click instead of collapsing to blank or boolean command values.
     // Changed (v2.0.0): Deferred Roll20 target references, roll queries, ability calls, and bracketed rolls in generated Mod-command buttons using Roll20's documented HTML entities so prompts run when clicked instead of being consumed while the API renders the panel.
     // Changed (v2.0.0): Added one bounded unavailable-command responder so disabled or inactive feature commands produce a clear recovery panel instead of failing silently; active command routes still take precedence.
@@ -8564,7 +8572,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // [GAMEASSIST:MODULES:CONDITIONASSIST] END
     // =============================================================================
 
-    // ————— TOKEN ASSIST MODULE v1.0.6 —————
+    // ————— TOKEN ASSIST MODULE v1.3.1 —————
     // =============================================================================
     // [GAMEASSIST:MODULES:TOKENASSIST] BEGIN
     // Section Title: GameAssist general token controls and TokenMod compatibility
@@ -8574,7 +8582,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     //   depends_on: ["[GAMEASSIST:POLICY]","[GAMEASSIST:APP:UTILS]","[GAMEASSIST:CORE:MARKERSERVICE]","[GAMEASSIST:CORE:OBJECT]"],
     //   provides: ["GameAssist.TokenAssist"],
     //   last_updated_version: "v2.0.0",
-    //   independent_versions: { module_version: "1.3.0", token_config_schema_version: 1, tokenmod_reference_version: "0.8.88" }, lifecycle: "active" }
+    //   independent_versions: { module_version: "1.3.1", token_config_schema_version: 1, tokenmod_reference_version: "0.8.88" }, lifecycle: "active" }
     // -------------------------------------------------------------------------
     // Narrative
     // TokenAssist provides GameAssist's general token controls through a verified,
@@ -8584,7 +8592,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // -------------------------------------------------------------------------
     const TokenAssist = (() => {
         const MODULE_NAME = 'TokenAssist';
-        const MODULE_VERSION = '1.3.0';
+        const MODULE_VERSION = '1.3.1';
         const CONFIG_SCHEMA_VERSION = 1;
         const TOKENMOD_REFERENCE = Object.freeze({
             version: '0.8.88',
@@ -9045,6 +9053,9 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             return { ok: true, value: next };
         }
 
+        // Literal conversion and relative updates share the same channel bounds.
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
         /**
          * normalizeLiteralColor — Convert supported TokenAssist color literals to Roll20 hex storage.
          * Inputs: transparent, 3/4/6/8-digit hex, rgb/rgba, or hsv/hsva.
@@ -9073,7 +9084,6 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
                 return null;
             }
 
-            const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
             const scaled = (part, decimalMaximum, integerMaximum) => {
                 const value = Number(part);
                 return String(part).includes('.')
@@ -9946,6 +9956,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
         protectedConfigKeys: ['configSchemaVersion']
     });
     // --- Notes & Comments ---
+    // Changed (v2.0.0): Advanced TokenAssist to 1.3.1; literal and relative color operations share an in-scope clamp, restoring tint/aura arithmetic while preserving channel limits and alpha values.
     // Changed (v2.0.0): Advanced TokenAssist to 1.3.0 with validated relative color arithmetic, night-vision dimming controls, and synchronized relative/random multi-sided-token selection.
     // Changed (v2.0.0): Clarified TokenAssist's branded MarkerService ownership while retaining organized action-library coverage, longest-name-first alias routing, and legacy expression compatibility as documented migration surfaces.
     // Prior notes:
@@ -9974,7 +9985,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // [GAMEASSIST:MODULES:TOKENASSIST] END
     // =============================================================================
 
-    // ————— INITIATIVE ASSIST MODULE v1.0.5 —————
+    // ————— INITIATIVE ASSIST MODULE v1.0.7 —————
     // =============================================================================
     // [GAMEASSIST:MODULES:INITIATIVEASSIST] BEGIN
     // Section Title: Native initiative workflow
@@ -9984,7 +9995,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     //   depends_on: ["[GAMEASSIST:POLICY]","[GAMEASSIST:APP:UTILS]","[GAMEASSIST:CORE:TURNTRACKERSERVICE]","[GAMEASSIST:CORE:OBJECT]"],
     //   observability: { spans: ["[GAMEASSIST:MODULES:INITIATIVEASSIST]"] },
     //   last_updated_version: "v2.0.0",
-    //   independent_versions: { module_version: "1.0.6" }, lifecycle: "active" }
+    //   independent_versions: { module_version: "1.0.7" }, lifecycle: "active" }
     // -------------------------------------------------------------------------
     // Narrative
     // InitiativeAssist classifies D&D 5E 2014 and 2024 tracker actors, resolves
@@ -9992,9 +10003,10 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // compact native-tracker workflow. CombatAssist owns explicit encounter,
     // round, turn-timer, and current-turn-ping behavior; InitiativeAssist does not.
     // -------------------------------------------------------------------------
+    let resumeInitiativeAssist = () => {};
     GameAssist.register('InitiativeAssist', function() {
         const MODULE_NAME = 'InitiativeAssist';
-        const MODULE_VERSION = '1.0.6';
+        const MODULE_VERSION = '1.0.7';
         const modState = GameAssist.getState(MODULE_NAME);
         Object.assign(modState.config, {
             enabled: false,
@@ -11544,11 +11556,14 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             }
         }
 
-        GameAssist.TurnTrackerService.clearObservers(MODULE_NAME);
-        GameAssist.TurnTrackerService.observe(event => {
-            modState.runtime.lastTrackerRevision = event.current?.revision || null;
-            modState.runtime.lastTrackerUpdate = event.timestamp || isoNow();
-        }, { owner: MODULE_NAME });
+        resumeInitiativeAssist = () => {
+            GameAssist.TurnTrackerService.clearObservers(MODULE_NAME);
+            GameAssist.TurnTrackerService.observe(event => {
+                modState.runtime.lastTrackerRevision = event.current?.revision || null;
+                modState.runtime.lastTrackerUpdate = event.timestamp || isoNow();
+            }, { owner: MODULE_NAME });
+        };
+        resumeInitiativeAssist();
 
         GameAssist.InitiativeAssist = Object.freeze({
             version: MODULE_VERSION,
@@ -11577,9 +11592,11 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
         prefixes: ['!Init', '!Init-', '!Initiative', '!Initiative-', '!InitiativeAssist', '!InitiativeAssist-'],
         dependsOn: ['TurnTrackerService'],
         preserveRuntimeOnDisable: true,
+        resume: () => resumeInitiativeAssist(),
         teardown: () => GameAssist.TurnTrackerService.clearObservers('InitiativeAssist')
     });
     // --- Notes & Comments ---
+    // Changed (v2.0.0): Advanced InitiativeAssist to 1.0.7; live re-enabling restores its owned tracker observer through the core resume hook while preserving encounter groups and one-time command registration.
     // Changed (v2.0.0): Advanced InitiativeAssist to 1.0.6; mixed-sheet actor results now retain the inspected sheet contract instead of referencing an undefined local identifier.
     // Changed (v2.0.0): Advanced InitiativeAssist to 1.0.5; bare Init, Initiative, and InitiativeAssist commands and their hyphenated actions share the established case-insensitive parser.
     // Changed (v2.0.0): Added the standard GameAssist Home return to the private InitiativeAssist GM/DM start roster.
@@ -11619,7 +11636,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     //   depends_on: ["[GAMEASSIST:POLICY]","[GAMEASSIST:APP:UTILS]","[GAMEASSIST:CORE:TURNTRACKERSERVICE]","[GAMEASSIST:CORE:SEMANTICEVENTS]","[GAMEASSIST:CORE:HEALTHSERVICE]","[GAMEASSIST:CORE:OBJECT]"],
     //   observability: { spans: ["[GAMEASSIST:MODULES:COMBATASSIST]"] },
     //   last_updated_version: "v2.0.0",
-    //   independent_versions: { module_version: "1.2.1", combat_event_schema_version: 1, combat_timeline_schema_version: 1 }, lifecycle: "active" }
+    //   independent_versions: { module_version: "1.2.2", combat_event_schema_version: 1, combat_timeline_schema_version: 1 }, lifecycle: "active" }
     // -------------------------------------------------------------------------
     // Narrative
     // CombatAssist begins only after a GM explicitly starts it against an open,
@@ -11630,9 +11647,10 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // timers and pings add turn awareness without moving tokens or ending turns.
     // -------------------------------------------------------------------------
     let teardownCombatAssist = () => {};
+    let resumeCombatAssist = () => {};
     GameAssist.register('CombatAssist', function() {
         const MODULE_NAME = 'CombatAssist';
-        const MODULE_VERSION = '1.2.1';
+        const MODULE_VERSION = '1.2.2';
         const COMBAT_EVENT_SCHEMA_VERSION = 1;
         const COMBAT_TIMELINE_SCHEMA_VERSION = 1;
         const VALID_STATES = new Set(['active', 'paused', 'attention']);
@@ -13764,56 +13782,60 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             }
         }
 
-        const savedEncounter = getEncounter();
-        if (savedEncounter?.status === 'active') {
-            const current = GameAssist.TurnTrackerService.snapshot();
-            const currentAnalysis = analyzeSnapshot(current);
-            if (
-                !currentAnalysis.ok ||
-                current.pageId !== savedEncounter.pageId ||
-                !sameOrder(currentAnalysis.identities, savedEncounter.order)
-            ) {
-                enterAttention(
-                    savedEncounter,
-                    currentAnalysis.reason || 'The Turn Tracker changed while CombatAssist was unavailable. Restart tracking after reviewing the current order.',
-                    current,
-                    { notify: false }
-                );
-            } else {
-                useRoundCounter(savedEncounter, currentAnalysis);
-                scheduleTurnTimers(savedEncounter, current, currentAnalysis, { resume: true });
+        resumeCombatAssist = () => {
+            // Revalidate retained encounter state before restoring timers or observing new turns.
+            const savedEncounter = getEncounter();
+            if (savedEncounter?.status === 'active') {
+                const current = GameAssist.TurnTrackerService.snapshot();
+                const currentAnalysis = analyzeSnapshot(current);
+                if (
+                    !currentAnalysis.ok ||
+                    current.pageId !== savedEncounter.pageId ||
+                    !sameOrder(currentAnalysis.identities, savedEncounter.order)
+                ) {
+                    enterAttention(
+                        savedEncounter,
+                        currentAnalysis.reason || 'The Turn Tracker changed while CombatAssist was unavailable. Restart tracking after reviewing the current order.',
+                        current,
+                        { notify: false }
+                    );
+                } else {
+                    useRoundCounter(savedEncounter, currentAnalysis);
+                    scheduleTurnTimers(savedEncounter, current, currentAnalysis, { resume: true });
+                }
             }
-        }
 
-        GameAssist.TurnTrackerService.clearObservers(MODULE_NAME);
-        GameAssist.TurnTrackerService.observe(event => {
-            if (!MODULES[MODULE_NAME]?.active) return;
-            if (event.source === 'gameassist' && event.label === 'CombatAssist restore tracker') return;
-            processSnapshot(event.current, {
-                directionHint: event.source === 'gameassist' && event.label === 'CombatAssist next turn'
-                    ? 'forward'
-                    : (event.source === 'gameassist' && event.label === 'CombatAssist previous turn'
-                        ? 'backward'
-                        : (event.source === 'gameassist' ? 'rebase' : null))
+            GameAssist.TurnTrackerService.clearObservers(MODULE_NAME);
+            GameAssist.TurnTrackerService.observe(event => {
+                if (!MODULES[MODULE_NAME]?.active) return;
+                if (event.source === 'gameassist' && event.label === 'CombatAssist restore tracker') return;
+                processSnapshot(event.current, {
+                    directionHint: event.source === 'gameassist' && event.label === 'CombatAssist next turn'
+                        ? 'forward'
+                        : (event.source === 'gameassist' && event.label === 'CombatAssist previous turn'
+                            ? 'backward'
+                            : (event.source === 'gameassist' ? 'rebase' : null))
+                });
+            }, { owner: MODULE_NAME });
+            GameAssist.SemanticEvents.clearObservers(`${MODULE_NAME}:HealthTimeline`);
+            GameAssist.HealthService.observe(recordHealthTimeline, { owner: `${MODULE_NAME}:HealthTimeline` });
+
+            GameAssist.CombatAssist = Object.freeze({
+                version: MODULE_VERSION,
+                combatEventSchemaVersion: COMBAT_EVENT_SCHEMA_VERSION,
+                combatTimelineSchemaVersion: COMBAT_TIMELINE_SCHEMA_VERSION,
+                getStatus: () => {
+                    const encounter = getEncounter();
+                    return encounter ? JSON.parse(JSON.stringify(encounter)) : null;
+                },
+                observe: (callback, { owner = 'CombatAssistConsumer' } = {}) => GameAssist.SemanticEvents.observe(callback, {
+                    owner,
+                    types: ['combat.encounter.started', 'combat.encounter.rebased', 'combat.encounter.attention', 'combat.encounter.paused', 'combat.encounter.resumed', 'combat.encounter.ended', 'combat.turn.changed']
+                }),
+                clearObservers: owner => GameAssist.SemanticEvents.clearObservers(owner)
             });
-        }, { owner: MODULE_NAME });
-        GameAssist.SemanticEvents.clearObservers(`${MODULE_NAME}:HealthTimeline`);
-        GameAssist.HealthService.observe(recordHealthTimeline, { owner: `${MODULE_NAME}:HealthTimeline` });
-
-        GameAssist.CombatAssist = Object.freeze({
-            version: MODULE_VERSION,
-            combatEventSchemaVersion: COMBAT_EVENT_SCHEMA_VERSION,
-            combatTimelineSchemaVersion: COMBAT_TIMELINE_SCHEMA_VERSION,
-            getStatus: () => {
-                const encounter = getEncounter();
-                return encounter ? JSON.parse(JSON.stringify(encounter)) : null;
-            },
-            observe: (callback, { owner = 'CombatAssistConsumer' } = {}) => GameAssist.SemanticEvents.observe(callback, {
-                owner,
-                types: ['combat.encounter.started', 'combat.encounter.rebased', 'combat.encounter.attention', 'combat.encounter.paused', 'combat.encounter.resumed', 'combat.encounter.ended', 'combat.turn.changed']
-            }),
-            clearObservers: owner => GameAssist.SemanticEvents.clearObservers(owner)
-        });
+        };
+        resumeCombatAssist();
 
         teardownCombatAssist = function() {
             clearTurnTimers(getEncounter(), { forget: true });
@@ -13844,9 +13866,11 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
         dependsOn: ['TurnTrackerService'],
         // CHOICE: resolve the live closure at teardown time because register() captures option values before module init assigns its cleanup function.
         teardown: () => teardownCombatAssist(),
+        resume: () => resumeCombatAssist(),
         preserveRuntimeOnDisable: true
     });
     // --- Notes & Comments ---
+    // Changed (v2.0.0): Advanced CombatAssist to 1.2.2; live re-enabling restores tracker and health observers, the public API, and eligible timers after validating the retained encounter against the current tracker. Commands remain registered once and stale pre-disable timers stay invalid.
     // Changed (v2.0.0): Advanced CombatAssist to 1.2.1; the encounter-ending confirmation now formats its stored start time through the shared timezone-aware display helper instead of calling an undefined function.
     // Changed (v2.0.0): Advanced CombatAssist to 1.2.0 with optional 5e Ready/legacy Delay records and !Now signaling, bounded HealthService evidence by turn boundary, and an explicit deduplicated NPCAssist encounter-summary handoff.
     // Changed (v2.0.0): Restored verified semantic progression events to the release inventory; the 500-entry health bound is per active or most recent encounter review, while held actions remain encounter-scoped.
@@ -13854,6 +13878,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // Changed (v2.0.0): Advanced CombatAssist to 1.1.0 with stable encounter identity, monotonic verified-forward progression, and immutable public semantic events for optional consumers; native tracker ownership and all established encounter controls remain unchanged.
     // Decision log:
     //   CHOICE: Publish verified encounter observations without exposing a consumer write path - ALT: let EffectAssist parse Roll20 turnorder independently; REJECTED: duplicate tracker interpretation would drift from CombatAssist's accepted baseline and safety rules.
+    //   CHOICE: Resume disposable resources inside the original closure - ALT: rerun the complete initializer; REJECTED: Roll20 handlers cannot be detached and old closures could duplicate commands or lose timer-generation guards.
     // Prior notes:
     //   v2.0.0 / CombatAssist 1.1.1: bare !combat and !combatassist opened the GM control center, and both names accepted the established case-insensitive space-or-hyphen command forms.
     //   v2.0.0 / CombatAssist 1.1.0 maintenance: Corrected the runtime version display to the then-current owner-authoritative section and release inventory value; encounter behavior was unchanged.
