@@ -27,7 +27,7 @@
  *   !lang registry remove <display name>
  *
  * Quote names containing spaces, for example:
- *   !lang grant "Marcus Hurrell" "Deep Speech, Elvish"
+ *   !lang grant "Bob Whatshisface" "Deep Speech, Elvish"
  */
 
 var LanguageAccessManager = LanguageAccessManager || (function () {
