@@ -3,7 +3,7 @@
 GameAssist - Roll20 API Script
 Version: 2.0.0
 Last Updated: 2026-08-28 (America/New_York)
-Release scope: EffectAssist 2.5.4 duration-label repair, AttackAssist 1.1.0 crash-safe visible official-2014 roll submission, HealAssist 1.2.2 automatic verified healing with optional review and safe public results, HealthService 1.1.1 shared NPC HP-bar setup, SheetCapabilities 1.0.0 per-operation sheet contracts, TokenAssist 1.3.1 marker/controller/report expansion, InitiativeAssist 1.0.7 mixed-sheet actor repair, CombatAssist 1.2.2 encounter-ending repair, NPCAssist 1.5.0 encounter-summary handoff, handout identity/index support, AlmanacAssist 2.0.5 layered Current Settings, saved-location snapshots, compact world controls, seasonal weather, and reviewed travel, and regression repairs across the v2.0.0 module suite.
+Release scope: EffectAssist 2.5.4 duration-label repair, AttackAssist 1.1.0 crash-safe visible official-2014 roll submission, HealAssist 1.2.2 automatic verified healing with optional review and safe public results, HealthService 1.1.1 shared NPC HP-bar setup, SheetCapabilities 1.0.0 per-operation sheet contracts, MarkerService 1.1.2 signed marker arithmetic, TokenAssist 1.3.1 marker/controller/report expansion, InitiativeAssist 1.0.8 shared NPC HP-bar death checks, CombatAssist 1.2.2 encounter-ending repair, NPCAssist 1.5.0 encounter-summary handoff, handout identity/index support, AlmanacAssist 2.0.6 single-use rest transactions, layered Current Settings, saved-location snapshots, compact world controls, seasonal weather, and reviewed travel, and regression repairs across the v2.0.0 module suite.
 Author: Mord Eagle
 License: MIT for original GameAssist code; see LICENSE and ATTRIBUTIONS.md
 Homepage: https://github.com/Mord-Eagle/GameAssist
@@ -22,7 +22,7 @@ calls GameAssist.enqueue(). This development package contains fifteen configurab
 - CritAssist 0.2.5.3 - Detects kept natural-1 attack dice and offers fumble/confirm menus with direct module recovery controls.
 - ConditionAssist 1.0.5 - Provides condition wording, artwork, announcements, marker controls, and full-name command aliases.
 - TokenAssist 1.3.1 - Provides general token controls through !token, !tokenassist, !token-assist, and !ta commands with compact GM navigation, an organized action library, longest-name-first alias routing, controller/report routing, computed-value reports, and MarkerService-backed marker expressions. Legacy !token-mod syntax remains only as a temporary migration alias.
-- InitiativeAssist 1.0.7 - Uses Roll20's native Turn Tracker for mixed-sheet initiative workflows and compact topic guidance.
+- InitiativeAssist 1.0.8 - Uses Roll20's native Turn Tracker for mixed-sheet initiative workflows, shared NPC HP-bar eligibility, and compact topic guidance.
 - CombatAssist 1.2.2 - Tracks encounters, native round counters, guarded turns, optional timers, private-safe pings, recoverable tracker changes, verified semantic progression events, bounded health evidence, and optional Ready/Delay signaling.
 - WelcomeAssist 0.1.6 - Optionally greets the table after a healthy GameAssist startup through short or full-name commands.
 - ConcentrationAssist 0.6.0 - Runs supported 2014 manual and private HP-loss-offered concentration checks, refuses unavailable save data instead of guessing, provides guided marker configuration, manages its configured marker, and exposes concentration lifecycle events.
@@ -30,7 +30,7 @@ calls GameAssist.enqueue(). This development package contains fifteen configurab
 - EffectAssist 2.5.4 - Coordinates compact catalog-driven effects, exact caster-and-recipient identity, retained GM requests, GameAssist-owned 2014-sheet modifiers, verified token-specific concentration, ownership-safe cleanup, provider-specific duration candidates, bounded 2014 Bless proposals, and guarded Guidance consumption.
 - HealAssist 1.2.2 - Guides verified 2014 normal or maximum healing with direct single-recipient targeting, default automatic application and optional review, visible PC targeting, private GM requests, safe public announcements, and HealthService verification.
 - AttackAssist 1.1.0 - Guides authorized 2014 repeating attacks through direct visible targeting, default sheet-mode submission, optional GM-enabled roll review, complete prompt-safe Classic-sheet expansion, private GM placement, crash-safe inline-roll validation, and visible one-use native-template rolls without applying damage.
-- AlmanacAssist 2.0.5 - Provides compact Session controls and layered Current Settings with direct Climate and Biome choices, twelve ecoregion starters, optional geography/terrain/environment/hydrology/vegetation influences, visible seasonal weather calculations, and independent saved-location snapshots; retains named regions, reusable definitions, coherent scenes, reviewed travel with private encounter checks, phenomena, local time, advanced Wayfarer editing, WorldPacks, six independently controlled systems, and transactional rests.
+- AlmanacAssist 2.0.6 - Provides compact Session controls and layered Current Settings with direct Climate and Biome choices, twelve ecoregion starters, optional geography/terrain/environment/hydrology/vegetation influences, visible seasonal weather calculations, and independent saved-location snapshots; retains named regions, reusable definitions, coherent scenes, reviewed travel with private encounter checks, phenomena, local time, advanced Wayfarer editing, WorldPacks, six independently controlled systems, and single-use transactional rests.
 - HPAssist 0.3.0 - Rolls npc_hpformula and uses HealthService for verified writes to the selected shared NPC HP bar when available.
 - DebugTools 0.3.1 - Optional dry-run-first GM diagnostics with verified supported HP damage writes on the selected shared NPC HP bar.
 
@@ -1894,7 +1894,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     //   depends_on: ["[GAMEASSIST:APP:UTILS]"], provides: ["GameAssist.MarkerService"],
     //   observability: { spans: ["[GAMEASSIST:CORE:MARKERSERVICE]"] },
     //   last_updated_version: "v2.0.0",
-    //   independent_versions: { marker_service_version: "1.1.1", tokenmod_reference_version: "0.8.88" }, lifecycle: "active" }
+    //   independent_versions: { marker_service_version: "1.1.2", tokenmod_reference_version: "0.8.88" }, lifecycle: "active" }
     // -------------------------------------------------------------------------
     // Narrative
     // MarkerService resolves Roll20 built-in marker ids, custom display names, and exact
@@ -1908,7 +1908,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // -----------------------------------------------------------------------------
     let setMarkerServiceEnabled;
     const MarkerService = (() => {
-        const version = '1.1.1';
+        const version = '1.1.2';
         const builtInMarkerIds = new Set([
             'red', 'blue', 'green', 'brown', 'purple', 'pink', 'yellow', 'dead',
             'skull', 'sleepy', 'half-heart', 'half-haze', 'interdiction', 'snail',
@@ -2541,7 +2541,8 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             else if (sign === '*') value = base * value;
             else if (sign === '/') value = value === 0 ? NaN : base / value;
             if (!Number.isFinite(value)) return null;
-            return Math.max(minimum, Math.min(maximum, Math.trunc(Math.abs(value))));
+            // Preserve the sign so subtraction below zero reaches the lower bound.
+            return Math.max(minimum, Math.min(maximum, Math.trunc(value)));
         }
 
         function parseExpression(expression) {
@@ -2760,6 +2761,8 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
         });
     })();
     // --- Notes & Comments ---
+    // Changed (v2.0.0): Advanced MarkerService to 1.1.2; truncate signed marker arithmetic before applying min/max bounds, so subtraction cannot turn a negative remainder into an increased count.
+    // Prior notes:
     // Changed (v2.0.0): Advanced MarkerService to 1.1.1; unchanged campaign marker registries are recognized without serializing their complete JSON text on every marker operation.
     // Prior notes:
     //   v2.0.0 / MarkerService 1.1.0: Added the advanced marker expressions used by TokenAssist for duplicate indexes, conditional updates, relative counts, min/max bounds, relative colors, dimming values, and relative/random side selection. The service remains the single direct marker authority; ATTRIBUTIONS.md records the TokenMod design reference.
@@ -9985,7 +9988,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // [GAMEASSIST:MODULES:TOKENASSIST] END
     // =============================================================================
 
-    // ————— INITIATIVE ASSIST MODULE v1.0.7 —————
+    // ————— INITIATIVE ASSIST MODULE v1.0.8 —————
     // =============================================================================
     // [GAMEASSIST:MODULES:INITIATIVEASSIST] BEGIN
     // Section Title: Native initiative workflow
@@ -9995,7 +9998,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     //   depends_on: ["[GAMEASSIST:POLICY]","[GAMEASSIST:APP:UTILS]","[GAMEASSIST:CORE:TURNTRACKERSERVICE]","[GAMEASSIST:CORE:OBJECT]"],
     //   observability: { spans: ["[GAMEASSIST:MODULES:INITIATIVEASSIST]"] },
     //   last_updated_version: "v2.0.0",
-    //   independent_versions: { module_version: "1.0.7" }, lifecycle: "active" }
+    //   independent_versions: { module_version: "1.0.8" }, lifecycle: "active" }
     // -------------------------------------------------------------------------
     // Narrative
     // InitiativeAssist classifies D&D 5E 2014 and 2024 tracker actors, resolves
@@ -10006,7 +10009,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     let resumeInitiativeAssist = () => {};
     GameAssist.register('InitiativeAssist', function() {
         const MODULE_NAME = 'InitiativeAssist';
-        const MODULE_VERSION = '1.0.7';
+        const MODULE_VERSION = '1.0.8';
         const modState = GameAssist.getState(MODULE_NAME);
         Object.assign(modState.config, {
             enabled: false,
@@ -10271,7 +10274,8 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             if (actorType !== 'npc') {
                 return { dead: false, hpKnown: false, hp: null, markerKnown: false, markerDead: false, mismatch: false };
             }
-            const hpRaw = token.get('bar1_value');
+            // Shared bar selection remains readable even when health observation is disabled.
+            const hpRaw = token.get(GameAssist.HealthService.getHpFields().current);
             const hp = numeric(hpRaw);
             const hpKnown = hp !== null;
             const hpDead = hpKnown && hp <= 0;
@@ -11596,6 +11600,8 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
         teardown: () => GameAssist.TurnTrackerService.clearObservers('InitiativeAssist')
     });
     // --- Notes & Comments ---
+    // Changed (v2.0.0): Advanced InitiativeAssist to 1.0.8; roster, individual-roll, and reroll death checks read the current shared NPC HP bar on each evaluation. PC eligibility and death-marker disagreement rules are unchanged.
+    // Prior notes:
     // Changed (v2.0.0): Advanced InitiativeAssist to 1.0.7; live re-enabling restores its owned tracker observer through the core resume hook while preserving encounter groups and one-time command registration.
     // Changed (v2.0.0): Advanced InitiativeAssist to 1.0.6; mixed-sheet actor results now retain the inspected sheet contract instead of referencing an undefined local identifier.
     // Changed (v2.0.0): Advanced InitiativeAssist to 1.0.5; bare Init, Initiative, and InitiativeAssist commands and their hyphenated actions share the established case-insensitive parser.
@@ -23646,7 +23652,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     //   guarantees: ["Session Mode keeps current place, scene, time, travel, rest, weather, event, and announcement actions compact while Worldbuilding Mode owns durable definitions","Six independently toggleable internal submodules provide fictional time, climate, astronomy, weather, environment, and deliberate rest workflows without becoming hidden prerequisites","One signed base chronology keeps Year 1 at elapsed minute zero for saved-campaign compatibility while allowing validated Year 0 dates","SceneResolver publishes one immutable coherent snapshot with field-level provenance for place, local time, climate, weather, environment, astronomy, and active phenomena","Geographies, biomes, ecoregions, locations, phenomena, quick actions, and local temporal contexts are bounded, validated, and dependency-aware","Prepared destinations and mileage-based travel change chronology or active location only after explicit review and confirmation","Travel encounter checks are private GM evidence derived from a selected interval and die, never encounter-content generation or automatic gameplay mutation","Immutable versioned presets install editable copies without replacing existing places","Wayfarer provides complete chat editors plus a versioned advanced handout whose stale-protected import changes only the saved draft","WorldPack import/export excludes runtime chronology and character state, validates the complete bounded definition graph before mutation, and records provenance","TimeAlmanac owns fictional world time without changing real-world GameAssist timestamps, NPCAssist Session dates, CombatAssist rounds, or EffectAssist duration ownership","Committed changes publish bounded immutable semantic events rather than replaying every elapsed minute","Backward movement requires explicit confirmation and never reverses unrelated campaign state","RestAlmanac previews and revalidates verified 2014-sheet writes before mutation and supports standard, heroic, gritty, and bounded custom durations","Wayfarer presents its 20-hour clock as ordinal Hours and named daily periods rather than imposing a twelve-hour AM/PM clock","Announcement preview and delivery use bounded GM-selected audience, heading, preset, field, and descriptive/detailed/technical presentation settings","Optional RulesAdvisor guidance is profile-specific, read-only, and never applies gameplay changes","Focused Almanac role and reference commands are case-insensitive and accept spaces or hyphens"],
     //   depends_on: ["[GAMEASSIST:POLICY]","[GAMEASSIST:APP:UTILS]","[GAMEASSIST:CORE:SEMANTICEVENTS]","[GAMEASSIST:CORE:OBJECT]"],
     //   provides: ["GameAssist.AlmanacAssist"], last_updated_version: "v2.0.0",
-    //   independent_versions: { module_version: "2.0.5", current_settings_schema_version: 1, time_state_schema_version: 2, wayfarer_draft_schema_version: 3, announcement_schema_version: 4, climate_state_schema_version: 1, astronomy_state_schema_version: 1, weather_state_schema_version: 1, environment_state_schema_version: 2, rest_state_schema_version: 2, world_state_schema_version: 1, scene_schema_version: 1, worldpack_schema_version: 1, temporal_context_schema_version: 1, wayfarer_handout_schema_version: 1 }, lifecycle: "active" }
+    //   independent_versions: { module_version: "2.0.6", current_settings_schema_version: 1, time_state_schema_version: 2, wayfarer_draft_schema_version: 3, announcement_schema_version: 4, climate_state_schema_version: 1, astronomy_state_schema_version: 1, weather_state_schema_version: 1, environment_state_schema_version: 2, rest_state_schema_version: 2, world_state_schema_version: 1, scene_schema_version: 1, worldpack_schema_version: 1, temporal_context_schema_version: 1, wayfarer_handout_schema_version: 1 }, lifecycle: "active" }
     // -------------------------------------------------------------------------
     // Narrative
     // AlmanacAssist presents a compact Session Mode for live play and a separate
@@ -23666,7 +23672,7 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
     // -------------------------------------------------------------------------
     GameAssist.register('AlmanacAssist', function() {
         const MODULE_NAME = 'AlmanacAssist';
-        const MODULE_VERSION = '2.0.5';
+        const MODULE_VERSION = '2.0.6';
         const TIME_STATE_SCHEMA_VERSION = 2;
         const WAYFARER_DRAFT_SCHEMA_VERSION = 3;
         const ANNOUNCEMENT_SCHEMA_VERSION = 4;
@@ -30588,6 +30594,9 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             }
             const nextMinute = shouldAdvance ? runtime.time.worldMinute + Math.round(Number(grant.definition.hours) * calendarMinutesPerHour(profileFor())) : null;
             if (shouldAdvance && !resolveWorldMinute(profileFor(), nextMinute)) return sendPanel(msg, 'RestAlmanac Needs Attention', [{ label: 'Problem', value: 'The optional time advance would exceed the supported calendar range.' }, { label: 'Changes', value: 'None.' }]);
+            // Consume before the first write: rollback cannot invalidate HealthService's
+            // cached apply result. A retry must start with a fresh preview/operation id.
+            delete runtime.rest.grants[grant.id];
             const completed = [];
             try {
                 writes.forEach(write => {
@@ -30598,7 +30607,10 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
                 completed.reverse().forEach(write => {
                     try { setRestWrite(write, write.before, grant.id, 'rollback'); } catch { /* Best-effort rollback; audit will expose remaining drift. */ }
                 });
-                return sendPanel(msg, 'RestAlmanac Needs Attention', [{ label: 'Problem', value: 'Roll20 did not accept every sheet change. Completed writes were rolled back where possible.' }]);
+                return sendPanel(msg, 'RestAlmanac Needs Attention', [
+                    { label: 'Problem', value: 'Roll20 did not accept every sheet change. Completed writes were rolled back where possible. Check the affected sheets before preparing a new preview.' },
+                    { label: 'Next Step', value: almanacButton('Prepare New Preview', '!rest') }
+                ]);
             }
             let timeResult = null;
             if (shouldAdvance) {
@@ -30607,7 +30619,10 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
                     completed.reverse().forEach(write => {
                         try { setRestWrite(write, write.before, grant.id, 'time-rollback'); } catch { /* Best-effort rollback; audit will expose remaining drift. */ }
                     });
-                    return sendPanel(msg, 'RestAlmanac Needs Attention', [{ label: 'Problem', value: 'Fictional time could not be advanced, so sheet changes were rolled back.' }]);
+                    return sendPanel(msg, 'RestAlmanac Needs Attention', [
+                        { label: 'Problem', value: 'Fictional time could not be advanced. Sheet changes were rolled back where possible. Check the affected sheets before preparing a new preview.' },
+                        { label: 'Next Step', value: almanacButton('Prepare New Preview', '!rest') }
+                    ]);
                 }
             }
             const record = {
@@ -30623,7 +30638,6 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
             };
             runtime.rest.history.push(record);
             if (runtime.rest.history.length > POLICY.almanac.restHistoryLimit) runtime.rest.history.shift();
-            delete runtime.rest.grants[grant.id];
             publishChange('almanac.rest.completed', null, record, { action: 'rest-completed' }, msg);
             sendPanel(msg, `${grant.definition.name} Complete`, [
                 { label: 'Characters', value: record.characterNames.map(_sanitize).join(', ') },
@@ -31175,6 +31189,8 @@ For bug reports, include the relevant GameAssist chat output and sandbox console
         protectedConfigKeys: ['submodules', 'wayfarer', 'wayfarerDraft', 'climate', 'astronomy', 'weather', 'announcement', 'environment', 'rest', 'world', 'temporalContexts', 'worldPacks', 'rulesAdvisorEnabled', 'rulesAdvisorProfile']
     });
     // --- Notes & Comments ---
+    // Changed (v2.0.0): Advanced AlmanacAssist to 2.0.6; rest confirmations are consumed after validation but before any sheet write. Failed sheet/time transactions retain best-effort rollback, create no completion record, and require a fresh preview so cached HealthService operations cannot report an unapplied retry as successful.
+    // Prior notes:
     // Changed (v2.0.0): Advanced AlmanacAssist to 2.0.5. Named Climate/Biome
     // selectors and ecoregion starters now use numbered, stale-checked choices;
     // the module-local button adapter defers double quotes through HTML transport.

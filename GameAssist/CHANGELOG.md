@@ -6,6 +6,16 @@ This changelog is intentionally detailed. It records not only visible features, 
 
 ---
 
+## v2.0.0 Shared HP, Marker Arithmetic, And Rest Transaction Repairs - 2026-08-28
+
+- **InitiativeAssist 1.0.8:** Reads NPC health from HealthService's current Bar 1, Bar 2, or Bar 3 selection for roster classification, individual initiative rolls, and rerolls. The configured field is re-read at execution time; PC eligibility, death-marker mismatches, custom tracker rows, and non-target priorities retain their prior behavior.
+- **MarkerService 1.1.2:** Preserves the signed result of relative marker arithmetic before truncation and minimum/maximum clamping. Subtracting below zero now reaches the configured lower bound instead of becoming a positive count through absolute-value conversion.
+- **AlmanacAssist 2.0.6:** Consumes a validated rest grant immediately before the first sheet write. Failed sheet or fictional-time transactions keep best-effort rollback, create no completion record, offer a fresh preview, and cannot reuse HealthService's cached apply operation to report an unapplied retry as successful.
+- Adds focused local regression coverage for Bar 1/2/3 NPC classification and actual rerolls, signed marker expressions through MarkerService and TokenAssist, rest rollback, permission and stale-preview refusal, failed and successful one-use grants, restart preservation, and fresh-operation retries.
+- Keeps GameAssist at v2.0.0. Existing commands, saved HP-bar settings, Almanac schemas, unrelated modules, One-Click metadata, and archived releases are unchanged.
+
+---
+
 ## v2.0.0 Module Reactivation And Token Colors - 2026-08-28
 
 - **CombatAssist 1.2.2:** Turning the module off and back on restores native turn tracking, combat HP history, its public API, and eligible turn timers without a sandbox restart. The saved encounter is checked against the current tracker before continuing; missed movement requires review rather than guessed turns or rounds.
