@@ -1,5 +1,4 @@
 {
-    "$schema": "https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/script.json.schema",
     "name": "Language Access Manager",
     "script": "LanguageAccessManager.js",
     "version": "1.0.0",
