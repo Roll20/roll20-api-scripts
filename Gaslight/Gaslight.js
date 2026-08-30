@@ -366,6 +366,35 @@ var Gaslight = Gaslight || (() => {
         return false;
     };
 
+    /**
+     * Feature-detect the experimental-sandbox graphic.createCopy(properties) method.
+     * When present, a graphic can be duplicated with its Marketplace imgsrc AND sides
+     * preserved (which createObj() would reject). See:
+     * https://app.roll20.net/forum/post/12801404
+     * @param {object} token - a Roll20 graphic object
+     * @returns {boolean}
+     */
+    const supportsCreateCopy = (token) => {
+        return !!token && typeof token.createCopy === 'function';
+    };
+
+    /**
+     * Single source of truth for "can this token be staged (copied) to another page?"
+     * - No imgsrc: never copyable.
+     * - createCopy available: always copyable (Marketplace imgsrc/sides preserved).
+     * - Otherwise: fall back to the legacy probe (createObj rejects Marketplace URLs).
+     * @param {object} token - a Roll20 graphic object
+     * @param {string} [pageid] - page to probe on (defaults to the token's page)
+     * @returns {boolean}
+     */
+    const canStageToken = (token, pageid) => {
+        if (!token) return false;
+        var imgsrc = token.get('imgsrc');
+        if (!imgsrc) return false;
+        if (supportsCreateCopy(token)) return true;
+        return canCreateWithImgsrc(imgsrc, pageid || token.get('_pageid'));
+    };
+
     const formatMarketplaceError = (failures, retryCommand) => {
         var failMsg = '<b>⚠️ ' + failures.length + ' token(s) could not be staged</b> because their images are from the Roll20 Marketplace and not in your library.<br>';
         if (failures.some(function(f) { return f.id; }) && typeof ScriptKit !== 'undefined') failMsg += '<small><i>Click a token image to ping its location.</i></small>';
@@ -416,24 +445,32 @@ var Gaslight = Gaslight || (() => {
             var imgsrc = token.get('imgsrc');
             if (!imgsrc) return;
 
-            // Create with spatial + identity + gmnotes (minimum for Anchor/linking to work)
-            var newToken = createObj('graphic', {
-                _subtype: 'token',
-                pageid: targetPageId,
-                imgsrc: imgsrc,
-                left: token.get('left'),
-                top: token.get('top'),
-                width: token.get('width'),
-                height: token.get('height'),
-                rotation: token.get('rotation'),
-                flipv: token.get('flipv'),
-                fliph: token.get('fliph'),
-                layer: token.get('layer'),
-                name: token.get('name'),
-                represents: token.get('represents') || '',
-                controlledby: token.get('controlledby') || '',
-                gmnotes: token.get('gmnotes') || ''
-            });
+            var newToken;
+            if (supportsCreateCopy(token)) {
+                // Experimental sandbox: createCopy duplicates ALL properties
+                // (including Marketplace imgsrc + sides), overriding only the page.
+                newToken = token.createCopy({ pageid: targetPageId });
+            } else {
+                // Legacy: create with spatial + identity + gmnotes (minimum for
+                // Anchor/linking to work). Marketplace imgsrc will be rejected here.
+                newToken = createObj('graphic', {
+                    _subtype: 'token',
+                    pageid: targetPageId,
+                    imgsrc: imgsrc,
+                    left: token.get('left'),
+                    top: token.get('top'),
+                    width: token.get('width'),
+                    height: token.get('height'),
+                    rotation: token.get('rotation'),
+                    flipv: token.get('flipv'),
+                    fliph: token.get('fliph'),
+                    layer: token.get('layer'),
+                    name: token.get('name'),
+                    represents: token.get('represents') || '',
+                    controlledby: token.get('controlledby') || '',
+                    gmnotes: token.get('gmnotes') || ''
+                });
+            }
             if (newToken) {
                 setLinkId(newToken, getLinkId(token));
                 result.cloned++;
@@ -2262,7 +2299,7 @@ var Gaslight = Gaslight || (() => {
             // Check for marketplace images when enabling
             if (val === 'on') {
                 var marketplaceFailures = tokens.filter(function(t) {
-                    return !canCreateWithImgsrc(t.get('imgsrc'), t.get('_pageid'));
+                    return !canStageToken(t, t.get('_pageid'));
                 }).map(function(t) { return { id: t.get('id'), name: t.get('name') || '(unnamed)', imgsrc: t.get('imgsrc') }; });
                 if (marketplaceFailures.length > 0) {
                     reply(msg, 'Stage', formatMarketplaceError(marketplaceFailures, '!gaslight stage --default on'));
@@ -2431,7 +2468,14 @@ var Gaslight = Gaslight || (() => {
         Object.values(groupInfo.players).forEach(function(pInfo) {
             if (pInfo.pageId !== pageId) targetPages.push(pInfo.pageId);
         });
-        stageTokenToPages(obj, targetPages);
+        var stageResult = stageTokenToPages(obj, targetPages);
+        if (stageResult.failed) {
+            sendChat(SCRIPT_NAME, '/w gm ' + formatMarketplaceError([{
+                id: stageResult.id,
+                name: stageResult.name,
+                imgsrc: stageResult.imgsrc
+            }], '!gaslight stage'));
+        }
 
         // Re-link after a short delay to let createObj finish
         setTimeout(function() {
