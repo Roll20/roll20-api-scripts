@@ -1,0 +1,41 @@
+{
+  "name": "chatsetattr",
+  "version": "2.0.0beta",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "build": "rollup --config rollup.config.ts --configPlugin typescript --configImportAttributesKey with",
+    "start": "rollup --config rollup.config.ts --configPlugin typescript --configImportAttributesKey with --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@roll20/api-types": "../.types",
+    "@rollup/plugin-inject": "^5.0.5",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@stylistic/eslint-plugin": "^5.4.0",
+    "@types/node": "^22.15.15",
+    "@types/underscore": "^1.13.0",
+    "eslint": "^9.36.0",
+    "lib-smart-attributes": "../libSmartAttributes",
+    "lib-uuid": "../libUUID",
+    "rollup": "^4.52.3",
+    "rollup-plugin-delete": "^3.0.1",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.45.0",
+    "underscore": "^1.13.7",
+    "vitest": "^3.2.4"
+  }
+}
