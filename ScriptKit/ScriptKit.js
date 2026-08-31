@@ -1,6 +1,6 @@
 // =============================================================================
-// ScriptKit v1.3.0
-// Last Updated: 2026-08-16
+// ScriptKit v1.4.0
+// Last Updated: 2026-08-31
 // Author: Kenan Millet
 //
 // Description:
@@ -17,8 +17,120 @@ var ScriptKit = ScriptKit || (() => {
     'use strict';
 
     const SCRIPT_NAME = 'ScriptKit';
-    const SCRIPT_VERSION = '1.3.0';
+    const SCRIPT_VERSION = '1.4.0';
     const HANDOUT_STEP = Object.freeze({ auto: true });
+
+    // =========================================================================
+    // Random name generator (adjective-noun pairs, seeded shuffle)
+    // =========================================================================
+
+    // 100 words each, no duplicates, fantasy-themed, with 2-5 words per starting
+    // letter for every letter except 'x' (no common, readable x-words exist).
+    // Adjectives and nouns never overlap. Keep words short, unambiguous, and free
+    // of digits/hyphens (nameBase relies on that).
+    const NAME_ADJECTIVES = [
+        'ancient', 'arcane', 'ashen', 'astral', 'azure',
+        'bestial', 'blessed', 'bright', 'bronze', 'brooding',
+        'celestial', 'crimson', 'cryptic', 'crystal', 'cursed',
+        'daring', 'dark', 'dreadful', 'druidic', 'dusky',
+        'eldritch', 'elven', 'enchanted', 'eternal', 'ethereal',
+        'fabled', 'fallen', 'feral', 'fiery', 'frozen',
+        'gilded', 'glimmering', 'gloomy', 'golden', 'grim',
+        'hallowed', 'haunted', 'heroic', 'hidden', 'holy',
+        'icy', 'immortal', 'infernal', 'iron', 'ivory',
+        'jagged', 'jeweled', 'jinxed',
+        'keen', 'kindred', 'knightly',
+        'livid', 'lordly', 'lost', 'luminous', 'lunar',
+        'molten', 'moonlit', 'mystic', 'mythic',
+        'natural', 'nimble', 'noble',
+        'obscure', 'occultic', 'ominous',
+        'popular', 'primal', 'prismatic',
+        'quaint', 'quelling', 'quiet',
+        'radiant', 'regal', 'ruinous', 'runic',
+        'sacred', 'shadowy', 'silver', 'spectral', 'stormy',
+        'terrific', 'thriving', 'timeless', 'tranquil',
+        'ultimate', 'unique', 'unseen',
+        'valiant', 'veiled', 'verdant', 'vital',
+        'wandering', 'warded', 'wicked', 'wise',
+        'yawning', 'young',
+        'zealous', 'zesty',
+    ];
+
+    const NAME_NOUNS = [
+        'abyss', 'aegis', 'amulet', 'arrow',
+        'bane', 'banshee', 'basilisk', 'beacon', 'blade',
+        'chalice', 'cinder', 'citadel', 'crown', 'crypt',
+        'dagger', 'doom', 'dragon', 'drake', 'dusk',
+        'effigy', 'elixir', 'elm', 'ember',
+        'fang', 'fen', 'flame', 'forge', 'frost',
+        'gale', 'glaive', 'griffin', 'grimoire', 'grove',
+        'harbinger', 'haven', 'hearth', 'hex', 'hollow',
+        'idol', 'imp', 'ingot', 'island',
+        'jewel', 'jinx', 'juggernaut',
+        'keep', 'knight', 'kraken',
+        'labyrinth', 'lantern', 'lich', 'lotus', 'lyre',
+        'manor', 'mantle', 'mirror', 'monolith', 'myth',
+        'nexus', 'nova', 'nymph',
+        'obelisk', 'omen', 'onyx', 'oracle',
+        'phoenix', 'portal', 'prophet', 'pyre',
+        'quartz', 'quill', 'quiver',
+        'ravine', 'relic', 'ruin', 'rune',
+        'sigil', 'specter', 'spire', 'summit', 'sword',
+        'talisman', 'tempest', 'thorn', 'throne', 'tomb',
+        'umbra', 'unicorn', 'urn',
+        'valley', 'vigil', 'vortex',
+        'warden', 'wisp', 'wraith', 'wyrm',
+        'yeti', 'yew',
+        'zenith', 'zephyr',
+    ];
+
+    const NAME_PAIR_COUNT = NAME_ADJECTIVES.length * NAME_NOUNS.length;
+
+    // Small deterministic PRNG (mulberry32) — seeded so the shuffle is stable
+    // across sandbox restarts when the seed is persisted.
+    const mulberry32 = (seed) => {
+        let a = seed >>> 0;
+        return () => {
+            a |= 0; a = (a + 0x6D2B79F5) | 0;
+            let t = Math.imul(a ^ (a >>> 15), 1 | a);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    };
+
+    // Cache of the shuffled pair-index order for the active seed (rebuilt on
+    // seed change / restart; derived from the persisted seed so it's stable).
+    let _nameShuffle = null;
+    let _nameShuffleSeed = null;
+
+    const getNameShuffle = (seed) => {
+        if (_nameShuffle && _nameShuffleSeed === seed) return _nameShuffle;
+        const rand = mulberry32(seed);
+        const arr = new Array(NAME_PAIR_COUNT);
+        for (let i = 0; i < NAME_PAIR_COUNT; i++) arr[i] = i;
+        // Fisher-Yates using the seeded PRNG
+        for (let i = NAME_PAIR_COUNT - 1; i > 0; i--) {
+            const j = Math.floor(rand() * (i + 1));
+            const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+        }
+        _nameShuffle = arr;
+        _nameShuffleSeed = seed;
+        return arr;
+    };
+
+    // The base name for a shuffled position.
+    const nameForShufflePos = (seed, pos) => {
+        const shuffle = getNameShuffle(seed);
+        const pair = shuffle[pos % NAME_PAIR_COUNT];
+        const adj = NAME_ADJECTIVES[pair % NAME_ADJECTIVES.length];
+        const noun = NAME_NOUNS[Math.floor(pair / NAME_ADJECTIVES.length)];
+        return adj + '-' + noun;
+    };
+
+    // Strip a trailing -<digits> suffix to get the base name. Our dictionary
+    // words never contain digits, so this is unambiguous.
+    const nameBase = (name) => (name || '').replace(/-\d+$/, '');
+
 
     // In-memory MOTD tracking (resets on sandbox restart)
     const motdSeen = {}; // { scriptName: Set of shown indices }
@@ -366,6 +478,7 @@ var ScriptKit = ScriptKit || (() => {
             return false;
         }
         if (registrations[scriptName]) return true; // already registered
+        ensureNameState(scriptName); // assign a random name-offset on first registration
         registrations[scriptName] = {
             _scriptName: scriptName,
             command: opts.command.startsWith('!') ? opts.command : '!' + opts.command,
@@ -567,6 +680,23 @@ var ScriptKit = ScriptKit || (() => {
         if (!state[SCRIPT_NAME].migrations) state[SCRIPT_NAME].migrations = {};
         if (!state[SCRIPT_NAME].versionDates) state[SCRIPT_NAME].versionDates = {};
         if (!state[SCRIPT_NAME].lastSeenVersions) state[SCRIPT_NAME].lastSeenVersions = {};
+        if (!state[SCRIPT_NAME].names) {
+            state[SCRIPT_NAME].names = {
+                seed: (Math.floor(Math.random() * 0xFFFFFFFF) >>> 0) || 1, // shuffle seed (persisted)
+                plugins: {} // { scriptName: { offset, cursor, used: { base: count } } }
+            };
+        }
+    };
+
+    // Ensure per-plugin name state exists; assign a random starting offset once.
+    const ensureNameState = (scriptName) => {
+        ensureState();
+        var names = state[SCRIPT_NAME].names;
+        if (!names.plugins[scriptName]) {
+            var offset = Math.floor(Math.random() * NAME_PAIR_COUNT);
+            names.plugins[scriptName] = { offset: offset, cursor: offset, used: {} };
+        }
+        return names.plugins[scriptName];
     };
 
     /**
@@ -2650,6 +2780,47 @@ var ScriptKit = ScriptKit || (() => {
             return (reg && reg._handouts && reg._handouts.dev) || null;
         },
         usage: (msg, command, reason) => handleUsage(msg, command, reason),
+
+        // ---- Random name generator ---------------------------------------
+        // Returns the count a base name has been used for a plugin (0 if unused).
+        // Accepts a base name or a full name (trailing -N suffix is stripped).
+        nameCount: (scriptName, name) => {
+            var st = ensureNameState(scriptName);
+            return st.used[nameBase(name)] || 0;
+        },
+        // Record a use of a name (increments the base's count). Returns new count.
+        useName: (scriptName, name) => {
+            var st = ensureNameState(scriptName);
+            var base = nameBase(name);
+            st.used[base] = (st.used[base] || 0) + 1;
+            return st.used[base];
+        },
+        // Release a use of a name (decrements; removes at <= 0). Returns new count.
+        dropName: (scriptName, name) => {
+            var st = ensureNameState(scriptName);
+            var base = nameBase(name);
+            if (!st.used[base]) return 0;
+            st.used[base] -= 1;
+            if (st.used[base] <= 0) { delete st.used[base]; return 0; }
+            return st.used[base];
+        },
+        // Generate a human-readable name for a plugin. Draws the next base name
+        // from a shared seeded shuffle at the plugin's own cursor (starting from
+        // its randomly-assigned offset), then appends -N based on how many times
+        // that base has been used. Pass a useCount(base)->number function to
+        // override the default count source (api.nameCount) — e.g. to check live
+        // objects after a state reset. Defaults to this plugin's tracked counts.
+        randomName: (scriptName, useCount) => {
+            var st = ensureNameState(scriptName);
+            var names = state[SCRIPT_NAME].names;
+            var base = nameForShufflePos(names.seed, st.cursor);
+            st.cursor = (st.cursor + 1) % NAME_PAIR_COUNT; // wrap; lap completes back at offset
+            var countFn = (typeof useCount === 'function')
+                ? useCount
+                : (b) => (st.used[b] || 0);
+            var n = countFn(base) || 0;
+            return n > 0 ? (base + '-' + (n + 1)) : base;
+        },
     };
 
     // Tutorial.Choreograph.registerExample('Sequence', { ... })
@@ -2689,6 +2860,13 @@ on('ready', () => {
         help: {
             description: 'Generic framework library for Roll20 API scripts.',
             changelog: [
+                { version: '1.4.0', date: '2026-08-31', changes: [
+                    'Random name generator: `ScriptKit.randomName(scriptName, useCount?)` returns human-readable, fantasy-themed adjective-noun names (e.g. "arcane-dragon")',
+                    'Names drawn from a shared seeded shuffle (persisted seed → stable order); each plugin gets a random starting offset so plugins begin on different names',
+                    'Collision suffixing: repeated base names become `-2`, `-3`, … based on use count',
+                    '`ScriptKit.useName` / `dropName` / `nameCount` — standardized per-plugin usage tracking (keyed on the base name; trailing `-N` auto-stripped)',
+                    'Dictionaries: 100 adjectives + 100 nouns, no overlap, 2-5 words per letter',
+                ]},
                 { version: '1.3.0', date: '2026-08-16', changes: [
                     'Lazy evaluation: all registration fields (`description`, `items`, `body`, `title`, `details`, `syntax`, `name`, etc.) can now be functions that return the expected value — evaluated on access',
                     'Guide step fields (`select`, `query`, `min`, `max`) also support functions, receiving `ctx` as argument',
@@ -2761,6 +2939,22 @@ on('ready', () => {
                         { name: 'exampleHandler', description: 'Custom (example, msg) => handoutFields function for non-default example generation', version: '1.0.0' },
                         { name: 'onComplete', description: 'Callback fired when any guide completes: (ctx) => void', version: '1.0.0' },
                         { name: 'onMigrationFailure', description: 'Callback on migration error: ({ version, direction, error, currentStoredVersion }) => void', version: '1.0.0' },
+                    ],
+                },
+                randomNames: {
+                    title: 'Random Name Generator',
+                    description: 'Human-readable adjective-noun names',
+                    handouts: 'dev',
+                    version: '1.4.0',
+                    body: 'Generate readable, fantasy-themed IDs like `arcane-dragon` instead of opaque random strings.\n\n'
+                        + '`ScriptKit.randomName(scriptName, useCount?)` draws the next base name from a shared seeded shuffle at your script\'s own cursor (each script gets a random starting offset, so scripts begin on different names). If the base has been used before, a `-N` suffix is appended (`arcane-dragon-2`).\n\n'
+                        + '**Uniqueness is per-plugin and plugin-owned.** By default the suffix count comes from `ScriptKit.nameCount(scriptName, base)`; after you actually use a name, call `ScriptKit.useName(scriptName, name)` to record it. Pass a `useCount(base) => number` function as the second argument to override the count source (e.g. to check live objects after a state reset).\n\n'
+                        + 'All lookups (`nameCount`/`useName`/`dropName`) key on the **base** name and auto-strip a trailing `-N`, so you can pass either the base or the full returned name.',
+                    items: [
+                        { name: 'ScriptKit.randomName(scriptName, useCount?)', description: 'Return a name; useCount(base)→number optionally overrides the default count source', version: '1.4.0' },
+                        { name: 'ScriptKit.useName(scriptName, name)', description: 'Record a use (increments the base\'s count). Returns the new count.', version: '1.4.0' },
+                        { name: 'ScriptKit.dropName(scriptName, name)', description: 'Release a use (decrements; removes at <= 0). Returns the new count.', version: '1.4.0' },
+                        { name: 'ScriptKit.nameCount(scriptName, name)', description: 'Times the base name has been used (0 if unused).', version: '1.4.0' },
                     ],
                 },
                 usage: {
