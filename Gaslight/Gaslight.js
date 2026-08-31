@@ -650,11 +650,12 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
-     * A brand-new page that has never held an object can have a non-string
-     * _zorder (undefined). The engine's auto "send to front" on the first
-     * createObj then throws (adjustZOrder calls _zorder.split()). Seed it with
-     * an empty string so the first object can be created safely. _zorder is
-     * documented read-only, so guard the set and verify it took.
+     * A page the GM has never viewed can have a non-string _zorder (undefined) —
+     * Roll20 initializes it on first render, not on object placement. The engine's
+     * auto "send to front" on the first createObj then throws (adjustZOrder calls
+     * _zorder.split()). Seed it with an empty string so the first object can be
+     * created safely. _zorder is documented read-only, so guard the set and verify
+     * it took (fall back to asking the GM to view the page if it didn't).
      * @returns {boolean} true if the page's _zorder is a usable string
      */
     const ensurePageZOrder = (pageId) => {
@@ -1426,16 +1427,11 @@ var Gaslight = Gaslight || (() => {
             return;
         }
 
-        // Configure the source page as the master.
-        masterPage.set('name', masterName + ' (master)');
-        setConfigOnPage(masterPageId, groupName, { player: 'GM' });
-
-        reply(msg, 'Quick', 'Preparing ' + needed + ' player page(s) for "' + masterName + '"\u2026 this runs in the background; you\u2019ll get a notice when it\u2019s done.');
-
         // Assign each player a page: prefer existing copies, then scratch pages.
         // Copies are used as-is (Roll20 already duplicated their contents); scratch
         // pages get the master's settings + contents cloned onto them and are
-        // tracked so merge can recycle them.
+        // tracked so merge can recycle them. Build the full plan BEFORE mutating
+        // anything so we can validate and abort atomically.
         var scratchUsed = [];
         var jobs = playerIds.map(function(pid) {
             var player = getObj('player', pid);
@@ -1452,18 +1448,28 @@ var Gaslight = Gaslight || (() => {
             return { pid: pid, playerName: playerName, page: page, isScratch: isScratch };
         });
 
+        // Pre-flight: every target page must have a usable _zorder (Roll20 sets it
+        // up on first view; a never-viewed page crashes the first createObj).
+        // ensurePageZOrder tries to seed it. If ANY page can't be prepared, abort
+        // WITHOUT changing anything — no partial setup.
+        var notReady = jobs.filter(function(job) { return !ensurePageZOrder(job.page.get('_id')); });
+        if (notReady.length > 0) {
+            reply(msg, 'Error', notReady.length + ' target page(s) have an uninitialized z-order and can\'t be prepared safely, so nothing was changed. Open (navigate to) each of these pages once so Roll20 initializes them, then re-run <code>' + CMD + ' quick</code>:<br>' +
+                notReady.map(function(job) { return '&bull; ' + (job.page.get('name') || job.page.get('_id')) + ' (' + job.playerName + ')'; }).join('<br>'));
+            return;
+        }
+
+        // All pages validated — safe to mutate. Configure the source as master.
+        masterPage.set('name', masterName + ' (master)');
+        setConfigOnPage(masterPageId, groupName, { player: 'GM' });
+
+        reply(msg, 'Quick', 'Preparing ' + needed + ' player page(s) for "' + masterName + '"\u2026 this runs in the background; you\u2019ll get a notice when it\u2019s done.');
+
         var idx = 0;
         var processNext = function() {
             if (idx >= jobs.length) { finish(); return; }
             var job = jobs[idx++];
             var pageId = job.page.get('_id');
-            // A pristine scratch page may have an uninitialized _zorder, which makes
-            // the engine crash on the first createObj. Seed it first.
-            if (!ensurePageZOrder(pageId)) {
-                reply(msg, 'Warning', 'Page for ' + job.playerName + ' has an uninitialized z-order and could not be prepared safely; skipping. Try placing (and deleting) any object on the ' + SCRATCH_NAME + ' page once, then retry.');
-                processNext();
-                return;
-            }
             job.page.set('name', masterName + ' (' + job.playerName + ')');
             setConfigOnPage(pageId, groupName, { player: job.playerName, playerid: job.pid });
             if (job.isScratch) {
@@ -4677,91 +4683,95 @@ var Gaslight = Gaslight || (() => {
 
         // Register examples
 
-        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
-            name: 'getting-started',
-            description: 'Set up your first per-player split: pages, setup, split, and merge (guide only)',
-            guide: [
-                { prompt: 'This guide walks you through creating your first **per-player split**.\n\nYou\'ll need at least 2 players in your game, but those players do not need to be online.' },
-                { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" — all changes start here.' },
+        // getting-started is composed at registration time: shared intro +
+        // (quick OR manual setup steps, chosen by sandbox capability) + shared
+        // teaching/outro. Choosing the variant here avoids per-step `when` checks.
+        const gsIntro = [
+            { prompt: 'This guide walks you through creating your first **per-player split**.\n\nYou\'ll need at least 2 players in your game, but those players do not need to be online.' },
+            { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" — all changes start here.' },
+        ];
 
-                // ---- Quick path (createCopy available) --------------------------
-                { prompt: 'Good news — your sandbox supports the fast path. Create **one blank page per player**, and name each one exactly `' + SCRATCH_NAME + '`. (You can keep these around and reuse them — Gaslight recycles them automatically.)\n\nThese are scratch pages Gaslight will clone your master onto.',
-                  when: () => createCopyAvailable() },
-                { prompt: 'Navigate to your **master page**, then run `!gaslight quick` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight quick` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight quick "Player1" "Player2" ...` — uses the named players.\n\n**Option 3:** Define a Roll20 party, set the master as the banner page, and run `!gaslight quick` with no selection.\n\nGaslight clones your master onto the scratch pages, configures the group, and splits — all in one step. (A group name is optional; a readable one is generated for you.)',
-                  when: () => createCopyAvailable(),
-                  ...ScriptKit.waitForCommand('!gaslight quick'),
-                  onContinue: () => {
-                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected yet. Make sure you have enough `' + SCRATCH_NAME + '` pages (one per player) and run `!gaslight quick`.';
-                  }
-                },
+        const gsQuickSetup = [
+            { prompt: 'Good news — your sandbox supports the fast path. Create **one blank page**, and name it exactly `' + SCRATCH_NAME + '`, and then duplicate it until there is one per player. (You can keep these around and reuse them — Gaslight recycles them automatically.)\n\nThese are scratch pages Gaslight will clone your master page onto.\n\n*If `quick` later warns that a page has an "uninitialized z-order," just navigate to that page once (Roll20 sets it up on first view) and re-run.*' },
+            { prompt: 'Navigate to your **master page**, then run `!gaslight quick` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight quick` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight quick "Player1" "Player2" ...` — uses the named players.\n\n**Option 3:** Define a Roll20 party, set the master as the banner page, and run `!gaslight quick` with no selection.\n\nGaslight clones your master onto the scratch pages, configures the group, and splits — all in one step. (A group name is optional; a readable one is generated for you.)',
+              ...ScriptKit.waitForCommand('!gaslight quick'),
+              onContinue: () => {
+                  if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected yet. Make sure you have enough `' + SCRATCH_NAME + '` pages (one per player) and run `!gaslight quick`.';
+              }
+            },
+        ];
 
-                // ---- Manual path (createCopy unavailable) -----------------------
-                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.',
-                  when: () => !createCopyAvailable() },
-                { prompt: 'Navigate to the master page and run `!gaslight setup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup "Player1" "Player2" ...` with no selection — uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup` with no selection — uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player. A group name is generated for you — or provide one as the first argument (e.g. `!gaslight setup my-battle`) if you\'d like to name it yourself.',
-                  when: () => !createCopyAvailable(),
-                  ...ScriptKit.waitForCommand('!gaslight setup'),
-                  onContinue: () => {
-                      var groups = discoverAllGroups();
-                      if (Object.keys(groups).length === 0) return 'No group configured yet. Run `!gaslight setup <name>` using one of the methods above.';
-                  }
-                },
-                { prompt: () => {
-                      // Find the group that was just configured but isn't active yet.
-                      var all = discoverAllGroups();
-                      var active = state[SCRIPT_NAME].activeGroups || {};
-                      var pending = Object.keys(all).filter(function(g) { return all[g].master && !active[g]; });
-                      var name = pending.length ? pending[0] : '<group>';
-                      return 'Now activate it:\n\n`!gaslight split ' + name + '`\n\nThis moves players to their individual pages and begins token syncing.\n\n(Use the group name Setup reported — shown above as **' + name + '**.)';
-                  },
-                  when: () => !createCopyAvailable(),
-                  ...ScriptKit.waitForCommand('!gaslight split'),
-                  onContinue: () => {
-                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first.';
-                  }
-                },
-                { prompt: 'You may notice a **HUD** appeared on the master page. We\'ll cover that in a later example. For now, disable it with:\n\n`!gaslight hud off`',
-                  when: () => Object.values(hudRegistry).some(function(e) { return e.isVisible(); }),
-                  onEnter: (ctx, advance) => {
-                      var s = state[SCRIPT_NAME];
-                      var pageId = getHudPageId();
-                      if (pageId) {
-                          var player = ctx.player;
-                          var delay = 0;
-                          // Ping view indicator
-                          if (s.hud.viewId) {
-                              var viewObj = getObj('text', s.hud.viewId);
-                              if (viewObj) {
-                                  setTimeout(function() { ScriptKit.ping(pageId, viewObj.get('left'), viewObj.get('top'), { player: player, color: '#00ff00', moveAll: true }); }, delay);
-                                  delay += 1500;
-                              }
-                          }
-                          // Ping initiative HUD frame
-                          if (s.hud.initData && s.hud.initData.frameId) {
-                              var frameObj = getObj('pathv2', s.hud.initData.frameId);
-                              if (frameObj) {
-                                  setTimeout(function() { ScriptKit.ping(pageId, frameObj.get('x'), frameObj.get('y'), { player: player, color: '#4fc3f7', moveAll: true }); }, delay);
-                                  delay += 1500;
-                              }
-                          }
-                          // Ping turn reticle
-                          if (s.hud.reticleData && s.hud.reticleData.id) {
-                              var reticleObj = getObj('pathv2', s.hud.reticleData.id);
-                              if (reticleObj) {
-                                  setTimeout(function() { ScriptKit.ping(pageId, reticleObj.get('x'), reticleObj.get('y'), { player: player, color: '#ff6600', moveAll: true }); }, delay);
-                              }
+        const gsManualSetup = [
+            { prompt: '💡 **Tip:** Gaslight has a one-command setup — `!gaslight quick` — that clones your page and splits automatically, no manual page duplication needed. It requires the **experimental (Jumpgate) sandbox**, which your game isn\'t using right now. You can enable it in your game\'s API/Mod settings if you\'d like the easier flow; otherwise, continue with the manual steps below.' },
+            { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.' },
+            { prompt: 'Navigate to the master page and run `!gaslight setup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup "Player1" "Player2" ...` with no selection — uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup` with no selection — uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player. A group name is generated for you — or provide one as the first argument (e.g. `!gaslight setup my-battle`) if you\'d like to name it yourself.',
+              ...ScriptKit.waitForCommand('!gaslight setup'),
+              onContinue: () => {
+                  var groups = discoverAllGroups();
+                  if (Object.keys(groups).length === 0) return 'No group configured yet. Run `!gaslight setup <name>` using one of the methods above.';
+              }
+            },
+            { prompt: () => {
+                  var all = discoverAllGroups();
+                  var active = state[SCRIPT_NAME].activeGroups || {};
+                  var pending = Object.keys(all).filter(function(g) { return all[g].master && !active[g]; });
+                  var name = pending.length ? pending[0] : '<group>';
+                  return 'Now activate it:\n\n`!gaslight split ' + name + '`\n\nThis moves players to their individual pages and begins token syncing.\n\n(Use the group name Setup reported — shown above as **' + name + '**.)';
+              },
+              ...ScriptKit.waitForCommand('!gaslight split'),
+              onContinue: () => {
+                  if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first.';
+              }
+            },
+        ];
+
+        const gsShared = [
+            { prompt: 'You may notice a **HUD** appeared on the master page. We\'ll cover that in a later example. For now, disable it with:\n\n`!gaslight hud off`',
+              when: () => Object.values(hudRegistry).some(function(e) { return e.isVisible(); }),
+              onEnter: (ctx, advance) => {
+                  var s = state[SCRIPT_NAME];
+                  var pageId = getHudPageId();
+                  if (pageId) {
+                      var player = ctx.player;
+                      var delay = 0;
+                      if (s.hud.viewId) {
+                          var viewObj = getObj('text', s.hud.viewId);
+                          if (viewObj) {
+                              setTimeout(function() { ScriptKit.ping(pageId, viewObj.get('left'), viewObj.get('top'), { player: player, color: '#00ff00', moveAll: true }); }, delay);
+                              delay += 1500;
                           }
                       }
-                      // Wait for !gaslight hud command to advance
-                      ScriptKit.waitForCommand('!gaslight hud').onEnter(ctx, advance);
-                  },
-                  onExit: (ctx) => { ScriptKit.waitForCommand('!gaslight hud').onExit(ctx); }
-                },
-                { prompt: 'Your split is now active. Try moving an **NPC token** on the master page — it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else — useful for hiding tokens, swapping images, or showing per-player information.' },
-                { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages — players can move their own tokens and everyone sees it (bidirectional).' },
-                { prompt: 'When you\'re done with the split (e.g. combat ends, scene changes), run:\n\n`!gaslight merge`.\n\nThis tears down all links and returns players to the banner page.' },
-                { prompt: '**That\'s the basics!** From here, explore the other examples to learn more about how to use gaslight.', offerExamples: ['manual-setup', 'core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
-            ],
+                      if (s.hud.initData && s.hud.initData.frameId) {
+                          var frameObj = getObj('pathv2', s.hud.initData.frameId);
+                          if (frameObj) {
+                              setTimeout(function() { ScriptKit.ping(pageId, frameObj.get('x'), frameObj.get('y'), { player: player, color: '#4fc3f7', moveAll: true }); }, delay);
+                              delay += 1500;
+                          }
+                      }
+                      if (s.hud.reticleData && s.hud.reticleData.id) {
+                          var reticleObj = getObj('pathv2', s.hud.reticleData.id);
+                          if (reticleObj) {
+                              setTimeout(function() { ScriptKit.ping(pageId, reticleObj.get('x'), reticleObj.get('y'), { player: player, color: '#ff6600', moveAll: true }); }, delay);
+                          }
+                      }
+                  }
+                  ScriptKit.waitForCommand('!gaslight hud').onEnter(ctx, advance);
+              },
+              onExit: (ctx) => { ScriptKit.waitForCommand('!gaslight hud').onExit(ctx); }
+            },
+            { prompt: 'Your split is now active. Try moving an **NPC token** on the master page — it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else — useful for hiding tokens, swapping images, or showing per-player information.' },
+            { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages — players can move their own tokens and everyone sees it (bidirectional).' },
+            { prompt: 'When you\'re done with the split (e.g. combat ends, scene changes), run:\n\n`!gaslight merge`.\n\nThis tears down all links and returns players to the banner page.' },
+            { prompt: '**That\'s the basics!** From here, explore the other examples to learn more about how to use gaslight.', offerExamples: ['manual-setup', 'core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
+        ];
+
+        const gsQuick = createCopyAvailable();
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'getting-started',
+            description: gsQuick
+                ? 'Set up your first per-player split in one command with !gaslight quick (guide only)'
+                : 'Set up your first per-player split: pages, setup, split, and merge (guide only)',
+            guide: gsIntro.concat(gsQuick ? gsQuickSetup : gsManualSetup).concat(gsShared),
         });
 
         // Only register the standalone manual-setup guide when `quick` exists —
