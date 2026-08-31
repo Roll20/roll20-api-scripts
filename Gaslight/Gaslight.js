@@ -1,6 +1,6 @@
 ﻿// =============================================================================
-// Gaslight v2.2.2
-// Last Updated: 2026-08-14
+// Gaslight v2.3.0
+// Last Updated: 2026-08-30
 // Author: Kenan Millet
 //
 // Description:
@@ -13,6 +13,7 @@
 //
 // Commands:
 //   !gaslight setup <group>                     Quick-configure from duplicates
+//   !gaslight quick [group] [players...]         Configure + split using copies/scrap pages
 //   !gaslight split <group> [--force]           Activate a prepared group
 //   !gaslight merge [group]                     Tear down links, return players
 //   !gaslight test <group>                      Dry-run linking resolution
@@ -33,17 +34,18 @@
 //   !gaslight --help                            Command reference
 // =============================================================================
 
-/* global on, sendChat, getObj, findObjs, createObj, Campaign, playerIsGM, log, state, generateUUID */
+/* global on, sendChat, getObj, findObjs, createObj, Campaign, playerIsGM, log, state, generateUUID, sendPing, setTimeout, _ */
 
 var Gaslight = Gaslight || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Gaslight';
-    const SCRIPT_VERSION = '2.2.2';
+    const SCRIPT_VERSION = '2.3.0';
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
     const GLS_TAG        = '[GLS]';
+    const SCRAP_NAME     = 'GLS-SCRAP';
     const ANCHOR_PROPS   = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
 
     // =========================================================================
@@ -393,6 +395,170 @@ var Gaslight = Gaslight || (() => {
         if (!imgsrc) return false;
         if (supportsCreateCopy(token)) return true;
         return canCreateWithImgsrc(imgsrc, pageid || token.get('_pageid'));
+    };
+
+    // =========================================================================
+    // Page cloning (for !gaslight quick)
+    // =========================================================================
+
+    // Page settings copied onto a freshly-created blank page. _id/_type/_zorder
+    // are read-only and excluded; name is set separately.
+    const PAGE_CLONE_PROPS = [
+        'showgrid', 'showdarkness', 'showlighting', 'width', 'height',
+        'snapping_increment', 'grid_opacity', 'fog_opacity', 'background_color',
+        'gridcolor', 'grid_type', 'scale_number', 'scale_units', 'gridlabels',
+        'diagonaltype', 'lightupdatedrop', 'lightenforcelos', 'lightrestrictmove',
+        'lightglobalillum', 'jukeboxtrigger', 'dynamic_lighting_enabled',
+        'daylight_mode_enabled', 'daylightModeOpacity', 'explorer_mode', 'darknessEffect'
+    ];
+
+    // Per-type property lists for cloning page objects. Positional/appearance
+    // props only — _id/_type/_pageid are set by createObj/createCopy.
+    const CLONE_PROPS = {
+        graphic: ['left', 'top', 'width', 'height', 'rotation', 'layer', 'isdrawing',
+            'flipv', 'fliph', 'name', 'gmnotes', 'controlledby', 'represents',
+            'bar1_link', 'bar2_link', 'bar3_link', 'bar1_value', 'bar2_value', 'bar3_value',
+            'bar1_max', 'bar2_max', 'bar3_max', 'aura1_radius', 'aura2_radius',
+            'aura1_color', 'aura2_color', 'aura1_square', 'aura2_square', 'tint_color',
+            'statusmarkers', 'showname', 'showplayers_name', 'showplayers_bar1',
+            'showplayers_bar2', 'showplayers_bar3', 'showplayers_aura1', 'showplayers_aura2',
+            'playersedit_name', 'playersedit_bar1', 'playersedit_bar2', 'playersedit_bar3',
+            'playersedit_aura1', 'playersedit_aura2', 'light_radius', 'light_dimradius',
+            'light_otherplayers', 'light_hassight', 'light_angle', 'light_losangle',
+            'light_multiplier', 'emits_bright_light', 'bright_light_distance',
+            'emits_low_light', 'low_light_distance', 'has_bright_light_vision',
+            'has_night_vision', 'night_vision_distance', 'sides', 'currentSide'],
+        path: ['fill', 'stroke', 'rotation', 'layer', 'stroke_width', 'width', 'height',
+            'top', 'left', 'scaleX', 'scaleY', 'controlledby', 'barrierType'],
+        pathv2: ['shape', 'points', 'fill', 'stroke', 'rotation', 'layer', 'stroke_width',
+            'x', 'y', 'controlledby', 'barrierType', 'oneWayReversed'],
+        text: ['top', 'left', 'width', 'height', 'text', 'font_size', 'rotation', 'color',
+            'font_family', 'layer', 'controlledby'],
+        door: ['x', 'y', 'color', 'isOpen', 'isLocked', 'isSecret', 'path'],
+        window: ['x', 'y', 'color', 'isOpen', 'isLocked', 'path'],
+        pin: ['x', 'y', 'bgColor', 'shape', 'icon', 'pinImage', 'customizationType',
+            'useTextIcon', 'iconText', 'tooltipImageSize', 'link', 'linkType', 'subLink',
+            'subLinkType', 'title', 'notes', 'gmNotes', 'tooltipImage', 'nameplateVisibleTo',
+            'imageVisibleTo', 'notesVisibleTo', 'gmNotesVisibleTo', 'scale']
+    };
+
+    // Object types we clone, in the order we search for them.
+    const CLONE_TYPES = ['graphic', 'path', 'pathv2', 'text', 'door', 'window', 'pin'];
+
+    /**
+     * Build a createObj-ready property object for a page object being cloned.
+     */
+    const buildCloneProps = (obj, destPageId) => {
+        var type = obj.get('_type');
+        var props = CLONE_PROPS[type] || [];
+        var data = { _pageid: destPageId };
+        props.forEach(function(p) {
+            var v = obj.get(p);
+            if (v !== undefined) data[p] = v;
+        });
+        return data;
+    };
+
+    /**
+     * Clone one page object onto destPageId. Returns the new object or null.
+     * Graphics prefer createCopy (Marketplace-safe); other types use createObj.
+     */
+    const clonePageObject = (obj, destPageId) => {
+        var type = obj.get('_type');
+        if (type === 'graphic') {
+            if (supportsCreateCopy(obj)) return obj.createCopy({ pageid: destPageId }) || null;
+            // Legacy fallback (Marketplace imgsrc will fail here)
+            var g = buildCloneProps(obj, destPageId);
+            g._subtype = 'token';
+            g.imgsrc = obj.get('imgsrc');
+            return createObj('graphic', g) || null;
+        }
+        if (type === 'path') {
+            // path requires _path at creation and is immutable afterward
+            var pd = buildCloneProps(obj, destPageId);
+            pd._path = obj.get('_path');
+            return createObj('path', pd) || null;
+        }
+        // pathv2, text, door, window, pin
+        return createObj(type, buildCloneProps(obj, destPageId)) || null;
+    };
+
+    /**
+     * Clone all objects from sourcePageId onto destPageId, preserving z-order,
+     * then invoke onDone(created). Work is deferred to avoid blocking the sandbox.
+     */
+    const clonePageContents = (sourcePageId, destPageId, onDone) => {
+        var sourcePage = getObj('page', sourcePageId);
+        var zorder = (sourcePage.get('_zorder') || '').split(',').filter(Boolean);
+        // Gather objects on the source page, keyed by id.
+        var byId = {};
+        CLONE_TYPES.forEach(function(t) {
+            findObjs({ _type: t, _pageid: sourcePageId }).forEach(function(o) {
+                // Skip Gaslight's own config text objects — the destination page
+                // gets its own config via setConfigOnPage. Cloning the master's
+                // GM config onto a player page would corrupt group discovery.
+                if (o.get('_type') === 'text' && (o.get('text') || '').indexOf(CONFIG_HEADER) === 0) return;
+                // Skip Gaslight script pins — these are page-specific logic markers,
+                // not map content, and shouldn't be duplicated onto player pages.
+                if (o.get('_type') === 'pin' && isScriptPin(o)) return;
+                byId[o.id] = o;
+            });
+        });
+        // Order by _zorder first; append any not present in _zorder (some types
+        // like pins/doors/windows may not appear in the z-order list).
+        var ordered = [];
+        zorder.forEach(function(id) { if (byId[id]) { ordered.push(byId[id]); delete byId[id]; } });
+        Object.keys(byId).forEach(function(id) { ordered.push(byId[id]); });
+
+        var created = [];
+        var i = 0;
+        var step = function() {
+            if (i >= ordered.length) {
+                // No z-order normalization needed: objects were created in
+                // _zorder order (back-to-front) and the engine sends each new
+                // object to the front, so the final stacking matches the source.
+                if (onDone) onDone(created);
+                return;
+            }
+            var src = ordered[i++];
+            try {
+                var copy = clonePageObject(src, destPageId);
+                if (copy) created.push(copy);
+            } catch (e) {
+                log(SCRIPT_NAME + ': quick clone failed for ' + src.get('_type') + ' ' + src.id + ' \u2014 ' + e.message);
+            }
+            if (typeof _ !== 'undefined' && _.defer) _.defer(step);
+            else setTimeout(step, 0);
+        };
+        step();
+    };
+
+    /**
+     * A brand-new page that has never held an object can have a non-string
+     * _zorder (undefined). The engine's auto "send to front" on the first
+     * createObj then throws (adjustZOrder calls _zorder.split()). Seed it with
+     * an empty string so the first object can be created safely. _zorder is
+     * documented read-only, so guard the set and verify it took.
+     * @returns {boolean} true if the page's _zorder is a usable string
+     */
+    const ensurePageZOrder = (pageId) => {
+        var page = getObj('page', pageId);
+        if (!page) return false;
+        if (typeof page.get('_zorder') === 'string') return true;
+        try { page.set('_zorder', ''); } catch (e) { /* read-only in some engines */ }
+        return typeof page.get('_zorder') === 'string';
+    };
+
+    /**
+     * Remove all clonable objects (graphic/path/pathv2/text/door/window/pin)
+     * from a page. Used to recycle scrap pages on merge.
+     */
+    const wipePage = (pageId) => {
+        CLONE_TYPES.forEach(function(t) {
+            findObjs({ _type: t, _pageid: pageId }).forEach(function(o) {
+                try { o.remove(); } catch (e) { /* some types may not be removable */ }
+            });
+        });
     };
 
     const formatMarketplaceError = (failures, retryCommand) => {
@@ -1057,6 +1223,177 @@ var Gaslight = Gaslight || (() => {
         reply(msg, 'Setup', out);
     };
 
+    const doQuick = (msg, args) => {
+        var s = state[SCRIPT_NAME];
+        args = args.slice();
+
+        // Optional group name: if the first arg isn't a flag and doesn't match a
+        // known player (name or ID), treat it as the group name. Uses the
+        // side-effect-free lookup so a group name doesn't trigger a "no player"
+        // error whisper.
+        var groupName = null;
+        if (args.length > 0 && args[0].indexOf('--') !== 0) {
+            if (!findPlayerByNameOrId(args[0])) {
+                groupName = args.shift();
+            }
+        }
+        if (!groupName) groupName = 'quick-' + genId();
+
+        // Determine players (mirror doSetup): selected tokens' controllers,
+        // named args, then party-tagged characters.
+        var playerIds = [];
+        if (msg.selected && msg.selected.length > 0) {
+            msg.selected.forEach(function(sel) {
+                var obj = getObj(sel._type, sel._id);
+                if (!obj) return;
+                var charId = obj.get('represents');
+                if (!charId) return;
+                var character = getObj('character', charId);
+                if (!character) return;
+                var cb = character.get('controlledby') || '';
+                if (cb && cb !== 'all') {
+                    cb.split(',').filter(Boolean).forEach(function(pid) {
+                        if (playerIds.indexOf(pid) === -1) playerIds.push(pid);
+                    });
+                }
+            });
+        }
+        args.forEach(function(name) {
+            var resolved = resolvePlayer(msg, name, CMD + ' quick ' + groupName);
+            if (resolved && resolved !== 'ambiguous' && resolved.id !== 'GM') {
+                if (playerIds.indexOf(resolved.id) === -1) playerIds.push(resolved.id);
+            }
+        });
+        if (playerIds.length === 0) {
+            var characters = findObjs({ _type: 'character' });
+            characters.forEach(function(c) {
+                var tags = c.get('tags') || '';
+                if (!tags.toLowerCase().includes('party')) return;
+                var cb = c.get('controlledby') || '';
+                if (cb && cb !== 'all') {
+                    cb.split(',').filter(Boolean).forEach(function(pid) {
+                        if (playerIds.indexOf(pid) === -1) playerIds.push(pid);
+                    });
+                }
+            });
+        }
+        if (playerIds.length === 0) { reply(msg, 'Error', 'No players found. Select tokens, provide names, or tag party characters.'); return; }
+
+        // Resolve the source (master) page.
+        var masterPageId = resolvePageId(msg, args);
+        var masterPage = getObj('page', masterPageId);
+        if (!masterPage) { reply(msg, 'Error', 'Could not determine source page. Select a token on the page to clone.'); return; }
+
+        // Gate on createCopy support (Option A): pick a graphic on the page and
+        // check. If none exists or it's unsupported, fail before doing anything.
+        var probe = findObjs({ _type: 'graphic', _pageid: masterPageId, _subtype: 'token' })[0];
+        if (!probe) {
+            reply(msg, 'Error', 'The source page has no token to verify cloning support. Add a token, or use <code>' + CMD + ' setup</code> with manually-duplicated pages.');
+            return;
+        }
+        if (!supportsCreateCopy(probe)) {
+            reply(msg, 'Error', '<b>' + CMD + ' quick</b> requires the experimental/Jumpgate sandbox (needs <code>graphic.createCopy</code>). Switch your game to the experimental sandbox, or duplicate pages manually and use <code>' + CMD + ' setup</code>.');
+            return;
+        }
+
+        // Prevent re-activating an already-active group.
+        if (s.activeGroups[groupName]) { reply(msg, 'Error', 'Group "' + groupName + '" is already active. Merge it first.'); return; }
+
+        var masterName = stripGlsTag(masterPage.get('name')) || 'Map';
+
+        // Find existing copies of the master page (same base name after stripping
+        // recursive "Copy of " prefixes), excluding the master itself. These are
+        // GM-made duplicates and already have their contents.
+        var stripCopyOf = function(name) {
+            while (name.indexOf('Copy of ') === 0) name = name.slice(8);
+            return name;
+        };
+        var allPages = findObjs({ _type: 'page' });
+        var copies = allPages.filter(function(p) {
+            if (p.get('_id') === masterPageId) return false;
+            return stripCopyOf(stripGlsTag(p.get('name'))) === masterName;
+        });
+
+        // Find scrap pages to fill any shortfall.
+        var scrap = allPages.filter(function(p) { return p.get('name') === SCRAP_NAME; });
+
+        var needed = playerIds.length; // one page per player (master is the source page)
+        if (copies.length + scrap.length < needed) {
+            reply(msg, 'Error', 'Need ' + needed + ' player page(s) but found only ' + copies.length + ' copy(ies) of "' + masterName + '" and ' + scrap.length + ' <code>' + SCRAP_NAME + '</code> page(s). Duplicate the page or add more <code>' + SCRAP_NAME + '</code> pages.');
+            return;
+        }
+
+        // Configure the source page as the master.
+        masterPage.set('name', masterName + ' (master)');
+        setConfigOnPage(masterPageId, groupName, { player: 'GM' });
+
+        reply(msg, 'Quick', 'Preparing ' + needed + ' player page(s) for "' + masterName + '"\u2026 this runs in the background; you\u2019ll get a notice when it\u2019s done.');
+
+        // Assign each player a page: prefer existing copies, then scrap pages.
+        // Copies are used as-is (Roll20 already duplicated their contents); scrap
+        // pages get the master's settings + contents cloned onto them and are
+        // tracked so merge can recycle them.
+        var scrapUsed = [];
+        var jobs = playerIds.map(function(pid) {
+            var player = getObj('player', pid);
+            var playerName = player ? player.get('_displayname') : pid;
+            var page, isScrap;
+            if (copies.length > 0) {
+                page = copies.shift();
+                isScrap = false;
+            } else {
+                page = scrap.shift();
+                isScrap = true;
+                scrapUsed.push(page.get('_id'));
+            }
+            return { pid: pid, playerName: playerName, page: page, isScrap: isScrap };
+        });
+
+        var idx = 0;
+        var processNext = function() {
+            if (idx >= jobs.length) { finish(); return; }
+            var job = jobs[idx++];
+            var pageId = job.page.get('_id');
+            // A pristine scrap page may have an uninitialized _zorder, which makes
+            // the engine crash on the first createObj. Seed it first.
+            if (!ensurePageZOrder(pageId)) {
+                reply(msg, 'Warning', 'Page for ' + job.playerName + ' has an uninitialized z-order and could not be prepared safely; skipping. Try placing (and deleting) any object on the ' + SCRAP_NAME + ' page once, then retry.');
+                processNext();
+                return;
+            }
+            job.page.set('name', masterName + ' (' + job.playerName + ')');
+            setConfigOnPage(pageId, groupName, { player: job.playerName, playerid: job.pid });
+            if (job.isScrap) {
+                // Match settings to the master, then clone contents.
+                var settings = {};
+                PAGE_CLONE_PROPS.forEach(function(p) {
+                    var v = masterPage.get(p);
+                    if (v !== undefined) settings[p] = v;
+                });
+                job.page.set(settings);
+                clonePageContents(masterPageId, pageId, function() { processNext(); });
+            } else {
+                processNext();
+            }
+        };
+
+        var finish = function() {
+            // Run the standard split logic (link resolution, playerspecificpages,
+            // Anchor/Mirror links, move players, focus-ping).
+            doSplit(msg, [groupName, '--force']);
+            // Track scrap pages so merge recycles them (wipe + rename back).
+            if (s.activeGroups[groupName]) {
+                s.activeGroups[groupName].scrapPages = scrapUsed;
+                // If every player page came from a scrap page, the whole group is
+                // ephemeral — remember to also strip the master's GM config on merge.
+                s.activeGroups[groupName].allScrap = (jobs.length > 0 && scrapUsed.length === jobs.length);
+            }
+            sendChat(SCRIPT_NAME, '/w gm <b>[Quick]</b> Group "' + groupName + '" is ready: ' + jobs.length + ' player page(s) prepared and split.' + (scrapUsed.length > 0 ? ' ' + scrapUsed.length + ' scrap page(s) will be recycled on <code>' + CMD + ' merge</code>.' : ''));
+        };
+
+        processNext();
+    };
+
     const doSplit = (msg, args) => {
         var force = args.indexOf('--force') !== -1;
         args = args.filter(function(a) { return a !== '--force'; });
@@ -1215,6 +1552,43 @@ var Gaslight = Gaslight || (() => {
                 if (groupPageIds.has(psp[playerId])) delete psp[playerId];
             });
             Campaign().set('playerspecificpages', Object.keys(psp).length > 0 ? psp : false);
+
+            // Recycle scrap pages used by `!gaslight quick`: wipe their objects
+            // and rename them back to the scrap identifier so they can be reused.
+            // Players were already returned to the shared page above. Pages that
+            // were the GM's own duplicates are left untouched.
+            //
+            // IMPORTANT: set `destroying` so the destroy:graphic handler does not
+            // cascade these deletions to linked copies on the master/other pages.
+            // The tokens still carry gaslight_link + tracked links at this point.
+            if (active.scrapPages && active.scrapPages.length > 0) {
+                var wasDestroying = destroying;
+                destroying = true;
+                try {
+                    active.scrapPages.forEach(function(pageId) {
+                        var pg = getObj('page', pageId);
+                        if (!pg) return;
+                        wipePage(pageId);
+                        pg.set('name', SCRAP_NAME);
+                    });
+                } finally {
+                    destroying = wasDestroying;
+                }
+            }
+
+            // If every player page was a scrap page, the group was fully
+            // ephemeral — also remove the master page's GM config text and
+            // restore its name so no Gaslight trace remains.
+            if (active.allScrap && active.masterPageId) {
+                var masterCfg = getGroupConfigOnPage(active.masterPageId, gn);
+                if (masterCfg && masterCfg.obj) masterCfg.obj.remove();
+                var masterPg = getObj('page', active.masterPageId);
+                if (masterPg) {
+                    var restored = (masterPg.get('name') || '').replace(/\s*\(master\)\s*$/, '');
+                    if (restored !== masterPg.get('name')) masterPg.set('name', restored);
+                }
+            }
+
             delete s.activeGroups[gn];
         });
 
@@ -2654,6 +3028,7 @@ var Gaslight = Gaslight || (() => {
 
     const HELP_TEXT = '<b>' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + '</b><br><br>'
         + '<code>' + CMD + ' setup &lt;group&gt;</code> -- Quick-configure from duplicated pages<br>'
+        + '<code>' + CMD + ' quick [group]</code> -- Configure + split using copies/scrap pages<br>'
         + '<code>' + CMD + ' split &lt;group&gt;</code> -- Activate group<br>'
         + '<code>' + CMD + ' merge [group]</code> -- Tear down links<br>'
         + '<code>' + CMD + ' test &lt;group&gt;</code> -- Dry-run linking<br>'
@@ -2998,14 +3373,23 @@ var Gaslight = Gaslight || (() => {
      * - It links to a handout (script in handout notes, config in handout gmNotes or pin gmNotes)
      * - OR it has ---GASLIGHT-SCRIPT--- in its own gmNotes (self-contained)
      */
+    const isScriptPin = (pin) => {
+        if (pin.get('_type') !== 'pin') return false;
+        // Handout-linked pin: only a Gaslight script pin if the linked handout
+        // is a Gaslight script (its name carries the [GLS] prefix).
+        if (pin.get('link') && pin.get('linkType') === 'handout') {
+            var handout = getObj('handout', pin.get('link'));
+            if (handout && /^\[GLS\]\s*/i.test(handout.get('name') || '')) return true;
+        }
+        // Self-contained script pin marker in gmNotes.
+        var notes = pin.get('gmNotes') || '';
+        try { notes = decodeURIComponent(notes); } catch(e) {}
+        return notes.indexOf('---GASLIGHT-SCRIPT---') !== -1;
+    };
+
     const findScriptPins = (pageId) => {
         var pins = findObjs({ _type: 'pin', _pageid: pageId });
-        return pins.filter(function(pin) {
-            if (pin.get('link') && pin.get('linkType') === 'handout') return true;
-            var notes = pin.get('gmNotes') || '';
-            try { notes = decodeURIComponent(notes); } catch(e) {}
-            return notes.indexOf('---GASLIGHT-SCRIPT---') !== -1;
-        });
+        return pins.filter(isScriptPin);
     };
 
     /**
@@ -3552,6 +3936,7 @@ var Gaslight = Gaslight || (() => {
 
         switch (sub) {
             case 'setup':   doSetup(msg, args);   break;
+            case 'quick':   doQuick(msg, args);   break;
             case 'split':   doSplit(msg, args);   break;
             case 'merge':   doMerge(msg, args);   break;
             case 'test':    doTest(msg, args);    break;
@@ -3954,6 +4339,12 @@ var Gaslight = Gaslight || (() => {
                           items: [
                               { name: '<group>', description: 'Name for the group configuration', version: '2.0.0' },
                               { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
+                          ]},
+                        { syntax: 'quick [group] [players...]', description: 'Configure + split using page copies and scrap pages', version: '2.3.0',
+                          details: 'Uses existing duplicates of the current page for player pages, and fills any shortfall from pages named GLS-SCRAP (their settings + contents are cloned from the master; requires the experimental/Jumpgate sandbox for graphic.createCopy). Configures the group and runs split in one step. Group name is optional (auto-generated if omitted). On merge, scrap pages are wiped and renamed back to GLS-SCRAP for reuse; real duplicates are left untouched.',
+                          items: [
+                              { name: '[group]', description: 'Optional group name (auto-generated if omitted)', version: '2.3.0' },
+                              { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.3.0' },
                           ]},
                         { syntax: 'split <group> [--force]', description: 'Activate a prepared group', version: '1.0.0',
                           details: 'Links tokens across pages, moves players to individual pages, begins syncing. Runs test-first unless --force.',
