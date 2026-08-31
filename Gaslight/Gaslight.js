@@ -12,10 +12,11 @@
 // Dependencies: Anchor, Mirror, SelectManager, RollCapture (optional)
 //
 // Commands:
-//   !gaslight setup <group>                     Quick-configure from duplicates
-//   !gaslight quick [group] [players...]         Configure + split using copies/scrap pages
+//   !gaslight setup [group] [players...]        Quick-configure from duplicates (group name optional)
+//   !gaslight quick [group] [players...]         Configure + split using copies/scratch pages
 //   !gaslight split <group> [--force]           Activate a prepared group
-//   !gaslight merge [group]                     Tear down links, return players
+//   !gaslight merge [group]                     End a split (top of stack, or named); nested-split aware
+//   !gaslight merge-all                         End all active splits
 //   !gaslight test <group>                      Dry-run linking resolution
 //   !gaslight link [<name>|new] [ids...]        Set gaslight_link on tokens
 //   !gaslight unlink [ids...|--group <g>]       Remove gaslight_link from tokens
@@ -44,8 +45,7 @@ var Gaslight = Gaslight || (() => {
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
-    const GLS_TAG        = '[GLS]';
-    const SCRAP_NAME     = 'GLS-SCRAP';
+    const SCRATCH_NAME     = 'GL-SCRATCH';
     const ANCHOR_PROPS   = ['left', 'top', 'rotation', 'width', 'height', 'flipv', 'fliph'];
 
     // =========================================================================
@@ -55,6 +55,17 @@ var Gaslight = Gaslight || (() => {
     const stripGlsTag = (name) => {
         return (name || '').replace(/^\[GLS\]\s*/i, '').trim();
     };
+
+    // Strip repeated Roll20 "Copy of " prefixes (added when duplicating pages).
+    const stripCopyOf = (name) => {
+        name = name || '';
+        while (name.indexOf('Copy of ') === 0) name = name.slice(8);
+        return name;
+    };
+
+    // True if a page is a scratch page — its name is GL-SCRATCH, possibly behind one
+    // or more "Copy of " prefixes (duplicating a scratch page keeps it usable).
+    const isScratchPageName = (name) => stripCopyOf(name || '') === SCRATCH_NAME;
 
     var relaying = new Set();
     var scripting = false;
@@ -88,9 +99,21 @@ var Gaslight = Gaslight || (() => {
                 activeGroups: {},
                 config: { autoCommit: false, relayCommands: [] },
                 view: 'master',
-                hud: { view: true, initiative: true }
+                hud: { view: true, initiative: true },
+                pageStacks: {}
             };
         }
+        // Per-player page history: { playerId: [ { group, pageId }, ... ] } (top = last).
+        // Enables nested splits — merging a group returns each player to the most
+        // recent group they're still in (or the banner page if none remain).
+        if (!state[SCRIPT_NAME].pageStacks) state[SCRIPT_NAME].pageStacks = {};
+        // Restore the push-sequence counter from persisted stacks so ordering
+        // survives sandbox restarts.
+        Object.keys(state[SCRIPT_NAME].pageStacks).forEach(function(pid) {
+            (state[SCRIPT_NAME].pageStacks[pid] || []).forEach(function(e) {
+                if (typeof e.seq === 'number' && e.seq > _pageStackSeq) _pageStackSeq = e.seq;
+            });
+        });
         if (!state[SCRIPT_NAME].config.relayCommands) state[SCRIPT_NAME].config.relayCommands = [];
         if (!state[SCRIPT_NAME].hud) state[SCRIPT_NAME].hud = { view: true, initiative: true, reticle: true };
         if (state[SCRIPT_NAME].hud.initiative === undefined) state[SCRIPT_NAME].hud.initiative = false;
@@ -100,6 +123,82 @@ var Gaslight = Gaslight || (() => {
             if (state[SCRIPT_NAME].view === null) state[SCRIPT_NAME].view = 'master';
             state[SCRIPT_NAME].version = SCRIPT_VERSION;
         }
+    };
+
+    // =========================================================================
+    // Per-player page stacks (nested split support)
+    // =========================================================================
+
+    // Push (or move to top) a player's entry for a group. Called on split/quick.
+    // `seq` is a monotonic push-order stamp so `merge` can find the truly
+    // most-recently-activated group regardless of differing player sets.
+    var _pageStackSeq = 0;
+    const pushPlayerPage = (playerId, group, pageId) => {
+        var stacks = state[SCRIPT_NAME].pageStacks;
+        var stack = stacks[playerId] || (stacks[playerId] = []);
+        for (var i = stack.length - 1; i >= 0; i--) {
+            if (stack[i].group === group) stack.splice(i, 1);
+        }
+        stack.push({ group: group, pageId: pageId, seq: ++_pageStackSeq });
+    };
+
+    // Remove a group's entry from every player's stack. Returns a map of
+    // { playerId: newTopPageId|null } ONLY for players whose CURRENT (top) page
+    // belonged to the removed group — i.e. players who need reassignment.
+    const removeGroupFromStacks = (group) => {
+        var stacks = state[SCRIPT_NAME].pageStacks;
+        var reassign = {};
+        Object.keys(stacks).forEach(function(playerId) {
+            var stack = stacks[playerId];
+            if (!stack || stack.length === 0) return;
+            var wasTop = stack[stack.length - 1].group === group;
+            for (var i = stack.length - 1; i >= 0; i--) {
+                if (stack[i].group === group) stack.splice(i, 1);
+            }
+            if (wasTop) {
+                reassign[playerId] = stack.length > 0 ? stack[stack.length - 1].pageId : null;
+            }
+            if (stack.length === 0) delete stacks[playerId];
+        });
+        return reassign;
+    };
+
+    // The most-recently-activated group still present in any stack — used by
+    // `merge` (no arg) to decide which group to pop. Uses the highest push seq.
+    const topStackGroup = () => {
+        var stacks = state[SCRIPT_NAME].pageStacks;
+        var best = null, bestSeq = -1;
+        Object.keys(stacks).forEach(function(playerId) {
+            var stack = stacks[playerId];
+            if (!stack) return;
+            stack.forEach(function(entry) {
+                if (entry.seq > bestSeq) { bestSeq = entry.seq; best = entry.group; }
+            });
+        });
+        return best;
+    };
+
+    // Resolve the optional leading group-name argument shared by setup/quick.
+    // If the first arg isn't a flag and does NOT resolve to a player, it's the
+    // group name (shifted off args). Otherwise a readable, collision-free name is
+    // generated via ScriptKit (falling back to a genId-based name). Mutates args.
+    const resolveGroupName = (args) => {
+        var groupName = null;
+        if (args.length > 0 && args[0].indexOf('--') !== 0 && !findPlayerByNameOrId(args[0])) {
+            groupName = args.shift();
+        }
+        if (groupName) return groupName;
+        var groupExists = function(name) {
+            return !!state[SCRIPT_NAME].activeGroups[name] || !!discoverGroup(name).master;
+        };
+        if (typeof ScriptKit !== 'undefined' && ScriptKit.randomName) {
+            return ScriptKit.randomName(SCRIPT_NAME, function(base) {
+                var count = 0;
+                while (groupExists(count === 0 ? base : base + '-' + (count + 1))) count++;
+                return count;
+            });
+        }
+        return 'group-' + genId();
     };
 
     // =========================================================================
@@ -381,6 +480,23 @@ var Gaslight = Gaslight || (() => {
     };
 
     /**
+     * Is graphic.createCopy available in this sandbox at all? Probes any graphic
+     * in the game. Used to branch guides toward the `quick` vs manual workflow.
+     * Memoized — createCopy support is a fixed property of the sandbox for the
+     * life of the process. We only cache once a graphic exists to test (avoids
+     * caching a false negative in an empty game); findObjs is relatively costly.
+     * @returns {boolean}
+     */
+    var _createCopyMemo = null; // null = unknown, true/false = determined
+    const createCopyAvailable = () => {
+        if (_createCopyMemo !== null) return _createCopyMemo;
+        var g = findObjs({ _type: 'graphic' })[0];
+        if (!g) return false; // no graphic to test yet — don't cache, retry later
+        _createCopyMemo = supportsCreateCopy(g);
+        return _createCopyMemo;
+    };
+
+    /**
      * Single source of truth for "can this token be staged (copied) to another page?"
      * - No imgsrc: never copyable.
      * - createCopy available: always copyable (Marketplace imgsrc/sides preserved).
@@ -551,7 +667,7 @@ var Gaslight = Gaslight || (() => {
 
     /**
      * Remove all clonable objects (graphic/path/pathv2/text/door/window/pin)
-     * from a page. Used to recycle scrap pages on merge.
+     * from a page. Used to recycle scratch pages on merge.
      */
     const wipePage = (pageId) => {
         CLONE_TYPES.forEach(function(t) {
@@ -1121,8 +1237,10 @@ var Gaslight = Gaslight || (() => {
      * Expects N+1 pages with the same name (or name prefix). Assigns master + players.
      */
     const doSetup = (msg, args) => {
-        if (args.length < 1) { reply(msg, 'Error', 'Usage: !gaslight setup &lt;group_name&gt; [players...]'); return; }
-        var groupName = args.shift();
+        args = args.slice();
+        // First arg is the group name only if it doesn't resolve to a player;
+        // otherwise a readable name is auto-generated (group name is optional).
+        var groupName = resolveGroupName(args);
 
         // Determine players: selected tokens + named args, fallback to party tags
         var playerIds = [];
@@ -1178,10 +1296,6 @@ var Gaslight = Gaslight || (() => {
 
         // Find candidate pages: same base name (strip recursive "Copy of " prefixes), or already has this group's config
         var allPages = findObjs({ _type: 'page' });
-        var stripCopyOf = function(name) {
-            while (name.indexOf('Copy of ') === 0) name = name.slice(8);
-            return name;
-        };
         var candidates = allPages.filter(function(p) {
             var name = stripCopyOf(p.get('name'));
             if (name === masterName) return true;
@@ -1227,34 +1341,9 @@ var Gaslight = Gaslight || (() => {
         var s = state[SCRIPT_NAME];
         args = args.slice();
 
-        // Optional group name: if the first arg isn't a flag and doesn't match a
-        // known player (name or ID), treat it as the group name. Uses the
-        // side-effect-free lookup so a group name doesn't trigger a "no player"
-        // error whisper.
-        var groupName = null;
-        if (args.length > 0 && args[0].indexOf('--') !== 0) {
-            if (!findPlayerByNameOrId(args[0])) {
-                groupName = args.shift();
-            }
-        }
-        if (!groupName) {
-            // Auto-generate a readable group name via ScriptKit, guaranteeing it
-            // doesn't collide with an existing group (active or configured on a
-            // page). useCount returns how many existing groups already use the
-            // base (base, base-2, ...) so randomName picks a free suffix.
-            var groupExists = function(name) {
-                return !!s.activeGroups[name] || !!discoverGroup(name).master;
-            };
-            if (typeof ScriptKit !== 'undefined' && ScriptKit.randomName) {
-                groupName = ScriptKit.randomName(SCRIPT_NAME, function(base) {
-                    var count = 0;
-                    while (groupExists(count === 0 ? base : base + '-' + (count + 1))) count++;
-                    return count;
-                });
-            } else {
-                groupName = 'quick-' + genId();
-            }
-        }
+        // First arg is the group name only if it doesn't resolve to a player;
+        // otherwise a readable name is auto-generated.
+        var groupName = resolveGroupName(args);
 
         // Determine players (mirror doSetup): selected tokens' controllers,
         // named args, then party-tagged characters.
@@ -1321,22 +1410,19 @@ var Gaslight = Gaslight || (() => {
         // Find existing copies of the master page (same base name after stripping
         // recursive "Copy of " prefixes), excluding the master itself. These are
         // GM-made duplicates and already have their contents.
-        var stripCopyOf = function(name) {
-            while (name.indexOf('Copy of ') === 0) name = name.slice(8);
-            return name;
-        };
         var allPages = findObjs({ _type: 'page' });
         var copies = allPages.filter(function(p) {
             if (p.get('_id') === masterPageId) return false;
+            if (isScratchPageName(p.get('name'))) return false; // scratch pages handled separately
             return stripCopyOf(stripGlsTag(p.get('name'))) === masterName;
         });
 
-        // Find scrap pages to fill any shortfall.
-        var scrap = allPages.filter(function(p) { return p.get('name') === SCRAP_NAME; });
+        // Find scratch pages to fill any shortfall (GL-SCRATCH, or "Copy of GL-SCRATCH", ...).
+        var scratch = allPages.filter(function(p) { return isScratchPageName(p.get('name')); });
 
         var needed = playerIds.length; // one page per player (master is the source page)
-        if (copies.length + scrap.length < needed) {
-            reply(msg, 'Error', 'Need ' + needed + ' player page(s) but found only ' + copies.length + ' copy(ies) of "' + masterName + '" and ' + scrap.length + ' <code>' + SCRAP_NAME + '</code> page(s). Duplicate the page or add more <code>' + SCRAP_NAME + '</code> pages.');
+        if (copies.length + scratch.length < needed) {
+            reply(msg, 'Error', 'Need ' + needed + ' player page(s) but found only ' + copies.length + ' copy(ies) of "' + masterName + '" and ' + scratch.length + ' <code>' + SCRATCH_NAME + '</code> page(s). Duplicate the page or add more <code>' + SCRATCH_NAME + '</code> pages.');
             return;
         }
 
@@ -1346,24 +1432,24 @@ var Gaslight = Gaslight || (() => {
 
         reply(msg, 'Quick', 'Preparing ' + needed + ' player page(s) for "' + masterName + '"\u2026 this runs in the background; you\u2019ll get a notice when it\u2019s done.');
 
-        // Assign each player a page: prefer existing copies, then scrap pages.
-        // Copies are used as-is (Roll20 already duplicated their contents); scrap
+        // Assign each player a page: prefer existing copies, then scratch pages.
+        // Copies are used as-is (Roll20 already duplicated their contents); scratch
         // pages get the master's settings + contents cloned onto them and are
         // tracked so merge can recycle them.
-        var scrapUsed = [];
+        var scratchUsed = [];
         var jobs = playerIds.map(function(pid) {
             var player = getObj('player', pid);
             var playerName = player ? player.get('_displayname') : pid;
-            var page, isScrap;
+            var page, isScratch;
             if (copies.length > 0) {
                 page = copies.shift();
-                isScrap = false;
+                isScratch = false;
             } else {
-                page = scrap.shift();
-                isScrap = true;
-                scrapUsed.push(page.get('_id'));
+                page = scratch.shift();
+                isScratch = true;
+                scratchUsed.push(page.get('_id'));
             }
-            return { pid: pid, playerName: playerName, page: page, isScrap: isScrap };
+            return { pid: pid, playerName: playerName, page: page, isScratch: isScratch };
         });
 
         var idx = 0;
@@ -1371,16 +1457,16 @@ var Gaslight = Gaslight || (() => {
             if (idx >= jobs.length) { finish(); return; }
             var job = jobs[idx++];
             var pageId = job.page.get('_id');
-            // A pristine scrap page may have an uninitialized _zorder, which makes
+            // A pristine scratch page may have an uninitialized _zorder, which makes
             // the engine crash on the first createObj. Seed it first.
             if (!ensurePageZOrder(pageId)) {
-                reply(msg, 'Warning', 'Page for ' + job.playerName + ' has an uninitialized z-order and could not be prepared safely; skipping. Try placing (and deleting) any object on the ' + SCRAP_NAME + ' page once, then retry.');
+                reply(msg, 'Warning', 'Page for ' + job.playerName + ' has an uninitialized z-order and could not be prepared safely; skipping. Try placing (and deleting) any object on the ' + SCRATCH_NAME + ' page once, then retry.');
                 processNext();
                 return;
             }
             job.page.set('name', masterName + ' (' + job.playerName + ')');
             setConfigOnPage(pageId, groupName, { player: job.playerName, playerid: job.pid });
-            if (job.isScrap) {
+            if (job.isScratch) {
                 // Match settings to the master, then clone contents.
                 var settings = {};
                 PAGE_CLONE_PROPS.forEach(function(p) {
@@ -1398,14 +1484,14 @@ var Gaslight = Gaslight || (() => {
             // Run the standard split logic (link resolution, playerspecificpages,
             // Anchor/Mirror links, move players, focus-ping).
             doSplit(msg, [groupName, '--force']);
-            // Track scrap pages so merge recycles them (wipe + rename back).
+            // Track scratch pages so merge recycles them (wipe + rename back).
             if (s.activeGroups[groupName]) {
-                s.activeGroups[groupName].scrapPages = scrapUsed;
-                // If every player page came from a scrap page, the whole group is
+                s.activeGroups[groupName].scratchPages = scratchUsed;
+                // If every player page came from a scratch page, the whole group is
                 // ephemeral — remember to also strip the master's GM config on merge.
-                s.activeGroups[groupName].allScrap = (jobs.length > 0 && scrapUsed.length === jobs.length);
+                s.activeGroups[groupName].allScratch = (jobs.length > 0 && scratchUsed.length === jobs.length);
             }
-            sendChat(SCRIPT_NAME, '/w gm <b>[Quick]</b> Group "' + groupName + '" is ready: ' + jobs.length + ' player page(s) prepared and split.' + (scrapUsed.length > 0 ? ' ' + scrapUsed.length + ' scrap page(s) will be recycled on <code>' + CMD + ' merge</code>.' : ''));
+            sendChat(SCRIPT_NAME, '/w gm <b>[Quick]</b> Group "' + groupName + '" is ready: ' + jobs.length + ' player page(s) prepared and split.' + (scratchUsed.length > 0 ? ' ' + scratchUsed.length + ' scratch page(s) will be recycled on <code>' + CMD + ' merge</code>.' : ''));
         };
 
         processNext();
@@ -1475,8 +1561,14 @@ var Gaslight = Gaslight || (() => {
         Object.entries(groupInfo.players).forEach(function(entry) {
             var playerId = entry[0], pInfo = entry[1];
             var player = getObj('player', playerId);
-            if (player) psp[playerId] = pInfo.pageId;
-            else reply(msg, 'Warning', 'Player "' + pInfo.name + '" (' + playerId + ') not found.');
+            if (player) {
+                psp[playerId] = pInfo.pageId;
+                // Record this group at the top of the player's page stack so a
+                // later merge can restore them to their previous group's page.
+                pushPlayerPage(playerId, groupName, pInfo.pageId);
+            } else {
+                reply(msg, 'Warning', 'Player "' + pInfo.name + '" (' + playerId + ') not found.');
+            }
         });
         Campaign().set('playerspecificpages', psp);
 
@@ -1537,7 +1629,9 @@ var Gaslight = Gaslight || (() => {
     const doMerge = (msg, args) => {
         const s = state[SCRIPT_NAME];
         const groupName = args[0];
-        const groupsToMerge = groupName ? [groupName] : Object.keys(s.activeGroups);
+        // No arg: pop the most-recently-activated group off the stack.
+        // With a name: merge that specific group wherever it sits in the stack.
+        const groupsToMerge = groupName ? [groupName] : (topStackGroup() ? [topStackGroup()] : []);
         if (groupsToMerge.length === 0) { reply(msg, 'Error', 'No active groups to merge.'); return; }
 
         groupsToMerge.forEach(function(gn) {
@@ -1561,42 +1655,52 @@ var Gaslight = Gaslight || (() => {
                 allIds.forEach(function(id) { Mirror.unlink([id]); });
             }
 
+            // Remove this group from every player's page stack. reassign holds
+            // { playerId: newTopPageId|null } for players whose CURRENT page was
+            // in this group — they need to move to their previous group's page
+            // (or the banner page if their stack is now empty).
+            var reassign = removeGroupFromStacks(gn);
             var psp = Campaign().get('playerspecificpages') || {};
-            // Remove all players assigned to any page in this group
+            Object.keys(reassign).forEach(function(playerId) {
+                var newPage = reassign[playerId];
+                if (newPage) psp[playerId] = newPage;   // fall back to previous group's page
+                else delete psp[playerId];              // no group left → banner page
+            });
+            // Fallback: clear any player still assigned to one of this group's
+            // pages but not tracked in a stack (e.g. pre-existing/reset state).
             var groupPageIds = new Set([active.masterPageId]);
             Object.values(active.playerPages).forEach(function(p) { groupPageIds.add(p.pageId); });
             Object.keys(psp).forEach(function(playerId) {
-                if (groupPageIds.has(psp[playerId])) delete psp[playerId];
+                if (!reassign.hasOwnProperty(playerId) && groupPageIds.has(psp[playerId])) delete psp[playerId];
             });
             Campaign().set('playerspecificpages', Object.keys(psp).length > 0 ? psp : false);
 
-            // Recycle scrap pages used by `!gaslight quick`: wipe their objects
-            // and rename them back to the scrap identifier so they can be reused.
-            // Players were already returned to the shared page above. Pages that
-            // were the GM's own duplicates are left untouched.
+            // Recycle scratch pages used by `!gaslight quick`: wipe their objects
+            // and rename them back to the scratch identifier so they can be reused.
+            // Players affected by this merge were already reassigned above.
             //
             // IMPORTANT: set `destroying` so the destroy:graphic handler does not
             // cascade these deletions to linked copies on the master/other pages.
             // The tokens still carry gaslight_link + tracked links at this point.
-            if (active.scrapPages && active.scrapPages.length > 0) {
+            if (active.scratchPages && active.scratchPages.length > 0) {
                 var wasDestroying = destroying;
                 destroying = true;
                 try {
-                    active.scrapPages.forEach(function(pageId) {
+                    active.scratchPages.forEach(function(pageId) {
                         var pg = getObj('page', pageId);
                         if (!pg) return;
                         wipePage(pageId);
-                        pg.set('name', SCRAP_NAME);
+                        pg.set('name', SCRATCH_NAME);
                     });
                 } finally {
                     destroying = wasDestroying;
                 }
             }
 
-            // If every player page was a scrap page, the group was fully
+            // If every player page was a scratch page, the group was fully
             // ephemeral — also remove the master page's GM config text and
             // restore its name so no Gaslight trace remains.
-            if (active.allScrap && active.masterPageId) {
+            if (active.allScratch && active.masterPageId) {
                 var masterCfg = getGroupConfigOnPage(active.masterPageId, gn);
                 if (masterCfg && masterCfg.obj) masterCfg.obj.remove();
                 var masterPg = getObj('page', active.masterPageId);
@@ -1609,10 +1713,22 @@ var Gaslight = Gaslight || (() => {
             delete s.activeGroups[gn];
         });
 
-        reply(msg, 'Merge', 'Merged ' + groupsToMerge.length + ' group(s). Players returned to shared page.');
+        reply(msg, 'Merge', 'Merged ' + groupsToMerge.length + ' group(s). Players returned to their previous page.');
 
         // Destroy HUD elements (preference preserved, will recreate on next split)
         Object.keys(hudRegistry).forEach(function(el) { hudRegistry[el].disable(); });
+    };
+
+    const doMergeAll = (msg) => {
+        const s = state[SCRIPT_NAME];
+        // Snapshot names first — doMerge mutates activeGroups. Merging every group
+        // empties the page stacks regardless of order; each merge reassigns any
+        // affected players to their next remaining group (or the banner page).
+        var names = Object.keys(s.activeGroups);
+        if (names.length === 0) { reply(msg, 'Error', 'No active groups to merge.'); return; }
+        names.forEach(function(gn) {
+            if (s.activeGroups[gn]) doMerge(msg, [gn]);
+        });
     };
 
     const doTest = (msg, args) => {
@@ -3045,9 +3161,10 @@ var Gaslight = Gaslight || (() => {
 
     const HELP_TEXT = '<b>' + SCRIPT_NAME + ' v' + SCRIPT_VERSION + '</b><br><br>'
         + '<code>' + CMD + ' setup &lt;group&gt;</code> -- Quick-configure from duplicated pages<br>'
-        + '<code>' + CMD + ' quick [group]</code> -- Configure + split using copies/scrap pages<br>'
+        + '<code>' + CMD + ' quick [group]</code> -- Configure + split using copies/scratch pages<br>'
         + '<code>' + CMD + ' split &lt;group&gt;</code> -- Activate group<br>'
         + '<code>' + CMD + ' merge [group]</code> -- Tear down links<br>'
+        + '<code>' + CMD + ' merge-all</code> -- End all active splits<br>'
         + '<code>' + CMD + ' test &lt;group&gt;</code> -- Dry-run linking<br>'
         + '<code>' + CMD + ' link [name|new] [ids...]</code> -- Link tokens<br>'
         + '<code>' + CMD + ' unlink [ids...]</code> -- Unlink tokens<br>'
@@ -3956,6 +4073,7 @@ var Gaslight = Gaslight || (() => {
             case 'quick':   doQuick(msg, args);   break;
             case 'split':   doSplit(msg, args);   break;
             case 'merge':   doMerge(msg, args);   break;
+            case 'merge-all': doMergeAll(msg);    break;
             case 'test':    doTest(msg, args);    break;
             case 'link':    doLink(msg, args);    break;
             case 'unlink':  doUnlink(msg, args);  break;
@@ -4200,9 +4318,9 @@ var Gaslight = Gaslight || (() => {
             '<ol>',
             '<li>Create your master page with all tokens placed.</li>',
             '<li>Duplicate it once per player (Roll20 built-in Duplicate Page).</li>',
-            '<li>Select party tokens on the master page, run: <code>!gaslight setup mygroup</code> — this auto-detects duplicates, assigns pages to players, and configures the group.</li>',
-            '<li>Run <code>!gaslight test mygroup</code> — dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
-            '<li>Run <code>!gaslight split mygroup</code> — activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
+            '<li>Select party tokens on the master page, run: <code>!gaslight setup</code> — auto-detects duplicates, assigns pages to players, and configures the group. A group name is generated (shown in the reply); add your own as the first argument to name it.</li>',
+            '<li>Run <code>!gaslight test &lt;group&gt;</code> — dry-run that shows how tokens will link without activating anything. Fix any warnings before proceeding.</li>',
+            '<li>Run <code>!gaslight split &lt;group&gt;</code> — activates the group: links tokens across pages, moves players to their individual pages, and begins syncing.</li>',
             '<li>When done: <code>!gaslight merge</code> — tears down all links, returns players to the banner page.</li>',
             '</ol>',
             '<h3>Commands</h3>',
@@ -4282,8 +4400,6 @@ var Gaslight = Gaslight || (() => {
             version: SCRIPT_VERSION,
             command: CMD,
             tag: 'GLS',
-            aliases: { help: ['help', '--help'], man: 'man', examples: 'examples', whatsnew: 'whatsnew', genHelp: 'gen-help', genDev: 'gen-dev-docs' },
-            newSince: '2.2.0',
             motd: [
                 'Use `!gaslight test <group>` before splitting to catch linking issues early.',
                 'The `--default` flag on stage/sync/desync sets character-level config that applies automatically.',
@@ -4298,12 +4414,22 @@ var Gaslight = Gaslight || (() => {
                 quickStart: [
                     'Create your master page with all tokens placed.',
                     'Duplicate it once per player (Roll20 built-in Duplicate Page).',
-                    'Select party tokens on the master page, run `!gaslight setup mygroup` — auto-detects duplicates, assigns pages, configures the group.',
-                    '`!gaslight test mygroup` — dry-run showing how tokens will link. Fix any warnings.',
-                    '`!gaslight split mygroup` — activates the group: links tokens, moves players, begins syncing.',
+                    'Select party tokens on the master page, run `!gaslight setup` — auto-detects duplicates, assigns pages, configures the group (a name is generated, or provide your own).',
+                    '`!gaslight test <group>` — dry-run showing how tokens will link. Fix any warnings.',
+                    '`!gaslight split <group>` — activates the group: links tokens, moves players, begins syncing.',
                     'When done: `!gaslight merge` — tears down all links, returns players.',
                 ],
                 changelog: [
+                    { version: '2.3.0', date: '2026-08-31', changes: [
+                        '`!gaslight quick [group] [players...]` — configure + split in one step, cloning the master onto page copies (and reusable ' + SCRATCH_NAME + ' pages) via graphic.createCopy (experimental sandbox)',
+                        'Marketplace-safe token staging: stage/clone now uses createCopy when available, preserving Marketplace imgsrc and sides',
+                        '`!gaslight merge-all` — end all active splits at once',
+                        'Nested splits: per-player page stacks — merging a group returns each player to the most recent group they\'re still in (or the banner page)',
+                        '`!gaslight merge` (no arg) now ends the most-recently-activated split (top of the stack) instead of all splits; `merge <group>` still targets a specific group anywhere in the stack',
+                        'Group name is now optional for `setup` and `quick` — a readable name (e.g. arcane-dragon) is generated via ScriptKit; the first argument is treated as a player unless it doesn\'t resolve to one',
+                        'Auto-stage failures are now reported to the GM instead of failing silently',
+                        'Adaptive getting-started guide (quick vs manual by sandbox) plus a standalone manual-setup guide when quick is available',
+                    ]},
                     { version: '2.2.2', date: '2026-08-14', changes: [
                         'Added version dates to changelog for ScriptKit date-based whatsnew queries',
                     ]},
@@ -4351,14 +4477,14 @@ var Gaslight = Gaslight || (() => {
                 ],
                 commands: [
                     { group: 'Core', commands: [
-                        { syntax: 'setup <group> [players...]', description: 'Quick-configure group from duplicate pages', version: '2.0.0',
-                          details: 'Auto-detects page copies by name, assigns master + player pages. Players resolved from selected tokens or named explicitly.',
+                        { syntax: 'setup [group] [players...]', description: 'Quick-configure group from duplicate pages', version: '2.0.0',
+                          details: 'Auto-detects page copies by name, assigns master + player pages. Players resolved from selected tokens or named explicitly. The group name is optional — a readable one is generated (and shown in the reply) if you don\'t provide one.',
                           items: [
-                              { name: '<group>', description: 'Name for the group configuration', version: '2.0.0' },
+                              { name: '[group]', description: 'Optional group name (a readable name is generated if omitted; the first arg is only treated as a group name if it doesn\'t match a player)', version: '2.3.0' },
                               { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
                           ]},
-                        { syntax: 'quick [group] [players...]', description: 'Configure + split using page copies and scrap pages', version: '2.3.0',
-                          details: 'Uses existing duplicates of the current page for player pages, and fills any shortfall from pages named GLS-SCRAP (their settings + contents are cloned from the master; requires the experimental/Jumpgate sandbox for graphic.createCopy). Configures the group and runs split in one step. Group name is optional (auto-generated if omitted). On merge, scrap pages are wiped and renamed back to GLS-SCRAP for reuse; real duplicates are left untouched.',
+                        { syntax: 'quick [group] [players...]', description: 'Configure + split using page copies and scratch pages', version: '2.3.0',
+                          details: 'Uses existing duplicates of the current page for player pages, and fills any shortfall from pages named ' + SCRATCH_NAME + ' (their settings + contents are cloned from the master; requires the experimental/Jumpgate sandbox for graphic.createCopy). Configures the group and runs split in one step. Group name is optional (auto-generated if omitted). On merge, scratch pages are wiped and renamed back to ' + SCRATCH_NAME + ' for reuse; real duplicates are left untouched.',
                           items: [
                               { name: '[group]', description: 'Optional group name (a readable name like "arcane-dragon" is generated if omitted)', version: '2.3.0' },
                               { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.3.0' },
@@ -4368,7 +4494,14 @@ var Gaslight = Gaslight || (() => {
                           items: [
                               { name: '--force', description: 'Skip the automatic test and split immediately', version: '1.0.0' },
                           ]},
-                        { syntax: 'merge [group]', description: 'Tear down links, return players to shared page', version: '1.0.0' },
+                        { syntax: 'merge [group]', description: 'End a split; players return to their previous split (or banner)', version: '1.0.0',
+                          details: 'With no argument, merges the most recently activated group. With a group name, merges that specific group wherever it sits. Because splits stack, each player returns to the most recent group they\'re still in (or the banner page if none remain). quick scratch pages are recycled on merge.',
+                          items: [
+                              { name: '(no args)', description: 'Merge the most-recently-activated group (top of the stack)', version: '2.3.0' },
+                              { name: '<group>', description: 'Merge a specific group, wherever it is in the stack', version: '2.3.0' },
+                          ]},
+                        { syntax: 'merge-all', description: 'End all active splits (pop the whole stack)', version: '2.3.0',
+                          details: 'Merges every active group, emptying the page stacks. Each player ends up back on the banner page.' },
                         { syntax: 'test <group>', description: 'Dry-run linking resolution', version: '1.0.0',
                           details: 'Shows which tokens would link via each resolution step (1-4) without activating anything.' },
                         { syntax: 'status', description: 'Show configured groups, active splits, linked token counts', version: '1.0.0' },
@@ -4550,15 +4683,38 @@ var Gaslight = Gaslight || (() => {
             guide: [
                 { prompt: 'This guide walks you through creating your first **per-player split**.\n\nYou\'ll need at least 2 players in your game, but those players do not need to be online.' },
                 { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This page is the GM\'s "ground truth" — all changes start here.' },
-                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.' },
-                { prompt: 'Navigate to the master page and run `!gaslight setup mygroup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup mygroup` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup mygroup "Player1" "Player2" ...` with no selection — uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup mygroup` with no selection — uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player.',
+
+                // ---- Quick path (createCopy available) --------------------------
+                { prompt: 'Good news — your sandbox supports the fast path. Create **one blank page per player**, and name each one exactly `' + SCRATCH_NAME + '`. (You can keep these around and reuse them — Gaslight recycles them automatically.)\n\nThese are scratch pages Gaslight will clone your master onto.',
+                  when: () => createCopyAvailable() },
+                { prompt: 'Navigate to your **master page**, then run `!gaslight quick` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight quick` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight quick "Player1" "Player2" ...` — uses the named players.\n\n**Option 3:** Define a Roll20 party, set the master as the banner page, and run `!gaslight quick` with no selection.\n\nGaslight clones your master onto the scratch pages, configures the group, and splits — all in one step. (A group name is optional; a readable one is generated for you.)',
+                  when: () => createCopyAvailable(),
+                  ...ScriptKit.waitForCommand('!gaslight quick'),
+                  onContinue: () => {
+                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected yet. Make sure you have enough `' + SCRATCH_NAME + '` pages (one per player) and run `!gaslight quick`.';
+                  }
+                },
+
+                // ---- Manual path (createCopy unavailable) -----------------------
+                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the page names as they are — the *"Copy of"* prefix is how Gaslight auto-detects them.',
+                  when: () => !createCopyAvailable() },
+                { prompt: 'Navigate to the master page and run `!gaslight setup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup "Player1" "Player2" ...` with no selection — uses the specified player names.\n\n**Option 3:** Define a Roll20 party, set the master page as the banner page, and run `!gaslight setup` with no selection — uses controlling players of party tokens.\n\nAll options auto-detect duplicated pages and assign one per player. A group name is generated for you — or provide one as the first argument (e.g. `!gaslight setup my-battle`) if you\'d like to name it yourself.',
+                  when: () => !createCopyAvailable(),
                   ...ScriptKit.waitForCommand('!gaslight setup'),
                   onContinue: () => {
                       var groups = discoverAllGroups();
                       if (Object.keys(groups).length === 0) return 'No group configured yet. Run `!gaslight setup <name>` using one of the methods above.';
                   }
                 },
-                { prompt: 'Now run:\n\n`!gaslight split mygroup`\n\nThis activates the group — players are moved to their individual pages and token syncing begins.',
+                { prompt: () => {
+                      // Find the group that was just configured but isn't active yet.
+                      var all = discoverAllGroups();
+                      var active = state[SCRIPT_NAME].activeGroups || {};
+                      var pending = Object.keys(all).filter(function(g) { return all[g].master && !active[g]; });
+                      var name = pending.length ? pending[0] : '<group>';
+                      return 'Now activate it:\n\n`!gaslight split ' + name + '`\n\nThis moves players to their individual pages and begins token syncing.\n\n(Use the group name Setup reported — shown above as **' + name + '**.)';
+                  },
+                  when: () => !createCopyAvailable(),
                   ...ScriptKit.waitForCommand('!gaslight split'),
                   onContinue: () => {
                       if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first.';
@@ -4604,9 +4760,51 @@ var Gaslight = Gaslight || (() => {
                 { prompt: 'Your split is now active. Try moving an **NPC token** on the master page — it syncs to all player pages automatically. NPC tokens only sync when updated on the master page (one-directional).\n\nThis means you can change an NPC on a specific player\'s page without affecting anyone else — useful for hiding tokens, swapping images, or showing per-player information.' },
                 { prompt: 'Now try moving a **player-controlled token** on that player\'s page. It syncs back to the master and out to other player pages — players can move their own tokens and everyone sees it (bidirectional).' },
                 { prompt: 'When you\'re done with the split (e.g. combat ends, scene changes), run:\n\n`!gaslight merge`.\n\nThis tears down all links and returns players to the banner page.' },
-                { prompt: '**That\'s the basics!** From here, explore the other examples to learn more about how to use gaslight.', offerExamples: ['core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
+                { prompt: '**That\'s the basics!** From here, explore the other examples to learn more about how to use gaslight.', offerExamples: ['manual-setup', 'core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
             ],
         });
+
+        // Only register the standalone manual-setup guide when `quick` exists —
+        // otherwise getting-started already IS the manual walkthrough.
+        if (createCopyAvailable()) {
+        ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
+            name: 'manual-setup',
+            description: 'Prepare gaslight pages in advance by hand: duplicate pages, setup, split',
+            guide: [
+                { prompt: 'This guide covers the **manual** setup workflow — duplicating pages yourself and configuring the group by hand.\n\nThis is handy for **preparing your gaslight pages in advance** (before a session), or when you want full control over exactly which pages map to which players.' },
+                { prompt: 'Create your **master page** with all tokens placed (NPCs, player characters, objects). This is the GM\'s "ground truth" — all changes start here.' },
+                { prompt: 'Duplicate the page **once per player** using Roll20\'s built-in **Duplicate Page** button. Leave the names as they are — the *"Copy of"* prefix is how Gaslight auto-detects the copies.' },
+                { prompt: 'Navigate to the master page and run `!gaslight setup` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight setup`.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight setup "Player1" "Player2" ...`.\n\n**Option 3:** Define a Roll20 party, set the master as the banner page, and run `!gaslight setup` with no selection.\n\nAll options auto-detect the duplicated pages and assign one per player. A group name is generated for you — or provide one as the first argument if you\'d like to name it.',
+                  ...ScriptKit.waitForCommand('!gaslight setup'),
+                  onContinue: () => {
+                      var groups = discoverAllGroups();
+                      if (Object.keys(groups).length === 0) return 'No group configured yet. Run `!gaslight setup` using one of the methods above.';
+                  }
+                },
+                { prompt: () => {
+                      var all = discoverAllGroups();
+                      var active = state[SCRIPT_NAME].activeGroups || {};
+                      var pending = Object.keys(all).filter(function(g) { return all[g].master && !active[g]; });
+                      var name = pending.length ? pending[0] : '<group>';
+                      return 'Optional: run `!gaslight test ' + name + '` first to preview how tokens will link and catch any issues before activating.';
+                  } },
+                { prompt: () => {
+                      var all = discoverAllGroups();
+                      var active = state[SCRIPT_NAME].activeGroups || {};
+                      var pending = Object.keys(all).filter(function(g) { return all[g].master && !active[g]; });
+                      var name = pending.length ? pending[0] : '<group>';
+                      return 'Activate the group:\n\n`!gaslight split ' + name + '`\n\nPlayers are moved to their individual pages and token syncing begins.';
+                  },
+                  ...ScriptKit.waitForCommand('!gaslight split'),
+                  onContinue: () => {
+                      if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected. Run `!gaslight split <group>` first.';
+                  }
+                },
+                { prompt: 'When you\'re done, run `!gaslight merge` to tear down the links and return players to the banner page.\n\n**Note:** manual setup leaves your duplicated pages in place after merge (unlike `!gaslight quick`, which recycles its scratch pages).' },
+                { prompt: '**That\'s manual setup.** For the one-command version (when available), see the **getting-started** guide.', offerExamples: ['getting-started', 'core-mechanics', 'initiative-hud', 'relay', 'scripting'] },
+            ],
+        });
+        }
 
         ScriptKit.Gaslight.registerExample(SCRIPT_NAME, {
             name: 'core-mechanics',
@@ -4651,7 +4849,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: 'You can also set sync/desync **defaults** on a character so new tokens inherit the config:\n\n`!gaslight sync --default all` — sync everything (the default)\n`!gaslight sync --default left,top,bar1_value` — sync only these props\n`!gaslight desync --default left,top` — exclude position from sync\n`!gaslight desync --default all` — disable all syncing by default\n\nUse `!gaslight sync reset` on a token to re-read the character default.' },
                 { prompt: '**Token deletion behavior:**\n\n• Delete a **parent token** (master page, or controlling player\'s page for PCs) → all linked copies are removed\n• Delete a **non-parent copy** (e.g. an NPC on a player page) → only that copy is removed, others remain' },
                 { prompt: '**That\'s the core!** You now know how to stage, link/unlink, sync/desync, and manage token lifecycle.\n\nNext, learn how the initiative HUD works or how to relay commands to player pages.',
-                  offerExamples: ['initiative-hud', 'relay', 'scripting']
+                  offerExamples: ['manual-setup', 'initiative-hud', 'relay', 'scripting']
                 },
             ],
         });
@@ -4945,7 +5143,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: '**Toggling on/off:**\n\nYou can disable the HUD without losing your settings:\n\n`!gaslight hud init off` — hides the initiative HUD (turn order still works normally)\n`!gaslight hud init on` — shows it again with your saved customization\n`!gaslight hud reticle off` / `on` — same for the reticle independently\n`!gaslight hud off` / `on` — toggles all HUD elements at once' },
                 { prompt: '**⚠️ Tags:**\n\nIf a token in initiative doesn\'t exist on all player pages, its HUD pin shows a ⚠️ icon in the title. Click the pin to see which players can\'t see it.\n\nThis usually means the token hasn\'t been staged to all pages. Run `!gaslight stage` with it selected to fix it.' },
                 { prompt: '**Commands reference:**\n\n`!gaslight hud init on|off|reset` — toggle/reset the initiative HUD\n`!gaslight hud reticle on|off|reset` — toggle/reset the reticle\n`!gaslight init` — sync turn order into HUD\n`!gaslight init sync` — add missing linked tokens\n`!gaslight init trim` — remove stale entries\n\n**That\'s the initiative HUD!**',
-                  offerExamples: ['core-mechanics', 'relay', 'scripting']
+                  offerExamples: ['manual-setup', 'core-mechanics', 'relay', 'scripting']
                 },
             ],
         });
@@ -4996,7 +5194,7 @@ var Gaslight = Gaslight || (() => {
                 { prompt: '**Manual relay:**\n\nTo relay a command to specific players (overriding the current view), select a master token and run:\n\n`!gaslight relay all !token-mod --set bar1_value|5`\n\nYou can also target specific players:\n\n`!gaslight relay "<player name>" !token-mod --set statusmarkers|dead`' },
                 { prompt: '**Player-page relay:**\n\nBy default, commands run on a **player page** only affect that page. To make a command also relay from player pages, add it to the relay list:\n\n`!gaslight config relay-add !token-mod`\n\nRemove with: `!gaslight config relay-remove !token-mod`\nView the list: `!gaslight config relay-list`' },
                 { prompt: '**What doesn\'t relay:**\n\n• `!gaslight`, `!mirror`, and `!anchor` commands never auto-relay\n• Commands with no tokens selected don\'t relay unless a master token id is specified in their parameters\n• Commands run while view is `off` don\'t relay\n\n**That\'s relay!** You can now run commands from the master page and have them affect all (or specific) player views automatically.',
-                  offerExamples: ['core-mechanics', 'initiative-hud', 'scripting']
+                  offerExamples: ['manual-setup', 'core-mechanics', 'initiative-hud', 'scripting']
                 },
             ],
         });
@@ -5031,7 +5229,7 @@ var Gaslight = Gaslight || (() => {
                 },
                 { prompt: '**Debugging:**\n\nIf something doesn\'t work, use dry-run to see what would execute:\n\n`!gaslight eval --dry-run --all`\n\nThis shows the fully-expanded commands after variable substitution, so you can verify the logic without changing anything.' },
                 { prompt: '**Key concepts:**\n\n• `@(target.*)` — the token being evaluated (master copy)\n• `@(viewer.*)` — the viewing player\'s copy (use inside `any()`/`all()`)\n• `@(gm_target.*)` — always resolves to the master token\n• `any(@(viewer.gl_x))` — true if ANY viewer has the value\n• `all(@(viewer.gl_x))` — true if ALL viewers have the value\n• `{& if}` / `{& else}` / `{& end}` — conditional blocks\n• `--set` vs `--setch` — token variable vs character variable\n• `trigger:` — comma-separated list of variables that auto-trigger re-evaluation\n\nSee the other applied examples for more complex scripts.',
-                  offerExamples: ['core-mechanics', 'initiative-hud', 'relay', 'stealth', 'truesight', 'madness']
+                  offerExamples: ['manual-setup', 'core-mechanics', 'initiative-hud', 'relay', 'stealth', 'truesight', 'madness']
                 },
             ],
         });
