@@ -8,8 +8,8 @@ const FormatHandout = (() => {
   // Config
 
   const scriptName = 'FormatHandout';
-  const version = '0.15.2';
-  const lastUpdate = 1788189437; // unix timestamp, seconds
+  const version = '0.16.0';
+  const lastUpdate = 1788278400; // unix timestamp, seconds
   const schemaVersion = 0.1;
 
   const DEBUG = false;
@@ -22,7 +22,7 @@ const FormatHandout = (() => {
   const IMPORT_HANDOUT_NAME = 'FormatHandout Styles Import';
   const HELP_HANDOUT_NAME = 'Help: Handout Formatter';
   // Same avatar as other scripts' help handouts use, for a
-  // consistent look across his library.
+  // consistent look across the library.
   const HANDOUT_AVATAR = 'https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147';
   const IMAGE_EDITOR_COMMAND = '!imageeditor';
   const IMAGE_EDITOR_THREAD_URL = 'https://app.roll20.net/forum/post/12716858/script-image-editor-format-images-add-captions-and-flow-text-in-roll20-handouts';
@@ -32,6 +32,22 @@ const FormatHandout = (() => {
   const OPEN_ICON_URL = 'https://files.d20.io/images/499306760/P0U-RtaBG5HTjvAWOFHfCA/original.webp?178807691';
   const OPEN_ICON_HTML = `<img src="${OPEN_ICON_URL}" width="14" height="14" style="vertical-align:middle;" alt="Open in Roll20">`;
   const bindingTagPrefix = (field) => `formathandout-bound-${field}::`;
+  const migrateStyleBindings = (oldName, newName) => {
+    ['notes', 'gmnotes'].forEach(field => {
+      const prefix = bindingTagPrefix(field);
+      const oldTag = `${prefix}${oldName}`;
+      const newTag = `${prefix}${newName}`;
+      findObjs({ type: 'handout' }).forEach(h => {
+        let tags = [];
+        try { tags = JSON.parse(h.get('tags') || '[]') || []; } catch (e) { /* ignore */ }
+        const idx = tags.indexOf(oldTag);
+        if (idx === -1) return;
+        tags[idx] = newTag;
+        try { h.set('tags', JSON.stringify(tags)); } catch (e) { /* ignore */ }
+        Logger.log(`Migrated style binding on "${h.get('name')}" (${field}): "${oldName}" -> "${newName}"`);
+      });
+    });
+  };
   const seedVersionTag = (seed) => `formathandout-seed-${seed.key}-v${seed.seedVersion}`;
 
   // Built-in styles ship as auto-created "<Name>_css" handouts so built-in
@@ -72,8 +88,9 @@ td { padding: 4px 8px; border: 1px solid #c9b183; text-align: left; }`
     },
     {
       key: 'dnd5e',
-      name: 'D&D 5e',
-      seedVersion: 4, // bump only this when D&D 5e's css text changes
+      name: '5e',
+      renamedFrom: 'D&D 5e',
+      seedVersion: 4, // bump only this when 5e's css text changes
       css:
 `bg {
     background-image: url('https://i.imgur.com/vjL1blE.jpg');
@@ -242,6 +259,215 @@ td {
     border: none;
     outline: none;
     text-align: left;
+}`
+    },
+    {
+      key: 'book',
+      name: 'Book',
+      seedVersion: 1,
+      css:
+`container {
+  background-color: #ecdfc0;
+  background-image: url('https://files.d20.io/images/499387644/qnbekevImRbYAxPEmk1E1A/original.webp?1788122543');
+  color: #3a2b18;
+  font-family: 'Crimson Text', Georgia, 'Times New Roman', serif;
+  padding: 20px 26px;
+  border: 4px double #5b3d22;
+  box-shadow: 0 0 16px rgba(0,0,0,0.35);
+}
+
+h1 {
+  font-family: 'Della Respira', Georgia, serif;
+  color: #4a2f1c;
+  font-size: 30px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  border-bottom: 2px double #8a6a3f;
+  padding-bottom: 10px;
+  margin: 8px 0 14px 0;
+}
+
+h2 {
+  font-family: 'Della Respira', Georgia, serif;
+  color: #4a2f1c;
+  font-size: 22px;
+  text-align: center;
+  letter-spacing: 1px;
+  margin: 16px 0 8px 0;
+}
+
+h3, h4, h5, h6 {
+  font-family: 'Merriweather', Georgia, serif;
+  font-style: italic;
+  color: #5b3d22;
+  font-size: 16px;
+  margin: 12px 0 5px 0;
+}
+
+p {
+  font-family: 'Crimson Text', Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.7;
+  text-indent: 24px;
+  margin: 2px 0;
+  text-align: justify;
+}
+
+p.first-of-type {
+  text-indent: 0px !important;
+}
+
+blockquote {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-style: italic;
+  color: #5b3d22;
+  border-left: 3px solid #8a6a3f;
+  border-right: 3px solid #8a6a3f;
+  font-size: 30px!important;
+  line-height: 1.4;
+  padding: 8px 16px;
+  margin: 30px 8%;
+}
+
+pre, code {
+  font-family: 'IM Fell DW Pica', Georgia, serif;
+  background-color: rgba(0,0,0,0.12);
+  color: #3a2b18;
+  border: 1px solid #8a6a3f;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+ol, ul { margin: 6px 0 6px 30px; }
+li {
+  font-family: 'Crimson Text', Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+strong { color: #4a2f1c; }
+em { color: #5b3d22; }
+s { color: #9c8a68; }
+
+a { color: #6e4326; text-decoration: underline; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 15px;
+  color: #3a2b18;
+}
+tr:first-child { background-color: rgba(0,0,0,0.12); font-weight: bold; border-bottom: 2px double #8a6a3f; }
+tr:nth-child(odd) { background-color: rgba(0,0,0,0.05); }
+tr:nth-child(even) { background-color: transparent; }
+td, th {
+  font-family: 'Crimson Text', Georgia, serif;
+  padding: 5px 9px;
+  border: 1px solid #8a6a3f;
+  text-align: left;
+}`
+    },
+    {
+      key: 'computer',
+      name: 'Computer',
+      seedVersion: 1,
+      css:
+`container {
+  background-color: #0a0f0a;
+  background-image: repeating-linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 1px, transparent 2px, transparent 3px);
+  color: #33ff66;
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  padding: 16px 18px;
+  border: 2px solid #1f5c33;
+  box-shadow: 0 0 18px rgba(51,255,102,0.25);
+}
+
+h1 {
+  font-family: 'Contrail One', 'Lucida Console', monospace;
+  color: #9dffb8;
+  font-size: 24px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  border-bottom: 1px solid #1f5c33;
+  padding-bottom: 6px;
+  margin: 4px 0 10px 0;
+}
+
+h2 {
+  font-family: 'Contrail One', 'Lucida Console', monospace;
+  color: #9dffb8;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 10px 0 6px 0;
+}
+
+h3, h4, h5, h6 {
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  color: #9dffb8;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 8px 0 4px 0;
+}
+
+p {
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 6px 0;
+}
+
+blockquote {
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  color: #ffcf5c;
+  background-color: #1a1206;
+  border-left: 3px solid #ffcf5c;
+  padding: 6px 10px;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+pre, code {
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  background-color: #001a08;
+  color: #33ff66;
+  border: 1px solid #1f5c33;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+ol, ul { margin: 6px 0 6px 26px; }
+li {
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+strong { color: #9dffb8; }
+em { color: #74e896; }
+s { color: #4a7a5a; }
+
+a { color: #6cf0ff; text-decoration: underline; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  font-size: 13px;
+  color: #33ff66;
+}
+tr:first-child { background-color: #123c1e; color: #9dffb8; font-weight: bold; }
+tr:nth-child(odd) { background-color: #0a0f0a; }
+tr:nth-child(even) { background-color: #0f180f; }
+td, th {
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  padding: 4px 8px;
+  border: 1px solid #1f5c33;
+  text-align: left;
 }`
     }
   ];
@@ -1007,7 +1233,28 @@ td {
     ensureBuiltinStyles: () => {
       BUILTIN_STYLE_SEEDS.forEach(seed => {
         const handoutName = `${seed.name}${STYLE_SUFFIX}`;
-        if (findObjs({ type: 'handout', name: handoutName })[0]) return;
+        const existing = findObjs({ type: 'handout', name: handoutName })[0];
+        if (existing) {
+          const existingTags = HandoutUtils.getTags(existing);
+          if (existingTags.indexOf(BUILTIN_TAG) === -1) {
+            HandoutUtils.setTagsRaw(existing, existingTags.concat([BUILTIN_TAG, seedVersionTag(seed)]));
+            Logger.log(`Adopted existing "${handoutName}" as a built-in style handout`);
+          }
+          return;
+        }
+
+        if (seed.renamedFrom) {
+          const oldName = `${seed.renamedFrom}${STYLE_SUFFIX}`;
+          const old = findObjs({ type: 'handout', name: oldName })[0];
+          const oldTags = old ? HandoutUtils.getTags(old) : [];
+          if (old && oldTags.indexOf(BUILTIN_TAG) !== -1) {
+            old.set('name', handoutName);
+            migrateStyleBindings(seed.renamedFrom, seed.name);
+            Logger.log(`Renamed built-in style handout "${oldName}" -> "${handoutName}"`);
+            return;
+          }
+        }
+
         const h = createObj('handout', {
           name: handoutName,
           notes: `<pre style="white-space:pre-wrap;">${HtmlUtil.escapeHtml(seed.css)}</pre>`
