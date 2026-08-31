@@ -1237,7 +1237,24 @@ var Gaslight = Gaslight || (() => {
                 groupName = args.shift();
             }
         }
-        if (!groupName) groupName = 'quick-' + genId();
+        if (!groupName) {
+            // Auto-generate a readable group name via ScriptKit, guaranteeing it
+            // doesn't collide with an existing group (active or configured on a
+            // page). useCount returns how many existing groups already use the
+            // base (base, base-2, ...) so randomName picks a free suffix.
+            var groupExists = function(name) {
+                return !!s.activeGroups[name] || !!discoverGroup(name).master;
+            };
+            if (typeof ScriptKit !== 'undefined' && ScriptKit.randomName) {
+                groupName = ScriptKit.randomName(SCRIPT_NAME, function(base) {
+                    var count = 0;
+                    while (groupExists(count === 0 ? base : base + '-' + (count + 1))) count++;
+                    return count;
+                });
+            } else {
+                groupName = 'quick-' + genId();
+            }
+        }
 
         // Determine players (mirror doSetup): selected tokens' controllers,
         // named args, then party-tagged characters.
@@ -4343,7 +4360,7 @@ var Gaslight = Gaslight || (() => {
                         { syntax: 'quick [group] [players...]', description: 'Configure + split using page copies and scrap pages', version: '2.3.0',
                           details: 'Uses existing duplicates of the current page for player pages, and fills any shortfall from pages named GLS-SCRAP (their settings + contents are cloned from the master; requires the experimental/Jumpgate sandbox for graphic.createCopy). Configures the group and runs split in one step. Group name is optional (auto-generated if omitted). On merge, scrap pages are wiped and renamed back to GLS-SCRAP for reuse; real duplicates are left untouched.',
                           items: [
-                              { name: '[group]', description: 'Optional group name (auto-generated if omitted)', version: '2.3.0' },
+                              { name: '[group]', description: 'Optional group name (a readable name like "arcane-dragon" is generated if omitted)', version: '2.3.0' },
                               { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.3.0' },
                           ]},
                         { syntax: 'split <group> [--force]', description: 'Activate a prepared group', version: '1.0.0',
