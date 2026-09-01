@@ -1,0 +1,26 @@
+{
+  "$schema": "https://github.com/Roll20/roll20-api-scripts/master/_Example%20Script%20-%20Check%20for%20formatting%20details/script.schema.json",
+  "name": "HandoutImageDisplay",
+  "script": "HandoutImageDisplay.js",
+  "version": "1.1.0",
+  "previousversions": [],
+  "description": "Copies the main image from any named handout into one reusable, player-safe Image Display handout without revealing the source handout's notes or GM notes. GM commands: !showimage|Handout Name prepares an image; !showimage --share posts a player-accessible link; !showimage --hide removes the display from player journals; !showimage --setup creates or repairs the combined Collections macro for the current GM; !showimage --adopt safely adopts a v1.0 display handout; !showimage --help displays help. No dependencies are required.",
+  "authors": "Kingkiller",
+  "roll20userid": "2978722",
+  "dependencies": [],
+  "modifies": {
+    "state.HandoutImageDisplay": "read,write",
+    "handout.name": "read",
+    "handout.avatar": "read,write",
+    "handout.notes": "read,write",
+    "handout.gmnotes": "read,write",
+    "handout.inplayerjournals": "read,write",
+    "handout.archived": "read,write",
+    "macro._playerid": "read,write",
+    "macro.name": "read,write",
+    "macro.action": "read,write",
+    "macro.visibleto": "read,write",
+    "macro.istokenaction": "read,write"
+  },
+  "conflicts": []
+}
