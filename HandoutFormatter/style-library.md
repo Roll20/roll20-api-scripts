@@ -1,14 +1,14 @@
 # FormatHandout Style Library
 
-Ready-made styles for **Handout Formatter**, a Roll20 API script that dresses up a handout's Notes/GM Notes with CSS to look like a real prop from your game world. Four styles ship with the script itself; the rest are plain CSS you copy into a handout of your own -- either way, once a style exists, it shows up automatically in the script's style picker.
+Ready-made styles for **FormatHandout**, a Roll20 API script that dresses up a handout's Notes/GM Notes with CSS to look like a real prop from your game world. Four styles ship with the script itself; the rest are plain CSS you copy into a handout of your own -- either way, once a style exists, it shows up automatically in the script's style picker.
 
-*Current as of Handout Formatter v0.16.0.*
+*Current as of FormatHandout v0.17.0.*
 
 ---
 
 ## Installation
 
-FormatHandout looks for any handout in your game named exactly `<Style Name>_css` (for example `Monument_css`) and reads plain CSS straight out of its **Notes** field.
+FormatHandout looks for any handout in your game named exactly `<Style Name>_css` (for example `Monument_css`) and reads plain CSS straight out of its **Notes** field -- no special editor, no script changes, nothing to configure.
 
 **Built-in styles (Parchment, 5e, Book, Computer)** are created for you automatically the first time the script runs in your game -- there's nothing to install for these four, they already exist. If you ever want to see or tweak one's CSS, just open its `<Name>_css` handout like any other.
 
@@ -17,7 +17,7 @@ FormatHandout looks for any handout in your game named exactly `<Style Name>_css
 1. In your Roll20 game, open the **Handouts** tab in the right-hand sidebar (the card icon).
 2. Click **+ Add a handout** to create a new one.
 3. Name it *exactly* as shown below, including the trailing `_css` (for example `Monument_css`) -- FormatHandout matches on this exact name.
-4. Open the handout, click into its **Notes** field, and paste in the style's CSS block from below. A plain-text paste is fine -- no need to wrap it in a `<pre>` tag or format it specially, Handout Formatter reads it as plain text either way.
+4. Open the handout and click into its **Notes** field. Insert an empty code block (Roll20's rich-text toolbar has one) and paste the style's CSS -- copied straight from the block below -- into that code block. A clean paste into a code block avoids the editor mangling anything before FormatHandout reads it.
 5. Save/close the handout.
 6. Open the control panel (type `!FormatHandout` in chat, or click the "?" button on it once it exists) -- the new style now appears in the style picker automatically. No reload or restart needed.
 
@@ -38,7 +38,7 @@ Warm tan parchment with a serif type family, a dashed sepia blockquote border, a
 
 ```css
 container {
-  background-color: #f4ecd8;
+  background-image: url('https://i.imgur.com/vjL1blE.jpg');
   color: #3b2c1a;
   font-family: Georgia, 'Palatino Linotype', serif;
   padding: 12px;
@@ -70,7 +70,7 @@ td { padding: 4px 8px; border: 1px solid #c9b183; text-align: left; }
 
 ### 5e (`5e_css`)
 
-A cream Player's Handbook-style page: a red drop-shadow heading, a right-floated boxed sidebar quote/aside, and a bordered table -- built to feel like an official 5e sourcebook page.
+A cream Player's Handbook-style page: a red drop-shadow heading, a right-floated boxed sidebar quote/aside, and a bordered table -- built to feel like an official D&D 5e sourcebook page.
 
 <details>
 <summary><b>5e</b> &mdash; CSS</summary>
@@ -250,14 +250,13 @@ td {
 
 ### Book (`Book_css`)
 
-A leather-and-paper page from an old, well-loved tome -- an ornamental small-caps display heading, italic serif subheadings, and a first paragraph that skips its indent right after a heading, the way traditional book typesetting does it.
+A leather-and-parchment page from an old, well-loved tome -- an ornamental small-caps display heading, italic serif subheadings, and a first paragraph that skips its indent right after a heading, the way traditional book typesetting does it.
 
 <details>
 <summary><b>Book</b> &mdash; CSS</summary>
 
 ```css
 container {
-  background-color: #ecdfc0;
   background-image: url('https://files.d20.io/images/499387644/qnbekevImRbYAxPEmk1E1A/original.webp?1788122543');
   color: #3a2b18;
   font-family: 'Crimson Text', Georgia, 'Times New Roman', serif;
@@ -311,11 +310,11 @@ p.first-of-type {
 blockquote {
   font-family: 'Crimson Text', Georgia, serif;
   font-style: italic;
+  font-size: 30px!important;
+  line-height:1.4;
   color: #5b3d22;
   border-left: 3px solid #8a6a3f;
   border-right: 3px solid #8a6a3f;
-  font-size: 30px!important;
-  line-height: 1.4;
   padding: 8px 16px;
   margin: 30px 8%;
 }
@@ -477,7 +476,7 @@ Copy these into a new handout of your own, per the installation steps above.
 
 ### Monument (`Monument_css`)
 
-A carved stone monument inscription -- tiling header-ornament and footer-band artwork over a marble texture, all-caps chiseled headings with a light/dark text-shadow bevel, and a table and quote block that read as recessed into the stone or embossed on brass plaque, respectively.
+A carved stone monument inscription -- tiling header-ornament and footer-band artwork over a marble texture, all-caps chiseled headings with a light/dark text-shadow bevel, and a table and quote block that read as recessed and embossed into the stone, respectively.
 
 <details>
 <summary><b>Monument</b> &mdash; CSS</summary>
@@ -643,7 +642,7 @@ pre {
 
 ### Notebook (`Notebook_css`)
 
-An in-world letter/journal page locked to the background photo's 16px ruled-paper baseline grid -- every heading and paragraph (tries to) land on a ruled line, in a handwriting-style font family.
+An in-world letter/journal page locked to the background photo's 16px ruled-paper baseline grid -- every heading and paragraph lands on a ruled line, in a handwriting-style font family.
 
 <details>
 <summary><b>Notebook</b> &mdash; CSS</summary>
@@ -730,13 +729,12 @@ em { color: #3a3222; }
 
 ### Letter (`Letter_css`)
 
-A freeform handwritten letter -- warm paper, ink-blue body text, a flourished script heading, and a floated script-font blockquote that reads as a margin note.
+A freeform handwritten letter -- warm paper, ink-blue body text, a flourished script heading, and a floated script-font blockquote that reads as a postscript aside rather than a centered callout.
 
 <details>
 <summary><b>Letter</b> &mdash; CSS</summary>
 
 ```css
-
 container {
   background-color: #f7f1e0;
   color: #26324a;
@@ -838,7 +836,7 @@ td, th {
 
 ### Newspaper (`Newspaper_css`)
 
-A newsprint clipping -- a condensed bold masthead headline, justified serif body copy, an italic serif byline/dateline, and a drop-shadow so the whole thing reads as a cut-out clipping rather than a full page. Unfortunately, Roll20 does not support multi-column divs in handouts.
+A newsprint clipping -- a condensed bold masthead headline, justified serif body copy, an italic serif byline/dateline, and a drop-shadow so the whole thing reads as a cut-out clipping rather than a full page.
 
 <details>
 <summary><b>Newspaper</b> &mdash; CSS</summary>
@@ -934,7 +932,7 @@ td { padding: 3px 6px; border-bottom: 1px solid #999; }
 
 ### Wanted (`Wanted_css`)
 
-Work in progress for a wanted poster -- a stenciled Western display headline, an inset shadow for a weathered feel, and a bordered blockquote built for a "REWARD: 500gp / DEAD OR ALIVE" callout.
+A wood/leather wanted poster -- a stenciled Western display headline, an inset shadow for a weathered feel, and a bordered blockquote built for a "REWARD: 500gp / DEAD OR ALIVE" callout.
 
 <details>
 <summary><b>Wanted</b> &mdash; CSS</summary>
@@ -945,14 +943,15 @@ bg {
   background-color: #d9c49a;
   box-shadow: inset 0 0 25px rgba(0,0,0,0.5);
   border: 2px solid #3a2415;
-  padding: 20px 16px;
+  padding: 40px 32px;
   color: #2a1a0d;
 }
 h1 {
   font-family: Rye, Copperplate, Georgia, serif;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-size: 34px;
+  font-size: 42px;
+  line-height:1.2;
   text-align: center;
   color: #6b1c1c;
   margin: 0 0 6px 0;
@@ -961,66 +960,83 @@ h2 {
   font-family: 'IM Fell DW Pica', 'Times New Roman', serif;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-size: 18px;
+  font-size: 36px;
   text-align: center;
   color: #3a2415;
   border-top: 1px solid #3a2415;
   border-bottom: 1px solid #3a2415;
   padding: 4px 0;
-  margin: 6px 0 10px 0;
+  margin: 12px 0 18px 0;
 }
 h3 {
   font-family: 'IM Fell DW Pica', 'Times New Roman', serif;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-size: 16px;
+  font-size: 30px;
   text-align: center;
   color: #3a2415;
-  margin: 8px 0 4px 0;
+  margin: 16px 0 4px 0;
 }
 h4 {
   font-family: 'IM Fell DW Pica', 'Times New Roman', serif;
   text-transform: uppercase;
-  font-size: 14px;
+  font-size: 24px;
   text-align: center;
   color: #3a2415;
-  margin: 6px 0 3px 0;
+  margin: 12px 0 3px 0;
 }
 h5 {
   font-family: 'IM Fell DW Pica', 'Times New Roman', serif;
   font-variant: small-caps;
-  font-size: 13px;
+  font-size: 22px;
   text-align: center;
   color: #3a2415;
-  margin: 5px 0 3px 0;
+  margin: 10px 0 3px 0;
 }
 h6 {
   font-family: 'IM Fell DW Pica', 'Times New Roman', serif;
   font-style: italic;
   font-variant: small-caps;
-  font-size: 12px;
+  font-size: 18px;
   text-align: center;
   color: #6b1c1c;
-  margin: 4px 0 2px 0;
+  margin: 8px 0 2px 0;
 }
 p {
   font-family: 'IM Fell DW Pica', 'Times New Roman', serif;
-  font-size: 15px;
-  line-height: 19px;
+  font-size: 18px;
+  line-height: 24px;
   text-align: center;
   color: #2a1a0d;
   margin: 4px 0;
 }
+pre {
+  font-family: 'IM Fell DW Pica', 'Times New Roman', serif;
+  font-size: 20px;
+  line-height:1.2;
+  text-align: center;
+  color: #6b1c1c;
+  border-color: #333;
+  border-style: inset;
+  background-color: rgba(0,0,0,0.1);
+  padding: 6px;
+  margin: 20px 20px;
+}
 blockquote {
   font-family: Rye, Copperplate, Georgia, serif;
   font-size: 20px;
+  line-height:1.2;
   text-align: center;
   color: #6b1c1c;
   border: 2px solid #6b1c1c;
   padding: 6px;
-  margin: 10px 20px;
+  margin: 20px 20px;
 }
 strong { color: #6b1c1c; }
+
+table { width: 100%; border-collapse: collapse; font-family: Georgia, 'Palatino Linotype', serif; font-size: 14px; color: #111; }
+tr:first-child { font-weight: bold; border-bottom: 2px solid #333; }
+td { padding: 4px 8px; border: 1px solid #333; text-align: left; }
 ```
 
 </details>
@@ -1098,7 +1114,6 @@ p {
 }
 blockquote {
   font-weight: bold;
-  color: #444;
   background-color: rgba(0,0,0,0.22);
   border: 1px solid #000;
   padding: 12px 12px;
@@ -1129,7 +1144,7 @@ td { padding: 3px 6px; border: 1px solid #999; }
 
 ### Chalkboard (`Chalkboard_css`)
 
-A chalkboard texture background with a layered white text-shadow trick that gives every heading a soft, slightly-offset chalky texture instead of a crisp, flat shadow.
+A chalkboard photo background with a layered white text-shadow trick that gives every heading a soft, slightly-offset chalky texture instead of a crisp, flat shadow.
 
 <details>
 <summary><b>Chalkboard</b> &mdash; CSS</summary>
@@ -1257,10 +1272,6 @@ A ruled-paper diary/log page, distinct from Notebook -- no baseline grid, a scri
 <summary><b>Journal</b> &mdash; CSS</summary>
 
 ```css
-/* Journal
-   Ruled-paper feel for a diary/log with date headings and
-   handwritten scrawl in the margin. */
-
 container {
   background-color: #f7f2e2;
   background-image: repeating-linear-gradient(to bottom, transparent, transparent 27px, #d9cfa8 28px);
@@ -1350,6 +1361,7 @@ table {
   font-family: 'Patrick Hand', Georgia, serif;
   font-size: 14px;
   color: #3b2b1a;
+  margin: 20px 0;
 }
 tr:first-child { background-color: #e6d9ad; font-weight: bold; border-bottom: 2px solid #b7a877; }
 tr:nth-child(odd) { background-color: #f7f2e2; }
@@ -1358,6 +1370,287 @@ td, th {
   font-family: 'Patrick Hand', Georgia, serif;
   padding: 4px 8px;
   border: 1px solid #cbbd91;
+  text-align: left;
+}
+```
+
+</details>
+
+### Scroll (`Scroll_css`)
+
+An unrolled parchment scroll -- a blood-red blackletter headline, three stacked background images that scale to the handout's own width, and a white-on-orange magical glow shared by the h2/h3 headings and the strikethrough tag, for a burned-away or enchanted-text effect.
+
+<details>
+<summary><b>Scroll</b> &mdash; CSS</summary>
+
+```css
+bg {
+  box-sizing: border-box;
+  background-color: transparent;
+  background-image: url('https://files.d20.io/images/499523393/r8kFWGBwQiabPd_8DSHNxA/original.webp?1788234833'), url('https://files.d20.io/images/499523394/3MC6HfU5mzqXbgV855ZbKg/original.webp?1788234834'), url('https://files.d20.io/images/499523395/MKWdctjvzLVXua6XKrrQSg/original.webp?1788234834');
+  background-repeat: no-repeat, no-repeat, repeat-y;
+  background-position: top center, bottom center, top center;
+  background-size: 100% auto, 100% auto, 100% auto;
+  padding: 150px 100px 120px 100px;
+  color: #000;
+  font-family: 'Kaushan Script', Georgia, serif;
+}
+h1 {
+  font-family: 'UnifrakturMaguntia', 'Old English Text MT', fantasy;
+  color: #5c0000;
+  font-size: 80px;
+  text-align: center;
+  line-height: 1.0;
+  margin: 0 0 14px 0;
+}
+
+h2 {
+  font-family: 'UnifrakturMaguntia', 'Old English Text MT', fantasy;
+  color: #fff;
+  font-size: 50px;
+  line-height: 1.2;
+  text-align: center;
+  margin: 30px 0 20px 0;
+  text-shadow:
+    0 0 2px #fff,
+    0 0 5px #ff9900,
+    0 0 10px #ff9900,
+    0 0 20px #ff6600;
+}
+
+h3 {
+  font-family: 'UnifrakturMaguntia', 'Old English Text MT', fantasy;
+  color: #fff;
+  font-size: 36px;
+  line-height: 1.2;
+  text-align: center;
+  margin: 30px 0 20px 0;
+  text-shadow:
+    0 0 2px #fff,
+    0 0 5px #ff9900,
+    0 0 10px #ff9900,
+    0 0 20px #ff6600;
+}
+
+h4 {
+  font-family: 'UnifrakturMaguntia', 'Old English Text MT', fantasy;
+  color: #222;
+  font-size: 18px;
+  text-align: center;
+  margin: 14px 0 5px 0;
+}
+
+h5 {
+  font-family: 'Kaushan Script', Georgia, serif;
+  color: #222;
+  font-size: 16px;
+  margin: 12px 0 4px 0;
+}
+
+h6 {
+  font-family: 'Kaushan Script', Georgia, serif;
+  color: #222;
+  font-style: italic;
+  font-size: 14px;
+  margin: 10px 0 4px 0;
+}
+
+p {
+  font-family: 'Kaushan Script', Georgia, serif;
+  color: #222;
+  font-size: 20px;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+blockquote {
+  font-family: Georgia, serif;
+  background-color: rgba(0,0,0,0.06);
+  color: #444;
+  border-left: 3px solid #5c0000;
+  border-right: 3px solid #5c0000;
+  padding: 8px 16px;
+  margin: 12px 40px;
+}
+
+pre, code {
+  font-family: Georgia, serif;
+  color: #000;
+  background-color: rgba(0,0,0,0.06);
+  border: 1px solid #a6997a;
+  padding: 6px 10px;
+  font-size: 15px;
+}
+
+ol, ul { margin: 6px 0 6px 26px; }
+li {
+  font-family: 'Kaushan Script', Georgia, serif;
+  color: #000;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+strong { color: #5c0000; }
+em { font-style: italic; color: #000; }
+s {
+  color: #fff;
+  text-decoration: none !important;
+  text-shadow:
+    0 0 2px #fff,
+    0 0 5px #ff9900,
+    0 0 10px #ff9900,
+    0 0 20px #ff6600;
+}
+
+a { color: #5c0000; text-decoration: underline; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Kaushan Script', Georgia, serif;
+  font-size: 16px;
+  color: #000;
+}
+tr:first-child { background-color: rgba(92,0,0,0.12); font-weight: bold; border-bottom: 2px solid #5c0000; }
+tr:nth-child(odd) { background-color: rgba(0,0,0,0.04); }
+tr:nth-child(even) { background-color: transparent; }
+td, th {
+  font-family: 'Kaushan Script', Georgia, serif;
+  padding: 5px 9px;
+  border: 1px solid #a6997a;
+  text-align: left;
+}
+```
+
+</details>
+
+### PF2 (`PF2_css`)
+
+A Pathfinder 2 sourcebook look -- a large centered blackletter H1, bold Garamond H2, uppercase Anton H3/H4 in navy, and a top/bottom-rule banner blockquote, with flat colors standing in for any official background art.
+
+<details>
+<summary><b>PF2</b> &mdash; CSS</summary>
+
+```css
+bg {
+  background-color: #fff;
+  padding: 20px 26px;
+  color: #2a2418;
+  font-family: 'EB Garamond', Garamond, Georgia, serif;
+}
+
+h1 {
+  font-family: 'UnifrakturMaguntia', 'Old English Text MT', fantasy;
+  font-weight: bold;
+  color: #005c2e;
+  font-size: 52px;
+  line-height:1.2;
+  text-align:center;
+  letter-spacing: 1px;
+  padding: 6px 0;
+  margin: 10px 0 12px 0;
+}
+
+h2 {
+  font-family: 'EB Garamond', Garamond, Georgia, serif;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #662600;
+  font-size: 36px;
+  font-weight: bold;
+  padding: 4px 0;
+  margin: 14px 0 0px 0;
+}
+
+h3 {
+  font-family: Anton, Arial, sans-serif;
+  font-weight: bold;
+  color: #001a4d;
+  font-size: 20px;
+  text-transform: uppercase;
+  margin: 16px 0 0 0;
+}
+
+h4 {
+  font-family: Anton, Arial, sans-serif;
+  font-weight: bold;
+  color: #001a4d;
+  font-size: 20px;
+  text-transform: uppercase;
+  margin: 16px 0 0 0;
+  border-bottom: 2px solid #001a4d;
+}
+
+h5 {
+  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  font-style: italic;
+  color: #662600;
+  font-size: 13px;
+  margin: 8px 0 3px 0;
+}
+
+h6 {
+  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  font-style: italic;
+  color: #555;
+  font-size: 12px;
+  margin: 6px 0 2px 0;
+}
+
+p {
+  font-family: 'EB Garamond', Garamond, Georgia, serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #2a2418;
+  margin: 6px 0;
+}
+
+blockquote {
+  font-family: 'Oswald', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.2;
+  color: #005c2e;
+  border-top: 1px solid #005c2e;
+  border-bottom: 1px solid #005c2e;
+  padding: 10px 14px;
+  margin: 20px 0px;
+}
+
+pre {
+  font-family: 'Oswald', Arial, sans-serif;
+  color: #111;
+  font-size: 14px;
+  line-height: 1.3;
+  border: none;
+  background-color: transparent;
+  padding: none;
+}
+
+ol, ul { margin: 6px 0 6px 24px; }
+li {
+  font-family: 'EB Garamond', Garamond, Georgia, serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #2a2418;
+}
+
+em { font-style: italic;}
+s { color: #999; }
+
+a { color: #005c2e; text-decoration: underline; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Verdana, sans-serif;
+  font-size: 14px;
+  color: #111;
+}
+tr:first-child { background-color: #4a0409; color: #eee; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #8a6d3b; }
+tr:nth-child(even) { background-color: #f1e9cd; }
+td, th {
+  padding: 6px;
+  border: 1px solid #c2b59b;
   text-align: left;
 }
 ```

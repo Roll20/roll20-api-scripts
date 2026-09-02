@@ -8,8 +8,8 @@ const FormatHandout = (() => {
   // Config
 
   const scriptName = 'FormatHandout';
-  const version = '0.16.0';
-  const lastUpdate = 1788278400; // unix timestamp, seconds
+  const version = '0.17.0';
+  const lastUpdate = 1788364800; // unix timestamp, seconds
   const schemaVersion = 0.1;
 
   const DEBUG = false;
@@ -20,8 +20,10 @@ const FormatHandout = (() => {
   const BUILTIN_TAG = 'formathandout-builtin';
   const EXPORT_HANDOUT_NAME = 'FormatHandout Styles Export';
   const IMPORT_HANDOUT_NAME = 'FormatHandout Styles Import';
+  const DEV_GAME_PLAYER_ID = '-LPNiC84i6AI7m7NuqlV';
+  const isDevGame = () => findObjs({ type: 'player' }).some(p => p.id === DEV_GAME_PLAYER_ID);
   const HELP_HANDOUT_NAME = 'Help: Handout Formatter';
-  // Same avatar as other scripts' help handouts use, for a
+  // Same avatar the other scripts' help handouts use, for a
   // consistent look across the library.
   const HANDOUT_AVATAR = 'https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147';
   const IMAGE_EDITOR_COMMAND = '!imageeditor';
@@ -1403,10 +1405,10 @@ td, th {
         `<a href="!${scriptName} --select-field gmnotes" style="${gmStyle}">GM Notes</a>`;
     },
 
-    buildStylePicker: (ui, styles) => {
+    buildStylePicker: (ui, styles, devGame) => {
       const editBtn = `<a href="!${scriptName} --toggle-edit-mode" style="${ui.editMode ? CSS.toolbarBtnActive : CSS.toolbarBtn}" title="${ui.editMode ? 'Exit edit mode' : 'Edit mode: style buttons below open their _css handout in Roll20 instead of selecting a preview style'}">Edit</a>`;
-      const exportBtn = `<a href="!${scriptName} --export-styles" style="${CSS.toolbarBtn}" title="Export: copy every style's CSS out to one handout, for handing off to Claude">&#8593; Export</a>`;
-      const importBtn = `<a href="!${scriptName} --import-styles" style="${CSS.toolbarBtn}" title="Import: write styles from the &quot;${IMPORT_HANDOUT_NAME}&quot; handout back into their _css handouts">&#8595; Import</a>`;
+      const exportBtn = devGame ? `<a href="!${scriptName} --export-styles" style="${CSS.toolbarBtn}" title="Export: copy every style's CSS out to one handout, for handing off to Claude">&#8593; Export</a>` : '';
+      const importBtn = devGame ? `<a href="!${scriptName} --import-styles" style="${CSS.toolbarBtn}" title="Import: write styles from the &quot;${IMPORT_HANDOUT_NAME}&quot; handout back into their _css handouts">&#8595; Import</a>` : '';
       const header = `<div><span style="${CSS.sectionLabelInline}">Preview Style</span>${editBtn}${exportBtn}${importBtn}</div>`;
 
       if (!styles.length) {
@@ -1435,12 +1437,15 @@ td, th {
         : '') +
       `<a href="!${scriptName} --toggle-source" style="${CSS.buttonNeutralLg}">${ui.showSource ? 'Show Preview' : 'View Source'}</a>`,
 
-    buildBody: (ui, allTargets, displayTargets, styles, selectedHandout, previewHtml, outOfSyncIds, rawContent) => {
+    buildBody: (ui, allTargets, displayTargets, styles, selectedHandout, previewHtml, outOfSyncIds, rawContent, devGame) => {
       const listHtml = Renderer.buildHandoutList(ui, allTargets, displayTargets, outOfSyncIds);
-      const stylePicker = Renderer.buildStylePicker(ui, styles);
+      const stylePicker = Renderer.buildStylePicker(ui, styles, devGame);
       const hasSpanTags = !!(selectedHandout && Cleaner.hasSpanTags(rawContent));
 
       const previewLabel = `Preview${selectedHandout ? ' &mdash; ' + HtmlUtil.escapeHtml(selectedHandout.get('name')) + ' (' + ui.selectedField + ')' : ''}`;
+      const previewOpenLink = selectedHandout
+        ? `<a href="http://journal.roll20.net/handout/${selectedHandout.id}" style="margin-left:6px; ${CSS.openBtn}" title="Open &quot;${HtmlUtil.escapeHtml(selectedHandout.get('name'))}&quot; directly in Roll20">${OPEN_ICON_HTML}</a>`
+        : '';
       let previewContent;
       if (!selectedHandout) {
         previewContent = `<div style="${CSS.emptyState}">Select a handout from the list to preview.</div>`;
@@ -1451,7 +1456,7 @@ td, th {
       }
 
       const previewControls = `<div style="${CSS.previewControlsBox}">${stylePicker}` +
-        `<div style="${CSS.sectionLabel}">${previewLabel}</div></div>`;
+        `<div style="${CSS.sectionLabel}">${previewLabel}${previewOpenLink}</div></div>`;
 
       let confirmBanner = '';
       if (ui.confirmSanitize && hasSpanTags) {
@@ -1528,7 +1533,7 @@ td, th {
 
     return Promise.all([styledWork, outOfSyncWork]).then(([{ rawContent, styledHtml }, outOfSyncIds]) => {
       const displayTargets = filterTargetsForDisplay(allTargets, ui, outOfSyncIds);
-      const body = Renderer.buildBody(ui, allTargets, displayTargets, styles, selectedHandout, styledHtml, outOfSyncIds, rawContent);
+      const body = Renderer.buildBody(ui, allTargets, displayTargets, styles, selectedHandout, styledHtml, outOfSyncIds, rawContent, isDevGame());
       HandoutUtils.getPanelHandout().set('notes', body);
     }).catch(err => {
       Logger.error(`render failed: ${err}`);
@@ -1644,7 +1649,10 @@ td, th {
       `<li>Click a handout in the list on the left to select it &mdash; use Recent, the A-Z strip, or ` +
       `Search if the list is long.</li>` +
       `<li>Choose Notes or GM Notes with the toggle in the header.</li>` +
-      `<li>Pick a style under "Preview Style" and check the preview at the bottom of the panel.</li>` +
+      `<li>Pick a style under "Preview Style" and check the preview at the bottom of the panel &mdash; ` +
+      `it shows what the selected handout <i>would</i> look like if it used that style, which is not ` +
+      `necessarily the style (if any) it's actually using right now. To see the handout's real, ` +
+      `current appearance in Roll20, click the small open icon next to the "Preview" label.</li>` +
       `<li>Click Apply. Remove Styling, or applying a different style, can always change or undo it ` +
       `later.</li>` +
       `</ol>` +
