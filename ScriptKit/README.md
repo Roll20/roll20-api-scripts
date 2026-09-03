@@ -540,7 +540,46 @@ const onExtensionRegistered = () => {
 
 **`ScriptKit.updateHandoutImmediately(scriptName, mode)`** — Regenerate synchronously, only if exists.
 
+### Random Name Generator
+
+Generate readable, fantasy-themed IDs like `arcane-dragon` instead of opaque random strings — handy for group names, labels, or any user-facing identifier.
+
+```js
+// Default: uses ScriptKit's own per-plugin usage tracking
+const name = ScriptKit.randomName('MyScript');        // e.g. "arcane-dragon"
+ScriptKit.useName('MyScript', name);                  // record it as used
+
+// Later, when the thing is gone:
+ScriptKit.dropName('MyScript', name);                 // release it
+```
+
+Names are drawn from a shared **seeded shuffle** over 100 adjectives × 100 nouns (10,000 unique bases). The seed is persisted, so ordering is stable across sandbox restarts. Each plugin (keyed by the `scriptName` argument) gets a random starting **offset**, so different plugins begin on different names. When a base name has already been used, a numeric suffix is appended (`arcane-dragon-2`, `arcane-dragon-3`, …).
+
+**`ScriptKit.randomName(scriptName, useCount?)`** — Return the next name. By default the suffix count comes from ScriptKit's own tracking (`nameCount`). Pass a `useCount(base) => number` function to override the count source — e.g. to check live game objects after a state reset:
+
+```js
+const name = ScriptKit.randomName('MyScript', (base) => {
+    // return how many existing things already use this base name
+    return countExistingThingsNamed(base);
+});
+```
+
+**`ScriptKit.useName(scriptName, name)`** — Record a use of a name (increments the base's count). Returns the new count.
+
+**`ScriptKit.dropName(scriptName, name)`** — Release a use (decrements; removes at ≤ 0). Returns the new count.
+
+**`ScriptKit.nameCount(scriptName, name)`** — How many times the base name has been used (0 if unused).
+
+All four accept either a base name or a full name — a trailing `-N` suffix is stripped automatically. `randomName` does **not** require `ScriptKit.register`; per-plugin state is created lazily on first use.
+
 ## Changelog
+
+### v1.4.0
+- **Random name generator** — `ScriptKit.randomName(scriptName, useCount?)` returns human-readable, fantasy-themed adjective-noun names (e.g. `arcane-dragon`).
+- Names drawn from a shared seeded shuffle (persisted seed → stable ordering across restarts); each plugin gets a random starting offset so plugins begin on different names.
+- Collision suffixing: repeated base names become `-2`, `-3`, … based on use count.
+- `ScriptKit.useName` / `dropName` / `nameCount` — standardized per-plugin usage tracking, keyed on the base name (trailing `-N` auto-stripped).
+- Dictionaries: 100 adjectives + 100 nouns, no duplicates, no adjective/noun overlap, 2–5 words per starting letter.
 
 ### v1.3.0
 - **Lazy evaluation** — all registration fields (`description`, `items`, `body`, `title`, `details`, `name`, `syntax`, etc.) can now optionally be functions that return the expected value. ScriptKit resolves them on access. Guide step fields (`select`, `query`, `min`, `max`) receive `ctx` when resolved.
