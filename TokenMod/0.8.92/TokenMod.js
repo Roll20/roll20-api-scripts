@@ -11,7 +11,6 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
     const version = '0.8.92';
     API_Meta.TokenMod.version = version;
     const lastUpdate = 1788358968;
-
     const schemaVersion = 0.6;
     const STATUS_MARKER_SOURCES = ['default', 'sheet', 'custom'];
     const STATUS_MARKER_SOURCE_LABELS = { default: 'Default', sheet: 'Sheet', custom: 'Custom' };
