@@ -183,6 +183,7 @@ bshields.customfx = (function() {
             var propName = prop.substring(0, prop.indexOf(':')).trim(),
                 propVal = prop.substring(prop.indexOf(':') + 1);
             
+            if (isUnsafeKey(propName)) return;
             fxDefinition[propName] = propVal;
         });
         
@@ -202,6 +203,7 @@ bshields.customfx = (function() {
                 _.each(propList, function(prop) {
                     var propName = prop.substring(0, prop.indexOf(':')).trim(),
                         propVal = prop.substring(prop.indexOf(':') + 1);
+                    if (isUnsafeKey(propName)) return;
                     fxDefinition[key][propName] = tryParseJSON(propVal);
                 });
             }
@@ -214,6 +216,10 @@ bshields.customfx = (function() {
         var name = getObj('player', msg.playerid).get('displayname');
         
         sendChat('Custom FX.js', '/w "' + name + '" ' + errors[errorKey]);
+    }
+    
+    function isUnsafeKey(key) {
+        return key === '__proto__' || key === 'constructor' || key === 'prototype';
     }
     
     function tryParseJSON(str) {
