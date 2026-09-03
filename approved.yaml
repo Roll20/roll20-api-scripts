@@ -1415,6 +1415,10 @@ Chronicle:
 TrinketsAndTrackers:
   - "T&T - Trinkets and Trackers"
   - "Utility"
+
+CombatAssistant:
+  - "T&T - Combat Assistant"
+  - "Utility"
   
 Sequence:
   - "Sequence"
