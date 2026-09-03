@@ -2,8 +2,7 @@
 
 Handout Formatter is a Mod Script that takes the plain text you've already written and formatted in a handout's Notes or GM Notes and dresses it up to look like a real prop from your game world — an old letter, a wanted poster, a torn journal page, whatever fits the scene. You can also use it to match your game system's theme instead of looking like plain, unstyled text. Your original writing is never touched — the styling sits on top of it, and can be swapped or removed again at any time.
 
-As an added bonus, if you click "Remove Styling", the script will clean up HMTL garbage from other programs, removing stuff added by things like MS Word. It also fixes a host of styling bugs introduced by the Roll20 text editor, like oversize quotes, or header styles that won't release.
-
+As an added bonus, "Remove Styling" doesn't just strip the applied style — it also cleans up HTML cruft left behind by other programs (like Microsoft Word) and fixes a handful of Roll20 text-editor quirks, like oversized quote text or header styles that won't let go.
 
 
 A few things people might use it for:
