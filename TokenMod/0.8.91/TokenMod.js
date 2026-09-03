@@ -8,10 +8,9 @@ API_Meta.TokenMod={offset:Number.MAX_SAFE_INTEGER,lineCount:-1};
 const TokenMod = (() => { // eslint-disable-line no-unused-vars
 
     const scriptName = "TokenMod";
-    const version = '0.8.92';
+    const version = '0.8.91';
     API_Meta.TokenMod.version = version;
-    const lastUpdate = 1788358968;
-
+    const lastUpdate = 1788116722;
     const schemaVersion = 0.6;
     const STATUS_MARKER_SOURCES = ['default', 'sheet', 'custom'];
     const STATUS_MARKER_SOURCE_LABELS = { default: 'Default', sheet: 'Sheet', custom: 'Custom' };
@@ -332,13 +331,9 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
         ['on']      : ()=>'compact'
       },
       aura1_options: {
-        __default__      : ()=>'circle',
-        ['circle']       : ()=>'circle',
-        ['square']       : ()=>'square',
-        ['hex']          : ()=>'hex',
-        ['circleborder'] : ()=>'circleborder',
-        ['squareborder'] : ()=>'squareborder',
-        ['hexborder']    : ()=>'hexborder'
+        __default__ : ()=>'circle',
+        ['circle']  : ()=>'circle',
+        ['square']  : ()=>'square'
       },
       bar1_num_permission: {
         __default__  : ()=>'',
@@ -2360,7 +2355,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
         setAuraOptions: (/* context*/) => _h.join(
                     _h.subhead('Aura Options'),
                     _h.inset(
-                        _h.paragraph(`Aura Options sets the shape that an aura is displayed in on the tabletop.  There are six shapes that can be used: ${_h.code('square')}, ${_h.code('circle')}, ${_h.code('hex')}, ${_h.code('squareborder')}, ${_h.code('circleborder')}, and ${_h.code('hexborder')}. Any other value is ignored.`),
+                        _h.paragraph(`Aura Options sets the shape that an aura is displayed in on the tabletop.  There are two shapes that can be used: ${_h.code('square')} and ${_h.code('circle')}. Any other value is ignored.`),
                         _h.minorhead('Available Aura Options Properties:'),
                         _h.inset(
                             _h.grid(
@@ -2374,7 +2369,7 @@ const TokenMod = (() => { // eslint-disable-line no-unused-vars
                         ),
                         _h.paragraph(`In addition, you can also use the aliases ${_h.code('aura1_option')}, ${_h.code('aura2_option')}, ${_h.code('aura1_shape')}, and ${_h.code('aura2_shape')}.`),
                         _h.inset(
-                            _h.pre( '!token-mod --set aura1_option|hex aura2_shape|hexborder' )
+                            _h.pre( '!token-mod --set aura1_option|square aura2_shape|circle' )
                         )
                     )
                 ),

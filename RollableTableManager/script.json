@@ -1,0 +1,9 @@
+{
+  "name": "Rollable Table Manager",
+  "script": "RollableTableManager.js",
+  "version": "1.0.0",
+  "previousversions": [],
+  "description": "A GM-only Roll20 Mod script for browsing large rollable-table collections alphabetically, managing table items through chat, keeping personal GM favorites, and optionally presenting results through ScriptCards.",
+  "authors": "Kingkiller546",
+  "roll20userid": "2978722"
+}
