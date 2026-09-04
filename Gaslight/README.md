@@ -7,7 +7,7 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 - Roll20 Pro subscription (API access required)
 - [Anchor](https://github.com/Roll20/roll20-api-scripts/tree/master/Anchor) (spatial sync)
 - [Mirror](https://github.com/Roll20/roll20-api-scripts/tree/master/Mirror) (property sync)
-- [ScriptKit](https://github.com/Roll20/roll20-api-scripts/tree/master/ScriptKit) (help system, examples, guides)
+- [ScriptKit](https://github.com/Roll20/roll20-api-scripts/tree/master/ScriptKit) (**≥ 1.4.0** — help system, examples, guides, name generator)
 - [RollCapture](https://github.com/Roll20/roll20-api-scripts/tree/master/RollCapture) (optional, roll value extraction for scripting)
 - [ZeroFrame](https://github.com/Roll20/roll20-api-scripts/tree/master/ZeroFrame) (needed for the following other required scripts)
 - [SelectManager](https://github.com/Roll20/roll20-api-scripts/tree/master/SelectManager) (command relay)
@@ -24,20 +24,29 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 
 ## Quick Start
 
+**One-command setup** (experimental/Jumpgate sandbox):
+1. Create your master page
+2. Make one blank page named `GL-SCRATCH`, duplicate it once per player
+3. Select party tokens, run: `!gaslight quick` — clones the master onto the scratch pages, configures the group, and splits in one step
+4. When done: `!gaslight merge`
+
+**Manual setup** (any sandbox):
 1. Create your master page
 2. Duplicate it once per player (Roll20's built-in Duplicate Page)
-3. Select party tokens, run: `!gaslight setup mygroup`
-4. Verify: `!gaslight test mygroup`
-5. Activate: `!gaslight split mygroup`
+3. Select party tokens, run: `!gaslight setup` (a group name is generated, or provide one)
+4. Verify: `!gaslight test <group>`
+5. Activate: `!gaslight split <group>`
 6. When done: `!gaslight merge`
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `!gaslight setup <group>` | Quick-configure from duplicate pages |
+| `!gaslight setup [group]` | Quick-configure from duplicate pages (group name optional) |
+| `!gaslight quick [group] [players...]` | Configure + split in one step, cloning onto copies/`GL-SCRATCH` pages (experimental sandbox) |
 | `!gaslight split <group> [--force]` | Activate group (test-first) |
-| `!gaslight merge [group]` | Tear down links, return players |
+| `!gaslight merge [group]` | End a split; players return to their previous split (or banner). No arg = most recent split |
+| `!gaslight merge-all` | End all active splits at once |
 | `!gaslight test <group>` | Dry-run linking resolution |
 | `!gaslight stage [--default on\|off] [players...]` | Propagate tokens to player pages |
 | `!gaslight link [--default] [name\|new] [ids...]` | Manually link tokens |
@@ -285,6 +294,20 @@ Applied script examples (with handout generation):
 - **madness** - Afflicted players see all tokens as enemies
 
 ## Changelog
+
+### v2.3.0
+- `!gaslight quick [group] [players...]` — configure + split in one step, cloning the master onto page copies (and reusable `GL-SCRATCH` pages) via `graphic.createCopy` (experimental sandbox)
+- Marketplace-safe token staging — stage/clone uses `createCopy` when available, preserving Marketplace `imgsrc` and `sides`
+- `!gaslight merge-all` — end all active splits at once
+- Nested splits via per-player page stacks — merging a group returns each player to the most recent group they're still in (or the banner page)
+- `!gaslight merge` (no arg) now ends the most-recently-activated split (top of the stack) instead of all splits; `merge <group>` targets a specific group anywhere in the stack
+- Group name optional for `setup` and `quick` — a readable name (e.g. `arcane-dragon`) is generated via ScriptKit; the first argument is treated as a player unless it doesn't resolve to one
+- Auto-stage failures are now reported to the GM instead of failing silently
+- Adaptive getting-started guide (quick vs manual by sandbox) plus a standalone manual-setup guide when quick is available
+- **New dependency:** ScriptKit ≥ 1.4.0 (for the name generator)
+
+### v2.2.2
+- Added version dates to changelog for ScriptKit date-based whatsnew queries
 
 ### v2.2.1
 - Fix: `!gaslight link` re-establishes links for tokens in active groups

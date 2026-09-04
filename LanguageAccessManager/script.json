@@ -1,0 +1,13 @@
+{
+    "name": "Language Access Manager",
+    "script": "LanguageAccessManager.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "Language Access Manager uses hidden character sheets as language permission groups. It provides non-destructive setup, configurable standard and Tal'Tamaira registries, permanent and temporary access, exact restoration, rules-aware Comprehend Languages and Tongues routing, GM spoken/inscription macros, and player-specific speaking macros. Open the GM setup menu with `!lang setup`.",
+    "authors": "Kingkiller546",
+    "roll20userid": "2978722",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}

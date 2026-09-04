@@ -1463,3 +1463,15 @@ Locksmith:
 TrackDuration:
   - "TrackDuration"
   - "Utility"
+
+RollableTableManager:
+  - "RollableTableManager"
+  - "Utility"
+
+LanguageAccessManager:
+  - "LanguageAccessManager"
+  - "Utility"
+
+HandoutImageDisplay:
+  - "HandoutImageDisplay"
+  - "Utility"
