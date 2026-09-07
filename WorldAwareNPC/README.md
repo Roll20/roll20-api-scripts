@@ -35,22 +35,23 @@ The generator uses Roll20 Rollable Tables and the persistent state object. It do
 1. Open the Roll20 campaign.
 2. Open **Settings → Mod Scripts**.
 3. Create a new script.
-4. Paste the complete contents of World-Aware-NPC-Generator.js.
+4. Paste the complete contents of NPCgen.js.
 5. Save the script.
 6. In Roll20 chat, run:
 
        !npc-config
 
 7. Select **Install Missing Tables**.
-8. Generate an NPC with:
+8. Open the NPC selector with:
 
-       !npc
+       !npc-menu
 
 ## Commands
 
 | Command | Purpose |
 |---|---|
 | !npc | Generate an NPC and whisper the card to the GM. |
+| !npc-menu | Open a GM-only selector for random or chosen origins and races. |
 | !npc-config | Open the GM-only Setup Manager. |
 | !npc-check | Check that required tables exist and contain items. |
 
@@ -59,6 +60,7 @@ The generator uses Roll20 Rollable Tables and the persistent state object. It do
 - **Install Missing Tables** creates only tables that do not already exist.
 - **Repair Defaults** adds default items missing from installed tables.
 - **Factions: On/Off** enables or disables faction generation.
+- **NPC Selector** opens the origin/race selector.
 - **Generate NPC** produces a test NPC.
 
 Installing missing tables does not overwrite an existing table. Repairing defaults does not change existing items or weights, but it will restore any default item whose name is absent. Do not use **Repair Defaults** if you intentionally removed default items and do not want them restored.
@@ -100,15 +102,23 @@ Custom races without a configured language pool use the Human pool associated wi
 
 Create a Roll20 macro containing:
 
-    !npc
+    !npc-menu
 
-A menu button can call the generator directly:
+A menu button can open the selector directly:
 
-    [NPC Generator](!npc)
+    [NPC Generator](!npc-menu)
+
+You can also call selections directly:
+
+    !npc --origin "Southern Continent"
+    !npc --race "Human"
+    !npc --origin "Southern Continent" --race "Human"
+
+The origin and race must match items in the live NPC-Origin and NPC-Race tables. Use `Random` in either selector prompt to leave that field random.
 
 ## Generated card
 
-The output is whispered to the GM and is not added to the archived chat log. The card includes **Generate Another** and **Setup** buttons.
+The output is whispered to the GM and is not added to the archived chat log. A selected origin or race is preserved by **Repeat Selection**. **New Selection** returns to the selector, and **Setup** opens the Setup Manager.
 
 Faction is hidden when Influence is **No Influence**, or when faction generation has been disabled through the Setup Manager.
 
@@ -127,6 +137,14 @@ Replace the previous script contents with the new version and save. Existing Rol
 Avoid deleting and reinstalling tables unless you intend to lose custom table changes.
 
 ## Version history
+
+### 1.1.0
+
+- Added a GM-only origin and race selector.
+- Supports fully random, chosen origin, chosen race, or both.
+- Selector choices are read from the live Rollable Tables.
+- Added repeat-selection and new-selection card buttons.
+- Updated public branding to NPCgen.
 
 ### 1.0.0
 

@@ -1,8 +1,8 @@
 {
   "name": "WorldAwareNPC",
   "script": "WorldAwareNPC.js",
-  "version": "1.0.0",
-  "previousversions": [],
+  "version": "1.1.0",
+  "previousversions": ["1.0.0"],
   "description": "A GM-only, world-aware NPC generator for Roll20. Creates and manages weighted rollable tables for race, age, sex, origin, affluence, influence, and faction; generates ancestry- and origin-aware names; supports Changeling assumed identities; and provides an interactive setup manager.",
   "authors": "Kingkiller546",
   "roll20userid": "2978722"
