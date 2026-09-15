@@ -1,0 +1,29 @@
+{
+    "name": "FaceOnMOve",
+    "script": "FaceOnMOve.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "Automatically rotates and/or flips tokens to face their direction of movement.\n\nWhen a token moves, FaceOnMOve turns it to face the way it went — rotating toward the movement angle (clamped and optionally snapped to horizontal), flipping single-image tokens left/right, or swapping to dedicated side art on rollable tokens (including separate up/down art for steep movement). Configuration layers as global defaults → per-character overrides → per-token overrides, all editable from an interactive menu.\n\n**Requires [ScriptKit](https://github.com/Roll20/roll20-api-scripts/tree/master/ScriptKit)** for help, man, whatsnew, and handout generation.\n\n**Getting started:** Select one or more tokens and run `!fomo` (or `!fomo menu`) to open the config menu. Use the Global tab to set defaults, or the Token/Character tabs to override for the selection. For most single-image tokens, the only setting that matters is Facing (Left/Right).\n\n**v1.0.0 - New features:**\n- Initial release\n- Face movement direction via rotation and/or horizontal flip\n- Rollable-token side swapping (left/right and steep up/down art)\n- Global, per-token, and per-character config layering\n- Interactive config menu with side picker and Facing controls\n- Waypoint grouping, snap-to-horizontal, in-place facing gestures, idle reset\n- Global master switch and status-marker exclusions\n- ScriptKit integration: help, man, whatsnew, motd, gen-help\n\nCommands:\n- `!fomo menu` -- Open the config menu (same as bare !fomo; uses selection or global) (GM)\n- `!fomo enable` -- Enable facing for selected tokens\n- `!fomo disable` -- Disable facing for selected tokens\n- `!fomo on` -- Global master switch ON (GM)\n- `!fomo off` -- Global master switch OFF (GM)\n- `!fomo toggle` -- Flip the global master switch (GM)\n- `!fomo face [<id>|default] <left|right|inherit>` -- Set default facing; inherit clears a token/character override; default = global (GM)\n- `!fomo set <key> <value>` -- Set a global default (GM)\n- `!fomo set-token [<id>] <key> <value>` -- Set a token-level override; uses selection if no id (GM)\n- `!fomo set-char [<id>] <key> <value>` -- Set a character-level override; accepts token or character id (GM)\n- `!fomo reset-token [<id>]` -- Clear token-level overrides (id form GM-only)\n- `!fomo reset-char [<id>]` -- Clear character-level overrides (GM)\n- `!fomo reset-all [--force]` -- Reset ALL tokens to defaults (GM)\n- `!fomo reset-global [--force]` -- Restore global defaults to factory values (GM)",
+    "authors": "Kenan Millet",
+    "roll20userid": "2614613",
+    "dependencies": [
+        "ScriptKit"
+    ],
+    "modifies": {
+        "rotation": "read, write",
+        "imgsrc": "read, write",
+        "currentSide": "read, write",
+        "fliph": "read, write",
+        "sides": "read",
+        "lastmove": "read",
+        "left": "read",
+        "top": "read",
+        "width": "read",
+        "height": "read",
+        "layer": "read",
+        "statusmarkers": "read",
+        "represents": "read"
+    },
+    "conflicts": [],
+    "useroptions": []
+}
