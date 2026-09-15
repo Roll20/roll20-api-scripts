@@ -1,0 +1,14 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/script.json.schema",
+    "name": "Initiative Pulse",
+    "script": "InitiativePulse.js",
+    "version": "1.0.0",
+    "previousversions": [],
+    "description": "Initiative Pulse adds non-invasive timed announcements to normal Roll20 initiative. GM-created Actions announce when initiative crosses a configured threshold, while Effects count down from explicit round notifications. It integrates with Initiative Tracker Plus without taking control of turns, halos, end-of-turn handling, or rounds. Use `!pulse-menu` for the GM menu, `!pulse action Name %% Initiative %% Repeat` to add an Action, and `!pulse effect Name %% Duration` to add an Effect. Additional GM commands install menu, ScriptCards, and Clear Combat macros; inspect or clear current entries; and clean up Initiative Pulse state and macros. See the README for complete usage and integration details.",
+    "authors": "Kingkiller546",
+    "roll20userid": "2978722",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {},
+    "conflicts": []
+}
