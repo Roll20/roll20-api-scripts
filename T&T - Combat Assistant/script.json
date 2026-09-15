@@ -1,0 +1,71 @@
+{
+  "name": "T&T - Combat Assistant",
+  "script": "CombatAssistant.js",
+  "version": "1.2.8",
+  "previousversions": [],
+  "description": "# T&T - Combat Assistant\n\n**Combat automation for Roll20 D&D 2014 & 2024.**\n\nCombat Assistant reads attacks, spells, damage, healing, saving throws and initiative from supported Roll20 D&D character sheets and turns them into interactive combat tools for the GM and players.\n\n## Features\n\n- **Attack & Spell Capture:** Reads supported attack, damage and healing rolls and creates interactive cards to apply their effects to selected tokens.\n- **Automatic Damage:** Checks AC and applies damage while accounting for Temporary HP, Resistances, Immunities and Vulnerabilities.\n- **Healing & Temporary HP:** Apply captured or manual healing directly to selected tokens.\n- **Group Saving Throws:** Roll saving throws for groups of selected tokens with support for Normal, Advantage and Disadvantage rolls.\n- **Group Initiative:** Roll initiative for multiple selected creatures and automatically update the Roll20 Turn Order.\n- **Animated Combat:** Optional Roll20 FX for projectiles, hits, healing, explosions, beams, breath attacks and other combat effects.\n- **Area of Effect Automation:** Creates movable markers for Radius, Sphere, Cylinder, Emanation, Cube, Square, Cone and Line effects and automatically detects affected tokens.\n- **Automatic AoE Saves:** Resolve saving throws and damage for creatures caught inside an area effect.\n- **Concentration System:** Tracks concentration spells, concentration saves, duration and persistent AoE markers, removing their effects when concentration ends.\n- **Turn Tracker:** Customizable combat rounds, turn cards, Next Turn controls, optional Auto Focus, Round Counter and animated Turn Marker.\n- **Movement Tracker:** Tracks movement during a creature's turn and supports Dash movement.\n- **Combat Menu:** Reads attacks from a character sheet and provides compact chat controls for rolling them.\n- **Spell Menu:** Reads and organizes available spells directly from supported character sheets.\n- **Resource Manager:** Displays and manages limited-use character resources and spell slots directly from Combat Assistant and Turn cards.\n- **Player Combat Controls:** Optional player attack, healing, saving throw, initiative, AoE, resource and turn controls.\n- **Range Checking:** Optional validation of attack and spell target distance.\n- **NPC Combat Tools:** Group saves, initiative, attacks, spells, resources, movement tracking and optional defeated-NPC removal.\n- **D&D 2014 & 2024 Support:** Designed to work with both official Roll20 D&D sheet generations.\n\n## Basic Commands\n\n- `!ca menu` - Open the main Combat Assistant menu.\n- `!ca settings` - Open configuration and feature toggles.\n- `!ca help` - Show command help.\n- `!ca combat` - Show attacks for the selected token.\n- `!ca spells` - Show spells for the selected token.\n- `!ca resources` - Show resources and spell slots.\n- `!ca save <ability>` - Roll saving throws for selected tokens.\n- `!ca init` - Roll initiative for selected tokens.\n- `!ca deal manual <damage> <type>` - Apply manual damage.\n- `!ca heal manual <hp|temp> <value>` - Apply healing or Temporary HP.\n- `!ca turn` - Show the current Turn card.\n- `!ca turnnext` - Advance to the next combat turn.\n\nCombat Assistant also accepts `!combatAssistant` and `!combat-assistant`.\n\n## Links\n\nCreated by **[AmadeusVF](https://www.patreon.com/cw/AmadeusVF/home)**.\n\n[Combat Assistant - Roll20 Forum](https://app.roll20.net/forum/post/12797865/script-combat-assistant-animated-combat-automated-attacks-and-spells-aoe-concentration-track-damage-and-healing-d-and-d-2014-slash-2024)",
+  "authors": "AmadeusVF",
+  "roll20userid": "15900768",
+  "patreon": "https://www.patreon.com/cw/AmadeusVF/home",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {
+    "state.COMBAT_ASSISTANT": "read,write",
+
+    "Campaign().turnorder": "read,write",
+    "Campaign().initiativepage": "read,write",
+    "Campaign().playerpageid": "read",
+    "Campaign().playerspecificpages": "read",
+
+    "chat:message": "read",
+    "chat": "write",
+
+    "graphic.represents": "read,write",
+    "graphic.name": "read,write",
+    "graphic.imgsrc": "read,write",
+    "graphic.pageid": "read",
+    "graphic.layer": "read,write",
+    "graphic.left": "read,write",
+    "graphic.top": "read,write",
+    "graphic.width": "read,write",
+    "graphic.height": "read,write",
+    "graphic.rotation": "read,write",
+    "graphic.controlledby": "read,write",
+    "graphic.statusmarkers": "read,write",
+    "graphic.gmnotes": "read,write",
+
+    "graphic.bar1_value": "read,write",
+    "graphic.bar2_value": "read,write",
+    "graphic.bar3_value": "read,write",
+    "graphic.bar1_max": "read",
+    "graphic.bar2_max": "read",
+    "graphic.bar3_max": "read",
+    "graphic.bar1_link": "read",
+    "graphic.bar2_link": "read",
+    "graphic.bar3_link": "read",
+
+    "character.name": "read,write",
+    "character.controlledby": "read,write",
+    "character.inplayerjournals": "read,write",
+    "character.archived": "read,write",
+    "character.gmnotes": "read,write",
+
+    "attribute.characterid": "read,write",
+    "attribute.name": "read,write",
+    "attribute.current": "read,write",
+    "attribute.max": "read",
+
+    "ability.characterid": "read,write",
+    "ability.name": "read,write",
+    "ability.action": "read,write",
+    "ability.istokenaction": "read,write",
+
+    "player.displayname": "read",
+
+    "page.scale_number": "read",
+    "page.snapping_increment": "read",
+
+    "custfx.name": "read"
+  },
+  "conflicts": []
+}
