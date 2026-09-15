@@ -1,5 +1,5 @@
 ﻿// =============================================================================
-// Gaslight v2.4.0
+// Gaslight v2.3.1
 // Last Updated: 2026-09-06
 // Author: Kenan Millet
 //
@@ -41,7 +41,7 @@ var Gaslight = Gaslight || (() => {
     'use strict';
 
     const SCRIPT_NAME    = 'Gaslight';
-    const SCRIPT_VERSION = '2.4.0';
+    const SCRIPT_VERSION = '2.3.1';
     const CMD            = '!gaslight';
     const CONFIG_HEADER  = '---GASLIGHT---';
     const LINK_KEY       = 'gaslight_link';
@@ -66,181 +66,6 @@ var Gaslight = Gaslight || (() => {
     // True if a page is a scratch page — its name is GL-SCRATCH, possibly behind one
     // or more "Copy of " prefixes (duplicating a scratch page keeps it usable).
     const isScratchPageName = (name) => stripCopyOf(name || '') === SCRATCH_NAME;
-
-    // =========================================================================
-    // GL-SCRATCH pageFolder (Latest sandbox / v1.5+ only)
-    //
-    // On v1.5, scratch pages live in a dedicated "GL-SCRATCH" pageFolder so they
-    // stay out of sight. ANY page in that folder is a scratch page (regardless of
-    // name), so users can just drop blank pages into the folder. In-use copies are
-    // placed next to the master (via placeAfter) and moved back into the folder on
-    // merge. On v1.0 (no pageFolder API) all of this is inert and Gaslight falls
-    // back to the flat, name-based GL-SCRATCH behavior.
-    // =========================================================================
-
-    // Does this sandbox support pageFolders? True for Mod Script Sandbox v1.5 and
-    // any later version (>= 1.5). We compare numerically so a future "1.6"/"2.0"
-    // doesn't regress to the v1.0 fallback. Unknown/unparseable -> treated as legacy.
-    const sandboxAtLeast = (major, minor) => {
-        var v;
-        try { v = Campaign().sandboxVersion; } catch (e) { return false; }
-        var parts = String(v || '').split('.');
-        var maj = parseInt(parts[0], 10);
-        var min = parseInt(parts[1], 10);
-        if (isNaN(maj)) return false;
-        if (isNaN(min)) min = 0;
-        return maj > major || (maj === major && min >= minor);
-    };
-    // pageFolders (and the placeIn/placeAfter methods) arrived in v1.5.
-    const isLatestSandbox = () => sandboxAtLeast(1, 5);
-
-    // Find the GL-SCRATCH pageFolder, or undefined. v1.5 only.
-    const getScratchFolder = () => {
-        if (!isLatestSandbox()) return undefined;
-        return findObjs({ _type: 'pageFolder', name: SCRATCH_NAME })[0];
-    };
-
-    // Get-or-create the GL-SCRATCH pageFolder. Returns the folder or undefined
-    // (v1.0, or if creation isn't supported). Defensive: never throws.
-    const ensureScratchFolder = () => {
-        if (!isLatestSandbox()) return undefined;
-        try {
-            var existing = getScratchFolder();
-            if (existing) return existing;
-            return createObj('pageFolder', { name: SCRATCH_NAME }) || undefined;
-        } catch (e) {
-            log('Gaslight: could not ensure ' + SCRATCH_NAME + ' folder: ' + e.message);
-            return undefined;
-        }
-    };
-
-    // Does this page live inside the given folder? Reads _path (comma-delimited
-    // pageFolder ids; empty/"," means root).
-    const pageInFolder = (page, folderId) => {
-        if (!page || !folderId) return false;
-        var path = '';
-        try { path = page.get('_path') || ''; } catch (e) { return false; }
-        return path.split(',').filter(Boolean).indexOf(folderId) !== -1;
-    };
-
-    // True if a page is a scratch page: on v1.5, membership in the GL-SCRATCH
-    // folder counts (any name); on any sandbox, the GL-SCRATCH name counts.
-    const isScratchPage = (page) => {
-        if (!page) return false;
-        if (isScratchPageName(page.get('name'))) return true;
-        var folder = getScratchFolder();
-        return folder ? pageInFolder(page, folder.id) : false;
-    };
-
-    // Move a page next to the master (same folder level, adjacent). placeAfter
-    // handles both cases: master in a folder -> copy joins that folder; master at
-    // root -> copy stays at root. Skips if master is itself in the scratch folder
-    // (would otherwise drop in-use copies back into GL-SCRATCH). Defensive: any
-    // failure degrades to leaving the page where it is. v1.5 only.
-    const placeCopyNearMaster = (copyPage, masterPage) => {
-        if (!isLatestSandbox() || !copyPage || !masterPage) return;
-        try {
-            var folder = getScratchFolder();
-            if (folder && pageInFolder(masterPage, folder.id)) return; // don't stage into scratch folder
-            if (typeof copyPage.placeAfter === 'function') copyPage.placeAfter(masterPage);
-        } catch (e) {
-            log('Gaslight: placeCopyNearMaster failed: ' + e.message);
-        }
-    };
-
-    // Move a page back into the GL-SCRATCH folder (on merge/recycle). Defensive.
-    // v1.5 only; no-op otherwise.
-    const placeInScratchFolder = (page) => {
-        if (!isLatestSandbox() || !page) return;
-        try {
-            var folder = ensureScratchFolder();
-            if (folder && typeof page.placeIn === 'function') page.placeIn(folder);
-        } catch (e) {
-            log('Gaslight: placeInScratchFolder failed: ' + e.message);
-        }
-    };
-
-    // Startup: ensure the GL-SCRATCH folder exists and migrate any loose pages
-    // named GL-SCRATCH into it. v1.5 only; safe/no-op on v1.0. Runs once at ready.
-    const migrateScratchPages = () => {
-        if (!isLatestSandbox()) return;
-        var folder = ensureScratchFolder();
-        if (!folder) return;
-        try {
-            findObjs({ _type: 'page' }).forEach(function(p) {
-                if (isScratchPageName(p.get('name')) && !pageInFolder(p, folder.id)) {
-                    if (typeof p.placeIn === 'function') p.placeIn(folder);
-                }
-            });
-        } catch (e) {
-            log('Gaslight: scratch-page migration failed: ' + e.message);
-        }
-    };
-
-    // A page counts as "empty" (a usable blank scratch page) if it has none of the
-    // object types we clone onto scratch pages. Mirrors CLONE_TYPES so the check
-    // stays in sync with what `quick` actually copies.
-    const pageIsEmpty = (pageId) => {
-        return !CLONE_TYPES.some(function(t) {
-            return findObjs({ _type: t, _pageid: pageId }).length > 0;
-        });
-    };
-
-    // A never-viewed page has `_zorder === false` (a boolean) instead of a string.
-    // Roll20 only initializes it when a GM first opens the page in the client, and
-    // there is no API way to seed it — `createObj` on such a page throws inside
-    // Roll20 ("_zorder.split is not a function"). `quick` must skip these until the
-    // GM opens them once. Returns true only when _zorder is a usable string.
-    const pageZOrderReady = (page) => {
-        try { return typeof page.get('_zorder') === 'string'; } catch (e) { return false; }
-    };
-
-    // React to a page entering the GL-SCRATCH folder (created there, or dragged in):
-    // React to a page entering the GL-SCRATCH folder (created there, or dragged in):
-    //   - empty page not already named GL-SCRATCH -> rename to GL-SCRATCH (uniform).
-    //   - empty page whose _zorder is uninitialized -> nudge the GM to open it once
-    //     (quick can't clone onto a never-viewed page; see pageZOrderReady).
-    //   - non-empty page -> clearly not a scratch page: whisper the GM and eject it
-    //     back to where it came from. On a drag (change:page:_path) we know the
-    //     origin from prev._path: if it came from another folder, put it back in
-    //     that folder; if it came from root (or we have no prev, e.g. add:page),
-    //     drop it at root just before the GL-SCRATCH folder.
-    // v1.5+ only. Defensive: never throws. Merge-recycled pages are wiped before
-    // they land here, so they read as empty and normalize correctly — no guard flag needed.
-    const handleScratchFolderMembership = (page, prev) => {
-        if (!isLatestSandbox() || !page) return;
-        var folder = getScratchFolder();
-        if (!folder || !pageInFolder(page, folder.id)) return; // not in the scratch folder
-        try {
-            if (pageIsEmpty(page.id)) {
-                if (stripCopyOf(page.get('name') || '') !== SCRATCH_NAME) page.set('name', SCRATCH_NAME);
-                // Never-viewed pages can't be cloned onto until Roll20 initializes
-                // their z-order (only happens when a GM opens the page). Nudge once.
-                if (!pageZOrderReady(page)) {
-                    sendChat(SCRIPT_NAME, '/w gm <b>[Gaslight]</b> Added a scratch page to <code>' + SCRATCH_NAME + '</code>. <b>Open it once</b> (click it in the page menu) so Roll20 initializes it — otherwise <code>' + CMD + ' quick</code> can\'t use it yet.', null, { noarchive: true });
-                }
-                return;
-            }
-            // Real page dropped into the scratch folder by mistake — eject it back
-            // to its origin. prev._path (from a drag) lists the folder ids it was in;
-            // the innermost one that isn't the scratch folder is where it belongs.
-            var name = page.get('name') || page.id;
-            var originId = null;
-            if (prev && typeof prev._path === 'string') {
-                var ids = prev._path.split(',').filter(Boolean).filter(function(id) { return id !== folder.id; });
-                if (ids.length > 0) originId = ids[ids.length - 1];
-            }
-            var originFolder = originId ? getObj('pageFolder', originId) : null;
-            if (originFolder && typeof page.placeIn === 'function') {
-                page.placeIn(originFolder); // came from another folder — put it back
-            } else if (typeof page.placeBefore === 'function') {
-                page.placeBefore(folder); // came from root (or unknown) — drop at root by the folder
-            }
-            sendChat(SCRIPT_NAME, '/w gm <b>[Gaslight]</b> Moved <b>' + name + '</b> out of the <code>' + SCRATCH_NAME + '</code> folder — it has objects on it, so it wasn\'t treated as a scratch page. Only empty pages in that folder are used as scratch pages.', null, { noarchive: true });
-        } catch (e) {
-            log('Gaslight: handleScratchFolderMembership failed: ' + e.message);
-        }
-    };
 
     var relaying = new Set();
     var scripting = false;
@@ -1589,22 +1414,16 @@ var Gaslight = Gaslight || (() => {
         var allPages = findObjs({ _type: 'page' });
         var copies = allPages.filter(function(p) {
             if (p.get('_id') === masterPageId) return false;
-            if (isScratchPage(p)) return false; // scratch pages (by name or GL-SCRATCH folder) handled separately
+            if (isScratchPageName(p.get('name'))) return false; // scratch pages handled separately
             return stripCopyOf(stripGlsTag(p.get('name'))) === masterName;
         });
 
-        // Find scratch pages to fill any shortfall. A scratch page is one named
-        // GL-SCRATCH (any sandbox) OR any page inside the GL-SCRATCH folder (v1.5+).
-        // Only EMPTY pages qualify — a real map that ended up in the folder is never
-        // consumed (and is separately ejected by the folder-membership handler).
-        var scratch = allPages.filter(function(p) {
-            if (p.get('_id') === masterPageId) return false;
-            return isScratchPage(p) && pageIsEmpty(p.get('_id'));
-        });
+        // Find scratch pages to fill any shortfall (GL-SCRATCH, or "Copy of GL-SCRATCH", ...).
+        var scratch = allPages.filter(function(p) { return isScratchPageName(p.get('name')); });
 
         var needed = playerIds.length; // one page per player (master is the source page)
         if (copies.length + scratch.length < needed) {
-            reply(msg, 'Error', 'Need ' + needed + ' player page(s) but found only ' + copies.length + ' copy(ies) of "' + masterName + '" and ' + scratch.length + ' scratch page(s). Duplicate the page, or add more blank pages to the <code>' + SCRATCH_NAME + '</code> folder.');
+            reply(msg, 'Error', 'Need ' + needed + ' player page(s) but found only ' + copies.length + ' copy(ies) of "' + masterName + '" and ' + scratch.length + ' <code>' + SCRATCH_NAME + '</code> page(s). Duplicate the page or add more <code>' + SCRATCH_NAME + '</code> pages.');
             return;
         }
 
@@ -1635,14 +1454,8 @@ var Gaslight = Gaslight || (() => {
         // WITHOUT changing anything — no partial setup.
         var notReady = jobs.filter(function(job) { return !ensurePageZOrder(job.page.get('_id')); });
         if (notReady.length > 0) {
-            // Scratch pages are all named GL-SCRATCH, so naming them individually is
-            // useless. Tell the GM to open the uninitialized page(s) — for folder
-            // scratch pages that means opening each page in the GL-SCRATCH folder.
-            var folder = getScratchFolder();
-            var howTo = folder
-                ? 'Open each blank page in the <code>' + SCRATCH_NAME + '</code> folder once (click it in the page menu) so Roll20 initializes it, then re-run <code>' + CMD + ' quick</code>.'
-                : 'Open (navigate to) your <code>' + SCRATCH_NAME + '</code> page(s) once so Roll20 initializes them, then re-run <code>' + CMD + ' quick</code>.';
-            reply(msg, 'Error', notReady.length + ' scratch page(s) haven\'t been opened yet, so Roll20 hasn\'t initialized them and <code>' + CMD + ' quick</code> can\'t clone onto them safely. Nothing was changed.<br>' + howTo);
+            reply(msg, 'Error', notReady.length + ' target page(s) have an uninitialized z-order and can\'t be prepared safely, so nothing was changed. Open (navigate to) each of these pages once so Roll20 initializes them, then re-run <code>' + CMD + ' quick</code>:<br>' +
+                notReady.map(function(job) { return '&bull; ' + (job.page.get('name') || job.page.get('_id')) + ' (' + job.playerName + ')'; }).join('<br>'));
             return;
         }
 
@@ -1667,9 +1480,6 @@ var Gaslight = Gaslight || (() => {
                     if (v !== undefined) settings[p] = v;
                 });
                 job.page.set(settings);
-                // v1.5+: move the in-use copy out of the GL-SCRATCH folder to sit
-                // right next to the master (same folder level). No-op on v1.0.
-                placeCopyNearMaster(job.page, masterPage);
                 clonePageContents(masterPageId, pageId, function() { processNext(); });
             } else {
                 processNext();
@@ -1887,8 +1697,6 @@ var Gaslight = Gaslight || (() => {
                         if (!pg) return;
                         wipePage(pageId);
                         pg.set('name', SCRATCH_NAME);
-                        // v1.5+: return the recycled page to the GL-SCRATCH folder.
-                        placeInScratchFolder(pg);
                     });
                 } finally {
                     destroying = wasDestroying;
@@ -4618,14 +4426,6 @@ var Gaslight = Gaslight || (() => {
                     'When done: `!gaslight merge` — tears down all links, returns players.',
                 ],
                 changelog: [
-                    { version: '2.4.0', date: '2026-09-06', changes: [
-                        'GL-SCRATCH pageFolder (Latest sandbox v1.5+): scratch pages now live in a dedicated ' + SCRATCH_NAME + ' folder to stay out of sight. Any page in the folder is treated as a scratch page — just drop blank pages in.',
-                        'In-use scratch copies are moved next to the master page during `quick`, and returned to the ' + SCRATCH_NAME + ' folder on merge.',
-                        'On startup the ' + SCRATCH_NAME + ' folder is auto-created and any loose ' + SCRATCH_NAME + '-named pages are tucked into it.',
-                        'Empty pages added to the folder are auto-named ' + SCRATCH_NAME + '; a non-empty page dropped in by mistake is ejected back to where it came from with a heads-up to the GM.',
-                        'Reminder to open newly-added scratch pages once (Roll20 only initializes a page when first viewed; `quick` can\'t clone onto an unopened page).',
-                        'v1.0 (Legacy) sandbox is unaffected — the flat, name-based ' + SCRATCH_NAME + ' behavior still applies.',
-                    ]},
                     { version: '2.3.1', date: '2026-09-06', changes: [
                         'Terminology: refer to the sandbox as the "Latest sandbox (Mod Script Sandbox v1.5)" instead of "experimental/Jumpgate", matching Roll20\'s current Mod Scripts settings. No behavior change.',
                     ]},
@@ -4693,7 +4493,7 @@ var Gaslight = Gaslight || (() => {
                               { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.0.0' },
                           ]},
                         { syntax: 'quick [group] [players...]', description: 'Configure + split using page copies and scratch pages', version: '2.3.0',
-                          details: 'Uses existing duplicates of the current page for player pages, and fills any shortfall from blank pages in the ' + SCRATCH_NAME + ' folder (any page in that folder is a scratch page; its settings + contents are cloned from the master; requires the Latest sandbox / Mod Script Sandbox v1.5 for graphic.createCopy). Configures the group and runs split in one step. Group name is optional (auto-generated if omitted). On merge, scratch pages are wiped and returned to the ' + SCRATCH_NAME + ' folder for reuse; real duplicates are left untouched',
+                          details: 'Uses existing duplicates of the current page for player pages, and fills any shortfall from pages named ' + SCRATCH_NAME + ' (their settings + contents are cloned from the master; requires the Latest sandbox (Mod Script Sandbox v1.5) for graphic.createCopy). Configures the group and runs split in one step. Group name is optional (auto-generated if omitted). On merge, scratch pages are wiped and renamed back to ' + SCRATCH_NAME + ' for reuse; real duplicates are left untouched.',
                           items: [
                               { name: '[group]', description: 'Optional group name (a readable name like "arcane-dragon" is generated if omitted)', version: '2.3.0' },
                               { name: '[players...]', description: 'Player names to include (optional — auto-detected from selected tokens or party-tagged characters)', version: '2.3.0' },
@@ -4895,11 +4695,11 @@ var Gaslight = Gaslight || (() => {
         ];
 
         const gsQuickSetup = [
-            { prompt: 'Good news — your sandbox supports the fast path. Gaslight has created a page folder named `' + SCRATCH_NAME + '` for you. Add a few **blank pages** into that folder — one per player. Any page you put in the folder becomes a reusable scratch page (Gaslight auto-names them and recycles them for you), so you don\'t need to name them yourself.\n\n**Important:** after adding each blank page, **open it once** (click it in the page menu) — Roll20 only initializes a page the first time you view it, and quick can\'t clone onto an unopened page.\n\nGaslight will clone your master page onto these when you split, and return them to the folder on merge.\n\n*If `quick` later warns that a page has an "uninitialized z-order," just navigate to that page once (Roll20 sets it up on first view) and re-run.*' },
+            { prompt: 'Good news — your sandbox supports the fast path. Create **one blank page**, and name it exactly `' + SCRATCH_NAME + '`, and then duplicate it until there is one per player. (You can keep these around and reuse them — Gaslight recycles them automatically.)\n\nThese are scratch pages Gaslight will clone your master page onto.\n\n*If `quick` later warns that a page has an "uninitialized z-order," just navigate to that page once (Roll20 sets it up on first view) and re-run.*' },
             { prompt: 'Navigate to your **master page**, then run `!gaslight quick` using one of these methods:\n\n**Option 1:** Select player-character tokens on the master page, then run `!gaslight quick` — uses controlling players of selected tokens.\n\n**Option 2:** Set the master page as the banner page and run `!gaslight quick "Player1" "Player2" ...` — uses the named players.\n\n**Option 3:** Define a Roll20 party, set the master as the banner page, and run `!gaslight quick` with no selection.\n\nGaslight clones your master onto the scratch pages, configures the group, and splits — all in one step. (A group name is optional; a readable one is generated for you.)',
               ...ScriptKit.waitForCommand('!gaslight quick'),
               onContinue: () => {
-                  if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected yet. Make sure the `' + SCRATCH_NAME + '` folder has enough blank pages (one per player) and run `!gaslight quick`.';
+                  if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length === 0) return 'No active split detected yet. Make sure you have enough `' + SCRATCH_NAME + '` pages (one per player) and run `!gaslight quick`.';
               }
             },
         ];
@@ -5593,9 +5393,6 @@ var Gaslight = Gaslight || (() => {
         }
         // createHelpHandout(); // Replaced by ScriptKit gen-help
         checkDanglingGroups();
-        // Latest sandbox (v1.5+): ensure the GL-SCRATCH folder exists and tuck any
-        // loose GL-SCRATCH-named pages into it. No-op on v1.0.
-        migrateScratchPages();
         if (Object.keys(state[SCRIPT_NAME].activeGroups || {}).length > 0) {
             buildTriggerMap();
             registerAllCompProps();
@@ -8174,12 +7971,6 @@ var Gaslight = Gaslight || (() => {
                 rebuildTriggerMapFromCache();
             }
         });
-
-        // GL-SCRATCH folder maintenance (v1.5+): when a page is created in or dragged
-        // into the folder, normalize it (empty -> rename to GL-SCRATCH) or eject it
-        // (non-empty -> move out + whisper). No-op on v1.0.
-        on('add:page', function(obj) { handleScratchFolderMembership(obj); });
-        on('change:page:_path', function(obj, prev) { handleScratchFolderMembership(obj, prev); });
     };
 
     return { checkInstall, registerEventHandlers };

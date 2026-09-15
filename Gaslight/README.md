@@ -24,11 +24,11 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 
 ## Quick Start
 
-**One-command setup** (experimental/Jumpgate sandbox):
+**One-command setup** (Latest sandbox — Mod Script Sandbox v1.5+):
 1. Create your master page
-2. Make one blank page named `GL-SCRATCH`, duplicate it once per player
+2. Add a few blank pages to the `GL-SCRATCH` folder (Gaslight auto-creates this folder; any page you put in it becomes a reusable scratch page — one per player). **Open each new page once** so Roll20 initializes it — `quick` can't clone onto a page you've never viewed.
 3. Select party tokens, run: `!gaslight quick` — clones the master onto the scratch pages, configures the group, and splits in one step
-4. When done: `!gaslight merge`
+4. When done: `!gaslight merge` (scratch pages are wiped and returned to the `GL-SCRATCH` folder for reuse)
 
 **Manual setup** (any sandbox):
 1. Create your master page
@@ -43,7 +43,7 @@ Per-player map perception for Roll20. Split players onto individual copies of a 
 | Command | Description |
 |---------|-------------|
 | `!gaslight setup [group]` | Quick-configure from duplicate pages (group name optional) |
-| `!gaslight quick [group] [players...]` | Configure + split in one step, cloning onto copies/`GL-SCRATCH` pages (experimental sandbox) |
+| `!gaslight quick [group] [players...]` | Configure + split in one step, cloning onto copies/`GL-SCRATCH` pages (Latest sandbox v1.5) |
 | `!gaslight split <group> [--force]` | Activate group (test-first) |
 | `!gaslight merge [group]` | End a split; players return to their previous split (or banner). No arg = most recent split |
 | `!gaslight merge-all` | End all active splits at once |
@@ -294,6 +294,17 @@ Applied script examples (with handout generation):
 - **madness** - Afflicted players see all tokens as enemies
 
 ## Changelog
+
+### v2.4.0
+- `GL-SCRATCH` pageFolder (Latest sandbox v1.5+): scratch pages now live in a dedicated `GL-SCRATCH` folder to stay out of sight. Any page in the folder is treated as a scratch page — just drop blank pages in (no naming needed).
+- In-use scratch copies are moved next to the master page during `quick`, and returned to the `GL-SCRATCH` folder on merge.
+- On startup the `GL-SCRATCH` folder is auto-created and any loose `GL-SCRATCH`-named pages are tucked into it.
+- Empty pages added to the folder are auto-named `GL-SCRATCH`; a non-empty page dropped in by mistake is ejected back to where it came from with a heads-up to the GM.
+- Reminder to open newly-added scratch pages once (Roll20 only initializes a page when first viewed; `quick` can't clone onto an unopened page).
+- v1.0 (Legacy) sandbox is unaffected — the flat, name-based `GL-SCRATCH` behavior still applies.
+
+### v2.3.1
+- Terminology: refer to the sandbox as the "Latest sandbox (Mod Script Sandbox v1.5)" instead of "experimental/Jumpgate", matching Roll20's current Mod Scripts settings. No behavior change.
 
 ### v2.3.0
 - `!gaslight quick [group] [players...]` — configure + split in one step, cloning the master onto page copies (and reusable `GL-SCRATCH` pages) via `graphic.createCopy` (experimental sandbox)
