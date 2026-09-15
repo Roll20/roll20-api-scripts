@@ -1475,3 +1475,23 @@ LanguageAccessManager:
 HandoutImageDisplay:
   - "HandoutImageDisplay"
   - "Utility"
+
+CombatAssistant:
+- "T&T - Combat Assistant"
+- "Utility"
+  
+InitiativePulse:
+- "Initiative Pulse"
+- "Utility"
+
+HandoutFormatter:
+- "HandoutFormatter"
+- "Utility"
+
+WorldAwareNPC:
+- "WorldAwareNPC"
+- "Utility"
+
+FaceOnMOve:
+- "FaceOnMOve"
+- "Utility"
