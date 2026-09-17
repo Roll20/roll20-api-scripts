@@ -2,38 +2,40 @@
 // By:       Keith Curtis
 // Contact:  https://app.roll20.net/users/162065/keithcurtis
 // Changelog
-// 0.3.0 Substantial internal update (framework migration + bug-fix pass).
-//       No command, flag, or output-format changes unless noted.
-//       - Migrated onto the standard script framework (Config/State/Logger/
-//         Parser/Output/Commands); rewrote argument parsing and option
-//         dispatch for readability.
-//       - Fixed: --id targeting a deleted/missing token could crash the
-//         sandbox; --template|name was ignored depending on flag order;
-//         --tooltip/--tokenimage/--card/default-token multi-select reports
-//         repeated the first selected token's data instead of each token's
-//         own; a player/self-note routed to a handout could leak stale
-//         GM-only text from an earlier, unrelated call; --image2/--image3+
-//         could return stray bio prose instead of an image; a mislabeled
-//         "Pathefinder 2e" config option.
-//       - Removed dead code: the non-functional "!gmnote-Pattern" filter
-//         shorthand, and a leftover debug block.
-//       - Every option now whispers an explanation instead of failing
-//         silently (no target selected, bad/deleted --id, token without a
-//         character, empty field).
-//       - Headers (h1-h6) in notes now take the surrounding template's own
-//         text color instead of Roll20's fixed heading color.
-//       - The "-----" GM-only divider now parses correctly regardless of
-//         how Roll20's rich-text editor wraps it, and its whisper box no
-//         longer displays when there's nothing readable after the divider.
-//       - Fixed image links (including cache-busted, webp Roll20 URLs) not
-//         rendering in chat: Supernotes now builds the <img>/<a> tags
-//         itself instead of relying on Roll20 to auto-embed markdown
-//         placed inside a roll template, which it does not do. Every
-//         "is this an image" extension check is now one shared list.
-//       - New: --menu whispers a compact, clickable button grid of every
-//         reporting option for the selected token(s) — a GM sees both a
-//         GM-facing and a player-facing row; anyone else sees only the
-//         player-facing row.
+// 0.3.0 Big cleanup and bug-fix pass under the hood. Commands and flags
+//       all work exactly the same as before.
+//       - Rebuilt the internals for easier upkeep and fewer surprises down
+//         the road.
+//       - Fixed a crash when a command pointed at a token that no longer
+//         exists.
+//       - Fixed --template being ignored depending on where it was placed
+//         in the command.
+//       - Fixed multi-token reports (tooltip, token image, card, plain
+//         notes) sometimes repeating the first token's info for every
+//         line instead of showing each token's own.
+//       - Fixed GM-only text occasionally leaking into a handout it
+//         shouldn't have.
+//       - Fixed --image2, --image3, etc. sometimes returning a chunk of
+//         garbled bio text instead of the actual image.
+//       - Fixed the "Pathefinder 2e" typo in the config menu.
+//       - Cleared out old unused code: a broken, undocumented filter
+//         option nobody was using, and some leftover debug clutter.
+//       - Every option now tells you why nothing happened instead of
+//         staying silent (no token selected, bad/missing id, empty
+//         field, etc).
+//       - Headers in notes/bios now match the color of whatever template
+//         you're using, instead of always showing in Roll20's default
+//         heading color.
+//       - Fixed the "-----" GM-only divider so it's parsed reliably no
+//         matter how Roll20 happens to format it, and the secret box no
+//         longer shows up empty when there's nothing after the divider.
+//       - Fixed images (including newer webp images and Roll20's
+//         cache-busted links) sometimes showing up as plain text instead
+//         of the actual picture.
+//       - New: --menu command. Whispers a clickable button menu of every
+//         option for the selected token(s), so you don't have to
+//         remember the flags. GMs see both the GM buttons and the player
+//         buttons; players only see their own.
 // 0.2.8 Added webp support
 // 0.2.7 Added Templates for 2024 sheet, Dark and Light
 // 0.2.6 Reworked and updated Help system to use handout. Fixed logic issue Card output.

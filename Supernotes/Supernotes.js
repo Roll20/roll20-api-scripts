@@ -1,5 +1,55 @@
+// Script:   Supernotes
+// By:       Keith Curtis
+// Contact:  https://app.roll20.net/users/162065/keithcurtis
+// Changelog
+// 0.3.0 Big cleanup and bug-fix pass under the hood. Commands and flags
+//       all work exactly the same as before.
+//       - Rebuilt the internals for easier upkeep and fewer surprises down
+//         the road.
+//       - Fixed a crash when a command pointed at a token that no longer
+//         exists.
+//       - Fixed --template being ignored depending on where it was placed
+//         in the command.
+//       - Fixed multi-token reports (tooltip, token image, card, plain
+//         notes) sometimes repeating the first token's info for every
+//         line instead of showing each token's own.
+//       - Fixed GM-only text occasionally leaking into a handout it
+//         shouldn't have.
+//       - Fixed --image2, --image3, etc. sometimes returning a chunk of
+//         garbled bio text instead of the actual image.
+//       - Fixed the "Pathefinder 2e" typo in the config menu.
+//       - Cleared out old unused code: a broken, undocumented filter
+//         option nobody was using, and some leftover debug clutter.
+//       - Every option now tells you why nothing happened instead of
+//         staying silent (no token selected, bad/missing id, empty
+//         field, etc).
+//       - Headers in notes/bios now match the color of whatever template
+//         you're using, instead of always showing in Roll20's default
+//         heading color.
+//       - Fixed the "-----" GM-only divider so it's parsed reliably no
+//         matter how Roll20 happens to format it, and the secret box no
+//         longer shows up empty when there's nothing after the divider.
+//       - Fixed images (including newer webp images and Roll20's
+//         cache-busted links) sometimes showing up as plain text instead
+//         of the actual picture.
+//       - New: --menu command. Whispers a clickable button menu of every
+//         option for the selected token(s), so you don't have to
+//         remember the flags. GMs see both the GM buttons and the player
+//         buttons; players only see their own.
+// 0.2.8 Added webp support
+// 0.2.7 Added Templates for 2024 sheet, Dark and Light
+// 0.2.6 Reworked and updated Help system to use handout. Fixed logic issue Card output.
+// 0.2.5 fixed trailing space problem in command line, fixed linebreak issue.
 
-// Supernotes_Templates can be called by other scripts. At this point ScriptCards is the only One Click script that does this.
+/* ============================================================================
+ * Supernotes_Templates
+ *
+ * Deliberately declared OUTSIDE the Supernotes namespace/IIFE below, as a
+ * plain global. Other One-Click scripts (currently ScriptCards/SuperCards)
+ * read this object directly by name to render notes in a matching style, so
+ * its name, location, and shape are a stable public contract — do not move
+ * it inside the IIFE or rename it.
+ * ========================================================================== */
 let Supernotes_Templates = {
     generic: {
         boxcode: `<div style='color: #000; border: 1px solid #000; background-color: white; box-shadow: 0 0 3px #000; display: block; text-align: left; font-size: 13px; padding: 5px; margin-bottom: 2px; font-family: sans-serif; white-space: pre-wrap;'>`,
@@ -28,7 +78,7 @@ let Supernotes_Templates = {
         whisperbuttonstyle: `style='display:inline-block; color:#bbb; background-color: transparent;padding: 0px; border: none'`,
         footer: ""
     },
-    
+
     dark55: {
         boxcode: `<div style='color: #fff; font-family: proxima-nova, "Proxima Nova", sans-serif !important; border-radius: 8px; display: block; text-align: left; font-size: 14px; padding: 5px; margin-bottom: 2px; font-weight:normal;  white-space: pre-wrap; background-image: url(https://storage.googleapis.com/roll20-cdn/advanced-sheets-production-9b1f7af9/dnd2024byroll20/assets/bg-img.jpg); background-color: #0b0b0b;'>`,
         titlecode: `<div style='color:#fff; font-family: proxima-nova, "Proxima Nova", sans-serif !important; background-color:transparent; margin-right:3px; padding:3px; font-size:24px; line-height:26px;border-bottom: 1px solid #d72f2f; white-space: pre-wrap;'>`,
@@ -56,7 +106,7 @@ let Supernotes_Templates = {
         whisperbuttonstyle: `style='display:inline-block; color:#E16363; font-weight:bold; background-color: transparent;padding: 0px; border: none;`,
         footer: ""
     },
-    
+
     roll20dark: {
         boxcode: `<div style='color: #fff; border: 1px solid #000; background-image: linear-gradient(210deg, #4c2951, #0e0d49); background-color: transparent; display: block; text-align: left; font-size: 14px; padding: 5px; margin-bottom: 2px; font-family: "proxima nova", sans-serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='font-weight:bolder; color:#e7339d; background-color:transparent; margin-right:3px; padding:3px; font-size:24px; line-height:26px; font-family:"nunito black", nunito;>'>`,
@@ -163,7 +213,7 @@ let Supernotes_Templates = {
         buttonwrapper: `<div style='display:block; margin-top:14px ;text-align:center;font-family: Luminari,"times new roman"'>`,
         buttonstyle: `style='display:inline-block; color:#0e3365; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color: #0e3365; font-size:14px; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
+        buttondivider: " &nbsp;&bull;&nbsp; ",
         handoutbuttonstyle: `style='display:inline-block; color: #0e3365; font-size:14px; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'display:block; border-width: 5px 0px 5px 0px; border-style: solid; border-color:#58170D; padding:5px; margin-top:9px;'`,
         whisperbuttonstyle: `style='display:inline-block; color:#0e3365; background-color: transparent;padding: 0px; border: none'`,
@@ -179,7 +229,7 @@ let Supernotes_Templates = {
         buttonwrapper: `<div style='display:block; border-top: solid 1px #000; background-color: #E0E5C1; margin-top:12px ;text-align:center;font-family:arial, sans-serif'>`,
         buttonstyle: `style='display:inline-block; color:#58170D; background-color: transparent;padding: 0px; border: none'`,
         playerbuttonstyle: `style='display:inline-block; color: #000; font-size:12px; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&bull;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
+        buttondivider: " &nbsp;&bull;&nbsp; ",
         handoutbuttonstyle: `style='display:inline-block; color: #000; font-size:12px; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-color:#E0E5C1; color:#000; display:block; border-width: 1px; border-width: 1px 0px 1px 0px; border-style: solid; border-color:#58170D; padding:5px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#58170D; background-color: transparent;padding: 0px; border: none'`,
@@ -193,7 +243,7 @@ path: {
     buttonwrapper: `<div style='display:block; background-color: transparent; margin-top:12px ;text-align:center;font-family:arial, sans-serif'>`,
     buttonstyle: `style='display:inline-block; color:#5e0000; font-weight:bold; background-color: transparent; padding: 0px; border: none'`,
     playerbuttonstyle: `style='display:inline-block; color: #eee; font-size:12px; background-color: #5e0000; padding: 0px 4px 0px 4px; border-style:solid; border-width: 2px 4px 2px 4px; border-color: #d9c484; text-transformation: all-caps; font-family: "gin", impact, "Arial Bold Condensed", sans-serif;'`,
-    buttondivider: " &nbsp;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
+    buttondivider: " &nbsp;&nbsp; ",
     handoutbuttonstyle: `style='display:inline-block; color: #eee; font-size:12px; background-color: #5e0000; padding: 0px 4px 0px 4px; border-style:solid; border-width: 2px 4px 2px 4px; border-color: #d9c484; text-transformation: all-caps; font-family: "gin", impact, "Arial Bold Condensed", sans-serif;'`,
     whisperStyle: `'background-color:#dbd1bc; color:#000; display:block; border-width: 1px; margin-top:15px; padding:5px; font-size: 15px; font-family: "Good OT", arial, sans-serif;'`,
     whisperbuttonstyle: `style='display:inline-block; color:#58170D; background-color: transparent; font-weight:bold; padding: 0px; border: none'`,
@@ -213,7 +263,7 @@ apoc: {
         whisperbuttonstyle: `style='display:inline-block; color:#bbb; background-color: transparent;padding: 0px; border: none'`,
         footer: `<img style = 'margin: 0px !important; padding:0px;width:100%' src = 'https://files.d20.io/images/459209596/RSmUyGMLL-vQ04zCmmWPGQ/original.png'>`
     },
-    
+
     roman: {
         boxcode: `<div style='color: 000; background-image: url(https://files.d20.io/images/459209470/FuYxzu3hsKZZe7vP6czucg/original.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; box-shadow: 0 0 3px #fff; text-align: left; font-size: 17px; padding: 0px; margin-bottom: 2px; font-family: "Shadows Into Light", Monaco,"Courier New", monospace; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:-25px; margin-top:0px; text-align:center;' src='https://files.d20.io/images/459209530/dIxYg78Hg-J_cM6IC9AJcw/original.png'></div>`,
         titlecode: `<div style='font-weight:bold; color: #666; background-color:transparent; margin:20px 12px 0px 12px; padding:12px 3px 8px 3px;font-weight: 900; font-size: 24px; line-height:24px; text-transform: uppercase; text-shadow: -1px -1px rgba(0,0,0,0.5), 1px 1px rgba(255,255,255,0.5); font-family: "Crimson Text", times,"Times New Roman", serif; text-align:center'>`,
@@ -277,7 +327,7 @@ choices: {
         buttonwrapper: `<div style='display:block; color: #eada8d; background-image: linear-gradient(to bottom,#261d22,#472a53); background-color: transparent; margin:12px -12px -12px -12px; padding: 10px; text-align:center;font-family: "minion", "minion pro", merriweather, baskerville, garamond, serif;'>`,
         buttonstyle: `style='display:inline-block; color:#eee; hover: yellow; background-color: transparent;padding: 0px; border: none; '`,
         playerbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
+        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ",
         handoutbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-image: linear-gradient(to bottom,#4b443d,#3f3732,#4b443d); background-color: transparent; color:#f8e8a6; display:block; border-width: 1px; border: 1px solid #4f4841; margin: 20px, -12px, 15px, -12px; padding:10px, 10px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#eee; background-color: transparent;padding: 0px; border: none'`,
@@ -290,7 +340,7 @@ gate3: {
         buttonwrapper: `<div style='display:block; color: #bc8e1d; background-image: linear-gradient(to bottom,#261d22,#472a53); background-color: transparent; margin:12px -12px -12px -12px; padding: 10px; border-radius: 0px 0px 18px 18px; text-align:center;font-family: "Minion", "Minion Pro", serif;'>`,
         buttonstyle: `style='display:inline-block; color:#eada8d; background-color: transparent;padding: 0px; border: none; '`,
         playerbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
-        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ", //`<img style='margin:0px 4px 0px 4px; width:20px;' src='https://files.d20.io/images/459209588/xw0q8Qvdx1MCsWHP1XNmnw/original.png'>`,
+        buttondivider: " &nbsp;&FilledSmallSquare;&nbsp; ",
         handoutbuttonstyle: `style='display:inline-block; color: #eee; font-size:16px; font-family: "Minion", "Minion Pro", serif; background-color: transparent;padding: 0px; border: none'`,
         whisperStyle: `'background-image: linear-gradient(to bottom,#4b443d,#3f3732,#4b443d); background-color: transparent; color:#f8e8a6; display:block; border-width: 1px; border: 1px solid #4f4841; margin: 20px, -12px, 15px, -12px; padding:10px, 10px'`,
         whisperbuttonstyle: `style='display:inline-block; color:#eee; background-color: transparent;padding: 0px; border: none'`,
@@ -339,7 +389,7 @@ gate3: {
         whisperbuttonstyle: `style='display:inline-block; color:#fce5bb; background-color: transparent;padding: 0px; border: none'`,
         footer: ""
     },
-    
+
     scroll2: {
         boxcode: `<div style='color: #000; background-image: url(https://files.d20.io/images/459209540/G34O1t42pKh2eI9rffzolg/original.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block; text-align: left; font-size: 14px; margin-top:30px; margin-bottom: 2px; padding:0px 5px 0px 5px;font-family: 'Gill Sans', sans-serif; white-space: pre-wrap;'><div style = 'display:block; text-align:center;'><img style='margin-bottom:0px; margin-top:-30px; text-align:center;  background-size: 100%; ' src='https://files.d20.io/images/459209533/McHJox7DYx1h7_OkBsQObw/original.png'></div>`,
         titlecode: `<div style='color: #58360d; background-color: transparent: display: block; text-align: Center; line-height:24px; font-size: 24px; padding: 5px 15px 5px 10px; margin: 0px 3px 0px 3px; font-family: "Kaushan Script", Luminari,"Times New Roman", serif; white-space: pre-wrap;'>`,
@@ -353,7 +403,7 @@ gate3: {
         whisperbuttonstyle: `style='display:inline-block; color:#fcdd6d; background-color: transparent;padding: 0px; border: none'`,
         footer: `<img style = 'margin: 0px !important; padding:0px; position:relative; top:9px; width:100%' src = 'https://files.d20.io/images/459209591/d_akXh9AwqutbUN1x1nsIQ/original.png'>`
     },
-    
+
     vault: {
         boxcode: `<div style='color: #111; background-image: url(https://files.d20.io/images/459209599/XOj4c3B1Y9bOiNteobKe3Q/original.png); background-size: 100%; background-repeat: repeat-y; background-color: transparent; display: block;  text-shadow: 3px 3px 15px #74a4dc, -3px -3px 15px #74a4dc, 3px -3px 15px #74a4dc, -3px 3px 15px #74a4dc; text-align: left; font-size: 14px;  margin-bottom: 2px; padding:10px 5px 5px 5px;font-family: 'Contrail One', sans-serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='color: #111; background-color: #transparent; background-image: url(https://files.d20.io/images/459209469/UA2E7Vyf-kncA8k1jUuyAg/original.png);  border-radius:3px; display: block; text-align: Center; text-shadow: none; line-height:24px; font-size: 24px; padding: 5px 15px 5px 10px; margin: -5px 0px 15px 0px; font-style:bold; font-family: "Contrail One", serif; white-space: pre-wrap;'>`,
@@ -367,7 +417,7 @@ gate3: {
         whisperbuttonstyle: `style='display:inline-block; color:#284a73; background-color: transparent;padding: 0px; border: none'`,
         footer: ``
     },
-    
+
     osrblue: {
         boxcode: `<div style='color: #333; background-image: url(https://files.d20.io/images/459209456/3MxudvaBU_ZNiVqfym2f9Q/original.png); box-shadow:inset 0 0 70px #f4f2db, 2px 2px 5px #111; background-size: 25%; background-repeat: repeat; background-color: transparent; display: block; font-weight: bolder; text-align: left; font-size: 14px;  margin-bottom: 2px; padding:10px 5px 5px 5px; font-family: "Courier One", courier , sans-serif; white-space: pre-wrap;'>`,
         titlecode: `<div style='color: #729aa5; background-color: transparent;  border-radius:3px; display: block; text-align: Center; line-height:24px; font-size: 24px; padding: 5px 15px 5px 10px; margin: -5px 0px 3px 0px; font-style:bold; font-family: Anton, serif; white-space: pre-wrap;'>`,
@@ -384,35 +434,393 @@ gate3: {
 
 };
 
-on('ready', function() {
-    if (!_.has(state, 'Supernotes')) {
-        state.Supernotes = {
-            sheet: 'Default',
-            template: 'default',
-            title: 'name',
-            theText: '',
-            sendToPlayers: true,
-            makeHandout: true,
-            darkMode: false
+/* ============================================================================
+ * Supernotes
+ * ========================================================================== */
+const Supernotes = (() => {
+    'use strict';
+
+    // ==================================================
+    // Config
+    // ==================================================
+
+    const scriptName = 'Supernotes';
+    const version = '0.3.0';
+    const schemaVersion = 1.0;
+
+    const DEBUG = false;
+
+    // Local alias — the real registry lives in the global Supernotes_Templates
+    // above (see the comment on that declaration for why it's global).
+    const templates = Supernotes_Templates;
+
+    // Fallback styling for the *native* Roll20 roll-template output path
+    // (i.e. no --template|name given on the command). A custom template's
+    // own boxcode/whisperStyle/buttonstyle from Supernotes_Templates always
+    // takes precedence over these when one is chosen — see deliver() below.
+    const CSS = {
+        whisperStyle: (darkMode) => (darkMode
+            ? `'background-color:#2b2130; color:#fbfcf0; display:block; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px'`
+            : `'background-color:#fff; color:#000; display:block; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px'`),
+        buttonStyle: (darkMode) => (darkMode
+            ? `style='display:inline-block; color:#a980bd; font-size: 0.9em; background-color: transparent;padding: 0px; border: none'`
+            : `style='display:inline-block; color:#ce0f69; font-size: 0.9em; background-color: transparent;padding: 0px; border: none'`)
+    };
+
+    // ==================================================
+    // Logger
+    // ==================================================
+
+    const Logger = {
+        log: (msg) => log(`${scriptName} | ${msg}`),
+        debug: (msg) => { if (DEBUG) log(`${scriptName} [DEBUG] | ${msg}`); },
+        error: (msg) => log(`${scriptName} [ERROR] | ${msg}`)
+    };
+
+    // ==================================================
+    // State
+    //
+    // Pre-0.2.9 installs stored sheet/template/title/theText/sendToPlayers/
+    // makeHandout/darkMode directly on state.Supernotes, with no version
+    // field at all. State.initialize migrates that flat shape into config
+    // the first time this version runs — preserving whatever the GM had
+    // already chosen — then leaves it alone on later loads.
+    // ==================================================
+
+    const State = {
+        initialize: () => {
+            const existing = state[scriptName];
+
+            if (!existing || existing.version !== schemaVersion) {
+                Logger.log(`Updating Schema to v${schemaVersion}`);
+
+                state[scriptName] = {
+                    version: schemaVersion,
+                    config: {
+                        sheet: (existing && existing.sheet) || 'Default',
+                        template: (existing && existing.template) || 'default',
+                        title: (existing && existing.title) || 'name',
+                        theText: (existing && existing.theText !== undefined) ? existing.theText : '',
+                        sendToPlayers: (existing && existing.sendToPlayers !== undefined) ? existing.sendToPlayers : true,
+                        makeHandout: (existing && existing.makeHandout !== undefined) ? existing.makeHandout : true,
+                        darkMode: (existing && existing.darkMode !== undefined) ? existing.darkMode : false
+                    }
+                };
+            }
+        },
+
+        config: () => state[scriptName].config
+    };
+
+    // ==================================================
+    // Parser
+    //
+    // Chunks are split on "--"; several flags encode their value inline via
+    // a pipe rather than a following token (--template|name,
+    // --handout|Title|, --idTOKENID, --image3) — this grammar predates
+    // --key/value style and is preserved exactly, since macros in live
+    // campaigns depend on it.
+    //
+    // Each recognizer below owns one flag shape: `test` decides whether a
+    // chunk is that flag, `apply` records it. A chunk no recognizer claims
+    // is the command's "option" (--bio, --card, --tooltip, etc.) — last one
+    // wins when more than one shows up.
+    // ==================================================
+
+    const ARGUMENT_FLAG_RECOGNIZERS = [
+        {
+            name: 'notitle',
+            test: (chunk) => chunk === 'notitle',
+            apply: (parsed) => { parsed.notitle = true; }
+        },
+        {
+            name: 'id',
+            test: (chunk) => chunk.includes('id-'),
+            apply: (parsed, chunk) => { parsed.id = chunk.split(/id/)[1]; }
+        },
+        {
+            name: 'handout',
+            test: (chunk) => /handout\|.*?\|/.test(chunk),
+            apply: (parsed, chunk) => { parsed.handoutTitle = chunk.match(/handout\|.*?\|/).toString().split('|')[1]; }
+        },
+        {
+            name: 'template',
+            test: (chunk) => chunk.includes('template|'),
+            apply: (parsed, chunk) => { parsed.customTemplate = chunk.split(/\|/)[1]; }
+        }
+    ];
+
+    const Parser = {
+
+        parse: (content) => {
+            const [command, ...flagChunks] = content.trim().split(/\s+--/);
+
+            const parsed = {
+                command,
+                customTemplate: '',
+                option: undefined,
+                notitle: false,
+                id: '',
+                handoutTitle: ''
+            };
+
+            flagChunks.forEach(chunk => {
+                const matches = ARGUMENT_FLAG_RECOGNIZERS.filter(r => r.test(chunk));
+
+                if (matches.length > 0) {
+                    matches.forEach(r => r.apply(parsed, chunk));
+                } else {
+                    parsed.option = chunk;
+                }
+            });
+
+            return parsed;
+        }
+    };
+
+    // ==================================================
+    // Output — pure formatting helpers
+    // ==================================================
+
+    const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
+
+    const parseMarkdown = (markdownText) => {
+        const htmlText = markdownText
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+            .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+            .replace(/\*(.*)\*/gim, '<i>$1</i>')
+            .replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' />")
+            .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>")
+            .replace(/\n$/gim, '<br />');
+
+        return htmlText.trim();
+    };
+
+    // Picks which bio image(s) to return for --image / --images / --imageN,
+    // given an already-decoded character bio. Matches each <img ...> tag
+    // individually (rather than one greedy match across all of them) so
+    // any index works regardless of what text sits between the images.
+    const pickCharacterArtwork = (decodedBio, option) => {
+        const styledBio = decodedBio.replace(/<img /gi, "<img style = 'filter:none !important;' ");
+        const images = styledBio.match(/<img[^>]*>/gi) || [];
+
+        if (images.length === 0) {
+            return 'No artwork exists for this character. Consider specifiying avatar.';
+        }
+
+        if (option === "images") {
+            return images.join('');
+        }
+
+        let imageIndex = parseInt((option.match(/\d+/) || [])[0], 10);
+        if (isNaN(imageIndex) || imageIndex < 1 || imageIndex > images.length) {
+            imageIndex = 1;
+        }
+
+        return images[imageIndex - 1];
+    };
+
+    // Forces headers (<h1>-<h6>) in note/bio text to inherit the
+    // surrounding box's text color, since Roll20's own chat/sheet CSS
+    // otherwise gives them a fixed color that can be unreadable against a
+    // dark template or a sheet's own dark-mode default template.
+    const neutralizeHeadingColors = (html) => html.replace(
+        /<(h[1-6])((?:\s+[^>]*)?)>/gi,
+        (fullMatch, tag, attrs) => {
+            if (/style\s*=/i.test(attrs)) {
+                return `<${tag}${attrs.replace(/style\s*=\s*(['"])(.*?)\1/i, (m, quote, css) => `style=${quote}${css}; color: inherit !important;${quote}`)}>`;
+            }
+            return `<${tag}${attrs} style="color: inherit !important;">`;
+        }
+    );
+
+    // True if html has any actual text once tags, &nbsp;, and whitespace
+    // are stripped away — used to decide whether the GM-only whisper box
+    // is worth showing at all. Content Roll20 itself hides
+    // (style="display:none") is stripped first, since Roll20's rich text
+    // editor auto-appends a hidden tracking block (a "TOKENHOME" div) to
+    // GM Notes that would otherwise always count as "readable".
+    const hasReadableText = (html) => html
+        .replace(/<(div|span)[^>]*style\s*=\s*["'][^"']*display\s*:\s*none[^"']*["'][^>]*>[\s\S]*?<\/\1>/gi, '')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .trim().length > 0;
+
+    // Matches a "-----" GM-only divider, including any block tag Roll20's
+    // rich-text editor wraps around it when it's typed as its own line
+    // (e.g. stored as "<div>-----</div>", not bare text) — matching the
+    // whole wrapped divider as one unit keeps both halves well-formed HTML
+    // instead of splitting through the middle of a tag. Falls back to
+    // matching bare dashes when they aren't wrapped in anything.
+    const GM_ONLY_DIVIDER = /(?:<(div|p)[^>]*>\s*)?-{5,}(?:\s*<\/\1>)?/i;
+
+    // Splits note text on the GM-only divider: `before` is shown to
+    // everyone, `after` is GM-only. With no divider present, `before` is
+    // the whole text and `after` is empty.
+    const splitGmOnlySection = (text) => {
+        const match = text.match(GM_ONLY_DIVIDER);
+        if (!match) {
+            return { before: text, after: '' };
+        }
+        return {
+            before: text.slice(0, match.index),
+            after: text.slice(match.index + match[0].length)
         };
-        message = 'Welcome to Supernotes! If this is your first time running it, the script is set to use the Default Roll Template. You can choose a different sheet template below, as well as decide whether you want the script to display a "Send to Players" footer at the end of every GM message. It is currently set to true.<BR><BR>[Default Template - any sheet](!gmnote --config|default)<BR>[D&D 5th Edition by Roll20](!gmnote --config|dnd5e)<BR>[DnD 5e Shaped](!gmnote --config|5eshaped)<BR>[Pathfinder by Roll20](!gmnote --config|pfofficial)<BR>[Pathfinder Community](!gmnote --config|pfcommunity)<BR>[Pathfinder 2e by Roll20](!gmnote --config|pf2e)<BR>[Starfinder by Roll20](!gmnote --config|starfinder)<BR>[Call of Cthulhu 7th Edition by Roll20](!gmnote --config|callofcthulhu)<BR><BR>[Toggle Send to Players](!gmnote --config|sendtoPlayers)';
-        sendChat('Supernotes', '/w gm &{template:' + state.Supernotes.template + '}{{' + state.Supernotes.title + '=' + 'Config' + '}} {{' + state.Supernotes.theText + '=' + message + '}}');
-    }
-});
+    };
 
-on('ready', () => {
-    
-    
-    /* =========================================================
- * Supernotes Help Handout Builder
- * ========================================================= */
+    // Every extension Roll20 will auto-embed as an image, kept in one
+    // place so every "is this url an image" check builds off it instead of
+    // keeping its own copy.
+    const IMAGE_EXTENSIONS = 'jpg|jpeg|png|gif|webm|webp';
 
-const buildSupernotesHelp = () => {
+    // [label](url) markdown is handled in two passes: any url that's
+    // itself an image is turned into a real <img> tag directly (Roll20
+    // does not auto-embed markdown placed inside a roll template's
+    // {{key=value}} values — only plain typed/pasted chat text — so
+    // Supernotes builds the tag itself rather than leaving that to Roll20);
+    // whatever's left (ordinary links) becomes a plain clickable <a>. The
+    // optional "?query"/"#fragment" after the extension matches Roll20's
+    // own cache-busted, hosted image URLs.
+    const IMAGE_MARKDOWN_LINK = new RegExp(`\\[([^\\]]*?)\\]\\(([^\\)]*?\\.(?:${IMAGE_EXTENSIONS})(?:\\?[^)]*)?(?:#[^)]*)?)\\)`, 'gi');
+    const MARKDOWN_LINK = /\[([^\]]*?)\]\(([^\)]*?)\)/gim;
 
-    const HANDOUT_NAME = "Help: Supernotes";
-    const HANDOUT_AVATAR = "https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147"; // change if desired
+    // Does this HTML/text already contain an embedded image (an
+    // <img src="...ext">, or [label](...ext) markdown, cache-buster
+    // tolerated)? Used by --card to decide whether to prepend the token's
+    // own portrait.
+    const HAS_EMBEDDED_IMAGE = new RegExp(`\\.(?:${IMAGE_EXTENSIONS})(?:[?#][^\\s'"<>)]*)?`, 'i');
 
-const helpHtml = `
+    // Replaces markdown image links with real <img> tags. imgStyle may be
+    // '' for a bare <img src="..."> — chat/whisper output relies on
+    // Roll20's own chat CSS to keep images from overflowing, same as the
+    // existing --avatar/--tokenimage output.
+    const embedMarkdownImages = (text, imgStyle) => (undefined !== text)
+        ? text.replace(IMAGE_MARKDOWN_LINK, (full, alt, src) => `<img alt='${alt}' src='${src}'${imgStyle ? " style='" + imgStyle + "'" : ""}>`)
+        : text;
+
+    const cleanText = (text, buttonStyle) => {
+        text = (undefined !== text)
+            ? embedMarkdownImages(text, '').replace(MARKDOWN_LINK, "<a " + buttonStyle + "href='$2'>$1</a>").replace(/<p>/gm, "").replace(/<\/p>/gm, "<BR>").replace("padding:5px'></div><div>", "padding:5px'>")
+            : "";
+        text = text.replace('<a href=\"http://journal.roll20.net', '<a ' + buttonStyle + ' href=\"http://journal.roll20.net').replace('<a href=\"https://app.roll20.net', '<a ' + buttonStyle + ' href=\"https://app.roll20.net');
+        text = text.replace('<a href=\"http', '<a ' + buttonStyle + ' href=\"http');
+        text = text
+            .replace(/\r?\n+/g, "<BR>")
+            .replace(/<\s*br\s*\/?\s*>/gi, "<BR>")
+            .replace(/(<BR>\s*){2,}/g, "<BR>")
+            .trim();
+
+        return text;
+    };
+
+    // ==================================================
+    // Commands (Single Root)
+    //
+    // !gmnote / !pcnote / !selfnote stay three distinct top-level commands
+    // (not folded into one "!supernotes --mode" root) since macros/buttons
+    // in existing campaigns depend on those exact strings. All three funnel
+    // through this one Commands.root dispatcher, and every button
+    // Supernotes emits is itself a full command string, so there's one code
+    // path for "typed" and "clicked".
+    // ==================================================
+
+    const Commands = {};
+
+    Commands.config = (messagePrefix, template, title, theText, option) => {
+        const cfg = State.config();
+        const templateChoice = option.split('|')[1];
+
+        if (templateChoice === undefined) {
+            const message = 'Current sheet template:<BR><b>' + cfg.sheet + '</b><BR>Send to Players:<BR><b>' + cfg.sendToPlayers + '</b><BR><BR>Choose a template for Supernotes to use.<BR><BR>[Default Template - any sheet](!gmnote --config|default)<BR>[D&D 5th Edition by Roll20](!gmnote --config|dnd5e)<BR>[DnD 5e Shaped](!gmnote --config|5eshaped)<BR>[Pathfinder Community](!gmnote --config|pfcommunity)<BR>[Pathfinder by Roll20](!gmnote --config|pfofficial)<BR>[Pathfinder 2e by Roll20](!gmnote --config|pf2e)<BR>[Starfinder by Roll20](!gmnote --config|starfinder)<BR>[Call of Cthulhu 7th Edition by Roll20](!gmnote --config|callofcthulhu)<BR><BR>[Toggle Send to Players](!gmnote --config|sendtoPlayers)<BR>[Toggle Make Handout button](!gmnote --config|makeHandout)<BR>[Toggle Darkmode](!gmnote --config|darkMode)';
+            sendChat('Supernotes', messagePrefix + '&{template:' + template + '}{{' + title + '=' + 'Config' + '}} {{' + theText + '=' + message + '}}');
+            return;
+        }
+
+        switch (templateChoice) {
+            case 'default':
+                cfg.sheet = 'Default';
+                cfg.template = 'default';
+                cfg.title = 'name';
+                cfg.theText = '';
+                sendChat('Supernotes', '/w gm Supernotes set to Default roll template');
+                break;
+            case 'dnd5e':
+                cfg.sheet = 'D&D 5th Edition by Roll20';
+                cfg.template = 'npcaction';
+                cfg.title = 'rname';
+                cfg.theText = 'description';
+                sendChat('Supernotes', '/w gm Supernotes set to ' + cfg.sheet);
+                break;
+            case '5eshaped':
+                cfg.sheet = 'DnD 5e Shaped';
+                cfg.template = '5e-shaped';
+                cfg.title = 'title';
+                cfg.theText = 'text_big';
+                sendChat('Supernotes', '/w gm Supernotes set to ' + cfg.sheet);
+                break;
+            case 'pfcommunity':
+                cfg.sheet = 'Pathfinder Community';
+                cfg.template = 'pf_generic';
+                cfg.title = 'name';
+                cfg.theText = 'description';
+                sendChat('Supernotes', '/w gm Supernotes set to ' + cfg.sheet);
+                break;
+            case 'pfofficial':
+                cfg.sheet = 'Pathfinder by Roll20';
+                cfg.template = 'npc';
+                cfg.title = 'name';
+                cfg.theText = 'descflag=1}} {{desc';
+                sendChat('Supernotes', '/w gm Supernotes set to ' + cfg.sheet);
+                break;
+            case 'pf2e':
+                // was mislabeled "Pathefinder 2e" — display label only, the
+                // --config|pf2e flag itself is unchanged.
+                cfg.sheet = 'Pathfinder 2e';
+                cfg.template = 'rolls';
+                cfg.title = 'header';
+                cfg.theText = 'notes_show=[[1]]}} {{notes';
+                sendChat('Supernotes', '/w gm Supernotes set to ' + cfg.sheet);
+                break;
+            case 'starfinder':
+                cfg.sheet = 'Starfinder';
+                cfg.template = 'sf_generic';
+                cfg.title = 'title';
+                cfg.theText = 'buttons0';
+                sendChat('Supernotes', '/w gm Supernotes set to ' + cfg.sheet);
+                break;
+            case 'callofcthulhu':
+                cfg.sheet = 'Call of Cthulhu 7th Edition by Roll20';
+                cfg.template = 'callofcthulhu';
+                cfg.title = 'title';
+                cfg.theText = 'roll_bonus';
+                sendChat('Supernotes', '/w gm Supernotes set to ' + cfg.sheet);
+                break;
+            case 'sendtoPlayers':
+                cfg.sendToPlayers = !cfg.sendToPlayers;
+                sendChat('Supernotes', '/w gm Send to Players set to ' + cfg.sendToPlayers);
+                break;
+            case 'makeHandout':
+                cfg.makeHandout = !cfg.makeHandout;
+                sendChat('Supernotes', '/w gm Make Handout button set to ' + cfg.makeHandout);
+                break;
+            case 'darkMode':
+                cfg.darkMode = !cfg.darkMode;
+                sendChat('Supernotes', '/w gm darkMode set to ' + cfg.darkMode);
+                break;
+            default:
+                sendChat('Supernotes', `/w gm Supernotes: <code>${templateChoice}</code> isn't a recognized --config option. Use --config with no value to see the menu.`);
+                break;
+        }
+    };
+
+    Commands.help = () => {
+        const HANDOUT_NAME = "Help: Supernotes";
+        const HANDOUT_AVATAR = "https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147";
+
+        const helpHtml = `
 <h1>Supernotes</h1>
 <p><span style="font-weight:normal;">Documentation for v.${version}</span></p>
 
@@ -421,7 +829,7 @@ const helpHtml = `
 <h2>Overview</h2>
 
 <p>
-Supernotes pulls content from a token’s <em>GM Notes</em> field and from other character fields not normally accessible to macros.
+Supernotes pulls content from a token's <em>GM Notes</em> field and from other character fields not normally accessible to macros.
 If a token represents a character, you may retrieve:
 </p>
 
@@ -453,13 +861,13 @@ Images, API command buttons, links, markdown image syntax <code>[x](imageURL)</c
 
 <h2>Commands</h2>
 
-<p><strong>!gmnote</strong> 
+<p><strong>!gmnote</strong>
 Whispers note to GM.</p>
 
-<p><strong>!pcnote</strong> 
+<p><strong>!pcnote</strong>
 Sends note to all players.</p>
 
-<p><strong>!selfnote</strong> 
+<p><strong>!selfnote</strong>
 Whispers note to the command sender.</p>
 
 <hr>
@@ -468,57 +876,60 @@ Whispers note to the command sender.</p>
 
 <h3>Sources</h3>
 <ul>
-<li><strong>--token</strong>  
+<li><strong>--token</strong>
 Pull from selected token GM Notes (default). Token does not require a character.</li>
 
-<li><strong>--charnote</strong>  
+<li><strong>--charnote</strong>
 Pull from represented character GM Notes.</li>
 
-<li><strong>--bio</strong>  
+<li><strong>--bio</strong>
 Pull from character Bio field.</li>
 
-<li><strong>--avatar</strong>  
+<li><strong>--avatar</strong>
 Return character Avatar image.</li>
 
-<li><strong>--image</strong>  
+<li><strong>--image</strong>
 Return first Bio image.</li>
 
-<li><strong>--images</strong>  
+<li><strong>--images</strong>
 Return all Bio images.</li>
 
-<li><strong>--image[number]</strong>  
+<li><strong>--image[number]</strong>
 Return indexed Bio image (e.g. --image1, --image2).</li>
 
-<li><strong>--tooltip</strong>  
+<li><strong>--tooltip</strong>
 Return selected token tooltip.</li>
 
-<li><strong>--tokenimage</strong>  
+<li><strong>--tokenimage</strong>
 Return selected token image.</li>
 
-<li><strong>--card</strong>  
+<li><strong>--card</strong>
 Return token image and gmnotes in one report.</li>
+
+<li><strong>--menu</strong>
+Whisper a clickable menu of all the above, for the selected token(s). A GM sees a row of GM-whispering buttons and a row of player-facing buttons; anyone else sees only the player-facing row.</li>
 
 </ul>
 
 <h3>Options</h3>
 
 <ul>
-<li><strong>--notitle</strong>  
+<li><strong>--notitle</strong>
 Suppress title in chat output. May be added to any command in any order.</li>
 
-<li><strong>--idTOKENID</strong>  
+<li><strong>--idTOKENID</strong>
 Read notes from specific token ID. No space after --id. Example: <code>!gmnote --id-1234567890abcdef</code></li>
 
-<li><strong>--handout|Handout Name|</strong>  
-Send output to named handout instead of chat.  
-Creates the handout if it does not exist.  
+<li><strong>--handout|Handout Name|</strong>
+Send output to named handout instead of chat.
+Creates the handout if it does not exist.
 Content above the automatic horizontal rule remains persistent.</li>
 
 
-<li><strong>--help</strong>  
+<li><strong>--help</strong>
 Displays help.</li>
 
-<li><strong>--config</strong>  
+<li><strong>--config</strong>
 Opens configuration dialog.</li>
 </ul>
 
@@ -555,7 +966,7 @@ Example:
 
 <p>
 All templates include inline buttons and support Send to Players and Make Handout.
-Handouts use Roll20’s native styling for cross-platform reliability.
+Handouts use Roll20's native styling for cross-platform reliability.
 </p>
 
 <hr>
@@ -629,7 +1040,7 @@ The configuration dialog allows you to:
 
 <ul>
 <li>Select a sheet roll template</li>
-<li>Toggle the “Send to Players” footer button</li>
+<li>Toggle the "Send to Players" footer button</li>
 </ul>
 
 <p>
@@ -687,855 +1098,513 @@ Re-Run Configuration
 
 `;
 
-
-    // Find existing handout
-    let handout = findObjs({
-        _type: "handout",
-        name: HANDOUT_NAME
-    })[0];
-
-    // Create if missing
-    if (!handout) {
-        handout = createObj("handout", {
-            name: HANDOUT_NAME,
-            archived: false
-        });
-    }
-
-    // Always overwrite content + avatar
-    handout.set({
-        notes: helpHtml,
-        avatar: HANDOUT_AVATAR
-    });
-
-    const link = `http://journal.roll20.net/handout/${handout.get("_id")}`;
-
-    const box =
-        `<div style="background:#111; padding:10px; border:1px solid #555; border-radius:6px; color:#eee;">` +
-        `<div style="font-size:110%; font-weight:bold; margin-bottom:5px;">Supernotes Help</div>` +
-        `<a href="${link}" target="_blank" style="color:#00d4ff; font-weight:bold;">Open Help Handout</a>` +
-        `</div>`;
-
-    sendChat("Supernotes", `/w gm ${box}`, null, { noarchive: true });
-};
-
-
-    function parseMarkdown(markdownText) {
-        const htmlText = markdownText
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
-            .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
-            .replace(/\*(.*)\*/gim, '<i>$1</i>')
-            .replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' />")
-            .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2'>$1</a>")
-            .replace(/\n$/gim, '<br />')
-
-        return htmlText.trim()
-    }
-
-function cleanText(text,buttonStyle){
-                            text = ((undefined !== text) ? text.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.webp\)|\.jpeg\))/gim, "<a " + buttonStyle + "href='$2'>$1</a>").replace(/<p>/gm, "").replace(/<\/p>/gm, "<BR>").replace("padding:5px'></div><div>", "padding:5px'>") : "");
-                        text = text.replace('<a href=\"http://journal.roll20.net', '<a ' + buttonStyle + ' href=\"http://journal.roll20.net').replace('<a href=\"https://app.roll20.net', '<a ' + buttonStyle + ' href=\"https://app.roll20.net');
-                        text = text.replace('<a href=\"http', '<a ' + buttonStyle + ' href=\"http');
-                        text = text    // Convert real newline characters to <BR>
-    .replace(/\r?\n+/g, "<BR>")
-    // Normalize mixed <br>, <br/>, <BR/> variations to <BR>
-    .replace(/<\s*br\s*\/?\s*>/gi, "<BR>")
-    // Remove accidental duplicate <BR><BR><BR> etc
-    .replace(/(<BR>\s*){2,}/g, "<BR>")
-    .trim();
-                        
-return text;
-}
-
-
-
-    const decodeUnicode = (str) => str.replace(/%u[0-9a-fA-F]{2,4}/g, (m) => String.fromCharCode(parseInt(m.slice(2), 16)));
-
-    const version = '0.2.8';
-    log('Supernotes v' + version + ' is ready!To set the template of choice or to toggle the send to players option, Use the command !gmnote --config');
-//Changelog
-// 0.2.8 Added webp support
-// 0.2.7 Added Templates for 2024 sheet, Dark and Light
-// 0.2.6 Reworked and updated Help system to use handout. Fixed logic issue Card output.
-// 0.2.5 fixed trailing space problem in command line, fixed linebreak issue.
-
-
-
-
-    on('chat:message', function(msg) {
-        if ('api' === msg.type && msg.content.match(/^!(gm|pc|self)note\b/)) {
-            let match = msg.content.match(/^!gmnote-(.*)$/);
-let selectedObject = msg.selected;
-
-//################## EXPERIMENTAL TO GET TOKEN ID FROM SUPPLIED VALUE
-if(msg.content.includes("--token|")){
-    virtualTokenID = msg.content.split(/--token\|/)[1].split(/\s/)[0];
-sendChat ("notes","success. Virtual token id is " + virtualTokenID);
-    if (virtualTokenID.length !== 20 && virtualTokenID.charAt(0) !== "-"){
-        sendChat ("notes","this is not a token id :" + virtualTokenID);
-        sendChat ("notes","player page id :" + Campaign().get("playerpageid"));
-        
-         selectedObject = findObjs({
-            _type: "graphic",
-            _id: virtualTokenID,
-        });
-        log ("selectedObject is " + selectedObject);
-       // selectedObject = theToken[0];
-    }
-    if (selectedObject){
-    sendChat ("notes", "number of 'selected' objects is " +selectedObject.length);
-    } else{
-    sendChat ("notes", "no passed value");
-    }
-//sendChat ("notes","virtual ID is " + selectedObject[0].get("_id"));
-}
-//################## EXPERIMENTAL TO GET TOKEN ID FROM SUPPLIED VALUE
-
-
-
-
-
-
-
-            //define command                     
-            let command = msg.content.split(/\s+--/)[0];
-            let sender = msg.who;
-            let senderID = msg.playerid;
-
-            let isGM = playerIsGM(senderID);
-            let messagePrefix = '/w gm ';
-            if (command === '!pcnote') {
-                messagePrefix = '';
-            }
-
-            if (command === '!selfnote') {
-                messagePrefix = '/w ' + sender + ' ';
-            }
-
-            let secondOption = '';
-            let args = msg.content.trim().split(/\s+--/);
-
-            let customTemplate = '';
-            let option = '';
-            let notitle = false;
-            let id = '';
-            let tokenImage = '';
-            let tooltip = '';
-            let tokenName = '';
-            let trueToken = [];
-            let tokenID = '';
-            let handoutTitle = '';
-            let whisper = '';
-
-            let templates = Supernotes_Templates;
-
-
-
-
-            function sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton) {
-                handoutButton = ((handoutButton) ? handoutButton.replace(/NamePlaceholder/, whom) : handoutButton);
-
-                if (message === "" && option.match(/^(bio|charnote|token|tooltip)/)) {
-                    message = `The information does not exist for the <code>${option}</code> option`
-                }
-
-                if (handoutTitle === '') {
-                    //Crops out GM info on player messages
-                    if (isGM) {
-                        //message = (message.includes("-----") ? message.split('-----')[0] + "<div style= " + whisperStyle + ">" + message.split('-----')[1] + "</div>" : message);
-                        whisper = (message.includes("-----") ? message.split('-----')[1] : "");
-                        message = (message.includes("-----") ? message.split('-----')[0] : message);
-
-                    }
-
-                    if (customTemplate.length > 0) {
-                        let chosenTemplate = templates.generic;
-                        switch (customTemplate) {
-                            case "crt":
-                                chosenTemplate = templates.crt;
-                                break;
-                            case "dark":
-                                chosenTemplate = templates.dark;
-                                break;
-                            case "roll20light":
-                                chosenTemplate = templates.roll20light;
-                                break;
-                            case "roll20dark":
-                                chosenTemplate = templates.roll20dark;
-                                break;
-                            case "scroll":
-                                chosenTemplate = templates.scroll;
-                                break;
-                            case "scroll2":
-                                chosenTemplate = templates.scroll2;
-                                break;
-                            case "vault":
-                                chosenTemplate = templates.vault;
-                                break;
-                            case "osrblue":
-                                chosenTemplate = templates.osrblue;
-                                break;
-                            case "lcars":
-                                chosenTemplate = templates.lcars;
-                                break;
-                            case "faraway":
-                                chosenTemplate = templates.faraway;
-                                break;
-                            case "strange":
-                                chosenTemplate = templates.strange;
-                                break;
-                            case "gothic":
-                                chosenTemplate = templates.gothic;
-                                break;
-                            case "western":
-                                chosenTemplate = templates.western;
-                                break;
-                            case "dragon":
-                                chosenTemplate = templates.dragon;
-                                break;
-                            case "wizard":
-                                chosenTemplate = templates.wizard;
-                                break;
-                            case "path":
-                                chosenTemplate = templates.path;
-                                break;
-                            case "treasure":
-                                chosenTemplate = templates.treasure;
-                                break;
-                            case "steam":
-                                chosenTemplate = templates.steam;
-                                break;
-                            case "gate3":
-                                chosenTemplate = templates.gate3;
-                                break;
-                            case "choices":
-                                chosenTemplate = templates.choices;
-                                break;
-                            case "apoc":
-                                chosenTemplate = templates.apoc;
-                                break;
-                            case "news":
-                                chosenTemplate = templates.news;
-                                break;
-                            case "roman":
-                                chosenTemplate = templates.roman;
-                                break;
-                            case "notebook":
-                                chosenTemplate = templates.notebook;
-                                break;
-                            case "dark55":
-                                chosenTemplate = templates.dark55;
-                                break;
-                            case "light55":
-                                chosenTemplate = templates.light55;
-                                break;
-                            case "bob":
-                                break;
-                            default:
-                                chosenTemplate = templates.generic;
-                                // code block
-                        }
-
-
-
-
-                        playerButton = playerButton.split('\n')[1];
-
-                        playerButton = ((undefined !== playerButton) ? playerButton.replace(/\[(.*?)\]\((.*?)\)/gim, "<a " + chosenTemplate.playerbuttonstyle + "href='$2'>$1</a>") : "");
-                        handoutButton = ((undefined !== handoutButton) ? handoutButton.replace(/\[(.*?)\]\((.*?)\)/gim, "<a " + chosenTemplate.handoutbuttonstyle + "href='$2'>$1</a>").replace(" | <a", "<a") : "");
-
-                        //need to replace markdown hyperlinks without replacing markdown image codes.
-whisper = ((whisper.length>0) ? "<div style =" + chosenTemplate.whisperStyle + ">" + whisper + "</div>" : "");
-
-
-message = cleanText(message,chosenTemplate.buttonstyle);
-//the following lines attempt to account for numerous Roll20 CSS and HTML oddities.
-whisper = cleanText(whisper,chosenTemplate.whisperbuttonstyle);
-whisper= whisper.replace(/<\/span><BR>/i,"")
-.replace(/<BR><span style=.*?>/i,'<span>')
-.replace(/<BR><p style=.*?>/i,'<p>')
-.replace(/(<p>|<\/p>)/,'')
-.replace(/><BR>/i,'>');
-
-
-
-
-
-
-//                        message = ((undefined !== message) ? message.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.jpeg\))/gim, "<a " + chosenTemplate.buttonstyle + "href='$2'>$1</a>").replace(/<p>/gm, "").replace(/<\/p>/gm, "<BR>").replace("padding:5px'></div><div>", "padding:5px'>") : "");
-//                        message = message.replace('<a href=\"http://journal.roll20.net', '<a ' + chosenTemplate.buttonstyle + ' href=\"http://journal.roll20.net').replace('<a href=\"https://app.roll20.net', '<a ' + chosenTemplate.buttonstyle + ' href=\"https://app.roll20.net');
-//                        message = message.replace('<a href=\"http', '<a ' + chosenTemplate.buttonstyle + ' href=\"http');
-                        //message = message.replace(whisperStyle,chosenTemplate.whisperStyle);
-                        //message = message.replace("<br>\n<div style", "<br><br><div style");
-
-
-                        //log("message = " + message);
-                        //log ("whisperfinal = " +whisper);
-
-
-                        if (command === '!pcnote') {
-                            return sendChat(whom, messagePrefix + chosenTemplate.boxcode + chosenTemplate.titlecode + whom + chosenTemplate.textcode + message + '</div></div>' + chosenTemplate.footer + '</div>');
-
-                        } else {
-
-                            return sendChat(whom, messagePrefix + chosenTemplate.boxcode + chosenTemplate.titlecode + whom + chosenTemplate.textcode + message + whisper + chosenTemplate.buttonwrapper + playerButton + chosenTemplate.buttondivider + handoutButton + '</div></div></div>' + chosenTemplate.footer + '</div>');
-                        }
-
-
-
-                    } else {
-                        playerButton = ((undefined !== playerButton) ? playerButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.webp\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
-                        handoutButton = ((undefined !== handoutButton) ? handoutButton.replace(/\[([^\]]*?)\]\(([^\)]*?)\)(?<!\.jpg\)|\.png\)|\.gif\)|\.webm\)|\.webp\)|\.jpeg\))/gim, "<a " + buttonstyle + "href='$2'>$1</a>") : "");
-whisper = ((whisper.length>0) ? "<div style =" + whisperStyle + ">" + whisper + "</div>" : "");
-//log ("whisper = " + whisper);
-                        return sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + whisper + playerButton + handoutButton + '}}');
-                    }
-
-                } else {
-                    let noteHandout = findObjs({
-                        type: 'handout',
-                        name: handoutTitle
-                    });
-                    noteHandout = noteHandout ? noteHandout[0] : undefined;
-
-                    if (!noteHandout) {
-                        noteHandout = createObj('handout', {
-                            name: handoutTitle,
-                            archived: false,
-                            inplayerjournals: "",
-                            controlledby: ""
-                        });
-                        let noteHandoutid = noteHandout.get("_id");
-                        sendChat('Supernotes', `/w gm Supernotes has created a handout named <b>${handoutTitle}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${noteHandoutid}">here</a> to open.`, null, {
-                            noarchive: true
-                        });
-                    }
-                    if (noteHandout) {
-
-                        playerButton = '<BR><a href = "&#96;' + msg.content.replace(/!(gm|self)/, "!pc").replace(/\s(--|)handout\|.*\|/, "") + '">Send to Players in Chat</a>';
-                        if (makeHandout) {
-                                                        handoutButton = ((playerButton) ? ' | ' : '<BR>') + '<a href = "&#96;' + '!gmnote --id' + tokenID + ' --handout|' + whom + '|">Make Handout</a>';
-                        }
-                        message = message.replace(/\[.*?\]\((.*?\.(jpg|jpeg|png|gif))\)/g, `<img style=" max-width:100%; max-height: 200px; float:right; padding-top:0px; margin-bottom:5px; margin-left:5px" src="$1">`);
-                        message = message.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
-                        message = message.replace(/<img(.*)<(\/|)br(\/|)>/g, `<img$1`);
-
-                        ((isGM) ? message = message : message = ((message.includes("-----") ? message.split('-----')[0] : message)));
-
-                        message = parseMarkdown(message);
-                        if (isGM) {
-                            gmnote = (message.includes("-----") ? message.split('-----')[1] : '');
-                            message = (message.includes("-----") ? message.split('-----')[0] : message);
-                        }
-
-                        noteHandout.get("notes", function(notes) {
-
-//##############TEST FOR VARIABLE IMAGE HEIGHT BASED ON HEIGHT OF REPORT###################################################
-// change 200 to 201 in line 447 to activate
-                            if(notes.match(/float:right; color:#aaa;'>\(\d*\)/)) {
-                                let reportCount= notes.match(/(?<=<span style = 'float:right; color:#aaa;'>\()\d+/);;
-//log ("reportCount = " + reportCount);
-
-let newHeight = reportCount * 20;
-if (newHeight > 500){newHeight = 500};
-if (newHeight < 200){newHeight = 200};
-//log ("newHeight = " + newHeight);
-message = message.replace(/201px/,newHeight+'px');
-
-                            }
-//##############TEST FOR VARIABLE IMAGE HEIGHT BASED ON HEIGHT OF REPORT###################################################
-
-                            
-                            if (notes.includes('<!---End Report--->')) {
-                                if (notes.includes('!report')) {
-                                    notes = notes.split('<!---End Report--->')[0] + '<!---End Report--->';
-                                } else {
-                                    notes = notes.split(/<hr>/i)[0] + '<!---End Report--->';
-                                }
-                            } else {
-                                playerButton = '';
-                                handoutButton = '';
-                                notes = ''; //<!---End Report--->';
-                            }
-                            /*if (notes.includes('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')) {
-                                notes = notes.split('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')[0] + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-                            } else {
-                                notes = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-                            }*/
-                            //message = '<div style="display:block;">' + message +'</div>';
-
-                            noteHandout.set("gmnotes", gmnote);
-                            noteHandout.set("notes", notes + "<h3>" + whom + "</h3>" + message + playerButton + handoutButton)
-                            //THIS NEEDS A TOGGLE
-                            //if(!tokenImage.includes("marketplace")){noteHandout.set("avatar", tokenImage+"?12345678")}
-                        })
-                    } else {
-                        sendChat('Supernotes', whom + `No handout named ${handoutTitle} was found.`, null, {
-                            noarchive: true
-                        }, )
-                    }
-
-                }
-
-            }
-
-            let theToken = selectedObject;
-
-            args.forEach(a => {
-                if (a === 'notitle') {
-                    notitle = true
-                }
-                if (a.includes('id-')) {
-                    id = a.split(/id/)[1]
-                }
-                if (a.match(/handout\|.*?\|/)) {
-                    handoutTitle = a.match(/handout\|.*?\|/).toString().split('|')[1]
-                }
-                if (a !== command && !(a.includes('id-')) && !(a.includes('handout|')) && a !== 'notitle') {
-                    option = a
-                }
-                if (a.includes('template|')) {
-                    customTemplate = a.split(/\|/)[1]
-                }
-
+        let handout = findObjs({
+            _type: "handout",
+            name: HANDOUT_NAME
+        })[0];
+
+        if (!handout) {
+            handout = createObj("handout", {
+                name: HANDOUT_NAME,
+                archived: false
             });
+        }
 
-            ((id) ? theToken = [{
-                "_id": id,
-                "type": "graphic"
-            }] : theToken = selectedObject);
+        handout.set({
+            notes: helpHtml,
+            avatar: HANDOUT_AVATAR
+        });
+
+        const link = `http://journal.roll20.net/handout/${handout.get("_id")}`;
+
+        const box =
+            `<div style="background:#111; padding:10px; border:1px solid #555; border-radius:6px; color:#eee;">` +
+            `<div style="font-size:110%; font-weight:bold; margin-bottom:5px;">Supernotes Help</div>` +
+            `<a href="${link}" target="_blank" style="color:#00d4ff; font-weight:bold;">Open Help Handout</a>` +
+            `</div>`;
+
+        sendChat("Supernotes", `/w gm ${box}`, null, { noarchive: true });
+    };
+
+    Commands.root = (msg) => {
+        const parsed = Parser.parse(msg.content);
+        const { customTemplate, notitle, id, handoutTitle } = parsed;
+        let option = parsed.option;
+
+        const command = parsed.command;
+        const sender = msg.who;
+        const senderID = msg.playerid;
+        const isGM = playerIsGM(senderID);
+
+        let messagePrefix = '/w gm ';
+        if (command === '!pcnote') {
+            messagePrefix = '';
+        }
+        if (command === '!selfnote') {
+            messagePrefix = '/w ' + sender + ' ';
+        }
 
 
-            if (undefined !== theToken) {
-                trueToken = getObj('graphic', theToken[0]._id);
-                tokenImage = trueToken.get('imgsrc');
-                tokenTooltip = trueToken.get('tooltip');
-                tokenName = trueToken.get('name');
-                tokenID = trueToken.get('_id');
+        // ---- Resolve the token(s) this command applies to ----
+        // Targets are resolved lazily, per-option, via resolveTargets()
+        // below; a target that doesn't resolve to a real graphic (deleted
+        // token, stale --id) is simply skipped rather than crashing.
+        const selectedObject = msg.selected;
+        const theToken = id ? [{ "_id": id, "type": "graphic" }] : selectedObject;
+
+        // ---- Resolve active sheet-template / footer config ----
+        const cfg = State.config();
+        const template = cfg.template;
+        const title = cfg.title;
+        const theText = cfg.theText;
+        const sendToPlayers = cfg.sendToPlayers;
+        const makeHandout = cfg.makeHandout || false;
+        const darkMode = cfg.darkMode || false;
+        const whisperStyle = CSS.whisperStyle(darkMode);
+        const buttonstyle = CSS.buttonStyle(darkMode);
+
+        // ---- deliver(): renders one report, either to chat or to a handout ----
+        const deliver = (whom, message, tokenIdForButtons, playerButton, handoutButton) => {
+            handoutButton = (handoutButton) ? handoutButton.replace(/NamePlaceholder/, whom) : handoutButton;
+
+            if (message === "" && option.match(/^(bio|charnote|token|tooltip)/)) {
+                message = `The information does not exist for the <code>${option}</code> option`;
             }
 
+            if (handoutTitle === '') {
+                // Applied before the GM-only split below so it covers both
+                // the visible message and the GM-only whisper.
+                message = neutralizeHeadingColors(message);
 
+                let whisper = '';
 
-            const template = state.Supernotes.template;
-            const title = state.Supernotes.title;
-            const theText = state.Supernotes.theText;
-            const sendToPlayers = state.Supernotes.sendToPlayers;
-            const makeHandout = state.Supernotes.makeHandout || false;
-            const darkMode = state.Supernotes.darkMode || false;
-            const whisperStyle = ((darkMode) ? `'background-color:#2b2130; color:#fbfcf0; display:block; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px'` : `'background-color:#fff; color:#000; display:block; border-width: 1px; border-style: solid; border-color:#a3a681; padding:5px'`);
-
-            const whisperColor = ((darkMode) ? "#2b2130" : "#fbfcf0");
-            const whisperTextColor = ((darkMode) ? "#fff" : "#000");
-            const buttonstyle = ((darkMode) ? `style='display:inline-block; color:#a980bd; font-size: 0.9em; background-color: transparent;padding: 0px; border: none'` : `style='display:inline-block; color:#ce0f69; font-size: 0.9em; background-color: transparent;padding: 0px; border: none'`);
-
-
-
-
-            if (option !== undefined && option.includes('config')) {
-                let templateChoice = option.split('|')[1]
-
-                if (templateChoice === undefined) {
-                    message = 'Current sheet template:<BR><b>' + state.Supernotes.sheet + '</b><BR>Send to Players:<BR><b>' + state.Supernotes.sendToPlayers + '</b><BR><BR>Choose a template for Supernotes to use.<BR><BR>[Default Template - any sheet](!gmnote --config|default)<BR>[D&D 5th Edition by Roll20](!gmnote --config|dnd5e)<BR>[DnD 5e Shaped](!gmnote --config|5eshaped)<BR>[Pathfinder Community](!gmnote --config|pfcommunity)<BR>[Pathfinder by Roll20](!gmnote --config|pfofficial)<BR>[Pathfinder 2e by Roll20](!gmnote --config|pf2e)<BR>[Starfinder by Roll20](!gmnote --config|starfinder)<BR>[Call of Cthulhu 7th Edition by Roll20](!gmnote --config|callofcthulhu)<BR><BR>[Toggle Send to Players](!gmnote --config|sendtoPlayers)<BR>[Toggle Make Handout button](!gmnote --config|makeHandout)<BR>[Toggle Darkmode](!gmnote --config|darkMode)'
-                    sendChat('Supernotes', messagePrefix + '&{template:' + template + '}{{' + title + '=' + 'Config' + '}} {{' + theText + '=' + message + '}}');
+                if (isGM) {
+                    const split = splitGmOnlySection(message);
+                    whisper = split.after;
+                    message = split.before;
                 }
 
+                if (customTemplate.length > 0) {
+                    let chosenTemplate = templates.generic;
+                    switch (customTemplate) {
+                        case "crt": chosenTemplate = templates.crt; break;
+                        case "dark": chosenTemplate = templates.dark; break;
+                        case "roll20light": chosenTemplate = templates.roll20light; break;
+                        case "roll20dark": chosenTemplate = templates.roll20dark; break;
+                        case "scroll": chosenTemplate = templates.scroll; break;
+                        case "scroll2": chosenTemplate = templates.scroll2; break;
+                        case "vault": chosenTemplate = templates.vault; break;
+                        case "osrblue": chosenTemplate = templates.osrblue; break;
+                        case "lcars": chosenTemplate = templates.lcars; break;
+                        case "faraway": chosenTemplate = templates.faraway; break;
+                        case "strange": chosenTemplate = templates.strange; break;
+                        case "gothic": chosenTemplate = templates.gothic; break;
+                        case "western": chosenTemplate = templates.western; break;
+                        case "dragon": chosenTemplate = templates.dragon; break;
+                        case "wizard": chosenTemplate = templates.wizard; break;
+                        case "path": chosenTemplate = templates.path; break;
+                        case "treasure": chosenTemplate = templates.treasure; break;
+                        case "steam": chosenTemplate = templates.steam; break;
+                        case "gate3": chosenTemplate = templates.gate3; break;
+                        case "choices": chosenTemplate = templates.choices; break;
+                        case "apoc": chosenTemplate = templates.apoc; break;
+                        case "news": chosenTemplate = templates.news; break;
+                        case "roman": chosenTemplate = templates.roman; break;
+                        case "notebook": chosenTemplate = templates.notebook; break;
+                        case "dark55": chosenTemplate = templates.dark55; break;
+                        case "light55": chosenTemplate = templates.light55; break;
+                        case "bob": break;
+                        default: chosenTemplate = templates.generic; break;
+                    }
 
-                switch (templateChoice) {
-                    case 'default':
-                        state.Supernotes.sheet = 'Default';
-                        state.Supernotes.template = 'default';
-                        state.Supernotes.title = 'name';
-                        state.Supernotes.theText = '';
-                        sendChat('Supernotes', '/w gm Supernotes set to Default roll template');
-                        break;
-                    case 'dnd5e':
-                        state.Supernotes.sheet = 'D&D 5th Edition by Roll20';
-                        state.Supernotes.template = 'npcaction';
-                        state.Supernotes.title = 'rname';
-                        state.Supernotes.theText = 'description';
-                        sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
-                        break;
-                    case '5eshaped':
-                        state.Supernotes.sheet = 'DnD 5e Shaped';
-                        state.Supernotes.template = '5e-shaped';
-                        state.Supernotes.title = 'title';
-                        state.Supernotes.theText = 'text_big';
-                        sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
-                        break;
-                    case 'pfcommunity':
-                        state.Supernotes.sheet = 'Pathfinder Community';
-                        state.Supernotes.template = 'pf_generic';
-                        state.Supernotes.title = 'name';
-                        state.Supernotes.theText = 'description';
-                        sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
-                        break;
-                    case 'pfofficial':
-                        state.Supernotes.sheet = 'Pathfinder by Roll20';
-                        state.Supernotes.template = 'npc';
-                        state.Supernotes.title = 'name';
-                        state.Supernotes.theText = 'descflag=1}} {{desc';
-                        sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
-                        break;
-                    case 'pf2e':
-                        state.Supernotes.sheet = 'Pathefinder 2e';
-                        state.Supernotes.template = 'rolls';
-                        state.Supernotes.title = 'header';
-                        state.Supernotes.theText = 'notes_show=[[1]]}} {{notes';
-                        sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
-                        break;
-                    case 'starfinder':
-                        state.Supernotes.sheet = 'Starfinder';
-                        state.Supernotes.template = 'sf_generic';
-                        state.Supernotes.title = 'title';
-                        state.Supernotes.theText = 'buttons0';
-                        sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
-                        break;
-                    case 'callofcthulhu':
-                        state.Supernotes.sheet = 'Call of Cthulhu 7th Edition by Roll20';
-                        state.Supernotes.template = 'callofcthulhu';
-                        state.Supernotes.title = 'title';
-                        state.Supernotes.theText = 'roll_bonus';
-                        sendChat('Supernotes', '/w gm Supernotes set to ' + state.Supernotes.sheet);
-                        break;
-                    case 'sendtoPlayers':
-                        if (state.Supernotes.sendToPlayers) {
-                            state.Supernotes.sendToPlayers = false
-                        } else {
-                            state.Supernotes.sendToPlayers = true
-                        };
-                        sendChat('Supernotes', '/w gm Send to Players set to ' + state.Supernotes.sendToPlayers);
-                        break;
-                    case 'makeHandout':
-                        if (state.Supernotes.makeHandout) {
-                            state.Supernotes.makeHandout = false
-                        } else {
-                            state.Supernotes.makeHandout = true
-                        };
-                        sendChat('Supernotes', '/w gm Make Handout button set to ' + state.Supernotes.makeHandout);
-                        break;
-                    case 'darkMode':
-                        if (state.Supernotes.darkMode) {
-                            state.Supernotes.darkMode = false
-                        } else {
-                            state.Supernotes.darkMode = true
-                        };
-                        sendChat('Supernotes', '/w gm darkMode set to ' + state.Supernotes.darkMode);
-                        break;
-                }
-            } else {
-                if (option !== undefined && option.includes('help')) {
-    buildSupernotesHelp();
-    return;
+                    playerButton = playerButton.split('\n')[1];
+                    playerButton = (undefined !== playerButton) ? playerButton.replace(/\[(.*?)\]\((.*?)\)/gim, "<a " + chosenTemplate.playerbuttonstyle + "href='$2'>$1</a>") : "";
+                    handoutButton = (undefined !== handoutButton) ? handoutButton.replace(/\[(.*?)\]\((.*?)\)/gim, "<a " + chosenTemplate.handoutbuttonstyle + "href='$2'>$1</a>").replace(" | <a", "<a") : "";
+
+                    whisper = hasReadableText(whisper) ? "<div style =" + chosenTemplate.whisperStyle + ">" + whisper + "</div>" : "";
+
+                    message = cleanText(message, chosenTemplate.buttonstyle);
+                    whisper = cleanText(whisper, chosenTemplate.whisperbuttonstyle);
+                    whisper = whisper.replace(/<\/span><BR>/i, "")
+                        .replace(/<BR><span style=.*?>/i, '<span>')
+                        .replace(/<BR><p style=.*?>/i, '<p>')
+                        .replace(/(<p>|<\/p>)/, '')
+                        .replace(/><BR>/i, '>');
+
+                    if (command === '!pcnote') {
+                        return sendChat(whom, messagePrefix + chosenTemplate.boxcode + chosenTemplate.titlecode + whom + chosenTemplate.textcode + message + '</div></div>' + chosenTemplate.footer + '</div>');
+                    } else {
+                        return sendChat(whom, messagePrefix + chosenTemplate.boxcode + chosenTemplate.titlecode + whom + chosenTemplate.textcode + message + whisper + chosenTemplate.buttonwrapper + playerButton + chosenTemplate.buttondivider + handoutButton + '</div></div></div>' + chosenTemplate.footer + '</div>');
+                    }
+
                 } else {
-                    if (!(option + '').match(/^(card|bio|charnote|tokenimage|tooltip|avatar|imag(e|es|e[1-9]))/)) {
-                        option = 'token';
+                    playerButton = (undefined !== playerButton) ? playerButton.replace(MARKDOWN_LINK, "<a " + buttonstyle + "href='$2'>$1</a>") : "";
+                    handoutButton = (undefined !== handoutButton) ? handoutButton.replace(MARKDOWN_LINK, "<a " + buttonstyle + "href='$2'>$1</a>") : "";
+
+                    // This default-template path never runs message/whisper
+                    // through cleanText(), so image markdown is embedded
+                    // directly here instead. Readability is decided BEFORE
+                    // that conversion, since an image-only whisper would
+                    // otherwise look "empty" once its brackets are gone.
+                    const whisperHasContent = hasReadableText(whisper);
+                    message = embedMarkdownImages(message, '');
+                    whisper = embedMarkdownImages(whisper, '');
+                    whisper = whisperHasContent ? "<div style =" + whisperStyle + ">" + whisper + "</div>" : "";
+                    return sendChat(whom, messagePrefix + '&{template:' + template + '}{{' + title + '=' + whom + '}} {{' + theText + '=' + message + whisper + playerButton + handoutButton + '}}');
+                }
+
+            } else {
+                let noteHandout = findObjs({ type: 'handout', name: handoutTitle });
+                noteHandout = noteHandout ? noteHandout[0] : undefined;
+
+                if (!noteHandout) {
+                    noteHandout = createObj('handout', {
+                        name: handoutTitle,
+                        archived: false,
+                        inplayerjournals: "",
+                        controlledby: ""
+                    });
+                    const noteHandoutId = noteHandout.get("_id");
+                    sendChat('Supernotes', `/w gm Supernotes has created a handout named <b>${handoutTitle}</b>. <BR>Click <a href="http://journal.roll20.net/handout/${noteHandoutId}">here</a> to open.`, null, { noarchive: true });
+                }
+
+                if (noteHandout) {
+                    playerButton = '<BR><a href = "&#96;' + msg.content.replace(/!(gm|self)/, "!pc").replace(/\s(--|)handout\|.*\|/, "") + '">Send to Players in Chat</a>';
+                    if (makeHandout) {
+                        handoutButton = ((playerButton) ? ' | ' : '<BR>') + '<a href = "&#96;' + '!gmnote --id' + tokenIdForButtons + ' --handout|' + whom + '|">Make Handout</a>';
                     }
 
-                    let playerButton = '';
-                    if (sendToPlayers && (command === '!gmnote' || command === '!selfnote')) {
-                        
+                    message = embedMarkdownImages(message, 'max-width:100%; max-height: 200px; float:right; padding-top:0px; margin-bottom:5px; margin-left:5px');
+                    message = message.replace(MARKDOWN_LINK, '<a href="$2">$1</a>');
+                    message = message.replace(/<img(.*)<(\/|)br(\/|)>/g, `<img$1`);
 
-                        
-                        
-                        
-                        playerButton = '\n[Send to Players](' + msg.content.replace(/!(gm|self)/, "!pc") + ' --id' + tokenID + ')';
+                    message = isGM ? message : splitGmOnlySection(message).before;
+
+                    message = parseMarkdown(message);
+
+                    // Declared fresh per call so a player/self-note never
+                    // inherits stale GM-only text from an earlier, unrelated
+                    // !gmnote call.
+                    let gmnote = '';
+                    if (isGM) {
+                        const split = splitGmOnlySection(message);
+                        gmnote = split.after;
+                        message = split.before;
                     }
 
-                    let handoutButton = '';
-                    if (makeHandout && (command.includes('gmnote') || command.includes('selfnote'))) {
-                        handoutButton = ((playerButton) ? ' | ' : '<BR>') + '[Make Handout](' + msg.content.replace(/!(pc|self)/, "!gm") + ' --id' + tokenID + ' --handout|NamePlaceholder|)';
-                    } else {
-                        //handoutButton = '\n[Make Handout](' + msg.content.replace(/!(pc|self)/, "!gm") +')';
-
-                    }
-
-                    let regex;
-                    if (match && match[1]) {
-                        regex = new RegExp(`^${match[1]}`, 'i');
-                    }
-
-                    let message = '';
-                    let whom = '';
-
-
-
-if (option === 'card') {
-
-    (theToken || []).forEach(sel => {
-
-        const o = getObj('graphic', sel._id);
-        if (!o) return;
-
-        const tokenID = o.id;
-        const tokenName = o.get('name') || '';
-        const rawGM = o.get('gmnotes') || '';
-
-        // Always assign whom deterministically
-        whom = tokenName;
-
-        // Decode GM notes safely
-        let decodedGM = rawGM ? unescape(decodeUnicode(rawGM)) : '';
-
-        // Apply regex filtering if present
-        if (decodedGM && regex) {
-            decodedGM = _.filter(
-                decodedGM.split(/(?:[\n\r]+|<br\/?>)/),
-                l => regex.test(l)
-            ).join('\r');
-        }
-
-        message = decodedGM || '';
-
-        // Crop GM-only content for player/self notes
-        if (command === '!pcnote' || command === '!selfnote') {
-            if (message.includes("-----")) {
-                message = message.split('-----')[0];
-            }
-        }
-
-        // Apply notitle
-        if (notitle) {
-            whom = '';
-        }
-
-        // Inject token image if message isn't an image URL
-        if (!/\.(png|jpg|jpeg|gif)/i.test(message)) {
-
-            let styledTokenImage = `<img src="${tokenImage}" style="position:relative; top:-15px; float:right; width:100px; margin:0px 0px 3px 5px;">`;
-
-            if (!message) {
-                message = `<br><br>`;
-            }
-
-            message = styledTokenImage + message;
-        }
-
-        sendMessage(
-            whom,
-            messagePrefix,
-            template,
-            title,
-            theText,
-            message,
-            tokenID,
-            playerButton,
-            handoutButton
-        );
-
-    });
-
-                    } else {
-                        if (option === 'tooltip') {
-                        (theToken || [])
-                        .map(o => getObj('graphic', o._id))
-                            .filter(g => undefined !== g)
-                            .map(t => getObj('character', t.get('represents')))
-                            .filter(c => undefined !== c)
-                            .forEach(c => {
-                                message = tokenTooltip;
-                                whom = tokenName;
-                                if (notitle) {
-                                    whom = '';
-                                }
-                                sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton);
-                            });
-                    } else {
-                        if (option === 'tokenimage') {
-                            (theToken || [])
-                            .map(o => getObj('graphic', o._id))
-                                .filter(g => undefined !== g)
-                                /*                                .map(t => getObj('character', t.get('represents')))*/
-                                .filter(c => undefined !== c)
-                                .forEach(c => {
-                                    message = "<img src='" + tokenImage + "'>";
-                                    whom = tokenName;
-                                    if (notitle) {
-                                        whom = '';
-                                    }
-                                    sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton);
-                                });
-                        } else {
-                            if (option === 'avatar') {
-                                (theToken || [])
-                                .map(o => getObj('graphic', o._id))
-                                    .filter(g => undefined !== g)
-                                    .map(t => getObj('character', t.get('represents')))
-                                    .filter(c => undefined !== c)
-                                    .forEach(c => {
-                                        message = "<img src='" + c.get('avatar') + "'>";
-                                        whom = c.get('name');
-                                        if (notitle) {
-                                            whom = '';
-                                        }
-                                        sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton);
-                                    });
-                            } else {
-
-                                if (option.match(/^imag(e|es|e[1-9])/)) {
-
-
-                                    (theToken || [])
-                                    .map(o => getObj('graphic', o._id))
-                                        .filter(g => undefined !== g)
-                                        .map(t => getObj('character', t.get('represents')))
-                                        .filter(c => undefined !== c)
-                                        .forEach(c => c.get('bio', (val) => {
-                                            if (null !== val && 'null' !== val && val.length > 0) {
-                                                if (regex) {
-                                                    message = _.filter(
-                                                        decodeUnicode(val).split(/(?:[\n\r]+|<br\/?>)/),
-                                                        (l) => regex.test(l.replace(/<[^>]*>/g, ''))
-                                                    ).join('\r');
-                                                    message = message.replace("<img ", "<img style = 'filter:none !important;' ");
-                                                } else {
-                                                    message = decodeUnicode(val);
-                                                    message = message.replace("<img ", "<img style = 'filter:none !important;' ");
-
-                                                }
-                                                if (option === "images") {
-                                                    artwork = message.match(/\<.* src.*?\>/g);
-                                                    if (artwork === null) {
-                                                        artwork = 'No artwork exists for this character. Consider specifiying avatar.'
-                                                    };
-
-                                                } else {
-                                                    artwork = message.match(/\<.* src.*?\>/g);
-                                                    artwork = String(artwork);
-                                                    if (artwork === null) {
-                                                        artwork = 'No artwork exists for this character. Consider specifiying avatar.'
-                                                    };
-
-
-                                                    imageIndex = option.match(/\d+/g);
-
-
-                                                    if (isNaN(imageIndex) || !imageIndex) {
-                                                        imageIndex = 1
-                                                    }
-
-                                                    if (imageIndex > (artwork.split(",")).length) {
-                                                        imageIndex = 1
-                                                    }
-
-                                                    imageIndex = imageIndex - 1; //corrects from human readable
-
-                                                    artwork = artwork.split(",")[imageIndex];
-
-                                                }
-                                                if (('' + artwork).length > 3) {
-                                                    message = artwork;
-                                                } else {
-                                                    message = 'No artwork exists for this character.';
-                                                }
-                                                if (artwork === "null" || message === "null") {
-                                                    message = 'No artwork exists for this character. Consider specifiying avatar.'
-                                                };
-
-                                                whom = c.get('name');
-
-                                                //Sends the final message
-                                                if (notitle) {
-                                                    whom = '';
-                                                }
-                                                sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton);
-
-                                            }
-                                        }));
-                                } else {
-
-
-
-                                    if ((option === 'bio') || (option === 'charnote')) {
-                                        let suboption = (option === 'charnote') ? 'gmnotes' : 'bio';
-
-                                        (theToken || [])
-                                        .map(o => getObj('graphic', o._id))
-                                            .filter(g => undefined !== g)
-                                            .map(t => getObj('character', t.get('represents')))
-                                            .filter(c => undefined !== c)
-                                            .forEach(c => c.get(suboption, (val) => {
-                                                if (null !== val && 'null' !== val && val.length > 0) {
-                                                    if (regex) {
-                                                        message = _.filter(
-                                                            decodeUnicode(val).split(/(?:[\n\r]+|<br\/?>)/),
-                                                            (l) => regex.test(l.replace(/<[^>]*>/g, ''))
-                                                        ).join('\r');
-                                                    } else {
-                                                        message = decodeUnicode(val);
-                                                    }
-                                                    whom = c.get('name');
-                                                    //Crops out GM info on player messages
-                                                    if (command === '!pcnote' || command === '!selfnote') {
-                                                        message = (message.includes("-----") ? message.split('-----')[0] : message);
-                                                    }
-                                                    //Sends the final message
-                                                    if (notitle) {
-                                                        whom = '';
-                                                    }
-                                                    sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton);
-
-                                                } else {
-                                                    if (notitle) {
-                                                        whom = ''
-                                                    }
-                                                    message = `The information does not exist for the <code>${option}</code> option`;
-                                                    sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton);
-
-                                                }
-                                            }));
-                                    } else {
-                                        (theToken || [])
-                                        .map(o => getObj('graphic', o._id))
-                                            .filter(g => undefined !== g)
-                                            .filter((o) => {
-    const gm = (o && o.get) ? o.get('gmnotes') : '';
-    return !!(gm && gm.length > 0);
-})
-                                            .forEach(o => {
-                                                if (regex) {
-                                                    message = _.filter(unescape(decodeUnicode(o.get('gmnotes'))).split(/(?:[\n\r]+|<br\/?>)/), (l) => regex.test(l)).join('\r');
-                                                } else {
-                                                    message = unescape(decodeUnicode(o.get('gmnotes')));
-                                                }
-                                                whom = o.get('name');
-
-                                            });
-
-                                        //Crops out GM info on player messages
-                                        if (command === '!pcnote' || command === '!selfnote') {
-                                            message = (message.includes("-----") ? message.split('-----')[0] : message);
-                                        }
-
-                                        //Sends the final message
-                                        if (notitle) {
-                                            whom = '';
-                                        }
-                                        sendMessage(whom, messagePrefix, template, title, theText, message, tokenID, playerButton, handoutButton);
-
-                                    }
-
-                                    /* Log Block. Turn on for debugging
-                                                                    [
-                                                                        `### REPORT###`,
-                                                                        `THE MESSAGE =${message}`,
-                                                                        `command = ${command}`,
-                                                                        //                               `option = ${option}`,
-                                                                        `secondOption = ${secondOption}`,
-                                                                        `messagePrefix = ${messagePrefix}`,
-                                                                        `whom = ${whom}`,
-                                                                        `message =${message}`
-                                                                    ].forEach(m => log(m));
-                                                                    */
-                                }
-                                }
-                            }
+                    noteHandout.get("notes", (notes) => {
+                        if (notes.match(/float:right; color:#aaa;'>\(\d*\)/)) {
+                            const reportCount = notes.match(/(?<=<span style = 'float:right; color:#aaa;'>\()\d+/);
+                            let newHeight = reportCount * 20;
+                            if (newHeight > 500) { newHeight = 500; }
+                            if (newHeight < 200) { newHeight = 200; }
+                            message = message.replace(/201px/, newHeight + 'px');
                         }
-                    }
+
+                        if (notes.includes('<!---End Report--->')) {
+                            if (notes.includes('!report')) {
+                                notes = notes.split('<!---End Report--->')[0] + '<!---End Report--->';
+                            } else {
+                                notes = notes.split(/<hr>/i)[0] + '<!---End Report--->';
+                            }
+                        } else {
+                            playerButton = '';
+                            handoutButton = '';
+                            notes = '';
+                        }
+
+                        noteHandout.set("gmnotes", gmnote);
+                        noteHandout.set("notes", notes + "<h3>" + whom + "</h3>" + message + playerButton + handoutButton);
+                    });
+                } else {
+                    sendChat('Supernotes', whom + `No handout named ${handoutTitle} was found.`, null, { noarchive: true });
                 }
             }
+        };
+
+        // ---- Dispatch ----
+
+        if (option !== undefined && option.includes('config')) {
+            Commands.config(messagePrefix, template, title, theText, option);
+            return;
+        }
+
+        if (option !== undefined && option.includes('help')) {
+            Commands.help();
+            return;
+        }
+
+        if (!(option + '').match(/^(card|bio|charnote|tokenimage|tooltip|avatar|menu|imag(e|es|e[1-9]))/)) {
+            option = 'token';
+        }
+
+        // Builds the "Send to Players" / "Make Handout" button pair for one
+        // report line, targeting a specific token id. Called per selected
+        // token so each line's buttons point at that line's own token.
+        const buildButtons = (btnTokenID) => {
+            let pb = '';
+            if (sendToPlayers && (command === '!gmnote' || command === '!selfnote')) {
+                pb = '\n[Send to Players](' + msg.content.replace(/!(gm|self)/, "!pc") + ' --id' + btnTokenID + ')';
+            }
+
+            let hb = '';
+            if (makeHandout && (command.includes('gmnote') || command.includes('selfnote'))) {
+                hb = ((pb) ? ' | ' : '<BR>') + '[Make Handout](' + msg.content.replace(/!(pc|self)/, "!gm") + ' --id' + btnTokenID + ' --handout|NamePlaceholder|)';
+            }
+
+            return { playerButton: pb, handoutButton: hb };
+        };
+
+        // Finishes one target's report: applies --notitle, builds that
+        // token's own Send-to-Players/Make-Handout buttons, and hands the
+        // result to deliver().
+        const sendReport = (tokenId, whom, message) => {
+            const buttons = buildButtons(tokenId);
+            deliver(notitle ? '' : whom, message, tokenId, buttons.playerButton, buttons.handoutButton);
+        };
+
+        // !pcnote and !selfnote never show the GM-only tail of a note (the
+        // part after a "-----" marker); !gmnote's own whisper-only handling
+        // of that section happens separately, inside deliver().
+        const stripGmOnlySectionForPlayers = (message) => {
+            if (command !== '!pcnote' && command !== '!selfnote') {
+                return message;
+            }
+            return splitGmOnlySection(message).before;
+        };
+
+        // Resolves each targeted token to its graphic object and, when
+        // requireCharacter is true, the character it represents — dropping
+        // any target that can't be resolved (a deleted token, a stale
+        // --id, or, when requireCharacter, a token with no character).
+        const resolveTargets = (requireCharacter) => {
+            const graphics = (theToken || [])
+                .map(sel => getObj('graphic', sel._id))
+                .filter(g => undefined !== g);
+
+            if (!requireCharacter) {
+                return graphics.map(g => ({ g }));
+            }
+
+            return graphics
+                .map(g => ({ g, c: getObj('character', g.get('represents')) }))
+                .filter(({ c }) => undefined !== c);
+        };
+
+        // Whispers an explanation to whoever ran the command when an
+        // option had no target at all to report on (nothing selected, a
+        // bad/deleted --id, or no represented character), rather than
+        // failing silently.
+        const explainNoTargets = (thisOption, requireCharacter) => {
+            const graphics = (theToken || [])
+                .map(sel => getObj('graphic', sel._id))
+                .filter(g => undefined !== g);
+
+            let reason;
+            if (!theToken || theToken.length === 0) {
+                reason = 'No token is selected, and no valid <code>--id</code> was given.';
+            } else if (graphics.length === 0) {
+                reason = id
+                    ? `No token could be found with id <code>${id}</code>. It may have been deleted, or the id may be mistyped.`
+                    : 'The selected token(s) could not be found — they may have been deleted.';
+            } else if (requireCharacter) {
+                reason = `The selected token(s) don't represent a character, and <code>--${thisOption}</code> needs one that does.`;
+            } else {
+                reason = `Nothing to report for <code>--${thisOption}</code>.`;
+            }
+
+            sendChat('Supernotes', `/w ${sender} Supernotes: ${reason}`, null, { noarchive: true });
+        };
+
+        // --menu: a compact, clickable options grid for one or more
+        // selected tokens, covering every reporting option. Each button is
+        // a real <a href='!command ...'> tag (not markdown left for later
+        // conversion) so it renders under both the custom-template and
+        // default-template paths, and embeds --id<tokenID> so it keeps
+        // working after the token is deselected. A GM sees both a "To GM"
+        // and a "To Players" row; anyone else sees only "To Players".
+        if (option === 'menu') {
+            const targets = resolveTargets(false);
+            if (targets.length === 0) { explainNoTargets(option, false); return; }
+
+            const MENU_ITEMS = [
+                { label: 'Note', flag: '' },
+                { label: 'Bio', flag: ' --bio' },
+                { label: 'Char-gm', flag: ' --charnote' },
+                { label: 'Avatar', flag: ' --avatar' },
+                { label: 'Image', flag: ' --image' },
+                { label: 'Images', flag: ' --images' },
+                { label: 'Token', flag: ' --tokenimage' },
+                { label: 'Tooltip', flag: ' --tooltip' },
+                { label: 'Card', flag: ' --card' },
+            ];
+
+            const buildMenuRow = (cmd, tokenID) => MENU_ITEMS
+                .map(({ label, flag }) => "<a " + buttonstyle + "href='" + cmd + flag + " --id" + tokenID + "'>" + label + "</a>")
+                .join(' | ');
+
+            targets.forEach(({ g }) => {
+                const tokenID = g.get('_id');
+                const rows = [];
+                if (isGM) {
+                    rows.push('<b>To GM</b><BR>' + buildMenuRow('!gmnote', tokenID));
+                }
+                rows.push('<b>To Players</b><BR>' + buildMenuRow('!pcnote', tokenID));
+
+                sendReport(tokenID, g.get('name'), rows.join('<BR><BR>'));
+            });
+            return;
+        }
+
+        if (option === 'card') {
+            const targets = resolveTargets(false);
+            if (targets.length === 0) { explainNoTargets(option, false); return; }
+
+            targets.forEach(({ g }) => {
+                const rawGM = g.get('gmnotes') || '';
+                let message = stripGmOnlySectionForPlayers(rawGM ? unescape(decodeUnicode(rawGM)) : '');
+
+                if (!HAS_EMBEDDED_IMAGE.test(message)) {
+                    const styledTokenImage = `<img src="${g.get('imgsrc')}" style="position:relative; top:-15px; float:right; width:100px; margin:0px 0px 3px 5px;">`;
+                    message = styledTokenImage + (message || '<br><br>');
+                }
+
+                sendReport(g.get('_id'), g.get('name') || '', message);
+            });
+            return;
+        }
+
+        if (option === 'tooltip') {
+            // Requires a represented character, though the tooltip text
+            // itself still comes from the token, not the character.
+            const targets = resolveTargets(true);
+            if (targets.length === 0) { explainNoTargets(option, true); return; }
+
+            targets.forEach(({ g }) => {
+                sendReport(g.get('_id'), g.get('name'), g.get('tooltip'));
+            });
+            return;
+        }
+
+        if (option === 'tokenimage') {
+            const targets = resolveTargets(false);
+            if (targets.length === 0) { explainNoTargets(option, false); return; }
+
+            targets.forEach(({ g }) => {
+                const imgsrc = g.get('imgsrc');
+                const message = imgsrc ? "<img src='" + imgsrc + "'>" : 'No image is set for this token.';
+                sendReport(g.get('_id'), g.get('name'), message);
+            });
+            return;
+        }
+
+        if (option === 'avatar') {
+            const targets = resolveTargets(true);
+            if (targets.length === 0) { explainNoTargets(option, true); return; }
+
+            targets.forEach(({ g, c }) => {
+                const avatar = c.get('avatar');
+                const message = avatar ? "<img src='" + avatar + "'>" : 'No avatar image is set for this character.';
+                sendReport(g.get('_id'), c.get('name'), message);
+            });
+            return;
+        }
+
+        if (option.match(/^imag(e|es|e[1-9])/)) {
+            const targets = resolveTargets(true);
+            if (targets.length === 0) { explainNoTargets(option, true); return; }
+
+            targets.forEach(({ g, c }) => c.get('bio', (val) => {
+                const message = (null !== val && 'null' !== val && val.length > 0)
+                    ? pickCharacterArtwork(decodeUnicode(val), option)
+                    : 'No artwork exists for this character. Consider specifiying avatar.';
+                sendReport(g.get('_id'), c.get('name'), message);
+            }));
+            return;
+        }
+
+        if (option === 'bio' || option === 'charnote') {
+            const suboption = (option === 'charnote') ? 'gmnotes' : 'bio';
+            const targets = resolveTargets(true);
+            if (targets.length === 0) { explainNoTargets(option, true); return; }
+
+            targets.forEach(({ g, c }) => c.get(suboption, (val) => {
+                const whom = c.get('name');
+
+                if (null !== val && 'null' !== val && val.length > 0) {
+                    sendReport(g.get('_id'), whom, stripGmOnlySectionForPlayers(decodeUnicode(val)));
+                } else {
+                    sendReport(g.get('_id'), whom, `The information does not exist for the <code>${option}</code> option`);
+                }
+            }));
+            return;
+        }
+
+        // default ('token') option — GM Notes straight off the selected
+        // token(s). One message per selected token; a token with no GM
+        // Notes gets an explanatory message instead of being silently
+        // skipped.
+        {
+            const targets = resolveTargets(false);
+            if (targets.length === 0) { explainNoTargets(option, false); return; }
+
+            targets.forEach(({ g }) => {
+                const gm = g.get('gmnotes');
+                const message = (gm && gm.length > 0)
+                    ? stripGmOnlySectionForPlayers(unescape(decodeUnicode(gm)))
+                    : 'No GM Notes exist for this token.';
+                sendReport(g.get('_id'), g.get('name'), message);
+            });
+        }
+    };
+
+    // ==================================================
+    // Event Handling
+    // ==================================================
+
+    const handleInput = (msg) => {
+        if (msg.type !== 'api') return;
+        if (!msg.content.match(/^!(gm|pc|self)note\b/)) return;
+        Commands.root(msg);
+    };
+
+    const registerEventHandlers = () => {
+        on('chat:message', handleInput);
+    };
+
+    // ==================================================
+    // Initialization
+    // ==================================================
+
+    const sendWelcomeMessage = () => {
+        const cfg = State.config();
+        const message = 'Welcome to Supernotes! If this is your first time running it, the script is set to use the Default Roll Template. You can choose a different sheet template below, as well as decide whether you want the script to display a "Send to Players" footer at the end of every GM message. It is currently set to true.<BR><BR>[Default Template - any sheet](!gmnote --config|default)<BR>[D&D 5th Edition by Roll20](!gmnote --config|dnd5e)<BR>[DnD 5e Shaped](!gmnote --config|5eshaped)<BR>[Pathfinder by Roll20](!gmnote --config|pfofficial)<BR>[Pathfinder Community](!gmnote --config|pfcommunity)<BR>[Pathfinder 2e by Roll20](!gmnote --config|pf2e)<BR>[Starfinder by Roll20](!gmnote --config|starfinder)<BR>[Call of Cthulhu 7th Edition by Roll20](!gmnote --config|callofcthulhu)<BR><BR>[Toggle Send to Players](!gmnote --config|sendtoPlayers)';
+        sendChat('Supernotes', '/w gm &{template:' + cfg.template + '}{{' + cfg.title + '=' + 'Config' + '}} {{' + cfg.theText + '=' + message + '}}');
+    };
+
+    const checkInstall = () => {
+        const isFirstRun = !state[scriptName];
+
+        State.initialize();
+
+        if (isFirstRun) {
+            sendWelcomeMessage();
+        }
+
+        Logger.log(`v${version} is ready! To set the template of choice or to toggle the send to players option, use the command !gmnote --config`);
+        return true;
+    };
+
+    on('ready', () => {
+        if (checkInstall()) {
+            registerEventHandlers();
         }
     });
-});
+
+    // ==================================================
+    // Public Interface
+    // ==================================================
+
+    return {};
+
+})();
