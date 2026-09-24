@@ -140,15 +140,44 @@ Each pin includes two ping buttons:
 
 ---
 
+## Search
+
+Search Mode looks across every searchable handout at once — names, headers, and body text (including GM Notes, for the GM).
+
+Trigger it:
+
+`!wiki --search`
+
+or click the **SEARCH** button, then enter a search term.
+
+### Results
+
+- Grouped by handout, ranked: name match, then header match, then body-text match
+- Each matching section shown with a highlighted snippet
+- Click a section's header to jump straight to it
+- GM Notes matches marked **[GM]** for the GM
+
+### Browsing Results
+
+- The navigation panel stays on the matched-handout list (with a **New Search** button) so you can jump between hits without re-searching
+- Opening a result highlights the matched term inline in the content panel, using the same highlight style as the results list
+- Switching mode or starting a new search clears the highlight
+
+### What's Searched
+
+- Archived handouts and handouts tagged `wiki-` are excluded
+- Players only see matches in handouts they can already access, and never see GM Notes matches
+
+---
+
 ## Content Controls
 
-Located above the content panel:
+Located above the content panel. Most buttons are icon-only to save space — hover any button to see what it does; a grayed-out button means there's nothing to do in that direction right now.
 
-- **Back / Forward** — navigation history
-- **Clear History** — reset navigation stack
-- **Previous / Next** — step through filtered list
+- **▲ / ▼** (left) — Previous / Next: step through the filtered list
+- **◀ / ✕ / ▶** (right) — Back / Clear History / Forward: navigate history
 - **Edit** (GM) — open source handout
-- **Send to Chat** (GM) — output content unfiltered
+- **To: GM / Players** (GM) — send the current content to GM chat, or the player-visible version to everyone
 - **Pintool** (GM) — opens Pintool if installed (Pin Mode only)
 
 History is tracked separately for GM and players.
@@ -180,6 +209,7 @@ They can access:
 
 - `!wiki` — open Wiki
 - `!wiki --help` — open help
+- `!wiki --search` — prompt for a search term and switch to Search Mode
 - `!wiki --audit-pins` — audit current page pins
 
 ---
@@ -194,6 +224,7 @@ They can access:
 - Build a dashboard in Wiki Home
 - Use `wiki+` for selective sharing
 - Use `wiki-` to hide system handouts
+- Use clear, descriptive headers — they double as the jump link in Search results
 
 ---
 
@@ -204,3 +235,7 @@ They can access:
 If Pintool is installed:
 - A Pintool button appears in Pin Mode
 - Provides enhanced pin management
+
+---
+
+**Version:** 1.0.1 &nbsp;|&nbsp; **Updated:** 2026-09-23

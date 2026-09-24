@@ -3,7 +3,7 @@
 
 This script pulls the contents from a token's GM Notes field and sends them to chat, based on a user-selectable roll template. If the token represents a character, you can optionally pull in the Bio or GM notes from the character. Options also exist to pull in images referenced by the token or its associated character. The user can decide whether to whisper the notes to the GM or broadcast them to all players. Finally, there is the option to add a footer to notes whispered to the GM. This footer creates a chat button to give the option of sending the notes on to the players.
 
-This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but can be adapted easily suing the Configuration section below.
+This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but can be adapted easily using the Configuration section below.
 
 
 ## Commands:
@@ -13,6 +13,13 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 **!pcnote** sends the note to all players
 
 **!selfnote** whispers the note to to the sender
+
+
+## Special Note Syntax
+
+Place five dashes (-----) on their own line inside a token's GM Notes to mark everything below them as GM-only. When the note is run, only the part above the dashes is ever shown to players; the part below is whispered privately to the GM in its own separate box, even if that same note is later sent to the table with !pcnote.
+
+Standard Roll20 image link syntax, [label](imageURL), works directly inside notes and bios. It will show up as an actual picture in the report, not just as a clickable link.
 
 
 ## Paramaters
@@ -29,9 +36,15 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 *--images* Pulls all images from the bio field of the character assigned to a token, if any exist. Otherwise returns notice that no artwork is available
 
-*--tokenimage* Pulls the token image images from the token.
+*--tokenimage* Pulls the token's own image (not the character's avatar).
 
 *--image[number]* Pulls indexed image from the bio field of the character assigned to a token, if any exist. *--image1* will pull the first image, *--image2* the second and so on. Otherwise returns first image if available. If no images are available, returns notice that no artwork is available.
+
+*--tooltip* Pulls the tooltip text set on the selected token.
+
+*--card* Combines the token's image and its GM notes into a single report. If the notes don't already contain a picture, the token's own image is used automatically.
+
+*--menu* Whispers a clickable button menu covering every option above, for the selected token(s), so you don't have to remember or retype flags. If you're the GM, you'll see a row of GM-only buttons plus a row of player-facing buttons; players only see the player-facing row.
 
 *--notitle* This option suppresses the title in the chat output. It is useful for times when the GM might wish to show an image or note to the player without clueing them in wha the note is about. For instance, they may wish to reveal an image of a monster without revealing its name. This parameter can be added to any command. It is the only paramater for which this is true. Example *!pcnote --image --notitle* wil pull the first of any images from the token's associate character sheet and send it to the chat without a title. *--notitle* may be added to the command in any order.
 
@@ -39,7 +52,7 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 *--handout|Handoutname|* If this is present in the arguments, the note will be sent to a handout instead of chat. This can allow a note to remain usable without scrolling through the chat. It can also be used as a sort of floating palette. Notes in handouts can be updated. Running the macro again will regenerate the note. The string in between pipes will be used as the name of the note handout. If no handout by that name exists, Supernotes will create one and post a link in chat to open it. The title must be placed between two pipes. *handout|My Handout|* will work. *handout|My Handout* will fail. A note handout automatically creates a horizontal rule at the top of the handout. Anything typed manually above that rule will be persistent. Supernotes will not overwrite this portion. You can use this area to create Journal Command Buttons to generate new notes or to give some context to the existing note. All updates are live.
 
-*--template[templatename]* Instead of using the configured sheet roll template, you can choose from between more than 10 custom templates that cover most common genres. Add the template command directly after the main prompt, followed by any of the regular parameters above. The current choices are:
+*--template[templatename]* Instead of using the configured sheet roll template, you can choose from between more than 25 custom templates that cover most common genres. Add the template command directly after the main prompt, followed by any of the regular parameters above. The current choices are:
 
 - **generic.** Just the facts, ma'am. Nothing fancy here.
 
@@ -89,14 +102,20 @@ This script as written is optimized for the D&D 5th Edition by Roll20 sheet, but
 
 - **roman**. Bonus style! This was added in a previous version, but was only documented mid-thread.
 
+- **strange**. Other kids who ride bikes and play D&D.
+
+- **dark55**. A style to complement the D&D 5.5e (2024) Sheet dark mode.
+
+- **light55**. A style to complement the D&D 5.5e (2024) Sheet light mode.
+
 *--help* Displays help.
 
-*--config* Returns a configuration dialog box that allows you to set which sheet's roll template to use, and to toggle the 'Send to Players' footer.
+*--config* Returns a configuration dialog box that allows you to set which sheet's roll template to use, and to toggle the 'Send to Players' footer, the 'Make Handout' button, and dark mode.
 
 
 ## Configuration
 
-When first installed, Supernotes is configured for the default roll template. It will display a config dialog box at startup that will allow you to choose a roll template based on your character sheet of choice, as well as the option  to toggle whether you want the 'Send to Players' footer button to appear. The footer will appear on a !selfnote whisper, so that the message can be shared with other players if desired.
+When first installed, Supernotes is configured for the default roll template. It will display a config dialog box at startup that will allow you to choose a roll template based on your character sheet of choice, as well as the option to toggle whether you want the 'Send to Players' footer button to appear, whether a 'Make Handout' button appears alongside it, and whether dark mode is used for templates/sheets with a dark background. The footer will appear on a !selfnote whisper, so that the message can be shared with other players if desired.
 
 You will need to edit the code of the script if you wish to create a custom configuration, or contact keithcurtis on the Roll20 forum and request an addition. The pre-installed sheets are:
 
@@ -117,3 +136,8 @@ Default Template, D&D 5th Edition by Roll20, 5e Shaped, Pathfinder by Roll20, Pa
 - 0.2.2 Minor tweaks. Corrected catch line in API_Meta
 - 0.2.3 Minor fix to roman template
 - 0.2.4 Added 10 new templates
+- 0.2.5 Fixed a trailing space bug and a linebreak issue in commands.
+- 0.2.6 Reworked the Help system to use a handout. Fixed a logic issue in the Card output.
+- 0.2.7 Added Dark and Light templates for the 2024 sheet.
+- 0.2.8 Added support for webp images.
+- 0.3.0 Big cleanup and bug-fix pass under the hood; commands and flags all still work the same as before. Fixed a crash from a bad/missing token id, multi-token reports sometimes repeating the wrong token's info, GM-only text occasionally leaking into a handout, `--image2`/`--image3` sometimes returning garbled text instead of an image, and a typo in the Pathfinder 2e config option. Every option now tells you why nothing happened instead of failing silently. Headers in notes now match your template's own colors instead of Roll20's default. The `-----` GM-only divider is parsed more reliably, and its box no longer shows up empty when there's nothing after it. Fixed images (including webp images and Roll20's cache-busted links) sometimes showing up as plain text instead of the picture. Added the new `--menu` command: a clickable menu of every option for the selected token(s).
