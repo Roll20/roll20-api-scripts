@@ -7,10 +7,9 @@ const Chronicle = (() => {
   // Config
   // ==================================================
   const scriptName = 'Chronicle';
-  const version = '1.0.6';
+  const version = '1.0.5';
   //Changelog
-  // 1.0.6 Fixed month and moon reordering (month reorder swaps names only). Delete Month now asks for confirmation. Non-recurring holidays take a year. Removed unused tag commands and duplicate data loader. Traveller added to preset list. Faerun preset: Shieldmeet after Flamerule, vernal equinox Ches 19. Seasons wrap past year end and start on the equinox/solstice everywhere (labels previously started a month early). Special days sharing a position keep their own events, notes and weather. Fixed first event/note/weather in a new calendar being lost (events handout was created with data in the wrong field); events handout name now always follows the loaded calendar. Equinoxes and solstices are labeled on their days (grid, details, chat, timeline), with a Design mode toggle. Leap Years section renamed Gregorian Leap Day.
-  // 1.0.5 changed send to chat for grid to 7 day span instead of a hard-coded 7-day week, and improved display.
+  // 1.0.5 changed send to chat for grid to 7 day span instead of a hard-coded 7-day week, and improved navigation and display.
   // 1.0.4 Fixed Mode display issues from Roll20 Dark/Light mode, Added Send to Chat behavior for Timeline view.
   // 1.0.3 Corrected reversion in default calendar definitions
   // 1.0.2 Added Interannual Day code to handle Traveller Imperial Calendar
@@ -23,7 +22,6 @@ const Chronicle = (() => {
   const LOGGING = false;
 
   const HANDOUT_PREFIX = 'Chronicle';
-  const PRESET_CALENDAR_NAMES = ['Gregorian', 'Absalom Reckoning', 'Faerun', 'Greyhawk', 'Eberron', 'Traveller'];
   const CHRONICLE_HELP_NAME = "Help: Chronicle";
   const CHRONICLE_HELP_AVATAR = "https://files.d20.io/images/470559564/QxDbBYEhr6jLMSpm0x42lg/original.png?1767857147";
   const CHRONICLE_HELP_TEXT = `
@@ -64,7 +62,7 @@ const Chronicle = (() => {
 <li><strong>Days:</strong> Number of days in the month</li>
 <li><strong>Order:</strong> Position in the year (automatically managed)</li>
 </ul>
-<p>Use the up/down arrows to swap a month's name with its neighbor. Only the names move; day counts and anything dated in that slot (events, notes, weather, holidays, special days) stay where they are. Delete unwanted months with the Delete button. Deleting a month moves every later month up one slot, so items dated in those months will fall in a different month. You will be asked to confirm.</p>
+<p>Use the up/down arrows to reorder months. Delete unwanted months with the Delete button.</p>
 
 <h4>Weeks</h4>
 <p>Configure the weekly structure:</p>
@@ -79,7 +77,6 @@ const Chronicle = (() => {
 <li><strong>Name:</strong> Holiday name</li>
 <li><strong>Month/Day:</strong> Date of occurrence</li>
 <li><strong>Recurring:</strong> Whether it repeats annually</li>
-<li><strong>Year:</strong> The year a non-recurring holiday occurs. Ignored for recurring holidays. Use this for movable holidays by adding one entry per year.</li>
 <li><strong>Description:</strong> Optional details about the holiday</li>
 </ul>
 <p>Holidays appear in red text throughout the calendar. Click a holiday name to view its description privately (whisper) or announce it publicly to all players.</p>
@@ -107,8 +104,6 @@ const Chronicle = (() => {
 <li><strong>Offset (Leap only):</strong> Year offset for calculation (typically 0)</li>
 <li><strong>Description:</strong> Optional details about the special day</li>
 </ul>
-<p>When two special days share a position (such as Midsummer and Shieldmeet), they appear in list order, and events, notes and weather stay with the day they were created on.</p>
-<p><strong>Faerûn calendars created before version 1.0.6</strong> place Shieldmeet after Hammer 30 and the vernal equinox on day 60. To correct them, edit Shieldmeet's position to after Flamerule 30 and set the vernal equinox to 79 (Ches 19). Any event or note created on Shieldmeet before the change needs to be moved.</p>
 
 <h3>Moons</h3>
 <p>Add celestial bodies with lunar cycles that display on your calendar:</p>
@@ -133,10 +128,6 @@ const Chronicle = (() => {
 <li>The script will guide you through a series of prompts to configure your climate settings, according to a simplified Köppen climate classification. </li>
 <li>Select temperature units (Fahrenheit or Celsius)</li>
 </ol>
-
-<h4>Seasons</h4>
-<p>Set the day of year of the vernal (spring) equinox in Design mode. The summer solstice, autumn equinox and winter solstice are placed a quarter, half and three quarters of a year later, wrapping into the next year if needed. Each season begins on its equinox or solstice. Day numbers count month days only; festival and other special days take the season of the day before them.</p>
-<p>The equinoxes and solstices are labeled on the calendar grid, in the Featured Date details, in Send to Chat, and in Timeline mode when Holidays are shown. Use the Show on Calendar toggle in the Seasons section of Design mode to turn the labels off, for example if you have entered them as holidays yourself.</p>
 
 <h4>Generating Weather</h4>
 <p>Click "Generate Weather" in the Featured Date section to create weather for the current date. Generated weather persists and appears automatically when viewing that date.</p>
@@ -363,9 +354,9 @@ const Chronicle = (() => {
   const cssDark = {
     button: 'display: inline-block; padding: 4px 8px; margin: 2px; background: #5a9fd4; color: #111111; border: 1px solid #555555; border-radius: 3px; font-weight:bold; text-decoration: none; cursor: pointer; font-size: 11px;',
     buttonSmall: 'display: inline-block; padding: 2px 5px; margin: 1px; background: #5a9fd4; color: #111111; border: 1px solid #555555; border-radius: 2px; font-weight:bold; text-decoration: none; cursor: pointer; font-size: 9px;',
-    creator: 'display: inline-block; padding: 2px 6px; margin: 0 3px; background: #3a3a3a; color: #aaaaaa; border: 1px #666 solid; border-radius: 20px; font-size: 9px; font-weight: bold;',
-    tagButton: 'display: inline-block; padding: 2px 5px; margin: 0 1px; background: #2a2a2a; color: #cccccc; border: 1px #666 solid; border-radius: 20px; text-decoration: none; cursor: pointer; font-size: 9px;font-weight: bold;',
-    tag: 'display: inline-block; padding: 2px 5px; margin: 0 2px; background: #2d2d2d; color: #bbbbbb; border: 1px #666 solid; border-radius: 20px; text-decoration: none; cursor: pointer; font-size: 9px;font-weight: bold;',
+    creator: 'display: inline-block; padding: 2px 6px; margin: 0 3px; background: #3a3a3a; color: #aaaaaa; border-radius: 20px; font-size: 9px; font-weight: bold;',
+    tagButton: 'display: inline-block; padding: 2px 5px; margin: 0 1px; background: #2a2a2a; color: #cccccc; border-radius: 20px; text-decoration: none; cursor: pointer; font-size: 9px;font-weight: bold;',
+    tag: 'display: inline-block; padding: 2px 5px; margin: 0 2px; background: #2d2d2d; color: #bbbbbb; border-radius: 20px; text-decoration: none; cursor: pointer; font-size: 9px;font-weight: bold;',
     holiday: 'color: #dd5555; font-weight: bold;',
     container: 'background: #1a1a1a; color: #eeeeee; padding: 10px; border: 1px solid #555555; border-radius: 5px; font-family: "Helvetica Neue", Arial, sans-serif; margin: -30px;',
     chatOutput: 'background: #4a4a4a; color: #eeeeee; padding: 8px 12px; border-left: 6px solid #6b8cae; border-top: 1px solid #6b8cae; border-right: 1px solid #6b8cae; border-bottom: 1px solid #6b8cae; border-radius: 3px; font-family: "Helvetica Neue", Arial, sans-serif; font-size: 13px; margin: 2px 0;',
@@ -383,16 +374,16 @@ const Chronicle = (() => {
   const lightModeOverrides = {
     button: { background: '#4a7ac2', color: '#eeeeee', border: '1px solid #999999' },
     buttonSmall: { background: '#4a7ac2', color: '#eeeeee', border: '1px solid #999999' },
-    creator: { background: '#e0e0e0', color: '#222222', border: 'none' },
-    tagButton: { background: '#cccccc', color: '#333333', border: 'none' },
-    tag: { background: '#cccccc', color: '#777777', border: 'none' },
+    creator: { background: '#e0e0e0', color: '#222222'},
+    tagButton: { background: '#cccccc', color: '#333333'},
+    tag: { background: '#cccccc', color: '#777777'},
     holiday: { color: '#cc3333' },
     container: { background: '#eeeeee', color: '#111111', border: '1px solid #cccccc' },
     chatOutput: { background: '#dddddd', color: '#111111', 'border-left': '6px solid #4a7ac2', 'border-top': '1px solid #4a7ac2', 'border-right': '1px solid #4a7ac2', 'border-bottom': '1px solid #4a7ac2' },
     header: { background: '#f5f5f5', color: '#111111', border: '2px solid #cccccc' },
     headerColor: '#111111',
     tableCell: { border: '1px solid #cccccc', color: '#111111' },
-    calendarDay: { background: '#eeeeee', color: '#111111 !important', border: '1px solid #cccccc' },
+    calendarDay: { background: '#eeeeee', color: '#111111', border: '1px solid #cccccc' },
     calendarDayOtherMonth: { background: '#eeeeee', color: '#111111', border: '1px solid #cccccc' },
     calendarDayToday: { background: '#d8d8d8', color: '#111111', border: '3px solid #4a7ac2' },
     emojiCircle: { background: '#333333', border: '1px solid #999' },
@@ -402,9 +393,9 @@ const Chronicle = (() => {
   const fantasyModeOverrides = {
     button: { background: '#8b4513', color: '#f4e8d0', border: '1px solid #5a3820' },
     buttonSmall: { background: '#8b4513', color: '#f4e8d0', border: '1px solid #5a3820' },
-    creator: { background: '#d4c0a0', color: '#5a3820', border: 'none' },
-    tagButton: { background: '#c4b090', color: '#6b4820', border: 'none' },
-    tag: { background: '#cbb8a0', color: '#7b5830', border: 'none' },
+    creator: { background: '#d4c0a0', color: '#5a3820' },
+    tagButton: { background: '#c4b090', color: '#6b4820' },
+    tag: { background: '#cbb8a0', color: '#7b5830' },
     holiday: { color: '#cc4444' },
     container: { background: '#f4e8d0', color: '#2c1810', border: '1px solid #8b6f47' },
     chatOutput: { background: '#e8d4b0', color: '#2c1810', 'border-left': '6px solid #8b4513', 'border-top': '1px solid #8b4513', 'border-right': '1px solid #8b4513', 'border-bottom': '1px solid #8b4513' },
@@ -439,7 +430,7 @@ const Chronicle = (() => {
         const borderKey = sides.find(k => Object.keys(mapped).includes(k)) || 'border';
         mapped[borderKey] = override.border;
       }
-
+      
       // Handle individual border properties (kebab-case)
       if (override['border-left']) mapped['border-left'] = override['border-left'];
       if (override['border-top']) mapped['border-top'] = override['border-top'];
@@ -509,20 +500,20 @@ const Chronicle = (() => {
   // ==================================================
 
   const MarkdownParser = {
-
+    
     // Parse markdown [text](url) patterns
     parse: (text) => {
       if (!text) return [];
-
+      
       const elements = [];
       const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
       let match;
-
+      
       while ((match = regex.exec(text)) !== null) {
         const linkText = match[1];
         const url = match[2];
         const isImage = MarkdownParser.isImageUrl(url);
-
+        
         elements.push({
           type: isImage ? 'image' : 'link',
           text: linkText,
@@ -531,44 +522,44 @@ const Chronicle = (() => {
           isImage: isImage
         });
       }
-
+      
       return elements;
     },
-
+    
     // Check if URL is an image based on extension
     isImageUrl: (url) => {
       const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg'];
       const lowerUrl = url.toLowerCase();
       return imageExtensions.some(ext => lowerUrl.endsWith(ext));
     },
-
+    
     // Get text with markdown elements removed (for alt text display)
     stripMarkdown: (text) => {
       if (!text) return text;
       return text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
     },
-
+    
     // Render markdown elements as HTML for display
     renderAsHtml: (text, calendar, options = {}) => {
       if (!text) return '';
-
+      
       const elements = MarkdownParser.parse(text);
       if (elements.length === 0) return text; // No markdown, return as-is
-
+      
       let html = '';
       let lastIndex = 0;
-
+      
       // Get CSS styles
       const CSS_CURRENT = getCSS();
-
+      
       // Get holiday link styling with Roll20 button style overrides
       const holidayStyle = CSS_CURRENT.holiday + ' text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0; margin: 0;';
-
+      
       // Sort elements by position in text
       const regex = /\[([^\]]+)\]\(([^)]+)\)/g;
       let match;
       const matches = [];
-
+      
       while ((match = regex.exec(text)) !== null) {
         matches.push({
           start: match.index,
@@ -577,15 +568,15 @@ const Chronicle = (() => {
           url: match[2]
         });
       }
-
+      
       matches.forEach(m => {
         // Add text before this element
         if (lastIndex < m.start) {
           html += text.substring(lastIndex, m.start);
         }
-
+        
         const isImage = MarkdownParser.isImageUrl(m.url);
-
+        
         if (isImage) {
           // Render image link
           if (options.featured || options.sendToChat) {
@@ -606,15 +597,15 @@ const Chronicle = (() => {
             html += `<span style="${holidayStyle}">${m.linkText}</span>`;
           }
         }
-
+        
         lastIndex = m.end;
       });
-
+      
       // Add remaining text
       if (lastIndex < text.length) {
         html += text.substring(lastIndex);
       }
-
+      
       return html;
     }
   };
@@ -689,12 +680,11 @@ const Chronicle = (() => {
       display: display // Whether to show on calendar grid (default true)
     }),
 
-    createHoliday: (name, dateRef, recurring, description, year) => ({
+    createHoliday: (name, dateRef, recurring, description) => ({
       id: `holiday_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: name,
       dateRef: dateRef, // {month, day} or {month, week, weekday} for relative dates
       recurring: recurring, // true for annual
-      year: recurring ? null : year, // only used when not recurring
       type: 'absolute', // or 'relative'
       description: description || ''
     }),
@@ -800,23 +790,12 @@ const Chronicle = (() => {
       let group;
 
       switch (inputs.latitude_band) {
-        case 'tropical':
-          group = 'A';
-          break;
-        case 'subtropical':
-          group = 'C';
-          break;
-        case 'temperate':
-          group = 'C';
-          break;
-        case 'subarctic':
-          group = 'D';
-          break;
-        case 'polar':
-          group = 'E';
-          break;
-        default:
-          group = 'C';
+        case 'tropical': group = 'A'; break;
+        case 'subtropical': group = 'C'; break;
+        case 'temperate': group = 'C'; break;
+        case 'subarctic': group = 'D'; break;
+        case 'polar': group = 'E'; break;
+        default: group = 'C';
       }
 
       // Override: continental temperate becomes subarctic
@@ -844,8 +823,8 @@ const Chronicle = (() => {
         }
       }
 
-      if (inputs.ocean_proximity === 'continental' &&
-        (inputs.latitude_band === 'subtropical' || inputs.latitude_band === 'temperate')) {
+      if (inputs.ocean_proximity === 'continental' && 
+          (inputs.latitude_band === 'subtropical' || inputs.latitude_band === 'temperate')) {
         // Check for steppe mitigation
         if (inputs.ocean_proximity === 'near_coastal' || inputs.rainshadow === 'windward') {
           return 'BSk'; // Steppe
@@ -861,8 +840,8 @@ const Chronicle = (() => {
       if (baseGroup === 'E' || baseGroup === 'B') return '';
 
       // West coast + subtropical/temperate = dry summer
-      if (inputs.coast_type === 'west' &&
-        (inputs.latitude_band === 'subtropical' || inputs.latitude_band === 'temperate')) {
+      if (inputs.coast_type === 'west' && 
+          (inputs.latitude_band === 'subtropical' || inputs.latitude_band === 'temperate')) {
         return 's';
       }
 
@@ -1198,7 +1177,7 @@ const Chronicle = (() => {
         DataModels.createInterMonthDay('Midsummer', { afterMonth: 7, afterDay: 30 }, true, 'fixed', null, 0, "A raucous holiday of bonfires, drinking, romance, and excess. Nobles sponsor tournaments and public celebrations while adventurers easily find work as guards, performers, or duelists. The festival's chaos also makes it ideal cover for thefts, assassinations, and secret cult rites."),
         DataModels.createInterMonthDay('Highharvestide', { afterMonth: 9, afterDay: 30 }, true, 'fixed', null, 0, "A harvest celebration focused on gratitude, trade, and preparation for winter. Markets swell with food, crafts, and livestock while temples collect offerings for the needy. Rural folk tell ghost stories and leave symbolic gifts to appease local spirits before the dark season begins."),
         DataModels.createInterMonthDay('The Feast of the Moon', { afterMonth: 11, afterDay: 30 }, true, 'fixed', null, 0, "A solemn yet warm remembrance of the dead held as winter approaches. Families honor ancestors with candlelit vigils and shared meals, while priests conduct rites for wandering souls. Undead sightings and supernatural encounters are considered more common during the festival nights."),
-        DataModels.createInterMonthDay('Shieldmeet', { afterMonth: 7, afterDay: 30 }, true, 'leap', 4, 0, "Occurring only every four years, this extra feast day is tied to truces, diplomacy, and grand gatherings. Mercenary companies negotiate contracts, rulers announce decrees, and temples pursue reconciliation rituals. Many believe ancient magic weakens or shifts during Shieldmeet, encouraging risky arcane experiments.")
+        DataModels.createInterMonthDay('Shieldmeet', { afterMonth: 1, afterDay: 30 }, true, 'leap', 4, 0, "Occurring only every four years, this extra feast day is tied to truces, diplomacy, and grand gatherings. Mercenary companies negotiate contracts, rulers announce decrees, and temples pursue reconciliation rituals. Many believe ancient magic weakens or shifts during Shieldmeet, encouraging risky arcane experiments.")
       ];
       cal.leapYears = {
         enabled: false,
@@ -1206,7 +1185,7 @@ const Chronicle = (() => {
         exceptions: []
       };
       cal.seasons = {
-        vernalEquinox: 79 // Ches 19
+        vernalEquinox: 60
       };
       cal.holidays = [];
       cal.climate = null;
@@ -1306,18 +1285,18 @@ const Chronicle = (() => {
       cal.climate = null;
       cal.units = 'us';
       cal.moons = [
-        DataModels.createMoon('Zarantyr', 0.4, { year: 1, month: 1, day: 1 }, 0.3, 'orange', false), // Tiny, hidden
-        DataModels.createMoon('Olarune', 0.8, { year: 1, month: 1, day: 2 }, 0.4, 'gray', false), // Small, hidden
-        DataModels.createMoon('Therendor', 1.8, { year: 1, month: 1, day: 3 }, 0.5, 'tan', false), // Medium-small, hidden
-        DataModels.createMoon('Eyre', 2.9, { year: 1, month: 1, day: 4 }, 0.6, 'yellow', true), // Medium, visible, default color
-        DataModels.createMoon('Dravago', 5.1, { year: 1, month: 1, day: 5 }, 0.7, 'orange', true), // Medium-large, visible, orange
-        DataModels.createMoon('Nymm', 6.7, { year: 1, month: 1, day: 6 }, 0.8, 'blue', true), // Large, visible, blue
-        DataModels.createMoon('Lharvion', 10.3, { year: 1, month: 1, day: 7 }, 0.9, 'red', true), // Very large, visible, red
-        DataModels.createMoon('Barrakas', 12.3, { year: 1, month: 1, day: 8 }, 1.0, 'orange', true), // Full size, visible, orange
-        DataModels.createMoon('Rhaan', 14.5, { year: 1, month: 1, day: 9 }, 0.5, 'purple', false), // Medium-small, hidden, purple
-        DataModels.createMoon('Sypheros', 16.9, { year: 1, month: 1, day: 10 }, 0.6, 'brown', false), // Medium, hidden, brown
-        DataModels.createMoon('Aryth', 11.9, { year: 1, month: 1, day: 11 }, 0.7, 'tan', false), // Medium-large, hidden, tan
-        DataModels.createMoon('Vult', 29.2, { year: 1, month: 1, day: 12 }, 0.8, 'yellow', true) // Large, visible, yellow
+        DataModels.createMoon('Zarantyr', 0.4, { year: 1, month: 1, day: 1 }, 0.3, 'orange', false),  // Tiny, hidden
+        DataModels.createMoon('Olarune', 0.8, { year: 1, month: 1, day: 2 }, 0.4, 'gray', false),  // Small, hidden
+        DataModels.createMoon('Therendor', 1.8, { year: 1, month: 1, day: 3 }, 0.5, 'tan', false),  // Medium-small, hidden
+        DataModels.createMoon('Eyre', 2.9, { year: 1, month: 1, day: 4 }, 0.6, 'yellow', true),  // Medium, visible, default color
+        DataModels.createMoon('Dravago', 5.1, { year: 1, month: 1, day: 5 }, 0.7, 'orange', true),  // Medium-large, visible, orange
+        DataModels.createMoon('Nymm', 6.7, { year: 1, month: 1, day: 6 }, 0.8, 'blue', true),  // Large, visible, blue
+        DataModels.createMoon('Lharvion', 10.3, { year: 1, month: 1, day: 7 }, 0.9, 'red', true),  // Very large, visible, red
+        DataModels.createMoon('Barrakas', 12.3, { year: 1, month: 1, day: 8 }, 1.0, 'orange', true),  // Full size, visible, orange
+        DataModels.createMoon('Rhaan', 14.5, { year: 1, month: 1, day: 9 }, 0.5, 'purple', false),  // Medium-small, hidden, purple
+        DataModels.createMoon('Sypheros', 16.9, { year: 1, month: 1, day: 10 }, 0.6, 'brown', false),  // Medium, hidden, brown
+        DataModels.createMoon('Aryth', 11.9, { year: 1, month: 1, day: 11 }, 0.7, 'tan', false),  // Medium-large, hidden, tan
+        DataModels.createMoon('Vult', 29.2, { year: 1, month: 1, day: 12 }, 0.8, 'yellow', true)  // Large, visible, yellow
       ];
       return cal;
     },
@@ -1325,7 +1304,7 @@ const Chronicle = (() => {
     traveller: () => {
       const cal = DataModels.createCalendar('Traveller');
       cal.description = 'The standard Imperial Calendar used throughout the Third Imperium. The year begins with Holiday, a day outside the normal weekly cycle. This is followed by 364 numbered days, ensuring that Wonday always marks Day 2 of every year.';
-      cal.daysInYear = 365; // Full year: Holiday (1) + month days (364)
+      cal.daysInYear = 365;  // Full year: Holiday (1) + month days (364)
       cal.months = [
         DataModels.createMonth('Day', 364, 0)
       ];
@@ -1468,7 +1447,7 @@ const Chronicle = (() => {
         handout = HandoutManager.createHandout(name, '');
         Logger.log(`Created calendar handout: ${name}`);
       }
-
+      
       HandoutManager.setHandoutGMNotes(handout, data);
       Logger.log(`Updated calendar handout: ${name}`);
 
@@ -1476,30 +1455,104 @@ const Chronicle = (() => {
       return handout;
     },
 
-
-    // Events handout name always follows the loaded calendar handout (same rule the loader uses)
-    eventsHandoutName: (fallbackName) => {
-      const calHandoutName = State.config().currentCalendar;
-      if (calHandoutName) {
-        return `${HANDOUT_PREFIX} Events: ${calHandoutName.replace(`${HANDOUT_PREFIX} Calendar: `, '')}`;
+    loadData: (callback) => {
+      // Load calendar and events data using proper async callbacks
+      // Pass loaded data to callback instead of storing in state
+      const calName = State.config().currentCalendar;
+      if (!calName) {
+        callback({
+          calendar: null,
+          events: [],
+          notes: [],
+          moons: [],
+          weather: []
+        });
+        return;
       }
-      return fallbackName ? `${HANDOUT_PREFIX} Events: ${fallbackName}` : null;
+
+      const calHandout = HandoutManager.findHandout(calName);
+      if (!calHandout) {
+        Logger.error(`Calendar handout not found: ${calName}`);
+        callback({
+          calendar: null,
+          events: [],
+          notes: [],
+          moons: [],
+          weather: []
+        });
+        return;
+      }
+
+      // Load calendar with callback
+      HandoutManager.getHandoutGMNotes(calHandout, (gmnotes) => {
+        let calendar = null;
+        let moons = [];
+        
+        try {
+          calendar = JSON.parse(gmnotes || '{}');
+          moons = calendar.moons || [];
+          Logger.debug(`Loaded calendar: ${calendar.name}`);
+        } catch (e) {
+          Logger.error(`Failed to parse calendar: ${e}`);
+        }
+
+        // Load events with callback
+        const eventsName = `${HANDOUT_PREFIX} Events: ${calName.replace(`${HANDOUT_PREFIX} Calendar: `, '')}`;
+        const eventsHandout = HandoutManager.findHandout(eventsName);
+        
+        if (!eventsHandout) {
+          callback({
+            calendar: calendar,
+            events: [],
+            notes: [],
+            moons: moons,
+            weather: []
+          });
+          return;
+        }
+
+        HandoutManager.getHandoutGMNotes(eventsHandout, (eventsNotes) => {
+          let events = [];
+          let notes = [];
+          let weather = [];
+          
+          try {
+            const data = JSON.parse(eventsNotes || '{}');
+            events = data.events || [];
+            notes = data.notes || [];
+            weather = data.weather || [];
+            Logger.debug(`Loaded ${events.length} events, ${notes.length} notes`);
+          } catch (e) {
+            Logger.error(`Failed to parse events: ${e}`);
+          }
+
+          // Return all loaded data
+          callback({
+            calendar: calendar,
+            events: events,
+            notes: notes,
+            moons: moons,
+            weather: weather
+          });
+        });
+      });
     },
 
+
+
     saveEvents: (campaignName, events, notes, weather = []) => {
-      const name = HandoutManager.eventsHandoutName(campaignName);
-      if (!name) return null;
+      const name = `${HANDOUT_PREFIX} Events: ${campaignName}`;
       let handout = HandoutManager.findHandout(name);
 
       const jsonData = JSON.stringify({ events, notes, weather }, null, 2);
 
       if (!handout) {
-        // Create empty, then write data to GM Notes (where the loader reads it)
-        handout = HandoutManager.createHandout(name, '');
+        handout = HandoutManager.createHandout(name, jsonData);
         Logger.log(`Created events handout: ${name}`);
+      } else {
+        HandoutManager.setHandoutGMNotes(handout, jsonData);
+        Logger.log(`Updated events handout: ${name}`);
       }
-      HandoutManager.setHandoutGMNotes(handout, jsonData);
-      Logger.log(`Updated events handout: ${name}`);
 
       State.setConfig('currentEvents', name);
       return handout;
@@ -1633,15 +1686,6 @@ const Chronicle = (() => {
         }
       }
       return null;
-    },
-
-    // Holiday match: non-recurring holidays with a year only match that year; older data without a year acts as recurring
-    holidayOnDate: (h, date) => {
-      if (!h || !h.dateRef || !date || date.isInterannual) return false;
-      if (h.type && h.type !== 'absolute') return false;
-      if (h.dateRef.month !== date.month || h.dateRef.day !== date.day) return false;
-      if (h.recurring === false && Number.isInteger(h.year)) return h.year === date.year;
-      return true;
     },
 
     // Convert {year, month, day} or {year, isInterannual, position, order} to absolute day number
@@ -1802,7 +1846,7 @@ const Chronicle = (() => {
     // Get special days that occur in a specific year
     getSpecialDaysForYear: (year, calendar) => {
       if (!calendar.interMonthDays) return [];
-
+      
       return calendar.interMonthDays.filter(sd => {
         if (sd.dayType === 'fixed') {
           return true; // Fixed days always occur
@@ -1814,142 +1858,10 @@ const Chronicle = (() => {
       });
     },
 
-    // Position of a special day among those sharing its slot this year (0 = first)
-    getSpecialDayIndex: (sd, year, calendar) => {
-      return DateUtils.getSpecialDaysForYear(year, calendar)
-        .filter(d => d.position && d.position.afterMonth === sd.position.afterMonth && d.position.afterDay === sd.position.afterDay)
-        .findIndex(d => d.id === sd.id);
-    },
-
-    // Item (event/note/weather) dated on a special day: match by ID, else by position for older items without one
-    itemOnSpecialDay: (dateRef, sd, year, calendar) => {
-      if (!dateRef || !sd || !sd.position || dateRef.isInterannual || dateRef.year !== year) return false;
-      if (dateRef.specialDayId) return dateRef.specialDayId === sd.id;
-      if (dateRef.month !== sd.position.afterMonth) return false;
-      const daysInMonth = DateUtils.getDaysInMonth(dateRef.month, year, calendar);
-      if (Number.isInteger(dateRef.day) && dateRef.day <= daysInMonth) return false; // a regular day of the month
-      const idx = DateUtils.getSpecialDayIndex(sd, year, calendar);
-      if (idx < 0) return false;
-      return Math.abs(dateRef.day - (sd.position.afterDay + 1 + idx * 0.01)) < 0.001;
-    },
-
-    // Item dated on a regular month day (not a special or interannual day)
-    itemOnRegularDate: (dateRef, date) => {
-      return !!dateRef && !dateRef.isInterannual && !dateRef.specialDayId &&
-        dateRef.year === date.year && dateRef.month === date.month && dateRef.day === date.day;
-    },
-
-    // Item matching for any featured date: special day, interannual day, or regular day
-    itemOnDate: (dateRef, date, calendar) => {
-      if (!dateRef || !date) return false;
-      if (date.isInterannual) {
-        return dateRef.isInterannual === true && dateRef.year === date.year &&
-          dateRef.position === date.position && dateRef.order === date.order;
-      }
-      let sd = date.specialDayId ? (calendar.interMonthDays || []).find(d => d.id === date.specialDayId) : null;
-      if (!sd && date.month) {
-        // A date without an ID can still point at a special day (e.g. an older saved "Today")
-        sd = DateUtils.getSpecialDaysForYear(date.year, calendar)
-          .find(d => DateUtils.itemOnSpecialDay(date, d, date.year, calendar));
-      }
-      if (sd) return DateUtils.itemOnSpecialDay(dateRef, sd, date.year, calendar);
-      return DateUtils.itemOnRegularDate(dateRef, date);
-    },
-
-    // Day of year counting month days only (plus beginning interannual days); special days take the day before
-    getDayOfYear: (date, calendar) => {
-      if (date.isInterannual) return DateUtils.getAbsDayOfInterannualDay(date.position, date.order, calendar);
-      let dayOfYear = DateUtils.countInterannualDaysAtBeginning(calendar);
-      for (let m = 1; m < date.month; m++) {
-        dayOfYear += DateUtils.getDaysInMonth(m, date.year, calendar);
-      }
-      const sd = date.specialDayId ? (calendar.interMonthDays || []).find(d => d.id === date.specialDayId) : null;
-      if (sd && sd.position) {
-        dayOfYear += sd.position.afterDay;
-      } else {
-        dayOfYear += Math.min(Math.floor(date.day), DateUtils.getDaysInMonth(date.month, date.year, calendar));
-      }
-      return dayOfYear;
-    },
-
-    // Equinox/solstice days; wraps past the end of the year
-    getSeasonPoints: (calendar) => {
-      const n = calendar.daysInYear || 365;
-      const vernal = (calendar.seasons && calendar.seasons.vernalEquinox) || 80;
-      const wrap = (d) => ((d - 1) % n + n) % n + 1;
-      return {
-        spring: wrap(vernal),
-        summer: wrap(vernal + Math.floor(n / 4)),
-        autumn: wrap(vernal + Math.floor(n / 2)),
-        winter: wrap(vernal + Math.floor(3 * n / 4))
-      };
-    },
-
-    // Whether equinox/solstice markers show on days (missing setting = shown)
-    seasonMarkersEnabled: (calendar) => !(calendar.seasons && calendar.seasons.showMarkers === false),
-
-    // Equinox/solstice names falling on a date (not on intercalary special days)
-    getSeasonMarkers: (date, calendar) => {
-      if (!date || date.specialDayId || !DateUtils.seasonMarkersEnabled(calendar)) return [];
-      if (!date.isInterannual) {
-        if (!Number.isInteger(date.day) || date.day > DateUtils.getDaysInMonth(date.month, date.year, calendar)) return [];
-      }
-      const doy = DateUtils.getDayOfYear(date, calendar);
-      const p = DateUtils.getSeasonPoints(calendar);
-      const names = [];
-      if (doy === p.spring) names.push('Spring Equinox');
-      if (doy === p.summer) names.push('Summer Solstice');
-      if (doy === p.autumn) names.push('Autumn Equinox');
-      if (doy === p.winter) names.push('Winter Solstice');
-      return names;
-    },
-
-    // Date for a day of year in a given year (inverse of getDayOfYear for regular and interannual days)
-    dayOfYearToDate: (dayOfYear, year, calendar) => {
-      const beginning = DateUtils.getInterannualDaysAtPosition('beginning', calendar);
-      if (dayOfYear <= beginning.length) {
-        const d = beginning[dayOfYear - 1];
-        return d ? { year, isInterannual: true, position: 'beginning', order: d.order } : null;
-      }
-      let remaining = dayOfYear - beginning.length;
-      for (let m = 1; m <= calendar.months.length; m++) {
-        const dim = DateUtils.getDaysInMonth(m, year, calendar);
-        if (remaining <= dim) return { year, month: m, day: remaining };
-        remaining -= dim;
-      }
-      const ending = DateUtils.getInterannualDaysAtPosition('end', calendar);
-      const d = ending[remaining - 1];
-      return d ? { year, isInterannual: true, position: 'end', order: d.order } : null;
-    },
-
-    // Season for a day of year; each season starts on its equinox/solstice
-    getSeason: (dayOfYear, calendar) => {
-      const n = calendar.daysInYear || 365;
-      const vernal = (calendar.seasons && calendar.seasons.vernalEquinox) || 80;
-      const offset = ((dayOfYear - vernal) % n + n) % n;
-      if (offset < Math.floor(n / 4)) return 'spring';
-      if (offset < Math.floor(n / 2)) return 'summer';
-      if (offset < Math.floor(3 * n / 4)) return 'autumn';
-      return 'winter';
-    },
-
-    // "Ches 19" style label for a day of year (base year, no leap days)
-    dayOfYearLabel: (dayOfYear, calendar) => {
-      const beginning = DateUtils.getInterannualDaysAtPosition('beginning', calendar);
-      if (dayOfYear <= beginning.length) return beginning[dayOfYear - 1] ? beginning[dayOfYear - 1].name : '';
-      let remaining = dayOfYear - beginning.length;
-      for (const m of calendar.months) {
-        if (remaining <= m.days) return `${m.name} ${remaining + beginning.length}`;
-        remaining -= m.days;
-      }
-      const ending = DateUtils.getInterannualDaysAtPosition('end', calendar);
-      return ending[remaining - 1] ? ending[remaining - 1].name : '';
-    },
-
     // Get special days that occur after a specific date
     getSpecialDaysAfterDate: (month, day, year, calendar) => {
       const specialDays = DateUtils.getSpecialDaysForYear(year, calendar);
-
+      
       return specialDays.filter(sd => {
         if (!sd.position) return false;
         // Check if special day comes after this month/day
@@ -1962,18 +1874,18 @@ const Chronicle = (() => {
     // Check if a date is a special day (occurs AFTER the position day)
     isSpecialDay: (month, day, year, calendar) => {
       const specialDays = DateUtils.getSpecialDaysForYear(year, calendar);
-
+      
       return specialDays.find(sd => {
         if (!sd.position) return false;
         // Special day occurs the day AFTER position.afterDay
         if (sd.position.afterMonth !== month) return false;
-
+        
         // For "part of week" special days, they occur on afterDay + 1
         // For "between weeks" they're shown separately in grid
         if (!sd.breaksWeekCycle) {
           return day === sd.position.afterDay + 1;
         }
-
+        
         return false;
       });
     },
@@ -1985,7 +1897,7 @@ const Chronicle = (() => {
 
       // Calculate absolute day values using the same logic as timeline sorting
       let fromAbsDay, toAbsDay;
-
+      
       if (fromDate.isInterannual) {
         let yearDays = 0;
         if (fromDate.year > 1) {
@@ -1998,7 +1910,7 @@ const Chronicle = (() => {
         const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
         fromAbsDay = DateUtils.toAbsoluteDay(fromDate, calendar) + beginningInterannualCount;
       }
-
+      
       if (toDate.isInterannual) {
         let yearDays = 0;
         if (toDate.year > 1) {
@@ -2011,26 +1923,26 @@ const Chronicle = (() => {
         const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
         toAbsDay = DateUtils.toAbsoluteDay(toDate, calendar) + beginningInterannualCount;
       }
-
+      
       let totalDays = Math.floor(toAbsDay - fromAbsDay);
       const isNegative = totalDays < 0;
       totalDays = Math.abs(totalDays);
-
+      
       let years = 0;
       let months = 0;
       let days = totalDays;
-
+      
       const daysInYear = DateUtils.getDaysInYear(fromDate.year || toDate.year, calendar);
       if (days >= daysInYear) {
         years = Math.floor(days / daysInYear);
         days = days % daysInYear;
       }
-
+      
       if (days >= 30) {
         months = Math.floor(days / 30);
         days = days % 30;
       }
-
+      
       return { years: years, months: months, days: days, isNegative: isNegative, isFirstOfYear: false };
     },
 
@@ -2053,7 +1965,7 @@ const Chronicle = (() => {
       // Since fullDayRef is when the moon WAS full, we need to offset by half a cycle
       let phase = cyclePosition / moon.period;
       phase = (phase + 0.5) % 1; // Shift so full moon reference = 0.5
-
+      
       return phase;
     },
 
@@ -2063,51 +1975,26 @@ const Chronicle = (() => {
       if (color === undefined) color = 'yellow';
       if (moonName === undefined) moonName = '';
       if (showTooltip === undefined) showTooltip = false;
-
+      
       // Sprite sheet URL
       const spriteURL = 'https://files.d20.io/images/488065736/0YUajKyQKqwp_NAkiQZw2Q/original.webp?1779563627';
-
+      
       // Map color names to row indices (0-11)
       const colorMap = {
-        'yellow': 0,
-        '#f7d79c': 0, // default yellow
-        'red': 1,
-        '#ff0000': 1,
-        '#ff4500': 1,
-        '#ff6347': 1,
-        'green': 2,
-        '#00ff00': 2,
-        '#008000': 2,
-        'blue': 3,
-        '#0000ff': 3,
-        '#87ceeb': 3,
-        'cyan': 4,
-        '#00ffff': 4,
-        'orange': 5,
-        '#ffa500': 5,
-        '#d4af37': 5,
-        '#ffd700': 5,
-        'purple': 6,
-        '#800080': 6,
-        '#dda0dd': 6,
-        'tan': 7,
-        '#d2b48c': 7,
-        '#f0e68c': 7,
-        '#e8dcc4': 7,
-        'brown': 8,
-        '#8b4513': 8,
-        '#a0522d': 8,
-        'white': 9,
-        '#ffffff': 9,
-        '#f8f8ff': 9,
-        'gray': 10,
-        '#808080': 10,
-        '#c0c0c0': 10,
-        'dark': 11,
-        '#000000': 11,
-        '#2a2a2a': 11
+        'yellow': 0, '#f7d79c': 0, // default yellow
+        'red': 1, '#ff0000': 1, '#ff4500': 1, '#ff6347': 1,
+        'green': 2, '#00ff00': 2, '#008000': 2,
+        'blue': 3, '#0000ff': 3, '#87ceeb': 3,
+        'cyan': 4, '#00ffff': 4,
+        'orange': 5, '#ffa500': 5, '#d4af37': 5, '#ffd700': 5,
+        'purple': 6, '#800080': 6, '#dda0dd': 6,
+        'tan': 7, '#d2b48c': 7, '#f0e68c': 7, '#e8dcc4': 7,
+        'brown': 8, '#8b4513': 8, '#a0522d': 8,
+        'white': 9, '#ffffff': 9, '#f8f8ff': 9,
+        'gray': 10, '#808080': 10, '#c0c0c0': 10,
+        'dark': 11, '#000000': 11, '#2a2a2a': 11
       };
-
+      
       // Find closest color match
       let rowIndex = 0;
       const lowerColor = (color || '').toLowerCase();
@@ -2116,13 +2003,13 @@ const Chronicle = (() => {
       } else if (colorMap[color] !== undefined) {
         rowIndex = colorMap[color];
       }
-
+      
       // Map phase (0-1) to column index (0-7)
       // 0 = new, 0.125 = waxing crescent, 0.25 = first quarter, 0.375 = waxing gibbous
       // 0.5 = full, 0.625 = waning gibbous, 0.75 = last quarter, 0.875 = waning crescent
       let colIndex = Math.floor(phase * 8);
       if (colIndex >= 8) colIndex = 7; // Cap at 7
-
+      
       // Sprite sheet specs
       const sheetWidth = 512;
       const sheetHeight = 768;
@@ -2130,20 +2017,20 @@ const Chronicle = (() => {
       const rows = 12;
       const cellWidth = sheetWidth / cols; // 64px
       const cellHeight = sheetHeight / rows; // 64px
-
+      
       // Calculate display size
       const baseSize = 20;
       const actualSize = baseSize * Math.max(0.1, Math.min(1, size));
-
+      
       // Calculate background position (negative offsets to show the correct cell)
       const bgX = -(colIndex * actualSize);
       const bgY = -(rowIndex * actualSize);
-
+      
       // Scale the entire sprite sheet so each 64px cell becomes actualSize pixels
       // Sheet is 8 cols × 12 rows, so scaled sheet is (8*actualSize) × (12*actualSize)
       const scaledSheetWidth = cols * actualSize;
       const scaledSheetHeight = rows * actualSize;
-
+      
       // Create HTML with background sprite
       let html = '<span style="';
       html += 'display: inline-block; ';
@@ -2155,13 +2042,13 @@ const Chronicle = (() => {
       html += 'background-repeat: no-repeat; ';
       html += 'vertical-align: middle;';
       html += '"';
-
+      
       if (showTooltip && moonName) {
         html += ' title="' + moonName + '"';
       }
-
+      
       html += '></span>';
-
+      
       return html;
     },
 
@@ -2169,10 +2056,10 @@ const Chronicle = (() => {
       if (!moons || moons.length === 0) {
         return [];
       }
-
+      
       const visibleMoons = moons.filter(m => m.display !== false);
       const showTooltips = visibleMoons.length > 1;
-
+      
       const results = [];
       for (let i = 0; i < visibleMoons.length; i++) {
         const moon = visibleMoons[i];
@@ -2181,7 +2068,7 @@ const Chronicle = (() => {
           const size = moon.size || 1;
           const color = moon.color || 'yellow';
           const html = MoonPhaseCalculator.generateMoonHTML(phase, size, color, moon.name, showTooltips);
-
+          
           results.push({
             name: moon.name,
             phase: phase,
@@ -2191,7 +2078,7 @@ const Chronicle = (() => {
           log('Error generating moon phase for ' + moon.name + ': ' + e);
         }
       }
-
+      
       return results;
     }
 
@@ -2205,11 +2092,11 @@ const Chronicle = (() => {
   // ==================================================
   // Data Loader - Loads data from handouts with callbacks
   // ==================================================
-
+  
   const DataLoader = {
     loadAll: (callback) => {
       const calName = State.config().currentCalendar;
-
+      
       if (!calName) {
         // No calendar loaded
         callback({
@@ -2221,7 +2108,7 @@ const Chronicle = (() => {
         });
         return;
       }
-
+      
       const calHandout = HandoutManager.findHandout(calName);
       if (!calHandout) {
         Logger.error(`Calendar handout not found: ${calName}`);
@@ -2234,15 +2121,15 @@ const Chronicle = (() => {
         });
         return;
       }
-
+      
       // Load calendar with callback
       HandoutManager.getHandoutGMNotes(calHandout, (gmnotes) => {
         let calendar = null;
         let moons = [];
-
+        
         try {
           calendar = JSON.parse(gmnotes || '{}');
-
+          
           // Migration: ensure moons array exists
           if (!calendar.moons) {
             calendar.moons = [];
@@ -2251,11 +2138,11 @@ const Chronicle = (() => {
         } catch (e) {
           Logger.error(`Failed to parse calendar: ${e}`);
         }
-
+        
         // Load events with callback
-        const eventsName = HandoutManager.eventsHandoutName();
+        const eventsName = `${HANDOUT_PREFIX} Events: ${calName.replace(`${HANDOUT_PREFIX} Calendar: `, '')}`;
         const eventsHandout = HandoutManager.findHandout(eventsName);
-
+        
         if (!eventsHandout) {
           callback({
             calendar: calendar,
@@ -2266,12 +2153,12 @@ const Chronicle = (() => {
           });
           return;
         }
-
+        
         HandoutManager.getHandoutGMNotes(eventsHandout, (eventsNotes) => {
           let events = [];
           let notes = [];
           let weather = [];
-
+          
           try {
             const data = JSON.parse(eventsNotes || '{}');
             events = data.events || [];
@@ -2280,7 +2167,7 @@ const Chronicle = (() => {
           } catch (e) {
             Logger.error(`Failed to parse events: ${e}`);
           }
-
+          
           callback({
             calendar: calendar,
             events: events,
@@ -2300,12 +2187,12 @@ const Chronicle = (() => {
       const theme = State.config().theme;
 
       let content = '';
-
+      
       // Outer wrapper for entire handout background
       content += `<div style="${CSS_CURRENT.container}">`;
-
+      
       content += InterfaceRenderer.renderHeader(mode);
-
+      
       switch (mode) {
         case 'calendar':
           content += InterfaceRenderer.renderCalendarMode(data);
@@ -2342,25 +2229,25 @@ const Chronicle = (() => {
 
       let html = '<div style="' + CSS_CURRENT.header + 'padding: 10px; margin: -10px -10px 10px -10px;">';
       html += '<span style="font-size: 18px; font-weight: bold;">Chronicle</span>';
-
+      
       html += '<span style="float: right;">';
-
+      
       // Mode buttons (Calendar, Timeline)
       modes.forEach(m => {
         const style = m.key === currentMode ? CSS_CURRENT.button + 'font-weight: bold;' : CSS_CURRENT.button;
         html += Output.makeButton(m.label, `!chr --mode ${m.key}`, style);
       });
-
+      
       // Send to Chat button
       html += Output.makeButton('Send to Chat', `!chr --chat ${currentMode}`, CSS_CURRENT.button);
-
+      
       html += '<span style="margin: 0 8px;">|</span>';
-
+      
       // Design and Help buttons
       const designStyle = currentMode === 'design' ? CSS_CURRENT.button + 'font-weight: bold;' : CSS_CURRENT.button;
       html += Output.makeButton('Design', `!chr --mode design`, designStyle);
       html += Output.makeButton('?', '!chr --help', CSS_CURRENT.button);
-
+      
       html += '</span>'; // Close float:right span
       html += '</div>';
       return html;
@@ -2374,7 +2261,7 @@ const Chronicle = (() => {
 
       const viewingDate = State.config().viewingDate;
       const currentDate = State.config().currentDate;
-
+      
       let html = '<div style="padding: 10px;">';
 
       // Month navigation
@@ -2397,18 +2284,18 @@ const Chronicle = (() => {
       const currentDate = State.config().currentDate;
 
       let html = '<div style="text-align: center; margin: 10px 0; font-size: 16px; font-weight: bold;">';
-
+      
       // Previous controls
       html += Output.makeButton('◀◀◀', `!chr --prevyear`, CSS_CURRENT.button);
       html += Output.makeButton('◀◀', `!chr --prevmonth`, CSS_CURRENT.button);
       html += Output.makeButton('◀', `!chr --prevday`, CSS_CURRENT.button);
-
+      
       html += ` <span style="margin: 0 10px;">`;
-
+      
       // Day picker with direct query
       html += `<a style="${CSS_CURRENT.button}" href="!chr --jumptoday ?{Which day?|${currentDate.day}}">${currentDate.day}</a>`;
       html += ` `;
-
+      
       // Month picker with direct query (or simple link for single-month calendars)
       let monthButtonHref;
       if (calendar.months.length === 1) {
@@ -2419,26 +2306,26 @@ const Chronicle = (() => {
       }
       html += `<a style="${CSS_CURRENT.button}" href="${monthButtonHref}">${monthName}</a>`;
       html += ` `;
-
+      
       // Year picker with direct query
       html += `<a style="${CSS_CURRENT.button}" href="!chr --jumptoyear ?{Which year?|${viewingDate.year}}">${viewingDate.year}</a>`;
       html += `</span> `;
-
+      
       // Next controls
       html += Output.makeButton('▶', `!chr --nextday`, CSS_CURRENT.button);
       html += Output.makeButton('▶▶', `!chr --nextmonth`, CSS_CURRENT.button);
       html += Output.makeButton('▶▶▶', `!chr --nextyear`, CSS_CURRENT.button);
-
+      
       html += '</div>';
 
       // Featured Date (currently viewing) and Today (saved campaign date) display
       const currentMonth = calendar.months[currentDate.month - 1];
       const currentMonthName = currentMonth ? currentMonth.name : 'Unknown';
-
+      
       const todayDate = State.config().featuredDate || currentDate; // "Today" is the saved date
       const todayMonth = calendar.months[todayDate.month - 1];
       const todayMonthName = todayMonth ? todayMonth.name : 'Unknown';
-
+      
       html += `<div style="text-align: center; margin: 5px 0; font-size: 12px;">`;
       html += `<strong>Today:</strong> ${todayMonthName} ${todayDate.day}, ${todayDate.year} `;
       html += Output.makeButton('Go to Today', `!chr --gototoday`, CSS_CURRENT.buttonSmall);
@@ -2476,14 +2363,12 @@ const Chronicle = (() => {
         const beginningDays = DateUtils.getInterannualDaysAtPosition('beginning', calendar);
         for (const day of beginningDays) {
           html += '<tr>';
-          const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' :
-            CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' :
-            '#e4d4c0';
+          const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' : 
+                               CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : 
+                               '#e4d4c0';
           html += `<td colspan="${daysInWeek}" style="padding: 8px; text-align: left; background: ${specialDayBg}; border: 2px solid #6a6a6a; font-weight: bold; font-size: 13px; cursor: pointer; padding-left: 15px;">`;
           html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --viewinterannual ${viewingDate.year}|${day.position}|${day.order}">`;
           html += `<span style="${CSS_CURRENT.holiday}">${day.name}</span>`;
-          DateUtils.getSeasonMarkers({ year: viewingDate.year, isInterannual: true, position: day.position, order: day.order }, calendar)
-            .forEach(name => { html += ` <span style="${CSS_CURRENT.holiday} font-size: 10px; font-style: italic; font-weight: normal;">${name}</span>`; });
           html += `</a>`;
           html += `</td>`;
           html += '</tr>';
@@ -2492,9 +2377,9 @@ const Chronicle = (() => {
 
       // Get special days for this year that break the week cycle (between weeks intercalary days)
       const specialDaysThisYear = DateUtils.getSpecialDaysForYear(viewingDate.year, calendar);
-      const betweenWeeksSpecialDays = specialDaysThisYear.filter(sd =>
-        sd.breaksWeekCycle &&
-        sd.position &&
+      const betweenWeeksSpecialDays = specialDaysThisYear.filter(sd => 
+        sd.breaksWeekCycle && 
+        sd.position && 
         sd.position.afterMonth === viewingDate.month
       );
 
@@ -2502,9 +2387,9 @@ const Chronicle = (() => {
       const specialDaysBeforeMonth = betweenWeeksSpecialDays.filter(sd => sd.position.afterDay === 0);
       specialDaysBeforeMonth.forEach(sd => {
         html += '<tr>';
-        const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' :
-          CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' :
-          '#e4d4c0';
+        const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' : 
+                             CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : 
+                             '#e4d4c0';
         html += `<td colspan="${daysInWeek}" style="padding: 8px; text-align: left; background: ${specialDayBg}; border: 2px solid #6a6a6a; font-weight: bold; font-size: 13px; cursor: pointer; padding-left: 15px;">`;
         html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --setspecialday ${viewingDate.year}|${sd.id}">`;
         html += `<span style="${CSS_CURRENT.holiday}">${sd.name}</span>`;
@@ -2525,7 +2410,7 @@ const Chronicle = (() => {
           if (dayCounter < firstWeekday) {
             // Days from previous month
             const prevDate = InterfaceRenderer.getPreviousMonthDay(
-              viewingDate,
+              viewingDate, 
               firstWeekday - dayCounter,
               calendar
             );
@@ -2555,8 +2440,8 @@ const Chronicle = (() => {
         const lastDayRendered = dayNum - 1;
         const specialDaysAfterThisWeek = betweenWeeksSpecialDays.filter(sd => {
           // Find special days where afterDay is within the range of days just rendered
-          return sd.position.afterDay > (lastDayRendered - daysInWeek) &&
-            sd.position.afterDay <= lastDayRendered;
+          return sd.position.afterDay > (lastDayRendered - daysInWeek) && 
+                 sd.position.afterDay <= lastDayRendered;
         });
 
         // Sort by afterDay to show in correct order
@@ -2567,17 +2452,30 @@ const Chronicle = (() => {
           html += '<tr>';
           // Theme-aware background color (slightly lighter than calendar cells)
           const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' : // dark theme
-            CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : // light theme
-            '#e4d4c0'; // fantasy theme
+                               CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : // light theme
+                               '#e4d4c0'; // fantasy theme
           html += `<td colspan="${daysInWeek}" style="padding: 8px; text-align: left; background: ${specialDayBg}; border: 2px solid #6a6a6a; font-weight: bold; font-size: 13px; cursor: pointer; padding-left: 15px;">`;
           html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --setspecialday ${viewingDate.year}|${sd.id}">`;
           html += `<div>`;
           html += `<span style="${CSS_CURRENT.holiday}">${sd.name}</span>`;
-
+          
           // Get events and notes for this special day
-          const sdEvents = data.events.filter(e => DateUtils.itemOnSpecialDay(e.dateRef, sd, viewingDate.year, calendar));
-          const sdNotes = data.notes.filter(n => DateUtils.itemOnSpecialDay(n.dateRef, sd, viewingDate.year, calendar));
-
+          const specialDayDate = {
+            year: viewingDate.year,
+            month: sd.position.afterMonth,
+            day: sd.position.afterDay + 1
+          };
+          const sdEvents = data.events.filter(e => 
+            e.dateRef.year === specialDayDate.year && 
+            e.dateRef.month === specialDayDate.month && 
+            e.dateRef.day === specialDayDate.day
+          );
+          const sdNotes = data.notes.filter(n => 
+            n.dateRef.year === specialDayDate.year && 
+            n.dateRef.month === specialDayDate.month && 
+            n.dateRef.day === specialDayDate.day
+          );
+          
           // Show events/notes if any
           if (sdEvents.length > 0 || sdNotes.length > 0) {
             html += '<div style="font-size: 11px; margin-top: 5px; font-weight: normal;">';
@@ -2589,7 +2487,7 @@ const Chronicle = (() => {
             });
             html += '</div>';
           }
-
+          
           html += `</div>`;
           html += `</a>`;
           html += `</td>`;
@@ -2609,15 +2507,15 @@ const Chronicle = (() => {
           shownSpecialDayIds.add(sd.id);
         }
       });
-
-      const specialDaysAfterMonth = betweenWeeksSpecialDays.filter(sd =>
+      
+      const specialDaysAfterMonth = betweenWeeksSpecialDays.filter(sd => 
         sd.position.afterDay >= daysInMonth && !shownSpecialDayIds.has(sd.id)
       );
       specialDaysAfterMonth.forEach(sd => {
         html += '<tr>';
-        const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' :
-          CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' :
-          '#e4d4c0';
+        const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' : 
+                             CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : 
+                             '#e4d4c0';
         html += `<td colspan="${daysInWeek}" style="padding: 8px; text-align: left; background: ${specialDayBg}; border: 2px solid #6a6a6a; font-weight: bold; font-size: 13px; cursor: pointer; padding-left: 15px;">`;
         html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --setspecialday ${viewingDate.year}|${sd.id}">`;
         html += `<span style="${CSS_CURRENT.holiday}">${sd.name}</span>`;
@@ -2631,14 +2529,12 @@ const Chronicle = (() => {
         const endingDays = DateUtils.getInterannualDaysAtPosition('end', calendar);
         for (const day of endingDays) {
           html += '<tr>';
-          const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' :
-            CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' :
-            '#e4d4c0';
+          const specialDayBg = CSS_CURRENT.calendarDay.includes('2d2d2d') ? '#3d3d3d' : 
+                               CSS_CURRENT.calendarDay.includes('eeeeee') ? '#d8d8d8' : 
+                               '#e4d4c0';
           html += `<td colspan="${daysInWeek}" style="padding: 8px; text-align: left; background: ${specialDayBg}; border: 2px solid #6a6a6a; font-weight: bold; font-size: 13px; cursor: pointer; padding-left: 15px;">`;
           html += `<a style="text-decoration: none; color: inherit; display: block;" href="!chr --viewinterannual ${viewingDate.year}|${day.position}|${day.order}">`;
           html += `<span style="${CSS_CURRENT.holiday}">${day.name}</span>`;
-          DateUtils.getSeasonMarkers({ year: viewingDate.year, isInterannual: true, position: day.position, order: day.order }, calendar)
-            .forEach(name => { html += ` <span style="${CSS_CURRENT.holiday} font-size: 10px; font-style: italic; font-weight: normal;">${name}</span>`; });
           html += `</a>`;
           html += `</td>`;
           html += '</tr>';
@@ -2653,33 +2549,45 @@ const Chronicle = (() => {
       const CSS_CURRENT = getCSS();
       const currentDate = State.config().currentDate;
       const verboseMode = State.config().verboseCalendar || false;
-      const isToday = !otherMonth &&
-        date.year === currentDate.year &&
-        date.month === currentDate.month &&
-        date.day === currentDate.day;
-
-      let style = otherMonth ? CSS_CURRENT.calendarDayOtherMonth :
-        isToday ? CSS_CURRENT.calendarDayToday :
-        CSS_CURRENT.calendarDay;
-
+      const isToday = !otherMonth && 
+                      date.year === currentDate.year && 
+                      date.month === currentDate.month && 
+                      date.day === currentDate.day;
+      
+      let style = otherMonth ? CSS_CURRENT.calendarDayOtherMonth : 
+                  isToday ? CSS_CURRENT.calendarDayToday : 
+                  CSS_CURRENT.calendarDay;
+      
       const moons = data.moons;
       const holidays = InterfaceRenderer.getHolidaysForDate(date, calendar);
       const weatherCache = data.weather;
-      const events = data.events.filter(e => DateUtils.itemOnRegularDate(e.dateRef, date));
-      const notes = data.notes.filter(n => DateUtils.itemOnRegularDate(n.dateRef, date));
-
+      const events = data.events.filter(e => 
+        e.dateRef.year === date.year && 
+        e.dateRef.month === date.month && 
+        e.dateRef.day === date.day
+      );
+      const notes = data.notes.filter(n => 
+        n.dateRef.year === date.year && 
+        n.dateRef.month === date.month && 
+        n.dateRef.day === date.day
+      );
+      
       // Find weather for this date
-      const weatherForDate = weatherCache.find(w => DateUtils.itemOnRegularDate(w.dateRef, date));
+      const weatherForDate = weatherCache.find(w =>
+        w.dateRef.year === date.year &&
+        w.dateRef.month === date.month &&
+        w.dateRef.day === date.day
+      );
 
       let html = `<td style="${style}">`;
       html += `<a style="display: block; text-decoration: none; color: inherit; width: 100%; height: inherit; overflow: hidden;" href="!chr --viewdate ${date.year}|${date.month}|${date.day}">`;
-
+      
       // Weather emoji (float right at top)
       if (weatherForDate) {
         const weatherEmoji = weatherForDate.emoji || WeatherGenerator.getWeatherEmoji(weatherForDate.description);
         html += `<div style="${CSS_CURRENT.emojiCircle}">${weatherEmoji}</div>`;
       }
-
+      
       // Date number - offset by beginning interannual days to show day-of-year
       const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
       const displayDay = date.day + beginningInterannualCount;
@@ -2703,11 +2611,6 @@ const Chronicle = (() => {
         html += holidays[0].name; // Show first holiday only
         html += '</div>';
       }
-
-      // Equinox/solstice markers
-      DateUtils.getSeasonMarkers(date, calendar).forEach(name => {
-        html += `<div style="font-size: 10px; font-style: italic; margin-top: 2px; clear: both; ${CSS_CURRENT.holiday}">${name}</div>`;
-      });
 
       // Special Days (if "part of week" type)
       const specialDay = DateUtils.isSpecialDay(date.month, date.day, date.year, calendar);
@@ -2779,8 +2682,13 @@ const Chronicle = (() => {
     },
 
     getHolidaysForDate: (date, calendar) => {
-      // Relative holidays are not implemented; holidayOnDate returns false for them
-      return (calendar.holidays || []).filter(h => DateUtils.holidayOnDate(h, date));
+      return calendar.holidays.filter(h => {
+        if (h.type === 'absolute') {
+          return h.dateRef.month === date.month && h.dateRef.day === date.day;
+        }
+        // TODO: Handle relative dates
+        return false;
+      });
     },
 
     renderDayDetails: (date, calendar, data) => {
@@ -2798,20 +2706,84 @@ const Chronicle = (() => {
         );
       }
 
-      // Items on this date (regular, special, or interannual day)
-      const events = data.events.filter(e => DateUtils.itemOnDate(e.dateRef, date, calendar));
-      const notes = data.notes.filter(n => DateUtils.itemOnDate(n.dateRef, date, calendar));
-      const weather = data.weather.find(w => DateUtils.itemOnDate(w.dateRef, date, calendar));
+      // Filter events and notes - handle both regular and interannual dates
+      const events = data.events.filter(e => {
+        if (isInterannual) {
+          return e.dateRef.year === date.year && 
+                 e.dateRef.isInterannual === true &&
+                 e.dateRef.position === date.position &&
+                 e.dateRef.order === date.order;
+        } else {
+          return e.dateRef.year === date.year && 
+                 e.dateRef.month === date.month && 
+                 e.dateRef.day === date.day;
+        }
+      });
 
+      const notes = data.notes.filter(n => {
+        if (isInterannual) {
+          return n.dateRef.year === date.year && 
+                 n.dateRef.isInterannual === true &&
+                 n.dateRef.position === date.position &&
+                 n.dateRef.order === date.order;
+        } else {
+          return n.dateRef.year === date.year && 
+                 n.dateRef.month === date.month && 
+                 n.dateRef.day === date.day;
+        }
+      });
+
+      const weather = data.weather.find(w => {
+        if (isInterannual) {
+          return w.dateRef.year === date.year &&
+                 w.dateRef.isInterannual === true &&
+                 w.dateRef.position === date.position &&
+                 w.dateRef.order === date.order;
+        } else {
+          return w.dateRef.year === date.year &&
+                 w.dateRef.month === date.month &&
+                 w.dateRef.day === date.day;
+        }
+      });
+
+      // Calculate day of year and month name (handles both regular and interannual)
+      let dayOfYear = 0;
       let monthName = '';
-      if (!isInterannual) {
+      
+      if (isInterannual) {
+        dayOfYear = DateUtils.getAbsDayOfInterannualDay(date.position, date.order, calendar);
+        monthName = ''; // Not applicable for interannual days
+      } else {
         const month = calendar.months[date.month - 1];
         monthName = month ? month.name : 'Unknown';
+        // Calculate day of year (1-based, counting from month 1 day 1)
+        const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
+        for (let m = 1; m < date.month; m++) {
+          dayOfYear += DateUtils.getDaysInMonth(m, date.year, calendar);
+        }
+        dayOfYear += beginningInterannualCount + date.day;
       }
 
-      const dayOfYear = DateUtils.getDayOfYear(date, calendar);
       const daysInYear = DateUtils.getDaysInYear(date.year, calendar);
-      const season = DateUtils.getSeason(dayOfYear, calendar);
+      const vernal = calendar.seasons.vernalEquinox || 80; // Default to day 80 if not set
+      const seasonOffset = Math.floor(daysInYear / 12); // 1/12 of year before equinox/solstice
+      
+      // Calculate season boundaries (starting 1/12 year before each equinox/solstice)
+      const springStart = vernal - seasonOffset;
+      const summerStart = vernal + Math.floor(daysInYear / 4) - seasonOffset;
+      const autumnStart = vernal + Math.floor(daysInYear / 2) - seasonOffset;
+      const winterStart = vernal + Math.floor(3 * daysInYear / 4) - seasonOffset;
+      
+      let season = 'winter';
+      if (dayOfYear >= springStart && dayOfYear < summerStart) {
+        season = 'spring';
+      } else if (dayOfYear >= summerStart && dayOfYear < autumnStart) {
+        season = 'summer';
+      } else if (dayOfYear >= autumnStart && dayOfYear < winterStart) {
+        season = 'autumn';
+      } else {
+        season = 'winter';
+      }
 
       let html = '<div style="margin-top: 20px; padding: 10px; background: var(--bg-secondary); border-radius: 5px;">';
 
@@ -2852,7 +2824,10 @@ const Chronicle = (() => {
       html += `<p style="font-size: 11px; color: var(--text-secondary);"><em>Season: ${season.charAt(0).toUpperCase() + season.slice(1)} (Day ${dayOfYear} of ${daysInYear})</em></p>`;
 
       // Holidays
-      const holidays = (calendar.holidays || []).filter(h => DateUtils.holidayOnDate(h, date));
+      const holidays = (calendar.holidays || []).filter(h => 
+        h.dateRef.month === date.month && 
+        h.dateRef.day === date.day
+      );
       if (holidays.length > 0) {
         html += '<div style="margin: 10px 0;"><strong>Holidays:</strong> ';
         holidays.forEach((h, idx) => {
@@ -2860,12 +2835,6 @@ const Chronicle = (() => {
           if (idx < holidays.length - 1) html += ', ';
         });
         html += '</div>';
-      }
-
-      // Equinox/solstice markers
-      const seasonMarkers = DateUtils.getSeasonMarkers(date, calendar);
-      if (seasonMarkers.length > 0) {
-        html += `<div style="margin: 10px 0;"><strong>Season:</strong> <span style="${CSS_CURRENT.holiday}">${seasonMarkers.join(', ')}</span></div>`;
       }
 
       // Special Days
@@ -2887,7 +2856,7 @@ const Chronicle = (() => {
         html += ` (${weather.temperature.value}°${weather.temperature.unit})`;
         html += Output.makeButton('Regenerate', `!chr --regenweather`, CSS_CURRENT.buttonSmall + `margin-left:10px;`);
         html += Output.makeButton('Clear Weather', `!chr --clearweather`, CSS_CURRENT.buttonSmall + `margin-left:5px;`);
-
+        
         // Custom weather button with emoji selection
         const weatherEmojis = [
           '☀️ Clear', '⛅ Partly Cloudy', '☁️ Cloudy', '🌤️ Hazy', '🌫️ Fog/Mist',
@@ -2903,9 +2872,9 @@ const Chronicle = (() => {
         }).join('|');
         weatherDropdown += '}|?{Weather Description}';
         weatherDropdown += `|?{Temperature|${weather.temperature.value}}`;
-
-        html += Output.makeButton('Custom',
-          `!chr --customweather ${weatherDropdown}`,
+        
+        html += Output.makeButton('Custom', 
+          `!chr --customweather ${weatherDropdown}`, 
           CSS_CURRENT.buttonSmall + `margin-left:5px;`);
         html += '</div>';
       }
@@ -2915,25 +2884,25 @@ const Chronicle = (() => {
         html += '<div style="margin: 10px 0;"><strong>Events:</strong><ul style="list-style-type: none; padding-left: 0;">';
         events.forEach((e, idx) => {
           html += `<li>`;
-
+          
           // Action buttons (always visible) with prepopulated content
           const escapedContent = e.content.replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
           html += Output.makeButton('Edit', `!chr --editevent ${e.id}|?{New content|${escapedContent}}`, CSS_CURRENT.buttonSmall);
           html += Output.makeButton('Delete', `!chr --deleteevent ${e.id}`, CSS_CURRENT.buttonSmall);
           html += `<a style="${CSS_CURRENT.buttonSmall}" href="!chr --convert ${e.id}|event">↔</a>`;
           html += `<a style="${CSS_CURRENT.buttonSmall}" href="!chr --moveevent ${e.id}|?{New Year|${date.year}}|?{New Month (1-${calendar.months.length})|${date.month}}|?{New Day|${date.day}}">Move</a>`;
-
+          
           // Content
           html += ` ${MarkdownParser.renderAsHtml(e.content, calendar, {featured: true})} `;
-
+          
           // Verbose mode: show creator, tag management, and tags
           if (verbose) {
             // Creator badge
             html += `<span style="${CSS_CURRENT.creator}">${e.createdBy}</span> `;
-
+            
             // Tag management buttons
             html += `<a style="${CSS_CURRENT.tagButton}" href="!chr --addtag ${e.id}|event|?{New tags (comma-separated)}">+</a>`;
-
+            
             // Build tag list for the Ⲷ button
             const allTags = TagSystem.getAllTags(data);
             if (allTags.length > 0) {
@@ -2942,7 +2911,7 @@ const Chronicle = (() => {
             } else {
               html += `<a style="${CSS_CURRENT.tagButton}" href="!chr --addtag ${e.id}|event|?{New tags (comma-separated)}">Ⲷ</a>`;
             }
-
+            
             // Display existing tags
             if (e.tags && e.tags.length > 0) {
               e.tags.forEach(tag => {
@@ -2950,7 +2919,7 @@ const Chronicle = (() => {
               });
             }
           }
-
+          
           html += '</li>';
         });
         html += '</ul></div>';
@@ -2961,25 +2930,25 @@ const Chronicle = (() => {
         html += '<div style="margin: 10px 0;"><strong>Notes:</strong><ul style="list-style-type: none; padding-left: 0;">';
         notes.forEach((n, idx) => {
           html += `<li>`;
-
+          
           // Action buttons (always visible) with prepopulated content
           const escapedContent = n.content.replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
           html += Output.makeButton('Edit', `!chr --editnote ${n.id}|?{New content|${escapedContent}}`, CSS_CURRENT.buttonSmall);
           html += Output.makeButton('Delete', `!chr --deletenote ${n.id}`, CSS_CURRENT.buttonSmall);
           html += `<a style="${CSS_CURRENT.buttonSmall}" href="!chr --convert ${n.id}|note">↔</a>`;
           html += `<a style="${CSS_CURRENT.buttonSmall}" href="!chr --movenote ${n.id}|?{New Year|${date.year}}|?{New Month (1-${calendar.months.length})|${date.month}}|?{New Day|${date.day}}">Move</a>`;
-
+          
           // Content
           html += ` ${MarkdownParser.renderAsHtml(n.content, calendar, {featured: true})} `;
-
+          
           // Verbose mode: show creator, tag management, and tags
           if (verbose) {
             // Creator badge
             html += `<span style="${CSS_CURRENT.creator}">${n.createdBy}</span> `;
-
+            
             // Tag management buttons
             html += `<a style="${CSS_CURRENT.tagButton}" href="!chr --addtag ${n.id}|note|?{New tags (comma-separated)}">+</a>`;
-
+            
             // Build tag list for the Ⲷ button
             const allTags = TagSystem.getAllTags(data);
             if (allTags.length > 0) {
@@ -2988,7 +2957,7 @@ const Chronicle = (() => {
             } else {
               html += `<a style="${CSS_CURRENT.tagButton}" href="!chr --addtag ${n.id}|note|?{New tags (comma-separated)}">Ⲷ</a>`;
             }
-
+            
             // Display existing tags
             if (n.tags && n.tags.length > 0) {
               n.tags.forEach(tag => {
@@ -2996,7 +2965,7 @@ const Chronicle = (() => {
               });
             }
           }
-
+          
           html += '</li>';
         });
         html += '</ul></div>';
@@ -3011,7 +2980,7 @@ const Chronicle = (() => {
       const calendar = data.calendar || DataModels.createCalendar('New Calendar');
 
       let html = '<div style="padding: 10px;">';
-
+      
       // Theme Controls (on separate line)
       const themes = [
         { key: 'light', label: '☀️ Light', value: 'light' },
@@ -3019,7 +2988,7 @@ const Chronicle = (() => {
         { key: 'fantasy', label: '📜 Fantasy', value: 'fantasy' }
       ];
       const currentTheme = State.config().theme || 'dark';
-
+      
       html += '<div style="margin-bottom: 15px; text-align: right;">';
       html += '<strong>Theme Controls:</strong> ';
       themes.forEach(t => {
@@ -3027,14 +2996,14 @@ const Chronicle = (() => {
         html += Output.makeButton(t.label, `!chr --theme ${t.value}`, style);
       });
       html += '</div>';
-
-      html += '<div style="font-size: 1.5em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 15px 0 10px 0;">Calendar Design</div>';
+      
+      html += '<h2 style="color: ' + CSS_CURRENT.headerColor + ';">Calendar Design</h2>';
 
       // Calendar selection
       html += '<div style="margin: 20px 0;">';
       html += '<strong>Active Calendar:</strong> ' + (calendar.name || 'None');
       html += '<div style="margin-top: 5px;">';
-
+      
       // Built-in calendars
       html += Output.makeButton('Load Gregorian', `!chr --loadcal gregorian`, CSS_CURRENT.button);
       html += Output.makeButton('Load Absalom', `!chr --loadcal absalom`, CSS_CURRENT.button);
@@ -3042,24 +3011,31 @@ const Chronicle = (() => {
       html += Output.makeButton('Load Greyhawk', `!chr --loadcal greyhawk`, CSS_CURRENT.button);
       html += Output.makeButton('Load Eberron', `!chr --loadcal eberron`, CSS_CURRENT.button);
       html += Output.makeButton('Load Traveller', `!chr --loadcal traveller`, CSS_CURRENT.button);
-
+      
       // Find all custom calendar handouts
       const allHandouts = findObjs({ type: 'handout' });
-      const presetCalendarNames = PRESET_CALENDAR_NAMES.map(n => HANDOUT_PREFIX + ' Calendar: ' + n);
-
+      const presetCalendarNames = [
+        HANDOUT_PREFIX + ' Calendar: Gregorian',
+        HANDOUT_PREFIX + ' Calendar: Absalom Reckoning',
+        HANDOUT_PREFIX + ' Calendar: Faerun',
+        HANDOUT_PREFIX + ' Calendar: Greyhawk',
+        HANDOUT_PREFIX + ' Calendar: Eberron',
+        HANDOUT_PREFIX + ' Calendar: Traveller'
+      ];
+      
       const customCalendars = allHandouts.filter(h => {
         const name = h.get('name');
-        return name.startsWith(HANDOUT_PREFIX + ' Calendar:') &&
-          !presetCalendarNames.includes(name);
+        return name.startsWith(HANDOUT_PREFIX + ' Calendar:') && 
+               !presetCalendarNames.includes(name);
       });
-
+      
       // Add button for each custom calendar
       customCalendars.forEach(h => {
         const fullName = h.get('name');
         const calName = fullName.replace(HANDOUT_PREFIX + ' Calendar: ', '');
         html += Output.makeButton('Load ' + calName, '!chr --loadcal ' + calName, CSS_CURRENT.button);
       });
-
+      
       html += '<a style="' + CSS_CURRENT.button + '" href="!chr --createnewcal ?{Calendar Name|New Calendar}">New Calendar</a>';
       html += '</div>';
       html += '</div>';
@@ -3079,7 +3055,7 @@ const Chronicle = (() => {
 
       // Basic settings
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Basic Settings</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Basic Settings</h3>';
       html += `<p><strong>Calendar Name:</strong> ${calendar.name} `;
       html += Output.makeButton('Edit', `!chr --savename ?{Calendar Name|${calendar.name}}`, CSS_CURRENT.buttonSmall);
       html += '</p>';
@@ -3093,7 +3069,7 @@ const Chronicle = (() => {
 
       // Months
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Months</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Months</h3>';
       if (calendar.months.length === 0) {
         html += '<p><em>No months defined</em></p>';
       } else {
@@ -3105,27 +3081,23 @@ const Chronicle = (() => {
           html += `<td style="${CSS_CURRENT.tableCell}">${m.name}</td>`;
           html += `<td style="${CSS_CURRENT.tableCell}">${m.days}</td>`;
           html += `<td style="${CSS_CURRENT.tableCell}">`;
-
+          
           // Up arrow (disabled for first item)
           if (idx > 0) {
             html += Output.makeButton('↑', `!chr --movemonth ${idx}|up`, CSS_CURRENT.buttonSmall);
           } else {
             html += `<span style="${CSS_CURRENT.buttonSmall} opacity: 0.3; cursor: default;">↑</span>`;
           }
-
+          
           // Down arrow (disabled for last item)
           if (idx < calendar.months.length - 1) {
             html += Output.makeButton('↓', `!chr --movemonth ${idx}|down`, CSS_CURRENT.buttonSmall);
           } else {
             html += `<span style="${CSS_CURRENT.buttonSmall} opacity: 0.3; cursor: default;">↓</span>`;
           }
-
+          
           html += Output.makeButton('Edit', `!chr --updatemonth ${idx}|?{Month Name|${m.name}}|?{Days|${m.days}}`, CSS_CURRENT.buttonSmall);
-          const laterMonths = calendar.months.length - 1 - idx;
-          const delWarning = laterMonths > 0 ?
-            `Delete ${m.name}? The ${laterMonths} month(s) after it each move up one slot. Existing events and notes and weather and holidays and special days dated in those months will then fall in a different month. This cannot be undone.` :
-            `Delete ${m.name}? Existing events and notes and weather and holidays dated in this month will no longer have a valid date. This cannot be undone.`;
-          html += Output.makeButton('Delete', `!chr --delmonth ${idx}|?{${delWarning}|No|Yes}`, CSS_CURRENT.buttonSmall);
+          html += Output.makeButton('Delete', `!chr --delmonth ${idx}`, CSS_CURRENT.buttonSmall);
           html += '</td>';
           html += '</tr>';
         });
@@ -3138,7 +3110,7 @@ const Chronicle = (() => {
 
       // Weekday names
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Weekday Names</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Weekday Names</h3>';
       html += '<p>' + calendar.weeks.weekdayNames.join(', ') + '</p>';
       const weekdayStr = calendar.weeks.weekdayNames.join(',');
       html += Output.makeButton('Edit Weekdays', `!chr --saveweekdays ?{Weekday Names (comma-separated)|${weekdayStr}}`, CSS_CURRENT.button);
@@ -3146,7 +3118,7 @@ const Chronicle = (() => {
 
       // Holidays
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Holidays</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Holidays</h3>';
       if (!calendar.holidays || calendar.holidays.length === 0) {
         html += '<p><em>No holidays defined</em></p>';
       } else {
@@ -3158,7 +3130,6 @@ const Chronicle = (() => {
           html += `<td style="${CSS_CURRENT.tableCell}">`;
           if (h.type === 'absolute') {
             html += `${h.dateRef.month}/${h.dateRef.day}`;
-            if (h.recurring === false && Number.isInteger(h.year)) html += `/${h.year}`;
           } else {
             html += `Relative`;
           }
@@ -3166,16 +3137,15 @@ const Chronicle = (() => {
           html += `<td style="${CSS_CURRENT.tableCell}">${h.description || '<em>None</em>'}</td>`;
           html += `<td style="${CSS_CURRENT.tableCell}">${h.recurring ? 'Yes' : 'No'}</td>`;
           html += `<td style="${CSS_CURRENT.tableCell}">`;
-
+          
           // Edit button - edit all fields
           const escapedName = h.name.replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
           const escapedDesc = (h.description || '').replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
-          const recurringDefault = h.recurring === false ? 'No' : 'Yes';
-          const yearDefault = Number.isInteger(h.year) ? h.year : (State.config().currentDate || { year: 1 }).year;
-          html += Output.makeButton('Edit',
-            `!chr --editholiday ${idx}|?{Holiday Name|${escapedName}}|?{Month (1-${calendar.months.length})|${h.dateRef.month}}|?{Day|${h.dateRef.day}}|?{Recurring?|${recurringDefault}|Yes|No}|?{Description|${escapedDesc}}|?{Year (used only if not recurring)|${yearDefault}}`,
+          const recurringDefault = h.recurring ? 'Yes' : 'No';
+          html += Output.makeButton('Edit', 
+            `!chr --editholiday ${idx}|?{Holiday Name|${escapedName}}|?{Month (1-12)|${h.dateRef.month}}|?{Day|${h.dateRef.day}}|?{Recurring?|${recurringDefault}|Yes|No}|?{Description|${escapedDesc}}`, 
             CSS_CURRENT.buttonSmall);
-
+          
           // Up/Down arrows
           if (idx > 0) {
             html += Output.makeButton('↑', `!chr --moveholiday ${idx}|up`, CSS_CURRENT.buttonSmall);
@@ -3187,7 +3157,7 @@ const Chronicle = (() => {
           } else {
             html += `<span style="${CSS_CURRENT.buttonSmall} opacity: 0.3; cursor: default;">↓</span>`;
           }
-
+          
           html += Output.makeButton('Delete', `!chr --deleteholiday ${idx}`, CSS_CURRENT.buttonSmall);
           html += '</td>';
           html += '</tr>';
@@ -3195,15 +3165,15 @@ const Chronicle = (() => {
         html += '</table>';
       }
       html += '<div style="margin-top: 5px;">';
-      html += Output.makeButton('Add Holiday',
-        `!chr --addholiday ?{Holiday Name}|?{Month (1-${calendar.months.length})}|?{Day}|?{Recurring?|Yes|No}|?{Description (optional)|}|?{Year (used only if not recurring)|${(State.config().currentDate || { year: 1 }).year}}`,
+      html += Output.makeButton('Add Holiday', 
+        `!chr --addholiday ?{Holiday Name}|?{Month (1-12)}|?{Day}|?{Recurring?|Yes|No}|?{Description (optional)||}`, 
         CSS_CURRENT.button);
       html += '</div>';
       html += '</div>';
 
       // Special Days
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Special Days</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Special Days</h3>';
       html += '<p style="font-size: 11px; font-style: italic;">Intercalary days (like Midsummer, leap days) that occur outside normal month/week structure</p>';
       const specialDays = calendar.interMonthDays || [];
       if (specialDays.length === 0) {
@@ -3232,28 +3202,28 @@ const Chronicle = (() => {
           html += `<td style="${CSS_CURRENT.tableCell}">${sd.breaksWeekCycle ? 'Between weeks' : 'Part of week'}</td>`;
           html += `<td style="${CSS_CURRENT.tableCell}">${sd.description || '<em>None</em>'}</td>`;
           html += `<td style="${CSS_CURRENT.tableCell}">`;
-
+          
           // Edit button - direct href
           const escapedName = sd.name.replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
           const escapedDesc = (sd.description || '').replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
-
+          
           const currentMonth = calendar.months[sd.position.afterMonth - 1];
           const monthList = calendar.months.map((m, idx) => {
             const num = idx + 1;
             return `${m.name},${num}`;
           }).join('|');
           const monthDefault = `${currentMonth.name},${sd.position.afterMonth}`;
-
+          
           const weekBehaviorDefault = sd.breaksWeekCycle ? 'Between weeks,betweenWeeks' : 'Part of week,partOfWeek';
-
+          
           let editQuery = `!chr --updatespecialday ${idx}|${sd.dayType}|?{Name|${escapedName}}|?{After Which Month?|${monthDefault}|${monthList}}|?{After Which Day?|${sd.position.afterDay}}|?{Week Behavior|${weekBehaviorDefault}|Part of week,partOfWeek|Between weeks,betweenWeeks}`;
-
+          
           if (sd.dayType === 'leap') {
             editQuery += `|?{Frequency|${sd.frequency}}|?{Offset|${sd.offset}}`;
           }
-
+          
           editQuery += `|?{Description|${escapedDesc}}`;
-
+          
           html += `<a style="${CSS_CURRENT.buttonSmall}" href="${editQuery}">Edit</a>`;
           html += Output.makeButton('Delete', `!chr --deletespecialday ${idx}`, CSS_CURRENT.buttonSmall);
           html += '</td>';
@@ -3262,26 +3232,26 @@ const Chronicle = (() => {
         html += '</table>';
       }
       html += '<div style="margin-top: 5px;">';
-
+      
       // Build month list for special day queries
       const monthList = calendar.months.map((m, idx) => `${m.name},${idx + 1}`).join('|');
-
+      
       // Fixed special day query
       const fixedQuery = `!chr --savespecialday fixed|?{Name}|?{After Which Month?|${monthList}}|?{After Which Day? (0=before month)}|?{Week Behavior|Part of week,partOfWeek|Between weeks,betweenWeeks}|?{Description (optional)|}`;
       html += `<a style="${CSS_CURRENT.button}" href="${fixedQuery}">Add Fixed Special Day</a>`;
-
+      
       // Leap special day query
       const leapQuery = `!chr --savespecialday leap|?{Name}|?{After Which Month?|${monthList}}|?{After Which Day? (0=before month)}|?{Week Behavior|Part of week,partOfWeek|Between weeks,betweenWeeks}|?{Every N years (frequency)|4}|?{Year offset|0}|?{Description (optional)|}`;
       html += `<a style="${CSS_CURRENT.button}" href="${leapQuery}">Add Leap Special Day</a>`;
-
+      
       html += '</div>';
       html += '</div>';
 
       // Interannual Days
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Interannual Days (Year Holidays)</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Interannual Days (Year Holidays)</h3>';
       const interannualDays = calendar.interannualDays || [];
-
+      
       if (interannualDays.length === 0) {
         html += '<p><em>No interannual days defined</em></p>';
       } else {
@@ -3292,40 +3262,40 @@ const Chronicle = (() => {
         html += '<td style="padding: 5px; border: 1px solid var(--border);">Name</td>';
         html += '<td style="padding: 5px; border: 1px solid var(--border);">Actions</td>';
         html += '</tr>';
-
+        
         interannualDays.forEach((day, idx) => {
           const escapedName = day.name.replace(/'/g, "\\'");
           const positionLabel = day.position === 'beginning' ? 'Beginning of Year' : 'End of Year';
-
+          
           html += '<tr>';
           html += `<td style="padding: 5px; border: 1px solid var(--border);">${positionLabel}</td>`;
           html += `<td style="padding: 5px; border: 1px solid var(--border);">${day.order}</td>`;
           html += `<td style="padding: 5px; border: 1px solid var(--border);">${day.name}</td>`;
           html += '<td style="padding: 5px; border: 1px solid var(--border);">';
-
+          
           // Up arrow (move earlier in position)
           if (idx > 0 && interannualDays[idx - 1].position === day.position) {
             html += Output.makeButton('↑', `!chr --moveinterannual ${idx}|up`, CSS_CURRENT.buttonSmall);
           }
-
+          
           // Down arrow (move later in position)
           if (idx < interannualDays.length - 1 && interannualDays[idx + 1].position === day.position) {
             html += Output.makeButton('↓', `!chr --moveinterannual ${idx}|down`, CSS_CURRENT.buttonSmall);
           }
-
+          
           // Edit button
           const editQuery = `!chr --updateinterannual ${idx}|?{Name|${escapedName}}`;
           html += `<a style="${CSS_CURRENT.buttonSmall}" href="${editQuery}">Edit</a>`;
-
+          
           // Delete button
           html += Output.makeButton('Delete', `!chr --deleteinterannual ${idx}`, CSS_CURRENT.buttonSmall);
           html += '</td>';
           html += '</tr>';
         });
-
+        
         html += '</table>';
       }
-
+      
       html += '<div style="margin-top: 5px;">';
       // Add Interannual Day query - embedded in button link
       const interannualQuery = `!chr --addinterannual ?{Name}|?{Position|beginning,end}`;
@@ -3333,7 +3303,7 @@ const Chronicle = (() => {
       html += '</div>';
       html += '</div>';
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Moons</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Moons</h3>';
       const moons = data.moons;
       if (!moons || moons.length === 0) {
         html += '<p><em>No moons defined</em></p>';
@@ -3347,12 +3317,12 @@ const Chronicle = (() => {
         html += '<td style="padding: 5px; border: 1px solid var(--border);">Visible</td>';
         html += '<td style="padding: 5px; border: 1px solid var(--border);">Actions</td>';
         html += '</tr>';
-
+        
         moons.forEach((m, idx) => {
           const size = m.size || 1;
           const color = m.color || 'yellow';
           const display = m.display !== false ? 'Yes' : 'No';
-
+          
           html += '<tr>';
           html += '<td style="padding: 5px; border: 1px solid var(--border);">' + m.name + '</td>';
           html += '<td style="padding: 5px; border: 1px solid var(--border);">' + m.period + 'd</td>';
@@ -3360,7 +3330,7 @@ const Chronicle = (() => {
           html += '<td style="padding: 5px; border: 1px solid var(--border);">' + color + '</td>';
           html += '<td style="padding: 5px; border: 1px solid var(--border);">' + display + '</td>';
           html += '<td style="padding: 5px; border: 1px solid var(--border);">';
-
+          
           // Up/Down arrows
           if (idx > 0) {
             html += Output.makeButton('↑', '!chr --movemoon ' + idx + '|up', CSS_CURRENT.buttonSmall);
@@ -3368,36 +3338,36 @@ const Chronicle = (() => {
           if (idx < moons.length - 1) {
             html += Output.makeButton('↓', '!chr --movemoon ' + idx + '|down', CSS_CURRENT.buttonSmall);
           }
-
-          html += Output.makeButton('Edit',
-            '!chr --updatemoon ' + idx + '|?{Moon Name|' + m.name + '}|?{Period|' + m.period + '}|?{Full Year|' + m.fullDayRef.year + '}|?{Full Month|' + m.fullDayRef.month + '}|?{Full Day|' + m.fullDayRef.day + '}|?{Size (0.1-1.0)|' + size + '}|?{Color|' + color + ',yellow|red,red|green,green|blue,blue|cyan,cyan|orange,orange|purple,purple|tan,tan|brown,brown|white,white|gray,gray|dark,dark}|?{Display on grid?|' + (m.display !== false ? 'true' : 'false') + ',true|false,false}',
+          
+          html += Output.makeButton('Edit', 
+            '!chr --updatemoon ' + idx + '|?{Moon Name|' + m.name + '}|?{Period|' + m.period + '}|?{Full Year|' + m.fullDayRef.year + '}|?{Full Month|' + m.fullDayRef.month + '}|?{Full Day|' + m.fullDayRef.day + '}|?{Size (0.1-1.0)|' + size + '}|?{Color|' + color + ',yellow|red,red|green,green|blue,blue|cyan,cyan|orange,orange|purple,purple|tan,tan|brown,brown|white,white|gray,gray|dark,dark}|?{Display on grid?|' + (m.display !== false ? 'true' : 'false') + ',true|false,false}', 
             CSS_CURRENT.buttonSmall);
           html += Output.makeButton('Delete', '!chr --delmoon ' + idx + '', CSS_CURRENT.buttonSmall);
-
+          
           html += '</td>';
           html += '</tr>';
         });
-
+        
         html += '</table>';
       }
-      html += Output.makeButton('Add Moon',
-        '!chr --savemoon ?{Moon Name}|?{Period in Days (decimals OK)|28}|?{Year when full|1}|?{Month when full|1}|?{Day when full|1}|?{Size (0.1-1.0)|1}|?{Color|yellow,yellow|red,red|green,green|blue,blue|cyan,cyan|orange,orange|purple,purple|tan,tan|brown,brown|white,white|gray,gray|dark,dark}|?{Display on grid?|true,true|false,false}',
+      html += Output.makeButton('Add Moon', 
+        '!chr --savemoon ?{Moon Name}|?{Period in Days (decimals OK)|28}|?{Year when full|1}|?{Month when full|1}|?{Day when full|1}|?{Size (0.1-1.0)|1}|?{Color|yellow,yellow|red,red|green,green|blue,blue|cyan,cyan|orange,orange|purple,purple|tan,tan|brown,brown|white,white|gray,gray|dark,dark}|?{Display on grid?|true,true|false,false}', 
         CSS_CURRENT.button);
       html += '</div>';
 
       // Climate
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Climate</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Climate</h3>';
       if (calendar.climate) {
         html += `<p><strong>${calendar.climate.climate_name}</strong> (${calendar.climate.koppen_code})</p>`;
         html += `<p><em>${calendar.climate.biome_hint}</em></p>`;
       } else {
         html += '<p><em>No climate set</em></p>';
       }
-      html += Output.makeButton('Set Climate',
-        `!chr --saveclimate ?{Latitude|tropical|subtropical|temperate|subarctic|polar}|?{Ocean Proximity|coastal|near_coastal|inland|continental}|?{Coast Type|west|east|none}|?{Elevation|lowland|highland|alpine}|?{Rainfall Pattern - If nearby mountains affect rainfall choose windward for the wetter side and leeward for the drier side otherwise choose neutral|windward|leeward|neutral}`,
+      html += Output.makeButton('Set Climate', 
+        `!chr --saveclimate ?{Latitude|tropical|subtropical|temperate|subarctic|polar}|?{Ocean Proximity|coastal|near_coastal|inland|continental}|?{Coast Type|west|east|none}|?{Elevation|lowland|highland|alpine}|?{Rainfall Pattern - If nearby mountains affect rainfall choose windward for the wetter side and leeward for the drier side otherwise choose neutral|windward|leeward|neutral}`, 
         CSS_CURRENT.button);
-
+      
       // Climate Override button with dropdown
       const climateOptions = [
         { code: 'Af', name: 'Tropical Rainforest', temp: 'Hot and humid year-round', precip: 'Heavy rainfall in all seasons', biome: 'Dense jungle - diverse wildlife' },
@@ -3418,73 +3388,70 @@ const Chronicle = (() => {
         { code: 'ET', name: 'Tundra', temp: 'Cold year-round', precip: 'Low precipitation', biome: 'Permafrost - mosses - lichens' },
         { code: 'EF', name: 'Ice Cap', temp: 'Extremely cold year-round', precip: 'Minimal precipitation', biome: 'Permanent ice and snow' }
       ];
-
+      
       let climateDropdown = '?{Choose a specific Climate|';
-      climateDropdown += climateOptions.map(c =>
+      climateDropdown += climateOptions.map(c => 
         `${c.code} ${c.name} - ${c.temp} - ${c.precip} - ${c.biome},${c.code}`
       ).join('|');
       climateDropdown += '}';
-
-      html += Output.makeButton('Override Climate',
-        `!chr --overrideclimate ${climateDropdown}`,
+      
+      html += Output.makeButton('Override Climate', 
+        `!chr --overrideclimate ${climateDropdown}`, 
         CSS_CURRENT.buttonSmall);
-
+      
       // Temperature units toggle
       const currentUnits = calendar.units || 'us';
       const unitsLabel = currentUnits === 'us' ? 'F' : 'C';
       html += Output.makeButton(`Units: ${unitsLabel}`, `!chr --toggleunits`, CSS_CURRENT.buttonSmall);
-
+      
       html += '</div>';
 
       // Seasons
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Seasons & Equinoxes</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Seasons & Equinoxes</h3>';
       html += `<p><strong>Vernal Equinox:</strong> Day ${calendar.seasons.vernalEquinox} of ${calendar.daysInYear} `;
-      html += Output.makeButton('Edit',
-        `!chr --setvernalequinox ?{Day of Year for Vernal Equinox|${calendar.seasons.vernalEquinox}}`,
+      html += Output.makeButton('Edit', 
+        `!chr --setvernalequinox ?{Day of Year for Vernal Equinox|${calendar.seasons.vernalEquinox}}`, 
         CSS_CURRENT.buttonSmall);
       html += '</p>';
-      html += `<p><strong>Show on Calendar:</strong> ${DateUtils.seasonMarkersEnabled(calendar) ? 'Yes' : 'No'} `;
-      html += Output.makeButton('Toggle', `!chr --toggleseasonmarkers`, CSS_CURRENT.buttonSmall);
-      html += '</p>';
-
+      
       // Calculate and display the other seasonal points
-      const seasonPoints = DateUtils.getSeasonPoints(calendar);
-      const pointLabel = (d) => {
-        const label = DateUtils.dayOfYearLabel(d, calendar);
-        return label ? `Day ${d} (${label})` : `Day ${d}`;
-      };
-
+      const vernal = calendar.seasons.vernalEquinox;
+      const daysInYear = calendar.daysInYear;
+      const summer = vernal + Math.floor(daysInYear / 4);
+      const autumnal = vernal + Math.floor(daysInYear / 2);
+      const winter = vernal + Math.floor(3 * daysInYear / 4);
+      
       html += `<p><em>Based on this setting:</em></p>`;
       html += `<ul style="font-size: 11px;">`;
-      html += `<li>Spring Equinox (Vernal): ${pointLabel(seasonPoints.spring)}</li>`;
-      html += `<li>Summer Solstice: ${pointLabel(seasonPoints.summer)}</li>`;
-      html += `<li>Autumn Equinox: ${pointLabel(seasonPoints.autumn)}</li>`;
-      html += `<li>Winter Solstice: ${pointLabel(seasonPoints.winter)}</li>`;
+      html += `<li>Spring Equinox (Vernal): Day ${vernal}</li>`;
+      html += `<li>Summer Solstice: Day ${summer}</li>`;
+      html += `<li>Autumn Equinox: Day ${autumnal}</li>`;
+      html += `<li>Winter Solstice: Day ${winter}</li>`;
       html += `</ul>`;
-      html += '<p style="font-size: 10px; font-style: italic;">These points divide the year into four equal seasons. Each season begins on its equinox or solstice. Day numbers count month days only; festival and other special days take the season of the day before them.</p>';
+      html += '<p style="font-size: 10px; font-style: italic;">These points divide the year into four equal seasons for weather generation.</p>';
       html += '</div>';
 
       // Leap Years
       html += '<div style="margin: 20px 0; padding: 10px; background: var(--bg-secondary);">';
-      html += '<div style="font-size: 1.25em; font-weight: bold; color: ' + CSS_CURRENT.headerColor + '; margin: 12px 0 8px 0;">Gregorian Leap Day</div>';
+      html += '<h3 style="color: ' + CSS_CURRENT.headerColor + ';">Leap Years</h3>';
       html += `<p><strong>Enabled:</strong> ${calendar.leapYears.enabled ? 'Yes' : 'No'} `;
       html += Output.makeButton('Toggle', `!chr --toggleleap`, CSS_CURRENT.buttonSmall);
       html += '</p>';
-
+      
       if (calendar.leapYears.enabled) {
         html += `<p><strong>Cycle:</strong> Every ${calendar.leapYears.cycle} years `;
-        html += Output.makeButton('Edit',
-          `!chr --setleapcycle ?{Leap Year Cycle|${calendar.leapYears.cycle}}`,
+        html += Output.makeButton('Edit', 
+          `!chr --setleapcycle ?{Leap Year Cycle|${calendar.leapYears.cycle}}`, 
           CSS_CURRENT.buttonSmall);
         html += '</p>';
-
+        
         html += '<p><strong>Exception Years:</strong> ';
         if (calendar.leapYears.exceptions && calendar.leapYears.exceptions.length > 0) {
           calendar.leapYears.exceptions.forEach((year, idx) => {
             html += `${year} `;
-            html += Output.makeButton('✖',
-              `!chr --removeleapexception ${idx}`,
+            html += Output.makeButton('✖', 
+              `!chr --removeleapexception ${idx}`, 
               CSS_CURRENT.buttonSmall);
             html += ' ';
           });
@@ -3493,12 +3460,12 @@ const Chronicle = (() => {
         }
         html += '</p>';
         html += '<div style="margin-top: 5px;">';
-        html += Output.makeButton('Add Exception Year',
-          `!chr --addleapexception ?{Year to Exclude from Leap Years}`,
+        html += Output.makeButton('Add Exception Year', 
+          `!chr --addleapexception ?{Year to Exclude from Leap Years}`, 
           CSS_CURRENT.button);
         html += '</div>';
-
-        html += `<p style="font-size: 10px; font-style: italic; margin-top: 10px;">When enabled, adds 1 day to the end of month 2 every ${calendar.leapYears.cycle} years (except exception years). Leap special days such as Shieldmeet are set in Special Days, not here.</p>`;
+        
+        html += `<p style="font-size: 10px; font-style: italic; margin-top: 10px;">When enabled, adds 1 day to the year every ${calendar.leapYears.cycle} years (except exception years). February typically receives the extra day in Gregorian-style calendars.</p>`;
       }
       html += '</div>';
 
@@ -3512,7 +3479,7 @@ const Chronicle = (() => {
       const events = data.events;
       const notes = data.notes;
       const holidays = calendar.holidays || [];
-
+      
       // Get timeline state from State config (create if doesn't exist)
       const timelineState = State.config().timelineState || {
         selectedTags: [],
@@ -3527,18 +3494,18 @@ const Chronicle = (() => {
         endYear: null,
         sortAscending: true
       };
-
+      
       // Get all unique tags
       const allTags = TagSystem.getAllTags(data);
-
+      
       // Build pipe-separated tag list for queries
       const tagQueryString = Array.from(allTags).sort().join('|');
-
+      
       let html = '<table style="width: 100%; height: 100%; border-collapse: collapse;"><tr>';
-
+      
       // ===== LEFT SIDEBAR =====
       html += '<td style="width: 250px; padding: 10px; border-right: 1px solid #555555; vertical-align: top;">';
-
+      
       // Type toggles
       html += '<div style="margin-bottom: 15px;">';
       html += '<strong style="font-size: 11px;">Type:</strong><br>';
@@ -3563,7 +3530,7 @@ const Chronicle = (() => {
         timelineState.showWeather ? CSS_CURRENT.button : CSS_CURRENT.buttonSmall
       );
       html += '</div>';
-
+      
       // Show Details toggle
       html += '<div style="margin-bottom: 15px;">';
       html += Output.makeButton(
@@ -3572,29 +3539,29 @@ const Chronicle = (() => {
         timelineState.showDetails ? CSS_CURRENT.button : CSS_CURRENT.buttonSmall
       );
       html += '</div>';
-
+      
       // Date range controls
       html += '<div style="margin-bottom: 15px;">';
       html += '<strong style="font-size: 11px;">Date Range:</strong> ';
-
+      
       const startYearText = timelineState.startYear || '---';
       html += `<a style="${CSS_CURRENT.buttonSmall}" href="!chr --tl-startyear ?{Earliest year to display|}">`;
       html += startYearText;
       html += `</a>`;
-
+      
       html += Output.makeButton('All', `!chr --tl-clearrange`, CSS_CURRENT.buttonSmall);
-
+      
       const endYearText = timelineState.endYear || '---';
       html += `<a style="${CSS_CURRENT.buttonSmall}" href="!chr --tl-endyear ?{Latest year to display|}">`;
       html += endYearText;
       html += `</a>`;
-
+      
       // Sort toggle
       const sortIcon = timelineState.sortAscending ? '↓' : '↑';
       html += Output.makeButton(sortIcon, `!chr --tl-togglesort`, CSS_CURRENT.buttonSmall);
-
+      
       html += '</div>';
-
+      
       // Tag mode toggle
       html += '<div style="margin-bottom: 15px;">';
       html += '<strong style="font-size: 11px;">Tag Mode:</strong> ';
@@ -3604,7 +3571,7 @@ const Chronicle = (() => {
         CSS_CURRENT.buttonSmall
       );
       html += '</div>';
-
+      
       // Select All / Deselect All buttons
       if (allTags.length > 0) {
         html += '<div style="margin-bottom: 15px;">';
@@ -3618,18 +3585,18 @@ const Chronicle = (() => {
         }
         html += '</div>';
       }
-
+      
       // Tag list
       html += '<div style="margin-bottom: 5px;"><strong style="font-size: 11px;">Tags:</strong></div>';
       html += '<div style="margin-top: 5px;">';
-
+      
       if (allTags.length === 0) {
         html += '<div style="font-size: 10px; font-style: italic; color: #888888;">No tags yet</div>';
       } else {
         allTags.forEach(tag => {
           const isSelected = timelineState.selectedTags.includes(tag);
           let tagStyle = CSS_CURRENT.tag;
-
+          
           if (isSelected) {
             // Different color based on AND/OR mode
             if (timelineState.tagMode === 'OR') {
@@ -3640,26 +3607,26 @@ const Chronicle = (() => {
               tagStyle = 'display: inline-block; padding: 2px 5px; margin: 0 2px; background: #5a9f5a; color: #ffffff; border-radius: 20px; text-decoration: none; cursor: pointer; font-size: 9px; font-weight: bold;';
             }
           }
-
+          
           html += '<a style="' + tagStyle + '" href="!chr --tl-toggletag ' + tag + '">' + tag + '</a> ';
         });
       }
-
+      
       // Add "Untagged" filter
       html += '<div style="margin-top: 10px;">';
       const showUntagged = timelineState.showUntagged || false;
-      const untaggedStyle = showUntagged ?
-        'display: inline-block; padding: 2px 5px; margin: 0 2px; background: #888888; color: #ffffff; border-radius: 20px; text-decoration: none; cursor: pointer; font-size: 9px; font-weight: bold;' :
+      const untaggedStyle = showUntagged ? 
+        'display: inline-block; padding: 2px 5px; margin: 0 2px; background: #888888; color: #ffffff; border-radius: 20px; text-decoration: none; cursor: pointer; font-size: 9px; font-weight: bold;' : 
         CSS_CURRENT.tag;
       html += '<a style="' + untaggedStyle + '" href="!chr --tl-toggleuntagged">[Untagged]</a>';
       html += '</div>';
-
+      
       html += '</div>';
       html += '</td>'; // End left sidebar
-
+      
       // ===== RIGHT CONTENT AREA =====
       html += '<td style="padding: 10px; vertical-align: top;">';
-
+      
       if (timelineState.selectedTags.length === 0 && !timelineState.showUntagged) {
         html += '<div style="padding: 20px; text-align: center; color: #888888;">';
         html += 'Select one or more tags to view timeline';
@@ -3667,15 +3634,15 @@ const Chronicle = (() => {
       } else {
         // Filter items based on selected tags, tag mode, and untagged filter
         let filteredItems = [];
-
+        
         // Add events if toggled on
         if (timelineState.showEvents) {
           events.forEach(e => {
             let shouldInclude = false;
-
+            
             // Check if item has tags
             const hasTags = e.tags && e.tags.length > 0;
-
+            
             // Show item if ANY of these conditions are true:
             // 1. showUntagged is ON and item has NO tags
             if (timelineState.showUntagged && !hasTags) {
@@ -3683,16 +3650,16 @@ const Chronicle = (() => {
             }
             // 2. tags are selected and item matches them
             if (timelineState.selectedTags.length > 0 && hasTags) {
-              const matches = timelineState.tagMode === 'OR' ?
-                e.tags.some(t => timelineState.selectedTags.includes(t)) :
-                timelineState.selectedTags.every(t => e.tags.includes(t));
+              const matches = timelineState.tagMode === 'OR'
+                ? e.tags.some(t => timelineState.selectedTags.includes(t))
+                : timelineState.selectedTags.every(t => e.tags.includes(t));
               if (matches) shouldInclude = true;
             }
             // 3. NO filters active - show all items
             if (timelineState.selectedTags.length === 0 && !timelineState.showUntagged) {
               shouldInclude = true;
             }
-
+            
             if (shouldInclude) {
               filteredItems.push({
                 type: 'event',
@@ -3703,15 +3670,15 @@ const Chronicle = (() => {
             }
           });
         }
-
+        
         // Add notes if toggled on
         if (timelineState.showNotes) {
           notes.forEach(n => {
             let shouldInclude = false;
-
+            
             // Check if item has tags
             const hasTags = n.tags && n.tags.length > 0;
-
+            
             // Show item if ANY of these conditions are true:
             // 1. showUntagged is ON and item has NO tags
             if (timelineState.showUntagged && !hasTags) {
@@ -3719,16 +3686,16 @@ const Chronicle = (() => {
             }
             // 2. tags are selected and item matches them
             if (timelineState.selectedTags.length > 0 && hasTags) {
-              const matches = timelineState.tagMode === 'OR' ?
-                n.tags.some(t => timelineState.selectedTags.includes(t)) :
-                timelineState.selectedTags.every(t => n.tags.includes(t));
+              const matches = timelineState.tagMode === 'OR'
+                ? n.tags.some(t => timelineState.selectedTags.includes(t))
+                : timelineState.selectedTags.every(t => n.tags.includes(t));
               if (matches) shouldInclude = true;
             }
             // 3. NO filters active - show all items
             if (timelineState.selectedTags.length === 0 && !timelineState.showUntagged) {
               shouldInclude = true;
             }
-
+            
             if (shouldInclude) {
               filteredItems.push({
                 type: 'note',
@@ -3739,7 +3706,7 @@ const Chronicle = (() => {
             }
           });
         }
-
+        
         // Find date range of filtered items
         if (filteredItems.length > 0) {
           const sortedItems = [...filteredItems].sort((a, b) => {
@@ -3747,24 +3714,26 @@ const Chronicle = (() => {
             const bAbs = DateUtils.toAbsoluteDay(b.date, calendar);
             return aAbs - bAbs;
           });
-
+          
           const earliestDate = sortedItems[0].date;
           const latestDate = sortedItems[sortedItems.length - 1].date;
-
+          
           // Calculate year span
           const yearSpan = latestDate.year - earliestDate.year;
-
+          
           // Add holidays if toggled on, within range, AND span is one year or less
           if (timelineState.showHolidays && yearSpan <= 1) {
             holidays.forEach(h => {
+              // Check if holiday falls within the date range of filtered items
+              const holidayDate = { year: earliestDate.year, month: h.dateRef.month, day: h.dateRef.day };
+              
               // Check each year in range
               for (let year = earliestDate.year; year <= latestDate.year; year++) {
                 const hDate = { year: year, month: h.dateRef.month, day: h.dateRef.day };
-                if (!DateUtils.holidayOnDate(h, hDate)) continue;
                 const hAbs = DateUtils.toAbsoluteDay(hDate, calendar);
                 const earlyAbs = DateUtils.toAbsoluteDay(earliestDate, calendar);
                 const lateAbs = DateUtils.toAbsoluteDay(latestDate, calendar);
-
+                
                 if (hAbs >= earlyAbs && hAbs <= lateAbs) {
                   filteredItems.push({
                     type: 'holiday',
@@ -3774,26 +3743,7 @@ const Chronicle = (() => {
                 }
               }
             });
-
-            // Equinox/solstice markers (shown with holidays)
-            if (DateUtils.seasonMarkersEnabled(calendar)) {
-              const earlyAbsM = DateUtils.toAbsoluteDay(earliestDate, calendar);
-              const lateAbsM = DateUtils.toAbsoluteDay(latestDate, calendar);
-              const points = DateUtils.getSeasonPoints(calendar);
-              for (let year = earliestDate.year; year <= latestDate.year; year++) {
-                [points.spring, points.summer, points.autumn, points.winter].forEach(doy => {
-                  const mDate = DateUtils.dayOfYearToDate(doy, year, calendar);
-                  if (!mDate) return;
-                  const names = DateUtils.getSeasonMarkers(mDate, calendar);
-                  if (names.length === 0) return;
-                  const mAbs = DateUtils.toAbsoluteDay(mDate, calendar);
-                  if (mAbs >= earlyAbsM && mAbs <= lateAbsM) {
-                    filteredItems.push({ type: 'seasonmarker', date: mDate, content: names.join(', ') });
-                  }
-                });
-              }
-            }
-
+            
             // Add special days if toggled on
             const specialDays = calendar.interMonthDays || [];
             specialDays.forEach(sd => {
@@ -3806,7 +3756,7 @@ const Chronicle = (() => {
                   const sdAbs = DateUtils.toAbsoluteDay(sdDate, calendar);
                   const earlyAbs = DateUtils.toAbsoluteDay(earliestDate, calendar);
                   const lateAbs = DateUtils.toAbsoluteDay(latestDate, calendar);
-
+                  
                   if (sdAbs >= earlyAbs && sdAbs <= lateAbs) {
                     filteredItems.push({
                       type: 'specialday',
@@ -3820,7 +3770,7 @@ const Chronicle = (() => {
             });
           }
         }
-
+        
         // Add weather if toggled on
         if (timelineState.showWeather) {
           const weather = data.weather || [];
@@ -3833,7 +3783,7 @@ const Chronicle = (() => {
             });
           });
         }
-
+        
         // Apply year range filter
         if (timelineState.startYear) {
           filteredItems = filteredItems.filter(item => item.date.year >= timelineState.startYear);
@@ -3841,14 +3791,14 @@ const Chronicle = (() => {
         if (timelineState.endYear) {
           filteredItems = filteredItems.filter(item => item.date.year <= timelineState.endYear);
         }
-
+        
         // Sort by date
         filteredItems.sort((a, b) => {
           const aAbs = DateUtils.toAbsoluteDay(a.date, calendar);
           const bAbs = DateUtils.toAbsoluteDay(b.date, calendar);
           return timelineState.sortAscending ? aAbs - bAbs : bAbs - aAbs;
         });
-
+        
         if (filteredItems.length === 0) {
           html += '<div style="padding: 20px; text-align: center; color: #888888;">';
           html += 'No items match the selected filters';
@@ -3882,7 +3832,7 @@ const Chronicle = (() => {
                 const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
                 sortKey = DateUtils.toAbsoluteDay(item.date, calendar) + beginningInterannualCount;
               }
-
+              
               itemsByDate[key] = {
                 date: item.date,
                 items: [],
@@ -3891,23 +3841,23 @@ const Chronicle = (() => {
             }
             itemsByDate[key].items.push(item);
           });
-
+          
           // Convert to array and sort by absolute day (this is the key fix!)
-          const sortedDates = Object.values(itemsByDate).sort((a, b) =>
+          const sortedDates = Object.values(itemsByDate).sort((a, b) => 
             timelineState.sortAscending ? a.sortKey - b.sortKey : b.sortKey - a.sortKey
           );
-
+          
           // Render timeline table
           html += '<table style="width: 100%; border-collapse: collapse; border: none;">';
-
+          
           let lastYear = null;
           let lastMonth = null;
-
+          
           sortedDates.forEach(entry => {
             const d = entry.date;
             const month = d.isInterannual ? null : calendar.months[d.month - 1];
             const monthName = d.isInterannual ? '' : (month ? month.name : 'Unknown');
-
+            
             // Calculate weekday (interannual days have no weekday)
             let weekdayName = '';
             if (!d.isInterannual) {
@@ -3915,15 +3865,15 @@ const Chronicle = (() => {
               const weekdayIndex = (absDay - 1) % calendar.weeks.daysInWeek;
               weekdayName = calendar.weeks.weekdayNames[weekdayIndex] || 'Day';
             }
-
+            
             // Check if only events (no notes or holidays)
             const hasOnlyEvents = entry.items.every(item => item.type === 'event');
-
+            
             html += '<tr style="vertical-align: top;">';
-
+            
             // Date column - theme-aware colors, clickable
             html += `<td style="padding: 5px 15px 5px 0; width: 150px; font-size: 11px; border: none; cursor: pointer;">`;
-
+            
             // Create link based on date type
             let dateLink;
             if (d.isInterannual) {
@@ -3932,13 +3882,13 @@ const Chronicle = (() => {
               dateLink = `!chr --viewdate ${d.year}|${d.month}|${d.day}`;
             }
             html += `<a style="text-decoration: none; color: inherit; display: block;" href="${dateLink}">`;
-
+            
             if (d.year !== lastYear) {
               html += `<strong style="font-size: 13px;">${d.year}</strong><br>`;
               lastYear = d.year;
               lastMonth = null; // Reset month when year changes
             }
-
+            
             // Display date information based on type
             if (d.isInterannual) {
               // For interannual days, find and display the name
@@ -3956,21 +3906,19 @@ const Chronicle = (() => {
                   html += `<strong>${monthName}</strong><br>`;
                   lastMonth = d.month;
                 }
-
+                
                 html += `<span>${weekdayName} ${d.day}</span>`;
               }
             }
             html += '</a>';
             html += '</td>';
-
+            
             // Content column
             html += '<td style="padding: 5px 0; font-size: 12px; border: none;">';
-
+            
             entry.items.forEach(item => {
               if (item.type === 'holiday') {
                 html += `<div style="margin-bottom: 3px;"><strong style="${CSS_CURRENT.holiday}">Holiday:</strong> ${item.content}</div>`;
-              } else if (item.type === 'seasonmarker') {
-                html += `<div style="margin-bottom: 3px;"><strong style="${CSS_CURRENT.holiday}">Season:</strong> ${item.content}</div>`;
               } else if (item.type === 'specialday') {
                 html += `<div style="margin-bottom: 3px;"><a style="${CSS_CURRENT.holiday} text-decoration: underline; cursor: pointer;" href="!chr --setspecialday ${item.date.year}|${item.specialDayId}">${item.content}</a></div>`;
               } else if (item.type === 'weather') {
@@ -3979,7 +3927,7 @@ const Chronicle = (() => {
                 // Show event with action buttons and tags
                 const e = item.item;
                 const escapedContent = e.content.replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
-
+                
                 // Calculate elapsed time from the viewing date (currentDate)
                 const viewingDate = State.config().currentDate || { year: 1, month: 1, day: 1 };
                 const elapsed = DateUtils.getElapsedTime(viewingDate, e.dateRef, calendar);
@@ -3992,14 +3940,14 @@ const Chronicle = (() => {
                   elapsedText += elapsed.days + 'd';
                   if (elapsed.isNegative) elapsedText = '-' + elapsedText;
                 }
-
+                
                 html += `<div style="margin-bottom: 8px; padding: 5px; background: var(--bg-secondary); border-left: 3px solid ${CSS_CURRENT.holiday};">`;
                 html += '<div style="margin-bottom: 5px;">';
-                html += MarkdownParser.renderAsHtml(e.content, calendar, { sendToChat: true });
+                html += MarkdownParser.renderAsHtml(e.content, calendar, {sendToChat: true});
                 // Elapsed time button floating right
                 html += `<a style="${CSS_CURRENT.tag} float: right;" href="!chr --setfeatureddate ${e.dateRef.year}|${e.dateRef.month}|${e.dateRef.day}">${elapsedText}</a>`;
                 html += '</div>';
-
+                
                 // Buttons and tags on same line
                 html += '<div>';
                 html += Output.makeButton('Edit', `!chr --editevent ${e.id}|?{New content|${escapedContent}}`, CSS_CURRENT.buttonSmall);
@@ -4020,7 +3968,7 @@ const Chronicle = (() => {
                 // Show note with action buttons and tags
                 const n = item.item;
                 const escapedContent = n.content.replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
-
+                
                 // Calculate elapsed time from the viewing date (currentDate)
                 const viewingDate = State.config().currentDate || { year: 1, month: 1, day: 1 };
                 const elapsed = DateUtils.getElapsedTime(viewingDate, n.dateRef, calendar);
@@ -4033,14 +3981,14 @@ const Chronicle = (() => {
                   elapsedText += elapsed.days + 'd';
                   if (elapsed.isNegative) elapsedText = '-' + elapsedText;
                 }
-
+                
                 html += `<div style="margin-bottom: 8px; padding: 5px; background: var(--bg-secondary); border-left: 3px solid #888;">`;
                 html += '<div style="margin-bottom: 5px;">';
-                html += MarkdownParser.renderAsHtml(n.content, calendar, { sendToChat: true });
+                html += MarkdownParser.renderAsHtml(n.content, calendar, {sendToChat: true});
                 // Elapsed time button floating right
                 html += `<a style="${CSS_CURRENT.tag} float: right;" href="!chr --setfeatureddate ${n.dateRef.year}|${n.dateRef.month}|${n.dateRef.day}">${elapsedText}</a>`;
                 html += '</div>';
-
+                
                 // Buttons and tags on same line
                 html += '<div>';
                 html += Output.makeButton('Edit', `!chr --editnote ${n.id}|?{New content|${escapedContent}}`, CSS_CURRENT.buttonSmall);
@@ -4070,25 +4018,25 @@ const Chronicle = (() => {
                   elapsedText += elapsed.days + 'd';
                   if (elapsed.isNegative) elapsedText = '-' + elapsedText;
                 }
-
+                
                 html += '<div style="margin-bottom: 3px; position: relative;">';
-                html += MarkdownParser.renderAsHtml(item.content, calendar, { sendToChat: true });
+                html += MarkdownParser.renderAsHtml(item.content, calendar, {sendToChat: true});
                 html += `<a style="${CSS_CURRENT.tag} float: right; margin-left: 10px;" href="!chr --setfeatureddate ${item.date.year}|${item.date.month}|${item.date.day}">${elapsedText}</a>`;
                 html += '</div>';
               }
             });
-
+            
             html += '</td>';
             html += '</tr>';
           });
-
+          
           html += '</table>';
         }
       }
-
+      
       html += '</td>'; // End content area
       html += '</tr></table>'; // End outer table
-
+      
       return html;
     }
 
@@ -4295,10 +4243,6 @@ const Chronicle = (() => {
         return Commands.toggleUnits(msg);
       }
 
-      if (args.toggleseasonmarkers) {
-        return Commands.toggleSeasonMarkers(msg);
-      }
-
       if (args.setvernalequinox) {
         return Commands.setVernalEquinox(msg, args.setvernalequinox);
       }
@@ -4471,6 +4415,10 @@ const Chronicle = (() => {
         return Commands.editTag(msg, args.edittag);
       }
 
+      if (args.addtagfromlist) {
+        return Commands.addTagFromList(msg, args.addtagfromlist);
+      }
+
       // Timeline commands
       if (args['tl-toggle']) {
         return Commands.timelineToggle(msg, args['tl-toggle']);
@@ -4512,6 +4460,14 @@ const Chronicle = (() => {
         return Commands.timelineToggleUntagged(msg);
       }
 
+      if (args.pickitemtag) {
+        return Commands.pickItemTag(msg, args.pickitemtag);
+      }
+
+      if (args.addtag) {
+        return Commands.addTag(msg, args.addtag);
+      }
+
       if (args.chat) {
         if (args.chat === 'calendar') {
           return Commands.sendCalendarToChat(msg);
@@ -4541,9 +4497,9 @@ const Chronicle = (() => {
           archived: false,
           avatar: CHRONICLE_HELP_AVATAR
         });
-
+        
         helpHandout.set('notes', CHRONICLE_HELP_TEXT);
-
+        
         log('Chronicle: Created help handout');
       } else {
         // Update existing help handout
@@ -4556,7 +4512,7 @@ const Chronicle = (() => {
       const CSS_CURRENT = getCSS();
       const handoutId = helpHandout.get('_id');
       const button = `<a style="${CSS_CURRENT.button}" href="http://journal.roll20.net/handout/${handoutId}">Open Chronicle Help Documentation</a>`;
-
+      
       Output.send(msg.who, button);
     },
 
@@ -4567,21 +4523,21 @@ const Chronicle = (() => {
       HandoutManager.saveCalendar(calendar);
       State.setConfig('currentCalendar', `${HANDOUT_PREFIX} Calendar: ${calendar.name}`);
 
-      // Create empty events handout for this calendar
-      HandoutManager.saveEvents(calendar.name, [], [], []);
+      // Create empty events handout
+      HandoutManager.saveEvents('My Campaign', [], []);
 
       // Set initial viewing date
       State.setConfig('viewingDate', { year: 1, month: 1 });
       State.setConfig('currentDate', { year: 1, month: 1, day: 1 });
 
       Output.send(msg.who, `<div style="${CSS_CURRENT.container}">Chronicle initialized with Gregorian calendar!</div>`);
-
+      
       Commands.renderInterface(msg);
     },
 
     renderInterface: (msg) => {
       // Load data with callbacks, then render with loaded data
-      DataLoader.loadAll((data) => {
+      HandoutManager.loadData((data) => {
         const mode = State.config().displayMode;
         InterfaceRenderer.render(mode, data, (handout) => {
           // Silently update - no confirmation needed
@@ -4596,7 +4552,7 @@ const Chronicle = (() => {
         Commands.renderInterface(msg);
         handout = HandoutManager.findHandout(INTERFACE_HANDOUT_NAME);
       }
-
+      
       if (handout) {
         // Send button link using Output system
         const who = Utils.stripGM(msg.who);
@@ -4618,25 +4574,25 @@ const Chronicle = (() => {
 
     loadCalendar: (msg, calType) => {
       let calendar;
-
+      
       // Check if this is a request to list existing calendars
       if (calType === 'list') {
         const handouts = findObjs({ type: 'handout' });
-        const presetNames = PRESET_CALENDAR_NAMES;
+        const presetNames = ['Gregorian', 'Absalom Reckoning', 'Faerun', 'Greyhawk', 'Eberron'];
         const calendarHandouts = handouts.filter(h => {
           const name = h.get('name');
           if (!name.startsWith(HANDOUT_PREFIX + ' Calendar:')) return false;
-
+          
           const calName = name.replace(HANDOUT_PREFIX + ' Calendar: ', '');
           // Exclude preset calendars from the list since they have dedicated Load buttons
           return !presetNames.includes(calName);
         });
-
+        
         if (calendarHandouts.length === 0) {
           Output.send(msg.who, '<em>No custom calendars found.</em>');
           return;
         }
-
+        
         let output = '<div><strong>Custom Calendars:</strong><br>';
         calendarHandouts.forEach(h => {
           const fullName = h.get('name');
@@ -4647,7 +4603,7 @@ const Chronicle = (() => {
         Output.send(msg.who, output);
         return;
       }
-
+      
       // Check if loading a default calendar type
       if (calType === 'gregorian' || calType === 'absalom' || calType === 'faerun' || calType === 'greyhawk' || calType === 'eberron' || calType === 'traveller') {
         // Get the default calendar
@@ -4664,11 +4620,11 @@ const Chronicle = (() => {
         } else if (calType === 'traveller') {
           calendar = DefaultCalendars.traveller();
         }
-
+        
         // Check if handouts already exist - if so, just load them instead of overwriting
         const handoutName = `${HANDOUT_PREFIX} Calendar: ${calendar.name}`;
         const existingHandout = HandoutManager.findHandout(handoutName);
-
+        
         if (existingHandout) {
           // Handout already exists - just switch to it, don't overwrite
           State.setConfig('currentCalendar', handoutName);
@@ -4677,29 +4633,28 @@ const Chronicle = (() => {
           Commands.renderInterface(msg);
           return;
         }
-
+        
         // Handout doesn't exist - create it
         HandoutManager.saveCalendar(calendar);
         State.setConfig('currentCalendar', handoutName);
-        State.setConfig('currentEvents', HandoutManager.eventsHandoutName());
         Commands.renderInterface(msg);
         return;
       }
-
+      
       // Not a preset - try to find existing calendar handout with this name
       const handoutName = `${HANDOUT_PREFIX} Calendar: ${calType}`;
       const handout = HandoutManager.findHandout(handoutName);
-
+      
       if (!handout) {
         Output.send(msg.who, `Calendar "${calType}" not found. Use <strong>!chr --loadcal list</strong> to see existing calendars, or <strong>!chr --loadcal gregorian</strong> / <strong>!chr --loadcal absalom</strong> / <strong>!chr --loadcal faerun</strong> / <strong>!chr --loadcal greyhawk</strong> / <strong>!chr --loadcal eberron</strong> / <strong>!chr --loadcal traveller</strong> to create a new one.`);
         return;
       }
-
+      
       // Load the existing calendar
       State.setConfig('currentCalendar', handoutName);
       const eventsName = `${HANDOUT_PREFIX} Events: ${calType}`;
       State.setConfig('currentEvents', eventsName);
-
+      
       Commands.renderInterface(msg);
     },
 
@@ -4813,20 +4768,20 @@ const Chronicle = (() => {
 
     previousYear: (msg) => {
       const viewingDate = State.config().viewingDate;
-
-      State.setConfig('viewingDate', {
-        year: viewingDate.year - 1,
-        month: viewingDate.month
+      
+      State.setConfig('viewingDate', { 
+        year: viewingDate.year - 1, 
+        month: viewingDate.month 
       });
       Commands.renderInterface(msg);
     },
 
     nextYear: (msg) => {
       const viewingDate = State.config().viewingDate;
-
-      State.setConfig('viewingDate', {
-        year: viewingDate.year + 1,
-        month: viewingDate.month
+      
+      State.setConfig('viewingDate', { 
+        year: viewingDate.year + 1, 
+        month: viewingDate.month 
       });
       Commands.renderInterface(msg);
     },
@@ -4835,18 +4790,21 @@ const Chronicle = (() => {
       // Navigate to the saved "Today" date
       const todayDate = State.config().featuredDate || State.config().currentDate;
       State.setConfig('currentDate', todayDate);
-      State.setConfig('viewingDate', {
-        year: todayDate.year,
-        month: todayDate.month
+      State.setConfig('viewingDate', { 
+        year: todayDate.year, 
+        month: todayDate.month 
       });
       Commands.renderInterface(msg);
     },
 
     setToday: (msg) => {
       // Save the current Featured Date as the new "Today"
-      // Copy the whole date so special and interannual days keep their identity
       const currentDate = State.config().currentDate;
-      State.setConfig('featuredDate', JSON.parse(JSON.stringify(currentDate)));
+      State.setConfig('featuredDate', {
+        year: currentDate.year,
+        month: currentDate.month,
+        day: currentDate.day
+      });
       Commands.renderInterface(msg);
     },
 
@@ -5062,6 +5020,87 @@ const Chronicle = (() => {
       Commands.renderInterface(msg);
     },
 
+    pickItemTag: (msg, itemData) => {
+      const parts = itemData.split('|');
+      const itemId = parts[0];
+      const itemType = parts[1]; // 'event' or 'note'
+
+      DataLoader.loadAll((data) => {
+        // Find the item
+        let item = null;
+        if (itemType === 'event') {
+          item = data.events.find(e => e.id === itemId);
+        } else if (itemType === 'note') {
+          item = data.notes.find(n => n.id === itemId);
+        }
+
+        if (!item) {
+          Output.send(msg.who, 'Item not found');
+          return;
+        }
+
+        // Collect all existing tags
+        const allTags = new Set();
+        data.events.forEach(e => {
+          if (e.tags) e.tags.forEach(t => allTags.add(t));
+        });
+        data.notes.forEach(n => {
+          if (n.tags) n.tags.forEach(t => allTags.add(t));
+        });
+
+        const tagList = Array.from(allTags).sort().join('|');
+
+        // Build button with direct query - use pipe-separated tags
+        let output = '<div>';
+        if (tagList) {
+          output += '<a style="' + CSS_CURRENT.button + '" href="!chr --addtag ' + itemId + '|' + itemType + '|?{Tag|' + tagList + '}">Pick a tag to add</a>';
+        } else {
+          output += '<em>No existing tags to choose from. Type a new tag:</em><br>';
+          output += '<a style="' + CSS_CURRENT.button + '" href="!chr --addtag ' + itemId + '|' + itemType + '|?{Tag}">Add new tag</a>';
+        }
+        output += '</div>';
+        
+        Output.send(msg.who, output);
+      });
+    },
+
+    addTag: (msg, tagData) => {
+      const parts = tagData.split('|');
+      const itemId = parts[0];
+      const itemType = parts[1];
+      const tag = parts.slice(2).join('|').trim(); // Rejoin in case tag contains |
+
+      if (!tag) {
+        Output.send(msg.who, 'No tag selected');
+        return;
+      }
+
+      DataLoader.loadAll((data) => {
+        let item = null;
+        if (itemType === 'event') {
+          item = data.events.find(e => e.id === itemId);
+        } else if (itemType === 'note') {
+          item = data.notes.find(n => n.id === itemId);
+        }
+
+        if (!item) {
+          Output.send(msg.who, 'Item not found');
+          return;
+        }
+
+        // Add tag if not already present
+        if (!item.tags) item.tags = [];
+        if (!item.tags.includes(tag)) {
+          item.tags.push(tag);
+        }
+
+        // Save
+        HandoutManager.saveEvents(data.events);
+        HandoutManager.saveNotes(data.notes);
+        Commands.renderInterface(msg);
+      });
+    },
+
     editEvent: (msg, eventData) => {
       const parts = eventData.split('|');
       const eventId = parts[0];
@@ -5070,7 +5109,7 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const events = data.events;
         const event = events.find(e => e.id === eventId);
-
+        
         if (!event) {
           Output.send(msg.who, 'Event not found');
           return;
@@ -5112,7 +5151,7 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const notes = data.notes;
         const note = notes.find(n => n.id === noteId);
-
+        
         if (!note) {
           Output.send(msg.who, 'Note not found');
           return;
@@ -5268,7 +5307,7 @@ const Chronicle = (() => {
 
         // Parse new tags
         const newTags = Utils.parseTags(newTagsStr);
-
+        
         if (newTags.length === 0) {
           Output.send(msg.who, 'No valid tags provided');
           return;
@@ -5359,6 +5398,34 @@ const Chronicle = (() => {
       });
     },
 
+    addTagFromList: (msg, itemData) => {
+      DataLoader.loadAll((data) => {
+        const parts = itemData.split('|');
+        if (parts.length < 2) {
+          Output.send(msg.who, 'Invalid format');
+          return;
+        }
+
+        const itemId = parts[0];
+        const itemType = parts[1];
+
+        // Get all existing tags
+        const allTags = TagSystem.getAllTags(data);
+
+        if (allTags.length === 0) {
+          Output.send(msg.who, 'No existing tags found. Use the + button to create tags first.');
+          return;
+        }
+
+        // Build the tag list for the query dropdown and output the command directly
+        const tagList = allTags.join('|');
+        
+        // This sends nothing to chat - Roll20 will process the command directly from the button
+        // The button's href already contains the full command, so we just need to trigger it
+        sendChat('Chronicle', `!chr --addtag ${itemId}|${itemType}|?{Choose tag to add|${tagList}}`);
+      });
+    },
+
     pickMonth: (msg) => {
       DataLoader.loadAll((data) => {
         const CSS_CURRENT = getCSS();
@@ -5383,15 +5450,15 @@ const Chronicle = (() => {
     jumpToMonth: (msg, monthNum) => {
       const month = parseInt(monthNum);
       const viewingDate = State.config().viewingDate;
-
+      
       if (isNaN(month)) {
         Output.send(msg.who, 'Invalid month');
         return;
       }
 
-      State.setConfig('viewingDate', {
-        year: viewingDate.year,
-        month: month
+      State.setConfig('viewingDate', { 
+        year: viewingDate.year, 
+        month: month 
       });
       Commands.renderInterface(msg);
     },
@@ -5405,15 +5472,15 @@ const Chronicle = (() => {
     jumpToYear: (msg, yearNum) => {
       const year = parseInt(yearNum);
       const viewingDate = State.config().viewingDate;
-
+      
       if (isNaN(year)) {
         Output.send(msg.who, 'Invalid year');
         return;
       }
 
-      State.setConfig('viewingDate', {
-        year: year,
-        month: viewingDate.month
+      State.setConfig('viewingDate', { 
+        year: year, 
+        month: viewingDate.month 
       });
       Commands.renderInterface(msg);
     },
@@ -5423,7 +5490,7 @@ const Chronicle = (() => {
         const day = parseInt(dayNum);
         const currentDate = State.config().currentDate;
         const calendar = data.calendar;
-
+        
         if (isNaN(day)) {
           Output.send(msg.who, 'Invalid day');
           return;
@@ -5451,11 +5518,11 @@ const Chronicle = (() => {
 
     createNewCalendar: (msg, calName) => {
       const calendar = DataModels.createCalendar(calName);
-
+      
       // Start with basic structure - user will configure in Design Mode
       calendar.months = [];
       calendar.weeks.weekdayNames = ['Day1', 'Day2', 'Day3', 'Day4', 'Day5', 'Day6', 'Day7'];
-
+      
       HandoutManager.saveCalendar(calendar);
       State.setConfig('currentCalendar', `${HANDOUT_PREFIX} Calendar: ${calName}`);
 
@@ -5499,7 +5566,7 @@ const Chronicle = (() => {
         const calendar = data.calendar;
         const month = calendar.months[currentDate.month - 1];
         const monthName = month ? month.name : 'Unknown';
-
+        
         Output.send(msg.who, `To add a note for ${monthName} ${currentDate.day}, ${currentDate.year}, use the Add Note button in the handout.`);
       });
     },
@@ -5508,8 +5575,16 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const currentDate = State.config().currentDate;
         const notes = data.notes;
-        const eventsName = HandoutManager.eventsHandoutName();
+        let eventsName = State.config().currentEvents;
+        const currentCalendar = State.config().currentCalendar;
         const who = Utils.stripGM(msg.who);
+
+        // If currentEvents isn't set, derive it from calendar name
+        if (!eventsName && currentCalendar) {
+          const calName = currentCalendar.replace(`${HANDOUT_PREFIX} Calendar: `, '');
+          eventsName = `${HANDOUT_PREFIX} Events: ${calName}`;
+          State.setConfig('currentEvents', eventsName);
+        }
 
         const note = DataModels.createNote(noteText, currentDate, [], who);
         notes.push(note);
@@ -5517,7 +5592,8 @@ const Chronicle = (() => {
         // Save to handout
         const events = data.events;
         if (eventsName) {
-          HandoutManager.saveEvents(null, events, notes, data.weather || []);
+          const calName = eventsName.replace(`${HANDOUT_PREFIX} Events: `, '');
+          HandoutManager.saveEvents(calName, events, notes, data.weather || []);
         } else {
           Output.send(msg.who, 'Error: No calendar loaded. Please load or create a calendar first.');
           return;
@@ -5534,7 +5610,7 @@ const Chronicle = (() => {
         const calendar = data.calendar;
         const month = calendar.months[currentDate.month - 1];
         const monthName = month ? month.name : 'Unknown';
-
+        
         Output.send(msg.who, `To add an event for ${monthName} ${currentDate.day}, ${currentDate.year}, use the Add Event button in the handout.`);
       });
     },
@@ -5543,8 +5619,16 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const currentDate = State.config().currentDate;
         const events = data.events;
-        const eventsName = HandoutManager.eventsHandoutName();
+        let eventsName = State.config().currentEvents;
+        const currentCalendar = State.config().currentCalendar;
         const who = Utils.stripGM(msg.who);
+
+        // If currentEvents isn't set, derive it from calendar name
+        if (!eventsName && currentCalendar) {
+          const calName = currentCalendar.replace(`${HANDOUT_PREFIX} Calendar: `, '');
+          eventsName = `${HANDOUT_PREFIX} Events: ${calName}`;
+          State.setConfig('currentEvents', eventsName);
+        }
 
         const event = DataModels.createEvent(eventText, currentDate, [], who);
         events.push(event);
@@ -5552,7 +5636,8 @@ const Chronicle = (() => {
         // Save to handout
         const notes = data.notes;
         if (eventsName) {
-          HandoutManager.saveEvents(null, events, notes, data.weather || []);
+          const calName = eventsName.replace(`${HANDOUT_PREFIX} Events: `, '');
+          HandoutManager.saveEvents(calName, events, notes, data.weather || []);
         } else {
           Output.send(msg.who, 'Error: No calendar loaded. Please load or create a calendar first.');
           return;
@@ -5576,7 +5661,7 @@ const Chronicle = (() => {
         );
 
         const newWeather = WeatherGenerator.generate(currentDate, calendar);
-
+        
         if (!newWeather) {
           Output.send(msg.who, 'No climate set. Use Design Mode to set a climate first.');
           return;
@@ -5610,9 +5695,9 @@ const Chronicle = (() => {
         let weather = data.weather || [];
 
         // Remove weather for current date
-        weather = weather.filter(w =>
-          !(w.dateRef.year === currentDate.year &&
-            w.dateRef.month === currentDate.month &&
+        weather = weather.filter(w => 
+          !(w.dateRef.year === currentDate.year && 
+            w.dateRef.month === currentDate.month && 
             w.dateRef.day === currentDate.day)
         );
 
@@ -5692,11 +5777,11 @@ const Chronicle = (() => {
     saveMonth: (msg, monthData) => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
-
+      
         Logger.debug(`saveMonth received: "${monthData}"`);
-
+      
         const parts = monthData.split('|');
-
+      
         if (parts.length < 2) {
           Output.send(msg.who, `Invalid format. Received ${parts.length} parts. Expected format: Name|Days. Got: "${monthData}"`);
           return;
@@ -5720,9 +5805,9 @@ const Chronicle = (() => {
     },
 
     addMoon: (msg) => {
-      // Kept for backward compatibility - query is now in the button
-      Output.send(msg.who, `Use the Add Moon button in Design Mode to add a moon.`);
-    },
+        // Kept for backward compatibility - query is now in the button
+        Output.send(msg.who, `Use the Add Moon button in Design Mode to add a moon.`);
+      },
 
 
     saveMoon: (msg, moonData) => {
@@ -5732,13 +5817,13 @@ const Chronicle = (() => {
           Output.send(msg.who, 'No calendar loaded');
           return;
         }
-
+      
         const moons = calendar.moons || [];
-
+      
         Logger.debug(`saveMoon received: "${moonData}"`);
-
+      
         const parts = moonData.split('|');
-
+      
         if (parts.length < 5) {
           Output.send(msg.who, `Invalid format. Expected at least 5 parts: Name|Period|FullYear|FullMonth|FullDay. Got: "${moonData}"`);
           return;
@@ -5771,16 +5856,16 @@ const Chronicle = (() => {
 
 
     setClimate: (msg) => {
-      // Kept for backward compatibility - query is now in the button
-      Output.send(msg.who, `Use the Set Climate button in Design Mode to configure climate.`);
-    },
+        // Kept for backward compatibility - query is now in the button
+        Output.send(msg.who, `Use the Set Climate button in Design Mode to configure climate.`);
+      },
 
 
     saveClimate: (msg, climateData) => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const parts = climateData.split('|');
-
+      
         if (parts.length < 5) {
           Output.send(msg.who, 'Invalid format. See help for proper format.');
           return;
@@ -5806,8 +5891,8 @@ const Chronicle = (() => {
     overrideClimate: (msg, koppenCode) => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
-        const code = koppenCode.trim(); // Don't convert to uppercase - keep the original case
-
+        const code = koppenCode.trim();  // Don't convert to uppercase - keep the original case
+        
         // Climate descriptions (must match the ones in UI)
         const descriptions = {
           'Af': { name: 'Tropical Rainforest', temp: 'Hot and humid year-round', precip: 'Heavy rainfall in all seasons', biome: 'Dense jungle - diverse wildlife' },
@@ -5828,12 +5913,12 @@ const Chronicle = (() => {
           'ET': { name: 'Tundra', temp: 'Cold year-round', precip: 'Low precipitation', biome: 'Permafrost - mosses - lichens' },
           'EF': { name: 'Ice Cap', temp: 'Extremely cold year-round', precip: 'Minimal precipitation', biome: 'Permanent ice and snow' }
         };
-
+        
         if (!descriptions[code]) {
           Output.send(msg.who, `Invalid climate code: ${code}`);
           return;
         }
-
+        
         const desc = descriptions[code];
         const climate = {
           koppen_code: code,
@@ -5842,11 +5927,11 @@ const Chronicle = (() => {
           precipitation_profile: desc.precip,
           biome_hint: desc.biome
         };
-
+        
         calendar.climate = climate;
         HandoutManager.saveCalendar(calendar);
         Commands.renderInterface(msg);
-
+        
         Output.send(msg.who, `Climate set to: ${desc.name} (${code})`);
       });
     },
@@ -5854,26 +5939,15 @@ const Chronicle = (() => {
     toggleUnits: (msg) => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
-
+        
         // Toggle between 'us' and 'metric'
         calendar.units = (calendar.units === 'us') ? 'metric' : 'us';
-
+        
         HandoutManager.saveCalendar(calendar);
         Commands.renderInterface(msg);
       });
     },
 
-
-    toggleSeasonMarkers: (msg) => {
-      DataLoader.loadAll((data) => {
-        const calendar = data.calendar;
-        if (!calendar) return;
-        calendar.seasons = calendar.seasons || {};
-        calendar.seasons.showMarkers = !DateUtils.seasonMarkersEnabled(calendar);
-        HandoutManager.saveCalendar(calendar);
-        Commands.renderInterface(msg);
-      });
-    },
 
     setVernalEquinox: (msg, dayStr) => {
       DataLoader.loadAll((data) => {
@@ -5897,10 +5971,10 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         calendar.leapYears.enabled = !calendar.leapYears.enabled;
-
+      
         HandoutManager.saveCalendar(calendar);
 
-        Output.send(msg.who, `Gregorian leap day ${calendar.leapYears.enabled ? 'enabled' : 'disabled'}`);
+        Output.send(msg.who, `Leap years ${calendar.leapYears.enabled ? 'enabled' : 'disabled'}`);
         Commands.renderInterface(msg);
       });
     },
@@ -5918,7 +5992,7 @@ const Chronicle = (() => {
         calendar.leapYears.cycle = cycle;
         HandoutManager.saveCalendar(calendar);
 
-        Output.send(msg.who, `Gregorian leap day cycle set to every ${cycle} years`);
+        Output.send(msg.who, `Leap year cycle set to every ${cycle} years`);
         Commands.renderInterface(msg);
       });
     },
@@ -5979,7 +6053,7 @@ const Chronicle = (() => {
         Logger.debug(`addHoliday received: "${holidayData}"`);
 
         if (parts.length < 4) {
-          Output.send(msg.who, `Invalid format. Expected: Name|Month|Day|Recurring|Description|Year. Got: "${holidayData}"`);
+          Output.send(msg.who, `Invalid format. Expected: Name|Month|Day|Recurring|Description. Got: "${holidayData}"`);
           return;
         }
 
@@ -5988,12 +6062,6 @@ const Chronicle = (() => {
         const day = parseInt(parts[2]);
         const recurring = parts[3].trim() === 'Yes';
         const description = parts[4] ? parts[4].trim() : '';
-        const year = parts[5] !== undefined ? parseInt(parts[5]) : NaN;
-
-        if (!recurring && isNaN(year)) {
-          Output.send(msg.who, 'A non-recurring holiday needs a year.');
-          return;
-        }
 
         if (isNaN(month) || isNaN(day)) {
           Output.send(msg.who, `Invalid month or day. Month=${parts[1]}, Day=${parts[2]}`);
@@ -6005,8 +6073,8 @@ const Chronicle = (() => {
           return;
         }
 
-        const holiday = DataModels.createHoliday(name, { month, day }, recurring, description, year);
-
+        const holiday = DataModels.createHoliday(name, {month, day}, recurring, description);
+      
         if (!calendar.holidays) {
           calendar.holidays = [];
         }
@@ -6024,7 +6092,7 @@ const Chronicle = (() => {
         const parts = holidayData.split('|');
 
         if (parts.length < 6) {
-          Output.send(msg.who, `Invalid format. Expected: Index|Name|Month|Day|Recurring|Description|Year`);
+          Output.send(msg.who, `Invalid format. Expected: Index|Name|Month|Day|Recurring|Description`);
           return;
         }
 
@@ -6034,12 +6102,6 @@ const Chronicle = (() => {
         const day = parseInt(parts[3]);
         const recurring = parts[4].trim() === 'Yes';
         const description = parts[5].trim();
-        const year = parts[6] !== undefined ? parseInt(parts[6]) : NaN;
-
-        if (!recurring && isNaN(year)) {
-          Output.send(msg.who, 'A non-recurring holiday needs a year.');
-          return;
-        }
 
         if (isNaN(idx) || idx < 0 || idx >= calendar.holidays.length) {
           Output.send(msg.who, `Invalid holiday index: ${idx}`);
@@ -6060,7 +6122,6 @@ const Chronicle = (() => {
         calendar.holidays[idx].name = name;
         calendar.holidays[idx].dateRef = { month, day };
         calendar.holidays[idx].recurring = recurring;
-        calendar.holidays[idx].year = recurring ? null : year;
         calendar.holidays[idx].description = description;
 
         HandoutManager.saveCalendar(calendar);
@@ -6134,19 +6195,19 @@ const Chronicle = (() => {
     addSpecialDay: (msg, dayType) => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
-
+        
         // Build month list for query
         const monthList = calendar.months.map((m, idx) => `${m.name},${idx + 1}`).join('|');
-
+        
         // Create direct query based on type - this will be embedded in a button href
         let query = `!chr --savespecialday ${dayType}|?{Name}|?{After Which Month?|${monthList}}|?{After Which Day? (0=before month)}|?{Week Behavior|Part of week,partOfWeek|Between weeks,betweenWeeks}`;
-
+        
         if (dayType === 'leap') {
           query += `|?{Every N years (frequency)|4}|?{Year offset|0}`;
         }
-
+        
         query += `|?{Description (optional)|}`;
-
+        
         // This command should not be called from Design mode buttons anymore
         // But keep for backwards compatibility
         const CSS_CURRENT = getCSS();
@@ -6158,7 +6219,7 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const parts = specialDayData.split('|');
-
+        
         const dayType = parts[0]; // 'fixed' or 'leap'
         const name = parts[1].trim();
         const monthParts = parts[2].split(','); // "MonthName,MonthNumber"
@@ -6166,11 +6227,11 @@ const Chronicle = (() => {
         const afterDay = parseInt(parts[3]);
         const weekBehaviorParts = parts[4].split(',');
         const weekBehavior = weekBehaviorParts[1] || weekBehaviorParts[0]; // Get second part or fallback
-
+        
         let frequency = null;
         let offset = 0;
         let description = '';
-
+        
         if (dayType === 'leap') {
           frequency = parseInt(parts[5]);
           offset = parseInt(parts[6]);
@@ -6178,26 +6239,27 @@ const Chronicle = (() => {
         } else {
           description = parts[5] ? parts[5].trim() : '';
         }
-
+        
         if (!name || isNaN(afterMonth) || isNaN(afterDay)) {
           Output.send(msg.who, `Invalid input. Name: "${name}", Month: ${afterMonth}, Day: ${afterDay}`);
           return;
         }
-
+        
         const specialDay = DataModels.createInterMonthDay(
-          name, { afterMonth, afterDay },
+          name,
+          { afterMonth, afterDay },
           weekBehavior === 'betweenWeeks',
           dayType,
           frequency,
           offset,
           description
         );
-
+        
         if (!calendar.interMonthDays) {
           calendar.interMonthDays = [];
         }
         calendar.interMonthDays.push(specialDay);
-
+        
         HandoutManager.saveCalendar(calendar);
         Commands.renderInterface(msg);
       });
@@ -6208,16 +6270,16 @@ const Chronicle = (() => {
         const calendar = data.calendar;
         const CSS_CURRENT = getCSS();
         const index = parseInt(idx);
-
+        
         if (!calendar.interMonthDays || index < 0 || index >= calendar.interMonthDays.length) {
           Output.send(msg.who, 'Special day not found');
           return;
         }
-
+        
         const sd = calendar.interMonthDays[index];
         const escapedName = sd.name.replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
         const escapedDesc = (sd.description || '').replace(/\|/g, '&#124;').replace(/\}/g, '&#125;');
-
+        
         // Build month list with current selection first
         const currentMonth = calendar.months[sd.position.afterMonth - 1];
         const monthList = calendar.months.map((m, idx) => {
@@ -6225,18 +6287,18 @@ const Chronicle = (() => {
           return num === sd.position.afterMonth ? `${m.name},${num}` : `${m.name},${num}`;
         }).join('|');
         const monthDefault = `${currentMonth.name},${sd.position.afterMonth}`;
-
+        
         // Week behavior with current as default
         const weekBehaviorDefault = sd.breaksWeekCycle ? 'Between weeks,betweenWeeks' : 'Part of week,partOfWeek';
-
+        
         let query = `!chr --updatespecialday ${index}|${sd.dayType}|?{Name|${escapedName}}|?{After Which Month?|${monthDefault}|${monthList}}|?{After Which Day?|${sd.position.afterDay}}|?{Week Behavior|${weekBehaviorDefault}|Part of week,partOfWeek|Between weeks,betweenWeeks}`;
-
+        
         if (sd.dayType === 'leap') {
           query += `|?{Frequency|${sd.frequency}}|?{Offset|${sd.offset}}`;
         }
-
+        
         query += `|?{Description|${escapedDesc}}`;
-
+        
         Output.send(msg.who, Output.makeButton('Update Special Day', query, CSS_CURRENT.button));
       });
     },
@@ -6245,7 +6307,7 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const parts = specialDayData.split('|');
-
+        
         const index = parseInt(parts[0]);
         const dayType = parts[1];
         const name = parts[2].trim();
@@ -6254,11 +6316,11 @@ const Chronicle = (() => {
         const afterDay = parseInt(parts[4]);
         const weekBehaviorParts = parts[5].split(',');
         const weekBehavior = weekBehaviorParts[1] || weekBehaviorParts[0];
-
+        
         let frequency = null;
         let offset = 0;
         let description = '';
-
+        
         if (dayType === 'leap') {
           frequency = parseInt(parts[6]);
           offset = parseInt(parts[7]);
@@ -6266,12 +6328,12 @@ const Chronicle = (() => {
         } else {
           description = parts[6] ? parts[6].trim() : '';
         }
-
+        
         if (!calendar.interMonthDays || index < 0 || index >= calendar.interMonthDays.length) {
           Output.send(msg.who, 'Special day not found');
           return;
         }
-
+        
         calendar.interMonthDays[index].name = name;
         calendar.interMonthDays[index].position = { afterMonth, afterDay };
         calendar.interMonthDays[index].breaksWeekCycle = (weekBehavior === 'betweenWeeks');
@@ -6279,7 +6341,7 @@ const Chronicle = (() => {
         calendar.interMonthDays[index].frequency = frequency;
         calendar.interMonthDays[index].offset = offset;
         calendar.interMonthDays[index].description = description;
-
+        
         HandoutManager.saveCalendar(calendar);
         Commands.renderInterface(msg);
       });
@@ -6289,15 +6351,15 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const idx = parseInt(idxStr);
-
+        
         if (!calendar.interMonthDays || idx < 0 || idx >= calendar.interMonthDays.length) {
           Output.send(msg.who, 'Invalid special day index');
           return;
         }
-
+        
         const sd = calendar.interMonthDays[idx];
         calendar.interMonthDays.splice(idx, 1);
-
+        
         HandoutManager.saveCalendar(calendar);
         Commands.renderInterface(msg);
       });
@@ -6307,12 +6369,12 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const specialDay = (calendar.interMonthDays || []).find(sd => sd.id === specialDayId);
-
+        
         if (!specialDay) {
           Output.send(msg.who, `Special day not found`);
           return;
         }
-
+        
         const CSS_CURRENT = getCSS();
         let output = `<strong style="${CSS_CURRENT.holiday}">${specialDay.name}</strong>`;
         if (specialDay.description) {
@@ -6320,7 +6382,7 @@ const Chronicle = (() => {
         }
         output += `<br>`;
         output += `<a style="${CSS_CURRENT.button}" href="!chr --specialdayannounce ${specialDay.id}">Announce publicly</a>`;
-
+        
         Output.send(msg.who, output);
       });
     },
@@ -6329,12 +6391,12 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const specialDay = (calendar.interMonthDays || []).find(sd => sd.id === specialDayId);
-
+        
         if (!specialDay) {
           Output.send(msg.who, `Special day not found`);
           return;
         }
-
+        
         const CSS_CURRENT = getCSS();
         let output = `<div style="${CSS_CURRENT.chatOutput}">`;
         output += `<strong style="${CSS_CURRENT.holiday}">${specialDay.name}</strong>`;
@@ -6342,7 +6404,7 @@ const Chronicle = (() => {
           output += `<br>${specialDay.description}`;
         }
         output += `</div>`;
-
+        
         Output.broadcast(output);
       });
     },
@@ -6352,26 +6414,26 @@ const Chronicle = (() => {
         const parts = specialDayData.split('|');
         const year = parseInt(parts[0]);
         const specialDayId = parts[1];
-
+        
         const calendar = data.calendar;
         const specialDay = (calendar.interMonthDays || []).find(sd => sd.id === specialDayId);
-
+        
         if (!specialDay) {
           Output.send(msg.who, `Special day not found`);
           return;
         }
-
+        
         // Calculate unique day number for this special day
         // Count how many special days come before this one with the same afterMonth and afterDay
         const specialDaysThisYear = DateUtils.getSpecialDaysForYear(year, calendar);
-        const sameDaySpecialDays = specialDaysThisYear.filter(sd =>
+        const sameDaySpecialDays = specialDaysThisYear.filter(sd => 
           sd.position.afterMonth === specialDay.position.afterMonth &&
           sd.position.afterDay === specialDay.position.afterDay
         );
-
+        
         // Find this special day's index among same-day special days
         const index = sameDaySpecialDays.findIndex(sd => sd.id === specialDayId);
-
+        
         // Set currentDate with special day reference and unique fractional day
         State.setConfig('currentDate', {
           year: year,
@@ -6379,13 +6441,13 @@ const Chronicle = (() => {
           day: specialDay.position.afterDay + 1 + (index * 0.01), // Unique fractional offset
           specialDayId: specialDayId
         });
-
+        
         // Set viewing month
         State.setConfig('viewingDate', {
           year: year,
           month: specialDay.position.afterMonth
         });
-
+        
         Commands.renderInterface(msg);
       });
     },
@@ -6525,34 +6587,40 @@ const Chronicle = (() => {
 
 
     moveMonth: (msg, moveData) => {
-      // Reorder swaps names only; day counts and all month-number references stay with their slot
-      DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const parts = moveData.split('|');
         const idx = parseInt(parts[0]);
         const direction = parts[1];
 
-        if (!calendar || isNaN(idx) || idx < 0 || idx >= calendar.months.length) {
+        if (isNaN(idx) || idx < 0 || idx >= calendar.months.length) {
           Output.send(msg.who, 'Invalid month index');
           return;
         }
 
         const newIdx = direction === 'up' ? idx - 1 : idx + 1;
-        if (newIdx < 0 || newIdx >= calendar.months.length) return;
 
-        const tempName = calendar.months[idx].name;
-        calendar.months[idx].name = calendar.months[newIdx].name;
-        calendar.months[newIdx].name = tempName;
+        if (newIdx < 0 || newIdx >= calendar.months.length) {
+          return; // Can't move beyond boundaries
+        }
+
+        // Swap
+        const temp = calendar.months[idx];
+        calendar.months[idx] = calendar.months[newIdx];
+        calendar.months[newIdx] = temp;
+
+        // Update order property
+        calendar.months.forEach((m, i) => {
+          m.order = i;
+        });
 
         HandoutManager.saveCalendar(calendar);
+
         Commands.renderInterface(msg);
-      });
-    },
+      },
+
 
     moveMoon: (msg, moveData) => {
-      DataLoader.loadAll((data) => {
-        const calendar = data.calendar;
-        const moons = calendar ? calendar.moons : [];
+        const moons = data.moons;
         const parts = moveData.split('|');
         const idx = parseInt(parts[0]);
         const direction = parts[1];
@@ -6563,16 +6631,20 @@ const Chronicle = (() => {
         }
 
         const newIdx = direction === 'up' ? idx - 1 : idx + 1;
-        if (newIdx < 0 || newIdx >= moons.length) return;
 
+        if (newIdx < 0 || newIdx >= moons.length) {
+          return; // Can't move beyond boundaries
+        }
+
+        // Swap
         const temp = moons[idx];
         moons[idx] = moons[newIdx];
         moons[newIdx] = temp;
 
-        HandoutManager.saveCalendar(calendar);
+
         Commands.renderInterface(msg);
-      });
-    },
+      },
+
 
     moveHoliday: (msg, moveData) => {
       DataLoader.loadAll((data) => {
@@ -6606,27 +6678,27 @@ const Chronicle = (() => {
 
     editMonth: (msg, idx) => {
       DataLoader.loadAll((data) => {
-        const calendar = data.calendar;
-        const monthIndex = parseInt(idx);
-        const month = calendar.months[monthIndex];
+          const calendar = data.calendar;
+          const monthIndex = parseInt(idx);
+          const month = calendar.months[monthIndex];
+      
+          if (!month) {
+            Output.send(msg.who, 'Invalid month index');
+            return;
+          }
 
-        if (!month) {
-          Output.send(msg.who, 'Invalid month index');
-          return;
-        }
-
-        Output.send(msg.who, `To edit "${month.name}", type: <strong>!chr --updatemonth ${idx}|?{New Month Name|${month.name}}|?{New Days|${month.days}}</strong>`);
+          Output.send(msg.who, `To edit "${month.name}", type: <strong>!chr --updatemonth ${idx}|?{New Month Name|${month.name}}|?{New Days|${month.days}}</strong>`);
       });
     },
 
     updateMonth: (msg, monthData) => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
-
+    
         Logger.debug(`updateMonth received: "${monthData}"`);
-
+    
         const parts = monthData.split('|');
-
+    
         if (parts.length < 3) {
           Output.send(msg.who, `Invalid format. Received ${parts.length} parts. Expected: Index|Name|Days. Got: "${monthData}"`);
           return;
@@ -6650,43 +6722,42 @@ const Chronicle = (() => {
       });
     },
 
-    deleteMonth: (msg, deleteData) => {
-      // Button sends idx|Yes after a confirmation query; anything else is treated as cancel
-      const parts = String(deleteData).split('|');
-      if ((parts[1] || '').trim() !== 'Yes') return;
-
+    deleteMonth: (msg, idx) => {
       DataLoader.loadAll((data) => {
-        const calendar = data.calendar;
-        const monthIndex = parseInt(parts[0]);
-        const month = calendar ? calendar.months[monthIndex] : null;
+            const calendar = data.calendar;
+            const monthIndex = parseInt(idx);
+            const month = calendar.months[monthIndex];
+      
+            if (!month) {
+              Output.send(msg.who, 'Invalid month index');
+              return;
+            }
 
-        if (!month) {
-          Output.send(msg.who, 'Invalid month index');
-          return;
-        }
+            calendar.months.splice(monthIndex, 1);
+      
+            // Re-index remaining months
+            calendar.months.forEach((m, i) => {
+              m.order = i;
+            });
 
-        calendar.months.splice(monthIndex, 1);
-        calendar.months.forEach((m, i) => {
-          m.order = i;
-        });
+            HandoutManager.saveCalendar(calendar);
 
-        HandoutManager.saveCalendar(calendar);
-        Commands.renderInterface(msg);
-      });
-    },
+            Commands.renderInterface(msg);
+          });
+        },
 
-    editMoon: (msg, idx) => {
+        editMoon: (msg, idx) => {
       DataLoader.loadAll((data) => {
-        const moons = data.moons;
-        const moonIndex = parseInt(idx);
-        const moon = moons[moonIndex];
+              const moons = data.moons;
+              const moonIndex = parseInt(idx);
+              const moon = moons[moonIndex];
+      
+              if (!moon) {
+                Output.send(msg.who, 'Invalid moon index');
+                return;
+              }
 
-        if (!moon) {
-          Output.send(msg.who, 'Invalid moon index');
-          return;
-        }
-
-        Output.send(msg.who, `To edit "${moon.name}", use: <strong>!chr --updatemoon ${idx}|?{Moon Name|${moon.name}}|?{Period|${moon.period}}|?{Full Year|${moon.fullDayRef.year}}|?{Full Month|${moon.fullDayRef.month}}|?{Full Day|${moon.fullDayRef.day}}</strong>`);
+              Output.send(msg.who, `To edit "${moon.name}", use: <strong>!chr --updatemoon ${idx}|?{Moon Name|${moon.name}}|?{Period|${moon.period}}|?{Full Year|${moon.fullDayRef.year}}|?{Full Month|${moon.fullDayRef.month}}|?{Full Day|${moon.fullDayRef.day}}</strong>`);
       });
     },
 
@@ -6695,7 +6766,7 @@ const Chronicle = (() => {
         const calendar = data.calendar;
         const moons = calendar.moons || [];
         const parts = moonData.split('|');
-
+      
         if (parts.length < 6) {
           Output.send(msg.who, 'Invalid format');
           return;
@@ -6736,7 +6807,7 @@ const Chronicle = (() => {
         const moons = calendar.moons || [];
         const moonIndex = parseInt(idx);
         const moon = moons[moonIndex];
-
+      
         if (!moon) {
           Output.send(msg.who, 'Invalid moon index');
           return;
@@ -6755,7 +6826,7 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         const current = calendar.weeks.weekdayNames.join(',');
-
+      
         Output.send(msg.who, `Current weekdays: ${current}<br>To change, type: <strong>!chr --saveweekdays ?{Weekday Names (comma-separated)|${current}}</strong>`);
       });
     },
@@ -6804,7 +6875,7 @@ const Chronicle = (() => {
       DataLoader.loadAll((data) => {
         const calendar = data.calendar;
         calendar.description = description || '';
-
+        
         HandoutManager.saveCalendar(calendar);
         Commands.renderInterface(msg);
       });
@@ -6853,7 +6924,7 @@ const Chronicle = (() => {
         }
 
         calendar.weeks.daysInWeek = numDays;
-
+      
         // Adjust weekday names if needed
         while (calendar.weeks.weekdayNames.length < numDays) {
           calendar.weeks.weekdayNames.push(`Day${calendar.weeks.weekdayNames.length + 1}`);
@@ -6871,452 +6942,482 @@ const Chronicle = (() => {
 
     sendCalendarToChat: (msg) => {
       DataLoader.loadAll((data) => {
-        const CSS_CURRENT = getCSS();
-        const calendar = data.calendar;
-        const viewingDate = State.config().viewingDate;
-        const currentDate = State.config().currentDate;
-        const month = calendar.months[currentDate.month - 1];
-        const moons = data.moons;
-        const events = data.events;
-        const notes = data.notes;
-        const weather = data.weather;
+                  const CSS_CURRENT = getCSS();
+                  const calendar = data.calendar;
+                  const viewingDate = State.config().viewingDate;
+                  const currentDate = State.config().currentDate;
+                  const month = calendar.months[currentDate.month - 1];
+                  const moons = data.moons;
+                  const events = data.events;
+                  const notes = data.notes;
+                  const weather = data.weather;
 
-        if (!month) {
-          Output.send(msg.who, 'Invalid month');
-          return;
-        }
-
-        const dayOfYear = DateUtils.getDayOfYear(currentDate, calendar);
-        const daysInYear = DateUtils.getDaysInYear(currentDate.year, calendar);
-        const seasonRaw = DateUtils.getSeason(dayOfYear, calendar);
-        const season = seasonRaw.charAt(0).toUpperCase() + seasonRaw.slice(1);
-
-        let output = `<div style="${CSS_CURRENT.chatOutput}">`;
-        output += `<div style="font-weight:bold;margin-bottom:5px;">${month.name} ${currentDate.day}, ${currentDate.year}</div>`;
-        output += `<div style="font-size:11px;margin-bottom:5px;"><em>Season: ${season} (Day ${dayOfYear} of ${daysInYear})</em></div>`;
-
-        // Current day's weather
-        const todayWeather = weather.find(w => DateUtils.itemOnDate(w.dateRef, currentDate, calendar));
-        if (todayWeather) {
-          const weatherEmoji = todayWeather.emoji || WeatherGenerator.getWeatherEmoji(todayWeather.description);
-          const emojiStyle = CSS_CURRENT.emojiCircle.replace('float: right;', '').replace('float:right;', '') + 'display: inline-block; vertical-align: middle;';
-          output += `<div style="margin-top:5px;font-size:11px;"><strong>Weather:</strong> <div style="${emojiStyle}">${weatherEmoji}</div> ${todayWeather.description} (${todayWeather.temperature.value}°${todayWeather.temperature.unit})</div>`;
-        }
-
-        // Current day's holidays
-        const todayHolidays = (calendar.holidays || []).filter(h => DateUtils.holidayOnDate(h, currentDate));
-        if (todayHolidays.length > 0) {
-          output += '<div style="margin-top:5px;font-size:11px;"><strong>Holidays:</strong> ';
-          output += todayHolidays.map(h =>
-            `<a style="${CSS_CURRENT.holiday} text-decoration: underline; cursor: pointer; background: none; border: none;" href="!chr --holidayannounce ${h.id}">${h.name}</a>`
-          ).join(', ');
-          output += '</div>';
-        }
-
-        // Equinox/solstice markers
-        const todayMarkers = DateUtils.getSeasonMarkers(currentDate, calendar);
-        if (todayMarkers.length > 0) {
-          output += `<div style="margin-top:5px;font-size:11px;"><strong>Season:</strong> <span style="${CSS_CURRENT.holiday}">${todayMarkers.join(', ')}</span></div>`;
-        }
-
-        // Current day's special days
-        const todaySpecialDay = DateUtils.isSpecialDay(currentDate.month, currentDate.day, currentDate.year, calendar);
-        if (todaySpecialDay) {
-          output += '<div style="margin-top:5px;font-size:11px;"><strong>Special Day:</strong> ';
-          output += `<a style="${CSS_CURRENT.holiday} text-decoration: underline; cursor: pointer; background: none; border: none;" href="!chr --specialdayannounce ${todaySpecialDay.id}">${todaySpecialDay.name}</a>`;
-          output += '</div>';
-        }
-
-        // Current day's events (exclude gm tagged)
-        const todayEvents = events.filter(e =>
-          DateUtils.itemOnDate(e.dateRef, currentDate, calendar) &&
-          !(e.tags && e.tags.includes('gm'))
-        );
-        if (todayEvents.length > 0) {
-          output += '<div style="margin-top:5px;font-size:11px;"><strong>Events:</strong></div><ul style="margin:2px 0;padding-left:15px;font-size:13px;">';
-          todayEvents.forEach(e => output += `<li>${MarkdownParser.renderAsHtml(e.content, calendar, {sendToChat: true})}</li>`);
-          output += '</ul>';
-        }
-
-        // Current day's notes (exclude gm tagged)
-        const todayNotes = notes.filter(n =>
-          DateUtils.itemOnDate(n.dateRef, currentDate, calendar) &&
-          !(n.tags && n.tags.includes('gm'))
-        );
-        if (todayNotes.length > 0) {
-          output += '<div style="margin-top:5px;font-size:11px;"><strong>Notes:</strong></div><ul style="margin:2px 0;padding-left:15px;font-size:13px;">';
-          todayNotes.forEach(n => output += `<li>${MarkdownParser.renderAsHtml(n.content, calendar, {sendToChat: true})}</li>`);
-          output += '</ul>';
-        }
-
-        // Week context - 7 day grid centered on featured date (3 before, featured in middle, 3 after)
-        const daysInWeek = calendar.weeks.daysInWeek;
-
-        output += '<div style="margin-top:10px;"><strong>7 Day Span:</strong></div>';
-        output += '<table style="width:100%;border-collapse:collapse;font-size:10px;margin:5px 0;">';
-
-        // Helper to convert absolute day back to date (accounts for both interannual and intercalary days)
-        const absDateToDateRef = (absDay) => {
-          if (absDay <= 0) return { year: 1, month: 1, day: 1 };
-
-          let year = 1;
-          let dayCount = absDay;
-
-          // Find the year
-          while (dayCount > DateUtils.getDaysInYear(year, calendar)) {
-            dayCount -= DateUtils.getDaysInYear(year, calendar);
-            year++;
-          }
-
-          // Check if it's an interannual (beginning) day
-          const interannualDays = calendar.interannualDays || [];
-          for (let iday of interannualDays) {
-            if (iday.position === 'beginning') {
-              const iabsDay = DateUtils.getAbsDayOfInterannualDay(iday.position, iday.order, calendar);
-              if (dayCount === iabsDay) {
-                return { year: year, isInterannual: true, position: iday.position, order: iday.order };
-              }
-            }
-          }
-
-          // Account for beginning interannual offset
-          const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
-          let adjustedDay = dayCount - beginningInterannualCount;
-
-          // Find the month and day
-          let month = 1;
-          while (month <= calendar.months.length) {
-            const daysInMonth = DateUtils.getDaysInMonth(month, year, calendar);
-
-            if (adjustedDay <= daysInMonth) {
-              // Check for intercalary days after this day
-              const interCalDays = calendar.interMonthDays || [];
-              for (let icd of interCalDays) {
-                if (icd.afterDay === adjustedDay && icd.afterMonth === month) {
-                  return { year: year, month: month, day: adjustedDay, specialDayId: icd.id, isIntercalaryFollowing: true };
-                }
-              }
-              // Regular day
-              return { year: year, month: month, day: adjustedDay > 0 ? adjustedDay : 1 };
-            }
-
-            adjustedDay -= daysInMonth;
-
-            // Check for intercalary days after this month
-            const interCalDays = calendar.interMonthDays || [];
-            const interCalAfter = interCalDays.filter(icd => icd.afterMonth === month && icd.afterDay >= daysInMonth);
-
-            if (interCalAfter.length > 0 && adjustedDay > 0 && adjustedDay <= interCalAfter.length) {
-              const icd = interCalAfter[adjustedDay - 1];
-              return { year: year, month: month, day: daysInMonth, specialDayId: icd.id, isSpecialDay: true };
-            }
-
-            adjustedDay -= interCalAfter.length;
-            month++;
-          }
-
-          // Check for ending interannual days
-          for (let iday of interannualDays) {
-            if (iday.position === 'end') {
-              const iabsDay = DateUtils.getAbsDayOfInterannualDay(iday.position, iday.order, calendar);
-              if (dayCount === iabsDay) {
-                return { year: year, isInterannual: true, position: iday.position, order: iday.order };
-              }
-            }
-          }
-
-          // Fallback
-          return { year: year, month: 1, day: 1 };
-        };
-
-        // Helper function to convert day 31 to intercalary if it exists
-        const normalizeDate = (date) => {
-          if (date.isIntercalary || date.isInterannual) return date;
-
-          const daysInMonth = DateUtils.getDaysInMonth(date.month, date.year, calendar);
-          if (date.day > daysInMonth) {
-            // This is representing an intercalary day - find it
-            const icd = (calendar.interMonthDays || []).find(d =>
-              d.position.afterMonth === date.month && d.position.afterDay === daysInMonth
-            );
-            if (icd) {
-              return {
-                year: date.year,
-                month: date.month,
-                day: date.day,
-                isIntercalary: true,
-                specialDayId: icd.id
-              };
-            }
-          }
-          return date;
-        };
-
-        // Helper function to step forward/backward one day at a time, handling intercalary days
-        const stepDate = (date, steps) => {
-          let current = normalizeDate(JSON.parse(JSON.stringify(date)));
-          const direction = steps > 0 ? 1 : -1;
-          let remaining = Math.abs(steps);
-
-          while (remaining > 0) {
-            if (direction > 0) {
-              // Stepping forward
-              if (current.isIntercalary && current.specialDayId) {
-                // Move from intercalary to next month day 1
-                const icd = (calendar.interMonthDays || []).find(d => d.id === current.specialDayId);
-                if (icd && icd.position.afterMonth !== undefined) {
-                  current.month = icd.position.afterMonth + 1;
-                  if (current.month > calendar.months.length) {
-                    current.month = 1;
-                    current.year++;
+                  if (!month) {
+                    Output.send(msg.who, 'Invalid month');
+                    return;
                   }
-                }
-                current.day = 1;
-                current.isIntercalary = false;
-                current.specialDayId = undefined;
-              } else if (current.isInterannual) {
-                // Move from interannual to next month day 1
-                current.month = (current.position === 'end') ? current.month + 1 : 1;
-                if (current.month > calendar.months.length) {
-                  current.month = 1;
-                  current.year++;
-                }
-                current.day = 1;
-                current.isInterannual = false;
-                current.position = undefined;
-                current.order = undefined;
-              } else {
-                const daysInMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
 
-                // Check if there's an intercalary day after this day in this month
-                const interCalDays = (calendar.interMonthDays || []).filter(icd =>
-                  icd.position.afterMonth === current.month && icd.position.afterDay === current.day
-                );
+                  // Calculate day of year (1-based, counting from month 1 day 1)
+                  let dayOfYear = 0;
+                  for (let m = 1; m < currentDate.month; m++) {
+                    dayOfYear += DateUtils.getDaysInMonth(m, currentDate.year, calendar);
+                  }
+                  dayOfYear += currentDate.day;
 
-                if (interCalDays.length > 0) {
-                  // Move to intercalary day
-                  current.specialDayId = interCalDays[0].id;
-                  current.isIntercalary = true;
-                } else if (current.day < daysInMonth) {
-                  // Regular next day (not at month end)
-                  current.day++;
-                } else {
-                  // At last day of month, check for intercalary after this day
-                  const interCalAfterDay = (calendar.interMonthDays || []).find(icd =>
-                    icd.position.afterMonth === current.month && icd.position.afterDay === current.day
+                  const daysInYear = DateUtils.getDaysInYear(currentDate.year, calendar);
+                  const vernal = calendar.seasons.vernalEquinox || 80;
+                  const seasonOffset = Math.floor(daysInYear / 12);
+                  
+                  const springStart = vernal - seasonOffset;
+                  const summerStart = vernal + Math.floor(daysInYear / 4) - seasonOffset;
+                  const autumnStart = vernal + Math.floor(daysInYear / 2) - seasonOffset;
+                  const winterStart = vernal + Math.floor(3 * daysInYear / 4) - seasonOffset;
+      
+                  let season = 'Winter';
+                  if (dayOfYear >= springStart && dayOfYear < summerStart) {
+                    season = 'Spring';
+                  } else if (dayOfYear >= summerStart && dayOfYear < autumnStart) {
+                    season = 'Summer';
+                  } else if (dayOfYear >= autumnStart && dayOfYear < winterStart) {
+                    season = 'Autumn';
+                  } else {
+                    season = 'Winter';
+                  }
+
+                  let output = `<div style="${CSS_CURRENT.chatOutput}">`;
+                  output += `<div style="font-weight:bold;margin-bottom:5px;">${month.name} ${currentDate.day}, ${currentDate.year}</div>`;
+                  output += `<div style="font-size:11px;margin-bottom:5px;"><em>Season: ${season} (Day ${dayOfYear} of ${daysInYear})</em></div>`;
+
+                  // Current day's weather
+                  const todayWeather = weather.find(w => 
+                    w.dateRef.year === currentDate.year && 
+                    w.dateRef.month === currentDate.month && 
+                    w.dateRef.day === currentDate.day
                   );
+                  if (todayWeather) {
+                    const weatherEmoji = todayWeather.emoji || WeatherGenerator.getWeatherEmoji(todayWeather.description);
+                    const emojiStyle = CSS_CURRENT.emojiCircle.replace('float: right;', '').replace('float:right;', '') + 'display: inline-block; vertical-align: middle;';
+                    output += `<div style="margin-top:5px;font-size:11px;"><strong>Weather:</strong> <div style="${emojiStyle}">${weatherEmoji}</div> ${todayWeather.description} (${todayWeather.temperature.value}°${todayWeather.temperature.unit})</div>`;
+                  }
 
-                  if (interCalAfterDay) {
-                    // Move to intercalary day
-                    current.specialDayId = interCalAfterDay.id;
-                    current.isIntercalary = true;
-                  } else if (current.month === calendar.months.length) {
-                    // At last day of last month - check for end of year interannual day
-                    const endOfYearDay = (calendar.interannualDays || []).find(iad =>
-                      iad.position === 'end'
-                    );
-                    if (endOfYearDay) {
-                      // Move to end of year interannual day
-                      current.month = calendar.months.length;
-                      current.day = undefined;
-                      current.isInterannual = true;
-                      current.position = 'end';
-                      current.order = endOfYearDay.order;
-                    } else {
-                      // Move to next month (which is month 1 of next year)
-                      current.month = 1;
-                      current.year++;
-                      current.day = 1;
+                  // Current day's holidays
+                  const todayHolidays = (calendar.holidays || []).filter(h => 
+                    h.dateRef.month === currentDate.month && 
+                    h.dateRef.day === currentDate.day
+                  );
+                  if (todayHolidays.length > 0) {
+                    output += '<div style="margin-top:5px;font-size:11px;"><strong>Holidays:</strong> ';
+                    output += todayHolidays.map(h => 
+                      `<a style="${CSS_CURRENT.holiday} text-decoration: underline; cursor: pointer; background: none; border: none;" href="!chr --holidayannounce ${h.id}">${h.name}</a>`
+                    ).join(', ');
+                    output += '</div>';
+                  }
+
+                  // Current day's special days
+                  const todaySpecialDay = DateUtils.isSpecialDay(currentDate.month, currentDate.day, currentDate.year, calendar);
+                  if (todaySpecialDay) {
+                    output += '<div style="margin-top:5px;font-size:11px;"><strong>Special Day:</strong> ';
+                    output += `<a style="${CSS_CURRENT.holiday} text-decoration: underline; cursor: pointer; background: none; border: none;" href="!chr --specialdayannounce ${todaySpecialDay.id}">${todaySpecialDay.name}</a>`;
+                    output += '</div>';
+                  }
+
+                  // Current day's events (exclude gm tagged)
+                  const todayEvents = events.filter(e => 
+                    e.dateRef.year === currentDate.year && 
+                    e.dateRef.month === currentDate.month && 
+                    e.dateRef.day === currentDate.day &&
+                    !(e.tags && e.tags.includes('gm'))
+                  );
+                  if (todayEvents.length > 0) {
+                    output += '<div style="margin-top:5px;font-size:11px;"><strong>Events:</strong></div><ul style="margin:2px 0;padding-left:15px;font-size:13px;">';
+                    todayEvents.forEach(e => output += `<li>${MarkdownParser.renderAsHtml(e.content, calendar, {sendToChat: true})}</li>`);
+                    output += '</ul>';
+                  }
+
+                  // Current day's notes (exclude gm tagged)
+                  const todayNotes = notes.filter(n => 
+                    n.dateRef.year === currentDate.year && 
+                    n.dateRef.month === currentDate.month && 
+                    n.dateRef.day === currentDate.day &&
+                    !(n.tags && n.tags.includes('gm'))
+                  );
+                  if (todayNotes.length > 0) {
+                    output += '<div style="margin-top:5px;font-size:11px;"><strong>Notes:</strong></div><ul style="margin:2px 0;padding-left:15px;font-size:13px;">';
+                    todayNotes.forEach(n => output += `<li>${MarkdownParser.renderAsHtml(n.content, calendar, {sendToChat: true})}</li>`);
+                    output += '</ul>';
+                  }
+
+                  // Week context - 7 day grid centered on featured date (3 before, featured in middle, 3 after)
+                  const daysInWeek = calendar.weeks.daysInWeek;
+                  
+                  output += '<div style="margin-top:10px;"><strong>7 Day Span:</strong></div>';
+                  output += '<table style="width:100%;border-collapse:collapse;font-size:10px;margin:5px 0;">';
+      
+                  // Helper to convert absolute day back to date (accounts for both interannual and intercalary days)
+                  const absDateToDateRef = (absDay) => {
+                    if (absDay <= 0) return { year: 1, month: 1, day: 1 };
+                    
+                    let year = 1;
+                    let dayCount = absDay;
+                    
+                    // Find the year
+                    while (dayCount > DateUtils.getDaysInYear(year, calendar)) {
+                      dayCount -= DateUtils.getDaysInYear(year, calendar);
+                      year++;
                     }
-                  } else {
-                    // Move to next month
-                    current.month++;
-                    current.day = 1;
+                    
+                    // Check if it's an interannual (beginning) day
+                    const interannualDays = calendar.interannualDays || [];
+                    for (let iday of interannualDays) {
+                      if (iday.position === 'beginning') {
+                        const iabsDay = DateUtils.getAbsDayOfInterannualDay(iday.position, iday.order, calendar);
+                        if (dayCount === iabsDay) {
+                          return { year: year, isInterannual: true, position: iday.position, order: iday.order };
+                        }
+                      }
+                    }
+                    
+                    // Account for beginning interannual offset
+                    const beginningInterannualCount = DateUtils.countInterannualDaysAtBeginning(calendar);
+                    let adjustedDay = dayCount - beginningInterannualCount;
+                    
+                    // Find the month and day
+                    let month = 1;
+                    while (month <= calendar.months.length) {
+                      const daysInMonth = DateUtils.getDaysInMonth(month, year, calendar);
+                      
+                      if (adjustedDay <= daysInMonth) {
+                        // Check for intercalary days after this day
+                        const interCalDays = calendar.interMonthDays || [];
+                        for (let icd of interCalDays) {
+                          if (icd.afterDay === adjustedDay && icd.afterMonth === month) {
+                            return { year: year, month: month, day: adjustedDay, specialDayId: icd.id, isIntercalaryFollowing: true };
+                          }
+                        }
+                        // Regular day
+                        return { year: year, month: month, day: adjustedDay > 0 ? adjustedDay : 1 };
+                      }
+                      
+                      adjustedDay -= daysInMonth;
+                      
+                      // Check for intercalary days after this month
+                      const interCalDays = calendar.interMonthDays || [];
+                      const interCalAfter = interCalDays.filter(icd => icd.afterMonth === month && icd.afterDay >= daysInMonth);
+                      
+                      if (interCalAfter.length > 0 && adjustedDay > 0 && adjustedDay <= interCalAfter.length) {
+                        const icd = interCalAfter[adjustedDay - 1];
+                        return { year: year, month: month, day: daysInMonth, specialDayId: icd.id, isSpecialDay: true };
+                      }
+                      
+                      adjustedDay -= interCalAfter.length;
+                      month++;
+                    }
+                    
+                    // Check for ending interannual days
+                    for (let iday of interannualDays) {
+                      if (iday.position === 'end') {
+                        const iabsDay = DateUtils.getAbsDayOfInterannualDay(iday.position, iday.order, calendar);
+                        if (dayCount === iabsDay) {
+                          return { year: year, isInterannual: true, position: iday.position, order: iday.order };
+                        }
+                      }
+                    }
+                    
+                    // Fallback
+                    return { year: year, month: 1, day: 1 };
+                  };
+                  
+                  // Helper function to convert day 31 to intercalary if it exists
+                  const normalizeDate = (date) => {
+                    if (date.isIntercalary || date.isInterannual) return date;
+                    
+                    const daysInMonth = DateUtils.getDaysInMonth(date.month, date.year, calendar);
+                    if (date.day > daysInMonth) {
+                      // This is representing an intercalary day - find it
+                      const icd = (calendar.interMonthDays || []).find(d => 
+                        d.position.afterMonth === date.month && d.position.afterDay === daysInMonth
+                      );
+                      if (icd) {
+                        return {
+                          year: date.year,
+                          month: date.month,
+                          day: date.day,
+                          isIntercalary: true,
+                          specialDayId: icd.id
+                        };
+                      }
+                    }
+                    return date;
+                  };
+                  
+                  // Helper function to step forward/backward one day at a time, handling intercalary days
+                  const stepDate = (date, steps) => {
+                    let current = normalizeDate(JSON.parse(JSON.stringify(date)));
+                    const direction = steps > 0 ? 1 : -1;
+                    let remaining = Math.abs(steps);
+                    
+                    while (remaining > 0) {
+                      if (direction > 0) {
+                        // Stepping forward
+                        if (current.isIntercalary && current.specialDayId) {
+                          // Move from intercalary to next month day 1
+                          const icd = (calendar.interMonthDays || []).find(d => d.id === current.specialDayId);
+                          if (icd && icd.position.afterMonth !== undefined) {
+                            current.month = icd.position.afterMonth + 1;
+                            if (current.month > calendar.months.length) {
+                              current.month = 1;
+                              current.year++;
+                            }
+                          }
+                          current.day = 1;
+                          current.isIntercalary = false;
+                          current.specialDayId = undefined;
+                        } else if (current.isInterannual) {
+                          // Move from interannual to next month day 1
+                          current.month = (current.position === 'end') ? current.month + 1 : 1;
+                          if (current.month > calendar.months.length) {
+                            current.month = 1;
+                            current.year++;
+                          }
+                          current.day = 1;
+                          current.isInterannual = false;
+                          current.position = undefined;
+                          current.order = undefined;
+                        } else {
+                          const daysInMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                          
+                          // Check if there's an intercalary day after this day in this month
+                          const interCalDays = (calendar.interMonthDays || []).filter(icd => 
+                            icd.position.afterMonth === current.month && icd.position.afterDay === current.day
+                          );
+                          
+                          if (interCalDays.length > 0) {
+                            // Move to intercalary day
+                            current.specialDayId = interCalDays[0].id;
+                            current.isIntercalary = true;
+                          } else if (current.day < daysInMonth) {
+                            // Regular next day (not at month end)
+                            current.day++;
+                          } else {
+                            // At last day of month, check for intercalary after this day
+                            const interCalAfterDay = (calendar.interMonthDays || []).find(icd => 
+                              icd.position.afterMonth === current.month && icd.position.afterDay === current.day
+                            );
+                            
+                            if (interCalAfterDay) {
+                              // Move to intercalary day
+                              current.specialDayId = interCalAfterDay.id;
+                              current.isIntercalary = true;
+                            } else if (current.month === calendar.months.length) {
+                              // At last day of last month - check for end of year interannual day
+                              const endOfYearDay = (calendar.interannualDays || []).find(iad => 
+                                iad.position === 'end'
+                              );
+                              if (endOfYearDay) {
+                                // Move to end of year interannual day
+                                current.month = calendar.months.length;
+                                current.day = undefined;
+                                current.isInterannual = true;
+                                current.position = 'end';
+                                current.order = endOfYearDay.order;
+                              } else {
+                                // Move to next month (which is month 1 of next year)
+                                current.month = 1;
+                                current.year++;
+                                current.day = 1;
+                              }
+                            } else {
+                              // Move to next month
+                              current.month++;
+                              current.day = 1;
+                            }
+                          }
+                        }
+                      } else {
+                        // Stepping backward
+                        if (current.isIntercalary) {
+                          // Move back to the day before the intercalary
+                          const icd = (calendar.interMonthDays || []).find(d => d.id === current.specialDayId);
+                          if (icd) {
+                            current.month = icd.position.afterMonth;
+                            current.day = icd.position.afterDay;
+                            current.isIntercalary = false;
+                            current.specialDayId = undefined;
+                          }
+                        } else if (current.isInterannual) {
+                          // Move back to last day of previous month/year
+                          if (current.position === 'beginning') {
+                            // At beginning of year - go to last month of previous year
+                            current.year--;
+                            current.month = calendar.months.length;
+                          } else {
+                            // At end of year - go to last month of current year  
+                            current.month = calendar.months.length;
+                          }
+                          const daysInLastMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                          current.day = daysInLastMonth;
+                          current.isInterannual = false;
+                          current.position = undefined;
+                          current.order = undefined;
+                        } else if (current.day === 1) {
+                          // At first day of month
+                          if (current.month === 1) {
+                            // At first day of year - check for beginning of year interannual day
+                            const beginningOfYearDay = (calendar.interannualDays || []).find(iad => 
+                              iad.position === 'beginning'
+                            );
+                            if (beginningOfYearDay) {
+                              // Move to beginning of year interannual day (in current year)
+                              current.month = 1;
+                              current.day = undefined;
+                              current.isInterannual = true;
+                              current.position = 'beginning';
+                              current.order = beginningOfYearDay.order;
+                            } else {
+                              // Move to last day of previous month (last month of previous year)
+                              current.month = calendar.months.length;
+                              current.year--;
+                              current.day = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                            }
+                          } else {
+                            // At first day of other months
+                            current.month--;
+                            const daysInPrevMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                            
+                            // Check for intercalary after the last day of previous month
+                            const interCalBeforeMonth = (calendar.interMonthDays || []).find(icd => 
+                              icd.position.afterMonth === current.month && icd.position.afterDay === daysInPrevMonth
+                            );
+                            
+                            if (interCalBeforeMonth) {
+                              current.specialDayId = interCalBeforeMonth.id;
+                              current.isIntercalary = true;
+                            } else {
+                              current.day = daysInPrevMonth;
+                            }
+                          }
+                        } else {
+                          // Regular day stepping backward
+                          // Check if there's an intercalary before the current day
+                          const interCalBeforeDay = (calendar.interMonthDays || []).find(icd => 
+                            icd.position.afterMonth === current.month && icd.position.afterDay === (current.day - 1)
+                          );
+                          
+                          if (interCalBeforeDay) {
+                            current.specialDayId = interCalBeforeDay.id;
+                            current.isIntercalary = true;
+                          } else {
+                            current.day--;
+                          }
+                        }
+                      }
+                      remaining--;
+                    }
+                    return current;
+                  };
+      
+                  // Pre-calculate all 7 dates for header alignment
+                  const normalizedCurrentDate = normalizeDate(currentDate);
+                  const sevenDayDates = [];
+                  for (let offset = -3; offset <= 3; offset++) {
+                    sevenDayDates.push(stepDate(normalizedCurrentDate, offset));
                   }
-                }
-              }
-            } else {
-              // Stepping backward
-              if (current.isIntercalary) {
-                // Move back to the day before the intercalary
-                const icd = (calendar.interMonthDays || []).find(d => d.id === current.specialDayId);
-                if (icd) {
-                  current.month = icd.position.afterMonth;
-                  current.day = icd.position.afterDay;
-                  current.isIntercalary = false;
-                  current.specialDayId = undefined;
-                }
-              } else if (current.isInterannual) {
-                // Move back to last day of previous month/year
-                if (current.position === 'beginning') {
-                  // At beginning of year - go to last month of previous year
-                  current.year--;
-                  current.month = calendar.months.length;
-                } else {
-                  // At end of year - go to last month of current year  
-                  current.month = calendar.months.length;
-                }
-                const daysInLastMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
-                current.day = daysInLastMonth;
-                current.isInterannual = false;
-                current.position = undefined;
-                current.order = undefined;
-              } else if (current.day === 1) {
-                // At first day of month
-                if (current.month === 1) {
-                  // At first day of year - check for beginning of year interannual day
-                  const beginningOfYearDay = (calendar.interannualDays || []).find(iad =>
-                    iad.position === 'beginning'
-                  );
-                  if (beginningOfYearDay) {
-                    // Move to beginning of year interannual day (in current year)
-                    current.month = 1;
-                    current.day = undefined;
-                    current.isInterannual = true;
-                    current.position = 'beginning';
-                    current.order = beginningOfYearDay.order;
-                  } else {
-                    // Move to last day of previous month (last month of previous year)
-                    current.month = calendar.months.length;
-                    current.year--;
-                    current.day = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+      
+                  // Weekday headers - use actual weekdays of the dates or intercalary names
+                  output += '<tr>';
+                  for (let i = 0; i < 7; i++) {
+                    const date = sevenDayDates[i];
+                    let headerName = '';
+                    
+                    if (date.isInterannual) {
+                      const interannualDay = (calendar.interannualDays || []).find(d => 
+                        d.position === date.position && d.order === date.order
+                      );
+                      headerName = interannualDay ? interannualDay.name.substr(0, 3) : '???';
+                    } else if (date.isIntercalary && date.specialDayId) {
+                      const icd = (calendar.interMonthDays || []).find(d => d.id === date.specialDayId);
+                      headerName = icd ? icd.name.substr(0, 3) : '???';
+                    } else {
+                      const absDay = DateUtils.toAbsoluteDay(date, calendar);
+                      const weekdayIndex = (absDay - 1) % daysInWeek;
+                      const dayName = calendar.weeks.weekdayNames[weekdayIndex] || weekdayIndex;
+                      headerName = dayName.substr(0, 3);
+                    }
+                    output += `<th style="border:1px solid #666;padding:2px;vertical-align:top;">${headerName}</th>`;
                   }
-                } else {
-                  // At first day of other months
-                  current.month--;
-                  const daysInPrevMonth = DateUtils.getDaysInMonth(current.month, current.year, calendar);
+                  output += '</tr>';
 
-                  // Check for intercalary after the last day of previous month
-                  const interCalBeforeMonth = (calendar.interMonthDays || []).find(icd =>
-                    icd.position.afterMonth === current.month && icd.position.afterDay === daysInPrevMonth
-                  );
-
-                  if (interCalBeforeMonth) {
-                    current.specialDayId = interCalBeforeMonth.id;
-                    current.isIntercalary = true;
-                  } else {
-                    current.day = daysInPrevMonth;
+                  output += '<tr>';
+                  
+                  // Render cells using pre-calculated dates
+                  for (let i = 0; i < 7; i++) {
+                    const targetDate = sevenDayDates[i];
+                    
+                    const isToday = targetDate.isInterannual 
+                      ? (currentDate.isInterannual && targetDate.position === currentDate.position && targetDate.order === currentDate.order && targetDate.year === currentDate.year)
+                      : targetDate.isIntercalary
+                        ? (currentDate.isIntercalary && targetDate.specialDayId === currentDate.specialDayId && targetDate.year === currentDate.year)
+                        : (!currentDate.isInterannual && !currentDate.isIntercalary && targetDate.month === currentDate.month && targetDate.day === currentDate.day && targetDate.year === currentDate.year);
+                    
+                    const style = isToday ? 
+                      'border:2px solid #6b8cae;padding:1px;font-weight:bold;vertical-align:top;background:#5a5a5a;' : 
+                      'border:1px solid #666;padding:2px;vertical-align:top;';
+                    
+                    let cellContent = '';
+                    if (targetDate.isInterannual) {
+                      const interannualDay = (calendar.interannualDays || []).find(d => 
+                        d.position === targetDate.position && d.order === targetDate.order
+                      );
+                      cellContent = interannualDay ? interannualDay.name.substr(0, 3) : '???';
+                    } else if (targetDate.isIntercalary && targetDate.specialDayId) {
+                      const icd = (calendar.interMonthDays || []).find(d => d.id === targetDate.specialDayId);
+                      cellContent = icd ? icd.name.substr(0, 3) : '???';
+                    } else {
+                      cellContent = targetDate.day.toString();
+                    }
+                    
+                    output += `<td style="${style}"><div>${cellContent}</div>`;
+                    
+                    // Moon phases (for regular and intercalary dates, not interannual)
+                    if (!targetDate.isInterannual && moons && moons.length > 0) {
+                      const phases = MoonPhaseCalculator.getAllPhases(moons, targetDate, calendar);
+                      if (phases.length > 0) {
+                        output += `<div style="font-size:8px;">`;
+                        phases.forEach(p => output += p.html);
+                        output += `</div>`;
+                      }
+                    }
+                    
+                    // Weather emoji in frame (reduced size)
+                    const w = weather.find(ww => {
+                      if (targetDate.isInterannual) {
+                        return ww.dateRef.isInterannual && 
+                               ww.dateRef.position === targetDate.position && 
+                               ww.dateRef.order === targetDate.order &&
+                               ww.dateRef.year === targetDate.year;
+                      } else if (targetDate.isIntercalary && targetDate.specialDayId) {
+                        return ww.dateRef.specialDayId === targetDate.specialDayId &&
+                               ww.dateRef.year === targetDate.year;
+                      } else {
+                        return !ww.dateRef.isInterannual && !ww.dateRef.isIntercalary &&
+                               ww.dateRef.year === targetDate.year && 
+                               ww.dateRef.month === targetDate.month && 
+                               ww.dateRef.day === targetDate.day;
+                      }
+                    });
+                    if (w) {
+                      const weatherEmoji = w.emoji || WeatherGenerator.getWeatherEmoji(w.description);
+                      const emojiStyle = CSS_CURRENT.emojiCircle.replace('float: right;', '').replace('float:right;', '') + 'display: inline-block; margin-top: 2px; padding:3px 1px; font-size: 14px;';
+                      output += `<div style="${emojiStyle}">${weatherEmoji}</div>`;
+                    }
+                    
+                    output += '</td>';
                   }
-                }
-              } else {
-                // Regular day stepping backward
-                // Check if there's an intercalary before the current day
-                const interCalBeforeDay = (calendar.interMonthDays || []).find(icd =>
-                  icd.position.afterMonth === current.month && icd.position.afterDay === (current.day - 1)
-                );
+                  output += '</tr></table>';
 
-                if (interCalBeforeDay) {
-                  current.specialDayId = interCalBeforeDay.id;
-                  current.isIntercalary = true;
-                } else {
-                  current.day--;
-                }
-              }
-            }
-            remaining--;
-          }
-          return current;
-        };
+                  output += '</div>';
 
-        // Pre-calculate all 7 dates for header alignment
-        const normalizedCurrentDate = normalizeDate(currentDate);
-        const sevenDayDates = [];
-        for (let offset = -3; offset <= 3; offset++) {
-          sevenDayDates.push(stepDate(normalizedCurrentDate, offset));
-        }
-
-        // Weekday headers - use actual weekdays of the dates or intercalary names
-        output += '<tr>';
-        for (let i = 0; i < 7; i++) {
-          const date = sevenDayDates[i];
-          let headerName = '';
-
-          if (date.isInterannual) {
-            const interannualDay = (calendar.interannualDays || []).find(d =>
-              d.position === date.position && d.order === date.order
-            );
-            headerName = interannualDay ? interannualDay.name.substr(0, 3) : '???';
-          } else if (date.isIntercalary && date.specialDayId) {
-            const icd = (calendar.interMonthDays || []).find(d => d.id === date.specialDayId);
-            headerName = icd ? icd.name.substr(0, 3) : '???';
-          } else {
-            const absDay = DateUtils.toAbsoluteDay(date, calendar);
-            const weekdayIndex = (absDay - 1) % daysInWeek;
-            const dayName = calendar.weeks.weekdayNames[weekdayIndex] || weekdayIndex;
-            headerName = dayName.substr(0, 3);
-          }
-          output += `<th style="border:1px solid #666;padding:2px;vertical-align:top;">${headerName}</th>`;
-        }
-        output += '</tr>';
-
-        output += '<tr>';
-
-        // Render cells using pre-calculated dates
-        for (let i = 0; i < 7; i++) {
-          const targetDate = sevenDayDates[i];
-
-          const isToday = targetDate.isInterannual ?
-            (currentDate.isInterannual && targetDate.position === currentDate.position && targetDate.order === currentDate.order && targetDate.year === currentDate.year) :
-            targetDate.isIntercalary ?
-            (currentDate.isIntercalary && targetDate.specialDayId === currentDate.specialDayId && targetDate.year === currentDate.year) :
-            (!currentDate.isInterannual && !currentDate.isIntercalary && targetDate.month === currentDate.month && targetDate.day === currentDate.day && targetDate.year === currentDate.year);
-
-          const style = isToday ?
-            'border:2px solid #6b8cae;padding:1px;font-weight:bold;vertical-align:top;background:#5a5a5a;' :
-            'border:1px solid #666;padding:2px;vertical-align:top;';
-
-          let cellContent = '';
-          if (targetDate.isInterannual) {
-            const interannualDay = (calendar.interannualDays || []).find(d =>
-              d.position === targetDate.position && d.order === targetDate.order
-            );
-            cellContent = interannualDay ? interannualDay.name.substr(0, 3) : '???';
-          } else if (targetDate.isIntercalary && targetDate.specialDayId) {
-            const icd = (calendar.interMonthDays || []).find(d => d.id === targetDate.specialDayId);
-            cellContent = icd ? icd.name.substr(0, 3) : '???';
-          } else {
-            cellContent = targetDate.day.toString();
-          }
-
-          output += `<td style="${style}"><div>${cellContent}</div>`;
-
-          // Moon phases (for regular and intercalary dates, not interannual)
-          if (!targetDate.isInterannual && moons && moons.length > 0) {
-            const phases = MoonPhaseCalculator.getAllPhases(moons, targetDate, calendar);
-            if (phases.length > 0) {
-              output += `<div style="font-size:8px;">`;
-              phases.forEach(p => output += p.html);
-              output += `</div>`;
-            }
-          }
-
-          // Weather emoji in frame (reduced size)
-          const w = weather.find(ww => {
-            if (targetDate.isInterannual) {
-              return ww.dateRef.isInterannual &&
-                ww.dateRef.position === targetDate.position &&
-                ww.dateRef.order === targetDate.order &&
-                ww.dateRef.year === targetDate.year;
-            } else if (targetDate.isIntercalary && targetDate.specialDayId) {
-              const icd = (calendar.interMonthDays || []).find(d => d.id === targetDate.specialDayId);
-              return DateUtils.itemOnSpecialDay(ww.dateRef, icd, targetDate.year, calendar);
-            } else {
-              return !ww.dateRef.isIntercalary && DateUtils.itemOnRegularDate(ww.dateRef, targetDate);
-            }
-          });
-          if (w) {
-            const weatherEmoji = w.emoji || WeatherGenerator.getWeatherEmoji(w.description);
-            const emojiStyle = CSS_CURRENT.emojiCircle.replace('float: right;', '').replace('float:right;', '') + 'display: inline-block; margin-top: 2px; padding:3px 1px; font-size: 14px;';
-            output += `<div style="${emojiStyle}">${weatherEmoji}</div>`;
-          }
-
-          output += '</td>';
-        }
-        output += '</tr></table>';
-
-        output += '</div>';
-
-        Output.broadcast(output);
+                  Output.broadcast(output);
       });
     },
 
@@ -7336,7 +7437,7 @@ const Chronicle = (() => {
 
         // Collect all items (events and notes)
         let allItems = [];
-
+        
         if (timelineState.showEvents) {
           events.forEach(e => {
             if (!(e.tags && e.tags.includes('gm'))) {
@@ -7344,7 +7445,7 @@ const Chronicle = (() => {
             }
           });
         }
-
+        
         if (timelineState.showNotes) {
           notes.forEach(n => {
             if (!(n.tags && n.tags.includes('gm'))) {
@@ -7358,15 +7459,15 @@ const Chronicle = (() => {
           allItems = allItems.filter(item => {
             const hasTags = item.tags && item.tags.length > 0;
             const itemTags = item.tags || [];
-
+            
             if (!hasTags && timelineState.showUntagged) {
               return true;
             }
-
+            
             if (!hasTags) {
               return false;
             }
-
+            
             if (timelineState.tagMode === 'OR') {
               return timelineState.selectedTags.some(tag => itemTags.includes(tag));
             } else {
@@ -7381,30 +7482,30 @@ const Chronicle = (() => {
 
         // Sort by date
         allItems.sort((a, b) => {
-          const aAbsDay = a.date.isInterannual ?
-            (() => {
-              let yearDays = 0;
-              if (a.date.year > 1) {
-                for (let y = 1; y < a.date.year; y++) {
-                  yearDays += DateUtils.getDaysInYear(y, calendar);
+          const aAbsDay = a.date.isInterannual 
+            ? (() => {
+                let yearDays = 0;
+                if (a.date.year > 1) {
+                  for (let y = 1; y < a.date.year; y++) {
+                    yearDays += DateUtils.getDaysInYear(y, calendar);
+                  }
                 }
-              }
-              return yearDays + DateUtils.getAbsDayOfInterannualDay(a.date.position, a.date.order, calendar);
-            })() :
-            DateUtils.toAbsoluteDay(a.date, calendar) + DateUtils.countInterannualDaysAtBeginning(calendar);
-
-          const bAbsDay = b.date.isInterannual ?
-            (() => {
-              let yearDays = 0;
-              if (b.date.year > 1) {
-                for (let y = 1; y < b.date.year; y++) {
-                  yearDays += DateUtils.getDaysInYear(y, calendar);
+                return yearDays + DateUtils.getAbsDayOfInterannualDay(a.date.position, a.date.order, calendar);
+              })()
+            : DateUtils.toAbsoluteDay(a.date, calendar) + DateUtils.countInterannualDaysAtBeginning(calendar);
+          
+          const bAbsDay = b.date.isInterannual
+            ? (() => {
+                let yearDays = 0;
+                if (b.date.year > 1) {
+                  for (let y = 1; y < b.date.year; y++) {
+                    yearDays += DateUtils.getDaysInYear(y, calendar);
+                  }
                 }
-              }
-              return yearDays + DateUtils.getAbsDayOfInterannualDay(b.date.position, b.date.order, calendar);
-            })() :
-            DateUtils.toAbsoluteDay(b.date, calendar) + DateUtils.countInterannualDaysAtBeginning(calendar);
-
+                return yearDays + DateUtils.getAbsDayOfInterannualDay(b.date.position, b.date.order, calendar);
+              })()
+            : DateUtils.toAbsoluteDay(b.date, calendar) + DateUtils.countInterannualDaysAtBeginning(calendar);
+          
           return aAbsDay - bAbsDay;
         });
 
@@ -7414,7 +7515,7 @@ const Chronicle = (() => {
 
         // Build table
         output += '<table style="width: 100%; border-collapse: collapse; border: none; font-size: 12px;">';
-
+        
         let lastYear = null;
         let lastMonth = null;
 
@@ -7446,15 +7547,15 @@ const Chronicle = (() => {
 
           // Date cell
           let dateCell = '';
-
+          
           if (d.year !== lastYear) {
             dateCell += `<strong style="font-size: 13px;">${d.year}</strong><br>`;
             lastYear = d.year;
             lastMonth = null;
           }
-
+          
           if (d.isInterannual) {
-            const interannualDay = (calendar.interannualDays || []).find(iad =>
+            const interannualDay = (calendar.interannualDays || []).find(iad => 
               iad.position === d.position && iad.order === d.order
             );
             dateCell += interannualDay ? interannualDay.name : 'Unknown';
@@ -7470,7 +7571,7 @@ const Chronicle = (() => {
           output += `<tr style="vertical-align: top;">`;
           output += `<td style="padding: 5px 15px 5px 0; width: 75px; font-size: 11px; border: none;">${dateCell}</td>`;
           output += `<td style="padding: 5px 0; font-size: 12px; border: none; position: relative;">`;
-          output += MarkdownParser.renderAsHtml(item.content, calendar, { sendToChat: true });
+          output += MarkdownParser.renderAsHtml(item.content, calendar, {sendToChat: true});
           output += `<span style="${CSS_CURRENT.tag} float: right; margin-left: 10px; cursor: default;">${elapsedText}</span>`;
           output += `</td>`;
           output += `</tr>`;
@@ -7488,10 +7589,10 @@ const Chronicle = (() => {
           notes.forEach(n => {
             if (n.tags) n.tags.forEach(t => allTags.add(t));
           });
-
+          
           output += `<div style="margin-top: 10px; font-size: 11px; border-top: 1px solid #555555; padding-top: 5px;">`;
           output += `<strong>Active Tags:</strong> `;
-
+          
           if (timelineState.selectedTags.length === allTags.size) {
             output += 'All tags active';
           } else {
@@ -7501,7 +7602,7 @@ const Chronicle = (() => {
               output += ' ...';
             }
           }
-
+          
           output += `</div>`;
         }
 
@@ -7517,43 +7618,43 @@ const Chronicle = (() => {
         const calendar = data.calendar;
         const moons = data.moons;
 
-        let output = `<div style="${CSS_CURRENT.chatOutput}">`;
-        output += `<div style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">${calendar.name} - Calendar Structure</div>`;
+                  let output = `<div style="${CSS_CURRENT.chatOutput}">`;
+                  output += `<div style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">${calendar.name} - Calendar Structure</div>`;
+      
+                  output += `<div style="font-size: 11px; margin: 5px 0;">`;
+                  output += `<strong>Days in Year:</strong> ${calendar.daysInYear} | `;
+                  output += `<strong>Days in Week:</strong> ${calendar.weeks.daysInWeek}`;
+                  output += `</div>`;
 
-        output += `<div style="font-size: 11px; margin: 5px 0;">`;
-        output += `<strong>Days in Year:</strong> ${calendar.daysInYear} | `;
-        output += `<strong>Days in Week:</strong> ${calendar.weeks.daysInWeek}`;
-        output += `</div>`;
+                  output += `<div style="font-size: 11px; margin: 5px 0;">`;
+                  output += `<strong>Months:</strong> ${calendar.months.map(m => `${m.name} (${m.days})`).join(', ')}`;
+                  output += `</div>`;
 
-        output += `<div style="font-size: 11px; margin: 5px 0;">`;
-        output += `<strong>Months:</strong> ${calendar.months.map(m => `${m.name} (${m.days})`).join(', ')}`;
-        output += `</div>`;
+                  output += `<div style="font-size: 11px; margin: 5px 0;">`;
+                  output += `<strong>Weekdays:</strong> ${calendar.weeks.weekdayNames.join(', ')}`;
+                  output += `</div>`;
 
-        output += `<div style="font-size: 11px; margin: 5px 0;">`;
-        output += `<strong>Weekdays:</strong> ${calendar.weeks.weekdayNames.join(', ')}`;
-        output += `</div>`;
+                  if (moons && moons.length > 0) {
+                    output += `<div style="font-size: 11px; margin: 5px 0;">`;
+                    output += `<strong>Moons:</strong> ${moons.map(m => `${m.name} (${m.period}d)`).join(', ')}`;
+                    output += `</div>`;
+                  }
 
-        if (moons && moons.length > 0) {
-          output += `<div style="font-size: 11px; margin: 5px 0;">`;
-          output += `<strong>Moons:</strong> ${moons.map(m => `${m.name} (${m.period}d)`).join(', ')}`;
-          output += `</div>`;
-        }
+                  if (calendar.climate) {
+                    output += `<div style="font-size: 11px; margin: 5px 0;">`;
+                    output += `<strong>Climate:</strong> ${calendar.climate.climate_name} (${calendar.climate.koppen_code})`;
+                    output += `</div>`;
+                  }
 
-        if (calendar.climate) {
-          output += `<div style="font-size: 11px; margin: 5px 0;">`;
-          output += `<strong>Climate:</strong> ${calendar.climate.climate_name} (${calendar.climate.koppen_code})`;
-          output += `</div>`;
-        }
+                  if (calendar.leapYears.enabled) {
+                    output += `<div style="font-size: 11px; margin: 5px 0;">`;
+                    output += `<strong>Leap Years:</strong> Every ${calendar.leapYears.cycle} years`;
+                    output += `</div>`;
+                  }
 
-        if (calendar.leapYears.enabled) {
-          output += `<div style="font-size: 11px; margin: 5px 0;">`;
-          output += `<strong>Gregorian Leap Day:</strong> Every ${calendar.leapYears.cycle} years`;
-          output += `</div>`;
-        }
+                  output += '</div>';
 
-        output += '</div>';
-
-        Output.broadcast(output);
+                  Output.broadcast(output);
       });
     }
 
@@ -7563,311 +7664,326 @@ const Chronicle = (() => {
   // Weather Generator
   // ==================================================
 
-  const WeatherGenerator = {
+              const WeatherGenerator = {
 
-    getWeatherEmoji: (description) => {
-      if (!description) return '';
+                getWeatherEmoji: (description) => {
+                  if (!description) return '';
+      
+                  const desc = description.toLowerCase();
+      
+                  // Check for specific weather types
+                  if (desc.includes('snow')) {
+                    if (desc.includes('heavy')) return '❄️';
+                    if (desc.includes('light')) return '🌨️';
+                    return '❄️';
+                  }
+                  if (desc.includes('thunderstorm')) return '⛈️';
+                  if (desc.includes('rain')) {
+                    if (desc.includes('heavy')) return '🌧️';
+                    return '🌧️';
+                  }
+                  if (desc.includes('cloudy') || desc.includes('overcast')) return '☁️';
+                  if (desc.includes('partly')) return '⛅';
+                  if (desc.includes('clear')) {
+                    if (desc.includes('cold')) return '🌬️';
+                    return '☀️';
+                  }
+                  if (desc.includes('fog') || desc.includes('mist')) return '🌫️';
+      
+                  // Default
+                  return '🌤️';
+                },
 
-      const desc = description.toLowerCase();
+                generate: (date, calendar) => {
+                  if (!calendar.climate) {
+                    return null;
+                  }
 
-      // Check for specific weather types
-      if (desc.includes('snow')) {
-        if (desc.includes('heavy')) return '❄️';
-        if (desc.includes('light')) return '🌨️';
-        return '❄️';
-      }
-      if (desc.includes('thunderstorm')) return '⛈️';
-      if (desc.includes('rain')) {
-        if (desc.includes('heavy')) return '🌧️';
-        return '🌧️';
-      }
-      if (desc.includes('cloudy') || desc.includes('overcast')) return '☁️';
-      if (desc.includes('partly')) return '⛅';
-      if (desc.includes('clear')) {
-        if (desc.includes('cold')) return '🌬️';
-        return '☀️';
-      }
-      if (desc.includes('fog') || desc.includes('mist')) return '🌫️';
+                  const climate = calendar.climate;
+                  const dayOfYear = DateUtils.toAbsoluteDay(date, calendar) % DateUtils.getDaysInYear(date.year, calendar);
+      
+                  // Determine season
+                  const season = WeatherGenerator._getSeason(dayOfYear, calendar);
 
-      // Default
-      return '🌤️';
-    },
+                  // Generate based on climate and season
+                  const temp = WeatherGenerator._generateTemperature(climate, season, calendar.units);
+                  const precip = WeatherGenerator._generatePrecipitation(climate, season);
+                  const wind = WeatherGenerator._generateWind(climate, season);
+                  const description = WeatherGenerator._generateDescription(climate, season, temp, precip, wind);
 
-    generate: (date, calendar) => {
-      if (!calendar.climate) {
-        return null;
-      }
+                  return DataModels.createWeather(date, climate.koppen_code, temp, precip, wind, description);
+                },
 
-      const climate = calendar.climate;
-      const dayOfYear = DateUtils.getDayOfYear(date, calendar);
+                _getSeason: (dayOfYear, calendar) => {
+                  const vernal = calendar.seasons.vernalEquinox;
+                  const daysInYear = calendar.daysInYear;
+      
+                  // Calculate other equinoxes/solstices at even intervals
+                  const summer = vernal + Math.floor(daysInYear / 4);
+                  const autumnal = vernal + Math.floor(daysInYear / 2);
+                  const winter = vernal + Math.floor(3 * daysInYear / 4);
 
-      // Determine season
-      const season = DateUtils.getSeason(dayOfYear, calendar);
+                  if (dayOfYear >= vernal && dayOfYear < summer) return 'spring';
+                  if (dayOfYear >= summer && dayOfYear < autumnal) return 'summer';
+                  if (dayOfYear >= autumnal && dayOfYear < winter) return 'autumn';
+                  return 'winter';
+                },
 
-      // Generate based on climate and season
-      const temp = WeatherGenerator._generateTemperature(climate, season, calendar.units);
-      const precip = WeatherGenerator._generatePrecipitation(climate, season);
-      const wind = WeatherGenerator._generateWind(climate, season);
-      const description = WeatherGenerator._generateDescription(climate, season, temp, precip, wind);
+                _generateTemperature: (climate, season, units) => {
+                  const code = climate.koppen_code;
+                  let baseTemp = 60; // Default Fahrenheit
+                  let seasonalSwing = 15; // Default seasonal temperature variation
 
-      return DataModels.createWeather(date, climate.koppen_code, temp, precip, wind, description);
-    },
+                  // Adjust by climate group
+                  if (code.startsWith('A')) {
+                    baseTemp = 85; // Tropical
+                    seasonalSwing = 5; // Minimal seasonal variation in tropics
+                  } else if (code.startsWith('B')) {
+                    baseTemp = code.includes('h') ? 90 : 70; // Hot/Cold Desert
+                    seasonalSwing = code.includes('h') ? 20 : 30; // Large daily and seasonal swings in deserts
+                  } else if (code.startsWith('C')) {
+                    baseTemp = 65; // Temperate
+                    seasonalSwing = 20; // Moderate seasonal variation
+                  } else if (code.startsWith('D')) {
+                    baseTemp = 45; // Continental
+                    seasonalSwing = 35; // Large seasonal variation
+                  } else if (code.startsWith('E')) {
+                    baseTemp = 20; // Polar
+                    seasonalSwing = 25; // Moderate variation (always cold)
+                  }
 
-    _generateTemperature: (climate, season, units) => {
-      const code = climate.koppen_code;
-      let baseTemp = 60; // Default Fahrenheit
-      let seasonalSwing = 15; // Default seasonal temperature variation
+                  // Adjust by season with climate-appropriate swings
+                  const seasonMod = {
+                    'spring': 0,
+                    'summer': seasonalSwing,
+                    'autumn': -seasonalSwing * 0.3,
+                    'winter': -seasonalSwing * 1.3
+                  };
+                  baseTemp += seasonMod[season] || 0;
 
-      // Adjust by climate group
-      if (code.startsWith('A')) {
-        baseTemp = 85; // Tropical
-        seasonalSwing = 5; // Minimal seasonal variation in tropics
-      } else if (code.startsWith('B')) {
-        baseTemp = code.includes('h') ? 90 : 70; // Hot/Cold Desert
-        seasonalSwing = code.includes('h') ? 20 : 30; // Large daily and seasonal swings in deserts
-      } else if (code.startsWith('C')) {
-        baseTemp = 65; // Temperate
-        seasonalSwing = 20; // Moderate seasonal variation
-      } else if (code.startsWith('D')) {
-        baseTemp = 45; // Continental
-        seasonalSwing = 35; // Large seasonal variation
-      } else if (code.startsWith('E')) {
-        baseTemp = 20; // Polar
-        seasonalSwing = 25; // Moderate variation (always cold)
-      }
+                  // Add random daily variation (larger in continental climates, smaller in maritime)
+                  let dailyVariation = 10;
+                  if (code.includes('f')) dailyVariation = 7; // Maritime climates more stable
+                  if (code.startsWith('D')) dailyVariation = 15; // Continental more variable
+                  if (code.startsWith('B')) dailyVariation = 20; // Deserts highly variable
+      
+                  const variation = Math.floor(Math.random() * (dailyVariation * 2)) - dailyVariation;
+                  let temp = baseTemp + variation;
 
-      // Adjust by season with climate-appropriate swings
-      const seasonMod = {
-        'spring': 0,
-        'summer': seasonalSwing,
-        'autumn': -seasonalSwing * 0.3,
-        'winter': -seasonalSwing * 1.3
-      };
-      baseTemp += seasonMod[season] || 0;
+                  const unit = units === 'metric' ? 'C' : 'F';
+      
+                  if (units === 'metric') {
+                    temp = Math.round((temp - 32) * 5 / 9);
+                  }
 
-      // Add random daily variation (larger in continental climates, smaller in maritime)
-      let dailyVariation = 10;
-      if (code.includes('f')) dailyVariation = 7; // Maritime climates more stable
-      if (code.startsWith('D')) dailyVariation = 15; // Continental more variable
-      if (code.startsWith('B')) dailyVariation = 20; // Deserts highly variable
+                  return { value: temp, unit: unit };
+                },
 
-      const variation = Math.floor(Math.random() * (dailyVariation * 2)) - dailyVariation;
-      let temp = baseTemp + variation;
+                _generatePrecipitation: (climate, season) => {
+                  const code = climate.koppen_code;
+                  const rand = Math.random();
 
-      const unit = units === 'metric' ? 'C' : 'F';
+                  // Dry climates (B) - very little precipitation year-round
+                  if (code.startsWith('B')) {
+                    if (rand < 0.9) return 'Clear';
+                    return 'Scattered clouds';
+                  }
 
-      if (units === 'metric') {
-        temp = Math.round((temp - 32) * 5 / 9);
-      }
+                  // Rainforest (Af) - heavy rain year-round
+                  if (code === 'Af') {
+                    if (rand < 0.6) return 'Rain';
+                    if (rand < 0.9) return 'Heavy rain';
+                    return 'Partly cloudy';
+                  }
 
-      return { value: temp, unit: unit };
-    },
+                  // Monsoon/Tropical Savanna (Aw) - wet summer, dry winter
+                  if (code === 'Aw') {
+                    if (season === 'summer') {
+                      if (rand < 0.7) return 'Heavy rain';
+                      return 'Thunderstorms';
+                    } else if (season === 'winter') {
+                      if (rand < 0.8) return 'Clear';
+                      return 'Partly cloudy';
+                    } else {
+                      if (rand < 0.5) return 'Rain';
+                      return 'Cloudy';
+                    }
+                  }
 
-    _generatePrecipitation: (climate, season) => {
-      const code = climate.koppen_code;
-      const rand = Math.random();
+                  // Mediterranean (Cs) - dry summer, wet winter
+                  if (code.startsWith('Cs')) {
+                    if (season === 'summer') {
+                      if (rand < 0.8) return 'Clear';
+                      return 'Partly cloudy';
+                    } else if (season === 'winter') {
+                      if (rand < 0.6) return 'Rain';
+                      return 'Cloudy';
+                    } else {
+                      if (rand < 0.5) return 'Partly cloudy';
+                      return 'Rain';
+                    }
+                  }
 
-      // Dry climates (B) - very little precipitation year-round
-      if (code.startsWith('B')) {
-        if (rand < 0.9) return 'Clear';
-        return 'Scattered clouds';
-      }
+                  // Monsoon temperate (Cw) - dry winter
+                  if (code.startsWith('Cw')) {
+                    if (season === 'winter') {
+                      if (rand < 0.7) return 'Clear';
+                      return 'Partly cloudy';
+                    } else {
+                      if (rand < 0.5) return 'Rain';
+                      return 'Cloudy';
+                    }
+                  }
 
-      // Rainforest (Af) - heavy rain year-round
-      if (code === 'Af') {
-        if (rand < 0.6) return 'Rain';
-        if (rand < 0.9) return 'Heavy rain';
-        return 'Partly cloudy';
-      }
+                  // Marine/Humid climates (Cf, Df) - precipitation year-round but varies by season
+                  if (code.includes('f')) {
+                    // Winter tends to have more precipitation in continental climates
+                    if (code.startsWith('D') && season === 'winter') {
+                      if (rand < 0.3) return 'Snow';
+                      if (rand < 0.6) return 'Heavy snow';
+                      if (rand < 0.8) return 'Cloudy';
+                      return 'Light snow';
+                    }
+        
+                    // Summer has more thunderstorms
+                    if (season === 'summer') {
+                      if (rand < 0.3) return 'Clear';
+                      if (rand < 0.5) return 'Partly cloudy';
+                      if (rand < 0.7) return 'Cloudy';
+                      if (rand < 0.85) return 'Rain';
+                      return 'Thunderstorms';
+                    }
+        
+                    // Spring/Autumn moderate
+                    if (rand < 0.3) return 'Clear';
+                    if (rand < 0.6) return 'Partly cloudy';
+                    if (rand < 0.8) return 'Cloudy';
+                    return 'Rain';
+                  }
 
-      // Monsoon/Tropical Savanna (Aw) - wet summer, dry winter
-      if (code === 'Aw') {
-        if (season === 'summer') {
-          if (rand < 0.7) return 'Heavy rain';
-          return 'Thunderstorms';
-        } else if (season === 'winter') {
-          if (rand < 0.8) return 'Clear';
-          return 'Partly cloudy';
-        } else {
-          if (rand < 0.5) return 'Rain';
-          return 'Cloudy';
-        }
-      }
+                  // Polar (E) - very little precipitation, mostly snow
+                  if (code.startsWith('E')) {
+                    if (season === 'summer') {
+                      if (rand < 0.6) return 'Overcast';
+                      if (rand < 0.9) return 'Light snow';
+                      return 'Snow';
+                    } else {
+                      if (rand < 0.5) return 'Clear and cold';
+                      if (rand < 0.8) return 'Light snow';
+                      return 'Heavy snow';
+                    }
+                  }
 
-      // Mediterranean (Cs) - dry summer, wet winter
-      if (code.startsWith('Cs')) {
-        if (season === 'summer') {
-          if (rand < 0.8) return 'Clear';
-          return 'Partly cloudy';
-        } else if (season === 'winter') {
-          if (rand < 0.6) return 'Rain';
-          return 'Cloudy';
-        } else {
-          if (rand < 0.5) return 'Partly cloudy';
-          return 'Rain';
-        }
-      }
+                  // Default fallback
+                  if (rand < 0.3) return 'Clear';
+                  if (rand < 0.6) return 'Partly cloudy';
+                  if (rand < 0.8) return 'Cloudy';
+                  if (rand < 0.95) return 'Rain';
+                  return 'Thunderstorms';
+                },
 
-      // Monsoon temperate (Cw) - dry winter
-      if (code.startsWith('Cw')) {
-        if (season === 'winter') {
-          if (rand < 0.7) return 'Clear';
-          return 'Partly cloudy';
-        } else {
-          if (rand < 0.5) return 'Rain';
-          return 'Cloudy';
-        }
-      }
+                _generateWind: (climate, season) => {
+                  const rand = Math.random();
+      
+                  if (rand < 0.4) return 'Calm';
+                  if (rand < 0.7) return 'Light breeze';
+                  if (rand < 0.9) return 'Moderate wind';
+                  if (rand < 0.97) return 'Strong wind';
+                  return 'Very strong wind';
+                },
 
-      // Marine/Humid climates (Cf, Df) - precipitation year-round but varies by season
-      if (code.includes('f')) {
-        // Winter tends to have more precipitation in continental climates
-        if (code.startsWith('D') && season === 'winter') {
-          if (rand < 0.3) return 'Snow';
-          if (rand < 0.6) return 'Heavy snow';
-          if (rand < 0.8) return 'Cloudy';
-          return 'Light snow';
-        }
+                _generateDescription: (climate, season, temp, precip, wind) => {
+                  let desc = precip;
+      
+                  if (precip !== 'Clear' && wind !== 'Calm') {
+                    desc += `, ${wind.toLowerCase()}`;
+                  }
 
-        // Summer has more thunderstorms
-        if (season === 'summer') {
-          if (rand < 0.3) return 'Clear';
-          if (rand < 0.5) return 'Partly cloudy';
-          if (rand < 0.7) return 'Cloudy';
-          if (rand < 0.85) return 'Rain';
-          return 'Thunderstorms';
-        }
+                  return desc;
+                }
 
-        // Spring/Autumn moderate
-        if (rand < 0.3) return 'Clear';
-        if (rand < 0.6) return 'Partly cloudy';
-        if (rand < 0.8) return 'Cloudy';
-        return 'Rain';
-      }
+              };
 
-      // Polar (E) - very little precipitation, mostly snow
-      if (code.startsWith('E')) {
-        if (season === 'summer') {
-          if (rand < 0.6) return 'Overcast';
-          if (rand < 0.9) return 'Light snow';
-          return 'Snow';
-        } else {
-          if (rand < 0.5) return 'Clear and cold';
-          if (rand < 0.8) return 'Light snow';
-          return 'Heavy snow';
-        }
-      }
+              // ==================================================
+              // Tag System
+              // ==================================================
 
-      // Default fallback
-      if (rand < 0.3) return 'Clear';
-      if (rand < 0.6) return 'Partly cloudy';
-      if (rand < 0.8) return 'Cloudy';
-      if (rand < 0.95) return 'Rain';
-      return 'Thunderstorms';
-    },
+              const TagSystem = {
 
-    _generateWind: (climate, season) => {
-      const rand = Math.random();
+                expandPartyTags: (tags) => {
+                  // Party management removed - tags are just passed through for now
+                  return [...tags];
+                },
 
-      if (rand < 0.4) return 'Calm';
-      if (rand < 0.7) return 'Light breeze';
-      if (rand < 0.9) return 'Moderate wind';
-      if (rand < 0.97) return 'Strong wind';
-      return 'Very strong wind';
-    },
+                getAllTags: (data) => {
+                  const events = data.events;
+                  const notes = data.notes;
+      
+                  const allTags = new Set();
+      
+                  [...events, ...notes].forEach(item => {
+                    if (item.tags) {
+                      item.tags.forEach(tag => allTags.add(tag));
+                    }
+                  });
 
-    _generateDescription: (climate, season, temp, precip, wind) => {
-      let desc = precip;
+                  return Array.from(allTags).sort();
+                },
 
-      if (precip !== 'Clear' && wind !== 'Calm') {
-        desc += `, ${wind.toLowerCase()}`;
-      }
+                filterByTags: (items, tags) => {
+                  if (!tags || tags.length === 0) return items;
 
-      return desc;
-    }
+                  return items.filter(item => {
+                    if (!item.tags) return false;
+                    return tags.some(tag => item.tags.includes(tag));
+                  });
+                }
 
-  };
+              };
 
-  // ==================================================
-  // Tag System
-  // ==================================================
+              // ==================================================
+              // Input Handler
+              // ==================================================
 
-  const TagSystem = {
+              const handleInput = (msg) => {
+                if (msg.type !== 'api') return;
 
-    expandPartyTags: (tags) => {
-      // Party management removed - tags are just passed through for now
-      return [...tags];
-    },
+                const parsed = Parser.parse(msg.content);
 
-    getAllTags: (data) => {
-      const events = data.events;
-      const notes = data.notes;
+                if (parsed.command !== '!chronicle' && parsed.command !== '!chr') return;
 
-      const allTags = new Set();
+                Commands.root(msg, parsed);
+              };
 
-      [...events, ...notes].forEach(item => {
-        if (item.tags) {
-          item.tags.forEach(tag => allTags.add(tag));
-        }
-      });
+              // ==================================================
+              // Event Registration
+              // ==================================================
 
-      return Array.from(allTags).sort();
-    },
+              const registerEventHandlers = () => {
+                on('chat:message', handleInput);
+              };
 
-    filterByTags: (items, tags) => {
-      if (!tags || tags.length === 0) return items;
+              // ==================================================
+              // Initialization
+              // ==================================================
 
-      return items.filter(item => {
-        if (!item.tags) return false;
-        return tags.some(tag => item.tags.includes(tag));
-      });
-    }
+              const checkInstall = () => {
+                log(`Chronicle v.${version} [${new Date(lastUpdate * 1000)}]. To use, type !chr in chat.`);
+                State.initialize();
+                return true;
+              };
 
-  };
+              on('ready', () => {
+                if (checkInstall()) {
+                  registerEventHandlers();
+                }
+              });
 
-  // ==================================================
-  // Input Handler
-  // ==================================================
+              // ==================================================
+              // Public Interface
+              // ==================================================
 
-  const handleInput = (msg) => {
-    if (msg.type !== 'api') return;
-
-    const parsed = Parser.parse(msg.content);
-
-    if (parsed.command !== '!chronicle' && parsed.command !== '!chr') return;
-
-    Commands.root(msg, parsed);
-  };
-
-  // ==================================================
-  // Event Registration
-  // ==================================================
-
-  const registerEventHandlers = () => {
-    on('chat:message', handleInput);
-  };
-
-  // ==================================================
-  // Initialization
-  // ==================================================
-
-  const checkInstall = () => {
-    log(`Chronicle v.${version} [${new Date(lastUpdate * 1000)}]. To use, type !chr in chat.`);
-    State.initialize();
-    return true;
-  };
-
-  on('ready', () => {
-    if (checkInstall()) {
-      registerEventHandlers();
-    }
-  });
-
-  // ==================================================
-  // Public Interface
-  // ==================================================
-
-  return {
-    version: version
-  };
+              return {
+                version: version
+              };
 })();
