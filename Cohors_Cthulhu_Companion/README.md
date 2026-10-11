@@ -1,6 +1,6 @@
 # Cohors Cthulhu Companion
 
-Version 1.0.0 (2026-10-09), by Han Vanholder.
+Version 1.0.0 (2026-10-11), by Han Vanholder.
 
 `CohorsCthulhuCompanion.js` is an optional companion Mod (API script) for
 the Cohors Cthulhu character sheet. The sheet works without it; the script
@@ -215,7 +215,7 @@ on('ready', () => {
 
 ## Changelog
 
-- **1.0.0** (2026-10-09): first release.
+- **1.0.0** (2026-10-11): first release.
 
 ## License
 

@@ -3,7 +3,7 @@
 // character sheet (Roll20).
 //
 // Version:      1.0.0
-// Last updated: 2026-10-09
+// Last updated: 2026-10-11
 // Author:       Han Vanholder
 // Docs:         README.md in this script's folder; !cchelp in game
 //
@@ -37,7 +37,7 @@
 // The script's one global.
 var CohorsCthulhuCompanion = CohorsCthulhuCompanion || {}; // eslint-disable-line no-var
 CohorsCthulhuCompanion.version = '1.0.0';
-CohorsCthulhuCompanion.lastUpdated = '2026-10-09';
+CohorsCthulhuCompanion.lastUpdated = '2026-10-11';
 CohorsCthulhuCompanion.importHooks = CohorsCthulhuCompanion.importHooks || [];
 
 on('ready', () => {
@@ -944,42 +944,49 @@ on('ready', () => {
     // Gives a character its default token and avatar. spec is the JSON
     // "token": a name, or {name, variant, image, size}; false skips it.
     // tokens is loadTokens()'s result. Looks in the token map first (the JSON
-    // token name, then the NPC's name), then the other token images.
-    // Returns a short description for the import card, or null; problems go
-    // into warnings.
+    // token name, then the NPC's name), then the other token images, and uses
+    // the first match whose image Roll20 accepts for a token, so one unusable
+    // image (e.g. a Marketplace one on the Token Library page) doesn't block
+    // the rest. Returns a short description for the import card, or null;
+    // problems go into warnings.
     const setupToken = (character, spec, details, warnings, tokens) => {
       if (spec === false) { return null; }
       const opts = typeof spec === 'string' ? {name: spec} : (spec && typeof spec === 'object' ? spec : {});
       const wanted = opts.name || details.name;
       const lookFor = tokenMapCandidates([opts.name, details.name]);
-      const fromMap = () => {
-        for (const name of lookFor) {
-          const entry = tokens.map.get(tokenMapKey(name));
-          debug(`token: token map ${entry ? `has "${entry.name}" for` : 'has nothing for'} "${name}"`);
-          if (entry) { return entry; }
-        }
-        return null;
-      };
-      const fromLibrary = () => {
-        for (const name of lookFor) {
-          const entry = findTokenImage(tokens.library, name, opts.variant || 'standard');
-          if (entry) { return entry; }
-        }
-        return null;
-      };
-      const found = opts.image ?
-        {url: opts.image, name: wanted, source: 'JSON image'} :
-        fromMap() || fromLibrary();
-      if (!found) {
+      const fromMap = lookFor.map((name) => {
+        const entry = tokens.map.get(tokenMapKey(name));
+        debug(`token: token map ${entry ? `has "${entry.name}" for` : 'has nothing for'} "${name}"`);
+        return entry;
+      });
+      const fromLibrary = lookFor.map((name) => findTokenImage(tokens.library, name, opts.variant || 'standard'));
+      const candidates = opts.image ?
+        [{url: opts.image, name: wanted, source: 'JSON image'}] :
+        fromMap.concat(fromLibrary).filter(Boolean);
+      const mapNote = tokens.map.size ? '' : '; the token map is empty';
+      if (!candidates.length) {
         const names = lookFor.map((name) => `"${name}"`).join(', ');
         debug(`token: nothing found for ${names} (token map: ${tokens.map.size} names, other token images: ${tokens.library.length})`);
-        warnings.push(`no token found - looked for ${names} in the token map and token images (see !ccimport tokens)`);
+        warnings.push(`no token found - looked for ${names} in the token map and token images${mapNote} (see !ccimport tokens)`);
         return null;
       }
-      const imgsrc = thumbUrl(found.url);
-      if (!imgsrc) {
-        warnings.push(`token "${found.name}" (${found.source}) isn't an image uploaded to Roll20 - token not set`);
+      let found = null;
+      let imgsrc = null;
+      const rejected = [];
+      for (const candidate of candidates) {
+        imgsrc = thumbUrl(candidate.url);
+        if (imgsrc) { found = candidate; break; }
+        debug(`token: "${candidate.name}" (${candidate.source}) can't be used, image ${candidate.url}`);
+        rejected.push(candidate);
+      }
+      if (!found) {
+        const shortUrl = (url) => (String(url).length > 70 ? `${String(url).slice(0, 67)}...` : String(url));
+        warnings.push(`token not set: ${rejected.map((c) => `"${c.name}" (${c.source}, ${shortUrl(c.url)})`).join('; ')} ` +
+          `isn't an image uploaded to Roll20${mapNote}`);
         return null;
+      }
+      if (rejected.length) {
+        debug(`token: skipped ${rejected.length} unusable image(s) before "${found.name}" (${found.source})`);
       }
       const page = Campaign().get('playerpageid') || ((findObjs({_type: 'page'})[0] || {}).id);
       const width = 70 * (Number(opts.size) || found.width || 1);
@@ -1381,6 +1388,7 @@ on('ready', () => {
   }
 
   log(`Cohors Cthulhu Companion ${version} (${lastUpdated}) ready: Momentum pool ${store.momentum.pool}/${CONFIG.momentumMax}, ` +
-    `Threat pool ${store.threat.pool}, token actions ${store.tokenActions.auto ? 'automatic' : 'manual'}. ` +
+    `Threat pool ${store.threat.pool}, token actions ${store.tokenActions.auto ? 'automatic' : 'manual'}, ` +
+    `token map ${Object.keys(CONFIG.tokenMap || {}).length} names in CONFIG. ` +
     `Debug logging ${store.debug.on ? 'on' : 'off'} (!ccdebugon / !ccdebugoff).`);
 });
