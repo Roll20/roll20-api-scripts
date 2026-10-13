@@ -2,13 +2,33 @@
     "$schema": "https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/script.json.schema",
     "name": "Initiative Pulse",
     "script": "InitiativePulse.js",
-    "version": "1.0.0",
-    "previousversions": [],
-    "description": "Initiative Pulse adds non-invasive timed announcements to normal Roll20 initiative. GM-created Actions announce when initiative crosses a configured threshold, while Effects count down from explicit round notifications. It integrates with Initiative Tracker Plus without taking control of turns, halos, end-of-turn handling, or rounds. Use `!pulse-menu` for the GM menu, `!pulse action Name %% Initiative %% Repeat` to add an Action, and `!pulse effect Name %% Duration` to add an Effect. Additional GM commands install menu, ScriptCards, and Clear Combat macros; inspect or clear current entries; and clean up Initiative Pulse state and macros. See the README for complete usage and integration details.",
+    "version": "1.5.0",
+    "previousversions": [
+        "1.0.0"
+    ],
+    "description": "Initiative Pulse announces initiative Actions, tracks token-turn Effect durations beside token names, and prompts click-to-roll concentration saves after HP damage. No companion scripts are required; Initiative Tracker Plus EOT and optional ScriptCards menus are supported.\n\nRun `!pulse-menu` and select tokens to add Effects. Example: `!pulse effect Haste %% 10 %% ⭐ %% yes`. Actions: `!pulse action Lair Action %% 20 %% yes`. Use `!pulse inspect` to edit/remove Effects and request saves; `!pulse setup` for 2014/2024/custom sheet choices, per-character overrides, concentration advantage, HP bar and markers; `!pulse config` for advanced settings; `!pulse diagnose` to check selected tokens. `!pulse clear` clears combat entries, and `!pulse clean` removes this GM's macros and resets Pulse. Menu macros: `!pulse install-macro`, `!pulse install-clear-macro`, and optional `!pulse install-scriptcards-macro`.\n\nConcentration commands allow token controllers: `!concentration start --token ID --name NAME`, `!concentration stop --token ID`, and `!concentration check --token ID --dc 10`. New concentration replaces the old spell on that token; failed checks or marker removal end the Effect.\n\nUpgrade warning: Effects now require selected tokens and tick at token turn-end, not `!pulse-round`. Old unassigned Effects remain paused until bound through Inspect. Disable separate Manual Concentration and TrackDuration scripts. Defaults use HP bar 1, constitution_save_bonus, warcaster=1, and chained-heart; configure these for your sheet. No caster-to-target links or automatic sorting/turn advancement. See README for complete commands, migration and limits.\n\nD&D 5E (2014) is the default. Optional D&D 5E (2024) support reads constitution_save_bonus through getSheetItem and requires the Experimental API sandbox. Mixed games use explicit per-character sheet choices in Setup. For 2024 characters with War Caster, set concentration advantage to Yes in Setup; feats are not auto-detected. 2024 support and Setup are automated-test verified; live validation is pending.",
     "authors": "Kingkiller546",
     "roll20userid": "2978722",
     "useroptions": [],
     "dependencies": [],
-    "modifies": {},
-    "conflicts": []
+    "modifies": {
+        "graphic.name": "read,write",
+        "graphic.statusmarkers": "read,write",
+        "graphic.bar1_value": "read",
+        "graphic.bar2_value": "read",
+        "graphic.bar3_value": "read",
+        "graphic.represents": "read",
+        "graphic.controlledby": "read",
+        "graphic.layer": "read",
+        "campaign.turnorder": "read",
+        "character.controlledby": "read",
+        "attribute.current": "read",
+        "macro.action": "read,write",
+        "macro.visibleto": "read,write",
+        "macro.name": "read,write"
+    },
+    "conflicts": [
+        "Manual Concentration",
+        "TrackDuration"
+    ]
 }
