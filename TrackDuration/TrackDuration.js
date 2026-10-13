@@ -1,7 +1,7 @@
-// Script:   TrackDuration
-// By:       Keith Curtis
-// Contact:  https://app.roll20.net/users/162065/keithcurtis
-// Base command: !duration
+// Duration.js
+// A Roll20 API script for tracking timed effects on tokens in the turn order.
+// Base command: !duration  (shows active effects + Add button)
+// Version: 1.0.1
 
 var Duration = Duration || (function () {
     'use strict';
@@ -10,8 +10,8 @@ var Duration = Duration || (function () {
     // CONSTANTS
     // ─────────────────────────────────────────────
 
-    const SCRIPT_NAME    = 'TrackDuration';
-    const VERSION        = '1.0.0';
+    const SCRIPT_NAME    = 'Track Duration';
+    const VERSION        = '1.0.1';
     const STATE_KEY      = 'Duration';
 
     const ALLOWED_EMOJIS = [
@@ -104,7 +104,24 @@ var Duration = Duration || (function () {
         error(msg) { log(this._prefix + 'ERROR: ' + msg); }
     };
 
+    // ─────────────────────────────────────────────
+    // STATE
+    // ─────────────────────────────────────────────
 
+    // state[STATE_KEY] = {
+    //   effects: {
+    //     [tokenId]: {
+    //       characterId:   string,   // token.get('represents')
+    //       baseTokenName: string,   // token name without any effect segments
+    //       imgSrc:        string,   // token imgsrc at time of first effect add
+    //       effects: [
+    //         { emoji, name, current, max }
+    //       ]
+    //     }
+    //   },
+    //   lastTopTokenId:  string | null,
+    //   turnOrderLength: number
+    // }
 
     const State = {
         init() {
@@ -221,7 +238,20 @@ var Duration = Duration || (function () {
             if (!raw || raw === '' || raw === '[]') return [];
             try { return JSON.parse(raw); } catch (e) { return []; }
         },
-        tokenEntries(turnOrder)          { return turnOrder.filter(e => e.id && e.id !== '-1'); },
+        tokenEntries(turnOrder) {
+            // Filter out non-token entries and TurnMarker1's round-counter graphic
+            const tmURL = (typeof state !== 'undefined' && state.TurnMarker && state.TurnMarker.tokenURL)
+                ? state.TurnMarker.tokenURL
+                : null;
+            return turnOrder.filter(e => {
+                if (!e.id || e.id === '-1') return false;
+                if (tmURL) {
+                    const t = getObj('graphic', e.id);
+                    if (t && t.get('imgsrc') === tmURL) return false;
+                }
+                return true;
+            });
+        },
         topEntry(tokenEntries)           { return tokenEntries.length > 0 ? tokenEntries[0] : null; },
         indexOfToken(tokenEntries, id)   { return tokenEntries.findIndex(e => e.id === id); }
     };
@@ -330,6 +360,8 @@ var Duration = Duration || (function () {
         },
 
         // Broadcast the main duration list, with an Add button for the current top token.
+        // entries: [ { displayName, imgSrc, effects: [{emoji,name,current}] } ]
+        // topTokenName: string | null  (name of the token at top of order, for the button label)
         sendStatusMessage(entries, topTokenName) {
             let body = '';
 
@@ -674,6 +706,16 @@ var Duration = Duration || (function () {
     // TURN ORDER CHANGE HANDLER
     // ─────────────────────────────────────────────
 
+    // Debounce guard: TurnMarker1 calls TurnOrder.Next()/Prev() from within its own
+    // change:campaign:turnorder handler (and in response to !eot/!pot chat commands),
+    // causing one or more additional change events in rapid succession. We suppress
+    // any tick that fires within DEBOUNCE_MS of the previous tick, regardless of which
+    // tokens are involved. 300 ms is long enough to catch same-event-loop re-fires and
+    // back-to-back automated advances, yet short enough that human button presses at
+    // normal speed (several hundred ms apart) are unaffected.
+    let _lastTickTime = 0;
+    const DEBOUNCE_MS = 300;
+
     const TurnHandler = {
         handle(obj, prev) {
             const newRaw  = obj.get('turnorder') || '';
@@ -715,6 +757,15 @@ var Duration = Duration || (function () {
             }
 
             // ── Determine direction and which token to tick ────────────────
+            //
+            // Forward:  prevTop moved to LAST position in new order
+            //           → its turn just ended → decrement prevTop on the way OUT
+            //
+            // Backward: newTop was at LAST position in the previous order
+            //           → we rewound to before its turn → increment newTop on the way IN
+            //
+            // Anything else → manual reorder; ignore
+            //
             const prevTopNewIdx = TurnUtils.indexOfToken(newTokens,  prevTopId);
             const newTopPrevIdx = newTopId ? TurnUtils.indexOfToken(prevTokens, newTopId) : -1;
             const n             = newTokens.length;
@@ -724,12 +775,28 @@ var Duration = Duration || (function () {
             State.setLastTopTokenId(newTopId);
             State.setTurnOrderLength(n);
 
+            let tickId        = null;
+            let tickDirection = null;
+
             if (prevTopNewIdx === n - 1) {
-                Core.tickToken(prevTopId, 'forward');
+                tickId        = prevTopId;
+                tickDirection = 'forward';
             } else if (newTopPrevIdx === prevN - 1) {
-                Core.tickToken(newTopId, 'backward');
+                tickId        = newTopId;
+                tickDirection = 'backward';
             }
             // else: unrecognised change — no tick
+
+            if (tickId) {
+                const now = Date.now();
+                if ((now - _lastTickTime) < DEBOUNCE_MS) {
+                    // Suppress duplicate event (e.g. TurnMarker's internal Next/Prev
+                    // triggering a second wrapped call for the same transition).
+                    return;
+                }
+                _lastTickTime = now;
+                Core.tickToken(tickId, tickDirection);
+            }
         }
     };
 
@@ -876,10 +943,51 @@ var Duration = Duration || (function () {
     // REGISTRATION
     // ─────────────────────────────────────────────
 
+    // ─────────────────────────────────────────────
+    // TURNORDER INTERCEPTION
+    // Roll20 does not fire change:campaign:turnorder when Campaign().set() is
+    // called from within another API script (e.g. TurnMarker1's TurnOrder.Next/Prev).
+    // We wrap TurnOrder.Next and TurnOrder.Prev at ready time so that script-driven
+    // advances are visible to Duration without modifying TurnMarker.
+    // ─────────────────────────────────────────────
+
+    const TurnOrderInterceptor = {
+        install() {
+            if (typeof TurnOrder === 'undefined') return;
+            if (TurnOrder._durationWrapped) return;
+
+            const origNext = TurnOrder.Next.bind(TurnOrder);
+            const origPrev = TurnOrder.Prev.bind(TurnOrder);
+
+            TurnOrder.Next = function () {
+                const prev = Campaign().get('turnorder');
+                origNext();
+                const obj = Campaign();
+                TurnOrderInterceptor._onchange(obj, { turnorder: prev });
+            };
+
+            TurnOrder.Prev = function () {
+                const prev = Campaign().get('turnorder');
+                origPrev();
+                const obj = Campaign();
+                TurnOrderInterceptor._onchange(obj, { turnorder: prev });
+            };
+
+            TurnOrder._durationWrapped = true;
+            Logger.log('TurnOrder.Next/Prev wrapped for script-driven advance detection.');
+        },
+
+        _onchange(obj, prev) {
+            TurnHandler.handle(obj, prev);
+        }
+    };
+
     on('ready', () => {
         State.init();
         on('chat:message',              msg         => Commands.handle(msg));
         on('change:campaign:turnorder', (obj, prev) => TurnHandler.handle(obj, prev));
+        // Wrap TurnOrder after a short delay to ensure TurnMarker has loaded first
+        setTimeout(() => TurnOrderInterceptor.install(), 200);
         Logger.log(`v${VERSION} ready.`);
     });
 

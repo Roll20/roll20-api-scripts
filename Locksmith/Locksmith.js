@@ -5,8 +5,9 @@
 var Locksmith = Locksmith || (function() {
     'use strict';
 
-    var VERSION = '1.0.0';
+    var VERSION = '1.0.1';
     //Changelog
+    // 1.0.1 Added "Pick." token action (Add Pick. Token Action button, !lock --pick-action)
     // 1.0.0 Debut
     var SCRIPT_NAME = 'Locksmith';
 
@@ -78,6 +79,10 @@ var Locksmith = Locksmith || (function() {
 <p><code>!lock --report-dc</code> (also on the menu) lists every selected door/window's status, or every door/window on the page if nothing is selected. Each name is clickable and pings its location for you.</p>
 ` + clear + `
 
+<h3>Pick. Token Action</h3>
+<p>The <strong>Add Pick. Token Action</strong> button on the menu (or <code>!lock --pick-action</code>) adds a <strong>Pick.</strong> token action to the character of every selected token. Clicking it runs that character's own Thieves' Tools entry from their sheet, so the sheet handles proficiency and advantage, and Locksmith resolves the result like any other Thieves' Tools check. It works with both sheets, and it saves anyone from having to build a macro. The character needs Thieves' Tools in their sheet's tool proficiency list; a character who only carries the tools gets no action.</p>
+<p>If a character's Thieves' Tools proficiency is deleted and added again, run the button again to refresh the action. Players can do the same for their own token by selecting it and running <code>!lock --pick-action</code>.</p>
+
 <h3>How locks are stored</h3>
 <p>Locksmith works off Roll20's standard color property for doors and windows - it doesn't add any extra data to your game. Because of this, <strong>manually changing the color of a door or window Locksmith has configured can break its ability to track that lock.</strong> If you need to recolor something Locksmith manages, use the menu to reconfigure it afterward rather than hand-editing its color.</p>
 
@@ -91,7 +96,7 @@ var Locksmith = Locksmith || (function() {
 <h2>For Players</h2>
 
 <h3>Picking a Lock</h3>
-<p>There's no special command - just make a Thieves' Tools check as you normally would (from your character sheet) while your token is near the door or window in question. <strong>Range:</strong> roughly an adjacent square, plus a small safety margin for measurement. Locksmith automatically finds the nearest locked door/window within that range and compares your roll:</p>
+<p>There's no special command - just make a Thieves' Tools check as you normally would (from your character sheet, or with the <strong>Pick.</strong> token action if your GM has added it) while your token is near the door or window in question. <strong>Range:</strong> roughly an adjacent square, plus a small safety margin for measurement. Locksmith automatically finds the nearest locked door/window within that range and compares your roll:</p>
 <ul>
 <li>If you beat the DC, you'll see a success message with an <strong>Unlock</strong> button - click it to actually unlock it.</li>
 <li>If you don't beat the DC, you're told your attempt failed, but never the DC itself - only your GM knows how close you came.</li>
@@ -604,8 +609,8 @@ var Locksmith = Locksmith || (function() {
 
                 // Knock is a no-roll spell, detected by title only.
                 // Beacon: type 'advancedroll', characterId included.
-                // Legacy: type 'whisper' (sheet whispers to GM by default),
-                // rolltemplate 'spell', raw macros - NO characterId, only
+                // Legacy: rolltemplate 'spell' (any message type - the sheet
+                // may whisper it, a macro may post it publicly), raw macros - NO characterId, only
                 // {{charname=...}}, resolved downstream by name.
                 extractKnockCast: function(msg) {
                     if (!msg || !msg.content) return null;
@@ -720,6 +725,79 @@ var Locksmith = Locksmith || (function() {
                 if (!charname) return null;
                 var matches = findObjs({ _type: 'character', name: charname });
                 return (matches && matches.length > 0) ? matches[0].id : null;
+            }
+        };
+
+        // "Pick." token action - a button that runs the character sheet's
+        // own Thieves' Tools row, so the sheet does the roll (proficiency,
+        // advantage, etc.) and Locksmith's normal roll detection handles
+        // the result. The trailing period keeps TokenActionMaker/Builder
+        // from cleaning it up. Row ids are stable, so the macro holds
+        // until the row itself is deleted and re-added (re-run to fix).
+        var PickAction = {
+            ACTION_NAME: 'Pick.',
+
+            isThievesTools: function(name) {
+                return typeof name === 'string' && RollParser.normalize(name) === 'thievestools';
+            },
+
+            // 2014 sheet: the row is made of ordinary attribute objects.
+            findLegacyRowId: function(characterId) {
+                var attrs = findObjs({ _type: 'attribute', _characterid: characterId }) || [];
+                for (var i = 0; i < attrs.length; i++) {
+                    var m = /^repeating_tool_(.+)_(toolname|name)$/.exec(attrs[i].get('name') || '');
+                    if (m && this.isThievesTools(attrs[i].get('current'))) return m[1];
+                }
+                return null;
+            },
+
+            // 2024 (Beacon) sheet: no attribute objects for rows. The
+            // character's "store" attribute holds every build entry; a tool
+            // proficiency is an entry of type Proficiency, category Tool,
+            // and its shortID is the row id the sheet's macro uses.
+            findBeaconRowId: function(characterId) {
+                var attr = findObjs({ _type: 'attribute', _characterid: characterId, name: 'store' })[0];
+                if (!attr) return null;
+                var store = attr.get('current');
+                if (typeof store === 'string') {
+                    try { store = JSON.parse(store); } catch (e) { return null; }
+                }
+                var entries = store && store.integrants && store.integrants.integrants;
+                if (!entries || typeof entries !== 'object') return null;
+                var keys = Object.keys(entries);
+                for (var i = 0; i < keys.length; i++) {
+                    var e = entries[keys[i]];
+                    if (e && e.type === 'Proficiency' && e.category === 'Tool' && e._enabled !== false &&
+                        e.shortID && this.isThievesTools(e.proficiency)) return e.shortID;
+                }
+                return null;
+            },
+
+            // -> { ok: true, created: bool } or { ok: false, reason }
+            apply: function(characterId) {
+                var macro = null;
+                var legacyId = this.findLegacyRowId(characterId);
+                if (legacyId) {
+                    macro = '%{selected|repeating_tool_' + legacyId + '_tool}';
+                } else {
+                    var beaconId = this.findBeaconRowId(characterId);
+                    if (beaconId) macro = '%{' + characterId + '|repeating_tool_' + beaconId + '_tool}';
+                }
+                if (!macro) {
+                    return { ok: false, reason: 'No Thieves\' Tools proficiency found' };
+                }
+                var existing = findObjs({ _type: 'ability', _characterid: characterId, name: this.ACTION_NAME })[0];
+                if (existing) {
+                    existing.set({ action: macro, istokenaction: true });
+                    return { ok: true, created: false };
+                }
+                createObj('ability', {
+                    characterid: characterId,
+                    name: this.ACTION_NAME,
+                    action: macro,
+                    istokenaction: true
+                });
+                return { ok: true, created: true };
             }
         };
 
@@ -1409,9 +1487,14 @@ var Locksmith = Locksmith || (function() {
                 '<a href="!lock --unpickable" ' + CSS.buttonNeutralInline + '>Unpickable</a>' +
                 '<a href="!lock --knock" ' + CSS.buttonNeutralInline + '>Magic</a>';
 
+            var tokenButtons =
+                '<a href="!lock --pick-action" title="Adds a Pick. token action to the selected tokens\' characters" ' +
+                CSS.buttonNeutralInline + '>Add Pick. Token Action</a>';
+
             var menuTable = '<table ' + CSS.menuTable + '>' +
                 '<tr><td ' + CSS.menuGroupLabel + '>Selected</td><td ' + CSS.menuGroupCell + '>' + selectedButtons + '</td></tr>' +
                 '<tr><td ' + CSS.menuGroupLabel + '>Set</td><td ' + CSS.menuGroupCell + '>' + setButtons + '</td></tr>' +
+                '<tr><td ' + CSS.menuGroupLabel + '>Characters</td><td ' + CSS.menuGroupCell + '>' + tokenButtons + '</td></tr>' +
                 '</table>';
 
             var fullWidthButton = '<a href="!lock --toggle-dc-labels" ' + CSS.buttonNeutral + '>Show/Hide All Lock DCs</a>';
@@ -1959,6 +2042,41 @@ var Locksmith = Locksmith || (function() {
             Chat.deliverKeyMessage(msg.playerid, 'Created the "Keys." token action for ' + character.get('name') + '.');
         },
 
+        // !lock --pick-action. Select one or more tokens; each token's
+        // character gets (or has refreshed) a "Pick." token action that
+        // runs its sheet's Thieves' Tools row. Not GM-gated - selection
+        // rules already limit players to their own tokens.
+        handlePickAction: function(msg) {
+            try {
+                var characterIds = [];
+                var sel = msg.selected || [];
+                for (var i = 0; i < sel.length; i++) {
+                    if (sel[i]._type !== 'graphic') continue;
+                    var token = getObj('graphic', sel[i]._id);
+                    var cid = token ? token.get('represents') : null;
+                    if (cid && characterIds.indexOf(cid) === -1) characterIds.push(cid);
+                }
+                if (characterIds.length === 0) {
+                    Chat.deliverKeyMessage(msg.playerid, 'Select one or more tokens that represent characters, then run !lock --pick-action.');
+                    return;
+                }
+
+                var items = [];
+                for (var k = 0; k < characterIds.length; k++) {
+                    var character = getObj('character', characterIds[k]);
+                    var cname = character ? character.get('name') : 'Unknown';
+                    var result = PickAction.apply(characterIds[k]);
+                    var text = !result.ok ? result.reason :
+                        (result.created ? 'Created "Pick."' : 'Updated "Pick."');
+                    items.push({ label: cname.replace(/</g, '&lt;'), value: text });
+                }
+                Chat.deliverKeyMessage(msg.playerid, '"Pick." Token Action', Chat._renderRows(items));
+            } catch (e) {
+                Logger.warn('pick-action failed: ' + e);
+                Chat.deliverKeyMessage(msg.playerid, 'Could not create the "Pick." token action: ' + e);
+            }
+        },
+
         // Clicked from a keyring report's "Use" button. Toggles the named
         // door/window's locked state (bypassing DC/unpickable/magic
         // entirely - a key doesn't care about any of that) as long as the
@@ -2286,6 +2404,8 @@ var Locksmith = Locksmith || (function() {
                     this.handleKeyLootMacro(msg, args);
                 } else if (flag === '--keyring') {
                     this.handleKeyring(msg);
+                } else if (flag === '--pick-action') {
+                    this.handlePickAction(msg);
                 } else if (flag === '--key-create-action') {
                     this.handleKeyCreateAction(msg, args);
                 } else if (flag === '--key-use') {

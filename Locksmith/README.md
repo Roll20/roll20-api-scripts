@@ -12,6 +12,7 @@ Roll20 has no native trigger for "a player clicks a locked door," so lock-pickin
 - **GM setup menu** (`!lock`) - set a DC, mark a lock Unpickable or Magic-only, and toggle on-map status labels (which turn yellow if a key-holder is already on the map).
 - **Keys and keyrings** - hand a key to a token directly, or generate a self-service loot macro for treasure. Each character's `!keyring` report lets them Use (toggle), Give, or Drop a key, plus a "Try all Keys" button that finds the nearest match automatically.
 - **One-click token action** - `!keyring` can be added as a token action, so players never type a command.
+- **Pick. token action** - the Add Pick. Token Action button (or `!lock --pick-action`) adds a "Pick." token action to each selected token's character. It runs that character's own Thieves' Tools entry from their sheet, so the sheet handles proficiency and advantage. Works on both sheets; the character needs Thieves' Tools in their tool proficiencies.
 - **In-game help** - `!lock --help` builds a full handout (GM and player sections, screenshots, jump links) right in your game.
 
 ## Installation
@@ -34,6 +35,7 @@ From there, players just make Thieves' Tools checks or cast Knock as normal - Lo
 | `!lock --report-dc` | GM | Lists every selected door/window's status, or the whole page if nothing is selected |
 | `!lock --help` | Anyone | Creates or refreshes the help handout |
 | `!keyring` (or `!lock --keyring`) | Anyone | Reports the selected token's keys - requires a token to be selected |
+| `!lock --pick-action` | Anyone | Adds a "Pick." token action to the character of each selected token (also the Add Pick. Token Action button on the menu) |
 
 Everything else - setting a DC, marking a lock Unpickable/Magic, granting or looting a key, giving/dropping a key, toggling map labels, creating the `!keyring` token action - is reached through buttons in the menu and reports above, not additional typed commands.
 
@@ -41,8 +43,10 @@ Everything else - setting a DC, marking a lock Unpickable/Magic, granting or loo
 
 - A door or window needs *both* a DC/Unpickable/Magic setting *and* Roll20's own locked state turned on before a pick attempt or Knock will do anything with it.
 - Manually changing the color of a door/window Locksmith manages can break its ability to track that lock - use the menu to reconfigure it instead.
-- All key-related output (granting, looting, keyring reports, Use/Give/Drop) is private to the GM and whoever ran the command - it's never broadcast to the table, unlike pick-attempt and Knock outcomes, which might be public, depending on sheet settings.
+- All key-related output (granting, looting, keyring reports, Use/Give/Drop) is private to the GM and whoever ran the command - it's never broadcast to the table, unlike pick-attempt and Knock outcomes, which are public.
 
 ## Changelog
+
+**1.0.1** - Added the "Pick." token action.
 
 **1.0.0** - Debut release.
