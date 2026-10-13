@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3.0] – 2026-10-06
+
+### Added
+
+- **Selectable heal/hurt effects** — `!aura heal <effect>` and `!aura hurt <effect>` now accept a Roll20 built-in effect name (e.g. `glow-holy`, `explode-blood`, `splatter-blood`) or a custom FX name/id from the campaign's Effects menu, as well as the existing 6-digit hex colour. `!aura heal default` / `!aura hurt default` restore the shipped colours. ([#5](https://github.com/steverobertsuk/roll20-api-scripts/issues/5))
+- Added `!aura listfx` (and a **List FX** button in the GM menu) that lists the campaign's custom FX with their ids and one-click **Heal** / **Hurt** set buttons, plus a reference of the built-in `<type>-<colour>` effect names — restoring the `LISTFX` helper from the 1.7.1 forum build.
+- Added a per-character `USEHEAL` attribute mirroring `USEBLOOD`: `DEFAULT` (use the global setting), `OFF`/`NO` (no heal FX for that character), a hex colour, or a comma-separated list of built-in and/or custom effect names.
+- The GM menu and `!aura settings` snapshot now show the chosen heal/hurt effect (colour swatch for hex values, the effect name otherwise).
+- **One-Click install options** — every setting (bar, aura/tint, palette, thresholds, PC/NPC toggles, nameplates, aura display values, FX, death sound, Death Save Integration) can now be set from the Roll20 One-Click install dialog via `useroptions`. Options are applied on first install and whenever the dialog is saved again (tracked in `state.HealthColors.globalconfigCache.lastsaved`), so in-game `!aura` changes are not overwritten on every restart. `!aura reset` / `!aura reset-all` return to the One-Click values.
+- `script.json` now declares the objects and properties the script reads and writes at property level (`graphic.*`, `character.*`, `attribute.*`, `custfx.*`, `jukeboxtrack.*`, `Campaign.token_markers`).
+
+### Changed
+
+- `USEBLOOD` now accepts Roll20 built-in effect names alongside custom FX names and hex colours. `OFF`/`NO` keep their long-standing meaning of disabling all HealthColors FX for that character and are now matched case-insensitively.
+- Unknown effect names given to `!aura heal` / `!aura hurt` are rejected with a GM warning instead of being silently ignored, and the previous setting is kept.
+- A configured custom FX that no longer exists (global setting or character attribute) now whispers the GM once per setting change rather than on every HP change; the API log still records every fallback. The warning names the setting or attribute to fix.
+- Built-in effects are spawned by name with Roll20's own renderer, so they play at Roll20's fixed size and are not scaled by token size or damage amount. Custom FX and colour bursts keep the existing scaling.
+- Updated the Death Save Integration sandbox guidance for Roll20's September 2026 rename: "Experimental" is now **Mod Script Sandbox v1.5** and "Default" is **v1.0**. The script now reads the running version from `Campaign().sandboxVersion`, logs it at startup, reports it in `!aura deathsaves debug`, and only shows the Beacon sheet note in the GM menu and the one-time GM whisper when the game is on v1.0 (or the version cannot be determined).
+
+### Fixed
+
+- Fixed newly placed tokens staying uncoloured until a setting was toggled (reported on the Roll20 forum with the 5e Shaped sheet, where HP max is calculated by the sheet after the token exists). A token change that only altered the health bar's max, its attribute link, or the token's character was treated as "nothing relevant changed" and skipped, and the `change:attribute` listener ignored changes to an attribute's max. Both paths now re-evaluate the token (silently, with no FX) so the aura or tint appears as soon as the bar becomes usable.
+
 ## [2.2.1] – 2026-07-03
 
 ### Added

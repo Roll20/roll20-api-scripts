@@ -1,5 +1,5 @@
 // ===========================
-// === HealthColors v2.2.1 ===
+// === HealthColors v2.3.0 ===
 // ===========================
 
 // AUTHORS:
@@ -7,7 +7,7 @@
 //  - Surok: https://app.roll20.net/users/335573/surok
 //  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7
 
-/* global createObj TokenMod spawnFxWithDefinition spawnFx getObj state playerIsGM sendChat findObjs Campaign log on getSheetItem */
+/* global createObj TokenMod spawnFxWithDefinition spawnFx spawnFxBetweenPoints getObj state globalconfig playerIsGM sendChat findObjs Campaign log on getSheetItem */
 
 var HealthColors =
   HealthColors ||
@@ -15,10 +15,10 @@ var HealthColors =
     'use strict';
 
     // ————— CONSTANTS —————
-    const VERSION = '2.2.1';
+    const VERSION = '2.3.0';
     const SCRIPT_NAME = 'HealthColors';
     const SCHEMA_VERSION = '1.1.0';
-    const UPDATED = '2026-07-03 06:00 UTC';
+    const UPDATED = '2026-10-07 21:00 UTC';
 
     // ————— DEFAULTS —————
     /**
@@ -47,8 +47,9 @@ var HealthColors =
      * @property {string}  Aura2Color   - Display/default Aura 2 tint value shown in output.
      * @property {boolean} OneOff       - When true, tokens without a linked character also get auras.
      * @property {boolean} FX           - Whether to spawn particle FX on HP changes.
-     * @property {string}  HealFX       - Hex color (no '#') used for the healing particle effect.
-     * @property {string}  HurtFX       - Hex color (no '#') used for the hurt/damage particle effect.
+     * @property {string}  HealFX       - Healing effect: a hex color (no '#') that recolours the default particle
+     *                                      burst, a Roll20 built-in effect name (`glow-holy`), or a custom FX name.
+     * @property {string}  HurtFX       - Hurt/damage effect; same formats as HealFX (default a red particle burst).
      * @property {string}  auraDeadFX   - Jukebox track name to play on death, or 'None' to disable.
      * @property {string}  colorPalette - Health aura colour palette ('default'|'colorblind').
      * @property {boolean} deathSavesOn   - Master toggle for the optional Death Save Integration (off by default).
@@ -107,6 +108,42 @@ var HealthColors =
         dead: [0, 0, 0], // black
       },
     };
+
+    // ————— BUILT-IN FX —————
+    /**
+     * Roll20's built-in particle-effect vocabulary. A built-in effect name is `<type>-<colour>`
+     * (e.g. `glow-holy`, `explode-blood`), exactly as shown in the in-game Effects menu.
+     * Directional types (beam, breath, splatter) need a start and end point, so they are
+     * spawned with `spawnFxBetweenPoints` from the token's own position.
+     */
+    const BUILTIN_FX_TYPES = [
+      'beam',
+      'bomb',
+      'breath',
+      'bubbling',
+      'burn',
+      'burst',
+      'explode',
+      'glow',
+      'missile',
+      'nova',
+      'splatter',
+    ];
+    const BUILTIN_FX_COLORS = [
+      'acid',
+      'blood',
+      'charm',
+      'death',
+      'fire',
+      'frost',
+      'holy',
+      'magic',
+      'slime',
+      'smoke',
+      'water',
+    ];
+    const DIRECTIONAL_FX_TYPES = new Set(['beam', 'breath', 'splatter']);
+    const BUILTIN_FX_PATTERN = new RegExp(`^(${BUILTIN_FX_TYPES.join('|')})-(${BUILTIN_FX_COLORS.join('|')})$`);
 
     /**
      * Seed definition for the '-DefaultHurt' Roll20 custom FX object created at install.
@@ -321,6 +358,111 @@ var HealthColors =
     function normalizeHex6(value, fallback) {
       const cleaned = (value || '').replace('#', '').trim().toUpperCase();
       return /^[0-9A-F]{6}$/.test(cleaned) ? cleaned : fallback;
+    }
+
+    /**
+     * Returns true when the value is a 6-digit hex colour, with or without a leading '#'.
+     *
+     * @param {string} value - Candidate value.
+     * @returns {boolean} True for a 6-digit hex colour.
+     */
+    function isHex6(value) {
+      return /^#?[0-9A-Fa-f]{6}$/.test(
+        String(value ?? '')
+          .trim()
+          .replace('#', ''),
+      );
+    }
+
+    /**
+     * Returns true when the value is a Roll20 built-in effect name (`<type>-<colour>`).
+     *
+     * @param {string} value - Candidate value (case-insensitive).
+     * @returns {boolean} True for a known built-in effect name.
+     */
+    function isBuiltinFxName(value) {
+      return BUILTIN_FX_PATTERN.test(
+        String(value ?? '')
+          .trim()
+          .toLowerCase(),
+      );
+    }
+
+    /**
+     * Returns true when a per-character FX override disables FX (`OFF` or `NO`, any case).
+     *
+     * @param {string|undefined} value - Attribute value.
+     * @returns {boolean} True when FX are switched off for the character.
+     */
+    function isFxOff(value) {
+      return /^(OFF|NO)$/i.test(String(value ?? '').trim());
+    }
+
+    /**
+     * Finds a campaign custom FX object by name (case-insensitive) or by object id.
+     *
+     * @param {string} nameOrId - Custom FX name or Roll20 object id.
+     * @returns {object|undefined} The custfx object, or undefined when none matches.
+     */
+    function findCustomFx(nameOrId) {
+      const key = String(nameOrId ?? '').trim();
+      if (!key) return undefined;
+      const byName = findObjs({ _type: 'custfx', name: key }, { caseInsensitive: true })[0];
+      if (byName) return byName;
+      return getObj('custfx', key) || undefined;
+    }
+
+    /**
+     * Classifies a heal/hurt FX value (global setting or per-character override entry).
+     *
+     * @param {string} value - Hex colour, built-in effect name, or custom FX name/id.
+     * @returns {{kind:'colour',hex:string}|{kind:'builtin',name:string}|{kind:'custom',name:string,fxObj:object}|null}
+     *          The classified choice, or null when the value is blank or names nothing known.
+     */
+    function classifyFxValue(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return null;
+      if (isHex6(raw)) return { kind: 'colour', hex: raw.replace('#', '').toUpperCase() };
+      if (isBuiltinFxName(raw)) return { kind: 'builtin', name: raw.toLowerCase() };
+      const fxObj = findCustomFx(raw);
+      if (fxObj) return { kind: 'custom', name: String(fxObj.get('name') || raw).trim(), fxObj };
+      return null;
+    }
+
+    /**
+     * Normalizes a `!aura heal` / `!aura hurt` argument. Accepts a hex colour, a Roll20
+     * built-in effect name, or a custom FX name/id (stored by its canonical name).
+     * `default` restores the shipped colour. Anything else keeps the fallback and warns the GM.
+     *
+     * @param {string} value        - Raw command argument.
+     * @param {string} fallback     - Current setting, kept when the input is invalid.
+     * @param {string} label        - 'heal' or 'hurt' (for messages).
+     * @param {string} defaultValue - Shipped default for this setting.
+     * @returns {string} The normalized setting value.
+     */
+    function normalizeFxSetting(value, fallback, label, defaultValue) {
+      const raw = String(value ?? '').trim();
+      if (!raw) return fallback;
+      if (raw.toUpperCase() === 'DEFAULT') return defaultValue;
+      const choice = classifyFxValue(raw);
+      if (!choice) {
+        gmWhisper(
+          `⚠ Unknown ${label} FX "${escapeForChat(raw)}". Use a hex colour (e.g. FDDC5C), a built-in effect such as glow-holy, or a custom FX name/id from <strong>!aura listfx</strong>. Keeping "${escapeForChat(fallback)}".`,
+        );
+        return fallback;
+      }
+      return choice.kind === 'colour' ? choice.hex : choice.name;
+    }
+
+    /**
+     * Inline style for a heal/hurt FX menu button or pill: a colour swatch for hex values,
+     * an auto-width label for effect names.
+     *
+     * @param {string} value - Current HealFX/HurtFX setting.
+     * @returns {string} Extra inline CSS.
+     */
+    function fxSettingStyle(value) {
+      return isHex6(value) ? `background-color:#${value}` : 'width:auto;padding-left:6px;padding-right:6px';
     }
 
     /**
@@ -621,6 +763,141 @@ var HealthColors =
       return values.reduce((acc, v) => acc + (isTruthyAttr(v) ? 1 : 0), 0);
     }
 
+    // ————— ONE-CLICK OPTIONS (globalconfig) —————
+    /**
+     * Parses a One-Click checkbox/boolean option. Roll20 delivers a ticked checkbox as the
+     * option's `value` string ('true' here) and an unticked one as false/'false'.
+     *
+     * @param {*}       value    - Raw option value.
+     * @param {boolean} fallback - Current setting, kept when the value is unrecognised.
+     * @returns {boolean} Parsed boolean.
+     */
+    function parseBooleanOption(value, fallback) {
+      if (typeof value === 'boolean') return value;
+      if (value === undefined || value === null) return fallback;
+      const normalized = String(value).trim().toLowerCase();
+      if (['true', '1', 'checked', 'on', 'yes'].includes(normalized)) return true;
+      if (['false', '0', '', 'off', 'no'].includes(normalized)) return false;
+      return fallback;
+    }
+
+    /**
+     * Normalizes a One-Click health-bar option ('bar1' | 'bar2' | 'bar3', any case).
+     *
+     * @param {string} value    - Raw option value.
+     * @param {string} fallback - Current setting.
+     * @returns {string} A valid bar key.
+     */
+    function normalizeBarKey(value, fallback) {
+      const bar = String(value ?? '')
+        .trim()
+        .toLowerCase();
+      return /^bar[123]$/.test(bar) ? bar : fallback;
+    }
+
+    /**
+     * One-Click `useroptions` → state normalizers, keyed by DEFAULTS key (the option `name`
+     * in script.json is the same key). Each takes (rawValue, currentSetting) and returns
+     * the value to store, so invalid input keeps the current setting.
+     */
+    const ONE_CLICK_NORMALIZERS = {
+      auraColorOn: parseBooleanOption,
+      auraBar: normalizeBarKey,
+      auraTint: parseBooleanOption,
+      auraPercPC: normalizePercent,
+      auraPerc: normalizePercent,
+      PCAura: parseBooleanOption,
+      NPCAura: parseBooleanOption,
+      auraDeadPC: parseBooleanOption,
+      auraDead: parseBooleanOption,
+      GM_PCNames: normalizeYesNoOff,
+      PCNames: normalizeYesNoOff,
+      GM_NPCNames: normalizeYesNoOff,
+      NPCNames: normalizeYesNoOff,
+      AuraSize: normalizePositiveNumber,
+      Aura1Shape: normalizeShape,
+      Aura1Color: normalizeHex6,
+      Aura2Size: normalizePositiveNumber,
+      Aura2Shape: normalizeShape,
+      Aura2Color: normalizeHex6,
+      OneOff: parseBooleanOption,
+      FX: parseBooleanOption,
+      HealFX: (value, current) => normalizeFxSetting(value, current, 'heal', DEFAULTS.HealFX),
+      HurtFX: (value, current) => normalizeFxSetting(value, current, 'hurt', DEFAULTS.HurtFX),
+      auraDeadFX: normalizeTrackName,
+      colorPalette: normalizePalette,
+      deathSavesOn: parseBooleanOption,
+      dsSuccessAttr: normalizeAttrName,
+      dsFailureAttr: normalizeAttrName,
+      dsDyingMarker: normalizeMarkerName,
+      dsStableMarker: normalizeMarkerName,
+    };
+
+    /**
+     * Returns this script's One-Click options branch from Roll20's `globalconfig`, or null.
+     * Roll20 keys the branch by the script.json name (lower-cased, punctuation varies), so the
+     * lookup accepts any key that normalizes to a name ending in "healthcolors".
+     *
+     * @returns {object|null} The options object (includes `lastsaved`), or null when absent.
+     */
+    function getOneClickOptions() {
+      if (typeof globalconfig !== 'object' || globalconfig === null) return null;
+      const normalizeKey = (key) =>
+        String(key)
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+      const key = Object.keys(globalconfig).find((k) => normalizeKey(k).endsWith('healthcolors'));
+      const branch = key ? globalconfig[key] : null;
+      return branch && typeof branch === 'object' ? branch : null;
+    }
+
+    /**
+     * Applies One-Click install options to state when they are newer than the last applied
+     * set (`globalconfig.<script>.lastsaved` vs `state.HealthColors.globalconfigCache.lastsaved`),
+     * so in-game `!aura` changes survive restarts until the GM saves the One-Click dialog again.
+     * Blank option values are ignored. Whispers the GM a summary of what changed and refreshes
+     * tokens so the new settings take effect immediately.
+     *
+     * @returns {boolean} True when options were applied.
+     */
+    function applyOneClickOptions() {
+      const s = state.HealthColors;
+      if (!s.globalconfigCache || typeof s.globalconfigCache !== 'object') s.globalconfigCache = { lastsaved: 0 };
+      const options = getOneClickOptions();
+      if (!options) return false;
+      const lastsaved = Number(options.lastsaved) || 0;
+      if (lastsaved <= (Number(s.globalconfigCache.lastsaved) || 0)) return false;
+
+      log(`${SCRIPT_NAME}: applying One-Click options saved ${new Date(lastsaved * 1000).toISOString()}`);
+      const changed = [];
+      Object.keys(ONE_CLICK_NORMALIZERS).forEach((key) => {
+        const raw = options[key];
+        if (raw === undefined || raw === null || (typeof raw === 'string' && raw.trim() === '')) return;
+        const next = ONE_CLICK_NORMALIZERS[key](typeof raw === 'boolean' ? raw : String(raw), s[key]);
+        if (next !== s[key]) {
+          changed.push({ key, from: s[key], to: next });
+          s[key] = next;
+        }
+      });
+      s.globalconfigCache = { lastsaved };
+
+      if (changed.length === 0) {
+        gmWhisper('One-Click options loaded: no settings changed.');
+        return true;
+      }
+      const lines = changed.map(
+        ({ key, from, to }) => `${key}: ${escapeForChat(String(from))} → <strong>${escapeForChat(String(to))}</strong>`,
+      );
+      gmWhisper(`Applied One-Click options:<br><div style="text-align:left">${lines.join('<br>')}</div>`);
+      if (changed.some(({ key, to }) => key === 'deathSavesOn' && to === false)) clearAllDeathSaveMarkers();
+      if (changed.some(({ key }) => key === 'auraTint')) {
+        modeSwitch(s.auraTint);
+      } else {
+        menuForceUpdate();
+      }
+      return true;
+    }
+
     // ————— WHISPER GM (declared early; used by checkInstall) —————
     /**
      * Sends a styled whisper message to the GM.
@@ -708,6 +985,10 @@ var HealthColors =
     }
 
     const lookupUseBlood = makeSmartAttrCache('USEBLOOD', {
+      default: 'DEFAULT',
+      validation: (o) => String(o || '').trim() !== '',
+    });
+    const lookupUseHeal = makeSmartAttrCache('USEHEAL', {
       default: 'DEFAULT',
       validation: (o) => String(o || '').trim() !== '',
     });
@@ -925,13 +1206,13 @@ var HealthColors =
     }
 
     /**
-     * Initializes or migrates persisted state, applies all default values, registers
-     * the TokenMod observer if available, and creates the default Hurt/Heal FX objects
-     * if they do not already exist in the campaign.
+     * Initializes or migrates persisted state, applies all default values, applies any
+     * newer One-Click install options, registers the TokenMod observer if available, and
+     * creates the default Hurt/Heal FX objects if they do not already exist in the campaign.
      * Safe to call multiple times (e.g. after a state reset).
      */
     function checkInstall() {
-      log(`-=> ${SCRIPT_NAME} v${VERSION} [Updated: ${UPDATED}] <=-`);
+      log(`-=> ${SCRIPT_NAME} v${VERSION} [Updated: ${UPDATED}] <=- Mod Script Sandbox ${describeSandbox()}`);
       if (state?.HealthColors?.schemaVersion !== SCHEMA_VERSION) {
         log(`<${SCRIPT_NAME} Updating Schema to v${SCHEMA_VERSION}>`);
         state.HealthColors = { schemaVersion: SCHEMA_VERSION, version: VERSION };
@@ -941,6 +1222,7 @@ var HealthColors =
         if (state.HealthColors[key] === undefined) state.HealthColors[key] = DEFAULTS[key];
       });
       state.HealthColors.colorPalette = normalizePalette(state.HealthColors.colorPalette, DEFAULTS.colorPalette);
+      applyOneClickOptions();
       if (typeof TokenMod !== 'undefined' && TokenMod.ObserveTokenChange) {
         TokenMod.ObserveTokenChange(handleTokenChange);
       }
@@ -964,6 +1246,40 @@ var HealthColors =
     }
 
     /**
+     * Returns the hex colour the default heal/hurt particle burst should use: the global
+     * HealFX/HurtFX setting when it is a colour, otherwise the shipped default colour
+     * (the setting then names an effect, and the default burst only plays as a fallback).
+     *
+     * @param {boolean} isHeal - True for the heal burst, false for hurt.
+     * @returns {string} 6-digit hex colour.
+     */
+    function getDefaultFxColour(isHeal) {
+      const key = isHeal ? 'HealFX' : 'HurtFX';
+      const setting = state.HealthColors[key];
+      return isHex6(setting) ? setting : DEFAULTS[key];
+    }
+
+    /**
+     * Writes a solid RGBA colour into every start/end colour key of an FX definition
+     * (both British and American spellings) and neutralizes the random colour channels.
+     *
+     * @param {object}   def - FX definition to mutate.
+     * @param {number[]} rgb - RGBA array from hexToRgb.
+     * @returns {object} The same definition, for chaining.
+     */
+    function applyFxColour(def, rgb) {
+      def.startColour = rgb;
+      def.startColor = rgb;
+      def.endColour = rgb;
+      def.endColor = rgb;
+      def.startColourRandom = [0, 0, 0, 0];
+      def.startColorRandom = [0, 0, 0, 0];
+      def.endColourRandom = [0, 0, 0, 0];
+      def.endColorRandom = [0, 0, 0, 0];
+      return def;
+    }
+
+    /**
      * Builds the normalized default Hurt/Heal definition payload used for
      * campaign custom FX objects.
      *
@@ -973,15 +1289,7 @@ var HealthColors =
      */
     function buildDefaultFxDefinition(isHeal, baseDef) {
       const def = { ...baseDef };
-      const rgb = hexToRgb(isHeal ? state.HealthColors.HealFX : state.HealthColors.HurtFX);
-      def.startColour = rgb;
-      def.startColor = rgb;
-      def.endColour = rgb;
-      def.endColor = rgb;
-      def.startColourRandom = [0, 0, 0, 0];
-      def.startColorRandom = [0, 0, 0, 0];
-      def.endColourRandom = [0, 0, 0, 0];
-      def.endColorRandom = [0, 0, 0, 0];
+      applyFxColour(def, hexToRgb(getDefaultFxColour(isHeal)));
 
       // Keep the vivid profile that reads clearly in live play.
       if (isHeal) {
@@ -1039,7 +1347,8 @@ var HealthColors =
 
     /**
      * Resets all persisted HealthColors settings back to DEFAULTS.
-     * Keeps schema/version metadata aligned to current script constants.
+     * Keeps schema/version metadata aligned to current script constants. Also drops the
+     * One-Click cache, so the following checkInstall re-applies the install-time options.
      */
     function resetAllSettingsToDefaults() {
       state.HealthColors = {
@@ -1072,6 +1381,24 @@ var HealthColors =
       if (Object.hasOwn(prev, key)) return prev[key];
       if (typeof prev.get === 'function') return prev.get(key);
       return undefined;
+    }
+
+    /**
+     * Reports whether the health bar's max, its attribute link, or the token's character
+     * changed in this event. Any of these can turn a token that was previously skipped
+     * (empty max, no character) into one that should be coloured, without the bar's
+     * current value moving at all — e.g. the 5e Shaped sheet computes HP max from the
+     * sheet after the token is placed, or the GM links the bar in token settings.
+     *
+     * @param {object} obj     - Roll20 token graphic object.
+     * @param {object} prev    - Previous token snapshot.
+     * @param {string} barUsed - Configured health bar property name (e.g. 'bar1').
+     * @returns {boolean} True when max, link, or represents differs from the snapshot.
+     */
+    function barLinkageChanged(obj, prev, barUsed) {
+      return [`${barUsed}_max`, `${barUsed}_link`, 'represents'].some(
+        (key) => String(getPrevBarValue(prev, key) ?? '') !== String(obj.get(key) ?? ''),
+      );
     }
 
     // ————— TOKEN LOGIC —————
@@ -1218,133 +1545,141 @@ var HealthColors =
       }
     }
 
+    // Missing-FX warnings already whispered (keyed by source, character and name) so a bad
+    // name is reported once per setting change rather than on every HP tick.
+    const warnedMissingFx = new Set();
+
     /**
-     * Builds the list of FX definition objects to spawn for a heal or hurt event.
+     * Logs, and whispers once, that a configured FX name could not be found, naming the
+     * setting or character attribute to fix. The caller falls back to the default burst.
      *
-     * @param {boolean}          isHeal    - True when HP went up.
-     * @param {string|undefined} useBlood  - Per-character blood FX override value.
-     * @param {string}           [label]   - Character/token name for error context.
-     * @returns {object[]} Array of Roll20 custfx definition objects.
+     * @param {string}  fxName - The unresolved effect name.
+     * @param {string}  source - 'heal' | 'hurt' (global setting) or 'USEHEAL' | 'USEBLOOD' (attribute).
+     * @param {string}  label  - Character/token name for context ('' for the global setting).
+     * @param {boolean} isHeal - True for a heal event.
      */
-    function buildFXList(isHeal, useBlood, label) {
-      const fxArray = [];
-
-      if (isHeal) {
-        const aFX = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
-        const def = getFxDefinition(aFX);
-
-        if (def) {
-          const healRgb = hexToRgb(state.HealthColors.HealFX);
-          def.startColour = healRgb;
-          def.startColor = healRgb;
-          def.endColour = healRgb;
-          def.endColor = healRgb;
-          def.startColourRandom = [0, 0, 0, 0];
-          def.startColorRandom = [0, 0, 0, 0];
-          def.endColourRandom = [0, 0, 0, 0];
-          def.endColorRandom = [0, 0, 0, 0];
-          fxArray.push(def);
-        }
-
-        return fxArray;
-      }
-
-      const aFX = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
-      const def = getFxDefinition(aFX);
-
-      if (!def) return fxArray;
-
-      if (useBlood === 'DEFAULT' || useBlood === undefined) {
-        const hurtRgb = hexToRgb(state.HealthColors.HurtFX);
-        def.startColour = hurtRgb;
-        def.startColor = hurtRgb;
-        def.endColour = hurtRgb;
-        def.endColor = hurtRgb;
-        def.startColourRandom = [0, 0, 0, 0];
-        def.startColorRandom = [0, 0, 0, 0];
-        def.endColourRandom = [0, 0, 0, 0];
-        def.endColorRandom = [0, 0, 0, 0];
-        fxArray.push(def);
-      } else {
-        const normalizedUseBlood = String(useBlood || '').trim();
-        const hurtRgb = hexToRgb(normalizedUseBlood);
-
-        if (hurtRgb.some((v) => v !== 0)) {
-          def.startColour = hurtRgb;
-          def.startColor = hurtRgb;
-          def.endColour = hurtRgb;
-          def.endColor = hurtRgb;
-          def.startColourRandom = [0, 0, 0, 0];
-          def.startColorRandom = [0, 0, 0, 0];
-          def.endColourRandom = [0, 0, 0, 0];
-          def.endColorRandom = [0, 0, 0, 0];
-          fxArray.push(def);
-        } else {
-          const fxNames = normalizedUseBlood
-            .split(',')
-            .map((fxName) => fxName.trim())
-            .filter((fxName) => fxName !== '');
-
-          if (fxNames.length === 0) {
-            const hurtRgb = hexToRgb(state.HealthColors.HurtFX);
-            def.startColour = hurtRgb;
-            def.startColor = hurtRgb;
-            def.endColour = hurtRgb;
-            def.endColor = hurtRgb;
-            def.startColourRandom = [0, 0, 0, 0];
-            def.startColorRandom = [0, 0, 0, 0];
-            def.endColourRandom = [0, 0, 0, 0];
-            def.endColorRandom = [0, 0, 0, 0];
-            fxArray.push(def);
-            return fxArray;
-          }
-
-          fxNames.forEach((fxName) => {
-            const custom = findObjs({ _type: 'custfx', name: fxName.trim() }, { caseInsensitive: true })[0];
-            const customDef = getFxDefinition(custom);
-
-            if (customDef) {
-              fxArray.push(customDef);
-            } else {
-              const who = label ? ` (character: "${label}")` : '';
-              log(`${SCRIPT_NAME}: Custom FX "${fxName.trim()}"${who} not found — check the USEBLOOD attribute.`);
-              gmWhisper(
-                `Custom FX "${fxName.trim()}"${who} not found. Fix the USEBLOOD attribute on that character. Falling back to default hurt FX.`,
-              );
-              const fallbackFx = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
-              const fallbackDef = getFxDefinition(fallbackFx);
-              if (fallbackDef) fxArray.push(fallbackDef);
-            }
-          });
-        }
-      }
-
-      return fxArray;
+    function warnMissingFx(fxName, source, label, isHeal) {
+      const key = `${source}|${label}|${fxName}`;
+      const who = label ? ` (character: "${escapeForChat(label)}")` : '';
+      const isAttr = source === 'USEHEAL' || source === 'USEBLOOD';
+      log(
+        `${SCRIPT_NAME}: FX "${fxName}"${who} not found — check ${isAttr ? `the ${source} attribute` : `!aura ${source}`}.`,
+      );
+      if (warnedMissingFx.has(key)) return;
+      warnedMissingFx.add(key);
+      const fix = isAttr
+        ? `Fix the ${source} attribute on that character`
+        : `Fix it with <strong>!aura ${source} &lt;effect&gt;</strong> (see <strong>!aura listfx</strong>)`;
+      gmWhisper(
+        `FX "${escapeForChat(fxName)}"${who} not found. ${fix}. Falling back to the default ${isHeal ? 'heal' : 'hurt'} FX.`,
+      );
     }
 
     /**
-     * Spawns the default heal or hurt FX by their saved custfx ID using spawnFx.
-     * This avoids client-side color inconsistencies seen in some sandboxes when using
-     * spawnFxWithDefinition directly. Only handles DEFAULT heal/hurt colors; custom
-     * named FX (USEBLOOD set to a custfx name) still use the definition-spawn path.
+     * Builds the colour-burst choice for the shipped default heal/hurt particle FX.
+     * Without `hex` the burst uses the global colour (the pre-synced `-DefaultHeal`/`-DefaultHurt`
+     * object is spawned by id); with `hex` a per-character colour is injected into a copy of
+     * the definition and spawned scaled.
      *
-     * @param {object}           obj      - Roll20 token graphic object.
-     * @param {boolean}          isHeal   - True when HP increased.
-     * @param {string|undefined} useBlood - Per-character blood override value.
-     * @returns {boolean} True when spawning was handled; false if the caller should fall back.
+     * @param {boolean} isHeal - True for a heal event.
+     * @param {string}  [hex]  - Per-character override colour.
+     * @returns {{kind:'colour',hex:string,global:boolean}} The colour choice.
      */
-    function spawnDefaultFxById(obj, isHeal, useBlood) {
-      if (!(useBlood === 'DEFAULT' || useBlood === undefined)) return false;
-      const fxName = isHeal ? '-DefaultHeal' : '-DefaultHurt';
-      const aFX = findObjs({ _type: 'custfx', name: fxName }, { caseInsensitive: true })[0];
-      if (!aFX) return false;
+    function defaultColourChoice(isHeal, hex) {
+      if (hex) return { kind: 'colour', hex, global: false };
+      return { kind: 'colour', hex: getDefaultFxColour(isHeal), global: true };
+    }
 
-      spawnFx(obj.get('left'), obj.get('top'), aFX.id, obj.get('pageid'));
-      return true;
+    /**
+     * Resolves which FX to spawn for a heal or hurt event.
+     * Precedence: per-character override (`USEHEAL` / `USEBLOOD`) → global `HealFX` / `HurtFX`.
+     * An override may be `DEFAULT` (use the global setting), a hex colour, or a comma-separated
+     * list of built-in effect names and/or custom FX names. Unknown names warn and fall back.
+     *
+     * @param {boolean}          isHeal   - True when HP went up.
+     * @param {string|undefined} override - Per-character attribute value.
+     * @param {string}           [label]  - Character/token name for error context.
+     * @returns {object[]} FX choices for spawnFxChoice.
+     */
+    function resolveFxChoices(isHeal, override, label) {
+      const raw = String(override ?? '').trim();
+
+      if (!raw || raw.toUpperCase() === 'DEFAULT') {
+        const setting = state.HealthColors[isHeal ? 'HealFX' : 'HurtFX'];
+        const choice = classifyFxValue(setting);
+        if (!choice) {
+          warnMissingFx(setting, isHeal ? 'heal' : 'hurt', '', isHeal);
+          return [defaultColourChoice(isHeal)];
+        }
+        return [choice.kind === 'colour' ? defaultColourChoice(isHeal) : choice];
+      }
+
+      if (isHex6(raw)) return [defaultColourChoice(isHeal, raw.replace('#', '').toUpperCase())];
+
+      const choices = raw
+        .split(',')
+        .map((fxName) => fxName.trim())
+        .filter((fxName) => fxName !== '')
+        .map((fxName) => {
+          const choice = classifyFxValue(fxName);
+          if (choice) return choice.kind === 'colour' ? defaultColourChoice(isHeal, choice.hex) : choice;
+          warnMissingFx(fxName, isHeal ? 'USEHEAL' : 'USEBLOOD', label, isHeal);
+          return defaultColourChoice(isHeal);
+        });
+
+      return choices.length ? choices : [defaultColourChoice(isHeal)];
+    }
+
+    /**
+     * Spawns one resolved FX choice at a token.
+     *  - builtin: Roll20 effect by name (`spawnFx`, or `spawnFxBetweenPoints` for directional
+     *    types). Built-in effects are fixed-size and are not scaled by token size or damage.
+     *  - custom:  the campaign custom FX definition, scaled by token size and hit size.
+     *  - colour:  the default heal/hurt burst — spawned by id when it uses the global colour
+     *    (avoids client colour drift), otherwise recoloured and spawned by definition.
+     *
+     * @param {object}  choice  - Entry from resolveFxChoices.
+     * @param {object}  obj     - Roll20 token graphic object.
+     * @param {boolean} isHeal  - True for a heal event.
+     * @param {number}  scale   - Token-size scale factor (height / 70).
+     * @param {number}  hitSize - Damage-proportion factor (0.2–1.0).
+     */
+    function spawnFxChoice(choice, obj, isHeal, scale, hitSize) {
+      const left = obj.get('left');
+      const top = obj.get('top');
+      const pageId = obj.get('pageid');
+
+      if (choice.kind === 'builtin') {
+        const type = choice.name.split('-')[0];
+        if (DIRECTIONAL_FX_TYPES.has(type)) {
+          spawnFxBetweenPoints({ x: left, y: top }, { x: left, y: top }, choice.name, pageId);
+        } else {
+          spawnFx(left, top, choice.name, pageId);
+        }
+        return;
+      }
+
+      if (choice.kind === 'custom') {
+        const def = getFxDefinition(choice.fxObj);
+        if (def) spawnFX(scale, hitSize, left, top, def, pageId);
+        return;
+      }
+
+      const defaultName = isHeal ? '-DefaultHeal' : '-DefaultHurt';
+      const defaultFx = findObjs({ _type: 'custfx', name: defaultName }, { caseInsensitive: true })[0];
+      if (choice.global && defaultFx) {
+        spawnFx(left, top, defaultFx.id, pageId);
+        return;
+      }
+      const def = getFxDefinition(defaultFx) || { ...(isHeal ? DEFAULT_HEAL_FX : DEFAULT_HURT_FX) };
+      applyFxColour(def, hexToRgb(choice.hex));
+      spawnFX(scale, hitSize, left, top, def, pageId);
     }
 
     /**
      * Gates and triggers particle FX when HP changes on a non-forced update.
+     * `USEBLOOD` set to OFF/NO keeps its long-standing meaning of no HealthColors FX at all
+     * for that character; `USEHEAL` OFF/NO suppresses only the heal FX.
      *
      * @param {object}           obj        - Roll20 token graphic object.
      * @param {object|undefined} oCharacter - Roll20 character object.
@@ -1355,16 +1690,18 @@ var HealthColors =
      */
     function maybeSpawnFX(obj, oCharacter, curValue, prevValue, maxValue, update) {
       if (update === 'YES' || Number.isNaN(prevValue) || curValue === prevValue) return;
+      if (!state.HealthColors.FX) return;
       const useBlood = oCharacter ? lookupUseBlood(oCharacter) : undefined;
-      if (!state.HealthColors.FX || useBlood === 'OFF' || useBlood === 'NO') return;
+      if (isFxOff(useBlood)) return;
       const isHeal = curValue > prevValue;
+      const useHeal = isHeal && oCharacter ? lookupUseHeal(oCharacter) : undefined;
+      if (isHeal && isFxOff(useHeal)) return;
       const amount = Math.abs(curValue - prevValue);
       const scale = obj.get('height') / 70;
       const hitSize = Math.max(Math.min((amount / maxValue) * 4, 1), 0.2) * (randomInt(60, 100) / 100);
       const fxLabel = (oCharacter && oCharacter.get('name')) || obj.get('name') || '';
-      if (spawnDefaultFxById(obj, isHeal, useBlood)) return;
-      buildFXList(isHeal, useBlood, fxLabel).forEach((fx) =>
-        spawnFX(scale, hitSize, obj.get('left'), obj.get('top'), fx, obj.get('pageid')),
+      resolveFxChoices(isHeal, isHeal ? useHeal : useBlood, fxLabel).forEach((choice) =>
+        spawnFxChoice(choice, obj, isHeal, scale, hitSize),
       );
     }
 
@@ -1396,12 +1733,22 @@ var HealthColors =
 
       const { maxValue, curValue, prevValue, hasPrevValue } = health;
       const sizeChanged = prev.width !== obj.get('width') || prev.height !== obj.get('height');
+      const linkageChanged = barLinkageChanged(obj, prev, barUsed);
 
       // Only skip when nothing relevant changed. The `curValue > 0` clause means we never
       // skip while a token is at/below 0 HP: on linked-attribute sheets (D&D 2024) a drop
       // can arrive with prev === cur (unreliable prev), and we still need the death-save /
       // dead marker logic to run. Re-processing at 0 HP is idempotent and cheap.
-      if (hasPrevValue && curValue === prevValue && curValue > 0 && update !== 'YES' && !sizeChanged) return;
+      if (
+        hasPrevValue &&
+        curValue === prevValue &&
+        curValue > 0 &&
+        update !== 'YES' &&
+        !sizeChanged &&
+        !linkageChanged
+      ) {
+        return;
+      }
 
       const oCharacter = getObj('character', obj.get('represents'));
       const typeConfig = resolveTypeConfig(oCharacter);
@@ -1589,6 +1936,9 @@ var HealthColors =
      * @param {number} ctx.legacyHits - Count of legacy attributes found.
      * @param {number} ctx.legacyAttrCount - Total legacy attribute count.
      * @param {boolean} ctx.sheetItemAvailable - Whether sheet-item API is available.
+     * @param {string} ctx.sandbox - Mod Script Sandbox label, e.g. 'v1.5' or 'unknown'.
+     * @param {boolean|null} ctx.beaconCapable - Whether the sandbox reads Beacon values live
+     *                                            (null when the version is unknown).
      */
     function processDeathSaveDebugToken(ctx) {
       const {
@@ -1604,6 +1954,8 @@ var HealthColors =
         legacyHits,
         legacyAttrCount,
         sheetItemAvailable,
+        sandbox,
+        beaconCapable,
       } = ctx;
       const emitDebug = (attrValues) => {
         const controlledby = character ? character.get('controlledby') : '';
@@ -1616,14 +1968,25 @@ var HealthColors =
           `<strong>success attrs:</strong> ${escapeForChat(settings.dsSuccessAttr)}`,
           `<strong>failure attrs:</strong> ${escapeForChat(settings.dsFailureAttr)}`,
           `<strong>resolved attr values:</strong> ${attrValues}`,
+          `<strong>Mod Script Sandbox:</strong> ${escapeForChat(sandbox)}`,
           `<strong>sheet-item API (getSheetItem):</strong> ${sheetItemAvailable ? 'available' : 'not available'}`,
           `<strong>legacy attributes:</strong> ${legacyAttrCount} total; watched fields stored as legacy: ${legacyHits}/${watched.length}`,
           `<strong>markers now:</strong> ${escapeForChat(dyingMarker)}=${token.get(dyingMarker) === true} ${escapeForChat(stableMarker)}=${token.get(stableMarker) === true} status_dead=${token.get('status_dead') === true}`,
         ];
         if (character && watched.length && legacyHits === 0) {
-          lines.push(
-            '⚠ Death saves are not legacy attributes on this sheet (Beacon model). Live reading requires the EXPERIMENTAL (Jumpgate) Mod sandbox — if the API console startup banner says [DEFAULT], values read as sheet defaults and markers will not track the sheet.',
-          );
+          if (beaconCapable === false) {
+            lines.push(
+              `⚠ Death saves are not legacy attributes on this sheet (Beacon model) and this game runs Mod Script Sandbox ${escapeForChat(sandbox)}. Live reading needs v${BEACON_SANDBOX_MIN_VERSION}: on v1.0 values read as sheet defaults and markers will not track the sheet.`,
+            );
+          } else if (beaconCapable === null) {
+            lines.push(
+              `⚠ Death saves are not legacy attributes on this sheet (Beacon model). Live reading needs Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION}; this sandbox did not report its version, so check the API console startup banner (\`Sandbox [v1.5 …]\`).`,
+            );
+          } else {
+            lines.push(
+              'Death saves are not legacy attributes on this sheet (Beacon model); they are read live through the sheet-item API.',
+            );
+          }
         }
         gmWhisper(lines.join('<br>'));
       };
@@ -1686,15 +2049,17 @@ var HealthColors =
         const barValue = escapeForChat(token.get(`${barUsed}_value`));
         const barMax = escapeForChat(token.get(`${barUsed}_max`));
 
-        // Sandbox/source diagnostics: which fields live in legacy attribute objects, and
-        // whether the sheet-item API exists. The Mod server cannot report Default vs
-        // Experimental directly, so surface the facts the GM needs to judge it.
+        // Sandbox/source diagnostics: which fields live in legacy attribute objects,
+        // whether the sheet-item API exists, and which Mod Script Sandbox the game runs
+        // (Campaign().sandboxVersion), so the GM can see why Beacon reads may be stale.
         const legacySnapshot = character
           ? collectDeathSaveWatchValues(character.id, getDeathSaveProbeFieldSet(watched))
           : {};
         const legacyHits = countLegacyWatchedHits(watched, legacySnapshot);
         const legacyAttrCount = character ? findObjs({ type: 'attribute', characterid: character.id }).length : 0;
         const sheetItemAvailable = typeof getSheetItem === 'function';
+        const sandbox = describeSandbox();
+        const beaconCapable = isBeaconCapableSandbox();
 
         processDeathSaveDebugToken({
           token,
@@ -1709,6 +2074,8 @@ var HealthColors =
           legacyHits,
           legacyAttrCount,
           sheetItemAvailable,
+          sandbox,
+          beaconCapable,
         });
       });
     }
@@ -2081,7 +2448,7 @@ var HealthColors =
      *
      * @param {string} characterId - Roll20 character id.
      * @param {object} s           - HealthColors state object.
-      * @param {object} [snapshotOverride] - Optional pre-resolved watch snapshot map.
+     * @param {object} [snapshotOverride] - Optional pre-resolved watch snapshot map.
      * @returns {{succ:number, fail:number}} Parsed death-save counters.
      */
     function getDeathSaveCountsFromSnapshot(characterId, s, snapshotOverride) {
@@ -2483,7 +2850,7 @@ var HealthColors =
     }
 
     /**
-     * Resolves missing watched fields through the Jumpgate sheet-item API and records
+     * Resolves missing watched fields through the sheet-item API and records
      * each name's outcome in the game-wide field-name status cache. A rejection means
      * the game's sheet does not define that name (Roll20 logs the sandbox error itself,
      * uncatchably), so the name is marked 'bad' and never asked for again.
@@ -2515,14 +2882,73 @@ var HealthColors =
       Promise.all(reads).then(onDone, onDone);
     }
 
+    // ————— MOD SCRIPT SANDBOX VERSION —————
+    /** Lowest Mod Script Sandbox version whose sheet-item API reads Beacon sheet values live. */
+    const BEACON_SANDBOX_MIN_VERSION = 1.5;
+
+    /**
+     * Returns the Mod Script Sandbox version this game runs on, as Roll20 reports it.
+     * Since the September 2026 rename the sandboxes are v1.0 (formerly "Default") and
+     * v1.5 (formerly "Experimental"), and `Campaign().sandboxVersion` exposes the version
+     * as a plain property (not via `get`) on both. Returns '' when the property is absent,
+     * i.e. a sandbox build that predates it.
+     *
+     * @returns {string} '1.0', '1.5', or '' when unknown.
+     */
+    function getSandboxVersion() {
+      try {
+        const campaign = typeof Campaign === 'function' ? Campaign() : null;
+        return String(campaign?.sandboxVersion ?? '').trim();
+      } catch (err) {
+        return '';
+      }
+    }
+
+    /**
+     * Whether this sandbox reads Beacon sheet values live through the sheet-item API.
+     * On v1.0 `getSheetItem` only wraps `getAttrByName`, so Beacon fields come back as
+     * sheet defaults.
+     *
+     * @returns {boolean|null} True on v1.5 or later, false on v1.0, null when unknown.
+     */
+    function isBeaconCapableSandbox() {
+      const version = Number.parseFloat(getSandboxVersion());
+      if (Number.isNaN(version)) return null;
+      return version >= BEACON_SANDBOX_MIN_VERSION;
+    }
+
+    /**
+     * Sandbox label for logs, whispers, and the menu footer.
+     *
+     * @returns {string} e.g. 'v1.5', or 'unknown' when the sandbox does not report one.
+     */
+    function describeSandbox() {
+      const version = getSandboxVersion();
+      return version ? `v${version}` : 'unknown';
+    }
+
+    /**
+     * Sandbox note shown under the Death Save Integration heading in the GM menu.
+     * Empty on a sandbox that reads Beacon values live (v1.5 or later), since the
+     * note would be redundant there; on v1.0, or when the version is not reported,
+     * it states the requirement and what this game runs.
+     *
+     * @returns {string} HTML span, or '' when no note is needed.
+     */
+    function sandboxDeathSaveIntegrationNote() {
+      if (isBeaconCapableSandbox() === true) return '';
+      const style = 'display:block;text-align:right;font-size:8pt;line-height:1.2em;margin:2px 0 4px 0;color:#FFE9A8';
+      return `<span style="${style}">Beacon sheets need Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION} for live death-save syncing (this game: ${escapeForChat(describeSandbox())}).</span>`;
+    }
+
     /**
      * One-time GM heads-up when a watched PC stores death saves outside legacy
-     * attribute objects (Beacon-model sheets like D&D 2024). Reading those live
-     * depends on the sheet-item API, which only returns current values on the
-     * Experimental (Jumpgate) Mod sandbox. The Mod server cannot detect which
-     * sandbox it is running on (confirmed by Roll20 staff), so the best we can do
-     * is detect the situation that makes the sandbox version matter and tell the
-     * GM what to check. Whispered at most once per sandbox session.
+     * attribute objects (Beacon-model sheets like D&D 2024) and the sandbox cannot
+     * read them live. The sheet-item API only returns current Beacon values on Mod
+     * Script Sandbox v1.5 or later; on v1.0 it returns sheet defaults. The sandbox
+     * version comes from `Campaign().sandboxVersion`, so the notice is skipped on a
+     * capable sandbox and only tells the GM to check the startup banner when the
+     * version is not reported. Whispered at most once per sandbox session.
      *
      * @param {object} character - Roll20 character object.
      * @param {object} snapshot  - Legacy-attribute snapshot for the watched fields.
@@ -2537,16 +2963,30 @@ var HealthColors =
       );
       if (anyLegacyHit) return;
 
+      const beaconCapable = isBeaconCapableSandbox();
+      if (beaconCapable === true) return;
+
       beaconReadRiskWarned = true;
-      gmWhisper(
-        [
-          `⚠ <strong>${escapeForChat(character.get('name'))}</strong>'s death saves are not stored as legacy attributes (Beacon-model sheet, e.g. D&amp;D 2024).`,
-          'HealthColors reads them via the sheet-item API, which only returns <strong>live</strong> values on the <strong>Experimental (Jumpgate)</strong> Mod sandbox. The Mod server cannot detect which sandbox it is running on, so check the API console startup banner:',
-          '• Banner says <strong>[DEFAULT …]</strong> → reads return sheet defaults (often all 0) and markers will NOT track the sheet. Switch via Game Settings → Mod (API) Scripts → API Sandbox Version → <strong>Experimental</strong>, then Restart — and re-check the banner, the setting can silently revert.',
-          '• Banner says <strong>EXPERIMENTAL</strong> → you are set; ignore this notice.',
-          '<i>(Shown once per sandbox session. !aura deathsaves debug includes these details per token.)</i>',
-        ].join('<br>'),
-      );
+      const sandbox = escapeForChat(describeSandbox());
+      const needed = `Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION}`;
+      const lines = [
+        `⚠ <strong>${escapeForChat(character.get('name'))}</strong>'s death saves are not stored as legacy attributes (Beacon-model sheet, e.g. D&amp;D 2024).`,
+        `HealthColors reads them via the sheet-item API, which only returns <strong>live</strong> values on <strong>${needed}</strong> or later.`,
+      ];
+      if (beaconCapable === false) {
+        lines.push(
+          `This game runs <strong>Mod Script Sandbox ${sandbox}</strong>, so reads return sheet defaults (often all 0) and markers will NOT track the sheet.`,
+          `Switch via Game Settings → Mod (API) Scripts → Mod Script Sandbox → <strong>v1.5 (Latest)</strong>, then Restart. The API console startup banner should then read <strong>Sandbox [v1.5 …]</strong>.`,
+        );
+      } else {
+        lines.push(
+          'This sandbox did not report its version, so check the API console startup banner:',
+          '• <strong>Sandbox [v1.0 …]</strong> → reads return sheet defaults (often all 0) and markers will NOT track the sheet. Switch via Game Settings → Mod (API) Scripts → Mod Script Sandbox → <strong>v1.5 (Latest)</strong>, then Restart.',
+          '• <strong>Sandbox [v1.5 …]</strong> → you are set; ignore this notice.',
+        );
+      }
+      lines.push('<i>(Shown once per sandbox session. !aura deathsaves debug includes these details per token.)</i>');
+      gmWhisper(lines.join('<br>'));
     }
 
     /**
@@ -2555,7 +2995,7 @@ var HealthColors =
      * sheet values that are not exposed as legacy attribute objects).
      *
      * Fallback resolution only runs for configured fields with no resolved alias, and
-     * prefers `getSheetItem` (Jumpgate) over the chat-parser `@{}` probe: chat probes
+     * prefers `getSheetItem` (live on Mod Script Sandbox v1.5) over the chat-parser `@{}` probe: chat probes
      * log a hard sandbox error for every name the character's sheet does not know.
      *
      * @param {object} character  - Roll20 character object.
@@ -2917,6 +3357,38 @@ var HealthColors =
     }
 
     /**
+     * Whispers the GM a list of the campaign's custom FX (name + id, with one-click Heal/Hurt
+     * set buttons) and a reference of Roll20's built-in `<type>-<colour>` effect names.
+     * Triggered by `!aura listfx` and the "List FX" menu button.
+     */
+    function whisperFxList() {
+      const custom = (findObjs({ _type: 'custfx' }) || [])
+        .slice()
+        .sort((a, b) => String(a.get('name') || '').localeCompare(String(b.get('name') || '')));
+      const setBtnStyle =
+        'width:auto;min-width:48px;padding-left:6px;padding-right:6px;color:#fff;text-decoration:none;font-weight:bold';
+      const rows = custom.map((fx) => {
+        const name = escapeForChat(String(fx.get('name') || '').trim() || '(unnamed)');
+        const setHeal = makeBtn('<span style="color:#fff">Heal</span>', `!aura heal ${fx.id}`, setBtnStyle);
+        const setHurt = makeBtn('<span style="color:#fff">Hurt</span>', `!aura hurt ${fx.id}`, setBtnStyle);
+        return `<tr><td style="padding:2px 4px;text-align:center;white-space:nowrap">${setHeal}${setHurt}</td><td style="padding:2px 4px;text-align:left"><strong>${name}</strong></td><td style="padding:2px 4px;text-align:left;font-size:8pt">${fx.id}</td></tr>`;
+      });
+      const th = 'padding:3px 4px;border-bottom:1px solid #2e5d78';
+      const table = rows.length
+        ? `<table style="width:100%;border-collapse:collapse;border:1px solid #2e5d78;background:#d8eaf5;color:#111"><thead><tr><th style="${th};text-align:center">Set</th><th style="${th};text-align:left">Custom FX</th><th style="${th};text-align:left">Id</th></tr></thead><tbody>${rows.join('')}</tbody></table>`
+        : '<i>No custom FX found in this campaign (create them in the Effects menu).</i>';
+      const builtin = [
+        `<div style="text-align:left;margin-top:6px;font-size:9pt"><strong>Built-in effects</strong> are named <code>&lt;type&gt;-&lt;colour&gt;</code>, e.g. <code>glow-holy</code>, <code>explode-blood</code>.`,
+        `<br><strong>Types:</strong> ${BUILTIN_FX_TYPES.join(', ')}`,
+        `<br><strong>Colours:</strong> ${BUILTIN_FX_COLORS.join(', ')}`,
+        `<br>Set one with <code>!aura heal &lt;effect&gt;</code> or <code>!aura hurt &lt;effect&gt;</code>; a 6-digit hex colour recolours the default burst instead.</div>`,
+      ].join('');
+      gmWhisper(
+        `<strong>Heal / Hurt FX</strong><br><span style="font-weight:normal">Current: heal = <strong>${escapeForChat(state.HealthColors.HealFX)}</strong>, hurt = <strong>${escapeForChat(state.HealthColors.HurtFX)}</strong></span><br>${table}${builtin}`,
+      );
+    }
+
+    /**
      * Renders and whispers the HealthColors configuration menu to the GM.
      * Builds the full HTML panel using makeBtn/toggleBtn/nameBtn helpers and
      * reflects all current state values as interactive button labels.
@@ -2950,8 +3422,10 @@ var HealthColors =
       ].join(';');
 
       const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
-      const healBtnStyle = `background-color:#${s.HealFX}`;
-      const hurtBtnStyle = `background-color:#${s.HurtFX}`;
+      const healBtnStyle = fxSettingStyle(s.HealFX);
+      const hurtBtnStyle = fxSettingStyle(s.HurtFX);
+      const healFxCmd = `!aura heal ?{Heal FX (hex colour or effect name)|${s.HealFX}}`;
+      const hurtFxCmd = `!aura hurt ?{Hurt FX (hex colour or effect name)|${s.HurtFX}}`;
       const aura1Style = `background-color:#${s.Aura1Color}`;
       const aura2Style = `background-color:#${s.Aura2Color}`;
       const deadFxCmd = `!aura deadfx ?{Sound Name?|${s.auraDeadFX}}`;
@@ -2989,12 +3463,13 @@ var HealthColors =
         `Aura 2 Color: ${makeBtn(s.Aura2Color, '!aura a2tint ?{Color?|806600}', aura2Style)}<br>`,
         `One Offs: ${toggleBtn(s.OneOff, '!aura ONEOFF')}<br>`,
         `FX: ${toggleBtn(s.FX, '!aura FX')}<br>`,
-        `HealFX Color: ${makeBtn(s.HealFX, '!aura HEAL ?{Color?|FDDC5C}', healBtnStyle)}<br>`,
-        `HurtFX Color: ${makeBtn(s.HurtFX, '!aura HURT ?{Color?|FF0000}', hurtBtnStyle)}<br>`,
+        `Heal FX: ${makeBtn(escapeForChat(s.HealFX), healFxCmd, healBtnStyle)}<br>`,
+        `Hurt FX: ${makeBtn(escapeForChat(s.HurtFX), hurtFxCmd, hurtBtnStyle)}<br>`,
+        `FX List: ${makeBtn('List FX', '!aura listfx', wide)}<br>`,
         `DeathSFX: ${makeBtn(s.auraDeadFX.substring(0, 4), deadFxCmd)}<br>`,
         hr,
         `<u>Death Save Integration</u><br>`,
-        `<span style="display:block;text-align:right;font-size:8pt;line-height:1.2em;margin:2px 0 4px 0;color:#FFE9A8">Beacon sheets require API Sandbox Version: Experimental for live death-save syncing.</span>`,
+        sandboxDeathSaveIntegrationNote(),
         `Enabled: ${toggleBtn(s.deathSavesOn, '!aura deathsaves toggle')}<br>`,
         `Success Field(s): ${makeBtn(s.dsSuccessAttr, successCmd, wide)}<br>`,
         `Failure Field(s): ${makeBtn(s.dsFailureAttr, failureCmd, wide)}<br>`,
@@ -3046,8 +3521,8 @@ var HealthColors =
       const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
       const aura1Style = `background-color:#${s.Aura1Color}`;
       const aura2Style = `background-color:#${s.Aura2Color}`;
-      const healStyle = `background-color:#${s.HealFX}`;
-      const hurtStyle = `background-color:#${s.HurtFX}`;
+      const healStyle = fxSettingStyle(s.HealFX);
+      const hurtStyle = fxSettingStyle(s.HurtFX);
       const html = [
         `<div style="${outerStyle}">`,
         `<div style="${menuHeaderStyle}">HealthColors Settings v${VERSION}</div>`,
@@ -3078,8 +3553,8 @@ var HealthColors =
         `Aura 2 Color: ${makePill(s.Aura2Color, aura2Style)}<br>`,
         `One Offs: ${boolPill(s.OneOff)}<br>`,
         `FX: ${boolPill(s.FX)}<br>`,
-        `HealFX Color: ${makePill(s.HealFX, healStyle)}<br>`,
-        `HurtFX Color: ${makePill(s.HurtFX, hurtStyle)}<br>`,
+        `Heal FX: ${makePill(escapeForChat(s.HealFX), healStyle)}<br>`,
+        `Hurt FX: ${makePill(escapeForChat(s.HurtFX), hurtStyle)}<br>`,
         `DeathSFX: ${makePill(s.auraDeadFX)}<br>`,
         hr,
         `<u>Death Save Integration</u><br>`,
@@ -3205,14 +3680,20 @@ var HealthColors =
           return { handled: true, earlyReturn: false };
         },
         HEAL: () => {
-          s.HealFX = normalizeHex6(parts[2], s.HealFX);
+          s.HealFX = normalizeFxSetting(parts.slice(2).join(' '), s.HealFX, 'heal', DEFAULTS.HealFX);
+          warnedMissingFx.clear();
           syncDefaultFxObjects();
           return { handled: true, earlyReturn: false };
         },
         HURT: () => {
-          s.HurtFX = normalizeHex6(parts[2], s.HurtFX);
+          s.HurtFX = normalizeFxSetting(parts.slice(2).join(' '), s.HurtFX, 'hurt', DEFAULTS.HurtFX);
+          warnedMissingFx.clear();
           syncDefaultFxObjects();
           return { handled: true, earlyReturn: false };
+        },
+        LISTFX: () => {
+          whisperFxList();
+          return { handled: true, earlyReturn: true };
         },
         RESET: () => {
           delete state.HealthColors;
@@ -3221,6 +3702,7 @@ var HealthColors =
           return { handled: true, earlyReturn: false };
         },
         'RESET-FX': () => {
+          warnedMissingFx.clear();
           resetDefaultFxObjects();
           return { handled: true, earlyReturn: false };
         },
@@ -3245,8 +3727,8 @@ var HealthColors =
     /**
      * Processes incoming Roll20 chat messages to handle !aura commands.
      * GM-only: non-GMs receive an access-denied whisper.
-     * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, etc.) to the
-     * appropriate state mutation then refreshes the menu. BAR validates 1/2/3,
+     * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, HEAL, HURT, LISTFX, etc.)
+     * to the appropriate state mutation then refreshes the menu. BAR validates 1/2/3,
      * whispers confirmation, and triggers immediate full sync. PALETTE also
      * triggers immediate full sync so existing tokens update right away.
      * When a setting changes, re-whispers the interactive menu to the GM.
@@ -3271,7 +3753,7 @@ var HealthColors =
         return;
       }
 
-      if (option !== 'MENU') gmWhisper('UPDATING TOKENS...');
+      if (option !== 'MENU' && option !== 'LISTFX') gmWhisper('UPDATING TOKENS...');
 
       const s = state.HealthColors;
       if (!applyMappedAuraOption(option, parts, s)) {
@@ -3340,6 +3822,25 @@ var HealthColors =
     }
 
     /**
+     * Forces a silent (no FX) re-evaluation of a token once Roll20 has propagated a
+     * linked attribute's new max to the token bar. Used when only the max changed, which
+     * is how sheets that calculate HP max (e.g. 5e Shaped) first make a new token
+     * colourable; change:graphic's prev is not reliable for attribute-driven updates, so
+     * the attribute event is the trustworthy trigger.
+     *
+     * @param {object} token - Roll20 token graphic object (snapshot at event time).
+     */
+    function refreshAfterAttrMaxChange(token) {
+      recentAttrFires.add(token.id);
+      setTimeout(() => {
+        const liveToken = getObj('graphic', token.id);
+        if (!liveToken) return;
+        handleToken(liveToken, deepClone(liveToken), 'YES');
+      }, 50);
+      setTimeout(() => recentAttrFires.delete(token.id), 250);
+    }
+
+    /**
      * Registers a change:attribute listener that catches HP changes made by scripts
      * such as AlterBars that modify character attributes directly rather than the
      * token bar. Those scripts fire change:attribute but may not fire change:graphic
@@ -3347,6 +3848,8 @@ var HealthColors =
      * and call handleToken ourselves with a real HP delta (enabling FX).
      * The token ID is added to recentAttrFires so that if change:graphic fires
      * afterwards it receives update='YES', skipping duplicate particle spawning.
+     * A change to the attribute's max alone (sheet workers computing HP max) triggers a
+     * silent refresh so newly placed tokens are coloured without a value change.
      */
     function registerAttributeListener() {
       on('change:attribute', (attr, prev) => {
@@ -3360,10 +3863,15 @@ var HealthColors =
         if (!charId) return;
         const oldVal = prev.current;
         const newVal = attr.get('current');
-        if (oldVal === newVal) return;
+        const valueChanged = oldVal !== newVal;
+        const maxChanged = String(prev.max ?? '') !== String(attr.get('max') ?? '');
+        if (!valueChanged && !maxChanged) return;
         findObjs({ type: 'graphic', represents: charId })
           .filter((t) => t.get('layer') === 'objects' && t.get(`${barUsed}_link`) === attr.id)
-          .forEach((token) => applyAttrHpChange(barUsed, oldVal, newVal, token));
+          .forEach((token) => {
+            if (valueChanged) applyAttrHpChange(barUsed, oldVal, newVal, token);
+            else refreshAfterAttrMaxChange(token);
+          });
       });
     }
 
@@ -3477,9 +3985,11 @@ var HealthColors =
     /**
      * Registers all Roll20 event listeners for the script.
      * - chat:message     → handleInput       (command processing)
-     * - change:graphic   → handleTokenChange (live HP changes and token resizes; suppresses
-     *                                         FX when the attribute listener already fired)
-     * - change:attribute → registerAttributeListener (AlterBars / indirect HP changes)
+     * - change:graphic   → handleTokenChange (live HP changes, token resizes, and bar max /
+     *                                         link / represents changes; suppresses FX when
+     *                                         the attribute listener already fired)
+     * - change:attribute → registerAttributeListener (AlterBars / indirect HP changes and
+     *                                                 max-only changes from sheet workers)
      * - add:graphic      → handleToken       (with 400ms delay to allow token data to settle)
      */
     function registerEventHandlers() {
