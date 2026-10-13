@@ -195,14 +195,23 @@ const TRANSLATION = {
       custom: '{emoji} {target} {effect} etkisi altında ({source})',
       advantage: '{emoji} {source}, {target}{subject} karşısında avantajlı',
       disadvantage: '{emoji} {source}, {target}{subject} karşısında dezavantajlı',
+      advantageAny: "{emoji} Saldırıların {target}'e karşı avantajı var{by}",
+      advantageNext: "{emoji} {target}'e karşı sonraki saldırının avantajı var{by}",
+      disadvantageAny: "{emoji} {target}'e karşı saldırıların dezavantajı var{by}",
+      disadvantageNext: "{emoji} {target}'e karşı sonraki saldırının dezavantajı var{by}",
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} {past}',
+      self: '{emoji} {target} {past}',
       standard: '{emoji} {target} {source} tarafından {past}',
     },
     apply: {
       custom: '{source}, {target} üzerine {effect} etkisi uygular.',
       advantage: '{source}, {target}{subject} karşısında avantajlıdır.',
       disadvantage: '{source}, {target}{subject} karşısında dezavantajlıdır.',
+      advantageAny: "{source}, {target}{reason}'ye karşı saldırılarda avantaj sağlar.",
+      advantageNext: "{source}, {target}{reason}'ye karşı bir sonraki saldırıda avantaj sağlar.",
+      disadvantageAny: "{source}, {target}{reason}'ye yönelik saldırılarda dezavantaj oluşturur.",
+      disadvantageNext:
+        "{source}, {target}{reason}'ye karşı yapılacak bir sonraki saldırıda dezavantaj oluşturur.",
       self: '{target} {past}.',
       withSuffix: '{source} {target} {suffix} {verb}.',
       standard: '{source} {target} {verb}.',
@@ -211,6 +220,15 @@ const TRANSLATION = {
       custom: '{target} artık {effect} etkisi altında değil.',
       advantage: '{source} artık {target}{subject} karşısında avantajlı değil.',
       disadvantage: '{source} artık {target}{subject} karşısında dezavantajlı değil.',
+      advantageAny: "{target}'e yönelik saldırıların artık avantajı yok{reason}.",
+      advantageNext: "{target}'a yönelik bir sonraki saldırının artık avantajı yok{reason}.",
+      disadvantageAny: "{target}'e yönelik saldırıların artık dezavantajı yok{reason}.",
+      disadvantageNext: "{target}'a yönelik bir sonraki saldırının artık dezavantajı yok{reason}.",
+      advantageUsed: "{target}'a karşı bir sonraki saldırıdaki avantaj kullanıldı{reason}.",
+      disadvantageUsed: "{target}'a karşı bir sonraki saldırının dezavantajı{reason} uygulandı.",
+      advantageUsedBy: "{source}, {target}{subject}'ye karşı avantajlı bir saldırı yaptı.",
+      disadvantageUsedBy:
+        "{source}, {target}{subject}'ye karşı dezavantajlı bir saldırı gerçekleştirdi.",
       noBy: '{target} artık {past} değil.',
       self: '{target} artık {past} değil.',
       standard: '{target} artık {source} tarafından {past} değil.',
@@ -236,6 +254,33 @@ const TRANSLATION = {
       targetDesc: 'Durumu veya etkiyi alacak yaratığı seçin.',
       otherText: 'Özel durum metni',
       effectDetails: '{condition} ayrıntıları',
+      whoHasAdvantage: 'Kimin Avantajı Var?',
+      whoHasDisadvantage: 'Kimin Dezavantajı Var?',
+      whoHasDesc:
+        'Atışı yapan yaratığı seçin veya hedefe saldıran kişi için geçerli olduğunda Herhangi bir saldırgan seçeneğini seçin (Yardım, Peri Ateşi, Kaçınma).',
+      anyAttackerBtn: 'Herhangi bir saldırgan',
+      grantedByTitle: 'Kim Veriyor?',
+      grantedByDesc:
+        'Yardımcı gibi, onu veren veya empoze eden yaratığı seçin. Kaynak dönüş süreleri bu yaratığı takip eder.',
+      grantedByOptionalTitle: 'Veren (İsteğe bağlı)',
+      grantedByOptionalDesc: "Bunu sağlayan veya dayatan yaratığı veya Hiçbiri'ni seçin.",
+      againstWhomTitle: 'Kime Karşı?',
+      againstWhomDesc: 'Saldırıya uğrayan yaratığı seçin.',
+      sameAsGranterBtn: 'Aynı yaratık (ör. Dodge)',
+      usageTitle: 'Kaç Saldırı?',
+      usageDesc:
+        'Bir sonraki saldırı tarafından mı tüketileceğini yoksa devam ettiği sürece her saldırıya mı uygulanacağını seçin.',
+      onceBtn: 'Yalnızca sonraki saldırı',
+      everyBtn: 'Her saldırı',
+      addReasonBtn: 'Neden etiketi ekleyin',
+      reasonPrompt: 'Sebep etiketi (ör. Yardım)',
+      reasonCurrent: 'Sebep: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Yardım',
+        reason: 'Yardım',
+      },
     },
     col: {
       players: 'Oyuncular',
@@ -263,6 +308,7 @@ const TRANSLATION = {
       untilRemoved: 'Kaldırılana kadar',
       endOfTargetTurn: 'Hedefin sonraki turunun sonu',
       endOfSourceTurn: 'Kaynağın sonraki turunun sonu',
+      startOfSourceTurn: 'Sonraki turda kaynağın başlangıcı',
       round1: '1 tur',
       round2: '2 tur',
       round3: '3 tur',
@@ -271,6 +317,8 @@ const TRANSLATION = {
       customPrompt: 'Tur sayısı',
       untilRemovedDisplay: 'Kaldırılana kadar',
       turnsRemaining: '{n} tur sonu takibi kaldı',
+      untilTurnStart: "{name}'in bir sonraki dönüşünün başlangıcına kadar",
+      untilTurnStartUnknown: 'Kaynağın bir sonraki dönüşünün başlangıcına kadar',
     },
     btn: {
       openWizard: 'Sihirbazı Aç',
@@ -296,6 +344,7 @@ const TRANSLATION = {
       runMacroNow: 'Şimdi Makroyu Çalıştır',
       macroButtonsEnable: 'Makro Düğmelerini Etkinleştir',
       macroButtonsDisable: 'Makro Düğmelerini Devre Dışı Bırak',
+      markUsed: 'Kullanıldı Olarak İşaretle',
     },
     title: {
       menu: 'Menü',
@@ -349,6 +398,7 @@ const TRANSLATION = {
       promoteOptions: "Turn Tracker'a Yükselt",
       editActions: 'Eylemleri Düzenle',
       macroActions: 'Makro Eylemler',
+      presets: 'Ön ayarlar',
     },
     msg: {
       noActive: 'Takip edilen aktif durum yok.',
@@ -461,6 +511,12 @@ const TRANSLATION = {
         'Yakın zamanda yapılmış bir uygulama eylemi bulunamadı. Önce bir koşulu uygulayın.',
       macroInvalidName: 'Makro adı boş olamaz.',
       macroMissingRequiredData: 'Makro oluşturmak için gerekli veriler eksik.',
+      advantageOnlyOption:
+        '--attacker, --once ve --reason yalnızca Avantaj ve Dezavantaj için geçerlidir.',
+      attackerInvalid: '--attacker yalnızca herhangi değerini kabul eder.',
+      onceInvalid: '--once, bir değer sağlandığında doğru veya yanlış olmasını bekler.',
+      effectUsed: 'kullanılmış',
+      unknownPreset: 'Bilinmeyen ön ayar. Mevcut ön ayarlar: {presets}.',
     },
     removal: {
       conditionField: 'Durum',
@@ -527,6 +583,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Hedef tur sırasında değildi; durum satırı sona eklendi.',
       turnInserted: 'Durum satırı hedef tokenın altına eklendi.',
+      usesField: 'Kullanım Alanları',
     },
   },
   handout: {
@@ -602,6 +659,14 @@ const TRANSLATION = {
         [
           '!koşul izleyici --source gala --target patron --condition Yüzüstü --duration 1 tur',
           'Benzersiz kısmi adları kullanarak doğrudan uygulayın; birden fazla jeton eşleşirse mod daha spesifik bir ad veya jeton kimliği ister.',
+        ],
+        [
+          '!koşul-izleyici --preset yardım',
+          'Yardım eylemi: önce yardımcıyı (örneğin bir tanıdık), ardından saldırıya uğrayan yaratığı seçin. Ona yönelik bir sonraki saldırı, kullanılana veya yardımcının bir sonraki turu başlayana kadar avantaja sahiptir. Yardımcıyı önceden seçmek için belirteç adı veya kimliğiyle birlikte --source ekleyin.',
+        ],
+        [
+          '!condition-tracker --source Sihirbaz --target Ogre --condition Avantaj --attacker herhangi bir --reason Faerie Fire --duration 10 tur',
+          'Sebebiyle etiketlenmiş tek bir hedefe karşı her saldırgan için avantaj.',
         ],
       ],
     },
@@ -681,10 +746,30 @@ const TRANSLATION = {
           'Seçilen her belirteç için bir sınıflandırma tanısını fısıldayın; algılanan türü, algılama kaynağını ve nedenini gösterir',
         ],
         ['--help', 'Sohbette kısa bir yardım kartı göster'],
+        [
+          '--preset yardım',
+          'Yardım ön ayarını başlatın: yardımcıyı ve saldırıya uğrayan yaratığı seçin (yardımcıyı önceden seçmek için --source ekleyin)',
+        ],
+        [
+          '--attacker herhangi biri',
+          'Yalnızca Avantaj / Dezavantaj: hedefe saldıran kişi için geçerlidir, --source bunu sağlayan yaratıktır ve sıra hedefin altında yer alır',
+        ],
+        [
+          '--once doğru|yanlış',
+          'Yalnızca Avantaj / Dezavantaj: bir sonraki saldırı tarafından tüketilir; GM, Kullanıldıkça İşaretle düğmesi alır',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Yalnızca Avantaj / Dezavantaj: satırda gösterilen neden etiketi (ör. Yardım)',
+        ],
+        [
+          '--used &lt;condition-id&gt;',
+          'Tek kullanımlık efekti kaldırın ve kullanıldığını duyurun',
+        ],
       ],
     },
     standardConditions: {
-      heading: 'Standart Durumlar (D&amp;D 5e)',
+      heading: 'Standart Durumlar ({system})',
       colCondition: 'Durum',
       none: 'Bu oyun sistemi için tanımlanmış standart koşullar yoktur. Serbest metin efektleri için Diğer özel efekt türünü kullanın.',
     },
@@ -726,6 +811,10 @@ const TRANSLATION = {
           'Kaynak tokenın inisiyatifteki sonraki turu sona erdiğinde sona erer',
         ],
         ['1 / 2 / 3 / 10 tur', 'Sabit geri sayım; çapa token tur sonunda bir azalma'],
+        [
+          'Kaynağın bir sonraki dönüşünün başlangıcı',
+          'Kaynak jetonun bir sonraki turu başlar başlamaz sona erer (Yardım, Kaçınma ve benzeri etkiler)',
+        ],
       ],
     },
     savedEffects: {

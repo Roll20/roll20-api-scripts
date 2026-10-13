@@ -28,20 +28,42 @@ This checklist validates `ConditionTracker.js` in a live Roll20 VTT game before 
 
 1. Run the macro, choose Grappled, choose a source token, then choose a target token.
    - Expected: Target gets the configured marker, a Turn Tracker row appears below target, and public chat announces the application.
-2. Run the macro, choose Advantage or Disadvantage, choose a subject (or None), choose a source token, then choose a target token.
-   - Expected: Turn Tracker row is grouped under the source token row.
+2. Run the macro, choose Advantage or Disadvantage, choose who has it, choose who granted it (or None), choose the creature being attacked, choose Every attack, then a duration.
+   - Expected: The row reads `<source> has advantage against <target> (<granter>)`, is grouped under the source token row, and the marker is on the source token.
 3. Apply Other with `Booming Blade`.
    - Expected: Turn Tracker text is target-first and chat says the source applies the effect to the target.
 4. Apply Other with empty text.
    - Expected: GM receives a warning and no row is added.
 5. Repeat the exact same source, target, condition, and custom text.
-   - Expected: Duplicate warning and no extra row.
+   - Expected: The existing row is replaced (still one row) and its duration restarts.
 6. Apply the same condition from a different source.
    - Expected: A separate row is allowed.
 7. Run `!condition-tracker --config subjectPromptBypass true`, then launch the prompt UI for Spell, Ability, or Other.
    - Expected: The Subject step is skipped, Subject is treated as None, and the apply flow continues without prompting for a subject token.
 8. Run `!condition-tracker --prompt --condition Spell --subjectPromptBypass false`.
    - Expected: The one-off override restores the Subject step for that command even if the saved config bypass is enabled.
+9. Run the wizard for Spell, pick a subject, source, and target, then click the details button.
+   - Expected: The command shown in the query flow includes `--subject`, and macros created from the apply summary keep it.
+
+## Advantage, Help, and Single-Use Effects
+
+1. Run `!condition-tracker --prompt` and click the **Help** preset, then pick the helper and the creature being attacked.
+   - Expected: A row `Next attack vs <target> has advantage — Help (<helper>)` appears under the target with `1×` in the pr column, the marker is on the target, chat announces that the helper grants advantage on the next attack, and the GM summary has a **Mark as Used** button.
+2. Click **Mark as Used**.
+   - Expected: The row and marker are removed and chat announces the advantage has been used.
+3. Apply the Help preset again during the helper's turn and advance the Turn Tracker through a full round.
+   - Expected: The row survives the end of the helper's current turn and is removed when the helper's next turn starts.
+4. Apply the Help preset twice for the same helper and target.
+   - Expected: One row only; no duplicate warning.
+5. In the wizard choose Advantage, **Any attacker**, a granter, a target, **Add a reason label** (`Faerie Fire`), **Every attack**, and `10 rounds`.
+   - Expected: Row `Attacks vs <target> have advantage — Faerie Fire (<granter>)` under the target with `10` in the pr column and no **Mark as Used** button.
+6. Run `!condition-tracker --source <token> --target <same token> --condition Disadvantage --attacker any --reason Dodge --duration Start of source next turn`.
+   - Expected: Row `Attacks vs <token> have disadvantage — Dodge` with `⏳` in the pr column.
+7. Run `!condition-tracker --source A --target B --condition Grappled --reason Test`.
+   - Expected: Warning that `--attacker`, `--once`, and `--reason` are only valid for Advantage and Disadvantage.
+8. Run `!condition-tracker --preset help --source @{selected|token_id}` with the helper selected.
+   - Expected: The wizard skips straight to **Against whom?**.
+9. Check the Turn Tracker pr column renders `1×` and `⏳` legibly and that sorting the tracker does not disturb the rows.
 
 ## Removal
 
@@ -57,6 +79,7 @@ This checklist validates `ConditionTracker.js` in a live Roll20 VTT game before 
    - Expected: Condition expires when the target's next tracked turn ends.
 2. Apply `End of source's next turn`.
    - Expected: Condition expires when the source's next tracked turn ends.
+   - Apply `Start of source's next turn`. Expected: Condition expires as soon as the source's next tracked turn begins.
 3. Apply `2 rounds`.
    - Expected: Condition expires after two target turn endings.
 4. Change Turn Tracker values without advancing the first token.

@@ -195,22 +195,41 @@ const TRANSLATION = {
       custom: '{emoji} {target} betroffen von {effect} ({source})',
       advantage: '{emoji} {source} hat Vorteil gegen {target}{subject}',
       disadvantage: '{emoji} {source} hat Nachteil gegen {target}{subject}',
+      advantageAny: '{emoji} Angriffe gegenüber {target} haben einen Vorteil{by}',
+      advantageNext: '{emoji} Nächster Angriff gegen {target} hat Vorteil{by}',
+      disadvantageAny: '{emoji} Angriffe gegenüber {target} haben Nachteile{by}',
+      disadvantageNext: '{emoji} Nächster Angriff gegen {target} hat Nachteil{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} ist {past}',
+      self: '{emoji} {target} ist {past}',
       standard: '{emoji} {target} {past} durch {source}',
     },
     apply: {
       custom: '{source} wendet {effect} auf {target} an.',
       advantage: '{source} hat Vorteil gegen {target}{subject}.',
       disadvantage: '{source} hat Nachteil gegen {target}{subject}.',
+      advantageAny: '{source} gewährt einen Vorteil bei Angriffen gegen {target}{reason}.',
+      advantageNext: '{source} gewährt einen Vorteil beim nächsten Angriff gegen {target}{reason}.',
+      disadvantageAny: '{source} benachteiligt Angriffe gegen {target}{reason}.',
+      disadvantageNext:
+        '{source} verschafft beim nächsten Angriff einen Nachteil gegen {target}{reason}.',
       self: '{target} ist {past}.',
-      withSuffix: 'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN PLATZHALTER3TOKEN.',
-      standard: 'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN.',
+      withSuffix: '{source} {verb} {target} {suffix}.',
+      standard: '{source} {verb} {target}.',
     },
     remove: {
       custom: '{target} ist nicht mehr von {effect} betroffen.',
       advantage: '{source} hat keinen Vorteil mehr gegen {target}{subject}.',
       disadvantage: '{source} hat keinen Nachteil mehr gegen {target}{subject}.',
+      advantageAny: 'Angriffe gegen {target} haben keinen Vorteil mehr{reason}.',
+      advantageNext: 'Der nächste Angriff gegen {target} hat keinen Vorteil mehr{reason}.',
+      disadvantageAny: 'Angriffe gegen {target} haben keinen Nachteil mehr {reason}.',
+      disadvantageNext: 'Der nächste Angriff gegen {target} hat keinen Nachteil mehr{reason}.',
+      advantageUsed: 'Der Vorteil beim nächsten Angriff gegen {target} wurde genutzt{reason}.',
+      disadvantageUsed:
+        'Der Nachteil beim nächsten Angriff gegen {target} wurde angewendet{reason}.',
+      advantageUsedBy: '{source} hat den Angriff mit Vorteil gegen {target}{subject} durchgeführt.',
+      disadvantageUsedBy:
+        '{source} hat den Angriff mit Nachteil gegen {target}{subject} durchgeführt.',
       noBy: '{target} ist nicht mehr {past}.',
       self: '{target} ist nicht mehr {past}.',
       standard: '{target} ist nicht mehr {past} durch {source}.',
@@ -236,6 +255,33 @@ const TRANSLATION = {
       targetDesc: 'Wähle das Wesen, das die Bedingung oder den Effekt erhält.',
       otherText: 'Benutzerdefinierter Bedingungstext',
       effectDetails: 'Details zu {condition}',
+      whoHasAdvantage: 'Wer hat den Vorteil?',
+      whoHasDisadvantage: 'Wer hat einen Nachteil?',
+      whoHasDesc:
+        'Wählen Sie die Kreatur aus, die den Wurf ausführt, oder wählen Sie „Beliebiger Angreifer“, wenn dies auf denjenigen zutrifft, der das Ziel angreift (Hilfe, Feenfeuer, Ausweichen).',
+      anyAttackerBtn: 'Jeder Angreifer',
+      grantedByTitle: 'Wer gewährt es?',
+      grantedByDesc:
+        'Wählen Sie die Kreatur aus, die es gewährt oder auferlegt, beispielsweise den Helfer. Die Dauer des Quellzugs folgt dieser Kreatur.',
+      grantedByOptionalTitle: 'Gewährt von (optional)',
+      grantedByOptionalDesc: 'Wähle die Kreatur, die es gewährt oder auferlegt hat, oder „Keine“.',
+      againstWhomTitle: 'Gegen wen?',
+      againstWhomDesc: 'Wählen Sie die angegriffene Kreatur aus.',
+      sameAsGranterBtn: 'Gleiche Kreatur (z. B. Ausweichen)',
+      usageTitle: 'Wie viele Angriffe?',
+      usageDesc:
+        'Wählen Sie, ob es beim nächsten Angriff aufgebraucht wird oder für jeden Angriff gilt, solange es anhält.',
+      onceBtn: 'Nur nächster Angriff',
+      everyBtn: 'Jeder Angriff',
+      addReasonBtn: 'Fügen Sie eine Begründungsbezeichnung hinzu',
+      reasonPrompt: 'Grundbezeichnung (z. B. Hilfe)',
+      reasonCurrent: 'Grund: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Helfen',
+        reason: 'Helfen',
+      },
     },
     col: {
       players: 'Spieler',
@@ -263,6 +309,7 @@ const TRANSLATION = {
       untilRemoved: 'Bis zur Entfernung',
       endOfTargetTurn: 'Ende des nächsten Zugs des Ziels',
       endOfSourceTurn: 'Ende des nächsten Zugs der Quelle',
+      startOfSourceTurn: 'Beginn der Quelle in der nächsten Runde',
       round1: '1 Runde',
       round2: '2 Runden',
       round3: '3 Runden',
@@ -271,6 +318,8 @@ const TRANSLATION = {
       customPrompt: 'Anzahl der Runden',
       untilRemovedDisplay: 'Bis zur Entfernung',
       turnsRemaining: '{n} verbleibende Zugende(n)',
+      untilTurnStart: 'Bis zum Beginn des nächsten Zuges von {name}',
+      untilTurnStartUnknown: 'Bis zum Beginn des nächsten Zuges der Quelle',
     },
     btn: {
       openWizard: 'Assistent öffnen',
@@ -296,6 +345,7 @@ const TRANSLATION = {
       runMacroNow: 'Führen Sie das Makro jetzt aus',
       macroButtonsEnable: 'Makroschaltflächen aktivieren',
       macroButtonsDisable: 'Makroschaltflächen deaktivieren',
+      markUsed: 'Als gebraucht markieren',
     },
     title: {
       menu: 'Menü',
@@ -349,6 +399,7 @@ const TRANSLATION = {
       promoteOptions: 'Zum Turn Tracker hochstufen',
       editActions: 'Aktionen bearbeiten',
       macroActions: 'Makroaktionen',
+      presets: 'Voreinstellungen',
     },
     msg: {
       noActive: 'Es werden keine aktiven Zustände verfolgt.',
@@ -464,6 +515,12 @@ const TRANSLATION = {
         'Keine aktuelle Apply-Aktion gefunden. Wenden Sie zuerst eine Bedingung an.',
       macroInvalidName: 'Der Makroname darf nicht leer sein.',
       macroMissingRequiredData: 'Es fehlen die erforderlichen Daten zum Erstellen des Makros.',
+      advantageOnlyOption:
+        '--attacker, --once und --reason gelten nur für Advantage und Disadvantage.',
+      attackerInvalid: '--attacker akzeptiert nur den Wert any.',
+      onceInvalid: '--once erwartet true oder false, wenn ein Wert angegeben wird.',
+      effectUsed: 'es wurde benutzt',
+      unknownPreset: 'Unbekannte Voreinstellung. Verfügbare Voreinstellungen: {presets}.',
     },
     removal: {
       conditionField: 'Zustand',
@@ -530,6 +587,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Ziel war nicht in der Rundenreihenfolge; Zustandszeile wurde angehängt.',
       turnInserted: 'Zustandszeile unterhalb des Ziel-Tokens eingefügt.',
+      usesField: 'Verwendungsmöglichkeiten',
     },
   },
   handout: {
@@ -606,6 +664,14 @@ const TRANSLATION = {
           '!condition-tracker --source Gala --target Boss --condition Liegend --duration 1 Runde',
           'Direkte Anwendung mit eindeutigen Teilnamen; Wenn mehrere Token übereinstimmen, fragt der Mod nach einem spezifischeren Namen oder einer spezifischeren Token-ID.',
         ],
+        [
+          '!condition-tracker --preset Hilfe',
+          'Hilfsaktion: Wählen Sie den Helfer (z. B. einen Vertrauten) und dann die Kreatur aus, die angegriffen wird. Der nächste Angriff gegen ihn hat einen Vorteil, bis er verwendet wird oder bis der nächste Zug des Helfers beginnt. Fügen Sie --source mit einem Tokennamen oder einer Token-ID hinzu, um den Helfer vorab auszuwählen.',
+        ],
+        [
+          '!condition-tracker --source Zauberer --target Oger --condition Vorteil --attacker beliebig --reason Feenfeuer --duration 10 Runden',
+          'Vorteil für jeden Angreifer gegenüber einem Ziel, gekennzeichnet mit dem Grund.',
+        ],
       ],
     },
     commandsRef: {
@@ -678,10 +744,30 @@ const TRANSLATION = {
           'Flüstern Sie eine Klassifizierungsdiagnose für jedes ausgewählte Token – zeigt den erkannten Typ, die Erkennungsquelle und den Grund an',
         ],
         ['--help', 'Zeigen Sie im Chat eine kurze Hilfekarte an'],
+        [
+          '--preset Hilfe',
+          'Starten Sie die Voreinstellung „Hilfe“: Wählen Sie den Helfer und die angegriffene Kreatur aus (fügen Sie --source hinzu, um den Helfer vorab auszuwählen).',
+        ],
+        [
+          '--attacker beliebig',
+          'Nur Vorteil/Nachteil: Es gilt für denjenigen, der das Ziel angreift, --source ist die Kreatur, die es gewährt, und die Reihe befindet sich unter dem Ziel',
+        ],
+        [
+          '--once wahr|falsch',
+          'Nur Vorteil/Nachteil: beim nächsten Angriff aufgebraucht; Der Spielleiter erhält die Schaltfläche „Als verwendet markieren“.',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Nur Vorteil/Nachteil: Grundbezeichnung wird in der Zeile angezeigt (z. B. Hilfe)',
+        ],
+        [
+          '--used &lt;condition-id&gt;',
+          'Entfernen Sie einen Einmaleffekt und melden Sie ihn als verwendet an',
+        ],
       ],
     },
     standardConditions: {
-      heading: 'Standardzustände (D&D 5e)',
+      heading: 'Standardzustände ({system})',
       colCondition: 'Zustand',
       none: 'Für dieses Spielsystem sind keine Standardbedingungen definiert. Verwenden Sie den benutzerdefinierten Effekttyp „Andere“ für Freitexteffekte.',
     },
@@ -723,6 +809,10 @@ const TRANSLATION = {
           'Verfällt am Ende des nächsten Zugs des Quell-Tokens',
         ],
         ['1 / 2 / 3 / 10 Runden', 'Fester Countdown; ein Dekrement pro Zugende des Ankertokens'],
+        [
+          'Beginn des nächsten Zuges der Quelle',
+          'Läuft ab, sobald der nächste Zug des Quellmarkers beginnt (Hilfe, Ausweichen und ähnliche Effekte)',
+        ],
       ],
     },
     savedEffects: {

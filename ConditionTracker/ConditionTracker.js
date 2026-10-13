@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Condition Tracker
  * Script: ConditionTracker.js
- * Version: 1.1.0
- * Built: 2026-05-15T00:43:28.799Z
+ * Version: 1.2.0
+ * Built: 2026-10-05T01:38:47.932Z
  */
 const ConditionTrackerMod = (() => {
   'use strict';
@@ -255,8 +255,8 @@ const ConditionTrackerMod = (() => {
   const SUPPORTED_LOCALE_LIST = SUPPORTED_LOCALES.map((code) => LOCALE_LABELS[code]).join(' / ');
 
   const SCRIPT_NAME = 'Condition Tracker';
-  const SCRIPT_VERSION = '1.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-05-15T00:43:28.799Z';
+  const SCRIPT_VERSION = '1.2.0';
+  const SCRIPT_LAST_UPDATED = '2026-10-05T01:38:47.932Z';
 
   const COLOR_BG_SOFT_BLACK = '#0A0A12';
   const COLOR_TEXT_ARCANE_SILVER = '#E6DFFF';
@@ -284,6 +284,7 @@ const ConditionTrackerMod = (() => {
   const DURATION_UNTIL_REMOVED = 'untilRemoved';
   const DURATION_TURN_END = 'turnEnd';
   const DURATION_ROUNDS = 'rounds';
+  const DURATION_TURN_START = 'turnStart';
   const MENU_REMOVE = 'remove';
   const COMMAND_SAVED = `${COMMAND} --saved`;
   const MACRO_NAME_SAVED = `${STATE_KEY}Saved`;
@@ -317,6 +318,9 @@ const ConditionTrackerMod = (() => {
   const CONDITION_ADVANTAGE = 'Advantage';
   const CONDITION_DISADVANTAGE = 'Disadvantage';
 
+  // --attacker value for Advantage/Disadvantage that applies to whoever attacks the target.
+  const ATTACKER_ANY = 'any';
+
   // Full set of all canonical custom-effect-type keys (used for validation).
   const CANONICAL_CUSTOM_TYPES = Object.freeze(
     new Set([
@@ -337,6 +341,7 @@ const ConditionTrackerMod = (() => {
     'Until removed',
     'End of target next turn',
     'End of source next turn',
+    'Start of source next turn',
     '1 round',
     '2 rounds',
     '3 rounds',
@@ -543,8 +548,8 @@ const ConditionTrackerMod = (() => {
         custom: '{emoji} {target} geraak deur {effect} ({source})',
         advantage: '{emoji} {source} het voordeel teen {target}{subject}',
         disadvantage: '{emoji} {source} het nadeel teen {target}{subject}',
-        noBy: 'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN (PLEKHOUER3TOKEN)',
-        self: '{target} is {past}',
+        noBy: '{emoji} {target} {past} ({source})',
+        self: '{emoji} {target} is {past}',
         standard: '{emoji} {target} {past} deur {source}',
       },
       apply: {
@@ -552,8 +557,8 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} het voordeel teen {target}{subject}.',
         disadvantage: '{source} het nadeel teen {target}{subject}.',
         self: '{target} is {past}.',
-        withSuffix: 'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN PLEKHOUER3TOKEN.',
-        standard: 'PLEKHOUER0TOKEN PLEKHOUER1TOKEN PLEKHOUER2TOKEN.',
+        withSuffix: '{source} {verb} {target} {suffix}.',
+        standard: '{source} {verb} {target}.',
       },
       remove: {
         custom: '{target} word nie meer deur {effect} geraak nie.',
@@ -1025,7 +1030,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standaard Toestande (D&amp;D 5e)',
+        heading: 'Standaard Toestande ({system})',
         colCondition: 'Toestand',
         none: 'Geen standaardvoorwaardes gedefinieer vir hierdie speletjiestelsel nie. Gebruik die Ander pasgemaakte effektipe vir vrytekseffekte.',
       },
@@ -1489,7 +1494,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} té avantatge contra {target}{subject}',
         disadvantage: '{emoji} {source} té desavantatge contra {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} està {past}',
+        self: '{emoji} {target} està {past}',
         standard: '{emoji} {target} {past} per {source}',
       },
       apply: {
@@ -1991,7 +1996,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Condicions estàndard (D&amp;D 5e)',
+        heading: 'Condicions estàndard ({system})',
         colCondition: 'Condició',
         none: "No s'han definit condicions estàndard per a aquest sistema de joc. Utilitzeu l'altre tipus d'efecte personalitzat per a efectes de text lliure.",
       },
@@ -2458,7 +2463,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} 對 {target}{subject} 具有優勢',
         disadvantage: '{emoji} {source} 對 {target}{subject} 具有劣勢',
         noBy: '{emoji} {target} {past}（{source}）',
-        self: '{target} {past}',
+        self: '{emoji} {target} {past}',
         standard: '{emoji} {target} 因 {source} 而{past}',
       },
       apply: {
@@ -2884,7 +2889,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: '標準狀態（D&amp;D 5e）',
+        heading: '標準狀態（{system}）',
         colCondition: '狀態',
         none: '沒有為此遊戲系統定義標準條件。使用其他自訂效果類型來實現自由文字效果。',
       },
@@ -3286,7 +3291,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} má výhodu proti {target}{subject}',
         disadvantage: '{emoji} {source} má nevýhodu proti {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} je {past}',
+        self: '{emoji} {target} je {past}',
         standard: '{emoji} {target} {past} od {source}',
       },
       apply: {
@@ -3766,7 +3771,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standardní stavy (D&amp;D 5e)',
+        heading: 'Standardní stavy ({system})',
         colCondition: 'Stav',
         none: 'Pro tento herní systém nejsou definovány žádné standardní podmínky. Pro efekty s volným textem použijte jiný typ vlastního efektu.',
       },
@@ -4218,7 +4223,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} har fordel mod {target}{subject}',
         disadvantage: '{emoji} {source} har ulempe mod {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} er {past}',
+        self: '{emoji} {target} er {past}',
         standard: '{emoji} {target} {past} af {source}',
       },
       apply: {
@@ -4702,7 +4707,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standardtilstande (D&amp;D 5e)',
+        heading: 'Standardtilstande ({system})',
         colCondition: 'Tilstand',
         none: 'Ingen standardbetingelser defineret for dette spilsystem. Brug den anden tilpassede effekttype til friteksteffekter.',
       },
@@ -5158,7 +5163,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} heeft voordeel tegen {target}{subject}',
         disadvantage: '{emoji} {source} heeft nadeel tegen {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} is {past}',
+        self: '{emoji} {target} is {past}',
         standard: '{emoji} {target} {past} door {source}',
       },
       apply: {
@@ -5648,7 +5653,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standaard Condities (D&amp;D 5e)',
+        heading: 'Standaard Condities ({system})',
         colCondition: 'Conditie',
         none: 'Er zijn geen standaardvoorwaarden gedefinieerd voor dit spelsysteem. Gebruik het type Ander aangepast effect voor vrije-teksteffecten.',
       },
@@ -6143,14 +6148,23 @@ const ConditionTrackerMod = (() => {
         custom: '{emoji} {target} affected by {effect} ({source})',
         advantage: '{emoji} {source} has advantage against {target}{subject}',
         disadvantage: '{emoji} {source} has disadvantage against {target}{subject}',
+        advantageAny: '{emoji} Attacks vs {target} have advantage{by}',
+        advantageNext: '{emoji} Next attack vs {target} has advantage{by}',
+        disadvantageAny: '{emoji} Attacks vs {target} have disadvantage{by}',
+        disadvantageNext: '{emoji} Next attack vs {target} has disadvantage{by}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} is {past}',
+        self: '{emoji} {target} is {past}',
         standard: '{emoji} {target} {past} by {source}',
       },
       apply: {
         custom: '{source} applies {effect} to {target}.',
         advantage: '{source} has advantage against {target}{subject}.',
         disadvantage: '{source} has disadvantage against {target}{subject}.',
+        advantageAny: '{source} grants advantage on attacks against {target}{reason}.',
+        advantageNext: '{source} grants advantage on the next attack against {target}{reason}.',
+        disadvantageAny: '{source} imposes disadvantage on attacks against {target}{reason}.',
+        disadvantageNext:
+          '{source} imposes disadvantage on the next attack against {target}{reason}.',
         self: '{target} is {past}.',
         withSuffix: '{source} {verb} {target} {suffix}.',
         standard: '{source} {verb} {target}.',
@@ -6159,6 +6173,16 @@ const ConditionTrackerMod = (() => {
         custom: '{target} is no longer affected by {effect}.',
         advantage: '{source} no longer has advantage against {target}{subject}.',
         disadvantage: '{source} no longer has disadvantage against {target}{subject}.',
+        advantageAny: 'Attacks against {target} no longer have advantage{reason}.',
+        advantageNext: 'The next attack against {target} no longer has advantage{reason}.',
+        disadvantageAny: 'Attacks against {target} no longer have disadvantage{reason}.',
+        disadvantageNext: 'The next attack against {target} no longer has disadvantage{reason}.',
+        advantageUsed: 'The advantage on the next attack against {target} has been used{reason}.',
+        disadvantageUsed:
+          'The disadvantage on the next attack against {target} has been applied{reason}.',
+        advantageUsedBy: '{source} has made the attack with advantage against {target}{subject}.',
+        disadvantageUsedBy:
+          '{source} has made the attack with disadvantage against {target}{subject}.',
         noBy: '{target} no longer {past}.',
         self: '{target} is no longer {past}.',
         standard: '{target} is no longer {past} by {source}.',
@@ -6184,6 +6208,33 @@ const ConditionTrackerMod = (() => {
         targetDesc: 'Select the creature that will receive the condition or effect.',
         otherText: 'Other condition text',
         effectDetails: '{condition} details',
+        whoHasAdvantage: 'Who Has Advantage?',
+        whoHasDisadvantage: 'Who Has Disadvantage?',
+        whoHasDesc:
+          'Select the creature making the roll, or choose Any attacker when it applies to whoever attacks the target (Help, Faerie Fire, Dodge).',
+        anyAttackerBtn: 'Any attacker',
+        grantedByTitle: 'Who Grants It?',
+        grantedByDesc:
+          'Select the creature granting or imposing it, such as the helper. Source-turn durations follow this creature.',
+        grantedByOptionalTitle: 'Granted By (Optional)',
+        grantedByOptionalDesc: 'Select the creature that granted or imposed it, or None.',
+        againstWhomTitle: 'Against Whom?',
+        againstWhomDesc: 'Select the creature being attacked.',
+        sameAsGranterBtn: 'Same creature (e.g. Dodge)',
+        usageTitle: 'How Many Attacks?',
+        usageDesc:
+          'Choose whether it is used up by the next attack or applies to every attack while it lasts.',
+        onceBtn: 'Next attack only',
+        everyBtn: 'Every attack',
+        addReasonBtn: 'Add a reason label',
+        reasonPrompt: 'Reason label (e.g. Help)',
+        reasonCurrent: 'Reason: {reason}',
+      },
+      preset: {
+        help: {
+          label: 'Help',
+          reason: 'Help',
+        },
       },
       col: {
         players: 'Players',
@@ -6211,6 +6262,7 @@ const ConditionTrackerMod = (() => {
         untilRemoved: 'Until removed',
         endOfTargetTurn: 'End of target next turn',
         endOfSourceTurn: 'End of source next turn',
+        startOfSourceTurn: 'Start of source next turn',
         round1: '1 round',
         round2: '2 rounds',
         round3: '3 rounds',
@@ -6219,6 +6271,8 @@ const ConditionTrackerMod = (() => {
         customPrompt: 'Number of rounds',
         untilRemovedDisplay: 'Until removed',
         turnsRemaining: '{n} tracked turn end(s) remaining',
+        untilTurnStart: "Until the start of {name}'s next turn",
+        untilTurnStartUnknown: "Until the start of the source's next turn",
       },
       btn: {
         openWizard: 'Open Wizard',
@@ -6244,6 +6298,7 @@ const ConditionTrackerMod = (() => {
         runMacroNow: 'Run Macro Now',
         macroButtonsEnable: 'Enable Macro Buttons',
         macroButtonsDisable: 'Disable Macro Buttons',
+        markUsed: 'Mark as Used',
       },
       title: {
         menu: 'Menu',
@@ -6297,6 +6352,7 @@ const ConditionTrackerMod = (() => {
         promoteOptions: 'Promote to Turn Tracker',
         editActions: 'Edit Actions',
         macroActions: 'Macro Actions',
+        presets: 'Presets',
       },
       msg: {
         noActive: 'No active conditions are tracked.',
@@ -6353,7 +6409,7 @@ const ConditionTrackerMod = (() => {
         otherDurationRequiresRounds:
           'Other duration requires a numeric round count, for example --duration 5 rounds.',
         invalidDuration:
-          'Duration must be Until removed, an end-of-turn option, or a positive round count.',
+          'Duration must be Until removed, a start- or end-of-turn option, or a positive round count.',
         zeroHpNoConditions: '{name} has reached 0 HP and has no active conditions.',
         zeroHpConditions: '{name} has reached 0 HP. Choose conditions to remove:',
         removeAllBtn: 'Remove All Conditions for {name}',
@@ -6405,6 +6461,12 @@ const ConditionTrackerMod = (() => {
         macroMissingLastAction: 'No recent apply action found. Apply a condition first.',
         macroInvalidName: 'Macro name cannot be empty.',
         macroMissingRequiredData: 'Missing required data to create macro.',
+        advantageOnlyOption:
+          '--attacker, --once, and --reason are only valid for Advantage and Disadvantage.',
+        attackerInvalid: '--attacker only accepts the value any.',
+        onceInvalid: '--once expects true or false when a value is provided.',
+        effectUsed: 'it was used',
+        unknownPreset: 'Unknown preset. Available presets: {presets}.',
       },
       removal: {
         conditionField: 'Condition',
@@ -6469,6 +6531,7 @@ const ConditionTrackerMod = (() => {
       apply: {
         turnAppended: 'Target was not in turn order; condition row was appended.',
         turnInserted: 'Condition row inserted below target token.',
+        usesField: 'Uses',
       },
     },
     handout: {
@@ -6545,6 +6608,14 @@ const ConditionTrackerMod = (() => {
             '!condition-tracker --source gala --target boss --condition Prone --duration 1 round',
             'Direct apply using unique partial names; if multiple tokens match, the mod asks for a more specific name or token id.',
           ],
+          [
+            '!condition-tracker --preset help',
+            "Help action: pick the helper (for example a familiar), then the creature being attacked. The next attack against it has advantage until used or until the helper's next turn starts. Add --source with a token name or id to pre-select the helper.",
+          ],
+          [
+            '!condition-tracker --source Wizard --target Ogre --condition Advantage --attacker any --reason Faerie Fire --duration 10 rounds',
+            'Advantage for every attacker against one target, labelled with the reason.',
+          ],
         ],
       },
       commandsRef: {
@@ -6611,6 +6682,23 @@ const ConditionTrackerMod = (() => {
             'Whisper a classification diagnostic for each selected token — shows the detected type, detection source, and reason',
           ],
           ['--help', 'Show a brief help card in chat'],
+          [
+            '--preset help',
+            'Start the Help preset: pick the helper and the creature being attacked (add --source to pre-select the helper)',
+          ],
+          [
+            '--attacker any',
+            'Advantage / Disadvantage only: it applies to whoever attacks the target, --source is the creature granting it, and the row sits under the target',
+          ],
+          [
+            '--once true|false',
+            'Advantage / Disadvantage only: used up by the next attack; the GM gets a Mark as Used button',
+          ],
+          [
+            '--reason &lt;text&gt;',
+            'Advantage / Disadvantage only: reason label shown in the row (e.g. Help)',
+          ],
+          ['--used &lt;condition-id&gt;', 'Remove a single-use effect and announce it as used'],
         ],
       },
       standardConditions: {
@@ -6630,16 +6718,19 @@ const ConditionTrackerMod = (() => {
           ],
           [
             '🍀 Advantage',
-            'Record advantage granted from one token to another; grouped with the source in initiative',
+            'Record that one creature has advantage against another (grouped with that creature in initiative), or that any attacker has advantage against a target (grouped with the target). Optional reason label and single-use tracking.',
           ],
-          ['⬇️ Disadvantage', 'Record disadvantage imposed; grouped with the source in initiative'],
+          [
+            '⬇️ Disadvantage',
+            'Record that one creature has disadvantage against another, or that any attacker has disadvantage against a target (for example Dodge). Same options as Advantage.',
+          ],
           ['📝 Other', 'Freeform custom label — you will be prompted for a description'],
         ],
       },
       durationOptions: {
         heading: 'Duration Options',
         intro:
-          "The remaining count is shown in the Turn Tracker pr column and decrements when the anchor token's turn ends.",
+          "Round counts are shown in the Turn Tracker pr column and decrement when the anchor token's turn ends. Turn-anchored durations show ⏳ and single-use effects show 1×.",
         colOption: 'Option',
         colBehaviour: 'Behaviour',
         rows: [
@@ -6653,6 +6744,10 @@ const ConditionTrackerMod = (() => {
             "Expires when the source token's next turn ends in initiative",
           ],
           ['1 / 2 / 3 / 10 rounds', 'Fixed countdown; one decrement per anchor-token turn-end'],
+          [
+            "Start of source's next turn",
+            "Expires as soon as the source token's next turn begins (Help, Dodge, and similar effects)",
+          ],
         ],
       },
       savedEffects: {
@@ -6793,7 +6888,7 @@ const ConditionTrackerMod = (() => {
           [
             'subjectPromptBypass',
             'true / false',
-            'Skip the optional subject-token step for Spell / Ability / Other effects',
+            'Skip the optional subject-token step for Spell / Ability / Advantage / Disadvantage / Other effects',
           ],
           [
             'suppressPublicChat',
@@ -7054,7 +7149,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} on etu {target}{subject} vastaan',
         disadvantage: '{emoji} {source} on haitta {target}{subject} vastaan',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} on {past}',
+        self: '{emoji} {target} on {past}',
         standard: '{emoji} {target} {past} — {source}',
       },
       apply: {
@@ -7532,7 +7627,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Vakiotilat (D&amp;D 5e)',
+        heading: 'Vakiotilat ({system})',
         colCondition: 'Tila',
         none: 'Tälle pelijärjestelmälle ei ole määritelty vakioehtoja. Käytä Muu mukautettua tehostetyyppiä vapaan tekstin tehosteille.',
       },
@@ -7989,7 +8084,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} a l’avantage contre {target}{subject}',
         disadvantage: '{emoji} {source} a le désavantage contre {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} est {past}',
+        self: '{emoji} {target} est {past}',
         standard: '{emoji} {target} {past} par {source}',
       },
       apply: {
@@ -8483,7 +8578,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Conditions standard (D&D 5e)',
+        heading: 'Conditions standard ({system})',
         colCondition: 'Condition',
         none: "Aucune condition standard définie pour ce système de jeu. Utilisez le type d'effet personnalisé Autre pour les effets de texte libre.",
       },
@@ -8956,7 +9051,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} hat Vorteil gegen {target}{subject}',
         disadvantage: '{emoji} {source} hat Nachteil gegen {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} ist {past}',
+        self: '{emoji} {target} ist {past}',
         standard: '{emoji} {target} {past} durch {source}',
       },
       apply: {
@@ -8964,8 +9059,8 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} hat Vorteil gegen {target}{subject}.',
         disadvantage: '{source} hat Nachteil gegen {target}{subject}.',
         self: '{target} ist {past}.',
-        withSuffix: 'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN PLATZHALTER3TOKEN.',
-        standard: 'PLATZHALTER0TOKEN PLATZHALTER1TOKEN PLATZHALTER2TOKEN.',
+        withSuffix: '{source} {verb} {target} {suffix}.',
+        standard: '{source} {verb} {target}.',
       },
       remove: {
         custom: '{target} ist nicht mehr von {effect} betroffen.',
@@ -9444,7 +9539,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standardzustände (D&D 5e)',
+        heading: 'Standardzustände ({system})',
         colCondition: 'Zustand',
         none: 'Für dieses Spielsystem sind keine Standardbedingungen definiert. Verwenden Sie den benutzerdefinierten Effekttyp „Andere“ für Freitexteffekte.',
       },
@@ -9918,7 +10013,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} έχει πλεονέκτημα εναντίον {target}{subject}',
         disadvantage: '{emoji} {source} έχει μειονέκτημα εναντίον {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} είναι {past}',
+        self: '{emoji} {target} είναι {past}',
         standard: '{emoji} {target} {past} από {source}',
       },
       apply: {
@@ -10415,7 +10510,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Τυπικές Καταστάσεις (D&amp;D 5e)',
+        heading: 'Τυπικές Καταστάσεις ({system})',
         colCondition: 'Κατάσταση',
         none: 'Δεν έχουν οριστεί τυπικές συνθήκες για αυτό το σύστημα παιχνιδιού. Χρησιμοποιήστε τον Άλλο προσαρμοσμένο τύπο εφέ για εφέ ελεύθερου κειμένου.',
       },
@@ -10885,7 +10980,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} ל־{source} יש יתרון נגד {target}{subject}',
         disadvantage: '{emoji} ל־{source} יש חיסרון נגד {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} {past}',
+        self: '{emoji} {target} {past}',
         standard: '{emoji} {target} {past} על ידי {source}',
       },
       apply: {
@@ -11315,7 +11410,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'מצבים רגילים (D&D 5e)',
+        heading: 'מצבים רגילים ({system})',
         colCondition: 'מצב',
         none: 'לא הוגדרו תנאים סטנדרטיים עבור מערכת משחק זו. השתמש בסוג אפקט מותאם אישית אחר עבור אפקטים של טקסט חופשי.',
       },
@@ -11715,7 +11810,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} előnnyel támad {target}{subject} ellen',
         disadvantage: '{emoji} {source} hátránnyal támad {target}{subject} ellen',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} {past}',
+        self: '{emoji} {target} {past}',
         standard: '{emoji} {target} {past} — {source}',
       },
       apply: {
@@ -12205,7 +12300,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Szabványos állapotok (D&amp;D 5e)',
+        heading: 'Szabványos állapotok ({system})',
         colCondition: 'Állapot',
         none: 'Ehhez a játékrendszerhez nincsenek szabványos feltételek meghatározva. Szabadszöveges effektusokhoz használja az Egyéb egyéni effektustípust.',
       },
@@ -12681,8 +12776,8 @@ const ConditionTrackerMod = (() => {
         custom: '{emoji} {target} influenzato da {effect} ({source})',
         advantage: '{emoji} {source} ha vantaggio contro {target}{subject}',
         disadvantage: '{emoji} {source} ha svantaggio contro {target}{subject}',
-        noBy: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN (SEGNAPOSTO3TOKEN)',
-        self: '{target} è {past}',
+        noBy: '{emoji} {target} {past} ({source})',
+        self: '{emoji} {target} è {past}',
         standard: '{emoji} {target} {past} da {source}',
       },
       apply: {
@@ -12690,8 +12785,8 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} ha vantaggio contro {target}{subject}.',
         disadvantage: '{source} ha svantaggio contro {target}{subject}.',
         self: '{target} è {past}.',
-        withSuffix: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN SEGNAPOSTO3TOKEN.',
-        standard: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN.',
+        withSuffix: '{source} {verb} {target} {suffix}.',
+        standard: '{source} {verb} {target}.',
       },
       remove: {
         custom: '{target} non è più influenzato da {effect}.',
@@ -13188,7 +13283,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Condizioni standard (D&amp;D 5e)',
+        heading: 'Condizioni standard ({system})',
         colCondition: 'Condizione',
         none: 'Nessuna condizione standard definita per questo sistema di gioco. Utilizza il tipo di effetto Altro personalizzato per gli effetti di testo libero.',
       },
@@ -13664,7 +13759,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source}は{target}{subject}に対して有利を持つ',
         disadvantage: '{emoji} {source}は{target}{subject}に対して不利を持つ',
         noBy: '{emoji} {target}は{past}（{source}）',
-        self: '{target}は{past}',
+        self: '{emoji} {target}は{past}',
         standard: '{emoji} {target}は{source}によって{past}',
       },
       apply: {
@@ -14150,7 +14245,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: '標準状態（D&amp;D 5e）',
+        heading: '標準状態（{system}）',
         colCondition: '状態',
         none: 'このゲーム システムには標準条件が定義されていません。フリーテキスト効果には、その他のカスタム効果タイプを使用します。',
       },
@@ -14593,7 +14688,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} 이(가) {target}{subject} 에 대해 이점을 가짐',
         disadvantage: '{emoji} {source} 이(가) {target}{subject} 에 대해 불이익을 가짐',
         noBy: '{emoji} {target} 이(가) {past} ({source})',
-        self: '{target} 이(가) {past}',
+        self: '{emoji} {target} 이(가) {past}',
         standard: '{emoji} {target} 이(가) {source} 에 의해 {past}',
       },
       apply: {
@@ -14601,8 +14696,8 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} 이(가) {target}{subject} 에 대해 이점을 가짐.',
         disadvantage: '{source} 이(가) {target}{subject} 에 대해 불이익을 가짐.',
         self: '{target} 이(가) {past}.',
-        withSuffix: '자리 표시자0토큰 자리 표시자1토큰 자리 표시자2토큰 자리 표시자3토큰.',
-        standard: '자리 표시자0토큰 자리 표시자1토큰 자리 표시자2토큰.',
+        withSuffix: '{source} {verb} {target} {suffix}.',
+        standard: '{source} {verb} {target}.',
       },
       remove: {
         custom: '{target} 에게 적용된 {effect} 효과가 종료됨.',
@@ -14712,7 +14807,7 @@ const ConditionTrackerMod = (() => {
         noConditions: '상태 없음',
         tokenMoved: '토큰 이동됨',
         markedDead: '사망으로 표시됨',
-        zeroHp: '자리 표시자0TOKEN — 0 HP',
+        zeroHp: '{name} — 0 HP',
         moveToken: '{name} — 토큰을 이동하시겠습니까?',
         scriptReady: '스크립트 준비됨',
         conditionReorder: '턴 순서 변경됨',
@@ -15056,7 +15151,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: '표준 상태 (D&D 5e)',
+        heading: '표준 상태 ({system})',
         colCondition: '상태',
         none: '이 게임 시스템에 대해 정의된 표준 조건이 없습니다. 자유 텍스트 효과에는 기타 사용자 정의 효과 유형을 사용하십시오.',
       },
@@ -15496,8 +15591,8 @@ const ConditionTrackerMod = (() => {
         custom: '{emoji} {target} pod wpływem {effect} ({source})',
         advantage: '{emoji} {source} ma ułatwienie przeciwko {target}{subject}',
         disadvantage: '{emoji} {source} ma utrudnienie przeciwko {target}{subject}',
-        noBy: 'MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN ({source})',
-        self: '{target} jest {past}',
+        noBy: '{emoji} {target} {past} ({source})',
+        self: '{emoji} {target} jest {past}',
         standard: '{emoji} {target} {past} przez {source}',
       },
       apply: {
@@ -15505,9 +15600,8 @@ const ConditionTrackerMod = (() => {
         advantage: '{source} ma ułatwienie przeciwko {target}{subject}.',
         disadvantage: '{source} ma utrudnienie przeciwko {target}{subject}.',
         self: '{target} jest {past}.',
-        withSuffix:
-          'MIEJSCE0TOKEN POSIADACZ MIEJSCA1TOKEN POSIADACZ MIEJSCA2TOKEN POSIADACZ MIEJSCA3TOKEN.',
-        standard: 'MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN.',
+        withSuffix: '{source} {verb} {target} {suffix}.',
+        standard: '{source} {verb} {target}.',
       },
       remove: {
         custom: '{target} nie jest już pod wpływem {effect}.',
@@ -15987,7 +16081,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standardowe stany (D&amp;D 5e)',
+        heading: 'Standardowe stany ({system})',
         colCondition: 'Stan',
         none: 'Nie zdefiniowano standardowych warunków dla tego systemu gry. W przypadku efektów tekstowych użyj typu efektu niestandardowego Inny.',
       },
@@ -16451,7 +16545,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} tem vantagem contra {target}{subject}',
         disadvantage: '{emoji} {source} tem desvantagem contra {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} está {past}',
+        self: '{emoji} {target} está {past}',
         standard: '{emoji} {target} {past} por {source}',
       },
       apply: {
@@ -16947,7 +17041,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Condições padrão (D&amp;D 5e)',
+        heading: 'Condições padrão ({system})',
         colCondition: 'Condição',
         none: 'Nenhuma condição padrão definida para este sistema de jogo. Utilize o tipo de efeito personalizado Outro para efeitos de texto livre.',
       },
@@ -17420,7 +17514,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} tem vantagem contra {target}{subject}',
         disadvantage: '{emoji} {source} tem desvantagem contra {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} está {past}',
+        self: '{emoji} {target} está {past}',
         standard: '{emoji} {target} {past} por {source}',
       },
       apply: {
@@ -17904,7 +17998,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Condições padrão (D&D 5e)',
+        heading: 'Condições padrão ({system})',
         colCondition: 'Condição',
         none: 'Nenhuma condição padrão definida para este sistema de jogo. Use o tipo de efeito personalizado Outro para efeitos de texto livre.',
       },
@@ -18371,7 +18465,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} имеет преимущество против {target}{subject}',
         disadvantage: '{emoji} {source} имеет помеху против {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} {past}',
+        self: '{emoji} {target} {past}',
         standard: '{emoji} {target} {past} от {source}',
       },
       apply: {
@@ -18869,7 +18963,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Стандартные состояния (D&amp;D 5e)',
+        heading: 'Стандартные состояния ({system})',
         colCondition: 'Состояние',
         none: 'Для этой игровой системы не определены стандартные условия. Используйте тип пользовательского эффекта «Другой» для эффектов произвольного текста.',
       },
@@ -19343,7 +19437,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} tiene ventaja contra {target}{subject}',
         disadvantage: '{emoji} {source} tiene desventaja contra {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} es {past}',
+        self: '{emoji} {target} es {past}',
         standard: '{emoji} {target} {past} por {source}',
       },
       apply: {
@@ -19503,7 +19597,7 @@ const ConditionTrackerMod = (() => {
         unknownConfig:
           'Opción de configuración desconocida. Usa --config para ver los ajustes disponibles.',
         macroReinstalled:
-          'Las macros {wizard} y {multiTarget} se han reinstalado para todos los GM actuales.',
+          'Las macros {wizard}, {multiTarget}, {reportToken}, {saved} y {classify} se han reinstalado para todos los GM actuales.',
         handoutReinstalled: 'El folleto de ayuda {handout} se reinstaló.',
         duplicate:
           'Esa combinación exacta de fuente, sujeto, objetivo, condición y texto personalizado ya está activa.',
@@ -19831,7 +19925,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Condiciones estándar (D&D 5e)',
+        heading: 'Condiciones estándar ({system})',
         colCondition: 'Condición',
         none: 'No hay condiciones estándar definidas para este sistema de juego. Utilice el tipo Otro efecto personalizado para efectos de texto libre.',
       },
@@ -20311,7 +20405,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} har fördel mot {target}{subject}',
         disadvantage: '{emoji} {source} har nackdel mot {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} är {past}',
+        self: '{emoji} {target} är {past}',
         standard: '{emoji} {target} {past} av {source}',
       },
       apply: {
@@ -20793,7 +20887,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standardtillstånd (D&amp;D 5e)',
+        heading: 'Standardtillstånd ({system})',
         colCondition: 'Tillstånd',
         none: 'Inga standardvillkor definierade för detta spelsystem. Använd den anpassade effekten Annan för fritexteffekter.',
       },
@@ -21239,7 +21333,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source}, {target}{subject} karşısında avantajlı',
         disadvantage: '{emoji} {source}, {target}{subject} karşısında dezavantajlı',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} {past}',
+        self: '{emoji} {target} {past}',
         standard: '{emoji} {target} {source} tarafından {past}',
       },
       apply: {
@@ -21729,7 +21823,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Standart Durumlar (D&amp;D 5e)',
+        heading: 'Standart Durumlar ({system})',
         colCondition: 'Durum',
         none: 'Bu oyun sistemi için tanımlanmış standart koşullar yoktur. Serbest metin efektleri için Diğer özel efekt türünü kullanın.',
       },
@@ -22197,7 +22291,7 @@ const ConditionTrackerMod = (() => {
         advantage: '{emoji} {source} має перевагу проти {target}{subject}',
         disadvantage: '{emoji} {source} має перешкоду проти {target}{subject}',
         noBy: '{emoji} {target} {past} ({source})',
-        self: '{target} {past}',
+        self: '{emoji} {target} {past}',
         standard: '{emoji} {target} {past} від {source}',
       },
       apply: {
@@ -22681,7 +22775,7 @@ const ConditionTrackerMod = (() => {
         ],
       },
       standardConditions: {
-        heading: 'Стандартні стани (D&amp;D 5e)',
+        heading: 'Стандартні стани ({system})',
         colCondition: 'Стан',
         none: 'Для цієї ігрової системи не визначено стандартних умов. Використовуйте тип ефекту «Інший» для ефектів довільного тексту.',
       },
@@ -27683,16 +27777,6 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Returns true when any active condition matches a predicate.
-   *
-   * @param {(condition: object) => boolean} predicate Match function.
-   * @returns {boolean} True when a matching condition exists.
-   */
-  function someActiveCondition(predicate) {
-    return getActiveConditions().some(predicate);
-  }
-
-  /**
    * Splits active conditions into kept and matched groups.
    *
    * @param {(condition: object) => boolean} predicate Match function.
@@ -28777,6 +28861,9 @@ const ConditionTrackerMod = (() => {
    * @param {string} details.targetName Target token name.
    * @param {boolean} [details.isSelfTarget] Whether source and target are the same token.
    * @param {string} [details.subjectName] Subject name for advantage types.
+   * @param {boolean} [details.anyAttacker] Advantage types: applies to any attacker of the target.
+   * @param {boolean} [details.once] Advantage types: applies to the next attack only.
+   * @param {string} [details.reason] Advantage types: reason label (e.g. Help).
    * @param {string} [locale] Output locale.
    * @returns {string} Turn Tracker display text.
    */
@@ -28793,7 +28880,15 @@ const ConditionTrackerMod = (() => {
     }
 
     if (isAdvantageType(details.condition)) {
-      const subject = toText(details.subjectName) ? ` (${details.subjectName})` : '';
+      if (details.anyAttacker) {
+        const granter = details.isSelfTarget || isSelfTarget(details) ? '' : details.sourceName;
+        return t(`templates.display.${anyAttackerKey(details)}`, locale, {
+          emoji,
+          target: details.targetName,
+          by: buildGrantSuffix(details.reason, granter),
+        });
+      }
+
       const tplKey =
         details.condition === CONDITION_DISADVANTAGE
           ? 'templates.display.disadvantage'
@@ -28802,7 +28897,7 @@ const ConditionTrackerMod = (() => {
         emoji,
         source: details.sourceName,
         target: details.targetName,
-        subject,
+        subject: buildGrantSuffix(details.reason, details.subjectName),
       });
     }
 
@@ -28868,12 +28963,29 @@ const ConditionTrackerMod = (() => {
     }
 
     if (isAdvantageType(details.condition)) {
-      const subject = toText(details.subjectName) ? ` (${escapeHtml(details.subjectName)})` : '';
+      if (details.anyAttacker) {
+        return (
+          prefix +
+          t(`templates.apply.${anyAttackerKey(details)}`, locale, {
+            source: src,
+            target: tgt,
+            reason: buildReasonSuffix(details.reason),
+          })
+        );
+      }
+
       const tplKey =
         details.condition === CONDITION_DISADVANTAGE
           ? 'templates.apply.disadvantage'
           : 'templates.apply.advantage';
-      return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
+      return (
+        prefix +
+        t(tplKey, locale, {
+          source: src,
+          target: tgt,
+          subject: htmlGrantSuffix(details),
+        })
+      );
     }
 
     const localData = getConditionLocalData(details.condition, locale);
@@ -28917,9 +29029,11 @@ const ConditionTrackerMod = (() => {
    * @param {object} condition Active condition record.
    * @param {boolean} useIcons Whether icons are enabled.
    * @param {string} [locale] Output locale.
+   * @param {object} [options] Message options.
+   * @param {boolean} [options.used] Word Advantage/Disadvantage removal as the effect being used.
    * @returns {string} Public chat text.
    */
-  function buildRemovalMessage(condition, useIcons, locale) {
+  function buildRemovalMessage(condition, useIcons, locale, options = {}) {
     const prefix = buildIconPrefix(condition.condition, useIcons);
     const src = actorSpan(condition.sourceName);
     const tgt = actorSpan(condition.targetName);
@@ -28935,14 +29049,27 @@ const ConditionTrackerMod = (() => {
     }
 
     if (isAdvantageType(condition.condition)) {
-      const subject = toText(condition.subjectName)
-        ? ` (${escapeHtml(condition.subjectName)})`
-        : '';
-      const tplKey =
-        condition.condition === CONDITION_DISADVANTAGE
-          ? 'templates.remove.disadvantage'
-          : 'templates.remove.advantage';
-      return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
+      const type = condition.condition === CONDITION_DISADVANTAGE ? 'disadvantage' : 'advantage';
+      if (condition.anyAttacker) {
+        const tplKey = options.used ? `${type}Used` : anyAttackerKey(condition);
+        return (
+          prefix +
+          t(`templates.remove.${tplKey}`, locale, {
+            target: tgt,
+            reason: buildReasonSuffix(condition.reason),
+          })
+        );
+      }
+
+      const tplKey = options.used ? `${type}UsedBy` : type;
+      return (
+        prefix +
+        t(`templates.remove.${tplKey}`, locale, {
+          source: src,
+          target: tgt,
+          subject: htmlGrantSuffix(condition),
+        })
+      );
     }
 
     const localData = getConditionLocalData(condition.condition, locale);
@@ -29006,6 +29133,53 @@ const ConditionTrackerMod = (() => {
    */
   function isAdvantageType(condition) {
     return condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE;
+  }
+
+  /**
+   * Returns the template key for an Advantage/Disadvantage that applies to any attacker.
+   *
+   * @param {object} details Display details or condition record.
+   * @returns {string} Template key such as "advantageNext" or "disadvantageAny".
+   */
+  function anyAttackerKey(details) {
+    const type = details.condition === CONDITION_DISADVANTAGE ? 'disadvantage' : 'advantage';
+    return `${type}${details.once ? 'Next' : 'Any'}`;
+  }
+
+  /**
+   * Builds the plain-text trailing label naming why an effect applies and who granted it.
+   *
+   * @param {string} reason Reason label (e.g. Help), may be empty.
+   * @param {string} name Granting creature name, may be empty.
+   * @returns {string} Suffix such as " — Help (Owl)", " — Help", " (Owl)", or "".
+   */
+  function buildGrantSuffix(reason, name) {
+    const reasonText = toText(reason);
+    const nameText = toText(name);
+    if (reasonText && nameText) return ` — ${reasonText} (${nameText})`;
+    if (reasonText) return ` — ${reasonText}`;
+    return nameText ? ` (${nameText})` : '';
+  }
+
+  /**
+   * Builds the HTML-escaped grant suffix for chat from a record's reason and subject.
+   *
+   * @param {object} details Display details or condition record.
+   * @returns {string} Escaped suffix.
+   */
+  function htmlGrantSuffix(details) {
+    return escapeHtml(buildGrantSuffix(details.reason, details.subjectName));
+  }
+
+  /**
+   * Builds the HTML-escaped parenthesised reason for chat announcements.
+   *
+   * @param {string} reason Reason label, may be empty.
+   * @returns {string} Suffix such as " (Help)" or "".
+   */
+  function buildReasonSuffix(reason) {
+    const reasonText = toText(reason);
+    return reasonText ? ` (${escapeHtml(reasonText)})` : '';
   }
 
   /**
@@ -29075,6 +29249,10 @@ const ConditionTrackerMod = (() => {
       );
     }
 
+    if (key === 'start of source next turn' || key === "start of source's next turn") {
+      return validDuration(createTurnStartDuration(context.sourceTokenId));
+    }
+
     const rounds = parseRoundCount(key);
     if (rounds > 0) {
       return validDuration(
@@ -29100,6 +29278,20 @@ const ConditionTrackerMod = (() => {
     return {
       type: DURATION_TURN_END,
       remaining: anchorTokenId === currentTurnTokenId ? 2 : 1,
+      anchor: anchorTokenId,
+    };
+  }
+
+  /**
+   * Creates a duration that expires when the anchor token's next turn starts.
+   *
+   * @param {string} anchorTokenId Anchor token id.
+   * @returns {object} Stored duration.
+   */
+  function createTurnStartDuration(anchorTokenId) {
+    return {
+      type: DURATION_TURN_START,
+      remaining: 1,
       anchor: anchorTokenId,
     };
   }
@@ -29148,6 +29340,7 @@ const ConditionTrackerMod = (() => {
     if (
       !duration ||
       duration.type === DURATION_UNTIL_REMOVED ||
+      duration.type === DURATION_TURN_START ||
       duration.anchor !== endedTurnTokenId
     ) {
       return false;
@@ -29155,6 +29348,23 @@ const ConditionTrackerMod = (() => {
 
     duration.remaining -= 1;
     return duration.remaining <= 0;
+  }
+
+  /**
+   * Returns true when a start-of-turn duration expires because its anchor's turn began.
+   *
+   * @param {object} condition Active condition record.
+   * @param {string} startedTurnTokenId Token id whose turn just started.
+   * @returns {boolean} True when the condition expired.
+   */
+  function expiresAtTurnStart(condition, startedTurnTokenId) {
+    const duration = condition.duration;
+    return Boolean(
+      duration &&
+      duration.type === DURATION_TURN_START &&
+      startedTurnTokenId &&
+      duration.anchor === startedTurnTokenId
+    );
   }
 
   /**
@@ -29212,11 +29422,12 @@ const ConditionTrackerMod = (() => {
       return { removed: false, marker: '' };
     }
 
-    if (isMarkerStillRequired(condition.targetTokenId, marker, condition.id)) {
+    const markerTokenId = getMarkerTokenId(condition);
+    if (isMarkerStillRequired(markerTokenId, marker, condition.id)) {
       return { removed: false, marker };
     }
 
-    const token = getObj('graphic', condition.targetTokenId);
+    const token = getObj('graphic', markerTokenId);
     if (!token) {
       return { removed: false, marker };
     }
@@ -29232,16 +29443,29 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
+   * Returns the id of the token that carries a condition's marker.
+   *
+   * Markers sit on the target unless the record names another token (Advantage
+   * and Disadvantage held by one creature are marked on that creature).
+   *
+   * @param {object} condition Active condition record.
+   * @returns {string} Token id.
+   */
+  function getMarkerTokenId(condition) {
+    return toText(condition?.markerTokenId) || toText(condition?.targetTokenId);
+  }
+
+  /**
    * Returns true when another active condition still requires a marker.
    *
-   * @param {string} targetTokenId Target token id.
+   * @param {string} targetTokenId Id of the token carrying the marker.
    * @param {string} marker Marker name or tag.
    * @param {string} ignoredConditionId Condition id being removed.
    * @returns {boolean} True when the marker is still needed.
    */
   function isMarkerStillRequired(targetTokenId, marker, ignoredConditionId) {
     for (const condition of ensureState().active) {
-      const sameTarget = condition.targetTokenId === targetTokenId;
+      const sameTarget = getMarkerTokenId(condition) === targetTokenId;
       const sameMarker = condition.marker === marker;
       const differentCondition = condition.id !== ignoredConditionId;
       if (sameTarget && sameMarker && differentCondition) {
@@ -29548,6 +29772,46 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
+   * One-click effect presets. Each preset pre-fills wizard arguments so the GM
+   * only picks the tokens involved. `reasonKey` is the translation key for the
+   * reason label shown in the Turn Tracker row.
+   */
+  const PRESETS = Object.freeze({
+    help: Object.freeze({
+      id: 'help',
+      labelKey: 'ui.preset.help.label',
+      reasonKey: 'ui.preset.help.reason',
+      condition: CONDITION_ADVANTAGE,
+      args: Object.freeze({
+        attacker: ATTACKER_ANY,
+        once: 'true',
+        duration: 'Start of source next turn',
+      }),
+    }),
+  });
+
+  /**
+   * Returns a preset by id.
+   *
+   * @param {string} id Preset id (case-insensitive).
+   * @returns {object|null} Preset definition or null.
+   */
+  function getPreset(id) {
+    return PRESETS[String(id || '').toLowerCase()] || null;
+  }
+
+  /**
+   * Returns the presets usable with a game-system profile.
+   *
+   * @param {object} profile Active system profile.
+   * @returns {object[]} Preset definitions whose effect type the system supports.
+   */
+  function getPresetsForProfile(profile) {
+    const types = profile?.CUSTOM_EFFECT_TYPES || [];
+    return Object.values(PRESETS).filter((preset) => types.includes(preset.condition));
+  }
+
+  /**
    * Gets the current Campaign turn order as an array.
    *
    * @returns {object[]} Current turn order rows.
@@ -29583,16 +29847,27 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Returns the pr value for a condition row based on its duration.
+   * Returns the pr value for a condition row.
    *
-   * @param {object|null} duration Stored duration object.
-   * @returns {string} Remaining count as a string, or empty for untimed durations.
+   * Single-use effects show a use marker, round counts show the rounds left, and
+   * turn-anchored durations show an hourglass rather than a bare number that
+   * reads like an initiative value.
+   *
+   * @param {object} condition Active condition record.
+   * @returns {string} Short pr text, or empty for untimed durations.
    */
-  function buildTurnOrderPr(duration) {
+  function buildTurnOrderPr(condition) {
+    const duration = condition?.duration;
+    if (condition?.once) {
+      return '1×';
+    }
     if (!duration || duration.type === DURATION_UNTIL_REMOVED) {
       return '';
     }
-    return String(duration.remaining);
+    if (duration.type === DURATION_ROUNDS) {
+      return String(duration.remaining);
+    }
+    return '⏳';
   }
 
   /**
@@ -29604,7 +29879,7 @@ const ConditionTrackerMod = (() => {
   function createConditionRow(condition) {
     return {
       id: '-1',
-      pr: buildTurnOrderPr(condition.duration),
+      pr: buildTurnOrderPr(condition),
       custom: condition.displayText,
       _ct: condition.id,
     };
@@ -29622,7 +29897,7 @@ const ConditionTrackerMod = (() => {
 
     for (const row of rows) {
       if (getConditionIdFromRow(row) === condition.id) {
-        row.pr = buildTurnOrderPr(condition.duration);
+        row.pr = buildTurnOrderPr(condition);
         changed = true;
         break;
       }
@@ -29683,16 +29958,18 @@ const ConditionTrackerMod = (() => {
   /**
    * Returns the token id used to anchor a condition row in Turn Tracker.
    *
-   * Advantage and Disadvantage are grouped under the source token so they read
-   * with the creature granting or imposing the effect.
+   * Advantage and Disadvantage held by one creature are grouped under that
+   * creature (the source). When they apply to any attacker they are grouped
+   * under the target, where the GM looks when someone attacks it.
    *
    * @param {object} condition Active condition record.
    * @returns {string} Anchor token id.
    */
   function getConditionAnchorTokenId(condition) {
     if (
-      condition?.condition === CONDITION_ADVANTAGE ||
-      condition?.condition === CONDITION_DISADVANTAGE
+      !condition?.anyAttacker &&
+      (condition?.condition === CONDITION_ADVANTAGE ||
+        condition?.condition === CONDITION_DISADVANTAGE)
     ) {
       return toText(condition.sourceTokenId);
     }
@@ -30118,6 +30395,7 @@ const ConditionTrackerMod = (() => {
    * @param {boolean} options.whisperResult Whether to whisper details.
    * @param {string} [options.locale] Primary output locale.
    * @param {string} [options.extraLocale] Additional output locale for bilingual mode.
+   * @param {boolean} [options.used] Announce the effect as used rather than removed.
    * @returns {object} Removal result.
    */
   function removeConditionById(conditionId, options) {
@@ -30135,9 +30413,12 @@ const ConditionTrackerMod = (() => {
     const locale = options.locale || config.language;
 
     if (options.publicAnnounce) {
-      announceHtml(buildRemovalMessage(condition, config.useIcons, locale));
+      const messageOptions = { used: Boolean(options.used) };
+      announceHtml(buildRemovalMessage(condition, config.useIcons, locale, messageOptions));
       if (options.extraLocale && options.extraLocale !== locale) {
-        announceHtml(buildRemovalMessage(condition, config.useIcons, options.extraLocale));
+        announceHtml(
+          buildRemovalMessage(condition, config.useIcons, options.extraLocale, messageOptions)
+        );
       }
     }
 
@@ -32589,8 +32870,13 @@ const ConditionTrackerMod = (() => {
       return invalid(t('ui.msg.subjectOnlyCustom', locale));
     }
 
+    const advantageOptions = validateAdvantageOptions(args, condition, locale);
+    if (!advantageOptions.valid) {
+      return advantageOptions;
+    }
+
     let subjectToken = null;
-    if (subjectId) {
+    if (subjectId && !advantageOptions.anyAttacker) {
       const subjectResult = resolveTokenReference(subjectId, 'subject', locale);
       if (!subjectResult.valid) {
         return invalid(subjectResult.message);
@@ -32616,6 +32902,50 @@ const ConditionTrackerMod = (() => {
       targetToken,
       condition,
       customText: isCustomTextCondition(condition) ? customText : '',
+      anyAttacker: advantageOptions.anyAttacker,
+      once: advantageOptions.once,
+      reason: advantageOptions.reason,
+    };
+  }
+
+  /**
+   * Validates the Advantage/Disadvantage-only options --attacker, --once, and --reason.
+   *
+   * @param {object} args Parsed command arguments.
+   * @param {string} condition Canonical condition.
+   * @param {string} locale Output locale.
+   * @returns {object} Validation result with anyAttacker, once, and reason.
+   */
+  function validateAdvantageOptions(args, condition, locale) {
+    const attacker = args.attacker === true ? '' : toText(args.attacker).toLowerCase();
+    const reason = args.reason === true ? '' : toText(args.reason);
+    const hasOnce = args.once !== undefined;
+
+    if (!isAdvantageType(condition)) {
+      if (attacker || reason || hasOnce) {
+        return invalid(t('ui.msg.advantageOnlyOption', locale));
+      }
+      return { valid: true, anyAttacker: false, once: false, reason: '' };
+    }
+
+    if (attacker && attacker !== ATTACKER_ANY) {
+      return invalid(t('ui.msg.attackerInvalid', locale));
+    }
+
+    let once = false;
+    if (hasOnce) {
+      const parsed = args.once === true ? { valid: true, value: true } : validateBoolean(args.once);
+      if (!parsed.valid) {
+        return invalid(t('ui.msg.onceInvalid', locale));
+      }
+      once = parsed.value;
+    }
+
+    return {
+      valid: true,
+      anyAttacker: attacker === ATTACKER_ANY,
+      once,
+      reason,
     };
   }
 
@@ -32869,10 +33199,74 @@ const ConditionTrackerMod = (() => {
       `--source ${sourceId}`,
       targetsRaw ? `--targets ${targetsRaw}` : `--target ${targetId}`,
       `--condition ${condition}`,
+      ...buildEffectOptionParts(args),
       `--duration ${duration}`,
     ];
     if (langRaw) parts.push(`--lang ${langRaw}`);
     return buildCommand(parts);
+  }
+
+  /**
+   * Returns true when wizard/apply args request an any-attacker Advantage/Disadvantage.
+   *
+   * @param {object} args Parsed command arguments.
+   * @returns {boolean} True for --attacker any.
+   */
+  function isAnyAttacker(args) {
+    return toText(args.attacker).toLowerCase() === ATTACKER_ANY;
+  }
+
+  /**
+   * Returns true when args mark the effect as used up by the next attack.
+   *
+   * @param {object} args Parsed command arguments.
+   * @returns {boolean} True for --once or --once true.
+   */
+  function isOnceArg(args) {
+    return args.once === true || toText(args.once).toLowerCase() === 'true';
+  }
+
+  /**
+   * Returns the --reason text, treating a bare flag as empty.
+   *
+   * @param {object} args Parsed command arguments.
+   * @returns {string} Reason label or an empty string.
+   */
+  function getReasonArg(args) {
+    return args.reason === true ? '' : toText(args.reason);
+  }
+
+  /**
+   * Builds the optional apply flags a wizard step must carry into the final
+   * apply command: subject, plus the Advantage/Disadvantage options.
+   *
+   * @param {object} args Current wizard args.
+   * @returns {string[]} Command parts.
+   */
+  function buildEffectOptionParts(args) {
+    const parts = [];
+    const subjectRaw = toText(args.subject);
+    if (subjectRaw && subjectRaw !== SUBJECT_NONE) parts.push(`--subject ${subjectRaw}`);
+    if (isAnyAttacker(args)) parts.push(`--attacker ${ATTACKER_ANY}`);
+    if (args.once !== undefined) parts.push(`--once ${isOnceArg(args)}`);
+    const reason = getReasonArg(args);
+    if (reason) parts.push(`--reason ${reason}`);
+    return parts;
+  }
+
+  /**
+   * Builds the optional apply flags that reproduce an applied condition record.
+   *
+   * @param {object} condition Active condition record.
+   * @returns {string[]} Command parts.
+   */
+  function buildRecordOptionParts(condition) {
+    const parts = [];
+    if (condition.subjectTokenId) parts.push(`--subject ${condition.subjectTokenId}`);
+    if (condition.anyAttacker) parts.push(`--attacker ${ATTACKER_ANY}`);
+    if (condition.once) parts.push('--once true');
+    if (condition.reason) parts.push(`--reason ${condition.reason}`);
+    return parts;
   }
 
   /**
@@ -33041,8 +33435,12 @@ const ConditionTrackerMod = (() => {
     if (targetsRaw) parts.push(`--targets ${targetsRaw}`);
     else if (selectedIdsRaw) parts.push(`--selected-ids ${selectedIdsRaw}`);
     if (canonical) parts.push(`--condition ${canonical}`);
+    if (isAnyAttacker(args)) parts.push(`--attacker ${ATTACKER_ANY}`);
+    if (args.once !== undefined) parts.push(`--once ${isOnceArg(args)}`);
     if (durationRaw) parts.push(`--duration ${durationRaw}`);
     if (langRaw) parts.push(`--lang ${langRaw}`);
+    const reason = getReasonArg(args);
+    if (reason) parts.push(`--reason ${reason}`);
     return buildCommand(parts);
   }
 
@@ -33133,9 +33531,13 @@ const ConditionTrackerMod = (() => {
    * @param {object} args Current wizard args.
    * @param {"source"|"target"|"subject"} slot Which slot to fill.
    * @param {string} [description] Optional context shown above the token list.
+   * @param {object} [options] Step options.
+   * @param {object[]} [options.extraButtons] Extra buttons shown above the token list.
+   * @param {string|null} [options.sourceShortcutLabel] Label for the target step's
+   *   "same token as source" button; null hides the button.
    * @returns {void}
    */
-  function showTokenStep(playerId, title, args, slot, description) {
+  function showTokenStep(playerId, title, args, slot, description, options = {}) {
     const locale = getConfig().language;
     const tokens = getPageTokens();
     if (tokens.length === 0) {
@@ -33167,15 +33569,16 @@ const ConditionTrackerMod = (() => {
     }
     if (slot === 'target') {
       const sourceId = toText(args.source);
-      if (sourceId) {
+      if (sourceId && options.sourceShortcutLabel !== null) {
         body.push(
           buildButton(
-            t('ui.wizard.noneOrSourceBtn', locale),
+            options.sourceShortcutLabel || t('ui.wizard.noneOrSourceBtn', locale),
             buildWizardBase({ ...args, target: sourceId })
           )
         );
       }
     }
+    body.push(...(options.extraButtons || []));
     body.push(htmlTable([t('ui.col.players', locale), t('ui.col.npcs', locale)], tableRows));
     whisper(playerId, title, body);
   }
@@ -33252,9 +33655,25 @@ const ConditionTrackerMod = (() => {
 
     const tableRows = buildTwoColumnRows(standardButtons, customButtons);
 
-    whisper(playerId, t('ui.wizard.selectCondition', locale), [
-      htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows),
-    ]);
+    // Presets start their own flow, so only offer them before any token is chosen.
+    const freshStart = !['source', 'target', 'targets', 'selected-ids'].some((key) =>
+      toText(args[key])
+    );
+    const presets = freshStart ? getPresetsForProfile(profile) : [];
+    const body = [];
+    if (presets.length > 0) {
+      body.push(
+        heading(t('ui.heading.presets', locale)),
+        ...presets.map((preset) =>
+          buildButton(t(preset.labelKey, locale), `${COMMAND} --preset ${preset.id}`)
+        )
+      );
+    }
+    body.push(
+      htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows)
+    );
+
+    whisper(playerId, t('ui.wizard.selectCondition', locale), body);
   }
 
   /**
@@ -33280,6 +33699,10 @@ const ConditionTrackerMod = (() => {
       {
         dur: 'End of source next turn',
         label: t('ui.dur.endOfSourceTurn', locale),
+      },
+      {
+        dur: 'Start of source next turn',
+        label: t('ui.dur.startOfSourceTurn', locale),
       },
     ];
     const rightOptions = [
@@ -33332,6 +33755,7 @@ const ConditionTrackerMod = (() => {
       `--source ${sourceId}`,
       targetsRaw ? `--targets ${targetsRaw}` : `--target ${targetId}`,
       `--condition ${condition}`,
+      ...buildEffectOptionParts(args),
       `--other ?{${prompt}|}`,
       `--duration ${durationQuery}`,
     ];
@@ -33389,10 +33813,41 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
+   * Whispers the Advantage/Disadvantage usage step: next attack only or every
+   * attack, with an optional reason label.
+   *
+   * @param {string} playerId GM player id.
+   * @param {object} args Current wizard args.
+   * @returns {void}
+   */
+  function showUsageStep(playerId, args) {
+    const locale = getConfig().language;
+    const reason = getReasonArg(args);
+    const body = [
+      rawHtml(
+        `<div style="font-style:italic;margin:2px 0 4px;">${escapeHtml(t('ui.wizard.usageDesc', locale))}</div>`
+      ),
+    ];
+    if (reason) {
+      body.push(t('ui.wizard.reasonCurrent', locale, { reason }));
+    }
+    body.push(
+      buildButton(t('ui.wizard.onceBtn', locale), buildWizardBase({ ...args, once: 'true' })),
+      buildButton(t('ui.wizard.everyBtn', locale), buildWizardBase({ ...args, once: 'false' })),
+      buildButton(
+        t('ui.wizard.addReasonBtn', locale),
+        `${buildWizardBase({ ...args, reason: '' })} --reason ?{${t('ui.wizard.reasonPrompt', locale)}|}`
+      )
+    );
+    whisper(playerId, t('ui.wizard.usageTitle', locale), body);
+  }
+
+  /**
    * Advances the condition application wizard based on which arguments are present.
    *
    * Steps in order: condition, subject (custom effects), source token,
-   * target token, and duration.
+   * target token, and duration. Advantage and Disadvantage ask who has it (or
+   * any attacker), who granted it, against whom, and how many attacks it covers.
    * Each step whispers buttons to the GM. Any step whose value is already
    * supplied is skipped. Calls handleApply directly when all values are present.
    *
@@ -33418,6 +33873,16 @@ const ConditionTrackerMod = (() => {
     }
 
     if (showPromptStep(playerId, resolvedWizardArgs, canonical, locale)) return;
+
+    // A pre-supplied duration means a macro or preset already decided everything.
+    if (
+      isAdvantageType(canonical) &&
+      resolvedWizardArgs.once === undefined &&
+      !toText(resolvedWizardArgs.duration)
+    ) {
+      showUsageStep(playerId, resolvedWizardArgs);
+      return;
+    }
 
     const subjectRaw = toText(resolvedWizardArgs.subject);
     const resolvedArgs =
@@ -33481,29 +33946,31 @@ const ConditionTrackerMod = (() => {
       return true;
     }
 
-    const subjectRaw = toText(args.subject);
-    const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
-    const subjectChosen = Boolean(subjectId) || subjectRaw === SUBJECT_NONE;
-    if (isCustomEffectType(canonical) && !subjectChosen) {
-      showTokenStep(
-        playerId,
-        t('ui.wizard.selectSubject', locale),
-        args,
-        'subject',
-        t('ui.wizard.subjectDesc', locale)
-      );
-      return true;
-    }
+    const advantage = isAdvantageType(canonical);
+    if (advantage) {
+      if (showAdvantageActorStep(playerId, args, canonical, locale)) return true;
+    } else {
+      if (isCustomEffectType(canonical) && !isSubjectChosen(args)) {
+        showTokenStep(
+          playerId,
+          t('ui.wizard.selectSubject', locale),
+          args,
+          'subject',
+          t('ui.wizard.subjectDesc', locale)
+        );
+        return true;
+      }
 
-    if (!toText(args.source)) {
-      showTokenStep(
-        playerId,
-        t('ui.wizard.selectSource', locale),
-        args,
-        'source',
-        t('ui.wizard.sourceDesc', locale)
-      );
-      return true;
+      if (!toText(args.source)) {
+        showTokenStep(
+          playerId,
+          t('ui.wizard.selectSource', locale),
+          args,
+          'source',
+          t('ui.wizard.sourceDesc', locale)
+        );
+        return true;
+      }
     }
 
     if (toText(args.target) || toText(args.targets)) {
@@ -33515,12 +33982,100 @@ const ConditionTrackerMod = (() => {
       return true;
     }
 
+    if (advantage) {
+      showTokenStep(
+        playerId,
+        t('ui.wizard.againstWhomTitle', locale),
+        args,
+        'target',
+        t('ui.wizard.againstWhomDesc', locale),
+        {
+          sourceShortcutLabel: isAnyAttacker(args) ? t('ui.wizard.sameAsGranterBtn', locale) : null,
+        }
+      );
+      return true;
+    }
+
     showTokenStep(
       playerId,
       t('ui.wizard.selectTarget', locale),
       args,
       'target',
       t('ui.wizard.targetDesc', locale)
+    );
+    return true;
+  }
+
+  /**
+   * Returns true when the wizard already has a subject answer (a token or None).
+   *
+   * @param {object} args Resolved wizard args.
+   * @returns {boolean} True when the subject step can be skipped.
+   */
+  function isSubjectChosen(args) {
+    return Boolean(toText(args.subject));
+  }
+
+  /**
+   * Shows the next Advantage/Disadvantage "who" step if one is still missing.
+   *
+   * The source is the creature that has the (dis)advantage, with the subject as
+   * the optional granter. For --attacker any the source is the granter itself
+   * and no subject is asked.
+   *
+   * @param {string} playerId GM player id.
+   * @param {object} args Resolved wizard args.
+   * @param {string} canonical Canonical condition label.
+   * @param {string} locale Locale code.
+   * @returns {boolean} True when a wizard step was rendered.
+   */
+  function showAdvantageActorStep(playerId, args, canonical, locale) {
+    const anyAttacker = isAnyAttacker(args);
+
+    if (!toText(args.source)) {
+      if (anyAttacker) {
+        showTokenStep(
+          playerId,
+          t('ui.wizard.grantedByTitle', locale),
+          args,
+          'source',
+          t('ui.wizard.grantedByDesc', locale)
+        );
+        return true;
+      }
+
+      const titleKey =
+        canonical === CONDITION_DISADVANTAGE
+          ? 'ui.wizard.whoHasDisadvantage'
+          : 'ui.wizard.whoHasAdvantage';
+      showTokenStep(
+        playerId,
+        t(titleKey, locale),
+        args,
+        'source',
+        t('ui.wizard.whoHasDesc', locale),
+        {
+          extraButtons: [
+            buildButton(
+              t('ui.wizard.anyAttackerBtn', locale),
+              buildWizardBase({ ...args, attacker: ATTACKER_ANY })
+            ),
+          ],
+        }
+      );
+      return true;
+    }
+
+    if (anyAttacker || isSubjectChosen(args)) {
+      return false;
+    }
+
+    showTokenStep(
+      playerId,
+      t('ui.wizard.grantedByOptionalTitle', locale),
+      args,
+      'subject',
+      t('ui.wizard.grantedByOptionalDesc', locale)
     );
     return true;
   }
@@ -33644,8 +34199,16 @@ const ConditionTrackerMod = (() => {
       handleMultiTargetTrigger(msg);
       return true;
     }
+    if (args.preset !== undefined) {
+      handlePreset(msg.playerid, args);
+      return true;
+    }
     if (args.prompt !== undefined) {
       showPromptUi(msg.playerid, args);
+      return true;
+    }
+    if (args.used) {
+      handleUsed(msg.playerid, args.used);
       return true;
     }
     if (args.menu) {
@@ -33760,10 +34323,12 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Validates args, checks for duplicates, and builds a ready-to-persist condition.
+   * Validates args and builds a ready-to-persist condition.
    *
-   * Does not modify state or the turn order. Returns null and whispers a warning
-   * to the GM when any step fails.
+   * Re-applying an identical effect refreshes it: the existing record, row, and
+   * marker are removed quietly so the new one replaces it. Otherwise state and
+   * the turn order are untouched. Returns null and whispers a warning to the GM
+   * when any step fails.
    *
    * @param {string} playerId GM player id.
    * @param {object} args Parsed command arguments.
@@ -33790,22 +34355,30 @@ const ConditionTrackerMod = (() => {
       return null;
     }
 
-    if (
-      isDuplicate(
-        validation.sourceToken.id,
-        validation.subjectToken?.id || '',
-        validation.subjectName || '',
-        validation.targetToken.id,
-        validation.condition,
-        validation.customText
-      )
-    ) {
-      whisperWarning(playerId, t('ui.msg.duplicate', locale));
-      return null;
+    const duplicate = findDuplicate({
+      sourceTokenId: validation.sourceToken.id,
+      subjectTokenId: validation.subjectToken?.id || '',
+      subjectName: validation.subjectName || '',
+      targetTokenId: validation.targetToken.id,
+      condition: validation.condition,
+      customText: validation.customText,
+      anyAttacker: validation.anyAttacker,
+      reason: validation.reason,
+    });
+    if (duplicate) {
+      removeConditionById(duplicate.id, {
+        playerId,
+        publicAnnounce: false,
+        whisperResult: false,
+      });
     }
 
     const condition = buildConditionRecord(validation, config, durationResult.duration, locale);
-    const markerNotice = applyConfiguredMarker(validation.targetToken, condition, config, locale);
+    const markerToken =
+      condition.markerTokenId === validation.sourceToken.id
+        ? validation.sourceToken
+        : validation.targetToken;
+    const markerNotice = applyConfiguredMarker(markerToken, condition, config, locale);
     return { condition, markerNotice, locale, extraLocale };
   }
 
@@ -33849,6 +34422,7 @@ const ConditionTrackerMod = (() => {
       targetArg: '',
       targetsArg: prepared.map((p) => p.condition.targetTokenId).join(','),
       conditionArg: prepared[0].condition.condition,
+      optionsArg: buildRecordOptionParts(prepared[0].condition).join(' '),
       durationArg: toText(args.duration),
       otherArg: toText(args.other),
       langArg: toText(args.lang),
@@ -33886,6 +34460,7 @@ const ConditionTrackerMod = (() => {
       targetArg: condition.targetTokenId,
       targetsArg: '',
       conditionArg: condition.condition,
+      optionsArg: buildRecordOptionParts(condition).join(' '),
       durationArg: toText(args.duration),
       otherArg: toText(args.other),
       langArg: toText(args.lang),
@@ -33916,6 +34491,11 @@ const ConditionTrackerMod = (() => {
       : validation.subjectName || '';
     const targetName = getTokenName(validation.targetToken);
     const marker = toText(config.markers[validation.condition]) || '';
+    const anyAttacker = Boolean(validation.anyAttacker);
+    const once = Boolean(validation.once);
+    const reason = toText(validation.reason);
+    // Advantage/Disadvantage held by one creature is marked on that creature.
+    const markerOnSource = isAdvantageType(validation.condition) && !anyAttacker;
     const details = {
       sourceName,
       subjectName,
@@ -33924,6 +34504,9 @@ const ConditionTrackerMod = (() => {
       condition: validation.condition,
       customText: validation.customText,
       useIcons: config.useIcons,
+      anyAttacker,
+      once,
+      reason,
     };
 
     const id = createId();
@@ -33939,6 +34522,10 @@ const ConditionTrackerMod = (() => {
       customText: validation.customText,
       displayText: buildDisplayText(details, locale),
       marker,
+      markerTokenId: markerOnSource ? validation.sourceToken.id : validation.targetToken.id,
+      anyAttacker,
+      once,
+      reason,
       turnOrderCustomId: id,
       duration,
       createdAt: Date.now(),
@@ -33948,7 +34535,7 @@ const ConditionTrackerMod = (() => {
   /**
    * Applies the configured marker and returns a GM-facing notice.
    *
-   * @param {Graphic} targetToken Target token.
+   * @param {Graphic} targetToken Token that carries the marker.
    * @param {object} condition Condition record.
    * @param {object} config Current config.
    * @param {string} [locale] Output locale.
@@ -33988,21 +34575,101 @@ const ConditionTrackerMod = (() => {
     condition,
     customText
   ) {
-    return someActiveCondition((activeCondition) => {
-      const sameSource = activeCondition.sourceTokenId === sourceTokenId;
-      const sameSubject = (activeCondition.subjectTokenId || '') === (subjectTokenId || '');
-      const sameSubjectName = (activeCondition.subjectName || '') === (subjectName || '');
-      const sameTarget = activeCondition.targetTokenId === targetTokenId;
-      const sameCondition = activeCondition.condition === condition;
-      const sameCustomText = activeCondition.customText === customText;
-      return (
-        sameSource &&
-        sameSubject &&
-        sameSubjectName &&
-        sameTarget &&
-        sameCondition &&
-        sameCustomText
+    return Boolean(
+      findDuplicate({
+        sourceTokenId,
+        subjectTokenId,
+        subjectName,
+        targetTokenId,
+        condition,
+        customText,
+      })
+    );
+  }
+
+  /**
+   * Finds the active condition that exactly matches a candidate effect.
+   *
+   * @param {object} candidate Candidate effect identity.
+   * @param {string} candidate.sourceTokenId Source token id.
+   * @param {string} [candidate.subjectTokenId] Subject token id.
+   * @param {string} [candidate.subjectName] Subject display name.
+   * @param {string} candidate.targetTokenId Target token id.
+   * @param {string} candidate.condition Condition label.
+   * @param {string} candidate.customText Custom effect text.
+   * @param {boolean} [candidate.anyAttacker] Any-attacker Advantage/Disadvantage.
+   * @param {string} [candidate.reason] Reason label.
+   * @returns {object|null} Matching active condition or null.
+   */
+  function findDuplicate(candidate) {
+    return (
+      ensureState().active.find(
+        (activeCondition) =>
+          activeCondition.sourceTokenId === candidate.sourceTokenId &&
+          (activeCondition.subjectTokenId || '') === (candidate.subjectTokenId || '') &&
+          (activeCondition.subjectName || '') === (candidate.subjectName || '') &&
+          activeCondition.targetTokenId === candidate.targetTokenId &&
+          activeCondition.condition === candidate.condition &&
+          activeCondition.customText === candidate.customText &&
+          Boolean(activeCondition.anyAttacker) === Boolean(candidate.anyAttacker) &&
+          (activeCondition.reason || '') === (candidate.reason || '')
+      ) || null
+    );
+  }
+
+  /**
+   * Starts a preset: pre-fills the wizard so only the tokens are left to pick.
+   *
+   * @param {string} playerId GM player id.
+   * @param {object} args Parsed command arguments.
+   * @returns {void}
+   */
+  function handlePreset(playerId, args) {
+    const config = getConfig();
+    const locale = config.language;
+    const available = getPresetsForProfile(getSystemProfile(config.gameSystem));
+    const preset = getPreset(args.preset === true ? '' : toText(args.preset));
+    if (!preset || !available.includes(preset)) {
+      whisperWarning(
+        playerId,
+        t('ui.msg.unknownPreset', locale, {
+          presets: available.map((item) => item.id).join(', ') || '-',
+        })
       );
+      return;
+    }
+
+    showPromptUi(playerId, {
+      condition: preset.condition,
+      ...preset.args,
+      reason: t(preset.reasonKey, locale),
+      ...args,
+      prompt: true,
+    });
+  }
+
+  /**
+   * Removes a single-use effect and announces it as used.
+   *
+   * @param {string} playerId GM player id.
+   * @param {string} conditionId Condition id.
+   * @returns {void}
+   */
+  function handleUsed(playerId, conditionId) {
+    const locale = getConfig().language;
+    const condition = findActiveCondition(toText(conditionId));
+    if (!condition) {
+      whisperWarning(playerId, t('ui.msg.conditionNotFound', locale));
+      return;
+    }
+
+    removeConditionById(condition.id, {
+      playerId,
+      reason: t('ui.msg.effectUsed', locale),
+      publicAnnounce: true,
+      whisperResult: true,
+      locale,
+      used: true,
     });
   }
 
@@ -34639,9 +35306,28 @@ const ConditionTrackerMod = (() => {
     const lines = [];
     for (const condition of active) {
       lines.push(buildRemoveButton(condition));
+      if (condition.once) {
+        lines.push(buildUsedButton(condition, locale, true));
+      }
     }
 
     whisper(playerId, t('ui.title.removalMenu', locale), lines);
+  }
+
+  /**
+   * Builds the Mark as Used button for a single-use effect.
+   *
+   * @param {object} condition Active condition record.
+   * @param {string} locale Output locale.
+   * @param {boolean} [withLabel] Append the row text so the button identifies its effect.
+   * @returns {object} Trusted HTML button.
+   */
+  function buildUsedButton(condition, locale, withLabel = false) {
+    const label = t('ui.btn.markUsed', locale);
+    return buildButton(
+      withLabel ? `${label}: ${condition.displayText}` : label,
+      `${COMMAND} --used ${condition.id}`
+    );
   }
 
   /**
@@ -34897,6 +35583,7 @@ const ConditionTrackerMod = (() => {
       `--source ${payload.sourceArg}`,
       targetPart,
       `--condition ${payload.conditionArg}`,
+      ...(payload.optionsArg ? [payload.optionsArg] : []),
       `--macro-mode ${mode}`,
       ...(payload.durationArg ? [`--duration ${payload.durationArg}`] : []),
       ...(payload.otherArg ? [`--other ${payload.otherArg}`] : []),
@@ -34953,9 +35640,15 @@ const ConditionTrackerMod = (() => {
           ],
           [t('ui.removal.markerField', locale), escapeHtml(markerNotice)],
           ['Duration', escapeHtml(formatDuration(condition.duration, locale))],
+          ...(condition.once
+            ? [[t('ui.apply.usesField', locale), escapeHtml(t('ui.wizard.onceBtn', locale))]]
+            : []),
         ]
       ),
     ];
+    if (condition.once) {
+      body.push(buildUsedButton(condition, locale));
+    }
 
     const config = getConfig();
     if (config.enablePostApplyMacroButtons) {
@@ -35120,6 +35813,15 @@ const ConditionTrackerMod = (() => {
   function formatDuration(duration, locale) {
     if (!duration || duration.type === DURATION_UNTIL_REMOVED) {
       return t('ui.dur.untilRemovedDisplay', locale);
+    }
+
+    if (duration.type === DURATION_TURN_START) {
+      const anchorToken = getGraphicToken(duration.anchor);
+      return anchorToken
+        ? t('ui.dur.untilTurnStart', locale, {
+            name: getTokenName(anchorToken),
+          })
+        : t('ui.dur.untilTurnStartUnknown', locale);
     }
 
     return t('ui.dur.turnsRemaining', locale, { n: duration.remaining });
@@ -35560,11 +36262,19 @@ const ConditionTrackerMod = (() => {
         clearCombatSnoozes();
       }
 
-      if (!previousFirstTurnId || previousFirstTurnId === currentFirstTurnId) {
+      // Roll20 advances one row at a time, so a condition row can sit at the top
+      // between two token turns. Detect the turn ending and the turn starting
+      // separately so a start is not missed when the previous top row was custom.
+      const turnEnded = Boolean(previousFirstTurnId) && previousFirstTurnId !== currentFirstTurnId;
+      const turnStarted = Boolean(currentFirstTurnId) && currentFirstTurnId !== previousFirstTurnId;
+      if (!turnEnded && !turnStarted) {
         return;
       }
 
-      const { expired, decremented } = collectExpiredConditions(previousFirstTurnId);
+      const { expired, decremented } = collectExpiredConditions(
+        turnEnded ? previousFirstTurnId : '',
+        turnStarted ? currentFirstTurnId : ''
+      );
       for (const condition of decremented) {
         updateConditionRow(condition);
       }
@@ -35686,18 +36396,23 @@ const ConditionTrackerMod = (() => {
   }
 
   /**
-   * Collects conditions that expired or decremented when an anchor token turn ended.
+   * Collects conditions that expired or decremented when an anchor token turn ended,
+   * plus start-of-turn conditions whose anchor token's turn just began.
    *
    * @param {string} endedTurnTokenId Token id whose turn ended.
+   * @param {string} startedTurnTokenId Token id whose turn started.
    * @returns {{ expired: object[], decremented: object[] }} Expired and decremented condition records.
    */
-  function collectExpiredConditions(endedTurnTokenId) {
+  function collectExpiredConditions(endedTurnTokenId, startedTurnTokenId) {
     const expired = [];
     const decremented = [];
 
     for (const condition of getActiveConditions()) {
-      const anchored = isAnchoredTo(condition, endedTurnTokenId);
-      if (decrementDuration(condition, endedTurnTokenId)) {
+      const anchored = Boolean(endedTurnTokenId) && isAnchoredTo(condition, endedTurnTokenId);
+      if (
+        decrementDuration(condition, endedTurnTokenId) ||
+        expiresAtTurnStart(condition, startedTurnTokenId)
+      ) {
         expired.push(condition);
       } else if (anchored) {
         decremented.push(condition);

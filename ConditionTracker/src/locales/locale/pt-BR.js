@@ -195,14 +195,22 @@ const TRANSLATION = {
       custom: '{emoji} {target} afetado por {effect} ({source})',
       advantage: '{emoji} {source} tem vantagem contra {target}{subject}',
       disadvantage: '{emoji} {source} tem desvantagem contra {target}{subject}',
+      advantageAny: '{emoji} Ataques contra {target} têm vantagem{by}',
+      advantageNext: '{emoji} Próximo ataque contra {target} tem vantagem{by}',
+      disadvantageAny: '{emoji} Ataques contra {target} têm desvantagem{by}',
+      disadvantageNext: '{emoji} Próximo ataque contra {target} tem desvantagem{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} está {past}',
+      self: '{emoji} {target} está {past}',
       standard: '{emoji} {target} {past} por {source}',
     },
     apply: {
       custom: '{source} aplica {effect} em {target}.',
       advantage: '{source} tem vantagem contra {target}{subject}.',
       disadvantage: '{source} tem desvantagem contra {target}{subject}.',
+      advantageAny: '{source} concede vantagem em ataques contra {target}{reason}.',
+      advantageNext: '{source} concede vantagem no próximo ataque contra {target}{reason}.',
+      disadvantageAny: '{source} impõe desvantagem em ataques contra {target}{reason}.',
+      disadvantageNext: '{source} impõe desvantagem no próximo ataque contra {target}{reason}.',
       self: '{target} está {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +219,14 @@ const TRANSLATION = {
       custom: '{target} não está mais afetado por {effect}.',
       advantage: '{source} não tem mais vantagem contra {target}{subject}.',
       disadvantage: '{source} não tem mais desvantagem contra {target}{subject}.',
+      advantageAny: 'Ataques contra {target} não têm mais vantagem{reason}.',
+      advantageNext: 'O próximo ataque contra {target} não tem mais vantagem{reason}.',
+      disadvantageAny: 'Ataques contra {target} não têm mais desvantagem{reason}.',
+      disadvantageNext: 'O próximo ataque contra {target} não tem mais desvantagem{reason}.',
+      advantageUsed: 'A vantagem no próximo ataque contra {target} foi utilizada{reason}.',
+      disadvantageUsed: 'A desvantagem no próximo ataque contra {target} foi aplicada{reason}.',
+      advantageUsedBy: '{source} fez o ataque com vantagem contra {target}{subject}.',
+      disadvantageUsedBy: '{source} fez o ataque com desvantagem contra {target}{subject}.',
       noBy: '{target} não está mais {past}.',
       self: '{target} não está mais {past}.',
       standard: '{target} não está mais {past} por {source}.',
@@ -236,6 +252,33 @@ const TRANSLATION = {
       targetDesc: 'Selecione a criatura que receberá a condição ou efeito.',
       otherText: 'Texto de condição personalizada',
       effectDetails: 'Detalhes de {condition}',
+      whoHasAdvantage: 'Quem tem vantagem?',
+      whoHasDisadvantage: 'Quem tem desvantagem?',
+      whoHasDesc:
+        'Selecione a criatura que está fazendo a rolagem ou escolha Qualquer atacante quando se aplicar a quem ataca o alvo (Ajuda, Fogo das Fadas, Esquiva).',
+      anyAttackerBtn: 'Qualquer invasor',
+      grantedByTitle: 'Quem o concede?',
+      grantedByDesc:
+        'Selecione a criatura que concede ou impõe isso, como o ajudante. As durações do turno da fonte seguem esta criatura.',
+      grantedByOptionalTitle: 'Concedido por (opcional)',
+      grantedByOptionalDesc: 'Selecione a criatura que concedeu ou impôs ou Nenhuma.',
+      againstWhomTitle: 'Contra quem?',
+      againstWhomDesc: 'Selecione a criatura que está sendo atacada.',
+      sameAsGranterBtn: 'Mesma criatura (por exemplo, Dodge)',
+      usageTitle: 'Quantos ataques?',
+      usageDesc:
+        'Escolha se ele será usado no próximo ataque ou se será aplicado a todos os ataques enquanto durar.',
+      onceBtn: 'Apenas próximo ataque',
+      everyBtn: 'Cada ataque',
+      addReasonBtn: 'Adicione um rótulo de motivo',
+      reasonPrompt: 'Rótulo do motivo (por exemplo, Ajuda)',
+      reasonCurrent: 'Motivo: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Ajuda',
+        reason: 'Ajuda',
+      },
     },
     col: {
       players: 'Jogadores',
@@ -263,6 +306,7 @@ const TRANSLATION = {
       untilRemoved: 'Até ser removido',
       endOfTargetTurn: 'Fim do próximo turno do alvo',
       endOfSourceTurn: 'Fim do próximo turno da origem',
+      startOfSourceTurn: 'Início da fonte no próximo turno',
       round1: '1 rodada',
       round2: '2 rodadas',
       round3: '3 rodadas',
@@ -271,6 +315,8 @@ const TRANSLATION = {
       customPrompt: 'Número de rodadas',
       untilRemovedDisplay: 'Até ser removido',
       turnsRemaining: '{n} fim(ns) de turno restante(s)',
+      untilTurnStart: 'Até o início do próximo turno de {name}',
+      untilTurnStartUnknown: 'Até o início do próximo turno da fonte',
     },
     btn: {
       openWizard: 'Abrir assistente',
@@ -296,6 +342,7 @@ const TRANSLATION = {
       runMacroNow: 'Execute a macro agora',
       macroButtonsEnable: 'Habilitar botões macro',
       macroButtonsDisable: 'Desativar botões macro',
+      markUsed: 'Marcar como usado',
     },
     title: {
       menu: 'Menu',
@@ -349,6 +396,7 @@ const TRANSLATION = {
       promoteOptions: 'Promover para Turn Tracker',
       editActions: 'Editar ações',
       macroActions: 'Macroações',
+      presets: 'Predefinições',
     },
     msg: {
       noActive: 'Nenhuma condição ativa está sendo rastreada.',
@@ -463,6 +511,12 @@ const TRANSLATION = {
         'Nenhuma ação de aplicação recente encontrada. Aplique uma condição primeiro.',
       macroInvalidName: 'O nome da macro não pode ficar vazio.',
       macroMissingRequiredData: 'Faltam dados necessários para criar macro.',
+      advantageOnlyOption:
+        '--attacker, --once e --reason são válidos apenas para Vantagem e Desvantagem.',
+      attackerInvalid: '--attacker aceita apenas o valor any.',
+      onceInvalid: '--once espera verdadeiro ou falso quando um valor é fornecido.',
+      effectUsed: 'foi usado',
+      unknownPreset: 'Predefinição desconhecida. Predefinições disponíveis: {presets}.',
     },
     removal: {
       conditionField: 'Condição',
@@ -529,6 +583,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'O alvo não estava na ordem de iniciativa; a linha de condição foi adicionada.',
       turnInserted: 'Linha de condição inserida abaixo da ficha alvo.',
+      usesField: 'Usos',
     },
   },
   handout: {
@@ -606,6 +661,14 @@ const TRANSLATION = {
           '!condition-tracker --source gala --target chefe --condition Pronado --duration 1 rodada',
           'Aplicação direta usando nomes parciais exclusivos; se vários tokens corresponderem, o mod solicitará um nome ou ID de token mais específico.',
         ],
+        [
+          '!condition-tracker --preset ajuda',
+          'Ação de ajuda: escolha o ajudante (por exemplo, um familiar) e depois a criatura que está sendo atacada. O próximo ataque contra ele tem vantagem até ser usado ou até o próximo turno do ajudante começar. Adicione --source com um nome de token ou ID para pré-selecionar o auxiliar.',
+        ],
+        [
+          '!condition-tracker --source Mago --target Ogro --condition Vantagem --attacker qualquer --reason Fogo das Fadas --duration 10 rodadas',
+          'Vantagem para cada atacante contra um alvo, rotulado com o motivo.',
+        ],
       ],
     },
     commandsRef: {
@@ -675,10 +738,27 @@ const TRANSLATION = {
           'Sussurre um diagnóstico de classificação para cada token selecionado — mostra o tipo detectado, a fonte de detecção e o motivo',
         ],
         ['--help', 'Mostrar um breve cartão de ajuda no chat'],
+        [
+          '--preset ajuda',
+          'Inicie a predefinição de Ajuda: escolha o ajudante e a criatura que está sendo atacada (adicione --source para pré-selecionar o ajudante)',
+        ],
+        [
+          '--attacker qualquer',
+          'Vantagem/Desvantagem apenas: aplica-se a quem ataca o alvo, --source é a criatura que o concede e a linha fica abaixo do alvo',
+        ],
+        [
+          '--once verdadeiro|falso',
+          'Somente Vantagem/Desvantagem: esgotado no próximo ataque; o GM recebe um botão Marcar como Usado',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Somente Vantagem/Desvantagem: rótulo do motivo mostrado na linha (por exemplo, Ajuda)',
+        ],
+        ['--used &lt;condition-id&gt;', 'Remova um efeito de uso único e anuncie-o como usado'],
       ],
     },
     standardConditions: {
-      heading: 'Condições padrão (D&D 5e)',
+      heading: 'Condições padrão ({system})',
       colCondition: 'Condição',
       none: 'Nenhuma condição padrão definida para este sistema de jogo. Use o tipo de efeito personalizado Outro para efeitos de texto livre.',
     },
@@ -722,6 +802,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 rodadas',
           'Contagem regressiva fixa; um decremento por cada fim de turno da âncora',
+        ],
+        [
+          'Início do próximo turno da fonte',
+          'Expira assim que o próximo turno da ficha fonte começar (Ajuda, Esquiva e efeitos semelhantes)',
         ],
       ],
     },

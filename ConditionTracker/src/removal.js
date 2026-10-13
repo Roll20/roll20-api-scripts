@@ -17,6 +17,7 @@ import { removeConditionRow } from './turnOrder.js';
  * @param {boolean} options.whisperResult Whether to whisper details.
  * @param {string} [options.locale] Primary output locale.
  * @param {string} [options.extraLocale] Additional output locale for bilingual mode.
+ * @param {boolean} [options.used] Announce the effect as used rather than removed.
  * @returns {object} Removal result.
  */
 export function removeConditionById(conditionId, options) {
@@ -34,9 +35,12 @@ export function removeConditionById(conditionId, options) {
   const locale = options.locale || config.language;
 
   if (options.publicAnnounce) {
-    announceHtml(buildRemovalMessage(condition, config.useIcons, locale));
+    const messageOptions = { used: Boolean(options.used) };
+    announceHtml(buildRemovalMessage(condition, config.useIcons, locale, messageOptions));
     if (options.extraLocale && options.extraLocale !== locale) {
-      announceHtml(buildRemovalMessage(condition, config.useIcons, options.extraLocale));
+      announceHtml(
+        buildRemovalMessage(condition, config.useIcons, options.extraLocale, messageOptions)
+      );
     }
   }
 

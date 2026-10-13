@@ -195,23 +195,39 @@ const TRANSLATION = {
       custom: '{emoji} {target} pod wpływem {effect} ({source})',
       advantage: '{emoji} {source} ma ułatwienie przeciwko {target}{subject}',
       disadvantage: '{emoji} {source} ma utrudnienie przeciwko {target}{subject}',
-      noBy: 'MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN ({source})',
-      self: '{target} jest {past}',
+      advantageAny: '{emoji} Ataki kontra {target} mają przewagę{by}',
+      advantageNext: '{emoji} Następny atak kontra {target} ma przewagę{by}',
+      disadvantageAny: '{emoji} Ataki kontra {target} mają wadę{by}',
+      disadvantageNext: '{emoji} Następny atak kontra {target} ma wadę{by}',
+      noBy: '{emoji} {target} {past} ({source})',
+      self: '{emoji} {target} jest {past}',
       standard: '{emoji} {target} {past} przez {source}',
     },
     apply: {
       custom: '{source} nakłada {effect} na {target}.',
       advantage: '{source} ma ułatwienie przeciwko {target}{subject}.',
       disadvantage: '{source} ma utrudnienie przeciwko {target}{subject}.',
+      advantageAny: '{source} zapewnia przewagę w atakach na {target}{reason}.',
+      advantageNext: '{source} zapewnia przewagę przy następnym ataku przeciwko {target}{reason}.',
+      disadvantageAny: '{source} utrudnia ataki na {target}{reason}.',
+      disadvantageNext:
+        '{source} powoduje niekorzystne skutki przy następnym ataku na {target}{reason}.',
       self: '{target} jest {past}.',
-      withSuffix:
-        'MIEJSCE0TOKEN POSIADACZ MIEJSCA1TOKEN POSIADACZ MIEJSCA2TOKEN POSIADACZ MIEJSCA3TOKEN.',
-      standard: 'MIEJSCE0TOKEN MIEJSCE1TOKEN MIEJSCE2TOKEN.',
+      withSuffix: '{source} {verb} {target} {suffix}.',
+      standard: '{source} {verb} {target}.',
     },
     remove: {
       custom: '{target} nie jest już pod wpływem {effect}.',
       advantage: '{source} nie ma już ułatwienia przeciwko {target}{subject}.',
       disadvantage: '{source} nie ma już utrudnienia przeciwko {target}{subject}.',
+      advantageAny: 'Ataki na {target} nie dają już przewagi{reason}.',
+      advantageNext: 'Następny atak na {target} nie ma już przewagi{reason}.',
+      disadvantageAny: 'Ataki na {target} nie mają już wady{reason}.',
+      disadvantageNext: 'Następny atak na {target} nie ma już wady{reason}.',
+      advantageUsed: 'Przewaga przy następnym ataku na {target} została wykorzystana{reason}.',
+      disadvantageUsed: 'Zastosowano wadę dotyczącą następnego ataku na {target}{reason}.',
+      advantageUsedBy: '{source} przeprowadził atak z przewagą przeciwko {target}{subject}.',
+      disadvantageUsedBy: '{source} przeprowadził atak z niekorzyścią przeciwko {target}{subject}.',
       noBy: '{target} nie jest już {past}.',
       self: '{target} nie jest już {past}.',
       standard: '{target} nie jest już {past} przez {source}.',
@@ -237,6 +253,33 @@ const TRANSLATION = {
       targetDesc: 'Wybierz stworzenie, które otrzyma stan lub efekt.',
       otherText: 'Własny tekst stanu',
       effectDetails: 'Szczegóły {condition}',
+      whoHasAdvantage: 'Kto ma przewagę?',
+      whoHasDisadvantage: 'Kto ma wadę?',
+      whoHasDesc:
+        'Wybierz stworzenie wykonujące rzut lub wybierz Dowolnego atakującego, jeśli dotyczy to tego, kto atakuje cel (Pomoc, Faerie Fire, Unik).',
+      anyAttackerBtn: 'Każdy napastnik',
+      grantedByTitle: 'Kto to przyznaje?',
+      grantedByDesc:
+        'Wybierz stworzenie, które je przyznaje lub narzuca, np. pomocnik. Czas trwania tury źródła podąża za tym stworzeniem.',
+      grantedByOptionalTitle: 'Przyznane przez (opcjonalnie)',
+      grantedByOptionalDesc: 'Wybierz stworzenie, które je przyznało lub narzuciło, lub Brak.',
+      againstWhomTitle: 'Przeciwko komu?',
+      againstWhomDesc: 'Wybierz atakowane stworzenie.',
+      sameAsGranterBtn: 'To samo stworzenie (np. Dodge)',
+      usageTitle: 'Ile ataków?',
+      usageDesc:
+        'Wybierz, czy ma zostać zużyty w następnym ataku, czy też ma zastosowanie do każdego trwającego ataku.',
+      onceBtn: 'Dopiero następny atak',
+      everyBtn: 'Każdy atak',
+      addReasonBtn: 'Dodaj etykietę przyczyny',
+      reasonPrompt: 'Etykieta powodu (np. Pomoc)',
+      reasonCurrent: 'Powód: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Pomoc',
+        reason: 'Pomoc',
+      },
     },
     col: {
       players: 'Gracze',
@@ -264,6 +307,7 @@ const TRANSLATION = {
       untilRemoved: 'Do usunięcia',
       endOfTargetTurn: 'Koniec następnej tury celu',
       endOfSourceTurn: 'Koniec następnej tury źródła',
+      startOfSourceTurn: 'Początek źródła następnej tury',
       round1: '1 runda',
       round2: '2 rundy',
       round3: '3 rundy',
@@ -272,6 +316,8 @@ const TRANSLATION = {
       customPrompt: 'Liczba rund',
       untilRemovedDisplay: 'Do usunięcia',
       turnsRemaining: 'Pozostało {n} koniec (końców) tury',
+      untilTurnStart: 'Do początku następnej tury {name}',
+      untilTurnStartUnknown: 'Do początku następnej tury źródła',
     },
     btn: {
       openWizard: 'Otwórz kreator',
@@ -297,6 +343,7 @@ const TRANSLATION = {
       runMacroNow: 'Uruchom makro teraz',
       macroButtonsEnable: 'Włącz przyciski makro',
       macroButtonsDisable: 'Wyłącz przyciski makro',
+      markUsed: 'Oznacz jako używane',
     },
     title: {
       menu: 'Menu',
@@ -350,6 +397,7 @@ const TRANSLATION = {
       promoteOptions: 'Promuj narzędzie do śledzenia skrętów',
       editActions: 'Edytuj akcje',
       macroActions: 'Działania makro',
+      presets: 'Ustawienia wstępne',
     },
     msg: {
       noActive: 'Nie są śledzone żadne aktywne stany.',
@@ -461,6 +509,12 @@ const TRANSLATION = {
         'Nie znaleziono ostatniej akcji zastosowania. Najpierw zastosuj warunek.',
       macroInvalidName: 'Nazwa makra nie może być pusta.',
       macroMissingRequiredData: 'Brak danych wymaganych do utworzenia makra.',
+      advantageOnlyOption:
+        '--attacker, --once i --reason obowiązują wyłącznie w przypadku Korzyści i Wad.',
+      attackerInvalid: '--attacker akceptuje tylko wartość any.',
+      onceInvalid: '--once oczekuje prawdy lub fałszu, gdy podana zostanie wartość.',
+      effectUsed: 'był używany',
+      unknownPreset: 'Nieznane ustawienie wstępne. Dostępne ustawienia wstępne: {presets}.',
     },
     removal: {
       conditionField: 'Stan',
@@ -527,6 +581,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Cel nie był w kolejności tur; wiersz stanu został dołączony na końcu.',
       turnInserted: 'Wiersz stanu wstawiony poniżej żetonu celu.',
+      usesField: 'Używa',
     },
   },
   handout: {
@@ -604,6 +659,14 @@ const TRANSLATION = {
           '!condition-tracker --source gala --target szef --condition Skłonny --duration 1 runda',
           'Zastosuj bezpośrednio, używając unikalnych nazw częściowych; jeśli pasuje wiele tokenów, mod pyta o bardziej szczegółową nazwę lub identyfikator tokena.',
         ],
+        [
+          '!condition-tracker --preset pomoc',
+          'Akcja pomocy: wybierz pomocnika (na przykład chowańca), a następnie atakuną istotę. Następny atak przeciwko niemu ma przewagę do czasu użycia lub do rozpoczęcia następnej tury pomocnika. Dodaj --source z nazwą tokena lub identyfikatorem, aby wstępnie wybrać pomocnika.',
+        ],
+        [
+          '!condition-tracker --source Czarodziej --target Ogr --condition Przewaga --attacker dowolna --reason Faerie Fire --duration 10 rund',
+          'Przewaga każdego atakującego przeciwko jednemu celowi, oznaczona powodem.',
+        ],
       ],
     },
     commandsRef: {
@@ -679,10 +742,27 @@ const TRANSLATION = {
           'Szepnij diagnostykę klasyfikacyjną dla każdego wybranego tokena — pokazuje wykryty typ, źródło wykrycia i przyczynę',
         ],
         ['--help', 'Pokaż krótką kartę pomocy na czacie'],
+        [
+          '--preset pomoc',
+          'Uruchom ustawienie Pomocy: wybierz pomocnika i atakowaną istotę (dodaj --source, aby wstępnie wybrać pomocnika)',
+        ],
+        [
+          '--attacker dowolny',
+          'Tylko zaleta/wada: dotyczy każdego, kto atakuje cel, --source jest stworzeniem, które je przyznaje, a rząd znajduje się pod celem',
+        ],
+        [
+          '--once prawda|fałsz',
+          'Tylko zaleta/wada: zużyte przez następny atak; GM otrzymuje przycisk Oznacz jako używane',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Tylko zaleta/wada: etykieta powodu pokazana w wierszu (np. Pomoc)',
+        ],
+        ['--used &lt;condition-id&gt;', 'Usuń efekt jednorazowego użytku i ogłoś go jako używany'],
       ],
     },
     standardConditions: {
-      heading: 'Standardowe stany (D&amp;D 5e)',
+      heading: 'Standardowe stany ({system})',
       colCondition: 'Stan',
       none: 'Nie zdefiniowano standardowych warunków dla tego systemu gry. W przypadku efektów tekstowych użyj typu efektu niestandardowego Inny.',
     },
@@ -726,6 +806,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 rund',
           'Stały odliczanie; jedno zmniejszenie na koniec tury żetonu kotwicy',
+        ],
+        [
+          'Początek następnej tury źródła',
+          'Wygasa wraz z rozpoczęciem następnej tury żetonu źródła (pomoc, unik i podobne efekty)',
         ],
       ],
     },

@@ -1,5 +1,10 @@
-import { getCanonicalCondition, isCustomEffectType, isCustomTextCondition } from './conditions.js';
-import { BOOLEAN_TEXT, CONDITION_OTHER, VALID_HEALTH_BARS } from './constants.js';
+import {
+  getCanonicalCondition,
+  isAdvantageType,
+  isCustomEffectType,
+  isCustomTextCondition,
+} from './conditions.js';
+import { ATTACKER_ANY, BOOLEAN_TEXT, CONDITION_OTHER, VALID_HEALTH_BARS } from './constants.js';
 import { normalizeLocale, SUPPORTED_LOCALE_LIST, t } from './i18n.js';
 import { getConfig } from './state.js';
 import { VALID_GAME_SYSTEMS } from './systems/index.js';
@@ -263,8 +268,13 @@ export function validateApplyArgs(args) {
     return invalid(t('ui.msg.subjectOnlyCustom', locale));
   }
 
+  const advantageOptions = validateAdvantageOptions(args, condition, locale);
+  if (!advantageOptions.valid) {
+    return advantageOptions;
+  }
+
   let subjectToken = null;
-  if (subjectId) {
+  if (subjectId && !advantageOptions.anyAttacker) {
     const subjectResult = resolveTokenReference(subjectId, 'subject', locale);
     if (!subjectResult.valid) {
       return invalid(subjectResult.message);
@@ -290,7 +300,46 @@ export function validateApplyArgs(args) {
     targetToken,
     condition,
     customText: isCustomTextCondition(condition) ? customText : '',
+    anyAttacker: advantageOptions.anyAttacker,
+    once: advantageOptions.once,
+    reason: advantageOptions.reason,
   };
+}
+
+/**
+ * Validates the Advantage/Disadvantage-only options --attacker, --once, and --reason.
+ *
+ * @param {object} args Parsed command arguments.
+ * @param {string} condition Canonical condition.
+ * @param {string} locale Output locale.
+ * @returns {object} Validation result with anyAttacker, once, and reason.
+ */
+function validateAdvantageOptions(args, condition, locale) {
+  const attacker = args.attacker === true ? '' : toText(args.attacker).toLowerCase();
+  const reason = args.reason === true ? '' : toText(args.reason);
+  const hasOnce = args.once !== undefined;
+
+  if (!isAdvantageType(condition)) {
+    if (attacker || reason || hasOnce) {
+      return invalid(t('ui.msg.advantageOnlyOption', locale));
+    }
+    return { valid: true, anyAttacker: false, once: false, reason: '' };
+  }
+
+  if (attacker && attacker !== ATTACKER_ANY) {
+    return invalid(t('ui.msg.attackerInvalid', locale));
+  }
+
+  let once = false;
+  if (hasOnce) {
+    const parsed = args.once === true ? { valid: true, value: true } : validateBoolean(args.once);
+    if (!parsed.valid) {
+      return invalid(t('ui.msg.onceInvalid', locale));
+    }
+    once = parsed.value;
+  }
+
+  return { valid: true, anyAttacker: attacker === ATTACKER_ANY, once, reason };
 }
 
 /**

@@ -2,6 +2,38 @@
 
 All notable changes to **Condition Tracker** will be documented in this file.
 
+## [1.2.0] - 2026-10-05
+
+### Added
+
+- **Any-attacker Advantage / Disadvantage (`--attacker any`)**: record effects that apply to whoever attacks a target (Help, Faerie Fire, Dodge) instead of to one named creature. `--source` is the creature granting it, the Turn Tracker row sits under the target, and the marker goes on the target. Row text reads `🍀 Next attack vs Goblin has advantage — Help (Owl)` or `🍀 Attacks vs Goblin have advantage — Faerie Fire (Wizard)`.
+- **Reason label (`--reason <text>`)**: optional label for Advantage / Disadvantage shown in the row and chat (for example `Help`).
+- **Single-use tracking (`--once true|false`)**: marks an Advantage / Disadvantage as used up by the next attack. The row shows `1×` in the pr column and the GM gets a **Mark as Used** button in the apply summary and the removal menu.
+- **`--used <condition-id>`**: removes a single-use effect and announces it as used rather than removed.
+- **`Start of source next turn` duration**: expires as soon as the source token's next turn begins, matching Help, Dodge, and similar effects.
+- **Presets (`--preset help`)**: the Help preset pre-fills any-attacker Advantage, single use, the `Help` reason, and the start-of-turn duration, so the GM only picks the helper and the creature being attacked. Presets are listed at the top of the wizard's condition step for systems that support the effect type.
+
+### Changed
+
+- The Advantage / Disadvantage wizard now asks **Who has advantage?** (with an **Any attacker** option), **Granted by (optional)**, **Against whom?**, and **How many attacks?** instead of the generic Subject / Source / Target prompts.
+- Advantage / Disadvantage held by one creature now places its marker on that creature (the source) rather than on the creature being attacked.
+- Re-applying an identical effect now refreshes it (the old row is replaced and the duration restarts) instead of being rejected as a duplicate.
+- Turn-anchored durations show `⏳` in the Turn Tracker pr column instead of a bare number; round counts still show the rounds remaining.
+- The handout and help card describe the new options; other locales fall back to English for the new strings until `npm run sync-locales` is run.
+
+### Fixed
+
+- The wizard dropped the chosen subject at the duration and details steps, so it never reached the Turn Tracker row. The subject is now carried through, and into macros created from the apply summary.
+- Corrupted templates in the `de`, `af`, `it`, `pl`, and `ko` locales printed literal mask tokens (for example `PLATZHALTER0TOKEN`) in apply announcements and rows.
+- The standard-conditions handout heading showed `D&D 5e` in every non-English locale regardless of the active game system.
+- The Spanish macro-reinstalled message listed only two of the five macros.
+- Self-targeted condition rows were missing their emoji.
+
+### Developer
+
+- `scripts/sync-locales.mjs` no longer sends placeholder-only strings for translation and rejects any translation that loses a placeholder, keeping the English text instead. This was the cause of the corrupted locale templates.
+- New `src/presets.js` module holds preset definitions.
+
 ## [1.1.0] - 2026-05-15 · [Milestone](https://github.com/steverobertsuk/roll20-api-scripts/milestone/3)
 
 ### Added

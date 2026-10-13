@@ -195,14 +195,22 @@ const TRANSLATION = {
       custom: '{emoji} {target} afectado por {effect} ({source})',
       advantage: '{emoji} {source} tiene ventaja contra {target}{subject}',
       disadvantage: '{emoji} {source} tiene desventaja contra {target}{subject}',
+      advantageAny: '{emoji} Los ataques vs {target} tienen ventaja{by}',
+      advantageNext: '{emoji} El próximo ataque vs {target} tiene ventaja{by}',
+      disadvantageAny: '{emoji} Los ataques vs {target} tienen desventaja{by}',
+      disadvantageNext: '{emoji} El próximo ataque vs {target} tiene desventaja{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} es {past}',
+      self: '{emoji} {target} es {past}',
       standard: '{emoji} {target} {past} por {source}',
     },
     apply: {
       custom: '{source} aplica {effect} a {target}.',
       advantage: '{source} tiene ventaja contra {target}{subject}.',
       disadvantage: '{source} tiene desventaja contra {target}{subject}.',
+      advantageAny: '{source} otorga ventaja en ataques contra {target}{reason}.',
+      advantageNext: '{source} otorga ventaja en el próximo ataque contra {target}{reason}.',
+      disadvantageAny: '{source} impone desventaja en los ataques contra {target}{reason}.',
+      disadvantageNext: '{source} impone desventaja en el próximo ataque contra {target}{reason}.',
       self: '{target} es {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +219,16 @@ const TRANSLATION = {
       custom: '{target} ya no está afectado por {effect}.',
       advantage: '{source} ya no tiene ventaja contra {target}{subject}.',
       disadvantage: '{source} ya no tiene desventaja contra {target}{subject}.',
+      advantageAny: 'Los ataques contra {target} ya no tienen ventaja{reason}.',
+      advantageNext: 'El próximo ataque contra {target} ya no tiene ventaja{reason}.',
+      disadvantageAny: 'Los ataques contra {target} ya no tienen desventaja{reason}.',
+      disadvantageNext: 'El próximo ataque contra {target} ya no tiene desventaja{reason}.',
+      advantageUsed: 'Se ha utilizado la ventaja en el próximo ataque contra {target}{reason}.',
+      disadvantageUsed:
+        'Se ha aplicado la desventaja en el próximo ataque contra {target}{reason}.',
+      advantageUsedBy: '{source} ha realizado el ataque con ventaja contra {target}{subject}.',
+      disadvantageUsedBy:
+        '{source} ha realizado el ataque con desventaja contra {target}{subject}.',
       noBy: '{target} ya no está {past}.',
       self: '{target} ya no es {past}.',
       standard: '{target} ya no está {past} por {source}.',
@@ -236,6 +254,33 @@ const TRANSLATION = {
       targetDesc: 'Selecciona la criatura que recibirá la condición o efecto.',
       otherText: 'Texto de condición personalizada',
       effectDetails: 'Detalles de {condition}',
+      whoHasAdvantage: '¿Quién tiene ventaja?',
+      whoHasDisadvantage: '¿Quién tiene desventaja?',
+      whoHasDesc:
+        'Selecciona la criatura que realiza la tirada o elige Cualquier atacante cuando se aplica a quien ataca al objetivo (Ayuda, Fuego de hadas, Esquivar).',
+      anyAttackerBtn: 'cualquier atacante',
+      grantedByTitle: '¿Quién lo concede?',
+      grantedByDesc:
+        'Selecciona la criatura que lo otorga o lo impone, como por ejemplo el ayudante. Las duraciones del turno fuente siguen a esta criatura.',
+      grantedByOptionalTitle: 'Otorgado por (opcional)',
+      grantedByOptionalDesc: 'Selecciona la criatura que lo concedió o impuso, o Ninguna.',
+      againstWhomTitle: '¿Contra quién?',
+      againstWhomDesc: 'Selecciona la criatura que está siendo atacada.',
+      sameAsGranterBtn: 'La misma criatura (por ejemplo, esquivar)',
+      usageTitle: '¿Cuántos ataques?',
+      usageDesc:
+        'Elige si se agota en el siguiente ataque o se aplica a cada ataque mientras dure.',
+      onceBtn: 'Sólo el próximo ataque',
+      everyBtn: 'Cada ataque',
+      addReasonBtn: 'Agregar una etiqueta de motivo',
+      reasonPrompt: 'Etiqueta de motivo (por ejemplo, Ayuda)',
+      reasonCurrent: 'Motivo: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Ayuda',
+        reason: 'Ayuda',
+      },
     },
     col: {
       players: 'Jugadores',
@@ -263,6 +308,7 @@ const TRANSLATION = {
       untilRemoved: 'Hasta retirar',
       endOfTargetTurn: 'Fin del próximo turno del objetivo',
       endOfSourceTurn: 'Fin del próximo turno de la fuente',
+      startOfSourceTurn: 'Inicio de la fuente siguiente turno',
       round1: '1 ronda',
       round2: '2 rondas',
       round3: '3 rondas',
@@ -271,6 +317,8 @@ const TRANSLATION = {
       customPrompt: 'Número de rondas',
       untilRemovedDisplay: 'Hasta retirar',
       turnsRemaining: '{n} fin(es) de turno restante(s)',
+      untilTurnStart: 'Hasta el inicio del próximo turno de {name}',
+      untilTurnStartUnknown: 'Hasta el inicio del próximo turno de la fuente.',
     },
     btn: {
       openWizard: 'Abrir asistente',
@@ -296,6 +344,7 @@ const TRANSLATION = {
       runMacroNow: 'Ejecutar macro ahora',
       macroButtonsEnable: 'Habilitar botones de macro',
       macroButtonsDisable: 'Deshabilitar botones de macros',
+      markUsed: 'Marcar como usado',
     },
     title: {
       menu: 'Menú',
@@ -349,6 +398,7 @@ const TRANSLATION = {
       promoteOptions: 'Promocionar a Turn Tracker',
       editActions: 'Editar acciones',
       macroActions: 'Acciones macro',
+      presets: 'Preajustes',
     },
     msg: {
       noActive: 'No se están rastreando condiciones activas.',
@@ -356,7 +406,7 @@ const TRANSLATION = {
       unknownConfig:
         'Opción de configuración desconocida. Usa --config para ver los ajustes disponibles.',
       macroReinstalled:
-        'Las macros {wizard} y {multiTarget} se han reinstalado para todos los GM actuales.',
+        'Las macros {wizard}, {multiTarget}, {reportToken}, {saved} y {classify} se han reinstalado para todos los GM actuales.',
       handoutReinstalled: 'El folleto de ayuda {handout} se reinstaló.',
       duplicate:
         'Esa combinación exacta de fuente, sujeto, objetivo, condición y texto personalizado ya está activa.',
@@ -463,6 +513,12 @@ const TRANSLATION = {
         'No se encontró ninguna acción de aplicación reciente. Aplique una condición primero.',
       macroInvalidName: 'El nombre de la macro no puede estar vacío.',
       macroMissingRequiredData: 'Faltan datos necesarios para crear la macro.',
+      advantageOnlyOption:
+        '--attacker, --once y --reason solo son válidos para Ventajas y Desventajas.',
+      attackerInvalid: '--attacker solo acepta el valor any.',
+      onceInvalid: '--once espera verdadero o falso cuando se proporciona un valor.',
+      effectUsed: 'fue usado',
+      unknownPreset: 'Preajuste desconocido. Preajustes disponibles: {presets}.',
     },
     removal: {
       conditionField: 'Condición',
@@ -531,6 +587,7 @@ const TRANSLATION = {
       turnAppended:
         'El objetivo no estaba en el orden de iniciativa; se agregó la fila de condición.',
       turnInserted: 'Fila de condición insertada debajo de la ficha objetivo.',
+      usesField: 'Usos',
     },
   },
   handout: {
@@ -607,6 +664,14 @@ const TRANSLATION = {
           '!condition-tracker --source gala --target jefe --condition boca abajo --duration 1 ronda',
           'Aplicación directa utilizando nombres parciales únicos; Si varios tokens coinciden, el mod solicita un nombre o identificación de token más específico.',
         ],
+        [
+          '!condition-tracker --preset ayuda',
+          'Acción de ayuda: elige al ayudante (por ejemplo, un familiar) y luego a la criatura que está siendo atacada. El siguiente ataque contra él tiene ventaja hasta que se utilice o hasta que comience el siguiente turno del ayudante. Agregue --source con un nombre de token o una identificación para preseleccionar el ayudante.',
+        ],
+        [
+          '!condition-tracker --source Mago --target Ogro --condition Ventaja --attacker cualquiera --reason Fuego de hadas --duration 10 rondas',
+          'Ventaja para cada atacante contra un objetivo, etiquetada con el motivo.',
+        ],
       ],
     },
     commandsRef: {
@@ -676,10 +741,30 @@ const TRANSLATION = {
           'Susurre un diagnóstico de clasificación para cada token seleccionado: muestra el tipo detectado, la fuente de detección y el motivo.',
         ],
         ['--help', 'Mostrar una breve tarjeta de ayuda en el chat'],
+        [
+          '--preset ayuda',
+          'Inicie el ajuste preestablecido de Ayuda: elija el ayudante y la criatura que está siendo atacada (agregue --source para preseleccionar el ayudante)',
+        ],
+        [
+          '--attacker cualquiera',
+          'Solo ventaja/desventaja: se aplica a quien ataca al objetivo, --source es la criatura que lo otorga y la fila se encuentra debajo del objetivo.',
+        ],
+        [
+          '--once verdadero|falso',
+          'Sólo ventaja/desventaja: agotado para el siguiente ataque; el GM obtiene un botón Marcar como usado',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Solo ventaja/desventaja: etiqueta de motivo que se muestra en la fila (por ejemplo, Ayuda)',
+        ],
+        [
+          '--used &lt;condition-id&gt;',
+          'Eliminar un efecto de un solo uso y anunciarlo como usado',
+        ],
       ],
     },
     standardConditions: {
-      heading: 'Condiciones estándar (D&D 5e)',
+      heading: 'Condiciones estándar ({system})',
       colCondition: 'Condición',
       none: 'No hay condiciones estándar definidas para este sistema de juego. Utilice el tipo Otro efecto personalizado para efectos de texto libre.',
     },
@@ -720,6 +805,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 rondas',
           'Cuenta regresiva fija; un decremento por cada fin de turno del ancla',
+        ],
+        [
+          'Inicio del siguiente turno de la fuente',
+          'Expira tan pronto como comienza el siguiente turno de la ficha de origen (Ayuda, Esquiva y efectos similares)',
         ],
       ],
     },

@@ -32,6 +32,7 @@ export const BOOLEAN_TEXT = new Set(['true', 'false']);
 export const DURATION_UNTIL_REMOVED = 'untilRemoved';
 export const DURATION_TURN_END = 'turnEnd';
 export const DURATION_ROUNDS = 'rounds';
+export const DURATION_TURN_START = 'turnStart';
 export const MENU_REMOVE = 'remove';
 export const COMMAND_SAVED = `${COMMAND} --saved`;
 export const MACRO_NAME_SAVED = `${STATE_KEY}Saved`;
@@ -65,6 +66,9 @@ export const CONDITION_ABILITY = 'Ability';
 export const CONDITION_ADVANTAGE = 'Advantage';
 export const CONDITION_DISADVANTAGE = 'Disadvantage';
 
+// --attacker value for Advantage/Disadvantage that applies to whoever attacks the target.
+export const ATTACKER_ANY = 'any';
+
 // Full set of all canonical custom-effect-type keys (used for validation).
 export const CANONICAL_CUSTOM_TYPES = Object.freeze(
   new Set([
@@ -85,6 +89,7 @@ export const DURATION_OPTIONS = Object.freeze([
   'Until removed',
   'End of target next turn',
   'End of source next turn',
+  'Start of source next turn',
   '1 round',
   '2 rounds',
   '3 rounds',

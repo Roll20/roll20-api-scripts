@@ -1,6 +1,7 @@
 import {
   CONDITION_ADVANTAGE,
   CONDITION_DISADVANTAGE,
+  DURATION_ROUNDS,
   DURATION_UNTIL_REMOVED,
   EMPTY_TURN_ORDER,
   TURN_ORDER_PREFIX,
@@ -44,16 +45,27 @@ export function getCurrentTurnTokenId() {
 }
 
 /**
- * Returns the pr value for a condition row based on its duration.
+ * Returns the pr value for a condition row.
  *
- * @param {object|null} duration Stored duration object.
- * @returns {string} Remaining count as a string, or empty for untimed durations.
+ * Single-use effects show a use marker, round counts show the rounds left, and
+ * turn-anchored durations show an hourglass rather than a bare number that
+ * reads like an initiative value.
+ *
+ * @param {object} condition Active condition record.
+ * @returns {string} Short pr text, or empty for untimed durations.
  */
-function buildTurnOrderPr(duration) {
+function buildTurnOrderPr(condition) {
+  const duration = condition?.duration;
+  if (condition?.once) {
+    return '1×';
+  }
   if (!duration || duration.type === DURATION_UNTIL_REMOVED) {
     return '';
   }
-  return String(duration.remaining);
+  if (duration.type === DURATION_ROUNDS) {
+    return String(duration.remaining);
+  }
+  return '⏳';
 }
 
 /**
@@ -65,7 +77,7 @@ function buildTurnOrderPr(duration) {
 export function createConditionRow(condition) {
   return {
     id: '-1',
-    pr: buildTurnOrderPr(condition.duration),
+    pr: buildTurnOrderPr(condition),
     custom: condition.displayText,
     _ct: condition.id,
   };
@@ -83,7 +95,7 @@ export function updateConditionRow(condition) {
 
   for (const row of rows) {
     if (getConditionIdFromRow(row) === condition.id) {
-      row.pr = buildTurnOrderPr(condition.duration);
+      row.pr = buildTurnOrderPr(condition);
       changed = true;
       break;
     }
@@ -144,16 +156,18 @@ export function insertConditionRows(conditions) {
 /**
  * Returns the token id used to anchor a condition row in Turn Tracker.
  *
- * Advantage and Disadvantage are grouped under the source token so they read
- * with the creature granting or imposing the effect.
+ * Advantage and Disadvantage held by one creature are grouped under that
+ * creature (the source). When they apply to any attacker they are grouped
+ * under the target, where the GM looks when someone attacks it.
  *
  * @param {object} condition Active condition record.
  * @returns {string} Anchor token id.
  */
 export function getConditionAnchorTokenId(condition) {
   if (
-    condition?.condition === CONDITION_ADVANTAGE ||
-    condition?.condition === CONDITION_DISADVANTAGE
+    !condition?.anyAttacker &&
+    (condition?.condition === CONDITION_ADVANTAGE ||
+      condition?.condition === CONDITION_DISADVANTAGE)
   ) {
     return toText(condition.sourceTokenId);
   }

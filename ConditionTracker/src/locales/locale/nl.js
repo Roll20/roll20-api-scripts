@@ -195,14 +195,22 @@ const TRANSLATION = {
       custom: '{emoji} {target} beïnvloed door {effect} ({source})',
       advantage: '{emoji} {source} heeft voordeel tegen {target}{subject}',
       disadvantage: '{emoji} {source} heeft nadeel tegen {target}{subject}',
+      advantageAny: '{emoji} Aanvallen tegen {target} hebben voordeel{by}',
+      advantageNext: '{emoji} Volgende aanval versus {target} heeft voordeel{by}',
+      disadvantageAny: '{emoji} Aanvallen versus {target} hebben een nadeel{by}',
+      disadvantageNext: '{emoji} Volgende aanval versus {target} heeft nadeel{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} is {past}',
+      self: '{emoji} {target} is {past}',
       standard: '{emoji} {target} {past} door {source}',
     },
     apply: {
       custom: '{source} past {effect} toe op {target}.',
       advantage: '{source} heeft voordeel tegen {target}{subject}.',
       disadvantage: '{source} heeft nadeel tegen {target}{subject}.',
+      advantageAny: '{source} geeft voordeel bij aanvallen tegen {target}{reason}.',
+      advantageNext: '{source} geeft voordeel bij de volgende aanval tegen {target}{reason}.',
+      disadvantageAny: '{source} vormt een nadeel voor aanvallen tegen {target}{reason}.',
+      disadvantageNext: '{source} levert een nadeel op bij de volgende aanval op {target}{reason}.',
       self: '{target} is {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +219,14 @@ const TRANSLATION = {
       custom: '{target} wordt niet langer beïnvloed door {effect}.',
       advantage: '{source} heeft niet langer voordeel tegen {target}{subject}.',
       disadvantage: '{source} heeft niet langer nadeel tegen {target}{subject}.',
+      advantageAny: 'Aanvallen tegen {target} hebben niet langer voordeel{reason}.',
+      advantageNext: 'De volgende aanval tegen {target} heeft niet langer voordeel{reason}.',
+      disadvantageAny: 'Aanvallen tegen {target} hebben niet langer een nadeel{reason}.',
+      disadvantageNext: 'De volgende aanval tegen {target} heeft niet langer een nadeel{reason}.',
+      advantageUsed: 'Het voordeel bij de volgende aanval tegen {target} is benut{reason}.',
+      disadvantageUsed: 'Het nadeel bij de volgende aanval op {target} is toegepast{reason}.',
+      advantageUsedBy: '{source} heeft de aanval met voordeel uitgevoerd tegen {target}{subject}.',
+      disadvantageUsedBy: '{source} heeft de aanval met nadeel uitgevoerd tegen {target}{subject}.',
       noBy: '{target} is niet langer {past}.',
       self: '{target} is niet langer {past}.',
       standard: '{target} wordt niet langer {past} door {source}.',
@@ -236,6 +252,33 @@ const TRANSLATION = {
       targetDesc: 'Selecteer het wezen dat de conditie of het effect ontvangt.',
       otherText: 'Aangepaste conditietekst',
       effectDetails: '{condition}-details',
+      whoHasAdvantage: 'Wie heeft voordeel?',
+      whoHasDisadvantage: 'Wie heeft nadeel?',
+      whoHasDesc:
+        'Selecteer het wezen dat de worp maakt, of kies Elke aanvaller als dit van toepassing is op degene die het doelwit aanvalt (Help, Faerie Fire, Dodge).',
+      anyAttackerBtn: 'Elke aanvaller',
+      grantedByTitle: 'Wie verleent het?',
+      grantedByDesc:
+        'Selecteer het wezen dat dit toekent of oplegt, zoals de helper. De duur van de bronbeurt volgt dit wezen.',
+      grantedByOptionalTitle: 'Toegekend door (optioneel)',
+      grantedByOptionalDesc: 'Selecteer het wezen dat dit heeft verleend of opgelegd, of Geen.',
+      againstWhomTitle: 'Tegen wie?',
+      againstWhomDesc: 'Selecteer het wezen dat wordt aangevallen.',
+      sameAsGranterBtn: 'Hetzelfde wezen (bijvoorbeeld Dodge)',
+      usageTitle: 'Hoeveel aanvallen?',
+      usageDesc:
+        'Kies of het wordt opgebruikt bij de volgende aanval of dat het van toepassing is op elke aanval zolang deze duurt.',
+      onceBtn: 'Alleen volgende aanval',
+      everyBtn: 'Elke aanval',
+      addReasonBtn: 'Voeg een redenlabel toe',
+      reasonPrompt: 'Redenlabel (bijv. Help)',
+      reasonCurrent: 'Reden: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Hulp',
+        reason: 'Hulp',
+      },
     },
     col: {
       players: 'Spelers',
@@ -263,6 +306,7 @@ const TRANSLATION = {
       untilRemoved: 'Tot verwijdering',
       endOfTargetTurn: 'Einde van de volgende beurt van het doel',
       endOfSourceTurn: 'Einde van de volgende beurt van de bron',
+      startOfSourceTurn: 'Begin van de bron volgende beurt',
       round1: '1 ronde',
       round2: '2 rondes',
       round3: '3 rondes',
@@ -271,6 +315,8 @@ const TRANSLATION = {
       customPrompt: 'Aantal rondes',
       untilRemovedDisplay: 'Tot verwijdering',
       turnsRemaining: '{n} bijgehouden beurteinde(s) resterend',
+      untilTurnStart: 'Tot het begin van de volgende beurt van {name}',
+      untilTurnStartUnknown: 'Tot het begin van de volgende beurt van de bron',
     },
     btn: {
       openWizard: 'Wizard openen',
@@ -296,6 +342,7 @@ const TRANSLATION = {
       runMacroNow: 'Voer nu een macro uit',
       macroButtonsEnable: 'Macroknoppen inschakelen',
       macroButtonsDisable: 'Macroknoppen uitschakelen',
+      markUsed: 'Markeer als gebruikt',
     },
     title: {
       menu: 'Menu',
@@ -349,6 +396,7 @@ const TRANSLATION = {
       promoteOptions: 'Promoveren tot Turn Tracker',
       editActions: 'Acties bewerken',
       macroActions: 'Macro-acties',
+      presets: 'Voorinstellingen',
     },
     msg: {
       noActive: 'Er worden geen actieve condities bijgehouden.',
@@ -463,6 +511,12 @@ const TRANSLATION = {
         'Er is geen recente toepassingsactie gevonden. Pas eerst een voorwaarde toe.',
       macroInvalidName: 'Macronaam mag niet leeg zijn.',
       macroMissingRequiredData: 'Er ontbreken vereiste gegevens om een ​​macro te maken.',
+      advantageOnlyOption:
+        '--attacker, --once en --reason zijn alleen geldig voor Voordeel en Nadeel.',
+      attackerInvalid: '--attacker accepteert alleen de waarde any.',
+      onceInvalid: '--once verwacht waar of onwaar wanneer een waarde wordt opgegeven.',
+      effectUsed: 'het werd gebruikt',
+      unknownPreset: 'Onbekende voorinstelling. Beschikbare voorinstellingen: {presets}.',
     },
     removal: {
       conditionField: 'Conditie',
@@ -527,6 +581,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Doel stond niet in de beurtenvolgorde; conditierij is toegevoegd.',
       turnInserted: 'Conditierij ingevoegd onder het doeltoken.',
+      usesField: 'Gebruik',
     },
   },
   handout: {
@@ -603,6 +658,14 @@ const TRANSLATION = {
         [
           '!condition-tracker --source gala --target baas --condition Buiklig --duration 1 ronde',
           'Direct toepassen met unieke deelnamen; als meerdere tokens overeenkomen, vraagt ​​de mod om een ​​specifiekere naam of token-ID.',
+        ],
+        [
+          '!condition-tracker --preset hulp',
+          'Hulpactie: kies de helper (bijvoorbeeld een bekende) en vervolgens het wezen dat wordt aangevallen. De volgende aanval ertegen heeft voordeel totdat deze wordt gebruikt of totdat de volgende beurt van de helper begint. Voeg --source toe met een tokennaam of ID om de helper vooraf te selecteren.',
+        ],
+        [
+          '!condition-tracker --source Tovenaar --target Boeman --condition Voordeel --attacker willekeurig --reason Faerie Fire --duration 10 ronden',
+          'Voordeel voor elke aanvaller tegen één doelwit, gelabeld met de reden.',
         ],
       ],
     },
@@ -682,10 +745,30 @@ const TRANSLATION = {
           'Fluister een classificatiediagnose voor elk geselecteerd token: toont het gedetecteerde type, de detectiebron en de reden',
         ],
         ['--help', 'Toon een korte hulpkaart in de chat'],
+        [
+          '--preset hulp',
+          'Start de Help-voorinstelling: kies de helper en het wezen dat wordt aangevallen (voeg --source toe om de helper vooraf te selecteren)',
+        ],
+        [
+          '--attacker elk',
+          'Alleen voordeel / nadeel: het is van toepassing op degene die het doelwit aanvalt, --source is het wezen dat het verleent, en de rij bevindt zich onder het doelwit',
+        ],
+        [
+          '--once waar|onwaar',
+          'Alleen voordeel / nadeel: opgebruikt door de volgende aanval; de GM krijgt een knop Markeren als gebruikt',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Alleen voordeel/nadeel: redenlabel weergegeven in de rij (bijv. Help)',
+        ],
+        [
+          '--used &lt;condition-id&gt;',
+          'Verwijder een effect voor eenmalig gebruik en kondig het aan als gebruikt',
+        ],
       ],
     },
     standardConditions: {
-      heading: 'Standaard Condities (D&amp;D 5e)',
+      heading: 'Standaard Condities ({system})',
       colCondition: 'Conditie',
       none: 'Er zijn geen standaardvoorwaarden gedefinieerd voor dit spelsysteem. Gebruik het type Ander aangepast effect voor vrije-teksteffecten.',
     },
@@ -729,6 +812,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 rondes',
           'Vaste aftelling; één vermindering per beurteindigng van het ankertoken',
+        ],
+        [
+          'Begin van de volgende beurt van de bron',
+          'Verloopt zodra de volgende beurt van het bronfiche begint (Help, Ontwijken en soortgelijke effecten)',
         ],
       ],
     },

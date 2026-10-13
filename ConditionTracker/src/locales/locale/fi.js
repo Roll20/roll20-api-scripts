@@ -195,14 +195,23 @@ const TRANSLATION = {
       custom: '{emoji} {target} vaikutuksen alainen: {effect} ({source})',
       advantage: '{emoji} {source} on etu {target}{subject} vastaan',
       disadvantage: '{emoji} {source} on haitta {target}{subject} vastaan',
+      advantageAny: '{emoji} Hyökkäyksillä vs. {target} on etua{by}',
+      advantageNext: '{emoji} Seuraava hyökkäys vs. {target} tarjoaa etua{by}',
+      disadvantageAny: '{emoji} Hyökkäyksissä vs {target} on haittapuoli{by}',
+      disadvantageNext: '{emoji} Seuraavassa hyökkäyksessä vs. {target} on haittapuoli{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} on {past}',
+      self: '{emoji} {target} on {past}',
       standard: '{emoji} {target} {past} — {source}',
     },
     apply: {
       custom: '{source} soveltaa {effect} kohteeseen {target}.',
       advantage: '{source} on etu {target}{subject} vastaan.',
       disadvantage: '{source} on haitta {target}{subject} vastaan.',
+      advantageAny: '{source} antaa etua hyökkäyksissä {target}{reason}.',
+      advantageNext:
+        '{source} antaa edun seuraavassa hyökkäyksessä kohdetta {target}{reason} vastaan.',
+      disadvantageAny: '{source} aiheuttaa haittaa hyökkäyksille {target}{reason}.',
+      disadvantageNext: '{source} aiheuttaa haittaa seuraavalle hyökkäykselle {target}{reason}.',
       self: '{target} on {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +220,14 @@ const TRANSLATION = {
       custom: '{target} ei enää ole {effect} vaikutuksen alainen.',
       advantage: '{source} ei enää ole etu {target}{subject} vastaan.',
       disadvantage: '{source} ei enää ole haitta {target}{subject} vastaan.',
+      advantageAny: 'Hyökkäyksillä {target} ei ole enää etua{reason}.',
+      advantageNext: 'Seuraavalla hyökkäyksellä {target} ei ole enää etua{reason}.',
+      disadvantageAny: 'Hyökkäyksillä {target} ei ole enää haittaa{reason}.',
+      disadvantageNext: 'Seuraavalla hyökkäyksellä {target} vastaan ​​ei ole enää haittaa{reason}.',
+      advantageUsed: 'Seuraavan hyökkäyksen etu {target} vastaan ​​on käytetty{reason}.',
+      disadvantageUsed: 'Seuraavassa hyökkäyksessä {target} vastaan ​​on käytetty haittaa{reason}.',
+      advantageUsedBy: '{source} on tehnyt hyökkäyksen edulla {target}{subject} vastaan.',
+      disadvantageUsedBy: '{source} on tehnyt hyökkäyksen miinuksella {target}{subject}.',
       noBy: '{target} ei enää ole {past}.',
       self: '{target} ei enää ole {past}.',
       standard: '{target} ei enää ole {past} — {source}.',
@@ -236,6 +253,33 @@ const TRANSLATION = {
       targetDesc: 'Valitse olento, joka vastaanottaa tilan tai vaikutuksen.',
       otherText: 'Mukautettu tilateksti',
       effectDetails: '{condition}-tiedot',
+      whoHasAdvantage: 'Kenellä on etua?',
+      whoHasDisadvantage: 'Kenellä on haittaa?',
+      whoHasDesc:
+        'Valitse rullan tekevä olento tai valitse Mikä tahansa hyökkääjä, kun se koskee ketä tahansa, joka hyökkää kohteen (apu, Faerie Fire, Dodge).',
+      anyAttackerBtn: 'Mikä tahansa hyökkääjä',
+      grantedByTitle: 'Kuka myöntää sen?',
+      grantedByDesc:
+        'Valitse olento, joka myöntää tai määrää sen, kuten apulainen. Lähteen käännösajat seuraavat tätä olentoa.',
+      grantedByOptionalTitle: 'Myöntäjä (valinnainen)',
+      grantedByOptionalDesc: 'Valitse olento, joka myönsi tai määräsi sen, tai Ei mitään.',
+      againstWhomTitle: 'Ketä vastaan?',
+      againstWhomDesc: 'Valitse olento, jota vastaan ​​hyökätään.',
+      sameAsGranterBtn: 'Sama olento (esim. Dodge)',
+      usageTitle: 'Kuinka monta hyökkäystä?',
+      usageDesc:
+        'Valitse, käytetäänkö se seuraavaan hyökkäykseen vai koskeeko se jokaista hyökkäystä niin kauan kuin se kestää.',
+      onceBtn: 'Vain seuraava hyökkäys',
+      everyBtn: 'Jokainen hyökkäys',
+      addReasonBtn: 'Lisää syytunniste',
+      reasonPrompt: 'Syytunniste (esim. Ohje)',
+      reasonCurrent: 'Syy: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Auttaa',
+        reason: 'Auttaa',
+      },
     },
     col: {
       players: 'Pelaajat',
@@ -263,6 +307,7 @@ const TRANSLATION = {
       untilRemoved: 'Kunnes poistetaan',
       endOfTargetTurn: 'Kohteen seuraavan vuoron lopussa',
       endOfSourceTurn: 'Lähteen seuraavan vuoron lopussa',
+      startOfSourceTurn: 'Lähteen alku seuraavalla kierroksella',
       round1: '1 kierros',
       round2: '2 kierrosta',
       round3: '3 kierrosta',
@@ -271,6 +316,8 @@ const TRANSLATION = {
       customPrompt: 'Kierrosten määrä',
       untilRemovedDisplay: 'Kunnes poistetaan',
       turnsRemaining: '{n} jäljellä olevaa vuoron loppua',
+      untilTurnStart: '{name} seuraavan käännöksen alkuun',
+      untilTurnStartUnknown: 'Lähteen seuraavan vuoron alkuun asti',
     },
     btn: {
       openWizard: 'Avaa ohjattu toiminto',
@@ -296,6 +343,7 @@ const TRANSLATION = {
       runMacroNow: 'Suorita makro nyt',
       macroButtonsEnable: 'Ota makropainikkeet käyttöön',
       macroButtonsDisable: 'Poista makropainikkeet käytöstä',
+      markUsed: 'Merkitse käytetyksi',
     },
     title: {
       menu: 'Valikko',
@@ -349,6 +397,7 @@ const TRANSLATION = {
       promoteOptions: 'Siirry Turn Trackeriin',
       editActions: 'Muokkaa toimintoja',
       macroActions: 'Makrotoiminnot',
+      presets: 'Esiasetukset',
     },
     msg: {
       noActive: 'Aktiivisia tiloja ei seurata.',
@@ -457,6 +506,12 @@ const TRANSLATION = {
       macroMissingLastAction: 'Viimeaikaista sovellustoimintoa ei löytynyt. Käytä ensin ehtoa.',
       macroInvalidName: 'Makron nimi ei voi olla tyhjä.',
       macroMissingRequiredData: 'Makron luomiseen tarvittavat tiedot puuttuvat.',
+      advantageOnlyOption:
+        '--attacker, --once ja --reason ovat voimassa vain etuja ja haittoja varten.',
+      attackerInvalid: '--attacker hyväksyy vain arvon mikä tahansa.',
+      onceInvalid: '--once odottaa arvon tosi tai epätosi, kun arvo annetaan.',
+      effectUsed: 'sitä käytettiin',
+      unknownPreset: 'Tuntematon esiasetus. Saatavilla olevat esiasetukset: {presets}.',
     },
     removal: {
       conditionField: 'Tila',
@@ -521,6 +576,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Kohde ei ollut vuorojärjestyksessä; tilarivi lisättiin loppuun.',
       turnInserted: 'Tilarivi lisätty kohde-tokenin alapuolelle.',
+      usesField: 'Käyttää',
     },
   },
   handout: {
@@ -597,6 +653,14 @@ const TRANSLATION = {
           '!condition-tracker --source gaala --target pomo --condition Makaa --duration 1 kierros',
           'Käytä suoraan käyttämällä ainutlaatuisia osittaisia ​​nimiä; Jos useat tunnukset täsmäävät, modi pyytää tarkempaa nimeä tai tunnuksen.',
         ],
+        [
+          '!condition-tracker --preset ohje',
+          'Aputoiminto: valitse auttaja (esimerkiksi tuttu) ja sitten olento, jota vastaan ​​hyökätään. Seuraavalla hyökkäyksellä sitä vastaan ​​on etu, kunnes se käytetään tai kunnes auttajan seuraava vuoro alkaa. Lisää --source tunnuksella tai tunnisteella, jotta voit valita apuohjelman etukäteen.',
+        ],
+        [
+          '!condition-tracker --source Wizard --target Ogre --condition Advantage --attacker any --reason Faerie Fire --duration 10 rounds',
+          'Etu jokaiselle hyökkääjälle yhtä kohdetta vastaan, syyllä merkittynä.',
+        ],
       ],
     },
     commandsRef: {
@@ -666,10 +730,24 @@ const TRANSLATION = {
           'Kuiskaa luokitusdiagnostiikka jokaiselle valitulle tunnukselle – näyttää havaitun tyypin, tunnistuslähteen ja syyn',
         ],
         ['--help', 'Näytä lyhyt ohjekortti chatissa'],
+        [
+          '--preset apua',
+          'Aloita ohjeen esiasetus: valitse auttaja ja olento, jonka kimppuun hyökätään (lisää --source esivalitaksesi auttaja)',
+        ],
+        [
+          '--attacker mikä tahansa',
+          'Etu / vain haitta: se koskee kaikkia, jotka hyökkäävät kohteeseen, --source on olento, joka myöntää sen, ja rivi on kohteen alla',
+        ],
+        [
+          '--once tosi|epätosi',
+          'Etu / vain haitta: käytetty seuraavaan hyökkäykseen; GM saa Merkitse käytetyksi -painikkeen',
+        ],
+        ['--reason &lt;text&gt;', 'Etu / Vain haitta: rivillä näkyvä syymerkki (esim. Ohje)'],
+        ['--used &lt;condition-id&gt;', 'Poista kertakäyttöinen tehoste ja ilmoita se käytetyksi'],
       ],
     },
     standardConditions: {
-      heading: 'Vakiotilat (D&amp;D 5e)',
+      heading: 'Vakiotilat ({system})',
       colCondition: 'Tila',
       none: 'Tälle pelijärjestelmälle ei ole määritelty vakioehtoja. Käytä Muu mukautettua tehostetyyppiä vapaan tekstin tehosteille.',
     },
@@ -710,6 +788,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 kierrosta',
           'Kiinteä laskuri; yksi pienennys ankkuri-tokenin vuoron päättyessä',
+        ],
+        [
+          'Lähteen seuraavan kierroksen alku',
+          'Vanhenee heti, kun lähdekoodin seuraava vuoro alkaa (Help, Dodge ja vastaavat tehosteet)',
         ],
       ],
     },

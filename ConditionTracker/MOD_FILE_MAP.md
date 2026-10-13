@@ -62,6 +62,7 @@ Scope notes:
 | `src/validation.js`           | Input validation and normalization for command arguments and config values.                                         |
 | `src/conditions.js`           | Condition normalization and message/display text composition for apply/remove output.                               |
 | `src/durations.js`            | Duration parsing and decrement/expiry logic.                                                                        |
+| `src/presets.js`              | One-click effect presets (for example Help) that pre-fill wizard arguments.                                         |
 | `src/turnOrder.js`            | Turn Tracker row creation, insertion/update/removal, signatures, migration, and lookup helpers.                     |
 | `src/removal.js`              | Unified condition removal pipeline with row removal, marker cleanup, and messaging.                                 |
 | `src/cleanup.js`              | Manual reconciliation for stale/orphaned state and Turn Tracker rows.                                               |

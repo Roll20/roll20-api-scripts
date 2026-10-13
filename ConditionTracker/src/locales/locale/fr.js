@@ -195,14 +195,24 @@ const TRANSLATION = {
       custom: '{emoji} {target} affecté par {effect} ({source})',
       advantage: '{emoji} {source} a l’avantage contre {target}{subject}',
       disadvantage: '{emoji} {source} a le désavantage contre {target}{subject}',
+      advantageAny: '{emoji} Les attaques contre {target} ont un avantage{by}',
+      advantageNext: "{emoji} La prochaine attaque contre {target} a l'avantage{by}",
+      disadvantageAny: '{emoji} Les attaques contre {target} ont un désavantage{by}',
+      disadvantageNext: '{emoji} La prochaine attaque contre {target} a un désavantage{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} est {past}',
+      self: '{emoji} {target} est {past}',
       standard: '{emoji} {target} {past} par {source}',
     },
     apply: {
       custom: '{source} applique {effect} à {target}.',
       advantage: '{source} a l’avantage contre {target}{subject}.',
       disadvantage: '{source} a le désavantage contre {target}{subject}.',
+      advantageAny: '{source} accorde un avantage sur les attaques contre {target}{reason}.',
+      advantageNext:
+        '{source} accorde un avantage lors de la prochaine attaque contre {target}{reason}.',
+      disadvantageAny: '{source} impose un désavantage aux attaques contre {target}{reason}.',
+      disadvantageNext:
+        '{source} impose un désavantage lors de la prochaine attaque contre {target}{reason}.',
       self: '{target} est {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +221,17 @@ const TRANSLATION = {
       custom: '{target} n’est plus affecté par {effect}.',
       advantage: '{source} n’a plus l’avantage contre {target}{subject}.',
       disadvantage: '{source} n’a plus le désavantage contre {target}{subject}.',
+      advantageAny: "Les attaques contre {target} n'ont plus l'avantage {reason}.",
+      advantageNext: "La prochaine attaque contre {target} n'a plus l'avantage {reason}.",
+      disadvantageAny: "Les attaques contre {target} n'ont plus le désavantage {reason}.",
+      disadvantageNext: "La prochaine attaque contre {target} n'a plus le désavantage {reason}.",
+      advantageUsed:
+        "L'avantage lors de la prochaine attaque contre {target} a été utilisé {reason}.",
+      disadvantageUsed:
+        'Le désavantage lors de la prochaine attaque contre {target} a été appliqué {reason}.',
+      advantageUsedBy: "{source} a lancé l'attaque avec un avantage contre {target}{subject}.",
+      disadvantageUsedBy:
+        "{source} a lancé l'attaque avec un désavantage contre {target}{subject}.",
       noBy: '{target} n’est plus {past}.',
       self: '{target} n’est plus {past}.',
       standard: '{target} n’est plus {past} par {source}.',
@@ -236,6 +257,33 @@ const TRANSLATION = {
       targetDesc: 'Sélectionnez la créature qui recevra la condition ou l’effet.',
       otherText: 'Texte de condition personnalisé',
       effectDetails: 'Détails de {condition}',
+      whoHasAdvantage: 'Qui a l’avantage ?',
+      whoHasDisadvantage: 'Qui est désavantagé ?',
+      whoHasDesc:
+        "Sélectionnez la créature qui effectue le jet, ou choisissez N'importe quel attaquant lorsque cela s'applique à celui qui attaque la cible (Aide, Faerie Fire, Esquive).",
+      anyAttackerBtn: 'Tout attaquant',
+      grantedByTitle: 'Qui l’accorde ?',
+      grantedByDesc:
+        "Sélectionnez la créature qui l'accorde ou l'impose, comme l'assistant. Les durées des tours de source suivent cette créature.",
+      grantedByOptionalTitle: 'Accordé par (facultatif)',
+      grantedByOptionalDesc: "Sélectionnez la créature qui l'a accordé ou imposé, ou Aucune.",
+      againstWhomTitle: 'Contre qui ?',
+      againstWhomDesc: 'Sélectionnez la créature attaquée.',
+      sameAsGranterBtn: 'Même créature (par exemple, Dodge)',
+      usageTitle: "Combien d'attaques ?",
+      usageDesc:
+        "Choisissez s'il est utilisé lors de la prochaine attaque ou s'il s'applique à chaque attaque tant qu'il dure.",
+      onceBtn: 'Prochaine attaque uniquement',
+      everyBtn: 'Chaque attaque',
+      addReasonBtn: 'Ajouter une étiquette de motif',
+      reasonPrompt: 'Libellé du motif (par exemple, Aide)',
+      reasonCurrent: 'Raison : {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Aide',
+        reason: 'Aide',
+      },
     },
     col: {
       players: 'Joueurs',
@@ -263,6 +311,7 @@ const TRANSLATION = {
       untilRemoved: 'Jusqu’à suppression',
       endOfTargetTurn: 'Fin du prochain tour de la cible',
       endOfSourceTurn: 'Fin du prochain tour de la source',
+      startOfSourceTurn: 'Début de la source au prochain tour',
       round1: '1 tour',
       round2: '2 tours',
       round3: '3 tours',
@@ -271,6 +320,8 @@ const TRANSLATION = {
       customPrompt: 'Nombre de rounds',
       untilRemovedDisplay: 'Jusqu’à suppression',
       turnsRemaining: '{n} fin(s) de tour restante(s)',
+      untilTurnStart: "Jusqu'au début du prochain tour de {name}",
+      untilTurnStartUnknown: "Jusqu'au début du prochain tour de la source",
     },
     btn: {
       openWizard: 'Ouvrir l’assistant',
@@ -296,6 +347,7 @@ const TRANSLATION = {
       runMacroNow: 'Exécuter la macro maintenant',
       macroButtonsEnable: 'Activer les boutons macro',
       macroButtonsDisable: 'Désactiver les boutons macro',
+      markUsed: 'Marquer comme utilisé',
     },
     title: {
       menu: 'Menu',
@@ -349,6 +401,7 @@ const TRANSLATION = {
       promoteOptions: 'Promouvoir Turn Tracker',
       editActions: 'Modifier les actions',
       macroActions: 'Actions de macros',
+      presets: 'Préréglages',
     },
     msg: {
       noActive: 'Aucune condition active n’est suivie.',
@@ -463,6 +516,12 @@ const TRANSLATION = {
         "Aucune action d'application récente trouvée. Appliquez d’abord une condition.",
       macroInvalidName: 'Le nom de la macro ne peut pas être vide.',
       macroMissingRequiredData: 'Données requises manquantes pour créer une macro.',
+      advantageOnlyOption:
+        '--attacker, --once et --reason ne sont valables que pour les avantages et les inconvénients.',
+      attackerInvalid: "--attacker n'accepte que la valeur any.",
+      onceInvalid: "--once attend vrai ou faux lorsqu'une valeur est fournie.",
+      effectUsed: 'il a été utilisé',
+      unknownPreset: 'Préréglage inconnu. Préréglages disponibles : {presets}.',
     },
     removal: {
       conditionField: 'Condition',
@@ -531,6 +590,7 @@ const TRANSLATION = {
       turnAppended:
         'La cible n’était pas dans l’ordre d’initiative ; la ligne de condition a été ajoutée.',
       turnInserted: 'Ligne de condition insérée sous le jeton cible.',
+      usesField: 'Utilisations',
     },
   },
   handout: {
@@ -606,6 +666,14 @@ const TRANSLATION = {
         [
           '!condition-tracker --source gala --target boss --condition Couché --duration 1 tour',
           'Application directe en utilisant des noms partiels uniques ; si plusieurs jetons correspondent, le mod demande un nom ou un identifiant de jeton plus spécifique.',
+        ],
+        [
+          '!condition-tracker --preset aide',
+          "Action d'aide : choisissez l'assistant (par exemple un familier), puis la créature attaquée. La prochaine attaque contre lui a un avantage jusqu'à ce qu'elle soit utilisée ou jusqu'au début du prochain tour de l'assistant. Ajoutez --source avec un nom ou un identifiant de jeton pour présélectionner l'assistant.",
+        ],
+        [
+          "!condition-tracker --source Sorcier --target Ogre --condition Avantage --attacker n'importe quel --reason Feu féerique --duration 10 tours",
+          'Avantage pour chaque attaquant contre une cible, étiqueté avec la raison.',
         ],
       ],
     },
@@ -685,10 +753,30 @@ const TRANSLATION = {
           'Chuchotez un diagnostic de classification pour chaque jeton sélectionné : affiche le type détecté, la source de détection et la raison.',
         ],
         ['--help', "Afficher une brève carte d'aide dans le chat"],
+        [
+          'Aide --preset',
+          "Démarrez le préréglage Aide : choisissez l'assistant et la créature attaquée (ajoutez --source pour présélectionner l'assistant)",
+        ],
+        [
+          "--attacker n'importe lequel",
+          "Avantage / Inconvénient uniquement : il s'applique à celui qui attaque la cible, --source est la créature qui l'accorde et la ligne se trouve sous la cible.",
+        ],
+        [
+          '--once vrai|faux',
+          'Avantage / Inconvénient uniquement : épuisé par la prochaine attaque ; le MJ obtient un bouton Marquer comme utilisé',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          "Avantage/Inconvénient uniquement : le libellé du motif s'affiche dans la ligne (par exemple, Aide)",
+        ],
+        [
+          '--used &lt;condition-id&gt;',
+          "Supprimer un effet à usage unique et l'annoncer comme utilisé",
+        ],
       ],
     },
     standardConditions: {
-      heading: 'Conditions standard (D&D 5e)',
+      heading: 'Conditions standard ({system})',
       colCondition: 'Condition',
       none: "Aucune condition standard définie pour ce système de jeu. Utilisez le type d'effet personnalisé Autre pour les effets de texte libre.",
     },
@@ -733,6 +821,10 @@ const TRANSLATION = {
           'Expire à la fin du prochain tour du jeton source dans l’initiative',
         ],
         ['1/2/3/10 tours', 'Compte à rebours fixe ; un décrément par fin de tour du jeton ancre'],
+        [
+          'Début du prochain tour de la source',
+          'Expire dès le début du prochain tour du jeton source (Aide, Esquive et effets similaires)',
+        ],
       ],
     },
     savedEffects: {
