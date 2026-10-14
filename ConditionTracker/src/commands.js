@@ -25,10 +25,12 @@ import {
   buildDisplayText,
   getCanonicalCondition,
   getConditionDisplayName,
+  isAdvantageType,
   isCustomEffectType,
   isCustomTextCondition,
 } from './conditions.js';
 import {
+  ATTACKER_ANY,
   COLOR_ACCENT_DARK,
   COLOR_ACCENT_LIGHT,
   COLOR_BG_SOFT_BLACK,
@@ -38,7 +40,9 @@ import {
   COMMAND_CLASSIFY,
   COMMAND_REPORT_TOKEN,
   COMMAND_SAVED,
+  CONDITION_DISADVANTAGE,
   DURATION_OPTIONS,
+  DURATION_TURN_START,
   DURATION_UNTIL_REMOVED,
   HANDOUT_NAME,
   MACRO_NAME,
@@ -53,6 +57,7 @@ import {
 import { parseDuration } from './durations.js';
 import { applyMarker, getCampaignTokenMarkers, resolveMarkerTag } from './markers.js';
 import { extractConditionTrackerCommand, parseCommand } from './parser.js';
+import { getPreset, getPresetsForProfile } from './presets.js';
 import { removeConditionById } from './removal.js';
 import {
   addActiveCondition,
@@ -67,7 +72,6 @@ import {
   setActorTokenOverride,
   setConfig,
   setLastApplyPayload,
-  someActiveCondition,
 } from './state.js';
 
 import { runCleanup } from './cleanup.js';
@@ -259,10 +263,74 @@ function buildDurationCommand(args, duration) {
     `--source ${sourceId}`,
     targetsRaw ? `--targets ${targetsRaw}` : `--target ${targetId}`,
     `--condition ${condition}`,
+    ...buildEffectOptionParts(args),
     `--duration ${duration}`,
   ];
   if (langRaw) parts.push(`--lang ${langRaw}`);
   return buildCommand(parts);
+}
+
+/**
+ * Returns true when wizard/apply args request an any-attacker Advantage/Disadvantage.
+ *
+ * @param {object} args Parsed command arguments.
+ * @returns {boolean} True for --attacker any.
+ */
+function isAnyAttacker(args) {
+  return toText(args.attacker).toLowerCase() === ATTACKER_ANY;
+}
+
+/**
+ * Returns true when args mark the effect as used up by the next attack.
+ *
+ * @param {object} args Parsed command arguments.
+ * @returns {boolean} True for --once or --once true.
+ */
+function isOnceArg(args) {
+  return args.once === true || toText(args.once).toLowerCase() === 'true';
+}
+
+/**
+ * Returns the --reason text, treating a bare flag as empty.
+ *
+ * @param {object} args Parsed command arguments.
+ * @returns {string} Reason label or an empty string.
+ */
+function getReasonArg(args) {
+  return args.reason === true ? '' : toText(args.reason);
+}
+
+/**
+ * Builds the optional apply flags a wizard step must carry into the final
+ * apply command: subject, plus the Advantage/Disadvantage options.
+ *
+ * @param {object} args Current wizard args.
+ * @returns {string[]} Command parts.
+ */
+function buildEffectOptionParts(args) {
+  const parts = [];
+  const subjectRaw = toText(args.subject);
+  if (subjectRaw && subjectRaw !== SUBJECT_NONE) parts.push(`--subject ${subjectRaw}`);
+  if (isAnyAttacker(args)) parts.push(`--attacker ${ATTACKER_ANY}`);
+  if (args.once !== undefined) parts.push(`--once ${isOnceArg(args)}`);
+  const reason = getReasonArg(args);
+  if (reason) parts.push(`--reason ${reason}`);
+  return parts;
+}
+
+/**
+ * Builds the optional apply flags that reproduce an applied condition record.
+ *
+ * @param {object} condition Active condition record.
+ * @returns {string[]} Command parts.
+ */
+function buildRecordOptionParts(condition) {
+  const parts = [];
+  if (condition.subjectTokenId) parts.push(`--subject ${condition.subjectTokenId}`);
+  if (condition.anyAttacker) parts.push(`--attacker ${ATTACKER_ANY}`);
+  if (condition.once) parts.push('--once true');
+  if (condition.reason) parts.push(`--reason ${condition.reason}`);
+  return parts;
 }
 
 /**
@@ -459,8 +527,12 @@ function buildWizardBase(args) {
   if (targetsRaw) parts.push(`--targets ${targetsRaw}`);
   else if (selectedIdsRaw) parts.push(`--selected-ids ${selectedIdsRaw}`);
   if (canonical) parts.push(`--condition ${canonical}`);
+  if (isAnyAttacker(args)) parts.push(`--attacker ${ATTACKER_ANY}`);
+  if (args.once !== undefined) parts.push(`--once ${isOnceArg(args)}`);
   if (durationRaw) parts.push(`--duration ${durationRaw}`);
   if (langRaw) parts.push(`--lang ${langRaw}`);
+  const reason = getReasonArg(args);
+  if (reason) parts.push(`--reason ${reason}`);
   return buildCommand(parts);
 }
 
@@ -549,9 +621,13 @@ function buildTwoColumnRows(leftButtons, rightButtons) {
  * @param {object} args Current wizard args.
  * @param {"source"|"target"|"subject"} slot Which slot to fill.
  * @param {string} [description] Optional context shown above the token list.
+ * @param {object} [options] Step options.
+ * @param {object[]} [options.extraButtons] Extra buttons shown above the token list.
+ * @param {string|null} [options.sourceShortcutLabel] Label for the target step's
+ *   "same token as source" button; null hides the button.
  * @returns {void}
  */
-function showTokenStep(playerId, title, args, slot, description) {
+function showTokenStep(playerId, title, args, slot, description, options = {}) {
   const locale = getConfig().language;
   const tokens = getPageTokens();
   if (tokens.length === 0) {
@@ -583,15 +659,16 @@ function showTokenStep(playerId, title, args, slot, description) {
   }
   if (slot === 'target') {
     const sourceId = toText(args.source);
-    if (sourceId) {
+    if (sourceId && options.sourceShortcutLabel !== null) {
       body.push(
         buildButton(
-          t('ui.wizard.noneOrSourceBtn', locale),
+          options.sourceShortcutLabel || t('ui.wizard.noneOrSourceBtn', locale),
           buildWizardBase({ ...args, target: sourceId })
         )
       );
     }
   }
+  body.push(...(options.extraButtons || []));
   body.push(htmlTable([t('ui.col.players', locale), t('ui.col.npcs', locale)], tableRows));
   whisper(playerId, title, body);
 }
@@ -668,9 +745,25 @@ function showConditionStep(playerId, args) {
 
   const tableRows = buildTwoColumnRows(standardButtons, customButtons);
 
-  whisper(playerId, t('ui.wizard.selectCondition', locale), [
-    htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows),
-  ]);
+  // Presets start their own flow, so only offer them before any token is chosen.
+  const freshStart = !['source', 'target', 'targets', 'selected-ids'].some((key) =>
+    toText(args[key])
+  );
+  const presets = freshStart ? getPresetsForProfile(profile) : [];
+  const body = [];
+  if (presets.length > 0) {
+    body.push(
+      heading(t('ui.heading.presets', locale)),
+      ...presets.map((preset) =>
+        buildButton(t(preset.labelKey, locale), `${COMMAND} --preset ${preset.id}`)
+      )
+    );
+  }
+  body.push(
+    htmlTable([t('ui.col.conditions', locale), t('ui.col.customEffects', locale)], tableRows)
+  );
+
+  whisper(playerId, t('ui.wizard.selectCondition', locale), body);
 }
 
 /**
@@ -696,6 +789,10 @@ function showDurationStep(playerId, args) {
     {
       dur: 'End of source next turn',
       label: t('ui.dur.endOfSourceTurn', locale),
+    },
+    {
+      dur: 'Start of source next turn',
+      label: t('ui.dur.startOfSourceTurn', locale),
     },
   ];
   const rightOptions = [
@@ -748,6 +845,7 @@ function showCustomTextStep(playerId, args, condition) {
     `--source ${sourceId}`,
     targetsRaw ? `--targets ${targetsRaw}` : `--target ${targetId}`,
     `--condition ${condition}`,
+    ...buildEffectOptionParts(args),
     `--other ?{${prompt}|}`,
     `--duration ${durationQuery}`,
   ];
@@ -805,10 +903,41 @@ function showEffectDetailStep(playerId, args, canonical) {
 }
 
 /**
+ * Whispers the Advantage/Disadvantage usage step: next attack only or every
+ * attack, with an optional reason label.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object} args Current wizard args.
+ * @returns {void}
+ */
+function showUsageStep(playerId, args) {
+  const locale = getConfig().language;
+  const reason = getReasonArg(args);
+  const body = [
+    rawHtml(
+      `<div style="font-style:italic;margin:2px 0 4px;">${escapeHtml(t('ui.wizard.usageDesc', locale))}</div>`
+    ),
+  ];
+  if (reason) {
+    body.push(t('ui.wizard.reasonCurrent', locale, { reason }));
+  }
+  body.push(
+    buildButton(t('ui.wizard.onceBtn', locale), buildWizardBase({ ...args, once: 'true' })),
+    buildButton(t('ui.wizard.everyBtn', locale), buildWizardBase({ ...args, once: 'false' })),
+    buildButton(
+      t('ui.wizard.addReasonBtn', locale),
+      `${buildWizardBase({ ...args, reason: '' })} --reason ?{${t('ui.wizard.reasonPrompt', locale)}|}`
+    )
+  );
+  whisper(playerId, t('ui.wizard.usageTitle', locale), body);
+}
+
+/**
  * Advances the condition application wizard based on which arguments are present.
  *
  * Steps in order: condition, subject (custom effects), source token,
- * target token, and duration.
+ * target token, and duration. Advantage and Disadvantage ask who has it (or
+ * any attacker), who granted it, against whom, and how many attacks it covers.
  * Each step whispers buttons to the GM. Any step whose value is already
  * supplied is skipped. Calls handleApply directly when all values are present.
  *
@@ -834,6 +963,16 @@ export function showPromptUi(playerId, args) {
   }
 
   if (showPromptStep(playerId, resolvedWizardArgs, canonical, locale)) return;
+
+  // A pre-supplied duration means a macro or preset already decided everything.
+  if (
+    isAdvantageType(canonical) &&
+    resolvedWizardArgs.once === undefined &&
+    !toText(resolvedWizardArgs.duration)
+  ) {
+    showUsageStep(playerId, resolvedWizardArgs);
+    return;
+  }
 
   const subjectRaw = toText(resolvedWizardArgs.subject);
   const resolvedArgs =
@@ -897,29 +1036,31 @@ function showPromptStep(playerId, args, canonical, locale) {
     return true;
   }
 
-  const subjectRaw = toText(args.subject);
-  const subjectId = subjectRaw === SUBJECT_NONE ? '' : subjectRaw;
-  const subjectChosen = Boolean(subjectId) || subjectRaw === SUBJECT_NONE;
-  if (isCustomEffectType(canonical) && !subjectChosen) {
-    showTokenStep(
-      playerId,
-      t('ui.wizard.selectSubject', locale),
-      args,
-      'subject',
-      t('ui.wizard.subjectDesc', locale)
-    );
-    return true;
-  }
+  const advantage = isAdvantageType(canonical);
+  if (advantage) {
+    if (showAdvantageActorStep(playerId, args, canonical, locale)) return true;
+  } else {
+    if (isCustomEffectType(canonical) && !isSubjectChosen(args)) {
+      showTokenStep(
+        playerId,
+        t('ui.wizard.selectSubject', locale),
+        args,
+        'subject',
+        t('ui.wizard.subjectDesc', locale)
+      );
+      return true;
+    }
 
-  if (!toText(args.source)) {
-    showTokenStep(
-      playerId,
-      t('ui.wizard.selectSource', locale),
-      args,
-      'source',
-      t('ui.wizard.sourceDesc', locale)
-    );
-    return true;
+    if (!toText(args.source)) {
+      showTokenStep(
+        playerId,
+        t('ui.wizard.selectSource', locale),
+        args,
+        'source',
+        t('ui.wizard.sourceDesc', locale)
+      );
+      return true;
+    }
   }
 
   if (toText(args.target) || toText(args.targets)) {
@@ -931,12 +1072,100 @@ function showPromptStep(playerId, args, canonical, locale) {
     return true;
   }
 
+  if (advantage) {
+    showTokenStep(
+      playerId,
+      t('ui.wizard.againstWhomTitle', locale),
+      args,
+      'target',
+      t('ui.wizard.againstWhomDesc', locale),
+      {
+        sourceShortcutLabel: isAnyAttacker(args) ? t('ui.wizard.sameAsGranterBtn', locale) : null,
+      }
+    );
+    return true;
+  }
+
   showTokenStep(
     playerId,
     t('ui.wizard.selectTarget', locale),
     args,
     'target',
     t('ui.wizard.targetDesc', locale)
+  );
+  return true;
+}
+
+/**
+ * Returns true when the wizard already has a subject answer (a token or None).
+ *
+ * @param {object} args Resolved wizard args.
+ * @returns {boolean} True when the subject step can be skipped.
+ */
+function isSubjectChosen(args) {
+  return Boolean(toText(args.subject));
+}
+
+/**
+ * Shows the next Advantage/Disadvantage "who" step if one is still missing.
+ *
+ * The source is the creature that has the (dis)advantage, with the subject as
+ * the optional granter. For --attacker any the source is the granter itself
+ * and no subject is asked.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object} args Resolved wizard args.
+ * @param {string} canonical Canonical condition label.
+ * @param {string} locale Locale code.
+ * @returns {boolean} True when a wizard step was rendered.
+ */
+function showAdvantageActorStep(playerId, args, canonical, locale) {
+  const anyAttacker = isAnyAttacker(args);
+
+  if (!toText(args.source)) {
+    if (anyAttacker) {
+      showTokenStep(
+        playerId,
+        t('ui.wizard.grantedByTitle', locale),
+        args,
+        'source',
+        t('ui.wizard.grantedByDesc', locale)
+      );
+      return true;
+    }
+
+    const titleKey =
+      canonical === CONDITION_DISADVANTAGE
+        ? 'ui.wizard.whoHasDisadvantage'
+        : 'ui.wizard.whoHasAdvantage';
+    showTokenStep(
+      playerId,
+      t(titleKey, locale),
+      args,
+      'source',
+      t('ui.wizard.whoHasDesc', locale),
+      {
+        extraButtons: [
+          buildButton(
+            t('ui.wizard.anyAttackerBtn', locale),
+            buildWizardBase({ ...args, attacker: ATTACKER_ANY })
+          ),
+        ],
+      }
+    );
+    return true;
+  }
+
+  if (anyAttacker || isSubjectChosen(args)) {
+    return false;
+  }
+
+  showTokenStep(
+    playerId,
+    t('ui.wizard.grantedByOptionalTitle', locale),
+    args,
+    'subject',
+    t('ui.wizard.grantedByOptionalDesc', locale)
   );
   return true;
 }
@@ -1060,8 +1289,16 @@ function routePrimaryCommand(msg, args) {
     handleMultiTargetTrigger(msg);
     return true;
   }
+  if (args.preset !== undefined) {
+    handlePreset(msg.playerid, args);
+    return true;
+  }
   if (args.prompt !== undefined) {
     showPromptUi(msg.playerid, args);
+    return true;
+  }
+  if (args.used) {
+    handleUsed(msg.playerid, args.used);
     return true;
   }
   if (args.menu) {
@@ -1176,10 +1413,12 @@ function handleMultiTargetTrigger(msg) {
 }
 
 /**
- * Validates args, checks for duplicates, and builds a ready-to-persist condition.
+ * Validates args and builds a ready-to-persist condition.
  *
- * Does not modify state or the turn order. Returns null and whispers a warning
- * to the GM when any step fails.
+ * Re-applying an identical effect refreshes it: the existing record, row, and
+ * marker are removed quietly so the new one replaces it. Otherwise state and
+ * the turn order are untouched. Returns null and whispers a warning to the GM
+ * when any step fails.
  *
  * @param {string} playerId GM player id.
  * @param {object} args Parsed command arguments.
@@ -1206,22 +1445,26 @@ function prepareApply(playerId, args) {
     return null;
   }
 
-  if (
-    isDuplicate(
-      validation.sourceToken.id,
-      validation.subjectToken?.id || '',
-      validation.subjectName || '',
-      validation.targetToken.id,
-      validation.condition,
-      validation.customText
-    )
-  ) {
-    whisperWarning(playerId, t('ui.msg.duplicate', locale));
-    return null;
+  const duplicate = findDuplicate({
+    sourceTokenId: validation.sourceToken.id,
+    subjectTokenId: validation.subjectToken?.id || '',
+    subjectName: validation.subjectName || '',
+    targetTokenId: validation.targetToken.id,
+    condition: validation.condition,
+    customText: validation.customText,
+    anyAttacker: validation.anyAttacker,
+    reason: validation.reason,
+  });
+  if (duplicate) {
+    removeConditionById(duplicate.id, { playerId, publicAnnounce: false, whisperResult: false });
   }
 
   const condition = buildConditionRecord(validation, config, durationResult.duration, locale);
-  const markerNotice = applyConfiguredMarker(validation.targetToken, condition, config, locale);
+  const markerToken =
+    condition.markerTokenId === validation.sourceToken.id
+      ? validation.sourceToken
+      : validation.targetToken;
+  const markerNotice = applyConfiguredMarker(markerToken, condition, config, locale);
   return { condition, markerNotice, locale, extraLocale };
 }
 
@@ -1266,6 +1509,7 @@ export function handleMultiApply(playerId, args) {
     targetArg: '',
     targetsArg: prepared.map((p) => p.condition.targetTokenId).join(','),
     conditionArg: prepared[0].condition.condition,
+    optionsArg: buildRecordOptionParts(prepared[0].condition).join(' '),
     durationArg: toText(args.duration),
     otherArg: toText(args.other),
     langArg: toText(args.lang),
@@ -1303,6 +1547,7 @@ export function handleApply(playerId, args) {
     targetArg: condition.targetTokenId,
     targetsArg: '',
     conditionArg: condition.condition,
+    optionsArg: buildRecordOptionParts(condition).join(' '),
     durationArg: toText(args.duration),
     otherArg: toText(args.other),
     langArg: toText(args.lang),
@@ -1333,6 +1578,11 @@ export function buildConditionRecord(validation, config, duration, locale) {
     : validation.subjectName || '';
   const targetName = getTokenName(validation.targetToken);
   const marker = toText(config.markers[validation.condition]) || '';
+  const anyAttacker = Boolean(validation.anyAttacker);
+  const once = Boolean(validation.once);
+  const reason = toText(validation.reason);
+  // Advantage/Disadvantage held by one creature is marked on that creature.
+  const markerOnSource = isAdvantageType(validation.condition) && !anyAttacker;
   const details = {
     sourceName,
     subjectName,
@@ -1341,6 +1591,9 @@ export function buildConditionRecord(validation, config, duration, locale) {
     condition: validation.condition,
     customText: validation.customText,
     useIcons: config.useIcons,
+    anyAttacker,
+    once,
+    reason,
   };
 
   const id = createId();
@@ -1356,6 +1609,10 @@ export function buildConditionRecord(validation, config, duration, locale) {
     customText: validation.customText,
     displayText: buildDisplayText(details, locale),
     marker,
+    markerTokenId: markerOnSource ? validation.sourceToken.id : validation.targetToken.id,
+    anyAttacker,
+    once,
+    reason,
     turnOrderCustomId: id,
     duration,
     createdAt: Date.now(),
@@ -1365,7 +1622,7 @@ export function buildConditionRecord(validation, config, duration, locale) {
 /**
  * Applies the configured marker and returns a GM-facing notice.
  *
- * @param {Graphic} targetToken Target token.
+ * @param {Graphic} targetToken Token that carries the marker.
  * @param {object} condition Condition record.
  * @param {object} config Current config.
  * @param {string} [locale] Output locale.
@@ -1405,16 +1662,101 @@ export function isDuplicate(
   condition,
   customText
 ) {
-  return someActiveCondition((activeCondition) => {
-    const sameSource = activeCondition.sourceTokenId === sourceTokenId;
-    const sameSubject = (activeCondition.subjectTokenId || '') === (subjectTokenId || '');
-    const sameSubjectName = (activeCondition.subjectName || '') === (subjectName || '');
-    const sameTarget = activeCondition.targetTokenId === targetTokenId;
-    const sameCondition = activeCondition.condition === condition;
-    const sameCustomText = activeCondition.customText === customText;
-    return (
-      sameSource && sameSubject && sameSubjectName && sameTarget && sameCondition && sameCustomText
+  return Boolean(
+    findDuplicate({
+      sourceTokenId,
+      subjectTokenId,
+      subjectName,
+      targetTokenId,
+      condition,
+      customText,
+    })
+  );
+}
+
+/**
+ * Finds the active condition that exactly matches a candidate effect.
+ *
+ * @param {object} candidate Candidate effect identity.
+ * @param {string} candidate.sourceTokenId Source token id.
+ * @param {string} [candidate.subjectTokenId] Subject token id.
+ * @param {string} [candidate.subjectName] Subject display name.
+ * @param {string} candidate.targetTokenId Target token id.
+ * @param {string} candidate.condition Condition label.
+ * @param {string} candidate.customText Custom effect text.
+ * @param {boolean} [candidate.anyAttacker] Any-attacker Advantage/Disadvantage.
+ * @param {string} [candidate.reason] Reason label.
+ * @returns {object|null} Matching active condition or null.
+ */
+export function findDuplicate(candidate) {
+  return (
+    ensureState().active.find(
+      (activeCondition) =>
+        activeCondition.sourceTokenId === candidate.sourceTokenId &&
+        (activeCondition.subjectTokenId || '') === (candidate.subjectTokenId || '') &&
+        (activeCondition.subjectName || '') === (candidate.subjectName || '') &&
+        activeCondition.targetTokenId === candidate.targetTokenId &&
+        activeCondition.condition === candidate.condition &&
+        activeCondition.customText === candidate.customText &&
+        Boolean(activeCondition.anyAttacker) === Boolean(candidate.anyAttacker) &&
+        (activeCondition.reason || '') === (candidate.reason || '')
+    ) || null
+  );
+}
+
+/**
+ * Starts a preset: pre-fills the wizard so only the tokens are left to pick.
+ *
+ * @param {string} playerId GM player id.
+ * @param {object} args Parsed command arguments.
+ * @returns {void}
+ */
+export function handlePreset(playerId, args) {
+  const config = getConfig();
+  const locale = config.language;
+  const available = getPresetsForProfile(getSystemProfile(config.gameSystem));
+  const preset = getPreset(args.preset === true ? '' : toText(args.preset));
+  if (!preset || !available.includes(preset)) {
+    whisperWarning(
+      playerId,
+      t('ui.msg.unknownPreset', locale, {
+        presets: available.map((item) => item.id).join(', ') || '-',
+      })
     );
+    return;
+  }
+
+  showPromptUi(playerId, {
+    condition: preset.condition,
+    ...preset.args,
+    reason: t(preset.reasonKey, locale),
+    ...args,
+    prompt: true,
+  });
+}
+
+/**
+ * Removes a single-use effect and announces it as used.
+ *
+ * @param {string} playerId GM player id.
+ * @param {string} conditionId Condition id.
+ * @returns {void}
+ */
+export function handleUsed(playerId, conditionId) {
+  const locale = getConfig().language;
+  const condition = findActiveCondition(toText(conditionId));
+  if (!condition) {
+    whisperWarning(playerId, t('ui.msg.conditionNotFound', locale));
+    return;
+  }
+
+  removeConditionById(condition.id, {
+    playerId,
+    reason: t('ui.msg.effectUsed', locale),
+    publicAnnounce: true,
+    whisperResult: true,
+    locale,
+    used: true,
   });
 }
 
@@ -2040,9 +2382,28 @@ export function showRemovalMenu(playerId) {
   const lines = [];
   for (const condition of active) {
     lines.push(buildRemoveButton(condition));
+    if (condition.once) {
+      lines.push(buildUsedButton(condition, locale, true));
+    }
   }
 
   whisper(playerId, t('ui.title.removalMenu', locale), lines);
+}
+
+/**
+ * Builds the Mark as Used button for a single-use effect.
+ *
+ * @param {object} condition Active condition record.
+ * @param {string} locale Output locale.
+ * @param {boolean} [withLabel] Append the row text so the button identifies its effect.
+ * @returns {object} Trusted HTML button.
+ */
+function buildUsedButton(condition, locale, withLabel = false) {
+  const label = t('ui.btn.markUsed', locale);
+  return buildButton(
+    withLabel ? `${label}: ${condition.displayText}` : label,
+    `${COMMAND} --used ${condition.id}`
+  );
 }
 
 /**
@@ -2294,6 +2655,7 @@ function buildMacroParts(payload, mode) {
     `--source ${payload.sourceArg}`,
     targetPart,
     `--condition ${payload.conditionArg}`,
+    ...(payload.optionsArg ? [payload.optionsArg] : []),
     `--macro-mode ${mode}`,
     ...(payload.durationArg ? [`--duration ${payload.durationArg}`] : []),
     ...(payload.otherArg ? [`--other ${payload.otherArg}`] : []),
@@ -2355,9 +2717,15 @@ export function whisperApplySummary(
         ],
         [t('ui.removal.markerField', locale), escapeHtml(markerNotice)],
         ['Duration', escapeHtml(formatDuration(condition.duration, locale))],
+        ...(condition.once
+          ? [[t('ui.apply.usesField', locale), escapeHtml(t('ui.wizard.onceBtn', locale))]]
+          : []),
       ]
     ),
   ];
+  if (condition.once) {
+    body.push(buildUsedButton(condition, locale));
+  }
 
   const config = getConfig();
   if (config.enablePostApplyMacroButtons) {
@@ -2522,6 +2890,13 @@ export function handleReportToken(msg) {
 export function formatDuration(duration, locale) {
   if (!duration || duration.type === DURATION_UNTIL_REMOVED) {
     return t('ui.dur.untilRemovedDisplay', locale);
+  }
+
+  if (duration.type === DURATION_TURN_START) {
+    const anchorToken = getGraphicToken(duration.anchor);
+    return anchorToken
+      ? t('ui.dur.untilTurnStart', locale, { name: getTokenName(anchorToken) })
+      : t('ui.dur.untilTurnStartUnknown', locale);
   }
 
   return t('ui.dur.turnsRemaining', locale, { n: duration.remaining });

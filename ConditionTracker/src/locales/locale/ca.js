@@ -195,14 +195,23 @@ const TRANSLATION = {
       custom: '{emoji} {target} afectat per {effect} ({source})',
       advantage: '{emoji} {source} té avantatge contra {target}{subject}',
       disadvantage: '{emoji} {source} té desavantatge contra {target}{subject}',
+      advantageAny: '{emoji} Els atacs contra {target} tenen avantatge{by}',
+      advantageNext: '{emoji} El proper atac contra {target} té avantatge{by}',
+      disadvantageAny: '{emoji} Els atacs contra {target} tenen un desavantatge{by}',
+      disadvantageNext: '{emoji} El proper atac contra {target} té un desavantatge{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} està {past}',
+      self: '{emoji} {target} està {past}',
       standard: '{emoji} {target} {past} per {source}',
     },
     apply: {
       custom: '{source} aplica {effect} a {target}.',
       advantage: '{source} té avantatge contra {target}{subject}.',
       disadvantage: '{source} té desavantatge contra {target}{subject}.',
+      advantageAny: '{source} atorga avantatge als atacs contra {target}{reason}.',
+      advantageNext: '{source} atorga avantatge en el següent atac contra {target}{reason}.',
+      disadvantageAny: '{source} imposa un desavantatge als atacs contra {target}{reason}.',
+      disadvantageNext:
+        '{source} imposa un desavantatge en el següent atac contra {target}{reason}.',
       self: '{target} està {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +220,14 @@ const TRANSLATION = {
       custom: '{target} ja no està afectat per {effect}.',
       advantage: '{source} ja no té avantatge contra {target}{subject}.',
       disadvantage: '{source} ja no té desavantatge contra {target}{subject}.',
+      advantageAny: 'Els atacs contra {target} ja no tenen avantatge{reason}.',
+      advantageNext: 'El proper atac contra {target} ja no té avantatge{reason}.',
+      disadvantageAny: 'Els atacs contra {target} ja no tenen desavantatge{reason}.',
+      disadvantageNext: 'El proper atac contra {target} ja no té desavantatge{reason}.',
+      advantageUsed: "L'avantatge en el proper atac contra {target} s'ha utilitzat{reason}.",
+      disadvantageUsed: "S'ha aplicat el desavantatge en el proper atac contra {target}{reason}.",
+      advantageUsedBy: "{source} ha fet l'atac amb avantatge contra {target}{subject}.",
+      disadvantageUsedBy: "{source} ha fet l'atac amb desavantatge contra {target}{subject}.",
       noBy: '{target} ja no {past}.',
       self: '{target} ja no està {past}.',
       standard: '{target} ja no està {past} per {source}.',
@@ -236,6 +253,32 @@ const TRANSLATION = {
       targetDesc: "Selecciona la criatura que rebrà la condició o l'efecte.",
       otherText: 'Text de condició personalitzat',
       effectDetails: 'Detalls de {condition}',
+      whoHasAdvantage: 'Qui té avantatge?',
+      whoHasDisadvantage: 'Qui té desavantatge?',
+      whoHasDesc:
+        "Seleccioneu la criatura que fa la tirada o trieu Qualsevol atacant quan s'apliqui a qui ataca l'objectiu (Ajuda, Foc Fada, Esquiva).",
+      anyAttackerBtn: 'Qualsevol atacant',
+      grantedByTitle: 'Qui ho concedeix?',
+      grantedByDesc:
+        "Seleccioneu la criatura que l'atorga o l'imposa, com ara l'ajudant. La durada del torn d'origen segueix aquesta criatura.",
+      grantedByOptionalTitle: 'Atorgat per (opcional)',
+      grantedByOptionalDesc: "Seleccioneu la criatura que l'ha concedit o imposat, o Cap.",
+      againstWhomTitle: 'Contra qui?',
+      againstWhomDesc: 'Seleccioneu la criatura atacada.',
+      sameAsGranterBtn: 'La mateixa criatura (p. ex., Dodge)',
+      usageTitle: 'Quants atacs?',
+      usageDesc: "Trieu si s'utilitzarà el següent atac o s'aplicarà a cada atac mentre duri.",
+      onceBtn: 'Només el proper atac',
+      everyBtn: 'Cada atac',
+      addReasonBtn: 'Afegiu una etiqueta de motiu',
+      reasonPrompt: 'Etiqueta del motiu (p. ex., Ajuda)',
+      reasonCurrent: 'Motiu: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Ajuda',
+        reason: 'Ajuda',
+      },
     },
     col: {
       players: 'Jugadors',
@@ -263,6 +306,7 @@ const TRANSLATION = {
       untilRemoved: "Fins que s'elimini",
       endOfTargetTurn: 'Fi del proper torn del destinatari',
       endOfSourceTurn: "Fi del proper torn de l'origen",
+      startOfSourceTurn: 'Inici de la font següent torn',
       round1: '1 ronda',
       round2: '2 rondes',
       round3: '3 rondes',
@@ -271,6 +315,8 @@ const TRANSLATION = {
       customPrompt: 'Nombre de rondes',
       untilRemovedDisplay: "Fins que s'elimini",
       turnsRemaining: '{n} fi(ns) de torn restant(s)',
+      untilTurnStart: "Fins a l'inici del proper torn de {name}",
+      untilTurnStartUnknown: "Fins a l'inici del proper torn de la font",
     },
     btn: {
       openWizard: "Obre l'assistent",
@@ -296,6 +342,7 @@ const TRANSLATION = {
       runMacroNow: 'Executeu Macro ara',
       macroButtonsEnable: 'Activa els botons de macro',
       macroButtonsDisable: 'Desactiva els botons de macro',
+      markUsed: 'Marca com a utilitzat',
     },
     title: {
       menu: 'Menú',
@@ -349,6 +396,7 @@ const TRANSLATION = {
       promoteOptions: 'Ascens a Turn Tracker',
       editActions: 'Edita accions',
       macroActions: 'Accions macro',
+      presets: 'Presets',
     },
     msg: {
       noActive: 'No hi ha cap condició activa en seguiment.',
@@ -467,6 +515,12 @@ const TRANSLATION = {
         "No s'ha trobat cap acció d'aplicació recent. Aplicar una condició primer.",
       macroInvalidName: 'El nom de la macro no pot estar buit.',
       macroMissingRequiredData: 'Falten les dades necessàries per crear la macro.',
+      advantageOnlyOption:
+        '--attacker, --once i --reason només són vàlids per a Avantatge i Desavantatge.',
+      attackerInvalid: '--attacker només accepta el valor qualsevol.',
+      onceInvalid: '--once espera vertader o fals quan es proporciona un valor.',
+      effectUsed: 'es va utilitzar',
+      unknownPreset: 'Preestablert desconegut. Valors predefinits disponibles: {presets}.',
     },
     removal: {
       conditionField: 'Condició',
@@ -533,6 +587,7 @@ const TRANSLATION = {
       turnAppended:
         "El destinatari no era a l'ordre d'iniciativa; la fila de condició s'ha afegit al final.",
       turnInserted: 'Fila de condició inserida sota el testimoni destinatari.',
+      usesField: 'Usos',
     },
   },
   handout: {
@@ -609,6 +664,14 @@ const TRANSLATION = {
         [
           '!condition-tracker --source gala --target cap --condition Prone --duration 1 ronda',
           'Aplicació directa amb noms parcials únics; si coincideixen múltiples fitxes, el mod demana un nom o identificador més específic.',
+        ],
+        [
+          '!condition-tracker --preset ajuda',
+          "Acció d'ajuda: escolliu l'ajudant (per exemple, un familiar) i després la criatura atacada. El següent atac contra ell té avantatge fins que s'utilitzi o fins que comenci el següent torn de l'ajudant. Afegiu --source amb un nom o identificador de testimoni per preseleccionar l'ajudant.",
+        ],
+        [
+          '!condition-tracker --source Wizard --target Ogre --condition Advantage --attacker any --reason Faerie Fire --duration 10 rounds',
+          'Avantatge per a cada atacant contra un objectiu, etiquetat amb el motiu.',
         ],
       ],
     },
@@ -691,10 +754,27 @@ const TRANSLATION = {
           'Xiuxiueja un diagnòstic de classificació per a cada testimoni seleccionat: mostra el tipus detectat, la font de detecció i el motiu',
         ],
         ['--help', "Mostra una targeta d'ajuda breu al xat"],
+        [
+          '--preset ajuda',
+          "Inicieu la configuració predeterminada d'ajuda: trieu l'ajudant i la criatura atacada (afegiu --source per preseleccionar l'ajudant)",
+        ],
+        [
+          '--attacker qualsevol',
+          "Avantatge / Desavantatge només: s'aplica a qui ataca l'objectiu, --source és la criatura que ho concedeix i la fila se situa sota l'objectiu.",
+        ],
+        [
+          '--once cert|fals',
+          'Avantatge / Desavantatge només: utilitzat pel següent atac; el GM obté un botó Marca com a utilitzat',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          "Només avantatge / desavantatge: l'etiqueta de motiu que es mostra a la fila (p. ex., Ajuda)",
+        ],
+        ['--used &lt;condition-id&gt;', "Elimina un efecte d'un sol ús i anuncia'l com s'utilitza"],
       ],
     },
     standardConditions: {
-      heading: 'Condicions estàndard (D&amp;D 5e)',
+      heading: 'Condicions estàndard ({system})',
       colCondition: 'Condició',
       none: "No s'han definit condicions estàndard per a aquest sistema de joc. Utilitzeu l'altre tipus d'efecte personalitzat per a efectes de text lliure.",
     },
@@ -741,6 +821,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 rondes',
           'Compte enrere fix; un decrement per fi de torn del testimoni ancla',
+        ],
+        [
+          'Inici del proper torn de la font',
+          'Caduca tan bon punt comença el següent torn de la fitxa font (Ajuda, Esquiva i efectes similars)',
         ],
       ],
     },

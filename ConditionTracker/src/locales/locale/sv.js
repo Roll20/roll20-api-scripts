@@ -195,14 +195,22 @@ const TRANSLATION = {
       custom: '{emoji} {target} påverkad av {effect} ({source})',
       advantage: '{emoji} {source} har fördel mot {target}{subject}',
       disadvantage: '{emoji} {source} har nackdel mot {target}{subject}',
+      advantageAny: '{emoji} Attacker kontra {target} har fördel{by}',
+      advantageNext: '{emoji} Nästa attack mot {target} har fördel{by}',
+      disadvantageAny: '{emoji} Attacker kontra {target} har nackdelar{by}',
+      disadvantageNext: '{emoji} Nästa attack mot {target} har en nackdel{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} är {past}',
+      self: '{emoji} {target} är {past}',
       standard: '{emoji} {target} {past} av {source}',
     },
     apply: {
       custom: '{source} applicerar {effect} på {target}.',
       advantage: '{source} har fördel mot {target}{subject}.',
       disadvantage: '{source} har nackdel mot {target}{subject}.',
+      advantageAny: '{source} ger fördel vid attacker mot {target}{reason}.',
+      advantageNext: '{source} ger fördel vid nästa attack mot {target}{reason}.',
+      disadvantageAny: '{source} medför nackdelar för attacker mot {target}{reason}.',
+      disadvantageNext: '{source} medför nackdelar vid nästa attack mot {target}{reason}.',
       self: '{target} är {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +219,14 @@ const TRANSLATION = {
       custom: '{target} är inte längre påverkad av {effect}.',
       advantage: '{source} har inte längre fördel mot {target}{subject}.',
       disadvantage: '{source} har inte längre nackdel mot {target}{subject}.',
+      advantageAny: 'Attacker mot {target} har inte längre fördel{reason}.',
+      advantageNext: 'Nästa attack mot {target} har inte längre fördel{reason}.',
+      disadvantageAny: 'Attacker mot {target} har inte längre nackdelar{reason}.',
+      disadvantageNext: 'Nästa attack mot {target} har inte längre nackdelar{reason}.',
+      advantageUsed: 'Fördelen vid nästa attack mot {target} har använts{reason}.',
+      disadvantageUsed: 'Nackdelen vid nästa attack mot {target} har tillämpats{reason}.',
+      advantageUsedBy: '{source} har gjort attacken med fördel mot {target}{subject}.',
+      disadvantageUsedBy: '{source} har gjort attacken med nackdel mot {target}{subject}.',
       noBy: '{target} är inte längre {past}.',
       self: '{target} är inte längre {past}.',
       standard: '{target} är inte längre {past} av {source}.',
@@ -236,6 +252,33 @@ const TRANSLATION = {
       targetDesc: 'Välj det väsen som kommer att ta emot tillståndet eller effekten.',
       otherText: 'Anpassad tillståndstext',
       effectDetails: '{condition}-detaljer',
+      whoHasAdvantage: 'Vem har fördel?',
+      whoHasDisadvantage: 'Vem har nackdel?',
+      whoHasDesc:
+        'Välj varelsen som gör rullningen, eller välj Alla angripare när det gäller den som attackerar målet (Hjälp, Faerie Fire, Dodge).',
+      anyAttackerBtn: 'Vilken angripare som helst',
+      grantedByTitle: 'Vem beviljar det?',
+      grantedByDesc:
+        'Välj varelsen som beviljar eller påtvingar den, till exempel hjälparen. Varaktigheten av källans vändning följer denna varelse.',
+      grantedByOptionalTitle: 'Beviljas av (valfritt)',
+      grantedByOptionalDesc: 'Välj varelsen som beviljade eller påtvingade den, eller Ingen.',
+      againstWhomTitle: 'Mot vem?',
+      againstWhomDesc: 'Välj varelsen som attackeras.',
+      sameAsGranterBtn: 'Samma varelse (t.ex. Dodge)',
+      usageTitle: 'Hur många attacker?',
+      usageDesc:
+        'Välj om den ska förbrukas av nästa attack eller gäller för varje attack så länge den varar.',
+      onceBtn: 'Endast nästa attack',
+      everyBtn: 'Varje attack',
+      addReasonBtn: 'Lägg till en orsaksetikett',
+      reasonPrompt: 'Orsaksetikett (t.ex. Hjälp)',
+      reasonCurrent: 'Orsak: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Hjälp',
+        reason: 'Hjälp',
+      },
     },
     col: {
       players: 'Spelare',
@@ -263,6 +306,7 @@ const TRANSLATION = {
       untilRemoved: 'Tills borttagen',
       endOfTargetTurn: 'Slutet av målets nästa tur',
       endOfSourceTurn: 'Slutet av källans nästa tur',
+      startOfSourceTurn: 'Start av källa nästa varv',
       round1: '1 runda',
       round2: '2 rundor',
       round3: '3 rundor',
@@ -271,6 +315,8 @@ const TRANSLATION = {
       customPrompt: 'Antal rundor',
       untilRemovedDisplay: 'Tills borttagen',
       turnsRemaining: '{n} spårad(e) turslut återstår',
+      untilTurnStart: 'Tills början av nästa sväng för {name}',
+      untilTurnStartUnknown: 'Tills början av källans nästa tur',
     },
     btn: {
       openWizard: 'Öppna guide',
@@ -296,6 +342,7 @@ const TRANSLATION = {
       runMacroNow: 'Kör makro nu',
       macroButtonsEnable: 'Aktivera makroknappar',
       macroButtonsDisable: 'Inaktivera makroknappar',
+      markUsed: 'Markera som använd',
     },
     title: {
       menu: 'Meny',
@@ -349,6 +396,7 @@ const TRANSLATION = {
       promoteOptions: 'Befordra till Turn Tracker',
       editActions: 'Redigera åtgärder',
       macroActions: 'Makroåtgärder',
+      presets: 'Förinställningar',
     },
     msg: {
       noActive: 'Inga aktiva tillstånd spåras.',
@@ -459,6 +507,12 @@ const TRANSLATION = {
         'Ingen nyligen tillämpad åtgärd hittades. Tillämpa ett villkor först.',
       macroInvalidName: 'Makronamnet får inte vara tomt.',
       macroMissingRequiredData: 'Data som krävs för att skapa makro saknas.',
+      advantageOnlyOption:
+        '--attacker, --once och --reason är endast giltiga för fördelar och nackdelar.',
+      attackerInvalid: '--attacker accepterar endast värdet något.',
+      onceInvalid: '--once förväntar sig sant eller falskt när ett värde tillhandahålls.',
+      effectUsed: 'den användes',
+      unknownPreset: 'Okänd förinställning. Tillgängliga förinställningar: {presets}.',
     },
     removal: {
       conditionField: 'Tillstånd',
@@ -525,6 +579,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Målet var inte i turordningen; tillståndsrad lades till sist.',
       turnInserted: 'Tillståndsrad infogad under måltoken.',
+      usesField: 'Används',
     },
   },
   handout: {
@@ -601,6 +656,14 @@ const TRANSLATION = {
           '!condition-tracker --source gala --target boss --condition Prone --duration 1 omgång',
           'Ansök direkt med unika delnamn; om flera tokens matchar, ber modden om ett mer specifikt namn eller token-id.',
         ],
+        [
+          '!condition-tracker --preset hjälp',
+          'Hjälpåtgärd: välj hjälparen (till exempel en bekant), sedan varelsen som attackeras. Nästa attack mot den har fördel tills den används eller tills hjälparens nästa tur börjar. Lägg till --source med ett tokennamn eller id för att förvälja hjälparen.',
+        ],
+        [
+          '!condition-tracker --source Wizard --target Ogre --condition Advantage --attacker valfri --reason Faerie Fire --duration 10 omgångar',
+          'Fördel för varje angripare mot ett mål, märkt med orsaken.',
+        ],
       ],
     },
     commandsRef: {
@@ -673,10 +736,27 @@ const TRANSLATION = {
           'Viska en klassificeringsdiagnostik för varje vald token — visar den detekterade typen, detekteringskällan och orsaken',
         ],
         ['--help', 'Visa ett kort hjälpkort i chatten'],
+        [
+          '--preset hjälp',
+          'Starta hjälpförinställningen: välj hjälparen och varelsen som attackeras (lägg till --source för att förvälja hjälparen)',
+        ],
+        [
+          '--attacker någon',
+          'Endast fördel / nackdel: det gäller den som attackerar målet, --source är varelsen som ger det, och raden sitter under målet',
+        ],
+        [
+          '--once sant|falskt',
+          'Endast fördel / nackdel: förbrukas av nästa attack; GM får en Markera som använd-knapp',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Endast fördel / nackdel: orsaksetiketten visas i raden (t.ex. Hjälp)',
+        ],
+        ['--used &lt;condition-id&gt;', 'Ta bort en engångseffekt och meddela att den används'],
       ],
     },
     standardConditions: {
-      heading: 'Standardtillstånd (D&amp;D 5e)',
+      heading: 'Standardtillstånd ({system})',
       colCondition: 'Tillstånd',
       none: 'Inga standardvillkor definierade för detta spelsystem. Använd den anpassade effekten Annan för fritexteffekter.',
     },
@@ -712,6 +792,10 @@ const TRANSLATION = {
         ['Slutet av målets nästa tur', 'Löper ut när måltoken:s nästa tur slutar i initiativet'],
         ['Slutet av källans nästa tur', 'Löper ut när källtoken:s nästa tur slutar i initiativet'],
         ['1 / 2 / 3 / 10 rundor', 'Fast nedräkning; ett steg per ankertokenens turslut'],
+        [
+          'Start av källans nästa tur',
+          'Upphör så snart källtokenets nästa tur börjar (Hjälp, Dodge och liknande effekter)',
+        ],
       ],
     },
     savedEffects: {

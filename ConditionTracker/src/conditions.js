@@ -118,6 +118,9 @@ export function getConditionEmoji(condition) {
  * @param {string} details.targetName Target token name.
  * @param {boolean} [details.isSelfTarget] Whether source and target are the same token.
  * @param {string} [details.subjectName] Subject name for advantage types.
+ * @param {boolean} [details.anyAttacker] Advantage types: applies to any attacker of the target.
+ * @param {boolean} [details.once] Advantage types: applies to the next attack only.
+ * @param {string} [details.reason] Advantage types: reason label (e.g. Help).
  * @param {string} [locale] Output locale.
  * @returns {string} Turn Tracker display text.
  */
@@ -134,7 +137,15 @@ export function buildDisplayText(details, locale) {
   }
 
   if (isAdvantageType(details.condition)) {
-    const subject = toText(details.subjectName) ? ` (${details.subjectName})` : '';
+    if (details.anyAttacker) {
+      const granter = details.isSelfTarget || isSelfTarget(details) ? '' : details.sourceName;
+      return t(`templates.display.${anyAttackerKey(details)}`, locale, {
+        emoji,
+        target: details.targetName,
+        by: buildGrantSuffix(details.reason, granter),
+      });
+    }
+
     const tplKey =
       details.condition === CONDITION_DISADVANTAGE
         ? 'templates.display.disadvantage'
@@ -143,7 +154,7 @@ export function buildDisplayText(details, locale) {
       emoji,
       source: details.sourceName,
       target: details.targetName,
-      subject,
+      subject: buildGrantSuffix(details.reason, details.subjectName),
     });
   }
 
@@ -209,12 +220,24 @@ export function buildApplyMessage(details, locale) {
   }
 
   if (isAdvantageType(details.condition)) {
-    const subject = toText(details.subjectName) ? ` (${escapeHtml(details.subjectName)})` : '';
+    if (details.anyAttacker) {
+      return (
+        prefix +
+        t(`templates.apply.${anyAttackerKey(details)}`, locale, {
+          source: src,
+          target: tgt,
+          reason: buildReasonSuffix(details.reason),
+        })
+      );
+    }
+
     const tplKey =
       details.condition === CONDITION_DISADVANTAGE
         ? 'templates.apply.disadvantage'
         : 'templates.apply.advantage';
-    return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
+    return (
+      prefix + t(tplKey, locale, { source: src, target: tgt, subject: htmlGrantSuffix(details) })
+    );
   }
 
   const localData = getConditionLocalData(details.condition, locale);
@@ -258,9 +281,11 @@ export function buildApplyMessage(details, locale) {
  * @param {object} condition Active condition record.
  * @param {boolean} useIcons Whether icons are enabled.
  * @param {string} [locale] Output locale.
+ * @param {object} [options] Message options.
+ * @param {boolean} [options.used] Word Advantage/Disadvantage removal as the effect being used.
  * @returns {string} Public chat text.
  */
-export function buildRemovalMessage(condition, useIcons, locale) {
+export function buildRemovalMessage(condition, useIcons, locale, options = {}) {
   const prefix = buildIconPrefix(condition.condition, useIcons);
   const src = actorSpan(condition.sourceName);
   const tgt = actorSpan(condition.targetName);
@@ -276,12 +301,27 @@ export function buildRemovalMessage(condition, useIcons, locale) {
   }
 
   if (isAdvantageType(condition.condition)) {
-    const subject = toText(condition.subjectName) ? ` (${escapeHtml(condition.subjectName)})` : '';
-    const tplKey =
-      condition.condition === CONDITION_DISADVANTAGE
-        ? 'templates.remove.disadvantage'
-        : 'templates.remove.advantage';
-    return prefix + t(tplKey, locale, { source: src, target: tgt, subject });
+    const type = condition.condition === CONDITION_DISADVANTAGE ? 'disadvantage' : 'advantage';
+    if (condition.anyAttacker) {
+      const tplKey = options.used ? `${type}Used` : anyAttackerKey(condition);
+      return (
+        prefix +
+        t(`templates.remove.${tplKey}`, locale, {
+          target: tgt,
+          reason: buildReasonSuffix(condition.reason),
+        })
+      );
+    }
+
+    const tplKey = options.used ? `${type}UsedBy` : type;
+    return (
+      prefix +
+      t(`templates.remove.${tplKey}`, locale, {
+        source: src,
+        target: tgt,
+        subject: htmlGrantSuffix(condition),
+      })
+    );
   }
 
   const localData = getConditionLocalData(condition.condition, locale);
@@ -343,8 +383,55 @@ function buildIconPrefix(condition, useIcons) {
  * @param {string} condition Canonical condition.
  * @returns {boolean} True for advantage-style effects.
  */
-function isAdvantageType(condition) {
+export function isAdvantageType(condition) {
   return condition === CONDITION_ADVANTAGE || condition === CONDITION_DISADVANTAGE;
+}
+
+/**
+ * Returns the template key for an Advantage/Disadvantage that applies to any attacker.
+ *
+ * @param {object} details Display details or condition record.
+ * @returns {string} Template key such as "advantageNext" or "disadvantageAny".
+ */
+function anyAttackerKey(details) {
+  const type = details.condition === CONDITION_DISADVANTAGE ? 'disadvantage' : 'advantage';
+  return `${type}${details.once ? 'Next' : 'Any'}`;
+}
+
+/**
+ * Builds the plain-text trailing label naming why an effect applies and who granted it.
+ *
+ * @param {string} reason Reason label (e.g. Help), may be empty.
+ * @param {string} name Granting creature name, may be empty.
+ * @returns {string} Suffix such as " — Help (Owl)", " — Help", " (Owl)", or "".
+ */
+function buildGrantSuffix(reason, name) {
+  const reasonText = toText(reason);
+  const nameText = toText(name);
+  if (reasonText && nameText) return ` — ${reasonText} (${nameText})`;
+  if (reasonText) return ` — ${reasonText}`;
+  return nameText ? ` (${nameText})` : '';
+}
+
+/**
+ * Builds the HTML-escaped grant suffix for chat from a record's reason and subject.
+ *
+ * @param {object} details Display details or condition record.
+ * @returns {string} Escaped suffix.
+ */
+function htmlGrantSuffix(details) {
+  return escapeHtml(buildGrantSuffix(details.reason, details.subjectName));
+}
+
+/**
+ * Builds the HTML-escaped parenthesised reason for chat announcements.
+ *
+ * @param {string} reason Reason label, may be empty.
+ * @returns {string} Suffix such as " (Help)" or "".
+ */
+function buildReasonSuffix(reason) {
+  const reasonText = toText(reason);
+  return reasonText ? ` (${escapeHtml(reasonText)})` : '';
 }
 
 /**

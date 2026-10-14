@@ -37,11 +37,12 @@ export function removeMarkerIfUnused(condition) {
     return { removed: false, marker: '' };
   }
 
-  if (isMarkerStillRequired(condition.targetTokenId, marker, condition.id)) {
+  const markerTokenId = getMarkerTokenId(condition);
+  if (isMarkerStillRequired(markerTokenId, marker, condition.id)) {
     return { removed: false, marker };
   }
 
-  const token = getObj('graphic', condition.targetTokenId);
+  const token = getObj('graphic', markerTokenId);
   if (!token) {
     return { removed: false, marker };
   }
@@ -57,16 +58,29 @@ export function removeMarkerIfUnused(condition) {
 }
 
 /**
+ * Returns the id of the token that carries a condition's marker.
+ *
+ * Markers sit on the target unless the record names another token (Advantage
+ * and Disadvantage held by one creature are marked on that creature).
+ *
+ * @param {object} condition Active condition record.
+ * @returns {string} Token id.
+ */
+export function getMarkerTokenId(condition) {
+  return toText(condition?.markerTokenId) || toText(condition?.targetTokenId);
+}
+
+/**
  * Returns true when another active condition still requires a marker.
  *
- * @param {string} targetTokenId Target token id.
+ * @param {string} targetTokenId Id of the token carrying the marker.
  * @param {string} marker Marker name or tag.
  * @param {string} ignoredConditionId Condition id being removed.
  * @returns {boolean} True when the marker is still needed.
  */
 export function isMarkerStillRequired(targetTokenId, marker, ignoredConditionId) {
   for (const condition of ensureState().active) {
-    const sameTarget = condition.targetTokenId === targetTokenId;
+    const sameTarget = getMarkerTokenId(condition) === targetTokenId;
     const sameMarker = condition.marker === marker;
     const differentCondition = condition.id !== ignoredConditionId;
     if (sameTarget && sameMarker && differentCondition) {

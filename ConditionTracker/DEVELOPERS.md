@@ -279,8 +279,17 @@ Interprets and decrements condition durations.
 - `untilRemoved` — Persists until manually removed
 - `turnEnd` — Expires when the anchor token's turn count reaches zero
 - `rounds` — Counts down on target-anchor turn ticks
+- `turnStart` — Expires when the anchor token's next turn begins
 
-Exports parser/build helpers (`parseDuration`, `createTurnEndDuration`, `createRoundDuration`) plus `decrementDuration(condition, endedTurnTokenId)`.
+Exports parser/build helpers (`parseDuration`, `createTurnEndDuration`, `createTurnStartDuration`, `createRoundDuration`) plus `decrementDuration(condition, endedTurnTokenId)` and `expiresAtTurnStart(condition, startedTurnTokenId)`.
+
+### Presets: `src/presets.js`
+
+One-click effect presets (currently `help`). A preset names a condition type and the wizard arguments to pre-fill; `handlePreset()` in `commands.js` expands it and hands off to the normal wizard, so a preset only needs an entry here plus its `ui.preset.<id>` label and reason strings. `getPresetsForProfile()` hides presets whose condition type the active game system does not offer.
+
+### Advantage / Disadvantage records
+
+Active records for these types carry extra fields: `anyAttacker` (applies to whoever attacks the target; `sourceTokenId` is then the granter), `once` (single use), `reason` (label), and `markerTokenId` (the token carrying the marker; records without it fall back to `targetTokenId`).
 
 ### Help & Installation: `src/handout.js`
 

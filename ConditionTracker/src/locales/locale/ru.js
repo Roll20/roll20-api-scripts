@@ -195,14 +195,22 @@ const TRANSLATION = {
       custom: '{emoji} {target} под воздействием {effect} ({source})',
       advantage: '{emoji} {source} имеет преимущество против {target}{subject}',
       disadvantage: '{emoji} {source} имеет помеху против {target}{subject}',
+      advantageAny: '{emoji} Атаки против {target} имеют преимущество {by}',
+      advantageNext: '{emoji} Следующая атака против {target} имеет преимущество {by}',
+      disadvantageAny: '{emoji} Атаки против {target} имеют недостаток {by}',
+      disadvantageNext: '{emoji} Следующая атака против {target} имеет недостаток {by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} {past}',
+      self: '{emoji} {target} {past}',
       standard: '{emoji} {target} {past} от {source}',
     },
     apply: {
       custom: '{source} накладывает {effect} на {target}.',
       advantage: '{source} имеет преимущество против {target}{subject}.',
       disadvantage: '{source} имеет помеху против {target}{subject}.',
+      advantageAny: '{source} дает преимущество при атаке против {target}{reason}.',
+      advantageNext: '{source} дает преимущество при следующей атаке против {target}{reason}.',
+      disadvantageAny: '{source} накладывает ограничения на атаки на {target}{reason}.',
+      disadvantageNext: '{source} создает помеху при следующей атаке на {target}{reason}.',
       self: '{target} {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +219,14 @@ const TRANSLATION = {
       custom: '{target} больше не находится под воздействием {effect}.',
       advantage: '{source} больше не имеет преимущества против {target}{subject}.',
       disadvantage: '{source} больше не имеет помехи против {target}{subject}.',
+      advantageAny: 'Атаки на {target} больше не имеют преимущества {reason}.',
+      advantageNext: 'Следующая атака на {target} больше не имеет преимущества {reason}.',
+      disadvantageAny: 'Атаки на {target} больше не имеют недостатка {reason}.',
+      disadvantageNext: 'Следующая атака на {target} больше не имеет недостатка {reason}.',
+      advantageUsed: 'Преимущество при следующей атаке против {target} было использовано{reason}.',
+      disadvantageUsed: 'Было применено преимущество при следующей атаке на {target} {reason}.',
+      advantageUsedBy: '{source} провел атаку с преимуществом против {target}{subject}.',
+      disadvantageUsedBy: '{source} совершил атаку с преимуществом против {target}{subject}.',
       noBy: '{target} больше не {past}.',
       self: '{target} больше не {past}.',
       standard: '{target} больше не {past} от {source}.',
@@ -236,6 +252,33 @@ const TRANSLATION = {
       targetDesc: 'Выберите существо, которое получит состояние или эффект.',
       otherText: 'Произвольный текст состояния',
       effectDetails: 'Подробности {condition}',
+      whoHasAdvantage: 'У кого есть преимущество?',
+      whoHasDisadvantage: 'У кого есть недостатки?',
+      whoHasDesc:
+        'Выберите существо, делающее бросок, или выберите «Любой атакующий», если это применимо к тому, кто атакует цель («Помощь», «Фейри-огонь», «Уклонение»).',
+      anyAttackerBtn: 'Любой злоумышленник',
+      grantedByTitle: 'Кто это дает?',
+      grantedByDesc:
+        'Выберите существо, предоставляющее или налагающее его, например, помощника. Продолжительность исходного хода следует за этим существом.',
+      grantedByOptionalTitle: 'Предоставлено (необязательно)',
+      grantedByOptionalDesc: 'Выберите существо, которое предоставило или наложило его, или Нет.',
+      againstWhomTitle: 'Против кого?',
+      againstWhomDesc: 'Выберите существо, на которое нападают.',
+      sameAsGranterBtn: 'То же существо (например, Додж)',
+      usageTitle: 'Сколько атак?',
+      usageDesc:
+        'Выберите, будет ли оно использовано при следующей атаке или будет применяться к каждой атаке, пока она длится.',
+      onceBtn: 'Только следующая атака',
+      everyBtn: 'Каждая атака',
+      addReasonBtn: 'Добавить метку причины',
+      reasonPrompt: 'Метка причины (например, «Справка»)',
+      reasonCurrent: 'Причина: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Помощь',
+        reason: 'Помощь',
+      },
     },
     col: {
       players: 'Игроки',
@@ -263,6 +306,7 @@ const TRANSLATION = {
       untilRemoved: 'До удаления',
       endOfTargetTurn: 'Конец следующего хода цели',
       endOfSourceTurn: 'Конец следующего хода источника',
+      startOfSourceTurn: 'Начало источника на следующем ходу',
       round1: '1 раунд',
       round2: '2 раунда',
       round3: '3 раунда',
@@ -271,6 +315,8 @@ const TRANSLATION = {
       customPrompt: 'Количество раундов',
       untilRemovedDisplay: 'До удаления',
       turnsRemaining: 'Осталось {n} конец (концов) хода',
+      untilTurnStart: 'До начала следующего хода {name}.',
+      untilTurnStartUnknown: 'До начала следующего хода источника',
     },
     btn: {
       openWizard: 'Открыть мастер',
@@ -296,6 +342,7 @@ const TRANSLATION = {
       runMacroNow: 'Запустить макрос сейчас',
       macroButtonsEnable: 'Включить кнопки макросов',
       macroButtonsDisable: 'Отключить кнопки макросов',
+      markUsed: 'Отметить как использованный',
     },
     title: {
       menu: 'Меню',
@@ -349,6 +396,7 @@ const TRANSLATION = {
       promoteOptions: 'Продвижение на Turn Tracker',
       editActions: 'Редактировать действия',
       macroActions: 'Макродействия',
+      presets: 'Пресеты',
     },
     msg: {
       noActive: 'Активных состояний не отслеживается.',
@@ -461,6 +509,12 @@ const TRANSLATION = {
         'Недавних действий по применению не найдено. Сначала примените условие.',
       macroInvalidName: 'Имя макроса не может быть пустым.',
       macroMissingRequiredData: 'Отсутствуют необходимые данные для создания макроса.',
+      advantageOnlyOption:
+        '--attacker, --once и --reason действительны только для преимуществ и недостатков.',
+      attackerInvalid: '--attacker принимает только значение «любой».',
+      onceInvalid: '--once ожидает true или false при предоставлении значения.',
+      effectUsed: 'оно было использовано',
+      unknownPreset: 'Неизвестная предустановка. Доступные пресеты: {presets}.',
     },
     removal: {
       conditionField: 'Состояние',
@@ -527,6 +581,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Цель не была в порядке ходов; строка состояния добавлена в конец.',
       turnInserted: 'Строка состояния вставлена ниже жетона цели.',
+      usesField: 'Использование',
     },
   },
   handout: {
@@ -602,6 +657,14 @@ const TRANSLATION = {
         [
           '!condition-tracker --source торжественный --target босс --condition Склон --duration 1 раунд',
           'Прямое применение с использованием уникальных частичных имен; если совпадают несколько токенов, мод запрашивает более конкретное имя или идентификатор токена.',
+        ],
+        [
+          '!condition-tracker --preset справка',
+          'Действие помощи: выберите помощника (например, фамильяра), затем атакуемое существо. Следующая атака по нему имеет преимущество до тех пор, пока не будет использована или пока не начнется следующий ход помощника. Добавьте --source с именем или идентификатором токена, чтобы предварительно выбрать помощника.',
+        ],
+        [
+          '!condition-tracker --source Волшебник --target Огр --condition Преимущество --attacker любой --reason Феерический огонь --duration 10 раундов',
+          'Преимущество каждого атакующего против одной цели с указанием причины.',
         ],
       ],
     },
@@ -687,10 +750,27 @@ const TRANSLATION = {
           'Шепот диагностики классификации для каждого выбранного токена — показывает обнаруженный тип, источник обнаружения и причину.',
         ],
         ['--help', 'Показать краткую карточку помощи в чате'],
+        [
+          '--preset помощь',
+          'Запустите предустановку справки: выберите помощника и атакуемое существо (добавьте --source, чтобы предварительно выбрать помощника)',
+        ],
+        [
+          '--attacker любой',
+          'Только преимущество/недостаток: оно применяется к тому, кто атакует цель, --source — это существо, предоставляющее его, а ряд находится под целью',
+        ],
+        [
+          '--once правда|ложь',
+          'Только преимущество/недостаток: израсходовано следующей атакой; ГМ получает кнопку «Отметить как использованный»',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Только преимущество/недостаток: метка причины отображается в строке (например, «Справка»).',
+        ],
+        ['--used &lt;condition-id&gt;', 'Удалить одноразовый эффект и объявить его использованным'],
       ],
     },
     standardConditions: {
-      heading: 'Стандартные состояния (D&amp;D 5e)',
+      heading: 'Стандартные состояния ({system})',
       colCondition: 'Состояние',
       none: 'Для этой игровой системы не определены стандартные условия. Используйте тип пользовательского эффекта «Другой» для эффектов произвольного текста.',
     },
@@ -734,6 +814,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 раундов',
           'Фиксированный обратный отсчёт; одно уменьшение за конец хода опорного жетона',
+        ],
+        [
+          'Начало следующего хода источника',
+          'Срок действия истекает, как только начинается следующий ход исходного жетона (Помощь, Уклонение и подобные эффекты).',
         ],
       ],
     },

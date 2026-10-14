@@ -1,4 +1,9 @@
-import { DURATION_ROUNDS, DURATION_TURN_END, DURATION_UNTIL_REMOVED } from './constants.js';
+import {
+  DURATION_ROUNDS,
+  DURATION_TURN_END,
+  DURATION_TURN_START,
+  DURATION_UNTIL_REMOVED,
+} from './constants.js';
 import { t } from './i18n.js';
 import { getConfig } from './state.js';
 import { normalizeKey, toText } from './utils.js';
@@ -34,6 +39,10 @@ export function parseDuration(label, context) {
     return validDuration(createTurnEndDuration(context.sourceTokenId, context.currentTurnTokenId));
   }
 
+  if (key === 'start of source next turn' || key === "start of source's next turn") {
+    return validDuration(createTurnStartDuration(context.sourceTokenId));
+  }
+
   const rounds = parseRoundCount(key);
   if (rounds > 0) {
     return validDuration(
@@ -59,6 +68,20 @@ export function createTurnEndDuration(anchorTokenId, currentTurnTokenId) {
   return {
     type: DURATION_TURN_END,
     remaining: anchorTokenId === currentTurnTokenId ? 2 : 1,
+    anchor: anchorTokenId,
+  };
+}
+
+/**
+ * Creates a duration that expires when the anchor token's next turn starts.
+ *
+ * @param {string} anchorTokenId Anchor token id.
+ * @returns {object} Stored duration.
+ */
+export function createTurnStartDuration(anchorTokenId) {
+  return {
+    type: DURATION_TURN_START,
+    remaining: 1,
     anchor: anchorTokenId,
   };
 }
@@ -107,6 +130,7 @@ export function decrementDuration(condition, endedTurnTokenId) {
   if (
     !duration ||
     duration.type === DURATION_UNTIL_REMOVED ||
+    duration.type === DURATION_TURN_START ||
     duration.anchor !== endedTurnTokenId
   ) {
     return false;
@@ -114,6 +138,23 @@ export function decrementDuration(condition, endedTurnTokenId) {
 
   duration.remaining -= 1;
   return duration.remaining <= 0;
+}
+
+/**
+ * Returns true when a start-of-turn duration expires because its anchor's turn began.
+ *
+ * @param {object} condition Active condition record.
+ * @param {string} startedTurnTokenId Token id whose turn just started.
+ * @returns {boolean} True when the condition expired.
+ */
+export function expiresAtTurnStart(condition, startedTurnTokenId) {
+  const duration = condition.duration;
+  return Boolean(
+    duration &&
+    duration.type === DURATION_TURN_START &&
+    startedTurnTokenId &&
+    duration.anchor === startedTurnTokenId
+  );
 }
 
 /**

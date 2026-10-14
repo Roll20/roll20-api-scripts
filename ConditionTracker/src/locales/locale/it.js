@@ -195,22 +195,41 @@ const TRANSLATION = {
       custom: '{emoji} {target} influenzato da {effect} ({source})',
       advantage: '{emoji} {source} ha vantaggio contro {target}{subject}',
       disadvantage: '{emoji} {source} ha svantaggio contro {target}{subject}',
-      noBy: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN (SEGNAPOSTO3TOKEN)',
-      self: '{target} è {past}',
+      advantageAny: '{emoji} Gli attacchi contro {target} hanno un vantaggio{by}',
+      advantageNext: '{emoji} Il prossimo attacco contro {target} ha vantaggio{by}',
+      disadvantageAny: '{emoji} Gli attacchi contro {target} hanno uno svantaggio{by}',
+      disadvantageNext: '{emoji} Il prossimo attacco contro {target} ha uno svantaggio{by}',
+      noBy: '{emoji} {target} {past} ({source})',
+      self: '{emoji} {target} è {past}',
       standard: '{emoji} {target} {past} da {source}',
     },
     apply: {
       custom: '{source} applica {effect} a {target}.',
       advantage: '{source} ha vantaggio contro {target}{subject}.',
       disadvantage: '{source} ha svantaggio contro {target}{subject}.',
+      advantageAny: '{source} garantisce vantaggio sugli attacchi contro {target}{reason}.',
+      advantageNext: '{source} garantisce vantaggio al prossimo attacco contro {target}{reason}.',
+      disadvantageAny: '{source} impone uno svantaggio agli attacchi contro {target}{reason}.',
+      disadvantageNext:
+        '{source} impone uno svantaggio al prossimo attacco contro {target}{reason}.',
       self: '{target} è {past}.',
-      withSuffix: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN SEGNAPOSTO3TOKEN.',
-      standard: 'SEGNAPOSTO0TOKEN SEGNAPOSTO1TOKEN SEGNAPOSTO2TOKEN.',
+      withSuffix: '{source} {verb} {target} {suffix}.',
+      standard: '{source} {verb} {target}.',
     },
     remove: {
       custom: '{target} non è più influenzato da {effect}.',
       advantage: '{source} non ha più vantaggio contro {target}{subject}.',
       disadvantage: '{source} non ha più svantaggio contro {target}{subject}.',
+      advantageAny: 'Gli attacchi contro {target} non hanno più vantaggio{reason}.',
+      advantageNext: 'Il prossimo attacco contro {target} non ha più vantaggio{reason}.',
+      disadvantageAny: 'Gli attacchi contro {target} non hanno più svantaggio{reason}.',
+      disadvantageNext: 'Il prossimo attacco contro {target} non ha più svantaggio{reason}.',
+      advantageUsed: 'Il vantaggio al prossimo attacco contro {target} è stato utilizzato{reason}.',
+      disadvantageUsed:
+        'Lo svantaggio al prossimo attacco contro {target} è stato applicato{reason}.',
+      advantageUsedBy: "{source} ha effettuato l'attacco con vantaggio contro {target}{subject}.",
+      disadvantageUsedBy:
+        "{source} ha effettuato l'attacco con svantaggio contro {target}{subject}.",
       noBy: '{target} non è più {past}.',
       self: '{target} non è più {past}.',
       standard: '{target} non è più {past} da {source}.',
@@ -236,6 +255,33 @@ const TRANSLATION = {
       targetDesc: "Seleziona la creatura che riceverà la condizione o l'effetto.",
       otherText: 'Testo condizione personalizzato',
       effectDetails: 'Dettagli {condition}',
+      whoHasAdvantage: 'Chi ha vantaggio?',
+      whoHasDisadvantage: 'Chi ha lo svantaggio?',
+      whoHasDesc:
+        'Seleziona la creatura che effettua il tiro o scegli Qualsiasi attaccante quando si applica a chiunque attacchi il bersaglio (Aiuto, Fuoco Fatato, Schivata).',
+      anyAttackerBtn: 'Qualsiasi attaccante',
+      grantedByTitle: 'Chi lo concede?',
+      grantedByDesc:
+        "Seleziona la creatura che lo concede o lo impone, come l'aiutante. La durata del turno della fonte segue questa creatura.",
+      grantedByOptionalTitle: 'Concesso da (facoltativo)',
+      grantedByOptionalDesc: 'Seleziona la creatura che lo ha concesso o imposto, oppure Nessuno.',
+      againstWhomTitle: 'Contro chi?',
+      againstWhomDesc: 'Seleziona la creatura che viene attaccata.',
+      sameAsGranterBtn: 'Stessa creatura (es. Schivata)',
+      usageTitle: 'Quanti attacchi?',
+      usageDesc:
+        "Scegli se verrà consumato dall'attacco successivo o si applicherà a ogni attacco finché dura.",
+      onceBtn: 'Solo il prossimo attacco',
+      everyBtn: 'Ogni attacco',
+      addReasonBtn: "Aggiungi un'etichetta motivo",
+      reasonPrompt: 'Etichetta motivo (ad es. Aiuto)',
+      reasonCurrent: 'Motivo: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Aiuto',
+        reason: 'Aiuto',
+      },
     },
     col: {
       players: 'Giocatori',
@@ -263,6 +309,7 @@ const TRANSLATION = {
       untilRemoved: 'Fino alla rimozione',
       endOfTargetTurn: 'Fine del prossimo turno del bersaglio',
       endOfSourceTurn: 'Fine del prossimo turno della sorgente',
+      startOfSourceTurn: 'Inizio della fonte nel turno successivo',
       round1: '1 giro',
       round2: '2 round',
       round3: '3 round',
@@ -271,6 +318,8 @@ const TRANSLATION = {
       customPrompt: 'Numero di round',
       untilRemovedDisplay: 'Fino alla rimozione',
       turnsRemaining: '{n} fine/i turno rimanente/i',
+      untilTurnStart: "Fino all'inizio della prossima svolta di {name}",
+      untilTurnStartUnknown: "Fino all'inizio del turno successivo della fonte",
     },
     btn: {
       openWizard: 'Apri procedura guidata',
@@ -296,6 +345,7 @@ const TRANSLATION = {
       runMacroNow: 'Esegui la macro adesso',
       macroButtonsEnable: 'Abilita i pulsanti macro',
       macroButtonsDisable: 'Disabilita i pulsanti macro',
+      markUsed: 'Contrassegna come usato',
     },
     title: {
       menu: 'Menu',
@@ -349,6 +399,7 @@ const TRANSLATION = {
       promoteOptions: 'Promuovi a Turn Tracker',
       editActions: 'Modifica azioni',
       macroActions: 'Azioni macro',
+      presets: 'Preimpostazioni',
     },
     msg: {
       noActive: 'Nessuna condizione attiva è tracciata.',
@@ -466,6 +517,12 @@ const TRANSLATION = {
         'Nessuna azione di applicazione recente trovata. Applicare prima una condizione.',
       macroInvalidName: 'Il nome della macro non può essere vuoto.',
       macroMissingRequiredData: 'Dati richiesti mancanti per creare la macro.',
+      advantageOnlyOption:
+        '--attacker, --once e --reason sono validi solo per Vantaggio e Svantaggio.',
+      attackerInvalid: '--attacker accetta solo il valore any.',
+      onceInvalid: '--once si aspetta vero o falso quando viene fornito un valore.',
+      effectUsed: 'è stato usato',
+      unknownPreset: 'Preimpostazione sconosciuta. Preimpostazioni disponibili: {presets}.',
     },
     removal: {
       conditionField: 'Condizione',
@@ -534,6 +591,7 @@ const TRANSLATION = {
       turnAppended:
         "Il bersaglio non era nell'ordine di iniziativa; la riga della condizione è stata aggiunta in fondo.",
       turnInserted: 'Riga della condizione inserita sotto il token bersaglio.',
+      usesField: 'Usi',
     },
   },
   handout: {
@@ -610,6 +668,14 @@ const TRANSLATION = {
         [
           '!condition-tracker --source gala --target capo --condition Disteso --duration 1 round',
           'Applicazione diretta utilizzando nomi parziali univoci; se più token corrispondono, la mod richiede un nome o un ID token più specifico.',
+        ],
+        [
+          '!condition-tracker --preset aiuto',
+          "Azione di aiuto: scegli l'aiutante (ad esempio un famiglio), quindi la creatura attaccata. Il prossimo attacco contro di esso ha vantaggio finché non viene utilizzato o finché non inizia il turno successivo dell'aiutante. Aggiungi --source con un nome token o un ID per preselezionare l'helper.",
+        ],
+        [
+          '!contatore condizioni --source Mago --target Ogre --condition Vantaggio --attacker qualsiasi --reason Fuoco fatato --duration 10 round',
+          'Vantaggio per ogni attaccante contro un bersaglio, etichettato con il motivo.',
         ],
       ],
     },
@@ -698,10 +764,27 @@ const TRANSLATION = {
           'Sussurra una diagnostica di classificazione per ogni token selezionato: mostra il tipo rilevato, la fonte di rilevamento e il motivo',
         ],
         ['--help', 'Mostra una breve scheda di aiuto in chat'],
+        [
+          '--preset aiuto',
+          "Avvia la preimpostazione dell'Aiuto: scegli l'aiutante e la creatura che viene attaccata (aggiungi --source per preselezionare l'aiutante)",
+        ],
+        [
+          '--attacker qualsiasi',
+          'Solo vantaggio/svantaggio: si applica a chiunque attacchi il bersaglio, --source è la creatura che lo concede e la riga si trova sotto il bersaglio',
+        ],
+        [
+          '--once vero|falso',
+          "Solo vantaggio/svantaggio: consumato dall'attacco successivo; il GM ottiene un pulsante Contrassegna come usato",
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Solo Vantaggio/Svantaggio: etichetta motivo mostrata nella riga (es. Aiuto)',
+        ],
+        ['--used &lt;condition-id&gt;', 'Rimuovi un effetto monouso e annuncialo come utilizzato'],
       ],
     },
     standardConditions: {
-      heading: 'Condizioni standard (D&amp;D 5e)',
+      heading: 'Condizioni standard ({system})',
       colCondition: 'Condizione',
       none: 'Nessuna condizione standard definita per questo sistema di gioco. Utilizza il tipo di effetto Altro personalizzato per gli effetti di testo libero.',
     },
@@ -748,6 +831,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 round',
           'Conto alla rovescia fisso; un decremento per ogni fine turno del token ancora',
+        ],
+        [
+          'Inizio del turno successivo della fonte',
+          'Scade non appena inizia il turno successivo del segnalino sorgente (Aiuto, Schivata ed effetti simili)',
         ],
       ],
     },

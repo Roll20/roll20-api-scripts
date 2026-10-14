@@ -83,6 +83,34 @@ function unmaskPlaceholders(text, placeholders) {
 }
 
 /**
+ * Returns true when a masked string still contains words to translate.
+ *
+ * Strings made only of placeholders and punctuation (e.g. `{source} {verb} {target}.`)
+ * must not be sent for translation: the service translates the mask tokens themselves.
+ *
+ * @param {string} masked Source string after placeholder masking.
+ * @returns {boolean} True when at least one letter remains outside mask tokens.
+ */
+function hasTranslatableText(masked) {
+  return /\p{L}/u.test(masked.replaceAll(/__CT_PLACEHOLDER_\d+__/g, ''));
+}
+
+/**
+ * Returns true when every source placeholder survived translation.
+ *
+ * @param {string} translated Translated string after placeholder restoration.
+ * @param {string[]} placeholders Original placeholders captured before translation.
+ * @returns {boolean} True when each placeholder appears at least as often as in the source.
+ */
+function placeholdersIntact(translated, placeholders) {
+  return placeholders.every(
+    (placeholder) =>
+      translated.split(placeholder).length - 1 >=
+      placeholders.filter((item) => item === placeholder).length
+  );
+}
+
+/**
  * Fetches translated payload JSON from Google Translate.
  *
  * @param {string} pathnameWithQuery Request path and query string for the fixed translate host.
@@ -147,6 +175,11 @@ async function translateSingle(text, targetLocale, cache, config, attempt = 0) {
   }
 
   const { masked, placeholders } = maskPlaceholders(text);
+  if (!hasTranslatableText(masked)) {
+    cache.set(cacheKey, text);
+    return text;
+  }
+
   const query = `&sl=en&tl=${encodeURIComponent(targetLocale)}&dt=t&q=${encodeURIComponent(masked)}`;
   const requestPath = `${GOOGLE_TRANSLATE_PATH}${query}`;
 
@@ -160,20 +193,30 @@ async function translateSingle(text, targetLocale, cache, config, attempt = 0) {
       : text;
 
     const translated = unmaskPlaceholders(translatedMasked, placeholders);
+    if (!placeholdersIntact(translated, placeholders)) {
+      console.warn(
+        `[sync-locales] ${targetLocale}: placeholders were altered in translation; keeping English for "${text}"`
+      );
+      cache.set(cacheKey, text);
+      return text;
+    }
     cache.set(cacheKey, translated);
     return translated;
   } catch (error) {
-    if (attempt < config.maxRetries && error.message.includes('timed out')) {
+    // Retry every failure (timeouts, rate limiting, network errors), not only timeouts,
+    // and never fall back to English silently.
+    if (attempt < config.maxRetries) {
       const delayMs = config.retryDelayMs * Math.pow(2, attempt);
+      console.warn(
+        `[sync-locales] ${targetLocale}: request failed (${error.message}); retrying in ${delayMs / 1000}s`
+      );
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       return translateSingle(text, targetLocale, cache, config, attempt + 1);
     }
 
-    if (attempt === config.maxRetries) {
-      console.error(
-        `[sync-locales] Translation failed for ${targetLocale} after ${config.maxRetries} retries: ${error.message}`
-      );
-    }
+    console.error(
+      `[sync-locales] ${targetLocale}: translation failed after ${config.maxRetries} retries (${error.message}); keeping English for "${text}"`
+    );
     cache.set(cacheKey, text);
     return text;
   }
@@ -396,7 +439,9 @@ async function writeLocale(localeCode, localeData) {
   const filePath = resolve(LOCALE_DIR, `${localeCode}.js`);
   const content = `const TRANSLATION = ${JSON.stringify(localeData, null, 2)};\n\nexport default TRANSLATION;\n`;
   writeFileSync(filePath, content, 'utf8');
-  const formatted = await prettier.format(content, { filepath: filePath });
+  // prettier.format() does not read .prettierrc on its own; resolve it explicitly.
+  const options = (await prettier.resolveConfig(filePath)) ?? {};
+  const formatted = await prettier.format(content, { ...options, filepath: filePath });
   writeFileSync(filePath, formatted, 'utf8');
 }
 

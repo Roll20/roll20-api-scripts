@@ -195,14 +195,22 @@ const TRANSLATION = {
       custom: '{emoji} {target} {effect} hatása alatt ({source})',
       advantage: '{emoji} {source} előnnyel támad {target}{subject} ellen',
       disadvantage: '{emoji} {source} hátránnyal támad {target}{subject} ellen',
+      advantageAny: '{emoji} A támadások a {target} ellen előnyben részesülnek{by}',
+      advantageNext: '{emoji} A következő támadás a {target} ellen előnyt jelent{by}',
+      disadvantageAny: '{emoji} A {target} elleni támadások hátrányosak{by}',
+      disadvantageNext: '{emoji} A következő támadás a {target} ellen hátrányos{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} {past}',
+      self: '{emoji} {target} {past}',
       standard: '{emoji} {target} {past} — {source}',
     },
     apply: {
       custom: '{source} alkalmazza a(z) {effect} hatást {target} célpontra.',
       advantage: '{source} előnnyel támad {target}{subject} ellen.',
       disadvantage: '{source} hátránnyal támad {target}{subject} ellen.',
+      advantageAny: 'A {source} előnyt biztosít a {target}{reason} elleni támadásoknál.',
+      advantageNext: 'A {source} előnyt biztosít a következő támadásnál: {target}{reason}.',
+      disadvantageAny: 'A {source} hátrányt jelent a {target}{reason} elleni támadásoknál.',
+      disadvantageNext: 'A {source} hátrányt okoz a következő támadásnál {target}{reason} ellen.',
       self: '{target} {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +219,14 @@ const TRANSLATION = {
       custom: '{target} már nem áll {effect} hatása alatt.',
       advantage: '{source} már nem rendelkezik előnnyel {target}{subject} ellen.',
       disadvantage: '{source} már nem rendelkezik hátránnyal {target}{subject} ellen.',
+      advantageAny: 'A {target} elleni támadásoknak már nincs előnyük{reason}.',
+      advantageNext: 'A {target} elleni következő támadásnak már nincs előnye{reason}.',
+      disadvantageAny: 'A {target} elleni támadásoknak többé nincs hátránya{reason}.',
+      disadvantageNext: 'A {target} elleni következő támadásnak már nincs hátránya{reason}.',
+      advantageUsed: 'A {target} elleni következő támadás előnyét kihasználták{reason}.',
+      disadvantageUsed: 'A {target} elleni következő támadásnál alkalmazták a hátrányt{reason}.',
+      advantageUsedBy: '{source} előnyben részesítette a támadást {target}{subject} ellen.',
+      disadvantageUsedBy: '{source} hátrányban hajtotta végre a támadást {target}{subject} ellen.',
       noBy: '{target} már nem {past}.',
       self: '{target} már nem {past}.',
       standard: '{target} már nem {past} — {source}.',
@@ -237,6 +253,34 @@ const TRANSLATION = {
       targetDesc: 'Válassza ki azt a lényt, amely megkapja az állapotot vagy hatást.',
       otherText: 'Egyéni állapotszöveg',
       effectDetails: '{condition} részletei',
+      whoHasAdvantage: 'Kinek van előnye?',
+      whoHasDisadvantage: 'Kinek van hátránya?',
+      whoHasDesc:
+        'Válaszd ki a dobó lényt, vagy válaszd a Bármely támadót, ha az vonatkozik arra, aki megtámadja a célpontot (Súgó, Tündértűz, Dodge).',
+      anyAttackerBtn: 'Bármelyik támadó',
+      grantedByTitle: 'Ki adja meg?',
+      grantedByDesc:
+        'Válassza ki azt a lényt, aki megadja vagy kikényszeríti, például a segítőt. A forrás-fordulási időtartamok ezt a lényt követik.',
+      grantedByOptionalTitle: 'Megadta (nem kötelező)',
+      grantedByOptionalDesc:
+        'Válassza ki azt a lényt, amelyik megadta vagy kiszabta, vagy a Nincs.',
+      againstWhomTitle: 'Ki ellen?',
+      againstWhomDesc: 'Válaszd ki a támadott lényt.',
+      sameAsGranterBtn: 'Ugyanaz a lény (pl. Dodge)',
+      usageTitle: 'Hány támadás?',
+      usageDesc:
+        'Válassza ki, hogy a következő támadás elhasználja-e, vagy minden támadásra érvényes, amíg tart.',
+      onceBtn: 'Csak a következő támadás',
+      everyBtn: 'Minden támadás',
+      addReasonBtn: 'Adjon hozzá egy okcímkét',
+      reasonPrompt: 'Ok címke (pl. Súgó)',
+      reasonCurrent: 'Ok: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Segítség',
+        reason: 'Segítség',
+      },
     },
     col: {
       players: 'Játékosok',
@@ -264,6 +308,7 @@ const TRANSLATION = {
       untilRemoved: 'Eltávolításig',
       endOfTargetTurn: 'A célpont következő körének végén',
       endOfSourceTurn: 'A forrás következő körének végén',
+      startOfSourceTurn: 'A forrás következő körének kezdete',
       round1: '1 kör',
       round2: '2 kör',
       round3: '3 kör',
@@ -272,6 +317,8 @@ const TRANSLATION = {
       customPrompt: 'Körök száma',
       untilRemovedDisplay: 'Eltávolításig',
       turnsRemaining: '{n} fennmaradó körjegy',
+      untilTurnStart: '{name} következő fordulójának kezdetéig',
+      untilTurnStartUnknown: 'A forrás következő körének kezdetéig',
     },
     btn: {
       openWizard: 'Varázsló megnyitása',
@@ -297,6 +344,7 @@ const TRANSLATION = {
       runMacroNow: 'Futtassa a Makrót most',
       macroButtonsEnable: 'Makrógombok engedélyezése',
       macroButtonsDisable: 'Makrógombok letiltása',
+      markUsed: 'Megjelölés használtként',
     },
     title: {
       menu: 'Menü',
@@ -350,6 +398,7 @@ const TRANSLATION = {
       promoteOptions: 'Előléptetés a Turn Tracker használatára',
       editActions: 'Műveletek szerkesztése',
       macroActions: 'Makróműveletek',
+      presets: 'Előbeállítások',
     },
     msg: {
       noActive: 'Nincs aktív követett állapot.',
@@ -464,6 +513,12 @@ const TRANSLATION = {
         'Nem található legutóbbi alkalmazási művelet. Először alkalmazzon egy feltételt.',
       macroInvalidName: 'A makró neve nem lehet üres.',
       macroMissingRequiredData: 'Hiányoznak a makró létrehozásához szükséges adatok.',
+      advantageOnlyOption:
+        'A --attacker, --once és --reason csak az Előny és a Hátrány esetében érvényes.',
+      attackerInvalid: '--attacker csak a tetszőleges értéket fogadja el.',
+      onceInvalid: '--once igaz vagy hamis értéket vár egy érték megadásakor.',
+      effectUsed: 'azt használták',
+      unknownPreset: 'Ismeretlen előbeállítás. Elérhető előre beállított értékek: {presets}.',
     },
     removal: {
       conditionField: 'Állapot',
@@ -531,6 +586,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'A célpont nem volt a körsorendben; az állapotsor hozzáfűzve a végéhez.',
       turnInserted: 'Az állapotsor a célpont token alá lett illesztve.',
+      usesField: 'Felhasználások',
     },
   },
   handout: {
@@ -608,6 +664,14 @@ const TRANSLATION = {
           '!condition-tracker --source gála --target főnök --condition Hason --duration 1 forduló',
           'Közvetlen alkalmazás egyedi résznevek használatával; ha több token egyezik, a mod konkrétabb nevet vagy token azonosítót kér.',
         ],
+        [
+          '!condition-tracker --preset súgó',
+          'Súgó akció: válaszd ki a segítőt (például egy ismerőst), majd a támadott lényt. A következő támadás ellene van előnyben, amíg ki nem használják, vagy amíg el nem kezdődik a segítő következő köre. Adja hozzá a --source címet egy token névvel vagy azonosítóval a segítő előre kiválasztásához.',
+        ],
+        [
+          '!condition-tracker --source Wizard --target Ogre --condition Advantage --attacker any --reason Faerie Fire --duration 10 rounds',
+          'Előny minden támadó számára egy célpont ellen, az okokkal megjelölve.',
+        ],
       ],
     },
     commandsRef: {
@@ -680,10 +744,27 @@ const TRANSLATION = {
           'Osztályozási diagnosztika suttogása minden kiválasztott tokenhez – megmutatja az észlelt típust, az észlelési forrást és az okot',
         ],
         ['--help', 'Mutasson egy rövid súgókártyát a chatben'],
+        [
+          '--preset súgó',
+          'Indítsa el a Súgó előre beállított beállítását: válassza ki a segítőt és a támadott lényt (adja hozzá a --source elemet a segítő előre kiválasztásához)',
+        ],
+        [
+          '--attacker bármelyik',
+          'Előny / Csak hátrány: arra vonatkozik, aki megtámadja a célpontot, --source az a lény, aki megadja, és a sor a célpont alatt van',
+        ],
+        [
+          '--once igaz|hamis',
+          'Előny / Csak hátrány: a következő támadásra elhasználódik; a GM kap egy Megjelölés használtként gombot',
+        ],
+        ['--reason &lt;text&gt;', 'Előny / Csak hátrány: a sorban látható ok címke (pl. Súgó)'],
+        [
+          '--used &lt;condition-id&gt;',
+          'Távolítsa el az egyszer használatos effektust, és jelentse be használtként',
+        ],
       ],
     },
     standardConditions: {
-      heading: 'Szabványos állapotok (D&amp;D 5e)',
+      heading: 'Szabványos állapotok ({system})',
       colCondition: 'Állapot',
       none: 'Ehhez a játékrendszerhez nincsenek szabványos feltételek meghatározva. Szabadszöveges effektusokhoz használja az Egyéb egyéni effektustípust.',
     },
@@ -727,6 +808,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 kör',
           'Rögzített visszaszámlálás; egy csökkentés a horgony token körének végén',
+        ],
+        [
+          'A forrás következő körének kezdete',
+          'Amint a forrástoken következő köre elkezdődik, lejár (Súgó, Dodge és hasonló hatások)',
         ],
       ],
     },

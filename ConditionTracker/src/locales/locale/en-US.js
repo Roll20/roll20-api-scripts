@@ -221,14 +221,23 @@ const TRANSLATION = {
       custom: '{emoji} {target} affected by {effect} ({source})',
       advantage: '{emoji} {source} has advantage against {target}{subject}',
       disadvantage: '{emoji} {source} has disadvantage against {target}{subject}',
+      advantageAny: '{emoji} Attacks vs {target} have advantage{by}',
+      advantageNext: '{emoji} Next attack vs {target} has advantage{by}',
+      disadvantageAny: '{emoji} Attacks vs {target} have disadvantage{by}',
+      disadvantageNext: '{emoji} Next attack vs {target} has disadvantage{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} is {past}',
+      self: '{emoji} {target} is {past}',
       standard: '{emoji} {target} {past} by {source}',
     },
     apply: {
       custom: '{source} applies {effect} to {target}.',
       advantage: '{source} has advantage against {target}{subject}.',
       disadvantage: '{source} has disadvantage against {target}{subject}.',
+      advantageAny: '{source} grants advantage on attacks against {target}{reason}.',
+      advantageNext: '{source} grants advantage on the next attack against {target}{reason}.',
+      disadvantageAny: '{source} imposes disadvantage on attacks against {target}{reason}.',
+      disadvantageNext:
+        '{source} imposes disadvantage on the next attack against {target}{reason}.',
       self: '{target} is {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -237,6 +246,16 @@ const TRANSLATION = {
       custom: '{target} is no longer affected by {effect}.',
       advantage: '{source} no longer has advantage against {target}{subject}.',
       disadvantage: '{source} no longer has disadvantage against {target}{subject}.',
+      advantageAny: 'Attacks against {target} no longer have advantage{reason}.',
+      advantageNext: 'The next attack against {target} no longer has advantage{reason}.',
+      disadvantageAny: 'Attacks against {target} no longer have disadvantage{reason}.',
+      disadvantageNext: 'The next attack against {target} no longer has disadvantage{reason}.',
+      advantageUsed: 'The advantage on the next attack against {target} has been used{reason}.',
+      disadvantageUsed:
+        'The disadvantage on the next attack against {target} has been applied{reason}.',
+      advantageUsedBy: '{source} has made the attack with advantage against {target}{subject}.',
+      disadvantageUsedBy:
+        '{source} has made the attack with disadvantage against {target}{subject}.',
       noBy: '{target} no longer {past}.',
       self: '{target} is no longer {past}.',
       standard: '{target} is no longer {past} by {source}.',
@@ -262,6 +281,33 @@ const TRANSLATION = {
       targetDesc: 'Select the creature that will receive the condition or effect.',
       otherText: 'Other condition text',
       effectDetails: '{condition} details',
+      whoHasAdvantage: 'Who Has Advantage?',
+      whoHasDisadvantage: 'Who Has Disadvantage?',
+      whoHasDesc:
+        'Select the creature making the roll, or choose Any attacker when it applies to whoever attacks the target (Help, Faerie Fire, Dodge).',
+      anyAttackerBtn: 'Any attacker',
+      grantedByTitle: 'Who Grants It?',
+      grantedByDesc:
+        'Select the creature granting or imposing it, such as the helper. Source-turn durations follow this creature.',
+      grantedByOptionalTitle: 'Granted By (Optional)',
+      grantedByOptionalDesc: 'Select the creature that granted or imposed it, or None.',
+      againstWhomTitle: 'Against Whom?',
+      againstWhomDesc: 'Select the creature being attacked.',
+      sameAsGranterBtn: 'Same creature (e.g. Dodge)',
+      usageTitle: 'How Many Attacks?',
+      usageDesc:
+        'Choose whether it is used up by the next attack or applies to every attack while it lasts.',
+      onceBtn: 'Next attack only',
+      everyBtn: 'Every attack',
+      addReasonBtn: 'Add a reason label',
+      reasonPrompt: 'Reason label (e.g. Help)',
+      reasonCurrent: 'Reason: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Help',
+        reason: 'Help',
+      },
     },
     col: {
       players: 'Players',
@@ -289,6 +335,7 @@ const TRANSLATION = {
       untilRemoved: 'Until removed',
       endOfTargetTurn: 'End of target next turn',
       endOfSourceTurn: 'End of source next turn',
+      startOfSourceTurn: 'Start of source next turn',
       round1: '1 round',
       round2: '2 rounds',
       round3: '3 rounds',
@@ -297,6 +344,8 @@ const TRANSLATION = {
       customPrompt: 'Number of rounds',
       untilRemovedDisplay: 'Until removed',
       turnsRemaining: '{n} tracked turn end(s) remaining',
+      untilTurnStart: "Until the start of {name}'s next turn",
+      untilTurnStartUnknown: "Until the start of the source's next turn",
     },
     btn: {
       openWizard: 'Open Wizard',
@@ -322,6 +371,7 @@ const TRANSLATION = {
       runMacroNow: 'Run Macro Now',
       macroButtonsEnable: 'Enable Macro Buttons',
       macroButtonsDisable: 'Disable Macro Buttons',
+      markUsed: 'Mark as Used',
     },
     title: {
       menu: 'Menu',
@@ -375,6 +425,7 @@ const TRANSLATION = {
       promoteOptions: 'Promote to Turn Tracker',
       editActions: 'Edit Actions',
       macroActions: 'Macro Actions',
+      presets: 'Presets',
     },
     msg: {
       noActive: 'No active conditions are tracked.',
@@ -430,7 +481,7 @@ const TRANSLATION = {
       otherDurationRequiresRounds:
         'Other duration requires a numeric round count, for example --duration 5 rounds.',
       invalidDuration:
-        'Duration must be Until removed, an end-of-turn option, or a positive round count.',
+        'Duration must be Until removed, a start- or end-of-turn option, or a positive round count.',
       zeroHpNoConditions: '{name} has reached 0 HP and has no active conditions.',
       zeroHpConditions: '{name} has reached 0 HP. Choose conditions to remove:',
       removeAllBtn: 'Remove All Conditions for {name}',
@@ -481,6 +532,12 @@ const TRANSLATION = {
       macroMissingLastAction: 'No recent apply action found. Apply a condition first.',
       macroInvalidName: 'Macro name cannot be empty.',
       macroMissingRequiredData: 'Missing required data to create macro.',
+      advantageOnlyOption:
+        '--attacker, --once, and --reason are only valid for Advantage and Disadvantage.',
+      attackerInvalid: '--attacker only accepts the value any.',
+      onceInvalid: '--once expects true or false when a value is provided.',
+      effectUsed: 'it was used',
+      unknownPreset: 'Unknown preset. Available presets: {presets}.',
     },
     removal: {
       conditionField: 'Condition',
@@ -545,6 +602,7 @@ const TRANSLATION = {
     apply: {
       turnAppended: 'Target was not in turn order; condition row was appended.',
       turnInserted: 'Condition row inserted below target token.',
+      usesField: 'Uses',
     },
   },
   handout: {
@@ -621,6 +679,14 @@ const TRANSLATION = {
           '!condition-tracker --source gala --target boss --condition Prone --duration 1 round',
           'Direct apply using unique partial names; if multiple tokens match, the mod asks for a more specific name or token id.',
         ],
+        [
+          '!condition-tracker --preset help',
+          "Help action: pick the helper (for example a familiar), then the creature being attacked. The next attack against it has advantage until used or until the helper's next turn starts. Add --source with a token name or id to pre-select the helper.",
+        ],
+        [
+          '!condition-tracker --source Wizard --target Ogre --condition Advantage --attacker any --reason Faerie Fire --duration 10 rounds',
+          'Advantage for every attacker against one target, labelled with the reason.',
+        ],
       ],
     },
     commandsRef: {
@@ -687,6 +753,23 @@ const TRANSLATION = {
           'Whisper a classification diagnostic for each selected token — shows the detected type, detection source, and reason',
         ],
         ['--help', 'Show a brief help card in chat'],
+        [
+          '--preset help',
+          'Start the Help preset: pick the helper and the creature being attacked (add --source to pre-select the helper)',
+        ],
+        [
+          '--attacker any',
+          'Advantage / Disadvantage only: it applies to whoever attacks the target, --source is the creature granting it, and the row sits under the target',
+        ],
+        [
+          '--once true|false',
+          'Advantage / Disadvantage only: used up by the next attack; the GM gets a Mark as Used button',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Advantage / Disadvantage only: reason label shown in the row (e.g. Help)',
+        ],
+        ['--used &lt;condition-id&gt;', 'Remove a single-use effect and announce it as used'],
       ],
     },
     standardConditions: {
@@ -706,16 +789,19 @@ const TRANSLATION = {
         ],
         [
           '🍀 Advantage',
-          'Record advantage granted from one token to another; grouped with the source in initiative',
+          'Record that one creature has advantage against another (grouped with that creature in initiative), or that any attacker has advantage against a target (grouped with the target). Optional reason label and single-use tracking.',
         ],
-        ['⬇️ Disadvantage', 'Record disadvantage imposed; grouped with the source in initiative'],
+        [
+          '⬇️ Disadvantage',
+          'Record that one creature has disadvantage against another, or that any attacker has disadvantage against a target (for example Dodge). Same options as Advantage.',
+        ],
         ['📝 Other', 'Freeform custom label — you will be prompted for a description'],
       ],
     },
     durationOptions: {
       heading: 'Duration Options',
       intro:
-        "The remaining count is shown in the Turn Tracker pr column and decrements when the anchor token's turn ends.",
+        "Round counts are shown in the Turn Tracker pr column and decrement when the anchor token's turn ends. Turn-anchored durations show ⏳ and single-use effects show 1×.",
       colOption: 'Option',
       colBehaviour: 'Behaviour',
       rows: [
@@ -729,6 +815,10 @@ const TRANSLATION = {
           "Expires when the source token's next turn ends in initiative",
         ],
         ['1 / 2 / 3 / 10 rounds', 'Fixed countdown; one decrement per anchor-token turn-end'],
+        [
+          "Start of source's next turn",
+          "Expires as soon as the source token's next turn begins (Help, Dodge, and similar effects)",
+        ],
       ],
     },
     savedEffects: {
@@ -866,7 +956,7 @@ const TRANSLATION = {
         [
           'subjectPromptBypass',
           'true / false',
-          'Skip the optional subject-token step for Spell / Ability / Other effects',
+          'Skip the optional subject-token step for Spell / Ability / Advantage / Disadvantage / Other effects',
         ],
         [
           'suppressPublicChat',

@@ -195,14 +195,24 @@ const TRANSLATION = {
       custom: '{emoji} {target} υπό επίδραση {effect} ({source})',
       advantage: '{emoji} {source} έχει πλεονέκτημα εναντίον {target}{subject}',
       disadvantage: '{emoji} {source} έχει μειονέκτημα εναντίον {target}{subject}',
+      advantageAny: '{emoji} Οι επιθέσεις έναντι {target} έχουν πλεονέκτημα{by}',
+      advantageNext: '{emoji} Επόμενη επίθεση εναντίον {target} έχει πλεονέκτημα{by}',
+      disadvantageAny: '{emoji} Οι επιθέσεις εναντίον {target} έχουν μειονέκτημα{by}',
+      disadvantageNext: '{emoji} Επόμενη επίθεση εναντίον {target} έχει μειονέκτημα{by}',
       noBy: '{emoji} {target} {past} ({source})',
-      self: '{target} είναι {past}',
+      self: '{emoji} {target} είναι {past}',
       standard: '{emoji} {target} {past} από {source}',
     },
     apply: {
       custom: '{source} εφαρμόζει {effect} στον {target}.',
       advantage: '{source} έχει πλεονέκτημα εναντίον {target}{subject}.',
       disadvantage: '{source} έχει μειονέκτημα εναντίον {target}{subject}.',
+      advantageAny: 'Το {source} παραχωρεί πλεονέκτημα σε επιθέσεις εναντίον {target}{reason}.',
+      advantageNext:
+        'Ο {source} παραχωρεί πλεονέκτημα στην επόμενη επίθεση εναντίον του {target}{reason}.',
+      disadvantageAny: 'Το {source} επιβάλλει μειονέκτημα στις επιθέσεις κατά {target}{reason}.',
+      disadvantageNext:
+        'Το {source} επιβάλλει μειονέκτημα στην επόμενη επίθεση εναντίον του {target}{reason}.',
       self: '{target} είναι {past}.',
       withSuffix: '{source} {verb} {target} {suffix}.',
       standard: '{source} {verb} {target}.',
@@ -211,6 +221,17 @@ const TRANSLATION = {
       custom: '{target} δεν επηρεάζεται πλέον από {effect}.',
       advantage: '{source} δεν έχει πλέον πλεονέκτημα εναντίον {target}{subject}.',
       disadvantage: '{source} δεν έχει πλέον μειονέκτημα εναντίον {target}{subject}.',
+      advantageAny: 'Οι επιθέσεις εναντίον {target} δεν έχουν πλέον πλεονέκτημα{reason}.',
+      advantageNext: 'Η επόμενη επίθεση εναντίον {target} δεν έχει πλέον πλεονέκτημα{reason}.',
+      disadvantageAny: 'Οι επιθέσεις εναντίον {target} δεν έχουν πλέον μειονέκτημα{reason}.',
+      disadvantageNext: 'Η επόμενη επίθεση εναντίον {target} δεν έχει πλέον μειονέκτημα{reason}.',
+      advantageUsed:
+        'Το πλεονέκτημα στην επόμενη επίθεση εναντίον του {target} έχει χρησιμοποιηθεί{reason}.',
+      disadvantageUsed:
+        'Το μειονέκτημα στην επόμενη επίθεση εναντίον {target} έχει εφαρμοστεί{reason}.',
+      advantageUsedBy: 'Ο {source} έκανε την επίθεση με πλεονέκτημα έναντι του {target}{subject}.',
+      disadvantageUsedBy:
+        'Ο {source} έκανε την επίθεση με μειονέκτημα έναντι του {target}{subject}.',
       noBy: '{target} δεν είναι πλέον {past}.',
       self: '{target} δεν είναι πλέον {past}.',
       standard: '{target} δεν είναι πλέον {past} από {source}.',
@@ -236,6 +257,33 @@ const TRANSLATION = {
       targetDesc: 'Επιλέξτε το πλάσμα που θα λάβει την κατάσταση ή το εφέ.',
       otherText: 'Προσαρμοσμένο κείμενο κατάστασης',
       effectDetails: 'Λεπτομέρειες {condition}',
+      whoHasAdvantage: 'Ποιος έχει το πλεονέκτημα;',
+      whoHasDisadvantage: 'Ποιος έχει μειονέκτημα;',
+      whoHasDesc:
+        'Επιλέξτε το πλάσμα που κάνει τη ζαριά ή επιλέξτε Οποιοσδήποτε επιτιθέμενος όταν ισχύει για όποιον επιτίθεται στον στόχο (Help, Faerie Fire, Dodge).',
+      anyAttackerBtn: 'Οποιοσδήποτε επιτιθέμενος',
+      grantedByTitle: 'Ποιος το Χορηγεί;',
+      grantedByDesc:
+        'Επιλέξτε το πλάσμα που το χορηγεί ή το επιβάλλει, όπως ο βοηθός. Οι διάρκειες στροφής πηγής ακολουθούν αυτό το πλάσμα.',
+      grantedByOptionalTitle: 'Χορηγείται από (Προαιρετικό)',
+      grantedByOptionalDesc: 'Επιλέξτε το πλάσμα που το έδωσε ή το επέβαλε ή Κανένα.',
+      againstWhomTitle: 'Ενάντια σε ποιον;',
+      againstWhomDesc: 'Επιλέξτε το πλάσμα που δέχεται επίθεση.',
+      sameAsGranterBtn: 'Ίδιο πλάσμα (π.χ. Dodge)',
+      usageTitle: 'Πόσες επιθέσεις;',
+      usageDesc:
+        'Επιλέξτε εάν θα εξαντληθεί από την επόμενη επίθεση ή θα ισχύει για κάθε επίθεση όσο διαρκεί.',
+      onceBtn: 'Μόνο η επόμενη επίθεση',
+      everyBtn: 'Κάθε επίθεση',
+      addReasonBtn: 'Προσθέστε μια ετικέτα λόγων',
+      reasonPrompt: 'Ετικέτα αιτιολογίας (π.χ. Βοήθεια)',
+      reasonCurrent: 'Αιτία: {reason}',
+    },
+    preset: {
+      help: {
+        label: 'Βοήθεια',
+        reason: 'Βοήθεια',
+      },
     },
     col: {
       players: 'Παίκτες',
@@ -263,6 +311,7 @@ const TRANSLATION = {
       untilRemoved: 'Μέχρι αφαίρεσης',
       endOfTargetTurn: 'Τέλος επόμενης σειράς στόχου',
       endOfSourceTurn: 'Τέλος επόμενης σειράς πηγής',
+      startOfSourceTurn: 'Έναρξη πηγής επόμενη στροφή',
       round1: '1 γύρος',
       round2: '2 γύροι',
       round3: '3 γύροι',
@@ -271,6 +320,8 @@ const TRANSLATION = {
       customPrompt: 'Αριθμός γύρων',
       untilRemovedDisplay: 'Μέχρι αφαίρεσης',
       turnsRemaining: '{n} εναπομείναντα τέλη σειράς',
+      untilTurnStart: 'Μέχρι την έναρξη της επόμενης στροφής του {name}',
+      untilTurnStartUnknown: 'Μέχρι την έναρξη της επόμενης στροφής της πηγής',
     },
     btn: {
       openWizard: 'Άνοιγμα Οδηγού',
@@ -296,6 +347,7 @@ const TRANSLATION = {
       runMacroNow: 'Εκτελέστε τη Μακροεντολή τώρα',
       macroButtonsEnable: 'Ενεργοποιήστε τα κουμπιά μακροεντολών',
       macroButtonsDisable: 'Απενεργοποιήστε τα κουμπιά μακροεντολών',
+      markUsed: 'Επισημάνετε ως χρησιμοποιημένο',
     },
     title: {
       menu: 'Μενού',
@@ -349,6 +401,7 @@ const TRANSLATION = {
       promoteOptions: 'Προώθηση στο Turn Tracker',
       editActions: 'Επεξεργασία ενεργειών',
       macroActions: 'Μακροεντολές',
+      presets: 'Προεπιλογές',
     },
     msg: {
       noActive: 'Δεν παρακολουθούνται ενεργές καταστάσεις.',
@@ -462,6 +515,12 @@ const TRANSLATION = {
         'Δεν βρέθηκε πρόσφατη ενέργεια εφαρμογής. Εφαρμόστε μια προϋπόθεση πρώτα.',
       macroInvalidName: 'Το όνομα της μακροεντολής δεν μπορεί να είναι κενό.',
       macroMissingRequiredData: 'Λείπουν τα απαιτούμενα δεδομένα για τη δημιουργία μακροεντολής.',
+      advantageOnlyOption:
+        'Τα --attacker, --once και --reason ισχύουν μόνο για Πλεονέκτημα και Μειονεκτήματα.',
+      attackerInvalid: 'Το --attacker δέχεται μόνο την οποιαδήποτε τιμή.',
+      onceInvalid: 'Το --once αναμένει true ή false όταν παρέχεται μια τιμή.',
+      effectUsed: 'χρησιμοποιήθηκε',
+      unknownPreset: 'Άγνωστη προεπιλογή. Διαθέσιμες προεπιλογές: {presets}.',
     },
     removal: {
       conditionField: 'Κατάσταση',
@@ -529,6 +588,7 @@ const TRANSLATION = {
       turnAppended:
         'Ο στόχος δεν ήταν στη σειρά πρωτοβουλίας· η σειρά κατάστασης προστέθηκε στο τέλος.',
       turnInserted: 'Η σειρά κατάστασης εισήχθη κάτω από το token στόχου.',
+      usesField: 'Χρήσεις',
     },
   },
   handout: {
@@ -605,6 +665,14 @@ const TRANSLATION = {
         [
           '!condition-tracker --source γκαλά --target boss --condition Prone --duration 1 γύρος',
           'Απευθείας εφαρμογή χρησιμοποιώντας μοναδικά επιμέρους ονόματα. εάν ταιριάζουν πολλά διακριτικά, το mod ζητά ένα πιο συγκεκριμένο όνομα ή αναγνωριστικό διακριτικού.',
+        ],
+        [
+          '!condition-tracker --preset βοήθεια',
+          'Ενέργεια βοήθειας: επιλέξτε τον βοηθό (για παράδειγμα έναν οικείο) και μετά το πλάσμα που δέχεται επίθεση. Η επόμενη επίθεση εναντίον του έχει πλεονέκτημα μέχρι να χρησιμοποιηθεί ή μέχρι να ξεκινήσει η επόμενη στροφή του βοηθού. Προσθέστε --source με διακριτικό όνομα ή αναγνωριστικό για να προεπιλέξετε τον βοηθό.',
+        ],
+        [
+          '!condition-tracker --source Wizard --target Ogre --condition Advantage --attacker any --reason Faerie Fire --duration 10 rounds',
+          'Πλεονέκτημα για κάθε επιτιθέμενο έναντι ενός στόχου, με την ένδειξη του λόγου.',
         ],
       ],
     },
@@ -684,10 +752,30 @@ const TRANSLATION = {
           'Ψιθυρίστε ένα διαγνωστικό ταξινόμησης για κάθε επιλεγμένο διακριτικό — δείχνει τον τύπο, την πηγή ανίχνευσης και τον λόγο που εντοπίστηκε',
         ],
         ['--help', 'Εμφάνιση μιας σύντομης κάρτας βοήθειας στη συνομιλία'],
+        [
+          '--preset βοήθεια',
+          'Ξεκινήστε την προεπιλογή Βοήθειας: επιλέξτε τον βοηθό και το πλάσμα που δέχεται επίθεση (προσθέστε --source για να προεπιλέξετε τον βοηθό)',
+        ],
+        [
+          '--attacker οποιαδήποτε',
+          'Πλεονέκτημα / Μειονέκτημα μόνο: ισχύει για όποιον επιτίθεται στον στόχο, --source είναι το πλάσμα που το δίνει και η σειρά κάθεται κάτω από τον στόχο',
+        ],
+        [
+          '--once true|false',
+          'Πλεονέκτημα / Μόνο μειονέκτημα: εξαντλήθηκε από την επόμενη επίθεση. η GM παίρνει ένα κουμπί Mark as Used',
+        ],
+        [
+          '--reason &lt;text&gt;',
+          'Πλεονέκτημα / Μόνο μειονέκτημα: η ετικέτα λόγων εμφανίζεται στη σειρά (π.χ. Βοήθεια)',
+        ],
+        [
+          '--used &lt;condition-id&gt;',
+          'Αφαιρέστε ένα εφέ μιας χρήσης και ανακοινώστε το ως χρησιμοποιείται',
+        ],
       ],
     },
     standardConditions: {
-      heading: 'Τυπικές Καταστάσεις (D&amp;D 5e)',
+      heading: 'Τυπικές Καταστάσεις ({system})',
       colCondition: 'Κατάσταση',
       none: 'Δεν έχουν οριστεί τυπικές συνθήκες για αυτό το σύστημα παιχνιδιού. Χρησιμοποιήστε τον Άλλο προσαρμοσμένο τύπο εφέ για εφέ ελεύθερου κειμένου.',
     },
@@ -731,6 +819,10 @@ const TRANSLATION = {
         [
           '1 / 2 / 3 / 10 γύροι',
           'Σταθερή αντίστροφη μέτρηση· μία μείωση ανά τέλος σειράς του token-αγκύρου',
+        ],
+        [
+          'Έναρξη της επόμενης στροφής της πηγής',
+          'Λήγει μόλις ξεκινήσει η επόμενη στροφή του διακριτικού πηγής (Help, Dodge και παρόμοια εφέ)',
         ],
       ],
     },

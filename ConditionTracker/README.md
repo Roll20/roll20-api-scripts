@@ -11,8 +11,9 @@
 - Saved effects (`--saved`): manage persistent long-term effects (curses, diseases, hidden debuffs) with public, masked, and GM-only visibility.
 - Adds custom Turn Tracker rows directly beneath the affected target token when possible.
 - Applies and safely removes configured token markers.
-- Prevents exact duplicate conditions while allowing the same condition from different sources.
-- Tracks durations including until removed, end of target/source next turn, and numeric round counts.
+- Refreshes an identical condition when it is re-applied, while allowing the same condition from different sources.
+- Tracks durations including until removed, end of target/source next turn, start of source next turn, and numeric round counts.
+- Records advantage or disadvantage for one creature or for any attacker against a target, with an optional reason label, single-use tracking, and a one-click **Help** preset.
 - Provides GM-only chat menus, a removal menu, configuration commands, and cleanup tools.
 - Automatically prunes conditions when a source or target token is deleted.
 - Creates or updates the `ConditionTrackerWizard`, `ConditionTrackerMultiTarget`, `ConditionTrackerReportToken`, `ConditionTrackerSaved`, and `ConditionTrackerClassify` GM macros on install.
@@ -55,8 +56,11 @@ All commands are GM-only except `--help`.
 - `!condition-tracker --multi-target`
 - `!condition-tracker --prompt --condition <condition> --duration <duration>`
 - `!condition-tracker --source <token_ref> --target <token_ref> --condition <condition> --other <text> --duration <duration>`
+- `!condition-tracker --source <token_ref> --target <token_ref> --condition Advantage|Disadvantage --attacker any --once true|false --reason <text> --duration <duration>`
+- `!condition-tracker --preset help`
 - `!condition-tracker --lang <locale>`
 - `!condition-tracker --remove <condition_id>`
+- `!condition-tracker --used <condition_id>`
 - `!condition-tracker --cleanup`
 - `!condition-tracker --reorder-conditions`
 - `!condition-tracker --reinstall-macro`
@@ -87,13 +91,31 @@ All commands are GM-only except `--help`.
 
 `!condition-tracker --prompt` opens a step-by-step chat wizard. Each step whispers clickable buttons to the GM — no extra click-to-load step.
 
-1. **Condition** — buttons for every standard condition plus Spell, Ability, Advantage, Disadvantage, and Other.
-2. **Subject** — for custom effect types (Spell, Ability, Advantage, Disadvantage, Other) only: all named tokens on the active page plus a **None** button.
+1. **Condition** — buttons for every standard condition plus Spell, Ability, Advantage, Disadvantage, and Other. Available presets (such as **Help**) are listed above the table.
+2. **Subject** — for Spell, Ability, and Other only: all named tokens on the active page plus a **None** button.
 3. **Source token** — all named tokens on the active page shown as buttons.
 4. **Target token** — same named token list.
 5. **Duration** — standard duration options as buttons; clicking one applies the condition immediately.
 
-For **Spell**, **Ability**, and **Other** conditions, a button is shown that opens native Roll20 query dialogs to collect the effect description and duration. Standard conditions and Advantage/Disadvantage go directly to the duration buttons.
+For **Spell**, **Ability**, and **Other** conditions, a button is shown that opens native Roll20 query dialogs to collect the effect description and duration.
+
+**Advantage** and **Disadvantage** use their own prompts:
+
+1. **Who has advantage?** — the creature making the roll, or **Any attacker** when it applies to whoever attacks the target (Help, Faerie Fire, Dodge).
+2. **Granted by (optional)** — the creature that granted it, or **None**. With **Any attacker** this step is replaced by **Who grants it?**, which is required.
+3. **Against whom?** — the creature being attacked.
+4. **How many attacks?** — **Next attack only** or **Every attack**, with an optional **Add a reason label** button.
+5. **Duration**.
+
+### Help preset
+
+`!condition-tracker --preset help` (or the **Help** button at the top of the wizard) asks only for the helper and the creature being attacked. It applies any-attacker Advantage, single use, with the reason `Help`, expiring at the start of the helper's next turn. To use it as a token action that pre-selects the helper:
+
+```text
+!condition-tracker --preset help --source @{selected|token_id}
+```
+
+When an ally makes the attack, click **Mark as Used** in the apply summary (or in `!condition-tracker --menu remove`). If nobody uses it, the row is removed when the helper's next turn starts.
 
 Passing extra flags pre-selects their values and skips the corresponding wizard step:
 
@@ -174,9 +196,20 @@ Giant Crab affected by Booming Blade (Nox)
 Giant Crab affected by Hunter's Mark (Ranger)
 ```
 
+Advantage and Disadvantage Turn Tracker text:
+
+```text
+Fighter has advantage against Goblin (Owl)
+Next attack vs Goblin has advantage — Help (Owl)
+Attacks vs Ogre have advantage — Faerie Fire (Wizard)
+Attacks vs Fighter have disadvantage — Dodge
+```
+
 Chat examples:
 
 ```text
+Owl grants advantage on the next attack against Goblin (Help).
+The advantage on the next attack against Goblin has been used (Help).
 Giant Crab grapples Nox.
 Nox applies Booming Blade to Giant Crab.
 Nox is no longer grappled by Giant Crab.
@@ -190,7 +223,9 @@ Standard conditions: Grappled, Restrained, Prone, Poisoned, Stunned, Blinded, Ch
 Custom effect types: **Spell**, **Ability**, **Advantage**, **Disadvantage**, and **Other**.
 
 - **Spell**, **Ability**, and **Other** require a free-text description supplied via `--other` or the wizard prompt.
-- **Advantage** and **Disadvantage** are grouped under the source token in the Turn Tracker.
+- **Advantage** and **Disadvantage** for one creature (`--source` has it against `--target`) are grouped under that creature in the Turn Tracker and marked on it. `--subject` optionally names who granted it.
+- With `--attacker any` they apply to whoever attacks `--target`: `--source` is the creature granting it, and the row and marker go on the target.
+- `--reason <text>` adds a label such as `Help`. `--once true` marks it as used up by the next attack; remove it with the **Mark as Used** button or `--used <condition_id>`.
 - **Other** is the catch-all for homebrew conditions, environmental effects, and anything that does not fit a predefined type.
 
 ## Configuration
@@ -204,7 +239,7 @@ Use `!condition-tracker --config reset` to restore all configurable settings and
 | `gameSystem`                  | System id (e.g. `dnd5e`, `pathfinder2e`)   | Set the active game system. Changes the condition list and resets markers to system defaults. See [Supported Game Systems](#supported-game-systems) for all valid ids.                                                                                                                              |
 | `useMarkers`                  | `true` / `false`                           | Apply Roll20 status markers to tokens when a condition is added                                                                                                                                                                                                                                     |
 | `useIcons`                    | `true` / `false`                           | Show short icon codes (e.g. `[G]`) instead of emoji in Turn Tracker rows                                                                                                                                                                                                                            |
-| `subjectPromptBypass`         | `true` / `false`                           | Skip the optional subject-token step for Spell / Ability / Other effects                                                                                                                                                                                                                            |
+| `subjectPromptBypass`         | `true` / `false`                           | Skip the optional subject-token step for Spell / Ability / Advantage / Disadvantage / Other effects                                                                                                                                                                                                 |
 | `suppressPublicChat`          | `true` / `false`                           | Suppress all public chat announcements (apply and remove messages). GM whispers are unaffected.                                                                                                                                                                                                     |
 | `enablePostApplyMacroButtons` | `true` / `false`                           | Show **Create Macro** buttons in the apply confirmation whisper. When enabled, two buttons appear after each successful apply: **Create Macro (Target: ...)** replays the exact same target list, and **Create Macro (Selected Target)** applies to the currently selected token. Default: `false`. |
 | `healthBar`                   | `bar1_value` / `bar2_value` / `bar3_value` | Token bar to watch; when it reaches 0 the GM is prompted to clean up conditions                                                                                                                                                                                                                     |
@@ -368,13 +403,18 @@ Supported durations:
 - `Until removed`
 - `End of target's next turn`
 - `End of source's next turn`
+- `Start of source's next turn`
 - `1 round`
 - `2 rounds`
 - `3 rounds`
 - `10 rounds`
 - Other positive numeric round counts such as `5 rounds`
 
-Durations are updated when the Turn Tracker advances from one token to another. Round counts are anchored to the target token's turn.
+Durations are updated when the Turn Tracker advances from one token to another. Round counts are anchored to the target token's turn. `Start of source's next turn` expires as soon as the source token reaches the top of the Turn Tracker again.
+
+The Turn Tracker pr column shows the rounds remaining for round counts, `⏳` for turn-anchored durations, and `1×` for single-use effects.
+
+Re-applying an identical effect refreshes it: the existing row is replaced and its duration restarts.
 
 ## Cleanup Behavior
 

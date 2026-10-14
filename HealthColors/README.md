@@ -12,10 +12,10 @@
 - **Exclusive Mode Management**: The script manages either Aura 1 (aura mode) or the token tint (tint mode) — never both simultaneously. In tint mode, Aura 1 is left untouched alongside Aura 2, freeing both rings for manual use as range indicators, light sources, or status markers.
 - **Aura 1 & Aura 2 Details in Output**: Settings output includes Aura 1 Shape/Tint and Aura 2 Radius/Shape/Tint rows using state-backed defaults for clear reference.
 - **Manual Overrides**: In aura mode, Aura 1 is re-synced to the health color on each HP change but is otherwise left alone. In tint mode, Aura 1 is never touched by the script, so manual aura settings persist permanently alongside the health tint.
-- **Blood & Heal FX**: Spawns custom particle effects when tokens are hurt or healed.
+- **Heal & Hurt FX**: Spawns particle effects when tokens are hurt or healed — a recoloured default burst, any Roll20 built-in effect (`glow-holy`, `explode-blood`, …), or a custom FX from the Effects menu, set globally or per character. See [Heal & Hurt FX](#heal--hurt-fx).
 - **Automated Dead Status**: Automatically applies a configurable status marker (default: Red X) when a token reaching 0 HP.
 - **NPC vs PC Config**: Separate settings for players and NPCs, including nameplate visibility and health tracking toggles.
-- **Optional Death Save Integration**: An off-by-default feature that distinguishes **dying** (configurable marker), **stable** (green), and **dead** (Red X) player characters at 0 HP, with marker sync driven automatically from watched death-save attributes (works on both the D&D 2024 and 2014 sheets; 2024/Beacon sheets require the Experimental (Jumpgate) Mod sandbox). See [Death Save Integration](#death-save-integration-optional).
+- **Optional Death Save Integration**: An off-by-default feature that distinguishes **dying** (configurable marker), **stable** (green), and **dead** (Red X) player characters at 0 HP, with marker sync driven automatically from watched death-save attributes (works on both the D&D 2024 and 2014 sheets; 2024/Beacon sheets need Mod Script Sandbox v1.5). See [Death Save Integration](#death-save-integration-optional).
 
 ---
 
@@ -25,6 +25,12 @@
 2. In your Roll20 Game Settings, go to **API Scripts**.
 3. Create a **New Script**, name it `HealthColors.js`, and paste the code.
 4. Click **Save Script**.
+
+A manual install has no One-Click dialog; configure everything in-game with `!aura`.
+
+## One-Click Install Options
+
+When installed from the Roll20 One-Click library, every HealthColors setting can be pre-set in the install dialog (the option names match the setting names used below, e.g. `auraBar`, `FX`, `HealFX`, `deathSavesOn`). HealthColors applies those values when the game's API sandbox next starts, and again whenever you save the One-Click dialog. Between saves, changes made in-game with `!aura` are kept across restarts. `!aura reset` and `!aura reset-all` return to the One-Click values. Blank options are ignored, and invalid values keep the current setting.
 
 ---
 
@@ -62,8 +68,9 @@ When a command changes a setting, HealthColors re-whispers the interactive GM me
 | `!aura oneoff`                       | Toggles health tracking for tokens that are not linked to a character sheet.                                                  |
 | `!aura update`                       | Forces a health-color update on all currently selected tokens.                                                                |
 | `!aura fx`                           | Toggles particle effects for damage and healing.                                                                              |
-| `!aura heal <hex>`                   | Sets the color of healing particle effects (e.g., `!aura heal FDDC5C`).                                                       |
-| `!aura hurt <hex>`                   | Sets the color of damage particle effects (e.g., `!aura hurt FF0000`).                                                        |
+| `!aura heal <effect>`                | Sets the healing effect: a hex colour (`!aura heal FDDC5C`), a built-in effect (`!aura heal glow-holy`), a custom FX name/id, or `default`. |
+| `!aura hurt <effect>`                | Sets the damage effect: a hex colour (`!aura hurt FF0000`), a built-in effect (`!aura hurt explode-blood`), a custom FX name/id, or `default`. |
+| `!aura listfx`                       | Lists the campaign's custom FX (with ids and one-click Heal/Hurt set buttons) and the built-in effect names.                  |
 | `!aura deadfx <trackname>`           | Sets a jukebox track to play when a token dies (e.g., `!aura deadfx Funeral`), or `None` to disable.                        |
 | `!aura reset`                        | Resets the script's state to factory defaults.                                                                                |
 | `!aura reset-fx`                     | Rebuilds `-DefaultHeal` and `-DefaultHurt` custom FX objects.                                                                 |
@@ -86,6 +93,35 @@ When a command changes a setting, HealthColors re-whispers the interactive GM me
 - `colorblind`: High = Cyan, Mid = Orange, Low = Magenta, Dead = Black.
 - At exactly 0 HP, the script uses the palette dead color (`#000000`) for clear knockout state.
 - If HP is above 100%, the script still uses blue (`#0000FF`) for overflow/temporary HP visualization.
+
+---
+
+## Heal & Hurt FX
+
+When a token's HP changes, HealthColors can play a particle effect at the token (`!aura fx` toggles this). The heal and hurt effects are chosen independently with `!aura heal <effect>` and `!aura hurt <effect>`, and each accepts three formats:
+
+| Format                | Example                              | What plays                                                                                                         |
+| :-------------------- | :----------------------------------- | :----------------------------------------------------------------------------------------------------------------- |
+| 6-digit hex colour    | `!aura hurt FF0000`                  | HealthColors' default particle burst (`-DefaultHeal` / `-DefaultHurt`) in that colour, scaled by token size and damage. |
+| Built-in effect name  | `!aura heal glow-holy`               | One of Roll20's built-in effects, exactly as named in the in-game Effects menu (`<type>-<colour>`).                 |
+| Custom FX name or id  | `!aura hurt Blood Spray`             | A custom FX you created in the Effects menu, scaled by token size and damage. Names are matched case-insensitively. |
+
+`!aura heal default` / `!aura hurt default` restore the shipped colours (`FDDC5C` / `FF0000`).
+
+Built-in effect names combine a **type** — `beam`, `bomb`, `breath`, `bubbling`, `burn`, `burst`, `explode`, `glow`, `missile`, `nova`, `splatter` — with a **colour** — `acid`, `blood`, `charm`, `death`, `fire`, `frost`, `holy`, `magic`, `slime`, `smoke`, `water` — e.g. `glow-holy`, `explode-blood`, `splatter-blood`, `burst-magic`. Built-in effects are drawn by Roll20 at their fixed size; only colour bursts and custom FX are scaled to the token and the amount of damage.
+
+Run `!aura listfx` (or press **List FX** in the menu) to see every custom FX in the campaign with its id and one-click **Heal** / **Hurt** buttons, plus the built-in name reference. The current heal/hurt choice is shown in the `!aura` menu and the `!aura settings` snapshot.
+
+### Per-character overrides
+
+Two character attributes let individual characters differ from the global settings. HealthColors creates them with the value `DEFAULT` the first time it processes a character; edit them on the sheet's Attributes & Abilities tab.
+
+| Attribute  | Applies to | Values                                                                                                                                   |
+| :--------- | :--------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| `USEBLOOD` | Hurt FX    | `DEFAULT` = global hurt setting · `OFF` / `NO` = no HealthColors FX at all for this character · a hex colour · one or more effect names (built-in or custom), comma-separated |
+| `USEHEAL`  | Heal FX    | `DEFAULT` = global heal setting · `OFF` / `NO` = no heal FX for this character · a hex colour · one or more effect names, comma-separated |
+
+A list such as `splatter-blood, Bone Shards` plays every entry. If an entry names a custom FX that no longer exists, HealthColors plays the default effect instead and whispers the GM once (per setting change) naming the character and attribute to fix.
 
 ---
 
@@ -114,11 +150,11 @@ HealthColors watches the configured success/failure fields and updates markers a
 
 ### D&D 2024 / Beacon sheets — sandbox requirement
 
-On Beacon-model sheets (e.g. D&D 2024), the death-save checkboxes are **not** legacy attributes; HealthColors reads them with Roll20's sheet-item API (`getSheetItem`). That API only returns **live** values on the **Experimental (Jumpgate)** Mod sandbox:
+On Beacon-model sheets (e.g. D&D 2024), the death-save checkboxes are **not** legacy attributes; HealthColors reads them with Roll20's sheet-item API (`getSheetItem`). That API only returns **live** values on **Mod Script Sandbox v1.5** (formerly "Experimental"); on **v1.0** (formerly "Default") it returns sheet defaults, often all `0`, so markers cannot track the sheet.
 
-- Switch via **Game Settings → Mod (API) Scripts → API Sandbox Version → Experimental**, then **Restart Server**.
-- Verify the API console startup banner says `EXPERIMENTAL`, not `[DEFAULT …]`. A known Roll20 issue can silently revert the selection — if the banner still says DEFAULT, toggle Default → restart → Experimental → restart.
-- On the Default sandbox, reads return sheet defaults (often all `0`), so markers cannot track the sheet. The Mod server cannot detect its own sandbox version, so HealthColors whispers a one-time GM notice when it finds a watched PC whose death saves are not legacy attributes, and `!aura deathsaves debug` reports the storage/API facts per token.
+- Roll20 renamed the sandboxes in September 2026 and made v1.5 the default for games that never chose one. Check yours under **Game Settings → Mod (API) Scripts → Mod Script Sandbox**; pick **v1.5 (Latest)** and **Restart Server** if needed.
+- The API console startup banner shows the running version, e.g. `##########> Sandbox [v1.5 2026-08-19] : Ready fired …`. HealthColors also logs it on startup and, on v1.0 or when the version is not reported, notes it under Death Save Integration in the GM menu.
+- HealthColors reads the version from `Campaign().sandboxVersion`. When it finds a watched PC whose death saves are not legacy attributes on a v1.0 sandbox, it whispers a one-time GM notice; on v1.5 no notice is needed. `!aura deathsaves debug` reports the sandbox version and the storage/API facts per token.
 
 ### Behaviour
 
@@ -138,6 +174,7 @@ On Beacon-model sheets (e.g. D&D 2024), the death-save checkboxes are **not** le
 - **Palette Changes**: Switching palettes from the menu or with `!aura palette ...` immediately runs a full refresh of tokens (equivalent to a force update).
 - **One-Off Tokens**: You can toggle "One-Offs" in the settings to enable health tracking for tokens that are not linked to a character sheet.
 - **FX Rendering Variance**: Some Roll20 sandbox/client combinations can render `spawnFxWithDefinition` colors inaccurately. HealthColors uses a fallback that updates default custom FX objects and spawns by FX ID to keep heal/hurt colors consistent.
+- **"FX … not found" whisper**: A configured custom FX (global `!aura heal`/`!aura hurt` setting or a character's `USEBLOOD`/`USEHEAL` attribute) no longer exists — typically after a campaign reset or character import. Run `!aura listfx` to see what is available and set a valid effect; the default burst plays in the meantime.
 - **Missing Max HP**: If the configured health bar has no `max` value on a token, HealthColors now clears that token's aura/tint until a max value is set.
 - **Third-Party Script Compatibility (AlterBars, etc.)**: When another API script changes HP by writing to a character attribute (rather than directly to the token bar), HealthColors detects the change via its `change:attribute` listener and updates the aura/tint and dead status correctly. No special configuration is required.
 

@@ -1,8 +1,9 @@
 {
   "name": "Aura/Tint HealthColors",
   "script": "HealthColors.js",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "previousversions": [
+    "2.2.1",
     "2.2.0",
     "2.1.4",
     "2.1.3",
@@ -24,18 +25,273 @@
   "description": "Script to set health indicator on tokens via aura or tint, based on a bars value. Be sure to set the bar your health is tied to in the menu: API menu command !AURA",
   "authors": "DXWarlock, Surok, MidNiteShadow7",
   "roll20userid": "262130, 335573, 16506286",
-  "useroptions": [],
+  "useroptions": [
+    {
+      "name": "auraColorOn",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Master switch: colour tokens by health. Default: enabled."
+    },
+    {
+      "name": "auraBar",
+      "type": "select",
+      "options": [
+        "bar1",
+        "bar2",
+        "bar3"
+      ],
+      "default": "bar1",
+      "description": "Token bar that holds hit points. Default: bar1."
+    },
+    {
+      "name": "auraTint",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Colour the token tint instead of the Aura 1 ring. Default: disabled (aura mode)."
+    },
+    {
+      "name": "colorPalette",
+      "type": "select",
+      "options": [
+        "default",
+        "colorblind"
+      ],
+      "default": "default",
+      "description": "Health colour palette. default = green/yellow/red; colorblind = cyan/orange/magenta. Default: default."
+    },
+    {
+      "name": "auraPercPC",
+      "type": "number",
+      "default": 100,
+      "description": "HP % at or below which player-character tokens show their health colour. 0 disables, 100 always shows. Default: 100."
+    },
+    {
+      "name": "auraPerc",
+      "type": "number",
+      "default": 100,
+      "description": "HP % at or below which NPC tokens show their health colour. 0 disables, 100 always shows. Default: 100."
+    },
+    {
+      "name": "PCAura",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Track health on player-character tokens. Default: enabled."
+    },
+    {
+      "name": "NPCAura",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Track health on NPC tokens. Default: enabled."
+    },
+    {
+      "name": "auraDeadPC",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Apply the dead (Red X) status marker to player characters at 0 HP. Default: enabled."
+    },
+    {
+      "name": "auraDead",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Apply the dead (Red X) status marker to NPCs at 0 HP. Default: enabled."
+    },
+    {
+      "name": "GM_PCNames",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No",
+        "Off"
+      ],
+      "default": "Yes",
+      "description": "GM visibility of player-character nameplates. Yes = always show, No = always hide, Off = leave Roll20's setting. Default: Yes."
+    },
+    {
+      "name": "GM_NPCNames",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No",
+        "Off"
+      ],
+      "default": "Yes",
+      "description": "GM visibility of NPC nameplates. Yes = always show, No = always hide, Off = leave Roll20's setting. Default: Yes."
+    },
+    {
+      "name": "PCNames",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No",
+        "Off"
+      ],
+      "default": "Yes",
+      "description": "Player visibility of player-character nameplates. Yes = always show, No = always hide, Off = leave Roll20's setting. Default: Yes."
+    },
+    {
+      "name": "NPCNames",
+      "type": "select",
+      "options": [
+        "Yes",
+        "No",
+        "Off"
+      ],
+      "default": "Yes",
+      "description": "Player visibility of NPC nameplates. Yes = always show, No = always hide, Off = leave Roll20's setting. Default: Yes."
+    },
+    {
+      "name": "AuraSize",
+      "type": "number",
+      "default": 0.35,
+      "description": "Aura 1 health-ring radius in feet beyond the token edge (aura mode). Default: 0.35."
+    },
+    {
+      "name": "Aura1Shape",
+      "type": "select",
+      "options": [
+        "Circle",
+        "Square"
+      ],
+      "default": "Circle",
+      "description": "Aura 1 shape shown in the settings output. Default: Circle."
+    },
+    {
+      "name": "Aura1Color",
+      "type": "text",
+      "default": "00FF00",
+      "description": "Aura 1 display colour shown in the settings output, as a 6-digit hex value without #. Default: 00FF00."
+    },
+    {
+      "name": "Aura2Size",
+      "type": "number",
+      "default": 5,
+      "description": "Aura 2 radius shown in the settings output. Default: 5."
+    },
+    {
+      "name": "Aura2Shape",
+      "type": "select",
+      "options": [
+        "Square",
+        "Circle"
+      ],
+      "default": "Square",
+      "description": "Aura 2 shape shown in the settings output. Default: Square."
+    },
+    {
+      "name": "Aura2Color",
+      "type": "text",
+      "default": "806600",
+      "description": "Aura 2 display colour shown in the settings output, as a 6-digit hex value without #. Default: 806600."
+    },
+    {
+      "name": "OneOff",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Also track tokens that are not linked to a character sheet. Default: disabled."
+    },
+    {
+      "name": "FX",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Play particle effects when a token is hurt or healed. Default: enabled."
+    },
+    {
+      "name": "HealFX",
+      "type": "text",
+      "default": "FDDC5C",
+      "description": "Healing effect: a 6-digit hex colour (recolours the default burst), a Roll20 built-in effect such as glow-holy, or a custom FX name. Default: FDDC5C."
+    },
+    {
+      "name": "HurtFX",
+      "type": "text",
+      "default": "FF0000",
+      "description": "Damage effect: a 6-digit hex colour (recolours the default burst), a Roll20 built-in effect such as explode-blood, or a custom FX name. Default: FF0000."
+    },
+    {
+      "name": "auraDeadFX",
+      "type": "text",
+      "default": "None",
+      "description": "Jukebox track to play when a token dies (comma-separate several to pick at random), or None. Default: None."
+    },
+    {
+      "name": "deathSavesOn",
+      "type": "checkbox",
+      "value": "true",
+      "description": "Enable Death Save Integration: distinguish dying / stable / dead player characters at 0 HP from watched death-save fields. Beacon (D&D 2024) sheets need Mod Script Sandbox v1.5. Default: disabled."
+    },
+    {
+      "name": "dsSuccessAttr",
+      "type": "text",
+      "default": "deathsave_succ1,deathsave_succ2,deathsave_succ3",
+      "description": "Death-save success field name(s), comma-separated for checkbox sheets. Default: deathsave_succ1,deathsave_succ2,deathsave_succ3."
+    },
+    {
+      "name": "dsFailureAttr",
+      "type": "text",
+      "default": "deathsave_fail1,deathsave_fail2,deathsave_fail3",
+      "description": "Death-save failure field name(s), comma-separated for checkbox sheets. Default: deathsave_fail1,deathsave_fail2,deathsave_fail3."
+    },
+    {
+      "name": "dsDyingMarker",
+      "type": "text",
+      "default": "skull",
+      "description": "Status marker for a dying player character at 0 HP. Use the exact tag from !aura deathsaves markers for custom markers. Default: skull."
+    },
+    {
+      "name": "dsStableMarker",
+      "type": "text",
+      "default": "green",
+      "description": "Status marker for a stable player character (3 death-save successes). Default: green."
+    }
+  ],
   "dependencies": [],
   "modifies": {
-    "custfx": "read,write",
-    "attribute": "read,write",
     "state.HealthColors": "read,write",
-    "token.aura1": "read,write",
-    "token.bar1": "read,write",
-    "token.bar2": "read,write",
-    "token.bar3": "read,write",
-    "token.tint_color": "read,write",
-    "token.statusmarkers": "read,write"
+    "graphic.bar1_value": "read,write",
+    "graphic.bar2_value": "read,write",
+    "graphic.bar3_value": "read,write",
+    "graphic.bar1_max": "read",
+    "graphic.bar2_max": "read",
+    "graphic.bar3_max": "read",
+    "graphic.bar1_link": "read",
+    "graphic.bar2_link": "read",
+    "graphic.bar3_link": "read",
+    "graphic.aura1_color": "read,write",
+    "graphic.aura1_radius": "write",
+    "graphic.showplayers_aura1": "write",
+    "graphic.tint_color": "read,write",
+    "graphic.statusmarkers": "read,write",
+    "graphic.showname": "write",
+    "graphic.showplayers_name": "write",
+    "graphic.layer": "read",
+    "graphic.subtype": "read",
+    "graphic.represents": "read",
+    "graphic.name": "read",
+    "graphic.width": "read",
+    "graphic.height": "read",
+    "graphic.left": "read",
+    "graphic.top": "read",
+    "graphic._pageid": "read",
+    "character.name": "read",
+    "character.controlledby": "read",
+    "attribute.name": "read,write",
+    "attribute.current": "read,write",
+    "attribute.max": "read",
+    "attribute._characterid": "read",
+    "custfx.name": "read,write",
+    "custfx.definition": "read,write",
+    "jukeboxtrack.title": "read",
+    "jukeboxtrack.playing": "write",
+    "jukeboxtrack.softstop": "write",
+    "jukeboxtrack.volume": "write",
+    "Campaign.token_markers": "read",
+    "Campaign.sandboxVersion": "read"
   },
   "conflicts": []
 }
