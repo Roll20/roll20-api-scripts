@@ -1,0 +1,113 @@
+{
+  "$id": "roll20.net/scripts/script.json.schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Roll20 API Script JSON Schema",
+  "description": "Schema to validate script.json for roll20 scripts",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "The name of the API script as it will appear on Roll20",
+      "type": "string"
+    },
+    "script": {
+      "description": "The name of the javascript file, which must remain uniform throughout versions",
+      "type": "string",
+      "pattern": "^.*\\.js$"
+    },
+    "version": {
+      "description": "The current version number of the API script (e.g. 12.3)",
+      "type": "string",
+      "pattern": "^([0-9]+(\\.)?)+([0-9]+)?$"
+    },
+    "previousversions": {
+      "description": "All previous versions of the script in an array format (e.g. [\"0.5\",\"0.1\"])",
+      "type": "array",
+      "items": {
+        "type": ["string", "integer", "number"],
+        "pattern": "^([0-9]+(\\.)?)+([0-9]+)?$"
+      },
+      "uniqueItems": true
+    },
+    "description": {
+      "description": "A short explanation of the script and it's use that will appear along side the script on Roll20. It is important for this section to be filled out in detail, as it's the primary way users will get information about the purpose and use of the script. Included in the description section needs to be an example use or purpose, list and explanation of API Commands, and any other information necessary to operating the script.",
+      "type": "string"
+    },
+    "authors": {
+      "description": "A simple string telling who contributed toward the script (e.g. Riley Dutton,Steve Koontz)",
+      "type": ["array", "string"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "roll20userid": {
+      "description": "A simple string telling the Roll20 User ID's of the authors (e.g. 1 or 45672,145678). Used internally and won't be shown publicly on the site.",
+      "type": ["string", "integer", "array"],
+      "pattern": "^([0-9]+,[ ]?)*[0-9]+$",
+      "items": {
+        "type": ["string", "integer"],
+        "pattern": "^[0-9]+$"
+      }
+    },
+    "patreon": {
+      "description": "Place the URL for a Patreon campaign here, and it will appear under your script's description when selected via one-click. (e.g. \"https://www.patreon.com/<name>\")",
+      "type": "string",
+      "pattern": "^(http(s)?://(www\\.)?patreon.com/.*)?"
+    },
+    "tipeee":{
+      "description": "Place the URL for a Tipeee here, and it will appear under your script's description when selected via one-click. (e.g. \"https://www.tipeee.com/<name>\")",
+      "type": "string",
+      "pattern": "^(http(s)?://(www\\.)?tipeee.com/.*)?"
+    },
+    "useroptions": {
+      "description": "An array of hashes that allow script authors to set pre-determined options for users to customize the functionality of the script. For more information check out the _Example folder's script.json for an example or see the Roll20 Wiki for more documentation.",
+      "type": ["array", "object"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type":{
+            "type": "string",
+            "enum": ["text", "number", "select", "checkbox"]
+          },
+          "default": {
+            "type": ["string", "number"]
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "description", "type"]
+      },
+      "maxProperties": 0
+    },
+    "dependencies": {
+      "description": "A list of other API scripts this script requires to function (e.g. My Kitchen)",
+      "type": ["array", "object"],
+      "items": {
+        "type": "string"
+      },
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "modifies": {
+      "description": "A list of the common Roll20 objects and properties the script reads and writes to. Custom objects and properties inside a namespace don't need to be included. (e.g. bar1_value: write)",
+      "type": ["array", "object"],
+      "maxItems": 0,
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["read", "write", "read, write", "write, read", "read,write", "write,read"]
+      }
+    },
+    "conflicts":{
+      "description": "A list of other API scripts this script is known to conflict with (e.g. Recipes)",
+      "type": ["array", "object"],
+      "items": {
+        "type": "string"
+      },
+      "maxProperties": 0
+    }
+  },
+  "required": ["name", "description", "script", "version", "authors", "roll20userid"]
+}
