@@ -9,7 +9,7 @@
 // actions/attacks; delete/deleteall remove token actions on any
 // supported sheet. Legacy TAM command forms (!deleteta, !deleteallta,
 // !sortta) and the "pf2" keyword are still recognized for existing
-// macros/games. Version 2.0.0.
+// macros/games. Version 2.0.1.
 
 const tokenActionMaker = (() => {
     "use strict";
@@ -19,7 +19,7 @@ const tokenActionMaker = (() => {
     const scriptName = "TokenActionMaker";
     const chatDisplayName = "Token Action Maker";
     const commandName = "ta";
-    const version = "2.0.0";
+    const version = "2.0.1";
     const schemaVersion = 1.0;
 
     const DEBUG = false;
