@@ -6,20 +6,9 @@
 //author: KeithCurtis
 //####################################
 
-var API_Meta = API_Meta || {};
-API_Meta.dltool = {
-    offset: Number.MAX_SAFE_INTEGER,
-    lineCount: -1
-}; {
-    try {
-        throw new Error('');
-    } catch (e) {
-        API_Meta.dltool.offset = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - (15));
-    }
-}
 /* globals checkLightLevel */
 on('ready', () => {
-    const version = '1.0.9';
+    const version = '1.1.0';
     log('-=> Dynamic Lighting Tool v' + version + ' is loaded. Base command is !dltool');
 
     if (!_.has(state, 'DLTool')) {
@@ -354,11 +343,14 @@ on('ready', () => {
 
 let utilityInfo = gmUtilityInfo;
 
-    on('chat:message', (msg) => {
-        if ('api' !== msg.type) {
+    on('chat:message', (msg_orig) => {
+        // Only handle !dltool commands. Roll20 passes the same msg object to every
+        // script's handler, so work on a copy and never alter the original.
+        if ('api' !== msg_orig.type || msg_orig.content.indexOf(cmdName) === -1) {
             return;
         }
-        
+        const msg = _.clone(msg_orig);
+
         msg.content = processInlinerolls(msg);
 
         let msgTxt = msg.content;
@@ -1142,11 +1134,3 @@ let utilityInfo = gmUtilityInfo;
         }
     });
 });
-
-{
-    try {
-        throw new Error('');
-    } catch (e) {
-        API_Meta.dltool.lineCount = (parseInt(e.stack.split(/\n/)[1].replace(/^.*:(\d+):.*$/, '$1'), 10) - API_Meta.dltool.offset);
-    }
-}
