@@ -15,6 +15,8 @@ This script creates token action macros for the selected token's character sheet
 > *0.3.7, Bug fixes for Pathfinder 2 by Roll20 Sheet.*
 >
 > *2.0.0, merged with the separate "Token Action Builder" script to add full support for the D&D Fifth Edition (5e & 5.5e) ("Beacon") sheet. Sheet type is now auto-detected — you no longer add 'pf2' to the command for a Pathfinder 2e character (the keyword is still accepted, just ignored). Added `!ta sort` / `!sortta` (groups and alphabetizes NPC actions, and PC attacks, by type instead of leaving them in the sheet's own order) and a new `pspells` category (same as `spells`, but prepared spells only). Help is now split per sheet — run `!ta help`.*
+>
+> *2.0.2, token action names now follow one set of rules on every sheet: spaces become hyphens, no stray brackets, and common qualifiers are shortened (see Token action names below). If you are upgrading, run `!ta delete` before re-running `!ta` on existing characters, or the old buttons will stay alongside the new ones. The check and save dropdowns now show the correct bonus for Beacon saving throws, and for Legacy NPC skills and saves that the stat block doesn't list. A character with several selected tokens is now processed once. New `nodot` keyword: `!ta nodot` names the Check, Save and Init macros without the leading period.*
 
 **!ta** Creates a full suite of token action macros for the selected token's character. Actions for NPCs and Attacks for PCs. Run with the token(s) selected — macros are created as token actions, visible only when that token is selected.
 
@@ -27,6 +29,8 @@ This script creates token action macros for the selected token's character sheet
 **!ta deleteall** Will delete ALL token actions for the selected character, whether they were created by this script or not. Use with caution — you'll be asked to confirm first.
 
 **!ta sort** Same as `!ta`, but groups and alphabetizes NPC actions (and PC attacks, on the sheets where that applies) by type, using name prefixes, instead of leaving them in the sheet's own order. See your sheet's section below for the specifics (not recommended on Pathfinder 2e — see its notes).
+
+**!ta nodot** Names the Check, Save and Init macros without the leading period (`Check`/`Save`/`Init` instead of `.Check`/`.Save`/`.Init`). Combines with any of the commands above, e.g. `!ta checks saves nodot`. Without the period they sort alphabetically among the other token actions instead of at the top.
 
 **!ta help** Shows in-chat help: a short common page covering usage and the categories shared by every sheet, plus a button per sheet for that sheet's own categories and notes.
 
@@ -51,7 +55,7 @@ This script creates token action macros for the selected token's character sheet
 Notes:
 - NPC action types are grouped in the token bar with name prefixes: _B.Bonus Actions, _R.Reactions, _L_Legendary, _M_Mythic.
 - `!ta sort` also groups plain NPC actions this way (prefixed _A.), so they cluster together instead of scattering alphabetically among everything else on the token bar.
-- Checks, Saves and Init are named with a leading period (.Check/.Save/.Init) so they sort to the top of the list.
+- Checks, Saves and Init are named with a leading period (.Check/.Save/.Init) so they sort to the top of the list. Add `nodot` to the command to leave the period off.
 - Beacon characters can take a while to process. You'll get a timestamped progress update in chat as each character finishes, and the API console log also records progress along the way — so if it looks stalled, it's usually still working.
 
 ## D&D 5e (Classic) by Roll20 Sheet ("OGL")
@@ -64,13 +68,13 @@ Notes:
 Notes:
 - NPC legendary/mythic actions are grouped in the token bar with name prefixes: _L_Legendary, _M_Mythic — same convention as Beacon.
 - `!ta sort` groups and alphabetizes plain NPC actions and PC attacks (prefixed _A.) and bonus actions (prefixed _B.), also matching Beacon's naming. Reactions, traits, and mythic actions aren't affected by sort.
-- Checks, Saves and Init are named with a leading period (.Check/.Save/.Init) so they sort to the top of the list.
+- Checks, Saves and Init are named with a leading period (.Check/.Save/.Init) so they sort to the top of the list. Add `nodot` to the command to leave the period off.
 
 ## Pathfinder 2e (Official) by Roll20 Sheet
 
-Sheet type is auto-detected — you no longer need to add 'pf2' to the command (the keyword is still accepted for existing macros, just ignored). In cases where there is an action cost, it will be indicated in the button name as `Action<#>`.
+Sheet type is auto-detected — you no longer need to add 'pf2' to the command (the keyword is still accepted for existing macros, just ignored). In cases where there is an action cost, it is shown at the end of the button name, e.g. `Stride-<1>`.
 
-- **attacks**: PC weapon attacks, plus NPC melee/ranged strikes. TAM will append a '-M' or '-R' after the name to distinguish melee from ranged. Each attack has two buttons immediately following for Attack 2 and Attack 3, abbreviated using the first two characters from each word in the attack's name. Example: `Silver Dagger` → `SiDa-2` `SiDa-3`.
+- **attacks**: PC weapon attacks, plus NPC melee/ranged strikes. Ranged strikes get '-R' after the name. Each attack has two buttons immediately following for Attack 2 and Attack 3, abbreviated using the first two characters from each word in the attack's name. Example: `Silver Dagger` → `SiDa2` `SiDa3`; a ranged `Shortbow` → `Shortbow-R`, `Sh-R2`, `Sh-R3`.
 - **actions**: PC's general actions list.
 - **offensive**: NPC offensive abilities.
 - **reactive**: NPC reactive abilities.
@@ -79,7 +83,25 @@ Sheet type is auto-detected — you no longer need to add 'pf2' to the command (
 Notes:
 - Ranged strikes get a -R suffix, plus the two extra abbreviated buttons described above.
 - `!ta sort` is not recommended for PF2 and has no effect here — alphabetizing would break the Attack-Attack2-Attack3 progression, so unsorted actions are created instead and a warning is shown.
-- Checks, Saves and Init are named with a leading period (.Check/.Save/.Init) so they sort to the top of the list.
+- Checks, Saves and Init are named with a leading period (.Check/.Save/.Init) so they sort to the top of the list. Add `nodot` to the command to leave the period off.
+
+## Token action names
+
+The same naming rules apply on every sheet. Spaces become hyphens, and common qualifiers are shortened:
+
+- `(One-Handed)` / `(Two-Handed)` → `-1H` / `-2H`; `(Melee; One-Handed)` → `-1Hm`
+- `(Melee)` / `(Ranged)` / `(Thrown)` → `-m` / `-r` / `-t`
+- `(Off-Hand)` → `-OH`; `(Finesse)` → `-Fnss`
+- `(3/Day)` → `-3/d`; `(3/Day Each)` → `-3/d-ea`; `(1/Turn)` → `-1/t`
+- `(Recharge 5–6)` → `—R5-6`; `(Recharges after a Short or Long Rest)` → `—R-Short/Long`
+- `(Costs 2 Actions)` → `—2a`
+- `(Humanoid or Hybrid Form Only)` → `—Humanoid/Hybrid`
+- `Legendary Resistance (3/Day, or 4/Day in Lair)` → `Lgnd-Resistance-3/d-or-4/d-Lair`
+- Spell sub-options: `Witch Bolt - Initial Attack` → `Witch-Bolt—Initial-Attack`
+- Any other parenthetical follows an em dash: `Push (Open Hand Technique)` → `Push—Open-Hand`
+- Numbered entries get a leading zero so they sort in order: `01-Charm-Ray` … `10-Death-Ray`
+- Characters Roll20 can't run in a token action button (`:` `|` `}` `(`) are removed.
+- If two entries on one sheet have exactly the same name, only the last one gets a button.
 
 ## Examples
 
