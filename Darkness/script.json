@@ -1,0 +1,20 @@
+{
+  "name": "Darkness",
+  "script": "Darkness.js",
+  "version": "1.0.0",
+  "description": "Darkness models the Darkness and Fog Cloud spells (and similar magical darkness or obscuring clouds) on the Roll20 tabletop. A field is an opaque image on the foreground layer. Tokens move freely in and out of it, and the script adjusts their vision and light as they do.\n\nWHAT A FIELD DOES:\n• Tokens inside a field cannot see: their field of vision and night vision are set to 0 degrees.\n• Inside darkness, light sources on any layer are put out. Fog does not affect light. Where the two overlap, darkness wins.\n• Nameplates, bars and auras of tokens inside a field are hidden from players.\n• Every changed setting is saved when a token enters and restored when it leaves, the field is turned off, or the field is deleted.\n• Overlapping fields, moved fields and resized fields are all handled.\n\nFEATURES:\n• Darkness (15 ft) and Fog Cloud (20 ft) presets, plus a custom effect and radius.\n• Emanation: a field centered on a creature, measured from the edge of its space, that follows the creature and is deleted with it.\n• Separate immunity lists for darkness and fog, for creatures with Devil's Sight, blindsight or truesight. Immune creatures keep their sight.\n• Several effects on a page at once, each labeled (Darkness A, Fog B) with a GM-only nameplate.\n• Works with token changes made by TokenMod, ScriptCards and SmartAoE.\n\nGETTING STARTED:\n1. Install the script.\n2. Type !darkness in chat to open the menu.\n3. Select a token (or a group, or nothing) and click Place Darkness Token. It is placed beside the token, at the center of the group, or in the middle of the page.\n4. Click Darkness, Fog Cloud, Custom or Emanation in the menu to turn the effect on.\n5. Click the ? button on any menu for help.\n\nThe first placement creates a GM-only character named Darkness Effect. Its token actions repeat the menu's controls, and its GM Notes hold the immunity lists. Run !darkness --setup to repair it if it is changed by hand.",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "patreon": "https://www.patreon.com/c/KeithCurtis",
+  "dependencies": [],
+  "modifies": {
+    "graphic": "read,write",
+    "character": "read,write",
+    "ability": "read,write",
+    "page": "read",
+    "player": "read",
+    "campaign": "read"
+  },
+  "conflicts": [],
+  "previousversions": ["1.0.0"]
+}
