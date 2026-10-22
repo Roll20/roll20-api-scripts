@@ -1,0 +1,28 @@
+{
+  "name": "Voice Menu Manager",
+  "script": "VoiceMenuManager.js",
+  "version": "1.0.0",
+  "previousversions": [],
+  "description": "**Voice Menu Manager** by **Kingkiller546** creates and maintains voice macros through a GM chat wizard. No code editing or other scripts are required.\n\n**Start:** enter `!vmm`, choose **Create a menu**, select Settlements → NPCs, Kingdoms → Settlements → NPCs, or Narration, then name the menu and macro. Add kingdoms/settlements through chat; the script creates their empty voice tables. Narration creates Session Intros, Scenes, Dreams and Visions, with configurable character grouping.\n\n**Audio:** supply your own Jukebox recordings. The default track prefix is `voice_`. A track named `voice_captainvale` can be represented by the table item `Captain Vale::voice_captainvale` or `Captain Vale::captainvale`. Add entries through the included recording editor or your own table editor, then regenerate. Structured character entries use `Character::Title::trackkey`; short prefixes and numbered titles also work.\n\n**Commands:** `!vmm` opens the manager; `!vmm wizard` starts setup; `!vmm help` shows help; `!vmm settings` configures the prefix and player playback; `!vmm play key` plays a track; `!vmm play TableName` rolls a weighted table first. Use generated Regenerate and Check tracks buttons, or `!vmm regenerate --menu MENU_ID` and `!vmm audit --menu MENU_ID`.\n\nTables and generated macros are linked by IDs, so renaming them is safe. GMs can rename/move/detach settlements, link existing tables, and archive/restore menus. Detaching retains table data. All dropdowns end with Cancel. Track playback stops other tracks sharing the voice prefix while leaving other music and ambience alone.\n\nManagement is GM-only. Playback is GM-only by default and can be enabled for players through Settings. No audio generation, uploads, external requests or campaign seed data are included. This script uses `!vmm` and does not handle `!voice`. Full instructions and testing notes are in the bundled README.",
+  "authors": "Kingkiller546",
+  "roll20userid": "2978722",
+  "useroptions": [],
+  "dependencies": [],
+  "modifies": {
+    "state.VoiceMenuManager": "read,write",
+    "macro._playerid": "read,write",
+    "macro.name": "read,write",
+    "macro.action": "read,write",
+    "macro.visibleto": "write",
+    "rollabletable.name": "read,write",
+    "rollabletable.showplayers": "write",
+    "tableitem._rollabletableid": "read,write",
+    "tableitem.name": "read,write",
+    "tableitem.weight": "read,write",
+    "jukeboxtrack.title": "read",
+    "jukeboxtrack.playing": "write",
+    "jukeboxtrack.softstop": "write",
+    "jukeboxtrack.loop": "write"
+  },
+  "conflicts": []
+}
