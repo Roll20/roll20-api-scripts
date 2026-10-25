@@ -1855,6 +1855,14 @@ var HealthColors =
       const { maxValue, curValue, prevValue, hasPrevValue } = health;
       const sizeChanged = prev.width !== obj.get('width') || prev.height !== obj.get('height');
       const linkageChanged = barLinkageChanged(obj, prev, barUsed);
+      // Saving token settings can overwrite an aura applied while the dialog was open.
+      // Reconcile visual changes even when HP, size and bar linkage stayed the same.
+      const indicatorKeys = state.HealthColors.auraTint
+        ? ['tint_color']
+        : ['aura1_radius', 'aura1_color', 'aura1_options', 'aura1_square', 'showplayers_aura1', 'tint_color'];
+      const indicatorChanged = indicatorKeys.some(
+        (key) => String(getPrevBarValue(prev, key) ?? '') !== String(obj.get(key) ?? ''),
+      );
 
       // Only skip when nothing relevant changed. The `curValue > 0` clause means we never
       // skip while a token is at/below 0 HP: on linked-attribute sheets (D&D 2024) a drop
@@ -1866,7 +1874,8 @@ var HealthColors =
         curValue > 0 &&
         update !== 'YES' &&
         !sizeChanged &&
-        !linkageChanged
+        !linkageChanged &&
+        !indicatorChanged
       ) {
         return;
       }
