@@ -95,12 +95,8 @@ const SmartAoE = (() => {
   // private to SmartAoE, and the script can run in strict mode.
   let c,
     controlledby,
-    dTheta,
     gmOutput,
-    i,
-    layer,
     newIndex,
-    newSideImg,
     newX,
     newY,
     originHeight,
@@ -110,7 +106,6 @@ const SmartAoE = (() => {
     originX,
     originY,
     oTokID,
-    oY,
     p,
     pageDL,
     pageGridIncrement,
@@ -125,7 +120,6 @@ const SmartAoE = (() => {
     retVal,
     s,
     success,
-    tokenPic,
     usePlayerColor,
     whisperString;
 
@@ -1571,7 +1565,7 @@ const SmartAoE = (() => {
    * @param {string} aoeType - AoE shape (e.g. 'square', 'circle', 'PFcircle', 'line', 'cone', '5econe', 'PFcone').
    * @param {pt} originPt - Starting origin point, stored as originPts[0].
    * @param {string} originTokID - Id of the caster/origin token.
-   * @param {string[]} pathIDs - Ids of the drawn paths (wrapped in an outer array before storing).
+   * @param {string} pathIDs - Id of the AoE's first drawn path (stored as a one-item array).
    * @param {string} pageID - Page the AoE is on.
    * @param {object} cardParameters - Chat card style settings for the results card.
    * @param {...*} rest - The remaining options (save, damage, resistance, condition, sound, whisper, layer and caster
@@ -5229,7 +5223,7 @@ const SmartAoE = (() => {
 
     if (aoeLinks) {
       //aoeLinks.indices.forEach((index) => {
-      for (i = aoeLinks.indices.length - 1; i > -1; i--) {
+      for (let i = aoeLinks.indices.length - 1; i > -1; i--) {
         //delete the linked paths and clear the the associated links arrays from the state object
         const stateLinkIndex = aoeLinks.indices[i];
         deleteLinkedPaths(state[scriptName].links[stateLinkIndex].pathIDs);
@@ -5461,8 +5455,8 @@ const SmartAoE = (() => {
     const charID = token.get('represents'),
       character = getObj('character', charID),
       displayName = token.get('name');
-    tokenPic = token.get('imgsrc').replace(/(?:max|original|med)\.png/, 'thumb.png');
-    layer = token.get('layer');
+    const tokenPic = token.get('imgsrc').replace(/(?:max|original|med)\.png/, 'thumb.png');
+    const layer = token.get('layer');
 
     const attrs = findObjs(
       {
