@@ -6188,7 +6188,11 @@ const SmartAoE = (() => {
       'Saves, damage & markers',
       [
         ['--dc / --saveFormula', 'save DC / 5eSTR…5eCHA or a formula (<<…>> and a{…} roll per target)', '0 / none'],
-        ['--noSave / --ignore', 'no save / attrName, value to leave characters out', 'false / none'],
+        [
+          '--noSave / --ignore',
+          'no save (assumed when there is no --saveFormula) / attrName, value to leave characters out',
+          'false / none',
+        ],
         [
           '--damageFormula1 / --damageFormula2',
           'number or roll each; negative heals; formula 2 can be used alone',
@@ -7707,6 +7711,13 @@ const SmartAoE = (() => {
     } else if (offsetX > 50 * 70 || offsetY > 50 * 70) {
       //In case the offset was entered in pixels
       retVal.push('Offset out of range. Format is "--offset|#,#" in Squares (Max 50)');
+    }
+
+    //No --saveFormula and no --noSave: each target used to send an empty roll that Roll20 never answers, so the AoE
+    //silently did nothing when triggered. Treat it as no save (full damage to every target), like --noSave|true.
+    if (!noSave && saveFormula === '') {
+      noSave = true;
+      DC = 999999;
     }
 
     //First data validation checkpoint
