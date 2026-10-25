@@ -6221,6 +6221,10 @@ const SmartAoE = (() => {
     }
 
     tok = getObj('graphic', tokID);
+    if (!tok) {
+      sendChat(scriptName, `${whisperString} Unable to find a token with id = ${tokID}`, null, { noarchive: true });
+      return;
+    }
     deleteAoELinksAndControlToks(tok);
   };
 
@@ -6250,7 +6254,7 @@ const SmartAoE = (() => {
 
     if (args.length > 1) {
       targetTokID = args[1];
-    } else if (msg.selected.length > 0) {
+    } else if (msg.selected && msg.selected.length > 0) {
       targetTokID = msg.selected[0]._id;
     } else {
       sendChat(
@@ -6261,6 +6265,7 @@ const SmartAoE = (() => {
           noarchive: true,
         },
       );
+      return;
     }
     targetTok = getObj('graphic', targetTokID);
 
@@ -6411,7 +6416,7 @@ const SmartAoE = (() => {
       let newindex;
       let updatedLink;
 
-      tok = getObj('graphic', msg.selected[0]._id);
+      tok = msg.selected && msg.selected[0] ? getObj('graphic', msg.selected[0]._id) : undefined;
 
       if (!tok) {
         sendChat(scriptName, `${whisperString} You must select a token to proceed`);
@@ -6428,7 +6433,7 @@ const SmartAoE = (() => {
 
       aoeLinks = getAoELinks(tok.get('id'));
 
-      if (aoeLinks.indices.length > 0) {
+      if (aoeLinks && aoeLinks.indices.length > 0) {
         //for each link associated with selected token (could be originTok or controlTok)
         for (let a = 0; a < aoeLinks.indices.length; a++) {
           if (aoeLinks.links[a].aoeFloat === false || aoeLinks.links[a].aoeType.match(/wall/i)) {
@@ -6529,6 +6534,17 @@ const SmartAoE = (() => {
 
     //find links associated with the aoeControlToken
     aoeLinks = getAoELinks(tok.get('id'));
+    if (!aoeLinks) {
+      sendChat(
+        scriptName,
+        `${whisperString} That token is not part of a SmartAoE. Select an AoE control token (or its caster).`,
+        null,
+        {
+          noarchive: true,
+        },
+      );
+      return;
+    }
 
     let validToks = [];
     if (singleTarget) {
@@ -6667,7 +6683,8 @@ const SmartAoE = (() => {
             //only add unique tokenids to the array of "hit" tokens
             foundIndex = tokenRolls.findIndex((e) => e.id === thisValidToks[t].tok.get('_id'));
             if (foundIndex === -1) {
-              tokenRolls.push(processTokenRolls(thisValidToks[t].tok, aoeLinks.links[a]));
+              const roll = processTokenRolls(thisValidToks[t].tok, aoeLinks.links[a]);
+              if (roll) tokenRolls.push(roll); //null when the token's character no longer exists
             }
           }
         }
