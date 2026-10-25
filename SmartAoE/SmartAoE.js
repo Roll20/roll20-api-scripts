@@ -174,6 +174,34 @@ const SmartAoE = (() => {
         return output;
     }
     
+    //Inline roll for a plain-number damage formula. Roll20 can't start an inline roll with a negative number,
+    //so healing amounts are written as "0 - n". Non-numeric values count as 0.
+    const baseDamageFormula = function(base) {
+        let n = Number.isFinite(base) ? base : 0;
+        return n < 0 ? `[[0 - ${Math.abs(n)}]]` : `[[${n}]]`;
+    }
+    
+    //Damage row(s) for the chat card: every damage roll with a non-zero result is shown, so formula 2
+    //still appears when formula 1 is absent. Returns '' when there is no damage to show.
+    const buildDamageRows = function(damageRolls, aoeLink) {
+        let shown = damageRolls
+            .map((r, idx) => {
+                return {
+                    styled: r.styled_1,
+                    type: idx === 0 ? aoeLink.damageType1 : aoeLink.damageType2,
+                    value: r.result_1 ? r.result_1[0] : 0
+                };
+            })
+            .filter(r => r.value);
+        if (shown.length === 0) {
+            return '';
+        }
+        if (shown.length === 1) {
+            return buildDamageRow(shown[0].styled, shown[0].type, false, '', '', aoeLink.cardParameters);
+        }
+        return buildDamageRow(shown[0].styled, shown[0].type, false, shown[1].styled, shown[1].type, aoeLink.cardParameters);
+    }
+    
     const buildDamageRow = function (damRoll1, damType1, hideformula, damRoll2="", damType2="", cardParameters) {
         let rowBackground, fontColor;
         
@@ -4105,20 +4133,10 @@ const SmartAoE = (() => {
                 .catch(err => sendErrorMessage(err));
         } else {
             let output = buildTitle(aoeLink.cardParameters);
+            let damageOutput = buildDamageRows(damageRolls, aoeLink);
             
-            if (damageRolls[0].result_1[0]) {
-                if (damageRolls.length > 1) {
-                    if (damageRolls[1].result_1[0]) {
-                        //two damage rolls
-                        output = output + buildDamageRow(damageRolls[0].styled_1, aoeLink.damageType1, false, damageRolls[1].styled_1, aoeLink.damageType2, aoeLink.cardParameters)
-                    } else {
-                        //one damage roll
-                        output = output + buildDamageRow(damageRolls[0].styled_1, aoeLink.damageType1, false, '', '', aoeLink.cardParameters)
-                    }
-                } else {
-                    //one damage roll
-                    output = output + buildDamageRow(damageRolls[0].styled_1, aoeLink.damageType1, false, '', '', aoeLink.cardParameters)
-                }
+            if (damageOutput) {
+                output = output + damageOutput;
                 
                 let descRow = buildDescRow(aoeLink.cardParameters.descriptiontext, aoeLink.cardParameters)
                 output = output + buildTableBody('', '', descRow, aoeLink.cardParameters);
@@ -4338,22 +4356,7 @@ const SmartAoE = (() => {
         });
         
         // Format rows of output
-        let outputNew = buildTitle(aoeLink.cardParameters);
-        
-        if (damageRolls[0].result_1[0]) {
-            if (damageRolls.length > 1) {
-                if (damageRolls[1].result_1[0]) {
-                    //two damage rolls
-                    outputNew = outputNew + buildDamageRow(damageRolls[0].styled_1, aoeLink.damageType1, false, damageRolls[1].styled_1, aoeLink.damageType2, aoeLink.cardParameters)
-                } else {
-                    //one damage roll
-                    outputNew = outputNew + buildDamageRow(damageRolls[0].styled_1, aoeLink.damageType1, false, '', '', aoeLink.cardParameters)
-                }
-            } else {
-                //one damage roll
-                outputNew = outputNew + buildDamageRow(damageRolls[0].styled_1, aoeLink.damageType1, false, '', '', aoeLink.cardParameters)
-            }
-        }
+        let outputNew = buildTitle(aoeLink.cardParameters) + buildDamageRows(damageRolls, aoeLink);
         
         let saveHeaderRow = buildSaveHeaderRow(aoeLink.cardParameters)
         
@@ -5024,14 +5027,14 @@ const SmartAoE = (() => {
                             }
                         }
                         
-                        //define roll associated with base damage
-                        if (aoeLinks.links[a].rollDamage1) {
-                            damageRolls.push({formula:aoeLinks.links[a].damageFormula1});
-                            if (aoeLinks.links[a].rollDamage2) {
-                                damageRolls.push({formula:aoeLinks.links[a].damageFormula2});
-                            }
-                        } else {
-                            damageRolls.push({formula:"[[" + aoeLinks.links[a].damageBase1 + "]]"});
+                        //define rolls for damage formulas 1 & 2. Each may be a roll or a plain number, independently
+                        //(previously formula 2 was dropped unless both formulas were rolls)
+                        let thisLink = aoeLinks.links[a];
+                        damageRolls.push({formula: thisLink.rollDamage1 ? thisLink.damageFormula1 : baseDamageFormula(thisLink.damageBase1)});
+                        if (thisLink.rollDamage2) {
+                            damageRolls.push({formula: thisLink.damageFormula2});
+                        } else if (Number.isFinite(thisLink.damageBase2) && thisLink.damageBase2 !== 0) {
+                            damageRolls.push({formula: baseDamageFormula(thisLink.damageBase2)});
                         }
                         
                         let foundIndex = -1;
@@ -5316,7 +5319,7 @@ const SmartAoE = (() => {
                                 //example: "<<(8+?{Cast at what level?|3,0|4,1|5,2|6,3|7,4|8,5|9,6})d6>>"" becomes something like "[[(8+1)d6]]"
                             } else {
                                 if (inlines[0] === undefined) {
-                                    damageBase1 = parseInt(d2);
+                                    damageBase2 = parseInt(d2);     //was damageBase1, which overwrote formula 1's damage
                                 } else {
                                     //damageFormula2 = `[[${inlines[0].expression}]]`;
                                     damageFormula2 = `[[${inlines[0].expression.replace(/&#91;/g,'[').replace(/&#93;/g,']')}]]`;
