@@ -6117,6 +6117,341 @@ const SmartAoE = (() => {
     sendChat('SmartAoE', errorMessage);
   };
 
+  // ————— HELP HANDOUT —————
+  /** Name of the GM-only help handout SmartAoE creates and keeps up to date. */
+  const HANDOUT_NAME = `${scriptName} — Help & Reference`;
+
+  /** Chat commands for the help handout: [command, description]. Keep in step with COMMAND_HANDLERS and the README. */
+  const HANDOUT_COMMANDS = [
+    [
+      '!smartaoe {{ --param|value … }}',
+      'Create an AoE for the selected token (or --selectedID). See Parameters below.',
+    ],
+    [
+      '!smarttrigger [controlTokenID]',
+      'Trigger the selected control token’s AoE (or the one whose id is given) on everything inside it. Selecting one of the AoE squares also works.',
+    ],
+    [
+      '!smartquery <tokenID>',
+      'Trigger only the AoEs that overlap a token’s square, e.g. !smartquery @{target|Choose a Target|token_id} for start/end-of-turn effects.',
+    ],
+    ['!smartrotateorigin cw|ccw', 'Move a cone’s origin to the next corner/face of the caster.'],
+    ['!smartremove', 'Remove all AoEs and control tokens linked to the selected token.'],
+    [
+      '!smartclearcache',
+      'Forget every stored AoE link in the game (tokens and drawings stay). Use only if links are corrupted.',
+    ],
+    ['!smarthelp', 'Rebuild this help handout and whisper a link to it.'],
+    ['!smartapply --args|…', 'Used by the chat card’s apply buttons. Not normally typed by hand.'],
+  ];
+
+  /** `!smartaoe` parameters for the help handout, grouped: [group, [[parameter, values, default], …]]. */
+  const HANDOUT_PARAMS = [
+    [
+      'Shape and placement',
+      [
+        [
+          '--aoeType',
+          'line, square, circle, PFcircle, wall, cone[, angle], PFcone, 5econe; add ", float" to squares/circles to detach them',
+          'line',
+        ],
+        ['--radius', 'number with units (30ft, 6u), bare number = pixels, or variable', 'variable'],
+        ['--width', 'wall thickness (wall only)', '1 square'],
+        ['--origin', 'center, nearest, or "nearest, face"', 'center'],
+        ['--offset', 'x, y offset of the origin from the caster, in grid squares', '0, 0'],
+        ['--forceIntersection', 'snap the control token to grid intersections', 'auto'],
+        ['--minGridArea / --minTokArea', 'fraction (0–1) of a square / token that must be covered', '0.01'],
+        ['--instant', 'delete the control token once triggered', 'false'],
+        ['--affectsCaster', 'the caster can be affected', 'false'],
+        ['--aoeLayer', 'objects/token, gm or map (map avoids the Jumpgate layering issue)', 'objects'],
+        [
+          '--selectedID / --playerID',
+          'caster token id / controlling player id (for calls from other scripts)',
+          'selection',
+        ],
+      ],
+    ],
+    [
+      'Control token & appearance',
+      [
+        ['--controlTokName', 'character whose default token is used, or self', 'AoEControlToken'],
+        ['--controlTokSize / --controlTokSide', 'size in squares / side of a multi-sided token', '1 / default'],
+        ['--isDrawing / --tooltip', 'control token drawing flag / tooltip text', 'false / none'],
+        ['--aoeColor / --aoeOutlineColor', '#RRGGBBAA fill / #RRGGBB outline, or player', '#ff000050 / #ff0000'],
+        ['--gridColor / --outlineOnly', 'grid-line colour (alpha 00 hides) / outline without fill', '#000000 / false'],
+        ['--fx', 'Roll20 effect <type>-<colour> on each affected square', 'none'],
+        ['--spawnSound / --moveSound / --triggerSound / --deleteSound', 'jukebox track names', 'none'],
+        ['--turnorder', 'name, value, formula, linked', 'linked'],
+      ],
+    ],
+    [
+      'Saves, damage & markers',
+      [
+        ['--dc / --saveFormula', 'save DC / 5eSTR…5eCHA or a formula (<<…>> and a{…} roll per target)', '0 / none'],
+        ['--noSave / --ignore', 'no save / attrName, value to leave characters out', 'false / none'],
+        [
+          '--damageFormula1 / --damageFormula2',
+          'number or roll each; negative heals; formula 2 can be used alone',
+          'none',
+        ],
+        ['--damageType1 / --damageType2', 'damage type of each formula', 'none'],
+        ['--damageSaveRule', 'operation on a successful save', '*0.5'],
+        ['--bar / --autoApply', 'bar(s) to change, e.g. 3,1 / apply without the chat buttons', '1 / false'],
+        [
+          '--resistAttr / --vulnerableAttr / --immunityAttr',
+          'attributes listing the target’s defences',
+          'npc_resistances …',
+        ],
+        [
+          '--resistanceRule / --vulnerableRule',
+          'operation for resistance / vulnerability (immunity is *0)',
+          '*0.5 / *2',
+        ],
+        ['--resource', 'attrName, cost, alias — resource (e.g. spell slot) deducted from the caster', 'cost 1'],
+        ['--conditionFail / --conditionPass', 'marker(s) on a failed / passed save (@# adds a number)', 'none'],
+        [
+          '--zeroHPmarker / --removeAtZero',
+          'marker when the last bar reaches 0 / remove the token at 0',
+          'none / false',
+        ],
+        ['--casterCondition', 'marker on the caster, or "marker, onFail"', 'none'],
+      ],
+    ],
+    [
+      'Chat card',
+      [
+        [
+          '--title / --leftSub / --rightSub / --desc',
+          'card title, subtitles and description (%br% = line break)',
+          'SmartAoE',
+        ],
+        ['--hideNames', 'show targets as Target_1, Target_2…', 'false'],
+        ['--whisperAll / --whisperResults', 'whisper the whole card / only the results', 'false'],
+        ['--chatAvatarsEnabled', 'false if chat avatars are turned off', 'true'],
+        [
+          'Styling',
+          '--titleCardBackground, --titleFontFace/Color/Size, --bodyFontFace/Size, --tableBGColor, --evenRowBackground, …',
+          'see README',
+        ],
+      ],
+    ],
+  ];
+
+  /** Example macros for the help handout: [title, macro text]. */
+  const HANDOUT_EXAMPLES = [
+    ['20 ft cube that floats freely', '!smartaoe {{\n  --aoeType|square, float\n  --radius|10ft\n}}'],
+    [
+      '5e cone that rotates around the caster',
+      '!smartaoe {{\n  --aoeType|5econe\n  --radius|30ft\n  --minGridArea|0.25\n  --origin|nearest, face\n}}',
+    ],
+    [
+      'Fireball: DEX save, half damage, 0 HP marker',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --radius|20ft\n  --dc|@{selected|spell_save_dc}\n  --saveFormula|5eDEX\n  --damageFormula1|[[8d6]]\n  --damageType1|fire\n  --zeroHPmarker|dead\n  --fx|burst-fire\n}}',
+    ],
+    [
+      'Healing with no save',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --radius|15ft\n  --noSave|true\n  --damageFormula1|-10\n  --autoApply|true\n}}',
+    ],
+  ];
+
+  /** Tips for the help handout: [title, text]. Mirrors the README. */
+  const HANDOUT_TIPS = [
+    [
+      'Jumpgate layering',
+      'In Jumpgate the AoE squares can cover tokens (a Roll20 issue). Add --aoeLayer|map, or refresh the browser. Clicking the control token may select a square instead; Trigger still works.',
+    ],
+    ['Attached squares and circles', 'Fixed-radius squares/circles without float only fit one-square casters.'],
+    [
+      'Line lengths',
+      'Lines use true distance, so diagonals are shorter than 5e grid counting. Leave out --radius and place the token by hand for an exact count.',
+    ],
+    [
+      'Called from other scripts',
+      'Pass --selectedID and --playerID, or install SelectManager and run !smconfig +playerid once.',
+    ],
+    [
+      '2024 (Beacon) sheets',
+      'The 5eSTR…5eCHA shortcuts use 2014-sheet attributes; use a custom --saveFormula and --dc on the 2024 sheet.',
+    ],
+    ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run !smartclearcache.'],
+  ];
+
+  /**
+   * Inline styles for the help handout. Roll20 strips <style> blocks, so there is no dark-mode media query: body text
+   * inherits the theme's colour, accents are mid-tones that read on light and dark backgrounds, and tints are
+   * semi-transparent grey.
+   */
+  const HANDOUT_STYLE = {
+    outer: 'font-family:Arial,sans-serif;font-size:13px;',
+    header: 'background-color:#8b1e1e;color:#fff;padding:10px 12px;border-radius:6px;',
+    h1: 'margin:0;font-size:20px;color:#fff;',
+    subtitle: 'margin:4px 0 0 0;font-size:12px;color:#f3d9c9;',
+    h2: 'margin:18px 0 6px 0;font-size:16px;color:#cc5a32;border-bottom:2px solid #e0a35b;padding-bottom:2px;',
+    h3: 'margin:12px 0 4px 0;font-size:14px;color:#cc5a32;',
+    p: 'margin:4px 0 8px 0;line-height:1.4;',
+    table: 'width:100%;border-collapse:collapse;margin:4px 0 10px 0;',
+    th: 'background-color:#a8401f;color:#fff;text-align:left;padding:4px 6px;',
+    td: 'padding:4px 6px;border-bottom:1px solid rgba(128,128,128,0.35);vertical-align:top;',
+    code: 'font-family:monospace;',
+    pre: 'font-family:monospace;background-color:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.35);padding:6px;white-space:pre-wrap;margin:4px 0 10px 0;',
+    footer: 'margin-top:16px;font-size:11px;opacity:0.75;',
+  };
+
+  /**
+   * Escapes text for handout HTML.
+   *
+   * @param {*} text - Value to escape.
+   * @returns {string} HTML-safe text.
+   */
+  const escapeHandoutHtml = function (text) {
+    return String(text ?? '').replace(
+      /[&<>"'{}|@]/g,
+      (ch) =>
+        ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+          '{': '&#123;',
+          '}': '&#125;',
+          '|': '&#124;',
+          '@': '&#64;',
+        })[ch],
+    );
+  };
+
+  /**
+   * Builds a handout table from rows of already-escaped HTML cells.
+   *
+   * @param {string[]}   headings - Column headings.
+   * @param {string[][]} rows     - Cell HTML per row.
+   * @returns {string} Table HTML.
+   */
+  const handoutTable = function (headings, rows) {
+    const S = HANDOUT_STYLE;
+    const head = headings.map((h) => `<th style="${S.th}">${h}</th>`).join('');
+    const body = rows.map((cells) => `<tr>${cells.map((c) => `<td style="${S.td}">${c}</td>`).join('')}</tr>`).join('');
+    return `<table style="${S.table}"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  };
+
+  /**
+   * Wraps text as inline code in the handout.
+   *
+   * @param {string} text - Plain text.
+   * @returns {string} HTML.
+   */
+  const handoutCode = function (text) {
+    return `<span style="${HANDOUT_STYLE.code}">${escapeHandoutHtml(text)}</span>`;
+  };
+
+  /**
+   * Generates the help handout HTML.
+   *
+   * @returns {string} Handout notes HTML.
+   */
+  const buildHandoutHtml = function () {
+    const S = HANDOUT_STYLE;
+    const p = (html) => `<p style="${S.p}">${html}</p>`;
+    const overview =
+      `<h2 style="${S.h2}">Overview</h2>` +
+      p(
+        'SmartAoE draws areas of effect on gridded maps and decides consistently which squares and creatures are inside. ' +
+          'It can roll saving throws, apply damage (with resistances, vulnerabilities and immunities), add condition markers and post a results card. ' +
+          'This handout is GM-only and is rebuilt every time the script loads.',
+      );
+    const quickStart =
+      `<h2 style="${S.h2}">Quick start</h2><ol style="${S.p}">` +
+      [
+        `Select the caster’s token and run a ${handoutCode('!smartaoe')} macro (the ${handoutCode('AoEGenerator')} macro whispers a menu of ready-made AoEs).`,
+        'Move the control token (the reticle) to aim; cones and lines run from the caster towards it.',
+        `Select the control token and run ${handoutCode('!smarttrigger')} (token action Trigger-ALL). Saves are rolled and a results card is posted.`,
+        `With ${handoutCode('--autoApply|true')} damage and markers are applied at once; otherwise use the buttons on the card.`,
+        `Delete the control token (or use ${handoutCode('--instant')}) to remove the AoE.`,
+      ]
+        .map((li) => `<li>${li}</li>`)
+        .join('') +
+      '</ol>';
+    const commands =
+      `<h2 style="${S.h2}">Commands</h2>` +
+      handoutTable(
+        ['Command', 'Description'],
+        HANDOUT_COMMANDS.map(([cmd, desc]) => [handoutCode(cmd), escapeHandoutHtml(desc)]),
+      );
+    const params =
+      `<h2 style="${S.h2}">!smartaoe parameters</h2>` +
+      p('Parameters are case-insensitive. Yes/no options accept true/yes/1 and false/no/0.') +
+      HANDOUT_PARAMS.map(
+        ([group, rows]) =>
+          `<h3 style="${S.h3}">${escapeHandoutHtml(group)}</h3>` +
+          handoutTable(
+            ['Parameter', 'Values', 'Default'],
+            rows.map(([name, values, def]) => [handoutCode(name), escapeHandoutHtml(values), escapeHandoutHtml(def)]),
+          ),
+      ).join('');
+    const examples =
+      `<h2 style="${S.h2}">Examples</h2>` +
+      HANDOUT_EXAMPLES.map(
+        ([title, macro]) =>
+          `<h3 style="${S.h3}">${escapeHandoutHtml(title)}</h3><pre style="${S.pre}">${escapeHandoutHtml(macro)}</pre>`,
+      ).join('');
+    const integration =
+      `<h2 style="${S.h2}">Other scripts</h2>` +
+      p(
+        `Scripts can react to SmartAoE’s token changes with ${handoutCode('SmartAoE.ObserveTokenChange(fn)')}, and read the 0 HP marker tags it has used with ${handoutCode('SmartAoE.ZeroHPMarkers()')}. HealthColors uses both.`,
+      );
+    const tips =
+      `<h2 style="${S.h2}">Tips &amp; known limitations</h2><ul style="${S.p}">` +
+      HANDOUT_TIPS.map(
+        ([t, x]) => `<li style="margin-bottom:4px;"><b>${escapeHandoutHtml(t)}:</b> ${escapeHandoutHtml(x)}</li>`,
+      ).join('') +
+      '</ul>';
+    const footer = `<p style="${S.footer}">${scriptName} v${version} · Author David M. (djmoorehead) · Full documentation: wiki.roll20.net/SmartAoE</p>`;
+    return (
+      `<div style="${S.outer}"><div style="${S.header}"><h1 style="${S.h1}">${scriptName}</h1>` +
+      `<p style="${S.subtitle}">Version ${version} · Help &amp; Reference</p></div>` +
+      `${overview}${quickStart}${commands}${params}${examples}${integration}${tips}${footer}</div>`
+    );
+  };
+
+  /**
+   * Creates the GM-only help handout, or rewrites its notes when it already exists.
+   * Extra handouts with the same name are left alone (only the first is updated).
+   *
+   * @returns {object|undefined} The Roll20 handout, or undefined if it could not be written.
+   */
+  const installHandout = function () {
+    try {
+      const handout =
+        findObjs({ _type: 'handout', name: HANDOUT_NAME })[0] ||
+        createObj('handout', { name: HANDOUT_NAME, inplayerjournals: '', controlledby: '' });
+      if (!handout) return undefined;
+      handout.set({ inplayerjournals: '', controlledby: '' });
+      handout.set('notes', buildHandoutHtml());
+      return handout;
+    } catch (err) {
+      log(`${scriptName}: could not update the help handout: ${(err && err.message) || err}`);
+      return undefined;
+    }
+  };
+
+  /**
+   * Handles `!smarthelp`: rebuilds the help handout and whispers the caller a link to it.
+   *
+   * @param {object} msg - Roll20 chat message.
+   * @returns {Promise<void>}
+   */
+  const handleHelpCommand = async function (msg) {
+    const player = getObj('player', msg.playerid);
+    const who = player ? player.get('_displayname') : undefined;
+    const whisperString = who === undefined ? '/w gm' : `/w "${who}"`;
+    const handout = installHandout();
+    const link = handout
+      ? `[Open the SmartAoE help handout](http://journal.roll20.net/handout/${handout.id})`
+      : 'Could not create the help handout; see the API console.';
+    sendChat(scriptName, `${whisperString} ${link}`, null, { noarchive: true });
+  };
+
   // ————— CHAT COMMANDS —————
   //Finds the token to trigger from the chat selection. In Jumpgate the AoE squares can sit on top of the
   //control token, so clicking it may select one of the squares instead: map a selected AoE square back to
@@ -7912,6 +8247,7 @@ const SmartAoE = (() => {
 
   /** Chat commands handled by SmartAoE, in the order they are checked. */
   const COMMAND_HANDLERS = [
+    { match: (content) => content.indexOf('!smarthelp') === 0, run: handleHelpCommand },
     { match: (content) => content.indexOf('!smartclearcache') === 0, run: handleClearCacheCommand },
     { match: (content) => content.indexOf('!smartremove') === 0, run: handleRemoveCommand },
     { match: (content) => content.indexOf('!smartquery') === 0, run: handleQueryCommand },
@@ -7976,6 +8312,7 @@ const SmartAoE = (() => {
 
   on('ready', () => {
     checkInstall();
+    installHandout();
     registerEventHandlers();
     populateTokenMarkerURLs();
   });
