@@ -973,6 +973,9 @@ const SmartAoE = (() => {
         
         if (fromTarget) {
             let tok = getObj('graphic', ID);
+            if (!tok) {
+                return undefined;
+            }
             let tokX = tok.get("left");
             let tokY = tok.get("top");
             let tokWidth = tok.get("width");
@@ -981,16 +984,21 @@ const SmartAoE = (() => {
             let tokCorners = getCellCoords(tokX, tokY, tokWidth, tokHeight)
             let pageID = tok.get("_pageid")
             let page = getObj('page', pageID);
+            if (!page) {
+                return undefined;
+            }
             let pageGridIncrement = page.get("snapping_increment");
             
             state[scriptName].links.forEach((link, index) => {
                 if (link.pageID === pageID) {
                     let totalOverlapArea = 0;
-                    link.pathIDs.forEach(pid => {
+                    (link.pathIDs || []).forEach(pid => {
                         let path = getObj('path', pid);
                         
+                        //skip paths that no longer exist (deleted by hand, page copied, etc.). A stale AoE used to
+                        //throw "Cannot read properties of undefined (reading 'get')" and break every Trigger-Target
                         //only check grid squares, not the outer AoE boundary path
-                        if (path.get("width") * path.get("height") <= 4900*pageGridIncrement) {
+                        if (path && path.get("width") * path.get("height") <= 4900*pageGridIncrement) {
                             let gridSq = getCellCoords(path.get("left"), path.get("top"), path.get("width"), path.get("height"));
                             let overlapArea = calcRectangleOverlapArea(gridSq, tokCorners);
                             totalOverlapArea += overlapArea;
@@ -2161,6 +2169,9 @@ const SmartAoE = (() => {
         let pathDistID = [];
         pathsArr.forEach((pathID) => {
             tempPath = getObj('path', pathID);
+            if (!tempPath) {
+                return;     //path no longer exists
+            }
             tempPt = new pt(tempPath.get("left"), tempPath.get("top"))
             dist = distBetweenPts(tempPt, oPt);
             pathDistID.push({ id:pathID, dist: dist });
@@ -4524,6 +4535,33 @@ const SmartAoE = (() => {
         sendChat('SmartAoE', errorMessage);
     };
     
+    //Finds the token to trigger from the chat selection. In Jumpgate the AoE squares can sit on top of the
+    //control token, so clicking it may select one of the squares instead: map a selected AoE square back to
+    //its link's control token. Returns undefined when nothing usable is selected.
+    const findTriggerToken = function(selected) {
+        if (!selected || selected.length === 0) {
+            return undefined;
+        }
+        for (let i = 0; i < selected.length; i++) {
+            let sel = selected[i];
+            if (sel._type === 'graphic') {
+                let g = getObj('graphic', sel._id);
+                if (g) {
+                    return g;
+                }
+            } else if (sel._type === 'path') {
+                let link = state[scriptName].links.find(l => (l.pathIDs || []).includes(sel._id));
+                if (link) {
+                    let ctl = getObj('graphic', link.controlTokID);
+                    if (ctl) {
+                        return ctl;
+                    }
+                }
+            }
+        }
+        return undefined;
+    };
+    
     async function smartAoE_handleInput (msg) {
         var who;
         var whisperString;
@@ -4897,13 +4935,29 @@ const SmartAoE = (() => {
                 
                 if (args.length === 1) {
                     //no ids passed - standard trigger that affects all toks in range
-                    tok = getObj("graphic",msg.selected[0]._id);
+                    tok = findTriggerToken(msg.selected);
                 } else {
-                    //ids passed, this is a trigger for a single target (e.g. effect that happens on the targets turn rather than one a caster's turn)
                     tok = getObj("graphic",args[1]);
-                    targetID = args[2];
-                    targetTok = getObj("graphic", targetID);
-                    singleTarget = true;
+                    if (args[2]) {
+                        //target id passed, this is a trigger for a single target (e.g. effect that happens on the targets turn rather than one a caster's turn)
+                        targetID = args[2];
+                        targetTok = getObj("graphic", targetID);
+                        if (!targetTok) {
+                            sendChat(scriptName, `${whisperString} Unable to find a target token with id = ${targetID}`, null, {
+                                noarchive: true
+                            });
+                            return;
+                        }
+                        singleTarget = true;
+                    }
+                    //"!smarttrigger <controlTokenID>" with no target triggers everything in range (it used to crash)
+                }
+                
+                if (!tok) {
+                    sendChat(scriptName, `${whisperString} Select an AoE control token (or its caster) to trigger, or pass its token id.`, null, {
+                        noarchive: true
+                    });
+                    return;
                 }
                 
                 tableLineCounter = 0;
