@@ -3354,7 +3354,18 @@ const SmartAoE = (() => {
 
         //must have two intersection pts to calculate area
         if (numAddedPts < 2) {
-          grid.splice(i, 1);
+          //a circle smaller than a cell can sit inside it without crossing an edge: keep that cell if enough is covered
+          const circleInCell =
+            oPt.x - rad >= baseCell[0].x &&
+            oPt.x + rad <= baseCell[2].x &&
+            oPt.y - rad >= baseCell[0].y &&
+            oPt.y + rad <= baseCell[2].y;
+          const circleArea = Math.PI * rad * rad;
+          if (circleInCell && circleArea >= minGridArea * 70 * 70 * pageGridIncrement * pageGridIncrement) {
+            grid[i].area = circleArea;
+          } else {
+            grid.splice(i, 1);
+          }
         } else {
           //valid intersection, now filter out the grid points that are outside of the AoE (some corner pts from each cell)
 
