@@ -962,6 +962,7 @@ const SmartAoE = (() => {
         };
         
         state[scriptName].links.push(link);
+        rememberZeroHPMarkers(zeroHPmarker);
         return link;
     }
     
@@ -4182,6 +4183,7 @@ const SmartAoE = (() => {
     }
     
     const applyDamage = function(tokID, name, bar, damageArr, zeroHPmarker, removeAtZero=false) {
+        rememberZeroHPMarkers(zeroHPmarker);    //before the marker is added, so observers can recognise it
         let tok = getObj('graphic', tokID);
         let currentHP = [];
         let maxHP = [];
@@ -4265,6 +4267,13 @@ const SmartAoE = (() => {
         return returnString;
         //return damage>0 ? `Applied ${damage} damage to ${name}` : `Healed ${name} by ${amountHealed}`;
         
+    }
+    
+    //0 HP marker tags (--zeroHPmarker) used this session. Kept after an AoE is deleted (e.g. --instant AoEs are
+    //removed before their damage is applied) so other scripts can tell SmartAoE's 0 HP markers apart.
+    const knownZeroHPMarkers = new Set();
+    const rememberZeroHPMarkers = function(markerString) {
+        splitStatusMarkers(markerString).forEach((m) => knownZeroHPMarkers.add(markerTag(m)));
     }
     
     //Splits a statusmarkers string into trimmed, non-empty entries
@@ -6000,6 +6009,8 @@ const SmartAoE = (() => {
     });
     
     return {
-        ObserveTokenChange: observeTokenChange
+        ObserveTokenChange: observeTokenChange,
+        //Public: marker tags SmartAoE has used as --zeroHPmarker this session (e.g. so HealthColors doesn't add its own)
+        ZeroHPMarkers: () => [...knownZeroHPMarkers]
     };
 })();
