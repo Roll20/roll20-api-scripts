@@ -1826,7 +1826,7 @@ const SmartAoE = (() => {
     let imgsrc;
     let sides;
     let sidesArr;
-    const whisperString = `/w ${who}`;
+    const whisperString = `/w "${who}"`;
 
     try {
       const baseObj = JSON.parse(tokenJSON);
@@ -1868,14 +1868,17 @@ const SmartAoE = (() => {
             currentSideNew = parseInt(currentSideNew) - 1; //currentSide is 1-based for user
           }
 
-          //set the current side (wtih data validation for the requested side)
-          if (currentSideNew > 0 || currentSideNew <= sidesArr.length - 1) {
-            newSideImg = getCleanImgsrc(sidesArr[currentSideNew]); //URL of the image
+          //set the current side, if it exists (was "> 0 ||", which let any number through and failed on a missing side)
+          if (currentSideNew >= 0 && currentSideNew <= sidesArr.length - 1) {
+            const newSideImg = getCleanImgsrc(sidesArr[currentSideNew]); //URL of the image
             baseObj['currentSide'] = currentSideNew;
             baseObj['imgsrc'] = newSideImg;
           } else {
-            sendChat('SmartAoE', `/w "${who}" ` + 'Error: Requested index of currentSide is invalid');
-            return retVal;
+            sendChat(
+              scriptName,
+              `${whisperString} Error: the control token has no side ${currentSideNew + 1} (it has ${sidesArr.length}).`,
+            );
+            return; //(previously returned an unrelated shared variable)
           }
         }
       }
@@ -1888,7 +1891,7 @@ const SmartAoE = (() => {
       }
       return controlToks;
     } catch (err) {
-      sendChat('SmartAoE', whisperString + 'Unhandled exception: ' + err.message);
+      sendChat(scriptName, `${whisperString} Unhandled exception: ${err.message}`);
     }
   };
 
@@ -8085,6 +8088,9 @@ const SmartAoE = (() => {
           tooltip,
           numSpawns,
         );
+        if (!controlToks || controlToks.length === 0) {
+          return; //spawnTokenAtXY has already whispered the reason
+        }
 
         //Possibly add a value to the turn tracker
         if (turnName !== '') {
