@@ -7,7 +7,7 @@
 //  - Surok: https://app.roll20.net/users/335573/surok
 //  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7
 
-/* global createObj TokenMod spawnFxWithDefinition spawnFx spawnFxBetweenPoints getObj state globalconfig playerIsGM sendChat findObjs Campaign log on getSheetItem */
+/* global createObj TokenMod SmartAoE spawnFxWithDefinition spawnFx spawnFxBetweenPoints getObj state globalconfig playerIsGM sendChat findObjs Campaign log on getSheetItem */
 
 var HealthColors =
   HealthColors ||
@@ -1293,6 +1293,103 @@ var HealthColors =
       handleToken(obj, prev, recentAttrFires.has(obj.id) ? 'YES' : undefined);
     }
 
+    /**
+     * Mod scripts whose token changes HealthColors observes. Roll20 does not fire
+     * change:graphic for changes made by another script, so without these hooks HP set by
+     * `!token-mod` or SmartAoE damage would not re-colour the token. Both expose
+     * `ObserveTokenChange(handler)` and call handler(token, prev) after changing a token.
+     *
+     * @returns {{name: string, api: object|undefined}[]} Integration name and its API object, if installed.
+     */
+    function getTokenObserverScripts() {
+      return [
+        { name: 'TokenMod', api: typeof TokenMod === 'undefined' ? undefined : TokenMod },
+        { name: 'SmartAoE', api: typeof SmartAoE === 'undefined' ? undefined : SmartAoE },
+      ];
+    }
+
+    /**
+     * Returns true when the named observer script is installed and offers ObserveTokenChange.
+     *
+     * @param {string} name - 'TokenMod' or 'SmartAoE'.
+     * @returns {boolean} Whether HealthColors can observe it.
+     */
+    function isObserverScriptAvailable(name) {
+      const entry = getTokenObserverScripts().find((e) => e.name === name);
+      return typeof entry?.api?.ObserveTokenChange === 'function';
+    }
+
+    let tokenObserversRegistered = false;
+
+    /**
+     * Registers handleTokenChange with every installed observer script. Runs once per
+     * sandbox start: checkInstall also runs after `!aura reset`, and registering again would
+     * process (and play FX for) every change twice.
+     */
+    function registerTokenObservers() {
+      if (tokenObserversRegistered) return;
+      tokenObserversRegistered = true;
+      const hooked = getTokenObserverScripts()
+        .filter(({ name }) => isObserverScriptAvailable(name))
+        .map(({ name, api }) => {
+          api.ObserveTokenChange(handleTokenChange);
+          return name;
+        });
+      if (hooked.length) log(`${SCRIPT_NAME}: observing token changes from ${hooked.join(', ')}`);
+      getSmartAoeZeroHpMarkers();
+    }
+
+    // SmartAoE 0 HP marker tags seen this session. Remembered after an AoE is deleted, so a
+    // later "apply damage" click from that AoE's chat card is still recognised.
+    const knownSmartAoeZeroHpMarkers = new Set();
+
+    /**
+     * Collects the 0 HP marker tags configured on SmartAoE AoEs (`zeroHPmarker`, stored per
+     * AoE in `state.SmartAoE.links`), adding them to the session-wide set.
+     *
+     * @returns {Set<string>} Every SmartAoE 0 HP marker tag known this session.
+     */
+    function getSmartAoeZeroHpMarkers() {
+      const addTags = (markerString) =>
+        String(markerString || '')
+          .split(',')
+          .map((tag) => tag.trim().replace(/@\d+$/, ''))
+          .filter(Boolean)
+          .forEach((tag) => knownSmartAoeZeroHpMarkers.add(tag));
+      // SmartAoE 1.0.0+ reports every 0 HP marker it has used this session, including --instant AoEs,
+      // which are deleted before their damage is applied.
+      if (typeof SmartAoE !== 'undefined' && typeof SmartAoE.ZeroHPMarkers === 'function') {
+        try {
+          SmartAoE.ZeroHPMarkers().forEach(addTags);
+        } catch (err) {
+          log(`${SCRIPT_NAME}: SmartAoE.ZeroHPMarkers() failed: ${err?.message || err}`);
+        }
+      }
+      // Older SmartAoE versions: read the AoEs saved in SmartAoE's state.
+      const links = state?.SmartAoE?.links;
+      if (Array.isArray(links)) links.forEach((link) => addTags(link?.zeroHPmarker));
+      return knownSmartAoeZeroHpMarkers;
+    }
+
+    /**
+     * Returns the SmartAoE 0 HP marker on a token, if any. SmartAoE adds that marker just
+     * before it lowers the HP bar, so it is already present when HealthColors sees 0 HP.
+     * When it is there, HealthColors leaves the 0 HP marker to SmartAoE and adds none itself.
+     *
+     * @param {object} obj - Roll20 token graphic object.
+     * @returns {string|null} The matching marker tag, or null.
+     */
+    function getSmartAoeZeroHpMarkerOn(obj) {
+      if (!isObserverScriptAvailable('SmartAoE')) return null;
+      const known = getSmartAoeZeroHpMarkers();
+      if (!known.size) return null;
+      const tags = String(obj.get('statusmarkers') || '')
+        .split(',')
+        .map((tag) => tag.trim().replace(/@\d+$/, ''))
+        .filter(Boolean);
+      return tags.find((tag) => known.has(tag)) || null;
+    }
+
     // ————— STATE / INSTALL —————
     /**
      * Migrates state from the interim HP-only "PC dying marker" build to Death Save
@@ -1326,7 +1423,7 @@ var HealthColors =
 
     /**
      * Initializes or migrates persisted state, applies all default values, applies any
-     * newer One-Click install options, registers the TokenMod observer if available, and
+     * newer One-Click install options, registers the TokenMod/SmartAoE observers if available, and
      * creates the default Hurt/Heal FX objects if they do not already exist in the campaign.
      * Safe to call multiple times (e.g. after a state reset).
      */
@@ -1343,9 +1440,7 @@ var HealthColors =
       });
       state.HealthColors.colorPalette = normalizePalette(state.HealthColors.colorPalette, DEFAULTS.colorPalette);
       applyOneClickOptions();
-      if (typeof TokenMod !== 'undefined' && TokenMod.ObserveTokenChange) {
-        TokenMod.ObserveTokenChange(handleTokenChange);
-      }
+      registerTokenObservers();
       const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
       const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
       if (!fxHurt) {
@@ -1583,15 +1678,16 @@ var HealthColors =
      * @param {number}        curValue  - Current bar value.
      * @param {number}        prevValue - Previous bar value.
      * @param {boolean}       hasPrevValue - Whether a valid previous bar value was provided.
+     * @param {boolean}       [soundOnly]  - Play the death sound but add no marker (SmartAoE already marked it).
      */
-    function applyDeadStatus(obj, curValue, prevValue, hasPrevValue) {
+    function applyDeadStatus(obj, curValue, prevValue, hasPrevValue, soundOnly = false) {
       if (curValue > 0) {
         obj.set('status_dead', false);
         return;
       }
       const deadSfx = state.HealthColors.auraDeadFX;
       if (deadSfx !== 'None' && hasPrevValue && curValue !== prevValue) playDeath(deadSfx);
-      obj.set('status_dead', true);
+      if (!soundOnly) obj.set('status_dead', true);
     }
 
     /**
@@ -1647,9 +1743,17 @@ var HealthColors =
       const colorType = useTint ? 'tint' : 'aura1';
       const appliedColor = useTint ? markerColor : withAuraOpacity(markerColor);
 
-      // Death Save Integration (PC-only) owns the dying/stable/dead markers when enabled.
-      const deathSaveHandled = applyDeathSaveStatus(obj, curValue, isPlayer);
-      if (!deathSaveHandled && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue);
+      // SmartAoE added its own 0 HP marker: let that stand and add no HealthColors marker.
+      const smartAoeMarker = curValue <= 0 ? getSmartAoeZeroHpMarkerOn(obj) : null;
+      const deathSaveActive = state.HealthColors.deathSavesOn && isPlayer;
+
+      if (smartAoeMarker) {
+        if (!deathSaveActive && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue, true);
+      } else {
+        // Death Save Integration (PC-only) owns the dying/stable/dead markers when enabled.
+        const deathSaveHandled = applyDeathSaveStatus(obj, curValue, isPlayer);
+        if (!deathSaveHandled && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue);
+      }
 
       if (isTypeOn && useAura !== 'NO') {
         if (curValue <= 0) {
@@ -2024,6 +2128,8 @@ var HealthColors =
      * Applies the dying/stable/dead marker to a token from synced save counts.
      * Above 0 HP all death markers are cleared. Otherwise: 3+ failures → dead (Red X,
      * plays the death sound once on entering dead); 3+ successes → stable; else dying.
+     * When the token carries a SmartAoE 0 HP marker, that marker stands in for dying (no dying
+     * marker is added) and is left in place.
      *
      * @param {object} token - Roll20 token graphic object.
      * @param {number} succ  - Number of recorded successes.
@@ -2037,16 +2143,23 @@ var HealthColors =
         token.set(buildDeathSaveMarkerPatch(false, false, false));
         return 'alive';
       }
+      // A SmartAoE 0 HP marker stands in for "dying", and is never removed by HealthColors.
+      const smartAoeMarker = getSmartAoeZeroHpMarkerOn(token);
+      const patch = (dyingOn, stableOn, deadOn) => {
+        const changes = buildDeathSaveMarkerPatch(dyingOn && !smartAoeMarker, stableOn, deadOn);
+        if (smartAoeMarker) delete changes[`status_${smartAoeMarker}`];
+        return changes;
+      };
       if (fail >= 3) {
         if (s.auraDeadFX !== 'None' && !token.get('status_dead')) playDeath(s.auraDeadFX);
-        token.set(buildDeathSaveMarkerPatch(false, false, true));
+        token.set(patch(false, false, true));
         return 'dead';
       }
       if (succ >= 3) {
-        token.set(buildDeathSaveMarkerPatch(false, true, false));
+        token.set(patch(false, true, false));
         return 'stable';
       }
-      token.set(buildDeathSaveMarkerPatch(true, false, false));
+      token.set(patch(true, false, false));
       return 'dying';
     }
 
