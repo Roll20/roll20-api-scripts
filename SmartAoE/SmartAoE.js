@@ -5910,6 +5910,10 @@ const SmartAoE = (() => {
    * @param {object} aoeLink - AoE link from state.
    */
   const processFinalMessages = function (messages, damageRolls, tokenRolls, aoeLink) {
+    //roll results arrive as arrays (one entry per inline roll in the line). Turn them into numbers before doing maths:
+    //"[5] + 2" used to give "52", and a line with two rolls compared as NaN
+    const lineTotal = (vals) => [].concat(vals).reduce((sum, v) => sum + (Number(v) || 0), 0);
+    const firstRoll = (vals) => Number([].concat(vals)[0]) || 0;
     //takes all the rolls that were processed thru the Roll20 die roller for all tokens and formats them.
     //   then, we will format the final chat output
     const freetext = '';
@@ -5960,18 +5964,18 @@ const SmartAoE = (() => {
       const RVI = []; //Resistances, Vulnerabilities, Immunities
       let RVI_string = '';
 
-      tempDam1 = damageRolls[0].result_1;
+      tempDam1 = lineTotal(damageRolls[0].result_1);
 
       const damType1 = aoeLink.damageType1.toLowerCase();
       const damType2 = aoeLink.damageType2.toLowerCase();
 
-      thisSaveRoll = o.result_1;
+      thisSaveRoll = firstRoll(o.result_1);
       if (o.roll2x) {
         RVI.push('A'); //rolling with advantage
         if (o.result_1[0] >= o.result_2[0]) {
           o.styled_2 = o.styled_2.replace('color:#000000', 'color:#999999');
         } else if (o.result_2[0] > o.result_1[0]) {
-          thisSaveRoll = o.result_2;
+          thisSaveRoll = firstRoll(o.result_2);
           o.styled_1 = o.styled_1.replace('color:#000000', 'color:#999999');
         }
       }
@@ -5990,7 +5994,7 @@ const SmartAoE = (() => {
         pushUniqueElementToArray(RVI, 'I');
       }
       if (damageRolls.length > 1) {
-        tempDam2 = damageRolls[1].result_1;
+        tempDam2 = lineTotal(damageRolls[1].result_1);
         if (damType2 !== '' && o.vulnerabilities.includes(damType2)) {
           tempDam2 = applyMathRule(tempDam2, aoeLink.vulnerableRule);
           pushUniqueElementToArray(RVI, 'V');
