@@ -6991,6 +6991,7 @@ const SmartAoE = (() => {
             noSave = true;
             DC = 999999;
           }
+          break; // (was missing: --noSave|false fell through and set the save formula to "false")
         case 'saveformula':
           const s = param.toLowerCase();
           if (saveList.hasOwnProperty(s)) {
@@ -7303,10 +7304,10 @@ const SmartAoE = (() => {
         return;
       }
       const p = getObj('player', playerID);
-      if ((getFillColor = true)) {
+      if (getFillColor) {
         aoeColor = p.get('color') + '50';
       }
-      if ((getOutlineColor = true)) {
+      if (getOutlineColor) {
         aoeOutlineColor = p.get('color');
       }
 
