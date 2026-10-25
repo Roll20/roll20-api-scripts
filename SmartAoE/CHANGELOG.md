@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates for 0.25–0.30 are the dates each version was added to the Roll20 One-Click repository.
 
-## [1.0.0] – Unreleased
+## [1.0.0] – 2026-10-25
 
 First 1.0 release: SmartAoE has been stable on the One-Click library since 0.25, so this version marks it as released. There are no breaking changes; existing macros and AoEs work as before.
 

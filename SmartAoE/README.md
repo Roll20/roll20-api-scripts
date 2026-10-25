@@ -268,5 +268,6 @@ The 2024 (Beacon) D&D sheet stores its data differently, so the built-in `5eSTR`
 ## Credits
 
 Original Author: David M. ([djmoorehead](https://github.com/djmoorehead)) · [Patreon](https://www.patreon.com/djmoorehead)  
-Refactored and Modernized for v1 by MidNiteShadow7
+Refactored and Modernized for v1 by MidNiteShadow7.
+
 See [CHANGELOG.md](CHANGELOG.md) for version history.
