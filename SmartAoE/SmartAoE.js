@@ -4219,24 +4219,22 @@ const SmartAoE = (() => {
             returnString = `Applied ${damage} damage to ${name}`;
         } else {
             //negative damage = healing! Can't heal above max.
-            //newHP = Math.min(currentHP - damage, maxHP);
-            let absDamage = Math.abs(damage);
-            newHP.push(Math.min(currentHP[0] - damage, maxHP[0]));
-            amountHealed = newHP[0] - currentHP[0];
-            
-            if (absDamage + currentHP[0] > maxHP[0] && bar.length > 1) {
-                remainingDamage = absDamage - (maxHP[0] - currentHP[0]);
-                //second bar value
-                newHP.push(Math.min(currentHP[1] - damage, maxHP[1]));
-                amountHealed += newHP[1] - currentHP[1];
-                if (remainingDamage + currentHP[1] > maxHP[1] && bar.length > 2) {
-                    remainingDamage = remainingDamage - (maxHP[1] - currentHP[1]);
-                    //third bar value
-                    newHP.push(Math.min(currentHP[2] - damage, maxHP[2]));
-                    amountHealed += newHP[2] - currentHP[2];
+            //Heal the first bar up to its max, then cascade only the leftover healing to the next bar.
+            //A bar already above its max (e.g. temp HP) is left as-is rather than reduced to max.
+            let remainingHeal = Math.abs(damage);
+            amountHealed = 0;
+            for (let i = 0; i < currentHP.length; i++) {
+                if (i > 0 && remainingHeal <= 0) {
+                    break;
                 }
+                let healed = Math.min(remainingHeal, Math.max(maxHP[i] - currentHP[i], 0));
+                newHP.push(currentHP[i] + healed);
+                amountHealed += healed;
+                remainingHeal -= healed;
             }
-            returnString = newHP===maxHP ? `Healed ${name} by ${amountHealed} (@Max)` : `Healed ${name} by ${amountHealed}`;
+            //newHP and maxHP are arrays, so compare bar by bar (newHP===maxHP was never true)
+            let atMax = newHP.every((hp, idx) => hp >= maxHP[idx]);
+            returnString = atMax ? `Healed ${name} by ${amountHealed} (@Max)` : `Healed ${name} by ${amountHealed}`;
         }
         
         let dummy;
@@ -4248,7 +4246,8 @@ const SmartAoE = (() => {
             dummy = removeStatusMarkers(tokID, zeroHPmarker);
         }
         
-        if (removeAtZero && newHP===0) {
+        //newHP is an array; like the zeroHPmarker check above, test the last bar (newHP===0 was never true)
+        if (removeAtZero && newHP[bar.length-1]===0) {
             dummy = removeToken(tokID);
         } else {
             //grab the previous token settings before setting new ones
