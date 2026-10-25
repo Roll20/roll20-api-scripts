@@ -8297,7 +8297,7 @@ const SmartAoE = (() => {
     { match: (content) => content.indexOf('!smartremove') === 0, run: handleRemoveCommand },
     { match: (content) => content.indexOf('!smartquery') === 0, run: handleQueryCommand },
     { match: (content) => content.indexOf('!smartapply') === 0, run: handleApplyCommand },
-    { match: (content) => /!smartping[gm|all]/.test(content), run: handlePingCommand },
+    { match: (content) => /^!smartping(gm|all)\b/.test(content), run: handlePingCommand },
     { match: (content) => content.indexOf('!smartrotateorigin') === 0, run: handleRotateOriginCommand },
     { match: (content) => content.indexOf('!smarttrigger') === 0, run: handleTriggerCommand },
     { match: (content) => content.indexOf('!smartaoe') === 0, run: handleCreateAoeCommand },
@@ -8316,7 +8316,10 @@ const SmartAoE = (() => {
     const content = msg.content.toLowerCase();
     try {
       for (const { match, run } of COMMAND_HANDLERS) {
-        if (match(content)) await run(msg);
+        if (match(content)) {
+          await run(msg);
+          break; //one command per message
+        }
       }
     } catch (err) {
       const player = getObj('player', msg.playerid);
