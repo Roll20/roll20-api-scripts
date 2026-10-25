@@ -3908,6 +3908,19 @@ const SmartAoE = (() => {
     	}
     }
     
+    //libInline HTML-encodes roll expressions (e.g. "*" -> "&#42;", "{" -> "&#123;", "<" -> "&#xFF1C;").
+    //Decode them all before re-rolling, otherwise [[2*13d6]] was re-rolled as [[2&#42;13d6]] = 2.
+    const decodeInlineExpression = function(expr) {
+        return String(expr || '')
+            .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+            .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, '&')
+            .replace(/\uFF1C/g, '<');
+    }
+    
     const processInlinerolls2 = function(str, parsedInlines) {
         let index;
         let inlineArr = [];
@@ -5305,7 +5318,7 @@ const SmartAoE = (() => {
                                     damageBase1 = parseInt(d1);
                                 } else {
                                     //damageFormula1 = `[[${inlines[0].expression}]]`;
-                                    damageFormula1 = `[[${inlines[0].expression.replace(/&#91;/g,'[').replace(/&#93;/g,']')}]]`;
+                                    damageFormula1 = `[[${decodeInlineExpression(inlines[0].expression)}]]`;
                                     rollDamage1 = true;
                                 }
                             }
@@ -5322,7 +5335,7 @@ const SmartAoE = (() => {
                                     damageBase2 = parseInt(d2);     //was damageBase1, which overwrote formula 1's damage
                                 } else {
                                     //damageFormula2 = `[[${inlines[0].expression}]]`;
-                                    damageFormula2 = `[[${inlines[0].expression.replace(/&#91;/g,'[').replace(/&#93;/g,']')}]]`;
+                                    damageFormula2 = `[[${decodeInlineExpression(inlines[0].expression)}]]`;
                                     rollDamage2 = true;
                                 }
                             }
