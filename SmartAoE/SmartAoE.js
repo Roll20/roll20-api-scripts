@@ -6944,9 +6944,10 @@ const SmartAoE = (() => {
         playJukeboxTrack(trackName, whisperString);
       }
       //for each link associated with selected token (could be originTok or controlTok)
-      let tokenRolls = [];
-      const damageRolls = [];
       for (let a = 0; a < aoeLinks.indices.length; a++) {
+        //rolls and targets belong to this AoE only: each link posts its own card (they used to pile up across links)
+        let tokenRolls = [];
+        const damageRolls = [];
         //first, filter for "ignore" attributes
         let thisValidToks = validToks.filter((obj) => {
           let attrs = {};
