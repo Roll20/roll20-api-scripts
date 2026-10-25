@@ -101,26 +101,17 @@ const SmartAoE = (() => {
     newY,
     originHeight,
     originIndex,
-    originPt,
     originWidth,
     originX,
     originY,
-    oTokID,
-    p,
-    pageDL,
     pageGridIncrement,
     pageScaleNumber,
-    pageScaleUnits,
     path,
     pathstring,
-    pingCmd,
     publicOutput,
-    retObj,
     returnString,
-    retVal,
     s,
     success,
-    usePlayerColor,
     whisperString;
 
   // ————— OBSERVERS (PUBLIC HOOKS) —————
@@ -332,17 +323,8 @@ const SmartAoE = (() => {
     if (shown.length === 0) {
       return '';
     }
-    if (shown.length === 1) {
-      return buildDamageRow(shown[0].styled, shown[0].type, false, '', '', aoeLink.cardParameters);
-    }
-    return buildDamageRow(
-      shown[0].styled,
-      shown[0].type,
-      false,
-      shown[1].styled,
-      shown[1].type,
-      aoeLink.cardParameters,
-    );
+    const second = shown[1] || { styled: '', type: '' };
+    return buildDamageRow(shown[0].styled, shown[0].type, second.styled, second.type, aoeLink.cardParameters);
   };
 
   /**
@@ -350,30 +332,22 @@ const SmartAoE = (() => {
    *
    * @param {string} damRoll1 - Inline-roll HTML for the first damage roll.
    * @param {string} damType1 - Damage type label for the first roll.
-   * @param {boolean} hideformula - (unused)
    * @param {string} [damRoll2=''] - Inline-roll HTML for the second damage roll; omitted from the row when empty.
    * @param {string} [damType2=''] - Damage type label for the second roll.
    * @param {object} cardParameters - Chat card style settings used to fill placeholders.
    * @returns {string} HTML table for the damage row.
    */
-  const buildDamageRow = function (damRoll1, damType1, hideformula, damRoll2 = '', damType2 = '', cardParameters) {
-    let rowBackground, fontColor;
-
-    let rowData =
+  const buildDamageRow = function (damRoll1, damType1, damRoll2 = '', damType2 = '', cardParameters) {
+    const damageCell = (roll, type) =>
       `<td style="width:270px;padding:3px;line-height: !{lineheight};width:100%;vertical-align:middle;text-align:center;font-weight:bold; font-size:!{bodyfontsize}; font-family: !{bodyfontface}">` +
       `<span>Dmg:</span>` +
-      `${damRoll1}` +
-      `<span>${damType1}</span>` +
+      `${roll}` +
+      `<span>${type}</span>` +
       `</td>`;
 
+    let rowData = damageCell(damRoll1, damType1);
     if (damRoll2 !== '') {
-      rowData =
-        rowData +
-        `<td style="width:270px;padding:3px;line-height: !{lineheight};width:100%;vertical-align:middle;text-align:center;font-weight:bold; font-size:!{bodyfontsize}; font-family: !{bodyfontface}">` +
-        `<span>Dmg:</span>` +
-        `${damRoll2}` +
-        `<span>${damType2}</span>` +
-        `</td>`;
+      rowData = rowData + damageCell(damRoll2, damType2);
     }
 
     let output =
@@ -386,6 +360,19 @@ const SmartAoE = (() => {
   };
 
   /**
+   * Colours for the next row of the saving-throw table, alternating odd/even rows via the shared tableLineCounter.
+   *
+   * @param {object} cardParameters - Chat card style settings, including odd/even row colours.
+   * @returns {{rowBackground:string, fontColor:string}} Background and text colour for the row.
+   */
+  const nextRowColors = function (cardParameters) {
+    tableLineCounter += 1;
+    return tableLineCounter % 2 === 0
+      ? { rowBackground: cardParameters.evenrowbackground, fontColor: cardParameters.evenrowfontcolor }
+      : { rowBackground: cardParameters.oddrowbackground, fontColor: cardParameters.oddrowfontcolor };
+  };
+
+  /**
    * Builds the header row (Target / Roll / P/F? / Dam.) of the saving-throw table.
    * Increments the shared tableLineCounter to choose the odd/even row colours.
    *
@@ -393,16 +380,7 @@ const SmartAoE = (() => {
    * @returns {string} HTML <tr> for the save table header.
    */
   const buildSaveHeaderRow = function (cardParameters) {
-    let rowBackground, fontColor;
-
-    tableLineCounter += 1;
-    if (tableLineCounter % 2 == 0) {
-      rowBackground = cardParameters.evenrowbackground;
-      fontColor = cardParameters.evenrowfontcolor;
-    } else {
-      rowBackground = cardParameters.oddrowbackground;
-      fontColor = cardParameters.oddrowfontcolor;
-    }
+    const { rowBackground, fontColor } = nextRowColors(cardParameters);
 
     let output =
       `<tr style="background: ${rowBackground}; color:${fontColor}; text-align:center;border-bottom: 1px solid #444444;">` +
@@ -451,8 +429,6 @@ const SmartAoE = (() => {
    * @returns {string} HTML for the table body and card closing tags.
    */
   const buildTableBody = function (saveHeaderRow, saveRows, descRow, cardParameters) {
-    let rowBackground, fontColor;
-
     let output =
       `<table style="width:270px; border-collapse:collapse; table-layout:fixed; font-size:!{bodyfontsize}; font-family: !{bodyfontface}">` +
       `${saveHeaderRow}` +
@@ -478,7 +454,6 @@ const SmartAoE = (() => {
    * @param {string} saveInline1 - Inline-roll HTML for the first save roll.
    * @param {string} saveInline2 - Inline-roll HTML for the second save roll (advantage/disadvantage).
    * @param {boolean} roll2x - Whether to show the second save roll.
-   * @param {boolean} hideforumula - (unused)
    * @param {number[]} dam - Damage amounts, joined with '/'.
    * @param {boolean} autoApply - If true, damage was already applied so no !smartapply link is added.
    * @param {string[]} bar - Token bar(s) that damage is applied to.
@@ -500,7 +475,6 @@ const SmartAoE = (() => {
     saveInline1,
     saveInline2,
     roll2x,
-    hideforumula,
     dam,
     autoApply,
     bar,
@@ -512,7 +486,6 @@ const SmartAoE = (() => {
     whisperString,
     whisperResults,
   ) {
-    let result;
     let damString = dam.join('/');
     markerString = markerString.replace(/::/g, '%%');
     zeroHPmarker = zeroHPmarker.replace(/::/g, '%%');
@@ -540,25 +513,13 @@ const SmartAoE = (() => {
       RVI_output = `<span style="font-size: 10px; vertical-align: super">${RVI}</span>`;
     }
 
-    let rowBackground;
-    let fontColor;
-    tableLineCounter += 1;
-    if (tableLineCounter % 2 == 0) {
-      rowBackground = cardParameters.evenrowbackground;
-      fontColor = cardParameters.evenrowfontcolor;
-    } else {
-      rowBackground = cardParameters.oddrowbackground;
-      fontColor = cardParameters.oddrowfontcolor;
-    }
+    const { rowBackground, fontColor } = nextRowColors(cardParameters);
 
-    if (success) {
-      result = `<td style="text-align:center"><a style="font-weight:bold;color:#ffffff;background:#3FB315;border:1px solid black;padding:2px;cursor:pointer"${applyDamLink}>P</a></td>`;
-    } else {
-      result = `<td style="text-align:center"><a style="font-weight:bold;color:#ffffff;background:#b50e0c;border:1px solid black;padding:2px;cursor:pointer"${applyDamLink}>F</a></td>`;
-    }
+    //P/F badge: green "P" for a pass, red "F" for a fail; a button for !smartapply unless damage was auto-applied
+    const result = `<td style="text-align:center"><a style="font-weight:bold;color:#ffffff;background:${success ? '#3FB315' : '#b50e0c'};border:1px solid black;padding:2px;cursor:pointer"${applyDamLink}>${success ? 'P' : 'F'}</a></td>`;
 
     //ping-pull for tokens on gm layer will only be visible to gm. Otherwise, all players see ping-pull
-    pingCmd = layer === 'gmlayer' ? '!smartpinggm' : '!smartpingall';
+    const pingCmd = layer === 'gmlayer' ? '!smartpinggm' : '!smartpingall';
 
     let output =
       `<tr style="background: ${rowBackground}; color:${fontColor}">` +
@@ -580,8 +541,7 @@ const SmartAoE = (() => {
 
     output = replaceStyleInformation(output, cardParameters);
 
-    retObj = { layer: layer, output: output };
-    return retObj;
+    return { layer: layer, output: output };
   };
 
   /**
@@ -592,9 +552,6 @@ const SmartAoE = (() => {
    * @returns {string} HTML for the description row.
    */
   const buildDescRow = function (descText, cardParameters) {
-    let rowBackground;
-    let fontColor;
-
     let output =
       `<desc style="background: !{tablebgcolor}; border-bottom-left-radius: !{tableborderradius};border-bottom-right-radius: !{tableborderradius};">` +
       `<td colspan="4">` +
@@ -643,19 +600,6 @@ const SmartAoE = (() => {
       outputLine = outputLine.replace(new RegExp('!{' + styleList[i] + '}', 'g'), cardParmeters[styleList[i]]);
     }
     return outputLine;
-  };
-
-  /**
-   * Whispers a message to a player (or to 'GM' if the player cannot be found) without saving it to the chat archive.
-   *
-   * @param {string} playerid - Roll20 player id to whisper to.
-   * @param {string} string - Message text or HTML.
-   */
-  const sendChatNoarchive = (playerid, string) => {
-    const whisperPrefix = `/w "${(getObj('player', playerid) || { get: () => 'GM' }).get('_displayname')}" `;
-    sendChat('smartAoE', whisperPrefix + string, null, {
-      noarchive: true,
-    });
   };
 
   // ————— SAVES & INLINE ROLLS —————
@@ -920,6 +864,239 @@ const SmartAoE = (() => {
 
   // ————— INSTALL —————
   /**
+   * Abilities given to the AoEControlToken character SmartAoE creates on first run: [name, macro action, token
+   * action?]. The AoEGenerator macro links to the AoE ones by name.
+   */
+  const CONTROL_TOKEN_ABILITIES = [
+    ['CW', '!smartrotateorigin cw', true],
+    ['CCW', '!smartrotateorigin ccw', true],
+    ['Trigger-ALL', '!smarttrigger', true],
+    ['Trigger-Target', '!smartquery @{target|Choose a Target|token_id}', true],
+    //Square, float
+    ['5ft-Square', '!smartaoe {{\n  --aoeType|square, float\n  --radius|2.5ft\n  --fx|burn-fire\n}}', false],
+    ['10ft-Square', '!smartaoe {{\n  --aoeType|square, float\n  --radius|5ft\n  --fx|burn-fire\n}}', false],
+    ['20ft-Square', '!smartaoe {{\n  --aoeType|square, float\n  --radius|10ft\n  --fx|burn-fire\n}}', false],
+    ['30ft-Square', '!smartaoe {{\n  --aoeType|square, float\n  --radius|15ft\n  --fx|burn-fire\n}}', false],
+    ['40ft-Square', '!smartaoe {{\n  --aoeType|square, float\n  --radius|20ft\n  --fx|burn-fire\n}}', false],
+    ['Variable-Square', '!smartaoe {{\n  --aoeType|square\n  --fx|burn-fire\n}}', false],
+    //Circle, float
+    [
+      '5ft-Circle',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --radius|2.5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '10ft-Circle',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --radius|5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '20ft-Circle',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --radius|10ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-Circle',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --radius|15ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '40ft-Circle',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --radius|20ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    ['Variable-Circle', '!smartaoe {{\n  --aoeType|circle\n  --minGridArea|0.5\n  --fx|burn-fire\n}}', false],
+    //PF circle, float
+    [
+      '5ft-PF-Circle',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|2.5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '10ft-PF-Circle',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '20ft-PF-Circle',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|10ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-PF-Circle',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|15ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '40ft-PF-Circle',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|20ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    ['Variable-PF-Circle', '!smartaoe {{\n  --aoeType|PFcircle\n  --minGridArea|0.5\n  --fx|burn-fire\n}}', false],
+    //Centered on Caster, square
+    [
+      '5ft-Square-Caster',
+      '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|5ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '10ft-Square-Caster',
+      '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|10ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '15ft-Square-Caster',
+      '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|15ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '20ft-Square-Caster',
+      '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|20ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-Square-Caster',
+      '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|30ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '40ft-Square-Caster',
+      '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|40ft\n  --forceIntersection|0\n}}',
+      false,
+    ],
+    //Centered on Caster, circle
+    [
+      '5ft-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|5ft\n  --minGridArea|0.5\n --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '10ft-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|10ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '15ft-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|15ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '20ft-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|20ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|30ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '40ft-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|40ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    //Centered on Caster, PF circle
+    [
+      '5ft-PF-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|5ft\n  --minGridArea|0.5\n --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '10ft-PF-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|10ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '15ft-PF-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|15ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '20ft-PF-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|20ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-PF-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|30ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '40ft-PF-Circle-Caster',
+      '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|40ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    //Lines
+    ['30ft-Line', '!smartaoe {{\n  --aoeType|line\n  --radius|30ft\n  --fx|burn-fire\n}}', false],
+    ['60ft-Line', '!smartaoe {{\n  --aoeType|line\n  --radius|60ft\n  --fx|burn-fire\n}}', false],
+    ['100ft-Line', '!smartaoe {{\n  --aoeType|line\n  --radius|100ft\n  --fx|burn-fire\n}}', false],
+    ['Variable-Line', '!smartaoe {{\n  --aoeType|line\n  --fx|burn-fire\n}}', false],
+    //5e cones
+    [
+      '15ft-5eCone',
+      '!smartaoe {{\n  --aoeType|5econe\n  --radius|15ft\n  --origin|nearest, face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-5eCone',
+      '!smartaoe {{\n  --aoeType|5econe\n  --radius|30ft\n  --origin|nearest, face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '60ft-5eCone',
+      '!smartaoe {{\n  --aoeType|5econe\n  --radius|60ft\n  --origin|nearest, face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      'Variable-5eCone',
+      '!smartaoe {{\n  --aoeType|5econe\n  --origin|nearest,face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    //PF cones
+    [
+      '15ft-PFCone',
+      '!smartaoe {{\n  --aoeType|PFcone\n  --radius|15ft\n  --origin|nearest, face\n  --forceIntersection|0\n  --minGridArea|0.50\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-PFCone',
+      '!smartaoe {{\n  --aoeType|PFcone\n  --radius|30ft\n  --origin|nearest\n  --forceIntersection|1\n --minGridArea|0.50\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '60ft-PFCone',
+      '!smartaoe {{\n  --aoeType|PFcone\n  --radius|60ft\n  --origin|nearest\n  --forceIntersection|1\n --minGridArea|0.50\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      'Variable-PFCone',
+      '!smartaoe {{\n  --aoeType|PFcone\n  --origin|nearest\n  --forceIntersection|1\n --minGridArea|0.50\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    //Normal cones, user enters cone angle
+    [
+      '15ft-Cone',
+      '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --radius|15ft\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '30ft-Cone',
+      '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --radius|30ft\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      '60ft-Cone',
+      '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --radius|60ft\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
+      false,
+    ],
+    [
+      'Variable-Cone',
+      '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|1\n  --fx|burn-fire\n}}',
+      false,
+    ],
+  ];
+
+  /**
    * Runs on startup: logs the version, creates or resets state[scriptName] when the schema version changes, and sets
    * up the default helpers.
    * If missing, creates the 'AoEControlToken' character (reticle default token plus CW/CCW/Trigger token actions and
@@ -943,10 +1120,7 @@ const SmartAoE = (() => {
           break;
 
         default:
-          state[scriptName] = {
-            version: schemaVersion,
-            links: [],
-          };
+          resetLinks();
           break;
       }
     }
@@ -1006,391 +1180,8 @@ const SmartAoE = (() => {
           }
 
           //create common abilities for the new character
-          let ability = createObj('ability', {
-            characterid: charID,
-            name: 'CW',
-            action: '!smartrotateorigin cw',
-            istokenaction: true,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'CCW',
-            action: '!smartrotateorigin ccw',
-            istokenaction: true,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Trigger-ALL',
-            action: '!smarttrigger',
-            istokenaction: true,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Trigger-Target',
-            action: '!smartquery @{target|Choose a Target|token_id}',
-            istokenaction: true,
-          });
-          //Square, float
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '5ft-Square',
-            action: '!smartaoe {{\n  --aoeType|square, float\n  --radius|2.5ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '10ft-Square',
-            action: '!smartaoe {{\n  --aoeType|square, float\n  --radius|5ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '20ft-Square',
-            action: '!smartaoe {{\n  --aoeType|square, float\n  --radius|10ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-Square',
-            action: '!smartaoe {{\n  --aoeType|square, float\n  --radius|15ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '40ft-Square',
-            action: '!smartaoe {{\n  --aoeType|square, float\n  --radius|20ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Variable-Square',
-            action: '!smartaoe {{\n  --aoeType|square\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //Circle, float
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '5ft-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --radius|2.5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '10ft-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --radius|5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '20ft-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --radius|10ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --radius|15ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '40ft-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --radius|20ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Variable-Circle',
-            action: '!smartaoe {{\n  --aoeType|circle\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //PF circle, float
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '5ft-PF-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|2.5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '10ft-PF-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|5ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '20ft-PF-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|10ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-PF-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|15ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '40ft-PF-Circle',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --radius|20ft\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Variable-PF-Circle',
-            action: '!smartaoe {{\n  --aoeType|PFcircle\n  --minGridArea|0.5\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //Centered on Caster, square
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '5ft-Square-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|5ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '10ft-Square-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|10ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '15ft-Square-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|15ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '20ft-Square-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|20ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-Square-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|30ft\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '40ft-Square-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|square, float\n  --controlTokName|self\n  --radius|40ft\n  --forceIntersection|0\n}}',
-            istokenaction: false,
-          });
-          //Centered on Caster, circle
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '5ft-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|5ft\n  --minGridArea|0.5\n --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '10ft-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|10ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '15ft-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|15ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '20ft-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|20ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|30ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '40ft-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|circle, float\n  --controlTokName|self\n  --radius|40ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //Centered on Caster, PF circle
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '5ft-PF-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|5ft\n  --minGridArea|0.5\n --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '10ft-PF-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|10ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '15ft-PF-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|15ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '20ft-PF-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|20ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-PF-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|30ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '40ft-PF-Circle-Caster',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcircle, float\n  --controlTokName|self\n  --radius|40ft\n  --minGridArea|0.5\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //Lines
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-Line',
-            action: '!smartaoe {{\n  --aoeType|line\n  --radius|30ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '60ft-Line',
-            action: '!smartaoe {{\n  --aoeType|line\n  --radius|60ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '100ft-Line',
-            action: '!smartaoe {{\n  --aoeType|line\n  --radius|100ft\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Variable-Line',
-            action: '!smartaoe {{\n  --aoeType|line\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //5e cones
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '15ft-5eCone',
-            action:
-              '!smartaoe {{\n  --aoeType|5econe\n  --radius|15ft\n  --origin|nearest, face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-5eCone',
-            action:
-              '!smartaoe {{\n  --aoeType|5econe\n  --radius|30ft\n  --origin|nearest, face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '60ft-5eCone',
-            action:
-              '!smartaoe {{\n  --aoeType|5econe\n  --radius|60ft\n  --origin|nearest, face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Variable-5eCone',
-            action:
-              '!smartaoe {{\n  --aoeType|5econe\n  --origin|nearest,face\n  --minGridArea|0.25\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //PF cones
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '15ft-PFCone',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcone\n  --radius|15ft\n  --origin|nearest, face\n  --forceIntersection|0\n  --minGridArea|0.50\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-PFCone',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcone\n  --radius|30ft\n  --origin|nearest\n  --forceIntersection|1\n --minGridArea|0.50\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '60ft-PFCone',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcone\n  --radius|60ft\n  --origin|nearest\n  --forceIntersection|1\n --minGridArea|0.50\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Variable-PFCone',
-            action:
-              '!smartaoe {{\n  --aoeType|PFcone\n  --origin|nearest\n  --forceIntersection|1\n --minGridArea|0.50\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          //Normal cones, user enters cone angle
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '15ft-Cone',
-            action:
-              '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --radius|15ft\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '30ft-Cone',
-            action:
-              '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --radius|30ft\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: '60ft-Cone',
-            action:
-              '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --radius|60ft\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|0\n  --fx|burn-fire\n}}',
-            istokenaction: false,
-          });
-          ability = createObj('ability', {
-            characterid: charID,
-            name: 'Variable-Cone',
-            action:
-              '!smartaoe {{\n  --aoeType|cone, ?{Enter cone angle|90}\n  --minGridArea|0.50\n  --origin|nearest, face\n  --forceIntersection|1\n  --fx|burn-fire\n}}',
-            istokenaction: false,
+          CONTROL_TOKEN_ABILITIES.forEach(([name, action, istokenaction]) => {
+            createObj('ability', { characterid: charID, name, action, istokenaction });
           });
 
           log(`====> From ${scriptName}: Character (${charName}) was created.`);
@@ -1495,48 +1286,14 @@ const SmartAoE = (() => {
   };
 
   /**
-   * Removes AoE links from state[scriptName].links. With no token or page id, wipes every link in the campaign;
-   * otherwise removes the links for the given control token and/or page and whispers a confirmation.
-   * Linked paths and tokens are not deleted, only the link records.
-   *
-   * @param {string} who - Name used in the whisper confirmation.
-   * @param {string} [tokID] - Control token id whose links should be removed.
-   * @param {string} [pageID] - Page id whose links should all be removed.
+   * Empties SmartAoE's state: every AoE in the campaign is unlinked (paths and control tokens are left on the board).
+   * Used on first install, when the stored schema is unknown, and by !smartclearcache.
    */
-  const clearCache = function (who, tokID = undefined, pageID = undefined) {
-    const whisperString = `/w ${who}`;
-    //no arguments passed, clear all linked pairs in ENTIRE CAMPAIGN
-    if (!tokID && !pageID) {
-      state[scriptName] = {
-        version: schemaVersion,
-        links: [],
-      };
-      return;
-    }
-
-    //token only
-    if (tokID) {
-      //iterate through linked pairs in state object to find pairs associated with tokID
-      for (let i = state[scriptName].links.length - 1; i > -1; i--) {
-        if (state[scriptName].links[i].tokID === tokID) {
-          //remove linked pair ids from state object
-          state[scriptName].links.splice(i, 1);
-          sendChat(scriptName, `${whisperString} SmartAoE paths unlinked for tokID = ${tokID}`);
-        }
-      }
-    }
-
-    //all linked tokens in current page
-    if (pageID) {
-      //iterate through linked pairs in state object to find pairs associated with pageID
-      for (let i = state[scriptName].links.length - 1; i > -1; i--) {
-        if (state[scriptName].links[i].pageID === pageID) {
-          //remove linked pair ids from state object
-          state[scriptName].links.splice(i, 1);
-        }
-      }
-      sendChat(scriptName, `${whisperString} SmartAoE paths unlinked for all tokens in pageID = ${pageID}`);
-    }
+  const resetLinks = function () {
+    state[scriptName] = {
+      version: schemaVersion,
+      links: [],
+    };
   };
 
   /**
@@ -1565,7 +1322,7 @@ const SmartAoE = (() => {
    * @param {string} aoeType - AoE shape (e.g. 'square', 'circle', 'PFcircle', 'line', 'cone', '5econe', 'PFcone').
    * @param {pt} originPt - Starting origin point, stored as originPts[0].
    * @param {string} originTokID - Id of the caster/origin token.
-   * @param {string} pathIDs - Id of the AoE's first drawn path (stored as a one-item array).
+   * @param {string} pathID - Id of the AoE's first drawn path (the link keeps a list of path ids).
    * @param {string} pageID - Page the AoE is on.
    * @param {object} cardParameters - Chat card style settings for the results card.
    * @param {...*} rest - The remaining options (save, damage, resistance, condition, sound, whisper, layer and caster
@@ -1590,7 +1347,7 @@ const SmartAoE = (() => {
     minGridArea,
     minTokArea,
     originTokID,
-    pathIDs,
+    pathID,
     pageID,
     fxType,
     saveFormula,
@@ -1635,8 +1392,6 @@ const SmartAoE = (() => {
     casterConditionOnFail,
     affectsCaster,
   ) {
-    const pathArr = [];
-    pathArr.push(pathIDs);
     const link = {
       //tokName: state[scriptName].links.length.toString(),
       controlTokName: controlTokName,
@@ -1660,7 +1415,7 @@ const SmartAoE = (() => {
       originType: originType,
       originPts: [originPt],
       originIndex: 0,
-      pathIDs: pathArr,
+      pathIDs: [pathID],
       saveFormula: saveFormula,
       saveName: saveName,
       ignoreAttr: ignoreAttr,
@@ -1821,8 +1576,6 @@ const SmartAoE = (() => {
     let controlTok;
     let controlTok2;
     const controlToks = [];
-    let imgsrc;
-    let sides;
     let sidesArr;
     const whisperString = `/w "${who}"`;
 
@@ -2388,10 +2141,9 @@ const SmartAoE = (() => {
    * @param {number} x2 - End x in grid units.
    * @param {number} y2 - End y in grid units.
    * @param {number} pageGridIncrement - Page snapping_increment.
-   * @param {number} [width] - (unused)
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the cells the line passes through.
    */
-  const getLineLocations = function (x1, y1, x2, y2, pageGridIncrement, width) {
+  const getLineLocations = function (x1, y1, x2, y2, pageGridIncrement) {
     let lineCoords = {
       xVals: [],
       yVals: [],
@@ -2733,7 +2485,6 @@ const SmartAoE = (() => {
     const startAngle = deg2rad * Math.floor(normalizeTo360deg(coneDirection - coneWidth / 2)); //round down to nearest degree to account for flotaing pt errors
     let endAngle = deg2rad * Math.ceil(normalizeTo360deg(coneDirection + coneWidth / 2)); //round down to nearest degree to account for flotaing pt errors
     const centerAngle = deg2rad * normalizeTo360deg(coneDirection);
-    const halfConeWidth = deg2rad * (coneWidth / 2);
     let criticalDist;
 
     //special case: Angle calcs will fail when the pt to check is same as origin point - count this as in the cone.
@@ -2794,7 +2545,9 @@ const SmartAoE = (() => {
 
     if (isFlatCone) {
       //for 5e-style cones. Basically a triangle (no rounded outer face)
-      const dTheta = Math.abs(pAngle - centerAngle); //cos() is the same either way round 0/360, so no wrap needed
+      //angle between the point and the cone's centre line, the short way round (e.g. 350deg and 10deg are 20deg apart)
+      const diff = Math.abs(pAngle - centerAngle);
+      const dTheta = Math.min(diff, 2 * Math.PI - diff);
       criticalDist = rad / Math.cos(dTheta);
     } else {
       //compare to full radius cone
@@ -2874,54 +2627,21 @@ const SmartAoE = (() => {
    *
    * @param {string} aoeType - AoE type; '5econe' uses the flat-cone geometry.
    * @param {pt} oPt - Cone origin in pixels.
-   * @param {number} offsetX - (unused)
-   * @param {number} offsetY - (unused)
    * @param {number} coneDirection - Centre-line bearing in degrees (0 = up, clockwise).
    * @param {number} coneWidth - Full cone angle in degrees.
    * @param {number} rad - Cone length in pixels.
    * @param {number} z - Extra side length in pixels for 5e cones (0 otherwise).
    * @returns {pt[]} [origin, trailing-side end, leading-side end].
    */
-  const getConeEndPts2 = function (aoeType, oPt, offsetX, offsetY, coneDirection, coneWidth, rad, z) {
-    let pt1, pt2;
+  const getConeEndPts2 = function (aoeType, oPt, coneDirection, coneWidth, rad, z) {
     const deg2rad = Math.PI / 180;
-
     coneDirection = normalizeTo360deg(coneDirection);
-
-    //define "cone" angles (in degrees)
     const th1 = deg2rad * (coneDirection - coneWidth / 2); //angle of trailing cone side
     const th2 = deg2rad * (coneDirection + coneWidth / 2); //angle of leading cone side
-
-    if (aoeType === '5econe') {
-      //a 5e cone is defined by the orgin and two pts
-      pt1 = get5eConePt(oPt, rad + z, th1);
-      pt2 = get5eConePt(oPt, rad + z, th2);
-    } else {
-      //normal cone with equal radius throughout
-      pt1 = getConeEndPt(oPt, rad, th1);
-      pt2 = getConeEndPt(oPt, rad, th2);
-    }
-
-    const pts = [oPt, pt1, pt2];
-    return pts;
+    const sideLength = aoeType === '5econe' ? rad + z : rad; //a 5e cone's sides reach past rad to its flat end
+    return [oPt, getConeEndPt(oPt, sideLength, th1), getConeEndPt(oPt, sideLength, th2)];
   };
 
-  /**
-   * Projects the end of a 5e cone side from the origin, rounded to whole pixels. Identical in maths to getConeEndPt.
-   * Angle in radians, 0 = straight up, clockwise.
-   *
-   * @param {{x:number, y:number}} oPt - Cone origin in pixels.
-   * @param {number} rad - Side length in pixels (already including any 5e extension).
-   * @param {number} theta - Bearing in radians.
-   * @returns {pt} The end point.
-   */
-  const get5eConePt = function (oPt, rad, theta) {
-    const deg2rad = Math.PI / 180;
-    //change in "normal" polar coord conversion due to 0deg being straight up and positive Y being "down"
-    const x = Math.round(oPt.x + rad * Math.sin(theta));
-    const y = Math.round(oPt.y + rad * Math.cos(theta + deg2rad * 180));
-    return new pt(x, y);
-  };
   /**
    * Projects a 5e cone side end relative to a local origin at (rad, rad), for building the cone outline path inside
    * its own bounding box. Not rounded. Angle in radians, 0 = straight up, clockwise.
@@ -3130,7 +2850,7 @@ const SmartAoE = (() => {
    * @returns {{x:number, y:number}[]} Zero, one or two intersection points lying on the segment.
    */
   const getLineCircleIntersections = function (pt1, pt2, centerPt, rad) {
-    let a, b, c, d, u1, u2, ret, retP1, retP2, v1, v2;
+    let b, c, d, u1, u2, ret, retP1, retP2, v1, v2;
 
     const circle = {
       radius: rad,
@@ -3191,20 +2911,168 @@ const SmartAoE = (() => {
   };
 
   /**
+   * Grid-cell bounds of a search box: the centres of the cells nearest its two corners.
+   *
+   * @param {pt} minPt - Upper-left corner of the box, in pixels.
+   * @param {pt} maxPt - Lower-right corner of the box, in pixels.
+   * @param {pt[]} pageGridCenters - Every grid-cell centre on the page.
+   * @param {number} pageGridIncrement - Page snapping_increment.
+   * @returns {{minX:number, maxX:number, minY:number, maxY:number}} Centre coordinates of the outermost cells.
+   */
+  const getGridBounds = function (minPt, maxPt, pageGridCenters, pageGridIncrement) {
+    return {
+      minX: getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).x,
+      maxX: getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).x,
+      minY: getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).y,
+      maxY: getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).y,
+    };
+  };
+
+  /**
+   * Grid-cell bounds of the box around an AoE origin, widened by the origin offset on each axis so it covers the whole
+   * AoE (circles, squares and cones).
+   *
+   * @param {pt} oPt - AoE origin (already including any offset from the token centre).
+   * @param {number} radX - Horizontal half-size of the AoE, in pixels.
+   * @param {number} radY - Vertical half-size of the AoE, in pixels.
+   * @param {number} offsetX - Horizontal origin offset, in pixels.
+   * @param {number} offsetY - Vertical origin offset, in pixels.
+   * @param {pt[]} pageGridCenters - Every grid-cell centre on the page.
+   * @param {number} pageGridIncrement - Page snapping_increment.
+   * @returns {{minX:number, maxX:number, minY:number, maxY:number}} Centre coordinates of the outermost cells.
+   */
+  const getOriginGridBounds = function (oPt, radX, radY, offsetX, offsetY, pageGridCenters, pageGridIncrement) {
+    const searchX = radX + Math.abs(offsetX || 0);
+    const searchY = radY + Math.abs(offsetY || 0);
+    return getGridBounds(
+      new pt(oPt.x - searchX, oPt.y - searchY),
+      new pt(oPt.x + searchX, oPt.y + searchY),
+      pageGridCenters,
+      pageGridIncrement,
+    );
+  };
+
+  /**
+   * Works out which grid cells inside the given bounds an AoE covers. This is the shared engine behind the circle,
+   * square, wall and cone shapes, which differ only in the tests they pass in:
+   *  - a cell whose four corners are all inside is kept;
+   *  - otherwise the points where the AoE's edge crosses each side of the cell (top, right, bottom, left) are added to
+   *    the cell, plus any AoE vertices inside the cell. With fewer than two such points the cell is dropped (unless
+   *    keepUncrossed keeps it); otherwise the cell is clipped to the AoE and kept if the covered area is at least
+   *    minGridArea of a cell.
+   *
+   * @param {object} shape - The AoE's tests.
+   * @param {function(pt):boolean} shape.isCornerInside - Whether a cell corner is inside the AoE.
+   * @param {function(pt):boolean} [shape.isPointInside=shape.isCornerInside] - Whether a clipped point is kept.
+   * @param {function(pt, pt):pt[]} shape.edgeCrossings - Where the AoE's edge crosses the cell side from a to b.
+   *   (called with the side index as a third argument).
+   * @param {pt[]} [shape.vertices=[]] - AoE corner points to add when they fall inside a cell.
+   * @param {function(pt[]):boolean} [shape.keepUncrossed] - For a partly covered cell with fewer than two crossing
+   *   points: return true to keep it anyway (gets the cell's corner points). Used for circles smaller than a cell.
+   * @param {pt} [shape.farFrom] - If given, each cell records its corner farthest from this point (PF distances).
+   * @param {{minX:number, maxX:number, minY:number, maxY:number}} bounds - Centres of the outermost cells to test.
+   * @param {number} minGridArea - Minimum covered fraction of a cell (0-1).
+   * @param {number} pageGridIncrement - Page snapping_increment.
+   * @returns {{center:pt, farthestCorner:(pt|undefined)}[]} The covered cells.
+   */
+  const getCoveredCells = function (shape, bounds, minGridArea, pageGridIncrement) {
+    const cellSize = 70 * pageGridIncrement;
+    const isPointInside = shape.isPointInside || shape.isCornerInside;
+    const vertices = shape.vertices || [];
+    const covered = [];
+
+    //columns, then rows, as the shapes always did (the order of the returned cells is kept)
+    for (let i = bounds.minX; i <= bounds.maxX; i = i + cellSize) {
+      for (let j = bounds.minY; j <= bounds.maxY; j = j + cellSize) {
+        const corners = getCellCoords(i, j, cellSize); //[UL, UR, LR, LL, UL] (UL repeated to close the cell)
+        const cell = {
+          center: new pt(i, j),
+          farthestCorner: shape.farFrom ? getFarthestCorner(shape.farFrom, corners) : undefined,
+        };
+
+        if (corners.slice(0, 4).every((c) => shape.isCornerInside(c))) {
+          covered.push(cell); //fully inside
+          continue;
+        }
+
+        //partly covered (or not at all): collect the AoE edge crossings on each side of the cell
+        let points = corners.slice();
+        let numAddedPts = 0;
+        for (let side = 0; side < 4; side++) {
+          const sideCrossings = [];
+          shape.edgeCrossings(corners[side], corners[side + 1], side).forEach((p) => {
+            if (p) pushUniquePtToArray(sideCrossings, p);
+          });
+          sideCrossings.forEach((p) => points.push(p));
+          numAddedPts += sideCrossings.length;
+        }
+        //and the AoE's own corners that sit inside this cell
+        vertices.forEach((v) => {
+          if (isPointInPolygon(v, corners)) {
+            numAddedPts += pushUniquePtToArray(points, v); //1 if added, 0 if already there
+          }
+        });
+
+        points = sortPtsClockwise(points);
+
+        if (numAddedPts < 2) {
+          //must have two crossing points to calculate an area
+          if (shape.keepUncrossed && shape.keepUncrossed(corners)) {
+            covered.push(cell);
+          }
+          continue;
+        }
+
+        //clip the cell to the AoE, then measure what is left
+        points = sortPtsClockwise(points.filter((p) => isPointInside(p)));
+        const area = calcPolygonArea(points);
+        if (area >= minGridArea * 70 * 70 * pageGridIncrement * pageGridIncrement) {
+          covered.push(cell);
+        }
+      }
+    }
+    return covered;
+  };
+
+  /**
+   * Crossing points of the cell side a-b with each of the given straight AoE edges.
+   *
+   * @param {pt} a - Start of the cell side.
+   * @param {pt} b - End of the cell side.
+   * @param {pt[][]} edges - AoE edges as [start, end] pairs.
+   * @returns {Array<pt|null>} One entry per edge (null where they don't cross).
+   */
+  const getSegmentCrossings = function (a, b, edges) {
+    return edges.map(([p, q]) => getIntersectionPt(a.x, a.y, b.x, b.y, p.x, p.y, q.x, q.y));
+  };
+
+  /**
+   * Turns a list of covered cells into the {xVals, yVals} lists of cell centres that the path drawing uses.
+   *
+   * @param {{center:pt}[]} cells - Covered cells, in order.
+   * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the cells.
+   */
+  const cellsToCoords = function (cells) {
+    return {
+      xVals: cells.map((c) => c.center.x),
+      yVals: cells.map((c) => c.center.y),
+    };
+  };
+
+  /**
    * Works out which grid cells a circle AoE covers. Cells fully inside are kept; partly covered cells are clipped to
-   * the circle and kept if the covered area is at least minGridArea of a cell. For 'PFcircle', cells must also pass a
-   * Pathfinder distance check (cell centre, or farthest corner if forceIntersection). All values in pixels.
+   * the circle and kept if the covered area is at least minGridArea of a cell. A circle smaller than a cell that sits
+   * inside it keeps that cell. For 'PFcircle', cells must also pass a Pathfinder distance check (cell centre, or
+   * farthest corner if forceIntersection). All values in pixels.
    *
    * @param {pt[]} pageGridCenters - Every grid-cell centre on the page.
    * @param {string} aoeType - 'circle' or 'PFcircle'.
-   * @param {boolean} aoeFloat - (unused)
    * @param {number} minGridArea - Minimum covered fraction of a cell (0-1).
    * @param {pt} oPt - Circle centre.
-   * @param {pt} cPt - (unused)
    * @param {number} rad - Radius in pixels.
    * @param {number} pageGridIncrement - Page snapping_increment.
    * @param {number} pageScaleNumber - Page scale_number, for PF distances.
-   * @param {number} offsetX - Origin offset from the token centre; widens the search box.
+   * @param {number} offsetX - Horizontal origin offset from the token centre; widens the search box.
    * @param {number} offsetY - Vertical origin offset; widens the search box.
    * @param {boolean} forceIntersection - For 'PFcircle', test the farthest corner instead of the centre.
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the covered cells.
@@ -3212,10 +3080,8 @@ const SmartAoE = (() => {
   const getCircleLocations = function (
     pageGridCenters,
     aoeType,
-    aoeFloat,
     minGridArea,
     oPt,
-    cPt,
     rad,
     pageGridIncrement,
     pageScaleNumber,
@@ -3223,189 +3089,34 @@ const SmartAoE = (() => {
     offsetY,
     forceIntersection,
   ) {
-    const circleCoords = {
-      xVals: [],
-      yVals: [],
-    };
+    const cellArea = 70 * 70 * pageGridIncrement * pageGridIncrement;
+    const bounds = getOriginGridBounds(oPt, rad, rad, offsetX, offsetY, pageGridCenters, pageGridIncrement);
+    let cells = getCoveredCells(
+      {
+        isCornerInside: (p) => isPointInCircle(p, oPt, rad),
+        edgeCrossings: (a, b) => getLineCircleIntersections(a, b, oPt, rad),
+        //a circle smaller than a cell can sit inside it without crossing an edge: keep that cell if enough is covered
+        keepUncrossed: (corners) =>
+          oPt.x - rad >= corners[0].x &&
+          oPt.x + rad <= corners[2].x &&
+          oPt.y - rad >= corners[0].y &&
+          oPt.y + rad <= corners[2].y &&
+          Math.PI * rad * rad >= minGridArea * cellArea,
+        farFrom: oPt,
+      },
+      bounds,
+      minGridArea,
+      pageGridIncrement,
+    );
 
-    const calcType = aoeType === 'PFcircle' ? 'PF' : 'Euclidean';
-
-    const bbRadX = rad;
-    const bbRadY = rad;
-
-    //Define grid.  Grid is determined by bounding box of AoE
-    //Grid is comprised of an array of cell objects
-    //cell objects are comprised of an area scalar and an array of points(endpoints plus intersections) in clockwise order (for area calcs)
-    const grid = [];
-
-    let minX, maxX, minY, maxY;
-    //Cells to test: the box around the origin, widened by the origin offset on each axis so it covers the whole AoE
-    //(was "- offsetX" on both ends and both axes, which shifted the box and ignored offsetY/bbRadY, missing edge cells)
-    const searchX = bbRadX + Math.abs(offsetX || 0);
-    const searchY = bbRadY + Math.abs(offsetY || 0);
-    const minPt = new pt(oPt.x - searchX, oPt.y - searchY);
-    const maxPt = new pt(oPt.x + searchX, oPt.y + searchY);
-    minX = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).x;
-    maxX = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).x;
-    minY = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).y;
-    maxY = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).y;
-
-    for (let i = minX; i <= maxX; i = i + 70 * pageGridIncrement) {
-      for (let j = minY; j <= maxY; j = j + 70 * pageGridIncrement) {
-        //i & j are the x&y coords of the center of each grid cell
-        const centerOfCell = new pt(i, j);
-        const cornerPts = getCellCoords(i, j, 70 * pageGridIncrement); //initialized with [ptUL, ptUR, ptLR, ptLL, ptUL] (note repeat of ptUL to close the cell
-        const cell = {
-          points: cornerPts,
-          farthestCorner: getFarthestCorner(oPt, cornerPts), //will use farthest corner pt when filtering for PF cone distances
-          center: centerOfCell,
-          area: 0,
-        };
-        grid.push(cell);
-      }
+    if (aoeType === 'PFcircle') {
+      //one last check to see if the grid square satisfies PF-style distance rules (every other diag counts as 2sq)
+      cells = cells.filter((c) => {
+        const testPt = forceIntersection ? c.farthestCorner : c.center;
+        return distBetweenPts(oPt, testPt, 'PF', pageGridIncrement, pageScaleNumber) <= rad;
+      });
     }
-
-    //find cells where all corners are within the cone OR there is a valid intersection of the cone with the cell. Remove all other cells from grid
-    for (let i = grid.length - 1; i > -1; i--) {
-      const ULinAoE = isPointInCircle(grid[i].points[0], oPt, rad);
-      const URinAoE = isPointInCircle(grid[i].points[1], oPt, rad);
-      const LRinAoE = isPointInCircle(grid[i].points[2], oPt, rad);
-      const LLinAoE = isPointInCircle(grid[i].points[3], oPt, rad);
-
-      if (!(ULinAoE && URinAoE && LRinAoE && LLinAoE)) {
-        //all corners not within circle, check for intersections
-
-        const topIntersections = [];
-        const rightIntersections = [];
-        const bottomIntersections = [];
-        const leftIntersections = [];
-        let numAddedPts = 0;
-        let insertIdx;
-        let intPts = []; //array of intersection points (circleAoE crossing cell border)
-        const containsVertex = false; //check the squareAoE corner points
-        const baseCell = grid[i].points.map((x) => x); //a copy of the base grid cell coordinates (used later to check for cone vertices)
-
-        // intersections of top grid segment with circle
-        intPts = getLineCircleIntersections(grid[i].points[0], grid[i].points[1], oPt, rad);
-        if (intPts.length > 0) {
-          intPts.forEach((pt) => {
-            pushUniquePtToArray(topIntersections, pt);
-          });
-        }
-
-        // intersections of right grid segment with circle
-        intPts = getLineCircleIntersections(grid[i].points[1], grid[i].points[2], oPt, rad);
-        if (intPts.length > 0) {
-          intPts.forEach((pt) => {
-            pushUniquePtToArray(rightIntersections, pt);
-          });
-        }
-
-        // intersections of bottom grid segment with circle
-        intPts = getLineCircleIntersections(grid[i].points[2], grid[i].points[3], oPt, rad);
-        if (intPts.length > 0) {
-          intPts.forEach((pt) => {
-            pushUniquePtToArray(bottomIntersections, pt);
-          });
-        }
-
-        // intersections of left grid segment with circle
-        intPts = getLineCircleIntersections(grid[i].points[3], grid[i].points[4], oPt, rad);
-        if (intPts.length > 0) {
-          intPts.forEach((pt) => {
-            pushUniquePtToArray(leftIntersections, pt);
-          });
-        }
-
-        if (topIntersections.length > 0) {
-          for (let t = 0; t < topIntersections.length; t++) {
-            if (topIntersections[t]) {
-              grid[i].points.push(topIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, topIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (rightIntersections.length > 0) {
-          for (let t = 0; t < rightIntersections.length; t++) {
-            if (rightIntersections[t]) {
-              grid[i].points.push(rightIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, rightIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (bottomIntersections.length > 0) {
-          for (let t = 0; t < bottomIntersections.length; t++) {
-            if (bottomIntersections[t]) {
-              grid[i].points.push(bottomIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, bottomIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (leftIntersections.length > 0) {
-          for (let t = 0; t < leftIntersections.length; t++) {
-            if (leftIntersections[t]) {
-              grid[i].points.push(leftIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, leftIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-
-        grid[i].points = sortPtsClockwise(grid[i].points);
-
-        //must have two intersection pts to calculate area
-        if (numAddedPts < 2) {
-          //a circle smaller than a cell can sit inside it without crossing an edge: keep that cell if enough is covered
-          const circleInCell =
-            oPt.x - rad >= baseCell[0].x &&
-            oPt.x + rad <= baseCell[2].x &&
-            oPt.y - rad >= baseCell[0].y &&
-            oPt.y + rad <= baseCell[2].y;
-          const circleArea = Math.PI * rad * rad;
-          if (circleInCell && circleArea >= minGridArea * 70 * 70 * pageGridIncrement * pageGridIncrement) {
-            grid[i].area = circleArea;
-          } else {
-            grid.splice(i, 1);
-          }
-        } else {
-          //valid intersection, now filter out the grid points that are outside of the AoE (some corner pts from each cell)
-
-          grid[i].points = grid[i].points.filter((pt) => {
-            return isPointInCircle(pt, oPt, rad);
-          });
-
-          grid[i].points = sortPtsClockwise(grid[i].points);
-
-          //calculate area with the filtered points that form an arbitrary polygon
-          const area = calcPolygonArea(grid[i].points);
-          grid[i].area = area;
-          //remove the grid cell if not enough area is covered by the cone
-          if (area < minGridArea * 70 * 70 * pageGridIncrement * pageGridIncrement) {
-            grid.splice(i, 1);
-          }
-        }
-      }
-    }
-
-    //We have a filtered array of grid cells. Return the coordinates of the center of each remaining cell
-    for (let i = 0; i < grid.length; i++) {
-      if (aoeType === 'PFcircle') {
-        //one last check to see if the grid square satisfies PF-style distance rules (every other diag counts as 2sq)
-        const testPt = forceIntersection ? grid[i].farthestCorner : grid[i].center;
-        const pfDist = distBetweenPts(oPt, testPt, calcType, pageGridIncrement, pageScaleNumber);
-        if (pfDist <= rad) {
-          circleCoords.xVals.push(grid[i].center.x);
-          circleCoords.yVals.push(grid[i].center.y);
-        }
-      } else {
-        circleCoords.xVals.push(grid[i].center.x);
-        circleCoords.yVals.push(grid[i].center.y);
-      }
-    }
-    return circleCoords;
+    return cellsToCoords(cells);
   };
 
   /**
@@ -3415,372 +3126,31 @@ const SmartAoE = (() => {
    *
    * @param {pt[]} pageGridCenters - Every grid-cell centre on the page.
    * @param {number} minGridArea - Minimum covered fraction of a cell (0-1).
-   * @param {pt} oPt - (unused)
-   * @param {pt} cPt - (unused)
    * @param {object} wallParams - From getWallParams: corners pt1-pt4 and extreme points pMinX, pMaxX, pMinY, pMaxY.
    * @param {number} pageGridIncrement - Page snapping_increment.
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the covered cells.
    */
-  const getWallLocations = function (pageGridCenters, minGridArea, oPt, cPt, wallParams, pageGridIncrement) {
-    const wallCoords = {
-      xVals: [],
-      yVals: [],
-    };
-
-    //Define grid.  Grid is determined by bounding box of AoE
-    //Grid is comprised of an array of cell objects
-    //cell objects are comprised of an area scalar and an array of points(endpoints plus intersections) in clockwise order (for area calcs)
-    const grid = [];
-
-    const minX = getClosestGridPt(wallParams.pMinX, pageGridCenters, pageGridIncrement).x;
-    const maxX = getClosestGridPt(wallParams.pMaxX, pageGridCenters, pageGridIncrement).x;
-    const minY = getClosestGridPt(wallParams.pMinY, pageGridCenters, pageGridIncrement).y;
-    const maxY = getClosestGridPt(wallParams.pMaxY, pageGridCenters, pageGridIncrement).y;
-
-    for (let i = minX; i <= maxX; i = i + 70 * pageGridIncrement) {
-      for (let j = minY; j <= maxY; j = j + 70 * pageGridIncrement) {
-        //i & j are the x&y coords of the center of each grid cell
-        const centerOfCell = new pt(i, j);
-        const cell = {
-          points: getCellCoords(i, j, 70 * pageGridIncrement), //initialized with [ptUL, ptUR, ptLR, ptLL, ptUL] (note repeat of ptUL to close the cell
-          center: centerOfCell,
-          area: 0,
-        };
-        grid.push(cell);
-      }
-    }
-
-    //find cells where all corners are within the cone OR there is a valid intersection of the cone with the cell. Remove all other cells from grid
+  const getWallLocations = function (pageGridCenters, minGridArea, wallParams, pageGridIncrement) {
     const wallAoEPolygon = [wallParams.pt1, wallParams.pt2, wallParams.pt3, wallParams.pt4, wallParams.pt1];
-
-    for (let i = grid.length - 1; i > -1; i--) {
-      const ULinAoE = isPointInPolygon(grid[i].points[0], wallAoEPolygon);
-      const URinAoE = isPointInPolygon(grid[i].points[1], wallAoEPolygon);
-      const LRinAoE = isPointInPolygon(grid[i].points[2], wallAoEPolygon);
-      const LLinAoE = isPointInPolygon(grid[i].points[3], wallAoEPolygon);
-
-      if (!(ULinAoE && URinAoE && LRinAoE && LLinAoE)) {
-        //all corners not within wall polygon, check for intersections (4 checks for each square segment)
-
-        const topIntersections = [];
-        const rightIntersections = [];
-        const bottomIntersections = [];
-        const leftIntersections = [];
-        let numAddedPts = 0;
-        let insertIdx;
-        let intPt; //intersection point (squareAoE edlge crossing cell border)
-        let containsVertex = false; //check the squareAoE corner points
-        const baseCell = grid[i].points.map((x) => x); //a copy of the base grid cell coordinates (used later to check for AoE vertices)
-
-        // intersections of top grid segment with the wallAoE (have to check all four sides of wall)
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          wallAoEPolygon[0].x,
-          wallAoEPolygon[0].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-          wallAoEPolygon[4].x,
-          wallAoEPolygon[4].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-
-        // intersections of right grid segment with two horizontal lines of squareAoE
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          wallAoEPolygon[0].x,
-          wallAoEPolygon[0].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-          wallAoEPolygon[4].x,
-          wallAoEPolygon[4].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-
-        // intersections of bottom grid segment with two vertical lines of squareAoE
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          wallAoEPolygon[0].x,
-          wallAoEPolygon[0].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-          wallAoEPolygon[4].x,
-          wallAoEPolygon[4].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-
-        // intersections of left grid segment with two horizontal lines of squareAoE
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          wallAoEPolygon[0].x,
-          wallAoEPolygon[0].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          wallAoEPolygon[1].x,
-          wallAoEPolygon[1].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          wallAoEPolygon[2].x,
-          wallAoEPolygon[2].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          wallAoEPolygon[3].x,
-          wallAoEPolygon[3].y,
-          wallAoEPolygon[4].x,
-          wallAoEPolygon[4].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-
-        if (topIntersections.length > 0) {
-          for (let t = 0; t < topIntersections.length; t++) {
-            if (topIntersections[t]) {
-              grid[i].points.push(topIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, topIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (rightIntersections.length > 0) {
-          for (let t = 0; t < rightIntersections.length; t++) {
-            if (rightIntersections[t]) {
-              grid[i].points.push(rightIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, rightIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (bottomIntersections.length > 0) {
-          for (let t = 0; t < bottomIntersections.length; t++) {
-            if (bottomIntersections[t]) {
-              grid[i].points.push(bottomIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, bottomIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (leftIntersections.length > 0) {
-          for (let t = 0; t < leftIntersections.length; t++) {
-            if (leftIntersections[t]) {
-              grid[i].points.push(leftIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, leftIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-
-        //check grid cell for wallAoEPolygon vertices
-
-        containsVertex = isPointInPolygon(wallAoEPolygon[0], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, wallAoEPolygon[0]); //returns 1 if pt added, 0 if not added
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(wallAoEPolygon[1], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, wallAoEPolygon[1]);
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(wallAoEPolygon[2], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, wallAoEPolygon[2]);
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(wallAoEPolygon[3], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, wallAoEPolygon[3]);
-          numAddedPts += ptAdded;
-        }
-
-        grid[i].points = sortPtsClockwise(grid[i].points);
-
-        //must have two intersection pts to calculate area
-        if (numAddedPts < 2) {
-          grid.splice(i, 1);
-        } else {
-          //valid intersection, now filter out the grid points that are outside of the AoE (some corner pts from each grid cell)
-
-          grid[i].points = grid[i].points.filter((pt) => {
-            return isPointInWall(pt, wallAoEPolygon);
-          });
-          grid[i].points = sortPtsClockwise(grid[i].points);
-
-          //calculate area with the filtered points that form an arbitrary polygon
-          const area = calcPolygonArea(grid[i].points);
-          grid[i].area = area;
-          //remove the grid cell if not enough area is covered by the cone
-          if (area < minGridArea * 70 * 70 * pageGridIncrement * pageGridIncrement) {
-            grid.splice(i, 1);
-          }
-        }
-      }
-    }
-
-    //We have a filtered array of grid cells. Return the coordinates of the center of each remaining cell
-    for (let i = 0; i < grid.length; i++) {
-      wallCoords.xVals.push(grid[i].center.x);
-      wallCoords.yVals.push(grid[i].center.y);
-    }
-    return wallCoords;
+    const wallEdges = [0, 1, 2, 3].map((k) => [wallAoEPolygon[k], wallAoEPolygon[k + 1]]);
+    const bounds = {
+      minX: getClosestGridPt(wallParams.pMinX, pageGridCenters, pageGridIncrement).x,
+      maxX: getClosestGridPt(wallParams.pMaxX, pageGridCenters, pageGridIncrement).x,
+      minY: getClosestGridPt(wallParams.pMinY, pageGridCenters, pageGridIncrement).y,
+      maxY: getClosestGridPt(wallParams.pMaxY, pageGridCenters, pageGridIncrement).y,
+    };
+    const cells = getCoveredCells(
+      {
+        isCornerInside: (p) => isPointInPolygon(p, wallAoEPolygon),
+        isPointInside: (p) => isPointInWall(p, wallAoEPolygon), //tolerant of floating-point error on the edges
+        edgeCrossings: (a, b) => getSegmentCrossings(a, b, wallEdges),
+        vertices: wallAoEPolygon.slice(0, 4),
+      },
+      bounds,
+      minGridArea,
+      pageGridIncrement,
+    );
+    return cellsToCoords(cells);
   };
 
   /**
@@ -3789,322 +3159,64 @@ const SmartAoE = (() => {
    * covered area is at least minGridArea of a cell. All values in pixels.
    *
    * @param {pt[]} pageGridCenters - Every grid-cell centre on the page.
-   * @param {string} aoeType - (unused)
-   * @param {boolean} aoeFloat - (unused)
    * @param {number} minGridArea - Minimum covered fraction of a cell (0-1).
    * @param {pt} oPt - Square centre.
-   * @param {pt} cPt - (unused)
    * @param {number} rad - Half the side length in pixels.
    * @param {number} pageGridIncrement - Page snapping_increment.
    * @param {number} offsetX - Horizontal widening, in pixels (also widens the search box).
    * @param {number} offsetY - Vertical widening, in pixels.
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the covered cells.
    */
-  const getSquareLocations = function (
-    pageGridCenters,
-    aoeType,
-    aoeFloat,
-    minGridArea,
-    oPt,
-    cPt,
-    rad,
-    pageGridIncrement,
-    offsetX,
-    offsetY,
-  ) {
-    const squareCoords = {
-      xVals: [],
-      yVals: [],
-    };
-
-    const bbRadX = rad;
-    const bbRadY = rad;
-
-    //Define grid.  Grid is determined by bounding box of AoE
-    //Grid is comprised of an array of cell objects
-    //cell objects are comprised of an area scalar and an array of points(endpoints plus intersections) in clockwise order (for area calcs)
-    const grid = [];
-
-    let minX, maxX, minY, maxY;
-    //Cells to test: the box around the origin, widened by the origin offset on each axis so it covers the whole AoE
-    //(was "- offsetX" on both ends and both axes, which shifted the box and ignored offsetY/bbRadY, missing edge cells)
-    const searchX = bbRadX + Math.abs(offsetX || 0);
-    const searchY = bbRadY + Math.abs(offsetY || 0);
-    const minPt = new pt(oPt.x - searchX, oPt.y - searchY);
-    const maxPt = new pt(oPt.x + searchX, oPt.y + searchY);
-    minX = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).x;
-    maxX = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).x;
-    minY = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).y;
-    maxY = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).y;
-
-    for (let i = minX; i <= maxX; i = i + 70 * pageGridIncrement) {
-      for (let j = minY; j <= maxY; j = j + 70 * pageGridIncrement) {
-        //i & j are the x&y coords of the center of each grid cell
-        const centerOfCell = new pt(i, j);
-        const cell = {
-          points: getCellCoords(i, j, 70 * pageGridIncrement), //initialized with [ptUL, ptUR, ptLR, ptLL, ptUL] (note repeat of ptUL to close the cell
-          center: centerOfCell,
-          area: 0,
-        };
-        grid.push(cell);
-      }
-    }
-
-    //find cells where all corners are within the cone OR there is a valid intersection of the cone with the cell. Remove all other cells from grid
+  const getSquareLocations = function (pageGridCenters, minGridArea, oPt, rad, pageGridIncrement, offsetX, offsetY) {
     const squareAoEPolygon = [
-      new pt(oPt.x - bbRadX - offsetX, oPt.y - bbRadY - offsetY),
-      new pt(oPt.x + bbRadX + offsetX, oPt.y - bbRadY - offsetY),
-      new pt(oPt.x + bbRadX + offsetX, oPt.y + bbRadY + offsetY),
-      new pt(oPt.x - bbRadX - offsetX, oPt.y + bbRadY + offsetY),
-      new pt(oPt.x - bbRadX - offsetX, oPt.y - bbRadY - offsetY),
+      new pt(oPt.x - rad - offsetX, oPt.y - rad - offsetY),
+      new pt(oPt.x + rad + offsetX, oPt.y - rad - offsetY),
+      new pt(oPt.x + rad + offsetX, oPt.y + rad + offsetY),
+      new pt(oPt.x - rad - offsetX, oPt.y + rad + offsetY),
+      new pt(oPt.x - rad - offsetX, oPt.y - rad - offsetY),
     ];
-    for (let i = grid.length - 1; i > -1; i--) {
-      const ULinAoE = isPointInPolygon(grid[i].points[0], squareAoEPolygon);
-      const URinAoE = isPointInPolygon(grid[i].points[1], squareAoEPolygon);
-      const LRinAoE = isPointInPolygon(grid[i].points[2], squareAoEPolygon);
-      const LLinAoE = isPointInPolygon(grid[i].points[3], squareAoEPolygon);
-
-      if (!(ULinAoE && URinAoE && LRinAoE && LLinAoE)) {
-        //all corners not within square, check for intersections (4 checks for each square segment)
-
-        const topIntersections = [];
-        const rightIntersections = [];
-        const bottomIntersections = [];
-        const leftIntersections = [];
-        let numAddedPts = 0;
-        let insertIdx;
-        let intPt; //intersection point (squareAoE edlge crossing cell border)
-        let containsVertex = false; //check the squareAoE corner points
-        const baseCell = grid[i].points.map((x) => x); //a copy of the base grid cell coordinates (used later to check for cone vertices)
-
-        // intersections of top grid segment with two vertical lines of squareAoE
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          squareAoEPolygon[1].x,
-          squareAoEPolygon[1].y,
-          squareAoEPolygon[2].x,
-          squareAoEPolygon[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          squareAoEPolygon[3].x,
-          squareAoEPolygon[3].y,
-          squareAoEPolygon[4].x,
-          squareAoEPolygon[4].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-
-        // intersections of right grid segment with two horizontal lines of squareAoE
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          squareAoEPolygon[0].x,
-          squareAoEPolygon[0].y,
-          squareAoEPolygon[1].x,
-          squareAoEPolygon[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          squareAoEPolygon[2].x,
-          squareAoEPolygon[2].y,
-          squareAoEPolygon[3].x,
-          squareAoEPolygon[3].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-
-        // intersections of bottom grid segment with two vertical lines of squareAoE
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          squareAoEPolygon[1].x,
-          squareAoEPolygon[1].y,
-          squareAoEPolygon[2].x,
-          squareAoEPolygon[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          squareAoEPolygon[3].x,
-          squareAoEPolygon[3].y,
-          squareAoEPolygon[4].x,
-          squareAoEPolygon[4].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-
-        // intersections of left grid segment with two horizontal lines of squareAoE
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          squareAoEPolygon[0].x,
-          squareAoEPolygon[0].y,
-          squareAoEPolygon[1].x,
-          squareAoEPolygon[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          squareAoEPolygon[2].x,
-          squareAoEPolygon[2].y,
-          squareAoEPolygon[3].x,
-          squareAoEPolygon[3].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-
-        if (topIntersections.length > 0) {
-          for (let t = 0; t < topIntersections.length; t++) {
-            if (topIntersections[t]) {
-              grid[i].points.push(topIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, topIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (rightIntersections.length > 0) {
-          for (let t = 0; t < rightIntersections.length; t++) {
-            if (rightIntersections[t]) {
-              grid[i].points.push(rightIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, rightIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (bottomIntersections.length > 0) {
-          for (let t = 0; t < bottomIntersections.length; t++) {
-            if (bottomIntersections[t]) {
-              grid[i].points.push(bottomIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, bottomIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (leftIntersections.length > 0) {
-          for (let t = 0; t < leftIntersections.length; t++) {
-            if (leftIntersections[t]) {
-              grid[i].points.push(leftIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, leftIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-
-        //check grid cell for squareAoEPolygon vertices
-        containsVertex = isPointInPolygon(squareAoEPolygon[0], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, squareAoEPolygon[0]); //returns 1 if pt added, 0 if not added
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(squareAoEPolygon[1], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, squareAoEPolygon[1]);
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(squareAoEPolygon[2], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, squareAoEPolygon[2]);
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(squareAoEPolygon[3], baseCell);
-        if (containsVertex) {
-          const ptAdded = pushUniquePtToArray(grid[i].points, squareAoEPolygon[3]);
-          numAddedPts += ptAdded;
-        }
-
-        grid[i].points = sortPtsClockwise(grid[i].points);
-
-        //must have two intersection pts to calculate area
-        if (numAddedPts < 2) {
-          grid.splice(i, 1);
-        } else {
-          //valid intersection, now filter out the grid points that are outside of the AoE (some corner pts from each cell)
-
-          grid[i].points = grid[i].points.filter((pt) => {
-            return isPointInPolygon(pt, squareAoEPolygon);
-          });
-
-          grid[i].points = sortPtsClockwise(grid[i].points);
-
-          //calculate area with the filtered points that form an arbitrary polygon
-          const area = calcPolygonArea(grid[i].points);
-          grid[i].area = area;
-          //remove the grid cell if not enough area is covered by the cone
-          if (area < minGridArea * 70 * 70 * pageGridIncrement * pageGridIncrement) {
-            grid.splice(i, 1);
-          }
-        }
-      }
-    }
-
-    //We have a filtered array of grid cells. Return the coordinates of the center of each remaining cell
-    for (let i = 0; i < grid.length; i++) {
-      squareCoords.xVals.push(grid[i].center.x);
-      squareCoords.yVals.push(grid[i].center.y);
-    }
-
-    return squareCoords;
+    //a horizontal cell side can only cross the square's vertical edges, and a vertical side its horizontal edges
+    const verticalEdges = [
+      [squareAoEPolygon[1], squareAoEPolygon[2]],
+      [squareAoEPolygon[3], squareAoEPolygon[4]],
+    ];
+    const horizontalEdges = [
+      [squareAoEPolygon[0], squareAoEPolygon[1]],
+      [squareAoEPolygon[2], squareAoEPolygon[3]],
+    ];
+    const bounds = getOriginGridBounds(oPt, rad, rad, offsetX, offsetY, pageGridCenters, pageGridIncrement);
+    const cells = getCoveredCells(
+      {
+        isCornerInside: (p) => isPointInPolygon(p, squareAoEPolygon),
+        edgeCrossings: (a, b, side) => getSegmentCrossings(a, b, side % 2 === 0 ? verticalEdges : horizontalEdges),
+        vertices: squareAoEPolygon.slice(0, 4),
+      },
+      bounds,
+      minGridArea,
+      pageGridIncrement,
+    );
+    return cellsToCoords(cells);
   };
 
   /**
-   * Works out which grid cells a cone AoE covers ('cone', 'PFcone' or flat '5econe'). Cells fully inside are kept;
-   * partly covered cells are clipped against the cone sides and arc (or flat edge) and kept if the covered area is at
-   * least minGridArea of a cell. 'PFcone' cells must also pass a Pathfinder distance check on their farthest corner.
-   * Pixels; bearing in degrees, 0 = up, clockwise.
+   * Works out which grid cells a cone covers. Supports 'cone' (round-ended), '5econe' (flat-ended triangle, 53deg)
+   * and 'PFcone' (round-ended, then filtered by Pathfinder distance to each cell's farthest corner). Cells fully
+   * inside are kept; partly covered cells are clipped to the cone and kept if the covered area is at least
+   * minGridArea of a cell. All values in pixels.
    *
    * @param {pt[]} pageGridCenters - Every grid-cell centre on the page.
-   * @param {string} aoeType - 'cone', 'PFcone' or '5econe'.
+   * @param {string} aoeType - 'cone', '5econe' or 'PFcone'.
    * @param {number} minGridArea - Minimum covered fraction of a cell (0-1).
    * @param {pt} oPt - Cone origin.
-   * @param {pt} cPt - (unused)
-   * @param {number} coneDirection - Centre-line bearing in degrees.
+   * @param {number} coneDirection - Centre-line bearing in degrees (0 = up, clockwise).
    * @param {number} coneWidth - Full cone angle in degrees.
    * @param {number} rad - Cone length in pixels.
    * @param {number} pageGridIncrement - Page snapping_increment.
    * @param {number} pageScaleNumber - Page scale_number, for PF distances.
-   * @param {number} offsetX - Origin offset from the token centre; widens the search box.
+   * @param {number} offsetX - Horizontal origin offset from the token centre; widens the search box.
    * @param {number} offsetY - Vertical origin offset; widens the search box.
-   * @param {number} oWidth - Origin token width in pixels; widens the search box.
-   * @param {number} oHeight - Origin token height in pixels; widens the search box.
+   * @param {number} oWidth - Origin token width in pixels (pads the search box for round cones).
+   * @param {number} oHeight - Origin token height in pixels.
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the covered cells.
    */
   const getConeLocations = function (
@@ -4112,7 +3224,6 @@ const SmartAoE = (() => {
     aoeType,
     minGridArea,
     oPt,
-    cPt,
     coneDirection,
     coneWidth,
     rad,
@@ -4123,26 +3234,14 @@ const SmartAoE = (() => {
     oWidth,
     oHeight,
   ) {
-    const coneCoords = {
-      xVals: [],
-      yVals: [],
-    };
-    const deg2rad = Math.PI / 180;
+    const isFlatCone = aoeType === '5econe';
     let bbRadX;
     let bbRadY;
+    let coneEndPts; //[origin, trailing-side end, leading-side end]
 
-    let coneEndPts;
-
-    const isFlatCone = aoeType === '5econe' ? true : false;
-    const calcType = aoeType === 'PFcone' ? 'PF' : 'Euclidean';
-
-    //Define grid.  Grid is determined by bounding box of AoE
-    //Grid is comprised of an array of cell objects
-    //cell objects are comprised of an area scalar and an array of points(endpoints plus intersections) in clockwise order (for area calcs)
-    let z;
-    if (aoeType === '5econe') {
-      z = rad / (2 * Math.sin(Math.atan(0.5))) - rad;
-      coneEndPts = getConeEndPts2(aoeType, oPt, offsetX, offsetY, coneDirection, coneWidth, rad, z); //3-element array with the origin and endPts of the cone (origin pt is excluded from this array)
+    if (isFlatCone) {
+      const z = rad / (2 * Math.sin(Math.atan(0.5))) - rad;
+      coneEndPts = getConeEndPts2(aoeType, oPt, coneDirection, coneWidth, rad, z);
       const sizeX = Math.max(
         Math.abs(coneEndPts[0].x - coneEndPts[1].x),
         Math.abs(coneEndPts[1].x - coneEndPts[2].x),
@@ -4153,386 +3252,49 @@ const SmartAoE = (() => {
         Math.abs(coneEndPts[1].y - coneEndPts[2].y),
         Math.abs(coneEndPts[2].y - coneEndPts[0].y),
       );
-
       //Extend the bounding box by 1.5 times
       bbRadX = Math.ceil((sizeX * 1.5) / (70 * pageGridIncrement)) * 70 * pageGridIncrement;
       bbRadY = Math.ceil((sizeY * 1.5) / (70 * pageGridIncrement)) * 70 * pageGridIncrement;
     } else {
-      z = 0;
-      coneEndPts = getConeEndPts2(aoeType, oPt, offsetX, offsetY, coneDirection, coneWidth, rad, z); //3-element array with the origin and endPts of the cone (origin pt is excluded from this array)
+      coneEndPts = getConeEndPts2(aoeType, oPt, coneDirection, coneWidth, rad, 0);
       bbRadX = rad + oWidth / 2;
       bbRadY = rad + oHeight / 2;
     }
 
-    //Define grid.  Grid is determined by bounding box of AoE
-    //Grid is comprised of an array of cell objects
-    //cell objects are comprised of an area scalar and an array of points(endpoints plus intersections) in clockwise order (for area calcs)
-    const grid = [];
-    let minX, maxX, minY, maxY;
-    //Cells to test: the box around the origin, widened by the origin offset on each axis so it covers the whole AoE
-    //(was "- offsetX" on both ends and both axes, which shifted the box and ignored offsetY/bbRadY, missing edge cells)
-    const searchX = bbRadX + Math.abs(offsetX || 0);
-    const searchY = bbRadY + Math.abs(offsetY || 0);
-    const minPt = new pt(oPt.x - searchX, oPt.y - searchY);
-    const maxPt = new pt(oPt.x + searchX, oPt.y + searchY);
-    minX = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).x;
-    maxX = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).x;
-    minY = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).y;
-    maxY = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).y;
+    const inCone = (p) => isPointInCone(p, oPt, rad, coneDirection, coneWidth, isFlatCone);
+    const coneSides = [
+      [oPt, coneEndPts[1]],
+      [oPt, coneEndPts[2]],
+    ];
+    const flatEnd = [[coneEndPts[1], coneEndPts[2]]];
 
-    for (let i = minX; i <= maxX; i = i + 70 * pageGridIncrement) {
-      for (let j = minY; j <= maxY; j = j + 70 * pageGridIncrement) {
-        //i & j are the x&y coords of the center of each grid cell
-        const centerOfCell = new pt(i, j);
-        const cornerPts = getCellCoords(i, j, 70 * pageGridIncrement); //initialized with [ptUL, ptUR, ptLR, ptLL, ptUL] (note repeat of ptUL to close the cell
-        const cell = {
-          points: cornerPts,
-          farthestCorner: getFarthestCorner(oPt, cornerPts), //will use farthest corner pt when filtering for PF cone distances
-          center: centerOfCell,
-          area: 0,
-        };
-        grid.push(cell);
+    //where a cell side crosses the cone: its two straight sides, then the flat end (5e) or the arc (round cones)
+    const edgeCrossings = (a, b) => {
+      const crossings = getSegmentCrossings(a, b, coneSides);
+      if (isFlatCone) {
+        return crossings.concat(getSegmentCrossings(a, b, flatEnd));
       }
-    }
-
-    //find cells where all corners are within the cone OR there is a valid intersection of the cone with the cell. Remove all other cells from grid
-    for (let i = grid.length - 1; i > -1; i--) {
-      const ULinCone = isPointInCone(grid[i].points[0], oPt, rad, coneDirection, coneWidth, isFlatCone);
-      const URinCone = isPointInCone(grid[i].points[1], oPt, rad, coneDirection, coneWidth, isFlatCone);
-      const LRinCone = isPointInCone(grid[i].points[2], oPt, rad, coneDirection, coneWidth, isFlatCone);
-      const LLinCone = isPointInCone(grid[i].points[3], oPt, rad, coneDirection, coneWidth, isFlatCone);
-
-      if (!(ULinCone && URinCone && LRinCone && LLinCone)) {
-        //all corners not within cone, check for intersections (3 checks for each cone segment)
-
-        const topIntersections = [];
-        const rightIntersections = [];
-        const bottomIntersections = [];
-        const leftIntersections = [];
-        let numAddedPts = 0;
-        let insertIdx;
-        let intPt; //intersection point (cone edge crossing cell border)
-        let intPtsArr = []; //intersection pt(s) of cell lines with cone arc section
-        let containsVertex = false; //check the cone origin & end points
-        const baseCell = grid[i].points.map((x) => x); //a copy of the base grid cell coordinates (used later to check for cone vertices)
-        // (ptUL.x, ptUL.y, ptUR.x, ptUR.y, oPt.x, oPt.y, endPt.x, endPt.y);
-
-        //top line of grid cell
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[1].x,
-          coneEndPts[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[0].x,
-          grid[i].points[0].y,
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[2].x,
-          coneEndPts[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-        }
-        if (aoeType === '5econe') {
-          //flat cone
-          intPt = getIntersectionPt(
-            grid[i].points[0].x,
-            grid[i].points[0].y,
-            grid[i].points[1].x,
-            grid[i].points[1].y,
-            coneEndPts[1].x,
-            coneEndPts[1].y,
-            coneEndPts[2].x,
-            coneEndPts[2].y,
-          );
-          if (intPt) {
-            const ptAdded = pushUniquePtToArray(topIntersections, intPt);
-          }
-        } else {
-          //normal cone
-          intPtsArr = getLineCircleIntersections(grid[i].points[0], grid[i].points[1], oPt, rad);
-          if (coneWidth !== 360) {
-            intPtsArr = intPtsArr.filter((p) => {
-              return isPointInCone(p, oPt, rad, coneDirection, coneWidth, isFlatCone);
-            });
-            intPtsArr.forEach((p) => pushUniquePtToArray(topIntersections, p));
-          }
-        }
-
-        //ptUR.x, ptUR.y, ptLR.x, ptLR.y, oPt.x, oPt.y, endPt.x, endPt.y
-
-        //Right side of grid cell
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[1].x,
-          coneEndPts[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[1].x,
-          grid[i].points[1].y,
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[2].x,
-          coneEndPts[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-        }
-        if (aoeType === '5econe') {
-          //flat cone
-          intPt = getIntersectionPt(
-            grid[i].points[1].x,
-            grid[i].points[1].y,
-            grid[i].points[2].x,
-            grid[i].points[2].y,
-            coneEndPts[1].x,
-            coneEndPts[1].y,
-            coneEndPts[2].x,
-            coneEndPts[2].y,
-          );
-          if (intPt) {
-            const ptAdded = pushUniquePtToArray(rightIntersections, intPt);
-          }
-        } else {
-          //normal cone
-          intPtsArr = getLineCircleIntersections(grid[i].points[1], grid[i].points[2], oPt, rad);
-          if (coneWidth !== 360) {
-            intPtsArr = intPtsArr.filter((p) => {
-              return isPointInCone(p, oPt, rad, coneDirection, coneWidth, isFlatCone);
-            });
-            intPtsArr.forEach((p) => pushUniquePtToArray(rightIntersections, p));
-          }
-        }
-
-        //ptLR.x, ptLR.y, ptLL.x, ptLL.y, oPt.x, oPt.y, endPt.x, endPt.y
-
-        //Bottom line of grid cell
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[1].x,
-          coneEndPts[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[2].x,
-          grid[i].points[2].y,
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[2].x,
-          coneEndPts[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-        }
-        if (aoeType === '5econe') {
-          //flat cone
-          intPt = getIntersectionPt(
-            grid[i].points[2].x,
-            grid[i].points[2].y,
-            grid[i].points[3].x,
-            grid[i].points[3].y,
-            coneEndPts[1].x,
-            coneEndPts[1].y,
-            coneEndPts[2].x,
-            coneEndPts[2].y,
-          );
-          if (intPt) {
-            const ptAdded = pushUniquePtToArray(bottomIntersections, intPt);
-          }
-        } else {
-          //normal cone
-          intPtsArr = getLineCircleIntersections(grid[i].points[2], grid[i].points[3], oPt, rad);
-          if (coneWidth !== 360) {
-            intPtsArr = intPtsArr.filter((p) => {
-              return isPointInCone(p, oPt, rad, coneDirection, coneWidth, isFlatCone);
-            });
-            intPtsArr.forEach((p) => pushUniquePtToArray(bottomIntersections, p));
-          }
-        }
-
-        //ptLL.x, ptLL.y, ptUL.x, ptUL.y, oPt.x, oPt.y, endPt.x, endPt.y
-
-        //Left side of grid cell
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[1].x,
-          coneEndPts[1].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-        intPt = getIntersectionPt(
-          grid[i].points[3].x,
-          grid[i].points[3].y,
-          grid[i].points[4].x,
-          grid[i].points[4].y,
-          oPt.x,
-          oPt.y,
-          coneEndPts[2].x,
-          coneEndPts[2].y,
-        );
-        if (intPt) {
-          const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-        }
-        if (aoeType === '5econe') {
-          //flat cone
-          intPt = getIntersectionPt(
-            grid[i].points[3].x,
-            grid[i].points[3].y,
-            grid[i].points[4].x,
-            grid[i].points[4].y,
-            coneEndPts[1].x,
-            coneEndPts[1].y,
-            coneEndPts[2].x,
-            coneEndPts[2].y,
-          );
-          if (intPt) {
-            const ptAdded = pushUniquePtToArray(leftIntersections, intPt);
-          }
-        } else {
-          //normal cone
-          intPtsArr = getLineCircleIntersections(grid[i].points[3], grid[i].points[4], oPt, rad);
-          if (coneWidth !== 360) {
-            intPtsArr = intPtsArr.filter((p) => {
-              return isPointInCone(p, oPt, rad, coneDirection, coneWidth, isFlatCone);
-            });
-            intPtsArr.forEach((p) => pushUniquePtToArray(leftIntersections, p));
-          }
-        }
-
-        if (topIntersections.length > 0) {
-          for (let t = 0; t < topIntersections.length; t++) {
-            if (topIntersections[t]) {
-              grid[i].points.push(topIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, topIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (rightIntersections.length > 0) {
-          for (let t = 0; t < rightIntersections.length; t++) {
-            if (rightIntersections[t]) {
-              grid[i].points.push(rightIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, rightIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (bottomIntersections.length > 0) {
-          for (let t = 0; t < bottomIntersections.length; t++) {
-            if (bottomIntersections[t]) {
-              grid[i].points.push(bottomIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, bottomIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-        if (leftIntersections.length > 0) {
-          for (let t = 0; t < leftIntersections.length; t++) {
-            if (leftIntersections[t]) {
-              grid[i].points.push(leftIntersections[t]);
-              //grid[i].points.splice(insertIdx, 0, leftIntersections[t]);
-              numAddedPts += 1;
-            }
-          }
-        }
-
-        //check grid cell for cone origin and endpt vertices
-        let verticesAdded = false;
-        containsVertex = isPointInPolygon(coneEndPts[0], baseCell);
-        if (containsVertex) {
-          verticesAdded = true;
-          const ptAdded = pushUniquePtToArray(grid[i].points, coneEndPts[0]); //returns 1 if pt added, 0 if not added
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(coneEndPts[1], baseCell);
-        if (containsVertex) {
-          verticesAdded = true;
-          const ptAdded = pushUniquePtToArray(grid[i].points, coneEndPts[1]);
-          numAddedPts += ptAdded;
-        }
-
-        containsVertex = isPointInPolygon(coneEndPts[2], baseCell);
-        if (containsVertex) {
-          verticesAdded = true;
-          const ptAdded = pushUniquePtToArray(grid[i].points, coneEndPts[2]);
-          numAddedPts += ptAdded;
-        }
-
-        grid[i].points = sortPtsClockwise(grid[i].points);
-
-        //must have two intersection pts to calculate area
-        if (numAddedPts < 2) {
-          grid.splice(i, 1);
-        } else {
-          //valid intersection, now filter out the grid points that are outside of the cone (some corner pts from each cell)
-
-          grid[i].points = grid[i].points.filter((pt) => {
-            return isPointInCone(pt, oPt, rad, coneDirection, coneWidth, isFlatCone);
-          });
-          grid[i].points = sortPtsClockwise(grid[i].points);
-          //calculate area with the filtered points that form an arbitrary polygon
-          const area = calcPolygonArea(grid[i].points);
-          grid[i].area = area;
-          //remove the grid cell if not enough area is covered by the cone
-          if (area < minGridArea * 70 * 70 * pageGridIncrement * pageGridIncrement) {
-            grid.splice(i, 1);
-          }
-        }
+      if (coneWidth !== 360) {
+        return crossings.concat(getLineCircleIntersections(a, b, oPt, rad).filter(inCone));
       }
-    }
+      return crossings; //a full circle has no arc ends to clip against
+    };
 
-    //We have a filtered array of grid cells. Return the coordinates of the center of each remaining cell
-    for (let i = 0; i < grid.length; i++) {
-      if (aoeType === 'PFcone') {
-        //one last check to see if the grid square satisfies PF-style distance rules (every other diag counts as 2sq)
-        const pfDist = distBetweenPts(oPt, grid[i].farthestCorner, calcType, pageGridIncrement, pageScaleNumber);
-        if (pfDist <= rad) {
-          coneCoords.xVals.push(grid[i].center.x);
-          coneCoords.yVals.push(grid[i].center.y);
-        }
-      } else {
-        coneCoords.xVals.push(grid[i].center.x);
-        coneCoords.yVals.push(grid[i].center.y);
-      }
+    const bounds = getOriginGridBounds(oPt, bbRadX, bbRadY, offsetX, offsetY, pageGridCenters, pageGridIncrement);
+    let cells = getCoveredCells(
+      { isCornerInside: inCone, edgeCrossings, vertices: coneEndPts, farFrom: oPt },
+      bounds,
+      minGridArea,
+      pageGridIncrement,
+    );
+
+    if (aoeType === 'PFcone') {
+      //one last check to see if the grid square satisfies PF-style distance rules (every other diag counts as 2sq)
+      cells = cells.filter(
+        (c) => distBetweenPts(oPt, c.farthestCorner, 'PF', pageGridIncrement, pageScaleNumber) <= rad,
+      );
     }
-    return coneCoords;
+    return cellsToCoords(cells);
   };
 
   //The following finds the intersection of the control line with the origin token (always thru center of token)
@@ -4626,7 +3388,6 @@ const SmartAoE = (() => {
   const getPossibleOriginPts = function (oPt, height, width, pageGridIncrement, allowFaces = false) {
     //gets all the corner points and 1/2 grid width faces around an origin pt
     let allPts = [];
-    let ptIJ;
 
     let incr;
     if (allowFaces) {
@@ -4656,7 +3417,6 @@ const SmartAoE = (() => {
    * @param {object} link - AoE link from state (aoeType, radius, coneWidth, minGridArea, aoeFloat, forceIntersection,
    *   pageID, ...).
    * @param {object} oTok - Roll20 graphic for the origin token.
-   * @param {object} cTok - (unused) Roll20 graphic for the control token.
    * @param {pt} originPtPx - Origin point.
    * @param {pt} controlPtPx - Control point.
    * @param {number} offsetX - Origin x offset from the token centre.
@@ -4669,7 +3429,6 @@ const SmartAoE = (() => {
   const getPathLocations = function (
     link,
     oTok,
-    cTok,
     originPtPx,
     controlPtPx,
     offsetX,
@@ -4679,7 +3438,6 @@ const SmartAoE = (() => {
     wallParams,
   ) {
     let locationsArr; //return value - array of pts (x & y)
-    let dX, dY; //used in Bresenham algorithm
     let coneDirection = 0; //angle (in degrees) between originPt & controlPt
     let rad = 0; //radius of effect in pixels
 
@@ -4727,7 +3485,6 @@ const SmartAoE = (() => {
             link.aoeType,
             link.minGridArea,
             originPtPx,
-            controlPtPx,
             coneDirection,
             link.coneWidth,
             rad,
@@ -4746,11 +3503,8 @@ const SmartAoE = (() => {
           }
           locationsArr = getSquareLocations(
             pageGridCenters,
-            link.aoeType,
-            link.aoeFloat,
             link.minGridArea,
             originPtPx,
-            controlPtPx,
             rad,
             pageGridIncrement,
             offsetX,
@@ -4759,14 +3513,7 @@ const SmartAoE = (() => {
           break;
         case 'wall':
           //walls are a bit different. We passed wallParams into this function, which includes radius, so we don't have to calculate again.
-          locationsArr = getWallLocations(
-            pageGridCenters,
-            link.minGridArea,
-            originPtPx,
-            controlPtPx,
-            wallParams,
-            pageGridIncrement,
-          );
+          locationsArr = getWallLocations(pageGridCenters, link.minGridArea, wallParams, pageGridIncrement);
           break;
         case 'PFcircle':
         //Fall through
@@ -4778,10 +3525,8 @@ const SmartAoE = (() => {
           locationsArr = getCircleLocations(
             pageGridCenters,
             link.aoeType,
-            link.aoeFloat,
             link.minGridArea,
             originPtPx,
-            controlPtPx,
             rad,
             pageGridIncrement,
             pageScaleNumber,
@@ -4832,7 +3577,6 @@ const SmartAoE = (() => {
    * outline, then saves the new path IDs, origin index and bounding box to state via updateAoELink.
    *
    * @param {{links: object[], indices: number[]}} aoeLinks - Links (and their state indices) returned by getAoELinks.
-   * @param {object} obj - Roll20 graphic (token) that changed (unused).
    * @param {boolean} [recalcNearest=true] - Re-compute candidate origin points and pick the nearest; false reuses the
    *   stored originIndex.
    * @param {number} [offsetX=0] - X offset (px) of the origin from the origin token centre; overwritten when the
@@ -4841,11 +3585,10 @@ const SmartAoE = (() => {
    *   nearest origin is recalculated.
    * @returns {Promise<void>} Resolves once all paths have been created and state updated.
    */
-  async function updateMapWithAoE(aoeLinks, obj, recalcNearest = true, offsetX = 0, offsetY = 0) {
+  async function updateMapWithAoE(aoeLinks, recalcNearest = true, offsetX = 0, offsetY = 0) {
     let pathLocations;
     let newPaths = [];
     let pageGridIncrement;
-    let updatedLink;
     let rad;
 
     //delete the linked paths and clear the pathIDs array from the state object
@@ -4860,8 +3603,6 @@ const SmartAoE = (() => {
       const oWidth = oTok.get('width');
 
       const cTok = getObj('graphic', aoeLinks.links[a].controlTokID);
-      const cHeight = cTok.get('height');
-      const cWidth = cTok.get('width');
 
       let originPtPx = new pt(oTok.get('left'), oTok.get('top')); //the origin coords of the effect (in pixels) - this may be different than the origin token center
       const controlPtPx = new pt(cTok.get('left'), cTok.get('top')); //the coords of the control pt of the effect (in pixels) - this may be different than the control token center
@@ -4939,7 +3680,6 @@ const SmartAoE = (() => {
         pathLocations = getPathLocations(
           aoeLinks.links[a],
           oTok,
-          cTok,
           originPtPx,
           controlPtPx,
           offsetX,
@@ -5170,12 +3910,6 @@ const SmartAoE = (() => {
       return;
     }
 
-    let pathLocations;
-    const newPaths = [];
-    let pageGridIncrement;
-    const offsetX = 0; //if the origin/control pts are shifted from center of cell, find offset to allow cell paths to line up with actual grid
-    const offsetY = 0;
-
     const tokID = obj.get('id');
     const aoeLinks = getAoELinks(tokID);
 
@@ -5201,7 +3935,7 @@ const SmartAoE = (() => {
         whisperString = aoeLinks.links[0].whisperString || '';
         playJukeboxTrack(trackName, whisperString);
       }
-      updateMapWithAoE(aoeLinks, obj);
+      updateMapWithAoE(aoeLinks);
     }
   }
 
@@ -5280,48 +4014,6 @@ const SmartAoE = (() => {
     return character;
   };
 
-  /**
-   * Replaces $[[n]] inline-roll placeholders in a chat message with their totals (or rollable-table item names).
-   * Legacy helper; not called anywhere in the current script.
-   *
-   * @param {object} msg - Roll20 chat message.
-   * @returns {string} Message content with inline rolls substituted.
-   */
-  function processInlinerolls(msg) {
-    if (_.has(msg, 'inlinerolls')) {
-      return _.chain(msg.inlinerolls)
-        .reduce(function (m, v, k) {
-          const ti = _.reduce(
-            v.results.rolls,
-            function (m2, v2) {
-              if (_.has(v2, 'table')) {
-                m2.push(
-                  _.reduce(
-                    v2.results,
-                    function (m3, v3) {
-                      m3.push(v3.tableItem.name);
-                      return m3;
-                    },
-                    [],
-                  ).join(', '),
-                );
-              }
-              return m2;
-            },
-            [],
-          ).join(', ');
-          m['$[[' + k + ']]'] = (ti.length && ti) || v.results.total || 0;
-          return m;
-        }, {})
-        .reduce(function (m, v, k) {
-          return m.replace(k, v);
-        }, msg.content)
-        .value();
-    } else {
-      return msg.content;
-    }
-  }
-
   //libInline HTML-encodes roll expressions (e.g. "*" -> "&#42;", "{" -> "&#123;", "<" -> "&#xFF1C;").
   //Decode them all before re-rolling, otherwise [[2*13d6]] was re-rolled as [[2&#42;13d6]] = 2.
   /**
@@ -5350,7 +4042,7 @@ const SmartAoE = (() => {
    * @param {object[]} parsedInlines - Inline roll data from libInline.getRollData.
    * @returns {{text: string, inlines: object[]}} Substituted text and the inline rolls it referenced.
    */
-  const processInlinerolls2 = function (str, parsedInlines) {
+  const substituteInlineRolls = function (str, parsedInlines) {
     let index;
     const inlineArr = [];
     const reg = /\$\[\[\d+\]\]/g;
@@ -5382,7 +4074,7 @@ const SmartAoE = (() => {
     args.shift();
     args = args.map((arg) => {
       const cmds = arg.split('|');
-      const retVals = processInlinerolls2(cmds[1], parsedInlines);
+      const retVals = substituteInlineRolls(cmds[1], parsedInlines);
 
       return {
         cmd: cmds.shift().toLowerCase().trim(),
@@ -5558,14 +4250,14 @@ const SmartAoE = (() => {
   };
 
   /**
-   * Copies roll results from sendChat callback messages into the matching damage roll entries, adding result_n,
-   * raw_n and styled_n fields per line. Not called anywhere; processMessagesMaster contains the same logic inline.
+   * Copies roll results from sendChat callback messages into the matching rows (damage rolls or targets), adding
+   * result_n (totals), raw_n (dice only) and styled_n (inline-roll HTML) for each line n of the rolled text.
    *
-   * @param {object[][]} messages - Message arrays returned by sendChat callbacks, one per damage roll.
-   * @param {object[]} damageRolls - Damage roll entries to populate (mutated).
-   * @returns {object[]} The populated damageRolls array.
+   * @param {object[][]} messages - Message arrays returned by sendChat callbacks, one per row.
+   * @param {object[]} rows - Rows to populate, in the same order (mutated).
+   * @returns {object[]} The populated rows.
    */
-  const processDamageMessages = function (messages, damageRolls) {
+  const attachRollResults = function (messages, rows) {
     messages.forEach((msgList, j) => {
       const inlinerollData = (msgList[0].inlinerolls || []).map((roll) => {
         return {
@@ -5575,16 +4267,16 @@ const SmartAoE = (() => {
         };
       });
       msgList[0].content.split('<br>').forEach((str, n) => {
-        damageRolls[j][`result_${n + 1}`] = [];
-        damageRolls[j][`raw_${n + 1}`] = [];
-        damageRolls[j][`styled_${n + 1}`] = str.replace(/\$\[\[(\d+)\]\]/g, (_, number) => {
-          damageRolls[j][`result_${n + 1}`].push(inlinerollData[parseInt(number)].result);
-          damageRolls[j][`raw_${n + 1}`].push(inlinerollData[parseInt(number)].raw);
+        rows[j][`result_${n + 1}`] = [];
+        rows[j][`raw_${n + 1}`] = [];
+        rows[j][`styled_${n + 1}`] = str.replace(/\$\[\[(\d+)\]\]/g, (_, number) => {
+          rows[j][`result_${n + 1}`].push(inlinerollData[parseInt(number)].result);
+          rows[j][`raw_${n + 1}`].push(inlinerollData[parseInt(number)].raw);
           return inlinerollData[parseInt(number)].styled;
         });
       });
     });
-    return damageRolls;
+    return rows;
   };
 
   //this was modified from Jakob's group-check api script
@@ -5601,29 +4293,7 @@ const SmartAoE = (() => {
     //takes all the rolls that were processed thru the Roll20 die roller for all tokens and formats them.
     //   then, we will format the final chat output
     let whisperString = '';
-    const freetext = '';
-    const rowData = '';
-    if (damageRolls.length > 0) {
-      messages.forEach((msgList, j) => {
-        const inlinerollData = (msgList[0].inlinerolls || []).map((roll) => {
-          return {
-            raw: extractDiceRoll(roll.results),
-            result: roll.results.total || 0,
-            styled: makeInlineroll(roll, false), //convert to variable later
-          };
-        });
-
-        msgList[0].content.split('<br>').forEach((str, n) => {
-          damageRolls[j][`result_${n + 1}`] = [];
-          damageRolls[j][`raw_${n + 1}`] = [];
-          damageRolls[j][`styled_${n + 1}`] = str.replace(/\$\[\[(\d+)\]\]/g, (_, number) => {
-            damageRolls[j][`result_${n + 1}`].push(inlinerollData[parseInt(number)].result);
-            damageRolls[j][`raw_${n + 1}`].push(inlinerollData[parseInt(number)].raw);
-            return inlinerollData[parseInt(number)].styled;
-          });
-        });
-      });
-    }
+    attachRollResults(messages, damageRolls);
 
     if (tokenRolls.length > 0) {
       Promise.all(
@@ -5739,22 +4409,21 @@ const SmartAoE = (() => {
       returnString = atMax ? `Healed ${name} by ${amountHealed} (@Max)` : `Healed ${name} by ${amountHealed}`;
     }
 
-    let dummy;
     if (zeroHPmarker && newHP[bar.length - 1] === 0) {
-      dummy = addStatusMarkers(tokID, zeroHPmarker);
+      addStatusMarkers(tokID, zeroHPmarker);
     } else if (zeroHPmarker && newHP[bar.length - 1] > 0) {
-      dummy = removeStatusMarkers(tokID, zeroHPmarker);
+      removeStatusMarkers(tokID, zeroHPmarker);
     }
 
     //newHP is an array; like the zeroHPmarker check above, test the last bar (newHP===0 was never true)
     if (removeAtZero && newHP[bar.length - 1] === 0) {
-      dummy = removeToken(tokID);
+      removeToken(tokID);
     } else {
       //grab the previous token settings before setting new ones
       const prevTok = JSON.parse(JSON.stringify(tok));
       //set new tok settings
-      newHP.map((hp, idx) => {
-        tok.set(`bar${bar[idx]}_value`, newHP[idx]);
+      newHP.forEach((hp, idx) => {
+        tok.set(`bar${bar[idx]}_value`, hp);
       });
       //trigger tokenChange event for other api scripts
       notifyObservers('tokenChange', tok, prevTok);
@@ -5921,9 +4590,6 @@ const SmartAoE = (() => {
     const firstRoll = (vals) => Number([].concat(vals)[0]) || 0;
     //takes all the rolls that were processed thru the Roll20 die roller for all tokens and formats them.
     //   then, we will format the final chat output
-    const freetext = '';
-    const rowData = '';
-    const saveName = tokenRolls[0].saveName;
     const publicDamageMessages = [];
     const gmDamageMessages = [];
     let autoApplyMsg = '';
@@ -5935,24 +4601,7 @@ const SmartAoE = (() => {
       whisperString = aoeLink.whisperString || '';
     }
 
-    messages.forEach((msgList, j) => {
-      const inlinerollData = (msgList[0].inlinerolls || []).map((roll) => {
-        return {
-          raw: extractDiceRoll(roll.results),
-          result: roll.results.total || 0,
-          styled: makeInlineroll(roll, false), //convert to variable later
-        };
-      });
-      msgList[0].content.split('<br>').forEach((str, n) => {
-        tokenRolls[j][`result_${n + 1}`] = [];
-        tokenRolls[j][`raw_${n + 1}`] = [];
-        tokenRolls[j][`styled_${n + 1}`] = str.replace(/\$\[\[(\d+)\]\]/g, (_, number) => {
-          tokenRolls[j][`result_${n + 1}`].push(inlinerollData[parseInt(number)].result);
-          tokenRolls[j][`raw_${n + 1}`].push(inlinerollData[parseInt(number)].raw);
-          return inlinerollData[parseInt(number)].styled;
-        });
-      });
-    });
+    attachRollResults(messages, tokenRolls);
 
     // Format rows of output
     const outputNew = buildTitle(aoeLink.cardParameters) + buildDamageRows(damageRolls, aoeLink);
@@ -5960,10 +4609,9 @@ const SmartAoE = (() => {
     const saveHeaderRow = buildSaveHeaderRow(aoeLink.cardParameters);
 
     //Calculate damage and status markers based on individual saving throws
-    const saveRolls = tokenRolls.map((o, i) => {
+    const saveRolls = tokenRolls.map((o) => {
       let tempDam1, tempDam2;
       const thisDamage = [];
-      const thisDamageType = [];
       let thisMarker = '';
       let thisSaveRoll;
       const RVI = []; //Resistances, Vulnerabilities, Immunities
@@ -6080,7 +4728,6 @@ const SmartAoE = (() => {
         o.styled_1,
         o.styled_2,
         o.roll2x,
-        false,
         thisDamage,
         aoeLink.autoApply,
         aoeLink.damageBar,
@@ -6475,15 +5122,26 @@ const SmartAoE = (() => {
   };
 
   /**
+   * Identifies who sent a chat command, for whispering replies back to them.
+   *
+   * @param {object} msg - Roll20 chat message.
+   * @param {string} [fallback=''] - Whisper prefix to use when the player can't be found (e.g. '/w gm').
+   * @returns {{who:(string|undefined), whisperString:string}} The player's display name and '/w "name"' prefix.
+   */
+  const getCaller = function (msg, fallback = '') {
+    const player = getObj('player', msg.playerid);
+    const who = player ? player.get('_displayname') : undefined;
+    return { who, whisperString: who === undefined ? fallback : `/w "${who}"` };
+  };
+
+  /**
    * Handles `!smarthelp`: rebuilds the help handout and whispers the caller a link to it.
    *
    * @param {object} msg - Roll20 chat message.
    * @returns {Promise<void>}
    */
   const handleHelpCommand = async function (msg) {
-    const player = getObj('player', msg.playerid);
-    const who = player ? player.get('_displayname') : undefined;
-    const whisperString = who === undefined ? '/w gm' : `/w "${who}"`;
+    const { whisperString } = getCaller(msg, '/w gm');
     const handout = installHandout();
     const link = handout
       ? `[Open the SmartAoE help handout](http://journal.roll20.net/handout/${handout.id})`
@@ -6534,17 +5192,8 @@ const SmartAoE = (() => {
    * @returns {Promise<void>}
    */
   const handleClearCacheCommand = async function (msg) {
-    let who;
-    let whisperString;
-
-    const player = getObj('player', msg.playerid);
-    if (player) {
-      who = getObj('player', msg.playerid).get('_displayname');
-      who === undefined ? (whisperString = '') : (whisperString = `/w "${who}"`);
-    } else {
-      whisperString = '';
-    }
-    clearCache('temp');
+    const { whisperString } = getCaller(msg);
+    resetLinks();
     sendChat(
       scriptName,
       `${whisperString} The SmartAoE cache has been cleared and all AoEs have been unlinked!<br>Any active AoEs in the campaign will have to be deleted manually.`,
@@ -6563,17 +5212,9 @@ const SmartAoE = (() => {
    * @returns {Promise<void>}
    */
   const handleRemoveCommand = async function (msg) {
-    let who;
-    let whisperString;
     let tok;
 
-    const player = getObj('player', msg.playerid);
-    if (player) {
-      who = getObj('player', msg.playerid).get('_displayname');
-      who === undefined ? (whisperString = '') : (whisperString = `/w "${who}"`);
-    } else {
-      whisperString = '';
-    }
+    const { whisperString } = getCaller(msg);
     let tokID;
 
     const args = msg.content.split(/\s+/);
@@ -6610,17 +5251,7 @@ const SmartAoE = (() => {
    * @returns {Promise<void>}
    */
   const handleQueryCommand = async function (msg) {
-    let who;
-    let whisperString;
-    let aoeLinks;
-
-    const player = getObj('player', msg.playerid);
-    if (player) {
-      who = getObj('player', msg.playerid).get('_displayname');
-      who === undefined ? (whisperString = '') : (whisperString = `/w "${who}"`);
-    } else {
-      whisperString = '';
-    }
+    const { whisperString } = getCaller(msg);
     let targetTok;
     let targetTokID;
 
@@ -6723,16 +5354,7 @@ const SmartAoE = (() => {
    * @returns {Promise<void>}
    */
   const handlePingCommand = async function (msg) {
-    let who;
-    let whisperString;
-
-    const player = getObj('player', msg.playerid);
-    if (player) {
-      who = getObj('player', msg.playerid).get('_displayname');
-      who === undefined ? (whisperString = '') : (whisperString = `/w "${who}"`);
-    } else {
-      whisperString = '';
-    }
+    const { whisperString } = getCaller(msg);
 
     const args = msg.content.split(/\s+/);
     const tokenID = args[1];
@@ -6766,21 +5388,9 @@ const SmartAoE = (() => {
    * @returns {Promise<void>}
    */
   const handleRotateOriginCommand = async function (msg) {
-    let who;
-    let whisperString;
-    let tok;
-    const offsetX = 0;
-    const offsetY = 0;
     let aoeLinks;
-    let oTok; //origin token
 
-    const player = getObj('player', msg.playerid);
-    if (player) {
-      who = getObj('player', msg.playerid).get('_displayname');
-      who === undefined ? (whisperString = '') : (whisperString = `/w "${who}"`);
-    } else {
-      whisperString = '';
-    }
+    const { whisperString } = getCaller(msg);
 
     const cmd = msg.content.split(/\s+/);
 
@@ -6830,7 +5440,7 @@ const SmartAoE = (() => {
             const offsetY = aoeLinks.links[a].originPts[aoeLinks.links[a].originIndex].y - oY;
             //Re-draw this AoE only (it used to redraw every linked AoE with this one's offsets)
             const thisLink = { links: [aoeLinks.links[a]], indices: [aoeLinks.indices[a]] };
-            updateMapWithAoE(thisLink, tok, false, offsetX, offsetY);
+            updateMapWithAoE(thisLink, false, offsetX, offsetY);
           }
         }
       }
@@ -6847,20 +5457,12 @@ const SmartAoE = (() => {
    * @returns {Promise<void>}
    */
   const handleTriggerCommand = async function (msg) {
-    let who;
-    let whisperString;
     let tok;
     let pageID;
     let controlTok = {}; //hoist to top so we can set from within a callback function
     let aoeLinks;
 
-    const player = getObj('player', msg.playerid);
-    if (player) {
-      who = getObj('player', msg.playerid).get('_displayname');
-      who === undefined ? (whisperString = '') : (whisperString = `/w "${who}"`);
-    } else {
-      whisperString = '';
-    }
+    const { whisperString } = getCaller(msg);
 
     const args = msg.content.split(/\s+/);
     let singleTarget = false;
@@ -7119,7 +5721,6 @@ const SmartAoE = (() => {
     let whisperResults = false;
     let selectedID;
     let playerID; //which player called the script. Will determine who gets whispered results
-    let tok;
     let pageID;
     let radius = 'variable'; //maximum radius, in pixels
     let wallWidth = 70;
@@ -7173,7 +5774,6 @@ const SmartAoE = (() => {
     let resistAttrs = ['npc_resistances'];
     let vulnerableAttrs = ['npc_vulnerabilities'];
     let immunityAttrs = ['npc_immunities'];
-    let pathstring; //JSON string for paths
     let oTok; //origin token
     let convertRadius = ''; //will we need to convert range from pixels to "u" or another page-defined distance unit?
     let convertWidth = ''; //will we need to convert the wallWidth from pixels to "u" or another page-defined distance unit?
@@ -7195,13 +5795,8 @@ const SmartAoE = (() => {
     let casterConditionOnFail = false;
     let affectsCaster = false;
 
-    const player = getObj('player', msg.playerid);
-    if (player) {
-      who = getObj('player', msg.playerid).get('_displayname');
-      who === undefined ? (whisperString = '') : (whisperString = `/w "${who}"`);
-    } else {
-      whisperString = '';
-    }
+    ({ who, whisperString } = getCaller(msg));
+    const player = getObj('player', msg.playerid); //for --aoeColor|player
 
     const retVal = [];
     //Initialize output formatting
@@ -7317,7 +5912,6 @@ const SmartAoE = (() => {
             if (player) {
               //player was obtained above from msg.playerid. Will fail when called from API
               aoeColor = player.get('color') + '50';
-              usePlayerColor = true;
             } else {
               sendChat(
                 scriptName,
@@ -7739,7 +6333,6 @@ const SmartAoE = (() => {
         }
       }
     }
-    oTokID = oTok.get('_id');
 
     //Check for valid offset X/Y (numeric)
     if (isNaN(offsetX) || isNaN(offsetY)) {
@@ -7772,7 +6365,6 @@ const SmartAoE = (() => {
 
     originX = oTok.get('left');
     originY = oTok.get('top');
-    originPt = new pt(originX, originY);
 
     //--------------RESOURCE MANAGEMENT----------------
     if (resourceName !== '') {
@@ -7826,9 +6418,7 @@ const SmartAoE = (() => {
 
     const thePage = getObj('page', pageID);
     pageScaleNumber = thePage.get('scale_number');
-    pageScaleUnits = thePage.get('scale_units');
     pageGridIncrement = thePage.get('snapping_increment');
-    pageDL = thePage.get('showlighting') || thePage.get('dynamic_lighting_enabled');
 
     //convert user input to pixels using current grid size & origin token size
     if (offsetX > 0 && originWidth > 70 * pageGridIncrement) {
@@ -7991,7 +6581,7 @@ const SmartAoE = (() => {
         //create a link between the source and control tokens (stored in state object)
         const oPt = new pt(oTok.get('left'), oTok.get('top'));
 
-        const newLink = makeAoELink(
+        makeAoELink(
           controlTokName,
           controlTok.get('_id'),
           aoeType,
@@ -8148,7 +6738,7 @@ const SmartAoE = (() => {
             //create a link between the source and control tokens (stored in state object).
             //in this case, the origin token is now the 2nd "controlTok" spawned
             const oPt = new pt(controlToks[1].get('left'), controlToks[1].get('top'));
-            const newLink = makeAoELink(
+            makeAoELink(
               controlTokName,
               controlToks[0].get('_id'),
               aoeType,
@@ -8214,7 +6804,7 @@ const SmartAoE = (() => {
           } else {
             //create a link between the source and control tokens (stored in state object)
             const oPt = new pt(oTok.get('left'), oTok.get('top'));
-            const newLink = makeAoELink(
+            makeAoELink(
               controlTokName,
               controlToks[0].get('_id'),
               aoeType,
@@ -8327,9 +6917,7 @@ const SmartAoE = (() => {
         }
       }
     } catch (err) {
-      const player = getObj('player', msg.playerid);
-      const who = player ? player.get('_displayname') : undefined;
-      const whisperString = who === undefined ? '' : `/w "${who}"`;
+      const { whisperString } = getCaller(msg);
       if (err.message === undefined) {
         sendChat(scriptName, whisperString + err); //sent err code via throw
       } else {
