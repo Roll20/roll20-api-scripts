@@ -1,5 +1,5 @@
 // ===========================
-// === HealthColors v2.3.0 ===
+// === HealthColors v2.4.0 ===
 // ===========================
 
 // AUTHORS:
@@ -15,10 +15,10 @@ var HealthColors =
     'use strict';
 
     // ————— CONSTANTS —————
-    const VERSION = '2.3.0';
+    const VERSION = '2.4.0';
     const SCRIPT_NAME = 'HealthColors';
     const SCHEMA_VERSION = '1.1.0';
-    const UPDATED = '2026-10-07 21:00 UTC';
+    const UPDATED = '2026-10-25 12:00 UTC';
 
     // ————— DEFAULTS —————
     /**
