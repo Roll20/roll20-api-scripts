@@ -461,17 +461,6 @@ var HealthColors =
       return choice.kind === 'colour' ? choice.hex : choice.name;
     }
 
-    /**
-     * Inline style for a heal/hurt FX menu button or pill: a colour swatch for hex values,
-     * an auto-width label for effect names.
-     *
-     * @param {string} value - Current HealFX/HurtFX setting.
-     * @returns {string} Extra inline CSS.
-     */
-    function fxSettingStyle(value) {
-      return isHex6(value) ? `background-color:#${value}` : 'width:auto;padding-left:6px;padding-right:6px';
-    }
-
     // ————— AURA SHAPES —————
     /**
      * Roll20 aura shapes (Token Settings → Aura → Shape), keyed by display label, mapped to the
@@ -3188,8 +3177,7 @@ var HealthColors =
      */
     function sandboxDeathSaveIntegrationNote() {
       if (isBeaconCapableSandbox() === true) return '';
-      const style = 'display:block;text-align:right;font-size:8pt;line-height:1.2em;margin:2px 0 4px 0;color:#FFE9A8';
-      return `<span style="${style}">Beacon sheets need Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION} for live death-save syncing (this game: ${escapeForChat(describeSandbox())}).</span>`;
+      return `<span>Beacon sheets need Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION} for live death-save syncing (this game: ${escapeForChat(describeSandbox())}).</span>`;
     }
 
     /**
@@ -3532,82 +3520,6 @@ var HealthColors =
     }
 
     /**
-     * Builds a non-interactive styled value pill for read-only output panels.
-     *
-     * @param {string} label           - Display text.
-     * @param {string} [extraStyle=''] - Additional inline CSS to append to base style.
-     * @returns {string} A styled span element.
-     */
-    function makePill(label, extraStyle = '') {
-      const base = [
-        'display:inline-block',
-        'padding-top:1px',
-        'text-align:center',
-        'font-size:9pt',
-        'min-width:48px',
-        'height:14px',
-        'border:1px solid black',
-        'margin:1px',
-        'background-color:#6FAEC7',
-        'border-radius:4px',
-        'box-shadow:1px 1px 1px #707070',
-        'line-height:14px',
-        'padding-left:4px',
-        'padding-right:4px',
-      ].join(';');
-      return `<span style="${base};${extraStyle}">${label}</span>`;
-    }
-
-    /**
-     * Builds a toggle-style button that shows red when the value is false/off.
-     *
-     * @param {boolean} value - Current boolean state (true = on/default blue, false = off/red).
-     * @param {string}  href  - Roll20 API command to execute on click.
-     * @returns {string} An HTML anchor string.
-     */
-    function toggleBtn(value, href) {
-      const style = value === true ? '' : 'background-color:#A84D4D';
-      return makeBtn(value === true ? 'Yes' : 'No', href, style);
-    }
-
-    /**
-     * Builds a three-state name-setting button. Red for 'No', grey for 'Off', default for 'Yes'.
-     *
-     * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
-     * @param {string} href  - Roll20 API command to execute on click.
-     * @returns {string} An HTML anchor string.
-     */
-    function nameBtn(value, href) {
-      let style = '';
-      if (value === 'No') style = 'background-color:#A84D4D';
-      if (value === 'Off') style = 'background-color:#D6D6D6';
-      return makeBtn(value, href, style);
-    }
-
-    /**
-     * Read-only pill counterpart to toggleBtn: default blue background for true, red for false.
-     *
-     * @param {boolean} value - Current boolean state.
-     * @returns {string} A styled span element.
-     */
-    function boolPill(value) {
-      return makePill(value ? 'Yes' : 'No', value ? '' : 'background-color:#A84D4D');
-    }
-
-    /**
-     * Read-only pill counterpart to nameBtn: red for 'No', grey for 'Off', default for 'Yes'.
-     *
-     * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
-     * @returns {string} A styled span element.
-     */
-    function namePill(value) {
-      let style = '';
-      if (value === 'No') style = 'background-color:#A84D4D';
-      if (value === 'Off') style = 'background-color:#D6D6D6';
-      return makePill(value, style);
-    }
-
-    /**
      * Whispers the GM a list of the campaign's custom FX (name + id, with one-click Heal/Hurt
      * set buttons) and a reference of Roll20's built-in `<type>-<colour>` effect names.
      * Triggered by `!aura listfx` and the "List FX" menu button.
@@ -3639,192 +3551,304 @@ var HealthColors =
       );
     }
 
+    /** Colours and inline styles shared by the GM menu and the settings snapshot. */
+    const MENU_STYLE = {
+      outer:
+        'border:1px solid #2e5d78;border-radius:6px;overflow:hidden;background-color:#f4f8fb;color:#1b2b36;font-size:9pt;box-shadow:2px 2px 2px #9aa9b5',
+      header: 'background-color:#2e5d78;color:#fff;text-align:center;font-weight:bold;font-size:10pt;padding:4px 6px',
+      subheader: 'font-weight:normal;font-size:8pt;color:#d8e8f2',
+      actions: 'text-align:center;padding:4px 2px;background-color:#dfeaf2;border-bottom:1px solid #b8ccd9',
+      section:
+        'background-color:#76add6;color:#fff;font-weight:bold;font-size:8.5pt;padding:2px 6px;letter-spacing:0.3px;text-transform:uppercase',
+      table: 'width:100%;border-collapse:collapse',
+      label: 'padding:2px 6px;text-align:left;vertical-align:middle',
+      control: 'padding:2px 4px;text-align:right;vertical-align:middle;white-space:nowrap',
+      note: 'padding:2px 6px 4px 6px;font-size:8pt;line-height:1.25em;color:#5b6b78;text-align:left',
+      warn: 'padding:2px 6px 4px 6px;font-size:8pt;line-height:1.25em;color:#8a5a00;text-align:left',
+      gridHead: 'padding:2px 4px;text-align:center;font-size:8pt;color:#5b6b78',
+      btn: 'display:inline-block;min-width:40px;padding:1px 6px;margin:1px;border:1px solid #1f4f6b;border-radius:4px;background-color:#3b82ad;color:#fff;font-size:8.5pt;font-weight:bold;text-align:center;text-decoration:none',
+      off: 'background-color:#a84d4d;border-color:#6e2b2b',
+      neutral: 'background-color:#9aa5ad;border-color:#6b757c',
+      action: 'background-color:#2e5d78;border-color:#1b3a4c',
+    };
+
     /**
-     * Renders and whispers the HealthColors configuration menu to the GM.
-     * Builds the full HTML panel using makeBtn/toggleBtn/nameBtn helpers and
-     * reflects all current state values as interactive button labels.
+     * Builds one control for the menu (a clickable button) or the snapshot (a read-only pill).
+     *
+     * @param {boolean} interactive  - True for a chat button, false for a read-only pill.
+     * @param {string}  label        - Visible text (already escaped where needed).
+     * @param {string}  [href]       - API command run by the button.
+     * @param {object}  [opts]       - Extra options.
+     * @param {string}  [opts.style] - Additional inline CSS.
+     * @param {string}  [opts.title] - Hover tooltip.
+     * @returns {string} HTML for the control.
      */
-    function showMenu() {
-      const s = state.HealthColors;
-      const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
-      const outerStyle = [
-        'border-radius:8px',
-        'box-shadow:3px 3px 1px #707070',
-        'border:2px solid black',
-        'overflow:hidden',
-      ].join(';');
-      const menuHeaderStyle = [
-        'background-color:#2e5d78',
-        'color:#fff',
-        'text-align:center',
-        'font-weight:bold',
-        'font-size:10pt',
-        'padding:4px 8px',
-        'letter-spacing:0.5px',
-      ].join(';');
-      const contentStyle = [
-        'padding:5px',
-        'font-size:9pt',
-        'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
-        'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
-        'color:#FFF',
-        'text-align:right',
-        'vertical-align:middle',
-      ].join(';');
-
-      const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
-      const healBtnStyle = fxSettingStyle(s.HealFX);
-      const hurtBtnStyle = fxSettingStyle(s.HurtFX);
-      const healFxCmd = `!aura heal ?{Heal FX (hex colour or effect name)|${s.HealFX}}`;
-      const hurtFxCmd = `!aura hurt ?{Hurt FX (hex colour or effect name)|${s.HurtFX}}`;
-      const aura1Style = `background-color:#${s.Aura1Color}`;
-      const aura2Style = `background-color:#${s.Aura2Color}`;
-      const deadFxCmd = `!aura deadfx ?{Sound Name?|${s.auraDeadFX}}`;
-      const wide = 'width:auto;padding-left:6px;padding-right:6px';
-      const successCmd = `!aura deathsaves success ?{Success attribute(s), comma-separated|${s.dsSuccessAttr}}`;
-      const failureCmd = `!aura deathsaves failure ?{Failure attribute(s), comma-separated|${s.dsFailureAttr}}`;
-      const dyingCmd = `!aura deathsaves dyingmarker ?{Dying marker|${s.dsDyingMarker}}`;
-      const html = [
-        `<div style="${outerStyle}">`,
-        `<div style="${menuHeaderStyle}">HealthColors v${VERSION}</div>`,
-        `<div style="${contentStyle}">`,
-        hr,
-        `Is On: ${toggleBtn(s.auraColorOn, '!aura on')}<br>`,
-        `Health Bar: ${makeBtn(s.auraBar, '!aura bar ?{Bar|1|2|3|4}')}<br>`,
-        `Use Tint: ${toggleBtn(s.auraTint, '!aura tint')}<br>`,
-        `Palette: ${makeBtn(s.colorPalette, '!aura palette ?{Palette|default|colorblind}', 'width:80px')} (auto refreshes all tokens)<br>`,
-        `Percentage(PC/NPC): ${makeBtn(percLabel, '!aura perc ?{PCPercent?|100} ?{NPCPercent?|100}')}<br>`,
-        hr,
-        `Show PC Health: ${toggleBtn(s.PCAura, '!aura pc')}<br>`,
-        `Show NPC Health: ${toggleBtn(s.NPCAura, '!aura npc')}<br>`,
-        `Show Dead PC: ${toggleBtn(s.auraDeadPC, '!aura deadPC')}<br>`,
-        `Show Dead NPC: ${toggleBtn(s.auraDead, '!aura dead')}<br>`,
-        hr,
-        `GM Sees all PC Names: ${nameBtn(s.GM_PCNames, '!aura gmpc ?{Setting|Yes|No|Off}')}<br>`,
-        `GM Sees all NPC Names: ${nameBtn(s.GM_NPCNames, '!aura gmnpc ?{Setting|Yes|No|Off}')}<br>`,
-        hr,
-        `PC Sees all PC Names: ${nameBtn(s.PCNames, '!aura pcpc ?{Setting|Yes|No|Off}')}<br>`,
-        `PC Sees all NPC Names: ${nameBtn(s.NPCNames, '!aura pcnpc ?{Setting|Yes|No|Off}')}<br>`,
-        hr,
-        `Aura 1 Radius (units): ${makeBtn(s.AuraSize, '!aura size ?{Size?|0.35}')}<br>`,
-        `Aura 1 Shape: ${makeBtn(escapeForChat(s.Aura1Shape), `!aura a1shape ?{Shape?|${AURA1_SHAPE_CHOICES}}`, wide)}<br>`,
-        `Aura 1 Opacity %: ${makeBtn(String(s.auraOpacity), `!aura opacity ?{Opacity % (1-100)|${s.auraOpacity}}`)}<br>`,
-        `Lock Aura 1 (players): ${toggleBtn(s.auraLockPlayers, '!aura lock')}<br>`,
-        `Aura 1 Color: ${makeBtn(s.Aura1Color, '!aura a1tint ?{Color?|00FF00}', aura1Style)}<br>`,
-        `Aura 2 Radius (units): ${makeBtn(String(s.Aura2Size), '!aura a2size ?{Size?|5}')}<br>`,
-        `Aura 2 Shape: ${makeBtn(s.Aura2Shape, `!aura a2shape ?{Shape?|${AURA2_SHAPE_CHOICES}}`)}<br>`,
-        `Aura 2 Color: ${makeBtn(s.Aura2Color, '!aura a2tint ?{Color?|806600}', aura2Style)}<br>`,
-        `One Offs: ${toggleBtn(s.OneOff, '!aura ONEOFF')}<br>`,
-        `FX: ${toggleBtn(s.FX, '!aura FX')}<br>`,
-        `Heal FX: ${makeBtn(escapeForChat(s.HealFX), healFxCmd, healBtnStyle)}<br>`,
-        `Hurt FX: ${makeBtn(escapeForChat(s.HurtFX), hurtFxCmd, hurtBtnStyle)}<br>`,
-        `FX List: ${makeBtn('List FX', '!aura listfx', wide)}<br>`,
-        `DeathSFX: ${makeBtn(s.auraDeadFX.substring(0, 4), deadFxCmd)}<br>`,
-        hr,
-        `<u>Death Save Integration</u><br>`,
-        sandboxDeathSaveIntegrationNote(),
-        `Enabled: ${toggleBtn(s.deathSavesOn, '!aura deathsaves toggle')}<br>`,
-        `Success Field(s): ${makeBtn(s.dsSuccessAttr, successCmd, wide)}<br>`,
-        `Failure Field(s): ${makeBtn(s.dsFailureAttr, failureCmd, wide)}<br>`,
-        `Dying Marker: ${makeBtn(s.dsDyingMarker, dyingCmd, wide)}<br>`,
-        `Stable Marker: ${makeBtn(s.dsStableMarker, '!aura deathsaves stablemarker ?{Stable marker|green}', wide)}<br>`,
-        `Dead Marker: ${makePill('Red X')}<br>`,
-        `Sync: ${makeBtn('Sync Selected', '!aura deathsaves sync', wide)}<br>`,
-        `Markers: ${makeBtn('List Markers', '!aura deathsaves markers', wide)}<br>`,
-        hr,
-        `</div>`,
-        `</div>`,
-      ].join('');
-
-      sendChat(SCRIPT_NAME, `/w GM ${html}`);
+    function menuControl(interactive, label, href, { style = '', title = '' } = {}) {
+      const css = `${MENU_STYLE.btn};${style}`;
+      const tip = title ? ` title="${escapeForChat(title)}"` : '';
+      return interactive && href
+        ? `<a style="${css}" href="${href}"${tip}>${label}</a>`
+        : `<span style="${css}"${tip}>${label}</span>`;
     }
 
     /**
-     * Renders a read-only settings snapshot to public game chat (all players).
+     * Builds a Yes/No control, red when off.
+     *
+     * @param {boolean} interactive - Button or pill.
+     * @param {boolean} value       - Current value.
+     * @param {string}  href        - Toggle command.
+     * @returns {string} HTML for the control.
+     */
+    function menuToggle(interactive, value, href) {
+      return menuControl(interactive, value ? 'Yes' : 'No', href, { style: value ? '' : MENU_STYLE.off });
+    }
+
+    /**
+     * Builds a Yes/No/Off nameplate control: red for No, grey for Off.
+     *
+     * @param {boolean} interactive - Button or pill.
+     * @param {string}  value       - 'Yes', 'No' or 'Off'.
+     * @param {string}  href        - Command prefix; the value prompt is appended.
+     * @returns {string} HTML for the control.
+     */
+    function menuName(interactive, value, href) {
+      let style = '';
+      if (value === 'No') style = MENU_STYLE.off;
+      if (value === 'Off') style = MENU_STYLE.neutral;
+      return menuControl(interactive, value, `${href} ?{Setting|Yes|No|Off}`, {
+        style,
+        title: 'Yes = always show, No = always hide, Off = leave the token setting alone',
+      });
+    }
+
+    /**
+     * Builds a titled menu section: a header bar followed by label/control rows.
+     *
+     * @param {string}   title - Section title.
+     * @param {string[]} rows  - Row HTML from menuRow / menuNote.
+     * @returns {string} Section HTML.
+     */
+    function menuSection(title, rows) {
+      return `<div style="${MENU_STYLE.section}">${title}</div><table style="${MENU_STYLE.table}">${rows.join('')}</table>`;
+    }
+
+    /**
+     * Builds one label/control row.
+     *
+     * @param {string} label   - Setting name.
+     * @param {string} control - Control HTML.
+     * @returns {string} Table row HTML.
+     */
+    function menuRow(label, control) {
+      return `<tr><td style="${MENU_STYLE.label}">${label}</td><td style="${MENU_STYLE.control}">${control}</td></tr>`;
+    }
+
+    /**
+     * Builds a full-width note row (small grey text, or amber for warnings).
+     *
+     * @param {string}  html   - Note content.
+     * @param {boolean} [warn] - Use the warning colour.
+     * @returns {string} Table row HTML ('' when html is empty).
+     */
+    function menuNote(html, warn = false) {
+      return html ? `<tr><td colspan="2" style="${warn ? MENU_STYLE.warn : MENU_STYLE.note}">${html}</td></tr>` : '';
+    }
+
+    /**
+     * Short label for a comma-separated list setting, e.g. "3 fields"; the full value goes in the tooltip.
+     *
+     * @param {string} list - Comma-separated names.
+     * @returns {string} Summary label.
+     */
+    function listSummary(list) {
+      const items = String(list || '')
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (items.length === 0) return 'none';
+      return items.length === 1 ? escapeForChat(items[0]) : `${items.length} fields`;
+    }
+
+    /**
+     * Builds the settings panel shared by the GM menu (interactive) and the `!aura settings`
+     * snapshot (read-only), so the two always show the same settings in the same layout.
+     *
+     * @param {boolean} interactive - True for the whispered GM menu, false for the public snapshot.
+     * @returns {string} Panel HTML.
+     */
+    function buildSettingsPanel(interactive) {
+      const s = state.HealthColors;
+      const c = (label, href, opts) => menuControl(interactive, label, href, opts);
+      const t = (value, href) => menuToggle(interactive, value, href);
+      const n = (value, href) => menuName(interactive, value, href);
+      const swatch = (hex) => `background-color:#${hex};color:#111;border-color:#555`;
+
+      const actions = interactive
+        ? `<div style="${MENU_STYLE.actions}">${[
+            c('Update Selected', '!aura update', {
+              style: MENU_STYLE.action,
+              title: 'Re-colour the selected token(s) now',
+            }),
+            c('Refresh All', '!aura forceall', {
+              style: MENU_STYLE.action,
+              title: 'Re-colour every token on the page',
+            }),
+            c('Post Settings', '!aura settings', {
+              style: MENU_STYLE.action,
+              title: 'Post a read-only copy of these settings to game chat',
+            }),
+          ].join('')}</div>`
+        : '';
+
+      const general = menuSection('General', [
+        menuRow('Enabled', t(s.auraColorOn, s.auraColorOn ? '!aura off' : '!aura on')),
+        menuRow('Health bar', c(s.auraBar, '!aura bar ?{Health bar|1|2|3|4}')),
+        menuRow(
+          'Colour with',
+          c(s.auraTint ? 'Tint' : 'Aura 1', '!aura tint', { title: 'Switch between Aura 1 ring and token tint' }),
+        ),
+        menuRow('Palette', c(s.colorPalette, '!aura palette ?{Palette|default|colorblind}')),
+        menuRow(
+          'Show at or below HP %',
+          c(`PC ${s.auraPercPC} / NPC ${s.auraPerc}`, '!aura perc ?{PC percent|100} ?{NPC percent|100}', {
+            title: '0 = never, 100 = always',
+          }),
+        ),
+        menuRow('Track unlinked tokens', t(s.OneOff, '!aura oneoff')),
+      ]);
+
+      const tracking = menuSection('Tracking &amp; markers', [
+        menuRow('Track PCs / NPCs', `${t(s.PCAura, '!aura pc')}${t(s.NPCAura, '!aura npc')}`),
+        menuRow('Dead marker PCs / NPCs', `${t(s.auraDeadPC, '!aura deadPC')}${t(s.auraDead, '!aura dead')}`),
+      ]);
+
+      const names =
+        `<div style="${MENU_STYLE.section}">Nameplates</div><table style="${MENU_STYLE.table}">` +
+        `<tr><td></td><td style="${MENU_STYLE.gridHead}">PCs</td><td style="${MENU_STYLE.gridHead}">NPCs</td></tr>` +
+        `<tr><td style="${MENU_STYLE.label}">GM sees</td><td style="${MENU_STYLE.control};text-align:center">${n(s.GM_PCNames, '!aura gmpc')}</td><td style="${MENU_STYLE.control};text-align:center">${n(s.GM_NPCNames, '!aura gmnpc')}</td></tr>` +
+        `<tr><td style="${MENU_STYLE.label}">Players see</td><td style="${MENU_STYLE.control};text-align:center">${n(s.PCNames, '!aura pcpc')}</td><td style="${MENU_STYLE.control};text-align:center">${n(s.NPCNames, '!aura pcnpc')}</td></tr></table>`;
+
+      const aura = menuSection('Aura 1 ring', [
+        menuRow('Radius (units)', c(String(s.AuraSize), `!aura size ?{Radius in page units|${s.AuraSize}}`)),
+        menuRow('Shape', c(escapeForChat(s.Aura1Shape), `!aura a1shape ?{Shape|${AURA1_SHAPE_CHOICES}}`)),
+        menuRow('Opacity %', c(String(s.auraOpacity), `!aura opacity ?{Opacity % (1-100)|${s.auraOpacity}}`)),
+        menuRow('Lock for players', t(s.auraLockPlayers, '!aura lock')),
+        menuNote(s.auraTint ? 'Tint mode is on: these apply when you switch back to Aura 1.' : ''),
+      ]);
+
+      const fx = menuSection('Effects &amp; sound', [
+        menuRow('Heal / hurt FX', t(s.FX, '!aura fx')),
+        menuRow(
+          'Heal effect',
+          c(escapeForChat(s.HealFX), `!aura heal ?{Heal FX (hex colour, effect name or default)|${s.HealFX}}`, {
+            style: isHex6(s.HealFX) ? swatch(s.HealFX) : '',
+          }),
+        ),
+        menuRow(
+          'Hurt effect',
+          c(escapeForChat(s.HurtFX), `!aura hurt ?{Hurt FX (hex colour, effect name or default)|${s.HurtFX}}`, {
+            style: isHex6(s.HurtFX) ? swatch(s.HurtFX) : '',
+          }),
+        ),
+        menuRow(
+          'Death sound',
+          c(escapeForChat(s.auraDeadFX), `!aura deadfx ?{Jukebox track(s) or None|${s.auraDeadFX}}`),
+        ),
+        interactive ? menuRow('Effect list', c('List FX', '!aura listfx')) : '',
+      ]);
+
+      const deathSaves = menuSection('Death Save Integration', [
+        menuNote(interactive ? sandboxDeathSaveIntegrationNote() : '', true),
+        menuRow('Enabled', t(s.deathSavesOn, '!aura deathsaves toggle')),
+        menuRow(
+          'Success fields',
+          c(
+            listSummary(s.dsSuccessAttr),
+            `!aura deathsaves success ?{Success field(s), comma-separated|${s.dsSuccessAttr}}`,
+            {
+              title: s.dsSuccessAttr,
+            },
+          ),
+        ),
+        menuRow(
+          'Failure fields',
+          c(
+            listSummary(s.dsFailureAttr),
+            `!aura deathsaves failure ?{Failure field(s), comma-separated|${s.dsFailureAttr}}`,
+            {
+              title: s.dsFailureAttr,
+            },
+          ),
+        ),
+        menuRow(
+          'Dying / stable marker',
+          `${c(escapeForChat(s.dsDyingMarker || 'none'), `!aura deathsaves dyingmarker ?{Dying marker|${s.dsDyingMarker}}`)}` +
+            `${c(escapeForChat(s.dsStableMarker || 'none'), `!aura deathsaves stablemarker ?{Stable marker|${s.dsStableMarker}}`)}`,
+        ),
+        menuRow('Dead marker', menuControl(false, 'Red X', '', { style: MENU_STYLE.neutral })),
+        interactive
+          ? menuRow(
+              'Tools',
+              `${c('Sync Selected', '!aura deathsaves sync')}${c('Markers', '!aura deathsaves markers')}`,
+            )
+          : '',
+      ]);
+
+      const reference = menuSection('Reference values (not applied)', [
+        menuRow(
+          'Aura 1 colour',
+          c(s.Aura1Color, `!aura a1tint ?{Colour (6-digit hex)|${s.Aura1Color}}`, { style: swatch(s.Aura1Color) }),
+        ),
+        menuRow(
+          'Aura 2 radius / shape',
+          `${c(String(s.Aura2Size), `!aura a2size ?{Radius|${s.Aura2Size}}`)}${c(
+            escapeForChat(s.Aura2Shape),
+            `!aura a2shape ?{Shape|${AURA2_SHAPE_CHOICES}}`,
+          )}`,
+        ),
+        menuRow(
+          'Aura 2 colour',
+          c(s.Aura2Color, `!aura a2tint ?{Colour (6-digit hex)|${s.Aura2Color}}`, { style: swatch(s.Aura2Color) }),
+        ),
+      ]);
+
+      const footer = interactive
+        ? `<div style="${MENU_STYLE.actions};border-top:1px solid #b8ccd9;border-bottom:0">${c('Open Help', handoutLink())}${c(
+            'Rebuild Help',
+            '!aura handout',
+          )}</div>`
+        : '';
+
+      const title = interactive ? 'HealthColors' : 'HealthColors Settings';
+      return [
+        `<div style="${MENU_STYLE.outer}">`,
+        `<div style="${MENU_STYLE.header}">${title} <span style="${MENU_STYLE.subheader}">v${VERSION}</span></div>`,
+        actions,
+        general,
+        tracking,
+        names,
+        aura,
+        fx,
+        deathSaves,
+        reference,
+        footer,
+        `</div>`,
+      ].join('');
+    }
+
+    /**
+     * Renders and whispers the interactive HealthColors settings menu to the GM.
+     */
+    function showMenu() {
+      sendChat(SCRIPT_NAME, `/w GM ${buildSettingsPanel(true)}`);
+    }
+
+    /**
+     * Posts a read-only settings snapshot to public game chat (all players).
      * Triggered by `!aura settings` on demand; not called automatically after changes.
      */
     function showSettingsInGameChat() {
-      const s = state.HealthColors;
-      const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
-      const outerStyle = [
-        'border-radius:8px',
-        'box-shadow:3px 3px 1px #707070',
-        'border:2px solid black',
-        'overflow:hidden',
-      ].join(';');
-      const menuHeaderStyle = [
-        'background-color:#2e5d78',
-        'color:#fff',
-        'text-align:center',
-        'font-weight:bold',
-        'font-size:10pt',
-        'padding:4px 8px',
-        'letter-spacing:0.5px',
-      ].join(';');
-      const contentStyle = [
-        'padding:5px',
-        'font-size:9pt',
-        'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
-        'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
-        'color:#FFF',
-        'text-align:right',
-        'vertical-align:middle',
-      ].join(';');
-
-      const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
-      const aura1Style = `background-color:#${s.Aura1Color}`;
-      const aura2Style = `background-color:#${s.Aura2Color}`;
-      const healStyle = fxSettingStyle(s.HealFX);
-      const hurtStyle = fxSettingStyle(s.HurtFX);
-      const html = [
-        `<div style="${outerStyle}">`,
-        `<div style="${menuHeaderStyle}">HealthColors Settings v${VERSION}</div>`,
-        `<div style="${contentStyle}">`,
-        hr,
-        `Is On: ${boolPill(s.auraColorOn)}<br>`,
-        `Bar: ${makePill(s.auraBar)}<br>`,
-        `Use Tint: ${boolPill(s.auraTint)}<br>`,
-        `Palette: ${makePill(s.colorPalette)}<br>`,
-        `Percentage(PC/NPC): ${makePill(percLabel)}<br>`,
-        hr,
-        `Show PC Health: ${boolPill(s.PCAura)}<br>`,
-        `Show NPC Health: ${boolPill(s.NPCAura)}<br>`,
-        `Show Dead PC: ${boolPill(s.auraDeadPC)}<br>`,
-        `Show Dead NPC: ${boolPill(s.auraDead)}<br>`,
-        hr,
-        `GM Sees all PC Names: ${namePill(s.GM_PCNames)}<br>`,
-        `GM Sees all NPC Names: ${namePill(s.GM_NPCNames)}<br>`,
-        hr,
-        `PC Sees all PC Names: ${namePill(s.PCNames)}<br>`,
-        `PC Sees all NPC Names: ${namePill(s.NPCNames)}<br>`,
-        hr,
-        `Aura 1 Radius: ${makePill(String(s.AuraSize))}<br>`,
-        `Aura 1 Shape: ${makePill(s.Aura1Shape)}<br>`,
-        `Aura 1 Opacity %: ${makePill(String(s.auraOpacity))}<br>`,
-        `Lock Aura 1 (players): ${boolPill(s.auraLockPlayers)}<br>`,
-        `Aura 1 Color: ${makePill(s.Aura1Color, aura1Style)}<br>`,
-        `Aura 2 Radius: ${makePill(String(s.Aura2Size))}<br>`,
-        `Aura 2 Shape: ${makePill(s.Aura2Shape)}<br>`,
-        `Aura 2 Color: ${makePill(s.Aura2Color, aura2Style)}<br>`,
-        `One Offs: ${boolPill(s.OneOff)}<br>`,
-        `FX: ${boolPill(s.FX)}<br>`,
-        `Heal FX: ${makePill(escapeForChat(s.HealFX), healStyle)}<br>`,
-        `Hurt FX: ${makePill(escapeForChat(s.HurtFX), hurtStyle)}<br>`,
-        `DeathSFX: ${makePill(s.auraDeadFX)}<br>`,
-        hr,
-        `<u>Death Save Integration</u><br>`,
-        `Enabled: ${boolPill(s.deathSavesOn)}<br>`,
-        `Success Field(s): ${makePill(s.dsSuccessAttr)}<br>`,
-        `Failure Field(s): ${makePill(s.dsFailureAttr)}<br>`,
-        `Dying Marker: ${makePill(s.dsDyingMarker)}<br>`,
-        `Stable Marker: ${makePill(s.dsStableMarker)}<br>`,
-        `Dead Marker: ${makePill('Red X')}<br>`,
-        hr,
-        `</div>`,
-        `</div>`,
-      ].join('');
-
-      sendChat(SCRIPT_NAME, html);
+      sendChat(SCRIPT_NAME, buildSettingsPanel(false));
     }
 
     // ————— HELP HANDOUT —————
