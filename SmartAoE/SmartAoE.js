@@ -635,9 +635,10 @@ const SmartAoE = (() => {
         //  Check for existence of the default control token. Create it if it doesn't exist
         //  Also creates multiple abilities/token actions, plus a collections macro for calling up an AoE Generator chat menu
         //----------------------------------------------------------------------------------
+        //declared outside the try block so the catch handler can name them (it threw a ReferenceError and hid the real error)
+        let charName = 'AoEControlToken'
+        let macroName = 'AoEGenerator'
         try {
-            let charName = 'AoEControlToken'
-            let macroName = 'AoEGenerator'
             let URL = 'https://s3.amazonaws.com/files.d20.io/images/219939338/Q-RiO5B4NhyaPGwc1YMz9w/max.png?1620037815'    //reticle image
             
             let controlTokenChars = findObjs({
@@ -5979,6 +5980,7 @@ const SmartAoE = (() => {
                 sendChat(scriptName, whisperString + err);      //sent err code via throw
             } else {
                 sendChat(scriptName, whisperString + 'Error: ' + err.message);
+                log(`${scriptName} error: ${err.stack || err.message}`);   //stack trace in the API console for diagnosis
             }
         }
     };
