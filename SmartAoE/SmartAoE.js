@@ -6775,8 +6775,6 @@ const SmartAoE = (() => {
     if (cmd.length > 1) {
       let tok;
       let direction; // either +1 or -1
-      let newindex;
-      let updatedLink;
 
       tok = msg.selected && msg.selected[0] ? getObj('graphic', msg.selected[0]._id) : undefined;
 
@@ -6813,12 +6811,14 @@ const SmartAoE = (() => {
 
             //Update the State object with new origin index
             const oTok = getObj('graphic', aoeLinks.links[a].originTokID);
+            if (!oTok) continue; //the caster token was deleted
             const oX = oTok.get('left');
             const oY = oTok.get('top');
             const offsetX = aoeLinks.links[a].originPts[aoeLinks.links[a].originIndex].x - oX;
             const offsetY = aoeLinks.links[a].originPts[aoeLinks.links[a].originIndex].y - oY;
-            //Re-draw the AoE on Map
-            updateMapWithAoE(aoeLinks, tok, false, offsetX, offsetY);
+            //Re-draw this AoE only (it used to redraw every linked AoE with this one's offsets)
+            const thisLink = { links: [aoeLinks.links[a]], indices: [aoeLinks.indices[a]] };
+            updateMapWithAoE(thisLink, tok, false, offsetX, offsetY);
           }
         }
       }
