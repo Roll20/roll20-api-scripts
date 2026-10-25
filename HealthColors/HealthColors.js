@@ -2055,13 +2055,21 @@ var HealthColors =
      * @param {object} msg - Roll20 chat message object with a populated `selected` array.
      */
     function manUpdate(msg) {
-      const allNames = msg.selected.reduce((acc, obj) => {
-        const token = getObj('graphic', obj._id);
-        const prev = deepClone(token);
-        handleToken(token, prev, 'YES');
-        return `${acc}${token.get('name')}<br>`;
-      }, '');
-      gmWhisper(allNames);
+      const tokens = (msg.selected || [])
+        .filter((sel) => sel._type === 'graphic')
+        .map((sel) => getObj('graphic', sel._id))
+        .filter(Boolean);
+      if (tokens.length === 0) {
+        gmWhisper(
+          'Select one or more tokens first, then press <b>Update Selected</b> (or run <code>!aura update</code>).',
+        );
+        return;
+      }
+      const names = tokens.map((token) => {
+        handleToken(token, deepClone(token), 'YES');
+        return escapeForChat(token.get('name') || '(unnamed token)');
+      });
+      gmWhisper(`Updated ${names.length} token${names.length === 1 ? '' : 's'}:<br>${names.join('<br>')}`);
     }
 
     // ————— DEATH SAVE INTEGRATION —————
@@ -4012,7 +4020,7 @@ var HealthColors =
         return;
       }
 
-      if (option !== 'MENU' && option !== 'LISTFX') gmWhisper('UPDATING TOKENS...');
+      if (!['MENU', 'LISTFX', 'UPDATE', 'SETTINGS'].includes(option)) gmWhisper('UPDATING TOKENS...');
 
       const s = state.HealthColors;
       if (applyMappedAuraOption(option, parts, s)) {
