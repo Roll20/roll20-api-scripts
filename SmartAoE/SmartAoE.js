@@ -539,7 +539,7 @@ const SmartAoE = (() => {
     const applyDamLink = autoApply
       ? ''
       : ` href='!smartapply --args|${id}|"${tempName}"|${barString}|${damString}|${markerString}|${zeroHPmarker}|${removeAtZeroMsg}|${gmWhisperDamageMsg}|${whisperString}'`;
-    damString = damString.replace('/', ' / ');
+    damString = damString.replace(/\//g, ' / ');
 
     let RVI_output = '';
     if (RVI.length > 0) {
@@ -1452,6 +1452,10 @@ const SmartAoE = (() => {
           `}}`;
 
         const players = findObjs({ _type: 'player' }).filter((p) => playerIsGM(p.get('_id')));
+        if (players.length === 0) {
+          log(`====> From ${scriptName}: No GM found, so the collections macro (${macroName}) was not created.`);
+          return;
+        }
         const gmID = players[0].get('_id');
 
         const macro = createObj('macro', { playerid: gmID, name: macroName, visibleto: gmID, action: actionText });
@@ -1481,7 +1485,7 @@ const SmartAoE = (() => {
    * @returns {string} Colour in '#rrggbbaa' form (other lengths are returned unchanged with '#').
    */
   const toFullColor = function (htmlstring, defaultAlpha = 'ff') {
-    let s = htmlstring.toLowerCase().replace(/[^0-9a-f]/, '');
+    let s = htmlstring.toLowerCase().replace(/[^0-9a-f]/g, ''); //strip every non-hex character (was the first only)
     switch (s.length) {
       case 3:
         s = `${s[0]}${s[0]}${s[1]}${s[1]}${s[2]}${s[2]}${defaultAlpha}`;
@@ -1916,7 +1920,6 @@ const SmartAoE = (() => {
     const ptLR = new pt(2 * (rad + z), 2 * (rad + z));
     const ptLL = new pt(0, 2 * (rad + z));
 
-    const oX = (oY = rad + z);
     //normalize rotation to 360deg and find defining angles (converted to radians)
 
     coneDirection = normalizeTo360deg(coneDirection);
@@ -2037,7 +2040,7 @@ const SmartAoE = (() => {
       return prev.y > curr.y ? prev : curr;
     });
 
-    //here we are going to create a new polygon that is 1px wider on  each side.
+    //here we are going to create a new polygon that is s (10px) wider on each side.
     //      This is to help overcome the floating point error issues with the isPointInPolygon function
     const s = 10;
     let tempPt1 = { x: pt1_0.x - s, y: pt1_0.y - s };
@@ -2065,7 +2068,7 @@ const SmartAoE = (() => {
       pCenter: pCenter, //the geometric center of the rotated wall
       widthBB: widthBB, //the width of the rectangle circumscribing the wall
       heightBB: heightBB, //the height of the rectangle circumscribing the wall
-      expandedPolygon: expandedPolygon, //a rectangle that is 1px wider on each side. This polygon is rotated already
+      expandedPolygon: expandedPolygon, //a rectangle that is s (10px) wider on each side. This polygon is rotated already
     };
   };
 
@@ -2150,7 +2153,8 @@ const SmartAoE = (() => {
       steps = 50;
       stepSize = deg2rad * (coneWidth / steps);
 
-      const oX = (oY = rad);
+      const oX = rad;
+      const oY = rad;
       let x, y;
       const startAngle = deg2rad * (coneDirection - coneWidth / 2);
       const endAngle = deg2rad * (coneDirection + coneWidth / 2);
@@ -2272,6 +2276,7 @@ const SmartAoE = (() => {
     const deg2rad = Math.PI / 180;
     let smallAngle;
     let retPt;
+    angle = normalizeTo360deg(angle); //angles outside 0-360 used to return undefined
 
     if (angle === 0) {
       retPt = new pt(oPt.x, oPt.y - rad);
@@ -2309,6 +2314,10 @@ const SmartAoE = (() => {
   const getAngle2ControlToken = function (oPt, cPt) {
     const deg2rad = Math.PI / 180;
     let cAngle; //return value (angle from originPt to controlPt)
+
+    if (cPt.x === oPt.x && cPt.y === oPt.y) {
+      return 0; //same point: no direction, treat as straight up (was NaN)
+    }
 
     const dX = Math.abs(cPt.x - oPt.x);
     const dY = Math.abs(cPt.y - oPt.y);
@@ -2497,7 +2506,7 @@ const SmartAoE = (() => {
   const distBetweenPts = function (pt1, pt2, calcType = 'Euclidean', gridIncrement = -999, scaleNumber = -999) {
     let distPx; //distance in Pixels
     let distUnits; //distance in units (gridded maps only)
-    if (calcType === 'PF' && (gridIncrement !== -999) & (scaleNumber !== -999)) {
+    if (calcType === 'PF' && gridIncrement !== -999 && scaleNumber !== -999) {
       //using 'Pathfinder' distance rules, where every other diagonal unit counts as 1.5 units.
       //..or using 5e diagonal rules where each diag only counts 1 square.
       //..5e is special due to how t is constructed. We use Euclidean distance to determine if in cone, but we can display in 5e units.
@@ -2512,8 +2521,6 @@ const SmartAoE = (() => {
         //every other diagonal counts as 1.5 squares
         minFloor1pt5Delta = Math.floor(1.5 * minDelta);
       }
-
-      const temp = Math.floor((maxDelta - minDelta + minFloor1pt5Delta) / scaleNumber) * scaleNumber;
 
       //convert dist back to pixels
       distUnits = Math.floor((maxDelta - minDelta + minFloor1pt5Delta) / scaleNumber) * scaleNumber;
@@ -2743,7 +2750,7 @@ const SmartAoE = (() => {
     // Calculate polar co-ordinates
     let polarRadius;
 
-    if (calcType == 'PF' && (gridIncrement !== -999) & (scaleNumber !== -999)) {
+    if (calcType === 'PF' && gridIncrement !== -999 && scaleNumber !== -999) {
       polarRadius = distBetweenPts(oPt, pt, calcType, gridIncrement, scaleNumber);
     } else {
       polarRadius = distBetweenPts(oPt, pt);
@@ -2793,7 +2800,7 @@ const SmartAoE = (() => {
 
     if (isFlatCone) {
       //for 5e-style cones. Basically a triangle (no rounded outer face)
-      dTheta = Math.abs(pAngle - centerAngle);
+      const dTheta = Math.abs(pAngle - centerAngle); //cos() is the same either way round 0/360, so no wrap needed
       criticalDist = rad / Math.cos(dTheta);
     } else {
       //compare to full radius cone
@@ -4596,7 +4603,11 @@ const SmartAoE = (() => {
 
     //Now, find the nearest "possiblePt" to this intersection pt
 
-    for (i = 0; i < possiblePts.length; i++) {
+    if (!intersectPt) {
+      intersectPt = { x: cPt.x, y: cPt.y }; //no edge crossing found (floating-point edge case): use the control point
+    }
+
+    for (let i = 0; i < possiblePts.length; i++) {
       dist = distBetweenPts(intersectPt, possiblePts[i]);
       if (dist < minDist || i === 0) {
         nearestPt = possiblePts[i];
