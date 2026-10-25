@@ -39,12 +39,17 @@ var HealthColors =
      * @property {string}  PCNames      - Player visibility of PC token names ('Yes'|'No'|'Off').
      * @property {string}  GM_NPCNames  - GM visibility of NPC token names ('Yes'|'No'|'Off').
      * @property {string}  NPCNames     - Player visibility of NPC token names ('Yes'|'No'|'Off').
-     * @property {number}  AuraSize     - Feet the aura extends beyond the token edge.
-     * @property {string}  Aura1Shape   - Display/default Aura 1 shape shown in output.
-     * @property {string}  Aura1Color   - Display/default Aura 1 tint shown in output.
-     * @property {number}  Aura2Size    - Display/default Aura 2 radius shown in output.
-     * @property {string}  Aura2Shape   - Display/default Aura 2 shape shown in output.
-     * @property {string}  Aura2Color   - Display/default Aura 2 tint value shown in output.
+     * @property {number}  AuraSize     - Page units (usually feet) the aura extends beyond the token edge.
+     * @property {string}  Aura1Shape   - Shape applied to the Aura 1 health ring in aura mode: a Roll20 shape
+     *                                      (Circle, Square, Hex, Circle Border, Square Border, Hex Border),
+     *                                      Auto / Auto Border (hex on hex-grid pages, circle otherwise), or
+     *                                      Keep (leave each token's own shape alone).
+     * @property {number}  auraOpacity  - Aura 1 health-ring opacity in percent (100 = solid, as before).
+     * @property {boolean} auraLockPlayers - When true (aura mode), controlling players cannot edit Aura 1.
+     * @property {string}  Aura1Color   - Reference value only (aura mode colours Aura 1 by health).
+     * @property {number}  Aura2Size    - Reference value only; Aura 2 is never changed by the script.
+     * @property {string}  Aura2Shape   - Reference value only; Aura 2 is never changed by the script.
+     * @property {string}  Aura2Color   - Reference value only; Aura 2 is never changed by the script.
      * @property {boolean} OneOff       - When true, tokens without a linked character also get auras.
      * @property {boolean} FX           - Whether to spawn particle FX on HP changes.
      * @property {string}  HealFX       - Healing effect: a hex color (no '#') that recolours the default particle
@@ -76,7 +81,9 @@ var HealthColors =
       GM_NPCNames: 'Yes',
       NPCNames: 'Yes',
       AuraSize: 0.35,
-      Aura1Shape: 'Circle',
+      Aura1Shape: 'Auto',
+      auraOpacity: 100,
+      auraLockPlayers: true,
       Aura1Color: '00FF00',
       Aura2Size: 5,
       Aura2Shape: 'Square',
@@ -465,18 +472,89 @@ var HealthColors =
       return isHex6(value) ? `background-color:#${value}` : 'width:auto;padding-left:6px;padding-right:6px';
     }
 
+    // ————— AURA SHAPES —————
     /**
-     * Normalizes an aura shape label to supported display values.
-     *
-     * @param {string} value    - Candidate shape value.
-     * @param {string} fallback - Fallback shape.
-     * @returns {string} One of Circle|Square.
+     * Roll20 aura shapes (Token Settings → Aura → Shape), keyed by display label, mapped to the
+     * `aura1_options` / `aura2_options` API value. Roll20 keeps `aura1_square` in sync itself.
      */
-    function normalizeShape(value, fallback) {
-      const shape = (value || '').trim().toUpperCase();
-      if (shape === 'CIRCLE') return 'Circle';
-      if (shape === 'SQUARE') return 'Square';
-      return fallback;
+    const AURA_SHAPES = Object.freeze({
+      Circle: 'circle',
+      Square: 'square',
+      Hex: 'hex',
+      'Circle Border': 'circleborder',
+      'Square Border': 'squareborder',
+      'Hex Border': 'hexborder',
+    });
+
+    /**
+     * HealthColors-only Aura 1 choices: Auto picks hex on hex-grid pages and circle otherwise
+     * (Auto Border uses the outline versions); Keep never touches the token's shape.
+     */
+    const AURA1_SPECIAL_SHAPES = Object.freeze(['Auto', 'Auto Border', 'Keep']);
+
+    /** Roll-query option list for the Aura 1 shape prompt. */
+    const AURA1_SHAPE_CHOICES = [...AURA1_SPECIAL_SHAPES, ...Object.keys(AURA_SHAPES)].join('|');
+
+    /** Roll-query option list for the Aura 2 (reference-only) shape prompt. */
+    const AURA2_SHAPE_CHOICES = Object.keys(AURA_SHAPES).join('|');
+
+    /**
+     * Normalizes an aura shape to its display label. Accepts the label, the API value or any
+     * spacing/punctuation variant ("Circle Border", "circleborder", "circle-border", "circle_border").
+     *
+     * @param {string}  value            - Candidate shape value.
+     * @param {string}  fallback         - Fallback shape.
+     * @param {boolean} [allowSpecial]   - Also accept Auto, Auto Border and Keep (Aura 1 only).
+     * @returns {string} A display label from AURA_SHAPES (or AURA1_SPECIAL_SHAPES).
+     */
+    function normalizeShape(value, fallback, allowSpecial = true) {
+      const squash = (v) =>
+        String(v ?? '')
+          .toLowerCase()
+          .replace(/[^a-z]/g, '');
+      const wanted = squash(value);
+      if (!wanted) return fallback;
+      const labels = allowSpecial ? [...AURA1_SPECIAL_SHAPES, ...Object.keys(AURA_SHAPES)] : Object.keys(AURA_SHAPES);
+      return labels.find((label) => squash(label) === wanted) || fallback;
+    }
+
+    /**
+     * Resolves the configured Aura 1 shape for a token into a Roll20 `aura1_options` value.
+     * Auto / Auto Border look at the token's page grid (`hex` or `hexr` → hex shapes). Roll20 draws
+     * hex auras in whole grid cells, so a radius under one cell (e.g. the default 0.35) would show
+     * almost nothing; Auto then uses the circle shapes instead.
+     *
+     * @param {object} obj - Roll20 token graphic object.
+     * @returns {string|null} API shape value, or null when the shape should be left alone (Keep).
+     */
+    function resolveAura1Shape(obj) {
+      const label = normalizeShape(state.HealthColors.Aura1Shape, DEFAULTS.Aura1Shape);
+      if (label === 'Keep') return null;
+      if (label === 'Auto' || label === 'Auto Border') {
+        const page = getObj('page', obj.get('_pageid'));
+        const gridType = String(page?.get('grid_type') || '').toLowerCase();
+        const cellUnits = (Number(page?.get('scale_number')) || 5) * (Number(page?.get('snapping_increment')) || 1);
+        const fillsACell = Number(state.HealthColors.AuraSize) >= cellUnits;
+        const base = gridType.startsWith('hex') && fillsACell ? 'hex' : 'circle';
+        return label === 'Auto Border' ? `${base}border` : base;
+      }
+      return AURA_SHAPES[label] || 'circle';
+    }
+
+    /**
+     * Applies the configured Aura 1 opacity to a `#rrggbb` colour by appending a two-digit
+     * alpha channel (Roll20 accepts `#rrggbbaa` for auras). 100% returns the colour unchanged.
+     *
+     * @param {string} hex - Colour in `#rrggbb` form.
+     * @returns {string} `#rrggbb` or `#rrggbbaa`.
+     */
+    function withAuraOpacity(hex) {
+      const pct = normalizePercent(state.HealthColors.auraOpacity, 100);
+      if (pct >= 100 || !/^#[0-9a-f]{6}$/i.test(hex)) return hex;
+      const alpha = Math.round((pct / 100) * 255)
+        .toString(16)
+        .padStart(2, '0');
+      return `${hex}${alpha}`;
     }
 
     /**
@@ -816,9 +894,14 @@ var HealthColors =
       NPCNames: normalizeYesNoOff,
       AuraSize: normalizePositiveNumber,
       Aura1Shape: normalizeShape,
+      auraOpacity: (value, current) => {
+        const pct = normalizePercent(value, current);
+        return pct >= 1 ? pct : current;
+      },
+      auraLockPlayers: parseBooleanOption,
       Aura1Color: normalizeHex6,
       Aura2Size: normalizePositiveNumber,
-      Aura2Shape: normalizeShape,
+      Aura2Shape: (value, current) => normalizeShape(value, current, false),
       Aura2Color: normalizeHex6,
       OneOff: parseBooleanOption,
       FX: parseBooleanOption,
@@ -1015,25 +1098,45 @@ var HealthColors =
 
     /**
      * Applies a health color to a token via aura or tint depending on configuration.
-     * When in tint mode, sets tint_color. When in aura mode, sets aura radius and color.
+     * When in tint mode, sets tint_color. When in aura mode, sets the Aura 1 radius, colour
+     * (with the configured opacity), shape (unless Keep) and player-edit lock.
      * Roll20 measures aura1_radius from the token edge, so sizeSet maps directly.
      *
      * @param {object} obj         - Roll20 token object.
-     * @param {number} sizeSet     - Feet the ring extends beyond the token edge (e.g. 0.35).
+     * @param {number} sizeSet     - Page units the ring extends beyond the token edge (e.g. 0.35).
      * @param {string} markerColor - Hex color string derived from health percentage.
      */
     function tokenSet(obj, sizeSet, markerColor) {
-      const useTint = state.HealthColors.auraTint;
-      if (useTint) {
+      const s = state.HealthColors;
+      if (s.auraTint) {
         obj.set({ tint_color: markerColor });
-      } else {
-        obj.set({
-          tint_color: 'transparent',
-          aura1_radius: sizeSet,
-          aura1_color: markerColor,
-          showplayers_aura1: true,
-        });
+        return;
       }
+      const changes = {
+        tint_color: 'transparent',
+        aura1_radius: sizeSet,
+        aura1_color: withAuraOpacity(markerColor),
+        showplayers_aura1: true,
+        playersedit_aura1: s.auraLockPlayers !== true,
+      };
+      const shape = resolveAura1Shape(obj);
+      if (shape) changes.aura1_options = shape;
+      obj.set(changes);
+    }
+
+    /**
+     * Hands Aura 1 back to the GM when the script stops managing it (switching to tint mode):
+     * clears the ring, restores Roll20's default circle shape (unless Shape is Keep) and lets
+     * controlling players edit it again.
+     *
+     * @param {object} obj - Roll20 token graphic object.
+     */
+    function releaseAura1(obj) {
+      const changes = { aura1_color: 'transparent', aura1_radius: 0, playersedit_aura1: true };
+      if (normalizeShape(state.HealthColors.Aura1Shape, DEFAULTS.Aura1Shape) !== 'Keep') {
+        changes.aura1_options = 'circle';
+      }
+      obj.set(changes);
     }
 
     /**
@@ -1206,6 +1309,21 @@ var HealthColors =
     }
 
     /**
+     * Before v2.4.0 the Aura 1 shape setting was display-only, so every existing game reports
+     * the old default "Circle" without that ever having changed a token. On first load of
+     * v2.4.0 an untouched "Circle" becomes "Keep" so upgrading does not reshape auras GMs set
+     * by hand; any other stored shape (a deliberate choice) is kept and now applied.
+     */
+    function migrateAuraShapeState() {
+      const s = state.HealthColors;
+      if (!s || s.auraShapeApplied) return;
+      if (s.Aura1Shape === 'Circle') s.Aura1Shape = 'Keep';
+      if (s.Aura1Shape !== undefined) s.Aura1Shape = normalizeShape(s.Aura1Shape, DEFAULTS.Aura1Shape);
+      if (s.Aura2Shape !== undefined) s.Aura2Shape = normalizeShape(s.Aura2Shape, DEFAULTS.Aura2Shape, false);
+      s.auraShapeApplied = true;
+    }
+
+    /**
      * Initializes or migrates persisted state, applies all default values, applies any
      * newer One-Click install options, registers the TokenMod observer if available, and
      * creates the default Hurt/Heal FX objects if they do not already exist in the campaign.
@@ -1218,6 +1336,7 @@ var HealthColors =
         state.HealthColors = { schemaVersion: SCHEMA_VERSION, version: VERSION };
       }
       migrateDeathSaveState();
+      migrateAuraShapeState();
       Object.keys(DEFAULTS).forEach((key) => {
         if (state.HealthColors[key] === undefined) state.HealthColors[key] = DEFAULTS[key];
       });
@@ -1525,6 +1644,7 @@ var HealthColors =
       const useAura = oCharacter ? lookupUseColor(oCharacter) : undefined;
       const useTint = state.HealthColors.auraTint;
       const colorType = useTint ? 'tint' : 'aura1';
+      const appliedColor = useTint ? markerColor : withAuraOpacity(markerColor);
 
       // Death Save Integration (PC-only) owns the dying/stable/dead markers when enabled.
       const deathSaveHandled = applyDeathSaveStatus(obj, curValue, isPlayer);
@@ -1540,7 +1660,7 @@ var HealthColors =
         } else {
           tokenSet(obj, state.HealthColors.AuraSize, markerColor);
         }
-      } else if (obj.get(`${colorType}_color`) === markerColor) {
+      } else if (String(obj.get(`${colorType}_color`) || '').toLowerCase() === appliedColor.toLowerCase()) {
         clearAuras(obj);
       }
     }
@@ -1766,7 +1886,7 @@ var HealthColors =
     /**
      * Handles the visual transition when switching between aura and tint modes.
      * Processes every token in a single drain queue pass: when switching to tint mode
-     * it clears aura1 on each token before re-evaluating health, ensuring no stale
+     * it releases aura1 on each token (see releaseAura1) before re-evaluating health, ensuring no stale
      * HC-set aura rings remain. When switching to aura mode it re-evaluates health
      * directly so tokenSet clears the tint and applies the aura ring in one step.
      *
@@ -1781,7 +1901,7 @@ var HealthColors =
       const drainQueue = () => {
         const token = workQueue.shift();
         if (!token) return;
-        if (toTint) token.set({ aura1_color: 'transparent', aura1_radius: 0 });
+        if (toTint) releaseAura1(token);
         const prev = deepClone(token);
         handleToken(token, prev, 'YES');
         setTimeout(drainQueue, 0);
@@ -3455,11 +3575,13 @@ var HealthColors =
         `PC Sees all PC Names: ${nameBtn(s.PCNames, '!aura pcpc ?{Setting|Yes|No|Off}')}<br>`,
         `PC Sees all NPC Names: ${nameBtn(s.NPCNames, '!aura pcnpc ?{Setting|Yes|No|Off}')}<br>`,
         hr,
-        `Aura 1 Radius (ft): ${makeBtn(s.AuraSize, '!aura size ?{Size?|0.35}')}<br>`,
-        `Aura 1 Shape: ${makeBtn(s.Aura1Shape, '!aura a1shape ?{Shape?|Circle|Square}')}<br>`,
+        `Aura 1 Radius (units): ${makeBtn(s.AuraSize, '!aura size ?{Size?|0.35}')}<br>`,
+        `Aura 1 Shape: ${makeBtn(escapeForChat(s.Aura1Shape), `!aura a1shape ?{Shape?|${AURA1_SHAPE_CHOICES}}`, wide)}<br>`,
+        `Aura 1 Opacity %: ${makeBtn(String(s.auraOpacity), `!aura opacity ?{Opacity % (1-100)|${s.auraOpacity}}`)}<br>`,
+        `Lock Aura 1 (players): ${toggleBtn(s.auraLockPlayers, '!aura lock')}<br>`,
         `Aura 1 Color: ${makeBtn(s.Aura1Color, '!aura a1tint ?{Color?|00FF00}', aura1Style)}<br>`,
-        `Aura 2 Radius (ft): ${makeBtn(String(s.Aura2Size), '!aura a2size ?{Size?|5}')}<br>`,
-        `Aura 2 Shape: ${makeBtn(s.Aura2Shape, '!aura a2shape ?{Shape?|Square|Circle}')}<br>`,
+        `Aura 2 Radius (units): ${makeBtn(String(s.Aura2Size), '!aura a2size ?{Size?|5}')}<br>`,
+        `Aura 2 Shape: ${makeBtn(s.Aura2Shape, `!aura a2shape ?{Shape?|${AURA2_SHAPE_CHOICES}}`)}<br>`,
         `Aura 2 Color: ${makeBtn(s.Aura2Color, '!aura a2tint ?{Color?|806600}', aura2Style)}<br>`,
         `One Offs: ${toggleBtn(s.OneOff, '!aura ONEOFF')}<br>`,
         `FX: ${toggleBtn(s.FX, '!aura FX')}<br>`,
@@ -3547,6 +3669,8 @@ var HealthColors =
         hr,
         `Aura 1 Radius: ${makePill(String(s.AuraSize))}<br>`,
         `Aura 1 Shape: ${makePill(s.Aura1Shape)}<br>`,
+        `Aura 1 Opacity %: ${makePill(String(s.auraOpacity))}<br>`,
+        `Lock Aura 1 (players): ${boolPill(s.auraLockPlayers)}<br>`,
         `Aura 1 Color: ${makePill(s.Aura1Color, aura1Style)}<br>`,
         `Aura 2 Radius: ${makePill(String(s.Aura2Size))}<br>`,
         `Aura 2 Shape: ${makePill(s.Aura2Shape)}<br>`,
@@ -3589,6 +3713,7 @@ var HealthColors =
         DEADPC: 'auraDeadPC',
         ONEOFF: 'OneOff',
         FX: 'FX',
+        LOCK: 'auraLockPlayers',
       };
       const STRINGS = {
         GMNPC: 'GM_NPCNames',
@@ -3618,7 +3743,13 @@ var HealthColors =
         return true;
       }
       if (SHAPES[option]) {
-        s[SHAPES[option]] = normalizeShape(parts[2], s[SHAPES[option]]);
+        // Join the remaining words so two-word shapes ("Circle Border") work from chat.
+        s[SHAPES[option]] = normalizeShape(parts.slice(2).join(' '), s[SHAPES[option]], option === 'A1SHAPE');
+        return true;
+      }
+      if (option === 'OPACITY') {
+        const pct = normalizePercent(parts[2], s.auraOpacity);
+        s.auraOpacity = pct >= 1 ? pct : s.auraOpacity;
         return true;
       }
       if (HEXES[option]) {
@@ -3724,6 +3855,9 @@ var HealthColors =
       return handler ? handler() : { handled: false, earlyReturn: false };
     }
 
+    /** Mapped options that change how the Aura 1 health ring looks, so tokens need repainting. */
+    const AURA_APPEARANCE_OPTIONS = new Set(['SIZE', 'A1SHAPE', 'OPACITY', 'LOCK']);
+
     /**
      * Processes incoming Roll20 chat messages to handle !aura commands.
      * GM-only: non-GMs receive an access-denied whisper.
@@ -3756,7 +3890,10 @@ var HealthColors =
       if (option !== 'MENU' && option !== 'LISTFX') gmWhisper('UPDATING TOKENS...');
 
       const s = state.HealthColors;
-      if (!applyMappedAuraOption(option, parts, s)) {
+      if (applyMappedAuraOption(option, parts, s)) {
+        // Aura 1 appearance settings are applied to tokens, so repaint them straight away.
+        if (AURA_APPEARANCE_OPTIONS.has(option) && !s.auraTint) menuForceUpdate();
+      } else {
         const result = runAuraSpecialOption(option, parts, msg, s);
         if (result.earlyReturn) return;
       }

@@ -148,45 +148,69 @@
       "name": "AuraSize",
       "type": "number",
       "default": 0.35,
-      "description": "Aura 1 health-ring radius in feet beyond the token edge (aura mode). Default: 0.35."
+      "description": "Aura 1 health-ring radius in page units (usually feet) beyond the token edge (aura mode). Default: 0.35."
     },
     {
       "name": "Aura1Shape",
       "type": "select",
       "options": [
+        "Auto",
+        "Auto Border",
+        "Keep",
         "Circle",
-        "Square"
+        "Square",
+        "Hex",
+        "Circle Border",
+        "Square Border",
+        "Hex Border"
       ],
-      "default": "Circle",
-      "description": "Aura 1 shape shown in the settings output. Default: Circle."
+      "default": "Auto",
+      "description": "Aura 1 health-ring shape (aura mode). Auto = hex on hex-grid pages when the radius is at least one grid cell, circle otherwise; Auto Border = outline versions; Keep = leave each token’s shape alone. Default: Auto."
+    },
+    {
+      "name": "auraOpacity",
+      "type": "number",
+      "default": 100,
+      "description": "Aura 1 health-ring opacity in percent, 1-100 (100 = solid). Default: 100."
+    },
+    {
+      "name": "auraLockPlayers",
+      "type": "checkbox",
+      "value": "true",
+      "checked": "checked",
+      "description": "Stop controlling players editing Aura 1 while HealthColors manages it (aura mode). Default: enabled."
     },
     {
       "name": "Aura1Color",
       "type": "text",
       "default": "00FF00",
-      "description": "Aura 1 display colour shown in the settings output, as a 6-digit hex value without #. Default: 00FF00."
+      "description": "Aura 1 colour reference value, as a 6-digit hex value without # (not applied; aura mode colours by health). Default: 00FF00."
     },
     {
       "name": "Aura2Size",
       "type": "number",
       "default": 5,
-      "description": "Aura 2 radius shown in the settings output. Default: 5."
+      "description": "Aura 2 radius reference value (not applied to tokens). Default: 5."
     },
     {
       "name": "Aura2Shape",
       "type": "select",
       "options": [
         "Square",
-        "Circle"
+        "Circle",
+        "Hex",
+        "Circle Border",
+        "Square Border",
+        "Hex Border"
       ],
       "default": "Square",
-      "description": "Aura 2 shape shown in the settings output. Default: Square."
+      "description": "Aura 2 shape reference value (not applied to tokens). Default: Square."
     },
     {
       "name": "Aura2Color",
       "type": "text",
       "default": "806600",
-      "description": "Aura 2 display colour shown in the settings output, as a 6-digit hex value without #. Default: 806600."
+      "description": "Aura 2 colour reference value, as a 6-digit hex value without # (not applied to tokens). Default: 806600."
     },
     {
       "name": "OneOff",
@@ -264,7 +288,10 @@
     "graphic.bar3_link": "read",
     "graphic.aura1_color": "read,write",
     "graphic.aura1_radius": "write",
+    "graphic.aura1_options": "read,write",
+    "graphic.aura1_square": "read",
     "graphic.showplayers_aura1": "write",
+    "graphic.playersedit_aura1": "write",
     "graphic.tint_color": "read,write",
     "graphic.statusmarkers": "read,write",
     "graphic.showname": "write",
@@ -278,6 +305,7 @@
     "graphic.left": "read",
     "graphic.top": "read",
     "graphic._pageid": "read",
+    "page.grid_type": "read",
     "character.name": "read",
     "character.controlledby": "read",
     "attribute.name": "read,write",
