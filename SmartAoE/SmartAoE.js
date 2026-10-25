@@ -534,7 +534,7 @@ const SmartAoE = (() => {
     const barString = bar.join(',');
 
     //replace some problem characters before creating the !smartapply button action text. These will get un-replaced when triggered
-    const tempName = name.replace(/'/g, '%apostrophe%').replace(/`/g, /%backtick%/g);
+    const tempName = name.replace(/'/g, '%apostrophe%').replace(/`/g, '%backtick%');
 
     const applyDamLink = autoApply
       ? ''
@@ -2658,7 +2658,7 @@ const SmartAoE = (() => {
    */
   function distToSegmentSquared(P, endPt1, endPt2) {
     const l2 = distSquared(endPt1, endPt2);
-    if (l2 == 0) return distSquared(p, endPt1);
+    if (l2 === 0) return distSquared(P, endPt1);
     let t = ((P.x - endPt1.x) * (endPt2.x - endPt1.x) + (P.y - endPt1.y) * (endPt2.y - endPt1.y)) / l2;
     t = Math.max(0, Math.min(1, t));
     return distSquared(P, { x: endPt1.x + t * (endPt2.x - endPt1.x), y: endPt1.y + t * (endPt2.y - endPt1.y) });
@@ -5853,6 +5853,7 @@ const SmartAoE = (() => {
     const operator = rule.substring(0, 1);
     const operand = parseFloat(rule.replace(operator, ''));
 
+    let retVal = val; //unknown operator: leave the value unchanged
     switch (operator) {
       case '*':
         retVal = Math.floor(val * operand);
