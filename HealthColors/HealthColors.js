@@ -27,7 +27,7 @@ var HealthColors =
      * the out-of-the-box behavior for new or reset campaigns.
      *
      * @property {boolean} auraColorOn  - Master on/off switch for the whole script.
-     * @property {string}  auraBar      - Which token bar to read HP from ('bar1'|'bar2'|'bar3').
+     * @property {string}  auraBar      - Which token bar to read HP from ('bar1'|'bar2'|'bar3'|'bar4').
      * @property {boolean} auraTint     - When true, colors the token tint instead of the aura rings.
      * @property {number}  auraPercPC   - HP % threshold below which the PC aura activates (0–100).
      * @property {number}  auraPerc     - HP % threshold below which the NPC aura activates (0–100).
@@ -860,7 +860,8 @@ var HealthColors =
     }
 
     /**
-     * Normalizes a One-Click health-bar option ('bar1' | 'bar2' | 'bar3', any case).
+     * Normalizes a One-Click health-bar option ('bar1' | 'bar2' | 'bar3' | 'bar4', any case).
+     * bar4 needs the game's "Maximum Token Bubbles/Bars" setting raised to 4.
      *
      * @param {string} value    - Raw option value.
      * @param {string} fallback - Current setting.
@@ -870,7 +871,7 @@ var HealthColors =
       const bar = String(value ?? '')
         .trim()
         .toLowerCase();
-      return /^bar[123]$/.test(bar) ? bar : fallback;
+      return /^bar[1-4]$/.test(bar) ? bar : fallback;
     }
 
     /**
@@ -3559,7 +3560,7 @@ var HealthColors =
         `<div style="${contentStyle}">`,
         hr,
         `Is On: ${toggleBtn(s.auraColorOn, '!aura on')}<br>`,
-        `Health Bar: ${makeBtn(s.auraBar, '!aura bar ?{Bar|1|2|3}')}<br>`,
+        `Health Bar: ${makeBtn(s.auraBar, '!aura bar ?{Bar|1|2|3|4}')}<br>`,
         `Use Tint: ${toggleBtn(s.auraTint, '!aura tint')}<br>`,
         `Palette: ${makeBtn(s.colorPalette, '!aura palette ?{Palette|default|colorblind}', 'width:80px')} (auto refreshes all tokens)<br>`,
         `Percentage(PC/NPC): ${makeBtn(percLabel, '!aura perc ?{PCPercent?|100} ?{NPCPercent?|100}')}<br>`,
@@ -3790,12 +3791,14 @@ var HealthColors =
           return { handled: true, earlyReturn: false };
         },
         BAR: () => {
-          if (/^[123]$/.test(parts[2] || '')) {
+          if (/^[1-4]$/.test(parts[2] || '')) {
             s.auraBar = `bar${parts[2]}`;
             gmWhisper(`Health bar set to ${s.auraBar}. Forcing sync...`);
             menuForceUpdate();
           } else {
-            gmWhisper(`Invalid bar "${parts[2] || ''}". Use !aura bar 1, !aura bar 2, or !aura bar 3.`);
+            gmWhisper(
+              `Invalid bar "${parts[2] || ''}". Use !aura bar 1, 2, 3 or 4 (bar 4 needs Maximum Token Bubbles/Bars set to 4).`,
+            );
           }
           return { handled: true, earlyReturn: false };
         },
@@ -3862,7 +3865,7 @@ var HealthColors =
      * Processes incoming Roll20 chat messages to handle !aura commands.
      * GM-only: non-GMs receive an access-denied whisper.
      * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, HEAL, HURT, LISTFX, etc.)
-     * to the appropriate state mutation then refreshes the menu. BAR validates 1/2/3,
+     * to the appropriate state mutation then refreshes the menu. BAR validates 1–4,
      * whispers confirmation, and triggers immediate full sync. PALETTE also
      * triggers immediate full sync so existing tokens update right away.
      * When a setting changes, re-whispers the interactive menu to the GM.

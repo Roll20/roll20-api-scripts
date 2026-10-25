@@ -39,10 +39,11 @@
       "options": [
         "bar1",
         "bar2",
-        "bar3"
+        "bar3",
+        "bar4"
       ],
       "default": "bar1",
-      "description": "Token bar that holds hit points. Default: bar1."
+      "description": "Token bar that holds hit points. bar4 needs Maximum Token Bubbles/Bars set to 4. Default: bar1."
     },
     {
       "name": "auraTint",
@@ -280,12 +281,15 @@
     "graphic.bar1_value": "read,write",
     "graphic.bar2_value": "read,write",
     "graphic.bar3_value": "read,write",
+    "graphic.bar4_value": "read,write",
     "graphic.bar1_max": "read",
     "graphic.bar2_max": "read",
     "graphic.bar3_max": "read",
+    "graphic.bar4_max": "read",
     "graphic.bar1_link": "read",
     "graphic.bar2_link": "read",
     "graphic.bar3_link": "read",
+    "graphic.bar4_link": "read",
     "graphic.aura1_color": "read,write",
     "graphic.aura1_radius": "write",
     "graphic.aura1_options": "read,write",
