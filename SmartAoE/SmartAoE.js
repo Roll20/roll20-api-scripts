@@ -3200,8 +3200,8 @@ const SmartAoE = (() => {
    * @param {number} rad - Radius in pixels.
    * @param {number} pageGridIncrement - Page snapping_increment.
    * @param {number} pageScaleNumber - Page scale_number, for PF distances.
-   * @param {number} offsetX - Origin offset from the token centre; shifts the search box (applied to both axes).
-   * @param {number} offsetY - (unused)
+   * @param {number} offsetX - Origin offset from the token centre; widens the search box.
+   * @param {number} offsetY - Vertical origin offset; widens the search box.
    * @param {boolean} forceIntersection - For 'PFcircle', test the farthest corner instead of the centre.
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the covered cells.
    */
@@ -3235,8 +3235,12 @@ const SmartAoE = (() => {
     const grid = [];
 
     let minX, maxX, minY, maxY;
-    const minPt = new pt(oPt.x - bbRadX - offsetX, oPt.y - bbRadX - offsetX);
-    const maxPt = new pt(oPt.x + bbRadX - offsetX, oPt.y + bbRadX - offsetX);
+    //Cells to test: the box around the origin, widened by the origin offset on each axis so it covers the whole AoE
+    //(was "- offsetX" on both ends and both axes, which shifted the box and ignored offsetY/bbRadY, missing edge cells)
+    const searchX = bbRadX + Math.abs(offsetX || 0);
+    const searchY = bbRadY + Math.abs(offsetY || 0);
+    const minPt = new pt(oPt.x - searchX, oPt.y - searchY);
+    const maxPt = new pt(oPt.x + searchX, oPt.y + searchY);
     minX = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).x;
     maxX = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).x;
     minY = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).y;
@@ -3777,7 +3781,7 @@ const SmartAoE = (() => {
    * @param {pt} cPt - (unused)
    * @param {number} rad - Half the side length in pixels.
    * @param {number} pageGridIncrement - Page snapping_increment.
-   * @param {number} offsetX - Horizontal widening, in pixels (also shifts the search box on both axes).
+   * @param {number} offsetX - Horizontal widening, in pixels (also widens the search box).
    * @param {number} offsetY - Vertical widening, in pixels.
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the covered cells.
    */
@@ -3807,8 +3811,12 @@ const SmartAoE = (() => {
     const grid = [];
 
     let minX, maxX, minY, maxY;
-    const minPt = new pt(oPt.x - bbRadX - offsetX, oPt.y - bbRadX - offsetX);
-    const maxPt = new pt(oPt.x + bbRadX - offsetX, oPt.y + bbRadX - offsetX);
+    //Cells to test: the box around the origin, widened by the origin offset on each axis so it covers the whole AoE
+    //(was "- offsetX" on both ends and both axes, which shifted the box and ignored offsetY/bbRadY, missing edge cells)
+    const searchX = bbRadX + Math.abs(offsetX || 0);
+    const searchY = bbRadY + Math.abs(offsetY || 0);
+    const minPt = new pt(oPt.x - searchX, oPt.y - searchY);
+    const maxPt = new pt(oPt.x + searchX, oPt.y + searchY);
     minX = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).x;
     maxX = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).x;
     minY = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).y;
@@ -4078,8 +4086,8 @@ const SmartAoE = (() => {
    * @param {number} rad - Cone length in pixels.
    * @param {number} pageGridIncrement - Page snapping_increment.
    * @param {number} pageScaleNumber - Page scale_number, for PF distances.
-   * @param {number} offsetX - Origin offset from the token centre; shifts the search box (applied to both axes).
-   * @param {number} offsetY - (only passed through to getConeEndPts2, where it is unused)
+   * @param {number} offsetX - Origin offset from the token centre; widens the search box.
+   * @param {number} offsetY - Vertical origin offset; widens the search box.
    * @param {number} oWidth - Origin token width in pixels; widens the search box.
    * @param {number} oHeight - Origin token height in pixels; widens the search box.
    * @returns {{xVals:number[], yVals:number[]}} Pixel centres of the covered cells.
@@ -4146,8 +4154,12 @@ const SmartAoE = (() => {
     //cell objects are comprised of an area scalar and an array of points(endpoints plus intersections) in clockwise order (for area calcs)
     const grid = [];
     let minX, maxX, minY, maxY;
-    const minPt = new pt(oPt.x - bbRadX - offsetX, oPt.y - bbRadX - offsetX);
-    const maxPt = new pt(oPt.x + bbRadX - offsetX, oPt.y + bbRadX - offsetX);
+    //Cells to test: the box around the origin, widened by the origin offset on each axis so it covers the whole AoE
+    //(was "- offsetX" on both ends and both axes, which shifted the box and ignored offsetY/bbRadY, missing edge cells)
+    const searchX = bbRadX + Math.abs(offsetX || 0);
+    const searchY = bbRadY + Math.abs(offsetY || 0);
+    const minPt = new pt(oPt.x - searchX, oPt.y - searchY);
+    const maxPt = new pt(oPt.x + searchX, oPt.y + searchY);
     minX = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).x;
     maxX = getClosestGridPt(maxPt, pageGridCenters, pageGridIncrement).x;
     minY = getClosestGridPt(minPt, pageGridCenters, pageGridIncrement).y;
