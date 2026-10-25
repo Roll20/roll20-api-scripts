@@ -2190,11 +2190,11 @@ const SmartAoE = (() => {
    */
   async function deleteLinkedPaths(pathIDs) {
     //delete the linked paths and clear the pathIDs array from the state object
+    //uses its own variable: it used to overwrite the shared "path" that AoE creation was still using
     pathIDs.forEach((pathID) => {
-      path = getObj('path', pathID);
-      if (path) {
-        path.remove();
-        path = getObj('path', pathID);
+      const oldPath = getObj('path', pathID);
+      if (oldPath) {
+        oldPath.remove();
       }
     });
   }
