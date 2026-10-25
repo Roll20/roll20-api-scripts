@@ -4267,27 +4267,41 @@ const SmartAoE = (() => {
         
     }
     
+    //Splits a statusmarkers string into trimmed, non-empty entries
+    const splitStatusMarkers = function(markerString) {
+        return (markerString || '').split(',').map((s) => s.trim()).filter((s) => s !== '');
+    }
+    
+    //Marker tag without its optional @number badge, e.g. "red@2" -> "red", "Down::123@1" -> "Down::123"
+    const markerTag = function(marker) {
+        return marker.replace(/@\d+$/, '');
+    }
+    
     const addStatusMarkers = function(tokID, markerString) {
         if (!markerString) {
             return;
         }
         
         let tok = getObj('graphic', tokID);
-        let currentMarkers = tok.get('statusmarkers');
-        let tempMarkers = markerString.split(',').map((s) => s.trim());
+        if (!tok) {
+            return;
+        }
+        let currentMarkers = splitStatusMarkers(tok.get('statusmarkers'));
+        let currentTags = currentMarkers.map(markerTag);
         
-        //we don't want to duplicate statusmarkers, so check to see if they already exist
-        tempMarkers.forEach((m, idx) =>{
-            if (currentMarkers.includes(m)) {
-                tempMarkers.splice(idx, 1)
-            }
-        });	
-        let newMarkers = tempMarkers.join(',');
+        //we don't want to duplicate statusmarkers, so compare whole marker tags (ignoring any @number badge).
+        //Filtering avoids the skipped entries of splicing inside forEach, and substring matches such as "red" in "red@2".
+        let newMarkers = splitStatusMarkers(markerString).filter((m, idx, arr) => {
+            return !currentTags.includes(markerTag(m)) && arr.findIndex((x) => markerTag(x) === markerTag(m)) === idx;
+        });
+        if (newMarkers.length === 0) {
+            return;
+        }
         
         //grab the previous token settings before setting new ones
         let prevTok = JSON.parse(JSON.stringify(tok));
-        //set new tok settings
-        tok.set("statusmarkers", currentMarkers + ',' + newMarkers);
+        //set new tok settings (no stray leading/trailing commas)
+        tok.set("statusmarkers", currentMarkers.concat(newMarkers).join(','));
         //trigger tokenChange event for other api scripts
         notifyObservers('tokenChange',tok, prevTok);
     }
@@ -4297,16 +4311,16 @@ const SmartAoE = (() => {
             return;
         }
         let tok = getObj('graphic', tokID);
-        let currentMarkers = tok.get('statusmarkers').split(',');
+        if (!tok) {
+            return;
+        }
+        let allMarkers = splitStatusMarkers(tok.get('statusmarkers'));
         
-        let markersToRemove = markerString.split(',');
-        
-        for (let i=currentMarkers.length-1; i>=0; i--) {
-            for (let j=0; j<markersToRemove.length; j++) {
-                if (currentMarkers[i]===markersToRemove[j]) {
-                    currentMarkers.splice(i,1)
-                }
-            }
+        //compare whole marker tags so "red@2" is removed by "red", and spaces after commas are ignored
+        let tagsToRemove = splitStatusMarkers(markerString).map(markerTag);
+        let currentMarkers = allMarkers.filter((m) => !tagsToRemove.includes(markerTag(m)));
+        if (currentMarkers.length === allMarkers.length) {
+            return;
         }
         
         //grab the previous token settings before setting new ones
