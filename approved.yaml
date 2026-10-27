@@ -1495,3 +1495,11 @@ WorldAwareNPC:
 FaceOnMOve:
 - "FaceOnMOve"
 - "Utility"
+
+Darkness:
+- "Darkness"
+- "Dynamic Lighting"
+
+VoiceMenuManager:
+- "Voice Menu Manager"
+- "Utility"
