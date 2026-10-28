@@ -1,5 +1,5 @@
 // ===========================
-// === HealthColors v2.3.0 ===
+// === HealthColors v2.4.0 ===
 // ===========================
 
 // AUTHORS:
@@ -7,7 +7,7 @@
 //  - Surok: https://app.roll20.net/users/335573/surok
 //  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7
 
-/* global createObj TokenMod spawnFxWithDefinition spawnFx spawnFxBetweenPoints getObj state globalconfig playerIsGM sendChat findObjs Campaign log on getSheetItem */
+/* global createObj TokenMod SmartAoE spawnFxWithDefinition spawnFx spawnFxBetweenPoints getObj state globalconfig playerIsGM sendChat findObjs Campaign log on getSheetItem */
 
 var HealthColors =
   HealthColors ||
@@ -15,10 +15,10 @@ var HealthColors =
     'use strict';
 
     // ————— CONSTANTS —————
-    const VERSION = '2.3.0';
+    const VERSION = '2.4.0';
     const SCRIPT_NAME = 'HealthColors';
     const SCHEMA_VERSION = '1.1.0';
-    const UPDATED = '2026-10-07 21:00 UTC';
+    const UPDATED = '2026-10-25 12:00 UTC';
 
     // ————— DEFAULTS —————
     /**
@@ -27,7 +27,7 @@ var HealthColors =
      * the out-of-the-box behavior for new or reset campaigns.
      *
      * @property {boolean} auraColorOn  - Master on/off switch for the whole script.
-     * @property {string}  auraBar      - Which token bar to read HP from ('bar1'|'bar2'|'bar3').
+     * @property {string}  auraBar      - Which token bar to read HP from ('bar1'|'bar2'|'bar3'|'bar4').
      * @property {boolean} auraTint     - When true, colors the token tint instead of the aura rings.
      * @property {number}  auraPercPC   - HP % threshold below which the PC aura activates (0–100).
      * @property {number}  auraPerc     - HP % threshold below which the NPC aura activates (0–100).
@@ -39,12 +39,17 @@ var HealthColors =
      * @property {string}  PCNames      - Player visibility of PC token names ('Yes'|'No'|'Off').
      * @property {string}  GM_NPCNames  - GM visibility of NPC token names ('Yes'|'No'|'Off').
      * @property {string}  NPCNames     - Player visibility of NPC token names ('Yes'|'No'|'Off').
-     * @property {number}  AuraSize     - Feet the aura extends beyond the token edge.
-     * @property {string}  Aura1Shape   - Display/default Aura 1 shape shown in output.
-     * @property {string}  Aura1Color   - Display/default Aura 1 tint shown in output.
-     * @property {number}  Aura2Size    - Display/default Aura 2 radius shown in output.
-     * @property {string}  Aura2Shape   - Display/default Aura 2 shape shown in output.
-     * @property {string}  Aura2Color   - Display/default Aura 2 tint value shown in output.
+     * @property {number}  AuraSize     - Page units (usually feet) the aura extends beyond the token edge.
+     * @property {string}  Aura1Shape   - Shape applied to the Aura 1 health ring in aura mode: a Roll20 shape
+     *                                      (Circle, Square, Hex, Circle Border, Square Border, Hex Border),
+     *                                      Auto / Auto Border (hex on hex-grid pages, circle otherwise), or
+     *                                      Keep (leave each token's own shape alone).
+     * @property {number}  auraOpacity  - Aura 1 health-ring opacity in percent (100 = solid, as before).
+     * @property {boolean} auraLockPlayers - When true (aura mode), controlling players cannot edit Aura 1.
+     * @property {string}  Aura1Color   - Reference value only (aura mode colours Aura 1 by health).
+     * @property {number}  Aura2Size    - Reference value only; Aura 2 is never changed by the script.
+     * @property {string}  Aura2Shape   - Reference value only; Aura 2 is never changed by the script.
+     * @property {string}  Aura2Color   - Reference value only; Aura 2 is never changed by the script.
      * @property {boolean} OneOff       - When true, tokens without a linked character also get auras.
      * @property {boolean} FX           - Whether to spawn particle FX on HP changes.
      * @property {string}  HealFX       - Healing effect: a hex color (no '#') that recolours the default particle
@@ -76,7 +81,9 @@ var HealthColors =
       GM_NPCNames: 'Yes',
       NPCNames: 'Yes',
       AuraSize: 0.35,
-      Aura1Shape: 'Circle',
+      Aura1Shape: 'Auto',
+      auraOpacity: 100,
+      auraLockPlayers: true,
       Aura1Color: '00FF00',
       Aura2Size: 5,
       Aura2Shape: 'Square',
@@ -454,29 +461,89 @@ var HealthColors =
       return choice.kind === 'colour' ? choice.hex : choice.name;
     }
 
+    // ————— AURA SHAPES —————
     /**
-     * Inline style for a heal/hurt FX menu button or pill: a colour swatch for hex values,
-     * an auto-width label for effect names.
-     *
-     * @param {string} value - Current HealFX/HurtFX setting.
-     * @returns {string} Extra inline CSS.
+     * Roll20 aura shapes (Token Settings → Aura → Shape), keyed by display label, mapped to the
+     * `aura1_options` / `aura2_options` API value. Roll20 keeps `aura1_square` in sync itself.
      */
-    function fxSettingStyle(value) {
-      return isHex6(value) ? `background-color:#${value}` : 'width:auto;padding-left:6px;padding-right:6px';
+    const AURA_SHAPES = Object.freeze({
+      Circle: 'circle',
+      Square: 'square',
+      Hex: 'hex',
+      'Circle Border': 'circleborder',
+      'Square Border': 'squareborder',
+      'Hex Border': 'hexborder',
+    });
+
+    /**
+     * HealthColors-only Aura 1 choices: Auto picks hex on hex-grid pages and circle otherwise
+     * (Auto Border uses the outline versions); Keep never touches the token's shape.
+     */
+    const AURA1_SPECIAL_SHAPES = Object.freeze(['Auto', 'Auto Border', 'Keep']);
+
+    /** Roll-query option list for the Aura 1 shape prompt. */
+    const AURA1_SHAPE_CHOICES = [...AURA1_SPECIAL_SHAPES, ...Object.keys(AURA_SHAPES)].join('|');
+
+    /** Roll-query option list for the Aura 2 (reference-only) shape prompt. */
+    const AURA2_SHAPE_CHOICES = Object.keys(AURA_SHAPES).join('|');
+
+    /**
+     * Normalizes an aura shape to its display label. Accepts the label, the API value or any
+     * spacing/punctuation variant ("Circle Border", "circleborder", "circle-border", "circle_border").
+     *
+     * @param {string}  value            - Candidate shape value.
+     * @param {string}  fallback         - Fallback shape.
+     * @param {boolean} [allowSpecial]   - Also accept Auto, Auto Border and Keep (Aura 1 only).
+     * @returns {string} A display label from AURA_SHAPES (or AURA1_SPECIAL_SHAPES).
+     */
+    function normalizeShape(value, fallback, allowSpecial = true) {
+      const squash = (v) =>
+        String(v ?? '')
+          .toLowerCase()
+          .replace(/[^a-z]/g, '');
+      const wanted = squash(value);
+      if (!wanted) return fallback;
+      const labels = allowSpecial ? [...AURA1_SPECIAL_SHAPES, ...Object.keys(AURA_SHAPES)] : Object.keys(AURA_SHAPES);
+      return labels.find((label) => squash(label) === wanted) || fallback;
     }
 
     /**
-     * Normalizes an aura shape label to supported display values.
+     * Resolves the configured Aura 1 shape for a token into a Roll20 `aura1_options` value.
+     * Auto / Auto Border look at the token's page grid (`hex` or `hexr` → hex shapes). Roll20 draws
+     * hex auras in whole grid cells, so a radius under one cell (e.g. the default 0.35) would show
+     * almost nothing; Auto then uses the circle shapes instead.
      *
-     * @param {string} value    - Candidate shape value.
-     * @param {string} fallback - Fallback shape.
-     * @returns {string} One of Circle|Square.
+     * @param {object} obj - Roll20 token graphic object.
+     * @returns {string|null} API shape value, or null when the shape should be left alone (Keep).
      */
-    function normalizeShape(value, fallback) {
-      const shape = (value || '').trim().toUpperCase();
-      if (shape === 'CIRCLE') return 'Circle';
-      if (shape === 'SQUARE') return 'Square';
-      return fallback;
+    function resolveAura1Shape(obj) {
+      const label = normalizeShape(state.HealthColors.Aura1Shape, DEFAULTS.Aura1Shape);
+      if (label === 'Keep') return null;
+      if (label === 'Auto' || label === 'Auto Border') {
+        const page = getObj('page', obj.get('_pageid'));
+        const gridType = String(page?.get('grid_type') || '').toLowerCase();
+        const cellUnits = (Number(page?.get('scale_number')) || 5) * (Number(page?.get('snapping_increment')) || 1);
+        const fillsACell = Number(state.HealthColors.AuraSize) >= cellUnits;
+        const base = gridType.startsWith('hex') && fillsACell ? 'hex' : 'circle';
+        return label === 'Auto Border' ? `${base}border` : base;
+      }
+      return AURA_SHAPES[label] || 'circle';
+    }
+
+    /**
+     * Applies the configured Aura 1 opacity to a `#rrggbb` colour by appending a two-digit
+     * alpha channel (Roll20 accepts `#rrggbbaa` for auras). 100% returns the colour unchanged.
+     *
+     * @param {string} hex - Colour in `#rrggbb` form.
+     * @returns {string} `#rrggbb` or `#rrggbbaa`.
+     */
+    function withAuraOpacity(hex) {
+      const pct = normalizePercent(state.HealthColors.auraOpacity, 100);
+      if (pct >= 100 || !/^#[0-9a-f]{6}$/i.test(hex)) return hex;
+      const alpha = Math.round((pct / 100) * 255)
+        .toString(16)
+        .padStart(2, '0');
+      return `${hex}${alpha}`;
     }
 
     /**
@@ -782,7 +849,8 @@ var HealthColors =
     }
 
     /**
-     * Normalizes a One-Click health-bar option ('bar1' | 'bar2' | 'bar3', any case).
+     * Normalizes a One-Click health-bar option ('bar1' | 'bar2' | 'bar3' | 'bar4', any case).
+     * bar4 needs the game's "Maximum Token Bubbles/Bars" setting raised to 4.
      *
      * @param {string} value    - Raw option value.
      * @param {string} fallback - Current setting.
@@ -792,7 +860,7 @@ var HealthColors =
       const bar = String(value ?? '')
         .trim()
         .toLowerCase();
-      return /^bar[123]$/.test(bar) ? bar : fallback;
+      return /^bar[1-4]$/.test(bar) ? bar : fallback;
     }
 
     /**
@@ -816,9 +884,14 @@ var HealthColors =
       NPCNames: normalizeYesNoOff,
       AuraSize: normalizePositiveNumber,
       Aura1Shape: normalizeShape,
+      auraOpacity: (value, current) => {
+        const pct = normalizePercent(value, current);
+        return pct >= 1 ? pct : current;
+      },
+      auraLockPlayers: parseBooleanOption,
       Aura1Color: normalizeHex6,
       Aura2Size: normalizePositiveNumber,
-      Aura2Shape: normalizeShape,
+      Aura2Shape: (value, current) => normalizeShape(value, current, false),
       Aura2Color: normalizeHex6,
       OneOff: parseBooleanOption,
       FX: parseBooleanOption,
@@ -1015,25 +1088,45 @@ var HealthColors =
 
     /**
      * Applies a health color to a token via aura or tint depending on configuration.
-     * When in tint mode, sets tint_color. When in aura mode, sets aura radius and color.
+     * When in tint mode, sets tint_color. When in aura mode, sets the Aura 1 radius, colour
+     * (with the configured opacity), shape (unless Keep) and player-edit lock.
      * Roll20 measures aura1_radius from the token edge, so sizeSet maps directly.
      *
      * @param {object} obj         - Roll20 token object.
-     * @param {number} sizeSet     - Feet the ring extends beyond the token edge (e.g. 0.35).
+     * @param {number} sizeSet     - Page units the ring extends beyond the token edge (e.g. 0.35).
      * @param {string} markerColor - Hex color string derived from health percentage.
      */
     function tokenSet(obj, sizeSet, markerColor) {
-      const useTint = state.HealthColors.auraTint;
-      if (useTint) {
+      const s = state.HealthColors;
+      if (s.auraTint) {
         obj.set({ tint_color: markerColor });
-      } else {
-        obj.set({
-          tint_color: 'transparent',
-          aura1_radius: sizeSet,
-          aura1_color: markerColor,
-          showplayers_aura1: true,
-        });
+        return;
       }
+      const changes = {
+        tint_color: 'transparent',
+        aura1_radius: sizeSet,
+        aura1_color: withAuraOpacity(markerColor),
+        showplayers_aura1: true,
+        playersedit_aura1: s.auraLockPlayers !== true,
+      };
+      const shape = resolveAura1Shape(obj);
+      if (shape) changes.aura1_options = shape;
+      obj.set(changes);
+    }
+
+    /**
+     * Hands Aura 1 back to the GM when the script stops managing it (switching to tint mode):
+     * clears the ring, restores Roll20's default circle shape (unless Shape is Keep) and lets
+     * controlling players edit it again.
+     *
+     * @param {object} obj - Roll20 token graphic object.
+     */
+    function releaseAura1(obj) {
+      const changes = { aura1_color: 'transparent', aura1_radius: 0, playersedit_aura1: true };
+      if (normalizeShape(state.HealthColors.Aura1Shape, DEFAULTS.Aura1Shape) !== 'Keep') {
+        changes.aura1_options = 'circle';
+      }
+      obj.set(changes);
     }
 
     /**
@@ -1189,6 +1282,103 @@ var HealthColors =
       handleToken(obj, prev, recentAttrFires.has(obj.id) ? 'YES' : undefined);
     }
 
+    /**
+     * Mod scripts whose token changes HealthColors observes. Roll20 does not fire
+     * change:graphic for changes made by another script, so without these hooks HP set by
+     * `!token-mod` or SmartAoE damage would not re-colour the token. Both expose
+     * `ObserveTokenChange(handler)` and call handler(token, prev) after changing a token.
+     *
+     * @returns {{name: string, api: object|undefined}[]} Integration name and its API object, if installed.
+     */
+    function getTokenObserverScripts() {
+      return [
+        { name: 'TokenMod', api: typeof TokenMod === 'undefined' ? undefined : TokenMod },
+        { name: 'SmartAoE', api: typeof SmartAoE === 'undefined' ? undefined : SmartAoE },
+      ];
+    }
+
+    /**
+     * Returns true when the named observer script is installed and offers ObserveTokenChange.
+     *
+     * @param {string} name - 'TokenMod' or 'SmartAoE'.
+     * @returns {boolean} Whether HealthColors can observe it.
+     */
+    function isObserverScriptAvailable(name) {
+      const entry = getTokenObserverScripts().find((e) => e.name === name);
+      return typeof entry?.api?.ObserveTokenChange === 'function';
+    }
+
+    let tokenObserversRegistered = false;
+
+    /**
+     * Registers handleTokenChange with every installed observer script. Runs once per
+     * sandbox start: checkInstall also runs after `!aura reset`, and registering again would
+     * process (and play FX for) every change twice.
+     */
+    function registerTokenObservers() {
+      if (tokenObserversRegistered) return;
+      tokenObserversRegistered = true;
+      const hooked = getTokenObserverScripts()
+        .filter(({ name }) => isObserverScriptAvailable(name))
+        .map(({ name, api }) => {
+          api.ObserveTokenChange(handleTokenChange);
+          return name;
+        });
+      if (hooked.length) log(`${SCRIPT_NAME}: observing token changes from ${hooked.join(', ')}`);
+      getSmartAoeZeroHpMarkers();
+    }
+
+    // SmartAoE 0 HP marker tags seen this session. Remembered after an AoE is deleted, so a
+    // later "apply damage" click from that AoE's chat card is still recognised.
+    const knownSmartAoeZeroHpMarkers = new Set();
+
+    /**
+     * Collects the 0 HP marker tags configured on SmartAoE AoEs (`zeroHPmarker`, stored per
+     * AoE in `state.SmartAoE.links`), adding them to the session-wide set.
+     *
+     * @returns {Set<string>} Every SmartAoE 0 HP marker tag known this session.
+     */
+    function getSmartAoeZeroHpMarkers() {
+      const addTags = (markerString) =>
+        String(markerString || '')
+          .split(',')
+          .map((tag) => tag.trim().replace(/@\d+$/, ''))
+          .filter(Boolean)
+          .forEach((tag) => knownSmartAoeZeroHpMarkers.add(tag));
+      // SmartAoE 1.0.0+ reports every 0 HP marker it has used this session, including --instant AoEs,
+      // which are deleted before their damage is applied.
+      if (typeof SmartAoE !== 'undefined' && typeof SmartAoE.ZeroHPMarkers === 'function') {
+        try {
+          SmartAoE.ZeroHPMarkers().forEach(addTags);
+        } catch (err) {
+          log(`${SCRIPT_NAME}: SmartAoE.ZeroHPMarkers() failed: ${err?.message || err}`);
+        }
+      }
+      // Older SmartAoE versions: read the AoEs saved in SmartAoE's state.
+      const links = state?.SmartAoE?.links;
+      if (Array.isArray(links)) links.forEach((link) => addTags(link?.zeroHPmarker));
+      return knownSmartAoeZeroHpMarkers;
+    }
+
+    /**
+     * Returns the SmartAoE 0 HP marker on a token, if any. SmartAoE adds that marker just
+     * before it lowers the HP bar, so it is already present when HealthColors sees 0 HP.
+     * When it is there, HealthColors leaves the 0 HP marker to SmartAoE and adds none itself.
+     *
+     * @param {object} obj - Roll20 token graphic object.
+     * @returns {string|null} The matching marker tag, or null.
+     */
+    function getSmartAoeZeroHpMarkerOn(obj) {
+      if (!isObserverScriptAvailable('SmartAoE')) return null;
+      const known = getSmartAoeZeroHpMarkers();
+      if (!known.size) return null;
+      const tags = String(obj.get('statusmarkers') || '')
+        .split(',')
+        .map((tag) => tag.trim().replace(/@\d+$/, ''))
+        .filter(Boolean);
+      return tags.find((tag) => known.has(tag)) || null;
+    }
+
     // ————— STATE / INSTALL —————
     /**
      * Migrates state from the interim HP-only "PC dying marker" build to Death Save
@@ -1206,8 +1396,23 @@ var HealthColors =
     }
 
     /**
+     * Before v2.4.0 the Aura 1 shape setting was display-only, so every existing game reports
+     * the old default "Circle" without that ever having changed a token. On first load of
+     * v2.4.0 an untouched "Circle" becomes "Keep" so upgrading does not reshape auras GMs set
+     * by hand; any other stored shape (a deliberate choice) is kept and now applied.
+     */
+    function migrateAuraShapeState() {
+      const s = state.HealthColors;
+      if (!s || s.auraShapeApplied) return;
+      if (s.Aura1Shape === 'Circle') s.Aura1Shape = 'Keep';
+      if (s.Aura1Shape !== undefined) s.Aura1Shape = normalizeShape(s.Aura1Shape, DEFAULTS.Aura1Shape);
+      if (s.Aura2Shape !== undefined) s.Aura2Shape = normalizeShape(s.Aura2Shape, DEFAULTS.Aura2Shape, false);
+      s.auraShapeApplied = true;
+    }
+
+    /**
      * Initializes or migrates persisted state, applies all default values, applies any
-     * newer One-Click install options, registers the TokenMod observer if available, and
+     * newer One-Click install options, registers the TokenMod/SmartAoE observers if available, and
      * creates the default Hurt/Heal FX objects if they do not already exist in the campaign.
      * Safe to call multiple times (e.g. after a state reset).
      */
@@ -1218,14 +1423,13 @@ var HealthColors =
         state.HealthColors = { schemaVersion: SCHEMA_VERSION, version: VERSION };
       }
       migrateDeathSaveState();
+      migrateAuraShapeState();
       Object.keys(DEFAULTS).forEach((key) => {
         if (state.HealthColors[key] === undefined) state.HealthColors[key] = DEFAULTS[key];
       });
       state.HealthColors.colorPalette = normalizePalette(state.HealthColors.colorPalette, DEFAULTS.colorPalette);
       applyOneClickOptions();
-      if (typeof TokenMod !== 'undefined' && TokenMod.ObserveTokenChange) {
-        TokenMod.ObserveTokenChange(handleTokenChange);
-      }
+      registerTokenObservers();
       const fxHurt = findObjs({ _type: 'custfx', name: '-DefaultHurt' }, { caseInsensitive: true })[0];
       const fxHeal = findObjs({ _type: 'custfx', name: '-DefaultHeal' }, { caseInsensitive: true })[0];
       if (!fxHurt) {
@@ -1463,15 +1667,16 @@ var HealthColors =
      * @param {number}        curValue  - Current bar value.
      * @param {number}        prevValue - Previous bar value.
      * @param {boolean}       hasPrevValue - Whether a valid previous bar value was provided.
+     * @param {boolean}       [soundOnly]  - Play the death sound but add no marker (SmartAoE already marked it).
      */
-    function applyDeadStatus(obj, curValue, prevValue, hasPrevValue) {
+    function applyDeadStatus(obj, curValue, prevValue, hasPrevValue, soundOnly = false) {
       if (curValue > 0) {
         obj.set('status_dead', false);
         return;
       }
       const deadSfx = state.HealthColors.auraDeadFX;
       if (deadSfx !== 'None' && hasPrevValue && curValue !== prevValue) playDeath(deadSfx);
-      obj.set('status_dead', true);
+      if (!soundOnly) obj.set('status_dead', true);
     }
 
     /**
@@ -1525,10 +1730,19 @@ var HealthColors =
       const useAura = oCharacter ? lookupUseColor(oCharacter) : undefined;
       const useTint = state.HealthColors.auraTint;
       const colorType = useTint ? 'tint' : 'aura1';
+      const appliedColor = useTint ? markerColor : withAuraOpacity(markerColor);
 
-      // Death Save Integration (PC-only) owns the dying/stable/dead markers when enabled.
-      const deathSaveHandled = applyDeathSaveStatus(obj, curValue, isPlayer);
-      if (!deathSaveHandled && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue);
+      // SmartAoE added its own 0 HP marker: let that stand and add no HealthColors marker.
+      const smartAoeMarker = curValue <= 0 ? getSmartAoeZeroHpMarkerOn(obj) : null;
+      const deathSaveActive = state.HealthColors.deathSavesOn && isPlayer;
+
+      if (smartAoeMarker) {
+        if (!deathSaveActive && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue, true);
+      } else {
+        // Death Save Integration (PC-only) owns the dying/stable/dead markers when enabled.
+        const deathSaveHandled = applyDeathSaveStatus(obj, curValue, isPlayer);
+        if (!deathSaveHandled && showDead) applyDeadStatus(obj, curValue, prevValue, hasPrevValue);
+      }
 
       if (isTypeOn && useAura !== 'NO') {
         if (curValue <= 0) {
@@ -1540,7 +1754,7 @@ var HealthColors =
         } else {
           tokenSet(obj, state.HealthColors.AuraSize, markerColor);
         }
-      } else if (obj.get(`${colorType}_color`) === markerColor) {
+      } else if (String(obj.get(`${colorType}_color`) || '').toLowerCase() === appliedColor.toLowerCase()) {
         clearAuras(obj);
       }
     }
@@ -1734,6 +1948,14 @@ var HealthColors =
       const { maxValue, curValue, prevValue, hasPrevValue } = health;
       const sizeChanged = prev.width !== obj.get('width') || prev.height !== obj.get('height');
       const linkageChanged = barLinkageChanged(obj, prev, barUsed);
+      // Saving token settings can overwrite an aura applied while the dialog was open.
+      // Reconcile visual changes even when HP, size and bar linkage stayed the same.
+      const indicatorKeys = state.HealthColors.auraTint
+        ? ['tint_color']
+        : ['aura1_radius', 'aura1_color', 'aura1_options', 'aura1_square', 'showplayers_aura1', 'tint_color'];
+      const indicatorChanged = indicatorKeys.some(
+        (key) => String(getPrevBarValue(prev, key) ?? '') !== String(obj.get(key) ?? ''),
+      );
 
       // Only skip when nothing relevant changed. The `curValue > 0` clause means we never
       // skip while a token is at/below 0 HP: on linked-attribute sheets (D&D 2024) a drop
@@ -1745,7 +1967,8 @@ var HealthColors =
         curValue > 0 &&
         update !== 'YES' &&
         !sizeChanged &&
-        !linkageChanged
+        !linkageChanged &&
+        !indicatorChanged
       ) {
         return;
       }
@@ -1766,7 +1989,7 @@ var HealthColors =
     /**
      * Handles the visual transition when switching between aura and tint modes.
      * Processes every token in a single drain queue pass: when switching to tint mode
-     * it clears aura1 on each token before re-evaluating health, ensuring no stale
+     * it releases aura1 on each token (see releaseAura1) before re-evaluating health, ensuring no stale
      * HC-set aura rings remain. When switching to aura mode it re-evaluates health
      * directly so tokenSet clears the tint and applies the aura ring in one step.
      *
@@ -1781,7 +2004,7 @@ var HealthColors =
       const drainQueue = () => {
         const token = workQueue.shift();
         if (!token) return;
-        if (toTint) token.set({ aura1_color: 'transparent', aura1_radius: 0 });
+        if (toTint) releaseAura1(token);
         const prev = deepClone(token);
         handleToken(token, prev, 'YES');
         setTimeout(drainQueue, 0);
@@ -1821,13 +2044,21 @@ var HealthColors =
      * @param {object} msg - Roll20 chat message object with a populated `selected` array.
      */
     function manUpdate(msg) {
-      const allNames = msg.selected.reduce((acc, obj) => {
-        const token = getObj('graphic', obj._id);
-        const prev = deepClone(token);
-        handleToken(token, prev, 'YES');
-        return `${acc}${token.get('name')}<br>`;
-      }, '');
-      gmWhisper(allNames);
+      const tokens = (msg.selected || [])
+        .filter((sel) => sel._type === 'graphic')
+        .map((sel) => getObj('graphic', sel._id))
+        .filter(Boolean);
+      if (tokens.length === 0) {
+        gmWhisper(
+          'Select one or more tokens first, then press <b>Update Selected</b> (or run <code>!aura update</code>).',
+        );
+        return;
+      }
+      const names = tokens.map((token) => {
+        handleToken(token, deepClone(token), 'YES');
+        return escapeForChat(token.get('name') || '(unnamed token)');
+      });
+      gmWhisper(`Updated ${names.length} token${names.length === 1 ? '' : 's'}:<br>${names.join('<br>')}`);
     }
 
     // ————— DEATH SAVE INTEGRATION —————
@@ -1894,6 +2125,8 @@ var HealthColors =
      * Applies the dying/stable/dead marker to a token from synced save counts.
      * Above 0 HP all death markers are cleared. Otherwise: 3+ failures → dead (Red X,
      * plays the death sound once on entering dead); 3+ successes → stable; else dying.
+     * When the token carries a SmartAoE 0 HP marker, that marker stands in for dying (no dying
+     * marker is added) and is left in place.
      *
      * @param {object} token - Roll20 token graphic object.
      * @param {number} succ  - Number of recorded successes.
@@ -1907,16 +2140,23 @@ var HealthColors =
         token.set(buildDeathSaveMarkerPatch(false, false, false));
         return 'alive';
       }
+      // A SmartAoE 0 HP marker stands in for "dying", and is never removed by HealthColors.
+      const smartAoeMarker = getSmartAoeZeroHpMarkerOn(token);
+      const patch = (dyingOn, stableOn, deadOn) => {
+        const changes = buildDeathSaveMarkerPatch(dyingOn && !smartAoeMarker, stableOn, deadOn);
+        if (smartAoeMarker) delete changes[`status_${smartAoeMarker}`];
+        return changes;
+      };
       if (fail >= 3) {
         if (s.auraDeadFX !== 'None' && !token.get('status_dead')) playDeath(s.auraDeadFX);
-        token.set(buildDeathSaveMarkerPatch(false, false, true));
+        token.set(patch(false, false, true));
         return 'dead';
       }
       if (succ >= 3) {
-        token.set(buildDeathSaveMarkerPatch(false, true, false));
+        token.set(patch(false, true, false));
         return 'stable';
       }
-      token.set(buildDeathSaveMarkerPatch(true, false, false));
+      token.set(patch(true, false, false));
       return 'dying';
     }
 
@@ -2937,8 +3177,7 @@ var HealthColors =
      */
     function sandboxDeathSaveIntegrationNote() {
       if (isBeaconCapableSandbox() === true) return '';
-      const style = 'display:block;text-align:right;font-size:8pt;line-height:1.2em;margin:2px 0 4px 0;color:#FFE9A8';
-      return `<span style="${style}">Beacon sheets need Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION} for live death-save syncing (this game: ${escapeForChat(describeSandbox())}).</span>`;
+      return `<span>Beacon sheets need Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION} for live death-save syncing (this game: ${escapeForChat(describeSandbox())}).</span>`;
     }
 
     /**
@@ -3281,82 +3520,6 @@ var HealthColors =
     }
 
     /**
-     * Builds a non-interactive styled value pill for read-only output panels.
-     *
-     * @param {string} label           - Display text.
-     * @param {string} [extraStyle=''] - Additional inline CSS to append to base style.
-     * @returns {string} A styled span element.
-     */
-    function makePill(label, extraStyle = '') {
-      const base = [
-        'display:inline-block',
-        'padding-top:1px',
-        'text-align:center',
-        'font-size:9pt',
-        'min-width:48px',
-        'height:14px',
-        'border:1px solid black',
-        'margin:1px',
-        'background-color:#6FAEC7',
-        'border-radius:4px',
-        'box-shadow:1px 1px 1px #707070',
-        'line-height:14px',
-        'padding-left:4px',
-        'padding-right:4px',
-      ].join(';');
-      return `<span style="${base};${extraStyle}">${label}</span>`;
-    }
-
-    /**
-     * Builds a toggle-style button that shows red when the value is false/off.
-     *
-     * @param {boolean} value - Current boolean state (true = on/default blue, false = off/red).
-     * @param {string}  href  - Roll20 API command to execute on click.
-     * @returns {string} An HTML anchor string.
-     */
-    function toggleBtn(value, href) {
-      const style = value === true ? '' : 'background-color:#A84D4D';
-      return makeBtn(value === true ? 'Yes' : 'No', href, style);
-    }
-
-    /**
-     * Builds a three-state name-setting button. Red for 'No', grey for 'Off', default for 'Yes'.
-     *
-     * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
-     * @param {string} href  - Roll20 API command to execute on click.
-     * @returns {string} An HTML anchor string.
-     */
-    function nameBtn(value, href) {
-      let style = '';
-      if (value === 'No') style = 'background-color:#A84D4D';
-      if (value === 'Off') style = 'background-color:#D6D6D6';
-      return makeBtn(value, href, style);
-    }
-
-    /**
-     * Read-only pill counterpart to toggleBtn: default blue background for true, red for false.
-     *
-     * @param {boolean} value - Current boolean state.
-     * @returns {string} A styled span element.
-     */
-    function boolPill(value) {
-      return makePill(value ? 'Yes' : 'No', value ? '' : 'background-color:#A84D4D');
-    }
-
-    /**
-     * Read-only pill counterpart to nameBtn: red for 'No', grey for 'Off', default for 'Yes'.
-     *
-     * @param {string} value - Current value: 'Yes', 'No', or 'Off'.
-     * @returns {string} A styled span element.
-     */
-    function namePill(value) {
-      let style = '';
-      if (value === 'No') style = 'background-color:#A84D4D';
-      if (value === 'Off') style = 'background-color:#D6D6D6';
-      return makePill(value, style);
-    }
-
-    /**
      * Whispers the GM a list of the campaign's custom FX (name + id, with one-click Heal/Hurt
      * set buttons) and a reference of Roll20's built-in `<type>-<colour>` effect names.
      * Triggered by `!aura listfx` and the "List FX" menu button.
@@ -3388,188 +3551,733 @@ var HealthColors =
       );
     }
 
+    /** Colours and inline styles shared by the GM menu and the settings snapshot. */
+    const MENU_STYLE = {
+      outer:
+        'border:1px solid #2e5d78;border-radius:6px;overflow:hidden;background-color:#f4f8fb;color:#1b2b36;font-size:9pt;box-shadow:2px 2px 2px #9aa9b5',
+      header: 'background-color:#2e5d78;color:#fff;text-align:center;font-weight:bold;font-size:10pt;padding:4px 6px',
+      subheader: 'font-weight:normal;font-size:8pt;color:#d8e8f2',
+      actions: 'text-align:center;padding:4px 2px;background-color:#dfeaf2;border-bottom:1px solid #b8ccd9',
+      section:
+        'background-color:#76add6;color:#fff;font-weight:bold;font-size:8.5pt;padding:2px 6px;letter-spacing:0.3px;text-transform:uppercase',
+      table: 'width:100%;border-collapse:collapse',
+      label: 'padding:2px 6px;text-align:left;vertical-align:middle',
+      control: 'padding:2px 4px;text-align:right;vertical-align:middle;white-space:nowrap',
+      note: 'padding:2px 6px 4px 6px;font-size:8pt;line-height:1.25em;color:#5b6b78;text-align:left',
+      warn: 'padding:2px 6px 4px 6px;font-size:8pt;line-height:1.25em;color:#8a5a00;text-align:left',
+      gridHead: 'padding:2px 4px;text-align:center;font-size:8pt;color:#5b6b78',
+      btn: 'display:inline-block;min-width:40px;padding:1px 6px;margin:1px;border:1px solid #1f4f6b;border-radius:4px;background-color:#3b82ad;color:#fff;font-size:8.5pt;font-weight:bold;text-align:center;text-decoration:none',
+      off: 'background-color:#a84d4d;border-color:#6e2b2b',
+      neutral: 'background-color:#9aa5ad;border-color:#6b757c',
+      action: 'background-color:#2e5d78;border-color:#1b3a4c',
+    };
+
     /**
-     * Renders and whispers the HealthColors configuration menu to the GM.
-     * Builds the full HTML panel using makeBtn/toggleBtn/nameBtn helpers and
-     * reflects all current state values as interactive button labels.
+     * Builds one control for the menu (a clickable button) or the snapshot (a read-only pill).
+     *
+     * @param {boolean} interactive  - True for a chat button, false for a read-only pill.
+     * @param {string}  label        - Visible text (already escaped where needed).
+     * @param {string}  [href]       - API command run by the button.
+     * @param {object}  [opts]       - Extra options.
+     * @param {string}  [opts.style] - Additional inline CSS.
+     * @param {string}  [opts.title] - Hover tooltip.
+     * @returns {string} HTML for the control.
      */
-    function showMenu() {
-      const s = state.HealthColors;
-      const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
-      const outerStyle = [
-        'border-radius:8px',
-        'box-shadow:3px 3px 1px #707070',
-        'border:2px solid black',
-        'overflow:hidden',
-      ].join(';');
-      const menuHeaderStyle = [
-        'background-color:#2e5d78',
-        'color:#fff',
-        'text-align:center',
-        'font-weight:bold',
-        'font-size:10pt',
-        'padding:4px 8px',
-        'letter-spacing:0.5px',
-      ].join(';');
-      const contentStyle = [
-        'padding:5px',
-        'font-size:9pt',
-        'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
-        'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
-        'color:#FFF',
-        'text-align:right',
-        'vertical-align:middle',
-      ].join(';');
-
-      const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
-      const healBtnStyle = fxSettingStyle(s.HealFX);
-      const hurtBtnStyle = fxSettingStyle(s.HurtFX);
-      const healFxCmd = `!aura heal ?{Heal FX (hex colour or effect name)|${s.HealFX}}`;
-      const hurtFxCmd = `!aura hurt ?{Hurt FX (hex colour or effect name)|${s.HurtFX}}`;
-      const aura1Style = `background-color:#${s.Aura1Color}`;
-      const aura2Style = `background-color:#${s.Aura2Color}`;
-      const deadFxCmd = `!aura deadfx ?{Sound Name?|${s.auraDeadFX}}`;
-      const wide = 'width:auto;padding-left:6px;padding-right:6px';
-      const successCmd = `!aura deathsaves success ?{Success attribute(s), comma-separated|${s.dsSuccessAttr}}`;
-      const failureCmd = `!aura deathsaves failure ?{Failure attribute(s), comma-separated|${s.dsFailureAttr}}`;
-      const dyingCmd = `!aura deathsaves dyingmarker ?{Dying marker|${s.dsDyingMarker}}`;
-      const html = [
-        `<div style="${outerStyle}">`,
-        `<div style="${menuHeaderStyle}">HealthColors v${VERSION}</div>`,
-        `<div style="${contentStyle}">`,
-        hr,
-        `Is On: ${toggleBtn(s.auraColorOn, '!aura on')}<br>`,
-        `Health Bar: ${makeBtn(s.auraBar, '!aura bar ?{Bar|1|2|3}')}<br>`,
-        `Use Tint: ${toggleBtn(s.auraTint, '!aura tint')}<br>`,
-        `Palette: ${makeBtn(s.colorPalette, '!aura palette ?{Palette|default|colorblind}', 'width:80px')} (auto refreshes all tokens)<br>`,
-        `Percentage(PC/NPC): ${makeBtn(percLabel, '!aura perc ?{PCPercent?|100} ?{NPCPercent?|100}')}<br>`,
-        hr,
-        `Show PC Health: ${toggleBtn(s.PCAura, '!aura pc')}<br>`,
-        `Show NPC Health: ${toggleBtn(s.NPCAura, '!aura npc')}<br>`,
-        `Show Dead PC: ${toggleBtn(s.auraDeadPC, '!aura deadPC')}<br>`,
-        `Show Dead NPC: ${toggleBtn(s.auraDead, '!aura dead')}<br>`,
-        hr,
-        `GM Sees all PC Names: ${nameBtn(s.GM_PCNames, '!aura gmpc ?{Setting|Yes|No|Off}')}<br>`,
-        `GM Sees all NPC Names: ${nameBtn(s.GM_NPCNames, '!aura gmnpc ?{Setting|Yes|No|Off}')}<br>`,
-        hr,
-        `PC Sees all PC Names: ${nameBtn(s.PCNames, '!aura pcpc ?{Setting|Yes|No|Off}')}<br>`,
-        `PC Sees all NPC Names: ${nameBtn(s.NPCNames, '!aura pcnpc ?{Setting|Yes|No|Off}')}<br>`,
-        hr,
-        `Aura 1 Radius (ft): ${makeBtn(s.AuraSize, '!aura size ?{Size?|0.35}')}<br>`,
-        `Aura 1 Shape: ${makeBtn(s.Aura1Shape, '!aura a1shape ?{Shape?|Circle|Square}')}<br>`,
-        `Aura 1 Color: ${makeBtn(s.Aura1Color, '!aura a1tint ?{Color?|00FF00}', aura1Style)}<br>`,
-        `Aura 2 Radius (ft): ${makeBtn(String(s.Aura2Size), '!aura a2size ?{Size?|5}')}<br>`,
-        `Aura 2 Shape: ${makeBtn(s.Aura2Shape, '!aura a2shape ?{Shape?|Square|Circle}')}<br>`,
-        `Aura 2 Color: ${makeBtn(s.Aura2Color, '!aura a2tint ?{Color?|806600}', aura2Style)}<br>`,
-        `One Offs: ${toggleBtn(s.OneOff, '!aura ONEOFF')}<br>`,
-        `FX: ${toggleBtn(s.FX, '!aura FX')}<br>`,
-        `Heal FX: ${makeBtn(escapeForChat(s.HealFX), healFxCmd, healBtnStyle)}<br>`,
-        `Hurt FX: ${makeBtn(escapeForChat(s.HurtFX), hurtFxCmd, hurtBtnStyle)}<br>`,
-        `FX List: ${makeBtn('List FX', '!aura listfx', wide)}<br>`,
-        `DeathSFX: ${makeBtn(s.auraDeadFX.substring(0, 4), deadFxCmd)}<br>`,
-        hr,
-        `<u>Death Save Integration</u><br>`,
-        sandboxDeathSaveIntegrationNote(),
-        `Enabled: ${toggleBtn(s.deathSavesOn, '!aura deathsaves toggle')}<br>`,
-        `Success Field(s): ${makeBtn(s.dsSuccessAttr, successCmd, wide)}<br>`,
-        `Failure Field(s): ${makeBtn(s.dsFailureAttr, failureCmd, wide)}<br>`,
-        `Dying Marker: ${makeBtn(s.dsDyingMarker, dyingCmd, wide)}<br>`,
-        `Stable Marker: ${makeBtn(s.dsStableMarker, '!aura deathsaves stablemarker ?{Stable marker|green}', wide)}<br>`,
-        `Dead Marker: ${makePill('Red X')}<br>`,
-        `Sync: ${makeBtn('Sync Selected', '!aura deathsaves sync', wide)}<br>`,
-        `Markers: ${makeBtn('List Markers', '!aura deathsaves markers', wide)}<br>`,
-        hr,
-        `</div>`,
-        `</div>`,
-      ].join('');
-
-      sendChat(SCRIPT_NAME, `/w GM ${html}`);
+    function menuControl(interactive, label, href, { style = '', title = '' } = {}) {
+      const css = `${MENU_STYLE.btn};${style}`;
+      const tip = title ? ` title="${escapeForChat(title)}"` : '';
+      return interactive && href
+        ? `<a style="${css}" href="${href}"${tip}>${label}</a>`
+        : `<span style="${css}"${tip}>${label}</span>`;
     }
 
     /**
-     * Renders a read-only settings snapshot to public game chat (all players).
+     * Builds a Yes/No control, red when off.
+     *
+     * @param {boolean} interactive - Button or pill.
+     * @param {boolean} value       - Current value.
+     * @param {string}  href        - Toggle command.
+     * @returns {string} HTML for the control.
+     */
+    function menuToggle(interactive, value, href) {
+      return menuControl(interactive, value ? 'Yes' : 'No', href, { style: value ? '' : MENU_STYLE.off });
+    }
+
+    /**
+     * Builds a Yes/No/Off nameplate control: red for No, grey for Off.
+     *
+     * @param {boolean} interactive - Button or pill.
+     * @param {string}  value       - 'Yes', 'No' or 'Off'.
+     * @param {string}  href        - Command prefix; the value prompt is appended.
+     * @returns {string} HTML for the control.
+     */
+    function menuName(interactive, value, href) {
+      let style = '';
+      if (value === 'No') style = MENU_STYLE.off;
+      if (value === 'Off') style = MENU_STYLE.neutral;
+      return menuControl(interactive, value, `${href} ?{Setting|Yes|No|Off}`, {
+        style,
+        title: 'Yes = always show, No = always hide, Off = leave the token setting alone',
+      });
+    }
+
+    /**
+     * Builds a titled menu section: a header bar followed by label/control rows.
+     *
+     * @param {string}   title - Section title.
+     * @param {string[]} rows  - Row HTML from menuRow / menuNote.
+     * @returns {string} Section HTML.
+     */
+    function menuSection(title, rows) {
+      return `<div style="${MENU_STYLE.section}">${title}</div><table style="${MENU_STYLE.table}">${rows.join('')}</table>`;
+    }
+
+    /**
+     * Builds one label/control row.
+     *
+     * @param {string} label   - Setting name.
+     * @param {string} control - Control HTML.
+     * @returns {string} Table row HTML.
+     */
+    function menuRow(label, control) {
+      return `<tr><td style="${MENU_STYLE.label}">${label}</td><td style="${MENU_STYLE.control}">${control}</td></tr>`;
+    }
+
+    /**
+     * Builds a full-width note row (small grey text, or amber for warnings).
+     *
+     * @param {string}  html   - Note content.
+     * @param {boolean} [warn] - Use the warning colour.
+     * @returns {string} Table row HTML ('' when html is empty).
+     */
+    function menuNote(html, warn = false) {
+      return html ? `<tr><td colspan="2" style="${warn ? MENU_STYLE.warn : MENU_STYLE.note}">${html}</td></tr>` : '';
+    }
+
+    /**
+     * Short label for a comma-separated list setting, e.g. "3 fields"; the full value goes in the tooltip.
+     *
+     * @param {string} list - Comma-separated names.
+     * @returns {string} Summary label.
+     */
+    function listSummary(list) {
+      const items = String(list || '')
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (items.length === 0) return 'none';
+      return items.length === 1 ? escapeForChat(items[0]) : `${items.length} fields`;
+    }
+
+    /**
+     * Builds the settings panel shared by the GM menu (interactive) and the `!aura settings`
+     * snapshot (read-only), so the two always show the same settings in the same layout.
+     *
+     * @param {boolean} interactive - True for the whispered GM menu, false for the public snapshot.
+     * @returns {string} Panel HTML.
+     */
+    function buildSettingsPanel(interactive) {
+      const s = state.HealthColors;
+      const c = (label, href, opts) => menuControl(interactive, label, href, opts);
+      const t = (value, href) => menuToggle(interactive, value, href);
+      const n = (value, href) => menuName(interactive, value, href);
+      const swatch = (hex) => `background-color:#${hex};color:#111;border-color:#555`;
+
+      const actions = interactive
+        ? `<div style="${MENU_STYLE.actions}">${[
+            c('Update Selected', '!aura update', {
+              style: MENU_STYLE.action,
+              title: 'Re-colour the selected token(s) now',
+            }),
+            c('Refresh All', '!aura forceall', {
+              style: MENU_STYLE.action,
+              title: 'Re-colour every token on the page',
+            }),
+            c('Post Settings', '!aura settings', {
+              style: MENU_STYLE.action,
+              title: 'Post a read-only copy of these settings to game chat',
+            }),
+          ].join('')}</div>`
+        : '';
+
+      const general = menuSection('General', [
+        menuRow('Enabled', t(s.auraColorOn, s.auraColorOn ? '!aura off' : '!aura on')),
+        menuRow('Health bar', c(s.auraBar, '!aura bar ?{Health bar|1|2|3|4}')),
+        menuRow(
+          'Colour with',
+          c(s.auraTint ? 'Tint' : 'Aura 1', '!aura tint', { title: 'Switch between Aura 1 ring and token tint' }),
+        ),
+        menuRow('Palette', c(s.colorPalette, '!aura palette ?{Palette|default|colorblind}')),
+        menuRow(
+          'Show at or below HP %',
+          c(`PC ${s.auraPercPC} / NPC ${s.auraPerc}`, '!aura perc ?{PC percent|100} ?{NPC percent|100}', {
+            title: '0 = never, 100 = always',
+          }),
+        ),
+        menuRow('Track unlinked tokens', t(s.OneOff, '!aura oneoff')),
+      ]);
+
+      const tracking = menuSection('Tracking &amp; markers', [
+        menuRow('Track PCs / NPCs', `${t(s.PCAura, '!aura pc')}${t(s.NPCAura, '!aura npc')}`),
+        menuRow('Dead marker PCs / NPCs', `${t(s.auraDeadPC, '!aura deadPC')}${t(s.auraDead, '!aura dead')}`),
+      ]);
+
+      const names =
+        `<div style="${MENU_STYLE.section}">Nameplates</div><table style="${MENU_STYLE.table}">` +
+        `<tr><td></td><td style="${MENU_STYLE.gridHead}">PCs</td><td style="${MENU_STYLE.gridHead}">NPCs</td></tr>` +
+        `<tr><td style="${MENU_STYLE.label}">GM sees</td><td style="${MENU_STYLE.control};text-align:center">${n(s.GM_PCNames, '!aura gmpc')}</td><td style="${MENU_STYLE.control};text-align:center">${n(s.GM_NPCNames, '!aura gmnpc')}</td></tr>` +
+        `<tr><td style="${MENU_STYLE.label}">Players see</td><td style="${MENU_STYLE.control};text-align:center">${n(s.PCNames, '!aura pcpc')}</td><td style="${MENU_STYLE.control};text-align:center">${n(s.NPCNames, '!aura pcnpc')}</td></tr></table>`;
+
+      const aura = menuSection('Aura 1 ring', [
+        menuRow('Radius (units)', c(String(s.AuraSize), `!aura size ?{Radius in page units|${s.AuraSize}}`)),
+        menuRow('Shape', c(escapeForChat(s.Aura1Shape), `!aura a1shape ?{Shape|${AURA1_SHAPE_CHOICES}}`)),
+        menuRow('Opacity %', c(String(s.auraOpacity), `!aura opacity ?{Opacity % (1-100)|${s.auraOpacity}}`)),
+        menuRow('Lock for players', t(s.auraLockPlayers, '!aura lock')),
+        menuNote(s.auraTint ? 'Tint mode is on: these apply when you switch back to Aura 1.' : ''),
+      ]);
+
+      const fx = menuSection('Effects &amp; sound', [
+        menuRow('Heal / hurt FX', t(s.FX, '!aura fx')),
+        menuRow(
+          'Heal effect',
+          c(escapeForChat(s.HealFX), `!aura heal ?{Heal FX (hex colour, effect name or default)|${s.HealFX}}`, {
+            style: isHex6(s.HealFX) ? swatch(s.HealFX) : '',
+          }),
+        ),
+        menuRow(
+          'Hurt effect',
+          c(escapeForChat(s.HurtFX), `!aura hurt ?{Hurt FX (hex colour, effect name or default)|${s.HurtFX}}`, {
+            style: isHex6(s.HurtFX) ? swatch(s.HurtFX) : '',
+          }),
+        ),
+        menuRow(
+          'Death sound',
+          c(escapeForChat(s.auraDeadFX), `!aura deadfx ?{Jukebox track(s) or None|${s.auraDeadFX}}`),
+        ),
+        interactive ? menuRow('Effect list', c('List FX', '!aura listfx')) : '',
+      ]);
+
+      const deathSaves = menuSection('Death Save Integration', [
+        menuNote(interactive ? sandboxDeathSaveIntegrationNote() : '', true),
+        menuRow('Enabled', t(s.deathSavesOn, '!aura deathsaves toggle')),
+        menuRow(
+          'Success fields',
+          c(
+            listSummary(s.dsSuccessAttr),
+            `!aura deathsaves success ?{Success field(s), comma-separated|${s.dsSuccessAttr}}`,
+            {
+              title: s.dsSuccessAttr,
+            },
+          ),
+        ),
+        menuRow(
+          'Failure fields',
+          c(
+            listSummary(s.dsFailureAttr),
+            `!aura deathsaves failure ?{Failure field(s), comma-separated|${s.dsFailureAttr}}`,
+            {
+              title: s.dsFailureAttr,
+            },
+          ),
+        ),
+        menuRow(
+          'Dying / stable marker',
+          `${c(escapeForChat(s.dsDyingMarker || 'none'), `!aura deathsaves dyingmarker ?{Dying marker|${s.dsDyingMarker}}`)}` +
+            `${c(escapeForChat(s.dsStableMarker || 'none'), `!aura deathsaves stablemarker ?{Stable marker|${s.dsStableMarker}}`)}`,
+        ),
+        menuRow('Dead marker', menuControl(false, 'Red X', '', { style: MENU_STYLE.neutral })),
+        interactive
+          ? menuRow(
+              'Tools',
+              `${c('Sync Selected', '!aura deathsaves sync')}${c('Markers', '!aura deathsaves markers')}`,
+            )
+          : '',
+      ]);
+
+      const reference = menuSection('Reference values (not applied)', [
+        menuRow(
+          'Aura 1 colour',
+          c(s.Aura1Color, `!aura a1tint ?{Colour (6-digit hex)|${s.Aura1Color}}`, { style: swatch(s.Aura1Color) }),
+        ),
+        menuRow(
+          'Aura 2 radius / shape',
+          `${c(String(s.Aura2Size), `!aura a2size ?{Radius|${s.Aura2Size}}`)}${c(
+            escapeForChat(s.Aura2Shape),
+            `!aura a2shape ?{Shape|${AURA2_SHAPE_CHOICES}}`,
+          )}`,
+        ),
+        menuRow(
+          'Aura 2 colour',
+          c(s.Aura2Color, `!aura a2tint ?{Colour (6-digit hex)|${s.Aura2Color}}`, { style: swatch(s.Aura2Color) }),
+        ),
+      ]);
+
+      const footer = interactive
+        ? `<div style="${MENU_STYLE.actions};border-top:1px solid #b8ccd9;border-bottom:0">${c('Open Help', handoutLink())}${c(
+            'Rebuild Help',
+            '!aura handout',
+          )}</div>`
+        : '';
+
+      const title = interactive ? 'HealthColors' : 'HealthColors Settings';
+      return [
+        `<div style="${MENU_STYLE.outer}">`,
+        `<div style="${MENU_STYLE.header}">${title} <span style="${MENU_STYLE.subheader}">v${VERSION}</span></div>`,
+        actions,
+        general,
+        tracking,
+        names,
+        aura,
+        fx,
+        deathSaves,
+        reference,
+        footer,
+        `</div>`,
+      ].join('');
+    }
+
+    /**
+     * Renders and whispers the interactive HealthColors settings menu to the GM.
+     */
+    function showMenu() {
+      sendChat(SCRIPT_NAME, `/w GM ${buildSettingsPanel(true)}`);
+    }
+
+    /**
+     * Posts a read-only settings snapshot to public game chat (all players).
      * Triggered by `!aura settings` on demand; not called automatically after changes.
      */
     function showSettingsInGameChat() {
-      const s = state.HealthColors;
-      const hr = `<hr style='background-color:#000;margin:5px;border-width:0;color:#000;height:1px;'/>`;
-      const outerStyle = [
-        'border-radius:8px',
-        'box-shadow:3px 3px 1px #707070',
-        'border:2px solid black',
-        'overflow:hidden',
-      ].join(';');
-      const menuHeaderStyle = [
-        'background-color:#2e5d78',
-        'color:#fff',
-        'text-align:center',
-        'font-weight:bold',
-        'font-size:10pt',
-        'padding:4px 8px',
-        'letter-spacing:0.5px',
-      ].join(';');
-      const contentStyle = [
-        'padding:5px',
-        'font-size:9pt',
-        'text-shadow:-1px -1px #222,1px -1px #222,-1px 1px #222,1px 1px #222,2px 2px #222',
-        'background-image:-webkit-linear-gradient(left,#76ADD6 0%,#a7c7dc 100%)',
-        'color:#FFF',
-        'text-align:right',
-        'vertical-align:middle',
-      ].join(';');
+      sendChat(SCRIPT_NAME, buildSettingsPanel(false));
+    }
 
-      const percLabel = `${s.auraPercPC}/${s.auraPerc}`;
-      const aura1Style = `background-color:#${s.Aura1Color}`;
-      const aura2Style = `background-color:#${s.Aura2Color}`;
-      const healStyle = fxSettingStyle(s.HealFX);
-      const hurtStyle = fxSettingStyle(s.HurtFX);
-      const html = [
-        `<div style="${outerStyle}">`,
-        `<div style="${menuHeaderStyle}">HealthColors Settings v${VERSION}</div>`,
-        `<div style="${contentStyle}">`,
-        hr,
-        `Is On: ${boolPill(s.auraColorOn)}<br>`,
-        `Bar: ${makePill(s.auraBar)}<br>`,
-        `Use Tint: ${boolPill(s.auraTint)}<br>`,
-        `Palette: ${makePill(s.colorPalette)}<br>`,
-        `Percentage(PC/NPC): ${makePill(percLabel)}<br>`,
-        hr,
-        `Show PC Health: ${boolPill(s.PCAura)}<br>`,
-        `Show NPC Health: ${boolPill(s.NPCAura)}<br>`,
-        `Show Dead PC: ${boolPill(s.auraDeadPC)}<br>`,
-        `Show Dead NPC: ${boolPill(s.auraDead)}<br>`,
-        hr,
-        `GM Sees all PC Names: ${namePill(s.GM_PCNames)}<br>`,
-        `GM Sees all NPC Names: ${namePill(s.GM_NPCNames)}<br>`,
-        hr,
-        `PC Sees all PC Names: ${namePill(s.PCNames)}<br>`,
-        `PC Sees all NPC Names: ${namePill(s.NPCNames)}<br>`,
-        hr,
-        `Aura 1 Radius: ${makePill(String(s.AuraSize))}<br>`,
-        `Aura 1 Shape: ${makePill(s.Aura1Shape)}<br>`,
-        `Aura 1 Color: ${makePill(s.Aura1Color, aura1Style)}<br>`,
-        `Aura 2 Radius: ${makePill(String(s.Aura2Size))}<br>`,
-        `Aura 2 Shape: ${makePill(s.Aura2Shape)}<br>`,
-        `Aura 2 Color: ${makePill(s.Aura2Color, aura2Style)}<br>`,
-        `One Offs: ${boolPill(s.OneOff)}<br>`,
-        `FX: ${boolPill(s.FX)}<br>`,
-        `Heal FX: ${makePill(escapeForChat(s.HealFX), healStyle)}<br>`,
-        `Hurt FX: ${makePill(escapeForChat(s.HurtFX), hurtStyle)}<br>`,
-        `DeathSFX: ${makePill(s.auraDeadFX)}<br>`,
-        hr,
-        `<u>Death Save Integration</u><br>`,
-        `Enabled: ${boolPill(s.deathSavesOn)}<br>`,
-        `Success Field(s): ${makePill(s.dsSuccessAttr)}<br>`,
-        `Failure Field(s): ${makePill(s.dsFailureAttr)}<br>`,
-        `Dying Marker: ${makePill(s.dsDyingMarker)}<br>`,
-        `Stable Marker: ${makePill(s.dsStableMarker)}<br>`,
-        `Dead Marker: ${makePill('Red X')}<br>`,
-        hr,
-        `</div>`,
-        `</div>`,
-      ].join('');
+    // ————— HELP HANDOUT —————
+    /** Name of the GM-only help handout HealthColors creates and keeps up to date. */
+    const HANDOUT_NAME = `${SCRIPT_NAME} — Help & Reference`;
 
-      sendChat(SCRIPT_NAME, html);
+    /**
+     * Command reference shown in the help handout, grouped by section. Each row is
+     * [command, description]. Keep this in step with the chat handler and README.
+     */
+    const HANDOUT_COMMANDS = [
+      [
+        'General',
+        [
+          ['!aura', 'Open the interactive GM settings menu.'],
+          ['!aura settings', 'Post a read-only settings snapshot to game chat.'],
+          ['!aura handout', 'Rebuild this help handout.'],
+          ['!aura on / !aura off', 'Turn HealthColors on or off for the whole game.'],
+          ['!aura forceall', 'Re-colour every token on the Objects layer.'],
+          ['!aura update', 'Re-colour the selected tokens only.'],
+          ['!aura reset', 'Reset all settings to factory defaults.'],
+          ['!aura reset-all', 'Restore defaults, rebuild the default FX and refresh every token.'],
+        ],
+      ],
+      [
+        'Health tracking',
+        [
+          ['!aura bar <1-4>', 'Choose the token bar that holds HP. Bar 4 needs Maximum Token Bubbles/Bars set to 4.'],
+          ['!aura tint', 'Switch between Aura 1 mode and Tint mode.'],
+          ['!aura palette <default|colorblind>', 'Choose the health colour palette.'],
+          ['!aura perc <PC> <NPC>', 'HP % at or below which colour shows: 0 = never, 100 = always.'],
+          ['!aura pc / !aura npc', 'Track health on player-character / NPC tokens.'],
+          ['!aura dead / !aura deadPC', 'Add the dead (Red X) marker to NPCs / PCs at 0 HP.'],
+          ['!aura oneoff', 'Also track tokens that are not linked to a character.'],
+        ],
+      ],
+      [
+        'Aura 1 health ring (aura mode)',
+        [
+          ['!aura size <n>', 'Ring radius in page units (usually feet) beyond the token edge. Default 0.35.'],
+          [
+            '!aura a1shape <shape>',
+            'Ring shape: Auto, Auto Border, Keep, Circle, Square, Hex, Circle Border, Square Border or Hex Border.',
+          ],
+          ['!aura opacity <1-100>', 'Ring opacity in percent. 100 = solid.'],
+          ['!aura lock', 'Stop (or allow) controlling players editing Aura 1.'],
+        ],
+      ],
+      [
+        'Reference values (not applied to tokens)',
+        [
+          ['!aura a1tint <hex>', 'Aura 1 colour reference (aura mode colours the ring by health).'],
+          ['!aura a2size <n>', 'Aura 2 radius reference.'],
+          ['!aura a2shape <shape>', 'Aura 2 shape reference (any of the six Roll20 shapes).'],
+          ['!aura a2tint <hex>', 'Aura 2 colour reference.'],
+        ],
+      ],
+      [
+        'Nameplates',
+        [
+          ['!aura gmpc <Yes|No|Off>', 'GM sees PC nameplates: Yes = always, No = never, Off = leave Roll20 setting.'],
+          ['!aura gmnpc <Yes|No|Off>', 'GM sees NPC nameplates.'],
+          ['!aura pcpc <Yes|No|Off>', 'Players see PC nameplates.'],
+          ['!aura pcnpc <Yes|No|Off>', 'Players see NPC nameplates.'],
+        ],
+      ],
+      [
+        'Effects and sound',
+        [
+          ['!aura fx', 'Turn heal/hurt particle effects on or off.'],
+          [
+            '!aura heal <effect>',
+            'Heal effect: a hex colour, a built-in effect (glow-holy), a custom FX name/id, or default.',
+          ],
+          ['!aura hurt <effect>', 'Hurt effect: same formats as heal (e.g. explode-blood).'],
+          ['!aura listfx', 'List custom FX with Heal/Hurt buttons, plus the built-in effect names.'],
+          ['!aura reset-fx', 'Rebuild the -DefaultHeal and -DefaultHurt custom FX.'],
+          ['!aura deadfx <track>', 'Jukebox track(s) to play when a token dies (comma-separate for random), or None.'],
+        ],
+      ],
+      [
+        'Death Save Integration (optional, PCs only)',
+        [
+          ['!aura deathsaves on / off / toggle', 'Turn Death Save Integration on or off.'],
+          ['!aura deathsaves success <attr,…>', 'Success field name(s).'],
+          ['!aura deathsaves failure <attr,…>', 'Failure field name(s).'],
+          ['!aura deathsaves dyingmarker <tag>', 'Marker for a dying PC (default skull).'],
+          ['!aura deathsaves stablemarker <tag>', 'Marker for a stable PC (default green).'],
+          ['!aura deathsaves markers', "List the campaign's status-marker tags."],
+          ['!aura deathsaves sync', 'Re-check death-save markers for the selected tokens now.'],
+          ['!aura deathsaves debug', 'Diagnostic report for the selected tokens.'],
+          ['!aura deathsaves watch [status|reset|off]', 'Debug watcher for the configured fields.'],
+          ['!aura deathsaves watchstatus', 'Debug: show the watched fields and characters.'],
+          ['!aura deathsaves attrs [filter]', "Debug: list the selected character's legacy attributes."],
+        ],
+      ],
+    ];
+
+    /** Per-character attributes for the help handout: [name, controls, values]. */
+    const HANDOUT_ATTRIBUTES = [
+      ['USECOLOR', 'Health colour', 'YES = colour this character by health · NO = never colour its tokens.'],
+      [
+        'USEBLOOD',
+        'Hurt FX',
+        'DEFAULT = global hurt effect · OFF / NO = no HealthColors FX at all for this character · a hex colour · one or more effect names (built-in or custom), comma-separated.',
+      ],
+      [
+        'USEHEAL',
+        'Heal FX',
+        'DEFAULT = global heal effect · OFF / NO = no heal FX for this character · a hex colour · one or more effect names, comma-separated.',
+      ],
+    ];
+
+    /** Optional integrations (besides Death Save Integration) for the help handout: [title, text]. */
+    const HANDOUT_INTEGRATIONS = [
+      [
+        'TokenMod',
+        'When TokenMod is installed, HealthColors listens for its token changes, so HP set with !token-mod updates colours, markers and FX like a manual edit.',
+      ],
+      [
+        'SmartAoE',
+        "When SmartAoE is installed, HealthColors listens for its token changes, so area damage and healing it applies re-colour tokens and update dead markers. If an AoE has a zeroHPmarker set, SmartAoE's marker is used instead: HealthColors adds no dead (or dying) marker to a token at 0 HP that already carries a SmartAoE 0 HP marker. The death sound still plays.",
+      ],
+      [
+        'AlterBars, ChatSetAttr and other attribute scripts',
+        'Scripts that change the HP attribute instead of the token bar are picked up by the attribute listener; no set-up is needed.',
+      ],
+      [
+        'One-Click install options',
+        'Every setting can be pre-set in the One-Click install dialog. Values are applied on first start and whenever the dialog is saved; in-game !aura changes are kept between saves.',
+      ],
+      [
+        'Script API',
+        "Other scripts can ask HealthColors to re-colour a token with HealthColors.Update(token, prev), where prev is the token's previous values (or {}).",
+      ],
+    ];
+
+    /** Tips & troubleshooting entries for the help handout: [title, text]. Mirrors the README. */
+    const HANDOUT_TIPS = [
+      [
+        'Aura visibility',
+        'The ring radius is in page units from the token edge. The default 0.35 can look subtle; raise it (e.g. 3) or use a border shape for a bolder ring.',
+      ],
+      [
+        'Manual changes',
+        'In aura mode, manual Aura 1 colour, radius or shape changes are put back when HP changes or the token is saved. Use Shape Keep to manage shapes yourself, or tint mode to keep Aura 1 free.',
+      ],
+      [
+        'Auto shape',
+        'Auto uses Hex on hex-grid pages (vertical or horizontal) once the radius is at least one grid cell (e.g. 5 ft), and Circle otherwise. Roll20 draws hex and square auras in whole grid cells, so a small radius shows little or nothing with those shapes.',
+      ],
+      [
+        'Upgraded from 2.3 or earlier',
+        'If Aura 1 Shape shows Keep, the old default Circle was switched so existing shapes were not changed. Pick Auto or another shape to let HealthColors manage it.',
+      ],
+      [
+        'Palette changes',
+        'Changing the palette, radius, shape, opacity or player lock refreshes every token straight away.',
+      ],
+      ['One-off tokens', 'Turn on One Offs to colour tokens that are not linked to a character.'],
+      ['Missing max HP', 'A token with no max in the health bar is left uncoloured until a max is set.'],
+      ['Bar 4', 'Bar 4 only works when Game Settings → Maximum Token Bubbles/Bars is set to 4.'],
+      [
+        '"FX … not found" whisper',
+        "A configured custom FX (global heal/hurt or a character's USEBLOOD/USEHEAL) no longer exists. Run !aura listfx and choose a valid effect; the default burst plays meanwhile.",
+      ],
+      [
+        'FX colours look wrong',
+        'Some sandbox/browser combinations draw FX colours inaccurately. HealthColors updates its default FX objects and spawns them by id to keep colours consistent; !aura reset-fx rebuilds them.',
+      ],
+      [
+        'Death-save markers not updating',
+        'On D&D 2024 sheets switch the game to Mod Script Sandbox v1.5. Use !aura deathsaves debug on the token, and !aura deathsaves sync to force a re-check.',
+      ],
+      [
+        'This handout',
+        'It is rebuilt when the script loads and after each setting change. Run !aura handout if it goes missing.',
+      ],
+    ];
+
+    /**
+     * Inline styles for the help handout (matches the GM menu's colours). Roll20 strips <style> blocks, so there is no
+     * dark-mode media query: body text inherits the theme's colour, accents are mid-tones that read on light and dark
+     * backgrounds, and tints are semi-transparent grey.
+     */
+    const HANDOUT_STYLE = {
+      outer: 'font-family:Arial,sans-serif;font-size:13px;',
+      header: 'background-color:#2e5d78;color:#fff;padding:10px 12px;border-radius:6px;',
+      h1: 'margin:0;font-size:20px;color:#fff;',
+      subtitle: 'margin:4px 0 0 0;font-size:12px;color:#d8e8f2;',
+      h2: 'margin:18px 0 6px 0;font-size:16px;color:#3d8bbd;border-bottom:2px solid #76ADD6;padding-bottom:2px;',
+      h3: 'margin:12px 0 4px 0;font-size:14px;color:#3d8bbd;',
+      p: 'margin:4px 0 8px 0;line-height:1.4;',
+      table: 'width:100%;border-collapse:collapse;margin:4px 0 10px 0;',
+      th: 'background-color:#2e6f96;color:#fff;text-align:left;padding:4px 6px;',
+      td: 'padding:4px 6px;border-bottom:1px solid rgba(128,128,128,0.35);vertical-align:top;',
+      code: 'font-family:monospace;white-space:nowrap;',
+      footer: 'margin-top:16px;font-size:11px;opacity:0.75;',
+    };
+
+    /**
+     * Escapes text for handout HTML.
+     *
+     * @param {*} text - Value to escape.
+     * @returns {string} HTML-safe text.
+     */
+    function escapeHandoutHtml(text) {
+      return String(text ?? '').replace(
+        /[&<>"']/g,
+        (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch],
+      );
+    }
+
+    /**
+     * Builds a handout table.
+     *
+     * @param {string[]}   headings - Column headings.
+     * @param {string[][]} rows     - Cell values (already HTML) per row.
+     * @returns {string} Table HTML.
+     */
+    function handoutTable(headings, rows) {
+      const S = HANDOUT_STYLE;
+      const head = headings.map((h) => `<th style="${S.th}">${h}</th>`).join('');
+      const body = rows
+        .map((cells) => `<tr>${cells.map((c) => `<td style="${S.td}">${c}</td>`).join('')}</tr>`)
+        .join('');
+      return `<table style="${S.table}"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    /**
+     * Wraps text as inline code in the handout.
+     *
+     * @param {string} text - Plain text.
+     * @returns {string} HTML.
+     */
+    function handoutCode(text) {
+      return `<span style="${HANDOUT_STYLE.code}">${escapeHandoutHtml(text)}</span>`;
+    }
+
+    /**
+     * Generates the help handout HTML, including a snapshot of the current settings.
+     *
+     * @returns {string} Handout notes HTML.
+     */
+    function buildHandoutHtml() {
+      const S = HANDOUT_STYLE;
+      const s = state.HealthColors || DEFAULTS;
+      const yesNo = (v) => (v ? 'Yes' : 'No');
+      const p = (html) => `<p style="${S.p}">${html}</p>`;
+
+      const overview =
+        `<h2 style="${S.h2}">Overview</h2>` +
+        p(
+          'HealthColors colours each token by its health so everyone can see how hurt it is at a glance. ' +
+            'In <b>aura mode</b> it draws an Aura 1 health ring; in <b>tint mode</b> it tints the whole token. ' +
+            'Colours move from healthy to hurt along the chosen palette, turn black at 0 HP and blue above max HP. ' +
+            `Type ${handoutCode('!aura')} for the settings menu. This handout is GM-only and is rebuilt every time the script loads or a setting changes.`,
+        );
+
+      const shapes =
+        `<h2 style="${S.h2}">Aura shapes &amp; appearance</h2>` +
+        p('In aura mode HealthColors owns Aura 1 on every coloured token and sets:') +
+        handoutTable(
+          ['Setting', 'Command', 'What it does'],
+          [
+            [
+              'Radius',
+              handoutCode('!aura size <n>'),
+              'Page units beyond the token edge (feet on a standard 5 ft grid).',
+            ],
+            [
+              'Shape',
+              handoutCode('!aura a1shape <shape>'),
+              '<b>Auto</b> = Hex on hex-grid pages when the radius is at least one grid cell, otherwise Circle. <b>Auto Border</b> = the outline versions. ' +
+                "<b>Keep</b> = never change the token's shape. Or pick Circle, Square, Hex, Circle Border, Square Border or Hex Border. " +
+                'Border shapes draw an outline without shading the token. Two-word shapes can be typed with or without the space.',
+            ],
+            ['Opacity', handoutCode('!aura opacity <1-100>'), 'Below 100 the map shows through the ring.'],
+            [
+              'Player lock',
+              handoutCode('!aura lock'),
+              'Stops controlling players editing Aura 1 while HealthColors manages it.',
+            ],
+          ],
+        ) +
+        p(
+          'Changing any of these refreshes every token straight away. Manual Aura 1 changes in aura mode are put back when HP changes or the token is saved ' +
+            '(use Shape <b>Keep</b> to manage shapes yourself). Switching to tint mode clears Aura 1, returns its shape to Circle (unless Keep) and lets players edit it again. ' +
+            'Aura 2 is never touched by HealthColors.',
+        );
+
+      const commands =
+        `<h2 style="${S.h2}">Commands</h2>` +
+        HANDOUT_COMMANDS.map(
+          ([section, rows]) =>
+            `<h3 style="${S.h3}">${escapeHandoutHtml(section)}</h3>` +
+            handoutTable(
+              ['Command', 'Description'],
+              rows.map(([cmd, desc]) => [handoutCode(cmd), escapeHandoutHtml(desc)]),
+            ),
+        ).join('');
+
+      const swatch = (rgb) => {
+        // eslint-disable-next-line no-bitwise
+        const hex = `#${((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1).toUpperCase()}`;
+        return `<span style="display:inline-block;width:14px;height:14px;border:1px solid #888;vertical-align:middle;background-color:${hex};"></span> ${hex}`;
+      };
+      const palettes =
+        `<h2 style="${S.h2}">Colour palettes</h2>` +
+        p(
+          `Choose with ${handoutCode('!aura palette <name>')}; all tokens refresh straight away. Colours blend smoothly from High (100 % HP) through Mid (50 %) to Low (just above 0).`,
+        ) +
+        handoutTable(
+          ['Palette', 'High (100 %)', 'Mid (50 %)', 'Low (near 0)', 'Dead (0 HP)'],
+          Object.entries(COLOR_PALETTES).map(([name, c]) => [
+            `${handoutCode(name)}${name === s.colorPalette ? ' <b>(in use)</b>' : ''}`,
+            swatch(c.high),
+            swatch(c.mid),
+            swatch(c.low),
+            swatch(c.dead),
+          ]),
+        ) +
+        p(`Above max HP (temporary HP) the colour is always blue ${swatch([0, 0, 255])}.`);
+
+      const attributes =
+        `<h2 style="${S.h2}">Attribute reference</h2>` +
+        p(
+          'HealthColors adds these attributes to a character the first time it processes it (USECOLOR as <b>YES</b>, the others as <b>DEFAULT</b>). ' +
+            'Edit them on the Attributes &amp; Abilities tab to make one character differ from the global settings.',
+        ) +
+        handoutTable(
+          ['Attribute', 'Controls', 'Values'],
+          HANDOUT_ATTRIBUTES.map(([name, controls, values]) => [
+            handoutCode(name),
+            escapeHandoutHtml(controls),
+            escapeHandoutHtml(values),
+          ]),
+        ) +
+        p(
+          'A list such as <i>splatter-blood, Bone Shards</i> plays every entry. A custom FX that no longer exists falls back to the default effect and the GM is whispered once.',
+        );
+
+      const integrations =
+        `<h2 style="${S.h2}">Optional integrations</h2>` +
+        `<h3 style="${S.h3}">Death Save Integration${s.deathSavesOn ? ' (on)' : ' (off)'}</h3>` +
+        p(
+          `Off by default; turn on with ${handoutCode('!aura deathsaves on')}. For player characters at 0 HP it shows <b>dying</b> (default ${handoutCode('skull')}), ` +
+            `<b>stable</b> after 3 successes (default ${handoutCode('green')}) and <b>dead</b> after 3 failures (Red X), updating automatically from the watched death-save fields. ` +
+            'NPCs keep the plain dead marker. Rules in order: 3+ failures = dead, else 3+ successes = stable, else dying. Healing above 0 HP clears the markers.',
+        ) +
+        p(
+          `Watched fields: success ${handoutCode(s.dsSuccessAttr)}, failure ${handoutCode(s.dsFailureAttr)}. ` +
+            `For a custom marker such as Unconscious, get its exact tag from ${handoutCode('!aura deathsaves markers')}. ` +
+            `D&amp;D 2024 (Beacon) sheets need Mod Script Sandbox v${BEACON_SANDBOX_MIN_VERSION} (Game Settings → Mod Scripts). This game's sandbox: ${escapeHandoutHtml(describeSandbox())}.`,
+        ) +
+        HANDOUT_INTEGRATIONS.map(([title, body]) => {
+          const isObserver = getTokenObserverScripts().some((e) => e.name === title);
+          let status = '';
+          if (isObserver) status = isObserverScriptAvailable(title) ? ' (detected)' : ' (not installed)';
+          return `<h3 style="${S.h3}">${escapeHandoutHtml(title + status)}</h3>${p(escapeHandoutHtml(body))}`;
+        }).join('');
+
+      const tips =
+        `<h2 style="${S.h2}">Tips &amp; troubleshooting</h2>` +
+        `<ul style="${S.p}">${HANDOUT_TIPS.map(([title, body]) => `<li style="margin-bottom:4px;"><b>${escapeHandoutHtml(title)}:</b> ${escapeHandoutHtml(body)}</li>`).join('')}</ul>`;
+
+      const current =
+        `<h2 style="${S.h2}">Current settings</h2>` +
+        handoutTable(
+          ['Setting', 'Value'],
+          [
+            ['Enabled', yesNo(s.auraColorOn)],
+            ['Health bar', s.auraBar],
+            ['Mode', s.auraTint ? 'Tint' : 'Aura 1'],
+            ['Palette', s.colorPalette],
+            ['Show at or below HP % (PC / NPC)', `${s.auraPercPC} / ${s.auraPerc}`],
+            ['Track PCs / NPCs', `${yesNo(s.PCAura)} / ${yesNo(s.NPCAura)}`],
+            ['Dead marker on PCs / NPCs', `${yesNo(s.auraDeadPC)} / ${yesNo(s.auraDead)}`],
+            ['Aura 1 radius (units)', s.AuraSize],
+            ['Aura 1 shape', s.Aura1Shape],
+            ['Aura 1 opacity %', s.auraOpacity],
+            ['Lock Aura 1 (players)', yesNo(s.auraLockPlayers)],
+            ['One-off tokens', yesNo(s.OneOff)],
+            ['Heal / hurt FX', `${yesNo(s.FX)} (${s.HealFX} / ${s.HurtFX})`],
+            ['Death sound', s.auraDeadFX],
+            ['Death Save Integration', yesNo(s.deathSavesOn)],
+          ].map(([k, v]) => [escapeHandoutHtml(k), escapeHandoutHtml(v)]),
+        );
+
+      const footer = `<p style="${S.footer}">${SCRIPT_NAME} v${VERSION} · Original author DXWarlock · 1.7.1 edit by Surok · v2 by MidNiteShadow7</p>`;
+
+      return (
+        `<div style="${S.outer}">` +
+        `<div style="${S.header}"><h1 style="${S.h1}">${SCRIPT_NAME}</h1>` +
+        `<p style="${S.subtitle}">Version ${VERSION} · Help &amp; Reference</p></div>` +
+        `${overview}${commands}${shapes}${palettes}${attributes}${integrations}${tips}${current}${footer}</div>`
+      );
+    }
+
+    /**
+     * Creates the GM-only help handout, or rewrites its notes when it already exists.
+     * Extra handouts with the same name are left alone (only the first is updated).
+     *
+     * @returns {object|undefined} The handout object.
+     */
+    function installHandout() {
+      try {
+        const html = buildHandoutHtml();
+        const handout =
+          findObjs({ _type: 'handout', name: HANDOUT_NAME })[0] ||
+          createObj('handout', { name: HANDOUT_NAME, inplayerjournals: '', controlledby: '' });
+        if (!handout) return undefined;
+        handout.set({ inplayerjournals: '', controlledby: '' });
+        handout.set('notes', html);
+        return handout;
+      } catch (err) {
+        log(`${SCRIPT_NAME}: could not update the help handout: ${err?.message || err}`);
+        return undefined;
+      }
+    }
+
+    /**
+     * Journal link to the help handout for chat buttons.
+     *
+     * @returns {string} URL, or the rebuild command when the handout cannot be found.
+     */
+    function handoutLink() {
+      const handout = findObjs({ _type: 'handout', name: HANDOUT_NAME })[0];
+      return handout ? `http://journal.roll20.net/handout/${handout.id}` : '!aura handout';
     }
 
     // ————— CHAT HANDLER —————
@@ -3589,6 +4297,7 @@ var HealthColors =
         DEADPC: 'auraDeadPC',
         ONEOFF: 'OneOff',
         FX: 'FX',
+        LOCK: 'auraLockPlayers',
       };
       const STRINGS = {
         GMNPC: 'GM_NPCNames',
@@ -3618,7 +4327,13 @@ var HealthColors =
         return true;
       }
       if (SHAPES[option]) {
-        s[SHAPES[option]] = normalizeShape(parts[2], s[SHAPES[option]]);
+        // Join the remaining words so two-word shapes ("Circle Border") work from chat.
+        s[SHAPES[option]] = normalizeShape(parts.slice(2).join(' '), s[SHAPES[option]], option === 'A1SHAPE');
+        return true;
+      }
+      if (option === 'OPACITY') {
+        const pct = normalizePercent(parts[2], s.auraOpacity);
+        s.auraOpacity = pct >= 1 ? pct : s.auraOpacity;
         return true;
       }
       if (HEXES[option]) {
@@ -3659,12 +4374,14 @@ var HealthColors =
           return { handled: true, earlyReturn: false };
         },
         BAR: () => {
-          if (/^[123]$/.test(parts[2] || '')) {
+          if (/^[1-4]$/.test(parts[2] || '')) {
             s.auraBar = `bar${parts[2]}`;
             gmWhisper(`Health bar set to ${s.auraBar}. Forcing sync...`);
             menuForceUpdate();
           } else {
-            gmWhisper(`Invalid bar "${parts[2] || ''}". Use !aura bar 1, !aura bar 2, or !aura bar 3.`);
+            gmWhisper(
+              `Invalid bar "${parts[2] || ''}". Use !aura bar 1, 2, 3 or 4 (bar 4 needs Maximum Token Bubbles/Bars set to 4).`,
+            );
           }
           return { handled: true, earlyReturn: false };
         },
@@ -3693,6 +4410,15 @@ var HealthColors =
         },
         LISTFX: () => {
           whisperFxList();
+          return { handled: true, earlyReturn: true };
+        },
+        HANDOUT: () => {
+          const handout = installHandout();
+          gmWhisper(
+            handout
+              ? `Help handout rebuilt: ${makeBtn('Open', handoutLink(), 'width:auto;padding-left:6px;padding-right:6px')}`
+              : 'Could not create the help handout. See the API console.',
+          );
           return { handled: true, earlyReturn: true };
         },
         RESET: () => {
@@ -3724,11 +4450,14 @@ var HealthColors =
       return handler ? handler() : { handled: false, earlyReturn: false };
     }
 
+    /** Mapped options that change how the Aura 1 health ring looks, so tokens need repainting. */
+    const AURA_APPEARANCE_OPTIONS = new Set(['SIZE', 'A1SHAPE', 'OPACITY', 'LOCK']);
+
     /**
      * Processes incoming Roll20 chat messages to handle !aura commands.
      * GM-only: non-GMs receive an access-denied whisper.
-     * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, HEAL, HURT, LISTFX, etc.)
-     * to the appropriate state mutation then refreshes the menu. BAR validates 1/2/3,
+     * Routes each subcommand (ON/OFF, BAR, TINT, PERC, PC, NPC, HEAL, HURT, LISTFX, HANDOUT, etc.)
+     * to the appropriate state mutation then refreshes the menu. BAR validates 1–4,
      * whispers confirmation, and triggers immediate full sync. PALETTE also
      * triggers immediate full sync so existing tokens update right away.
      * When a setting changes, re-whispers the interactive menu to the GM.
@@ -3749,18 +4478,26 @@ var HealthColors =
       }
 
       if (option === 'DEATHSAVES') {
-        if (handleDeathSaves(msg, parts)) showMenu();
+        if (handleDeathSaves(msg, parts)) {
+          installHandout();
+          showMenu();
+        }
         return;
       }
 
-      if (option !== 'MENU' && option !== 'LISTFX') gmWhisper('UPDATING TOKENS...');
+      if (!['MENU', 'LISTFX', 'HANDOUT', 'UPDATE', 'SETTINGS'].includes(option)) gmWhisper('UPDATING TOKENS...');
 
       const s = state.HealthColors;
-      if (!applyMappedAuraOption(option, parts, s)) {
+      if (applyMappedAuraOption(option, parts, s)) {
+        // Aura 1 appearance settings are applied to tokens, so repaint them straight away.
+        if (AURA_APPEARANCE_OPTIONS.has(option) && !s.auraTint) menuForceUpdate();
+      } else {
         const result = runAuraSpecialOption(option, parts, msg, s);
         if (result.earlyReturn) return;
       }
 
+      // Keep the handout's "Current settings" table in step with the change just made.
+      if (option !== 'MENU') installHandout();
       showMenu();
     }
 
@@ -4025,6 +4762,7 @@ var HealthColors =
       const settingsBtn = makeBtn('⚙ Settings', '!aura', 'width:auto;padding-left:6px;padding-right:6px');
       gmWhisper(`<strong>Script Ready</strong> (v${VERSION})<br>${settingsBtn}`);
       checkInstall();
+      installHandout();
       registerEventHandlers();
     });
 

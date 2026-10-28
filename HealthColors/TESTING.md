@@ -22,7 +22,13 @@ This checklist validates `HealthColors.js` in a live Roll20 VTT game before rele
 2. Check the Effects menu.
    - Expected: `-DefaultHurt` and `-DefaultHeal` custom FX exist (created on first run, with a "Creating Default … FX" whisper).
 3. Run `!aura`.
-   - Expected: The interactive GM menu is whispered, showing every setting as a button, including Heal FX, Hurt FX, FX List, and the Death Save Integration block.
+   - Expected: The GM menu is whispered with an action bar (Update Selected, Refresh All, Post Settings), the sections General, Tracking & markers, Nameplates (2×2 grid), Aura 1 ring, Effects & sound, Death Save Integration and Reference values, and a footer with Open Help / Rebuild Help. Off settings are red; nameplates set to Off are grey; colour settings show a swatch; the death-save fields show as e.g. "3 fields" with the full list on hover.
+3b-menu. Click **Update Selected** with nothing selected, then with a token selected.
+   - Expected: First a "Select one or more tokens first" whisper; then "Updated 1 token: <name>" and the token is re-coloured. No "UPDATING TOKENS..." whisper for this button.
+3a. Open the Journal.
+   - Expected: A **HealthColors — Help & Reference** handout exists, is not shown to players, shows v2.4.0, and has these sections: Overview, Commands (including `!aura opacity`, `!aura lock`, `!aura bar <1-4>`, `!aura handout`), Aura shapes & appearance (six shapes plus Auto/Auto Border/Keep), Colour palettes (swatches for `default` and `colorblind`, the one in use marked), Attribute reference (`USECOLOR`, `USEBLOOD`, `USEHEAL`), Optional integrations (Death Save Integration with the watched fields and this game's sandbox version, TokenMod, attribute scripts, One-Click, Script API), Tips & troubleshooting, and Current settings.
+3b. Change a setting (e.g. `!aura a1shape Hex Border`), then reopen the handout.
+   - Expected: Current settings shows the new value. The menu's **Help → Open Handout** button opens it; `!aura handout` whispers "Help handout rebuilt" without an `UPDATING TOKENS...` whisper and does not create a second handout.
 4. Run `!aura settings`.
    - Expected: A read-only settings panel is posted to public chat with the same values as pills.
 5. Change any setting from the menu (e.g. `!aura size 1`).
@@ -31,7 +37,7 @@ This checklist validates `HealthColors.js` in a live Roll20 VTT game before rele
 ## Health Colouring (Aura Mode)
 
 1. Set the PC token to full HP.
-   - Expected: Aura 1 is green at the configured radius (default `0.35` ft) and visible to players.
+   - Expected: Aura 1 is green at the configured radius (default `0.35` page units), Circle-shaped on a square-grid page, visible to players, and the controlling player cannot edit Aura 1.
 2. Reduce HP to about 75 %, 50 %, 25 %.
    - Expected: Aura shifts green → yellow → orange/red along the gradient.
 3. Set HP to 0.
@@ -46,15 +52,40 @@ This checklist validates `HealthColors.js` in a live Roll20 VTT game before rele
    - Expected: Whisper `Health bar set to bar2. Forcing sync...`; colouring follows bar 2. Run `!aura bar 1` to restore.
 8. Run `!aura bar 7`.
    - Expected: Invalid-bar whisper; the setting is unchanged.
+8a. Set *Maximum Token Bubbles/Bars* to 4, put HP in bar 4 on a token, and run `!aura bar 4`.
+   - Expected: Colouring follows bar 4. Run `!aura bar 1` to restore.
 9. Run `!aura forceall`.
    - Expected: `Refreshing N Tokens` then `Finished Refreshing Tokens`; every token's colour is re-evaluated.
-10. Select one token and run `!aura update`.
+10. Select one token and run `!aura update` (same as the menu's **Update Selected** button).
     - Expected: Only that token is refreshed and its name is whispered.
+
+## Aura Shapes & Appearance
+
+1. In the API console run `log(getObj('graphic', '<token id>').get('aura1_options'))` after picking each shape in a token's Aura 1 dialog.
+   - Expected: `circle`, `square`, `hex`, `circleborder`, `squareborder`, `hexborder`. (Confirms the API values HealthColors writes; report any difference.)
+2. Run `!aura a1shape` from the menu and pick each of `Circle`, `Square`, `Hex`, `Circle Border`, `Square Border`, `Hex Border`.
+   - Expected: Every coloured token is refreshed and its Aura 1 takes that shape; border shapes are outlines only.
+3. Set Shape to `Auto`, then view a token on a square-grid page and one on a hex-grid page (both `Hex (V)` and `Hex (H)`).
+   - Expected: Circle on the square grid. On the hex grids: Circle at the default radius `0.35`, Hex once `!aura size 5` (one cell) or more. `Auto Border` gives the matching outline shapes.
+4. Type `!aura a1shape circle-border`, then `!aura a1shape triangle`.
+   - Expected: The first sets `Circle Border`; the second leaves the setting unchanged.
+5. Set Shape to `Keep`, hand-pick Square on a token, then change its HP.
+   - Expected: The colour updates; the shape stays Square.
+6. With Shape `Hex`, open a coloured token's settings, change only the Aura 1 shape, and save.
+   - Expected: HealthColors puts the shape back to Hex.
+7. Run `!aura opacity 50`.
+   - Expected: Tokens refresh; the ring is half see-through (`aura1_color` ends in `80`). `!aura opacity 0` is rejected and the value is unchanged. Restore with `!aura opacity 100`.
+8. Run `!aura lock` (off), then reopen a coloured PC token as the controlling player.
+   - Expected: The player can edit Aura 1 again. Run `!aura lock` to restore.
+9. Load the script into a game that still has 2.3.0 state with Aura 1 Shape `Circle`.
+   - Expected: `!aura` shows Aura 1 Shape `Keep`; existing token shapes are unchanged. A game that had `Square` keeps `Square` and tokens become square.
+10. Check the menu and `!aura settings`.
+   - Expected: Aura 1 Radius/Aura 2 Radius are labelled "(units)", Aura 1 Opacity and Lock Aura 1 rows are shown, and Aura 1 Color and the Aura 2 rows sit under "Reference values (not applied to tokens)".
 
 ## Tint Mode
 
 1. Run `!aura tint`.
-   - Expected: Health colour moves to the token tint; Aura 1 set by HealthColors is cleared on every token.
+   - Expected: Health colour moves to the token tint; Aura 1 set by HealthColors is cleared on every token, its shape returns to Circle (unless Shape is `Keep`), and players can edit Aura 1 again.
 2. Manually set Aura 1 on a token, then change its HP.
    - Expected: Your manual Aura 1 is left untouched; only the tint changes.
 3. Run `!aura tint` again.
@@ -200,6 +231,14 @@ Use the PC token. Defaults target the D&D sheets (`deathsave_succ1..3` / `deaths
 
 1. With TokenMod installed, run `!token-mod --set bar1_value|-5` on the PC.
    - Expected: Colour and dead marker update and exactly one FX plays.
+1a. With SmartAoE installed, restart the sandbox, then apply area damage that drops the NPC to 0 HP and partly damages the PC.
+   - Expected: The console logs `HealthColors: observing token changes from TokenMod, SmartAoE` (or just the installed ones); both tokens re-colour, the NPC gets the dead marker, and the handout shows SmartAoE (detected).
+1c. Create a SmartAoE AoE with `zeroHPmarker` set (e.g. `pummeled`) and auto-apply damage that drops the NPC to 0 HP. Repeat with `--instant|true`.
+   - Expected: The token turns black and carries only SmartAoE's marker; HealthColors adds no Red X (the death sound still plays if set). Repeat with an AoE that has no `zeroHPmarker`: the Red X is added as usual.
+1d. With Death Save Integration on, drop the PC to 0 HP with the `zeroHPmarker` AoE.
+   - Expected: No dying marker is added; SmartAoE's marker stays. Recording 3 successes adds the stable marker without removing SmartAoE's.
+1b. Run `!aura reset`, then apply TokenMod or SmartAoE damage once.
+   - Expected: The token is processed once: exactly one FX plays.
 2. With ChatSetAttr or AlterBars installed, change the HP attribute through that script.
    - Expected: The token colour updates even though the token bar was not edited directly.
 3. Drag a new token from the journal onto the page.
