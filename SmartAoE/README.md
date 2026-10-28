@@ -9,9 +9,9 @@ Full original documentation: [Roll20 wiki – SmartAoE](https://wiki.roll20.net/
 ## Features
 
 - **Shapes**: line, square, circle, wall and cones (any angle, Pathfinder `PFcone`, or the 5e triangle `5econe`), plus Pathfinder-style `PFcircle`. Squares and circles can be attached to the caster or float freely.
-- **Consistent coverage rules**: a grid square counts when at least `--minGridArea` of it is covered, and a token counts when at least `--minTokArea` of it is inside the AoE.
+- **Consistent coverage rules**: a grid square counts when at least `--minGridArea` of it is covered, and a token counts when at least `--minTokArea` of it is inside the AoE. See [Grid rules by game system](#grid-rules-by-game-system) for D&D 2014 and 2024, Pathfinder and other systems.
 - **Interactive placement**: move the control token to aim; cones can rotate their origin around the caster's corners and faces.
-- **Saves and damage**: per-target saving throws (5e shorthands built in), two damage formulas with damage types, a rule for successful saves (half damage by default) and resistance/vulnerability/immunity checks. 5e Magic Resistance is detected (2014 sheet) and the save is rolled with advantage. Works with both the 2014 and the 2024 (Beacon) D&D sheets.
+- **Saves and damage**: per-target saving throws (5e shorthands built in), two damage formulas with damage types, a rule for successful saves (half damage by default) and resistance/vulnerability/immunity checks. 5e Magic Resistance is detected and the save is rolled with advantage. Works with both the 2014 and the 2024 (Beacon) D&D sheets.
 - **Markers**: status markers for passed saves, failed saves, 0 HP and the caster.
 - **Apply now or later**: apply damage and markers automatically, or from buttons on the chat card.
 - **Extras**: particle FX on affected squares, jukebox sounds, turn-order entries, tooltips, resource (spell slot) costs, whisper options and a fully styleable results card.
@@ -121,9 +121,9 @@ Parameters are case-insensitive. Boolean options accept `true`/`yes`/`1` (and `f
 | `--damageSaveRule` | Operation applied to damage on a successful save. | `*0.5` |
 | `--bar` | Bar(s) to change, e.g. `1` or `3,1` (temporary HP in bar 3 first, then bar 1). Damage left over on one bar carries to the next; healing fills each bar to its max before moving on. | `1` |
 | `--autoApply` | Apply damage and markers immediately instead of from the chat buttons. | `false` |
-| `--resistAttr`, `--vulnerableAttr`, `--immunityAttr` | Attribute(s) listing the target's resistances, vulnerabilities and immunities. | `npc_resistances`, `npc_vulnerabilities`, `npc_immunities` |
+| `--resistAttr`, `--vulnerableAttr`, `--immunityAttr` | Attribute(s) listing the target's resistances, vulnerabilities and immunities. AoEs count as magical, so damage types only resisted "from nonmagical attacks" (2014 stat blocks) are ignored. | `npc_resistances`, `npc_vulnerabilities`, `npc_immunities` |
 | `--resistanceRule`, `--vulnerableRule` | Operation applied for a resistance / vulnerability. Immunity always applies `*0`. | `*0.5`, `*2` |
-| `--resource` | `attrName, cost, alias, limit` — spend a resource (e.g. a spell slot) of the caster; the AoE is blocked if there is not enough. Without a limit the value counts **down** (slots left, as on the 2014 sheet). With a limit it counts **up** (slots used) and may not pass the limit: a number, `max` (the resource's own max) or another attribute, e.g. `lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total` on the 2024 sheet. | Cost `1` |
+| `--resource` | `attrName, cost, alias, limit` — spend a resource (e.g. a spell slot) of the caster; the AoE is blocked if there is not enough. Without a limit the value counts **down** (slots left, as on the 2014 sheet). With a limit it counts **up** (slots used) and may not pass the limit: a number, `max` (the resource's own max) or another attribute, e.g. `lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total` on the 2024 sheet. 2024-sheet spell slots (`lvlN_slots_expended`) use `lvlN_slots_total` as the limit when none is given. | Cost `1` |
 
 ### Markers
 
@@ -231,6 +231,33 @@ const smartAoeZeroHpTags = (typeof SmartAoE !== 'undefined' && SmartAoE.ZeroHPMa
 
 ---
 
+## Grid rules by game system
+
+SmartAoE doesn't build in one game's rule for which squares an area hits. Two settings decide it, so set them to match the rules your table uses:
+
+- `--minGridArea` — how much of a square (0–1) the area must cover for that square to count. The default `0.01` counts almost any overlap.
+- `--minTokArea` — how much of a token's space (0–1) must be in the counted squares for the creature to be hit. The default `0.01` means a creature in any counted square is hit.
+
+The shape and origin matter too: `5econe` is the D&D cone (a triangle as wide as it is long), `PFcircle` and `PFcone` measure with Pathfinder's alternating diagonals, and `--forceIntersection|1` puts the origin on a grid intersection (automatic for large floating squares and circles).
+
+| Rules | Settings |
+| :---- | :------- |
+| **D&D 5e 2024** — an area that covers at least half a square affects the whole square | `--minGridArea\|0.5`; cones with `--aoeType\|5econe`. |
+| **D&D 5e 2014, DMG** — the half-square rule is given for circular areas (spheres, cylinders) | `--minGridArea\|0.5` on circles; the defaults on other shapes. |
+| **D&D 5e 2014, Xanathar's template method** — a square counts if any part of it is under the template | The defaults (`0.01` / `0.01`); cones with `5econe`. |
+| **Pathfinder 1e, D&D 3.5 and Starfinder 1e** — bursts and cones start at a grid intersection, distance counts every second diagonal as two squares, and a square is in the area if its far edge is | `--aoeType\|PFcircle, float` or `PFcone` with `--forceIntersection\|1`, which tests each square's farthest corner against the radius. |
+| **Pathfinder 2e and Starfinder 2e** — bursts start at a grid corner and are measured like movement; a creature is affected if any square of its space is in the area | `PFcircle` with `--forceIntersection\|1` for bursts, `PFcone` for cones, `line` for lines; keep `--minTokArea` at `0.01`. Emanations spread from the sides of the creature's space, which SmartAoE doesn't model exactly: a `PFcircle` from a Medium creature's centre is the closest match. |
+| **Template rules where any creature the template touches is affected** | The defaults (`0.01` / `0.01`). |
+| **Rules that count a square only if its centre is in the area** | No exact setting; `--minGridArea\|0.5` is the closest for circles. |
+
+**The drawn squares are the ruling.** SmartAoE works out how much of each square the shape covers and draws only the squares that count, so there is no template edge to judge by eye, whichever rule you use.
+
+**Creature size.** Hits are decided by squares, not by how much of a creature the area covers. A token is hit when at least `--minTokArea` of it lies in counted squares. With the default `0.01`, a Tiny creature in a counted square is hit however small its token, and a token that straddles squares is hit if any part of it is in a counted square. Raise `--minTokArea` (e.g. `0.5`) only if your table wants most of a creature's space to be inside.
+
+SmartAoE works on gridded pages only. These summaries are a guide; check your rulebook, as tables often house-rule areas of effect.
+
+---
+
 ## Jumpgate
 
 SmartAoE's saves, damage and markers work in Jumpgate games, but there is a known **layering problem**: the AoE squares can appear on top of the control token and the tokens inside the AoE, making them hard to select. Roll20 staff traced this to Jumpgate not passing "send to back" changes made by Mod scripts to the browser ([forum report](https://app.roll20.net/forum/post/12193888/script-smartaoe-anyone-using-it-in-a-jumpgate-campaign-successfully)). It has to be fixed by Roll20; a script cannot work around it directly.
@@ -243,12 +270,12 @@ Workarounds reported on the forums:
 
 ### D&D 2024 (Beacon) sheets
 
-The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When SmartAoE can't find an attribute the 2014 way, it reads the sheet with Roll20's `getSheetItem`, then tries the custom-attribute form `user.<name>`. This covers `--resource`, `a{…}` references in `--saveFormula` (and the `5eSTR`…`5eCHA` shorthands), `--resistAttr` / `--vulnerableAttr` / `--immunityAttr` and `--ignore`.
+The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When SmartAoE can't find an attribute the 2014 way, it reads the sheet with Roll20's `getSheetItem`, then tries the custom-attribute form `user.<name>`. This covers `--resource`, `a{…}` references in `--saveFormula` (and the `5eSTR`…`5eCHA` shorthands), `--resistAttr` / `--vulnerableAttr` / `--immunityAttr` and `--ignore`. A 2024 character can also carry leftover attribute objects with the same names (for example after a 2014 character is moved to the 2024 sheet, or when another mod creates them); an empty one is skipped and the sheet's value is used.
 
 - Use the **Mod Script Sandbox v1.5** (the current default). On v1.0, `getSheetItem` can't see Beacon values.
-- **Spell slots count up on the 2024 sheet.** `lvl3_slots_expended` holds slots *used* (on the 2014 sheet it holds slots left), so give `--resource` the total as a limit: `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`. Without the limit SmartAoE subtracts, and with 0 slots used it always says there aren't enough.
+- **Spell slots count up on the 2024 sheet.** `lvl3_slots_expended` holds slots *used* (on the 2014 sheet it holds slots left). From 1.0.1, `--resource|lvl3_slots_expended` on a 2024 sheet counts up to `lvl3_slots_total` automatically; you can also give the limit yourself: `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`.
 - A `--resource` on a Beacon sheet is spent with `setSheetItem`. If the sheet doesn't let scripts change that value, the AoE isn't created and the GM is told why.
-- 5e Magic Resistance (save rolled twice) is only detected on 2014 sheets.
+- From 1.0.1, 5e Magic Resistance (save rolled twice, shown as **A**) is detected on 2024 sheets from a feature named Magic Resistance. Text elsewhere on the sheet, such as an item's description, doesn't count.
 - The names must exist on the 2024 sheet. If a value still comes out empty, check the name with a chat roll such as `[[@{selected|dexterity_save_bonus}]]`.
 
 ---
@@ -258,7 +285,7 @@ The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When Sm
 - Fixed-radius squares and circles that are **attached** to the caster (no `float`) don't account for token size and are only accurate for one-square casters.
 - Resistance handling is simple: conditional resistances such as "non-magical piercing" aren't recognised.
 - Very large AoEs with `--fx` can lag. This is a Roll20 limitation.
-- Pathfinder cone and circle templates follow their own grid rules, so use `PFcone` and `PFcircle`.
+- Pathfinder cone and circle templates follow their own grid rules, so use `PFcone` and `PFcircle`. See [Grid rules by game system](#grid-rules-by-game-system) for the settings for each system.
 - If the stored AoE links get out of step with the map (e.g. after copying pages), run `!smartclearcache`. (Trigger-Target no longer stops with a "Cannot read properties of undefined" error because of a stale AoE, but clearing the cache tidies up.)
 - **Line lengths** are measured with true (Euclidean) distance, so diagonal lines cover fewer squares than 5e's "every square counts as 5 ft" rule would give. For an exact count, leave out `--radius` and place the control token by hand.
 - **Line origins** for casters larger than one square start from the token's centre or nearest corner/face (`--origin`), not from the edge facing the target.

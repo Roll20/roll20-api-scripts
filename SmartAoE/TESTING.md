@@ -15,9 +15,9 @@ This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run
 ## Install and handout
 
 1. Restart the sandbox.
-   - Expected: The console logs `SmartAoE v1.0.0 initialized.` and no errors. On a fresh game an `AoEControlToken` character (with CW, CCW, Trigger-ALL, Trigger-Target token actions) and a GM `AoEGenerator` macro are created.
+   - Expected: The console logs `SmartAoE v1.0.1 initialized.` and no errors. On a fresh game an `AoEControlToken` character (with CW, CCW, Trigger-ALL, Trigger-Target token actions) and a GM `AoEGenerator` macro are created.
 2. Open the Journal.
-   - Expected: A **SmartAoE — Help & Reference** handout exists, is not shown to players, shows v1.0.0, and has these sections: Overview, Quick start, Commands, !smartaoe parameters (four groups), Examples, Other scripts, Tips & known limitations.
+   - Expected: A **SmartAoE — Help & Reference** handout exists, is not shown to players, shows v1.0.1, and has these sections: Overview, Quick start, Commands, !smartaoe parameters (four groups), Examples, Grid rules by game system, Other scripts, Tips & known limitations.
 3. Run `!smarthelp`.
    - Expected: A whisper with a link that opens the handout; no second handout is created.
 
@@ -25,6 +25,7 @@ This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run
 
 1. Select the NPC and run `!smartaoe {{ --aoeType|circle, float --radius|10ft }}`.
    - Expected: A control token (reticle) appears; moving it draws the red squares of a 10 ft circle.
+   - Before moving it, run `!smarttrigger <controlTokenID>`. Expected: A whisper to move the control token first (before 1.0.1: "Cannot read properties of undefined (reading 'x')").
 2. Select the control token and run `!smarttrigger` (or the Trigger-ALL token action).
    - Expected: A results card listing the creatures inside.
 3. In Jumpgate, click the reticle so that one of the red squares is selected instead, then run `!smarttrigger`.
@@ -76,11 +77,14 @@ Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with 
 1. Cast it with the PC selected.
    - Expected: "Level 3 slots: 1 used. Now 1 of N used.", and the sheet shows one more 3rd-level slot used. If the sheet won't let scripts change them: "Could not update …" and no AoE is drawn.
    - Cast until every slot is used, then once more. Expected: "Not enough Level 3 slots! … used = N of N" and no AoE is drawn.
-   - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: "Not enough lvl3_slots_expended!" (the value counts down, as on the 2014 sheet).
+   - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: it counts up to `lvl3_slots_total` as above, with `lvl3_slots_expended` as the name (before 1.0.1: "Not enough lvl3_slots_expended!").
 2. Trigger it over the Fire Giant.
    - Expected: The save includes the giant's DEX save bonus, the giant is listed as immune, and its HP doesn't change.
+   - Give the giant an empty legacy `npc_immunities` attribute object (e.g. a one-off Mod script running `createObj('attribute', { characterid: '<giant character id>', name: 'npc_immunities', current: '' })`) and trigger again. Expected: still immune (before 1.0.1 the empty attribute hid the sheet's "Fire").
+   - Give a 2014 NPC `npc_resistances` of `cold; bludgeoning, piercing, and slashing from nonmagical attacks` and hit it with a bludgeoning AoE, then a cold one. Expected: no **R** for bludgeoning (before 1.0.1 it resisted), **R** for cold.
+   - Add a 2024 creature with the Magic Resistance trait (e.g. a Yuan-ti Infiltrator) to the area and trigger again. Expected: two saves are rolled for it, the lower one greyed out, and its R/V/I column shows **A** (before 1.0.1 it rolled once).
 3. Repeat 1–2 in a 2014-sheet game.
-   - Expected: Same results as before 1.0.0; no "No attribute or sheet field found" errors in the API console.
+   - Expected: Same results as before 1.0.0 (`lvl3_slots_expended` counts down without a limit); no "No attribute or sheet field found" errors in the API console.
 
 ## Markers and removal
 
