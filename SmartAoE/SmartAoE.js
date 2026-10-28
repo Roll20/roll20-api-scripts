@@ -9,7 +9,7 @@
 // Draws areas of effect on gridded maps, decides which squares and tokens they cover, and can roll
 // saves, apply damage and markers, and post a results card. Requires libInline.
 
-/* global on log state sendChat sendPing getObj findObjs createObj Campaign playerIsGM spawnFx spawnFxBetweenPoints toBack toFront getAttrByName getSheetItem setDefaultTokenForCharacter randomInteger _ libInline */
+/* global on log state sendChat sendPing getObj findObjs createObj Campaign playerIsGM spawnFx spawnFxBetweenPoints toBack toFront getAttrByName getSheetItem setSheetItem setDefaultTokenForCharacter randomInteger _ libInline */
 
 const SmartAoE = (() => {
   'use strict';
@@ -4126,6 +4126,30 @@ const SmartAoE = (() => {
     return undefined;
   };
 
+  /**
+   * Reads the current value of a character's attribute: the legacy attribute object if there is one
+   * (case-insensitive name), otherwise the sheet item (Beacon sheets).
+   *
+   * @param {string} charID - Roll20 character ID.
+   * @param {string} attrName - Attribute name.
+   * @returns {Promise<{attr: object|undefined, sheetName: string|undefined, raw: string}|undefined>} The legacy
+   *   attribute or the sheet item name that matched, and the value as text; undefined if neither exists.
+   */
+  const readCharacterValue = async function (charID, attrName) {
+    const attr = findObjs(
+      {
+        _type: 'attribute',
+        name: attrName,
+        _characterid: charID,
+      },
+      { caseInsensitive: true },
+    )[0];
+    if (attr) return { attr, sheetName: undefined, raw: sheetValueToString(attr.get('current')) };
+    const sheetValue = await getSheetValue(charID, attrName);
+    if (sheetValue) return { attr: undefined, sheetName: sheetValue.name, raw: sheetValueToString(sheetValue.value) };
+    return undefined;
+  };
+
   //replaceAttributes and processTokenRolls modified from Jakob's group-check script
   /**
    * Recursively expands @{attribute} references in a roll formula using the given character's attribute values.
@@ -6416,49 +6440,41 @@ const SmartAoE = (() => {
     if (resourceName !== '') {
       const oChar = getObj('character', oTok.get('represents'));
       if (oChar) {
-        const attr = findObjs(
-          {
-            _type: 'attribute',
-            name: resourceName,
-            _characterid: oChar.get('_id'),
-          },
-          { caseInsensitive: true },
-        )[0];
-
-        if (attr) {
-          const resourceCurrent = parseFloat(attr.get('current'));
-          if (!isNumber(resourceCurrent)) {
-            sendChat(
-              scriptName,
-              `${whisperString} Non-numeric current resource value detected (${resourceName} = ${attr.get('current')})`,
-              null,
-              { noarchive: true },
-            );
-            return;
-          } else if (resourceCurrent - resourceCost < 0) {
-            sendChat(
-              scriptName,
-              `${whisperString} Not enough ${resourceAlias}! <br> Current ${resourceAlias} = ${resourceCurrent}, Cost = ${resourceCost}`,
-              null,
-              { noarchive: true },
-            );
-            return;
-          } else {
-            const newVal = resourceCurrent - resourceCost;
-            attr.set('current', newVal);
-            sendChat(
-              scriptName,
-              `${whisperString} ${resourceAlias} reduced by ${resourceCost}. Current value = ${newVal}`,
-              null,
-              { noarchive: true },
-            );
-          }
-        } else {
-          sendChat(scriptName, `${whisperString} Resource '${resourceName}' is not found.`, null, {
-            noarchive: true,
-          });
+        const charID = oChar.get('_id');
+        const whisperResource = (text) => sendChat(scriptName, `${whisperString} ${text}`, null, { noarchive: true });
+        //legacy attribute object, or a sheet item on Beacon sheets (e.g. D&D 2024)
+        const resource = await readCharacterValue(charID, resourceName);
+        if (!resource) {
+          whisperResource(`Resource '${resourceName}' is not found.`);
           return;
         }
+        const resourceCurrent = parseFloat(resource.raw);
+        if (!isNumber(resourceCurrent)) {
+          whisperResource(`Non-numeric current resource value detected (${resourceName} = ${resource.raw})`);
+          return;
+        }
+
+        const newVal = resourceCurrent - resourceCost;
+        if (newVal < 0) {
+          whisperResource(
+            `Not enough ${resourceAlias}! <br> Current ${resourceAlias} = ${resourceCurrent}, Cost = ${resourceCost}`,
+          );
+          return;
+        }
+        if (resource.attr) {
+          resource.attr.set('current', newVal);
+        } else {
+          try {
+            await setSheetItem(charID, resource.sheetName, newVal, 'current', { allowThrow: true });
+          } catch (err) {
+            whisperResource(
+              `Could not update ${resourceAlias} ('${resourceName}') on the sheet, so the AoE was not created. The sheet may not allow scripts to change it.`,
+            );
+            log(`${scriptName}: setSheetItem failed for ${resourceName}: ${err && err.message ? err.message : err}`);
+            return;
+          }
+        }
+        whisperResource(`${resourceAlias} reduced by ${resourceCost}. Current value = ${newVal}`);
       }
     }
 
