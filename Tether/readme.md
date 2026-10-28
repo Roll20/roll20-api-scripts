@@ -12,14 +12,15 @@ Tether creates persistent visual connections between tokens on the Roll20 VTT. C
 - **Custom Styling** — Adjust width, color, layer, and Dynamic Lighting barrier type
 - **Range-Aware Behavior** — Optionally set a distance threshold and choose how the tether reacts as tokens approach or exceed it: fade out, auto-remove, change color, or scale opacity/width smoothly with distance
 - **Grid-Aware Distance** — Threshold distance is measured using the page's own grid scale and diagonal-counting rule (D&D 5E, Pathfinder/3.5E, Manhattan, or Euclidean), so it stays accurate across differently configured maps
-- **Tether by Token ID** — Pair a selected token with one you can't select (e.g. an enemy you don't control) using `target|`
+- **Tether by Token ID** — Pair a selected token with one you can't select (e.g. an enemy you don't control) using `target|`, or pair any two tokens by id with two `target|` entries and nothing selected
+- **Smooth Movement** — When a token moves, the line fades out, repositions and fades back in; Dynamic Lighting barrier tethers move immediately so the barrier never lags
 - **Debug Command** — Inspect the exact computed distance and preview a tether's effective color/width before committing to settings
 - **PathV2 Support** — Uses the latest Roll20 path system
 
 ## Getting Started
 
 1. **Install the script** in your campaign
-2. **Select exactly two tokens** (or select one and use `target|` — see below)
+2. **Select exactly two tokens** (or select one and use `target|`, or use `target|` twice with nothing selected — see below)
 3. **Run:** `!tether`
 4. Move either token and the tether will automatically follow
 5. To remove the connection, select the same two tokens and run: `!untether`
@@ -113,13 +114,18 @@ This is meant to be used with Roll20's Target roll query, which prompts you to c
 
 `!tether target|@{target|token_id}`
 
+You can also use `target|` twice, with nothing selected, to pair two tokens by id:
+
+`!tether target|@{target|First|token_id} target|@{target|Second|token_id}`
+
 Requirements:
 
-- Exactly **one** token must be selected on the tabletop; the other endpoint comes from `target|`.
+- The selected tokens plus the `target|` ids must total exactly **two**: one selected and one `target|`, or none selected and two `target|` entries.
+- With nothing selected, you must control at least one of the two tokens, and both tokens must be on the same page. Commands sent by other scripts skip the control check.
 - The target token ID is trusted as given — Tether doesn't check whether you'd normally be allowed to select it. This is intentional, since `@{target|token_id}` already limits you to tokens you can see on the map.
-- The target must be a different token than the one selected; pairing a token with itself is rejected with an error.
+- The two tokens must be different; pairing a token with itself is rejected with an error.
 
-`target|` works the same way with `!untether` and `!tether-debug` — select one token and pair it with `target|` instead of selecting two.
+`target|` works the same way with `!untether` and `!tether-debug`.
 
 ## Debug
 
@@ -129,11 +135,11 @@ Preview the distance calculation and, optionally, what a threshold/exceeds combi
 `!tether-debug threshold|60 exceeds|attenuate color|00ff00`
 `!tether-debug target|@{target|token_id}`
 
-Select exactly two tokens (or one token plus `target|`) and run the command; results are whispered privately. Useful for confirming grid math on a page before committing to a threshold value.
+Select exactly two tokens (or use `target|`) and run the command; results are whispered privately. Useful for confirming grid math on a page before committing to a threshold value.
 
 ## Removing Tethers
 
-`!untether` — remove the tether between exactly two selected tokens (or one selected token plus `target|`)
+`!untether` — remove the tether between exactly two tokens (selected, or given with `target|`)
 `!untether selected` — remove every tether involving any of the selected tokens
 `!untether all` — remove every tether on the current page
 
@@ -162,6 +168,9 @@ Select exactly two tokens (or one token plus `target|`) and run the command; res
 
 *Tether to a token you don't control:*
 `!tether target|@{target|token_id} color|ff00ff`
+
+*Tether two tokens by id, nothing selected:*
+`!tether target|@{target|First|token_id} target|@{target|Second|token_id}`
 
 *Check the math before setting a threshold:*
 `!tether-debug threshold|60 exceeds|attenuate color|00ff00`

@@ -1,9 +1,28 @@
+// Script:   Tether
+// By:       Keith Curtis
+// Contact:  https://app.roll20.net/users/162065/keithcurtis
+// Changelog
+// 1.0.1  Tethers can now have a range limit (threshold) and a behavior for when it is passed (exceeds):
+//        fade out, remove the tether, change color, or fade or thin out as the tokens move apart.
+//        Distance follows the page's own grid scale and diagonal rule.
+//        Added target| to pair a selected token with one you can't select, or to pair two tokens by id
+//        with nothing selected. With nothing selected, you must control at least one of the two tokens.
+//        Both tokens must be on the same page. Commands sent by other scripts are not restricted.
+//        Added !tether-debug to show the measured distance and preview how a tether would draw.
+//        Fixed tethers being lost after an API restart, and tethers are removed as soon as a token is deleted.
+//        Moving a token updates its tethers in place, so the token stays selected when moved with the arrow keys.
+//        The line fades out and back in as it moves, to hide a flicker while the new position is drawn.
+//        Tethers that act as Dynamic Lighting barriers move immediately instead.
+//        Error messages now go to the player who ran the command.
+//        Other scripts' commands that only begin with !tether or !untether no longer trigger Tether.
+// 1.0.0  Initial release.
+
 const Tether = (() =>
 {
     'use strict';
 
     const SCRIPT = 'Tether';
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
 
     const DEFAULTS = {
         width: 5,
@@ -11,26 +30,31 @@ const Tether = (() =>
         layer: 'objects',
         type: 'transparent',
         threshold: null,
-        exceeds: 'off',
-        target: null
+        exceeds: 'off'
     };
 
     const VALID_LAYERS = ['objects', 'gmlayer', 'map', 'walls', 'foreground'];
     const EXCEEDS_KEYWORDS = ['off', 'delete', 'attenuate', 'stretch'];
 
-    // How long to wait after 'ready' before checking links, and how many
-    // times to retry before concluding a linked token is genuinely gone
-    // (as opposed to just not being loaded into the sandbox cache yet).
+    // Retry delays (ms) before a missing linked token is treated as deleted.
     const READY_RETRY_DELAYS = [2000, 5000, 10000, 20000];
 
-    // Roll20's grid is fixed at 70px per grid square regardless of page
-    // settings - this is a platform constant, not something pages configure.
+    // Roll20 grid size in pixels per square.
     const PIXELS_PER_SQUARE = 70;
 
-    // Distance (in the page's own scale_units) within which attenuate/stretch
-    // stay at full strength (full opacity / full width). Beyond this, effect
-    // strength fades linearly all the way out to the link's threshold.
+    // Distance (scale units) within which attenuate/stretch stay at full strength.
     const FULL_STRENGTH_RANGE_UNITS = 5;
+
+    // Move animation: fade out, move while invisible, fade in. MOVE_ANIMATION = false moves the line directly. Barrier tethers are never animated.
+    const MOVE_ANIMATION = true;
+    const MOVE_FADE_MS = 300;          // total for fade out + fade in
+    const MOVE_FADE_STEPS = 5;         // steps in each direction
+    const MOVE_INVISIBLE_MS = 100;     // wait after fully faded, before moving
+    const MOVE_SETTLE_MS = 400;        // wait after moving, before fading in
+    const MAX_POSITION_RETRIES = 3;
+
+    // Animations in progress, keyed by link.
+    const activeFades = new WeakMap();
 
     const checkInstall = () =>
     {
@@ -45,6 +69,12 @@ const Tether = (() =>
         }
     };
 
+    // Whisper target; commands from other scripts (playerid 'API') go to the GM.
+    const whisperTarget = playerid =>
+    {
+        const player = getObj('player', playerid);
+        return player ? `"${player.get('_displayname')}"` : 'gm';
+    };
 
     const showHelp = playerid =>
     {
@@ -53,7 +83,7 @@ const Tether = (() =>
 <div style="border:1px solid #666;background:#ccc;color:#111;padding:8px;border-radius:5px;font-size:12px;">
 <b><span style = "font-size:16px;">Tether</span></b>
 <br>
-Connect two tokens with an updating path. Select two, or select one and use target|.
+Connect two tokens with an updating path. Select two, select one and use target|, or use target| twice with nothing selected.
 <br><br>
 
 <b>Create:</b>
@@ -75,12 +105,12 @@ threshold|<i>60</i> (distance in the page's scale units)
 <br>
 exceeds|<i>off,delete,attenuate,stretch,</i> or a hex color
 <br>
-target|<i>token_id</i> (e.g. &#64;{target|token_id}) - select 1 token, pair it with this one
+target|<i>token_id</i> (e.g. &#64;{target|token_id}) - may be used twice. Selected tokens plus target| ids must total two. With nothing selected, you must control at least one of the two tokens. Both must be on the same page.
 <br><br>
 
 <b>Remove:</b>
 <br>
-!untether - remove selected pair (or select 1 + target|)
+!untether - remove selected pair (or 1 selected + target|, or target| twice)
 <br>
 !untether selected - remove all tethers involving selected tokens
 <br>
@@ -89,17 +119,16 @@ target|<i>token_id</i> (e.g. &#64;{target|token_id}) - select 1 token, pair it w
 
 <b>Debug:</b>
 <br>
-!tether-debug [options] - select 2 tokens (or 1 + target|) to see computed
+!tether-debug [options] - select 2 tokens (or use target|) to see computed
 distance and, if threshold|/exceeds| are included, a preview of the effective
 draw values
 </div>`;
 
         sendChat(
             SCRIPT,
-            `/w "${getObj('player',playerid).get('_displayname')}" ${help.replace(/\n\s*/g,'')}`
+            `/w ${whisperTarget(playerid)} ${help.replace(/\n\s*/g,'')}`
         );
     };
-
 
     const getPageForPlayer = (playerid) =>
     {
@@ -126,10 +155,7 @@ draw values
 
     const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
-    // Parses a 6- or 8-digit hex color (with or without leading #) into RGBA
-    // components. Returns null for anything else (named colors, malformed
-    // strings) - alpha-based threshold effects are skipped gracefully in
-    // that case rather than guessing.
+    // Hex color (6 or 8 digit) to RGBA parts; null if not hex.
     const hexToRgbaParts = hex => {
         if (typeof hex !== 'string') return null;
         const m = /^#?([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(hex);
@@ -159,8 +185,7 @@ draw values
         };
     };
 
-    // Distance between two graphics' centerpoints, in the page's own scale
-    // units, respecting the page's diagonal-counting method.
+    // Distance between token centers, in the page's scale units.
     const getDistance = (a, b) => {
         const settings = getPageSettings(a.get('_pageid'));
 
@@ -196,11 +221,7 @@ draw values
         return squares * settings.scale_number;
     };
 
-    // Computes the color/width that should actually be drawn for a link,
-    // given its BASE color/width (as set by color|/width|, never mutated)
-    // and the current distance between its tokens. This is recomputed fresh
-    // on every redraw, so "reversing" as tokens move back into range just
-    // falls out of the math automatically.
+    // Effective color/width for a link at a given distance (base values are never changed).
     const getEffectiveDraw = (link, distance) => {
         const base = { color: link.color, width: link.width };
 
@@ -210,10 +231,6 @@ draw values
         const overThreshold = distance > link.threshold;
         const baseParts = hexToRgbaParts(link.color);
 
-        // Fade progress (0 = full strength, 1 = at threshold) across the
-        // span from FULL_STRENGTH_RANGE_UNITS out to the threshold itself.
-        // Degenerate case (threshold at or inside the full-strength range)
-        // just snaps straight to max fade past that point.
         const fadeStart = Math.min(FULL_STRENGTH_RANGE_UNITS, link.threshold);
         const fadeRange = link.threshold - fadeStart;
         const fadeProgress = fadeRange > 0
@@ -234,7 +251,7 @@ draw values
                     return { color: toHexAlphaColor(baseParts, 0), width: link.width };
                 }
 
-                const alpha = baseParts.a * (1 - fadeProgress * 0.8); // 100% -> 20% of initial
+                const alpha = baseParts.a * (1 - fadeProgress * 0.8);
                 return { color: toHexAlphaColor(baseParts, alpha), width: link.width };
             }
 
@@ -249,12 +266,11 @@ draw values
             }
 
             case 'delete':
-                // Handled separately by applyThresholdDeletions(); draw as
-                // normal until the deletion pass removes the link entirely.
+                // exceeds|delete is handled by applyThresholdDeletions().
                 return base;
 
             default: {
-                // Not a keyword, so exceeds is a hex colorvalue.
+                // Not a keyword: exceeds is a hex color.
                 if (!overThreshold) return base;
                 return { color: exceeds, width: link.width };
             }
@@ -264,7 +280,8 @@ draw values
     const parseOptions = content =>
     {
         const opts = {
-            ...DEFAULTS
+            ...DEFAULTS,
+            targets: []
         };
 
         content.split(/\s+/).forEach(part =>
@@ -312,9 +329,7 @@ draw values
                 }
 
                 case 'target':
-                    // Token ids are case-sensitive - val (unlike key) was
-                    // never lowercased, so this is safe to use as-is.
-                    opts.target = val;
+                    opts.targets.push(val);
                     break;
             }
         });
@@ -322,42 +337,80 @@ draw values
         return opts;
     };
 
-    // Resolves the two graphics a command should act on, supporting both the
-    // classic "select exactly two tokens" flow and target|<token_id>, which
-    // lets a player tether to a token they can't select (e.g. one they don't
-    // control) by pairing it with a single selected token. Trusts the given
-    // id as-is - this is intended to be fed via @{target|token_id}, which
-    // itself only lets a player click a token they can already see.
-    const resolvePairFromMessage = msg =>
+    // GMs, or players listed in the token's or its character's controlledby.
+    const playerControlsToken = (playerid, token) =>
+    {
+        if (playerIsGM(playerid)) return true;
+
+        const listed = list =>
+        {
+            const ids = (list || '').split(',').map(s => s.trim());
+            return ids.includes('all') || ids.includes(playerid);
+        };
+
+        if (listed(token.get('controlledby'))) return true;
+
+        const charId = token.get('represents');
+        if (charId)
+        {
+            const character = getObj('character', charId);
+            if (character && listed(character.get('controlledby'))) return true;
+        }
+
+        return false;
+    };
+
+    const whisperError = (playerid, text) =>
+    {
+        sendChat(SCRIPT, `/w ${whisperTarget(playerid)} ${text}`);
+    };
+
+    // Resolves the pair: selected tokens plus target| ids must total two.
+    const resolvePairFromMessage = (msg, requireSamePage = true) =>
     {
         const opts = parseOptions(msg.content);
+        const selectedIds = (msg.selected || []).map(s => s._id);
 
-        if (opts.target)
+        if (opts.targets.length === 0)
         {
-            if (!msg.selected || msg.selected.length !== 1)
+            if (selectedIds.length !== 2)
             {
-                return { error: 'Select exactly one token when using target|.' };
+                return { error: 'Select exactly two tokens, or use target| with a token id.' };
             }
-
-            const a = getObj('graphic', msg.selected[0]._id);
-            const b = getObj('graphic', opts.target);
-
-            if (!a) return { error: 'Selected token could not be found.' };
-            if (!b) return { error: 'Target token could not be found.' };
-            if (a.id === b.id) return { error: 'target| must be a different token than the one selected.' };
-
-            return { a, b, opts };
         }
-
-        if (!msg.selected || msg.selected.length !== 2)
+        else if (selectedIds.length + opts.targets.length !== 2)
         {
-            return { error: 'Select exactly two tokens, or use target|<token_id>.' };
+            return { error: 'Selected tokens plus target| ids must total exactly two (one selected plus one target|, or two target|).' };
         }
 
-        const a = getObj('graphic', msg.selected[0]._id);
-        const b = getObj('graphic', msg.selected[1]._id);
+        const ids = [...selectedIds, ...opts.targets];
 
-        if (!a || !b) return { error: 'Selected tokens could not be found.' };
+        if (ids[0] === ids[1])
+        {
+            return { error: 'The two tokens must be different tokens.' };
+        }
+
+        const a = getObj('graphic', ids[0]);
+        const b = getObj('graphic', ids[1]);
+
+        if (!a || !b)
+        {
+            return { error: 'One of the tokens could not be found.' };
+        }
+
+        // Commands from other scripts (playerid 'API') skip the control check.
+        if (selectedIds.length === 0
+            && msg.playerid !== 'API'
+            && !playerControlsToken(msg.playerid, a)
+            && !playerControlsToken(msg.playerid, b))
+        {
+            return { error: 'You must control at least one of the two tokens.' };
+        }
+
+        if (requireSamePage && a.get('_pageid') !== b.get('_pageid'))
+        {
+            return { error: 'Both tokens must be on the same page.' };
+        }
 
         return { a, b, opts };
     };
@@ -384,17 +437,35 @@ draw values
         };
     };
 
-    // Redraws a single link's path if (and only if) both endpoints currently
-    // exist. Returns true/false but never mutates state[SCRIPT].links itself -
-    // this function is intentionally non-destructive.
-    const redrawLink = link => {
-
+    // Fills in defaults on older saved links.
+    const normalizeLink = link =>
+    {
         link.width ||= DEFAULTS.width;
         link.color ||= DEFAULTS.color;
         link.layer ||= DEFAULTS.layer;
         link.type ||= DEFAULTS.type;
         if (link.threshold === undefined) link.threshold = DEFAULTS.threshold;
         if (!link.exceeds) link.exceeds = DEFAULTS.exceeds;
+    };
+
+    // Confirms an in-place path update took effect.
+    const pathMatches = (path, e) =>
+    {
+        const close = (u, v) => Math.abs(Number(u) - Number(v)) < 0.01;
+
+        if (!close(path.get('x'), e.x) || !close(path.get('y'), e.y)) return false;
+
+        let pts = path.get('points');
+        try { if (typeof pts === 'string') pts = JSON.parse(pts); } catch (err) { return false; }
+        if (!Array.isArray(pts) || pts.length !== e.points.length) return false;
+
+        return pts.every((p, i) => close(p[0], e.points[i][0]) && close(p[1], e.points[i][1]));
+    };
+
+    // Redraws one link. inPlace updates the existing path (keeps the token selection) and falls back to recreating it.
+    const redrawLink = (link, inPlace = false) => {
+
+        normalizeLink(link);
 
         const a = getObj('graphic', link.a);
         const b = getObj('graphic', link.b);
@@ -402,13 +473,34 @@ draw values
         if (!a || !b) return false;
 
         const old = getObj('pathv2', link.path);
-        if (old) old.remove();
 
         const e = getEndpoints(a, b);
 
         const draw = link.threshold == null
             ? { color: link.color, width: link.width }
             : getEffectiveDraw(link, getDistance(a, b));
+
+        if (inPlace && old)
+        {
+            try
+            {
+                // The client may briefly show the new angle at the old center; not avoidable.
+                old.set({
+                    points: JSON.stringify(e.points),
+                    x: e.x,
+                    y: e.y,
+                    stroke: draw.color,
+                    stroke_width: draw.width
+                });
+
+                if (pathMatches(old, e)) return true;
+            }
+            catch (err)
+            {
+            }
+        }
+
+        if (old) old.remove();
 
         const path = createObj('pathv2', {
             _pageid: a.get('_pageid'),
@@ -430,10 +522,165 @@ draw values
         return true;
     };
 
-    // Separate pass for exceeds|delete links: can't safely splice the array
-    // mid-forEach inside redrawLink, so we redraw everything first, then
-    // sweep for any link whose current distance is past its threshold and
-    // remove it exactly like !untether would.
+    // Moves a link's path with the fade animation (out, move, settle, in). Recreates the path if it can't be moved.
+    const fadeMovedLink = link =>
+    {
+        normalizeLink(link);
+
+        const a = getObj('graphic', link.a);
+        const b = getObj('graphic', link.b);
+        if (!a || !b) return;
+
+        const path = getObj('pathv2', link.path);
+        if (!path)
+        {
+            redrawLink(link, true);
+            return;
+        }
+
+        if (activeFades.has(link)) return;
+        if (pathMatches(path, getEndpoints(a, b))) return;
+
+        const initial = hexToRgbaParts(path.get('stroke'));
+        if (!initial)
+        {
+            redrawLink(link, true);
+            return;
+        }
+
+        const stepMs = MOVE_FADE_MS / (2 * MOVE_FADE_STEPS);
+        const fade = {
+            phase: initial.a > 0 ? 'out' : 'move',
+            step: 0,
+            retries: 0
+        };
+        activeFades.set(link, fade);
+
+        const setStyle = (stroke, width) =>
+        {
+            if (path.get('stroke_width') !== width) path.set({ stroke, stroke_width: width });
+            else path.set({ stroke });
+        };
+
+        const tick = () =>
+        {
+            if (activeFades.get(link) !== fade) return;
+
+            const links = state[SCRIPT] && state[SCRIPT].links;
+            if (!links || !links.includes(link) || link.path !== path.get('_id') || !getObj('pathv2', link.path))
+            {
+                activeFades.delete(link);
+                return;
+            }
+
+            let delay = stepMs;
+
+            try
+            {
+                const first = getObj('graphic', link.a);
+                const second = getObj('graphic', link.b);
+
+                if (!first || !second)
+                {
+                    fade.phase = 'failed';
+                }
+                else if (fade.phase === 'out')
+                {
+                    fade.step++;
+                    path.set('stroke', toHexAlphaColor(initial, initial.a * (1 - fade.step / MOVE_FADE_STEPS)));
+
+                    if (fade.step >= MOVE_FADE_STEPS)
+                    {
+                        fade.phase = 'move';
+                        delay = MOVE_INVISIBLE_MS;
+                    }
+                }
+                else if (fade.phase === 'move')
+                {
+                    const e = getEndpoints(first, second);
+                    const style = getEffectiveDraw(link, getDistance(first, second));
+                    const attrs = { points: JSON.stringify(e.points), x: e.x, y: e.y };
+                    if (path.get('stroke_width') !== style.width) attrs.stroke_width = style.width;
+
+                    // Stroke is still invisible here.
+                    path.set(attrs);
+
+                    fade.retries = pathMatches(path, e) ? 0 : fade.retries + 1;
+
+                    if (fade.retries >= MAX_POSITION_RETRIES)
+                    {
+                        fade.phase = 'failed';
+                    }
+                    else
+                    {
+                        fade.phase = 'settle';
+                        delay = MOVE_SETTLE_MS;
+                    }
+                }
+                else if (fade.phase === 'settle')
+                {
+                    if (pathMatches(path, getEndpoints(first, second)))
+                    {
+                        fade.phase = 'in';
+                        fade.step = 0;
+                    }
+                    else
+                    {
+                        fade.phase = 'move';
+                        delay = 0;
+                    }
+                }
+                else if (fade.phase === 'in')
+                {
+                    // Token moved while waiting: reposition before showing.
+                    if (fade.step === 0 && !pathMatches(path, getEndpoints(first, second)))
+                    {
+                        fade.phase = 'move';
+                        delay = 0;
+                    }
+                    else
+                    {
+                        fade.step++;
+                        const style = getEffectiveDraw(link, getDistance(first, second));
+                        const parts = hexToRgbaParts(style.color);
+                        const stroke = (fade.step >= MOVE_FADE_STEPS || !parts)
+                            ? style.color
+                            : toHexAlphaColor(parts, parts.a * fade.step / MOVE_FADE_STEPS);
+
+                        setStyle(stroke, style.width);
+
+                        if (fade.step >= MOVE_FADE_STEPS) fade.phase = 'done';
+                    }
+                }
+            }
+            catch (err)
+            {
+                log(`${SCRIPT}: fade error for ${link.path}: ${err.message}`);
+                fade.phase = 'failed';
+            }
+
+            if (fade.phase === 'done')
+            {
+                activeFades.delete(link);
+                // Picks up a move made during the fade-in.
+                fadeMovedLink(link);
+            }
+            else if (fade.phase === 'failed')
+            {
+                activeFades.delete(link);
+                log(`${SCRIPT}: path ${link.path} could not be moved; recreating it.`);
+                redrawLink(link);
+            }
+            else
+            {
+                setTimeout(tick, delay);
+            }
+        };
+
+        setTimeout(tick, fade.phase === 'out' ? stepMs : 0);
+    };
+
+    // Removes exceeds|delete links that are past their threshold.
     const applyThresholdDeletions = () => {
         const s = state[SCRIPT];
         if (!s || !s.links) return;
@@ -445,7 +692,7 @@ draw values
 
             const a = getObj('graphic', link.a);
             const b = getObj('graphic', link.b);
-            if (!a || !b) return; // handled by pruneLinksForToken instead
+            if (!a || !b) return;
 
             if (getDistance(a, b) > link.threshold) toDelete.add(link);
         });
@@ -462,22 +709,25 @@ draw values
         log(`${SCRIPT}: auto-removed ${toDelete.size} tether(s) past their exceeds|delete threshold.`);
     };
 
-    // Non-destructive redraw of every link. Used on token move events. Any
-    // link whose endpoints can't currently be found is simply skipped, not
-    // removed - a legitimate move event implies the sandbox is fully loaded,
-    // so a missing endpoint here just means "not this link's tokens", not
-    // "delete this link". Also sweeps for exceeds|delete links past their
-    // threshold, since a move is exactly when that needs to be checked.
-    const redrawAll = () => {
+    // In-place redraw of the links attached to one token.
+    const redrawLinksForToken = tokenId => {
         const s = state[SCRIPT];
         if (!s || !s.links) return;
-        s.links.forEach(redrawLink);
+
+        s.links
+            .filter(link => link.a === tokenId || link.b === tokenId)
+            .forEach(link =>
+            {
+                const animate = MOVE_ANIMATION && (link.type || DEFAULTS.type) === 'transparent';
+
+                if (animate) fadeMovedLink(link);
+                else redrawLink(link, true);
+            });
+
         applyThresholdDeletions();
     };
 
-    // Destructive removal, only ever called when we're confident a token is
-    // actually gone (real-time destroy:graphic event, or after exhausting
-    // retries at ready-time reconciliation below).
+    // Removes links for a deleted token.
     const pruneLinksForToken = id => {
         const s = state[SCRIPT];
         if (!s || !s.links) return;
@@ -492,13 +742,7 @@ draw values
         });
     };
 
-    // Ready-time reconciliation. Retries several times with growing delays
-    // before concluding a linked token was genuinely deleted while the
-    // sandbox was offline. This replaces the old single-shot cleanup() that
-    // ran once at a fixed 2s delay - in larger campaigns getObj can still
-    // transiently miss objects at that point, and the old code treated any
-    // miss as "token deleted", permanently wiping valid links from state on
-    // every restart. Now we only prune after several misses in a row.
+    // After a restart, retries before pruning links whose tokens are missing.
     const reconcileAtReady = (attempt = 0) => {
         const s = state[SCRIPT];
         if (!s || !s.links || s.links.length === 0) return;
@@ -523,7 +767,7 @@ draw values
             return;
         }
 
-        // Exhausted retries - these tokens are genuinely gone, safe to prune.
+        // Retries exhausted: these tokens are gone.
         const missingIds = new Set();
         stillMissing.forEach(link => {
             if (!getObj('graphic', link.a)) missingIds.add(link.a);
@@ -590,7 +834,6 @@ draw values
         applyThresholdDeletions();
     };
 
-
     const removeLink = (id1, id2) =>
     {
 
@@ -612,7 +855,6 @@ draw values
         });
     };
 
-
     const removeAllOnPage = pageid =>
     {
 
@@ -631,7 +873,6 @@ draw values
         });
 
     };
-
 
     const removeSelected = selectedIds =>
     {
@@ -662,18 +903,21 @@ draw values
 
         checkInstall();
 
+        // Match the whole command word, not a prefix.
+        const command = msg.content.trim().split(/\s+/)[0];
+
         if(msg.content.trim().toLowerCase() === '!tether help')
         {
             showHelp(msg.playerid);
             return;
         }
 
-        if(msg.content.startsWith('!tether-debug'))
+        if(command === '!tether-debug')
         {
             const resolved = resolvePairFromMessage(msg);
             if(resolved.error)
             {
-                sendChat(SCRIPT, `/w gm ${resolved.error}`);
+                whisperError(msg.playerid, resolved.error);
                 return;
             }
 
@@ -711,25 +955,25 @@ draw values
 
             sendChat(
                 SCRIPT,
-                `/w "${getObj('player',msg.playerid).get('_displayname')}" ${report.replace(/\n\s*/g,'')}`
+                `/w ${whisperTarget(msg.playerid)} ${report.replace(/\n\s*/g,'')}`
             );
             return;
         }
 
-        if(msg.content.startsWith('!tether'))
+        if(command === '!tether')
         {
 
             const resolved = resolvePairFromMessage(msg);
             if(resolved.error)
             {
-                sendChat(SCRIPT, `/w gm ${resolved.error}`);
+                whisperError(msg.playerid, resolved.error);
                 return;
             }
 
             addLink(resolved.a, resolved.b, resolved.opts);
         }
 
-        if(msg.content.startsWith('!untether'))
+        if(command === '!untether')
         {
 
             const args = msg.content.trim().toLowerCase().split(/\s+/);
@@ -743,7 +987,6 @@ draw values
                     );
                     break;
 
-
                 case 'selected':
                     if(!msg.selected || msg.selected.length === 0)
                     {
@@ -756,12 +999,11 @@ draw values
                     );
                     break;
 
-
                 default: {
-                    const resolved = resolvePairFromMessage(msg);
+                    const resolved = resolvePairFromMessage(msg, false);
                     if(resolved.error)
                     {
-                        sendChat(SCRIPT, `/w gm ${resolved.error}`);
+                        whisperError(msg.playerid, resolved.error);
                         return;
                     }
 
@@ -774,23 +1016,19 @@ draw values
             }
         }
 
-
-
     });
 
     on('change:graphic:left', obj =>
     {
-        redrawAll();
+        redrawLinksForToken(obj.id);
     });
 
     on('change:graphic:top', obj =>
     {
-        redrawAll();
+        redrawLinksForToken(obj.id);
     });
 
-    // Real-time, reliable detection of token deletion - this is what
-    // actually prunes dead links during normal play, rather than inferring
-    // deletion from a failed getObj() call during unrelated events.
+    // Prunes links as soon as a token is deleted.
     on('destroy:graphic', obj =>
     {
         checkInstall();
@@ -809,6 +1047,5 @@ draw values
 
         log(`${SCRIPT} v${VERSION} Ready`);
     });
-
 
 })();
