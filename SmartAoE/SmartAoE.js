@@ -4108,15 +4108,16 @@ const SmartAoE = (() => {
    *
    * @param {string} charID - Roll20 character ID.
    * @param {string} attrName - Attribute or computed property name.
+   * @param {string} [type='current'] - 'current' or 'max'.
    * @returns {Promise<{name: string, value: *}|undefined>} The name that matched and its value, or undefined if
    *   getSheetItem is unavailable or nothing matched (or the value is empty).
    */
-  const getSheetValue = async function (charID, attrName) {
+  const getSheetValue = async function (charID, attrName, type = 'current') {
     if (typeof getSheetItem !== 'function') return undefined;
     for (const name of [attrName, `user.${attrName}`]) {
       let value;
       try {
-        value = await getSheetItem(charID, name);
+        value = await getSheetItem(charID, name, type);
       } catch (err) {
         continue; //not found on this sheet; try the next name
       }
@@ -4127,15 +4128,16 @@ const SmartAoE = (() => {
   };
 
   /**
-   * Reads the current value of a character's attribute: the legacy attribute object if there is one
-   * (case-insensitive name), otherwise the sheet item (Beacon sheets).
+   * Reads one value of a character's attribute: the legacy attribute object if there is one (case-insensitive name),
+   * otherwise the sheet item (Beacon sheets).
    *
    * @param {string} charID - Roll20 character ID.
    * @param {string} attrName - Attribute name.
+   * @param {string} [type='current'] - 'current' or 'max'.
    * @returns {Promise<{attr: object|undefined, sheetName: string|undefined, raw: string}|undefined>} The legacy
    *   attribute or the sheet item name that matched, and the value as text; undefined if neither exists.
    */
-  const readCharacterValue = async function (charID, attrName) {
+  const readCharacterValue = async function (charID, attrName, type = 'current') {
     const attr = findObjs(
       {
         _type: 'attribute',
@@ -4144,8 +4146,8 @@ const SmartAoE = (() => {
       },
       { caseInsensitive: true },
     )[0];
-    if (attr) return { attr, sheetName: undefined, raw: sheetValueToString(attr.get('current')) };
-    const sheetValue = await getSheetValue(charID, attrName);
+    if (attr) return { attr, sheetName: undefined, raw: sheetValueToString(attr.get(type)) };
+    const sheetValue = await getSheetValue(charID, attrName, type);
     if (sheetValue) return { attr: undefined, sheetName: sheetValue.name, raw: sheetValueToString(sheetValue.value) };
     return undefined;
   };
@@ -4961,7 +4963,11 @@ const SmartAoE = (() => {
           'operation for resistance / vulnerability (immunity is *0)',
           '*0.5 / *2',
         ],
-        ['--resource', 'attrName, cost, alias — resource (e.g. spell slot) deducted from the caster', 'cost 1'],
+        [
+          '--resource',
+          'attrName, cost, alias, limit — resource (e.g. spell slot) spent by the caster: counts down to 0, or with a limit (number, max or an attribute) counts up to it',
+          'cost 1',
+        ],
         ['--conditionFail / --conditionPass', 'marker(s) on a failed / passed save (@# adds a number)', 'none'],
         [
           '--zeroHPmarker / --removeAtZero',
@@ -5853,6 +5859,7 @@ const SmartAoE = (() => {
     let resourceName = '';
     let resourceCost = 0;
     let resourceAlias = '';
+    let resourceLimit = '';
     let spawnSound = '';
     let moveSound = '';
     let triggerSound = '';
@@ -6245,11 +6252,13 @@ const SmartAoE = (() => {
           } else {
             resourceCost = 1;
           }
-          if (r.length > 2) {
+          if (r.length > 2 && r[2].trim() !== '') {
             resourceAlias = r[2].trim();
           } else {
             resourceAlias = resourceName;
           }
+          //a limit makes the resource count up (uses so far, e.g. 2024 sheet *_slots_expended) instead of down
+          resourceLimit = r.length > 3 ? r[3].trim() : '';
           break;
         case 'spawnsound':
           spawnSound = param;
@@ -6454,10 +6463,38 @@ const SmartAoE = (() => {
           return;
         }
 
-        const newVal = resourceCurrent - resourceCost;
-        if (newVal < 0) {
+        //count-up mode: the resource tracks uses (e.g. 2024 sheet lvl3_slots_expended) up to a limit, which is a
+        //number, the resource's own max ("max"), or another attribute (e.g. lvl3_slots_total)
+        let limit;
+        if (resourceLimit !== '') {
+          let rawLimit = resourceLimit;
+          if (!isNumber(Number(resourceLimit))) {
+            const limitValue =
+              resourceLimit.toLowerCase() === 'max'
+                ? await readCharacterValue(
+                    charID,
+                    resource.attr ? resource.attr.get('name') : resource.sheetName,
+                    'max',
+                  )
+                : await readCharacterValue(charID, resourceLimit);
+            rawLimit = limitValue ? limitValue.raw : undefined;
+          }
+          limit = parseFloat(rawLimit);
+          if (!isNumber(limit)) {
+            whisperResource(
+              `The limit for ${resourceAlias} ('${resourceLimit}') is not found or not a number${rawLimit ? ` (${rawLimit})` : ''}.`,
+            );
+            return;
+          }
+        }
+
+        const countsUp = limit !== undefined;
+        const newVal = countsUp ? resourceCurrent + resourceCost : resourceCurrent - resourceCost;
+        if (countsUp ? newVal > limit : newVal < 0) {
           whisperResource(
-            `Not enough ${resourceAlias}! <br> Current ${resourceAlias} = ${resourceCurrent}, Cost = ${resourceCost}`,
+            countsUp
+              ? `Not enough ${resourceAlias}! <br> ${resourceAlias} used = ${resourceCurrent} of ${limit}, Cost = ${resourceCost}`
+              : `Not enough ${resourceAlias}! <br> Current ${resourceAlias} = ${resourceCurrent}, Cost = ${resourceCost}`,
           );
           return;
         }
@@ -6474,7 +6511,11 @@ const SmartAoE = (() => {
             return;
           }
         }
-        whisperResource(`${resourceAlias} reduced by ${resourceCost}. Current value = ${newVal}`);
+        whisperResource(
+          countsUp
+            ? `${resourceAlias}: ${resourceCost} used. Now ${newVal} of ${limit} used.`
+            : `${resourceAlias} reduced by ${resourceCost}. Current value = ${newVal}`,
+        );
       }
     }
 
