@@ -63,11 +63,24 @@ Use `--affectsCaster|true --autoApply|true --instant|true --noSave|true` on an A
 6. `--saveFormula|<<1d20>> --dc|1 --damageFormula1|[[2*10]] --conditionPass|blue` (no `--noSave`)
    - Expected: Pass, 10 damage (half), and the `blue` marker is added with no stray commas in the token's markers.
 7. `--saveFormula|5eDEX --dc|15 --damageFormula1|[[2*10]]`
-   - Expected: A save is rolled. On 2014-sheet characters the save bonus is included; on 2024 sheets it may not be (see README).
+   - Expected: A save is rolled and includes the character's DEX save bonus (2014 and 2024 sheets).
 8. `--noSave|false --saveFormula|<<1d20>> --dc|10 --damageFormula1|10`
    - Expected: A normal save is rolled (before 1.0.0, `--noSave|false` broke the save formula).
 9. `--damageFormula1|[[2d6]]` with **no** `--saveFormula` and **no** `--noSave`
    - Expected: The card is posted and the full damage is applied, as with `--noSave|true` (before 1.0.0 the trigger silently did nothing).
+
+## D&D 2024 (Beacon) sheet
+
+Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with spell slots and a Fire Giant (fire immunity) on bar 1. Run the macro from the [Beacon forum report](https://app.roll20.net/forum/post/12842711/script-update-smartaoe/?pageforid=12843607#post-12843607) (Fireball with `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`, `--saveformula|<<2d20kh1 + a{dexterity_save_bonus}>>` and the `npc_*` resist/vulnerable/immunity attributes).
+
+1. Cast it with the PC selected.
+   - Expected: "Level 3 slots: 1 used. Now 1 of N used.", and the sheet shows one more 3rd-level slot used. If the sheet won't let scripts change them: "Could not update …" and no AoE is drawn.
+   - Cast until every slot is used, then once more. Expected: "Not enough Level 3 slots! … used = N of N" and no AoE is drawn.
+   - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: "Not enough lvl3_slots_expended!" (the value counts down, as on the 2014 sheet).
+2. Trigger it over the Fire Giant.
+   - Expected: The save includes the giant's DEX save bonus, the giant is listed as immune, and its HP doesn't change.
+3. Repeat 1–2 in a 2014-sheet game.
+   - Expected: Same results as before 1.0.0; no "No attribute or sheet field found" errors in the API console.
 
 ## Markers and removal
 

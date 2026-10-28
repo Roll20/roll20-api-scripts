@@ -11,7 +11,7 @@ Full original documentation: [Roll20 wiki – SmartAoE](https://wiki.roll20.net/
 - **Shapes**: line, square, circle, wall and cones (any angle, Pathfinder `PFcone`, or the 5e triangle `5econe`), plus Pathfinder-style `PFcircle`. Squares and circles can be attached to the caster or float freely.
 - **Consistent coverage rules**: a grid square counts when at least `--minGridArea` of it is covered, and a token counts when at least `--minTokArea` of it is inside the AoE.
 - **Interactive placement**: move the control token to aim; cones can rotate their origin around the caster's corners and faces.
-- **Saves and damage**: per-target saving throws (5e shorthands built in), two damage formulas with damage types, a rule for successful saves (half damage by default) and resistance/vulnerability/immunity checks. 5e Magic Resistance is detected and the save is rolled with advantage.
+- **Saves and damage**: per-target saving throws (5e shorthands built in), two damage formulas with damage types, a rule for successful saves (half damage by default) and resistance/vulnerability/immunity checks. 5e Magic Resistance is detected (2014 sheet) and the save is rolled with advantage. Works with both the 2014 and the 2024 (Beacon) D&D sheets.
 - **Markers**: status markers for passed saves, failed saves, 0 HP and the caster.
 - **Apply now or later**: apply damage and markers automatically, or from buttons on the chat card.
 - **Extras**: particle FX on affected squares, jukebox sounds, turn-order entries, tooltips, resource (spell slot) costs, whisper options and a fully styleable results card.
@@ -123,7 +123,7 @@ Parameters are case-insensitive. Boolean options accept `true`/`yes`/`1` (and `f
 | `--autoApply` | Apply damage and markers immediately instead of from the chat buttons. | `false` |
 | `--resistAttr`, `--vulnerableAttr`, `--immunityAttr` | Attribute(s) listing the target's resistances, vulnerabilities and immunities. | `npc_resistances`, `npc_vulnerabilities`, `npc_immunities` |
 | `--resistanceRule`, `--vulnerableRule` | Operation applied for a resistance / vulnerability. Immunity always applies `*0`. | `*0.5`, `*2` |
-| `--resource` | `attrName, cost, alias` — deduct a resource (e.g. a spell slot) from the caster; the AoE is blocked if there is not enough. | Cost `1` |
+| `--resource` | `attrName, cost, alias, limit` — spend a resource (e.g. a spell slot) of the caster; the AoE is blocked if there is not enough. Without a limit the value counts **down** (slots left, as on the 2014 sheet). With a limit it counts **up** (slots used) and may not pass the limit: a number, `max` (the resource's own max) or another attribute, e.g. `lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total` on the 2024 sheet. | Cost `1` |
 
 ### Markers
 
@@ -241,7 +241,15 @@ Workarounds reported on the forums:
 - **Refresh the browser**, or select the squares and use *To Back*, after the AoE is placed.
 - **Triggering:** clicking the control token often selects one of the squares on top of it instead. `!smarttrigger` (and the **Trigger-ALL** token action) now accepts that: a selected square triggers its own AoE.
 
-The 2024 (Beacon) D&D sheet stores its data differently, so the built-in `5eSTR`…`5eCHA` save shorthands and `@{selected|spell_save_dc}`-style references from the 2014 sheet may not resolve. Use a custom `--saveFormula` and `--dc` with references that work on your sheet.
+### D&D 2024 (Beacon) sheets
+
+The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When SmartAoE can't find an attribute the 2014 way, it reads the sheet with Roll20's `getSheetItem`, then tries the custom-attribute form `user.<name>`. This covers `--resource`, `a{…}` references in `--saveFormula` (and the `5eSTR`…`5eCHA` shorthands), `--resistAttr` / `--vulnerableAttr` / `--immunityAttr` and `--ignore`.
+
+- Use the **Mod Script Sandbox v1.5** (the current default). On v1.0, `getSheetItem` can't see Beacon values.
+- **Spell slots count up on the 2024 sheet.** `lvl3_slots_expended` holds slots *used* (on the 2014 sheet it holds slots left), so give `--resource` the total as a limit: `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`. Without the limit SmartAoE subtracts, and with 0 slots used it always says there aren't enough.
+- A `--resource` on a Beacon sheet is spent with `setSheetItem`. If the sheet doesn't let scripts change that value, the AoE isn't created and the GM is told why.
+- 5e Magic Resistance (save rolled twice) is only detected on 2014 sheets.
+- The names must exist on the 2024 sheet. If a value still comes out empty, check the name with a chat roll such as `[[@{selected|dexterity_save_bonus}]]`.
 
 ---
 

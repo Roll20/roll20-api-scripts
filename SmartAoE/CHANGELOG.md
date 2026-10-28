@@ -12,6 +12,7 @@ The author's GitHub repository also has an unreleased **0.31 "Jumpgate compatibi
 ### Added
 
 - **Help handout** — a GM-only **SmartAoE — Help & Reference** handout is created in the Journal and rebuilt every time the script loads: overview, quick start, commands, all `!smartaoe` parameters (grouped), example macros, the integration API and tips. `!smarthelp` rebuilds it and whispers a link. Its colours read in both Roll20 light and dark mode.
+- **`--resource` limit (count-up resources).** An optional fourth value, `--resource|attrName, cost, alias, limit`, makes the resource count uses up to the limit instead of counting down to 0. The limit is a number, `max` (the resource's own max) or another attribute. The D&D 2024 sheet needs this for spell slots: `lvl3_slots_expended` counts slots used, so use `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`. Without a limit `--resource` works as before.
 - `TESTING.md` — a manual test checklist for live games, and a `.prettierrc` / `.gitignore` matching HealthColors.
 - `SmartAoE.ZeroHPMarkers()` — public function returning the marker tags used as `--zeroHPmarker` this session (kept after an AoE is deleted, including `--instant` AoEs, which are removed before their damage is applied), so other scripts can recognise SmartAoE's 0 HP markers.
 - Errors caught by the chat handler are also logged with their stack trace in the API console, so a line number is available for diagnosis.
@@ -39,6 +40,13 @@ The author's GitHub repository also has an unreleased **0.31 "Jumpgate compatibi
 
 ### Fixed
 
+- **D&D 2024 (Beacon) sheets** ([forum report](https://app.roll20.net/forum/post/12842711/script-update-smartaoe/?pageforid=12843607#post-12843607)). SmartAoE only read legacy attribute objects (`findObjs` / `getAttrByName`), which Beacon sheets don't use, so on a 2024 sheet:
+  - `--resource` always said the resource was not found;
+  - `a{…}` / `@{…}` references in `--saveFormula` (and the `5eSTR`…`5eCHA` shorthands) became empty, so saves were a bare d20;
+  - `--resistAttr` / `--vulnerableAttr` / `--immunityAttr` were never found, so targets took full damage;
+  - `--ignore` never matched.
+
+  These now fall back to Roll20's `getSheetItem` (and `user.<name>` for custom attributes) when no legacy attribute is found, and a Beacon resource is spent with `setSheetItem`. If the sheet refuses the change, the AoE isn't created and the GM is told why. 2014-sheet games keep using the attribute objects as before. Magic Resistance detection still needs legacy attributes.
 - **Commands with nothing selected (or the wrong thing selected) no longer throw.** `!smarttrigger` on a token that isn't part of an AoE, `!smartquery` and `!smartrotateorigin` with nothing selected, and `!smartremove` with an unknown id now whisper what to do instead of "Cannot read properties of undefined". A target whose character no longer exists is skipped instead of breaking the whole trigger.
 - **An AoE with no `--saveFormula` and no `--noSave` no longer does nothing when triggered.** Each target sent an empty roll that Roll20 never answered, so no card was posted and no damage applied, with no error. It is now treated as no save: every target takes full damage. Found during live testing.
 - **`--noSave|false` no longer breaks saves.** The `noSave` option had no `break`, so it fell through into `saveFormula` and set the save formula to the text `false`.
