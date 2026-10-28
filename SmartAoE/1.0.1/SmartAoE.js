@@ -5037,7 +5037,7 @@ const SmartAoE = (() => {
     ],
     [
       '2024 (Beacon) sheets',
-      'The 5eSTR…5eCHA shortcuts use 2014-sheet attributes; use a custom --saveFormula and --dc on the 2024 sheet.',
+      'Use the Mod Script Sandbox v1.5. Saves, damage-type attributes, --ignore and --resource read the 2024 sheet; spell slots (lvlN_slots_expended) count up to lvlN_slots_total. Magic Resistance is only detected on 2014 sheets.',
     ],
     ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run !smartclearcache.'],
   ];

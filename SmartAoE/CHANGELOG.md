@@ -9,6 +9,7 @@ Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20
 
 ### Changed
 
+- The help handout's **2024 (Beacon) sheets** tip no longer says the `5eSTR`…`5eCHA` shortcuts need a custom `--saveFormula` on the 2024 sheet (they have worked there since 1.0.0); it now gives the Sandbox v1.5, spell-slot and Magic Resistance notes.
 - **2024-sheet spell slots count up without a limit.** On a 2024 sheet, `--resource|lvl3_slots_expended` (any level) now counts the slots used up to `lvl3_slots_total` when no limit is given. In 1.0.0 it counted down, so with no slots used it always said there weren't enough, and casting with one slot used took it back to 0. 2014 sheets, where `lvlN_slots_expended` holds the slots left, still count down.
 
 ### Fixed
