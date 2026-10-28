@@ -1,0 +1,23 @@
+{
+    "name": "Tavern Games",
+    "script": "TavernGames.js",
+    "version": "2.6.2",
+    "previousversions": [],
+    "description": "Seven fantasy tavern dice games: Liar's Dice, Three-Dragon Ante (blackjack-style dice variant, NOT the official card game), Gelt, Goblin's Challenge, Classic Dice, Wizard's Duel and Treasure Hunt.\n\n**Start:** enter !tavern, choose a game, then GM selects New Lobby. Players join controlled characters; GM adds named NPCs, configures game stakes/free play where applicable and starts. One active game at a time.\n\n**Commands:** !tavern opens current game/selector; !tavern games opens the seven-game selector; !tavern rules opens current-game rules; !tavern GAME-menu and !tavern GAME-rules use prefixes liars, ante, gelt, goblin, classic, duel, hunt. Use buttons for authenticated revision-bound actions. !tavern refresh-rules is GM-only and refreshes the all-player-readable generated rules handout. GM Pause/Resume preserve state; End clears seats and any recorded unsettled pot without payout.\n\n**ScriptCards:** optional, recommended for styled cards and dice fonts; tested against official runtime 3.0.23d. Install ScriptCards separately if desired. No hard dependency; plain private/public output works without it.\n\n**Privacy:** players receive only their own hidden dice; GMs may see NPC dice, not other players' unrevealed hands. Duplicate/unsafe player names fail closed. An authenticated GM's non-player-secret menus may use the reserved GM route, visible to all GMs.\n\n**Limits:** 12 seats maximum; Goblin 3-6, Duel exactly 2, Hunt 1-12, other games 2-12. Stakes in CP/SP/EP/GP/PP are fictional records only. No character-sheet money, points, conditions or tokens are changed. Native turn tracker is not used; legacy upgrade cleanup removes only exact owned rows. Restart preserves games and invalidates old action tickets.\n\nHouse defaults and complete rules are in README.md and the generated handout. Treasury ties split whole coins with lower seat numbers receiving odd units. Ante all-bust, Gelt all-1 and Hunt no-success pots carry; Liar pays each challenge. Wizard uses game-only points. Hunt rolls a 7d12 target capped at 70 and one full ordered seven-die set per seat, scored by earliest successful prefix. No official Three-Dragon Ante card-game implementation or publisher affiliation is claimed.\n\nLocal mocked and official-interpreter tests are included in the separate review package; live campaign/browser interoperability is not verified.",
+    "authors": "Kingkiller546",
+    "roll20userid": "2978722",
+    "useroptions": [],
+    "dependencies": [],
+    "modifies": {
+        "player._displayname": "read",
+        "character.name": "read",
+        "character.controlledby": "read",
+        "campaign.turnorder": "read,write",
+        "handout.notes": "read,write",
+        "handout.name": "write",
+        "handout.inplayerjournals": "read,write",
+        "handout.controlledby": "read,write",
+        "handout.archived": "write"
+    },
+    "conflicts": []
+}
