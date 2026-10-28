@@ -121,7 +121,7 @@ Parameters are case-insensitive. Boolean options accept `true`/`yes`/`1` (and `f
 | `--damageSaveRule` | Operation applied to damage on a successful save. | `*0.5` |
 | `--bar` | Bar(s) to change, e.g. `1` or `3,1` (temporary HP in bar 3 first, then bar 1). Damage left over on one bar carries to the next; healing fills each bar to its max before moving on. | `1` |
 | `--autoApply` | Apply damage and markers immediately instead of from the chat buttons. | `false` |
-| `--resistAttr`, `--vulnerableAttr`, `--immunityAttr` | Attribute(s) listing the target's resistances, vulnerabilities and immunities. | `npc_resistances`, `npc_vulnerabilities`, `npc_immunities` |
+| `--resistAttr`, `--vulnerableAttr`, `--immunityAttr` | Attribute(s) listing the target's resistances, vulnerabilities and immunities. AoEs count as magical, so damage types only resisted "from nonmagical attacks" (2014 stat blocks) are ignored. | `npc_resistances`, `npc_vulnerabilities`, `npc_immunities` |
 | `--resistanceRule`, `--vulnerableRule` | Operation applied for a resistance / vulnerability. Immunity always applies `*0`. | `*0.5`, `*2` |
 | `--resource` | `attrName, cost, alias, limit` — spend a resource (e.g. a spell slot) of the caster; the AoE is blocked if there is not enough. Without a limit the value counts **down** (slots left, as on the 2014 sheet). With a limit it counts **up** (slots used) and may not pass the limit: a number, `max` (the resource's own max) or another attribute, e.g. `lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total` on the 2024 sheet. 2024-sheet spell slots (`lvlN_slots_expended`) use `lvlN_slots_total` as the limit when none is given. | Cost `1` |
 

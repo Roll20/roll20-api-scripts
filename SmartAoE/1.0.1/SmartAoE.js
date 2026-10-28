@@ -4207,6 +4207,22 @@ const SmartAoE = (() => {
   };
 
   /**
+   * Removes the damage types that only apply to nonmagical attacks from a resistance, vulnerability or immunity list
+   * (e.g. 2014 stat blocks' "bludgeoning, piercing, and slashing from nonmagical attacks that aren't silvered"). AoEs
+   * are treated as magical, as for Magic Resistance, so these mustn't match a bludgeoning AoE.
+   *
+   * @param {string} text - Lower-cased damage type list.
+   * @returns {string} The list without the nonmagical damage types.
+   */
+  const removeNonmagicalDamage = function (text) {
+    //"bludgeoning, piercing, and slashing", "bludgeoning or piercing", ...
+    const physical = '(?:(?:bludgeoning|piercing|slashing)(?:\\s*,\\s*(?:and\\s+|or\\s+)?|\\s+(?:and|or)\\s+)?)+';
+    return text
+      .replace(new RegExp(`${physical}\\s*(?:damage\\s+)?from\\s+non-?magical[^;]*`, 'g'), '')
+      .replace(new RegExp(`non-?magical\\s+${physical}[^;]*`, 'g'), '');
+  };
+
+  /**
    * Checks a Beacon (D&D 2024) sheet's "store" attribute for an enabled Magic Resistance feature. Only feature names
    * are checked: the whole store also holds item and spell text, which can mention magic resistance.
    *
@@ -4285,7 +4301,7 @@ const SmartAoE = (() => {
           if (sheetValue) values.push(sheetValueToString(sheetValue.value).toLowerCase());
         }
       }
-      return values.join('');
+      return values.map(removeNonmagicalDamage).join('');
     };
 
     if (!character) return null;
