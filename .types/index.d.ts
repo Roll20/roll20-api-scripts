@@ -218,7 +218,10 @@ type CharacterProperties = {
   _defaulttoken: string;
 };
 
-declare type Roll20Character = Prettify<Roll20Object<CharacterProperties>>;
+declare type Roll20Character = Prettify<Roll20Object<CharacterProperties> & {
+  /** Experimental: legacy Roll20 attributes vs Beacon sheet */
+  sheetEnvironment?: "legacy" | "beacon";
+}>;
 
 // Attribute type with proper properties
 type AttributeProperties = {
@@ -554,7 +557,11 @@ declare function getAllObjs(): Roll20Object<AnyRoll20Object>[];
  */
 declare function getAttrByName(character_id: string, attribute_name: string, value_type?: "current" | "max"): string;
 
-type SheetItemOptions = { allowThrow?: boolean };
+type SheetItemOptions = {
+  allowThrow?: boolean,
+  createAttr?: boolean,
+  withWorker?: boolean
+};
 type SheetItemValueTYpe = "current" | "max";
 
 /**
