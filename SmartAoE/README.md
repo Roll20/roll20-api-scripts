@@ -11,7 +11,7 @@ Full original documentation: [Roll20 wiki – SmartAoE](https://wiki.roll20.net/
 - **Shapes**: line, square, circle, wall and cones (any angle, Pathfinder `PFcone`, or the 5e triangle `5econe`), plus Pathfinder-style `PFcircle`. Squares and circles can be attached to the caster or float freely.
 - **Consistent coverage rules**: a grid square counts when at least `--minGridArea` of it is covered, and a token counts when at least `--minTokArea` of it is inside the AoE. See [Grid rules by game system](#grid-rules-by-game-system) for D&D 2014 and 2024, Pathfinder and other systems.
 - **Interactive placement**: move the control token to aim; cones can rotate their origin around the caster's corners and faces.
-- **Saves and damage**: per-target saving throws (5e shorthands built in), two damage formulas with damage types, a rule for successful saves (half damage by default) and resistance/vulnerability/immunity checks. 5e Magic Resistance is detected (2014 sheet) and the save is rolled with advantage. Works with both the 2014 and the 2024 (Beacon) D&D sheets.
+- **Saves and damage**: per-target saving throws (5e shorthands built in), two damage formulas with damage types, a rule for successful saves (half damage by default) and resistance/vulnerability/immunity checks. 5e Magic Resistance is detected and the save is rolled with advantage. Works with both the 2014 and the 2024 (Beacon) D&D sheets.
 - **Markers**: status markers for passed saves, failed saves, 0 HP and the caster.
 - **Apply now or later**: apply damage and markers automatically, or from buttons on the chat card.
 - **Extras**: particle FX on affected squares, jukebox sounds, turn-order entries, tooltips, resource (spell slot) costs, whisper options and a fully styleable results card.
@@ -275,7 +275,7 @@ The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When Sm
 - Use the **Mod Script Sandbox v1.5** (the current default). On v1.0, `getSheetItem` can't see Beacon values.
 - **Spell slots count up on the 2024 sheet.** `lvl3_slots_expended` holds slots *used* (on the 2014 sheet it holds slots left). From 1.0.1, `--resource|lvl3_slots_expended` on a 2024 sheet counts up to `lvl3_slots_total` automatically; you can also give the limit yourself: `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`.
 - A `--resource` on a Beacon sheet is spent with `setSheetItem`. If the sheet doesn't let scripts change that value, the AoE isn't created and the GM is told why.
-- 5e Magic Resistance (save rolled twice) is only detected on 2014 sheets.
+- From 1.0.1, 5e Magic Resistance (save rolled twice, shown as **A**) is detected on 2024 sheets from a feature named Magic Resistance. Text elsewhere on the sheet, such as an item's description, doesn't count.
 - The names must exist on the 2024 sheet. If a value still comes out empty, check the name with a chat roll such as `[[@{selected|dexterity_save_bonus}]]`.
 
 ---

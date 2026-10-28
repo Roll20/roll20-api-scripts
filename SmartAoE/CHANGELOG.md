@@ -13,13 +13,14 @@ Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20
 
 ### Changed
 
-- The help handout's **2024 (Beacon) sheets** tip no longer says the `5eSTR`…`5eCHA` shortcuts need a custom `--saveFormula` on the 2024 sheet (they have worked there since 1.0.0); it now gives the Sandbox v1.5, spell-slot and Magic Resistance notes.
+- The help handout's **2024 (Beacon) sheets** tip no longer says the `5eSTR`…`5eCHA` shortcuts need a custom `--saveFormula` on the 2024 sheet (they have worked there since 1.0.0); it now gives the Sandbox v1.5 and spell-slot notes.
 - **2024-sheet spell slots count up without a limit.** On a 2024 sheet, `--resource|lvl3_slots_expended` (any level) now counts the slots used up to `lvl3_slots_total` when no limit is given. In 1.0.0 it counted down, so with no slots used it always said there weren't enough, and casting with one slot used took it back to 0. 2014 sheets, where `lvlN_slots_expended` holds the slots left, still count down.
 
 ### Fixed
 
 - **Empty leftover attributes no longer hide 2024 sheet values.** A 2024 character can carry legacy attribute objects with the same names as its sheet values, for example after moving a 2014 character to the 2024 sheet or when another mod creates them. An empty `npc_immunities` (or `npc_resistances`, `npc_vulnerabilities`, `--ignore` or `--resource` attribute) was used as the value, so a Fire Giant took full fire damage even though a chat roll showed "Fire". An empty legacy attribute is now skipped and the sheet's value used.
 - **`!smarttrigger` before the control token has moved** no longer stops with "Cannot read properties of undefined (reading 'x')". The AoE has no squares yet, so SmartAoE whispers to move the control token first.
+- **Magic Resistance is detected on 2024 sheets.** A creature with a Magic Resistance feature, such as a Yuan-ti, now rolls its save twice and keeps the higher, shown as **A** on the card, as on the 2014 sheet. The 2024 sheet keeps its features in one `store` object, which SmartAoE read as "[object Object]". Only feature names are checked, so text elsewhere on the sheet, such as an item's description, doesn't count.
 
 ## [1.0.0] – 2026-10-25
 

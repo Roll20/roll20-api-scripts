@@ -4207,10 +4207,37 @@ const SmartAoE = (() => {
   };
 
   /**
+   * Checks a Beacon (D&D 2024) sheet's "store" attribute for an enabled Magic Resistance feature. Only feature names
+   * are checked: the whole store also holds item and spell text, which can mention magic resistance.
+   *
+   * @param {*} store - The current value of the character's "store" attribute (an object on Beacon sheets).
+   * @returns {boolean} True if the sheet has an enabled feature named Magic Resistance.
+   */
+  const hasBeaconMagicResistance = function (store) {
+    let data = store;
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (err) {
+        return false;
+      }
+    }
+    const integrants = data?.integrants?.integrants;
+    if (!integrants || typeof integrants !== 'object') return false;
+    return Object.values(integrants).some(
+      (item) =>
+        item &&
+        item._enabled !== false &&
+        typeof item.name === 'string' &&
+        item.name.toLowerCase().includes('magic resistance'),
+    );
+  };
+
+  /**
    * Builds the saving-throw entry for one target token: reads its resistances, vulnerabilities and immunities from the
    * link's configured attributes, detects Magic Resistance (roll twice), and expands the save formula with the
    * character's attributes ([[0]] when the AoE has no save). Attributes not found as legacy attribute objects are
-   * read from the sheet with getSheetItem (Beacon sheets); Magic Resistance detection needs legacy attributes.
+   * read from the sheet with getSheetItem (Beacon sheets); Magic Resistance is read from a Beacon sheet's features.
    *
    * @param {object} token - Roll20 graphic (token) hit by the AoE.
    * @param {object} link - AoE link from state.
@@ -4269,7 +4296,11 @@ const SmartAoE = (() => {
 
     if (attrs) {
       //Magic Resistance (likely 5e-only)
-      const tempAttrs = attrs.filter((att) => att.get('current').toString().toLowerCase().includes('magic resist'));
+      const tempAttrs = attrs.filter((att) => {
+        const current = att.get('current');
+        if (att.get('name') === 'store') return hasBeaconMagicResistance(current);
+        return sheetValueToString(current).toLowerCase().includes('magic resist');
+      });
       if (tempAttrs.length > 0) {
         roll2x = true;
       }
@@ -5037,7 +5068,7 @@ const SmartAoE = (() => {
     ],
     [
       '2024 (Beacon) sheets',
-      'Use the Mod Script Sandbox v1.5. Saves, damage-type attributes, `--ignore` and `--resource` read the 2024 sheet; spell slots (`lvlN_slots_expended`) count up to `lvlN_slots_total`. Magic Resistance is only detected on 2014 sheets.',
+      'Use the Mod Script Sandbox v1.5. Saves, damage-type attributes, `--ignore` and `--resource` read the 2024 sheet; spell slots (`lvlN_slots_expended`) count up to `lvlN_slots_total`. Magic Resistance comes from a feature of that name.',
     ],
     ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run `!smartclearcache`.'],
   ];

@@ -81,6 +81,7 @@ Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with 
 2. Trigger it over the Fire Giant.
    - Expected: The save includes the giant's DEX save bonus, the giant is listed as immune, and its HP doesn't change.
    - Give the giant an empty legacy `npc_immunities` attribute object (e.g. a one-off Mod script running `createObj('attribute', { characterid: '<giant character id>', name: 'npc_immunities', current: '' })`) and trigger again. Expected: still immune (before 1.0.1 the empty attribute hid the sheet's "Fire").
+   - Add a 2024 creature with the Magic Resistance trait (e.g. a Yuan-ti Infiltrator) to the area and trigger again. Expected: two saves are rolled for it, the lower one greyed out, and its R/V/I column shows **A** (before 1.0.1 it rolled once).
 3. Repeat 1–2 in a 2014-sheet game.
    - Expected: Same results as before 1.0.0 (`lvl3_slots_expended` counts down without a limit); no "No attribute or sheet field found" errors in the API console.
 
