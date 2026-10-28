@@ -25,6 +25,7 @@ This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run
 
 1. Select the NPC and run `!smartaoe {{ --aoeType|circle, float --radius|10ft }}`.
    - Expected: A control token (reticle) appears; moving it draws the red squares of a 10 ft circle.
+   - Before moving it, run `!smarttrigger <controlTokenID>`. Expected: A whisper to move the control token first (before 1.0.1: "Cannot read properties of undefined (reading 'x')").
 2. Select the control token and run `!smarttrigger` (or the Trigger-ALL token action).
    - Expected: A results card listing the creatures inside.
 3. In Jumpgate, click the reticle so that one of the red squares is selected instead, then run `!smarttrigger`.

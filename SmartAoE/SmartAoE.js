@@ -5642,6 +5642,19 @@ const SmartAoE = (() => {
         //rolls and targets belong to this AoE only: each link posts its own card (they used to pile up across links)
         let tokenRolls = [];
         const damageRolls = [];
+        //an AoE whose control token hasn't moved yet has no squares (or bounding box) to test against
+        if (!aoeLinks.links[a].boundingBox || aoeLinks.links[a].boundingBox.length === 0) {
+          sendChat(
+            scriptName,
+            `${whisperString} Move the AoE's control token to draw the area before triggering it.`,
+            null,
+            {
+              noarchive: true,
+            },
+          );
+          continue;
+        }
+
         //first, filter for "ignore" attributes (legacy attribute objects, else the sheet item on Beacon sheets)
         let thisValidToks = [];
         for (const obj of validToks) {

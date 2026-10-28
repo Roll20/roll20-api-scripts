@@ -14,6 +14,7 @@ Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20
 ### Fixed
 
 - **Empty leftover attributes no longer hide 2024 sheet values.** A 2024 character can carry legacy attribute objects with the same names as its sheet values, for example after moving a 2014 character to the 2024 sheet or when another mod creates them. An empty `npc_immunities` (or `npc_resistances`, `npc_vulnerabilities`, `--ignore` or `--resource` attribute) was used as the value, so a Fire Giant took full fire damage even though a chat roll showed "Fire". An empty legacy attribute is now skipped and the sheet's value used.
+- **`!smarttrigger` before the control token has moved** no longer stops with "Cannot read properties of undefined (reading 'x')". The AoE has no squares yet, so SmartAoE whispers to move the control token first.
 
 ## [1.0.0] – 2026-10-25
 
