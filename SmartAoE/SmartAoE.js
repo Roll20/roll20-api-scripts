@@ -4971,7 +4971,7 @@ const SmartAoE = (() => {
         ],
         [
           '--resource',
-          'attrName, cost, alias, limit — resource (e.g. spell slot) spent by the caster: counts down to 0, or with a limit (number, max or an attribute) counts up to it',
+          'attrName, cost, alias, limit — resource (e.g. spell slot) spent by the caster: counts down to 0, or with a limit (number, max or an attribute) counts up to it. 2024-sheet spell slots (lvlN_slots_expended) count up to lvlN_slots_total without a limit',
           'cost 1',
         ],
         ['--conditionFail / --conditionPass', 'marker(s) on a failed / passed save (@# adds a number)', 'none'],
@@ -6460,6 +6460,13 @@ const SmartAoE = (() => {
         //count-up mode: the resource tracks uses (e.g. 2024 sheet lvl3_slots_expended) up to a limit, which is a
         //number, the resource's own max ("max"), or another attribute (e.g. lvl3_slots_total)
         let limit;
+        //2024 (Beacon) spell slots count slots used, so without a limit use the sheet's slot total. 2014 sheets keep
+        //lvlN_slots_expended as a legacy attribute holding the slots left, so they still count down
+        const slotMatch = resource.sheetName && resourceName.match(/^lvl(\d)_slots_expended$/i);
+        if (resourceLimit === '' && slotMatch) {
+          const slotTotalName = `lvl${slotMatch[1]}_slots_total`;
+          if (await readCharacterValue(charID, slotTotalName)) resourceLimit = slotTotalName;
+        }
         if (resourceLimit !== '') {
           let rawLimit = resourceLimit;
           if (!isNumber(Number(resourceLimit))) {

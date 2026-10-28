@@ -123,7 +123,7 @@ Parameters are case-insensitive. Boolean options accept `true`/`yes`/`1` (and `f
 | `--autoApply` | Apply damage and markers immediately instead of from the chat buttons. | `false` |
 | `--resistAttr`, `--vulnerableAttr`, `--immunityAttr` | Attribute(s) listing the target's resistances, vulnerabilities and immunities. | `npc_resistances`, `npc_vulnerabilities`, `npc_immunities` |
 | `--resistanceRule`, `--vulnerableRule` | Operation applied for a resistance / vulnerability. Immunity always applies `*0`. | `*0.5`, `*2` |
-| `--resource` | `attrName, cost, alias, limit` — spend a resource (e.g. a spell slot) of the caster; the AoE is blocked if there is not enough. Without a limit the value counts **down** (slots left, as on the 2014 sheet). With a limit it counts **up** (slots used) and may not pass the limit: a number, `max` (the resource's own max) or another attribute, e.g. `lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total` on the 2024 sheet. | Cost `1` |
+| `--resource` | `attrName, cost, alias, limit` — spend a resource (e.g. a spell slot) of the caster; the AoE is blocked if there is not enough. Without a limit the value counts **down** (slots left, as on the 2014 sheet). With a limit it counts **up** (slots used) and may not pass the limit: a number, `max` (the resource's own max) or another attribute, e.g. `lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total` on the 2024 sheet. 2024-sheet spell slots (`lvlN_slots_expended`) use `lvlN_slots_total` as the limit when none is given. | Cost `1` |
 
 ### Markers
 
@@ -246,7 +246,7 @@ Workarounds reported on the forums:
 The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When SmartAoE can't find an attribute the 2014 way, it reads the sheet with Roll20's `getSheetItem`, then tries the custom-attribute form `user.<name>`. This covers `--resource`, `a{…}` references in `--saveFormula` (and the `5eSTR`…`5eCHA` shorthands), `--resistAttr` / `--vulnerableAttr` / `--immunityAttr` and `--ignore`. A 2024 character can also carry leftover attribute objects with the same names (for example after a 2014 character is moved to the 2024 sheet, or when another mod creates them); an empty one is skipped and the sheet's value is used.
 
 - Use the **Mod Script Sandbox v1.5** (the current default). On v1.0, `getSheetItem` can't see Beacon values.
-- **Spell slots count up on the 2024 sheet.** `lvl3_slots_expended` holds slots *used* (on the 2014 sheet it holds slots left), so give `--resource` the total as a limit: `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`. Without the limit SmartAoE subtracts, and with 0 slots used it always says there aren't enough.
+- **Spell slots count up on the 2024 sheet.** `lvl3_slots_expended` holds slots *used* (on the 2014 sheet it holds slots left). From 1.0.1, `--resource|lvl3_slots_expended` on a 2024 sheet counts up to `lvl3_slots_total` automatically; you can also give the limit yourself: `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`.
 - A `--resource` on a Beacon sheet is spent with `setSheetItem`. If the sheet doesn't let scripts change that value, the AoE isn't created and the GM is told why.
 - 5e Magic Resistance (save rolled twice) is only detected on 2014 sheets.
 - The names must exist on the 2024 sheet. If a value still comes out empty, check the name with a chat roll such as `[[@{selected|dexterity_save_bonus}]]`.

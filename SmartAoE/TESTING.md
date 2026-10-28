@@ -76,12 +76,12 @@ Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with 
 1. Cast it with the PC selected.
    - Expected: "Level 3 slots: 1 used. Now 1 of N used.", and the sheet shows one more 3rd-level slot used. If the sheet won't let scripts change them: "Could not update …" and no AoE is drawn.
    - Cast until every slot is used, then once more. Expected: "Not enough Level 3 slots! … used = N of N" and no AoE is drawn.
-   - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: "Not enough lvl3_slots_expended!" (the value counts down, as on the 2014 sheet).
+   - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: it counts up to `lvl3_slots_total` as above, with `lvl3_slots_expended` as the name (before 1.0.1: "Not enough lvl3_slots_expended!").
 2. Trigger it over the Fire Giant.
    - Expected: The save includes the giant's DEX save bonus, the giant is listed as immune, and its HP doesn't change.
    - Give the giant an empty legacy `npc_immunities` attribute object (e.g. a one-off Mod script running `createObj('attribute', { characterid: '<giant character id>', name: 'npc_immunities', current: '' })`) and trigger again. Expected: still immune (before 1.0.1 the empty attribute hid the sheet's "Fire").
 3. Repeat 1–2 in a 2014-sheet game.
-   - Expected: Same results as before 1.0.0; no "No attribute or sheet field found" errors in the API console.
+   - Expected: Same results as before 1.0.0 (`lvl3_slots_expended` counts down without a limit); no "No attribute or sheet field found" errors in the API console.
 
 ## Markers and removal
 
