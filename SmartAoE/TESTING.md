@@ -15,9 +15,9 @@ This checklist validates `SmartAoE.js` in a live Roll20 game before release. Run
 ## Install and handout
 
 1. Restart the sandbox.
-   - Expected: The console logs `SmartAoE v1.0.0 initialized.` and no errors. On a fresh game an `AoEControlToken` character (with CW, CCW, Trigger-ALL, Trigger-Target token actions) and a GM `AoEGenerator` macro are created.
+   - Expected: The console logs `SmartAoE v1.0.1 initialized.` and no errors. On a fresh game an `AoEControlToken` character (with CW, CCW, Trigger-ALL, Trigger-Target token actions) and a GM `AoEGenerator` macro are created.
 2. Open the Journal.
-   - Expected: A **SmartAoE — Help & Reference** handout exists, is not shown to players, shows v1.0.0, and has these sections: Overview, Quick start, Commands, !smartaoe parameters (four groups), Examples, Other scripts, Tips & known limitations.
+   - Expected: A **SmartAoE — Help & Reference** handout exists, is not shown to players, shows v1.0.1, and has these sections: Overview, Quick start, Commands, !smartaoe parameters (four groups), Examples, Other scripts, Tips & known limitations.
 3. Run `!smarthelp`.
    - Expected: A whisper with a link that opens the handout; no second handout is created.
 

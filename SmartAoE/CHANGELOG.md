@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates for 0.25–0.30 are the dates each version was added to the Roll20 One-Click repository.
 
+## [1.0.1] – 2026-10-28
+
+Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20.net/forum/post/12842711/script-update-smartaoe/?pageforid=12843906#post-12843906). There are no breaking changes.
+
 ## [1.0.0] – 2026-10-25
 
 First 1.0 release: SmartAoE has been stable on the One-Click library since 0.25, so this version marks it as released. There are no breaking changes; existing macros and AoEs work as before.

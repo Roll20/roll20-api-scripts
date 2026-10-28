@@ -1,10 +1,10 @@
 // ========================
-// === SmartAoE v1.0.0 ===
+// === SmartAoE v1.0.1 ===
 // ========================
 
 // AUTHORS:
 //  - David M. (djmoorehead): https://app.roll20.net/users/3987469 (original author, 0.x)
-//  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7 (1.0.0 fixes and refactor)
+//  - MidNiteShadow7: https://app.roll20.net/users/16506286/midniteshadow7 (1.0.x fixes and refactor)
 
 // Draws areas of effect on gridded maps, decides which squares and tokens they cover, and can roll
 // saves, apply damage and markers, and post a results card. Requires libInline.
@@ -16,7 +16,7 @@ const SmartAoE = (() => {
 
   // ————— CONSTANTS & STATE —————
   const scriptName = 'SmartAoE';
-  const version = '1.0.0';
+  const version = '1.0.1';
   const schemaVersion = '0.1';
 
   let cardParameters = {};
