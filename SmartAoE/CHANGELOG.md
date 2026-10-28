@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates f
 
 Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20.net/forum/post/12842711/script-update-smartaoe/?pageforid=12843906#post-12843906). There are no breaking changes.
 
+### Added
+
+- **Grid rules by game system**, in the README and the help handout — the `--minGridArea`, `--minTokArea`, shape and origin settings that match D&D 5e 2014 and 2024, Pathfinder 1e and 2e, Starfinder and other systems, with notes on how creature size affects hits (a Tiny creature in a counted square is hit).
+
 ### Changed
 
 - The help handout's **2024 (Beacon) sheets** tip no longer says the `5eSTR`…`5eCHA` shortcuts need a custom `--saveFormula` on the 2024 sheet (they have worked there since 1.0.0); it now gives the Sandbox v1.5, spell-slot and Magic Resistance notes.

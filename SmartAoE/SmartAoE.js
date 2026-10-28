@@ -5042,6 +5042,32 @@ const SmartAoE = (() => {
     ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run !smartclearcache.'],
   ];
 
+  /** Grid rules for the help handout: [rules, settings]. Mirrors the README's "Grid rules by game system". */
+  const HANDOUT_GRID_RULES = [
+    [
+      'D&D 5e 2024: an area covering at least half a square affects the whole square',
+      '--minGridArea|0.5; cones with --aoeType|5econe',
+    ],
+    [
+      'D&D 5e 2014, DMG: the half-square rule is given for circular areas (spheres, cylinders)',
+      '--minGridArea|0.5 on circles; the defaults on other shapes',
+    ],
+    [
+      "D&D 5e 2014, Xanathar's template method: a square counts if any part of it is under the template",
+      'The defaults (0.01 / 0.01); cones with 5econe',
+    ],
+    [
+      'Pathfinder 1e, D&D 3.5, Starfinder 1e: bursts and cones start at a grid intersection, every second diagonal counts double, and a square is in the area if its far edge is',
+      "--aoeType|PFcircle, float or PFcone with --forceIntersection|1 (tests each square's farthest corner)",
+    ],
+    [
+      'Pathfinder 2e, Starfinder 2e: bursts start at a grid corner and are measured like movement; a creature is hit if any square of its space is in the area',
+      "PFcircle with --forceIntersection|1 for bursts, PFcone for cones, line for lines; keep --minTokArea at 0.01. Emanations (from the sides of a creature's space) aren't modelled exactly: a PFcircle from a Medium creature's centre is closest",
+    ],
+    ['Templates where any creature the template touches is affected', 'The defaults (0.01 / 0.01)'],
+    ['A square counts only if its centre is in the area', 'No exact setting; --minGridArea|0.5 is closest for circles'],
+  ];
+
   /**
    * Inline styles for the help handout. Roll20 strips <style> blocks, so there is no dark-mode media query: body text
    * inherits the theme's colour, accents are mid-tones that read on light and dark backgrounds, and tints are
@@ -5161,6 +5187,24 @@ const SmartAoE = (() => {
         ([title, macro]) =>
           `<h3 style="${S.h3}">${escapeHandoutHtml(title)}</h3><pre style="${S.pre}">${escapeHandoutHtml(macro)}</pre>`,
       ).join('');
+    const gridRules =
+      `<h2 style="${S.h2}">Grid rules by game system</h2>` +
+      p(
+        `Two settings decide which squares and creatures an AoE hits: ${handoutCode('--minGridArea')} (how much of a square must be covered for it to count) and ${handoutCode('--minTokArea')} (how much of a token must be in the counted squares). Both default to ${handoutCode('0.01')}, so almost any overlap counts. Set them to match your game’s rules:`,
+      ) +
+      handoutTable(
+        ['Rules', 'Settings'],
+        HANDOUT_GRID_RULES.map(([rules, settings]) => [escapeHandoutHtml(rules), escapeHandoutHtml(settings)]),
+      ) +
+      p(
+        '<b>The drawn squares are the ruling.</b> SmartAoE works out how much of each square the shape covers and draws only the squares that count, so there is no template edge to judge by eye, whichever rule you use.',
+      ) +
+      p(
+        `<b>Creature size.</b> Hits are decided by squares, not by how much of a creature the area covers. A token is hit when at least ${handoutCode('--minTokArea')} of it lies in counted squares. With the default ${handoutCode('0.01')}, a Tiny creature in a counted square is hit however small its token, and a token that straddles squares is hit if any part of it is in a counted square. Raise ${handoutCode('--minTokArea')} (e.g. ${handoutCode('0.5')}) only if your table wants most of a creature’s space to be inside.`,
+      ) +
+      p(
+        'SmartAoE needs a gridded page. These are guides: check your rulebook, as tables often house-rule areas of effect.',
+      );
     const integration =
       `<h2 style="${S.h2}">Other scripts</h2>` +
       p(
@@ -5176,7 +5220,7 @@ const SmartAoE = (() => {
     return (
       `<div style="${S.outer}"><div style="${S.header}"><h1 style="${S.h1}">${scriptName}</h1>` +
       `<p style="${S.subtitle}">Version ${version} · Help &amp; Reference</p></div>` +
-      `${overview}${quickStart}${commands}${params}${examples}${integration}${tips}${footer}</div>`
+      `${overview}${quickStart}${commands}${params}${examples}${gridRules}${integration}${tips}${footer}</div>`
     );
   };
 
