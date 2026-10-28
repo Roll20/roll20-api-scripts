@@ -5008,7 +5008,7 @@ const SmartAoE = (() => {
         ['--bar / --autoApply', 'bar(s) to change, e.g. 3,1 / apply without the chat buttons', '1 / false'],
         [
           '--resistAttr / --vulnerableAttr / --immunityAttr',
-          'attributes listing the target’s defences',
+          'attributes listing the target’s defences; AoEs count as magical, so types resisted only from nonmagical attacks are ignored',
           'npc_resistances …',
         ],
         [
