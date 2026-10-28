@@ -243,7 +243,7 @@ Workarounds reported on the forums:
 
 ### D&D 2024 (Beacon) sheets
 
-The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When SmartAoE can't find an attribute the 2014 way, it reads the sheet with Roll20's `getSheetItem`, then tries the custom-attribute form `user.<name>`. This covers `--resource`, `a{…}` references in `--saveFormula` (and the `5eSTR`…`5eCHA` shorthands), `--resistAttr` / `--vulnerableAttr` / `--immunityAttr` and `--ignore`.
+The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When SmartAoE can't find an attribute the 2014 way, it reads the sheet with Roll20's `getSheetItem`, then tries the custom-attribute form `user.<name>`. This covers `--resource`, `a{…}` references in `--saveFormula` (and the `5eSTR`…`5eCHA` shorthands), `--resistAttr` / `--vulnerableAttr` / `--immunityAttr` and `--ignore`. A 2024 character can also carry leftover attribute objects with the same names (for example after a 2014 character is moved to the 2024 sheet, or when another mod creates them); an empty one is skipped and the sheet's value is used.
 
 - Use the **Mod Script Sandbox v1.5** (the current default). On v1.0, `getSheetItem` can't see Beacon values.
 - **Spell slots count up on the 2024 sheet.** `lvl3_slots_expended` holds slots *used* (on the 2014 sheet it holds slots left), so give `--resource` the total as a limit: `--resource|lvl3_slots_expended, 1, Level 3 slots, lvl3_slots_total`. Without the limit SmartAoE subtracts, and with 0 slots used it always says there aren't enough.

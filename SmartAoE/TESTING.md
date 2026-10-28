@@ -79,6 +79,7 @@ Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with 
    - Without the limit (`--resource|lvl3_slots_expended`) and no slots used. Expected: "Not enough lvl3_slots_expended!" (the value counts down, as on the 2014 sheet).
 2. Trigger it over the Fire Giant.
    - Expected: The save includes the giant's DEX save bonus, the giant is listed as immune, and its HP doesn't change.
+   - Give the giant an empty legacy `npc_immunities` attribute object (e.g. a one-off Mod script running `createObj('attribute', { characterid: '<giant character id>', name: 'npc_immunities', current: '' })`) and trigger again. Expected: still immune (before 1.0.1 the empty attribute hid the sheet's "Fire").
 3. Repeat 1–2 in a 2014-sheet game.
    - Expected: Same results as before 1.0.0; no "No attribute or sheet field found" errors in the API console.
 

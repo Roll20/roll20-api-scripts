@@ -4129,7 +4129,8 @@ const SmartAoE = (() => {
 
   /**
    * Reads one value of a character's attribute: the legacy attribute object if there is one (case-insensitive name),
-   * otherwise the sheet item (Beacon sheets).
+   * otherwise the sheet item (Beacon sheets). An empty legacy attribute doesn't hide a sheet item: Beacon characters
+   * can carry leftover legacy attributes (e.g. from a 2014 sheet or another mod) with the same name.
    *
    * @param {string} charID - Roll20 character ID.
    * @param {string} attrName - Attribute name.
@@ -4146,9 +4147,11 @@ const SmartAoE = (() => {
       },
       { caseInsensitive: true },
     )[0];
-    if (attr) return { attr, sheetName: undefined, raw: sheetValueToString(attr.get(type)) };
+    const legacyRaw = attr ? sheetValueToString(attr.get(type)) : '';
+    if (attr && legacyRaw !== '') return { attr, sheetName: undefined, raw: legacyRaw };
     const sheetValue = await getSheetValue(charID, attrName, type);
     if (sheetValue) return { attr: undefined, sheetName: sheetValue.name, raw: sheetValueToString(sheetValue.value) };
+    if (attr) return { attr, sheetName: undefined, raw: legacyRaw };
     return undefined;
   };
 
@@ -4235,8 +4238,8 @@ const SmartAoE = (() => {
     let roll2x = false;
 
     /**
-     * Joins the lower-cased values of the named attributes: legacy attribute objects where they exist, otherwise the
-     * sheet item of that name.
+     * Joins the lower-cased values of the named attributes: legacy attribute objects where they have a value,
+     * otherwise the sheet item of that name (an empty leftover legacy attribute must not hide a Beacon sheet's value).
      *
      * @param {string[]} attrNames - Attribute names configured on the link (e.g. resistAttrs).
      * @returns {Promise<string>} The values joined, '' when none are found.
@@ -4244,9 +4247,12 @@ const SmartAoE = (() => {
     const readDamageAttrs = async (attrNames) => {
       const values = [];
       for (const attrName of attrNames) {
-        const legacyAttrs = (attrs || []).filter((att) => att.get('name') === attrName);
-        if (legacyAttrs.length > 0) {
-          values.push(...legacyAttrs.map((e) => e.get('current').toLowerCase()));
+        const legacyValues = (attrs || [])
+          .filter((att) => att.get('name') === attrName)
+          .map((e) => sheetValueToString(e.get('current')).toLowerCase())
+          .filter((v) => v !== '');
+        if (legacyValues.length > 0) {
+          values.push(...legacyValues);
         } else {
           const sheetValue = await getSheetValue(charID, attrName);
           if (sheetValue) values.push(sheetValueToString(sheetValue.value).toLowerCase());
@@ -5644,20 +5650,8 @@ const SmartAoE = (() => {
           if (!represents || name === aoeLinks.links[a].controlTokName) continue;
           const ignoreAttr = aoeLinks.links[a].ignoreAttr;
           const ignoreVal = aoeLinks.links[a].ignoreVal.toString();
-          const attrs = findObjs(
-            {
-              _type: 'attribute',
-              _characterid: represents,
-              name: ignoreAttr,
-            },
-            { caseInsensitive: true },
-          );
-          if (attrs.length > 0) {
-            if (attrs[0].get('current') !== ignoreVal) thisValidToks.push(obj);
-          } else {
-            const sheetValue = ignoreAttr !== '' ? await getSheetValue(represents, ignoreAttr) : undefined;
-            if (!sheetValue || sheetValueToString(sheetValue.value) !== ignoreVal) thisValidToks.push(obj);
-          }
+          const ignoreValue = ignoreAttr !== '' ? await readCharacterValue(represents, ignoreAttr) : undefined;
+          if (!ignoreValue || ignoreValue.raw !== ignoreVal) thisValidToks.push(obj);
         }
 
         //Next, omit origin token and any tokens that don't have at least one corner in the AoE bounding box (or at least one corner of AoE bounding box is within the token bounding box)
