@@ -1,6 +1,12 @@
 // Script:   Handout Formatter
 // By:       Keith Curtis
 // Contact:  https://app.roll20.net/users/162065/keithcurtis
+// Changelog
+// 1.0.0 Initial release.
+// 1.0.1 Fixed horizontal rules being deleted from Notes/GM Notes whenever
+//       a style was applied or removed. Fixed the help handout's icon
+//       being embedded as an image in its text instead of set as the
+//       handout's own avatar.
 
 const HandoutFormatter = (() => {
   'use strict';
@@ -11,8 +17,8 @@ const HandoutFormatter = (() => {
   // Internal state storage key only (state[STATE_KEY]) -- never displayed,
   // just needs to match this file's own top-level identifier below.
   const STATE_KEY = 'HandoutFormatter';
-  const VERSION = '1.0.0';
-  const LAST_UPDATE = 1788393600; // unix timestamp, seconds
+  const VERSION = '1.0.1';
+  const LAST_UPDATE = 1793145600; // unix timestamp, seconds
   const SCHEMA_VERSION = 0.1;
 
   const DEBUG = false;
@@ -653,9 +659,13 @@ td, th {
   };
 
   const VOID_TAGS = ['br', 'img', 'hr', 'col', 'wbr', 'source', 'track', 'area', 'base', 'embed', 'param', 'input'];
+  // 'hr' is in VOID_TAGS (so the tokenizer treats it as self-closing) but
+  // was missing from ALLOWED_TAGS, so every horizontal rule was silently
+  // dropped by Cleaner.clean() -- which runs on every Apply, not just
+  // Remove Styling. Fixed by allowing it through, same as 'br'.
   const ALLOWED_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'blockquote', 'pre', 'code',
     'ol', 'ul', 'li', 'strong', 'b', 'em', 'i', 'u', 's', 'strike', 'sup', 'sub',
-    'span', 'br', 'a', 'img', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th'];
+    'span', 'br', 'hr', 'a', 'img', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th'];
 
   const TAG_RE = /<(\/?)([a-zA-Z][a-zA-Z0-9:]*)((?:\s+[a-zA-Z:_-][a-zA-Z0-9:_.-]*(?:\s*=\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s"'=<>`]+))?)*)\s*(\/?)\s*>/g;
   const ATTR_RE = /([a-zA-Z:_-][a-zA-Z0-9:_.-]*)\s*=\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s"'=<>`]+)/g;
@@ -800,7 +810,11 @@ td, th {
 
   const NOOP_TRANSPARENT_BG = /rgba?\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)/i;
 
-  const CLEANER_BLOCK_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'table', 'blockquote', 'pre'];
+  // 'hr' is block-level (a section break), not inline like 'br' -- treated
+  // here the same as a heading/paragraph/table, so it closes out any
+  // dangling open heading or synthetic paragraph before it's emitted,
+  // instead of ending up nested inside one.
+  const CLEANER_BLOCK_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'table', 'blockquote', 'pre', 'hr'];
 
   const QUOTE_LIKE_CONTAINERS = ['blockquote', 'pre'];
 
@@ -1196,6 +1210,7 @@ td, th {
     refreshHelpHandout: () => {
       const h = HandoutUtils.getHelpHandout();
       h.set('notes', buildHelpHtml());
+      h.set('avatar', HANDOUT_AVATAR); // the icon belongs on the handout's own avatar property, not inlined as an <img> in notes
       return h;
     },
 
@@ -1653,7 +1668,6 @@ td, th {
     const builtinNames = BUILTIN_STYLE_SEEDS.map(s => s.name).sort((a, b) => a.localeCompare(b));
 
     return `<div>` +
-      `<img src="${HANDOUT_AVATAR}" width="70">` +
       `<h1>${HtmlUtil.escapeHtml(PROGRAM_NAME)}</h1>` +
 
       `<p>${HtmlUtil.escapeHtml(PROGRAM_NAME)} takes the plain text you've already written in a ` +
