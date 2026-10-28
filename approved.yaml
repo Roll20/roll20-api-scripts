@@ -1503,3 +1503,7 @@ Darkness:
 VoiceMenuManager:
 - "Voice Menu Manager"
 - "Utility"
+
+TavernGames:
+- "Tavern Games"
+- "Utility"
