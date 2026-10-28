@@ -5020,52 +5020,58 @@ const SmartAoE = (() => {
     ],
   ];
 
-  /** Tips for the help handout: [title, text]. Mirrors the README. */
+  /** Tips for the help handout: [title, text]. Mirrors the README. Text in `backticks` is shown as code. */
   const HANDOUT_TIPS = [
     [
       'Jumpgate layering',
-      'In Jumpgate the AoE squares can cover tokens (a Roll20 issue). Add --aoeLayer|map, or refresh the browser. Clicking the control token may select a square instead; Trigger still works.',
+      'In Jumpgate the AoE squares can cover tokens (a Roll20 issue). Add `--aoeLayer|map`, or refresh the browser. Clicking the control token may select a square instead; Trigger still works.',
     ],
-    ['Attached squares and circles', 'Fixed-radius squares/circles without float only fit one-square casters.'],
+    ['Attached squares and circles', 'Fixed-radius squares/circles without `float` only fit one-square casters.'],
     [
       'Line lengths',
-      'Lines use true distance, so diagonals are shorter than 5e grid counting. Leave out --radius and place the token by hand for an exact count.',
+      'Lines use true distance, so diagonals are shorter than 5e grid counting. Leave out `--radius` and place the token by hand for an exact count.',
     ],
     [
       'Called from other scripts',
-      'Pass --selectedID and --playerID, or install SelectManager and run !smconfig +playerid once.',
+      'Pass `--selectedID` and `--playerID`, or install SelectManager and run `!smconfig +playerid` once.',
     ],
     [
       '2024 (Beacon) sheets',
-      'Use the Mod Script Sandbox v1.5. Saves, damage-type attributes, --ignore and --resource read the 2024 sheet; spell slots (lvlN_slots_expended) count up to lvlN_slots_total. Magic Resistance is only detected on 2014 sheets.',
+      'Use the Mod Script Sandbox v1.5. Saves, damage-type attributes, `--ignore` and `--resource` read the 2024 sheet; spell slots (`lvlN_slots_expended`) count up to `lvlN_slots_total`. Magic Resistance is only detected on 2014 sheets.',
     ],
-    ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run !smartclearcache.'],
+    ['Stale links', 'If AoEs stop matching the map (e.g. after copying pages), run `!smartclearcache`.'],
   ];
 
-  /** Grid rules for the help handout: [rules, settings]. Mirrors the README's "Grid rules by game system". */
+  /**
+   * Grid rules for the help handout: [rules, settings]. Mirrors the README's "Grid rules by game system". Text in
+   * `backticks` is shown as code.
+   */
   const HANDOUT_GRID_RULES = [
     [
       'D&D 5e 2024: an area covering at least half a square affects the whole square',
-      '--minGridArea|0.5; cones with --aoeType|5econe',
+      '`--minGridArea|0.5`; cones with `--aoeType|5econe`',
     ],
     [
       'D&D 5e 2014, DMG: the half-square rule is given for circular areas (spheres, cylinders)',
-      '--minGridArea|0.5 on circles; the defaults on other shapes',
+      '`--minGridArea|0.5` on circles; the defaults on other shapes',
     ],
     [
       "D&D 5e 2014, Xanathar's template method: a square counts if any part of it is under the template",
-      'The defaults (0.01 / 0.01); cones with 5econe',
+      'The defaults (`0.01` / `0.01`); cones with `5econe`',
     ],
     [
       'Pathfinder 1e, D&D 3.5, Starfinder 1e: bursts and cones start at a grid intersection, every second diagonal counts double, and a square is in the area if its far edge is',
-      "--aoeType|PFcircle, float or PFcone with --forceIntersection|1 (tests each square's farthest corner)",
+      "`--aoeType|PFcircle, float` or `PFcone` with `--forceIntersection|1` (tests each square's farthest corner)",
     ],
     [
       'Pathfinder 2e, Starfinder 2e: bursts start at a grid corner and are measured like movement; a creature is hit if any square of its space is in the area',
-      "PFcircle with --forceIntersection|1 for bursts, PFcone for cones, line for lines; keep --minTokArea at 0.01. Emanations (from the sides of a creature's space) aren't modelled exactly: a PFcircle from a Medium creature's centre is closest",
+      "`PFcircle` with `--forceIntersection|1` for bursts, `PFcone` for cones, `line` for lines; keep `--minTokArea` at `0.01`. Emanations (from the sides of a creature's space) aren't modelled exactly: a `PFcircle` from a Medium creature's centre is closest",
     ],
-    ['Templates where any creature the template touches is affected', 'The defaults (0.01 / 0.01)'],
-    ['A square counts only if its centre is in the area', 'No exact setting; --minGridArea|0.5 is closest for circles'],
+    ['Templates where any creature the template touches is affected', 'The defaults (`0.01` / `0.01`)'],
+    [
+      'A square counts only if its centre is in the area',
+      'No exact setting; `--minGridArea|0.5` is closest for circles',
+    ],
   ];
 
   /**
@@ -5084,7 +5090,7 @@ const SmartAoE = (() => {
     table: 'width:100%;border-collapse:collapse;margin:4px 0 10px 0;',
     th: 'background-color:#a8401f;color:#fff;text-align:left;padding:4px 6px;',
     td: 'padding:4px 6px;border-bottom:1px solid rgba(128,128,128,0.35);vertical-align:top;',
-    code: 'font-family:monospace;',
+    code: 'font-family:monospace;background-color:rgba(128,128,128,0.2);border:1px solid rgba(128,128,128,0.35);border-radius:3px;padding:0 3px;',
     pre: 'font-family:monospace;background-color:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.35);padding:6px;white-space:pre-wrap;margin:4px 0 10px 0;',
     footer: 'margin-top:16px;font-size:11px;opacity:0.75;',
   };
@@ -5135,6 +5141,24 @@ const SmartAoE = (() => {
    */
   const handoutCode = function (text) {
     return `<span style="${HANDOUT_STYLE.code}">${escapeHandoutHtml(text)}</span>`;
+  };
+
+  /**
+   * Escapes text for the handout, showing the parts in `backticks` as inline code that doesn't break across lines
+   * (e.g. after the "--" of a parameter).
+   *
+   * @param {string} text - Plain text with optional `code` spans.
+   * @returns {string} HTML.
+   */
+  const handoutText = function (text) {
+    return String(text ?? '')
+      .split('`')
+      .map((part, i) =>
+        i % 2 === 1
+          ? `<span style="${HANDOUT_STYLE.code}white-space:nowrap;">${escapeHandoutHtml(part)}</span>`
+          : escapeHandoutHtml(part),
+      )
+      .join('');
   };
 
   /**
@@ -5194,7 +5218,7 @@ const SmartAoE = (() => {
       ) +
       handoutTable(
         ['Rules', 'Settings'],
-        HANDOUT_GRID_RULES.map(([rules, settings]) => [escapeHandoutHtml(rules), escapeHandoutHtml(settings)]),
+        HANDOUT_GRID_RULES.map(([rules, settings]) => [escapeHandoutHtml(rules), handoutText(settings)]),
       ) +
       p(
         '<b>The drawn squares are the ruling.</b> SmartAoE works out how much of each square the shape covers and draws only the squares that count, so there is no template edge to judge by eye, whichever rule you use.',
@@ -5213,7 +5237,7 @@ const SmartAoE = (() => {
     const tips =
       `<h2 style="${S.h2}">Tips &amp; known limitations</h2><ul style="${S.p}">` +
       HANDOUT_TIPS.map(
-        ([t, x]) => `<li style="margin-bottom:4px;"><b>${escapeHandoutHtml(t)}:</b> ${escapeHandoutHtml(x)}</li>`,
+        ([t, x]) => `<li style="margin-bottom:4px;"><b>${escapeHandoutHtml(t)}:</b> ${handoutText(x)}</li>`,
       ).join('') +
       '</ul>';
     const footer = `<p style="${S.footer}">${scriptName} v${version} · Author David M. (djmoorehead) · Full documentation: wiki.roll20.net/SmartAoE</p>`;
