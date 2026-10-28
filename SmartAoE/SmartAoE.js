@@ -9,7 +9,7 @@
 // Draws areas of effect on gridded maps, decides which squares and tokens they cover, and can roll
 // saves, apply damage and markers, and post a results card. Requires libInline.
 
-/* global on log state sendChat sendPing getObj findObjs createObj Campaign playerIsGM spawnFx spawnFxBetweenPoints toBack toFront getAttrByName setDefaultTokenForCharacter randomInteger _ libInline */
+/* global on log state sendChat sendPing getObj findObjs createObj Campaign playerIsGM spawnFx spawnFxBetweenPoints toBack toFront getAttrByName getSheetItem setDefaultTokenForCharacter randomInteger _ libInline */
 
 const SmartAoE = (() => {
   'use strict';
@@ -4085,27 +4085,71 @@ const SmartAoE = (() => {
     return args;
   };
 
+  /**
+   * Turns a value read from a character sheet into text. Beacon sheets can return numbers, booleans (true/false
+   * become '1'/'0' so they work in roll formulas) and arrays (joined with commas).
+   *
+   * @param {*} value - Value from getSheetItem or an attribute's 'current'.
+   * @returns {string} The value as text ('' when missing).
+   */
+  const sheetValueToString = function (value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'boolean') return value ? '1' : '0';
+    if (Array.isArray(value)) return value.map(sheetValueToString).join(',');
+    if (typeof value === 'object') return '';
+    return String(value);
+  };
+
+  /**
+   * Reads a character sheet item with getSheetItem, which also sees Beacon (e.g. D&D 2024) computed properties that
+   * findObjs and getAttrByName miss. Tries the name as given, then the Beacon custom-attribute form "user.<name>"
+   * only if the sheet has no such item: an item that exists but is empty (e.g. an NPC with no resistances) stops
+   * there, because Roll20 logs an error to the API console for every missing user.* attribute.
+   *
+   * @param {string} charID - Roll20 character ID.
+   * @param {string} attrName - Attribute or computed property name.
+   * @returns {Promise<{name: string, value: *}|undefined>} The name that matched and its value, or undefined if
+   *   getSheetItem is unavailable or nothing matched (or the value is empty).
+   */
+  const getSheetValue = async function (charID, attrName) {
+    if (typeof getSheetItem !== 'function') return undefined;
+    for (const name of [attrName, `user.${attrName}`]) {
+      let value;
+      try {
+        value = await getSheetItem(charID, name);
+      } catch (err) {
+        continue; //not found on this sheet; try the next name
+      }
+      if (value === '') return undefined;
+      if (value !== null && value !== undefined) return { name, value };
+    }
+    return undefined;
+  };
+
   //replaceAttributes and processTokenRolls modified from Jakob's group-check script
   /**
    * Recursively expands @{attribute} references in a roll formula using the given character's attribute values.
-   * Missing attributes become empty strings.
+   * Reads through getSheetItem first (works for legacy and Beacon sheets), then getAttrByName (legacy sheet
+   * defaults). Missing attributes become empty strings.
    *
    * @param {string} formula - Roll formula containing @{attrName} references.
    * @param {string} charID - Roll20 character ID to read attributes from.
-   * @returns {string} Formula with all attribute references replaced.
+   * @returns {Promise<string>} Formula with all attribute references replaced.
    */
-  const replaceAttributes = function (formula, charID) {
-    const myGetAttrByName = (attrName) => {
-      const result = getAttrByName(charID, attrName);
-      if (typeof result === 'number') {
-        return String(result);
-      } else {
-        return result || '';
-      }
+  const replaceAttributes = async function (formula, charID) {
+    const myGetAttrByName = async (attrName) => {
+      const sheetValue = await getSheetValue(charID, attrName);
+      if (sheetValue) return sheetValueToString(sheetValue.value);
+      return sheetValueToString(getAttrByName(charID, attrName));
     };
-    const replacer = (_, attrName) => myGetAttrByName(attrName);
 
-    while (/@{(.*?)}/.test(formula)) formula = formula.replace(/@{(.*?)}/g, replacer);
+    //a pass replaces every reference; repeat while values themselves contain references
+    while (/@{(.*?)}/.test(formula)) {
+      const names = [...new Set([...formula.matchAll(/@{(.*?)}/g)].map((m) => m[1]))];
+      const values = {};
+      for (const name of names) values[name] = await myGetAttrByName(name);
+      formula = formula.replace(/@{(.*?)}/g, (_, attrName) => values[attrName]);
+    }
     return formula;
   };
 
@@ -4136,14 +4180,15 @@ const SmartAoE = (() => {
   /**
    * Builds the saving-throw entry for one target token: reads its resistances, vulnerabilities and immunities from the
    * link's configured attributes, detects Magic Resistance (roll twice), and expands the save formula with the
-   * character's attributes ([[0]] when the AoE has no save).
+   * character's attributes ([[0]] when the AoE has no save). Attributes not found as legacy attribute objects are
+   * read from the sheet with getSheetItem (Beacon sheets); Magic Resistance detection needs legacy attributes.
    *
    * @param {object} token - Roll20 graphic (token) hit by the AoE.
    * @param {object} link - AoE link from state.
-   * @returns {object|null} Target entry (pic, name, layer, saveName, DC, roll2x, formula, id, RVI strings), or null
-   *   if the token has no character.
+   * @returns {Promise<object|null>} Target entry (pic, name, layer, saveName, DC, roll2x, formula, id, RVI strings),
+   *   or null if the token has no character.
    */
-  const processTokenRolls = function (token, link) {
+  const processTokenRolls = async function (token, link) {
     const charID = token.get('represents'),
       character = getObj('character', charID),
       displayName = token.get('name');
@@ -4163,47 +4208,46 @@ const SmartAoE = (() => {
     let immunities = '';
     let roll2x = false;
 
+    /**
+     * Joins the lower-cased values of the named attributes: legacy attribute objects where they exist, otherwise the
+     * sheet item of that name.
+     *
+     * @param {string[]} attrNames - Attribute names configured on the link (e.g. resistAttrs).
+     * @returns {Promise<string>} The values joined, '' when none are found.
+     */
+    const readDamageAttrs = async (attrNames) => {
+      const values = [];
+      for (const attrName of attrNames) {
+        const legacyAttrs = (attrs || []).filter((att) => att.get('name') === attrName);
+        if (legacyAttrs.length > 0) {
+          values.push(...legacyAttrs.map((e) => e.get('current').toLowerCase()));
+        } else {
+          const sheetValue = await getSheetValue(charID, attrName);
+          if (sheetValue) values.push(sheetValueToString(sheetValue.value).toLowerCase());
+        }
+      }
+      return values.join('');
+    };
+
+    if (!character) return null;
+
+    resistances = await readDamageAttrs(link.resistAttrs);
+    vulnerabilities = await readDamageAttrs(link.vulnerableAttrs);
+    immunities = await readDamageAttrs(link.immunityAttrs);
+
     if (attrs) {
-      //Resistances
-      let tempAttrs = attrs.filter((att) => {
-        return link.resistAttrs.includes(att.get('name'));
-      });
-      if (tempAttrs.length > 0) {
-        resistances = tempAttrs.map((e) => e.get('current').toLowerCase()).join('');
-      }
-
-      //Vulnerabilities
-      tempAttrs = attrs.filter((att) => {
-        return link.vulnerableAttrs.includes(att.get('name'));
-      });
-      if (tempAttrs.length > 0) {
-        vulnerabilities = tempAttrs.map((e) => e.get('current').toLowerCase()).join('');
-      }
-
-      //Immunities
-      tempAttrs = attrs.filter((att) => {
-        return link.immunityAttrs.includes(att.get('name'));
-      });
-      if (tempAttrs.length > 0) {
-        immunities = tempAttrs.map((e) => e.get('current').toLowerCase()).join('');
-      }
-
       //Magic Resistance (likely 5e-only)
-      tempAttrs = attrs.filter((att) => att.get('current').toString().toLowerCase().includes('magic resist'));
+      const tempAttrs = attrs.filter((att) => att.get('current').toString().toLowerCase().includes('magic resist'));
       if (tempAttrs.length > 0) {
         roll2x = true;
       }
     }
 
     let computedFormula;
-    if (character) {
-      if (link.noSave === true) {
-        computedFormula = '[[0]]';
-      } else {
-        computedFormula = replaceAttributes(link.saveFormula, charID);
-      }
+    if (link.noSave === true) {
+      computedFormula = '[[0]]';
     } else {
-      return null;
+      computedFormula = await replaceAttributes(link.saveFormula, charID);
     }
 
     return {
@@ -5562,27 +5606,29 @@ const SmartAoE = (() => {
         //rolls and targets belong to this AoE only: each link posts its own card (they used to pile up across links)
         let tokenRolls = [];
         const damageRolls = [];
-        //first, filter for "ignore" attributes
-        let thisValidToks = validToks.filter((obj) => {
-          let attrs = {};
+        //first, filter for "ignore" attributes (legacy attribute objects, else the sheet item on Beacon sheets)
+        let thisValidToks = [];
+        for (const obj of validToks) {
           const represents = obj.tok.get('represents');
           const name = obj.tok.get('name');
-          if (represents && name !== aoeLinks.links[a].controlTokName) {
-            attrs = findObjs(
-              {
-                _type: 'attribute',
-                _characterid: represents,
-                name: aoeLinks.links[a].ignoreAttr,
-              },
-              { caseInsensitive: true },
-            );
-            if (attrs.length > 0) {
-              return attrs[0].get('current') !== aoeLinks.links[a].ignoreVal.toString();
-            } else {
-              return true;
-            }
+          if (!represents || name === aoeLinks.links[a].controlTokName) continue;
+          const ignoreAttr = aoeLinks.links[a].ignoreAttr;
+          const ignoreVal = aoeLinks.links[a].ignoreVal.toString();
+          const attrs = findObjs(
+            {
+              _type: 'attribute',
+              _characterid: represents,
+              name: ignoreAttr,
+            },
+            { caseInsensitive: true },
+          );
+          if (attrs.length > 0) {
+            if (attrs[0].get('current') !== ignoreVal) thisValidToks.push(obj);
+          } else {
+            const sheetValue = ignoreAttr !== '' ? await getSheetValue(represents, ignoreAttr) : undefined;
+            if (!sheetValue || sheetValueToString(sheetValue.value) !== ignoreVal) thisValidToks.push(obj);
           }
-        });
+        }
 
         //Next, omit origin token and any tokens that don't have at least one corner in the AoE bounding box (or at least one corner of AoE bounding box is within the token bounding box)
         if (aoeLinks.links[a].affectsCaster) {
@@ -5660,7 +5706,7 @@ const SmartAoE = (() => {
             //only add unique tokenids to the array of "hit" tokens
             foundIndex = tokenRolls.findIndex((e) => e.id === thisValidToks[t].tok.get('_id'));
             if (foundIndex === -1) {
-              const roll = processTokenRolls(thisValidToks[t].tok, aoeLinks.links[a]);
+              const roll = await processTokenRolls(thisValidToks[t].tok, aoeLinks.links[a]);
               if (roll) tokenRolls.push(roll); //null when the token's character no longer exists
             }
           }
