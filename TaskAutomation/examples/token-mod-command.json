@@ -3,7 +3,7 @@
   "id": "token-mod-command",
   "revision": 1,
   "name": "Other-Mod command",
-  "description": "Send an approved TokenMod command for the selected token, by ID. Shown as dispatched, not confirmed.",
+  "description": "Send an approved TokenMod command for the selected token, by ID. Shown as dispatched, not confirmed. TokenMod only accepts --ids from other Mods when its players-can-ids option is on.",
   "enabled": true,
   "parameters": {},
   "bindings": {

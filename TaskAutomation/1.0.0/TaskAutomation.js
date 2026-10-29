@@ -5,7 +5,7 @@
  * Name: TaskAutomation
  * Script: TaskAutomation.js
  * Version: 1.0.0
- * Built: 2026-10-29T08:32:19.450Z
+ * Built: 2026-10-29T08:46:12.762Z
  */
 const TaskAutomationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const TaskAutomationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'TaskAutomation';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T08:32:19.450Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T08:46:12.762Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -12871,7 +12871,7 @@ const TaskAutomationMod = (() => {
       ...base(
         'token-mod-command',
         'Other-Mod command',
-        'Send an approved TokenMod command for the selected token, by ID. Shown as dispatched, not confirmed.'
+        'Send an approved TokenMod command for the selected token, by ID. Shown as dispatched, not confirmed. TokenMod only accepts --ids from other Mods when its players-can-ids option is on.'
       ),
       bindings: { token: { from: 'selected', objectType: 'graphic', max: 1 } },
       access: { mode: 'gmOnly', authority: 'initiator' },

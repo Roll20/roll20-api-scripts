@@ -125,15 +125,15 @@ A task is JSON. Here is the montage:
 
 ## Worked Examples
 
-| Template            | What it shows                                                                                                                          |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `torch-reminder`    | Real-world minutes: warn after 50, put the torch out after 10 more. A restart after both passed asks you once instead of sending both. |
-| `hp-zero`           | Bar 1 crossing from above 0 to 0 or less marks the token dead and tells the GM. Staying at 0 does not fire again.                      |
-| `turn-response`     | The current turn changes to a token: wait up to 15 s for a `turn-ready` signal, then ping it. Re-sorting initiative is not a new turn. |
-| `parallel-scene`    | Fade a jukebox track and open a door at the same time, join, then chain `scene-cleanup`.                                               |
-| `session-reminder`  | Every Friday at 19:00 at a fixed UTC offset; a reminder missed by a little runs once, one missed by hours is only reported.            |
-| `token-mod-command` | Send an approved TokenMod command with the token's ID. Shown as sent, not as done.                                                     |
-| `door-sequence`     | Wait up to a minute for a `door-open` signal, then open the door or report that it stayed shut.                                        |
+| Template            | What it shows                                                                                                                                |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `torch-reminder`    | Real-world minutes: warn after 50, put the torch out after 10 more. A restart after both passed asks you once instead of sending both.       |
+| `hp-zero`           | Bar 1 crossing from above 0 to 0 or less marks the token dead and tells the GM. Staying at 0 does not fire again.                            |
+| `turn-response`     | The current turn changes to a token: wait up to 15 s for a `turn-ready` signal, then ping it. Re-sorting initiative is not a new turn.       |
+| `parallel-scene`    | Fade a jukebox track and open a door at the same time, join, then chain `scene-cleanup`.                                                     |
+| `session-reminder`  | Every Friday at 19:00 at a fixed UTC offset; a reminder missed by a little runs once, one missed by hours is only reported.                  |
+| `token-mod-command` | Send an approved TokenMod command with the token's ID. Shown as sent, not as done. Needs TokenMod's `players-can-ids` option to take effect. |
+| `door-sequence`     | Wait up to a minute for a `door-open` signal, then open the door or report that it stayed shut.                                              |
 
 Templates that start by themselves (`hp-zero`, `turn-response`, `session-reminder`) are added disabled; enable them when you are ready. [docs/EXAMPLES.md](docs/EXAMPLES.md) walks through each one with the expected chat and dashboard results. The JSON is in [examples/](examples/).
 
