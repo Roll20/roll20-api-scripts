@@ -281,7 +281,7 @@ export const TEMPLATES = [
     ...base(
       'token-mod-command',
       'Other-Mod command',
-      'Send an approved TokenMod command for the selected token, by ID. Shown as dispatched, not confirmed.'
+      'Send an approved TokenMod command for the selected token, by ID. Shown as dispatched, not confirmed. TokenMod only accepts --ids from other Mods when its players-can-ids option is on.'
     ),
     bindings: { token: { from: 'selected', objectType: 'graphic', max: 1 } },
     access: { mode: 'gmOnly', authority: 'initiator' },

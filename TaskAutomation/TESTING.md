@@ -67,7 +67,7 @@ Each game needs: a GM and a player account (use a second browser), a page with a
 
 ## 6. Integrations
 
-- [ ] `token-mod-command` changes the token through TokenMod, and the run shows _sent (not confirmed)_.
+- [ ] `token-mod-command` with TokenMod's defaults: the run shows _sent (not confirmed)_ and the token does not change (TokenMod drops `--ids` from other Mods). With `!token-mod --config players-can-ids|on` the token gets the blue marker.
 - [ ] A second Mod that pushes an adapter spec onto `globalThis.TaskAutomationQueue` before TaskAutomation loads is listed by `adapter list`.
 - [ ] `TaskAutomation.signal('door-open')` from another Mod releases `door-sequence`.
 

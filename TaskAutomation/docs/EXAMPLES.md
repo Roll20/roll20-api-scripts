@@ -61,6 +61,7 @@ Needs TokenMod. Select a token and start it: TaskAutomation sends `!token-mod --
 - The token ID is inserted exactly; a value with spaces, `--` or `|` would be refused.
 - The journal records the step as _sent (not confirmed)_. TaskAutomation cannot know whether TokenMod acted.
 - No selection is passed on: the command must name its targets. Commands come from the API, so Mods that only accept commands from players or GMs will ignore them.
+- **TokenMod ignores `--ids` in commands from other Mods** unless the GM turns on its option with `!token-mod --config players-can-ids|on` (which also lets players use `--ids`). With TokenMod's defaults the run still completes as _sent (not confirmed)_ and the token does not change, which is exactly why TaskAutomation never reports a command as done. TaskAutomation does not use TokenMod's `--api-as` because that would act as a player.
 
 ## Door sequence (`door-sequence`)
 
