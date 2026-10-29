@@ -6,3 +6,4 @@ script.json
 
 # Written by scripts/write-examples.mjs.
 examples/
+schema/

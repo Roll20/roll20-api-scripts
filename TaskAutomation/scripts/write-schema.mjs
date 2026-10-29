@@ -1,0 +1,480 @@
+/**
+ * Writes schema/task-definition.schema.json from the step catalogue, so the
+ * JSON Schema and the runtime validator (src/schema.js) share one source.
+ * The runtime validator also checks what JSON Schema cannot: unique step
+ * IDs, reference roots, loop safety, call cycles and limits.
+ *
+ * Usage: npm run schema
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { EVENT_TYPES, STEP_SPECS, stepFields } from '../src/catalogue.js';
+import { OPERATORS } from '../src/expressions.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const out = path.join(__dirname, '..', 'schema', 'task-definition.schema.json');
+
+const ID = { type: 'string', pattern: '^[A-Za-z0-9][A-Za-z0-9_-]{0,47}$' };
+const ref = (name) => ({ $ref: `#/$defs/${name}` });
+
+/**
+ * Returns the JSON Schema for a catalogue field kind.
+ *
+ * @param {object} spec Field spec.
+ * @returns {object} Schema.
+ */
+function fieldSchema(spec) {
+  switch (spec.kind) {
+    case 'expr':
+      return ref('expression');
+    case 'template':
+    case 'string':
+      return { type: 'string', maxLength: 2000 };
+    case 'id':
+      return ID;
+    case 'number':
+      return { type: 'number' };
+    case 'integer':
+      return spec.min === undefined ? { type: 'integer' } : { type: 'integer', minimum: spec.min };
+    case 'boolean':
+      return { type: 'boolean' };
+    case 'enum':
+      return { enum: spec.values };
+    case 'target':
+      return ref('target');
+    case 'recipients':
+      return ref('recipients');
+    case 'point':
+      return ref('point');
+    case 'exprMap':
+      return { type: 'object', additionalProperties: ref('expression') };
+    case 'steps':
+      return ref('steps');
+    default:
+      return {};
+  }
+}
+
+const stepVariants = Object.keys(STEP_SPECS).map((type) => {
+  const fields = stepFields(type);
+  const properties = {};
+  const required = [];
+  for (const [name, spec] of Object.entries(fields)) {
+    properties[name] = name === 'type' ? { const: type } : fieldSchema(spec);
+    if (spec.required) {
+      required.push(name);
+    }
+  }
+  if (type === 'parallel') {
+    properties.branches = {
+      type: 'array',
+      minItems: 2,
+      maxItems: 10,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'steps'],
+        properties: { id: ID, steps: ref('steps') },
+      },
+    };
+    properties.merge = {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'reducer'],
+        properties: {
+          name: ID,
+          var: ID,
+          from: { type: 'array', items: ID },
+          reducer: { enum: ['sum', 'min', 'max', 'first', 'last', 'count', 'all', 'any'] },
+        },
+      },
+    };
+  }
+  if (type === 'awaitEvent') {
+    properties.event = { enum: EVENT_TYPES };
+    properties.filter = ref('filter');
+  }
+  if (type === 'call' || type === 'task.start') {
+    properties.bindings = { type: 'object', additionalProperties: ref('target') };
+  }
+  properties.retry = ref('retry');
+  return { type: 'object', additionalProperties: false, required, properties, title: type };
+});
+
+const overdue = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    mode: { enum: ['skip', 'runOnce', 'catchUpBounded', 'review', 'expire'] },
+    graceMs: { type: 'number', minimum: 0 },
+    windowMs: { type: 'number', minimum: 0 },
+    maxAgeMs: { type: 'number', minimum: 0 },
+    catchUp: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        max: { type: 'integer', minimum: 1 },
+        maxAgeMs: { type: 'number' },
+        spacingMs: { type: 'number' },
+      },
+    },
+  },
+};
+
+const isoInstant = {
+  type: 'string',
+  pattern: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d{1,3})?)?(Z|[+-]\\d{2}:\\d{2})$',
+};
+const rate = {
+  cooldownMs: { type: 'number', minimum: 0 },
+  debounceMs: { type: 'number', minimum: 0 },
+  leading: { type: 'boolean' },
+  burst: {
+    type: 'object',
+    required: ['count', 'windowMs'],
+    properties: { count: { type: 'integer' }, windowMs: { type: 'number' } },
+  },
+  coalesce: { enum: ['objectId', 'none'] },
+  selfTrigger: { type: 'boolean' },
+};
+const triggerCommon = {
+  id: ID,
+  enabled: { type: 'boolean' },
+  bind: { type: 'object' },
+  description: { type: 'string' },
+};
+const timeCommon = {
+  start: isoInstant,
+  end: isoInstant,
+  maxCount: { type: 'integer', minimum: 1 },
+  overdue,
+};
+const trigger = (type, props, required = []) => ({
+  type: 'object',
+  additionalProperties: false,
+  required: ['id', 'type', ...required],
+  properties: { ...triggerCommon, type: { const: type }, ...props },
+});
+
+const schema = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: 'https://github.com/steverobertsuk/roll20-api-scripts/TaskAutomation/schema/task-definition.schema.json',
+  title: 'TaskAutomation task definition',
+  description:
+    'Generated by scripts/write-schema.mjs from src/catalogue.js. The runtime validator in src/schema.js enforces the same rules plus unique step IDs, reference roots, loop safety, call cycles and limits.',
+  type: 'object',
+  additionalProperties: false,
+  required: ['schemaVersion', 'id', 'name', 'steps'],
+  properties: {
+    schemaVersion: { const: 1 },
+    id: ID,
+    revision: { type: 'integer', minimum: 1 },
+    name: { type: 'string', minLength: 1, maxLength: 100 },
+    enabled: { type: 'boolean' },
+    description: { type: 'string', maxLength: 2000 },
+    tags: { type: 'array', items: { type: 'string' } },
+    parameters: {
+      type: 'object',
+      additionalProperties: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['type'],
+        properties: {
+          type: { enum: ['number', 'string', 'boolean', 'id'] },
+          default: {},
+          min: { type: 'number' },
+          max: { type: 'number' },
+          maxLength: { type: 'integer' },
+          enum: { type: 'array', items: { type: 'string' } },
+          required: { type: 'boolean' },
+          description: { type: 'string' },
+        },
+      },
+    },
+    bindings: {
+      type: 'object',
+      additionalProperties: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['from', 'objectType'],
+        properties: {
+          from: { enum: ['selected', 'ids', 'event', 'query', 'param', 'none'] },
+          objectType: { enum: ['graphic', 'character', 'player', 'jukeboxtrack', 'page'] },
+          ids: { type: 'array', items: { type: 'string' } },
+          max: { type: 'integer', minimum: 1 },
+          min: { type: 'integer', minimum: 0 },
+          param: ID,
+          query: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['max'],
+            properties: {
+              name: { type: 'string' },
+              pageId: { type: 'string' },
+              represents: { type: 'string' },
+              layer: { type: 'string' },
+              marker: { type: 'string' },
+              max: { type: 'integer', minimum: 1, maximum: 20 },
+              evaluate: { enum: ['start', 'step'] },
+            },
+          },
+          alternate: {
+            type: 'object',
+            required: ['from'],
+            properties: {
+              from: { enum: ['ids', 'event', 'none'] },
+              ids: { type: 'array', items: { type: 'string' } },
+            },
+          },
+          description: { type: 'string' },
+        },
+      },
+    },
+    access: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        mode: { enum: ['gmOnly', 'players'] },
+        players: { type: 'array', items: { type: 'string' } },
+        controllers: { type: 'boolean' },
+        authority: { enum: ['initiator', 'gmService'] },
+        capabilities: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            actions: { type: 'array', items: { enum: Object.keys(STEP_SPECS) } },
+            maxTargets: { type: 'integer' },
+            signals: { type: 'boolean' },
+          },
+        },
+        selfTrigger: { type: 'boolean' },
+        detachChildren: { type: 'boolean' },
+      },
+    },
+    triggers: {
+      type: 'array',
+      items: {
+        oneOf: [
+          trigger('manual', {}),
+          trigger('at', { at: isoInstant, overdue }, ['at']),
+          trigger(
+            'interval',
+            {
+              ...timeCommon,
+              every: { type: ['string', 'number'] },
+              anchor: isoInstant,
+              mode: { enum: ['fixedRate', 'fixedDelay'] },
+            },
+            ['every']
+          ),
+          trigger(
+            'daily',
+            {
+              ...timeCommon,
+              time: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$' },
+              offset: { type: 'string', pattern: '^[+-]\\d{2}:\\d{2}$' },
+            },
+            ['time', 'offset']
+          ),
+          trigger(
+            'weekly',
+            {
+              ...timeCommon,
+              time: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$' },
+              offset: { type: 'string', pattern: '^[+-]\\d{2}:\\d{2}$' },
+              days: {
+                type: 'array',
+                items: { enum: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] },
+                minItems: 1,
+              },
+            },
+            ['time', 'offset', 'days']
+          ),
+          trigger(
+            'event',
+            {
+              ...rate,
+              event: { enum: EVENT_TYPES },
+              filter: ref('filter'),
+              reconcile: { type: 'boolean' },
+            },
+            ['event']
+          ),
+          trigger('signal', { ...rate, name: ID, players: { type: 'boolean' } }, ['name']),
+          trigger(
+            'chat',
+            {
+              ...rate,
+              match: { type: 'object' },
+              channels: { type: 'array', items: { type: 'string' } },
+              private: { type: 'boolean' },
+            },
+            ['match']
+          ),
+        ],
+      },
+    },
+    policy: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        concurrency: { enum: ['allow', 'skipIfRunning', 'queue', 'replace'] },
+        maxConcurrent: { type: 'integer', minimum: 1 },
+        maxQueue: { type: 'integer', minimum: 1 },
+        queueExpiryMs: { type: 'number', minimum: 0 },
+        onError: { enum: ['fail', 'skip', 'retry', 'review'] },
+        retry: ref('retry'),
+        overdue,
+        restart: { enum: ['reconcile', 'review', 'fail'] },
+        timeoutMs: { type: 'number', minimum: 0 },
+        lifetimeMs: { type: 'number', minimum: 0 },
+        allowForever: { type: 'boolean' },
+        recursion: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            allow: { type: 'boolean' },
+            maxDepth: { type: 'integer', minimum: 1, maximum: 8 },
+          },
+        },
+        circuit: {
+          type: 'object',
+          properties: { admissionsPerMinute: { type: 'integer', minimum: 1 } },
+        },
+        quiet: { type: 'boolean' },
+      },
+    },
+    steps: ref('steps'),
+  },
+  $defs: {
+    steps: { type: 'array', items: ref('step') },
+    step: { oneOf: stepVariants },
+    expression: {
+      oneOf: [
+        { type: ['string', 'number', 'boolean', 'null'] },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['value'],
+          properties: { value: {} },
+        },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['ref'],
+          properties: {
+            ref: {
+              type: 'string',
+              pattern: '^(param|var|event|target|run|bindings|now|args)(\\.[A-Za-z0-9_]+)*$',
+            },
+            as: { enum: ['number', 'string', 'boolean'] },
+            default: { type: ['string', 'number', 'boolean', 'null'] },
+          },
+        },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['op'],
+          properties: {
+            op: { enum: OPERATORS },
+            left: ref('expression'),
+            right: ref('expression'),
+            arg: ref('expression'),
+            args: { type: 'array', minItems: 1, items: ref('expression') },
+            cond: ref('expression'),
+            then: ref('expression'),
+            else: ref('expression'),
+          },
+        },
+      ],
+    },
+    target: {
+      oneOf: [
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['binding'],
+          properties: { binding: ID },
+        },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['ids'],
+          properties: { ids: { type: 'array', items: { type: 'string' } } },
+        },
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['ref'],
+          properties: { ref: { type: 'string' } },
+        },
+      ],
+    },
+    recipients: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        gm: { type: 'boolean' },
+        players: { type: 'array', items: { type: 'string' } },
+        binding: ID,
+        controllers: ID,
+        initiator: { type: 'boolean' },
+      },
+    },
+    point: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['left', 'top', 'page'],
+      properties: { left: ref('expression'), top: ref('expression'), page: ref('expression') },
+    },
+    retry: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['maxAttempts'],
+      properties: {
+        maxAttempts: { type: 'integer', minimum: 1, maximum: 10 },
+        baseDelayMs: { type: 'number' },
+        maxDelayMs: { type: 'number' },
+        jitterMs: { type: 'number' },
+      },
+    },
+    filter: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        objectIds: { type: 'array', items: { type: 'string' } },
+        pageIds: { type: 'array', items: { type: 'string' } },
+        characterIds: { type: 'array', items: { type: 'string' } },
+        names: { type: 'array', items: { type: 'string' } },
+        properties: { type: 'array', items: { type: 'string' } },
+        attribute: { type: 'string' },
+        changedTo: { type: 'object' },
+        changedFrom: { type: 'object' },
+        crossing: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['property', 'direction', 'threshold'],
+          properties: {
+            property: { type: 'string' },
+            direction: { enum: ['below', 'above'] },
+            threshold: { type: 'number' },
+          },
+        },
+        signal: ID,
+        definitionId: ID,
+        binding: ID,
+        adapter: ID,
+        condition: ref('expression'),
+      },
+    },
+  },
+};
+
+fs.mkdirSync(path.dirname(out), { recursive: true });
+fs.writeFileSync(out, `${JSON.stringify(schema, null, 2)}\n`);
+console.log(`Wrote ${path.relative(path.join(__dirname, '..'), out)}`);
