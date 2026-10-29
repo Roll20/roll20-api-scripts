@@ -792,7 +792,7 @@ function showDefinition(playerId, id) {
   const rev = String(record.rev);
   const steps = [];
   outline(body.steps, 0, steps);
-  const draftAhead = record.draft && record.draft.revision > (record.current || 0);
+  const draftAhead = Boolean(record.draftDirty);
   const schedules = listSchedules(id).map(
     (sc) =>
       `${sc.id}: ${sc.paused ? t('statuses.paused', l) : sc.cursor.nextDueAt ? formatUtc(sc.cursor.nextDueAt) : '—'}`

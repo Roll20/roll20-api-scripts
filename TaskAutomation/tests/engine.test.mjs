@@ -575,3 +575,18 @@ test('drafts: editing steps does not change running runs until republished', () 
   assert.match(api.allText(), /"revision":2/);
   assertHealthy(api);
 });
+
+test('published tasks are not shown as having a draft; run errors name the token', () => {
+  const api = game();
+  api.command('!taskautomation template add montage');
+  assert.equal(api.taState().definitions.montage.draftDirty, false);
+  api.command('!taskautomation definition show --id montage');
+  assert.doesNotMatch(api.allText(), /unpublished changes/);
+  api.command('!taskautomation definition set --id montage --field description --value "changed"');
+  assert.equal(api.taState().definitions.montage.draftDirty, true);
+  const dryad = api.token({ name: 'Dryad' });
+  api.command('!taskautomation instance start --definition montage', [dryad]);
+  api.command(`!taskautomation instance inspect --id ${api.lastRun().id}`);
+  assert.match(api.allText(), /Dryad is not a multi-sided token/);
+  assertHealthy(api);
+});

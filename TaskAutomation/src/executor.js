@@ -19,7 +19,7 @@ import { getCompiled, getRecord, getSnapshot, setEnabled } from './definitions.j
 import { asTaskError, errorRecord, taskError } from './errors.js';
 import { MISSING, evaluate, renderTemplate, truthy } from './expressions.js';
 import { isGm, now } from './host.js';
-import { findAnyTarget, getTarget, readProperty, runQuery } from './objects.js';
+import { findAnyTarget, getTarget, readProperty, runQuery, targetLabel } from './objects.js';
 import { checkEffectAuthority } from './permissions.js';
 import { call, diag, maybeCall, onJob, runtime, schedule } from './runtime.js';
 import { checkParamValue, durationValue } from './schema.js';
@@ -1889,6 +1889,10 @@ function anyRunning(inst) {
  */
 function handleStepError(inst, branch, step, err, advanced) {
   const typed = asTaskError(err);
+  // Errors keep the object ID and add its name for messages.
+  if (typed.vars?.id && !typed.vars.name) {
+    typed.vars.name = targetLabel(typed.vars.id);
+  }
   const def = defOf(inst);
   const replay = replayClass(step);
   const frame = branch.frames.at(-1);

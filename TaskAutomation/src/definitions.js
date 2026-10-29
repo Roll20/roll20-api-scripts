@@ -141,6 +141,8 @@ export function createRecord(body, by) {
     archived: false,
     disabledReason: null,
     draft: clone(body),
+    // True while the draft has changes that are not published.
+    draftDirty: true,
     current: 0,
     revisions: {},
     createdAt: at,
@@ -190,6 +192,7 @@ export function updateDraft(id, change, by, expectedRev) {
     return result;
   }
   record.draft = draft;
+  record.draftDirty = true;
   if (typeof draft.name === 'string' && draft.name.trim()) {
     record.name = draft.name.trim();
   }
@@ -340,6 +343,7 @@ export function publish(id, by, expectedRev) {
   record.current = body.revision;
   record.draft = clone(body);
   record.draft.revision = body.revision + 1;
+  record.draftDirty = false;
   record.name = body.name;
   record.rev += 1;
   record.publishedAt = now();
