@@ -1,60 +1,60 @@
 const TRANSLATION = {
   titles: {
-    ready: 'A hexploration készen áll.',
-    settings: 'Hexexploration beállítások',
+    ready: 'A Hexploration készen áll.',
+    settings: 'Hexploration-beállítások',
     languages: 'Válasszon nyelvet',
     pageSettings: 'Oldalbeállítások: {page}',
-    status: 'Heti feltárás állapota: {page}',
+    status: 'Hexploration-állapot: {page}',
     help: 'Hexploration parancsok',
     confirm: 'Kérjük, erősítse meg',
   },
   discovery: {
-    title: 'Hely felfedezve',
+    title: 'Helyszín felfedezve',
   },
   menu: {
-    draw: 'Rajzolj',
-    reveal: 'Felfedni és elrejteni',
+    draw: 'Rajzolás',
+    reveal: 'Felfedés és elrejtés',
     locations: 'Helyszínek',
     tools: 'Eszközök',
-    layerInUse: 'Új hatszögek rajzolása folyamatban van a {layer}.',
+    layerInUse: 'Az új hatszögek ide kerülnek: {layer}.',
     pageSettingsHelp:
       'Ezek a beállítások csak erre az oldalra vonatkoznak. A ★ jelű beállítások felülírják a globális beállításokat.',
   },
   buttons: {
-    fill: 'Töltse ki',
+    fill: 'Kitöltés',
     fillInverse: 'Inverz kitöltés',
     undo: 'Kitöltés visszavonása',
-    reveal: 'Felfedni',
-    conceal: 'Elrejteni',
-    explore: 'Fedezze fel',
-    revealPage: 'Oldal feltárása',
+    reveal: 'Felfedés',
+    conceal: 'Lefedés',
+    explore: 'Felderítés',
+    revealPage: 'Oldal felfedése',
     resetPage: 'Oldal visszaállítása',
-    mark: 'Hely megjelölése',
-    unmark: 'Törölje a jelölést',
-    name: 'Név Hex',
-    settings: 'Beállítások elemre',
+    mark: 'Helyszín megjelölése',
+    unmark: 'Jelölés törlése',
+    name: 'Hatszög elnevezése',
+    settings: 'Beállítások',
     pageSettings: 'Oldalbeállítások',
     status: 'Állapot',
     rescan: 'Újraszkennelés',
-    calibrate: 'Kalibrálni',
+    calibrate: 'Kalibrálás',
     calibrateReset: 'Kalibrálás visszaállítása',
     help: 'Segítség',
-    change: 'Változás',
+    change: 'Módosítás',
     menu: 'Menü',
     clearOverrides: 'Felülbírálások törlése',
-    confirmReset: 'Igen, távolítsa el az összes hexát',
+    confirmReset: 'Igen, minden hatszög eltávolítása',
   },
   prompts: {
     name: 'Helynév (a törléshez hagyja üresen)',
   },
   values: {
-    on: 'On',
-    off: 'Le',
-    none: 'Egyik sem',
+    on: 'Be',
+    off: 'Ki',
+    none: 'Nincs',
     hexLayer: {
-      auto: 'Automatikus (előtérben, ha elérhető)',
-      foreground: 'előtér réteg',
-      objects: 'token réteg',
+      auto: 'Automatikus (előtér, ha elérhető)',
+      foreground: 'előtérréteg',
+      objects: 'tokenréteg',
     },
     revealBy: {
       players: 'Játékos tokenek',
@@ -62,22 +62,22 @@ const TRANSLATION = {
       all: 'Minden token',
     },
     revealMode: {
-      clear: 'Világos',
+      clear: 'Eltávolítás',
       glimpse: 'Bepillantás',
     },
     announce: {
       all: 'Mindenki',
-      gm: 'Csak GM',
-      off: 'Le',
+      gm: 'Csak a GM',
+      off: 'Ki',
     },
     orientation: {
       vertical: 'Hex (V)',
       horizontal: 'Hex (H)',
     },
     fillKind: {
-      fill: 'Töltse ki',
+      fill: 'Kitöltés',
       fillInverse: 'Inverz kitöltés',
-      conceal: 'Elrejteni',
+      conceal: 'Lefedés',
     },
   },
   settings: {
@@ -86,8 +86,8 @@ const TRANSLATION = {
       desc: 'A menük, üzenetek és tájékoztatók nyelve.',
     },
     hexLayer: {
-      label: 'Hatlapos réteg',
-      desc: 'Ahol új hatszögeket rajzolnak. Az Auto megpróbálja az előtér réteget (a tokenek felett), és visszaesik a token rétegre, ha a játék nem támogatja.',
+      label: 'Hatszögek rétege',
+      desc: 'Hová kerülnek az új hatszögek. Az Automatikus az előtérréteggel próbálkozik (a tokenek fölött), és ha a játék ezt nem támogatja, a tokenréteget használja.',
     },
     fillColor: {
       label: 'Kitöltés színe',
@@ -102,15 +102,15 @@ const TRANSLATION = {
       desc: 'A csak GM-nek szánt névcímkék színe a megnevezett hexákon.',
     },
     glimpseColor: {
-      label: 'Glimpse Color',
-      desc: 'A színes hatszögek bepillantáskor a következőre változnak (Glimpse discovery mód). Használjon átlátszó rgba() színt.',
+      label: 'Bepillantás színe',
+      desc: 'Az a szín, amelyre a hatszögek bepillantáskor váltanak (Bepillantás felfedési mód). Használjon átlátszó rgba() színt.',
     },
     strokeWidth: {
-      label: 'Határ szélessége',
+      label: 'Szegély szélessége',
       desc: 'Az új hatszögek körvonalának szélessége pixelben (0-tól 20-ig).',
     },
     maxDistance: {
-      label: 'Hex Reveal távolság',
+      label: 'Hatszögek felfedési távolsága',
       desc: 'A húzott hatszögekre alkalmazva: egy jelzőnek ezen a sok hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire is lásson. Hagyja üresen korlátozás nélkül.',
     },
     revealDistance: {
@@ -122,42 +122,42 @@ const TRANSLATION = {
       desc: 'Ha be van kapcsolva, egy hatszög csak akkor derül ki, ha nincs fedett hatszög közte és a token között.',
     },
     revealPath: {
-      label: 'Fedezd fel az ösvényen',
+      label: 'Felfedés az útvonal mentén',
       desc: 'Ha be van kapcsolva, minden hexa, amelyen a token áthalad a húzás közben (beleértve az útpontokat is), megjelenik, nem csak az, ahol megáll.',
     },
     revealBy: {
-      label: 'Tokenek, amelyek felfedik',
+      label: 'Felfedő tokenek',
       desc: 'A tokenrétegen lévő jelzők hatszögeket mutatnak: a játékos által irányított jelzőket, bármely karaktert vagy minden jelzőt.',
     },
     revealMode: {
-      label: 'Felfedezési mód',
-      desc: 'A Clear eltávolítja a hatszögleteket látótávolságon belül. A bepillantás ehelyett átlátszóvá teszi őket; eltávolítják őket, amikor egy token belép beléjük.',
+      label: 'Felfedési mód',
+      desc: 'Az Eltávolítás mód eltávolítja a látótávolságon belüli hatszögeket. A Bepillantás mód ehelyett átlátszóvá teszi őket; akkor tűnnek el, amikor egy token belép beléjük.',
     },
     announce: {
-      label: 'Hirdesse a felfedezéseket',
+      label: 'Felfedezések bejelentése',
       desc: 'Ki látja a csevegőüzenetet, ha egy megnevezett helyet felfedeznek.',
     },
     pingDiscoveries: {
-      label: 'Ping felfedezések',
+      label: 'Felfedezések pingelése',
       desc: 'Ha be van kapcsolva, a játékosok egy megnevezett helyre pingelődnek, amikor felfedezik.',
     },
     hideCoveredTokens: {
-      label: 'Fedett tokenek elrejtése',
+      label: 'Lefedett tokenek elrejtése',
       desc: 'A Roll20 neveket, sávokat és aurákat rajzol a hatszögek fölé. Ha be van kapcsolva, a fedett hatszög alatti jelzőknek a játékosok által látható nevük, a sávok és az aurák ki vannak kapcsolva, majd újra bekapcsolnak, amikor feltárják őket.',
     },
   },
   status: {
-    engine: 'Játék motor',
+    engine: 'Játékmotor',
     grid: 'Rács',
-    layer: 'Hatlapos réteg',
-    hexes: 'Hexák',
-    named: 'Elnevezett hexák',
-    icons: 'Helyjelzők',
-    glimpsed: 'Megpillantott hatszögek',
-    pending: 'Betöltésre váró helyek',
+    layer: 'Hatszögek rétege',
+    hexes: 'Hatszögek',
+    named: 'Elnevezett hatszögek',
+    icons: 'Helyszíntokenek',
+    glimpsed: 'Bepillantott hatszögek',
+    pending: 'Kitöltésre váró helyszínek',
     calibrated: 'Kalibrálva',
-    overrides: 'Oldal felülbírálása',
-    undo: 'Visszavonás elérhető',
+    overrides: 'Oldalszintű felülbírálások',
+    undo: 'Visszavonható',
   },
   messages: {
     filled:
@@ -183,11 +183,11 @@ const TRANSLATION = {
       'A kalibráció eltávolítva. Újraellenőrzés: megtartva {kept}, újra benyújtva {moved}, átvett {adopted}.',
     journalRebuilt: 'A "{help}" és a "{deck}" szórólapok újjáépítésre kerültek.',
     migrated:
-      'A Hexploration 1.x hexadecimális térképeidet frissítettük. Ha ezt a játékot egy régi játékból másolták, futtassa az Újrakeresést minden hexadecimális térképoldalon.',
+      'Az Ön Hexploration 1.x hatszögtérképei frissültek. Ha ezt a játékot egy Legacy játékból másolták, futtassa az Újraszkennelést minden hatszögtérkép-oldalon.',
     pruned:
-      'Mentett hexák, amelyek már nem léteznek és elfelejtettek: {dropped}. Ha ezt a játékot vagy oldalt másolták, futtassa az Újraellenőrzést az oldalon, hogy újra felvegye a hatszögleteket.',
+      'Mentett hatszögek, amelyek már nem léteznek, és törlődtek a nyilvántartásból: {dropped}. Ha ezt a játékot vagy oldalt másolták, futtassa az Újraszkennelést az oldalon, hogy újra felvegye a hatszögeit.',
     readyHint:
-      'Írja be a !hexploration parancsot a menübe, vagy nyissa meg a "Hexploration - Command Deck" tájékoztatót.',
+      'A menühöz írja be a !hexploration parancsot, vagy nyissa meg a "Hexploration - Command Deck" tájékoztatót.',
   },
   warnings: {
     foregroundUnavailable:
@@ -198,7 +198,7 @@ const TRANSLATION = {
     noPage: 'Nem található az oldal, amelyen dolgozni kellene.',
     notHex: 'Ez az oldal nem használ hatszögletű rácsot.',
     noPolygons: 'Válasszon ki egy vagy több rajzolt alakzatot a kitöltéshez.',
-    emptyArea: 'A kiválasztott terület nem tartalmaz hexadecimális középpontokat.',
+    emptyArea: 'A kijelölt terület egyetlen hatszögközéppontot sem tartalmaz.',
     tooMany: 'Ez túl sok hexát hozna létre egyszerre ({count}).',
     nothingToConceal: 'Válassza ki a rajzolt alakzatokat vagy jelzőket az elrejteni.',
     nothingToReveal:
@@ -228,7 +228,7 @@ const TRANSLATION = {
     calibrateNeedsTokens:
       'Illesszen egy tokent egy hatszög közepére, és jelölje ki. Válasszon ki egy második tokent, amely egy szomszédos hatszögre van illesztve ugyanabban a sorban (Hex V) vagy oszlopban (Hex H), hogy a hatszög méretét is javítsa.',
     calibrateFailed:
-      'Két tokennek ugyanabban a sorban (Hex V) vagy ugyanabban az oszlopban (Hexa) kell lennie, egymástól legalább egy hatszögre.',
+      'A két tokennek ugyanabban a sorban (Hex V) vagy ugyanabban az oszlopban (Hex H) kell lennie, egymástól legalább egy hatszögnyire.',
     unexpected: 'A részletek az API-konzol naplójában találhatók.',
   },
   help: {
@@ -241,7 +241,7 @@ const TRANSLATION = {
     revealPage: 'Felfed minden hexát az oldalon bejelentések nélkül.',
     conceal:
       'A kiválasztott alakzatok és tokenek alatti területet ismét takarja be hatszögletekkel.',
-    explore: 'Mutasd meg a kiválasztott tokenek körül, mintha csak most költöztek volna oda.',
+    explore: 'Felfedés a kijelölt tokenek körül, mintha éppen oda mozogtak volna.',
     resetPage: 'Távolítson el minden hatszögletet az oldalon (először rákérdez).',
     name: 'Nevezze el a kiválasztott hexákat, vagy a kiválasztott tokenek alatti hexákat. Hagyja üresen a nevet a törléshez.',
     mark: 'A kiválasztott tokeneket rejtett helyekké alakíthatja.',
@@ -249,22 +249,20 @@ const TRANSLATION = {
     set: 'Módosítson egy beállítást, vagy jelenítse meg az összes beállítást.',
     pageSet: 'Felfedezési beállítás felülírása csak az aktuális oldalon.',
     pageClear: 'Távolítsa el az aktuális oldal felülírásait.',
-    rescan:
-      'Építse újra az oldal hexadecimális listáját, például egy oldal vagy játék másolása után.',
+    rescan: 'Építse újra az oldal hatszöglistáját, például egy oldal vagy játék másolása után.',
     calibrate:
       'Sorolja fel a hatszögletű rácsot egy vagy két kiválasztott tokennel, amelyeket hatszögletű középpontokra pattint.',
     calibrateReset: 'Távolítsa el az aktuális oldal kalibrálását.',
     status: 'Mutassa meg, mit tud a Hexploration az aktuális oldalról.',
-    journal: 'Építsd újra a Help és Command Deck segédanyagokat.',
+    journal: 'Építse újra a Segítség és a Command Deck tájékoztatót.',
     help: 'Mutasd ezt a listát.',
     handout: 'A teljes utasítás a „{name}” tájékoztatóban található.',
   },
   deck: {
-    subtitle: 'Parancsnoki pakli',
     drawDesc:
       'Rajzoljon alakzatokat egy terület köré, jelölje ki őket, majd töltse ki. A visszavonás megfordítja az utolsó kitöltést.',
     revealDesc:
-      'Válassza ki a hatszögleteket, alakzatokat vagy jelzőket, hogy ismét felfedje vagy lefedje őket. Fedezze fel a kiválasztott tokenek körüli felfedéseket, mintha elmozdultak volna.',
+      'Jelöljön ki hatszögeket, alakzatokat vagy tokeneket a felfedésükhöz vagy újbóli lefedésükhöz. A Felderítés úgy fed fel a kijelölt tokenek körül, mintha odamozogtak volna.',
     locationsDesc:
       'Jelölje ki a tokeneket, hogy elrejtse őket hexák alatti helyként. Válasszon hexákat vagy tokeneket a hexa elnevezéséhez.',
     toolsDesc:
@@ -277,7 +275,7 @@ const TRANSLATION = {
     footer: 'Használja a „{deck}” tájékoztatót az egykattintásos vezérlőkhöz.',
     overview: {
       heading: 'Áttekintés',
-      body: 'A Hexploration egy hexadecimális térképet fed le átlátszatlan hatszögekkel. Ahogy a csapat mozog, a hatszögek, amelyeken áthaladnak (és ha úgy tetszik, a körülöttük lévő hatszögek) eltávolításra kerülnek, így a térkép egyenként hatszögletű kerül felfedésre. A rejtett helyek hatszögek alá helyezhetők, és a rendszer kijelenti, ha megtalálják. Működik a Jumpgate és Legacy játékokban, bármilyen méretű Hex (V) és Hex (H) rácson.',
+      body: 'A Hexploration átlátszatlan hatszögekkel fedi le a hatszögtérképet. Ahogy a csapat halad, a hatszögek, amelyeken áthalad (és ha szeretné, a körülöttük lévők is), eltűnnek, így a térkép hatszögről hatszögre tárul fel. A hatszögek alá rejtett helyszínek helyezhetők el, ezeket megtalálásukkor a rendszer bejelenti. Jumpgate és Legacy játékokban is működik, bármekkora Hex (V) és Hex (H) rácson.',
       demo: 'Nézzen meg egy rövid bemutatót (az 1-es verziótól)',
     },
     quickStart: {
@@ -285,8 +283,8 @@ const TRANSLATION = {
       steps: [
         'Nyisson meg egy oldalt, amelynek rácsának beállítása Hex (V) vagy Hex (H).',
         'Rajzoljon egy vagy több alakzatot (sokszög, téglalap, ellipszis vagy szabadkézi) az elrejteni kívánt terület köré.',
-        'Jelölje ki az alakzatokat, és kattintson a Kitöltés gombra a Command Deckben (vagy írja be a !hexploration fill parancsot). Az alakzatokat hatszögek helyettesítik.',
-        'Nem kötelező: a kitöltés előtt válassza ki a tokeneket a fontos helyekhez, és kattintson a Hely megjelölése lehetőségre. A hatszögek alatt vannak elrejtve, és felfedik őket, amikor felfedezik.',
+        'Jelölje ki az alakzatokat, és kattintson a Command Deck Kitöltés gombjára (vagy írja be: !hexploration fill). Az alakzatok helyére hatszögek kerülnek.',
+        'Nem kötelező: a kitöltés előtt jelölje ki a fontos helyek tokenjeit, és kattintson a Helyszín megjelölése gombra. Ezek a hatszögek alá rejtőznek, és felfedezésükkor a rendszer bejelenti őket.',
         'Mozgass egy játékos tokent. Minden hatszög, amelyen áthalad, és a látótávolságon belüli hatszögek feltárulnak.',
       ],
     },
@@ -300,29 +298,29 @@ const TRANSLATION = {
     revealing: {
       heading: 'Hogyan működik a feltárás',
       points: [
-        'Csak a token rétegen lévő tokenek mutatnak hatszögeket. A tokenek számát a Tokens That Reveal: alapértelmezés szerint a játékos tokenek állítják be, így a GM a térkép felfedése nélkül mozgathatja a szörnyeket.',
-        'A token felfedi minden általa lefedett hatszöget (a nagy tokenek többre is kiterjednek), és ha a Reveal Along Path be van kapcsolva, minden hexát az útvonalon, amelyen végighúzták, beleértve az útpontokat is.',
-        'A Sight Distance felfedi az egyes hatszögek körüli hatszögeket. Ha a Line of Sight be van kapcsolva, a hatszög csak akkor jelenik meg, ha nincs közöttük fedett hatszög.',
-        'A hexadecimális feltárási távolságot a rendszer a hexákon tárolja, ahogy rajzolják. Azok a hatszögek csak belülről tárulnak fel annyi hatszögből, bármennyire is lát egy token. Használja hegyekre vagy erdőkre, amelyek elrejtik azt, ami mögöttük van.',
-        'Pillantás módban a látótávolságon belüli hatszögek ahelyett, hogy eltűnnének, átlátszóvá válnak, és eltávolítódnak, amikor egy token belép beléjük.',
-        'Az API nem jelenti a más modok által végrehajtott mozgásokat. A TokenMod lépéseit a rendszer automatikusan felveszi; más modok esetén válassza ki a tokeneket, és kattintson az Explore gombra, vagy hívja a Hexploration.revealAround(token)-t a saját mododból.',
-        'Az API nem jelenti a más modok által végrehajtott mozgásokat. A TokenMod lépéseit a rendszer automatikusan felveszi; más modok esetén válassza ki a tokeneket, és kattintson az Explore gombra, vagy hívja a Hexploration.revealAround(token)-t a saját modjából.',
+        'Csak a tokenrétegen lévő tokenek fednek fel hatszögeket. Hogy mely tokenek számítanak, azt a Felfedő tokenek beállítás határozza meg: alapértelmezés szerint a játékosok tokenjei, így a GM a térkép felfedése nélkül mozgathatja a szörnyeket.',
+        'Egy token felfed minden hatszöget, amelyet lefed (a nagy tokenek többet is), és ha a Felfedés az útvonal mentén be van kapcsolva, minden hatszöget azon az útvonalon is, amelyen végighúzták, az útpontokat is beleértve.',
+        'A Látótávolság az egyes ilyen hatszögek körüli hatszögeket fedi fel. Ha a Látóvonal be van kapcsolva, egy hatszög csak akkor fedődik fel, ha nincs közte és a token között lefedett hatszög.',
+        'A Hatszögek felfedési távolsága a hatszögek megrajzolásakor kerül tárolásra rajtuk. Ezek a hatszögek csak ennyi hatszögnyi távolságon belülről fedhetők fel, bármilyen messzire lát is egy token. Hegyekhez vagy erdőkhöz használja, amelyek eltakarják, ami mögöttük van.',
+        'Bepillantás módban a látótávolságon belüli hatszögek eltűnés helyett átlátszóvá válnak, és akkor tűnnek el, amikor egy token belép beléjük.',
+        'A Roll20 a tokenek nevét, sávjait és auráit a hatszögek fölé rajzolja. Ha a Lefedett tokenek elrejtése be van kapcsolva, a lefedett hatszög alatti token játékosok által látható neve, sávjai és aurái kikapcsolnak, amíg fel nem fedik, így a rejtett szörnyek nem árulják el magukat. Ha ezek közül bármelyiket bekapcsolja, amíg a token le van fedve, rejtve marad, és a token felfedésekor kapcsol be.',
+        'Az API nem jelzi a más modok által végrehajtott mozgásokat. A TokenMod mozgásait a rendszer automatikusan észleli; más modok esetén jelölje ki a tokeneket, és kattintson a Felderítés gombra, vagy hívja meg a Hexploration.revealAround(token) függvényt a saját modjából.',
       ],
     },
     locations: {
       heading: 'Hexák és helyek neve',
       points: [
-        'A Mark Location funkció rejtett helyekre változtatja a kiválasztott tokeneket. A már hatszög alatt lévő tokent azonnal elrejti; különben elrejti a következő kitöltés, amely lefedi.',
+        'A Helyszín megjelölése a kijelölt tokeneket rejtett helyszínekké alakítja. A már hatszög alatt lévő token azonnal elrejtődik; különben a következő kitöltés rejti el, amely lefedi.',
         'A fehér torony állapotjelzővel ellátott tokeneket a rendszer az 1-es verzióhoz hasonlóan helyként kezeli kitöltésekor.',
         'A rejtett helyjelzők a GM rétegre kerülnek. Amikor a hatszögük kiderül, a nevükkel együtt visszatérnek a token réteghez, és a felfedezésüket bejelentik.',
-        'Name Hex ad egy hexa nevet token nélkül. A név megjelenik a GM-nek címkeként a GM rétegen, és közli, amikor a hatszög megjelenik.',
-        'Az Announce Discoveries kiválasztja, hogy mindenki, csak a GM vagy senki sem látja a bejelentést. A Ping Discoveries a játékosok nézetét is áthelyezi a helyszínre.',
+        'A Hatszög elnevezése token nélkül ad nevet egy hatszögnek. A nevet a GM címkeként látja a GM-rétegen, és a rendszer bejelenti, amikor a hatszög felfedődik.',
+        'A Felfedezések bejelentése határozza meg, hogy mindenki, csak a GM vagy senki sem látja a bejelentést. A Felfedezések pingelése a játékosok nézetét is a helyszínre mozgatja.',
       ],
     },
     settings: {
       heading: 'Beállítások elemre',
       intro:
-        'Módosítsa a beállításokat a !hexploration set segítségével (vagy a Beállítások gombbal). A Hex Layer, a Tokens That Reveal és a Language is beállítható a Mod beállítási oldalán.',
+        'A beállításokat a !hexploration set paranccsal (vagy a Beállítások gombbal) módosíthatja. A Hatszögek rétege, a Felfedő tokenek és a Nyelv a Mod beállítási oldalán is megadható.',
       colKey: 'Kulcsfontosságú',
       colName: 'Beállítás',
       colDesc: 'Leírás',
@@ -332,9 +330,9 @@ const TRANSLATION = {
       heading: 'Jumpgate és Legacy',
       points: [
         'A Hexploration kidolgozza, hogy a játék melyik motort használja, és megrajzolja a megfelelő formát. Bármelyik szerkesztőben rajzolt alakzatok kitölthetők.',
-        'Ha a Hex Layer Auto-ra van állítva, a hexák az előtér rétegre, a tokenek fölé kerülnek, így a játékosok nem láthatják, mi van alatta. Ha az előtér réteg nem érhető el, a rendszer a token réteget használja helyette.',
-        'A Jumpgate matematikailag szabályos hatszögeket rajzol, amelyek kissé eltérnek az örökölt hatszögektől. Ha a hatszögek nem illeszkednek az oldal rácsához, illesszen egy tokent egy hatszögletű középponthoz, jelölje ki, majd kattintson a Kalibrálás gombra. Válasszon ki két tokent ugyanazon sor (Hex V) vagy oszlop (Hex H) szomszédos hatszögletéből a hexadecimális méret javításához.',
-        'Amikor egy oldalt vagy játékot másol, a hatszögei új azonosítókat kapnak. Futtassa az Újrakeresést az oldalon, hogy újra felvegye őket a névcímkéikkel és helyjelzőikkel együtt.',
+        'Ha a Hatszögek rétege Automatikus értékre van állítva, a hatszögek az előtérrétegre, a tokenek fölé kerülnek, így a játékosok nem látják, mi van alattuk. Ha az előtérréteg nem érhető el, a rendszer helyette a tokenréteget használja.',
+        'A Jumpgate matematikailag szabályos hatszögeket rajzol, amelyek alakja kissé eltér a Legacy hatszögekétől. Ha a hatszögek nem illeszkednek az oldal rácsához, illesszen egy tokent egy hatszög középpontjára, jelölje ki, majd kattintson a Kalibrálás gombra. A hatszögméret javításához jelöljön ki két tokent ugyanazon sor (Hex V) vagy oszlop (Hex H) szomszédos hatszögeiben.',
+        'Amikor egy oldalt vagy játékot másolnak, a hatszögei új azonosítókat kapnak. Futtassa az Újraszkennelést az oldalon, hogy újra felvegye őket a névcímkéikkel és helyszíntokenjeikkel együtt.',
       ],
     },
     upgrading: {
@@ -343,7 +341,7 @@ const TRANSLATION = {
         'A 2-es verziónak már nincs szüksége PathMath-ra, MatrixMath-ra, Vector Math-ra vagy HTML-készítőre. Eltávolíthatja őket, hacsak egy másik mod nem használja őket.',
         'A meglévő hexa térképek, nevek, helyjelzők és beállítások automatikusan frissülnek az első indításkor.',
         'Az 1-es verzió parancsai, beleértve a Hexploration_menu makrót is, továbbra is működnek.',
-        'Az 1-es verzió lehetővé teszi, hogy bármely karaktert ábrázoló token felfedjen hatszögleteket. Állítsa be a felfedő tokeneket karakterjelzőkre, hogy megtartsa ezt a viselkedést.',
+        'Az 1-es verzióban bármely karaktert ábrázoló token felfedhetett hatszögeket. Ennek megtartásához állítsa a Felfedő tokenek beállítást Karakter tokenek értékre.',
       ],
       colV1: '1-es verzió parancs',
       colV2: '2-es verzió parancs',
@@ -351,23 +349,23 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Hibaelhárítás',
       points: [
-        'Semmi sem történik, amikor egy token mozog: ellenőrizze, hogy a token a tokenrétegen van-e, és egyezik-e a felfedő tokenekkel, és hogy az oldal rendelkezik-e hexákkal (!hexploration állapot).',
+        'Semmi sem történik, amikor egy token mozog: ellenőrizze, hogy a token a tokenrétegen van-e, megfelel-e a Felfedő tokenek beállításnak, és vannak-e hatszögek az oldalon (!hexploration status).',
         'A hatszögek el vannak tolva a rácstól: használja a Kalibrálást, majd ellenőrizze a token segítségével néhány hatszöget a térképen.',
-        'Egy oldal vagy játék másolása után a hexák nem jelennek meg: futtassa az Újrakeresést az oldalon.',
+        'Egy oldal vagy játék másolása után a hatszögek nem fedődnek fel: futtassa az Újraszkennelést az oldalon.',
         'Kitöltés szerint a területnek nincs hatszög középpontja: az alakzatnak tartalmaznia kell legalább egy hatszög középpontját.',
         'Ha bármi mást szeretne, ellenőrizze az API-konzol naplóját, és adja meg az üzeneteit, amikor segítséget kér.',
       ],
     },
     languages: {
       heading: 'Nyelvek',
-      body: 'Válasszon nyelvet a !hexploration beállított nyelvvel. Elérhető nyelvek:',
+      body: 'Nyelvet a !hexploration set language paranccsal választhat. Elérhető nyelvek:',
       colLanguage: 'Nyelv',
-      colNative: 'Natív név',
+      colNative: 'Saját név',
       colCode: 'Kód',
     },
     credits: {
       heading: 'Kredit',
-      original: 'Eredeti mod által',
+      original: 'Az eredeti mod szerzője',
       maintainer: 'A 2-es verziót karbantartja',
       marketplace: 'Ada művészeti csomagjai a Roll20 Marketplace-en',
       support:

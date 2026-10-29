@@ -1,48 +1,48 @@
 const TRANSLATION = {
   titles: {
-    ready: 'Hexploration ist fertig.',
-    settings: 'Erkundungseinstellungen',
-    languages: 'Wählen Sie eine Sprache',
+    ready: 'Hexploration ist bereit.',
+    settings: 'Hexploration-Einstellungen',
+    languages: 'Sprache wählen',
     pageSettings: 'Seiteneinstellungen: {page}',
-    status: 'Erkundungsstatus: {page}',
-    help: 'Erkundungsbefehle',
+    status: 'Hexploration-Status: {page}',
+    help: 'Hexploration-Befehle',
     confirm: 'Bitte bestätigen',
   },
   discovery: {
     title: 'Standort entdeckt',
   },
   menu: {
-    draw: 'Ziehen',
-    reveal: 'Enthüllen und Verstecken',
+    draw: 'Zeichnen',
+    reveal: 'Aufdecken und Verdecken',
     locations: 'Standorte',
     tools: 'Werkzeuge',
-    layerInUse: 'Auf dem {layer} werden neue Hexfelder gezeichnet.',
+    layerInUse: 'Neue Hexfelder werden auf der {layer} gezeichnet.',
     pageSettingsHelp:
       'Diese Einstellungen gelten nur für diese Seite. Mit ★ gekennzeichnete Einstellungen überschreiben die globalen Einstellungen.',
   },
   buttons: {
     fill: 'Füllen',
-    fillInverse: 'Inverse Füllung',
+    fillInverse: 'Umgekehrt füllen',
     undo: 'Füllung rückgängig machen',
     reveal: 'Aufdecken',
     conceal: 'Verbergen',
     explore: 'Erkunden',
-    revealPage: 'Seite enthüllen',
+    revealPage: 'Seite aufdecken',
     resetPage: 'Seite zurücksetzen',
     mark: 'Standort markieren',
     unmark: 'Markierung aufheben',
-    name: 'Name Hex',
+    name: 'Hexfeld benennen',
     settings: 'Einstellungen',
     pageSettings: 'Seiteneinstellungen',
     status: 'Status',
     rescan: 'Erneut scannen',
     calibrate: 'Kalibrieren',
     calibrateReset: 'Kalibrierung zurücksetzen',
-    help: 'Helfen',
+    help: 'Hilfe',
     change: 'Ändern',
-    menu: 'Speisekarte',
+    menu: 'Menü',
     clearOverrides: 'Überschreibungen löschen',
-    confirmReset: 'Ja, alle Verhexungen entfernen',
+    confirmReset: 'Ja, alle Hexfelder entfernen',
   },
   prompts: {
     name: 'Standortname (zum Löschen leer lassen)',
@@ -50,11 +50,11 @@ const TRANSLATION = {
   values: {
     on: 'An',
     off: 'Aus',
-    none: 'Keiner',
+    none: 'Keine',
     hexLayer: {
       auto: 'Auto (Vordergrund, falls verfügbar)',
       foreground: 'Vordergrundebene',
-      objects: 'Token-Schicht',
+      objects: 'Token-Ebene',
     },
     revealBy: {
       players: 'Spielertoken',
@@ -62,8 +62,8 @@ const TRANSLATION = {
       all: 'Alle Token',
     },
     revealMode: {
-      clear: 'Klar',
-      glimpse: 'Blick',
+      clear: 'Entfernen',
+      glimpse: 'Durchsicht',
     },
     announce: {
       all: 'Alle',
@@ -72,11 +72,11 @@ const TRANSLATION = {
     },
     orientation: {
       vertical: 'Hex (V)',
-      horizontal: 'Sechskant (H)',
+      horizontal: 'Hex (H)',
     },
     fillKind: {
       fill: 'Füllen',
-      fillInverse: 'Inverse Füllung',
+      fillInverse: 'Umgekehrt füllen',
       conceal: 'Verbergen',
     },
   },
@@ -86,8 +86,8 @@ const TRANSLATION = {
       desc: 'Sprache für Menüs, Nachrichten und Handouts.',
     },
     hexLayer: {
-      label: 'Hex-Ebene',
-      desc: 'Wo neue Hexfelder gezeichnet werden. Automatisch versucht es mit der Vordergrundebene (über den Token) und greift auf die Tokenebene zurück, wenn das Spiel dies nicht unterstützt.',
+      label: 'Hexfeld-Ebene',
+      desc: 'Wo neue Hexfelder gezeichnet werden. „Auto“ versucht es mit der Vordergrundebene (über den Token) und weicht auf die Token-Ebene aus, wenn das Spiel sie nicht unterstützt.',
     },
     fillColor: {
       label: 'Füllfarbe',
@@ -98,19 +98,19 @@ const TRANSLATION = {
       desc: 'Farbe der Umrisse neuer Hexfelder.',
     },
     labelColor: {
-      label: 'Etikettenfarbe',
+      label: 'Beschriftungsfarbe',
       desc: 'Farbe der Nur-GM-Namensschilder auf benannten Hexfeldern.',
     },
     glimpseColor: {
-      label: 'Einblick in die Farbe',
-      desc: 'Die Farbverhexungen ändern sich, wenn man sie erblickt (Einblick-Enthüllungsmodus). Verwenden Sie eine durchsichtige rgba()-Farbe.',
+      label: 'Durchsicht-Farbe',
+      desc: 'Farbe, die Hexfelder annehmen, wenn sie durchsichtig werden (Aufdeckmodus „Durchsicht“). Verwenden Sie eine durchsichtige rgba()-Farbe.',
     },
     strokeWidth: {
       label: 'Randbreite',
       desc: 'Breite des Umrisses neuer Hexfelder in Pixel (0 bis 20).',
     },
     maxDistance: {
-      label: 'Hex-Enthüllungsabstand',
+      label: 'Aufdeckungsdistanz für Hexfelder',
       desc: 'Wird auf Hexfelder angewendet, wenn sie gezogen werden: Ein Spielstein muss sich innerhalb dieser Anzahl von Hexfeldern befinden, um sie aufzudecken, egal wie weit er sehen kann. Für keine Begrenzung leer lassen.',
     },
     revealDistance: {
@@ -122,23 +122,23 @@ const TRANSLATION = {
       desc: 'Wenn diese Option aktiviert ist, wird ein Hexfeld nur dann aufgedeckt, wenn kein abgedecktes Hexfeld zwischen ihm und dem Spielstein liegt.',
     },
     revealPath: {
-      label: 'Auf dem Weg enthüllen',
+      label: 'Entlang des Wegs aufdecken',
       desc: 'Wenn diese Option aktiviert ist, wird jedes Hexfeld, das ein Spielstein beim Ziehen durchquert (einschließlich Wegpunkte), angezeigt, nicht nur die Stelle, an der er anhält.',
     },
     revealBy: {
-      label: 'Zeichen, die offenbaren',
+      label: 'Aufdeckende Token',
       desc: 'Welche Spielsteine ​​auf der Spielsteinebene zeigen Hexereien an: Spielsteine, die von einem Spieler kontrolliert werden, Spielsteine, die einen beliebigen Charakter repräsentieren, oder jeder Spielstein.',
     },
     revealMode: {
-      label: 'Reveal-Modus',
-      desc: 'Clear entfernt Verhexungen in Sichtweite. Glimpse macht sie stattdessen durchsichtig; Sie werden entfernt, wenn ein Token in sie eindringt.',
+      label: 'Aufdeckmodus',
+      desc: '„Entfernen“ entfernt Hexfelder in Sichtweite. „Durchsicht“ macht sie stattdessen durchsichtig; sie werden entfernt, sobald ein Token sie betritt.',
     },
     announce: {
-      label: 'Kündigen Sie Entdeckungen an',
+      label: 'Entdeckungen ankündigen',
       desc: 'Wer sieht die Chat-Nachricht, wenn ein benannter Ort entdeckt wird?',
     },
     pingDiscoveries: {
-      label: 'Ping-Entdeckungen',
+      label: 'Entdeckungen anpingen',
       desc: 'Wenn diese Option aktiviert ist, werden Spieler an einen benannten Ort gepingt, wenn dieser entdeckt wird.',
     },
     hideCoveredTokens: {
@@ -148,16 +148,16 @@ const TRANSLATION = {
   },
   status: {
     engine: 'Spiel-Engine',
-    grid: 'Netz',
-    layer: 'Hex-Schicht',
-    hexes: 'Verhexungen',
-    named: 'Benannte Verhexungen',
-    icons: 'Standorttoken',
-    glimpsed: 'Gesehene Verhexungen',
-    pending: 'Orte, die auf eine Besetzung warten',
+    grid: 'Raster',
+    layer: 'Hexfeld-Ebene',
+    hexes: 'Hexfelder',
+    named: 'Benannte Hexfelder',
+    icons: 'Standort-Token',
+    glimpsed: 'Durchsichtige Hexfelder',
+    pending: 'Standorte, die auf eine Füllung warten',
     calibrated: 'Kalibriert',
     overrides: 'Seitenüberschreibungen',
-    undo: 'Rückgängig machen verfügbar',
+    undo: 'Rückgängig möglich',
   },
   messages: {
     filled:
@@ -183,11 +183,11 @@ const TRANSLATION = {
       'Kalibrierung entfernt. Erneut scannen: beibehalten {kept}, erneut eingereicht {moved}, übernommen {adopted}.',
     journalRebuilt: 'Die Handouts „{help}“ und „{deck}“ wurden neu erstellt.',
     migrated:
-      'Ihre Hexploration 1.x-Hex-Karten wurden aktualisiert. Wenn dieses Spiel von einem Legacy-Spiel kopiert wurde, führen Sie Rescan auf jeder Hex-Kartenseite aus.',
+      'Ihre Hexploration-1.x-Hexkarten wurden aktualisiert. Wenn dieses Spiel aus einem Legacy-Spiel kopiert wurde, führen Sie auf jeder Hexkartenseite „Erneut scannen“ aus.',
     pruned:
-      'Gespeicherte Hexen, die nicht mehr existieren und vergessen wurden: {dropped}. Wenn dieses Spiel oder diese Seite kopiert wurde, führen Sie „Rescan“ auf der Seite aus, um die Verhexungen wieder aufzunehmen.',
+      'Gespeicherte Hexfelder, die nicht mehr existieren und vergessen wurden: {dropped}. Wenn dieses Spiel oder diese Seite kopiert wurde, führen Sie auf der Seite „Erneut scannen“ aus, um ihre Hexfelder wieder zu erfassen.',
     readyHint:
-      'Geben Sie !hexploration für das Menü ein oder öffnen Sie das Handout „Hexploration – Command Deck“.',
+      'Geben Sie !hexploration ein, um das Menü aufzurufen, oder öffnen Sie das Handout "Hexploration - Command Deck".',
   },
   warnings: {
     foregroundUnavailable:
@@ -261,16 +261,15 @@ const TRANSLATION = {
       'Richten Sie das Sechseckgitter so aus, dass ein oder zwei ausgewählte Spielsteine ​​in die Sechseckmitten eingerastet werden.',
     calibrateReset: 'Entfernen Sie die Kalibrierung der aktuellen Seite.',
     status: 'Zeigen Sie, was Hexploration über die aktuelle Seite weiß.',
-    journal: 'Erstellen Sie die Handzettel für das Hilfe- und Befehlsdeck neu.',
+    journal: 'Erstellen Sie die Handouts Help und Command Deck neu.',
     help: 'Diese Liste anzeigen.',
     handout: 'Vollständige Anweisungen finden Sie im Handout „{name}“.',
   },
   deck: {
-    subtitle: 'Kommandodeck',
     drawDesc:
-      'Zeichnen Sie Formen um einen Bereich, wählen Sie sie aus und füllen Sie sie aus. Mit „Rückgängig“ wird die letzte Füllung rückgängig gemacht.',
+      'Zeichnen Sie Formen um einen Bereich, wählen Sie sie aus und füllen Sie sie dann. „Füllung rückgängig machen“ macht die letzte Füllung rückgängig.',
     revealDesc:
-      'Wählen Sie Verhexungen, Formen oder Spielsteine ​​aus, um sie wieder freizulegen oder zu verdecken. Beim Erkunden wird die Umgebung ausgewählter Spielsteine ​​angezeigt, als ob sie sich bewegt hätten.',
+      'Wählen Sie Hexfelder, Formen oder Token aus, um sie aufzudecken oder wieder zu verdecken. „Erkunden“ deckt die Umgebung ausgewählter Token auf, als hätten sie sich bewegt.',
     locationsDesc:
       'Wählen Sie Spielsteine ​​aus, um sie als Standorte unter Hexfeldern zu verbergen. Wählen Sie Hexfelder oder Token aus, um einem Hexfeld einen Namen zu geben.',
     toolsDesc:
@@ -291,9 +290,9 @@ const TRANSLATION = {
       steps: [
         'Öffnen Sie eine Seite, deren Raster auf Hex (V) oder Hex (H) eingestellt ist.',
         'Zeichnen Sie eine oder mehrere Formen (Polygon, Rechteck, Ellipse oder Freihand) um den auszublendenden Bereich.',
-        'Wählen Sie die Formen aus und klicken Sie im Command Deck auf „Fill“ (oder geben Sie „!hexploration fill“ ein). Die Formen werden durch Sechsecke ersetzt.',
-        'Optional: Wählen Sie vor dem Ausfüllen Token für wichtige Orte aus und klicken Sie auf „Standort markieren“. Sie sind unter den Verhexungen versteckt und werden bekannt gegeben, wenn sie entdeckt werden.',
-        'Verschiebe einen Spielermarker. Jedes Hexfeld, das es durchquert, und die Hexfelder innerhalb seiner Sichtweite werden aufgedeckt.',
+        'Wählen Sie die Formen aus und klicken Sie im Command Deck auf Füllen (oder geben Sie !hexploration fill ein). Die Formen werden durch Hexfelder ersetzt.',
+        'Optional: Wählen Sie vor dem Füllen Token für wichtige Orte aus und klicken Sie auf „Standort markieren“. Sie werden unter den Hexfeldern versteckt und bei ihrer Entdeckung angekündigt.',
+        'Bewegen Sie einen Spieler-Token. Jedes Hexfeld, das er durchquert, und die Hexfelder innerhalb seiner Sichtweite werden aufgedeckt.',
       ],
     },
     commands: {
@@ -306,29 +305,29 @@ const TRANSLATION = {
     revealing: {
       heading: 'Wie Offenlegung funktioniert',
       points: [
-        'Nur Spielsteine ​​auf der Spielsteinebene zeigen Hexfelder an. Die Anzahl der Spielsteine ​​wird standardmäßig durch „Tokens That Reveal: Player Tokens“ festgelegt, sodass der Spielleiter Monster bewegen kann, ohne die Karte aufzudecken.',
-        'Ein Spielstein deckt jedes Hexfeld auf, das er abdeckt (große Spielsteine ​​decken mehrere ab) und, wenn „Entlang des Pfads anzeigen“ aktiviert ist, jedes Hexfeld auf der Route, entlang derer es gezogen wurde, einschließlich Wegpunkten.',
-        'Die Sichtweite zeigt die Hexfelder um jedes dieser Hexfelder an. Bei aktivierter Sichtlinie wird ein Hexfeld nur dann aufgedeckt, wenn kein verdecktes Hexfeld dazwischen liegt.',
-        'Der Hex-Enthüllungsabstand wird auf den Hexfeldern gespeichert, während diese gezeichnet werden. Diese Verhexungen werden nur innerhalb von so vielen Verhexungen aufgedeckt, unabhängig davon, wie weit ein Spielstein reichen kann. Verwenden Sie es für Berge oder Wälder, die verbergen, was sich dahinter befindet.',
-        'Im Glimpse-Modus werden Hexfelder in Sichtweite durchsichtig, anstatt zu verschwinden, und werden entfernt, wenn ein Token sie betritt.',
-        'Die API meldet keine Bewegungen anderer Mods. TokenMod-Bewegungen werden automatisch übernommen; Wählen Sie für andere Mods die Token aus und klicken Sie auf „Erkunden“ oder rufen Sie Hexploration.revealAround(token) von Ihrem eigenen Mod aus auf.',
+        'Nur Token auf der Token-Ebene decken Hexfelder auf. Welche Token zählen, legt „Aufdeckende Token“ fest: standardmäßig Spieler-Token, sodass der GM Monster bewegen kann, ohne die Karte aufzudecken.',
+        'Ein Token deckt jedes Hexfeld auf, das er bedeckt (große Token bedecken mehrere), und bei aktiviertem „Entlang des Wegs aufdecken“ jedes Hexfeld auf der Route, entlang der er gezogen wurde, einschließlich Wegpunkten.',
+        '„Sichtweite“ deckt die Hexfelder um jedes dieser Hexfelder auf. Ist „Sichtlinie“ aktiviert, wird ein Hexfeld nur aufgedeckt, wenn kein verdecktes Hexfeld dazwischen liegt.',
+        '„Aufdeckungsdistanz für Hexfelder“ wird beim Zeichnen in den Hexfeldern gespeichert. Diese Hexfelder werden nur aus höchstens so vielen Hexfeldern Entfernung aufgedeckt, egal wie weit ein Token sehen kann. Nutzen Sie dies für Berge oder Wälder, die verbergen, was dahinter liegt.',
+        'Im Modus „Durchsicht“ werden Hexfelder in Sichtweite durchsichtig, statt zu verschwinden, und werden entfernt, sobald ein Token sie betritt.',
+        'Roll20 zeichnet Token-Namen, Leisten und Auren über den Hexfeldern. Ist „Verdeckte Token ausblenden“ aktiviert, werden bei einem Token unter einem verdeckten Hexfeld der für Spieler sichtbare Name, die Leisten und die Auren ausgeschaltet, bis er aufgedeckt wird, damit versteckte Monster sich nicht verraten. Schalten Sie eines davon ein, während der Token verdeckt ist, bleibt es verborgen und wird eingeschaltet, sobald der Token aufgedeckt wird.',
         'Die API meldet keine Bewegungen anderer Mods. TokenMod-Bewegungen werden automatisch übernommen; Wählen Sie für andere Mods die Token aus und klicken Sie auf „Erkunden“ oder rufen Sie Hexploration.revealAround(token) von Ihrem eigenen Mod aus auf.',
       ],
     },
     locations: {
       heading: 'Benannte Hexfelder und Orte',
       points: [
-        '„Standort markieren“ verwandelt die ausgewählten Token in versteckte Orte. Ein Spielstein, der sich bereits unter einem Feld befindet, wird sofort ausgeblendet; andernfalls wird es von der nächsten Füllung verdeckt, die es bedeckt.',
+        '„Standort markieren“ verwandelt die ausgewählten Token in versteckte Standorte. Ein Token, der bereits unter einem Hexfeld liegt, wird sofort versteckt; andernfalls wird er von der nächsten Füllung versteckt, die ihn bedeckt.',
         'Token mit der Statusmarkierung „Weißer Turm“ werden beim Ausfüllen ebenfalls als Orte behandelt, wie in Version 1.',
         'Versteckte Standortmarker werden auf die GM-Ebene verschoben. Wenn ihr Hexfeld aufgedeckt wird, kehren sie mit angezeigtem Namen zur Spielsteinebene zurück und ihre Entdeckung wird bekannt gegeben.',
-        'Name Hex gibt einem Hex einen Namen ohne Token. Der Name wird dem GM als Beschriftung auf der GM-Ebene angezeigt und bekannt gegeben, wenn das Hex aufgedeckt wird.',
-        '„Entdeckungen ankündigen“ legt fest, ob jeder, nur der GM oder niemand die Ankündigung sieht. Ping Discoveries verschiebt auch die Sicht der Spieler auf den Ort.',
+        '„Hexfeld benennen“ gibt einem Hexfeld einen Namen ohne Token. Der Name wird dem GM als Beschriftung auf der GM-Ebene angezeigt und angekündigt, wenn das Hexfeld aufgedeckt wird.',
+        '„Entdeckungen ankündigen“ legt fest, ob alle, nur der GM oder niemand die Ankündigung sieht. „Entdeckungen anpingen“ verschiebt außerdem die Ansicht der Spieler zum Standort.',
       ],
     },
     settings: {
       heading: 'Einstellungen',
       intro:
-        'Ändern Sie die Einstellungen mit !hexploration set (oder der Schaltfläche „Einstellungen“). Hex Layer, Tokens That Reveal und Sprache können ebenfalls auf der Einstellungsseite des Mods eingestellt werden.',
+        'Ändern Sie Einstellungen mit !hexploration set (oder über die Schaltfläche „Einstellungen“). „Hexfeld-Ebene“, „Aufdeckende Token“ und „Sprache“ lassen sich auch auf der Einstellungsseite des Mods festlegen.',
       colKey: 'Schlüssel',
       colName: 'Einstellung',
       colDesc: 'Beschreibung',
@@ -338,9 +337,9 @@ const TRANSLATION = {
       heading: 'Jumpgate und Legacy',
       points: [
         'Hexploration ermittelt, welche Engine das Spiel verwendet, und zeichnet die passende Form. In beiden Editoren gezeichnete Formen können gefüllt werden.',
-        'Wenn die Hex-Ebene auf „Auto“ eingestellt ist, werden Hexfelder auf der Vordergrundebene über den Spielsteinen gezeichnet, sodass Spieler nicht sehen können, was sich darunter befindet. Wenn die Vordergrundebene nicht verfügbar ist, wird stattdessen die Tokenebene verwendet.',
-        'Jumpgate zeichnet mathematisch regelmäßige Verhexungen, die eine etwas andere Form als Legacy-Verhexungen haben. Wenn die Sechsecke nicht mit dem Raster einer Seite übereinstimmen, rasten Sie ein Token in der Mitte eines Sechsecks ein, wählen Sie es aus und klicken Sie auf „Kalibrieren“. Wählen Sie zwei Spielsteine ​​in benachbarten Hexfeldern derselben Zeile (Hex V) oder Spalte (Hex H) aus, um auch die Hexfeldgröße zu korrigieren.',
-        'Wenn eine Seite oder ein Spiel kopiert wird, erhalten ihre Hexfelder neue IDs. Führen Sie „Rescan“ auf der Seite aus, um sie zusammen mit ihren Namensschildern und Standorttokens wieder aufzunehmen.',
+        'Ist „Hexfeld-Ebene“ auf „Auto“ gesetzt, werden Hexfelder auf der Vordergrundebene über den Token gezeichnet, sodass Spieler nicht sehen können, was darunter liegt. Ist die Vordergrundebene nicht verfügbar, wird stattdessen die Token-Ebene verwendet.',
+        'Jumpgate zeichnet mathematisch regelmäßige Hexfelder, deren Form leicht von Legacy-Hexfeldern abweicht. Wenn die Hexfelder nicht mit dem Raster einer Seite übereinstimmen, rasten Sie einen Token in der Mitte eines Hexfelds ein, wählen Sie ihn aus und klicken Sie auf „Kalibrieren“. Wählen Sie zwei Token in benachbarten Hexfeldern derselben Zeile (Hex V) oder Spalte (Hex H) aus, um auch die Hexfeldgröße zu korrigieren.',
+        'Wenn eine Seite oder ein Spiel kopiert wird, erhalten ihre Hexfelder neue IDs. Führen Sie auf der Seite „Erneut scannen“ aus, um sie zusammen mit ihren Namensbeschriftungen und Standort-Token wieder zu erfassen.',
       ],
     },
     upgrading: {
@@ -349,7 +348,7 @@ const TRANSLATION = {
         'Version 2 benötigt PathMath, MatrixMath, Vector Math oder HTML Builder nicht mehr. Sie können sie entfernen, es sei denn, ein anderer Mod verwendet sie.',
         'Vorhandene Hex-Karten, Namen, Standort-Tokens und Einstellungen werden beim ersten Start automatisch aktualisiert.',
         'Die Befehle der Version 1, einschließlich des Hexploration_menu-Makros, funktionieren weiterhin.',
-        'In Version 1 konnte jeder Spielstein, der einen Charakter darstellte, Verhexungen aufdecken. Setzen Sie Offenbar-Token auf Charakter-Token, um dieses Verhalten beizubehalten.',
+        'In Version 1 konnte jeder Token, der einen Charakter darstellt, Hexfelder aufdecken. Setzen Sie „Aufdeckende Token“ auf „Charaktertoken“, um dieses Verhalten beizubehalten.',
       ],
       colV1: 'Befehl der Version 1',
       colV2: 'Befehl der Version 2',
@@ -357,10 +356,10 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Fehlerbehebung',
       points: [
-        'Es passiert nichts, wenn sich ein Token bewegt: Überprüfen Sie, ob sich der Token auf der Token-Ebene befindet und mit Tokens That Reveal übereinstimmt und ob die Seite Hexfelder hat (!hexploration-Status).',
-        'Hexfelder sind vom Raster versetzt: Verwenden Sie „Kalibrieren“ und überprüfen Sie dann mit einem Token einige Hexfelder auf der Karte.',
-        'Verhexungen werden nach dem Kopieren einer Seite oder eines Spiels nicht mehr angezeigt: Führen Sie „Rescan“ auf der Seite aus.',
-        'Fill besagt, dass der Bereich keine Hex-Zentren hat: Die Form muss den Mittelpunkt von mindestens einem Hex enthalten.',
+        'Nichts passiert, wenn sich ein Token bewegt: Prüfen Sie, ob der Token auf der Token-Ebene liegt und zu „Aufdeckende Token“ passt und ob die Seite Hexfelder hat (!hexploration status).',
+        'Hexfelder sind gegenüber dem Raster versetzt: Verwenden Sie „Kalibrieren“ und prüfen Sie dann mit einem Token einige Hexfelder auf der Karte.',
+        'Hexfelder werden nach dem Kopieren einer Seite oder eines Spiels nicht mehr aufgedeckt: Führen Sie auf der Seite „Erneut scannen“ aus.',
+        '„Füllen“ meldet, dass der Bereich keine Hexfeld-Mittelpunkte enthält: Die Form muss den Mittelpunkt von mindestens einem Hexfeld enthalten.',
         'Überprüfen Sie für alles andere das API-Konsolenprotokoll und geben Sie die entsprechenden Meldungen an, wenn Sie um Hilfe bitten.',
       ],
     },
@@ -368,7 +367,7 @@ const TRANSLATION = {
       heading: 'Sprachen',
       body: 'Wählen Sie eine Sprache mit !hexploration set language. Verfügbare Sprachen:',
       colLanguage: 'Sprache',
-      colNative: 'Einheimischer Name',
+      colNative: 'Eigenbezeichnung',
       colCode: 'Code',
     },
     credits: {

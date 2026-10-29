@@ -1,11 +1,11 @@
 const TRANSLATION = {
   titles: {
-    ready: "L'exploration est prête.",
-    settings: "Paramètres d'exploration",
+    ready: 'Hexploration est prêt.',
+    settings: "Paramètres d'Hexploration",
     languages: 'Choisissez une langue',
     pageSettings: 'Paramètres de la page : {page}',
-    status: "Statut d'exploration : {page}",
-    help: "Commandes d'exploration",
+    status: "État d'Hexploration : {page}",
+    help: "Commandes d'Hexploration",
     confirm: 'Veuillez confirmer',
   },
   discovery: {
@@ -28,18 +28,18 @@ const TRANSLATION = {
     conceal: 'Cacher',
     explore: 'Explorer',
     revealPage: 'Révéler la page',
-    resetPage: 'Page de réinitialisation',
+    resetPage: 'Réinitialiser la page',
     mark: "Marquer l'emplacement",
-    unmark: 'Décocher',
-    name: 'Nom Hex',
+    unmark: 'Démarquer',
+    name: "Nommer l'hexagone",
     settings: 'Paramètres',
-    pageSettings: 'Paramètres des pages',
+    pageSettings: 'Paramètres de la page',
     status: 'Statut',
     rescan: 'Nouvelle analyse',
-    calibrate: 'Étalonner',
-    calibrateReset: "Réinitialiser l'étalonnage",
+    calibrate: 'Calibrer',
+    calibrateReset: 'Réinitialiser le calibrage',
     help: 'Aide',
-    change: 'Changement',
+    change: 'Modifier',
     menu: 'Menu',
     clearOverrides: 'Effacer les remplacements',
     confirmReset: 'Oui, supprimer tous les hexagones',
@@ -48,13 +48,13 @@ const TRANSLATION = {
     name: 'Nom du lieu (laissez vide pour effacer)',
   },
   values: {
-    on: 'Sur',
+    on: 'Activé',
     off: 'Désactivé',
     none: 'Aucun',
     hexLayer: {
       auto: 'Auto (premier plan si disponible)',
       foreground: 'calque de premier plan',
-      objects: 'couche de jetons',
+      objects: 'calque des jetons',
     },
     revealBy: {
       players: 'Jetons de joueur',
@@ -62,12 +62,12 @@ const TRANSLATION = {
       all: 'Tous les jetons',
     },
     revealMode: {
-      clear: 'Clair',
+      clear: 'Effacer',
       glimpse: 'Aperçu',
     },
     announce: {
       all: 'Tout le monde',
-      gm: 'GM uniquement',
+      gm: 'MJ uniquement',
       off: 'Désactivé',
     },
     orientation: {
@@ -86,7 +86,7 @@ const TRANSLATION = {
       desc: 'Langue des menus, des messages et des documents.',
     },
     hexLayer: {
-      label: 'Couche hexagonale',
+      label: 'Calque des hexagones',
       desc: 'Où de nouveaux hexagones sont dessinés. Auto essaie la couche de premier plan (au-dessus des jetons) et revient à la couche de jetons si le jeu ne la prend pas en charge.',
     },
     fillColor: {
@@ -102,15 +102,15 @@ const TRANSLATION = {
       desc: 'Couleur des étiquettes de nom réservées aux GM sur les hexs nommés.',
     },
     glimpseColor: {
-      label: 'Aperçu de la couleur',
-      desc: "Les hexagones de couleur changent lorsqu'ils sont aperçus (mode de révélation d'aperçu). Utilisez une couleur rgba() transparente.",
+      label: "Couleur d'aperçu",
+      desc: 'Couleur que prennent les hexagones aperçus (mode de révélation Aperçu). Utilisez une couleur rgba() transparente.',
     },
     strokeWidth: {
       label: 'Largeur de la bordure',
       desc: 'Largeur du contour des nouveaux hexs, en pixels (0 à 20).',
     },
     maxDistance: {
-      label: 'Distance de révélation hexagonale',
+      label: 'Distance de révélation des hexagones',
       desc: "Appliqué aux hexagones au fur et à mesure qu'ils sont dessinés : un jeton doit se trouver dans ce nombre d'hexagones pour les révéler, aussi loin qu'il puisse voir. Laissez vide sans limite.",
     },
     revealDistance: {
@@ -126,19 +126,19 @@ const TRANSLATION = {
       desc: "Lorsque cette option est activée, chaque hexagone traversé par un jeton lorsqu'il est déplacé (y compris les waypoints) est révélé, pas seulement l'endroit où il s'arrête.",
     },
     revealBy: {
-      label: 'Des jetons qui révèlent',
+      label: 'Jetons révélateurs',
       desc: "Quels jetons sur la couche de jetons révèlent des hexagones : jetons contrôlés par un joueur, jetons qui représentent n'importe quel personnage ou chaque jeton.",
     },
     revealMode: {
-      label: 'Mode Révéler',
-      desc: "Effacer supprime les hexagones en vue. Un aperçu les rend transparents à la place ; ils sont supprimés lorsqu'un jeton y pénètre.",
+      label: 'Mode de révélation',
+      desc: "Effacer supprime les hexagones à portée de vue. Aperçu les rend plutôt transparents ; ils sont supprimés lorsqu'un jeton y entre.",
     },
     announce: {
-      label: 'Annoncer des découvertes',
+      label: 'Annoncer les découvertes',
       desc: "Qui voit le message de discussion lorsqu'un emplacement nommé est découvert.",
     },
     pingDiscoveries: {
-      label: 'Découvertes Ping',
+      label: 'Pinger les découvertes',
       desc: "Lorsque cette option est activée, les joueurs reçoivent un ping vers un emplacement nommé lorsqu'il est découvert.",
     },
     hideCoveredTokens: {
@@ -149,19 +149,19 @@ const TRANSLATION = {
   status: {
     engine: 'Moteur de jeu',
     grid: 'Grille',
-    layer: 'Couche hexagonale',
+    layer: 'Calque des hexagones',
     hexes: 'Hexagones',
-    named: 'Hexs nommés',
-    icons: 'Jetons de localisation',
-    glimpsed: 'Hexs aperçus',
-    pending: "Emplacements en attente d'un remplissage",
+    named: 'Hexagones nommés',
+    icons: "Jetons d'emplacement",
+    glimpsed: 'Hexagones aperçus',
+    pending: 'Emplacements en attente de remplissage',
     calibrated: 'Calibré',
     overrides: 'Remplacements de page',
-    undo: 'Annuler disponible',
+    undo: 'Annulation disponible',
   },
   messages: {
     filled:
-      'Remplissez terminé. Hexs tirés : {created}. Restylé : {restyled}. Emplacements masqués : {icons}.',
+      'Remplissage terminé. Hexagones dessinés : {created}. Restylés : {restyled}. Emplacements cachés : {icons}.',
     revealed: 'Hexs révélés : {count}.',
     revealedPage: 'Chaque hexagone de la page révélé ({count}).',
     confirmReset:
@@ -187,7 +187,7 @@ const TRANSLATION = {
     pruned:
       "Hexs enregistrés qui n'existent plus et ont été oubliés : {dropped}. Si ce jeu ou cette page a été copié, lancez une nouvelle analyse sur la page pour récupérer ses hexagones.",
     readyHint:
-      'Tapez !hexploration pour le menu ou ouvrez le document « Hexploration - Command Deck ».',
+      'Tapez !hexploration pour afficher le menu, ou ouvrez le document "Hexploration - Command Deck".',
   },
   warnings: {
     foregroundUnavailable:
@@ -257,16 +257,15 @@ const TRANSLATION = {
       'Alignez la grille hexagonale avec un ou deux jetons sélectionnés accrochés aux centres des hexagones.',
     calibrateReset: 'Supprimez le calibrage de la page actuelle.',
     status: 'Montre ce que Hexploration sait de la page actuelle.',
-    journal: "Reconstruisez les documents d'aide et de commande.",
+    journal: 'Reconstruisez les documents Help et Command Deck.',
     help: 'Montrez cette liste.',
     handout: 'Les instructions complètes se trouvent dans le document « {name} ».',
   },
   deck: {
-    subtitle: 'Pont de commandement',
     drawDesc:
-      "Dessinez des formes autour d'une zone, sélectionnez-les, puis remplissez-les. Annuler annule le dernier remplissage.",
+      "Dessinez des formes autour d'une zone, sélectionnez-les, puis remplissez. Annuler le remplissage annule le dernier remplissage.",
     revealDesc:
-      "Sélectionnez des hexagones, des formes ou des jetons pour les révéler ou les recouvrir à nouveau. L'exploration révèle les jetons sélectionnés comme s'ils avaient bougé.",
+      "Sélectionnez des hexagones, des formes ou des jetons pour les révéler ou les recouvrir. Explorer révèle les alentours des jetons sélectionnés comme s'ils venaient de s'y déplacer.",
     locationsDesc:
       "Sélectionnez les jetons pour les cacher en tant qu'emplacements sous les hexagones. Sélectionnez des hexagones ou des jetons pour nommer un hexagone.",
     toolsDesc:
@@ -287,7 +286,7 @@ const TRANSLATION = {
       steps: [
         'Ouvrez une page dont la grille est définie sur Hex (V) ou Hex (H).',
         'Dessinez une ou plusieurs formes (polygone, rectangle, ellipse ou à main levée) autour de la zone à masquer.',
-        'Sélectionnez les formes et cliquez sur Remplir dans le jeu de commandes (ou tapez !hexploration fill). Les formes sont remplacées par des hexagones.',
+        'Sélectionnez les formes et cliquez sur Remplir dans le Command Deck (ou tapez !hexploration fill). Les formes sont remplacées par des hexagones.',
         "Facultatif : avant de remplir, sélectionnez les jetons pour les lieux importants et cliquez sur Marquer l'emplacement. Ils sont cachés sous les hexagones et annoncés dès leur découverte.",
         "Déplacez un jeton de joueur. Chaque hex qu'il traverse, ainsi que les hexs situés à sa distance de vue, sont révélés.",
       ],
@@ -302,29 +301,29 @@ const TRANSLATION = {
     revealing: {
       heading: 'Comment fonctionne la révélation',
       points: [
-        'Seuls les jetons sur la couche de jetons révèlent des hexagones. Le nombre de jetons est défini par Tokens That Reveal : les jetons de joueur par défaut, afin que le MJ puisse déplacer les monstres sans découvrir la carte.',
+        'Seuls les jetons sur le calque des jetons révèlent des hexagones. Les jetons concernés sont définis par Jetons révélateurs : les jetons de joueur par défaut, afin que le MJ puisse déplacer des monstres sans découvrir la carte.',
         "Un jeton révèle chaque hex qu'il couvre (les gros jetons en couvrent plusieurs) et, avec Révéler le long du chemin activé, chaque hex de la route qu'il a parcouru, y compris les waypoints.",
-        'Sight Distance révèle les hexs autour de chacun de ces hexs. Avec la Ligne de Vue activée, un hex n’est révélé que si aucun hex couvert ne se trouve entre les deux.',
-        "La distance de révélation des hexs est stockée sur les hexs au fur et à mesure qu'ils sont dessinés. Ces hexagones ne sont révélés qu’à partir d’un certain nombre d’hexagones, quelle que soit la distance que peut voir un jeton. Utilisez-le pour les montagnes ou les forêts qui cachent ce qui se trouve derrière elles.",
+        "La distance de vue révèle les hexagones autour de chacun de ces hexagones. Avec Ligne de vue activée, un hexagone n'est révélé que si aucun hexagone couvert ne se trouve entre les deux.",
+        "La distance de révélation des hexagones est enregistrée sur les hexagones au moment où ils sont dessinés. Ces hexagones ne sont révélés que depuis ce nombre d'hexagones au plus, quelle que soit la distance à laquelle un jeton peut voir. Utilisez-la pour des montagnes ou des forêts qui cachent ce qui se trouve derrière elles.",
         "En mode Aperçu, les hexagones visibles deviennent transparents au lieu de disparaître et sont supprimés lorsqu'un jeton y pénètre.",
-        "L'API ne signale pas les mouvements effectués par d'autres mods. Les mouvements TokenMod sont récupérés automatiquement ; pour les autres mods, sélectionnez les jetons et cliquez sur Explorer, ou appelez Hexploration.revealAround(token) depuis votre propre mod.",
+        "Roll20 dessine les noms, les barres et les auras des jetons au-dessus des hexagones. Avec Masquer les jetons couverts activé, un jeton sous un hexagone couvert voit son nom, ses barres et ses auras visibles par les joueurs désactivés jusqu'à ce qu'il soit découvert, afin que les monstres cachés ne se trahissent pas. Si vous en réactivez un pendant que le jeton est couvert, il reste masqué et sera activé lorsque le jeton sera découvert.",
         "L'API ne signale pas les mouvements effectués par d'autres mods. Les mouvements TokenMod sont récupérés automatiquement ; pour les autres mods, sélectionnez les jetons et cliquez sur Explorer, ou appelez Hexploration.revealAround(token) depuis votre propre mod.",
       ],
     },
     locations: {
       heading: 'Hexs et emplacements nommés',
       points: [
-        'Mark Location transforme les jetons sélectionnés en emplacements cachés. Un jeton déjà sous un hexagone est immédiatement caché ; sinon, il est masqué par le prochain remplissage qui le recouvre.',
+        "Marquer l'emplacement transforme les jetons sélectionnés en emplacements cachés. Un jeton déjà sous un hexagone est caché immédiatement ; sinon, il est caché par le prochain remplissage qui le recouvre.",
         'Les jetons avec le marqueur de statut tour blanche sont également traités comme des emplacements lorsque vous remplissez, comme dans la version 1.',
         "Les jetons d'emplacement cachés sont déplacés vers la couche GM. Lorsque leur hexagone est révélé, ils retournent à la couche de jetons avec leur nom affiché et leur découverte est annoncée.",
-        "Name Hex donne un nom à un hexagone sans jeton. Le nom est montré au MJ sous forme d'étiquette sur la couche GM et annoncé lorsque l'hex est révélé.",
-        "Annoncer les découvertes choisit si tout le monde, uniquement le MJ ou personne ne voit l'annonce. Ping Discoveries déplace également la vue des joueurs vers l’emplacement.",
+        "Nommer l'hexagone donne un nom à un hexagone sans jeton. Le nom est montré au MJ sous forme d'étiquette sur le calque MJ et annoncé lorsque l'hexagone est révélé.",
+        "Annoncer les découvertes détermine si tout le monde, seulement le MJ ou personne ne voit l'annonce. Pinger les découvertes déplace aussi la vue des joueurs vers l'emplacement.",
       ],
     },
     settings: {
       heading: 'Paramètres',
       intro:
-        'Modifiez les paramètres avec !hexploration set (ou le bouton Paramètres). La couche hexadécimale, les jetons révélés et la langue peuvent également être définis sur la page des paramètres du mod.',
+        'Modifiez les paramètres avec !hexploration set (ou le bouton Paramètres). Calque des hexagones, Jetons révélateurs et Langue peuvent aussi être définis sur la page de paramètres du mod.',
       colKey: 'Clé',
       colName: 'Paramètre',
       colDesc: 'Description',
@@ -334,7 +333,7 @@ const TRANSLATION = {
       heading: 'Jumpgate et héritage',
       points: [
         "Hexploration détermine quel moteur le jeu utilise et dessine le type de forme correspondant. Les formes dessinées dans l'un ou l'autre éditeur peuvent être remplies.",
-        "Avec Hex Layer réglé sur Auto, les hexagones sont dessinés sur la couche de premier plan, au-dessus des jetons, afin que les joueurs ne puissent pas voir ce qu'il y a en dessous. Si la couche de premier plan n'est pas disponible, la couche de jetons est utilisée à la place.",
+        "Avec Calque des hexagones réglé sur Auto, les hexagones sont dessinés sur le calque de premier plan, au-dessus des jetons, afin que les joueurs ne puissent pas voir ce qu'il y a en dessous. Si le calque de premier plan n'est pas disponible, le calque des jetons est utilisé à la place.",
         "Jumpgate dessine des hexagones mathématiquement réguliers, qui ont une forme légèrement différente des hexagones Legacy. Si les hexagones ne s’alignent pas avec la grille d’une page, placez un jeton au centre d’un hexagone, sélectionnez-le et cliquez sur Calibrer. Sélectionnez deux jetons dans des hexagones voisins de la même ligne (Hex V) ou colonne (Hex H) pour corriger également la taille de l'hexagone.",
         "Lorsqu'une page ou un jeu est copié, ses hexagones obtiennent de nouveaux identifiants. Exécutez une nouvelle analyse sur la page pour les récupérer, ainsi que leurs étiquettes de nom et leurs jetons de localisation.",
       ],
@@ -345,7 +344,7 @@ const TRANSLATION = {
         "La version 2 n'a plus besoin de PathMath, MatrixMath, Vector Math ou HTML Builder. Vous pouvez les supprimer à moins qu'un autre mod ne les utilise.",
         'Les cartes hexagonales, les noms, les jetons de localisation et les paramètres existants sont automatiquement mis à niveau au premier démarrage.',
         'Les commandes de la version 1, dont la macro Hexploration_menu, fonctionnent toujours.',
-        "La version 1 permettait à n'importe quel jeton représentant un personnage de révéler des hexagones. Définissez les jetons qui révèlent des jetons de personnage pour conserver ce comportement.",
+        'La version 1 permettait à tout jeton représentant un personnage de révéler des hexagones. Réglez Jetons révélateurs sur Jetons de personnage pour conserver ce comportement.',
       ],
       colV1: 'Commande version 1',
       colV2: 'Commande version 2',
@@ -353,10 +352,10 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Dépannage',
       points: [
-        "Rien ne se passe lorsqu'un jeton bouge : vérifiez que le jeton est sur la couche de jetons et correspond aux jetons qui révèlent, et que la page a des hexagones (!hétat d'exploration).",
+        'Rien ne se passe quand un jeton se déplace : vérifiez que le jeton est sur le calque des jetons et correspond à Jetons révélateurs, et que la page contient des hexagones (!hexploration status).',
         'Les hexs sont décalés par rapport à la grille : utilisez Calibrer, puis vérifiez avec un jeton sur quelques hexs de la carte.',
         "Les hexagones ont cessé de s'afficher après la copie d'une page ou d'un jeu : lancez une nouvelle analyse de la page.",
-        "Fill indique que la zone n'a pas de centre d'hexagone : la forme doit contenir le centre d'au moins un hexagone.",
+        "Remplir indique que la zone ne contient aucun centre d'hexagone : la forme doit contenir le centre d'au moins un hexagone.",
         "Pour toute autre chose, consultez le journal de la console API et incluez ses messages lorsque vous demandez de l'aide.",
       ],
     },
@@ -364,7 +363,7 @@ const TRANSLATION = {
       heading: 'Langues',
       body: 'Choisissez une langue avec !hexploration set language. Langues disponibles :',
       colLanguage: 'Langue',
-      colNative: 'Nom natif',
+      colNative: "Nom d'origine",
       colCode: 'Code',
     },
     credits: {

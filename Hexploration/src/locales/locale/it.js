@@ -1,42 +1,42 @@
 const TRANSLATION = {
   titles: {
-    ready: "L'esplorazione è pronta.",
-    settings: 'Impostazioni di esplorazione',
+    ready: 'Hexploration è pronto.',
+    settings: 'Impostazioni di Hexploration',
     languages: 'Scegli una lingua',
     pageSettings: 'Impostazioni pagina: {page}',
-    status: 'Stato esplorazione: {page}',
-    help: 'Comandi di esplorazione',
-    confirm: 'Per favore conferma',
+    status: 'Stato di Hexploration: {page}',
+    help: 'Comandi di Hexploration',
+    confirm: 'Conferma',
   },
   discovery: {
     title: 'Posizione scoperta',
   },
   menu: {
-    draw: 'Disegno',
-    reveal: 'Rivelare e nascondere',
+    draw: 'Disegna',
+    reveal: 'Rivela e nascondi',
     locations: 'Posizioni',
-    tools: 'Utensili',
-    layerInUse: 'Nuovi esagoni vengono disegnati su {layer}.',
+    tools: 'Strumenti',
+    layerInUse: 'I nuovi esagoni vengono disegnati sul {layer}.',
     pageSettingsHelp:
       'Queste impostazioni si applicano solo a questa pagina. Le impostazioni contrassegnate con ★ sovrascrivono le impostazioni globali.',
   },
   buttons: {
-    fill: 'Riempire',
+    fill: 'Riempi',
     fillInverse: 'Riempimento inverso',
     undo: 'Annulla riempimento',
-    reveal: 'Svelare',
-    conceal: 'Nascondere',
-    explore: 'Esplorare',
+    reveal: 'Rivela',
+    conceal: 'Nascondi',
+    explore: 'Esplora',
     revealPage: 'Rivela pagina',
     resetPage: 'Reimposta pagina',
     mark: 'Segna posizione',
-    unmark: 'Deseleziona',
-    name: 'Nome esadecimale',
+    unmark: 'Rimuovi segno',
+    name: 'Nomina esagono',
     settings: 'Impostazioni',
-    pageSettings: 'Impostazioni della pagina',
+    pageSettings: 'Impostazioni pagina',
     status: 'Stato',
     rescan: 'Nuova scansione',
-    calibrate: 'Calibrare',
+    calibrate: 'Calibra',
     calibrateReset: 'Ripristina calibrazione',
     help: 'Aiuto',
     change: 'Modifica',
@@ -48,36 +48,36 @@ const TRANSLATION = {
     name: 'Nome della posizione (lascia vuoto per cancellare)',
   },
   values: {
-    on: 'SU',
-    off: 'Spento',
+    on: 'Attivo',
+    off: 'Disattivo',
     none: 'Nessuno',
     hexLayer: {
       auto: 'Automatico (in primo piano se disponibile)',
-      foreground: 'strato di primo piano',
-      objects: 'strato di token',
+      foreground: 'livello in primo piano',
+      objects: 'livello dei segnalini',
     },
     revealBy: {
-      players: 'Gettoni del giocatore',
-      characters: 'Segnalini personaggio',
-      all: 'Tutti i gettoni',
+      players: 'Segnalini dei giocatori',
+      characters: 'Segnalini dei personaggi',
+      all: 'Tutti i segnalini',
     },
     revealMode: {
-      clear: 'Chiaro',
-      glimpse: 'Occhiata',
+      clear: 'Elimina',
+      glimpse: 'Intravedi',
     },
     announce: {
       all: 'Tutti',
-      gm: 'Solo GM',
-      off: 'Spento',
+      gm: 'Solo il GM',
+      off: 'Disattivo',
     },
     orientation: {
-      vertical: 'Esadecimale (V)',
-      horizontal: 'Esadecimale (H)',
+      vertical: 'Hex (V)',
+      horizontal: 'Hex (H)',
     },
     fillKind: {
-      fill: 'Riempire',
+      fill: 'Riempi',
       fillInverse: 'Riempimento inverso',
-      conceal: 'Nascondere',
+      conceal: 'Nascondi',
     },
   },
   settings: {
@@ -86,12 +86,12 @@ const TRANSLATION = {
       desc: 'Lingua per menu, messaggi e dispense.',
     },
     hexLayer: {
-      label: 'Strato esagonale',
-      desc: 'Dove vengono tracciati nuovi esagoni. Auto prova il livello in primo piano (sopra i token) e torna al livello token se il gioco non lo supporta.',
+      label: 'Livello degli esagoni',
+      desc: 'Dove vengono disegnati i nuovi esagoni. Automatico prova il livello in primo piano (sopra i segnalini) e ripiega sul livello dei segnalini se il gioco non lo supporta.',
     },
     fillColor: {
       label: 'Colore riempimento',
-      desc: 'Colore dei nuovi esagoni. Utilizzare rgba() per esadecimali trasparenti, ad esempio rgba(0,0,0,0.8).',
+      desc: 'Colore dei nuovi esagoni. Usa rgba() per esagoni trasparenti, ad esempio rgba(0,0,0,0.8).',
     },
     strokeColor: {
       label: 'Colore del bordo',
@@ -102,19 +102,19 @@ const TRANSLATION = {
       desc: 'Colore delle etichette con i nomi riservati ai GM sugli esagoni con nome.',
     },
     glimpseColor: {
-      label: 'Colore scorcio',
-      desc: 'Gli esagoni colorati cambiano in quando vengono intravisti (modalità di rivelazione Glimpse). Utilizza un colore rgba() trasparente.',
+      label: 'Colore degli esagoni intravisti',
+      desc: 'Colore che assumono gli esagoni intravisti (modalità di rivelazione Intravedi). Usa un colore rgba() trasparente.',
     },
     strokeWidth: {
       label: 'Larghezza del bordo',
       desc: 'Larghezza del contorno dei nuovi esagoni, in pixel (da 0 a 20).',
     },
     maxDistance: {
-      label: 'Distanza di rivelazione esadecimale',
+      label: 'Distanza di rivelazione degli esagoni',
       desc: 'Applicato agli esagoni mentre vengono disegnati: un segnalino deve trovarsi entro questo numero di esagoni per rivelarli, per quanto lontano possa vedere. Lascia vuoto per nessun limite.',
     },
     revealDistance: {
-      label: 'Distanza visiva',
+      label: 'Distanza di vista',
       desc: 'Quanti esagoni vengono rivelati attorno a un segnalino in movimento (da 0 a 20). 0 rivela solo gli esagoni attraversati dal segnalino.',
     },
     lineOfSight: {
@@ -130,40 +130,40 @@ const TRANSLATION = {
       desc: 'Quali gettoni sul livello dei gettoni rivelano esagoni: gettoni controllati da un giocatore, gettoni che rappresentano qualsiasi personaggio o ogni gettone.',
     },
     revealMode: {
-      label: 'Modalità Rivela',
-      desc: 'Pulito rimuove gli esagoni in vista. Glimpse li rende invece trasparenti; vengono rimossi quando un token vi entra.',
+      label: 'Modalità di rivelazione',
+      desc: 'Elimina rimuove gli esagoni in vista. Intravedi invece li rende trasparenti; vengono rimossi quando un segnalino vi entra.',
     },
     announce: {
-      label: 'Annunciare le scoperte',
+      label: 'Annuncia le scoperte',
       desc: 'Chi vede il messaggio di chat quando viene scoperta una posizione denominata.',
     },
     pingDiscoveries: {
-      label: 'Scoperte del ping',
+      label: 'Ping sulle scoperte',
       desc: 'Quando è attivo, i giocatori vengono collegati a una posizione denominata quando viene scoperta.',
     },
     hideCoveredTokens: {
-      label: 'Nascondi i token coperti',
+      label: 'Nascondi i segnalini coperti',
       desc: 'Roll20 disegna nomi, barre e aure sopra gli esagoni. Quando sono attivi, i gettoni sotto un esagono coperto hanno il nome, le barre e le aure visibili al giocatore disattivati ​​e riattivati ​​quando vengono scoperti.',
     },
   },
   status: {
     engine: 'Motore di gioco',
     grid: 'Griglia',
-    layer: 'Strato esagonale',
+    layer: 'Livello degli esagoni',
     hexes: 'Esagoni',
     named: 'Esagoni con nome',
-    icons: 'Gettoni di posizione',
+    icons: 'Segnalini di posizione',
     glimpsed: 'Esagoni intravisti',
     pending: 'Posizioni in attesa di riempimento',
     calibrated: 'Calibrato',
-    overrides: "La pagina esegue l'override",
-    undo: 'Annulla disponibile',
+    overrides: 'Sostituzioni di pagina',
+    undo: 'Annullamento disponibile',
   },
   messages: {
     filled:
       'Riempimento completato. Esagoni tracciati: {created}. Restyling: {restyled}. Posizioni nascoste: {icons}.',
     revealed: 'Esagoni rivelati: {count}.',
-    revealedPage: 'Ogni esadecimale sulla pagina è stato rivelato ({count}).',
+    revealedPage: 'Tutti gli esagoni della pagina sono stati rivelati ({count}).',
     confirmReset:
       'Rimuovere ogni esagono da "{page}" ({count})? I token di posizione ritornano al livello dei token. L\'annullamento non può annullare questa operazione.',
     resetPage: 'Esagoni rimossi dalla pagina: {count}.',
@@ -183,11 +183,11 @@ const TRANSLATION = {
       'Calibrazione rimossa. Nuova scansione: mantenuto {kept}, archiviato nuovamente {moved}, adottato {adopted}.',
     journalRebuilt: 'Le dispense "{help}" e "{deck}" sono state ricostruite.',
     migrated:
-      'Le tue mappe esadecimali Hexploration 1.x sono state aggiornate. Se questo gioco è stato copiato da un gioco Legacy, esegui Rescan su ogni pagina della mappa esadecimale.',
+      'Le tue mappe a esagoni di Hexploration 1.x sono state aggiornate. Se questo gioco è stato copiato da un gioco Legacy, esegui Nuova scansione su ogni pagina con una mappa a esagoni.',
     pruned:
-      'Esagoni salvati che non esistono più e sono stati dimenticati: {dropped}. Se questo gioco o questa pagina sono stati copiati, esegui Rescan sulla pagina per riprenderne gli esagoni.',
+      'Esagoni salvati che non esistono più e sono stati dimenticati: {dropped}. Se questo gioco o questa pagina sono stati copiati, esegui Nuova scansione sulla pagina per riprenderne gli esagoni.',
     readyHint:
-      'Digita !esplorazione nel menu o apri il volantino "Esplorazione - Mazzo di comandi".',
+      'Digita !hexploration per il menu, oppure apri la dispensa "Hexploration - Command Deck".',
   },
   warnings: {
     foregroundUnavailable:
@@ -197,9 +197,9 @@ const TRANSLATION = {
   },
   errors: {
     noPage: 'Impossibile trovare la pagina su cui lavorare.',
-    notHex: 'Questa pagina non utilizza una griglia esadecimale.',
+    notHex: 'Questa pagina non usa una griglia esagonale.',
     noPolygons: 'Seleziona una o più forme disegnate da riempire.',
-    emptyArea: "L'area selezionata non contiene centri esadecimali.",
+    emptyArea: "L'area selezionata non contiene alcun centro di esagono.",
     tooMany: 'Ciò creerebbe troppi esagoni in una volta sola ({count}).',
     nothingToConceal: 'Seleziona forme disegnate o gettoni da nascondere.',
     nothingToReveal: 'Seleziona esagoni, forme disegnate o gettoni da rivelare.',
@@ -216,8 +216,7 @@ const TRANSLATION = {
   },
   hints: {
     noPage: 'Apri la pagina su cui vuoi lavorare o seleziona qualcosa al suo interno.',
-    notHex:
-      'Imposta la griglia della pagina su Esadecimale (V) o Esadecimale (H) in Impostazioni pagina.',
+    notHex: 'Imposta la griglia della pagina su Hex (V) o Hex (H) nelle Impostazioni pagina.',
     noPolygons:
       "Disegna un poligono, un rettangolo, un'ellisse o una forma a mano libera attorno all'area, selezionala e riprova.",
     emptyArea:
@@ -228,7 +227,7 @@ const TRANSLATION = {
     unknownCommand: 'Digita !hexploration help per elencare i comandi.',
     unknownSetting: 'Digita !hexploration set per vedere tutte le impostazioni.',
     calibrateNeedsTokens:
-      'Aggancia un gettone al centro di un esagono e selezionalo. Seleziona un secondo token agganciato a un esagono vicino nella stessa riga (Hex V) o colonna (Hex H) per correggere anche la dimensione esadecimale.',
+      'Aggancia un segnalino al centro di un esagono e selezionalo. Seleziona un secondo segnalino agganciato a un esagono adiacente nella stessa riga (Hex V) o colonna (Hex H) per correggere anche la dimensione degli esagoni.',
     calibrateFailed:
       'Due gettoni devono trovarsi nella stessa riga (Hex V) o nella stessa colonna (Hex H), ad almeno un esagono di distanza.',
     unexpected: 'I dettagli si trovano nel registro della console API.',
@@ -250,21 +249,20 @@ const TRANSLATION = {
     pageSet: "Sostituisci un'impostazione di visualizzazione solo nella pagina corrente.",
     pageClear: 'Rimuovi le sostituzioni della pagina corrente.',
     rescan:
-      "Ricostruisci l'elenco esadecimale della pagina, ad esempio dopo aver copiato una pagina o un gioco.",
+      "Ricostruisci l'elenco degli esagoni della pagina, ad esempio dopo aver copiato una pagina o un gioco.",
     calibrate:
       'Allinea la griglia esagonale con uno o due gettoni selezionati agganciati ai centri esagonali.',
     calibrateReset: 'Rimuovi la calibrazione della pagina corrente.',
     status: 'Mostra cosa sa Hexploration sulla pagina corrente.',
-    journal: 'Ricostruisci le dispense del mazzo di aiuto e di comando.',
+    journal: 'Ricostruisci le dispense Help e Command Deck.',
     help: 'Mostra questo elenco.',
     handout: 'Le istruzioni complete si trovano nel volantino "{name}".',
   },
   deck: {
-    subtitle: 'Mazzo di comando',
     drawDesc:
-      "Disegna forme attorno a un'area, selezionale, quindi riempi. Annulla inverte l'ultimo riempimento.",
+      "Disegna forme attorno a un'area, selezionale, quindi riempi. Annulla riempimento annulla l'ultimo riempimento.",
     revealDesc:
-      'Seleziona esagoni, forme o gettoni per rivelarli o coprirli nuovamente. Esplora rivela i token selezionati come se si fossero spostati.',
+      'Seleziona esagoni, forme o segnalini per rivelarli o coprirli di nuovo. Esplora rivela attorno ai segnalini selezionati come se si fossero appena spostati.',
     locationsDesc:
       'Seleziona i token per nasconderli come posizioni sotto esagoni. Seleziona esagoni o gettoni per nominare un esagono.',
     toolsDesc:
@@ -285,9 +283,9 @@ const TRANSLATION = {
       steps: [
         'Apri una pagina la cui griglia è impostata su Hex (V) o Hex (H).',
         "Disegna una o più forme (poligono, rettangolo, ellisse o a mano libera) attorno all'area da nascondere.",
-        'Seleziona le forme e fai clic su Compila il mazzo di comandi (o digita! Hexploration fill). Le forme sono sostituite da esagoni.',
-        'Facoltativo: prima di riempire, seleziona i token per i luoghi importanti e fai clic su Segna posizione. Sono nascosti sotto gli esagoni e annunciati quando vengono scoperti.',
-        'Muovi un gettone giocatore. Ogni esagono che attraversa, e gli esagoni entro la sua Distanza di Vista, vengono rivelati.',
+        'Seleziona le forme e fai clic su Riempi nel Command Deck (oppure digita !hexploration fill). Le forme vengono sostituite da esagoni.',
+        'Facoltativo: prima di riempire, seleziona i segnalini dei luoghi importanti e fai clic su Segna posizione. Vengono nascosti sotto gli esagoni e annunciati quando vengono scoperti.',
+        'Muovi un segnalino giocatore. Ogni esagono che attraversa, e gli esagoni entro la sua Distanza di vista, vengono rivelati.',
       ],
     },
     commands: {
@@ -300,29 +298,29 @@ const TRANSLATION = {
     revealing: {
       heading: 'Come funziona la rivelazione',
       points: [
-        'Solo i gettoni sul livello dei gettoni rivelano gli esagoni. Quali token contano è stabilito da Tokens That Reveal: token del giocatore per impostazione predefinita, quindi il GM può spostare i mostri senza scoprire la mappa.',
-        'Un gettone rivela ogni esagono che copre (i gettoni grandi ne coprono diversi) e, con Rivela lungo il percorso attivato, ogni esagono sul percorso lungo il quale è stato trascinato, compresi i waypoint.',
-        'La Distanza di Vista rivela gli esagoni attorno a ciascuno di quegli esagoni. Con la Linea di Vista attiva, un esagono viene rivelato solo se nel mezzo non si trova alcun esagono coperto.',
-        "La distanza di rivelazione esadecimale viene memorizzata sugli esagoni man mano che vengono disegnati. Quegli esagoni vengono rivelati solo dall'interno di quel numero di esagoni, per quanto lontano possa vedere un segnalino. Usalo per montagne o foreste che nascondono ciò che c'è dietro di loro.",
-        'Nella modalità Glimpse, gli esagoni in vista diventano trasparenti invece di scomparire e vengono rimossi quando un token vi entra.',
-        "L'API non segnala le mosse effettuate da altri mod. Le mosse TokenMod vengono rilevate automaticamente; per altre mod, seleziona i token e fai clic su Esplora o chiama Hexploration.revealAround(token) dalla tua mod.",
-        "L'API non segnala le mosse effettuate da altri mod. Le mosse TokenMod vengono rilevate automaticamente; per altre mod, seleziona i token e fai clic su Esplora o chiama Hexploration.revealAround(token) dalla tua mod.",
+        'Solo i segnalini sul livello dei segnalini rivelano gli esagoni. Quali segnalini contano lo stabilisce Segnalini che rivelano: per impostazione predefinita i segnalini dei giocatori, così il GM può spostare i mostri senza scoprire la mappa.',
+        'Un segnalino rivela ogni esagono che copre (i segnalini grandi ne coprono diversi) e, con Rivela lungo il percorso attivo, ogni esagono del percorso lungo il quale è stato trascinato, compresi i waypoint.',
+        "La Distanza di vista rivela gli esagoni attorno a ciascuno di quegli esagoni. Con Linea di vista attiva, un esagono viene rivelato solo se in mezzo non c'è alcun esagono coperto.",
+        "La Distanza di rivelazione degli esagoni viene memorizzata sugli esagoni nel momento in cui vengono disegnati. Quegli esagoni vengono rivelati solo da non più di quel numero di esagoni di distanza, per quanto lontano possa vedere un segnalino. Usala per montagne o foreste che nascondono ciò che c'è dietro.",
+        'Nella modalità Intravedi, gli esagoni in vista diventano trasparenti invece di scomparire e vengono rimossi quando un segnalino vi entra.',
+        'Roll20 disegna nomi, barre e aure dei segnalini sopra gli esagoni. Con Nascondi i segnalini coperti attivo, un segnalino sotto un esagono coperto ha nome, barre e aure visibili ai giocatori disattivati finché non viene scoperto, così i mostri nascosti non si tradiscono. Se ne attivi uno mentre il segnalino è coperto, resta nascosto e viene attivato quando il segnalino viene scoperto.',
+        "L'API non segnala gli spostamenti effettuati da altre mod. Gli spostamenti di TokenMod vengono rilevati automaticamente; per altre mod, seleziona i segnalini e fai clic su Esplora, oppure chiama Hexploration.revealAround(token) dalla tua mod.",
       ],
     },
     locations: {
       heading: 'Esagoni e posizioni con nome',
       points: [
-        'Segna posizione trasforma i token selezionati in posizioni nascoste. Un gettone già sotto un esagono viene immediatamente nascosto; altrimenti viene nascosto dal riempimento successivo che lo ricopre.',
+        'Segna posizione trasforma i segnalini selezionati in posizioni nascoste. Un segnalino già sotto un esagono viene nascosto subito; altrimenti viene nascosto dal riempimento successivo che lo copre.',
         "Anche i gettoni con l'indicatore di stato della torre bianca vengono trattati come posizioni quando li riempi, come nella versione 1.",
         'I segnalini posizione nascosta vengono spostati nel livello GM. Quando il loro esagono viene rivelato, ritornano al livello dei gettoni con il loro nome mostrato e la loro scoperta viene annunciata.',
-        "Nome esadecimale dà un nome a un esagono senza token. Il nome viene mostrato al GM come etichetta sul livello GM e annunciato quando l'esagono viene rivelato.",
-        "Annunciare le Scoperte sceglie se tutti, solo il GM o nessuno vedono l'annuncio. Ping Discoveries sposta anche la visuale dei giocatori sulla posizione.",
+        "Nomina esagono dà un nome a un esagono senza usare un segnalino. Il nome viene mostrato al GM come etichetta sul livello GM e annunciato quando l'esagono viene rivelato.",
+        "Annuncia le scoperte sceglie se l'annuncio lo vedono tutti, solo il GM o nessuno. Ping sulle scoperte sposta anche la visuale dei giocatori sulla posizione.",
       ],
     },
     settings: {
       heading: 'Impostazioni',
       intro:
-        'Modifica le impostazioni con !hexploration set (o il pulsante Impostazioni). Il livello esadecimale, i token rivelanti e la lingua possono essere impostati anche nella pagina delle impostazioni del Mod.',
+        'Modifica le impostazioni con !hexploration set (o con il pulsante Impostazioni). Livello degli esagoni, Segnalini che rivelano e Lingua si possono impostare anche nella pagina delle impostazioni della mod.',
       colKey: 'Chiave',
       colName: 'Collocamento',
       colDesc: 'Descrizione',
@@ -332,18 +330,18 @@ const TRANSLATION = {
       heading: 'Jumpgate e Legacy',
       points: [
         "L'esplorazione determina quale motore utilizza il gioco e disegna il tipo di forma corrispondente. È possibile riempire le forme disegnate in entrambi gli editor.",
-        "Con Livello esadecimale impostato su Auto, gli esagoni vengono disegnati sul livello in primo piano, sopra i token, in modo che i giocatori non possano vedere cosa c'è sotto. Se il livello in primo piano non è disponibile, viene utilizzato il livello token.",
-        "Jumpgate disegna esagoni matematicamente regolari, che hanno una forma leggermente diversa dagli esagoni Legacy. Se gli esagoni non si allineano con la griglia di una pagina, aggancia un token al centro dell'esagono, selezionalo e fai clic su Calibra. Seleziona due token negli esagoni vicini della stessa riga (Hex V) o colonna (Hex H) per correggere anche la dimensione esadecimale.",
-        'Quando una pagina o un gioco viene copiato, i suoi esagoni ottengono nuovi ID. Esegui Nuova scansione sulla pagina per riprenderli, insieme alle etichette dei nomi e ai token di posizione.',
+        "Con Livello degli esagoni impostato su Automatico, gli esagoni vengono disegnati sul livello in primo piano, sopra i segnalini, così i giocatori non possono vedere cosa c'è sotto. Se il livello in primo piano non è disponibile, viene usato invece il livello dei segnalini.",
+        'Jumpgate disegna esagoni matematicamente regolari, che hanno una forma leggermente diversa dagli esagoni Legacy. Se gli esagoni non sono allineati alla griglia di una pagina, aggancia un segnalino al centro di un esagono, selezionalo e fai clic su Calibra. Seleziona due segnalini in esagoni adiacenti della stessa riga (Hex V) o colonna (Hex H) per correggere anche la dimensione degli esagoni.',
+        'Quando una pagina o un gioco viene copiato, i suoi esagoni ottengono nuovi ID. Esegui Nuova scansione sulla pagina per riprenderli, insieme alle etichette dei nomi e ai segnalini di posizione.',
       ],
     },
     upgrading: {
       heading: 'Aggiornamento dalla versione 1',
       points: [
         'La versione 2 non necessita più di PathMath, MatrixMath, Vector Math o HTML Builder. Puoi rimuoverli a meno che un altro mod non li utilizzi.',
-        'Le mappe esadecimali, i nomi, i token di posizione e le impostazioni esistenti vengono aggiornati automaticamente al primo avvio.',
+        'Le mappe a esagoni, i nomi, i segnalini di posizione e le impostazioni esistenti vengono aggiornati automaticamente al primo avvio.',
         'I comandi della versione 1, inclusa la macro Hexploration_menu, funzionano ancora.',
-        'La versione 1 permetteva a qualsiasi gettone che rappresentava un personaggio di rivelare esagoni. Imposta i gettoni che rivelano sui gettoni personaggio per mantenere quel comportamento.',
+        'La versione 1 permetteva a qualsiasi segnalino che rappresentasse un personaggio di rivelare esagoni. Imposta Segnalini che rivelano su Segnalini dei personaggi per mantenere quel comportamento.',
       ],
       colV1: 'Comando della versione 1',
       colV2: 'Comando della versione 2',
@@ -351,10 +349,10 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Risoluzione dei problemi',
       points: [
-        'Non succede nulla quando un token si muove: controlla che il token sia sul token layer e corrisponda a Tokens That Reveal e che la pagina abbia esagoni (stato!Hexploration).',
-        'Gli esagoni sono spostati rispetto alla griglia: usa Calibra, quindi controlla con un gettone su alcuni esagoni sulla mappa.',
-        'Gli esagoni non vengono più rivelati dopo aver copiato una pagina o un gioco: esegui Rescan sulla pagina.',
-        "Riempi dice che l'area non ha centri esadecimali: la forma deve contenere il centro di almeno un esagono.",
+        'Non succede nulla quando un segnalino si muove: controlla che il segnalino sia sul livello dei segnalini e corrisponda a Segnalini che rivelano, e che la pagina abbia esagoni (!hexploration status).',
+        'Gli esagoni sono sfalsati rispetto alla griglia: usa Calibra, poi controlla con un segnalino su alcuni esagoni in vari punti della mappa.',
+        'Gli esagoni non vengono più rivelati dopo aver copiato una pagina o un gioco: esegui Nuova scansione sulla pagina.',
+        "Riempi indica che l'area non contiene centri di esagono: la forma deve contenere il centro di almeno un esagono.",
         'Per qualsiasi altra cosa, controlla il registro della console API e includi i suoi messaggi quando chiedi aiuto.',
       ],
     },
@@ -362,7 +360,7 @@ const TRANSLATION = {
       heading: 'Lingue',
       body: "Scegli una lingua con la lingua impostata per l'esplorazione. Lingue disponibili:",
       colLanguage: 'Lingua',
-      colNative: 'Nome nativo',
+      colNative: 'Nome originale',
       colCode: 'Codice',
     },
     credits: {

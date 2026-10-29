@@ -12,6 +12,7 @@ import {
   COLOR_MUTED,
   COLOR_TEXT,
   COMMAND,
+  DECK_TITLE,
   DEFAULT_CONFIG,
   DEMO_GIF_URL,
   HANDOUT_DECK_NAME,
@@ -186,7 +187,7 @@ export function buildDeckHtml(locale) {
   return `<div style="${STYLE.outer}${getDirectionStyle(lang)}">
     <div style="${STYLE.header}">
       <h1 style="${STYLE.h1}">⬢ ${SCRIPT_NAME} ⬢</h1>
-      <p style="${STYLE.subtitle}">${escapeHtml(tr('deck.subtitle'))} • v${SCRIPT_VERSION}</p>
+      <p style="${STYLE.subtitle}">${DECK_TITLE} • v${SCRIPT_VERSION}</p>
     </div>
     ${group('menu.draw', 'deck.drawDesc', [btn('fill', 'fill'), btn('fillInverse', 'fill inverse'), btn('undo', 'undo', true)])}
     ${group('menu.reveal', 'deck.revealDesc', [btn('reveal', 'reveal'), btn('conceal', 'conceal'), btn('explore', 'explore'), btn('revealPage', 'reveal page', true), btn('resetPage', 'reset page', true)])}

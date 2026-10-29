@@ -22,7 +22,9 @@ export const LEGACY_COMMANDS = {
 export const LEGACY_ARG_SEPARATOR = '&&';
 
 export const HANDOUT_HELP_NAME = 'Hexploration - Help';
-export const HANDOUT_DECK_NAME = 'Hexploration - Command Deck';
+// The deck's name is not translated, so it always matches the handout's name.
+export const DECK_TITLE = 'Command Deck';
+export const HANDOUT_DECK_NAME = `Hexploration - ${DECK_TITLE}`;
 
 export const AUTHOR_LINKS = {
   original: {

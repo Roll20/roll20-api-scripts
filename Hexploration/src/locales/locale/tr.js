@@ -1,45 +1,45 @@
 const TRANSLATION = {
   titles: {
-    ready: 'Keşif hazır.',
-    settings: 'Keşif Ayarları',
+    ready: 'Hexploration hazır.',
+    settings: 'Hexploration Ayarları',
     languages: 'Bir Dil Seçin',
     pageSettings: 'Sayfa Ayarları: {page}',
-    status: 'Keşif Durumu: {page}',
-    help: 'Keşif Komutları',
+    status: 'Hexploration Durumu: {page}',
+    help: 'Hexploration Komutları',
     confirm: 'Lütfen Onaylayın',
   },
   discovery: {
     title: 'Konum Keşfedildi',
   },
   menu: {
-    draw: 'Çizmek',
-    reveal: 'Göster ve Gizle',
+    draw: 'Çizim',
+    reveal: 'Açığa Çıkarma ve Gizleme',
     locations: 'Konumlar',
-    tools: 'Aletler',
-    layerInUse: '{layer} üzerinde yeni altıgenler çiziliyor.',
+    tools: 'Araçlar',
+    layerInUse: 'Yeni altıgenler şu katmana çiziliyor: {layer}.',
     pageSettingsHelp:
       'Bu ayarlar yalnızca bu sayfa için geçerlidir. ★ işaretli ayarlar genel ayarları geçersiz kılar.',
   },
   buttons: {
-    fill: 'Doldurmak',
-    fillInverse: 'Ters Doldurma',
+    fill: 'Doldur',
+    fillInverse: 'Ters Doldur',
     undo: 'Doldurmayı Geri Al',
-    reveal: 'Ortaya çıkarmak',
+    reveal: 'Açığa Çıkar',
     conceal: 'Gizle',
-    explore: 'Keşfetmek',
-    revealPage: 'Sayfayı Göster',
+    explore: 'Keşfet',
+    revealPage: 'Sayfayı Açığa Çıkar',
     resetPage: 'Sayfayı Sıfırla',
     mark: 'Konumu İşaretle',
-    unmark: 'İşareti kaldır',
-    name: 'Ad Hex',
+    unmark: 'İşareti Kaldır',
+    name: 'Altıgeni Adlandır',
     settings: 'Ayarlar',
     pageSettings: 'Sayfa Ayarları',
     status: 'Durum',
-    rescan: 'Yeniden tara',
-    calibrate: 'Kalibre et',
+    rescan: 'Yeniden Tara',
+    calibrate: 'Kalibre Et',
     calibrateReset: 'Kalibrasyonu Sıfırla',
     help: 'Yardım',
-    change: 'Değiştirmek',
+    change: 'Değiştir',
     menu: 'Menü',
     clearOverrides: 'Geçersiz Kılmaları Temizle',
     confirmReset: 'Evet, Tüm Altıgenleri Kaldır',
@@ -52,18 +52,18 @@ const TRANSLATION = {
     off: 'Kapalı',
     none: 'Hiçbiri',
     hexLayer: {
-      auto: 'Otomatik (varsa ön planda)',
+      auto: 'Otomatik (varsa ön plan)',
       foreground: 'ön plan katmanı',
-      objects: 'belirteç katmanı',
+      objects: 'jeton katmanı',
     },
     revealBy: {
       players: 'Oyuncu jetonları',
-      characters: 'Karakter belirteçleri',
+      characters: 'Karakter jetonları',
       all: 'Tüm jetonlar',
     },
     revealMode: {
-      clear: 'Temizlemek',
-      glimpse: 'Kısa bakış',
+      clear: 'Temizleme',
+      glimpse: 'Bakış',
     },
     announce: {
       all: 'Herkes',
@@ -71,23 +71,23 @@ const TRANSLATION = {
       off: 'Kapalı',
     },
     orientation: {
-      vertical: 'Altıgen (V)',
-      horizontal: 'Altıgen (H)',
+      vertical: 'Hex (V)',
+      horizontal: 'Hex (H)',
     },
     fillKind: {
-      fill: 'Doldurmak',
+      fill: 'Doldurma',
       fillInverse: 'Ters Doldurma',
-      conceal: 'Gizle',
+      conceal: 'Gizleme',
     },
   },
   settings: {
     language: {
       label: 'Dil',
-      desc: 'Menüler, mesajlar ve bildiriler için dil.',
+      desc: 'Menüler, mesajlar ve broşürler için dil.',
     },
     hexLayer: {
-      label: 'Altıgen Katman',
-      desc: 'Yeni altıgenlerin çizildiği yer. Otomatik, ön plan katmanını (belirteçlerin üstünde) dener ve oyun desteklemiyorsa simge katmanına geri döner.',
+      label: 'Altıgen Katmanı',
+      desc: 'Yeni altıgenlerin çizildiği yer. Otomatik, ön plan katmanını (jetonların üstünde) dener; oyun bunu desteklemiyorsa jeton katmanına geri döner.',
     },
     fillColor: {
       label: 'Dolgu Rengi',
@@ -103,14 +103,14 @@ const TRANSLATION = {
     },
     glimpseColor: {
       label: 'Bakış Rengi',
-      desc: 'Renk altıgenleri, göz atıldığında (Glimpse ortaya çıkarma modu) olarak değişir. Şeffaf bir rgba() rengi kullanın.',
+      desc: 'Altıgenlerin Bakış modunda aldığı renk. Yarı saydam bir rgba() rengi kullanın.',
     },
     strokeWidth: {
-      label: 'Kenar Genişliği',
+      label: 'Kenarlık Kalınlığı',
       desc: 'Yeni altıgenlerin ana hattının genişliği, piksel cinsinden (0 ila 20).',
     },
     maxDistance: {
-      label: 'Hex Ortaya Çıkma Mesafesi',
+      label: 'Altıgen Açığa Çıkarma Mesafesi',
       desc: 'Altıgenlere çizilirken uygulanır: Bir jetonun, görebildiği kadar uzağı ortaya çıkarabilmesi için bu sayıda altıgen içinde olması gerekir. Sınırsız olarak boş bırakın.',
     },
     revealDistance: {
@@ -122,42 +122,42 @@ const TRANSLATION = {
       desc: 'Açıkken, bir altıgen yalnızca onunla belirteç arasında örtülü bir altıgen bulunmadığında ortaya çıkar.',
     },
     revealPath: {
-      label: 'Yol Boyunca Ortaya Çıkar',
+      label: 'Yol Boyunca Açığa Çıkar',
       desc: 'Açık olduğunda, bir jetonun sürüklenirken geçtiği her altıgen (ara noktalar dahil) yalnızca durduğu yer değil, ortaya çıkar.',
     },
     revealBy: {
-      label: 'Ortaya Çıkan Tokenlar',
+      label: 'Açığa Çıkaran Jetonlar',
       desc: 'Jeton katmanındaki hangi jetonlar altıgenleri ortaya çıkarır: bir oyuncu tarafından kontrol edilen jetonlar, herhangi bir karakteri temsil eden jetonlar veya her jeton.',
     },
     revealMode: {
-      label: 'Ortaya Çıkarma Modu',
-      desc: 'Clear, görüş alanındaki altıgenleri kaldırır. Glimpse onların içini görmelerini sağlar; bir jeton onlara girdiğinde kaldırılırlar.',
+      label: 'Açığa Çıkarma Modu',
+      desc: 'Temizleme, görüş alanındaki altıgenleri kaldırır. Bakış ise onları yarı saydam yapar; içlerine bir jeton girdiğinde kaldırılırlar.',
     },
     announce: {
-      label: 'Keşifleri Duyurun',
+      label: 'Keşifleri Duyur',
       desc: 'Adlandırılmış bir konum keşfedildiğinde sohbet mesajını kimler görür?',
     },
     pingDiscoveries: {
-      label: 'Ping Keşifleri',
+      label: 'Keşifleri Pingle',
       desc: 'Açık olduğunda, oyuncular keşfedildiklerinde adlandırılmış bir konuma ping atılır.',
     },
     hideCoveredTokens: {
-      label: 'Kapalı Jetonları Gizle',
+      label: 'Örtülü Jetonları Gizle',
       desc: 'Roll20 altıgenlerin üzerine isimleri, çubukları ve auraları çizer. Açıkken, kapalı bir altıgen altındaki jetonların oyuncuların görebileceği adları vardır, çubuklar ve auralar kapatılır ve açığa çıktıklarında tekrar açılır.',
     },
   },
   status: {
     engine: 'Oyun motoru',
     grid: 'Izgara',
-    layer: 'Altıgen katman',
+    layer: 'Altıgen katmanı',
     hexes: 'Altıgenler',
     named: 'Adlandırılmış altıgenler',
-    icons: 'Konum belirteçleri',
-    glimpsed: 'Kısa bir bakış altıgenler',
-    pending: 'Doldurulmayı bekleyen yerler',
+    icons: 'Konum jetonları',
+    glimpsed: 'Bakış altındaki altıgenler',
+    pending: 'Doldurma bekleyen konumlar',
     calibrated: 'Kalibre edildi',
     overrides: 'Sayfa geçersiz kılmaları',
-    undo: 'Geri alma seçeneği mevcut',
+    undo: 'Geri alma mevcut',
   },
   messages: {
     filled:
@@ -166,7 +166,7 @@ const TRANSLATION = {
     revealedPage: 'Sayfadaki her altıgen ortaya çıktı ({count}).',
     confirmReset:
       '"{page}" ({count}) öğesindeki her altıgen kaldırılsın mı? Konum belirteçleri, belirteç katmanına geri döner. Geri alma işlemi bunu tersine çeviremez.',
-    resetPage: 'Onaltılıklar sayfadan kaldırıldı: {count}.',
+    resetPage: 'Sayfadan kaldırılan altıgenler: {count}.',
     undone:
       'Son doldurma geri alındı. Kaldırılan altıgenler: {removed}. Yeniden biçimlendirilen altıgenler geri yüklendi: {restored}.',
     named: '"{name}" adlı altıgenler: {count}.',
@@ -181,12 +181,12 @@ const TRANSLATION = {
       'Izgara kalibre edildi (sütun adımı {colStep}px, satır adımı {rowStep}px). Yeniden tarama: {kept} tutuldu, {moved} yeniden dosyalandı, {adopted} kabul edildi.',
     calibrationReset:
       'Kalibrasyon kaldırıldı. Yeniden tarama: {kept} tutuldu, {moved} yeniden dosyalandı, {adopted} kabul edildi.',
-    journalRebuilt: '"{help}" ve "{deck}" bildirileri yeniden oluşturuldu.',
+    journalRebuilt: '"{help}" ve "{deck}" broşürleri yeniden oluşturuldu.',
     migrated:
-      'Heexploration 1.x hex haritalarınız yükseltildi. Bu oyun Eski bir oyundan kopyalanmışsa, her altıgen harita sayfasında Yeniden Taramayı çalıştırın.',
+      "Hexploration 1.x altıgen haritalarınız yükseltildi. Bu oyun bir Legacy oyunundan kopyalandıysa, her altıgen harita sayfasında Yeniden Tara'yı çalıştırın.",
     pruned:
-      "Artık mevcut olmayan ve unutulan kayıtlı altıgenler: {dropped}. Bu oyun veya sayfa kopyalandıysa, altıgenleri tekrar almak için sayfada Yeniden Tarama'yı çalıştırın.",
-    readyHint: 'Menüye !hexploration yazın veya "Hexploration - Command Deck" broşürünü açın.',
+      "Artık var olmayan ve unutulan kayıtlı altıgenler: {dropped}. Bu oyun veya sayfa kopyalandıysa, altıgenlerini yeniden bulmak için sayfada Yeniden Tara'yı çalıştırın.",
+    readyHint: 'Menü için !hexploration yazın veya "Hexploration - Command Deck" broşürünü açın.',
   },
   warnings: {
     foregroundUnavailable:
@@ -223,9 +223,9 @@ const TRANSLATION = {
     unknownCommand: 'Komutları listelemek için !hexploration help yazın.',
     unknownSetting: 'Her ayarı görmek için !hexploration set yazın.',
     calibrateNeedsTokens:
-      'Bir altıgenin ortasına bir jeton tutturun ve onu seçin. Onaltılı boyutu da düzeltmek için aynı satırdaki (Hex V) veya sütundaki (Hex H) komşu altıgenlere tutturulmuş ikinci bir jeton seçin.',
+      'Bir altıgenin ortasına bir jeton tutturun ve onu seçin. Altıgen boyutunu da düzeltmek için aynı satırdaki (Hex V) veya sütundaki (Hex H) komşu altıgene tutturulmuş ikinci bir jeton seçin.',
     calibrateFailed:
-      'İki jetonun aynı satırda (Hex V) veya aynı sütunda (Hex H) ve en az bir onaltılık aralıkta olması gerekir.',
+      'İki jetonun aynı satırda (Hex V) veya aynı sütunda (Hex H) ve en az bir altıgen aralıkla olması gerekir.',
     unexpected: 'Ayrıntılar API konsolu günlüğündedir.',
   },
   help: {
@@ -246,21 +246,20 @@ const TRANSLATION = {
     pageSet: 'Yalnızca geçerli sayfadaki bir gösterme ayarını geçersiz kılın.',
     pageClear: 'Geçerli sayfanın geçersiz kılmalarını kaldırın.',
     rescan:
-      'Örneğin bir sayfayı veya oyunu kopyaladıktan sonra sayfanın onaltılı listesini yeniden oluşturun.',
+      'Sayfanın altıgen listesini yeniden oluşturun; örneğin bir sayfayı veya oyunu kopyaladıktan sonra.',
     calibrate:
       'Altıgen ızgarayı, altıgen merkezlerine tutturulmuş bir veya iki seçilmiş jetonla hizalayın.',
     calibrateReset: 'Geçerli sayfanın kalibrasyonunu kaldırın.',
-    status: "Heexploration'ın mevcut sayfa hakkında bildiklerini gösterin.",
-    journal: 'Yardım ve Komut Paneli bildirilerini yeniden oluşturun.',
+    status: "Hexploration'ın geçerli sayfa hakkında bildiklerini gösterin.",
+    journal: 'Yardım ve Command Deck broşürlerini yeniden oluşturun.',
     help: 'Bu listeyi göster.',
     handout: 'Talimatların tamamı "{name}" broşüründe yer almaktadır.',
   },
   deck: {
-    subtitle: 'Komut Güvertesi',
     drawDesc:
-      'Bir alanın etrafına şekiller çizin, bunları seçin ve ardından doldurun. Geri al, son dolguyu tersine çevirir.',
+      "Bir alanın çevresine şekiller çizin, onları seçin ve Doldur'a tıklayın. Doldurmayı Geri Al, son doldurmayı geri alır.",
     revealDesc:
-      'Tekrar ortaya çıkarmak veya kaplamak için altıgenleri, şekilleri veya jetonları seçin. Seçili tokenların etrafındaki gösterimleri sanki hareket etmişler gibi keşfedin.',
+      'Altıgenleri, şekilleri veya jetonları açığa çıkarmak ya da yeniden örtmek için seçin. Keşfet, seçili jetonların çevresini sanki oraya yeni gitmişler gibi açığa çıkarır.',
     locationsDesc:
       'Altıgenlerin altındaki konumlar olarak gizlemek için belirteçleri seçin. Bir altıgeni adlandırmak için altıgenleri veya belirteçleri seçin.',
     toolsDesc:
@@ -273,7 +272,7 @@ const TRANSLATION = {
     footer: 'Tek tıklamayla kontroller için "{deck}" broşürünü kullanın.',
     overview: {
       heading: 'Genel Bakış',
-      body: 'Heexploration, opak altıgenlere sahip bir altıgen haritayı kapsar. Grup ilerledikçe içinden geçtikleri altıgenler (ve isterseniz etraflarındaki altıgenler) kaldırılır, böylece harita her seferinde bir altıgen olarak ortaya çıkar. Gizli konumlar altıgenlerin altına yerleştirilebilir ve bulunduğunda duyurulur. Jumpgate ve Legacy oyunlarında, her boyuttaki Hex (V) ve Hex (H) ızgaralarında çalışır.',
+      body: 'Hexploration, bir altıgen haritayı opak altıgenlerle kaplar. Grup ilerledikçe içinden geçtiği altıgenler (ve isterseniz çevresindeki altıgenler) kaldırılır; böylece harita altıgen altıgen ortaya çıkar. Gizli konumlar altıgenlerin altına yerleştirilebilir ve bulunduklarında duyurulur. Jumpgate ve Legacy oyunlarında, her boyuttaki Hex (V) ve Hex (H) ızgaralarında çalışır.',
       demo: "Kısa bir demo izleyin (versiyon 1'den)",
     },
     quickStart: {
@@ -281,7 +280,7 @@ const TRANSLATION = {
       steps: [
         'Izgarası Hex (V) veya Hex (H) olarak ayarlanmış bir sayfayı açın.',
         'Gizlenecek alanın çevresine bir veya daha fazla şekil (çokgen, dikdörtgen, elips veya serbest çizim) çizin.',
-        "Şekilleri seçin ve Komut Panelinde Doldur'a tıklayın (veya !hexploration fill yazın). Şekillerin yerini altıgenler alır.",
+        "Şekilleri seçin ve Command Deck'te Doldur'a tıklayın (veya !hexploration fill yazın). Şekiller altıgenlerle değiştirilir.",
         "İsteğe bağlı: doldurmadan önce önemli yerler için jetonları seçin ve Konumu İşaretle'ye tıklayın. Altıgenlerin altında gizlenirler ve keşfedildiklerinde duyurulurlar.",
         'Bir oyuncu jetonunu taşıyın. İçinden geçtiği her altıgen ve Görüş Mesafesindeki altıgenler ortaya çıkar.',
       ],
@@ -296,13 +295,13 @@ const TRANSLATION = {
     revealing: {
       heading: 'Açığa Çıkarma Nasıl Çalışır?',
       points: [
-        'Yalnızca jeton katmanındaki jetonlar altıgenleri ortaya çıkarır. Hangi jetonların sayılacağı, Ortaya Çıkarılan Jetonlar tarafından belirlenir: varsayılan olarak oyuncu jetonları, böylece GM, haritayı açığa çıkarmadan canavarları hareket ettirebilir.',
-        'Bir jeton, kapsadığı her altıgeni (büyük jetonlar birkaçını kapsar) ve Yol Boyunca Göster açıkken, ara noktalar da dahil olmak üzere sürüklendiği rotadaki her altıgeni ortaya çıkarır.',
-        'Görüş Mesafesi, bu altıgenlerin her birinin etrafındaki altıgenleri ortaya çıkarır. Görüş Hattı açıkken, bir altıgen yalnızca arada kapalı bir altıgen bulunmadığında ortaya çıkar.',
-        'Hex Reveal Distance, altıgenler çizildikçe depolanır. Bu büyüler, bir jetonun görebileceği kadar uzağa, yalnızca o kadar çok büyünün içinden ortaya çıkar. Arkalarında olanı gizleyen dağlar veya ormanlar için kullanın.',
-        'Bakış modunda, görüş alanındaki altıgenler kaybolmak yerine şeffaf hale gelir ve içlerine bir jeton girdiğinde kaldırılır.',
-        'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
-        "API, diğer modların yaptığı hareketleri raporlamaz. TokenMod hareketleri otomatik olarak alınır; diğer modlar için belirteçleri seçin ve Araştır'a tıklayın veya kendi modunuzdan Heexploration.revealAround(token) öğesini çağırın.",
+        'Altıgenleri yalnızca jeton katmanındaki jetonlar açığa çıkarır. Hangi jetonların sayılacağını Açığa Çıkaran Jetonlar ayarı belirler: varsayılan olarak oyuncu jetonları; böylece GM haritayı açmadan canavarları hareket ettirebilir.',
+        'Bir jeton kapladığı her altıgeni (büyük jetonlar birkaç altıgen kaplar) ve Yol Boyunca Açığa Çıkar açıkken, ara noktalar dahil sürüklendiği rotadaki her altıgeni açığa çıkarır.',
+        'Görüş Mesafesi, bu altıgenlerin her birinin çevresindeki altıgenleri açığa çıkarır. Görüş Hattı açıkken bir altıgen yalnızca arada örtülü bir altıgen yoksa açığa çıkar.',
+        'Altıgen Açığa Çıkarma Mesafesi, altıgenler çizilirken onlara kaydedilir. Bu altıgenler, bir jeton ne kadar uzağı görürse görsün, yalnızca o kadar altıgen mesafeden açığa çıkar. Arkasındakini gizleyen dağlar veya ormanlar için kullanın.',
+        'Bakış modunda, görüş alanındaki altıgenler kaybolmak yerine yarı saydam olur ve içlerine bir jeton girdiğinde kaldırılır.',
+        'Roll20, jeton adlarını, çubuklarını ve auralarını altıgenlerin üzerine çizer. Örtülü Jetonları Gizle açıkken, örtülü bir altıgenin altındaki jetonun oyunculara görünen adı, çubukları ve auraları açığa çıkana kadar kapatılır; böylece gizli canavarlar kendilerini belli etmez. Jeton örtülüyken bunlardan birini açarsanız gizli kalır ve jeton açığa çıktığında açılır.',
+        "API, diğer modların yaptığı hareketleri bildirmez. TokenMod hareketleri otomatik olarak algılanır; diğer modlar için jetonları seçip Keşfet'e tıklayın veya kendi modunuzdan Hexploration.revealAround(token) çağırın.",
       ],
     },
     locations: {
@@ -311,14 +310,14 @@ const TRANSLATION = {
         'Konumu İşaretle, seçilen jetonları gizli konumlara dönüştürür. Zaten altıgen altında olan bir jeton hemen gizlenir; aksi takdirde onu kapsayan bir sonraki dolgu tarafından gizlenir.',
         "Beyaz kule durum işaretçisine sahip jetonlar da, sürüm 1'de olduğu gibi, doldurduğunuzda konum olarak kabul edilir.",
         'Gizli konum belirteçleri GM katmanına taşınır. Altıgenleri ortaya çıktığında, adlarının gösterildiği simge katmanına geri dönerler ve keşifleri duyurulur.',
-        "Name Hex, onaltılıya belirteci olmayan bir ad verir. İsim, GM katmanında bir etiket olarak GM'ye gösterilir ve altıgen ortaya çıktığında duyurulur.",
-        "Announce Discoveries, duyuruyu herkesin mi, yalnızca GM'nin mi yoksa hiç kimsenin mi görmeyeceğini seçer. Ping Discoveries ayrıca oyuncuların görünümünü konuma taşır.",
+        "Altıgeni Adlandır, bir altıgene jeton olmadan ad verir. Ad, GM katmanında bir etiket olarak GM'ye gösterilir ve altıgen açığa çıktığında duyurulur.",
+        "Keşifleri Duyur, duyuruyu herkesin mi, yalnızca GM'nin mi yoksa hiç kimsenin mi göreceğini seçer. Keşifleri Pingle ayrıca oyuncuların görünümünü konuma taşır.",
       ],
     },
     settings: {
       heading: 'Ayarlar',
       intro:
-        '!hexploration setiyle (veya Ayarlar düğmesiyle) ayarları değiştirin. Hex Katmanı, Ortaya Çıkan Tokenlar ve Dil ayrıca Modun ayarlar sayfasından da ayarlanabilir.',
+        "Ayarları !hexploration set ile (veya Ayarlar düğmesiyle) değiştirin. Altıgen Katmanı, Açığa Çıkaran Jetonlar ve Dil, Mod'un ayarlar sayfasından da ayarlanabilir.",
       colKey: 'Anahtar',
       colName: 'Ayar',
       colDesc: 'Tanım',
@@ -327,10 +326,10 @@ const TRANSLATION = {
     jumpgate: {
       heading: 'Jumpgate ve Eski',
       points: [
-        'Heexploration, oyunun hangi motoru kullandığını bulur ve ona uygun şekli çizer. Her iki düzenleyicide de çizilen şekiller doldurulabilir.',
-        'Hex Layer Auto (Otomatik) olarak ayarlandığında, altıgenler ön plan katmanında jetonların üzerine çizilir, böylece oyuncular altta ne olduğunu göremez. Ön plan katmanı mevcut değilse bunun yerine simge katmanı kullanılır.',
-        "Jumpgate, Eski altıgenlerden biraz farklı bir şekle sahip olan matematiksel olarak düzenli altıgenler çizer. Altıgenler sayfanın ızgarasıyla aynı hizada değilse, altıgen merkeze bir jeton tutturun, onu seçin ve Kalibre Et'e tıklayın. Onaltılı boyutu da düzeltmek için aynı satırdaki (Hex V) veya sütundaki (Hex H) komşu altıgenlerden iki jeton seçin.",
-        "Bir sayfa veya oyun kopyalandığında altıgenleri yeni kimlikler alır. Bunları ad etiketleri ve konum belirteçleriyle birlikte yeniden almak için sayfada Yeniden Tarama'yı çalıştırın.",
+        'Hexploration, oyunun hangi motoru kullandığını belirler ve uygun türde şekil çizer. Her iki düzenleyicide çizilen şekiller doldurulabilir.',
+        'Altıgen Katmanı Otomatik olarak ayarlandığında altıgenler ön plan katmanında, jetonların üzerine çizilir; böylece oyuncular altında ne olduğunu göremez. Ön plan katmanı kullanılamıyorsa bunun yerine jeton katmanı kullanılır.',
+        "Jumpgate matematiksel olarak düzgün altıgenler çizer; bunların şekli Legacy altıgenlerinden biraz farklıdır. Altıgenler sayfanın ızgarasıyla hizalı değilse bir altıgenin merkezine bir jeton tutturun, onu seçin ve Kalibre Et'e tıklayın. Altıgen boyutunu da düzeltmek için aynı satırdaki (Hex V) veya sütundaki (Hex H) komşu altıgenlerde iki jeton seçin.",
+        "Bir sayfa veya oyun kopyalandığında altıgenleri yeni kimlikler alır. Onları ad etiketleri ve konum jetonlarıyla birlikte yeniden bulmak için sayfada Yeniden Tara'yı çalıştırın.",
       ],
     },
     upgrading: {
@@ -338,8 +337,8 @@ const TRANSLATION = {
       points: [
         "Sürüm 2'nin artık PathMath, MatrixMath, Vector Math veya HTML Builder'a ihtiyacı yok. Başka bir mod kullanmadığı sürece bunları kaldırabilirsiniz.",
         'Mevcut altıgen haritalar, adlar, konum belirteçleri ve ayarlar ilk başlangıçta otomatik olarak yükseltilir.',
-        'Heexploration_menu makrosu da dahil olmak üzere sürüm 1 komutları hala çalışıyor.',
-        'Sürüm 1, bir karakteri temsil eden herhangi bir jetonun altıgenleri ortaya çıkarmasına izin veriyor. Bu davranışı korumak için Ortaya Çıkan Jetonları Karakter jetonlarına ayarlayın.',
+        'Hexploration_menu makrosu dahil sürüm 1 komutları hâlâ çalışır.',
+        "Sürüm 1, bir karakteri temsil eden her jetonun altıgenleri açığa çıkarmasına izin veriyordu. Bu davranışı korumak için Açığa Çıkaran Jetonlar'ı Karakter jetonları olarak ayarlayın.",
       ],
       colV1: 'Sürüm 1 komutu',
       colV2: 'Sürüm 2 komutu',
@@ -347,23 +346,23 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Sorun giderme',
       points: [
-        'Bir jeton hareket ettiğinde hiçbir şey olmuyor: jetonun jeton katmanında olduğunu, Ortaya Çıkan Jetonlarla eşleştiğini ve sayfada altıgenlerin (!hexploration durumu) bulunduğunu kontrol edin.',
-        "Altıgenler ızgaradan kaydırılmıştır: Kalibre Et'i kullanın, ardından haritadaki birkaç altıgeni bir jetonla kontrol edin.",
-        "Bir sayfayı veya oyunu kopyaladıktan sonra Hexes'in görüntülenmesi durduruldu: Sayfada Yeniden Tarama'yı çalıştırın.",
-        'Fill, alanda altıgen merkezinin bulunmadığını söylüyor: şeklin en az bir altıgen merkezi içermesi gerekiyor.',
+        'Bir jeton hareket ettiğinde hiçbir şey olmuyor: jetonun jeton katmanında olduğunu ve Açığa Çıkaran Jetonlar ayarına uyduğunu, sayfada da altıgenler bulunduğunu (!hexploration status) kontrol edin.',
+        "Altıgenler ızgaradan kaymış: Kalibre Et'i kullanın, ardından haritanın farklı yerlerindeki birkaç altıgeni bir jetonla kontrol edin.",
+        "Bir sayfayı veya oyunu kopyaladıktan sonra altıgenler açığa çıkmıyor: sayfada Yeniden Tara'yı çalıştırın.",
+        'Doldur, alanda altıgen merkezi olmadığını söylüyor: şeklin en az bir altıgenin merkezini içermesi gerekir.',
         'Başka bir şey için API konsolu günlüğünü kontrol edin ve yardım isterken mesajlarını ekleyin.',
       ],
     },
     languages: {
       heading: 'Diller',
-      body: '!hexploration set diliyle bir dil seçin. Mevcut diller:',
+      body: '!hexploration set language ile bir dil seçin. Mevcut diller:',
       colLanguage: 'Dil',
       colNative: 'Yerel ad',
       colCode: 'Kod',
     },
     credits: {
       heading: 'Kredi',
-      original: 'Orijinal mod',
+      original: 'Orijinal modun yapımcısı',
       maintainer: 'Versiyon 2 tarafından sürdürülen',
       marketplace: "Ada'nın sanat paketleri Roll20 Marketplace'te",
       support:

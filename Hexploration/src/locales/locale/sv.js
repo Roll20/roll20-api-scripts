@@ -1,37 +1,37 @@
 const TRANSLATION = {
   titles: {
     ready: 'Hexploration är redo.',
-    settings: 'Heexploration Inställningar',
+    settings: 'Hexploration-inställningar',
     languages: 'Välj ett språk',
     pageSettings: 'Sidinställningar: {page}',
-    status: 'Hexploration Status: {page}',
-    help: 'Hexploration kommandon',
+    status: 'Hexploration-status: {page}',
+    help: 'Hexploration-kommandon',
     confirm: 'Vänligen bekräfta',
   },
   discovery: {
     title: 'Plats upptäckt',
   },
   menu: {
-    draw: 'Dra',
-    reveal: 'Avslöja och göm',
+    draw: 'Rita',
+    reveal: 'Avslöja och dölj',
     locations: 'Platser',
     tools: 'Verktyg',
-    layerInUse: 'Nya sexkanter ritas på {layer}.',
+    layerInUse: 'Nya hexar ritas på {layer}.',
     pageSettingsHelp:
       'Dessa inställningar gäller endast för denna sida. Inställningar markerade ★ åsidosätter de globala inställningarna.',
   },
   buttons: {
-    fill: 'Fylla',
+    fill: 'Fyll',
     fillInverse: 'Omvänd fyllning',
-    undo: 'Ångra Fyll',
+    undo: 'Ångra fyllning',
     reveal: 'Avslöja',
-    conceal: 'Dölja',
+    conceal: 'Dölj',
     explore: 'Utforska',
-    revealPage: 'Avslöja sidan',
+    revealPage: 'Avslöja sida',
     resetPage: 'Återställ sida',
     mark: 'Markera plats',
     unmark: 'Avmarkera',
-    name: 'Namn Hex',
+    name: 'Namnge hex',
     settings: 'Inställningar',
     pageSettings: 'Sidinställningar',
     status: 'Status',
@@ -53,12 +53,12 @@ const TRANSLATION = {
     none: 'Ingen',
     hexLayer: {
       auto: 'Auto (förgrund om tillgängligt)',
-      foreground: 'förgrundsskikt',
-      objects: 'symbollager',
+      foreground: 'förgrundslagret',
+      objects: 'tokenlagret',
     },
     revealBy: {
-      players: 'Spelarpoletter',
-      characters: 'Karaktärspoletter',
+      players: 'Spelartokens',
+      characters: 'Rollpersonstokens',
       all: 'Alla tokens',
     },
     revealMode: {
@@ -75,9 +75,9 @@ const TRANSLATION = {
       horizontal: 'Hex (H)',
     },
     fillKind: {
-      fill: 'Fylla',
+      fill: 'Fyll',
       fillInverse: 'Omvänd fyllning',
-      conceal: 'Dölja',
+      conceal: 'Dölj',
     },
   },
   settings: {
@@ -86,12 +86,12 @@ const TRANSLATION = {
       desc: 'Språk för menyer, meddelanden och åhörarkopior.',
     },
     hexLayer: {
-      label: 'Hexlager',
+      label: 'Lager för hexar',
       desc: 'Där nya hexar ritas. Auto provar förgrundslagret (ovanför tokens) och faller tillbaka till tokenlagret om spelet inte stöder det.',
     },
     fillColor: {
       label: 'Fyllningsfärg',
-      desc: 'Färg på nya sexkanter. Använd rgba() för genomskinliga hexadecimaler, till exempel rgba(0,0,0,0.8).',
+      desc: 'Färg på nya hexar. Använd rgba() för genomskinliga hexar, till exempel rgba(0,0,0,0.8).',
     },
     strokeColor: {
       label: 'Kantfärg',
@@ -102,15 +102,15 @@ const TRANSLATION = {
       desc: 'Färgen på namnetiketterna endast för GM på namngivna sexkanter.',
     },
     glimpseColor: {
-      label: 'Glimt färg',
-      desc: 'Hexfärgade färger ändras till när de skymtas (Glimpse-avslöjningsläge). Använd en genomskinlig rgba()-färg.',
+      label: 'Glimtfärg',
+      desc: 'Färgen som hexar byter till när de skymtas (avslöjandeläget Glimt). Använd en genomskinlig rgba()-färg.',
     },
     strokeWidth: {
       label: 'Kantbredd',
       desc: 'Bredden på konturerna av nya hex, i pixlar (0 till 20).',
     },
     maxDistance: {
-      label: 'Hexavslöjande avstånd',
+      label: 'Avslöjandeavstånd för hexar',
       desc: 'Tillämpas på hexar när de ritas: en token måste finnas inom så många hexes för att avslöja dem, hur långt den än kan se. Lämna tomt utan gräns.',
     },
     revealDistance: {
@@ -118,7 +118,7 @@ const TRANSLATION = {
       desc: 'Hur många hexar runt en rörlig token som avslöjas (0 till 20). 0 avslöjar endast de hexar som token passerar igenom.',
     },
     lineOfSight: {
-      label: 'Synlinje',
+      label: 'Siktlinje',
       desc: 'När den är på avslöjas en hex endast om ingen täckt hex ligger mellan den och token.',
     },
     revealPath: {
@@ -130,33 +130,33 @@ const TRANSLATION = {
       desc: 'Vilka tokens på tokenlagret avslöjar hexes: tokens som kontrolleras av en spelare, tokens som representerar vilken karaktär som helst eller varje token.',
     },
     revealMode: {
-      label: 'Avslöjande läge',
-      desc: 'Clear tar bort sexkanter inom synhåll. Glimpse gör dem genomskinliga istället; de tas bort när en token kommer in i dem.',
+      label: 'Avslöjandeläge',
+      desc: 'Rensa tar bort hexar inom synhåll. Glimt gör dem i stället genomskinliga; de tas bort när en token går in i dem.',
     },
     announce: {
       label: 'Tillkännage upptäckter',
       desc: 'Vem ser chattmeddelandet när en namngiven plats upptäcks.',
     },
     pingDiscoveries: {
-      label: 'Ping upptäckter',
+      label: 'Pinga upptäckter',
       desc: 'När den är på pingas spelare till en namngiven plats när den upptäcks.',
     },
     hideCoveredTokens: {
-      label: 'Dölj täckta polletter',
+      label: 'Dölj täckta tokens',
       desc: 'Roll20 ritar namn, staplar och auror ovanför hexen. När de är på, har tokens under en täckt sexkant sitt spelare-synliga namn, staplar och auror avstängda och påslagna igen när de avslöjas.',
     },
   },
   status: {
     engine: 'Spelmotor',
     grid: 'Rutnät',
-    layer: 'Hexskikt',
-    hexes: 'Hex',
+    layer: 'Hexlager',
+    hexes: 'Hexar',
     named: 'Namngivna hexar',
-    icons: 'Platsskyltar',
-    glimpsed: 'Glimmade hexar',
+    icons: 'Platstokens',
+    glimpsed: 'Genomskinliga hexar',
     pending: 'Platser som väntar på fyllning',
     calibrated: 'Kalibrerad',
-    overrides: 'Sida åsidosätter',
+    overrides: 'Sidåsidosättningar',
     undo: 'Ångra tillgängligt',
   },
   messages: {
@@ -167,11 +167,11 @@ const TRANSLATION = {
       'Ta bort varje hex från "{page}" ({count})? Platssymboler återgår till tokenlagret. Ångra kan inte ångra detta.',
     resetPage: 'Hexen har tagits bort från sidan: {count}.',
     undone:
-      'Senaste fyllningen har ångrats. Hex borttagna: {removed}. Återställda hexadecimaler: {restored}.',
+      'Senaste fyllningen ångrad. Borttagna hexar: {removed}. Omstylade hexar som återställts: {restored}.',
     named: 'Hex med namnet "{name}": {count}.',
     unnamed: 'Namn raderade: {count}.',
     marked:
-      'Platser dolda i befintliga hexadecimaler: {attached}. Väntar på nästa fyllning som täcker dem: {pending}.',
+      'Platser dolda i befintliga hexar: {attached}. Väntar på nästa fyllning som täcker dem: {pending}.',
     unmarked: 'Tokens som inte längre är platser: {count}.',
     settingChanged: '{setting} inställd på {value}.',
     rescanned:
@@ -182,11 +182,11 @@ const TRANSLATION = {
       'Kalibrering har tagits bort. Skanna om: behöll {kept}, arkiverade på nytt {moved}, antog {adopted}.',
     journalRebuilt: '"{help}" och "{deck}" har byggts om.',
     migrated:
-      'Dina Hexploration 1.x hex-kartor har uppgraderats. Om det här spelet kopierades från ett Legacy-spel, kör Rescan på varje hex-kartasida.',
+      'Dina hexkartor från Hexploration 1.x har uppgraderats. Om det här spelet kopierades från ett Legacy-spel kör du Skanna igen på varje sida med en hexkarta.',
     pruned:
-      'Sparade hexar som inte längre finns och glömdes bort: {dropped}. Om det här spelet eller sidan kopierades, kör Rescan på sidan för att plocka upp dess hexes igen.',
+      'Sparade hexar som inte längre finns och har glömts bort: {dropped}. Om det här spelet eller sidan kopierades kör du Skanna igen på sidan för att hitta dess hexar igen.',
     readyHint:
-      'Skriv !hexploration för menyn, eller öppna utdelningen "Hexploration - Command Deck".',
+      'Skriv !hexploration för menyn, eller öppna handouten "Hexploration - Command Deck".',
   },
   warnings: {
     foregroundUnavailable:
@@ -225,7 +225,7 @@ const TRANSLATION = {
     calibrateNeedsTokens:
       'Fäst en token i mitten av en hex och välj den. Välj en andra token som fästs på en intilliggande hex i samma rad (Hex V) eller kolumn (Hex H) för att korrigera hexstorleken också.',
     calibrateFailed:
-      'Två tokens måste vara i samma rad (Hex V) eller samma kolumn (Hex H), med minst en hexadecimal isär.',
+      'Två tokens måste ligga i samma rad (Hex V) eller samma kolumn (Hex H), minst en hex från varandra.',
     unexpected: 'Detaljer finns i API-konsolloggen.',
   },
   help: {
@@ -248,16 +248,15 @@ const TRANSLATION = {
     calibrate: 'Rada hex-rutnätet med en eller två utvalda tokens fästa till hex-centrum.',
     calibrateReset: 'Ta bort den aktuella sidans kalibrering.',
     status: 'Visa vad Hexploration vet om den aktuella sidan.',
-    journal: 'Bygg om hjälp- och kommandodäcken.',
+    journal: 'Bygg om handouterna Help och Command Deck.',
     help: 'Visa den här listan.',
     handout: 'Fullständiga instruktioner finns i "{name}" handout.',
   },
   deck: {
-    subtitle: 'Kommandodäck',
     drawDesc:
-      'Rita former runt ett område, markera dem och fyll sedan. Ångra vänder den senaste fyllningen.',
+      'Rita former runt ett område, markera dem och fyll sedan. Ångra fyllning tar bort den senaste fyllningen.',
     revealDesc:
-      'Välj hex, former eller tokens för att avslöja eller täcka dem igen. Utforska avslöjar runt utvalda tokens som om de hade rört sig.',
+      'Välj hexar, former eller tokens för att avslöja dem eller täcka dem igen. Utforska avslöjar runt valda tokens som om de hade flyttats dit.',
     locationsDesc:
       'Välj tokens för att dölja dem som platser under hex. Välj hex eller token för att namnge en hex.',
     toolsDesc:
@@ -278,9 +277,9 @@ const TRANSLATION = {
       steps: [
         'Öppna en sida vars rutnät är inställt på Hex (V) eller Hex (H).',
         'Rita en eller flera former (polygon, rektangel, ellips eller frihand) runt området för att dölja.',
-        'Välj formerna och klicka på Fyll i kommandodäcket (eller skriv !hexploration fill). Formerna ersätts av hexar.',
+        'Markera formerna och klicka på Fyll i Command Deck (eller skriv !hexploration fill). Formerna ersätts av hexar.',
         'Valfritt: innan du fyller, välj tokens för viktiga platser och klicka på Markera plats. De är gömda under hexen och tillkännages när de upptäcks.',
-        'Flytta en spelartoken. Varje hex den passerar igenom, och hexen inom dess siktavstånd, avslöjas.',
+        'Flytta en spelartoken. Varje hex den passerar, och hexarna inom dess Siktavstånd, avslöjas.',
       ],
     },
     commands: {
@@ -293,13 +292,13 @@ const TRANSLATION = {
     revealing: {
       heading: 'Hur avslöjande fungerar',
       points: [
-        'Endast polletter på tokenlagret avslöjar sexkanter. Vilket antal tokens bestäms av Tokens That Reveal: spelartokens som standard, så GM kan flytta monster utan att avslöja kartan.',
-        'En token avslöjar varje hex den täcker (stora tokens täcker flera) och, med Reveal Along Path på, varje hex på rutten den släpades längs, inklusive waypoints.',
-        'Sight Distance avslöjar hexen runt var och en av dessa hexes. Med Line of Sight på avslöjas en hex endast om ingen täckt hex ligger emellan.',
-        'Hexavslöjande avstånd lagras på hexar när de ritas. Dessa hexes avslöjas bara inifrån så många hexes, hur långt en token än kan se. Använd den för berg eller skogar som döljer vad som finns bakom dem.',
-        'I Glimpse-läget blir hexar inom synhåll genomskinliga istället för att försvinna och tas bort när en token kommer in i dem.',
-        'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
-        'API:et rapporterar inte rörelser gjorda av andra mods. TokenMod-drag plockas upp automatiskt; för andra moddar, välj tokens och klicka på Utforska, eller ring Hexploration.revealAround(token) från din egen mod.',
+        'Endast tokens på tokenlagret avslöjar hexar. Vilka tokens som räknas bestäms av Tokens som avslöjar: spelartokens som standard, så att GM kan flytta monster utan att avslöja kartan.',
+        'En token avslöjar varje hex den täcker (stora tokens täcker flera) och, med Avslöja längs vägen på, varje hex på rutten den drogs längs, inklusive mellanpunkter.',
+        'Siktavstånd avslöjar hexarna runt var och en av dessa hexar. Med Siktlinje på avslöjas en hex bara om ingen täckt hex ligger emellan.',
+        'Avslöjandeavstånd för hexar lagras på hexarna när de ritas. Dessa hexar avslöjas bara inom så många hexars avstånd, hur långt en token än kan se. Använd det för berg eller skogar som döljer vad som finns bakom dem.',
+        'I läget Glimt blir hexar inom synhåll genomskinliga i stället för att försvinna, och de tas bort när en token går in i dem.',
+        'Roll20 ritar tokennamn, staplar och auror ovanpå hexarna. Med Dölj täckta tokens på stängs det namn, de staplar och de auror som spelarna kan se av för en token under en täckt hex tills den avtäcks, så att dolda monster inte avslöjar sig. Om du slår på något av dem medan token är täckt förblir det dolt och slås på när token avtäcks.',
+        'API:et rapporterar inte förflyttningar som görs av andra moddar. TokenMod-förflyttningar fångas upp automatiskt; för andra moddar markerar du tokens och klickar på Utforska, eller anropar Hexploration.revealAround(token) från din egen mod.',
       ],
     },
     locations: {
@@ -308,14 +307,14 @@ const TRANSLATION = {
         'Markera plats förvandlar de valda tokens till dolda platser. En token redan under en hex döljs direkt; annars döljs den av nästa fyllning som täcker den.',
         'Tokens med statusmarkören för det vita tornet behandlas också som platser när du fyller, som i version 1.',
         'Dolda platssymboler flyttas till GM-lagret. När deras hex avslöjas återvänder de till tokenlagret med deras namn visat, och deras upptäckt tillkännages.',
-        'Namn Hex ger en hex ett namn utan en token. Namnet visas för GM som en etikett på GM-lagret och meddelas när hexen avslöjas.',
-        'Announce Discoveries väljer om alla, bara GM, eller ingen ser tillkännagivandet. Ping Discoveries flyttar också spelarnas vy till platsen.',
+        'Namnge hex ger en hex ett namn utan en token. Namnet visas för GM som en etikett på GM-lagret och tillkännages när hexen avslöjas.',
+        'Tillkännage upptäckter väljer om alla, bara GM eller ingen ser tillkännagivandet. Pinga upptäckter flyttar också spelarnas vy till platsen.',
       ],
     },
     settings: {
       heading: 'Inställningar',
       intro:
-        'Ändra inställningar med !hexploration set (eller knappen Inställningar). Hexlager, Tokens That Reveal och Language kan också ställas in på modens inställningssida.',
+        'Ändra inställningar med !hexploration set (eller knappen Inställningar). Lager för hexar, Tokens som avslöjar och Språk kan också ställas in på modens inställningssida.',
       colKey: 'Nyckel',
       colName: 'Miljö',
       colDesc: 'Beskrivning',
@@ -325,18 +324,18 @@ const TRANSLATION = {
       heading: 'Jumpgate och Legacy',
       points: [
         'Hexploration tar reda på vilken motor spelet använder och ritar den matchande formen. Former ritade i någon av editorerna kan fyllas.',
-        'Med Hex Layer inställt på Auto, ritas hex på förgrundslagret, ovanför tokens, så att spelare inte kan se vad som finns under. Om förgrundslagret inte är tillgängligt används tokenlagret istället.',
-        'Jumpgate ritar matematiskt regelbundna hexes, som är en något annorlunda form från Legacy hexes. Om hexadelarna inte stämmer överens med en sidas rutnät, fäster du en token till en hex-centrum, markerar den och klickar på Kalibrera. Välj två tokens i angränsande hexadecimaler i samma rad (Hex V) eller kolumn (Hex H) för att även korrigera hexstorleken.',
-        'När en sida eller ett spel kopieras får dess hexar nya ID. Kör Rescan på sidan för att plocka upp dem igen, tillsammans med deras namnetiketter och platssymboler.',
+        'När Lager för hexar är inställt på Auto ritas hexar på förgrundslagret, ovanför tokens, så att spelarna inte kan se vad som finns under. Om förgrundslagret inte är tillgängligt används tokenlagret i stället.',
+        'Jumpgate ritar matematiskt regelbundna hexar, som har en något annan form än Legacy-hexar. Om hexarna inte stämmer med en sidas rutnät, fäst en token i mitten av en hex, markera den och klicka på Kalibrera. Markera två tokens i angränsande hexar i samma rad (Hex V) eller kolumn (Hex H) för att även korrigera hexstorleken.',
+        'När en sida eller ett spel kopieras får dess hexar nya ID:n. Kör Skanna igen på sidan för att hitta dem igen, tillsammans med deras namnetiketter och platstokens.',
       ],
     },
     upgrading: {
       heading: 'Uppgraderar från version 1',
       points: [
         'Version 2 behöver inte längre PathMath, MatrixMath, Vector Math eller HTML Builder. Du kan ta bort dem om inte en annan mod använder dem.',
-        'Befintliga hexadecimala kartor, namn, platssymboler och inställningar uppgraderas automatiskt vid första starten.',
+        'Befintliga hexkartor, namn, platstokens och inställningar uppgraderas automatiskt vid första starten.',
         'Version 1-kommandona, inklusive makrot Hexploration_menu, fungerar fortfarande.',
-        'Version 1 låter vilken token som helst som representerade en karaktär avslöja hexes. Ställ in Tokens That Reveal till Character-tokens för att behålla det beteendet.',
+        'I version 1 kunde varje token som representerade en rollperson avslöja hexar. Ställ in Tokens som avslöjar på Rollpersonstokens för att behålla det beteendet.',
       ],
       colV1: 'Kommandot version 1',
       colV2: 'Kommandot version 2',
@@ -344,10 +343,10 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Felsökning',
       points: [
-        'Ingenting händer när en token rör sig: kontrollera att token finns på tokenlagret och matchar Tokens That Reveal, och att sidan har hexes (!hexploration-status).',
+        'Ingenting händer när en token flyttas: kontrollera att token ligger på tokenlagret och matchar Tokens som avslöjar, och att sidan har hexar (!hexploration status).',
         'Hexen är förskjutna från rutnätet: använd Kalibrera och kontrollera sedan med en token på några hexar över kartan.',
-        'Hexes slutade avslöjas efter att ha kopierat en sida eller ett spel: kör Rescan på sidan.',
-        'Fill säger att området inte har några sexkantscentrum: formen måste innehålla mitten av minst en sexkant.',
+        'Hexar slutade avslöjas efter att en sida eller ett spel kopierats: kör Skanna igen på sidan.',
+        'Fyll säger att området inte innehåller några hexmittpunkter: formen måste innehålla mittpunkten på minst en hex.',
         'För allt annat, kontrollera API-konsolloggen och inkludera dess meddelanden när du ber om hjälp.',
       ],
     },
@@ -355,7 +354,7 @@ const TRANSLATION = {
       heading: 'Språk',
       body: 'Välj ett språk med !hexploration set språk. Tillgängliga språk:',
       colLanguage: 'Språk',
-      colNative: 'Inhemskt namn',
+      colNative: 'Eget namn',
       colCode: 'Koda',
     },
     credits: {

@@ -253,7 +253,6 @@ export default {
     handout: 'Full instructions are in the "{name}" handout.',
   },
   deck: {
-    subtitle: 'Command Deck',
     drawDesc: 'Draw shapes around an area, select them, then fill. Undo reverses the last fill.',
     revealDesc:
       'Select hexes, shapes or tokens to reveal or cover them again. Explore reveals around selected tokens as if they had moved.',
