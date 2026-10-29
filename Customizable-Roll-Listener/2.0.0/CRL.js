@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.0.0
- * Built: 2026-10-29T14:08:20.230Z
+ * Built: 2026-10-29T14:29:18.820Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -610,7 +610,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T14:08:20.230Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T14:29:18.820Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1585,6 +1585,9 @@ const CustomizableRollListenerMod = (() => {
       languages: {
         heading: 'Languages',
         body: 'Choose a language with !crl config language or the Language One-Click option. Supported languages:',
+        colCode: 'Code',
+        colName: 'Language',
+        colNative: 'Native name',
       },
       credits: {
         heading: 'Credits',
@@ -2772,7 +2775,13 @@ const CustomizableRollListenerMod = (() => {
       .map(([key, url]) => link(url, t(`handout.templates.${key}`, lang)))
       .join(' • ');
 
-    const locales = SUPPORTED_LOCALES.map((c) => escapeHtml(LOCALE_LABELS[c])).join(', ');
+    const locales = SUPPORTED_LOCALES.map((c) => LOCALE_DEFINITIONS.find((d) => d.code === c)).map(
+      ({ code: localeCode, name, nativeName }) => [
+        code(localeCode),
+        escapeHtml(name),
+        escapeHtml(nativeName || name),
+      ]
+    );
     const { original, maintainer } = AUTHOR_LINKS;
 
     return `<div style="${STYLE.outer}${getDirectionStyle(lang)}">
@@ -2799,7 +2808,7 @@ const CustomizableRollListenerMod = (() => {
     ${section('storage', `<p style="${STYLE.p}">${h('storage.body', { character: STORE_CHARACTER_NAME })}</p>`)}
     ${section('upgrading', `${list(raw('upgrading.points'))}${table([t('handout.upgrading.colV1', lang), t('handout.upgrading.colV2', lang)], legacy)}`)}
     ${section('troubleshooting', list(raw('troubleshooting.points')))}
-    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p><p style="${STYLE.p};font-size:0.85em">${locales}</p>`)}
+    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p>${table([t('handout.languages.colCode', lang), t('handout.languages.colName', lang), t('handout.languages.colNative', lang)], locales)}`)}
     ${section(
       'credits',
       `<p style="${STYLE.p}">${h('credits.original')} ${link(original.profile, original.name)} • ${link(original.wiki, t('handout.credits.wiki', lang))}</p>

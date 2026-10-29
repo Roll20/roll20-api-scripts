@@ -422,6 +422,9 @@ export default {
     languages: {
       heading: 'Languages',
       body: 'Choose a language with !crl config language or the Language One-Click option. Supported languages:',
+      colCode: 'Code',
+      colName: 'Language',
+      colNative: 'Native name',
     },
     credits: {
       heading: 'Credits',

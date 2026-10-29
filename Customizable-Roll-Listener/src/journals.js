@@ -23,7 +23,14 @@ import {
   SCRIPT_VERSION,
   STORE_CHARACTER_NAME,
 } from './constants.js';
-import { getDirectionStyle, getLocale, LOCALE_LABELS, SUPPORTED_LOCALES, t, tRaw } from './i18n.js';
+import {
+  getDirectionStyle,
+  getLocale,
+  LOCALE_DEFINITIONS,
+  SUPPORTED_LOCALES,
+  t,
+  tRaw,
+} from './i18n.js';
 import { getConfig } from './state.js';
 import { escapeAttr, escapeHtml } from './utils.js';
 
@@ -186,7 +193,13 @@ export function buildHelpHtml(locale) {
     .map(([key, url]) => link(url, t(`handout.templates.${key}`, lang)))
     .join(' • ');
 
-  const locales = SUPPORTED_LOCALES.map((c) => escapeHtml(LOCALE_LABELS[c])).join(', ');
+  const locales = SUPPORTED_LOCALES.map((c) => LOCALE_DEFINITIONS.find((d) => d.code === c)).map(
+    ({ code: localeCode, name, nativeName }) => [
+      code(localeCode),
+      escapeHtml(name),
+      escapeHtml(nativeName || name),
+    ]
+  );
   const { original, maintainer } = AUTHOR_LINKS;
 
   return `<div style="${STYLE.outer}${getDirectionStyle(lang)}">
@@ -213,7 +226,7 @@ export function buildHelpHtml(locale) {
     ${section('storage', `<p style="${STYLE.p}">${h('storage.body', { character: STORE_CHARACTER_NAME })}</p>`)}
     ${section('upgrading', `${list(raw('upgrading.points'))}${table([t('handout.upgrading.colV1', lang), t('handout.upgrading.colV2', lang)], legacy)}`)}
     ${section('troubleshooting', list(raw('troubleshooting.points')))}
-    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p><p style="${STYLE.p};font-size:0.85em">${locales}</p>`)}
+    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p>${table([t('handout.languages.colCode', lang), t('handout.languages.colName', lang), t('handout.languages.colNative', lang)], locales)}`)}
     ${section(
       'credits',
       `<p style="${STYLE.p}">${h('credits.original')} ${link(original.profile, original.name)} • ${link(original.wiki, t('handout.credits.wiki', lang))}</p>
