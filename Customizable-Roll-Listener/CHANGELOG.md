@@ -21,6 +21,7 @@ A full rewrite by MidNiteShadow7 of Scott C.'s Customizable Roll Listener, which
 - Malformed commands, missing listeners and commands from other mods no longer crash the Mod sandbox; problems are whispered to the GM with a hint.
 - CRL no longer reacts to its own menus, and a listener that keeps triggering itself is switched off instead of looping.
 - Listener names may contain commas, and any field can be cleared.
+- GM cards never spill into public chat. Roll20 whispers only the first line of a message and posts the rest publicly, so listener cards with multi-line commands and the inspector's extra message data used to leak; cards are now kept on one line.
 - Menus no longer go missing: text shown in chat has `@{…}`, `%{…}`, `[[…]]` and `?{…}` encoded, because Roll20 drops a mod's whole message when it cannot resolve them.
 - The help no longer says that `\\config` deletes a listener.
 - Upgrading no longer wipes the mod's state when the schema changes.

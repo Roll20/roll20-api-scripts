@@ -408,3 +408,18 @@ test('whispers never carry Roll20 syntax outside buttons', () => {
     assert.doesNotMatch(outsideLinks, /@\{|%\{|\[\[|\?\{/, outsideLinks);
   }
 });
+
+test('cards stay on one line, so multi-line commands never leak to players', () => {
+  const game = start();
+  game.command('!crl new Two --text two --commands /em first \\\\ /em second');
+  game.clearChat();
+  game.command('!crl show Two');
+  game.command('!crl inspect');
+  game.say({ content: 'two\nlines' });
+  assert.ok(game.chat.length > 2);
+  for (const { text } of game.chat) {
+    assert.ok(!/[\r\n]/.test(text), text);
+  }
+  const card = game.chat.find((c) => /Commands: Two/.test(c.text))?.text || '';
+  assert.match(card, /\/em first<br>\/em second/);
+});

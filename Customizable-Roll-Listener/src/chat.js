@@ -99,6 +99,18 @@ function whisperTarget(playerId) {
 }
 
 /**
+ * Keeps chat HTML on one line. Roll20 only whispers the first line of a
+ * message and posts the rest publicly, so a stray line break would leak
+ * the end of a GM card to the players.
+ *
+ * @param {string} html Chat HTML.
+ * @returns {string} The same HTML without line breaks.
+ */
+export function oneLine(html) {
+  return String(html).replaceAll(/\r?\n/g, ' ');
+}
+
+/**
  * Sends a styled card whispered to a player, or to every GM when no player is given.
  *
  * @param {string|null} playerId Roll20 player ID.
@@ -108,7 +120,7 @@ function whisperTarget(playerId) {
  */
 export function whisper(playerId, title, content) {
   const body = Array.isArray(content) ? content.join('') : content;
-  sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${buildCard(title, body)}`, null, {
+  sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${oneLine(buildCard(title, body))}`, null, {
     noarchive: true,
   });
 }
@@ -121,7 +133,7 @@ export function whisper(playerId, title, content) {
  * @returns {void}
  */
 export function broadcast(title, body) {
-  sendChat(SCRIPT_NAME, buildCard(title, body));
+  sendChat(SCRIPT_NAME, oneLine(buildCard(title, body)));
 }
 
 /**
@@ -141,7 +153,9 @@ export function whisperWarning(playerId, message) {
     'font-size:0.95em',
   ].join(';');
   const html = `<div style="${style}">${escapeHtml(message)}</div>`;
-  sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${html}`, null, { noarchive: true });
+  sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${oneLine(html)}`, null, {
+    noarchive: true,
+  });
 }
 
 /**
@@ -165,7 +179,9 @@ export function whisperError(playerId, message, hint) {
     ? `<div style="margin-top:3px;font-size:0.9em">${escapeHtml(hint)}</div>`
     : '';
   const html = `<div style="${style}"><strong>${escapeHtml(message)}</strong>${hintHtml}</div>`;
-  sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${html}`, null, { noarchive: true });
+  sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${oneLine(html)}`, null, {
+    noarchive: true,
+  });
 }
 
 /**
@@ -250,5 +266,5 @@ export function buildRow(label, valueHtml) {
 export function buildCode(text) {
   const style =
     'font-family:monospace;font-size:0.85em;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,0.25);padding:3px 5px;border-radius:3px;margin:2px 0';
-  return `<div style="${style}">${escapeHtml(text)}</div>`;
+  return `<div style="${style}">${escapeHtml(text).replaceAll(/\r?\n/g, '<br>')}</div>`;
 }

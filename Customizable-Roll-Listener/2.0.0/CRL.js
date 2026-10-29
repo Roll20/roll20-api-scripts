@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.0.0
- * Built: 2026-10-29T15:49:14.739Z
+ * Built: 2026-10-29T16:56:32.270Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -610,7 +610,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T15:49:14.739Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T16:56:32.270Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -836,6 +836,18 @@ const CustomizableRollListenerMod = (() => {
   }
 
   /**
+   * Keeps chat HTML on one line. Roll20 only whispers the first line of a
+   * message and posts the rest publicly, so a stray line break would leak
+   * the end of a GM card to the players.
+   *
+   * @param {string} html Chat HTML.
+   * @returns {string} The same HTML without line breaks.
+   */
+  function oneLine(html) {
+    return String(html).replaceAll(/\r?\n/g, ' ');
+  }
+
+  /**
    * Sends a styled card whispered to a player, or to every GM when no player is given.
    *
    * @param {string|null} playerId Roll20 player ID.
@@ -845,9 +857,14 @@ const CustomizableRollListenerMod = (() => {
    */
   function whisper(playerId, title, content) {
     const body = Array.isArray(content) ? content.join('') : content;
-    sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${buildCard(title, body)}`, null, {
-      noarchive: true,
-    });
+    sendChat(
+      SCRIPT_NAME,
+      `/w ${whisperTarget(playerId)} ${oneLine(buildCard(title, body))}`,
+      null,
+      {
+        noarchive: true,
+      }
+    );
   }
 
   /**
@@ -867,7 +884,9 @@ const CustomizableRollListenerMod = (() => {
       'font-size:0.95em',
     ].join(';');
     const html = `<div style="${style}">${escapeHtml(message)}</div>`;
-    sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${html}`, null, { noarchive: true });
+    sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${oneLine(html)}`, null, {
+      noarchive: true,
+    });
   }
 
   /**
@@ -891,7 +910,9 @@ const CustomizableRollListenerMod = (() => {
       ? `<div style="margin-top:3px;font-size:0.9em">${escapeHtml(hint)}</div>`
       : '';
     const html = `<div style="${style}"><strong>${escapeHtml(message)}</strong>${hintHtml}</div>`;
-    sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${html}`, null, { noarchive: true });
+    sendChat(SCRIPT_NAME, `/w ${whisperTarget(playerId)} ${oneLine(html)}`, null, {
+      noarchive: true,
+    });
   }
 
   /**
@@ -976,7 +997,7 @@ const CustomizableRollListenerMod = (() => {
   function buildCode(text) {
     const style =
       'font-family:monospace;font-size:0.85em;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,0.25);padding:3px 5px;border-radius:3px;margin:2px 0';
-    return `<div style="${style}">${escapeHtml(text)}</div>`;
+    return `<div style="${style}">${escapeHtml(text).replaceAll(/\r?\n/g, '<br>')}</div>`;
   }
 
   // Runs a matched listener's commands: fills in placeholders, works out who
