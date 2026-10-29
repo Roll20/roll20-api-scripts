@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "door-sequence",
+  "revision": 1,
+  "name": "Door sequence",
+  "description": "Announce a door, wait up to a minute for the door-open signal, then open it or report that it stayed shut.",
+  "enabled": true,
+  "parameters": {},
+  "bindings": {
+    "door": {
+      "from": "selected",
+      "objectType": "graphic",
+      "max": 1
+    }
+  },
+  "access": {
+    "mode": "gmOnly",
+    "authority": "initiator"
+  },
+  "triggers": [
+    {
+      "id": "manual",
+      "type": "manual"
+    }
+  ],
+  "policy": {
+    "concurrency": "skipIfRunning",
+    "maxConcurrent": 1,
+    "onError": "fail",
+    "restart": "reconcile"
+  },
+  "steps": [
+    {
+      "id": "announce",
+      "type": "chat.send",
+      "mode": "say",
+      "text": "The heavy door groans. Someone must pull the lever..."
+    },
+    {
+      "id": "lever",
+      "type": "awaitEvent",
+      "event": "signal",
+      "filter": {
+        "signal": "door-open"
+      },
+      "timeoutMs": 60000,
+      "saveAs": "lever"
+    },
+    {
+      "id": "opened",
+      "type": "if",
+      "condition": {
+        "ref": "var.lever.matched"
+      },
+      "then": [
+        {
+          "id": "swing",
+          "type": "token.advanceSide",
+          "target": {
+            "binding": "door"
+          },
+          "delta": 1,
+          "wrap": false
+        },
+        {
+          "id": "open-msg",
+          "type": "chat.send",
+          "mode": "say",
+          "text": "The door swings open."
+        }
+      ],
+      "else": [
+        {
+          "id": "shut-msg",
+          "type": "chat.send",
+          "mode": "say",
+          "text": "The door stays shut."
+        }
+      ]
+    }
+  ]
+}
