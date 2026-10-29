@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "torch-reminder",
+  "revision": 1,
+  "name": "Torch reminder",
+  "description": "Warn the torchbearer after 50 real-world minutes and put the torch out 10 minutes later. Real minutes, not game time.",
+  "enabled": true,
+  "parameters": {},
+  "bindings": {
+    "torchbearer": {
+      "from": "selected",
+      "objectType": "graphic",
+      "max": 1
+    }
+  },
+  "access": {
+    "mode": "gmOnly",
+    "authority": "initiator"
+  },
+  "triggers": [
+    {
+      "id": "manual",
+      "type": "manual"
+    }
+  ],
+  "policy": {
+    "concurrency": "allow",
+    "maxConcurrent": 10,
+    "onError": "fail",
+    "restart": "reconcile"
+  },
+  "steps": [
+    {
+      "id": "burn",
+      "type": "wait",
+      "durationMs": 3000000,
+      "overdue": "review"
+    },
+    {
+      "id": "warn",
+      "type": "chat.send",
+      "mode": "whisper",
+      "to": {
+        "gm": true,
+        "controllers": "torchbearer"
+      },
+      "text": "{{target.torchbearer.name}}'s torch is guttering: about 10 minutes of light left."
+    },
+    {
+      "id": "last-light",
+      "type": "wait",
+      "durationMs": 600000,
+      "overdue": "review"
+    },
+    {
+      "id": "out",
+      "type": "chat.send",
+      "mode": "say",
+      "text": "{{target.torchbearer.name}}'s torch burns out."
+    }
+  ]
+}

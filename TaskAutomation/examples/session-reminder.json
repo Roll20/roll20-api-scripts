@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "session-reminder",
+  "revision": 1,
+  "name": "Session reminder",
+  "description": "Every Friday at 19:00 (UTC+00:00) remind the table that the session starts soon. Update the offset when the clocks change.",
+  "enabled": false,
+  "parameters": {},
+  "bindings": {},
+  "access": {
+    "mode": "gmOnly",
+    "authority": "gmService"
+  },
+  "triggers": [
+    {
+      "id": "weekly",
+      "type": "weekly",
+      "days": [
+        "fri"
+      ],
+      "time": "19:00",
+      "offset": "+00:00",
+      "overdue": {
+        "mode": "runOnce",
+        "windowMs": 900000,
+        "maxAgeMs": 7200000
+      }
+    }
+  ],
+  "policy": {
+    "concurrency": "skipIfRunning",
+    "maxConcurrent": 1,
+    "onError": "skip",
+    "lifetimeMs": 3600000
+  },
+  "steps": [
+    {
+      "id": "remind",
+      "type": "chat.send",
+      "mode": "say",
+      "text": "Session starts in 15 minutes. Grab your dice!"
+    }
+  ]
+}

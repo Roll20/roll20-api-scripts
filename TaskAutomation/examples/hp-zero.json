@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "hp-zero",
+  "revision": 1,
+  "name": "HP threshold",
+  "description": "When a token's bar 1 drops from above 0 to 0 or less, mark it dead and tell the GM.",
+  "enabled": false,
+  "parameters": {},
+  "bindings": {
+    "token": {
+      "from": "event",
+      "objectType": "graphic",
+      "max": 1
+    }
+  },
+  "access": {
+    "mode": "gmOnly",
+    "authority": "gmService"
+  },
+  "triggers": [
+    {
+      "id": "bar-crossing",
+      "type": "event",
+      "event": "token.change",
+      "filter": {
+        "properties": [
+          "bar1_value"
+        ],
+        "crossing": {
+          "property": "bar1_value",
+          "direction": "below",
+          "threshold": 0
+        }
+      },
+      "bind": {
+        "binding": "token"
+      },
+      "cooldownMs": 1000
+    }
+  ],
+  "policy": {
+    "concurrency": "allow",
+    "maxConcurrent": 10,
+    "onError": "skip"
+  },
+  "steps": [
+    {
+      "id": "mark",
+      "type": "marker.set",
+      "target": {
+        "binding": "token"
+      },
+      "marker": "dead",
+      "op": "add"
+    },
+    {
+      "id": "tell",
+      "type": "chat.send",
+      "mode": "whisper",
+      "to": {
+        "gm": true
+      },
+      "text": "{{target.token.name}} has dropped to {{event.new.bar1_value}} HP."
+    }
+  ]
+}

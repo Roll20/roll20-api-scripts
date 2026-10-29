@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "scene-cleanup",
+  "revision": 1,
+  "name": "Scene cleanup",
+  "description": "Stop a jukebox track and announce the scene is over. Called by Parallel scene.",
+  "enabled": true,
+  "parameters": {
+    "track": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    }
+  },
+  "bindings": {},
+  "access": {
+    "mode": "gmOnly",
+    "authority": "initiator"
+  },
+  "triggers": [
+    {
+      "id": "manual",
+      "type": "manual"
+    }
+  ],
+  "policy": {
+    "concurrency": "allow",
+    "maxConcurrent": 5,
+    "onError": "skip"
+  },
+  "steps": [
+    {
+      "id": "silence",
+      "type": "audio.control",
+      "track": "{{param.track}}",
+      "op": "stop"
+    },
+    {
+      "id": "done",
+      "type": "chat.send",
+      "mode": "desc",
+      "text": "The scene falls quiet."
+    }
+  ]
+}
