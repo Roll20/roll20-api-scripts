@@ -1,76 +1,216 @@
-(() => {
-  'use strict';
+// Named hexes and hidden location tokens.
+//
+// A hex can carry a name (shown to the GM as a label on the GM layer) and an
+// icon (a token hidden on the GM layer). Both are announced when the hex is
+// revealed, and the icon is moved back to the token layer.
 
-  /**
-   * Gets the objects representing locations on a page.
-   * @param {Page} page
-   * @return {Graphic[]}
-   */
-  function getMarkers(page) {
-    return findObjs({
-      _type: 'graphic',
-      _pageid: page.get('_id'),
-      'status_white-tower': true
-    });
+import { LAYER_GM, LAYER_TOKEN, LOCATION_MARKER, MAX_NAME_LENGTH } from './constants.js';
+import { hexKey, hexToPixel, pixelToHex } from './grid.js';
+import {
+  getConfig,
+  getHex,
+  getPageHexes,
+  getPendingLocations,
+  setPendingLocation,
+} from './state.js';
+import { tokenHasMarker, toText } from './utils.js';
+
+/**
+ * Returns the token attached to a hex as its icon, if it still exists.
+ *
+ * @param {object} hex Hex record.
+ * @returns {object|null} Roll20 graphic.
+ */
+export function getHexIcon(hex) {
+  return hex.iconId ? getObj('graphic', hex.iconId) || null : null;
+}
+
+/**
+ * Returns the name announced when a hex is discovered: the icon's name, or
+ * the hex's own name.
+ *
+ * @param {object} hex Hex record.
+ * @returns {string} Discovery name (empty when the hex is unnamed).
+ */
+export function getDiscoveryName(hex) {
+  const icon = getHexIcon(hex);
+  return toText(icon?.get('name')) || toText(hex.name);
+}
+
+/**
+ * Removes a hex's GM-layer name label.
+ *
+ * @param {object} hex Hex record.
+ * @returns {void}
+ */
+export function removeLabel(hex) {
+  if (hex.nameId) {
+    getObj('text', hex.nameId)?.remove();
+    delete hex.nameId;
   }
+}
 
-  /**
-   * Sets the icon and name for a hex.
-   * @param {Path} path
-   *        The path representing the hex.
-   * @param {Graphic} icon
-   *        The icon containing the graphic and name for the hex when it is
-   *        revealed.
-   */
-  function setHexIcon(path, icon) {
-    let pageHex = Hexploration._state.getPageHexByPath(path);
-    if(!pageHex)
-      throw new Error('Could not find PageHex data for path ' + path.get('_id'));
-
-    pageHex.iconId = icon.get('_id');
-    icon.set('layer', 'gmlayer');
+/**
+ * Sets or clears a hex's name and redraws its GM-layer label.
+ *
+ * @param {object} ctx Page context.
+ * @param {object} hex Hex record.
+ * @param {string} name New name (empty to clear).
+ * @returns {void}
+ */
+export function setHexName(ctx, hex, name) {
+  removeLabel(hex);
+  const clean = toText(name).slice(0, MAX_NAME_LENGTH);
+  if (!clean) {
+    delete hex.name;
+    return;
   }
-
-  /**
-   * Sets the name for a hex, without assigning it an icon.
-   * @param {Path} path
-   *        The Path representing the hex.
-   * @param {string} name
-   */
-  function setHexName(path, name) {
-    let config = Hexploration._state.getConfig();
-
-    let pageHex = Hexploration._state.getPageHexByPath(path);
-    if(!pageHex)
-      throw new Error('Could not find PageHex data for path ' + path.get('_id'));
-
-    // Remove the previous name.
-    if(pageHex.nameId) {
-      let namePath = getObj('text', pageHex.nameId);
-      namePath.remove();
-      pageHex.nameId = undefined;
-    }
-
-    // Set the new name and create a text object for it.
-    pageHex.name = name;
-    if(pageHex.name) {
-      let namePath = createObj('text', {
-        _pageid: path.get('_pageid'),
-        layer: 'gmlayer',
-        left: path.get('left'),
-        top: path.get('top'),
-        text: name,
-        color: config.labelColor
-      });
-      pageHex.nameId = namePath.get('_id');
-    }
-  }
-
-  _.extend(Hexploration, {
-    _locations: {
-      getMarkers,
-      setHexIcon,
-      setHexName
-    }
+  hex.name = clean;
+  const [x, y] = hexToPixel(ctx.grid, hex.row, hex.col);
+  const label = createObj('text', {
+    _pageid: ctx.pageId,
+    layer: LAYER_GM,
+    left: x,
+    top: y,
+    text: clean,
+    color: getConfig().labelColor,
   });
-})();
+  if (label) {
+    hex.nameId = label.get('_id');
+  }
+}
+
+/**
+ * Attaches a token to a hex as its hidden icon.
+ *
+ * @param {object} hex Hex record.
+ * @param {object} token Roll20 graphic.
+ * @returns {string} The token's layer before it was hidden (for undo).
+ */
+export function attachIcon(hex, token) {
+  const previousLayer = token.get('layer');
+  hex.iconId = token.get('_id');
+  token.set('layer', LAYER_GM);
+  setPendingLocation(hex.iconId, null);
+  return previousLayer;
+}
+
+/**
+ * Detaches a hex's icon and returns it to the token layer.
+ *
+ * @param {object} hex Hex record.
+ * @param {boolean} [show=true] Move the icon back to the token layer.
+ * @returns {void}
+ */
+export function detachIcon(hex, show = true) {
+  const icon = getHexIcon(hex);
+  if (icon && show) {
+    icon.set('layer', LAYER_TOKEN);
+  }
+  delete hex.iconId;
+}
+
+/**
+ * Returns the hex records on a page keyed by the ID of their icon.
+ *
+ * @param {string} pageId Page ID.
+ * @returns {Map<string, object>} Map of icon ID to hex record.
+ */
+function hexesByIcon(pageId) {
+  const map = new Map();
+  for (const hex of getPageHexes(pageId)) {
+    if (hex.iconId) {
+      map.set(hex.iconId, hex);
+    }
+  }
+  return map;
+}
+
+/**
+ * Returns location tokens waiting for a hex on a page, keyed by hex cell:
+ * tokens marked with `mark`, plus (as in v1) tokens with the white-tower
+ * status marker. Tokens already attached to a hex are ignored.
+ *
+ * @param {object} ctx Page context.
+ * @returns {Map<string, object>} Map of "row,col" to Roll20 graphic.
+ */
+export function findLocationTokens(ctx) {
+  const attached = hexesByIcon(ctx.pageId);
+  const tokens = new Map();
+  const consider = (token) => {
+    if (!token || attached.has(token.get('_id'))) {
+      return;
+    }
+    const [row, col] = pixelToHex(ctx.grid, token.get('left'), token.get('top'));
+    tokens.set(hexKey(row, col), token);
+  };
+
+  for (const tokenId of getPendingLocations(ctx.pageId)) {
+    const token = getObj('graphic', tokenId);
+    if (token) {
+      consider(token);
+    } else {
+      setPendingLocation(tokenId, null);
+    }
+  }
+  for (const token of findObjs({ _type: 'graphic', _pageid: ctx.pageId })) {
+    if (tokenHasMarker(token, LOCATION_MARKER)) {
+      consider(token);
+    }
+  }
+  return tokens;
+}
+
+/**
+ * Marks tokens as hidden locations. A token already under a hex is attached
+ * immediately; otherwise it waits for the next fill that covers it.
+ *
+ * @param {object} ctx Page context.
+ * @param {object[]} tokens Roll20 graphics.
+ * @returns {{attached: number, pending: number}} Counts.
+ */
+export function markLocations(ctx, tokens) {
+  const attached = hexesByIcon(ctx.pageId);
+  let attachedCount = 0;
+  let pendingCount = 0;
+  for (const token of tokens) {
+    if (attached.has(token.get('_id'))) {
+      continue;
+    }
+    const [row, col] = pixelToHex(ctx.grid, token.get('left'), token.get('top'));
+    const hex = getHex(ctx.pageId, hexKey(row, col));
+    if (hex && !hex.iconId) {
+      attachIcon(hex, token);
+      attachedCount++;
+    } else {
+      setPendingLocation(token.get('_id'), ctx.pageId);
+      pendingCount++;
+    }
+  }
+  return { attached: attachedCount, pending: pendingCount };
+}
+
+/**
+ * Stops tokens being hidden locations. Attached tokens return to the token layer.
+ *
+ * @param {object} ctx Page context.
+ * @param {object[]} tokens Roll20 graphics.
+ * @returns {number} Number of tokens unmarked.
+ */
+export function unmarkLocations(ctx, tokens) {
+  const attached = hexesByIcon(ctx.pageId);
+  const pending = new Set(getPendingLocations(ctx.pageId));
+  let count = 0;
+  for (const token of tokens) {
+    const id = token.get('_id');
+    const hex = attached.get(id);
+    if (hex) {
+      detachIcon(hex);
+      count++;
+    } else if (pending.has(id)) {
+      setPendingLocation(id, null);
+      count++;
+    }
+  }
+  return count;
+}
