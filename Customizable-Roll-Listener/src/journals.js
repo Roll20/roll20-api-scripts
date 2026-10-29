@@ -2,6 +2,8 @@
 
 import {
   AUTHOR_LINKS,
+  COMMON_TEMPLATES,
+  TEMPLATE_LINKS,
   COLOR_ACCENT,
   COLOR_BORDER,
   COLOR_BUTTON_BG,
@@ -173,6 +175,17 @@ export function buildHelpHtml(locale) {
     ['!crl \\\\set,listen=on|off', `${COMMAND} on / ${COMMAND} off`],
   ].map(([v1, v2]) => [code(v1), code(v2)]);
 
+  const templates = COMMON_TEMPLATES.map(({ sheet, names }) => [
+    escapeHtml(sheet),
+    names
+      .split(', ')
+      .map((name) => code(name))
+      .join(' '),
+  ]);
+  const templateLinks = Object.entries(TEMPLATE_LINKS)
+    .map(([key, url]) => link(url, t(`handout.templates.${key}`, lang)))
+    .join(' • ');
+
   const locales = SUPPORTED_LOCALES.map((c) => escapeHtml(LOCALE_LABELS[c])).join(', ');
   const { original, maintainer } = AUTHOR_LINKS;
 
@@ -185,6 +198,11 @@ export function buildHelpHtml(locale) {
     ${section('quickStart', list(raw('quickStart.steps'), true))}
     ${section('examples', `${list(raw('examples.points'))}${pre(raw('examples.code')?.join?.('\n') || '')}`)}
     ${section('matching', list(raw('matching.points')))}
+    ${section(
+      'templates',
+      `${list(raw('templates.points'))}${table([t('handout.templates.colSheet', lang), t('handout.templates.colNames', lang)], templates)}
+       <p style="${STYLE.p}">${h('templates.links')} ${templateLinks}</p>`
+    )}
     ${section('rolls', list(raw('rolls.points')))}
     ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('options', `<p style="${STYLE.p}">${h('options.intro')}</p>${table([t('handout.options.colOption', lang), t('handout.options.colDesc', lang)], options)}`)}

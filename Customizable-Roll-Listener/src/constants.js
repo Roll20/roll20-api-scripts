@@ -33,6 +33,23 @@ export const AUTHOR_LINKS = {
   },
 };
 
+// Where to read about roll templates and find a sheet's template names.
+export const TEMPLATE_LINKS = {
+  builtIn: 'https://help.roll20.net/hc/en-us/articles/360037257334-How-to-Make-Roll-Templates',
+  dnd5e2014: 'https://help.roll20.net/hc/en-us/articles/360037257834-D-D-5e-OGL-Roll-Templates',
+  sheets: 'https://github.com/Roll20/roll20-character-sheets',
+};
+
+// Template names of common sheets, shown in the Help handout.
+export const COMMON_TEMPLATES = [
+  { sheet: 'Any game (built in)', names: 'default' },
+  {
+    sheet: 'D&D 5E by Roll20 (2014)',
+    names: 'simple, atk, dmg, atkdmg, spell, desc, npcaction, npcatk, npcdmg',
+  },
+  { sheet: 'D&D 2024 by Roll20 (Beacon)', names: 'dnd-2024' },
+];
+
 // Marks a v2 listener's rules when they are mirrored into its ability description.
 export const RULES_MARKER = 'crl';
 

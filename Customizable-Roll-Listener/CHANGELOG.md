@@ -28,7 +28,7 @@ A full rewrite by MidNiteShadow7 of Scott C.'s Customizable Roll Listener, which
 ### Added
 
 - Chat menus with a card per listener and buttons to change every setting, and a **Command Deck** handout.
-- **Help** handout, and documentation (README, TESTING, DEVELOPERS, MOD_FILE_MAP).
+- **Help** handout, and documentation (README, TESTING, DEVELOPERS, MOD_FILE_MAP), including how to find a sheet's roll template names, the templates of common sheets and links to Roll20's roll template articles.
 - New `!crl <command> --option value` syntax. Listeners can be named by name or ID.
 - Filters for message types, speakers / characters (including the character in the roll template) and players.
 - Roll checks for totals and natural die results (`>=15`, `<=2`, `19-20`), and a choice of which dice to check.

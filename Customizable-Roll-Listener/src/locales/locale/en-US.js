@@ -44,7 +44,8 @@ export default {
     name: 'New name',
     target: 'Listener name',
     commands: 'Commands - separate lines with two backslashes',
-    templates: 'Roll templates separated by spaces - none for no template - empty for any',
+    templates:
+      'Roll templates separated by spaces - none for no template - empty for any - Inspect shows a roll’s template',
     types: 'Message types separated by spaces - empty for any except api',
     text: 'Text to look for - see the Help handout - empty for any',
     regex: 'How to read the text',
@@ -290,6 +291,21 @@ export default {
         'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
       ],
     },
+    templates: {
+      heading: 'Roll Template Names',
+      points: [
+        'A roll template is the layout a sheet uses for its roll cards. Its name is the part after template: in a macro, so &{template:atkdmg} is the atkdmg template. Each sheet has its own names.',
+        'The quickest way to find a name: click Inspect Next Message, make the roll from the sheet, and read the Roll template line CRL whispers back.',
+        'You can also read the name in a sheet button’s macro, or in the sheet’s source on GitHub, where each template is a <rolltemplate class="sheet-rolltemplate-NAME">.',
+        'Templates of common sheets:',
+      ],
+      colSheet: 'Sheet',
+      colNames: 'Template names',
+      links: 'More about roll templates:',
+      builtIn: 'Roll20: built-in roll templates',
+      dnd5e2014: 'Roll20: D&D 5e (2014) roll templates',
+      sheets: 'Roll20 character sheet source',
+    },
     rolls: {
       heading: 'Roll Checks',
       points: [
@@ -313,7 +329,8 @@ export default {
         'Add these to !crl new or !crl edit. Leave a value empty, or use -, to clear it. --commands must come last.',
       colOption: 'Option',
       colDesc: 'Meaning',
-      templates: 'Roll template names, separated by spaces. none = no template.',
+      templates:
+        'Roll template names, separated by spaces. none = no template. See Roll Template Names above.',
       types: 'Message types, separated by spaces: {types}.',
       text: 'Text to find. Separate pieces with &&. ## marks an inline roll.',
       regex: 'on to read the text as regular expressions, off for plain text.',

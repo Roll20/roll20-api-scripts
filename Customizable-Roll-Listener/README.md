@@ -39,7 +39,7 @@ A listener triggers when **every** filter it has matches. Empty filters match ev
 
 | Filter                | Option        | Matches when…                                                                                                                                                             |
 | --------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Roll templates        | `--templates` | The message uses one of these templates (`none` = no template).                                                                                                           |
+| Roll templates        | `--templates` | The message uses one of these templates (`none` = no template). See [Roll Template Names](#roll-template-names).                                                          |
 | Message types         | `--types`     | The message is one of: `general`, `rollresult`, `gmrollresult`, `emote`, `whisper`, `desc`, `advancedroll` (Beacon), `api`. Empty means every type except `api` commands. |
 | Text                  | `--text`      | Every piece of text (separated by `&&`) appears. Case is ignored. Roll totals and rollable table results count as text. `##` stands for an inline roll.                   |
 | Text mode             | `--regex`     | `on` reads the text as regular expressions.                                                                                                                               |
@@ -51,6 +51,30 @@ A listener triggers when **every** filter it has matches. Empty filters match ev
 | Dice checked          | `--dice`      | `auto` (only d20s when a d20 was rolled, so damage dice do not count as crits), `any`, or a size such as `20` or `d100`.                                                  |
 
 Roll checks look at every roll in the message, or only the rolls a `##` in the text found. Dropped dice (advantage and disadvantage) and rerolled dice are ignored. A listener triggers when at least one roll meets every roll check.
+
+## Roll Template Names
+
+A roll template is the layout a character sheet uses for its roll cards. Its name is the part after `template:` in a macro, so `&{template:atkdmg}` uses the `atkdmg` template. Each sheet has its own templates, so `--templates` takes whatever names your game's sheet uses.
+
+To find a name:
+
+1. **Use the inspector.** Type `!crl inspect` (or click **Inspect Next Message**), make the roll from the sheet, and read the **Roll template** line CRL whispers back. This works for every sheet, including Beacon sheets.
+2. **Read the macro.** A sheet button or macro that starts `&{template:NAME}` uses the `NAME` template.
+3. **Read the sheet's source.** Community sheets are in the [Roll20 character sheets repository](https://github.com/Roll20/roll20-character-sheets), where each template is a `<rolltemplate class="sheet-rolltemplate-NAME">`.
+
+Templates of common sheets:
+
+| Sheet                       | Template names                                                                     |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| Any game (built in)         | `default`                                                                          |
+| D&D 5E by Roll20 (2014)     | `simple`, `atk`, `dmg`, `atkdmg`, `spell`, `desc`, `npcaction`, `npcatk`, `npcdmg` |
+| D&D 2024 by Roll20 (Beacon) | `dnd-2024` (see [Beacon Sheets](#beacon-sheets-dd-2024-and-others) for its fields) |
+
+More about roll templates:
+
+- [How to Make Roll Templates](https://help.roll20.net/hc/en-us/articles/360037257334-How-to-Make-Roll-Templates) (Roll20 Help Center): the built-in `default` template and how sheets define theirs.
+- [D&D 5e OGL Roll Templates](https://help.roll20.net/hc/en-us/articles/360037257834-D-D-5e-OGL-Roll-Templates) (Roll20 Help Center): every D&D 5E by Roll20 (2014) template and its fields, useful for `${field:name}`.
+- [Roll20 character sheets repository](https://github.com/Roll20/roll20-character-sheets): the source of community sheets and their templates.
 
 ## Other Options
 

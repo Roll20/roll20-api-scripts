@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.0.0
- * Built: 2026-10-29T08:03:35.365Z
+ * Built: 2026-10-29T14:08:20.230Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -610,7 +610,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T08:03:35.365Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T14:08:20.230Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -641,6 +641,23 @@ const CustomizableRollListenerMod = (() => {
       github: 'https://github.com/steverobertsuk',
     },
   };
+
+  // Where to read about roll templates and find a sheet's template names.
+  const TEMPLATE_LINKS = {
+    builtIn: 'https://help.roll20.net/hc/en-us/articles/360037257334-How-to-Make-Roll-Templates',
+    dnd5e2014: 'https://help.roll20.net/hc/en-us/articles/360037257834-D-D-5e-OGL-Roll-Templates',
+    sheets: 'https://github.com/Roll20/roll20-character-sheets',
+  };
+
+  // Template names of common sheets, shown in the Help handout.
+  const COMMON_TEMPLATES = [
+    { sheet: 'Any game (built in)', names: 'default' },
+    {
+      sheet: 'D&D 5E by Roll20 (2014)',
+      names: 'simple, atk, dmg, atkdmg, spell, desc, npcaction, npcatk, npcdmg',
+    },
+    { sheet: 'D&D 2024 by Roll20 (Beacon)', names: 'dnd-2024' },
+  ];
 
   // Marks a v2 listener's rules when they are mirrored into its ability description.
   const RULES_MARKER = 'crl';
@@ -1189,7 +1206,8 @@ const CustomizableRollListenerMod = (() => {
       name: 'New name',
       target: 'Listener name',
       commands: 'Commands - separate lines with two backslashes',
-      templates: 'Roll templates separated by spaces - none for no template - empty for any',
+      templates:
+        'Roll templates separated by spaces - none for no template - empty for any - Inspect shows a roll’s template',
       types: 'Message types separated by spaces - empty for any except api',
       text: 'Text to look for - see the Help handout - empty for any',
       regex: 'How to read the text',
@@ -1436,6 +1454,21 @@ const CustomizableRollListenerMod = (() => {
           'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
         ],
       },
+      templates: {
+        heading: 'Roll Template Names',
+        points: [
+          'A roll template is the layout a sheet uses for its roll cards. Its name is the part after template: in a macro, so &{template:atkdmg} is the atkdmg template. Each sheet has its own names.',
+          'The quickest way to find a name: click Inspect Next Message, make the roll from the sheet, and read the Roll template line CRL whispers back.',
+          'You can also read the name in a sheet button’s macro, or in the sheet’s source on GitHub, where each template is a <rolltemplate class="sheet-rolltemplate-NAME">.',
+          'Templates of common sheets:',
+        ],
+        colSheet: 'Sheet',
+        colNames: 'Template names',
+        links: 'More about roll templates:',
+        builtIn: 'Roll20: built-in roll templates',
+        dnd5e2014: 'Roll20: D&D 5e (2014) roll templates',
+        sheets: 'Roll20 character sheet source',
+      },
       rolls: {
         heading: 'Roll Checks',
         points: [
@@ -1459,7 +1492,8 @@ const CustomizableRollListenerMod = (() => {
           'Add these to !crl new or !crl edit. Leave a value empty, or use -, to clear it. --commands must come last.',
         colOption: 'Option',
         colDesc: 'Meaning',
-        templates: 'Roll template names, separated by spaces. none = no template.',
+        templates:
+          'Roll template names, separated by spaces. none = no template. See Roll Template Names above.',
         types: 'Message types, separated by spaces: {types}.',
         text: 'Text to find. Separate pieces with &&. ## marks an inline roll.',
         regex: 'on to read the text as regular expressions, off for plain text.',
@@ -2727,6 +2761,17 @@ const CustomizableRollListenerMod = (() => {
       ['!crl \\\\set,listen=on|off', `${COMMAND} on / ${COMMAND} off`],
     ].map(([v1, v2]) => [code(v1), code(v2)]);
 
+    const templates = COMMON_TEMPLATES.map(({ sheet, names }) => [
+      escapeHtml(sheet),
+      names
+        .split(', ')
+        .map((name) => code(name))
+        .join(' '),
+    ]);
+    const templateLinks = Object.entries(TEMPLATE_LINKS)
+      .map(([key, url]) => link(url, t(`handout.templates.${key}`, lang)))
+      .join(' • ');
+
     const locales = SUPPORTED_LOCALES.map((c) => escapeHtml(LOCALE_LABELS[c])).join(', ');
     const { original, maintainer } = AUTHOR_LINKS;
 
@@ -2739,6 +2784,11 @@ const CustomizableRollListenerMod = (() => {
     ${section('quickStart', list(raw('quickStart.steps'), true))}
     ${section('examples', `${list(raw('examples.points'))}${pre(raw('examples.code')?.join?.('\n') || '')}`)}
     ${section('matching', list(raw('matching.points')))}
+    ${section(
+      'templates',
+      `${list(raw('templates.points'))}${table([t('handout.templates.colSheet', lang), t('handout.templates.colNames', lang)], templates)}
+       <p style="${STYLE.p}">${h('templates.links')} ${templateLinks}</p>`
+    )}
     ${section('rolls', list(raw('rolls.points')))}
     ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('options', `<p style="${STYLE.p}">${h('options.intro')}</p>${table([t('handout.options.colOption', lang), t('handout.options.colDesc', lang)], options)}`)}
