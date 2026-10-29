@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.0.0
- * Built: 2026-10-29T14:29:18.820Z
+ * Built: 2026-10-29T15:44:44.692Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -610,7 +610,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T14:29:18.820Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T15:44:44.692Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -2776,8 +2776,8 @@ const CustomizableRollListenerMod = (() => {
       .join(' • ');
 
     const locales = SUPPORTED_LOCALES.map((c) => LOCALE_DEFINITIONS.find((d) => d.code === c)).map(
-      ({ code: localeCode, name, nativeName }) => [
-        code(localeCode),
+      ({ code: localeCode, name, nativeName, flag, flagLabel }) => [
+        `<span title="${escapeAttr(flagLabel)}">${flag}</span> ${code(localeCode)}`,
         escapeHtml(name),
         escapeHtml(nativeName || name),
       ]

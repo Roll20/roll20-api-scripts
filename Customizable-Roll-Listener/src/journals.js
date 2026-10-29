@@ -194,8 +194,8 @@ export function buildHelpHtml(locale) {
     .join(' • ');
 
   const locales = SUPPORTED_LOCALES.map((c) => LOCALE_DEFINITIONS.find((d) => d.code === c)).map(
-    ({ code: localeCode, name, nativeName }) => [
-      code(localeCode),
+    ({ code: localeCode, name, nativeName, flag, flagLabel }) => [
+      `<span title="${escapeAttr(flagLabel)}">${flag}</span> ${code(localeCode)}`,
       escapeHtml(name),
       escapeHtml(nativeName || name),
     ]
