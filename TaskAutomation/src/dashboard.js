@@ -379,7 +379,7 @@ function renderDefinitions(page, lang, at) {
       ? t('dashboard.enabled', lang)
       : t('dashboard.disabled', lang, { reason: record.disabledReason || '—' });
     return [
-      `${escapeHtml(truncate(record.name, 60))}<br><span style="${S.muted}">${escapeHtml(record.id)} r${record.current || '—'}${record.draft && record.current && record.draft.revision > record.current ? ' +draft' : ''}</span>`,
+      `${escapeHtml(truncate(record.name, 60))}<br><span style="${S.muted}">${escapeHtml(record.id)} r${record.current || '—'}${record.draftDirty && record.current ? ' +draft' : ''}</span>`,
       escapeHtml(state),
       escapeHtml(triggerSummary(def)),
       deadline(next, at),

@@ -5,7 +5,7 @@
  * Name: TaskAutomation
  * Script: TaskAutomation.js
  * Version: 1.0.0
- * Built: 2026-10-29T08:12:30.797Z
+ * Built: 2026-10-29T08:32:19.450Z
  */
 const TaskAutomationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const TaskAutomationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'TaskAutomation';
   const SCRIPT_VERSION = '1.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T08:12:30.797Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T08:32:19.450Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -2155,18 +2155,18 @@ const TaskAutomationMod = (() => {
       revisionMissing: 'Its task revision is missing.',
       restartPolicyFail: 'Stopped by a restart (this task fails on restart).',
       noTargets: 'No targets left for this step.',
-      noCharacter: '{id} does not represent a character.',
+      noCharacter: '{name} does not represent a character.',
       noRecipients: 'Nobody to send the message to.',
-      attributeMissing: 'The character has no attribute {attribute}.',
+      attributeMissing: '{name} has no attribute {attribute}.',
       notNumeric: '{attribute} is not a number.',
       notNumber: '{field} is not a number.',
       badValue: '{field} has a value that cannot be used.',
       valueMissing: '{field} has no value.',
-      expectedValue: '{property} of {id} has changed; nothing was overwritten.',
-      notMultiSided: '{id} is not a multi-sided token.',
-      sideOutOfRange: '{id} has only {max} sides.',
+      expectedValue: '{property} of {name} has changed; nothing was overwritten.',
+      notMultiSided: '{name} is not a multi-sided token.',
+      sideOutOfRange: '{name} has only {max} sides.',
       sideImageUnsupported:
-        'Side {side} of {id} is not an image the API can set (it must be in your library).',
+        'Side {side} of {name} is not an image the API can set (it must be in your library).',
       badMarker: '{marker} is not a valid marker name.',
       trackMissing: 'There is no jukebox track {track}.',
       fxMissing: 'There is no custom effect {fx}.',
@@ -2196,7 +2196,7 @@ const TaskAutomationMod = (() => {
       badInstant: 'The time is not valid.',
       badCount: 'The loop count is not a whole number.',
       unknownAction: 'Unknown step type {type}.',
-      controlLost: 'The player no longer controls {id}.',
+      controlLost: 'The player no longer controls {name}.',
       initiatorGone: 'The player who started it has left.',
       publicationRevoked: 'The task is no longer shared with players.',
     },
@@ -5835,6 +5835,8 @@ const TaskAutomationMod = (() => {
       archived: false,
       disabledReason: null,
       draft: clone(body),
+      // True while the draft has changes that are not published.
+      draftDirty: true,
       current: 0,
       revisions: {},
       createdAt: at,
@@ -5884,6 +5886,7 @@ const TaskAutomationMod = (() => {
       return result;
     }
     record.draft = draft;
+    record.draftDirty = true;
     if (typeof draft.name === 'string' && draft.name.trim()) {
       record.name = draft.name.trim();
     }
@@ -6034,6 +6037,7 @@ const TaskAutomationMod = (() => {
     record.current = body.revision;
     record.draft = clone(body);
     record.draft.revision = body.revision + 1;
+    record.draftDirty = false;
     record.name = body.name;
     record.rev += 1;
     record.publishedAt = now();
@@ -9719,6 +9723,10 @@ const TaskAutomationMod = (() => {
    */
   function handleStepError(inst, branch, step, err, advanced) {
     const typed = asTaskError(err);
+    // Errors keep the object ID and add its name for messages.
+    if (typed.vars?.id && !typed.vars.name) {
+      typed.vars.name = targetLabel(typed.vars.id);
+    }
     const def = defOf(inst);
     const replay = replayClass(step);
     const frame = branch.frames.at(-1);
@@ -11892,7 +11900,7 @@ const TaskAutomationMod = (() => {
         ? t('dashboard.enabled', lang)
         : t('dashboard.disabled', lang, { reason: record.disabledReason || '—' });
       return [
-        `${escapeHtml(truncate(record.name, 60))}<br><span style="${S.muted}">${escapeHtml(record.id)} r${record.current || '—'}${record.draft && record.current && record.draft.revision > record.current ? ' +draft' : ''}</span>`,
+        `${escapeHtml(truncate(record.name, 60))}<br><span style="${S.muted}">${escapeHtml(record.id)} r${record.current || '—'}${record.draftDirty && record.current ? ' +draft' : ''}</span>`,
         escapeHtml(state),
         escapeHtml(triggerSummary(def)),
         deadline(next, at),
@@ -14734,7 +14742,7 @@ const TaskAutomationMod = (() => {
     const rev = String(record.rev);
     const steps = [];
     outline(body.steps, 0, steps);
-    const draftAhead = record.draft && record.draft.revision > (record.current || 0);
+    const draftAhead = Boolean(record.draftDirty);
     const schedules = listSchedules(id).map(
       (sc) =>
         `${sc.id}: ${sc.paused ? t('statuses.paused', l) : sc.cursor.nextDueAt ? formatUtc(sc.cursor.nextDueAt) : '—'}`
