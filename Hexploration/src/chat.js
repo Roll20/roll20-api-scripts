@@ -198,10 +198,42 @@ export function buildButton(label, command) {
  *
  * @param {string} label Button label.
  * @param {string} command Chat command the button runs.
+ * @param {string} [prefixHtml=''] Trusted HTML shown before the label, such as a flag.
  * @returns {string} HTML anchor.
  */
-export function buildSecondaryButton(label, command) {
-  return `<a href="${escapeHtml(command)}" style="${BUTTON_SECONDARY_STYLE}">${escapeHtml(label)}</a>`;
+export function buildSecondaryButton(label, command, prefixHtml = '') {
+  return `<a href="${escapeHtml(command)}" style="${BUTTON_SECONDARY_STYLE}">${prefixHtml}${escapeHtml(label)}</a>`;
+}
+
+/**
+ * Builds a Twemoji asset URL for a locale flag.
+ *
+ * @param {string} flag Unicode regional-indicator flag.
+ * @returns {string} SVG asset URL or an empty string.
+ */
+function flagAssetUrl(flag) {
+  const codepoints = Array.from(String(flag || '').trim())
+    .map((character) => character.codePointAt(0).toString(16))
+    .join('-');
+  return codepoints
+    ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+    : '';
+}
+
+/**
+ * Builds a locale's flag as a Twemoji image. Roll20 on Windows shows emoji
+ * flags as letter pairs, so the flag is drawn from an SVG instead.
+ *
+ * @param {object} locale Locale metadata.
+ * @returns {string} Trusted flag HTML, or an empty string when there is no flag.
+ */
+export function buildLocaleFlag(locale) {
+  const label = escapeHtml(locale?.flagLabel || locale?.name || '');
+  const url = flagAssetUrl(locale?.flag);
+  if (!url) {
+    return '';
+  }
+  return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
 }
 
 /**

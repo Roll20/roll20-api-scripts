@@ -21,6 +21,7 @@ import {
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
+import { buildLocaleFlag } from './chat.js';
 import { getDirectionStyle, getLocale, LOCALE_DEFINITIONS, t, tRaw } from './i18n.js';
 import { getConfig } from './state.js';
 import { escapeHtml } from './utils.js';
@@ -138,10 +139,10 @@ export function buildHelpHtml(locale) {
     ['!hexploration_configModifyProperty …', `${COMMAND} set …`],
   ].map(([v1, v2]) => [code(v1), code(v2)]);
 
-  const locales = LOCALE_DEFINITIONS.map(({ code: localeCode, name, nativeName, flag }) => [
-    escapeHtml(flag ? `${flag} ${name}` : name),
-    escapeHtml(nativeName || name),
-    code(localeCode),
+  const locales = LOCALE_DEFINITIONS.map((locale) => [
+    escapeHtml(locale.name),
+    escapeHtml(locale.nativeName || locale.name),
+    `${buildLocaleFlag(locale)}${code(locale.code)}`,
   ]);
   const { original, maintainer } = AUTHOR_LINKS;
 

@@ -1,6 +1,7 @@
 import {
   buildButton,
   buildDivider,
+  buildLocaleFlag,
   buildRow,
   buildSecondaryButton,
   buildSectionLabel,
@@ -39,7 +40,7 @@ import {
   resetCalibration,
   undoLastFill,
 } from './hexes.js';
-import { LOCALE_LABELS, SUPPORTED_LOCALES, t } from './i18n.js';
+import { LOCALE_DEFINITIONS, LOCALE_LABELS, SUPPORTED_LOCALES, t } from './i18n.js';
 import { installHandouts } from './journals.js';
 import { markLocations, setHexName, unmarkLocations } from './locations.js';
 import { getHexLayer, isPathObject } from './paths.js';
@@ -685,7 +686,11 @@ function showSettings(playerId) {
   const config = getConfig();
   const rows = SETTING_ROWS.map((row) => {
     const value = config[row.key];
-    const shown = row.color ? buildSwatch(value) : escapeHtml(formatValue(row.key, value));
+    const flag =
+      row.key === 'language'
+        ? buildLocaleFlag(LOCALE_DEFINITIONS.find(({ code }) => code === value))
+        : '';
+    const shown = row.color ? buildSwatch(value) : flag + escapeHtml(formatValue(row.key, value));
     const button = buildSecondaryButton(
       tr('buttons.change'),
       `${COMMAND} set ${row.key} ${settingQuery(row, value)}`
@@ -707,8 +712,12 @@ function showSettings(playerId) {
  * @returns {void}
  */
 function showLanguages(playerId) {
-  const buttons = SUPPORTED_LOCALES.map((code) =>
-    buildSecondaryButton(LOCALE_LABELS[code], `${COMMAND} set language ${code}`)
+  const buttons = LOCALE_DEFINITIONS.map((locale) =>
+    buildSecondaryButton(
+      LOCALE_LABELS[locale.code],
+      `${COMMAND} set language ${locale.code}`,
+      buildLocaleFlag(locale)
+    )
   );
   whisper(playerId, tr('titles.languages'), `<div>${buttons.join('')}</div>`);
 }
