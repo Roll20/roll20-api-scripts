@@ -97,6 +97,37 @@ function link(url, label) {
 }
 
 /**
+ * Builds a Twemoji asset URL for a locale flag. Roll20 does not draw flag
+ * emoji (Windows shows them as letters), so handouts use the image instead.
+ *
+ * @param {string} flag Unicode regional-indicator flag.
+ * @returns {string} SVG asset URL or an empty string.
+ */
+function flagAssetUrl(flag) {
+  const codepoints = Array.from(String(flag || '').trim())
+    .map((character) => character.codePointAt(0).toString(16))
+    .join('-');
+  return codepoints
+    ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+    : '';
+}
+
+/**
+ * Builds an accessible flag image for a locale.
+ *
+ * @param {object} locale Locale metadata.
+ * @returns {string} Flag HTML, or an empty string when the locale has no flag.
+ */
+function localeFlag(locale) {
+  const url = flagAssetUrl(locale.flag);
+  if (!url) {
+    return '';
+  }
+  const label = escapeAttr(locale.flagLabel || locale.name);
+  return `<img src="${escapeAttr(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
+}
+
+/**
  * Builds the Help handout HTML.
  *
  * @param {string} locale Locale code.
@@ -194,10 +225,10 @@ export function buildHelpHtml(locale) {
     .join(' • ');
 
   const locales = SUPPORTED_LOCALES.map((c) => LOCALE_DEFINITIONS.find((d) => d.code === c)).map(
-    ({ code: localeCode, name, nativeName, flag, flagLabel }) => [
-      `<span title="${escapeAttr(flagLabel)}">${flag}</span> ${code(localeCode)}`,
-      escapeHtml(name),
-      escapeHtml(nativeName || name),
+    (locale) => [
+      `${localeFlag(locale)}${code(locale.code)}`,
+      escapeHtml(locale.name),
+      escapeHtml(locale.nativeName || locale.name),
     ]
   );
   const { original, maintainer } = AUTHOR_LINKS;
