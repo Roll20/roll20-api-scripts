@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0
+## 2.0.0 - 2026-10-29
 
 A full rewrite by MidNiteShadow7 of Ada Lindberg's Hexploration, which no longer worked in Jumpgate games.
 
@@ -49,18 +49,18 @@ A full rewrite by MidNiteShadow7 of Ada Lindberg's Hexploration, which no longer
 - Version 1 state is migrated automatically; hexes whose paths no longer exist are forgotten on startup.
 - Rebuilt with Rollup and Prettier; source split into ES modules with unit and end-to-end tests.
 
-## 1.3
+## 1.3 - 2019-03-19
 
 - Fixed a couple of state bugs.
 
-## 1.2
+## 1.2 - 2018-10-26
 
 - Maximum reveal distance, line-of-sight enforcement and icons for hexes.
 
-## 1.1
+## 1.1 - 2018-04-05
 
 - Chat menu, hex colours, reveal distance, named hexes and inverse fill.
 
-## 1.0
+## 1.0 - 2018-03-13
 
 - Initial release.
