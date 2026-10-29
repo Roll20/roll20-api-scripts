@@ -1,0 +1,48 @@
+{
+  "name": "TaskAutomation",
+  "script": "TaskAutomation.js",
+  "version": "1.0.0",
+  "previousversions": [],
+  "description": "# TaskAutomation\n\nAutomate your game without writing JavaScript: describe a task as data and let the Mod run it on time, on an event or on a button press.\n\n## Getting started\n\n1. Type `!taskautomation` for the menu, or open the **TaskAutomation - Dashboard** handout.\n2. Click **Templates** and add one of the worked examples (torch reminder, HP threshold, turn response, parallel scene, session reminder, other-Mod command, door sequence).\n3. Click **Start** next to a task, or let its schedule or trigger start it.\n\nType `!taskautomation help` for every command. The **TaskAutomation - Help** handout (GM only) is created in the Journal on startup.\n\n## Features\n\n* Tasks made of steps: chat messages, token, side, bar, marker and attribute changes, pings, effects, jukebox control, other-Mod commands and trusted Mod adapters.\n* Waits (for a time, until a moment or for an event), conditions, counted and conditional loops, calls to other tasks and parallel branches.\n* Start tasks by hand, at a set time, every so often, daily or weekly (with an explicit UTC offset), or when tokens, attributes, the turn order, the player page, players or signals change.\n* One timer for all the work, so idle games cost nothing.\n* Tasks survive API restarts. Work missed while the sandbox was off is reported and handled the way you choose: skip, run once, catch up a little, or ask you.\n* A GM-only dashboard handout with pause, resume, cancel and recovery buttons, and an optional player view.\n* GM-only by default; tasks can be published to listed players with tight limits.\n\nCreated by MidNiteShadow7.",
+  "authors": "MidNiteShadow7",
+  "roll20userid": "16506286",
+  "useroptions": [
+    {
+      "name": "dashboardRows",
+      "displayname": "Dashboard Rows",
+      "type": "select",
+      "options": ["10", "25", "50"],
+      "default": "25",
+      "description": "How many rows each dashboard section shows per page."
+    },
+    {
+      "name": "playerView",
+      "displayname": "Player View Handout",
+      "type": "select",
+      "options": ["off", "on"],
+      "default": "off",
+      "description": "on creates a separate TaskAutomation - Player View handout listing only tasks published to players."
+    },
+    {
+      "name": "diagnostics",
+      "displayname": "Diagnostic Logging",
+      "type": "select",
+      "options": ["off", "on"],
+      "default": "off",
+      "description": "on writes scheduler and recovery details to the API console."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "graphic": "read,write",
+    "character": "read",
+    "attribute": "read,write",
+    "page": "read",
+    "player": "read",
+    "jukeboxtrack": "read,write",
+    "campaign.turnorder": "read",
+    "campaign.playerpageid": "read",
+    "handouts": "read,write"
+  },
+  "conflicts": []
+}

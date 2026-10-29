@@ -1,0 +1,8 @@
+node_modules
+package-lock.json
+
+# Written by scripts/bump-version.mjs.
+script.json
+
+# Written by scripts/write-examples.mjs.
+examples/

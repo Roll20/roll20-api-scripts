@@ -1,0 +1,21 @@
+{
+  "name": "taskautomation-roll20",
+  "version": "1.0.0",
+  "description": "Roll20 API Mod that runs GM-defined automation tasks: schedules, waits, loops, conditions, parallel branches and event triggers, with a handout dashboard and restart recovery.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "examples": "node scripts/write-examples.mjs",
+    "format": "prettier --write \"TaskAutomation.js\" \"rollup.config.js\" \"src/**/*.js\" \"tests/**/*.mjs\" \"*.md\" \"docs/*.md\" \"scripts/**/*.mjs\"",
+    "sync-locales": "node scripts/sync-locales.mjs",
+    "regenerate-locales": "node scripts/sync-locales.mjs --regenerate"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "rollup": "^4.34.8"
+  }
+}
