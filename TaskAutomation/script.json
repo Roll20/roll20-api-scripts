@@ -11,7 +11,11 @@
       "name": "dashboardRows",
       "displayname": "Dashboard Rows",
       "type": "select",
-      "options": ["10", "25", "50"],
+      "options": [
+        "10",
+        "25",
+        "50"
+      ],
       "default": "25",
       "description": "How many rows each dashboard section shows per page."
     },
@@ -19,7 +23,10 @@
       "name": "playerView",
       "displayname": "Player View Handout",
       "type": "select",
-      "options": ["off", "on"],
+      "options": [
+        "off",
+        "on"
+      ],
       "default": "off",
       "description": "on creates a separate TaskAutomation - Player View handout listing only tasks published to players."
     },
@@ -27,7 +34,10 @@
       "name": "diagnostics",
       "displayname": "Diagnostic Logging",
       "type": "select",
-      "options": ["off", "on"],
+      "options": [
+        "off",
+        "on"
+      ],
       "default": "off",
       "description": "on writes scheduler and recovery details to the API console."
     }
