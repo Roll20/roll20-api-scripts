@@ -5,7 +5,7 @@
  * Name: Hexploration
  * Script: Hexploration.js
  * Version: 2.0.0
- * Built: 2026-10-29T02:20:55.900Z
+ * Built: 2026-10-29T08:23:06.249Z
  */
 const HexplorationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const HexplorationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Hexploration';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T02:20:55.900Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T08:23:06.249Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1102,7 +1102,7 @@ const HexplorationMod = (() => {
     return calibration;
   }
 
-  const TRANSLATION$4 = {
+  const TRANSLATION$m = {
     titles: {
       ready: 'Heeksplorasie is gereed.',
       settings: 'Heksplorasie-instellings',
@@ -1245,6 +1245,10 @@ const HexplorationMod = (() => {
         label: 'Ping Ontdekkings',
         desc: "Wanneer aan, word spelers na 'n genoemde plek geping wanneer dit ontdek word.",
       },
+      hideCoveredTokens: {
+        label: 'Versteek bedekte tekens',
+        desc: "Roll20 teken name, stawe en aura's bo hekkies. Wanneer dit aan is, word hul speler-sigbare naam, balke en aura's onder 'n bedekte hekshoek afgeskakel en weer aangeskakel wanneer hulle ontbloot word.",
+      },
     },
     status: {
       engine: 'Spel enjin',
@@ -1261,31 +1265,31 @@ const HexplorationMod = (() => {
     },
     messages: {
       filled:
-        'Vul voltooi: {created} heks geteken, {restyled} herstileer, {icons} liggings versteek.',
-      revealed: '{count} hekkies geopenbaar.',
-      revealedPage: 'Alle {count} hekse op die bladsy is geopenbaar.',
+        'Vul voltooi. Hekse getrek: {created}. Herstileer: {restyled}. Liggings versteek: {icons}.',
+      revealed: 'Hekse geopenbaar: {count}.',
+      revealedPage: 'Elke heksie op die bladsy is geopenbaar ({count}).',
       confirmReset:
-        'Verwyder alle {count} hekse van "{page}"? Liggingtokens keer terug na die tokenlaag. Ontdoen kan dit nie omkeer nie.',
-      resetPage: '{count} hekse van die bladsy verwyder.',
+        'Verwyder elke heks van "{page}" ({count})? Liggingtokens keer terug na die tokenlaag. Ontdoen kan dit nie omkeer nie.',
+      resetPage: 'Hekse verwyder van die bladsy: {count}.',
       undone:
-        'Laaste invulling is ongedaan gemaak: {removed} hekse is verwyder, {restored} herstileerde hekse is teruggestel.',
-      named: '{count} heksies genaamd "{name}".',
-      unnamed: 'Naam verwyder van {count} hekse.',
+        'Laaste vulling ontdoen. Hekse verwyder: {removed}. Herstileerde hekkies is herstel: {restored}.',
+      named: 'Hekse genaamd "{name}": {count}.',
+      unnamed: 'Name skoongemaak: {count}.',
       marked:
-        '{attached} liggings versteek in bestaande hekkies; {pending} sal versteek word deur die volgende vul wat hulle bedek.',
-      unmarked: '{count} tekens is nie meer liggings nie.',
+        'Liggings versteek in bestaande hekkies: {attached}. Wag vir die volgende vul wat hulle dek: {pending}.',
+      unmarked: 'Tekens wat nie meer liggings is nie: {count}.',
       settingChanged: '{setting} gestel na {value}.',
       rescanned:
-        "Herskandering voltooi: {kept} hekkies gehou, {adopted} aangeneem, {moved} herliasseer, {dropped} ontbrekende hekse vergete, {labels} etikette en __HEX_PLACEHOLDER's herskakel na.",
+        'Herskandeer voltooi. Gehou: {kept}. Aangeneem: {adopted}. Herliasseer: {moved}. Ontbreek en vergeet: {dropped}. Etikette herskakel: {labels}. Liggingtokens herskakel: {icons}.',
       calibrated:
-        'Rooster gekalibreer (kolomstap {colStep}px, rystap {rowStep}px). Herskandeer: {kept} behou, {moved} herliasseer, {adopted} aangeneem.',
+        'Rooster gekalibreer (kolomstap {colStep}px, rystap {rowStep}px). Herskandeer: behou {kept}, herliasseer {moved}, het {adopted} aangeneem.',
       calibrationReset:
-        'Kalibrasie verwyder. Herskandeer: {kept} behou, {moved} herliasseer, {adopted} aangeneem.',
+        'Kalibrasie verwyder. Herskandeer: behou {kept}, herliasseer {moved}, het {adopted} aangeneem.',
       journalRebuilt: 'Die "{help}" en "{deck}"-uitdeelstukke is herbou.',
       migrated:
         "Jou Hexploration 1.x-hex-kaarte is opgegradeer. As hierdie speletjie uit 'n Legacy-speletjie gekopieer is, voer Rescan op elke hekskaartbladsy uit.",
       pruned:
-        '{dropped} gestoorde hekkies bestaan ​​nie meer nie en is vergeet. As hierdie speletjie of bladsy gekopieer is, hardloop Rescan op die bladsy om sy hekkies weer op te tel.',
+        'Gestoorde hekkies wat nie meer bestaan ​​nie en vergeet is: {dropped}. As hierdie speletjie of bladsy gekopieer is, hardloop Rescan op die bladsy om sy hekkies weer op te tel.',
       readyHint:
         'Tik !hexploration vir die spyskaart, of maak die "Hexploration - Command Deck"-uitdeelstuk oop.',
     },
@@ -1293,14 +1297,14 @@ const HexplorationMod = (() => {
       foregroundUnavailable:
         'Hierdie speletjie ondersteun nie tekening op die voorgrondlaag nie, dus is hekse op die tekenlaag geteken.',
       someFailed:
-        '{count} heks kon nie geteken word nie. Gaan die API-konsole na vir besonderhede.',
+        'Hekse wat nie geteken kon word nie: {count}. Gaan die API-konsole na vir besonderhede.',
     },
     errors: {
       noPage: 'Kon nie die bladsy vind om aan te werk nie.',
       notHex: "Hierdie bladsy gebruik nie 'n hex-rooster nie.",
       noPolygons: 'Kies een of meer getekende vorms om te vul.',
       emptyArea: 'Die geselekteerde area bevat geen heksasiemiddels nie.',
-      tooMany: 'Dit sal {count} hexes skep, wat te veel in een slag is.',
+      tooMany: 'Dit sal te veel hekkies in een slag skep ({count}).',
       nothingToConceal: 'Kies getekende vorms of tekens om te versteek.',
       nothingToReveal: 'Kies hekkies, getekende vorms of tekens om te openbaar.',
       noTokens: 'Kies eers een of meer tekens.',
@@ -1405,6 +1409,7 @@ const HexplorationMod = (() => {
           "Hex Reveal Distance word op hekse gestoor soos hulle geteken word. Daardie hekse word net van binne geopenbaar soveel hekse, hoe ver 'n teken ook al kan sien. Gebruik dit vir berge of woude wat versteek wat agter hulle is.",
           "In Glimpse-modus word hekkies binne sig deurskynend in plaas daarvan om te verdwyn, en word verwyder wanneer 'n teken hulle binnekom.",
           'Die API rapporteer nie bewegings wat deur ander mods gemaak is nie. TokenMod-skuiwe word outomaties opgetel; vir ander mods, kies die tokens en klik Explore, of bel Hexploration.revealAround(token) vanaf jou eie mod.',
+          'Die API rapporteer nie bewegings wat deur ander mods gemaak is nie. TokenMod-skuiwe word outomaties opgetel; vir ander mods, kies die tokens en klik Explore, of bel Hexploration.revealAround(token) vanaf jou eie mod.',
         ],
       },
       locations: {
@@ -1471,7 +1476,7 @@ const HexplorationMod = (() => {
     },
   };
 
-  const TRANSLATION$3 = {
+  const TRANSLATION$l = {
     titles: {
       ready: "L'exploració està a punt.",
       settings: "Configuració d'exploració",
@@ -1614,6 +1619,10 @@ const HexplorationMod = (() => {
         label: 'Ping Descobriments',
         desc: 'Quan està activat, els jugadors reben un ping a una ubicació amb nom quan es descobreix.',
       },
+      hideCoveredTokens: {
+        label: 'Amaga les fitxes cobertes',
+        desc: 'Roll20 dibuixa noms, barres i aures per sobre dels hexagones. Quan està activat, les fitxes sota un hexagonal cobert tenen el seu nom visible per al jugador, les barres i les aures desactivades, i tornen a activar-se quan es destaquen.',
+      },
     },
     status: {
       engine: 'Motor de joc',
@@ -1630,31 +1639,31 @@ const HexplorationMod = (() => {
     },
     messages: {
       filled:
-        'Ompliment complet: {created} hexadecimals dibuixats, {restyled} redissenyats, {icons} ubicacions amagades.',
-      revealed: '{count} hexadecimals revelats.',
-      revealedPage: "S'han revelat tots els {count} hexadecificis de la pàgina.",
+        'Omplir complet. Hexagones dibuixats: {created}. Redisseny: {restyled}. Ubicacions amagades: {icons}.',
+      revealed: 'Hexagones revelats: {count}.',
+      revealedPage: "S'han revelat tots els hexadecimals de la pàgina ({count}).",
       confirmReset:
-        'Vols suprimir tots els {count} hexadecimals de "{page}"? Les fitxes d\'ubicació tornen a la capa de fitxes. Desfer no pot revertir això.',
-      resetPage: '{count} hexadecimals eliminats de la pàgina.',
+        'Eliminar tots els hexadecimals de "{page}" ({count})? Les fitxes d\'ubicació tornen a la capa de fitxes. Desfer no pot revertir això.',
+      resetPage: 'Hexadecimals eliminats de la pàgina: {count}.',
       undone:
-        'Últim farciment desfet: {removed} hexadecimals eliminats, {restored} hexadecimals restaurats.',
-      named: '{count} hexadecimals anomenats "{name}".',
-      unnamed: "S'ha esborrat el nom de {count} hexadecimals.",
+        'Últim farciment desfet. Hexagones eliminats: {removed}. Hexagones redissenyats restaurats: {restored}.',
+      named: 'Hexadecimals anomenats "{name}": {count}.',
+      unnamed: 'Noms esborrats: {count}.',
       marked:
-        "{attached} ubicacions amagades als hexàgons existents; {pending} s'amagarà pel següent farcit que els cobreixi.",
-      unmarked: 'Les fitxes {count} ja no són ubicacions.',
+        'Ubicacions amagades en hexadecimals existents: {attached}. Esperant el següent farcit que els cobreixi: {pending}.',
+      unmarked: 'Fitxes que ja no són ubicacions: {count}.',
       settingChanged: "{setting} s'ha establert en {value}.",
       rescanned:
-        "S'ha completat la tornada de l'exploració: {kept} hexadecimals conservats, {adopted} adoptat, {moved} tornat a arxivar, {dropped} hexadecimals que falten oblidats, __HEX_PLACEHOLDER_4_etiquetes_4__ S'han tornat a enllaçar {icons} fitxes d'ubicació.",
+        "Torna a escanejar completat. Conservat: {kept}. Adoptat: {adopted}. Tornada a arxivar: {moved}. Falta i oblidat: {dropped}. Etiquetes tornades a enllaçar: {labels}. S'han tornat a enllaçar fitxes d'ubicació: {icons}.",
       calibrated:
-        'Quadrícula calibrada (pas de columna {colStep}px, pas de fila {rowStep}px). Torna a escanejar: {kept} conservat, {moved} tornat a arxivar, {adopted} adoptat.',
+        "Quadrícula calibrada (pas de columna {colStep}px, pas de fila {rowStep}px). Torna a escanejar: s'ha mantingut {kept}, s'ha tornat a arxivar {moved}, s'ha adoptat {adopted}.",
       calibrationReset:
-        "S'ha eliminat el calibratge. Torna a escanejar: {kept} conservat, {moved} tornat a arxivar, {adopted} adoptat.",
+        "S'ha eliminat el calibratge. Torna a escanejar: s'ha mantingut {kept}, s'ha tornat a arxivar {moved}, s'ha adoptat {adopted}.",
       journalRebuilt: 'Els fullets "{help}" i "{deck}" s\'han reconstruït.',
       migrated:
         "Els vostres mapes hexadecimals d'Hexploration 1.x s'han actualitzat. Si aquest joc s'ha copiat d'un joc Legacy, executeu Reexplora a cada pàgina de mapa hexadecimal.",
       pruned:
-        "Els {dropped} desats ja no existeixen i s'han oblidat. Si s'ha copiat aquest joc o pàgina, executeu Tornar a escanejar a la pàgina per recollir-ne els hexàgons.",
+        "Hexagones desats que ja no existeixen i s'han oblidat: {dropped}. Si s'ha copiat aquest joc o pàgina, executeu Tornar a escanejar a la pàgina per recollir-ne els hexàgons.",
       readyHint:
         'Escriviu !hexploration per al menú o obriu el fullet "Hexploration - Conjunt d\'ordres".',
     },
@@ -1662,14 +1671,14 @@ const HexplorationMod = (() => {
       foregroundUnavailable:
         'Aquest joc no admet dibuixar a la capa de primer pla, de manera que es van dibuixar hexagones a la capa de fitxes.',
       someFailed:
-        "No s'han pogut dibuixar {count} hexadecimals. Consulteu la consola de l'API per obtenir més informació.",
+        "Hexagones que no s'han pogut dibuixar: {count}. Consulteu la consola de l'API per obtenir més informació.",
     },
     errors: {
       noPage: "No s'ha pogut trobar la pàgina per treballar.",
       notHex: 'Aquesta pàgina no utilitza una graella hexadecimal.',
       noPolygons: 'Seleccioneu una o més formes dibuixades per omplir.',
       emptyArea: "L'àrea seleccionada no conté cap centre hexagonal.",
-      tooMany: "Això crearia {count} hexadecimals, que són massa d'una vegada.",
+      tooMany: "Això crearia massa hexagones d'una vegada ({count}).",
       nothingToConceal: 'Seleccioneu formes dibuixades o fitxes per ocultar.',
       nothingToReveal: 'Seleccioneu hexagonals, formes dibuixades o fitxes per revelar.',
       noTokens: 'Seleccioneu primer un o més fitxes.',
@@ -1776,6 +1785,7 @@ const HexplorationMod = (() => {
           "Hex Reveal La distància s'emmagatzema en hexagonals a mesura que es dibuixen. Aquests hexagones només es revelen des de dins tants hexagones, per molt lluny que pugui veure una fitxa. Utilitzeu-lo per muntanyes o boscos que amaguen el que hi ha darrere.",
           "En el mode Visió visual, els hexàgons a la vista esdevenen transparents en lloc de desaparèixer, i s'eliminen quan hi entra una fitxa.",
           "L'API no informa dels moviments fets per altres modificacions. Els moviments de TokenMod es recullen automàticament; per a altres modificacions, seleccioneu les fitxes i feu clic a Explora, o truqueu a Hexploration.revealAround(token) des del vostre propi mod.",
+          "L'API no informa dels moviments fets per altres modificacions. Els moviments de TokenMod es recullen automàticament; per a altres modificacions, seleccioneu les fitxes i feu clic a Explora, o truqueu a Hexploration.revealAround(token) des del vostre propi mod.",
         ],
       },
       locations: {
@@ -1842,7 +1852,7 @@ const HexplorationMod = (() => {
     },
   };
 
-  const TRANSLATION$2 = {
+  const TRANSLATION$k = {
     titles: {
       ready: 'H探索已準備就緒。',
       settings: 'H探索設置',
@@ -1901,7 +1911,7 @@ const HexplorationMod = (() => {
       },
       revealBy: {
         players: '玩家代幣',
-        characters: 'Character tokens',
+        characters: '字元標記',
         all: '所有代幣',
       },
       revealMode: {
@@ -1984,6 +1994,10 @@ const HexplorationMod = (() => {
         label: '平發現',
         desc: '啟用後，當發現指定位置時，玩家會被 ping 到該位置。',
       },
+      hideCoveredTokens: {
+        label: '隱藏覆蓋的令牌',
+        desc: 'Roll20 在六角形上方繪製名稱、條形和光環。啟用後，被覆蓋的六角形下的令牌的玩家可見的名稱、條形和光環會關閉，並在未被覆蓋時重新打開。',
+      },
     },
     status: {
       engine: '遊戲引擎',
@@ -1999,40 +2013,40 @@ const HexplorationMod = (() => {
       undo: '可以撤銷',
     },
     messages: {
-      filled: '填入完成：繪製 {created} 六角形，重新設計 {restyled} 樣式，隱藏 {icons} 位置。',
-      revealed: '{count} 十六進位顯示。',
-      revealedPage: '顯示頁面上的所有 {count} 十六進位。',
+      filled: '填寫完成。繪製的六角形：{created}。重新設計：{restyled}。隱藏位置：{icons}。',
+      revealed: '六角形顯示：{count}。',
+      revealedPage: '顯示頁面上的每個十六進位 ({count})。',
       confirmReset:
-        '從“{page}”中刪除所有 {count} 十六進位嗎？位置令牌返回令牌層。撤銷無法逆轉此情況。',
-      resetPage: '從頁面中刪除了 {count} 十六進位。',
-      undone: '上次填入撤銷：刪除了 {removed} 六角形，恢復了 {restored} 重新設計的六角形。',
-      named: '{count} 名為「{name}」的十六進位。',
-      unnamed: '從 {count} 十六進位清除名稱。',
-      marked: '{attached} 隱藏在現有六角形中的位置； {pending} 將被覆蓋它們的下一個填充隱藏。',
-      unmarked: '{count} 標記不再是位置。',
+        '刪除「{page}」（{count}）中的每個十六進位？位置令牌返回令牌層。撤銷無法逆轉此情況。',
+      resetPage: '從頁面中刪除的十六進位：{count}。',
+      undone: '上次填充已撤消。已刪除六角形：{removed}。重新設計的六角形已恢復：{restored}。',
+      named: '名為「{name}」的六角形：{count}。',
+      unnamed: '已清除的名稱：{count}。',
+      marked: '隱藏在現有六角形中的位置：{attached}。等待下一次填充覆蓋它們：{pending}。',
+      unmarked: '不再是位置的標記：{count}。',
       settingChanged: '{setting} 設定為 {value}。',
       rescanned:
-        '重新掃描完成：保留 {kept} 十六進制，採用 {adopted}，重新歸檔 {moved}，忘記 {dropped} 缺失的十六進位，重新連結 __HEX_PLACEHOLDER_4%__HOLDER 41_ACE__HOL _HEX_',
+        '重新掃描完成。保留：{kept}。採用：{adopted}。重新歸檔：{moved}。遺失與遺忘：{dropped}。標籤重新連結：{labels}。位置標記重新連結：{icons}。',
       calibrated:
-        '網格校準（列步長 {colStep}px，行步長 {rowStep}px）。重新掃描：{kept} 保留，{moved} 重新歸檔，{adopted} 採用。',
-      calibrationReset: '校準已刪除。重新掃描：{kept} 保留，{moved} 重新歸檔，{adopted} 採用。',
-      journalRebuilt: 'The "{help}" and "{deck}" handouts have been rebuilt.',
+        '網格校準（列步長 {colStep}px，行步長 {rowStep}px）。重新掃描：保留{kept}，重新歸檔{moved}，採用{adopted}。',
+      calibrationReset: '校準已刪除。重新掃描：保留{kept}，重新歸檔{moved}，採用{adopted}。',
+      journalRebuilt: '“{help}”和“{deck}”講義已重建。',
       migrated:
         '您的 Heexploration 1.x 十六進位地圖已升級。如果此遊戲是從舊版遊戲複製的，請在每個十六進位地圖頁面上執行重新掃描。',
       pruned:
-        '{dropped} 保存的十六進位不再存在並被遺忘。如果該遊戲或頁面被複製，請在該頁面上執行重新掃描以再次擷取其六角形。',
+        '已保存的不再存在並被遺忘的十六進位：{dropped}。如果該遊戲或頁面被複製，請在該頁面上執行重新掃描以再次擷取其六角形。',
       readyHint: '在選單中輸入 !hexploration，或開啟「Hexploration - Command Deck」講義。',
     },
     warnings: {
       foregroundUnavailable: '遊戲不支援在前景圖層上繪製，因此在令牌層上繪製了六角形。',
-      someFailed: '無法繪製 {count} 六角形。檢查 API 控制台以了解詳細資訊。',
+      someFailed: '無法繪製的六角形：{count}。檢查 API 控制台以了解詳細資訊。',
     },
     errors: {
       noPage: '找不到要處理的頁面。',
       notHex: '此頁面不使用六角網格。',
       noPolygons: '選擇一個或多個要填滿的繪製形狀。',
       emptyArea: '所選區域不包含任何六角形中心。',
-      tooMany: '這會建立 {count} 六角形，一次性就太多了。',
+      tooMany: '這會一次建立太多的六角形 ({count})。',
       nothingToConceal: '選擇要隱藏的繪製形狀或標記。',
       nothingToReveal: '選擇要顯示的六角形、繪製的形狀或標記。',
       noTokens: '首先選擇一個或多個令牌。',
@@ -2064,7 +2078,7 @@ const HexplorationMod = (() => {
       menu: '顯示選單。',
       fill: '用六角形覆蓋選定的繪製形狀。',
       fillInverse: '覆蓋除所選形狀內部之外的整個頁面。',
-      undo: 'Undo the last fill, inverse fill or conceal, and restore the shapes it used.',
+      undo: '撤銷上次填充、反向填充或隱藏，並恢復其使用的形狀。',
       reveal: '顯示選定的六角形以及選定形狀和標記下的六角形。',
       revealPage: '顯示頁面上的每個十六進制，無需公告。',
       conceal: '再次用六角形覆蓋所選形狀和標記下方的區域。',
@@ -2128,6 +2142,7 @@ const HexplorationMod = (() => {
           '六角形顯示距離在繪製時儲存在六角形上。無論令牌能看到多遠，這些六角形都只能從那麼多六角形內顯露出來。將其用於隱藏其後面的山脈或森林。',
           '在「一瞥」模式中，視線內的六角形會變得透明而不是消失，當令牌進入其中時會被移除。',
           'API 不會報告其他模組所做的動作。 TokenMod 動作會自動拾取；對於其他 mod，請選擇令牌並點擊“探索”，或從您自己的 mod 中呼叫 Heexploration.revealAround(token)。',
+          'API 不會報告其他模組所做的動作。 TokenMod 動作會自動拾取；對於其他 mod，請選擇令牌並點擊“探索”，或從您自己的 mod 中呼叫 Heexploration.revealAround(token)。',
         ],
       },
       locations: {
@@ -2175,8 +2190,8 @@ const HexplorationMod = (() => {
           '令牌移動時不會發生任何事情：檢查令牌是否位於令牌層上並與「顯示的令牌」匹配，頁面是否有六角形（！h探索狀態）。',
           '六角形偏離網格：使用校準，然後用地圖上幾個六角形上的標記進行檢查。',
           '複製頁面或遊戲後，十六進位停止顯示：在頁面上執行重新掃描。',
-          'Fill says the area has no hex centres: the shape must contain the centre of at least one hex.',
-          'For anything else, check the API console log and include its messages when asking for help.',
+          'Fill 表示該區域沒有六角形中心：該形狀必須包含至少一個六角形的中心。',
+          '對於其他任何事情，請檢查 API 控制台日誌並在尋求協助時包含其訊息。',
         ],
       },
       languages: {
@@ -2194,7 +2209,7 @@ const HexplorationMod = (() => {
     },
   };
 
-  const TRANSLATION$1 = {
+  const TRANSLATION$j = {
     titles: {
       ready: 'Heexploration je připraven.',
       settings: 'Nastavení Heexploration',
@@ -2337,6 +2352,10 @@ const HexplorationMod = (() => {
         label: 'Ping Discovery',
         desc: 'Když je zapnuto, hráči jsou pingnuti na pojmenované místo, když je objeveno.',
       },
+      hideCoveredTokens: {
+        label: 'Skryjte kryté žetony',
+        desc: 'Roll20 kreslí jména, pruhy a aury nad hexy. Když jsou žetony pod krytým hexem zapnuté, jejich jméno, pruhy a aury viditelné pro hráče jsou vypnuté a znovu zapnuté, když jsou odkryty.',
+      },
     },
     status: {
       engine: 'Herní engine',
@@ -2353,45 +2372,46 @@ const HexplorationMod = (() => {
     },
     messages: {
       filled:
-        'Vyplnění dokončeno: {created} nakreslených hexů, {restyled} změněných, {icons} míst skrytých.',
-      revealed: '{count} odhalených hexů.',
-      revealedPage: 'Všechny {count} hexy na stránce odhaleny.',
+        'Vyplnění dokončeno. Vylosované hexy: {created}. Změna stylu: {restyled}. Skrytá místa: {icons}.',
+      revealed: 'Odhalené hexy: {count}.',
+      revealedPage: 'Každé odhalené hex na stránce ({count}).',
       confirmReset:
-        'Odebrat všechny {count} hexy z „{page}“? Tokeny umístění se vrátí do vrstvy tokenů. Zpět to nelze vrátit.',
-      resetPage: '{count} hexy odstraněny ze stránky.',
+        'Odebrat každé hex z „{page}“ ({count})? Tokeny umístění se vrátí do vrstvy tokenů. Zpět to nelze vrátit.',
+      resetPage: 'Ze stránky byly odstraněny hexy: {count}.',
       undone:
-        'Poslední vyplnění bylo zrušeno: {removed} hexy odstraněny, {restored} obnovené hexy s novým stylem.',
-      named: '{count} hexy s názvem „{name}“.',
-      unnamed: 'Název byl vymazán z {count} hexů.',
+        'Poslední výplň zrušena. Odstraněné hexy: {removed}. Obnovené obnovené hexy: {restored}.',
+      named: 'Hexusy s názvem „{name}“: {count}.',
+      unnamed: 'Jména vymazána: {count}.',
       marked:
-        '{attached} umístění skrytá na stávajících hexech; {pending} budou skryty další výplní, která je zakryje.',
-      unmarked: '{count} tokeny již nejsou umístění.',
+        'Místa skrytá na stávajících hexech: {attached}. Čekání na další výplň, která je pokryje: {pending}.',
+      unmarked: 'Tokeny, které již nejsou umístěními: {count}.',
       settingChanged: '{setting} nastaveno na {value}.',
       rescanned:
-        'Opětovné skenování dokončeno: {kept} hexy ponechány, {adopted} přijato, {moved} znovu zaregistrováno, {dropped} chybějící hexy zapomenuty, __HEX_PLACEHOLDER__5_4_ umístěníHEX_4_ umístění tokeny znovu propojeny.',
+        'Opětovné skenování dokončeno. Uchováno: {kept}. Přijato: {adopted}. Znovu vyplněno: {moved}. Chybějící a zapomenuté: {dropped}. Znovu propojené štítky: {labels}. Tokeny polohy byly znovu propojeny: {icons}.',
       calibrated:
-        'Mřížka zkalibrována (krok sloupce {colStep}px, krok řádku {rowStep}px). Znovu naskenovat: {kept} ponecháno, {moved} znovu zaevidováno, {adopted} přijato.',
+        'Mřížka zkalibrována (krok sloupce {colStep}px, krok řádku {rowStep}px). Znovu naskenovat: ponecháno {kept}, znovu zadáno {moved}, přijato {adopted}.',
       calibrationReset:
-        'Kalibrace odstraněna. Znovu naskenovat: {kept} ponecháno, {moved} znovu zaevidováno, {adopted} přijato.',
+        'Kalibrace odstraněna. Znovu naskenovat: ponecháno {kept}, znovu uloženo {moved}, přijato {adopted}.',
       journalRebuilt: 'Materiály „{help}“ a „{deck}“ byly přepracovány.',
       migrated:
         'Vaše hex mapy Heexploration 1.x byly upgradovány. Pokud byla tato hra zkopírována ze starší hry, spusťte znovu skenování na každé stránce hexové mapy.',
       pruned:
-        '{dropped} uložená hexy již neexistují a byla zapomenuta. Pokud byla tato hra nebo stránka zkopírována, spusťte Rescan na stránce a znovu seberte její hexy.',
+        'Uložená hexy, která již neexistují a byla zapomenuta: {dropped}. Pokud byla tato hra nebo stránka zkopírována, spusťte Rescan na stránce a znovu seberte její hexy.',
       readyHint:
         'Zadejte !hexploration pro nabídku nebo otevřete leták „Hexploration – Command Deck“.',
     },
     warnings: {
       foregroundUnavailable:
         'Tato hra nepodporuje kreslení na vrstvě popředí, takže hexy byly nakresleny na vrstvu žetonů.',
-      someFailed: '{count} hexy nelze nakreslit. Podrobnosti naleznete v konzole API.',
+      someFailed:
+        'Hexametry, které nebylo možné nakreslit: {count}. Podrobnosti naleznete v konzole API.',
     },
     errors: {
       noPage: 'Nelze najít stránku, na které by se dalo pracovat.',
       notHex: 'Tato stránka nepoužívá hexadecimální mřížku.',
       noPolygons: 'Vyberte jeden nebo více nakreslených tvarů, které chcete vyplnit.',
       emptyArea: 'Vybraná oblast neobsahuje žádné středy šestihran.',
-      tooMany: 'To by vytvořilo {count} hexů, což je příliš mnoho najednou.',
+      tooMany: 'To by vytvořilo příliš mnoho hexů najednou ({count}).',
       nothingToConceal: 'Vyberte nakreslené tvary nebo žetony, které chcete skrýt.',
       nothingToReveal: 'Vyberte hexy, nakreslené tvary nebo žetony, které chcete odhalit.',
       noTokens: 'Nejprve vyberte jeden nebo více žetonů.',
@@ -2493,6 +2513,7 @@ const HexplorationMod = (() => {
           'Hexová vzdálenost odhalení je uložena na hexech tak, jak jsou kresleny. Tyto hexy jsou odhaleny pouze z tolika hexů, jakkoli daleko žeton vidí. Použijte jej na hory nebo lesy, které skrývají to, co je za nimi.',
           'V režimu Glimpse se hexy v dohledu stanou průhlednými, místo aby zmizely, a jsou odstraněny, když do nich vstoupí žeton.',
           'API nehlásí pohyby provedené jinými mody. Pohyby TokenMod se sbírají automaticky; pro další mody vyberte tokeny a klikněte na Prozkoumat, nebo zavolejte Heexploration.revealAround(token) ze svého vlastního modu.',
+          'API nehlásí pohyby provedené jinými mody. Pohyby TokenMod se sbírají automaticky; pro další mody vyberte tokeny a klikněte na Prozkoumat, nebo zavolejte Heexploration.revealAround(token) ze svého vlastního modu.',
         ],
       },
       locations: {
@@ -2559,7 +2580,7 @@ const HexplorationMod = (() => {
     },
   };
 
-  const TRANSLATION = {
+  const TRANSLATION$i = {
     titles: {
       ready: 'Hexploration er klar.',
       settings: 'Indstillinger for Hexploration',
@@ -2671,7 +2692,7 @@ const HexplorationMod = (() => {
         desc: 'Bredden af ​​omridset af nye sekskanter, i pixels (0 til 20).',
       },
       maxDistance: {
-        label: 'Hex Reveal Distance',
+        label: 'Hex afsløre afstand',
         desc: 'Anvendes på hexes, efterhånden som de tegnes: Et symbol skal være inden for så mange hexes for at afsløre dem, uanset hvor langt det kan se. Lad være tomt uden grænse.',
       },
       revealDistance: {
@@ -2691,7 +2712,7 @@ const HexplorationMod = (() => {
         desc: 'Hvilke tokens på tokenlaget afslører hexes: tokens kontrolleret af en spiller, tokens, der repræsenterer en hvilken som helst karakter, eller hver token.',
       },
       revealMode: {
-        label: 'Reveal Mode',
+        label: 'Afsløringstilstand',
         desc: 'Clear fjerner sekskanter inden for syne. Glimt gør dem gennemsigtige i stedet; de fjernes, når et token kommer ind i dem.',
       },
       announce: {
@@ -2701,6 +2722,10 @@ const HexplorationMod = (() => {
       pingDiscoveries: {
         label: 'Ping opdagelser',
         desc: 'Når den er aktiveret, bliver spillere pinget til en navngiven placering, når den opdages.',
+      },
+      hideCoveredTokens: {
+        label: 'Skjul dækkede tokens',
+        desc: 'Roll20 tegner navne, streger og auraer over sekskanter. Når den er tændt, har tokens under en dækket sekskant deres spillersynlige navn, bjælker og auraer slået fra og tændt igen, når de afsløres.',
       },
     },
     status: {
@@ -2718,45 +2743,45 @@ const HexplorationMod = (() => {
     },
     messages: {
       filled:
-        'Fyld fuldført: {created} hexes tegnet, {restyled} restylet, {icons} placeringer skjult.',
-      revealed: '{count} hexes afsløret.',
-      revealedPage: 'Alle {count} hexes på siden afsløret.',
+        'Fyld færdig. Hexer tegnede: {created}. Omstilet: {restyled}. Steder skjult: {icons}.',
+      revealed: 'Hexer afsløret: {count}.',
+      revealedPage: 'Hver hex på siden afsløret ({count}).',
       confirmReset:
-        'Vil du fjerne alle {count} hexes fra "{page}"? Placeringstokens vender tilbage til tokenlaget. Fortryd kan ikke fortryde dette.',
-      resetPage: '{count} sekskanter fjernet fra siden.',
+        'Vil du fjerne hver hex fra "{page}" ({count})? Placeringstokens vender tilbage til tokenlaget. Fortryd kan ikke fortryde dette.',
+      resetPage: 'Hexer fjernet fra siden: {count}.',
       undone:
-        'Sidste udfyldning fortrydet: {removed} hexes fjernet, {restored} restyled hexes gendannet.',
-      named: '{count} hexes med navnet "{name}".',
-      unnamed: 'Navnet er ryddet fra {count} hexes.',
+        'Sidste udfyldning fortrydet. Hekser fjernet: {removed}. Restyled hexes gendannet: {restored}.',
+      named: 'Hexer med navnet "{name}": {count}.',
+      unnamed: 'Navne ryddet: {count}.',
       marked:
-        '{attached} placeringer skjult i eksisterende hexes; {pending} vil blive skjult af den næste udfyldning, der dækker dem.',
-      unmarked: '{count} tokens er ikke længere placeringer.',
+        'Placeringer skjult i eksisterende hexes: {attached}. Venter på den næste fyldning, der dækker dem: {pending}.',
+      unmarked: 'Tokens, der ikke længere er placeringer: {count}.',
       settingChanged: '{setting} indstillet til {value}.',
       rescanned:
-        'Genscanning fuldført: {kept} hexes bevaret, {adopted} adopteret, {moved} genarkiveret, {dropped} manglende hexes glemt, {labels} etiketter og __HEX_PLACEHOLDERs gentilknyttede placeringer.',
+        'Genscanning fuldført. Gemt: {kept}. Vedtaget: {adopted}. Genindgivet: {moved}. Manglende og glemt: {dropped}. Etiketter genlinket: {labels}. Placeringstokens genlinket: {icons}.',
       calibrated:
-        'Gitter kalibreret (kolonnetrin {colStep}px, rækketrin {rowStep}px). Genscan: {kept} beholdt, {moved} genindgivet, {adopted} vedtaget.',
+        'Gitter kalibreret (kolonnetrin {colStep}px, rækketrin {rowStep}px). Genscan: beholdt {kept}, genindsendt {moved}, adopteret {adopted}.',
       calibrationReset:
-        'Kalibrering fjernet. Genscan: {kept} beholdes, {moved} genindgivet, {adopted} blev vedtaget.',
+        'Kalibrering fjernet. Genscan: beholdt {kept}, genindleveret {moved}, adopteret {adopted}.',
       journalRebuilt: 'Uddelingsarkene "{help}" og "{deck}" er blevet genopbygget.',
       migrated:
         'Dine Hexploration 1.x hex-kort er blevet opgraderet. Hvis dette spil blev kopieret fra et Legacy-spil, skal du køre Rescan på hver hex-kortside.',
       pruned:
-        '{dropped} gemte hexes eksisterer ikke længere og blev glemt. Hvis dette spil eller denne side blev kopieret, skal du køre Rescan på siden for at samle dens hexes op igen.',
+        'Gemte hexes, der ikke længere eksisterer og blev glemt: {dropped}. Hvis dette spil eller denne side blev kopieret, skal du køre Rescan på siden for at samle dens hexes op igen.',
       readyHint:
         'Skriv !hexploration for menuen, eller åbn "Hexploration - Command Deck"-uddelingsark.',
     },
     warnings: {
       foregroundUnavailable:
         'Dette spil understøtter ikke tegning på forgrundslaget, så der blev tegnet sekskanter på tokenlaget.',
-      someFailed: '{count} sekskanter kunne ikke tegnes. Tjek API-konsollen for detaljer.',
+      someFailed: 'Hexer, der ikke kunne tegnes: {count}. Tjek API-konsollen for detaljer.',
     },
     errors: {
       noPage: 'Kunne ikke finde siden at arbejde på.',
       notHex: 'Denne side bruger ikke et hex-gitter.',
       noPolygons: 'Vælg en eller flere tegnede figurer, der skal udfyldes.',
       emptyArea: 'Det valgte område indeholder ingen hex-centre.',
-      tooMany: 'Det ville skabe {count} hexes, hvilket er for mange på én gang.',
+      tooMany: 'Det ville skabe for mange hexes på én gang ({count}).',
       nothingToConceal: 'Vælg tegnede figurer eller tokens til at skjule.',
       nothingToReveal: 'Vælg sekskanter, tegnede figurer eller tokens for at afsløre.',
       noTokens: 'Vælg først et eller flere tokens.',
@@ -2859,6 +2884,7 @@ const HexplorationMod = (() => {
           'Hex Reveal Distance gemmes på hexes, efterhånden som de tegnes. Disse hexes afsløres kun indefra så mange hexes, uanset hvor langt et token kan se. Brug den til bjerge eller skove, der skjuler, hvad der er bag dem.',
           'I Glimpse-tilstand bliver sekskanter inden for synsvidde gennemsigtige i stedet for at forsvinde, og fjernes, når et token kommer ind i dem.',
           "API'en rapporterer ikke bevægelser foretaget af andre mods. TokenMod-træk opfanges automatisk; for andre mods, vælg tokens og klik på Udforsk, eller ring til Hexploration.revealAround(token) fra din egen mod.",
+          "API'en rapporterer ikke bevægelser foretaget af andre mods. TokenMod-træk opfanges automatisk; for andre mods, vælg tokens og klik på Udforsk, eller ring til Hexploration.revealAround(token) fra din egen mod.",
         ],
       },
       locations: {
@@ -2915,7 +2941,7 @@ const HexplorationMod = (() => {
         body: 'Vælg et sprog med !hexploration set sprog. Tilgængelige sprog:',
       },
       credits: {
-        heading: 'Credits',
+        heading: 'Kreditter',
         original: 'Original mod af',
         maintainer: 'Version 2 vedligeholdes af',
         marketplace: 'Adas kunstpakker på Roll20 Marketplace',
@@ -2925,7 +2951,380 @@ const HexplorationMod = (() => {
     },
   };
 
-  var localeNl = {};
+  const TRANSLATION$h = {
+    titles: {
+      ready: 'Hexploratie is klaar.',
+      settings: 'Hexploratie-instellingen',
+      languages: 'Kies een taal',
+      pageSettings: 'Pagina-instellingen: {page}',
+      status: 'Hverkenningsstatus: {page}',
+      help: 'Hexploratie-opdrachten',
+      confirm: 'Bevestig alstublieft',
+    },
+    discovery: {
+      title: 'Locatie ontdekt',
+    },
+    menu: {
+      draw: 'Tekenen',
+      reveal: 'Onthullen en verbergen',
+      locations: 'Locaties',
+      tools: 'Hulpmiddelen',
+      layerInUse: 'Er worden nieuwe velden getekend op de {layer}.',
+      pageSettingsHelp:
+        'Deze instellingen zijn alleen van toepassing op deze pagina. Instellingen gemarkeerd met ★ overschrijven de algemene instellingen.',
+    },
+    buttons: {
+      fill: 'Vullen',
+      fillInverse: 'Omgekeerde vulling',
+      undo: 'Vulling ongedaan maken',
+      reveal: 'Onthullen',
+      conceal: 'Maskeren',
+      explore: 'Ontdekken',
+      revealPage: 'Pagina onthullen',
+      resetPage: 'Pagina opnieuw instellen',
+      mark: 'Markeer locatie',
+      unmark: 'Markering opheffen',
+      name: 'Naam Hex',
+      settings: 'Instellingen',
+      pageSettings: 'Pagina-instellingen',
+      status: 'Status',
+      rescan: 'Opnieuw scannen',
+      calibrate: 'Kalibreren',
+      calibrateReset: 'Kalibratie opnieuw instellen',
+      help: 'Hulp',
+      change: 'Wijziging',
+      menu: 'Menu',
+      clearOverrides: 'Wis overschrijvingen',
+      confirmReset: 'Ja, verwijder alle vakjes',
+    },
+    prompts: {
+      name: 'Locatienaam (leeg laten om te wissen)',
+    },
+    values: {
+      on: 'Op',
+      off: 'Uit',
+      none: 'Geen',
+      hexLayer: {
+        auto: 'Automatisch (voorgrond indien beschikbaar)',
+        foreground: 'voorgrond laag',
+        objects: 'token laag',
+      },
+      revealBy: {
+        players: 'Spelerfiches',
+        characters: 'Karakterfiches',
+        all: 'Alle tokens',
+      },
+      revealMode: {
+        clear: 'Duidelijk',
+        glimpse: 'Glimp',
+      },
+      announce: {
+        all: 'Iedereen',
+        gm: 'Alleen GM',
+        off: 'Uit',
+      },
+      orientation: {
+        vertical: 'Zeskant (V)',
+        horizontal: 'Zeskant (H)',
+      },
+      fillKind: {
+        fill: 'Vullen',
+        fillInverse: 'Omgekeerde vulling',
+        conceal: 'Maskeren',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Taal',
+        desc: "Taal voor menu's, berichten en hand-outs.",
+      },
+      hexLayer: {
+        label: 'Hex-laag',
+        desc: 'Waar nieuwe vakken worden getrokken. Auto probeert de voorgrondlaag (boven tokens) en valt terug naar de tokenlaag als het spel dit niet ondersteunt.',
+      },
+      fillColor: {
+        label: 'Vulkleur',
+        desc: 'Kleur van nieuwe vakjes. Gebruik rgba() voor doorzichtige hexen, bijvoorbeeld rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Randkleur',
+        desc: 'Kleur van de omtrek van nieuwe vakjes.',
+      },
+      labelColor: {
+        label: 'Etiketkleur',
+        desc: 'Kleur van de GM-only naamlabels op benoemde vakjes.',
+      },
+      glimpseColor: {
+        label: 'Glimp kleur',
+        desc: 'Kleurvakken veranderen naar wanneer er een glimp van wordt opgevangen (Glimpse-onthullingsmodus). Gebruik een doorzichtige rgba()-kleur.',
+      },
+      strokeWidth: {
+        label: 'Randbreedte',
+        desc: 'Breedte van de omtrek van nieuwe vakken, in pixels (0 tot 20).',
+      },
+      maxDistance: {
+        label: 'Hex onthullen afstand',
+        desc: 'Toegepast op velden zoals ze worden getrokken: een token moet zich binnen zoveel velden bevinden om ze te onthullen, hoe ver hij ook kan kijken. Laat leeg voor geen limiet.',
+      },
+      revealDistance: {
+        label: 'Zicht afstand',
+        desc: 'Hoeveel vakjes rond een bewegend pion worden onthuld (0 tot 20). 0 onthult alleen de vakjes waar het fiche doorheen gaat.',
+      },
+      lineOfSight: {
+        label: 'Zichtlijn',
+        desc: 'Wanneer deze optie is ingeschakeld, wordt een vakje alleen onthuld als er geen afgedekt vakje tussen het vakje en het fiche ligt.',
+      },
+      revealPath: {
+        label: 'Onthul langs het pad',
+        desc: 'Wanneer deze optie is ingeschakeld, wordt elke vakje waar een token doorheen gaat tijdens het slepen (inclusief tussenpunten) onthuld, niet alleen waar het stopt.',
+      },
+      revealBy: {
+        label: 'Tokens die onthullen',
+        desc: 'Welke tokens op de tokenlaag onthullen hexen: tokens die door een speler worden beheerd, tokens die een willekeurig personage vertegenwoordigen, of elk token.',
+      },
+      revealMode: {
+        label: 'Onthullingsmodus',
+        desc: 'Clear verwijdert vakjes die in zicht zijn. Glimpse maakt ze in plaats daarvan doorzichtig; ze worden verwijderd wanneer er een token in komt.',
+      },
+      announce: {
+        label: 'Ontdekkingen aankondigen',
+        desc: 'Wie ziet het chatbericht wanneer een genoemde locatie wordt ontdekt?',
+      },
+      pingDiscoveries: {
+        label: 'Ping-ontdekkingen',
+        desc: 'Wanneer deze optie is ingeschakeld, worden spelers naar een genoemde locatie gepingd wanneer deze wordt ontdekt.',
+      },
+      hideCoveredTokens: {
+        label: 'Verberg afgedekte tokens',
+        desc: "Roll20 tekent namen, balken en aura's boven velden. Wanneer deze zijn ingeschakeld, zijn de voor de speler zichtbare naam, balken en aura's van tokens onder een afgedekt vakje uitgeschakeld, en weer ingeschakeld wanneer ze worden blootgelegd.",
+      },
+    },
+    status: {
+      engine: 'Game-engine',
+      grid: 'Rooster',
+      layer: 'Hex-laag',
+      hexes: 'Hexen',
+      named: 'Genoemde hexen',
+      icons: 'Locatiefiches',
+      glimpsed: 'Glimp van hexen',
+      pending: 'Locaties die wachten op vulling',
+      calibrated: 'Gekalibreerd',
+      overrides: 'Pagina-overschrijvingen',
+      undo: 'Ongedaan maken beschikbaar',
+    },
+    messages: {
+      filled:
+        'Vul compleet. Getekende vakjes: {created}. Gerestyled: {restyled}. Locaties verborgen: {icons}.',
+      revealed: 'Hexen onthuld: {count}.',
+      revealedPage: 'Elke zeshoek op de pagina wordt onthuld ({count}).',
+      confirmReset:
+        'Elke hex verwijderen uit "{page}" ({count})? Locatietokens keren terug naar de tokenlaag. Ongedaan maken kan dit niet ongedaan maken.',
+      resetPage: 'Hexes verwijderd van de pagina: {count}.',
+      undone:
+        'Laatste vulling ongedaan gemaakt. Hexen verwijderd: {removed}. Gerestylede velden hersteld: {restored}.',
+      named: 'Hexen met de naam "{name}": {count}.',
+      unnamed: 'Namen gewist: {count}.',
+      marked:
+        'Locaties verborgen in bestaande vakjes: {attached}. Wachten op de volgende vulling die ze bedekt: {pending}.',
+      unmarked: 'Tokens die niet langer locaties zijn: {count}.',
+      settingChanged: '{setting} ingesteld op {value}.',
+      rescanned:
+        'Opnieuw scannen voltooid. Bewaarde: {kept}. Aangenomen: {adopted}. Opnieuw ingediend: {moved}. Vermist en vergeten: {dropped}. Labels opnieuw gekoppeld: {labels}. Locatietokens opnieuw gekoppeld: {icons}.',
+      calibrated:
+        'Raster gekalibreerd (kolomstap {colStep}px, rijstap {rowStep}px). Opnieuw scannen: {kept} behouden, opnieuw gearchiveerd {moved}, {adopted} overgenomen.',
+      calibrationReset:
+        'Kalibratie verwijderd. Opnieuw scannen: {kept} behouden, opnieuw gearchiveerd {moved}, {adopted} overgenomen.',
+      journalRebuilt: 'De hand-outs "{help}" en "{deck}" zijn opnieuw opgebouwd.',
+      migrated:
+        'Je Hexploration 1.x hex-kaarten zijn geüpgraded. Als dit spel is gekopieerd van een Legacy-spel, voert u Rescan uit op elke hex-kaartpagina.',
+      pruned:
+        'Opgeslagen vakjes die niet meer bestaan ​​en vergeten zijn: {dropped}. Als dit spel of deze pagina is gekopieerd, voert u Opnieuw scannen uit op de pagina om de vakjes weer op te halen.',
+      readyHint:
+        'Typ !hexploration voor het menu, of open het hand-out "Hexploration - Command Deck".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Dit spel biedt geen ondersteuning voor tekenen op de voorgrondlaag, dus werden er vakjes op de tokenlaag getekend.',
+      someFailed:
+        'Velden die niet konden worden getekend: {count}. Controleer de API-console voor meer informatie.',
+    },
+    errors: {
+      noPage: 'Kon de pagina niet vinden om aan te werken.',
+      notHex: 'Deze pagina maakt geen gebruik van een hex-raster.',
+      noPolygons: 'Selecteer een of meer getekende vormen om te vullen.',
+      emptyArea: 'Het geselecteerde gebied bevat geen hex-centra.',
+      tooMany: 'Dat zou te veel velden in één keer creëren ({count}).',
+      nothingToConceal: 'Selecteer getekende vormen of tokens om te verbergen.',
+      nothingToReveal: 'Selecteer vakjes, getekende vormen of tokens om te onthullen.',
+      noTokens: 'Selecteer eerst een of meer tokens.',
+      noHexes: 'Selecteer eerst een of meer vakjes (of fiches die op vakjes staan).',
+      nothingToUndo: 'Er is geen vulling die ongedaan kan worden gemaakt.',
+      unknownCommand: 'Onbekend commando: {command}',
+      unknownSetting: 'Onbekende instelling: {key}',
+      unknownPageSetting: 'Instellingen die per pagina kunnen worden ingesteld: {keys}',
+      invalidValue: '"{value}" is geen geldige waarde voor {key}.',
+      calibrateNeedsTokens:
+        'Selecteer een of twee tokens die op de middelpunten van de zeshoeken zijn vastgemaakt.',
+      calibrateFailed: 'Deze tokens kunnen niet worden gebruikt om te kalibreren.',
+      unexpected: 'Er is iets misgegaan: {message}',
+    },
+    hints: {
+      noPage: 'Open de pagina waaraan u wilt werken of selecteer er iets op.',
+      notHex: 'Stel het paginaraster in op Hex (V) of Hex (H) in Pagina-instellingen.',
+      noPolygons:
+        'Teken een veelhoek, rechthoek, ellips of vorm uit de vrije hand rond het gebied, selecteer het en probeer het opnieuw.',
+      emptyArea: 'Teken een grotere vorm of controleer de paginarasterinstellingen.',
+      tooMany: 'Vul een kleiner gebied, of splits het gebied in verschillende vormen.',
+      noHexes:
+        'Hexes bevinden zich op de voorgrond of tokenlaag; ga naar die laag om ze te selecteren.',
+      unknownCommand: 'Typ !hexploration help om de opdrachten weer te geven.',
+      unknownSetting: 'Typ !hexploration set om elke instelling te bekijken.',
+      calibrateNeedsTokens:
+        'Plaats een token in het midden van een vakje en selecteer het. Selecteer een tweede token dat is vastgemaakt aan een aangrenzende hex in dezelfde rij (Hex V) of kolom (Hex H) om ook de hex-grootte te corrigeren.',
+      calibrateFailed:
+        'Twee fiches moeten zich in dezelfde rij (Hex V) of dezelfde kolom (Hex H) bevinden, met minstens één vakje uit elkaar.',
+      unexpected: 'Details staan ​​in het API-consolelogboek.',
+    },
+    help: {
+      menu: 'Laat de menukaart zien.',
+      fill: 'Bedek de geselecteerde getekende vormen met vakjes.',
+      fillInverse: 'Bedek de hele pagina, behalve binnen de geselecteerde vormen.',
+      undo: 'Maak de laatste vulling ongedaan, keer de vulling om of verberg deze, en herstel de gebruikte vormen.',
+      reveal:
+        'Onthul de geselecteerde velden en de velden onder de geselecteerde vormen en fiches.',
+      revealPage: 'Onthul elke hex op de pagina zonder aankondigingen.',
+      conceal: 'Bedek het gebied onder de geselecteerde vormen en fiches opnieuw met vakjes.',
+      explore: 'Onthul de geselecteerde tokens alsof ze er net naartoe zijn verhuisd.',
+      resetPage: 'Verwijder elk vakje op de pagina (eerst gevraagd).',
+      name: 'Geef de geselecteerde velden een naam, of de velden onder de geselecteerde tokens. Laat de naam leeg om deze te wissen.',
+      mark: 'Verander de geselecteerde tokens in verborgen locaties.',
+      unmark: 'Voorkom dat de geselecteerde tokens verborgen locaties zijn.',
+      set: 'Wijzig een instelling of toon alle instellingen.',
+      pageSet: 'Overschrijf een instelling voor onthullen alleen op de huidige pagina.',
+      pageClear: 'Verwijder de overschrijvingen van de huidige pagina.',
+      rescan:
+        'Bouw de hexadecimale lijst van de pagina opnieuw op, bijvoorbeeld na het kopiëren van een pagina of spel.',
+      calibrate:
+        'Lijn het hex-raster uit met een of twee geselecteerde tokens die op de hexadecimale middelpunten zijn vastgeklikt.',
+      calibrateReset: 'Verwijder de kalibratie van de huidige pagina.',
+      status: 'Laat zien wat Hexploration weet over de huidige pagina.',
+      journal: 'Herbouw de Help- en Command Deck-hand-outs.',
+      help: 'Laat deze lijst zien.',
+      handout: 'Volledige instructies vindt u in de hand-out "{name}".',
+    },
+    deck: {
+      subtitle: 'Commandodek',
+      drawDesc:
+        'Teken vormen rond een gebied, selecteer ze en vul ze. Met Ongedaan maken wordt de laatste vulling ongedaan gemaakt.',
+      revealDesc:
+        'Selecteer vakjes, vormen of tokens om ze weer te onthullen of te bedekken. Ontdek onthullingen rond geselecteerde tokens alsof ze zijn verplaatst.',
+      locationsDesc:
+        'Selecteer tokens om ze te verbergen als locaties onder vakjes. Selecteer vakken of tokens om een ​​vak een naam te geven.',
+      toolsDesc:
+        "Instellingen, paginaoverschrijvingen, status, gekopieerde pagina's opnieuw scannen en het raster kalibreren.",
+      footer: 'Zie de hand-out "{help}" voor volledige instructies.',
+    },
+    handout: {
+      versionLabel: 'Versie',
+      subtitle: 'Hex-voor-hex verkenning voor Roll20',
+      footer: 'Gebruik de hand-out "{deck}" voor bediening met één klik.',
+      overview: {
+        heading: 'Overzicht',
+        body: 'Hexploration beslaat een hex-kaart met ondoorzichtige vakjes. Terwijl het gezelschap beweegt, worden de vakken waar ze doorheen gaan (en, als je wilt, de vakken eromheen) verwijderd, zodat de kaart vakje voor vakje wordt blootgelegd. Verborgen locaties kunnen onder vakjes worden geplaatst en worden aangekondigd wanneer ze worden gevonden. Het werkt in Jumpgate- en Legacy-spellen, op Hex (V) en Hex (H) rasters van elke grootte.',
+        demo: 'Bekijk een korte demo (vanaf versie 1)',
+      },
+      quickStart: {
+        heading: 'Snel beginnen',
+        steps: [
+          'Open een pagina waarvan het raster is ingesteld op Hex (V) of Hex (H).',
+          'Teken een of meer vormen (veelhoek, rechthoek, ellips of uit de vrije hand) rond het gebied dat u wilt verbergen.',
+          'Selecteer de vormen en klik op Invullen in het Command Deck (of typ !hexploration fill). De vormen worden vervangen door zeshoeken.',
+          'Optioneel: selecteer vóór het vullen tokens voor belangrijke plaatsen en klik op Locatie markeren. Ze zijn verborgen onder de vakken en worden aangekondigd wanneer ze worden ontdekt.',
+          'Verplaats een spelersfiche. Elke vakje waar hij doorheen gaat, en de vakjes binnen zijn zichtafstand, worden onthuld.',
+        ],
+      },
+      commands: {
+        heading: "Commando's",
+        intro:
+          "Alleen GM's kunnen deze commando's gebruiken. De meeste werken op de geselecteerde objecten; de rest handelt op de pagina die u bekijkt.",
+        colCommand: 'Commando',
+        colDesc: 'Wat het doet',
+      },
+      revealing: {
+        heading: 'Hoe onthullen werkt',
+        points: [
+          'Alleen tokens op de tokenlaag onthullen hexen. Welke tokens tellen wordt bepaald door Tokens That Reveal: standaard spelertokens, zodat de GM monsters kan verplaatsen zonder de kaart bloot te leggen.',
+          "Een fiche onthult elk vak dat het bestrijkt (grote fiches bestrijken er meerdere) en, als 'Onthullen langs pad' is ingeschakeld, elk vakje op de route waarlangs het is gesleept, inclusief tussenpunten.",
+          'Zichtafstand onthult de velden rond elk van deze velden. Als de zichtlijn is ingeschakeld, wordt een vakje alleen onthuld als er geen bedekt vakje tussen ligt.',
+          'Hex Reveal Distance wordt op de velden opgeslagen terwijl ze worden getrokken. Deze vakjes worden alleen onthuld vanuit dat aantal vakjes, hoe ver een token ook kan kijken. Gebruik het voor bergen of bossen die verbergen wat erachter ligt.',
+          'In de Glimpse-modus worden vakjes die zichtbaar zijn, doorzichtig in plaats van te verdwijnen, en worden ze verwijderd wanneer er een token in komt.',
+          'De API rapporteert geen bewegingen van andere mods. TokenMod-bewegingen worden automatisch opgepikt; voor andere mods selecteert u de tokens en klikt u op Ontdekken, of roept u Hexploration.revealAround(token) aan vanuit uw eigen mod.',
+          'De API rapporteert geen bewegingen van andere mods. TokenMod-bewegingen worden automatisch opgepikt; voor andere mods selecteert u de tokens en klikt u op Ontdekken, of roept u Hexploration.revealAround(token) aan vanuit uw eigen mod.',
+        ],
+      },
+      locations: {
+        heading: 'Genoemde velden en locaties',
+        points: [
+          'Locatie markeren verandert de geselecteerde tokens in verborgen locaties. Een pion dat zich al onder een vakje bevindt, wordt meteen verborgen; anders wordt het verborgen door de volgende vulling die het bedekt.',
+          'Tokens met de statusmarkering van de witte toren worden bij het vullen ook behandeld als locaties, zoals in versie 1.',
+          'Verborgen locatiefiches worden verplaatst naar de GM-laag. Wanneer hun hex wordt onthuld, keren ze terug naar de tokenlaag met hun naam weergegeven, en wordt hun ontdekking aangekondigd.',
+          'Naam Hex geeft een hex een naam zonder token. De naam wordt aan de GM getoond als een label op de GM-laag en aangekondigd wanneer de hex wordt onthuld.',
+          'Announce Discoveries kiest of iedereen, alleen de GM, of niemand de aankondiging ziet. Ping Discoveries verplaatst ook het zicht van de speler naar de locatie.',
+        ],
+      },
+      settings: {
+        heading: 'Instellingen',
+        intro:
+          'Wijzig de instellingen met !hexploration set (of de knop Instellingen). Hex Layer, Tokens That Reveal en Language kunnen ook worden ingesteld op de instellingenpagina van de Mod.',
+        colKey: 'Sleutel',
+        colName: 'Instelling',
+        colDesc: 'Beschrijving',
+        perPage: '(Kan per pagina worden ingesteld.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate en erfenis',
+        points: [
+          'Hexploration zoekt uit welke engine het spel gebruikt en tekent de bijpassende vorm. Vormen die in beide editors zijn getekend, kunnen worden gevuld.',
+          'Als Hex Layer is ingesteld op Auto, worden hexen op de voorgrondlaag getekend, boven de tokens, zodat spelers niet kunnen zien wat eronder zit. Als de voorgrondlaag niet beschikbaar is, wordt in plaats daarvan de tokenlaag gebruikt.',
+          'Jumpgate tekent wiskundig regelmatige vakken, die een iets andere vorm hebben dan Legacy-vakken. Als de vakjes niet op één lijn liggen met het raster van een pagina, plaats dan een token op het midden van een vakje, selecteer het en klik op Kalibreren. Selecteer twee tokens in aangrenzende vakjes van dezelfde rij (Hex V) of kolom (Hex H) om ook de hexadecimale grootte te corrigeren.',
+          "Wanneer een pagina of spel wordt gekopieerd, krijgen de vakjes nieuwe ID's. Voer Rescan uit op de pagina om ze weer op te halen, samen met hun naamlabels en locatietokens.",
+        ],
+      },
+      upgrading: {
+        heading: 'Upgraden vanaf versie 1',
+        points: [
+          'Versie 2 heeft niet langer PathMath, MatrixMath, Vector Math of HTML Builder nodig. Je kunt ze verwijderen, tenzij een andere mod ze gebruikt.',
+          'Bestaande hexadecimale kaarten, namen, locatietokens en instellingen worden bij de eerste start automatisch geüpgraded.',
+          'De opdrachten van versie 1, inclusief de macro Hexploration_menu, werken nog steeds.',
+          'Versie 1 liet elk token dat een personage vertegenwoordigde, vakjes onthullen. Stel tokens die onthullen in op karaktertokens om dat gedrag te behouden.',
+        ],
+        colV1: 'Versie 1-opdracht',
+        colV2: 'Versie 2-opdracht',
+      },
+      troubleshooting: {
+        heading: 'Problemen oplossen',
+        points: [
+          'Er gebeurt niets wanneer een token beweegt: controleer of het token zich op de tokenlaag bevindt en overeenkomt met Tokens That Reveal, en of de pagina hexes heeft (!hexploration-status).',
+          'Hexes zijn verschoven ten opzichte van het raster: gebruik Kalibreren en controleer vervolgens met een token op een paar velden op de kaart.',
+          'Hexes zijn niet meer zichtbaar na het kopiëren van een pagina of game: voer Rescan uit op de pagina.',
+          'Fill geeft aan dat het gebied geen middelpunten van zeshoeken heeft: de vorm moet het midden van ten minste één zeshoek bevatten.',
+          'Voor al het andere kunt u het logboek van de API-console raadplegen en de berichten erbij vermelden als u om hulp vraagt.',
+        ],
+      },
+      languages: {
+        heading: 'Talen',
+        body: 'Kies een taal met de door !hexploration ingestelde taal. Beschikbare talen:',
+      },
+      credits: {
+        heading: 'Kredieten',
+        original: 'Originele mod door',
+        maintainer: 'Versie 2 onderhouden door',
+        marketplace: "Ada's kunstpakketten op de Roll20 Marketplace",
+        support:
+          'Als je een bug vindt of een idee hebt, plaats dan een bericht op het Roll20 Mod-forum of open een probleem op GitHub, en voeg eventuele berichten uit het API-consolelogboek toe.',
+      },
+    },
+  };
 
   var localeEnUS = {
     titles: {
@@ -3294,39 +3693,6353 @@ const HexplorationMod = (() => {
     },
   };
 
-  var localeFi = {};
+  const TRANSLATION$g = {
+    titles: {
+      ready: 'Hexploration on valmis.',
+      settings: 'Tutkimusasetukset',
+      languages: 'Valitse kieli',
+      pageSettings: 'Sivuasetukset: {page}',
+      status: 'Tutkimuksen tila: {page}',
+      help: 'Hexploration komennot',
+      confirm: 'Ole hyvä ja vahvista',
+    },
+    discovery: {
+      title: 'Sijainti löydetty',
+    },
+    menu: {
+      draw: 'Piirrä',
+      reveal: 'Paljasta ja piilota',
+      locations: 'Sijainnit',
+      tools: 'Työkalut',
+      layerInUse: 'Uusia heksalukuja piirretään paikkaan {layer}.',
+      pageSettingsHelp:
+        'Nämä asetukset koskevat vain tätä sivua. ★-merkityt asetukset ohittavat yleiset asetukset.',
+    },
+    buttons: {
+      fill: 'Täyttää',
+      fillInverse: 'Käänteinen täyttö',
+      undo: 'Kumoa täyttö',
+      reveal: 'Paljastaa',
+      conceal: 'Salata',
+      explore: 'Tutkia',
+      revealPage: 'Paljasta sivu',
+      resetPage: 'Nollaa sivu',
+      mark: 'Merkitse sijainti',
+      unmark: 'Poista merkintä',
+      name: 'Nimi Hex',
+      settings: 'Asetukset',
+      pageSettings: 'Sivun asetukset',
+      status: 'Status',
+      rescan: 'Skannaa uudelleen',
+      calibrate: 'Kalibroida',
+      calibrateReset: 'Nollaa kalibrointi',
+      help: 'Auttaa',
+      change: 'Muuttaa',
+      menu: 'Valikko',
+      clearOverrides: 'Tyhjennä ohitukset',
+      confirmReset: 'Kyllä, poista kaikki heksit',
+    },
+    prompts: {
+      name: 'Sijainnin nimi (jätä tyhjäksi tyhjentääksesi)',
+    },
+    values: {
+      on: 'Päällä',
+      off: 'Pois',
+      none: 'Ei mitään',
+      hexLayer: {
+        auto: 'Automaattinen (etualalla, jos saatavilla)',
+        foreground: 'etualan kerros',
+        objects: 'merkkikerros',
+      },
+      revealBy: {
+        players: 'Pelaajan merkit',
+        characters: 'Hahmomerkit',
+        all: 'Kaikki merkit',
+      },
+      revealMode: {
+        clear: 'Selkeä',
+        glimpse: 'Vilkkaus',
+      },
+      announce: {
+        all: 'Kaikki',
+        gm: 'Vain GM',
+        off: 'Pois',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Täyttää',
+        fillInverse: 'Käänteinen täyttö',
+        conceal: 'Salata',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Kieli',
+        desc: 'Valikkojen, viestien ja monisteiden kieli.',
+      },
+      hexLayer: {
+        label: 'Hex kerros',
+        desc: 'Jossa piirretään uudet heksat. Auto yrittää etualan kerrosta (merkkien yläpuolella) ja palaa token-kerrokseen, jos peli ei tue sitä.',
+      },
+      fillColor: {
+        label: 'Täyttöväri',
+        desc: 'Uusien kuusioiden väri. Käytä rgba()-funktiota läpinäkyville heksadesille, esimerkiksi rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Reunuksen väri',
+        desc: 'Uusien kuusioiden ääriviivan väri.',
+      },
+      labelColor: {
+        label: 'Etiketin väri',
+        desc: 'Vain GM:n nimitarrojen väri nimetyissä heksadesissä.',
+      },
+      glimpseColor: {
+        label: 'Glimpse Color',
+        desc: 'Heksojen väri muuttuu välähdessään (Glimpse paljastamistila). Käytä läpinäkyvää rgba()-väriä.',
+      },
+      strokeWidth: {
+        label: 'Reunan leveys',
+        desc: 'Uusien heksojen ääriviivan leveys pikseleinä (0 - 20).',
+      },
+      maxDistance: {
+        label: 'Hex paljastaa etäisyyttä',
+        desc: 'Soveltuu heksaan, kun ne on piirretty: merkki on oltava tämän monen heksan sisällä paljastaakseen ne, riippumatta siitä, kuinka kauas se näkee. Jätä tyhjäksi ilman rajoituksia.',
+      },
+      revealDistance: {
+        label: 'Näköetäisyys',
+        desc: 'Kuinka monta heksaa liikkuvan merkin ympärillä paljastetaan (0 - 20). 0 paljastaa vain ne heksat, joiden läpi merkki kulkee.',
+      },
+      lineOfSight: {
+        label: 'Näkökenttä',
+        desc: 'Kun heksa on päällä, se paljastuu vain, jos sen ja merkin välissä ei ole peitettyä heksaa.',
+      },
+      revealPath: {
+        label: 'Paljasta polun varrella',
+        desc: 'Kun se on päällä, jokainen hex, jonka läpi merkki kulkee vedettäessä (mukaan lukien reittipisteet), paljastetaan, ei vain sen pysähtymiskohtaa.',
+      },
+      revealBy: {
+        label: 'Tokenit jotka paljastavat',
+        desc: 'Token-kerroksen merkit paljastavat heksioita: pelaajan hallitsemia merkkejä, mitä tahansa hahmoa edustavia merkkejä tai jokaista merkkiä.',
+      },
+      revealMode: {
+        label: 'Paljastustila',
+        desc: 'Kirkas poistaa kuusiot näkyviltä. Sen sijaan välähdys tekee niistä läpinäkyviä; ne poistetaan, kun niihin tulee merkki.',
+      },
+      announce: {
+        label: 'Ilmoita löydökset',
+        desc: 'Kuka näkee chat-viestin, kun nimetty sijainti löydetään.',
+      },
+      pingDiscoveries: {
+        label: 'Ping löydöt',
+        desc: 'Kun se on päällä, pelaajat pingoidaan nimettyyn paikkaan, kun se löydetään.',
+      },
+      hideCoveredTokens: {
+        label: 'Piilota peitetyt rahakkeet',
+        desc: 'Roll20 piirtää nimiä, palkkeja ja auloja heksaan yläpuolelle. Kun se on päällä, peitetyn heksan alla olevilla rahakkeilla on pelaajalle näkyvä nimi, palkit ja aurat pois päältä ja takaisin päälle, kun ne paljastuvat.',
+      },
+    },
+    status: {
+      engine: 'Pelin moottori',
+      grid: 'Ruudukko',
+      layer: 'Hex kerros',
+      hexes: 'Hexes',
+      named: 'Nimetyt heksat',
+      icons: 'Sijaintitunnukset',
+      glimpsed: 'Näytetyt kuusiot',
+      pending: 'Täyttöä odottavat paikat',
+      calibrated: 'Kalibroitu',
+      overrides: 'Sivun ohitukset',
+      undo: 'Kumoa käytettävissä',
+    },
+    messages: {
+      filled:
+        'Täyttö valmis. Heksat piirretty: {created}. Uudelleen muotoiltu: {restyled}. Piilotetut sijainnit: {icons}.',
+      revealed: 'Heksat paljastettiin: {count}.',
+      revealedPage: 'Jokainen sivun heksa paljastettiin ({count}).',
+      confirmReset:
+        'Poistetaanko jokainen heksa kohdasta "{page}" ({count})? Sijaintitunnukset palaavat merkkikerrokseen. Kumoa ei voi peruuttaa tätä.',
+      resetPage: 'Heksit poistettu sivulta: {count}.',
+      undone:
+        'Viimeinen täyttö kumottu. Heksit poistettu: {removed}. Uudelleen muotoillut heksat palautettu: {restored}.',
+      named: 'Heksaalit nimeltä "{name}": {count}.',
+      unnamed: 'Poistetut nimet: {count}.',
+      marked:
+        'Olemassa oleviin heksaan piilotetut sijainnit: {attached}. Odotetaan seuraavaa täyttöä, joka kattaa ne: {pending}.',
+      unmarked: 'Tunnukset, jotka eivät ole enää sijainteja: {count}.',
+      settingChanged: '{setting} asetettu arvoon {value}.',
+      rescanned:
+        'Uudelleenskannaus valmis. Säilytetty: {kept}. Hyväksytty: {adopted}. Arkistoitu uudelleen: {moved}. Kadonnut ja unohdettu: {dropped}. Uudelleen linkitetyt tunnisteet: {labels}. Sijaintitunnukset linkitetty uudelleen: {icons}.',
+      calibrated:
+        'Ruudukko kalibroitu (sarakkeen vaihe {colStep}px, rivin vaihe {rowStep}px). Tarkista uudelleen: säilytetty {kept}, arkistoitu uudelleen {moved}, hyväksytty {adopted}.',
+      calibrationReset:
+        'Kalibrointi poistettu. Tarkista uudelleen: säilytetty {kept}, arkistoitu uudelleen {moved}, hyväksytty {adopted}.',
+      journalRebuilt: 'Monisteet "{help}" ja "{deck}" on rakennettu uudelleen.',
+      migrated:
+        'Hexploration 1.x -heksaanikarttasi on päivitetty. Jos tämä peli on kopioitu Legacy-pelistä, suorita Rescan jokaisella hex-karttasivulla.',
+      pruned:
+        'Tallennetut heksat, joita ei enää ole ja jotka unohdettiin: {dropped}. Jos tämä peli tai sivu kopioitiin, suorita sivulla uudelleenskannaus, jotta voit hakea sen heksaanit uudelleen.',
+      readyHint: 'Kirjoita valikkoon !hexploration tai avaa "Hexploation - Command Deck" -moniste.',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Tämä peli ei tue piirtämistä etualan kerrokselle, joten heksaat piirrettiin merkkikerrokseen.',
+      someFailed: 'Heksat, joita ei voitu piirtää: {count}. Katso lisätietoja API-konsolista.',
+    },
+    errors: {
+      noPage: 'Työstettävää sivua ei löytynyt.',
+      notHex: 'Tämä sivu ei käytä kuusioruudukkoa.',
+      noPolygons: 'Valitse yksi tai useampi piirretty muoto täytettäväksi.',
+      emptyArea: 'Valittu alue ei sisällä heksakeskuksia.',
+      tooMany: 'Tämä loisi liian monta heksaa kerralla ({count}).',
+      nothingToConceal: 'Valitse piilotettavat piirretyt muodot tai merkit.',
+      nothingToReveal: 'Valitse paljastettavat kuusikat, piirretyt muodot tai merkit.',
+      noTokens: 'Valitse ensin yksi tai useampi merkki.',
+      noHexes: 'Valitse ensin yksi tai useampi heksa (tai heksoilla seisova rahake).',
+      nothingToUndo: 'Kumoavaa täyttöä ei ole.',
+      unknownCommand: 'Tuntematon komento: {command}',
+      unknownSetting: 'Tuntematon asetus: {key}',
+      unknownPageSetting: 'Sivukohtaisesti määritettävissä olevat asetukset: {keys}',
+      invalidValue: '"{value}" ei ole kelvollinen arvo kohteelle {key}.',
+      calibrateNeedsTokens: 'Valitse yksi tai kaksi kuusiokeskuksiin napsautettua rahaketta.',
+      calibrateFailed: 'Näitä tunnuksia ei voi käyttää kalibrointiin.',
+      unexpected: 'Jotain meni pieleen: {message}',
+    },
+    hints: {
+      noPage: 'Avaa sivu, jota haluat käsitellä, tai valitse siitä jotain.',
+      notHex: 'Aseta sivun ruudukoksi heksadesimaali (V) tai heksa (H) Sivuasetuksissa.',
+      noPolygons:
+        'Piirrä alueen ympärille monikulmio, suorakulmio, ellipsi tai vapaalla kädellä oleva muoto, valitse se ja yritä sitten uudelleen.',
+      emptyArea: 'Piirrä suurempi muoto tai tarkista sivuruudukon asetukset.',
+      tooMany: 'Täytä pienempi alue tai jaa alue useisiin muotoihin.',
+      noHexes:
+        'Heksit ovat etualalla tai merkkikerroksessa; vaihda kyseiselle tasolle valitaksesi ne.',
+      unknownCommand: 'Kirjoita !hexploration help listataksesi komennot.',
+      unknownSetting: 'Näet kaikki asetukset kirjoittamalla !hexploration set.',
+      calibrateNeedsTokens:
+        'Napsauta merkki heksan keskelle ja valitse se. Valitse toinen saman rivin (Hex V) tai sarakkeen (Hex H) viereiseen heksaaniin napsautettu merkki ja korjaa myös heksadesimaalikoko.',
+      calibrateFailed:
+        'Kahden tunnuksen on oltava samalla rivillä (Hex V) tai samassa sarakkeessa (Hex H), vähintään yhden heksan päässä toisistaan.',
+      unexpected: 'Yksityiskohdat ovat API-konsolin lokissa.',
+    },
+    help: {
+      menu: 'Näytä valikko.',
+      fill: 'Peitä valitut piirretyt muodot kuusioilla.',
+      fillInverse: 'Peitä koko sivu paitsi valittujen muotojen sisällä.',
+      undo: 'Kumoa viimeinen täyttö, käänteinen täyttö tai piilota ja palauta käytetyt muodot.',
+      reveal: 'Näytä valitut heksat ja valittujen muotojen ja merkkien alla olevat heksat.',
+      revealPage: 'Paljasta sivun jokainen hex ilman ilmoituksia.',
+      conceal: 'Peitä alue valittujen muotojen ja merkkien alla uudelleen kuusioilla.',
+      explore:
+        'Paljasta valittujen rahakkeiden ympärillä ikään kuin ne olisivat juuri muuttaneet sinne.',
+      resetPage: 'Poista sivulta jokainen hekseli (kysyy ensin).',
+      name: 'Nimeä valitut heksat tai valittujen merkkien alla olevat heksat. Tyhjennä se jättämällä nimen tyhjäksi.',
+      mark: 'Muuta valitut merkit piilotettuihin paikkoihin.',
+      unmark: 'Estä valittujen merkkien piilottaminen.',
+      set: 'Muuta asetusta tai näytä kaikki asetukset.',
+      pageSet: 'Ohita paljastamisasetus vain nykyisellä sivulla.',
+      pageClear: 'Poista nykyisen sivun ohitukset.',
+      rescan:
+        'Rakenna sivun heksadesimaalilista uudelleen esimerkiksi sivun tai pelin kopioimisen jälkeen.',
+      calibrate:
+        'Linjaa kuusioruudukko yhdellä tai kahdella valitulla kentällä, jotka on napsautettu kuusiokeskuksiin.',
+      calibrateReset: 'Poista nykyisen sivun kalibrointi.',
+      status: 'Näytä, mitä Hexploration tietää nykyisestä sivusta.',
+      journal: 'Rakenna Ohje- ja komentokansion monisteet uudelleen.',
+      help: 'Näytä tämä luettelo.',
+      handout: 'Täydelliset ohjeet ovat monisteessa "{name}".',
+    },
+    deck: {
+      subtitle: 'Komentolevy',
+      drawDesc:
+        'Piirrä muotoja alueen ympärille, valitse ne ja täytä. Kumoa kääntää viimeisen täytön.',
+      revealDesc:
+        'Valitse kuusiot, muodot tai merkit paljastaaksesi tai peittääksesi ne uudelleen. Tutki valittujen tokenien ympärillä olevia paljastuksia ikään kuin ne olisivat siirtyneet.',
+      locationsDesc:
+        'Valitse tunnukset piilottaaksesi ne sijainneiksi heksojen alle. Valitse heksadesimaalit tai merkit nimetäksesi heksan.',
+      toolsDesc:
+        'Asetukset, sivujen ohitukset, tila, kopioitujen sivujen uudelleenskannaus ja ruudukon kalibrointi.',
+      footer: 'Katso täydelliset ohjeet monisteesta "{help}".',
+    },
+    handout: {
+      versionLabel: 'Versio',
+      subtitle: 'Hex-by-hex tutkiminen Roll20:lle',
+      footer: 'Käytä "{deck}" -monistetta yhden napsautuksen ohjaimiin.',
+      overview: {
+        heading: 'Yleiskatsaus',
+        body: 'Hexploration kattaa hex-kartan läpinäkymättömillä heksailla. Kun seurue liikkuu, niiden läpi kulkevat heksat (ja halutessasi niiden ympärillä olevat heksat) poistetaan, joten kartta paljastuu heksa kerrallaan. Piilotetut paikat voidaan sijoittaa heksojen alle ja niistä ilmoitetaan, kun ne löydetään. Se toimii Jumpgate- ja Legacy-peleissä, minkä tahansa kokoisissa Hex (V) ja Hex (H) -ruudukoissa.',
+        demo: 'Katso lyhyt esittely (versiosta 1)',
+      },
+      quickStart: {
+        heading: 'Pika-aloitus',
+        steps: [
+          'Avaa sivu, jonka ruudukkoasetuksena on Hex (V) tai Hex (H).',
+          'Piirrä piilotettavan alueen ympärille yksi tai useampi muoto (monikulmio, suorakaide, ellipsi tai vapaalla kädellä).',
+          'Valitse muodot ja napsauta Täytä komentopakissa (tai kirjoita !hexploration fill). Muodot korvataan heksoilla.',
+          'Valinnainen: ennen täyttämistä valitse tunnukset tärkeille paikoille ja napsauta Merkitse sijainti. Ne piilotetaan kuusioiden alle ja ilmoitetaan, kun ne löydetään.',
+          'Siirrä pelaajatunnusta. Jokainen heksa, jonka se kulkee, ja sen näköetäisyyden sisällä olevat heksat paljastetaan.',
+        ],
+      },
+      commands: {
+        heading: 'komennot',
+        intro:
+          'Vain GM:t voivat käyttää näitä komentoja. Useimmat toimivat valittuihin objekteihin; loput toimivat katsomallasi sivulla.',
+        colCommand: 'Komento',
+        colDesc: 'Mitä se tekee',
+      },
+      revealing: {
+        heading: 'Kuinka paljastaminen toimii',
+        points: [
+          'Vain merkkikerroksen merkit paljastavat heksalukuja. Tokens That Reveal -pelimerkkien määrän määrittää oletusarvoisesti pelaajamerkit, joten GM voi siirtää hirviöitä paljastamatta karttaa.',
+          'Token paljastaa jokaisen heksan, jonka se peittää (suuret merkit kattavat useita) ja, kun Reveal Along Path on päällä, jokaisen heksan reitillä, jota se vedettiin, mukaan lukien reittipisteet.',
+          'Näköetäisyys paljastaa kunkin heksan ympärillä olevat heksat. Kun Line of Sight on päällä, kuusio tulee näkyviin vain, jos välissä ei ole peitettyä kuusiota.',
+          'Hex Reveal Distance tallennetaan heksaan kun ne piirretään. Nuo heksat paljastuvat vain sisältäpäin, että monet heksat, kuinka kauas merkki näkee. Käytä sitä vuorille tai metsille, jotka piilottavat sen, mikä on takanaan.',
+          'Glimpse-tilassa näkyvissä olevista kuusioista tulee läpinäkyviä sen sijaan, että ne katoavat, ja ne poistetaan, kun niihin tulee merkki.',
+          'API ei raportoi muiden modien tekemiä liikkeitä. TokenMod-liikkeet poimitaan automaattisesti; muita modeja varten valitse tunnukset ja napsauta Explore tai soita Hexploration.revealAround(token) omasta modistasi.',
+          'API ei raportoi muiden modien tekemiä liikkeitä. TokenMod-liikkeet poimitaan automaattisesti; muita modeja varten valitse tunnukset ja napsauta Explore tai soita Hexploration.revealAround(token) omasta modistasi.',
+        ],
+      },
+      locations: {
+        heading: 'Nimetty Heksit ja sijainnit',
+        points: [
+          'Mark Location muuttaa valitut tunnukset piilotetuiksi sijainneiksi. Heksan alla oleva merkki piilotetaan heti; muuten se piilotetaan seuraavalla sen peittävällä täytteellä.',
+          'Valkoisen tornin tilamerkillä varustetut rahakkeet käsitellään myös sijainneina, kun täytät, kuten versiossa 1.',
+          'Piilotetut sijaintitunnukset siirretään GM-tasolle. Kun heidän heksansa paljastetaan, he palaavat merkkikerrokseen ja heidän nimensä näytetään, ja heidän löytönsä ilmoitetaan.',
+          'Name Hex antaa heksalle nimen ilman merkkiä. Nimi näytetään GM:lle etikettinä GM-tasolla ja ilmoitetaan, kun hex paljastetaan.',
+          'Announce Discoveries valitsee, näkevätkö ilmoituksen kaikki, vain GM vai ei kukaan. Ping Discoveries siirtää myös pelaajien näkymän paikkaan.',
+        ],
+      },
+      settings: {
+        heading: 'Asetukset',
+        intro:
+          'Muuta asetuksia !hexploration setillä (tai Asetukset-painikkeella). Hex Layer, Tokens That Reveal ja Language voidaan asettaa myös Modin asetussivulla.',
+        colKey: 'Avain',
+        colName: 'Asetus',
+        colDesc: 'Kuvaus',
+        perPage: '(Voidaan asettaa sivukohtaisesti.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate ja Legacy',
+        points: [
+          'Hexploration selvittää, mitä moottoria peli käyttää, ja piirtää vastaavan muodon. Kummassakin editorissa piirretyt muodot voidaan täyttää.',
+          'Kun Hex Layer -asetuksena on Auto, heksat piirretään etualan tasolle, merkkien yläpuolelle, jotta pelaajat eivät näe, mitä alla on. Jos etualan kerrosta ei ole saatavilla, sen sijaan käytetään merkkikerrosta.',
+          'Jumpgate piirtää matemaattisesti säännölliset heksat, jotka ovat hieman eri muotoisia kuin Legacy-heksat. Jos heksaat eivät ole linjassa sivun ruudukon kanssa, kiinnitä merkki heksaanien keskipisteeseen, valitse se ja napsauta Kalibroi. Valitse kaksi merkkiä saman rivin (Hex V) tai sarakkeen (Hex H) viereisistä heksadesistä korjataksesi myös heksadesiaalisen koon.',
+          'Kun sivu tai peli kopioidaan, sen heksat saavat uudet tunnukset. Suorita uudelleenskannaus sivulla hakeaksesi ne uudelleen sekä niiden nimilaput ja sijaintitunnukset.',
+        ],
+      },
+      upgrading: {
+        heading: 'Päivitys versiosta 1',
+        points: [
+          'Versio 2 ei enää tarvitse PathMath-, MatrixMath-, Vector Math- tai HTML Builder -sovellusta. Voit poistaa ne, ellei toinen mod käytä niitä.',
+          'Nykyiset heksadesimaalikartat, nimet, sijaintitunnukset ja asetukset päivitetään automaattisesti ensimmäisen käynnistyksen yhteydessä.',
+          'Version 1 komennot, mukaan lukien Hexploration_menu-makro, toimivat edelleen.',
+          'Versio 1 antaa minkä tahansa merkkiä edustavan tunnuksen paljastaa heksalukuja. Aseta Paljastavat Tokenit Hahmotokeneiksi säilyttääksesi tämän käytöksen.',
+        ],
+        colV1: 'Version 1 komento',
+        colV2: 'Version 2 komento',
+      },
+      troubleshooting: {
+        heading: 'Vianetsintä',
+        points: [
+          'Mitään ei tapahdu, kun merkki liikkuu: tarkista, että merkki on merkkikerroksella ja vastaa Tokens That Reveal -merkkejä ja että sivulla on heksioita (!hexploration status).',
+          'Heksat ovat poissa ruudukosta: käytä Kalibrointia ja tarkista sitten tunnuksella muutamalla heksalla kartalla.',
+          'Heksit lakkasivat paljastamasta sivun tai pelin kopioimisen jälkeen: suorita sivulla Rescan.',
+          'Fill sanoo, että alueella ei ole heksadesimaalikeskuksia: muodon on sisällettävä vähintään yhden hex-keskipiste.',
+          'Jos haluat lisätietoja, tarkista API-konsolin loki ja sisällytä sen viestit, kun pyydät apua.',
+        ],
+      },
+      languages: {
+        heading: 'Kielet',
+        body: 'Valitse kieli !hexploration set -kielellä. Käytettävissä olevat kielet:',
+      },
+      credits: {
+        heading: 'Krediitit',
+        original: 'Alkuperäinen mod',
+        maintainer: 'Versio 2 ylläpitäjä',
+        marketplace: 'Adan taidepaketit Roll20 Marketplacessa',
+        support:
+          'Jos löydät virheen tai sinulla on idea, kirjoita viesti Roll20 Mod -foorumille tai avaa ongelma GitHubissa ja sisällytä kaikki viestit API-konsolin lokista.',
+      },
+    },
+  };
 
-  var localeFr = {};
+  const TRANSLATION$f = {
+    titles: {
+      ready: "L'exploration est prête.",
+      settings: "Paramètres d'exploration",
+      languages: 'Choisissez une langue',
+      pageSettings: 'Paramètres de la page : {page}',
+      status: "Statut d'exploration : {page}",
+      help: "Commandes d'exploration",
+      confirm: 'Veuillez confirmer',
+    },
+    discovery: {
+      title: 'Emplacement découvert',
+    },
+    menu: {
+      draw: 'Dessiner',
+      reveal: 'Révéler et masquer',
+      locations: 'Emplacements',
+      tools: 'Outils',
+      layerInUse: 'De nouveaux hexagones sont dessinés sur le {layer}.',
+      pageSettingsHelp:
+        "Ces paramètres s'appliquent uniquement à cette page. Les paramètres marqués ★ remplacent les paramètres globaux.",
+    },
+    buttons: {
+      fill: 'Remplir',
+      fillInverse: 'Remplissage inversé',
+      undo: 'Annuler le remplissage',
+      reveal: 'Révéler',
+      conceal: 'Cacher',
+      explore: 'Explorer',
+      revealPage: 'Révéler la page',
+      resetPage: 'Page de réinitialisation',
+      mark: "Marquer l'emplacement",
+      unmark: 'Décocher',
+      name: 'Nom Hex',
+      settings: 'Paramètres',
+      pageSettings: 'Paramètres des pages',
+      status: 'Statut',
+      rescan: 'Nouvelle analyse',
+      calibrate: 'Étalonner',
+      calibrateReset: "Réinitialiser l'étalonnage",
+      help: 'Aide',
+      change: 'Changement',
+      menu: 'Menu',
+      clearOverrides: 'Effacer les remplacements',
+      confirmReset: 'Oui, supprimer tous les hexagones',
+    },
+    prompts: {
+      name: 'Nom du lieu (laissez vide pour effacer)',
+    },
+    values: {
+      on: 'Sur',
+      off: 'Désactivé',
+      none: 'Aucun',
+      hexLayer: {
+        auto: 'Auto (premier plan si disponible)',
+        foreground: 'calque de premier plan',
+        objects: 'couche de jetons',
+      },
+      revealBy: {
+        players: 'Jetons de joueur',
+        characters: 'Jetons de personnage',
+        all: 'Tous les jetons',
+      },
+      revealMode: {
+        clear: 'Clair',
+        glimpse: 'Aperçu',
+      },
+      announce: {
+        all: 'Tout le monde',
+        gm: 'GM uniquement',
+        off: 'Désactivé',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Remplir',
+        fillInverse: 'Remplissage inversé',
+        conceal: 'Cacher',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Langue',
+        desc: 'Langue des menus, des messages et des documents.',
+      },
+      hexLayer: {
+        label: 'Couche hexagonale',
+        desc: 'Où de nouveaux hexagones sont dessinés. Auto essaie la couche de premier plan (au-dessus des jetons) et revient à la couche de jetons si le jeu ne la prend pas en charge.',
+      },
+      fillColor: {
+        label: 'Couleur de remplissage',
+        desc: 'Couleur des nouveaux hexagones. Utilisez rgba() pour les hexagones transparents, par exemple rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Couleur de la bordure',
+        desc: 'Couleur du contour des nouveaux hexagones.',
+      },
+      labelColor: {
+        label: "Couleur de l'étiquette",
+        desc: 'Couleur des étiquettes de nom réservées aux GM sur les hexs nommés.',
+      },
+      glimpseColor: {
+        label: 'Aperçu de la couleur',
+        desc: "Les hexagones de couleur changent lorsqu'ils sont aperçus (mode de révélation d'aperçu). Utilisez une couleur rgba() transparente.",
+      },
+      strokeWidth: {
+        label: 'Largeur de la bordure',
+        desc: 'Largeur du contour des nouveaux hexs, en pixels (0 à 20).',
+      },
+      maxDistance: {
+        label: 'Distance de révélation hexagonale',
+        desc: "Appliqué aux hexagones au fur et à mesure qu'ils sont dessinés : un jeton doit se trouver dans ce nombre d'hexagones pour les révéler, aussi loin qu'il puisse voir. Laissez vide sans limite.",
+      },
+      revealDistance: {
+        label: 'Distance de vue',
+        desc: "Combien d'hexagones autour d'un jeton en mouvement sont révélés (0 à 20). 0 révèle uniquement les hexagones traversés par le jeton.",
+      },
+      lineOfSight: {
+        label: 'Ligne de vue',
+        desc: "Lorsque cette option est activée, un hexagone n'est révélé que si aucun hexagone couvert ne se trouve entre lui et le jeton.",
+      },
+      revealPath: {
+        label: 'Révéler le long du chemin',
+        desc: "Lorsque cette option est activée, chaque hexagone traversé par un jeton lorsqu'il est déplacé (y compris les waypoints) est révélé, pas seulement l'endroit où il s'arrête.",
+      },
+      revealBy: {
+        label: 'Des jetons qui révèlent',
+        desc: "Quels jetons sur la couche de jetons révèlent des hexagones : jetons contrôlés par un joueur, jetons qui représentent n'importe quel personnage ou chaque jeton.",
+      },
+      revealMode: {
+        label: 'Mode Révéler',
+        desc: "Effacer supprime les hexagones en vue. Un aperçu les rend transparents à la place ; ils sont supprimés lorsqu'un jeton y pénètre.",
+      },
+      announce: {
+        label: 'Annoncer des découvertes',
+        desc: "Qui voit le message de discussion lorsqu'un emplacement nommé est découvert.",
+      },
+      pingDiscoveries: {
+        label: 'Découvertes Ping',
+        desc: "Lorsque cette option est activée, les joueurs reçoivent un ping vers un emplacement nommé lorsqu'il est découvert.",
+      },
+      hideCoveredTokens: {
+        label: 'Masquer les jetons couverts',
+        desc: "Roll20 dessine des noms, des barres et des auras au-dessus des hexagones. Lorsqu'ils sont activés, les jetons situés sous un hexagone couvert ont leur nom visible par le joueur, leurs barres et leurs auras éteints, et réactivés lorsqu'ils sont découverts.",
+      },
+    },
+    status: {
+      engine: 'Moteur de jeu',
+      grid: 'Grille',
+      layer: 'Couche hexagonale',
+      hexes: 'Hexagones',
+      named: 'Hexs nommés',
+      icons: 'Jetons de localisation',
+      glimpsed: 'Hexs aperçus',
+      pending: "Emplacements en attente d'un remplissage",
+      calibrated: 'Calibré',
+      overrides: 'Remplacements de page',
+      undo: 'Annuler disponible',
+    },
+    messages: {
+      filled:
+        'Remplissez terminé. Hexs tirés : {created}. Restylé : {restyled}. Emplacements masqués : {icons}.',
+      revealed: 'Hexs révélés : {count}.',
+      revealedPage: 'Chaque hexagone de la page révélé ({count}).',
+      confirmReset:
+        'Supprimer chaque hexagone de "{page}" ({count}) ? Les jetons d\'emplacement reviennent à la couche de jetons. L\'annulation ne peut pas inverser cette situation.',
+      resetPage: 'Hexs supprimés de la page : {count}.',
+      undone:
+        'Dernier remplissage annulé. Hexs supprimés : {removed}. Hexs relookés restaurés : {restored}.',
+      named: 'Hexs nommés "{name}" : {count}.',
+      unnamed: 'Noms effacés : {count}.',
+      marked:
+        'Emplacements cachés dans les hexs existants : {attached}. En attente du prochain remplissage qui les couvre : {pending}.',
+      unmarked: 'Jetons qui ne sont plus des emplacements : {count}.',
+      settingChanged: '{setting} défini sur {value}.',
+      rescanned:
+        'Nouvelle analyse terminée. Conservé : {kept}. Adopté : {adopted}. Re-déposé : {moved}. Manquant et oublié : {dropped}. Libellés réassociés : {labels}. Jetons de localisation réassociés : {icons}.',
+      calibrated:
+        'Grille calibrée (pas de colonne {colStep}px, pas de ligne {rowStep}px). Nouvelle analyse : conservé {kept}, reclassé {moved}, adopté {adopted}.',
+      calibrationReset:
+        'Calibrage supprimé. Nouvelle analyse : conservé {kept}, reclassé {moved}, adopté {adopted}.',
+      journalRebuilt: 'Les documents « {help} » et « {deck} » ont été reconstruits.',
+      migrated:
+        "Vos cartes hexagonales Hexploration 1.x ont été mises à niveau. Si ce jeu a été copié à partir d'un jeu Legacy, lancez une nouvelle analyse sur chaque page de carte hexagonale.",
+      pruned:
+        "Hexs enregistrés qui n'existent plus et ont été oubliés : {dropped}. Si ce jeu ou cette page a été copié, lancez une nouvelle analyse sur la page pour récupérer ses hexagones.",
+      readyHint:
+        'Tapez !hexploration pour le menu ou ouvrez le document « Hexploration - Command Deck ».',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Ce jeu ne prend pas en charge le dessin sur la couche de premier plan, les hexagones ont donc été dessinés sur la couche de jetons.',
+      someFailed:
+        "Hexs qui n'ont pas pu être tirés : {count}. Consultez la console API pour plus de détails.",
+    },
+    errors: {
+      noPage: 'Impossible de trouver la page sur laquelle travailler.',
+      notHex: "Cette page n'utilise pas de grille hexadécimale.",
+      noPolygons: 'Sélectionnez une ou plusieurs formes dessinées à remplir.',
+      emptyArea: "La zone sélectionnée ne contient aucun centre d'hexagone.",
+      tooMany: "Cela créerait trop d'hexagones en une seule fois ({count}).",
+      nothingToConceal: 'Sélectionnez des formes dessinées ou des jetons à masquer.',
+      nothingToReveal: 'Sélectionnez des hexagones, des formes dessinées ou des jetons à révéler.',
+      noTokens: "Sélectionnez d'abord un ou plusieurs jetons.",
+      noHexes:
+        "Sélectionnez d'abord un ou plusieurs hexagones (ou des jetons placés sur des hexagones).",
+      nothingToUndo: "Il n'y a aucun remplissage à défaire.",
+      unknownCommand: 'Commande inconnue : {command}',
+      unknownSetting: 'Paramètre inconnu : {key}',
+      unknownPageSetting: 'Paramètres pouvant être définis par page : {keys}',
+      invalidValue: '"{value}" n\'est pas une valeur valide pour {key}.',
+      calibrateNeedsTokens: 'Sélectionnez un ou deux jetons accrochés aux centres des hexagones.',
+      calibrateFailed: 'Ces jetons ne peuvent pas être utilisés pour calibrer.',
+      unexpected: "Un problème s'est produit : {message}",
+    },
+    hints: {
+      noPage:
+        'Ouvrez la page sur laquelle vous souhaitez travailler ou sélectionnez quelque chose dessus.',
+      notHex: 'Définissez la grille de la page sur Hex (V) ou Hex (H) dans Paramètres de page.',
+      noPolygons:
+        'Dessinez un polygone, un rectangle, une ellipse ou une forme à main levée autour de la zone, sélectionnez-le, puis réessayez.',
+      emptyArea:
+        'Dessinez une forme plus grande ou vérifiez les paramètres de la grille de la page.',
+      tooMany: 'Remplissez une zone plus petite ou divisez la zone en plusieurs formes.',
+      noHexes:
+        'Les hexagones sont au premier plan ou sur la couche de jetons ; passez à ce calque pour les sélectionner.',
+      unknownCommand: 'Tapez !hexploration help pour lister les commandes.',
+      unknownSetting: 'Tapez !hexploration set pour voir tous les paramètres.',
+      calibrateNeedsTokens:
+        "Placez un jeton au centre d'un hexagone et sélectionnez-le. Sélectionnez un deuxième jeton accroché à un hexagone voisin dans la même ligne (Hex V) ou colonne (Hex H) pour corriger également la taille de l'hexagone.",
+      calibrateFailed:
+        "Deux jetons doivent être dans la même ligne (Hex V) ou dans la même colonne (Hex H), à au moins un hex l'un de l'autre.",
+      unexpected: 'Les détails se trouvent dans le journal de la console API.',
+    },
+    help: {
+      menu: 'Afficher le menu.',
+      fill: 'Couvrez les formes dessinées sélectionnées avec des hexagones.',
+      fillInverse: "Couvrez toute la page sauf à l'intérieur des formes sélectionnées.",
+      undo: 'Annulez le dernier remplissage, inversez le remplissage ou masquez-le et restaurez les formes utilisées.',
+      reveal:
+        'Révélez les hexagones sélectionnés et les hexagones sous les formes et les jetons sélectionnés.',
+      revealPage: 'Révélez chaque hexagone de la page sans annonce.',
+      conceal:
+        'Couvrez à nouveau la zone sous les formes et les jetons sélectionnés avec des hexagones.',
+      explore: "Révélez autour des jetons sélectionnés comme s'ils venaient de s'y déplacer.",
+      resetPage: 'Supprimez tous les hexagones de la page (demande en premier).',
+      name: "Nommez les hexagones sélectionnés ou les hexagones sous les jetons sélectionnés. Laissez le nom vide pour l'effacer.",
+      mark: 'Transformez les jetons sélectionnés en emplacements cachés.',
+      unmark: "Empêchez les jetons sélectionnés d'être des emplacements cachés.",
+      set: 'Modifiez un paramètre ou affichez tous les paramètres.',
+      pageSet: 'Remplacer un paramètre de révélation sur la page actuelle uniquement.',
+      pageClear: 'Supprimez les remplacements de la page actuelle.',
+      rescan:
+        'Reconstruisez la liste hexadécimale de la page, par exemple après avoir copié une page ou un jeu.',
+      calibrate:
+        'Alignez la grille hexagonale avec un ou deux jetons sélectionnés accrochés aux centres des hexagones.',
+      calibrateReset: 'Supprimez le calibrage de la page actuelle.',
+      status: 'Montre ce que Hexploration sait de la page actuelle.',
+      journal: "Reconstruisez les documents d'aide et de commande.",
+      help: 'Montrez cette liste.',
+      handout: 'Les instructions complètes se trouvent dans le document « {name} ».',
+    },
+    deck: {
+      subtitle: 'Pont de commandement',
+      drawDesc:
+        "Dessinez des formes autour d'une zone, sélectionnez-les, puis remplissez-les. Annuler annule le dernier remplissage.",
+      revealDesc:
+        "Sélectionnez des hexagones, des formes ou des jetons pour les révéler ou les recouvrir à nouveau. L'exploration révèle les jetons sélectionnés comme s'ils avaient bougé.",
+      locationsDesc:
+        "Sélectionnez les jetons pour les cacher en tant qu'emplacements sous les hexagones. Sélectionnez des hexagones ou des jetons pour nommer un hexagone.",
+      toolsDesc:
+        'Paramètres, remplacements de pages, statut, nouvelle numérisation des pages copiées et calibrage de la grille.',
+      footer: 'Consultez le document « {help} » pour obtenir des instructions complètes.',
+    },
+    handout: {
+      versionLabel: 'Version',
+      subtitle: 'Exploration hex par hex pour Roll20',
+      footer: 'Utilisez le document "{deck}" pour les contrôles en un clic.',
+      overview: {
+        heading: 'Aperçu',
+        body: "L'hexploration couvre une carte d'hexagones avec des hexagones opaques. Au fur et à mesure que le groupe se déplace, les hexagones qu'il traverse (et, si vous le souhaitez, les hexagones qui l'entourent) sont supprimés, de sorte que la carte est découverte un hexagone à la fois. Les emplacements cachés peuvent être placés sous les hexagones et sont annoncés lorsqu'ils sont trouvés. Il fonctionne dans les jeux Jumpgate et Legacy, sur les grilles Hex (V) et Hex (H) de n'importe quelle taille.",
+        demo: 'Regardez une courte démo (à partir de la version 1)',
+      },
+      quickStart: {
+        heading: 'Démarrage rapide',
+        steps: [
+          'Ouvrez une page dont la grille est définie sur Hex (V) ou Hex (H).',
+          'Dessinez une ou plusieurs formes (polygone, rectangle, ellipse ou à main levée) autour de la zone à masquer.',
+          'Sélectionnez les formes et cliquez sur Remplir dans le jeu de commandes (ou tapez !hexploration fill). Les formes sont remplacées par des hexagones.',
+          "Facultatif : avant de remplir, sélectionnez les jetons pour les lieux importants et cliquez sur Marquer l'emplacement. Ils sont cachés sous les hexagones et annoncés dès leur découverte.",
+          "Déplacez un jeton de joueur. Chaque hex qu'il traverse, ainsi que les hexs situés à sa distance de vue, sont révélés.",
+        ],
+      },
+      commands: {
+        heading: 'Commandes',
+        intro:
+          'Seuls les MJ peuvent utiliser ces commandes. La plupart agissent sur les objets sélectionnés ; le reste agit sur la page que vous consultez.',
+        colCommand: 'Commande',
+        colDesc: 'Ce que ça fait',
+      },
+      revealing: {
+        heading: 'Comment fonctionne la révélation',
+        points: [
+          'Seuls les jetons sur la couche de jetons révèlent des hexagones. Le nombre de jetons est défini par Tokens That Reveal : les jetons de joueur par défaut, afin que le MJ puisse déplacer les monstres sans découvrir la carte.',
+          "Un jeton révèle chaque hex qu'il couvre (les gros jetons en couvrent plusieurs) et, avec Révéler le long du chemin activé, chaque hex de la route qu'il a parcouru, y compris les waypoints.",
+          'Sight Distance révèle les hexs autour de chacun de ces hexs. Avec la Ligne de Vue activée, un hex n’est révélé que si aucun hex couvert ne se trouve entre les deux.',
+          "La distance de révélation des hexs est stockée sur les hexs au fur et à mesure qu'ils sont dessinés. Ces hexagones ne sont révélés qu’à partir d’un certain nombre d’hexagones, quelle que soit la distance que peut voir un jeton. Utilisez-le pour les montagnes ou les forêts qui cachent ce qui se trouve derrière elles.",
+          "En mode Aperçu, les hexagones visibles deviennent transparents au lieu de disparaître et sont supprimés lorsqu'un jeton y pénètre.",
+          "L'API ne signale pas les mouvements effectués par d'autres mods. Les mouvements TokenMod sont récupérés automatiquement ; pour les autres mods, sélectionnez les jetons et cliquez sur Explorer, ou appelez Hexploration.revealAround(token) depuis votre propre mod.",
+          "L'API ne signale pas les mouvements effectués par d'autres mods. Les mouvements TokenMod sont récupérés automatiquement ; pour les autres mods, sélectionnez les jetons et cliquez sur Explorer, ou appelez Hexploration.revealAround(token) depuis votre propre mod.",
+        ],
+      },
+      locations: {
+        heading: 'Hexs et emplacements nommés',
+        points: [
+          'Mark Location transforme les jetons sélectionnés en emplacements cachés. Un jeton déjà sous un hexagone est immédiatement caché ; sinon, il est masqué par le prochain remplissage qui le recouvre.',
+          'Les jetons avec le marqueur de statut tour blanche sont également traités comme des emplacements lorsque vous remplissez, comme dans la version 1.',
+          "Les jetons d'emplacement cachés sont déplacés vers la couche GM. Lorsque leur hexagone est révélé, ils retournent à la couche de jetons avec leur nom affiché et leur découverte est annoncée.",
+          "Name Hex donne un nom à un hexagone sans jeton. Le nom est montré au MJ sous forme d'étiquette sur la couche GM et annoncé lorsque l'hex est révélé.",
+          "Annoncer les découvertes choisit si tout le monde, uniquement le MJ ou personne ne voit l'annonce. Ping Discoveries déplace également la vue des joueurs vers l’emplacement.",
+        ],
+      },
+      settings: {
+        heading: 'Paramètres',
+        intro:
+          'Modifiez les paramètres avec !hexploration set (ou le bouton Paramètres). La couche hexadécimale, les jetons révélés et la langue peuvent également être définis sur la page des paramètres du mod.',
+        colKey: 'Clé',
+        colName: 'Paramètre',
+        colDesc: 'Description',
+        perPage: '(Peut être défini par page.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate et héritage',
+        points: [
+          "Hexploration détermine quel moteur le jeu utilise et dessine le type de forme correspondant. Les formes dessinées dans l'un ou l'autre éditeur peuvent être remplies.",
+          "Avec Hex Layer réglé sur Auto, les hexagones sont dessinés sur la couche de premier plan, au-dessus des jetons, afin que les joueurs ne puissent pas voir ce qu'il y a en dessous. Si la couche de premier plan n'est pas disponible, la couche de jetons est utilisée à la place.",
+          "Jumpgate dessine des hexagones mathématiquement réguliers, qui ont une forme légèrement différente des hexagones Legacy. Si les hexagones ne s’alignent pas avec la grille d’une page, placez un jeton au centre d’un hexagone, sélectionnez-le et cliquez sur Calibrer. Sélectionnez deux jetons dans des hexagones voisins de la même ligne (Hex V) ou colonne (Hex H) pour corriger également la taille de l'hexagone.",
+          "Lorsqu'une page ou un jeu est copié, ses hexagones obtiennent de nouveaux identifiants. Exécutez une nouvelle analyse sur la page pour les récupérer, ainsi que leurs étiquettes de nom et leurs jetons de localisation.",
+        ],
+      },
+      upgrading: {
+        heading: 'Mise à niveau à partir de la version 1',
+        points: [
+          "La version 2 n'a plus besoin de PathMath, MatrixMath, Vector Math ou HTML Builder. Vous pouvez les supprimer à moins qu'un autre mod ne les utilise.",
+          'Les cartes hexagonales, les noms, les jetons de localisation et les paramètres existants sont automatiquement mis à niveau au premier démarrage.',
+          'Les commandes de la version 1, dont la macro Hexploration_menu, fonctionnent toujours.',
+          "La version 1 permettait à n'importe quel jeton représentant un personnage de révéler des hexagones. Définissez les jetons qui révèlent des jetons de personnage pour conserver ce comportement.",
+        ],
+        colV1: 'Commande version 1',
+        colV2: 'Commande version 2',
+      },
+      troubleshooting: {
+        heading: 'Dépannage',
+        points: [
+          "Rien ne se passe lorsqu'un jeton bouge : vérifiez que le jeton est sur la couche de jetons et correspond aux jetons qui révèlent, et que la page a des hexagones (!hétat d'exploration).",
+          'Les hexs sont décalés par rapport à la grille : utilisez Calibrer, puis vérifiez avec un jeton sur quelques hexs de la carte.',
+          "Les hexagones ont cessé de s'afficher après la copie d'une page ou d'un jeu : lancez une nouvelle analyse de la page.",
+          "Fill indique que la zone n'a pas de centre d'hexagone : la forme doit contenir le centre d'au moins un hexagone.",
+          "Pour toute autre chose, consultez le journal de la console API et incluez ses messages lorsque vous demandez de l'aide.",
+        ],
+      },
+      languages: {
+        heading: 'Langues',
+        body: 'Choisissez une langue avec !hexploration set language. Langues disponibles :',
+      },
+      credits: {
+        heading: 'Crédits',
+        original: 'Mod original par',
+        maintainer: 'Version 2 maintenue par',
+        marketplace: "Les packs artistiques d'Ada sur le Marketplace Roll20",
+        support:
+          'Si vous trouvez un bug ou avez une idée, publiez-le sur le forum Roll20 Mod ou ouvrez un problème sur GitHub et incluez tous les messages du journal de la console API.',
+      },
+    },
+  };
 
-  var localeDe = {};
+  const TRANSLATION$e = {
+    titles: {
+      ready: 'Hexploration ist fertig.',
+      settings: 'Erkundungseinstellungen',
+      languages: 'Wählen Sie eine Sprache',
+      pageSettings: 'Seiteneinstellungen: {page}',
+      status: 'Erkundungsstatus: {page}',
+      help: 'Erkundungsbefehle',
+      confirm: 'Bitte bestätigen',
+    },
+    discovery: {
+      title: 'Standort entdeckt',
+    },
+    menu: {
+      draw: 'Ziehen',
+      reveal: 'Enthüllen und Verstecken',
+      locations: 'Standorte',
+      tools: 'Werkzeuge',
+      layerInUse: 'Auf dem {layer} werden neue Hexfelder gezeichnet.',
+      pageSettingsHelp:
+        'Diese Einstellungen gelten nur für diese Seite. Mit ★ gekennzeichnete Einstellungen überschreiben die globalen Einstellungen.',
+    },
+    buttons: {
+      fill: 'Füllen',
+      fillInverse: 'Inverse Füllung',
+      undo: 'Füllung rückgängig machen',
+      reveal: 'Aufdecken',
+      conceal: 'Verbergen',
+      explore: 'Erkunden',
+      revealPage: 'Seite enthüllen',
+      resetPage: 'Seite zurücksetzen',
+      mark: 'Standort markieren',
+      unmark: 'Markierung aufheben',
+      name: 'Name Hex',
+      settings: 'Einstellungen',
+      pageSettings: 'Seiteneinstellungen',
+      status: 'Status',
+      rescan: 'Erneut scannen',
+      calibrate: 'Kalibrieren',
+      calibrateReset: 'Kalibrierung zurücksetzen',
+      help: 'Helfen',
+      change: 'Ändern',
+      menu: 'Speisekarte',
+      clearOverrides: 'Überschreibungen löschen',
+      confirmReset: 'Ja, alle Verhexungen entfernen',
+    },
+    prompts: {
+      name: 'Standortname (zum Löschen leer lassen)',
+    },
+    values: {
+      on: 'An',
+      off: 'Aus',
+      none: 'Keiner',
+      hexLayer: {
+        auto: 'Auto (Vordergrund, falls verfügbar)',
+        foreground: 'Vordergrundebene',
+        objects: 'Token-Schicht',
+      },
+      revealBy: {
+        players: 'Spielertoken',
+        characters: 'Charaktertoken',
+        all: 'Alle Token',
+      },
+      revealMode: {
+        clear: 'Klar',
+        glimpse: 'Blick',
+      },
+      announce: {
+        all: 'Alle',
+        gm: 'Nur GM',
+        off: 'Aus',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Sechskant (H)',
+      },
+      fillKind: {
+        fill: 'Füllen',
+        fillInverse: 'Inverse Füllung',
+        conceal: 'Verbergen',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Sprache',
+        desc: 'Sprache für Menüs, Nachrichten und Handouts.',
+      },
+      hexLayer: {
+        label: 'Hex-Ebene',
+        desc: 'Wo neue Hexfelder gezeichnet werden. Automatisch versucht es mit der Vordergrundebene (über den Token) und greift auf die Tokenebene zurück, wenn das Spiel dies nicht unterstützt.',
+      },
+      fillColor: {
+        label: 'Füllfarbe',
+        desc: 'Farbe neuer Hexfelder. Verwenden Sie rgba() für durchsichtige Hexadezimalwerte, zum Beispiel rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Randfarbe',
+        desc: 'Farbe der Umrisse neuer Hexfelder.',
+      },
+      labelColor: {
+        label: 'Etikettenfarbe',
+        desc: 'Farbe der Nur-GM-Namensschilder auf benannten Hexfeldern.',
+      },
+      glimpseColor: {
+        label: 'Einblick in die Farbe',
+        desc: 'Die Farbverhexungen ändern sich, wenn man sie erblickt (Einblick-Enthüllungsmodus). Verwenden Sie eine durchsichtige rgba()-Farbe.',
+      },
+      strokeWidth: {
+        label: 'Randbreite',
+        desc: 'Breite des Umrisses neuer Hexfelder in Pixel (0 bis 20).',
+      },
+      maxDistance: {
+        label: 'Hex-Enthüllungsabstand',
+        desc: 'Wird auf Hexfelder angewendet, wenn sie gezogen werden: Ein Spielstein muss sich innerhalb dieser Anzahl von Hexfeldern befinden, um sie aufzudecken, egal wie weit er sehen kann. Für keine Begrenzung leer lassen.',
+      },
+      revealDistance: {
+        label: 'Sichtweite',
+        desc: 'Wie viele Hexfelder um einen beweglichen Spielstein herum angezeigt werden (0 bis 20). 0 zeigt nur die Hexfelder an, die der Token durchquert.',
+      },
+      lineOfSight: {
+        label: 'Sichtlinie',
+        desc: 'Wenn diese Option aktiviert ist, wird ein Hexfeld nur dann aufgedeckt, wenn kein abgedecktes Hexfeld zwischen ihm und dem Spielstein liegt.',
+      },
+      revealPath: {
+        label: 'Auf dem Weg enthüllen',
+        desc: 'Wenn diese Option aktiviert ist, wird jedes Hexfeld, das ein Spielstein beim Ziehen durchquert (einschließlich Wegpunkte), angezeigt, nicht nur die Stelle, an der er anhält.',
+      },
+      revealBy: {
+        label: 'Zeichen, die offenbaren',
+        desc: 'Welche Spielsteine ​​auf der Spielsteinebene zeigen Hexereien an: Spielsteine, die von einem Spieler kontrolliert werden, Spielsteine, die einen beliebigen Charakter repräsentieren, oder jeder Spielstein.',
+      },
+      revealMode: {
+        label: 'Reveal-Modus',
+        desc: 'Clear entfernt Verhexungen in Sichtweite. Glimpse macht sie stattdessen durchsichtig; Sie werden entfernt, wenn ein Token in sie eindringt.',
+      },
+      announce: {
+        label: 'Kündigen Sie Entdeckungen an',
+        desc: 'Wer sieht die Chat-Nachricht, wenn ein benannter Ort entdeckt wird?',
+      },
+      pingDiscoveries: {
+        label: 'Ping-Entdeckungen',
+        desc: 'Wenn diese Option aktiviert ist, werden Spieler an einen benannten Ort gepingt, wenn dieser entdeckt wird.',
+      },
+      hideCoveredTokens: {
+        label: 'Verdeckte Token ausblenden',
+        desc: 'Roll20 zeichnet Namen, Balken und Auren über Hexfeldern. Wenn diese Option aktiviert ist, werden der für den Spieler sichtbare Name, die Balken und die Auren von Spielsteinen unter einem abgedeckten Hexfeld ausgeschaltet und wieder eingeschaltet, wenn sie aufgedeckt werden.',
+      },
+    },
+    status: {
+      engine: 'Spiel-Engine',
+      grid: 'Netz',
+      layer: 'Hex-Schicht',
+      hexes: 'Verhexungen',
+      named: 'Benannte Verhexungen',
+      icons: 'Standorttoken',
+      glimpsed: 'Gesehene Verhexungen',
+      pending: 'Orte, die auf eine Besetzung warten',
+      calibrated: 'Kalibriert',
+      overrides: 'Seitenüberschreibungen',
+      undo: 'Rückgängig machen verfügbar',
+    },
+    messages: {
+      filled:
+        'Vollständig ausfüllen. Gezeichnete Hexen: {created}. Neu gestaltet: {restyled}. Ausgeblendete Orte: {icons}.',
+      revealed: 'Aufgedeckte Verhexungen: {count}.',
+      revealedPage: 'Jedes Hex auf der Seite wird angezeigt ({count}).',
+      confirmReset:
+        'Jedes Hex aus „{page}“ ({count}) entfernen? Standort-Tokens kehren zur Token-Ebene zurück. Durch Rückgängigmachen kann dies nicht rückgängig gemacht werden.',
+      resetPage: 'Hexes wurden von der Seite entfernt: {count}.',
+      undone:
+        'Letzte Füllung rückgängig gemacht. Entfernte Verhexungen: {removed}. Neu gestaltete Hexfelder wiederhergestellt: {restored}.',
+      named: 'Hexen mit dem Namen „{name}“: {count}.',
+      unnamed: 'Gelöschte Namen: {count}.',
+      marked:
+        'In vorhandenen Hexfeldern versteckte Orte: {attached}. Warten auf die nächste Füllung, die sie abdeckt: {pending}.',
+      unmarked: 'Token, die keine Standorte mehr sind: {count}.',
+      settingChanged: '{setting} wird auf {value} gesetzt.',
+      rescanned:
+        'Neuscan abgeschlossen. Behalten: {kept}. Angenommen: {adopted}. Erneut eingereicht: {moved}. Fehlt und vergessen: {dropped}. Neu verknüpfte Etiketten: {labels}. Standort-Tokens neu verknüpft: {icons}.',
+      calibrated:
+        'Rasterkalibriert (Spaltenschritt {colStep}px, Zeilenschritt {rowStep}px). Erneut scannen: beibehalten {kept}, erneut eingereicht {moved}, übernommen {adopted}.',
+      calibrationReset:
+        'Kalibrierung entfernt. Erneut scannen: beibehalten {kept}, erneut eingereicht {moved}, übernommen {adopted}.',
+      journalRebuilt: 'Die Handouts „{help}“ und „{deck}“ wurden neu erstellt.',
+      migrated:
+        'Ihre Hexploration 1.x-Hex-Karten wurden aktualisiert. Wenn dieses Spiel von einem Legacy-Spiel kopiert wurde, führen Sie Rescan auf jeder Hex-Kartenseite aus.',
+      pruned:
+        'Gespeicherte Hexen, die nicht mehr existieren und vergessen wurden: {dropped}. Wenn dieses Spiel oder diese Seite kopiert wurde, führen Sie „Rescan“ auf der Seite aus, um die Verhexungen wieder aufzunehmen.',
+      readyHint:
+        'Geben Sie !hexploration für das Menü ein oder öffnen Sie das Handout „Hexploration – Command Deck“.',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Dieses Spiel unterstützt das Zeichnen auf der Vordergrundebene nicht, daher wurden Hexfelder auf der Tokenebene gezeichnet.',
+      someFailed:
+        'Hexen, die nicht gezeichnet werden konnten: {count}. Weitere Informationen finden Sie in der API-Konsole.',
+    },
+    errors: {
+      noPage: 'Die Seite, an der gearbeitet werden soll, konnte nicht gefunden werden.',
+      notHex: 'Diese Seite verwendet kein Hex-Raster.',
+      noPolygons: 'Wählen Sie eine oder mehrere gezeichnete Formen zum Füllen aus.',
+      emptyArea: 'Der ausgewählte Bereich enthält keine Hex-Zentren.',
+      tooMany: 'Das würde zu viele Verhexungen auf einmal erzeugen ({count}).',
+      nothingToConceal:
+        'Wählen Sie gezeichnete Formen oder Spielsteine ​​aus, die Sie verbergen möchten.',
+      nothingToReveal:
+        'Wählen Sie Hexfelder, gezeichnete Formen oder Spielsteine ​​aus, die Sie aufdecken möchten.',
+      noTokens: 'Wählen Sie zunächst einen oder mehrere Token aus.',
+      noHexes:
+        'Wählen Sie zunächst ein oder mehrere Hexfelder (oder darauf stehende Spielsteine) aus.',
+      nothingToUndo: 'Es gibt keine Füllung, die rückgängig gemacht werden könnte.',
+      unknownCommand: 'Unbekannter Befehl: {command}',
+      unknownSetting: 'Unbekannte Einstellung: {key}',
+      unknownPageSetting: 'Einstellungen, die pro Seite festgelegt werden können: {keys}',
+      invalidValue: '„{value}“ ist kein gültiger Wert für {key}.',
+      calibrateNeedsTokens:
+        'Wählen Sie ein oder zwei Token aus, die an den Sechseckzentren befestigt werden.',
+      calibrateFailed: 'Diese Token können nicht zur Kalibrierung verwendet werden.',
+      unexpected: 'Es ist ein Fehler aufgetreten: {message}',
+    },
+    hints: {
+      noPage:
+        'Öffnen Sie die Seite, an der Sie arbeiten möchten, oder wählen Sie etwas darauf aus.',
+      notHex:
+        'Stellen Sie das Seitenraster in den Seiteneinstellungen auf Hex (V) oder Hex (H) ein.',
+      noPolygons:
+        'Zeichnen Sie ein Polygon, ein Rechteck, eine Ellipse oder eine Freihandform um den Bereich, wählen Sie es aus und versuchen Sie es erneut.',
+      emptyArea:
+        'Zeichnen Sie eine größere Form oder überprüfen Sie die Seitenrastereinstellungen.',
+      tooMany:
+        'Füllen Sie einen kleineren Bereich oder teilen Sie den Bereich in mehrere Formen auf.',
+      noHexes:
+        'Verhexungen befinden sich im Vordergrund oder auf der Token-Ebene. Wechseln Sie zu dieser Ebene, um sie auszuwählen.',
+      unknownCommand: 'Geben Sie !hexploration help ein, um die Befehle aufzulisten.',
+      unknownSetting: 'Geben Sie !hexploration set ein, um alle Einstellungen anzuzeigen.',
+      calibrateNeedsTokens:
+        'Rasten Sie einen Spielstein in der Mitte eines Hexfelds ein und wählen Sie ihn aus. Wählen Sie ein zweites Token aus, das an einem benachbarten Hexfeld in derselben Zeile (Hex V) oder Spalte (Hex H) eingerastet ist, um auch die Hexfeldgröße zu korrigieren.',
+      calibrateFailed:
+        'Zwei Spielsteine ​​müssen sich in derselben Reihe (Hex V) oder derselben Spalte (Hex H) befinden und mindestens ein Hex voneinander entfernt sein.',
+      unexpected: 'Details finden Sie im API-Konsolenprotokoll.',
+    },
+    help: {
+      menu: 'Zeigen Sie das Menü an.',
+      fill: 'Decken Sie die ausgewählten gezeichneten Formen mit Hexen ab.',
+      fillInverse: 'Bedecken Sie die gesamte Seite mit Ausnahme der ausgewählten Formen.',
+      undo: 'Machen Sie die letzte Füllung rückgängig, kehren Sie die Füllung um oder verbergen Sie sie und stellen Sie die verwendeten Formen wieder her.',
+      reveal:
+        'Zeigt die ausgewählten Hexfelder und die Hexfelder unter den ausgewählten Formen und Spielsteinen an.',
+      revealPage: 'Enthülle jedes Hex auf der Seite ohne Ankündigungen.',
+      conceal:
+        'Decken Sie den Bereich unter den ausgewählten Formen und Spielsteinen erneut mit Hexen ab.',
+      explore:
+        'Zeigen Sie die ausgewählten Spielsteine ​​an, als ob sie sich gerade dorthin bewegt hätten.',
+      resetPage: 'Entferne jedes Hex auf der Seite (fragt zuerst).',
+      name: 'Benennen Sie die ausgewählten Hexfelder oder die Hexfelder unter den ausgewählten Spielsteinen. Lassen Sie den Namen leer, um ihn zu löschen.',
+      mark: 'Verwandeln Sie die ausgewählten Spielsteine ​​in versteckte Orte.',
+      unmark: 'Verhindern Sie, dass die ausgewählten Token versteckte Orte sind.',
+      set: 'Ändern Sie eine Einstellung oder zeigen Sie alle Einstellungen an.',
+      pageSet: 'Überschreiben Sie eine Anzeigeeinstellung nur auf der aktuellen Seite.',
+      pageClear: 'Entfernen Sie die Überschreibungen der aktuellen Seite.',
+      rescan:
+        'Erstellen Sie die Hex-Liste der Seite neu, beispielsweise nach dem Kopieren einer Seite oder eines Spiels.',
+      calibrate:
+        'Richten Sie das Sechseckgitter so aus, dass ein oder zwei ausgewählte Spielsteine ​​in die Sechseckmitten eingerastet werden.',
+      calibrateReset: 'Entfernen Sie die Kalibrierung der aktuellen Seite.',
+      status: 'Zeigen Sie, was Hexploration über die aktuelle Seite weiß.',
+      journal: 'Erstellen Sie die Handzettel für das Hilfe- und Befehlsdeck neu.',
+      help: 'Diese Liste anzeigen.',
+      handout: 'Vollständige Anweisungen finden Sie im Handout „{name}“.',
+    },
+    deck: {
+      subtitle: 'Kommandodeck',
+      drawDesc:
+        'Zeichnen Sie Formen um einen Bereich, wählen Sie sie aus und füllen Sie sie aus. Mit „Rückgängig“ wird die letzte Füllung rückgängig gemacht.',
+      revealDesc:
+        'Wählen Sie Verhexungen, Formen oder Spielsteine ​​aus, um sie wieder freizulegen oder zu verdecken. Beim Erkunden wird die Umgebung ausgewählter Spielsteine ​​angezeigt, als ob sie sich bewegt hätten.',
+      locationsDesc:
+        'Wählen Sie Spielsteine ​​aus, um sie als Standorte unter Hexfeldern zu verbergen. Wählen Sie Hexfelder oder Token aus, um einem Hexfeld einen Namen zu geben.',
+      toolsDesc:
+        'Einstellungen, Seitenüberschreibungen, Status, erneutes Scannen kopierter Seiten und Kalibrieren des Rasters.',
+      footer: 'Vollständige Anweisungen finden Sie im Handout „{help}“.',
+    },
+    handout: {
+      versionLabel: 'Version',
+      subtitle: 'Hex-für-Hex-Erkundung für Roll20',
+      footer: 'Verwenden Sie das Handout „{deck}“ für Ein-Klick-Steuerungen.',
+      overview: {
+        heading: 'Überblick',
+        body: 'Hexploration umfasst eine Hexfeldkarte mit undurchsichtigen Hexfeldern. Während sich die Gruppe bewegt, werden die Hexfelder, die sie durchquert (und, wenn Sie möchten, die Hexfelder um sie herum) entfernt, sodass die Karte jeweils ein Hexfeld freigelegt wird. Versteckte Orte können unter Hexfeldern platziert werden und werden bekannt gegeben, wenn sie gefunden werden. Es funktioniert in Jumpgate- und Legacy-Spielen auf Hex- (V) und Hex- (H) Gittern jeder Größe.',
+        demo: 'Sehen Sie sich eine kurze Demo an (ab Version 1)',
+      },
+      quickStart: {
+        heading: 'Schnellstart',
+        steps: [
+          'Öffnen Sie eine Seite, deren Raster auf Hex (V) oder Hex (H) eingestellt ist.',
+          'Zeichnen Sie eine oder mehrere Formen (Polygon, Rechteck, Ellipse oder Freihand) um den auszublendenden Bereich.',
+          'Wählen Sie die Formen aus und klicken Sie im Command Deck auf „Fill“ (oder geben Sie „!hexploration fill“ ein). Die Formen werden durch Sechsecke ersetzt.',
+          'Optional: Wählen Sie vor dem Ausfüllen Token für wichtige Orte aus und klicken Sie auf „Standort markieren“. Sie sind unter den Verhexungen versteckt und werden bekannt gegeben, wenn sie entdeckt werden.',
+          'Verschiebe einen Spielermarker. Jedes Hexfeld, das es durchquert, und die Hexfelder innerhalb seiner Sichtweite werden aufgedeckt.',
+        ],
+      },
+      commands: {
+        heading: 'Befehle',
+        intro:
+          'Nur GMs können diese Befehle verwenden. Die meisten wirken auf die ausgewählten Objekte; Der Rest wirkt auf der Seite, die Sie gerade betrachten.',
+        colCommand: 'Befehl',
+        colDesc: 'Was es bewirkt',
+      },
+      revealing: {
+        heading: 'Wie Offenlegung funktioniert',
+        points: [
+          'Nur Spielsteine ​​auf der Spielsteinebene zeigen Hexfelder an. Die Anzahl der Spielsteine ​​wird standardmäßig durch „Tokens That Reveal: Player Tokens“ festgelegt, sodass der Spielleiter Monster bewegen kann, ohne die Karte aufzudecken.',
+          'Ein Spielstein deckt jedes Hexfeld auf, das er abdeckt (große Spielsteine ​​decken mehrere ab) und, wenn „Entlang des Pfads anzeigen“ aktiviert ist, jedes Hexfeld auf der Route, entlang derer es gezogen wurde, einschließlich Wegpunkten.',
+          'Die Sichtweite zeigt die Hexfelder um jedes dieser Hexfelder an. Bei aktivierter Sichtlinie wird ein Hexfeld nur dann aufgedeckt, wenn kein verdecktes Hexfeld dazwischen liegt.',
+          'Der Hex-Enthüllungsabstand wird auf den Hexfeldern gespeichert, während diese gezeichnet werden. Diese Verhexungen werden nur innerhalb von so vielen Verhexungen aufgedeckt, unabhängig davon, wie weit ein Spielstein reichen kann. Verwenden Sie es für Berge oder Wälder, die verbergen, was sich dahinter befindet.',
+          'Im Glimpse-Modus werden Hexfelder in Sichtweite durchsichtig, anstatt zu verschwinden, und werden entfernt, wenn ein Token sie betritt.',
+          'Die API meldet keine Bewegungen anderer Mods. TokenMod-Bewegungen werden automatisch übernommen; Wählen Sie für andere Mods die Token aus und klicken Sie auf „Erkunden“ oder rufen Sie Hexploration.revealAround(token) von Ihrem eigenen Mod aus auf.',
+          'Die API meldet keine Bewegungen anderer Mods. TokenMod-Bewegungen werden automatisch übernommen; Wählen Sie für andere Mods die Token aus und klicken Sie auf „Erkunden“ oder rufen Sie Hexploration.revealAround(token) von Ihrem eigenen Mod aus auf.',
+        ],
+      },
+      locations: {
+        heading: 'Benannte Hexfelder und Orte',
+        points: [
+          '„Standort markieren“ verwandelt die ausgewählten Token in versteckte Orte. Ein Spielstein, der sich bereits unter einem Feld befindet, wird sofort ausgeblendet; andernfalls wird es von der nächsten Füllung verdeckt, die es bedeckt.',
+          'Token mit der Statusmarkierung „Weißer Turm“ werden beim Ausfüllen ebenfalls als Orte behandelt, wie in Version 1.',
+          'Versteckte Standortmarker werden auf die GM-Ebene verschoben. Wenn ihr Hexfeld aufgedeckt wird, kehren sie mit angezeigtem Namen zur Spielsteinebene zurück und ihre Entdeckung wird bekannt gegeben.',
+          'Name Hex gibt einem Hex einen Namen ohne Token. Der Name wird dem GM als Beschriftung auf der GM-Ebene angezeigt und bekannt gegeben, wenn das Hex aufgedeckt wird.',
+          '„Entdeckungen ankündigen“ legt fest, ob jeder, nur der GM oder niemand die Ankündigung sieht. Ping Discoveries verschiebt auch die Sicht der Spieler auf den Ort.',
+        ],
+      },
+      settings: {
+        heading: 'Einstellungen',
+        intro:
+          'Ändern Sie die Einstellungen mit !hexploration set (oder der Schaltfläche „Einstellungen“). Hex Layer, Tokens That Reveal und Sprache können ebenfalls auf der Einstellungsseite des Mods eingestellt werden.',
+        colKey: 'Schlüssel',
+        colName: 'Einstellung',
+        colDesc: 'Beschreibung',
+        perPage: '(Kann pro Seite eingestellt werden.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate und Legacy',
+        points: [
+          'Hexploration ermittelt, welche Engine das Spiel verwendet, und zeichnet die passende Form. In beiden Editoren gezeichnete Formen können gefüllt werden.',
+          'Wenn die Hex-Ebene auf „Auto“ eingestellt ist, werden Hexfelder auf der Vordergrundebene über den Spielsteinen gezeichnet, sodass Spieler nicht sehen können, was sich darunter befindet. Wenn die Vordergrundebene nicht verfügbar ist, wird stattdessen die Tokenebene verwendet.',
+          'Jumpgate zeichnet mathematisch regelmäßige Verhexungen, die eine etwas andere Form als Legacy-Verhexungen haben. Wenn die Sechsecke nicht mit dem Raster einer Seite übereinstimmen, rasten Sie ein Token in der Mitte eines Sechsecks ein, wählen Sie es aus und klicken Sie auf „Kalibrieren“. Wählen Sie zwei Spielsteine ​​in benachbarten Hexfeldern derselben Zeile (Hex V) oder Spalte (Hex H) aus, um auch die Hexfeldgröße zu korrigieren.',
+          'Wenn eine Seite oder ein Spiel kopiert wird, erhalten ihre Hexfelder neue IDs. Führen Sie „Rescan“ auf der Seite aus, um sie zusammen mit ihren Namensschildern und Standorttokens wieder aufzunehmen.',
+        ],
+      },
+      upgrading: {
+        heading: 'Upgrade von Version 1',
+        points: [
+          'Version 2 benötigt PathMath, MatrixMath, Vector Math oder HTML Builder nicht mehr. Sie können sie entfernen, es sei denn, ein anderer Mod verwendet sie.',
+          'Vorhandene Hex-Karten, Namen, Standort-Tokens und Einstellungen werden beim ersten Start automatisch aktualisiert.',
+          'Die Befehle der Version 1, einschließlich des Hexploration_menu-Makros, funktionieren weiterhin.',
+          'In Version 1 konnte jeder Spielstein, der einen Charakter darstellte, Verhexungen aufdecken. Setzen Sie Offenbar-Token auf Charakter-Token, um dieses Verhalten beizubehalten.',
+        ],
+        colV1: 'Befehl der Version 1',
+        colV2: 'Befehl der Version 2',
+      },
+      troubleshooting: {
+        heading: 'Fehlerbehebung',
+        points: [
+          'Es passiert nichts, wenn sich ein Token bewegt: Überprüfen Sie, ob sich der Token auf der Token-Ebene befindet und mit Tokens That Reveal übereinstimmt und ob die Seite Hexfelder hat (!hexploration-Status).',
+          'Hexfelder sind vom Raster versetzt: Verwenden Sie „Kalibrieren“ und überprüfen Sie dann mit einem Token einige Hexfelder auf der Karte.',
+          'Verhexungen werden nach dem Kopieren einer Seite oder eines Spiels nicht mehr angezeigt: Führen Sie „Rescan“ auf der Seite aus.',
+          'Fill besagt, dass der Bereich keine Hex-Zentren hat: Die Form muss den Mittelpunkt von mindestens einem Hex enthalten.',
+          'Überprüfen Sie für alles andere das API-Konsolenprotokoll und geben Sie die entsprechenden Meldungen an, wenn Sie um Hilfe bitten.',
+        ],
+      },
+      languages: {
+        heading: 'Sprachen',
+        body: 'Wählen Sie eine Sprache mit !hexploration set language. Verfügbare Sprachen:',
+      },
+      credits: {
+        heading: 'Credits',
+        original: 'Original-Mod von',
+        maintainer: 'Version 2 verwaltet von',
+        marketplace: 'Adas Kunstpakete auf dem Roll20-Marktplatz',
+        support:
+          'Wenn Sie einen Fehler finden oder eine Idee haben, posten Sie im Roll20 Mod-Forum oder öffnen Sie ein Problem auf GitHub und fügen Sie alle Meldungen aus dem API-Konsolenprotokoll hinzu.',
+      },
+    },
+  };
 
-  var localeEl = {};
+  const TRANSLATION$d = {
+    titles: {
+      ready: 'Η εξερεύνηση είναι έτοιμη.',
+      settings: 'Ρυθμίσεις εξερεύνησης',
+      languages: 'Επιλέξτε μια γλώσσα',
+      pageSettings: 'Ρυθμίσεις σελίδας: {page}',
+      status: 'Κατάσταση εξερεύνησης: {page}',
+      help: 'Εντολές Εξερεύνησης',
+      confirm: 'Επιβεβαιώστε',
+    },
+    discovery: {
+      title: 'Ανακαλύφθηκε τοποθεσία',
+    },
+    menu: {
+      draw: 'Ισοπαλία',
+      reveal: 'Αποκάλυψη και απόκρυψη',
+      locations: 'Τοποθεσίες',
+      tools: 'Εργαλεία',
+      layerInUse: 'Νέα εξάγωνα σχεδιάζονται στο {layer}.',
+      pageSettingsHelp:
+        'Αυτές οι ρυθμίσεις ισχύουν μόνο για αυτήν τη σελίδα. Οι ρυθμίσεις με την ένδειξη ★ αντικαθιστούν τις καθολικές ρυθμίσεις.',
+    },
+    buttons: {
+      fill: 'Γέμισμα',
+      fillInverse: 'Αντίστροφο γέμισμα',
+      undo: 'Αναίρεση συμπλήρωσης',
+      reveal: 'Αποκαλύπτω',
+      conceal: 'Απόκρυψη',
+      explore: 'Εξερευνώ',
+      revealPage: 'Αποκάλυψη σελίδας',
+      resetPage: 'Επαναφορά σελίδας',
+      mark: 'Επισήμανση τοποθεσίας',
+      unmark: 'Κατάργηση επισήμανσης',
+      name: 'Όνομα Hex',
+      settings: 'Ρυθμίσεις',
+      pageSettings: 'Ρυθμίσεις σελίδας',
+      status: 'Κατάσταση',
+      rescan: 'Εκ νέου σάρωση',
+      calibrate: 'Μετρώ την διάμετρο',
+      calibrateReset: 'Επαναφορά βαθμονόμησης',
+      help: 'Βοήθεια',
+      change: 'Αλλαγή',
+      menu: 'Μενού',
+      clearOverrides: 'Εκκαθάριση παρακάμψεων',
+      confirmReset: 'Ναι, Κατάργηση όλων των εξάγωνων',
+    },
+    prompts: {
+      name: 'Όνομα τοποθεσίας (αφήστε κενό για διαγραφή)',
+    },
+    values: {
+      on: 'Επί',
+      off: 'Μακριά από',
+      none: 'Κανένας',
+      hexLayer: {
+        auto: 'Αυτόματο (πρώτο πλάνο εάν είναι διαθέσιμο)',
+        foreground: 'στρώμα πρώτου πλάνου',
+        objects: 'συμβολικό στρώμα',
+      },
+      revealBy: {
+        players: 'Μαρκάρια παίκτη',
+        characters: 'Μαρκάρια χαρακτήρων',
+        all: 'Όλες οι μάρκες',
+      },
+      revealMode: {
+        clear: 'Σαφής',
+        glimpse: 'Ματιά',
+      },
+      announce: {
+        all: 'Καθένας',
+        gm: 'Μόνο GM',
+        off: 'Μακριά από',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Γέμισμα',
+        fillInverse: 'Αντίστροφο γέμισμα',
+        conceal: 'Απόκρυψη',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Γλώσσα',
+        desc: 'Γλώσσα για μενού, μηνύματα και φυλλάδια.',
+      },
+      hexLayer: {
+        label: 'Εξάγωνο στρώμα',
+        desc: 'Όπου σχεδιάζονται νέα εξάγωνα. Το Auto δοκιμάζει το επίπεδο προσκηνίου (πάνω από τα κουπόνια) και επιστρέφει στο επίπεδο διακριτικών εάν το παιχνίδι δεν το υποστηρίζει.',
+      },
+      fillColor: {
+        label: 'Χρώμα πλήρωσης',
+        desc: 'Χρώμα νέων εξάγωνων. Χρησιμοποιήστε rgba() για διαφανή εξάγωνα, για παράδειγμα rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Χρώμα περιγράμματος',
+        desc: 'Χρώμα του περιγράμματος των νέων εξάγωνων.',
+      },
+      labelColor: {
+        label: 'Χρώμα ετικέτας',
+        desc: 'Χρώμα των ετικετών ονομάτων μόνο για GM στα επώνυμα εξάγωνα.',
+      },
+      glimpseColor: {
+        label: 'Χρώμα Glimpse',
+        desc: 'Τα εξάγωνα χρώματος αλλάζουν σε όταν τα δει κανείς (λειτουργία αποκάλυψης ματιά). Χρησιμοποιήστε ένα διαφανές χρώμα rgba().',
+      },
+      strokeWidth: {
+        label: 'Πλάτος περιγράμματος',
+        desc: 'Πλάτος του περιγράμματος των νέων εξάγωνων, σε pixel (0 έως 20).',
+      },
+      maxDistance: {
+        label: 'Εξάγωνο αποκαλύπτουν απόσταση',
+        desc: 'Εφαρμόζεται στα εξάγωνα καθώς σχεδιάζονται: ένα διακριτικό πρέπει να βρίσκεται μέσα σε τόσα εξάγωνα για να τα αποκαλύψει, όσο μακριά μπορεί να δει. Αφήστε κενό χωρίς όριο.',
+      },
+      revealDistance: {
+        label: 'Απόσταση όρασης',
+        desc: 'Πόσα εξάγωνα γύρω από ένα κινούμενο διακριτικό αποκαλύπτονται (0 έως 20). Το 0 αποκαλύπτει μόνο τα εξάγωνα από τα οποία διέρχεται το διακριτικό.',
+      },
+      lineOfSight: {
+        label: 'Γραμμή όρασης',
+        desc: 'Όταν είναι ενεργοποιημένο, ένα εξάγωνο αποκαλύπτεται μόνο εάν δεν υπάρχει καλυμμένο εξάγωνο μεταξύ αυτού και του διακριτικού.',
+      },
+      revealPath: {
+        label: 'Αποκάλυψη κατά μήκος της διαδρομής',
+        desc: 'Όταν είναι ενεργοποιημένο, κάθε εξάγωνο από το οποίο περνάει ένα διακριτικό κατά τη μεταφορά (συμπεριλαμβανομένων των σημείων διαδρομής) αποκαλύπτεται, όχι μόνο το σημείο που σταματά.',
+      },
+      revealBy: {
+        label: 'Tokens που αποκαλύπτουν',
+        desc: 'Ποια κουπόνια στο επίπεδο διακριτικών αποκαλύπτουν εξάγωνα: μάρκες που ελέγχονται από έναν παίκτη, μάρκες που αντιπροσωπεύουν οποιονδήποτε χαρακτήρα ή κάθε διακριτικό.',
+      },
+      revealMode: {
+        label: 'Λειτουργία αποκάλυψης',
+        desc: 'Το Clear αφαιρεί τα εξάγωνα που φαίνονται. Το Glimpse τους κάνει διαφανείς. αφαιρούνται όταν μπει ένα κουπόνι.',
+      },
+      announce: {
+        label: 'Ανακοινώστε Ανακαλύψεις',
+        desc: 'Ποιος βλέπει το μήνυμα συνομιλίας όταν ανακαλύπτεται μια τοποθεσία με όνομα.',
+      },
+      pingDiscoveries: {
+        label: 'Ping ανακαλύψεις',
+        desc: 'Όταν είναι ενεργοποιημένο, οι παίκτες αποστέλλονται ping σε μια συγκεκριμένη τοποθεσία όταν ανακαλυφθεί.',
+      },
+      hideCoveredTokens: {
+        label: 'Απόκρυψη καλυμμένων κουπονιών',
+        desc: 'Το Roll20 σχεδιάζει ονόματα, μπάρες και αύρες πάνω από εξάγωνα. Όταν είναι ενεργοποιημένα, τα κουπόνια κάτω από ένα καλυμμένο εξάγωνο έχουν το όνομα που είναι ορατό από τον παίκτη, τις μπάρες και τις αύρες απενεργοποιημένες και ενεργοποιούνται ξανά όταν αποκαλυφθούν.',
+      },
+    },
+    status: {
+      engine: 'Μηχανή παιχνιδιού',
+      grid: 'Πλέγμα',
+      layer: 'Εξάγωνο στρώμα',
+      hexes: 'Εξάγωνα',
+      named: 'Ονομασμένα εξάγωνα',
+      icons: 'Διακριτικά τοποθεσίας',
+      glimpsed: 'Καθαρά εξάγωνα',
+      pending: 'Τοποθεσίες που περιμένουν γέμισμα',
+      calibrated: 'Βαθμονομημένο',
+      overrides: 'Σελίδα παρακάμπτει',
+      undo: 'Αναίρεση διαθέσιμη',
+    },
+    messages: {
+      filled:
+        'Η συμπλήρωση ολοκληρώθηκε. Σχεδιασμένα εξάγωνα: {created}. Επανασχεδιασμένο: {restyled}. Κρυφές τοποθεσίες: {icons}.',
+      revealed: 'Αποκαλύφθηκαν εξάγωνα: {count}.',
+      revealedPage: 'Κάθε εξάγωνο στη σελίδα που αποκαλύπτεται ({count}).',
+      confirmReset:
+        'Να καταργηθεί κάθε εξάγωνο από το "{page}" ({count}); Τα διακριτικά τοποθεσίας επιστρέφουν στο επίπεδο διακριτικών. Η αναίρεση δεν μπορεί να το αντιστρέψει.',
+      resetPage: 'Τα εξάγωνα καταργήθηκαν από τη σελίδα: {count}.',
+      undone:
+        'Η τελευταία πλήρωση αναιρέθηκε. Τα εξάγωνα καταργήθηκαν: {removed}. Αποκαταστάθηκαν τα ανανεωμένα εξάγωνα: {restored}.',
+      named: 'Hexes με όνομα "{name}": {count}.',
+      unnamed: 'Τα ονόματα διαγράφηκαν: {count}.',
+      marked:
+        'Τοποθεσίες που είναι κρυμμένες σε υπάρχοντα hexes: {attached}. Αναμονή για το επόμενο γέμισμα που τα καλύπτει: {pending}.',
+      unmarked: 'Διακριτικά που δεν είναι πλέον τοποθεσίες: {count}.',
+      settingChanged: 'Το {setting} ορίστηκε σε {value}.',
+      rescanned:
+        'Ολοκληρώθηκε η εκ νέου σάρωση. Διατήρηση: {kept}. Εγκρίθηκε: {adopted}. Κατατέθηκε εκ νέου: {moved}. Λείπει και έχει ξεχαστεί: {dropped}. Οι ετικέτες επανασυνδέθηκαν: {labels}. Τα διακριτικά τοποθεσίας επανασυνδέθηκαν: {icons}.',
+      calibrated:
+        'Βαθμονόμηση πλέγματος (βήμα στήλης {colStep}px, βήμα γραμμής {rowStep}px). Εκ νέου σάρωση: διατηρήθηκε {kept}, κατατέθηκε εκ νέου {moved}, υιοθετήθηκε {adopted}.',
+      calibrationReset:
+        'Η βαθμονόμηση καταργήθηκε. Εκ νέου σάρωση: διατηρήθηκε {kept}, κατατέθηκε εκ νέου {moved}, υιοθετήθηκε {adopted}.',
+      journalRebuilt: 'Τα φυλλάδια "{help}" και "{deck}" έχουν ανακατασκευαστεί.',
+      migrated:
+        'Οι χάρτες σας Hexploration 1.x hex έχουν αναβαθμιστεί. Εάν αυτό το παιχνίδι αντιγράφηκε από ένα παιχνίδι παλαιού τύπου, εκτελέστε Εκ νέου σάρωση σε κάθε σελίδα του εξάγωνου χάρτη.',
+      pruned:
+        'Αποθηκευμένα εξάγωνα που δεν υπάρχουν πλέον και ξεχάστηκαν: {dropped}. Εάν αυτό το παιχνίδι ή η σελίδα αντιγράφηκε, εκτελέστε Εκ νέου σάρωση στη σελίδα για να επαναλάβετε τα εξάγωνά της.',
+      readyHint:
+        'Πληκτρολογήστε !hexploration για το μενού ή ανοίξτε το φυλλάδιο "Hexploration - Command Deck".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Αυτό το παιχνίδι δεν υποστηρίζει τη σχεδίαση στο πρώτο επίπεδο, επομένως σχεδιάστηκαν εξάγωνα στο επίπεδο διακριτικών.',
+      someFailed:
+        'Δεκαεξάγωνα που δεν ήταν δυνατό να σχεδιαστούν: {count}. Ελέγξτε την κονσόλα API για λεπτομέρειες.',
+    },
+    errors: {
+      noPage: 'Δεν ήταν δυνατή η εύρεση της σελίδας για εργασία.',
+      notHex: 'Αυτή η σελίδα δεν χρησιμοποιεί εξαγωνικό πλέγμα.',
+      noPolygons: 'Επιλέξτε ένα ή περισσότερα σχεδιασμένα σχήματα για συμπλήρωση.',
+      emptyArea: 'Η επιλεγμένη περιοχή δεν περιέχει δεκαεξαδικά κέντρα.',
+      tooMany: 'Αυτό θα δημιουργούσε πάρα πολλά εξάγωνα με μία κίνηση ({count}).',
+      nothingToConceal: 'Επιλέξτε σχεδιασμένα σχήματα ή μάρκες για απόκρυψη.',
+      nothingToReveal: 'Επιλέξτε εξάγωνα, σχεδιασμένα σχήματα ή μάρκες για αποκάλυψη.',
+      noTokens: 'Επιλέξτε πρώτα ένα ή περισσότερα διακριτικά.',
+      noHexes: 'Επιλέξτε πρώτα ένα ή περισσότερα εξάγωνα (ή μάρκες που στέκονται σε εξάγωνα).',
+      nothingToUndo: 'Δεν υπάρχει γέμισμα για αναίρεση.',
+      unknownCommand: 'Άγνωστη εντολή: {command}',
+      unknownSetting: 'Άγνωστη ρύθμιση: {key}',
+      unknownPageSetting: 'Ρυθμίσεις που μπορούν να οριστούν ανά σελίδα: {keys}',
+      invalidValue: 'Το "{value}" δεν είναι έγκυρη τιμή για {key}.',
+      calibrateNeedsTokens: 'Επιλέξτε ένα ή δύο διακριτικά που έχουν κουμπώσει σε εξάγωνα κέντρα.',
+      calibrateFailed: 'Αυτά τα διακριτικά δεν μπορούν να χρησιμοποιηθούν για βαθμονόμηση.',
+      unexpected: 'Κάτι πήγε στραβά: {message}',
+    },
+    hints: {
+      noPage: 'Ανοίξτε τη σελίδα στην οποία θέλετε να εργαστείτε ή επιλέξτε κάτι σε αυτήν.',
+      notHex: 'Ορίστε το πλέγμα σελίδων σε Hex (V) ή Hex (H) στις Ρυθμίσεις σελίδας.',
+      noPolygons:
+        'Σχεδιάστε ένα πολύγωνο, ορθογώνιο, έλλειψη ή σχήμα ελεύθερου γύρω από την περιοχή, επιλέξτε το και δοκιμάστε ξανά.',
+      emptyArea: 'Σχεδιάστε ένα μεγαλύτερο σχήμα ή ελέγξτε τις ρυθμίσεις πλέγματος σελίδων.',
+      tooMany: 'Γεμίστε μια μικρότερη περιοχή ή χωρίστε την περιοχή σε διάφορα σχήματα.',
+      noHexes:
+        'Τα εξάγωνα βρίσκονται στο προσκήνιο ή στο στρώμα συμβολικής. μεταβείτε σε αυτό το επίπεδο για να τα επιλέξετε.',
+      unknownCommand: 'Πληκτρολογήστε !hexploration help για να παραθέσετε τις εντολές.',
+      unknownSetting: 'Πληκτρολογήστε !hexploration set για να δείτε κάθε ρύθμιση.',
+      calibrateNeedsTokens:
+        'Τοποθετήστε ένα διακριτικό στο κέντρο ενός εξάγωνου και επιλέξτε το. Επιλέξτε ένα δεύτερο διακριτικό που έχει κολλήσει σε ένα γειτονικό εξάγωνο στην ίδια σειρά (Hex V) ή στήλη (Hex H) για να διορθώσετε επίσης το μέγεθος του hex.',
+      calibrateFailed:
+        'Δύο κουπόνια πρέπει να βρίσκονται στην ίδια σειρά (Hex V) ή στην ίδια στήλη (Hex H), τουλάχιστον ένα εξάγωνο μεταξύ τους.',
+      unexpected: 'Οι λεπτομέρειες βρίσκονται στο αρχείο καταγραφής της κονσόλας API.',
+    },
+    help: {
+      menu: 'Εμφάνιση του μενού.',
+      fill: 'Καλύψτε τα επιλεγμένα σχεδιασμένα σχήματα με εξάγωνα.',
+      fillInverse: 'Καλύψτε ολόκληρη τη σελίδα εκτός από το εσωτερικό των επιλεγμένων σχημάτων.',
+      undo: 'Αναιρέστε το τελευταίο γέμισμα, αντίστροφο γέμισμα ή απόκρυψη και επαναφέρετε τα σχήματα που χρησιμοποίησε.',
+      reveal:
+        'Αποκαλύψτε τα επιλεγμένα εξάγωνα και τα εξάγωνα κάτω από τα επιλεγμένα σχήματα και μάρκες.',
+      revealPage: 'Αποκαλύψτε κάθε εξάγωνο στη σελίδα χωρίς ανακοινώσεις.',
+      conceal: 'Καλύψτε ξανά την περιοχή κάτω από τα επιλεγμένα σχήματα και μάρκες με εξάγωνα.',
+      explore: 'Αποκαλύψτε γύρω από τα επιλεγμένα διακριτικά σαν να είχαν μόλις μετακομίσει εκεί.',
+      resetPage: 'Αφαιρέστε κάθε εξάγωνο στη σελίδα (ρωτά πρώτα).',
+      name: 'Ονομάστε τα επιλεγμένα εξάγωνα ή τα εξάγωνα κάτω από τα επιλεγμένα διακριτικά. Αφήστε το όνομα κενό για να το διαγράψετε.',
+      mark: 'Μετατρέψτε τα επιλεγμένα διακριτικά σε κρυφές τοποθεσίες.',
+      unmark: 'Σταματήστε τα επιλεγμένα διακριτικά να είναι κρυφές τοποθεσίες.',
+      set: 'Αλλάξτε μια ρύθμιση ή εμφανίστε όλες τις ρυθμίσεις.',
+      pageSet: 'Παράκαμψη μιας ρύθμισης αποκάλυψης μόνο στην τρέχουσα σελίδα.',
+      pageClear: 'Καταργήστε τις παρακάμψεις της τρέχουσας σελίδας.',
+      rescan:
+        'Δημιουργήστε ξανά τη δεκαεξαδική λίστα της σελίδας, για παράδειγμα μετά την αντιγραφή μιας σελίδας ή ενός παιχνιδιού.',
+      calibrate:
+        'Ευθυγραμμίστε το εξαγωνικό πλέγμα με ένα ή δύο επιλεγμένα κουπόνια που έχουν κουμπώσει σε εξάγωνα κέντρα.',
+      calibrateReset: 'Καταργήστε τη βαθμονόμηση της τρέχουσας σελίδας.',
+      status: 'Δείξτε τι γνωρίζει η Hexploration για την τρέχουσα σελίδα.',
+      journal: 'Αναδημιουργήστε τα φυλλάδια Help and Command Deck.',
+      help: 'Εμφάνιση αυτής της λίστας.',
+      handout: 'Πλήρεις οδηγίες βρίσκονται στο φυλλάδιο "{name}".',
+    },
+    deck: {
+      subtitle: 'Κατάστρωμα εντολών',
+      drawDesc:
+        'Σχεδιάστε σχήματα γύρω από μια περιοχή, επιλέξτε τα και μετά συμπληρώστε. Η αναίρεση αντιστρέφει το τελευταίο γέμισμα.',
+      revealDesc:
+        'Επιλέξτε εξάγωνα, σχήματα ή μάρκες για να τα αποκαλύψετε ή να τα καλύψετε ξανά. Εξερευνήστε αποκαλύψεις γύρω από επιλεγμένα διακριτικά σαν να είχαν μετακινηθεί.',
+      locationsDesc:
+        'Επιλέξτε διακριτικά για να τα αποκρύψετε ως τοποθεσίες κάτω από τα hexes. Επιλέξτε εξάγωνα ή διακριτικά για να ονομάσετε ένα εξάγωνο.',
+      toolsDesc:
+        'Ρυθμίσεις, παρακάμψεις σελίδων, κατάσταση, εκ νέου σάρωση αντιγραμμένων σελίδων και βαθμονόμηση του πλέγματος.',
+      footer: 'Δείτε το φυλλάδιο "{help}" για πλήρεις οδηγίες.',
+    },
+    handout: {
+      versionLabel: 'Εκδοχή',
+      subtitle: 'Εξερεύνηση Hex-by-hex για το Roll20',
+      footer: 'Χρησιμοποιήστε το φυλλάδιο "{deck}" για στοιχεία ελέγχου με ένα κλικ.',
+      overview: {
+        heading: 'Επισκόπηση',
+        body: 'Το Hexploration καλύπτει έναν εξάγωνο χάρτη με αδιαφανή εξάγωνα. Καθώς το πάρτι κινείται, τα εξάγωνα από τα οποία περνούν (και, αν θέλετε, τα εξάγωνα γύρω τους) αφαιρούνται, οπότε ο χάρτης αποκαλύπτεται ένα εξάγωνο τη φορά. Οι κρυφές τοποθεσίες μπορούν να τοποθετηθούν κάτω από εξάγωνα και ανακοινώνονται όταν βρεθούν. Λειτουργεί σε παιχνίδια Jumpgate και Legacy, σε πλέγματα Hex (V) και Hex (H) οποιουδήποτε μεγέθους.',
+        demo: 'Παρακολουθήστε ένα σύντομο demo (από την έκδοση 1)',
+      },
+      quickStart: {
+        heading: 'Γρήγορη εκκίνηση',
+        steps: [
+          'Ανοίξτε μια σελίδα της οποίας το πλέγμα έχει οριστεί σε Hex (V) ή Hex (H).',
+          'Σχεδιάστε ένα ή περισσότερα σχήματα (πολύγωνο, ορθογώνιο, έλλειψη ή με ελεύθερο χέρι) γύρω από την περιοχή για να κρύψετε.',
+          'Επιλέξτε τα σχήματα και κάντε κλικ στο Συμπλήρωση στο Command Deck (ή πληκτρολογήστε !hexploration fill). Τα σχήματα αντικαθίστανται από εξάγωνα.',
+          'Προαιρετικά: πριν συμπληρώσετε, επιλέξτε διακριτικά για σημαντικά μέρη και κάντε κλικ στην επιλογή Επισήμανση τοποθεσίας. Είναι κρυμμένα κάτω από τα εξάγωνα και ανακοινώνονται όταν ανακαλυφθούν.',
+          'Μετακινήστε ένα διακριτικό παίκτη. Κάθε εξάγωνο από το οποίο περνά, και οι εξάγωνοι εντός της Απόστασης όρασής του, αποκαλύπτονται.',
+        ],
+      },
+      commands: {
+        heading: 'Εντολές',
+        intro:
+          'Μόνο οι GM μπορούν να χρησιμοποιήσουν αυτές τις εντολές. Οι περισσότεροι ενεργούν στα επιλεγμένα αντικείμενα. τα υπόλοιπα ενεργούν στη σελίδα που βλέπετε.',
+        colCommand: 'Εντολή',
+        colDesc: 'Τι κάνει',
+      },
+      revealing: {
+        heading: 'Πώς λειτουργεί η αποκάλυψη',
+        points: [
+          'Μόνο τα κουπόνια στο στρώμα διακριτικών αποκαλύπτουν εξάγωνα. Το ποια μάρκα μετράει ορίζεται από το Tokens That Reveal: tokens παίκτη από προεπιλογή, έτσι ώστε η GM να μπορεί να μετακινήσει τέρατα χωρίς να αποκαλύψει τον χάρτη.',
+          'Ένα διακριτικό αποκαλύπτει κάθε εξάγωνο που καλύπτει (τα μεγάλα διακριτικά καλύπτουν πολλά) και, με το Reveal Along Path να είναι ενεργοποιημένο, κάθε εξάγωνο στη διαδρομή που σύρθηκε, συμπεριλαμβανομένων των σημείων διαδρομής.',
+          'Η απόσταση όρασης αποκαλύπτει τα εξάγωνα γύρω από καθένα από αυτά τα εξάγωνα. Με το Line of Sight ενεργοποιημένο, ένα εξάγωνο αποκαλύπτεται μόνο εάν δεν υπάρχει καλυμμένο εξάγωνο στο μεταξύ.',
+          'Το Hex Reveal Distance αποθηκεύεται σε εξάγωνα καθώς σχεδιάζονται. Αυτά τα εξάγωνα αποκαλύπτονται από μέσα μόνο τόσα εξάγωνα, όσο μακριά κι αν μπορεί να δει κανείς. Χρησιμοποιήστε το για βουνά ή δάση που κρύβουν ό,τι είναι πίσω τους.',
+          'Στη λειτουργία Glimpse, τα εξάγωνα που είναι ορατά γίνονται διαφανή αντί να εξαφανίζονται και αφαιρούνται όταν εισέρχεται ένα διακριτικό.',
+          'Το API δεν αναφέρει κινήσεις που έγιναν από άλλα mods. Οι κινήσεις TokenMod λαμβάνονται αυτόματα. για άλλα mods, επιλέξτε τα διακριτικά και κάντε κλικ στο Explore ή καλέστε το Hexploration.revealAround(token) από το δικό σας mod.',
+          'Το API δεν αναφέρει κινήσεις που έγιναν από άλλα mods. Οι κινήσεις TokenMod λαμβάνονται αυτόματα. για άλλα mods, επιλέξτε τα διακριτικά και κάντε κλικ στο Explore ή καλέστε το Hexploration.revealAround(token) από το δικό σας mod.',
+        ],
+      },
+      locations: {
+        heading: 'Με όνομα Hexes and Locations',
+        points: [
+          'Η επισήμανση τοποθεσίας μετατρέπει τα επιλεγμένα διακριτικά σε κρυφές τοποθεσίες. Ένα διακριτικό που βρίσκεται ήδη κάτω από ένα εξάγωνο κρύβεται αμέσως. αλλιώς κρύβεται από το επόμενο γέμισμα που το καλύπτει.',
+          'Τα διακριτικά με τον δείκτη κατάστασης του λευκού πύργου αντιμετωπίζονται επίσης ως τοποθεσίες όταν συμπληρώνετε, όπως στην έκδοση 1.',
+          'Τα κρυφά διακριτικά τοποθεσίας μετακινούνται στο επίπεδο GM. Όταν το εξάγωνό τους αποκαλύπτεται, επιστρέφουν στο στρώμα συμβολικών με το όνομά τους που φαίνεται και η ανακάλυψή τους ανακοινώνεται.',
+          'Όνομα Hex δίνει σε ένα hex ένα όνομα χωρίς διακριτικό. Το όνομα εμφανίζεται στο GM ως ετικέτα στο επίπεδο GM και ανακοινώνεται όταν αποκαλυφθεί το εξάγωνο.',
+          'Το Announce Discoveries επιλέγει αν όλοι, μόνο ο GM ή κανείς δεν θα δει την ανακοίνωση. Το Ping Discoveries μετακινεί επίσης την προβολή των παικτών στην τοποθεσία.',
+        ],
+      },
+      settings: {
+        heading: 'Ρυθμίσεις',
+        intro:
+          'Αλλάξτε τις ρυθμίσεις με το !hexploration set (ή το κουμπί Ρυθμίσεις). Το Hex Layer, τα Tokens That Reveal και η Language μπορούν επίσης να οριστούν στη σελίδα ρυθμίσεων του Mod.',
+        colKey: 'Κλειδί',
+        colName: 'Σύνθεση',
+        colDesc: 'Περιγραφή',
+        perPage: '(Μπορεί να οριστεί ανά σελίδα.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate και Legacy',
+        points: [
+          'Το Hexploration προσδιορίζει τον κινητήρα που χρησιμοποιεί το παιχνίδι και σχεδιάζει το αντίστοιχο είδος σχήματος. Τα σχήματα που σχεδιάζονται σε οποιοδήποτε πρόγραμμα επεξεργασίας μπορούν να συμπληρωθούν.',
+          'Με το Hex Layer σε Αυτόματο, τα εξάγωνα σχεδιάζονται στο πρώτο επίπεδο, πάνω από τα διακριτικά, έτσι οι παίκτες δεν μπορούν να δουν τι υπάρχει από κάτω. Εάν το επίπεδο πρώτου πλάνου δεν είναι διαθέσιμο, χρησιμοποιείται το επίπεδο διακριτικού.',
+          'Το Jumpgate σχεδιάζει μαθηματικά κανονικά εξάγωνα, τα οποία έχουν ελαφρώς διαφορετικό σχήμα από τα εξάγωνα παλαιού τύπου. Εάν τα hexes δεν ευθυγραμμίζονται με το πλέγμα μιας σελίδας, κουμπώστε ένα διακριτικό σε ένα εξάγωνο κέντρο, επιλέξτε το και κάντε κλικ στο Calibrate. Επιλέξτε δύο διακριτικά σε γειτονικά εξάγωνα της ίδιας σειράς (Hex V) ή στήλης (Hex H) για να διορθώσετε και το μέγεθος του hex.',
+          'Όταν μια σελίδα ή ένα παιχνίδι αντιγράφεται, τα εξάγωνά του λαμβάνουν νέα αναγνωριστικά. Εκτελέστε Εκ νέου σάρωση στη σελίδα για να τα παραλάβετε ξανά, μαζί με τις ετικέτες ονομάτων και τα διακριτικά τοποθεσίας τους.',
+        ],
+      },
+      upgrading: {
+        heading: 'Αναβάθμιση από την έκδοση 1',
+        points: [
+          'Η έκδοση 2 δεν χρειάζεται πλέον PathMath, MatrixMath, Vector Math ή HTML Builder. Μπορείτε να τα αφαιρέσετε εκτός εάν τα χρησιμοποιεί άλλο mod.',
+          'Οι υπάρχοντες δεκαεξαδικοί χάρτες, τα ονόματα, τα διακριτικά τοποθεσίας και οι ρυθμίσεις αναβαθμίζονται αυτόματα με την πρώτη εκκίνηση.',
+          'Οι εντολές έκδοσης 1, συμπεριλαμβανομένης της μακροεντολής Hexploration_menu, εξακολουθούν να λειτουργούν.',
+          'Η έκδοση 1 επιτρέπει σε οποιοδήποτε διακριτικό που αντιπροσώπευε έναν χαρακτήρα να αποκαλύψει εξάγωνα. Ρυθμίστε τα Tokens That Reveal σε διακριτικά χαρακτήρων για να διατηρήσετε αυτή τη συμπεριφορά.',
+        ],
+        colV1: 'Εντολή έκδοσης 1',
+        colV2: 'Εντολή έκδοσης 2',
+      },
+      troubleshooting: {
+        heading: 'Αντιμετώπιση προβλημάτων',
+        points: [
+          'Τίποτα δεν συμβαίνει όταν ένα διακριτικό μετακινείται: ελέγξτε ότι το διακριτικό βρίσκεται στο επίπεδο του διακριτικού και ταιριάζει με τα Tokens That Reveal και ότι η σελίδα έχει hexes (!hexploration status).',
+          'Τα εξάγωνα μετατοπίζονται από το πλέγμα: χρησιμοποιήστε τη Βαθμονόμηση και, στη συνέχεια, ελέγξτε με ένα διακριτικό μερικά εξάγωνα στον χάρτη.',
+          'Τα Hexes σταμάτησαν να αποκαλύπτονται μετά την αντιγραφή μιας σελίδας ή ενός παιχνιδιού: εκτελέστε Εκ νέου σάρωση στη σελίδα.',
+          'Το Fill λέει ότι η περιοχή δεν έχει εξάγωνα κέντρα: το σχήμα πρέπει να περιέχει το κέντρο τουλάχιστον ενός εξάγωνου.',
+          'Για οτιδήποτε άλλο, ελέγξτε το αρχείο καταγραφής της κονσόλας API και συμπεριλάβετε τα μηνύματά του όταν ζητάτε βοήθεια.',
+        ],
+      },
+      languages: {
+        heading: 'Γλώσσες',
+        body: 'Επιλέξτε μια γλώσσα με !hexploration set language. Διαθέσιμες γλώσσες:',
+      },
+      credits: {
+        heading: 'Πιστώσεις',
+        original: 'Πρωτότυπο mod από',
+        maintainer: 'Έκδοση 2 που διατηρείται από',
+        marketplace: 'Τα πακέτα τέχνης της Ada στο Roll20 Marketplace',
+        support:
+          'Εάν βρείτε ένα σφάλμα ή έχετε μια ιδέα, δημοσιεύστε στο φόρουμ Roll20 Mod ή ανοίξτε ένα ζήτημα στο GitHub και συμπεριλάβετε τυχόν μηνύματα από το αρχείο καταγραφής της κονσόλας API.',
+      },
+    },
+  };
 
-  var localeHe = {};
+  const TRANSLATION$c = {
+    titles: {
+      ready: 'החקירה מוכנה.',
+      settings: 'הגדרות החקירה',
+      languages: 'בחר שפה',
+      pageSettings: 'הגדרות דף: {page}',
+      status: 'סטטוס החקירה: {page}',
+      help: 'פקודות החקירה',
+      confirm: 'אנא אשר',
+    },
+    discovery: {
+      title: 'מיקום התגלה',
+    },
+    menu: {
+      draw: 'לִמְשׁוֹך',
+      reveal: 'לגלות ולהסתיר',
+      locations: 'מיקומים',
+      tools: 'כְּלֵי עֲבוֹדָה',
+      layerInUse: 'משושים חדשים מצוירים ב-{layer}.',
+      pageSettingsHelp:
+        'הגדרות אלו חלות על דף זה בלבד. הגדרות המסומנות ★ עוקפות את ההגדרות הגלובליות.',
+    },
+    buttons: {
+      fill: 'לְמַלֵא',
+      fillInverse: 'מילוי הפוך',
+      undo: 'בטל מילוי',
+      reveal: 'לְגַלוֹת',
+      conceal: 'לְהַסתִיר',
+      explore: 'לַחקוֹר',
+      revealPage: 'גלה עמוד',
+      resetPage: 'אפס דף',
+      mark: 'סמן מיקום',
+      unmark: 'בטל את הסימון',
+      name: 'שם הקס',
+      settings: 'הגדרות',
+      pageSettings: 'הגדרות עמוד',
+      status: 'סטָטוּס',
+      rescan: 'סרוק מחדש',
+      calibrate: 'לְדַרֵג',
+      calibrateReset: 'אפס כיול',
+      help: 'עֶזרָה',
+      change: 'לְשַׁנוֹת',
+      menu: 'תַפרִיט',
+      clearOverrides: 'נקה עקיפות',
+      confirmReset: 'כן, הסר את כל המשושים',
+    },
+    prompts: {
+      name: 'שם המיקום (השאירו ריק כדי לנקות)',
+    },
+    values: {
+      on: 'עַל',
+      off: 'כבוי',
+      none: 'אַף לֹא אֶחָד',
+      hexLayer: {
+        auto: 'אוטומטי (בחזית אם זמין)',
+        foreground: 'שכבת חזית',
+        objects: 'שכבת אסימונים',
+      },
+      revealBy: {
+        players: 'אסימוני שחקן',
+        characters: 'אסימוני תווים',
+        all: 'כל האסימונים',
+      },
+      revealMode: {
+        clear: 'בָּרוּר',
+        glimpse: 'הֲצָצָה',
+      },
+      announce: {
+        all: 'כֹּל אֶחָד',
+        gm: 'GM בלבד',
+        off: 'כבוי',
+      },
+      orientation: {
+        vertical: 'משושה (V)',
+        horizontal: 'משושה (H)',
+      },
+      fillKind: {
+        fill: 'לְמַלֵא',
+        fillInverse: 'מילוי הפוך',
+        conceal: 'לְהַסתִיר',
+      },
+    },
+    settings: {
+      language: {
+        label: 'שָׂפָה',
+        desc: 'שפה לתפריטים, הודעות ודפי מידע.',
+      },
+      hexLayer: {
+        label: 'שכבת משושה',
+        desc: 'היכן מציירים משושים חדשים. אוטומטי מנסה את שכבת החזית (מעל האסימונים) ונופל בחזרה לשכבת האסימון אם המשחק אינו תומך בה.',
+      },
+      fillColor: {
+        label: 'צבע מילוי',
+        desc: 'צבע של משושים חדשים. השתמש ב-rgba() עבור hexes שקופים, למשל rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'צבע גבול',
+        desc: 'צבע קווי המתאר של משושות חדשות.',
+      },
+      labelColor: {
+        label: 'צבע התווית',
+        desc: 'צבע של תוויות השם GM בלבד על hexes עם שם.',
+      },
+      glimpseColor: {
+        label: 'צבע הצצה',
+        desc: 'משושי צבע משתנים לבעת הצצה (מצב חשיפת הצצה). השתמש בצבע rgba() שקוף.',
+      },
+      strokeWidth: {
+        label: 'רוחב גבול',
+        desc: 'רוחב קווי המתאר של משושים חדשים, בפיקסלים (0 עד 20).',
+      },
+      maxDistance: {
+        label: 'מרחק חשיפת משושה',
+        desc: 'מיושם על משושים כשהם מצוירים: אסימון חייב להיות בתוך כל כך הרבה משושות כדי לחשוף אותם, כמה רחוק שהוא יכול לראות. השאר ריק ללא הגבלה.',
+      },
+      revealDistance: {
+        label: 'מרחק ראייה',
+        desc: 'כמה משושים סביב אסימון נע נחשפים (0 עד 20). 0 חושף רק את המשושים שהאסימון עובר דרכם.',
+      },
+      lineOfSight: {
+        label: 'קו ראייה',
+        desc: 'כאשר מופעל, משושה מתגלה רק אם אין משושה מכוסה בינו לבין האסימון.',
+      },
+      revealPath: {
+        label: 'גלה לאורך הנתיב',
+        desc: 'כאשר הוא פועל, כל משושה שאסימון עובר דרכו בזמן גרירה (כולל נקודות ציון) מתגלה, לא רק היכן שהוא עוצר.',
+      },
+      revealBy: {
+        label: 'אסימונים שחושפים',
+        desc: 'אילו אסימונים בשכבת האסימון חושפים משושים: אסימונים הנשלטים על ידי שחקן, אסימונים המייצגים כל דמות או כל אסימון.',
+      },
+      revealMode: {
+        label: 'מצב חשיפה',
+        desc: 'קליר מסיר משושים בטווח ראייה. הצצה גורמת להם להיות שקופים במקום זאת; הם מוסרים כאשר אסימון נכנס אליהם.',
+      },
+      announce: {
+        label: 'הכריזו על תגליות',
+        desc: "מי רואה את הודעת הצ'אט כאשר מתגלה מיקום בעל שם.",
+      },
+      pingDiscoveries: {
+        label: 'פינג תגליות',
+        desc: 'כאשר הוא פועל, שחקנים מקבלים פינג למיקום בעל שם כאשר הוא מתגלה.',
+      },
+      hideCoveredTokens: {
+        label: 'הסתר אסימונים מכוסים',
+        desc: 'Roll20 מצייר שמות, מוטות והילות מעל משושים. כשהם מופעלים, לאסימונים מתחת לקסדה מכוסה השם שלהם גלוי לנגן, מוטות והילות כבויים, ומופעלים שוב כאשר הם נחשפים.',
+      },
+    },
+    status: {
+      engine: 'מנוע משחק',
+      grid: 'רֶשֶׁת',
+      layer: 'שכבת משושה',
+      hexes: 'משושים',
+      named: 'ששים בשם',
+      icons: 'אסימוני מיקום',
+      glimpsed: 'משושים נוצצים',
+      pending: 'מיקומים ממתינים למילוי',
+      calibrated: 'מְכוּיָל',
+      overrides: 'עקיפת עמוד',
+      undo: 'בטל זמין',
+    },
+    messages: {
+      filled:
+        'מילוי הושלם. משושים מצוירים: {created}. עיצוב מחדש: {restyled}. מיקומים מוסתרים: {icons}.',
+      revealed: 'נחשפו משושים: {count}.',
+      revealedPage: 'כל hex בדף נחשף ({count}).',
+      confirmReset:
+        'להסיר כל hex מ-"{page}" ({count})? אסימוני מיקום חוזרים לשכבת האסימון. לא ניתן לבטל את זה.',
+      resetPage: 'הקסים הוסרו מהדף: {count}.',
+      undone: 'המילוי האחרון בוטל. הקסים הוסרו: {removed}. שוחזרו משושי סגנון מחדש: {restored}.',
+      named: 'hexes בשם "{name}": {count}.',
+      unnamed: 'שמות נוקו: {count}.',
+      marked: 'מיקומים מוסתרים בשושים קיימים: {attached}. ממתין למילוי הבא שיכסה אותם: {pending}.',
+      unmarked: 'אסימונים שאינם עוד מיקומים: {count}.',
+      settingChanged: '{setting} מוגדר ל-{value}.',
+      rescanned:
+        'הסריקה מחדש הושלמה. נשמר: {kept}. אומץ: {adopted}. הוגש מחדש: {moved}. חסר ונשכח: {dropped}. תוויות מקושרות מחדש: {labels}. אסימוני מיקום מקושרים מחדש: {icons}.',
+      calibrated:
+        'רשת מכוילת (שלב עמודה {colStep}px, שלב שורה {rowStep}px). סריקה מחדש: שמר על {kept}, הוגש מחדש {moved}, אומץ {adopted}.',
+      calibrationReset:
+        'הכיול הוסר. סריקה מחדש: שמר על {kept}, הוגש מחדש {moved}, אימץ את {adopted}.',
+      journalRebuilt: 'הדפים "{help}" ו-"{deck}" נבנו מחדש.',
+      migrated:
+        'מפות הקש של Hexploration 1.x שלך שודרגו. אם המשחק הזה הועתק ממשחק Legacy, הפעל Rescan בכל דף מפה משושה.',
+      pruned:
+        'משושים שמורים שכבר לא קיימים ונשכחו: {dropped}. אם המשחק או הדף הזה הועתקו, הפעל סריקה מחדש בדף כדי להרים שוב את המשושים שלו.',
+      readyHint:
+        'הקלד !hexploration עבור התפריט, או פתח את דף המידע "Hexploration - Command Deck".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'משחק זה אינו תומך בציור על שכבת החזית, כך ששושים צוירו על שכבת האסימון.',
+      someFailed: 'הקסים שלא ניתן היה לצייר: {count}. בדוק את מסוף ה-API לפרטים.',
+    },
+    errors: {
+      noPage: 'לא הצלחתי למצוא את הדף לעבוד עליו.',
+      notHex: 'דף זה אינו משתמש ברשת משושה.',
+      noPolygons: 'בחר צורה מצוירת אחת או יותר למילוי.',
+      emptyArea: 'האזור שנבחר אינו מכיל מרכזי hex.',
+      tooMany: 'זה ייצור יותר מדי hexes במכה אחת ({count}).',
+      nothingToConceal: 'בחר צורות מצוירות או אסימונים כדי להסתיר.',
+      nothingToReveal: 'בחר משושים, צורות מצוירות או אסימונים לחשיפה.',
+      noTokens: 'תחילה בחר אסימון אחד או יותר.',
+      noHexes: 'בחר תחילה משושה אחת או יותר (או אסימונים העומדים על משושים).',
+      nothingToUndo: 'אין מילוי לבטל.',
+      unknownCommand: 'פקודה לא ידועה: {command}',
+      unknownSetting: 'הגדרה לא ידועה: {key}',
+      unknownPageSetting: 'הגדרות שניתן להגדיר לכל עמוד: {keys}',
+      invalidValue: '"{value}" אינו ערך חוקי עבור {key}.',
+      calibrateNeedsTokens: 'בחר אסימון אחד או שניים שהוצמדו למרכזי משושה.',
+      calibrateFailed: 'לא ניתן להשתמש באסימונים האלה לכיול.',
+      unexpected: 'משהו השתבש: {message}',
+    },
+    hints: {
+      noPage: 'פתח את הדף שאתה רוצה לעבוד עליו, או בחר משהו בו.',
+      notHex: 'הגדר את רשת העמודים ל-Hex (V) או Hex (H) בהגדרות עמוד.',
+      noPolygons:
+        'צייר מצולע, מלבן, אליפסה או צורה ביד חופשית סביב האזור, בחר אותו ולאחר מכן נסה שוב.',
+      emptyArea: 'צייר צורה גדולה יותר, או בדוק את הגדרות רשת העמודים.',
+      tooMany: 'ממלאים שטח קטן יותר, או חלקו את השטח למספר צורות.',
+      noHexes: 'המשושים נמצאים בחזית או בשכבת האסימון; עבור לשכבה זו כדי לבחור אותם.',
+      unknownCommand: 'הקלד !hexploration help כדי לרשום את הפקודות.',
+      unknownSetting: 'הקלד !hexploration set כדי לראות כל הגדרה.',
+      calibrateNeedsTokens:
+        'הצמד אסימון למרכז משושה ובחר בו. בחר אסימון שני שנצמד ל-hex סמוך באותה שורה (Hex V) או עמודה (Hex H) כדי לתקן גם את גודל הhex.',
+      calibrateFailed:
+        'שני אסימונים חייבים להיות באותה שורה (Hex V) או באותה עמודה (Hex H), לפחות hex אחד בנפרד.',
+      unexpected: 'הפרטים נמצאים ביומן מסוף ה-API.',
+    },
+    help: {
+      menu: 'הצג את התפריט.',
+      fill: 'כסה את הצורות המצוירות שנבחרו בשושים.',
+      fillInverse: 'כסה את כל העמוד למעט בתוך הצורות שנבחרו.',
+      undo: 'בטל את המילוי האחרון, מילוי הפוך או הסתר, ושחזר את הצורות בהן השתמש.',
+      reveal: 'חשוף את המשושים שנבחרו, ואת המשושים תחת הצורות והאסימונים שנבחרו.',
+      revealPage: 'חשוף כל קסם בדף ללא הודעות.',
+      conceal: 'כסה שוב את השטח מתחת לצורות והאסימונים שנבחרו בשושים.',
+      explore: 'חשפו סביב האסימונים שנבחרו כאילו הם זה עתה עברו לשם.',
+      resetPage: 'הסר כל hex בדף (שואל תחילה).',
+      name: 'תן שם למשושים שנבחרו, או לשושים מתחת לאסימונים שנבחרו. השאר את השם ריק כדי לנקות אותו.',
+      mark: 'הפוך את האסימונים שנבחרו למיקומים נסתרים.',
+      unmark: 'עצור את האסימונים שנבחרו להיות מיקומים מוסתרים.',
+      set: 'שנה הגדרה או הצג את כל ההגדרות.',
+      pageSet: 'עוקף הגדרת חשיפה בדף הנוכחי בלבד.',
+      pageClear: 'הסר את העקיפות של הדף הנוכחי.',
+      rescan: 'בנה מחדש את רשימת ה-hex של העמוד, למשל לאחר העתקת עמוד או משחק.',
+      calibrate: 'שורה את הרשת המשושה עם אסימון אחד או שניים נבחרים המוצמדים למרכזי משושה.',
+      calibrateReset: 'הסר את הכיול של הדף הנוכחי.',
+      status: 'הצג מה Hexploration יודע על הדף הנוכחי.',
+      journal: 'בנה מחדש את דפי העזרה והפקודה.',
+      help: 'הצג רשימה זו.',
+      handout: 'ההנחיות המלאות נמצאות בדף "{name}".',
+    },
+    deck: {
+      subtitle: 'סיפון פיקוד',
+      drawDesc: 'צייר צורות סביב אזור, בחר אותן ולאחר מכן מלא. בטל הופך את המילוי האחרון.',
+      revealDesc:
+        'בחר משושים, צורות או אסימונים כדי לחשוף או לכסות אותם שוב. חקור גילויים סביב אסימונים נבחרים כאילו הם זזו.',
+      locationsDesc:
+        'בחר אסימונים כדי להסתיר אותם כמיקומים מתחת למשושים. בחר hexes או אסימונים כדי לתת שם hex.',
+      toolsDesc: 'הגדרות, עקיפות עמודים, מצב, סריקה מחדש של דפים שהועתקו וכיול הרשת.',
+      footer: 'עיין בדף "{help}" להנחיות מלאות.',
+    },
+    handout: {
+      versionLabel: 'גִרְסָה',
+      subtitle: 'חקירה משושה אחר קסם עבור Roll20',
+      footer: 'השתמש בדף "{deck}" עבור פקדים בלחיצה אחת.',
+      overview: {
+        heading: 'סקירה כללית',
+        body: 'האקספלורציה מכסה מפת hex עם hexes אטומים. כאשר המפלגה זזה, המשושים שהם עוברים דרכם (ואם תרצו, המשושים סביבם) מוסרים, כך שהמפה נחשפת משושה אחת בכל פעם. ניתן למקם מיקומים מוסתרים מתחת למשושים והם מוכרזים כאשר הם נמצאים. זה עובד במשחקי Jumpgate ו- Legacy, על רשתות Hex (V) ו-Hex (H) בכל גודל.',
+        demo: 'צפו בהדגמה קצרה (מגרסה 1)',
+      },
+      quickStart: {
+        heading: 'התחלה מהירה',
+        steps: [
+          'פתח עמוד שהרשת שלו מוגדרת ל- Hex (V) או Hex (H).',
+          'צייר צורה אחת או יותר (מצולע, מלבן, אליפסה או ביד חופשית) סביב האזור כדי להסתיר.',
+          'בחר את הצורות ולחץ על מילוי ב-Command Deck (או הקלד !hexploration fill). הצורות מוחלפות בשושים.',
+          'אופציונלי: לפני המילוי, בחר אסימונים למקומות חשובים ולחץ על סמן מיקום. הם מוסתרים מתחת למשושים ומוכרזים כאשר הם מתגלים.',
+          'הזז אסימון שחקן. כל משושה שהוא עובר דרכו, והשיושים במרחק הראייה שלו, מתגלים.',
+        ],
+      },
+      commands: {
+        heading: 'פקודות',
+        intro:
+          'רק GMs יכולים להשתמש בפקודות אלה. רובם פועלים על האובייקטים שנבחרו; השאר פועלים בדף שבו אתה צופה.',
+        colCommand: 'פְּקוּדָה',
+        colDesc: 'מה זה עושה',
+      },
+      revealing: {
+        heading: 'איך עובד גילוי',
+        points: [
+          'רק אסימונים בשכבת האסימון מגלים משושים. איזה ספירת אסימונים נקבעת על ידי Tokens That Reveal: אסימוני שחקן כברירת מחדל, כך שה-GM יכול להזיז מפלצות מבלי לחשוף את המפה.',
+          'אסימון חושף כל משושה שהוא מכסה (אסימונים גדולים מכסים כמה) ועם Reveal Along Path מופעל, כל משושה במסלול שהוא נגרר אליו, כולל נקודות ציון.',
+          'מרחק ראייה חושף את המשושים סביב כל אחד מאותם משושות. כשקו הראייה פועל, משושה מתגלה רק אם אין שום משושה מכוסה באמצע.',
+          'מרחק חשיפת משושה מאוחסן על משושים בזמן שהם מצוירים. המשושים האלה מתגלים רק מבפנים כל כך הרבה משושים, עד כמה שאסימון יכול לראות. השתמש בו עבור הרים או יערות שמסתירים את מה שנמצא מאחוריהם.',
+          'במצב הצצה, משושים בטווח ראייה הופכים שקופים במקום להיעלם, והם מוסרים כאשר אסימון נכנס אליהם.',
+          'ה-API אינו מדווח על מהלכים שנעשו על ידי אופנים אחרים. מהלכי TokenMod נקלטים באופן אוטומטי; עבור אופנים אחרים, בחר את האסימונים ולחץ על Explore, או התקשר ל-Hexploration.revealAround(token) מהמוד שלך.',
+          'ה-API אינו מדווח על מהלכים שנעשו על ידי אופנים אחרים. מהלכי TokenMod נקלטים באופן אוטומטי; עבור אופנים אחרים, בחר את האסימונים ולחץ על Explore, או התקשר ל-Hexploration.revealAround(token) מהמוד שלך.',
+        ],
+      },
+      locations: {
+        heading: 'בשם משושים ומיקומים',
+        points: [
+          'סמן מיקום הופך את האסימונים שנבחרו למיקומים מוסתרים. אסימון שכבר תחת משושה מוסתר מיד; אחרת הוא מוסתר על ידי המילוי הבא שמכסה אותו.',
+          'אסימונים עם סמן המצב של המגדל הלבן מטופלים גם כמיקומים בעת מילוי, כמו בגרסה 1.',
+          'אסימוני מיקום מוסתרים מועברים לשכבת GM. כאשר הקסם שלהם מתגלה הם חוזרים לשכבת האסימון עם שמם מוצג, והגילוי שלהם מוכרז.',
+          'Name Hex נותן hex שם ללא אסימון. השם מוצג ל-GM כתווית בשכבת ה-GM ומוכרז כאשר ה-hex נחשף.',
+          'הכרזה תגליות בוחרת אם כולם, רק ה-GM או אף אחד לא יראה את ההכרזה. Ping Discoveries גם מעביר את תצוגת השחקנים למיקום.',
+        ],
+      },
+      settings: {
+        heading: 'הגדרות',
+        intro:
+          'שנה הגדרות באמצעות !hexploration set (או כפתור ההגדרות). ניתן להגדיר גם שכבת Hex Layer, Tokens That Reveal ושפה בדף ההגדרות של המוד.',
+        colKey: 'מַפְתֵחַ',
+        colName: 'סְבִיבָה',
+        colDesc: 'תֵאוּר',
+        perPage: '(ניתן להגדיר לכל עמוד.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate ומורשת',
+        points: [
+          'האקספלורציה מגלה באיזה מנוע המשחק משתמש ומשרטטת את הצורה התואמת. ניתן למלא צורות שצוירו בכל אחד מהעורך.',
+          'כאשר שכבת Hex Layer מוגדרת ל-Auto, משושים מצוירים בשכבת החזית, מעל אסימונים, כך ששחקנים לא יכולים לראות מה יש מתחת. אם שכבת החזית אינה זמינה, נעשה שימוש בשכבת האסימון במקום זאת.',
+          'Jumpgate מצייר hexes רגילים מתמטית, שהם צורה שונה במקצת מה-Legacy hexes. אם המשושים אינם מתיישבים עם הרשת של עמוד, הצמד אסימון למרכז משושה, בחר אותו ולחץ על כיול. בחר שני אסימונים בשושים שכנים של אותה שורה (Hex V) או עמודה (Hex H) כדי לתקן גם את גודל הhex.',
+          'כאשר עמוד או משחק מועתקים, המשושים שלו מקבלים מזהים חדשים. הפעל סריקה מחדש בדף כדי לאסוף אותם שוב, יחד עם תוויות השם ואסימוני המיקום שלהם.',
+        ],
+      },
+      upgrading: {
+        heading: 'משדרג מגרסה 1',
+        points: [
+          'גרסה 2 כבר לא צריכה PathMath, MatrixMath, Vector Math או HTML Builder. אתה יכול להסיר אותם אלא אם מוד אחר משתמש בהם.',
+          'מפות hex קיימות, שמות, אסימוני מיקום והגדרות משודרגים אוטומטית בהתחלה הראשונה.',
+          'הפקודות של גרסה 1, כולל המאקרו Hexploration_menu, עדיין עובדות.',
+          'גרסה 1 מאפשרת לכל אסימון שייצג דמות לחשוף משושים. הגדר אסימונים שחושפים לאסימוני תווים כדי לשמור על התנהגות זו.',
+        ],
+        colV1: 'פקודה גרסה 1',
+        colV2: 'פקודה גרסה 2',
+      },
+      troubleshooting: {
+        heading: 'פתרון בעיות',
+        points: [
+          'שום דבר לא קורה כאשר אסימון זז: בדוק שהאסימון נמצא בשכבת האסימון ותואם ל-Tokens That Reveal, ושהדף מכיל hexes (!hexploration status).',
+          'משושים מוסטים מהרשת: השתמש בכייל, ואז בדוק עם אסימון על כמה משושים על פני המפה.',
+          'Hexes הפסיקו לחשוף לאחר העתקת עמוד או משחק: הפעל Rescan בדף.',
+          'מילוי אומר שלאזור אין מרכזי משושה: הצורה חייבת להכיל את המרכז של משושה אחת לפחות.',
+          'לכל דבר אחר, בדוק את יומן מסוף ה-API וכלול את ההודעות שלו כאשר אתה מבקש עזרה.',
+        ],
+      },
+      languages: {
+        heading: 'שפות',
+        body: 'בחר שפה עם !hexploration set language. שפות זמינות:',
+      },
+      credits: {
+        heading: 'קרדיטים',
+        original: 'מוד מקורי מאת',
+        maintainer: 'גרסה 2 מתוחזקת על ידי',
+        marketplace: 'חבילות האמנות של עדה ב-Roll20 Marketplace',
+        support:
+          'אם אתה מוצא באג או יש לך רעיון, פרסם בפורום Roll20 Mod או פתח בעיה ב-GitHub, וכלול הודעות כלשהן מיומן מסוף ה-API.',
+      },
+    },
+  };
 
-  var localeHu = {};
+  const TRANSLATION$b = {
+    titles: {
+      ready: 'A hexploration készen áll.',
+      settings: 'Hexexploration beállítások',
+      languages: 'Válasszon nyelvet',
+      pageSettings: 'Oldalbeállítások: {page}',
+      status: 'Heti feltárás állapota: {page}',
+      help: 'Hexploration parancsok',
+      confirm: 'Kérjük, erősítse meg',
+    },
+    discovery: {
+      title: 'Hely felfedezve',
+    },
+    menu: {
+      draw: 'Rajzolj',
+      reveal: 'Felfedni és elrejteni',
+      locations: 'Helyszínek',
+      tools: 'Eszközök',
+      layerInUse: 'Új hatszögek rajzolása folyamatban van a {layer}.',
+      pageSettingsHelp:
+        'Ezek a beállítások csak erre az oldalra vonatkoznak. A ★ jelű beállítások felülírják a globális beállításokat.',
+    },
+    buttons: {
+      fill: 'Töltse ki',
+      fillInverse: 'Inverz kitöltés',
+      undo: 'Kitöltés visszavonása',
+      reveal: 'Felfedni',
+      conceal: 'Elrejteni',
+      explore: 'Fedezze fel',
+      revealPage: 'Oldal feltárása',
+      resetPage: 'Oldal visszaállítása',
+      mark: 'Hely megjelölése',
+      unmark: 'Törölje a jelölést',
+      name: 'Név Hex',
+      settings: 'Beállítások elemre',
+      pageSettings: 'Oldalbeállítások',
+      status: 'Állapot',
+      rescan: 'Újraszkennelés',
+      calibrate: 'Kalibrálni',
+      calibrateReset: 'Kalibrálás visszaállítása',
+      help: 'Segítség',
+      change: 'Változás',
+      menu: 'Menü',
+      clearOverrides: 'Felülbírálások törlése',
+      confirmReset: 'Igen, távolítsa el az összes hexát',
+    },
+    prompts: {
+      name: 'Helynév (a törléshez hagyja üresen)',
+    },
+    values: {
+      on: 'On',
+      off: 'Le',
+      none: 'Egyik sem',
+      hexLayer: {
+        auto: 'Automatikus (előtérben, ha elérhető)',
+        foreground: 'előtér réteg',
+        objects: 'token réteg',
+      },
+      revealBy: {
+        players: 'Játékos tokenek',
+        characters: 'Karakter tokenek',
+        all: 'Minden token',
+      },
+      revealMode: {
+        clear: 'Világos',
+        glimpse: 'Bepillantás',
+      },
+      announce: {
+        all: 'Mindenki',
+        gm: 'Csak GM',
+        off: 'Le',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Töltse ki',
+        fillInverse: 'Inverz kitöltés',
+        conceal: 'Elrejteni',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Nyelv',
+        desc: 'A menük, üzenetek és tájékoztatók nyelve.',
+      },
+      hexLayer: {
+        label: 'Hatlapos réteg',
+        desc: 'Ahol új hatszögeket rajzolnak. Az Auto megpróbálja az előtér réteget (a tokenek felett), és visszaesik a token rétegre, ha a játék nem támogatja.',
+      },
+      fillColor: {
+        label: 'Kitöltés színe',
+        desc: 'Új hatszögek színe. Használja az rgba()-t az átlátszó hexákhoz, például rgba(0,0,0,0,8).',
+      },
+      strokeColor: {
+        label: 'Szegély színe',
+        desc: 'Az új hatszögek körvonalának színe.',
+      },
+      labelColor: {
+        label: 'Címke színe',
+        desc: 'A csak GM-nek szánt névcímkék színe a megnevezett hexákon.',
+      },
+      glimpseColor: {
+        label: 'Glimpse Color',
+        desc: 'A színes hatszögek bepillantáskor a következőre változnak (Glimpse discovery mód). Használjon átlátszó rgba() színt.',
+      },
+      strokeWidth: {
+        label: 'Határ szélessége',
+        desc: 'Az új hatszögek körvonalának szélessége pixelben (0-tól 20-ig).',
+      },
+      maxDistance: {
+        label: 'Hex Reveal távolság',
+        desc: 'A húzott hatszögekre alkalmazva: egy jelzőnek ezen a sok hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire is lásson. Hagyja üresen korlátozás nélkül.',
+      },
+      revealDistance: {
+        label: 'Látótávolság',
+        desc: 'Hány hexa jelenik meg egy mozgó token körül (0-tól 20-ig). A 0 csak azokat a hatszögeket mutatja, amelyeken a token áthalad.',
+      },
+      lineOfSight: {
+        label: 'Látóvonal',
+        desc: 'Ha be van kapcsolva, egy hatszög csak akkor derül ki, ha nincs fedett hatszög közte és a token között.',
+      },
+      revealPath: {
+        label: 'Fedezd fel az ösvényen',
+        desc: 'Ha be van kapcsolva, minden hexa, amelyen a token áthalad a húzás közben (beleértve az útpontokat is), megjelenik, nem csak az, ahol megáll.',
+      },
+      revealBy: {
+        label: 'Tokenek, amelyek felfedik',
+        desc: 'A tokenrétegen lévő jelzők hatszögeket mutatnak: a játékos által irányított jelzőket, bármely karaktert vagy minden jelzőt.',
+      },
+      revealMode: {
+        label: 'Felfedezési mód',
+        desc: 'A Clear eltávolítja a hatszögleteket látótávolságon belül. A bepillantás ehelyett átlátszóvá teszi őket; eltávolítják őket, amikor egy token belép beléjük.',
+      },
+      announce: {
+        label: 'Hirdesse a felfedezéseket',
+        desc: 'Ki látja a csevegőüzenetet, ha egy megnevezett helyet felfedeznek.',
+      },
+      pingDiscoveries: {
+        label: 'Ping felfedezések',
+        desc: 'Ha be van kapcsolva, a játékosok egy megnevezett helyre pingelődnek, amikor felfedezik.',
+      },
+      hideCoveredTokens: {
+        label: 'Fedett tokenek elrejtése',
+        desc: 'A Roll20 neveket, sávokat és aurákat rajzol a hatszögek fölé. Ha be van kapcsolva, a fedett hatszög alatti jelzőknek a játékosok által látható nevük, a sávok és az aurák ki vannak kapcsolva, majd újra bekapcsolnak, amikor feltárják őket.',
+      },
+    },
+    status: {
+      engine: 'Játék motor',
+      grid: 'Rács',
+      layer: 'Hatlapos réteg',
+      hexes: 'Hexák',
+      named: 'Elnevezett hexák',
+      icons: 'Helyjelzők',
+      glimpsed: 'Megpillantott hatszögek',
+      pending: 'Betöltésre váró helyek',
+      calibrated: 'Kalibrálva',
+      overrides: 'Oldal felülbírálása',
+      undo: 'Visszavonás elérhető',
+    },
+    messages: {
+      filled:
+        'Kitöltés kész. Rajzolt hatszögek: {created}. Átformálva: {restyled}. Elrejtett helyek: {icons}.',
+      revealed: 'Felfedezett hatszögek: {count}.',
+      revealedPage: 'Az oldalon minden hex látható ({count}).',
+      confirmReset:
+        'Eltávolít minden hexát innen: „{page}” ({count})? A helyjelzők visszatérnek a token rétegbe. A visszavonás ezt nem tudja visszafordítani.',
+      resetPage: 'Az oldalról eltávolított hatszögek: {count}.',
+      undone:
+        'Az utolsó kitöltés visszavonva. Eltávolított hatszögek: {removed}. Újraformázott hatszögek visszaállítva: {restored}.',
+      named: '"{name}" nevű hatszögek: {count}.',
+      unnamed: 'Törölt nevek: {count}.',
+      marked:
+        'Meglévő hexákban rejtett helyek: {attached}. Várakozás a következő kitöltésre, amely lefedi őket: {pending}.',
+      unmarked: 'Tokenek, amelyek már nem helyek: {count}.',
+      settingChanged: '{setting} értéke {value}.',
+      rescanned:
+        'Az újraszkennelés befejeződött. Tartva: {kept}. Elfogadva: {adopted}. Újra benyújtva: {moved}. Hiányzó és elfelejtett: {dropped}. Újra összekapcsolt címkék: {labels}. A helytokenek újra összekapcsolva: {icons}.',
+      calibrated:
+        'Rács kalibrálva (oszloplépés {colStep}px, sorlépés {rowStep}px). Újraellenőrzés: megtartva {kept}, újra benyújtva {moved}, átvéve {adopted}.',
+      calibrationReset:
+        'A kalibráció eltávolítva. Újraellenőrzés: megtartva {kept}, újra benyújtva {moved}, átvett {adopted}.',
+      journalRebuilt: 'A "{help}" és a "{deck}" szórólapok újjáépítésre kerültek.',
+      migrated:
+        'A Hexploration 1.x hexadecimális térképeidet frissítettük. Ha ezt a játékot egy régi játékból másolták, futtassa az Újrakeresést minden hexadecimális térképoldalon.',
+      pruned:
+        'Mentett hexák, amelyek már nem léteznek és elfelejtettek: {dropped}. Ha ezt a játékot vagy oldalt másolták, futtassa az Újraellenőrzést az oldalon, hogy újra felvegye a hatszögleteket.',
+      readyHint:
+        'Írja be a !hexploration parancsot a menübe, vagy nyissa meg a "Hexploration - Command Deck" tájékoztatót.',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Ez a játék nem támogatja az előtér rétegre való rajzolást, ezért hatszögletűek rajzoltak a token rétegre.',
+      someFailed: 'Nem rajzolható hatszögek: {count}. A részletekért tekintse meg az API-konzolt.',
+    },
+    errors: {
+      noPage: 'Nem található az oldal, amelyen dolgozni kellene.',
+      notHex: 'Ez az oldal nem használ hatszögletű rácsot.',
+      noPolygons: 'Válasszon ki egy vagy több rajzolt alakzatot a kitöltéshez.',
+      emptyArea: 'A kiválasztott terület nem tartalmaz hexadecimális középpontokat.',
+      tooMany: 'Ez túl sok hexát hozna létre egyszerre ({count}).',
+      nothingToConceal: 'Válassza ki a rajzolt alakzatokat vagy jelzőket az elrejteni.',
+      nothingToReveal:
+        'Válassza ki a hatszögleteket, a rajzolt alakzatokat vagy a tokeneket a felfedéshez.',
+      noTokens: 'Először válasszon ki egy vagy több tokent.',
+      noHexes: 'Először válasszon ki egy vagy több hexát (vagy hatszögletű tokent).',
+      nothingToUndo: 'Nincs visszavonható kitöltés.',
+      unknownCommand: 'Ismeretlen parancs: {command}',
+      unknownSetting: 'Ismeretlen beállítás: {key}',
+      unknownPageSetting: 'Oldalanként beállítható beállítások: {keys}',
+      invalidValue: 'A „{value}” nem érvényes érték a {key} számára.',
+      calibrateNeedsTokens: 'Válasszon ki egy vagy két hatszögletű középpontra pattintott tokent.',
+      calibrateFailed: 'Ezeket a tokeneket nem lehet kalibrálni.',
+      unexpected: 'Hiba történt: {message}',
+    },
+    hints: {
+      noPage: 'Nyissa meg azt az oldalt, amelyen dolgozni szeretne, vagy válasszon rajta valamit.',
+      notHex: 'Állítsa az oldalrácsot Hex (V) vagy Hex (H) értékre az Oldalbeállításokban.',
+      noPolygons:
+        'Rajzoljon sokszöget, téglalapot, ellipszist vagy szabadkézi alakzatot a terület köré, jelölje ki, majd próbálkozzon újra.',
+      emptyArea: 'Rajzoljon nagyobb alakzatot, vagy ellenőrizze az oldalrács beállításait.',
+      tooMany: 'Töltsön ki egy kisebb területet, vagy ossza fel több formára.',
+      noHexes:
+        'A hatszögek az előtérben vagy a token rétegben vannak; váltson át arra a rétegre a kijelölésükhöz.',
+      unknownCommand: 'Írja be a !hexploration help parancsot a parancsok listázásához.',
+      unknownSetting: 'Minden beállítás megtekintéséhez írja be a !hexploration set parancsot.',
+      calibrateNeedsTokens:
+        'Illesszen egy tokent egy hatszög közepére, és jelölje ki. Válasszon ki egy második tokent, amely egy szomszédos hatszögre van illesztve ugyanabban a sorban (Hex V) vagy oszlopban (Hex H), hogy a hatszög méretét is javítsa.',
+      calibrateFailed:
+        'Két tokennek ugyanabban a sorban (Hex V) vagy ugyanabban az oszlopban (Hexa) kell lennie, egymástól legalább egy hatszögre.',
+      unexpected: 'A részletek az API-konzol naplójában találhatók.',
+    },
+    help: {
+      menu: 'Mutasd a menüt.',
+      fill: 'A kiválasztott rajzolt alakzatokat hatszögletekkel fedjük le.',
+      fillInverse: 'Fedje le az egész oldalt, kivéve a kiválasztott formák belsejét.',
+      undo: 'Vonja vissza az utolsó kitöltést, inverz kitöltést vagy elrejtést, és állítsa vissza a használt alakzatokat.',
+      reveal:
+        'Jelenítse meg a kiválasztott hatszögeket, valamint a kiválasztott alakzatok és tokenek alatti hatszögeket.',
+      revealPage: 'Felfed minden hexát az oldalon bejelentések nélkül.',
+      conceal:
+        'A kiválasztott alakzatok és tokenek alatti területet ismét takarja be hatszögletekkel.',
+      explore: 'Mutasd meg a kiválasztott tokenek körül, mintha csak most költöztek volna oda.',
+      resetPage: 'Távolítson el minden hatszögletet az oldalon (először rákérdez).',
+      name: 'Nevezze el a kiválasztott hexákat, vagy a kiválasztott tokenek alatti hexákat. Hagyja üresen a nevet a törléshez.',
+      mark: 'A kiválasztott tokeneket rejtett helyekké alakíthatja.',
+      unmark: 'Állítsa le, hogy a kiválasztott tokenek rejtett helyek legyenek.',
+      set: 'Módosítson egy beállítást, vagy jelenítse meg az összes beállítást.',
+      pageSet: 'Felfedezési beállítás felülírása csak az aktuális oldalon.',
+      pageClear: 'Távolítsa el az aktuális oldal felülírásait.',
+      rescan:
+        'Építse újra az oldal hexadecimális listáját, például egy oldal vagy játék másolása után.',
+      calibrate:
+        'Sorolja fel a hatszögletű rácsot egy vagy két kiválasztott tokennel, amelyeket hatszögletű középpontokra pattint.',
+      calibrateReset: 'Távolítsa el az aktuális oldal kalibrálását.',
+      status: 'Mutassa meg, mit tud a Hexploration az aktuális oldalról.',
+      journal: 'Építsd újra a Help és Command Deck segédanyagokat.',
+      help: 'Mutasd ezt a listát.',
+      handout: 'A teljes utasítás a „{name}” tájékoztatóban található.',
+    },
+    deck: {
+      subtitle: 'Parancsnoki pakli',
+      drawDesc:
+        'Rajzoljon alakzatokat egy terület köré, jelölje ki őket, majd töltse ki. A visszavonás megfordítja az utolsó kitöltést.',
+      revealDesc:
+        'Válassza ki a hatszögleteket, alakzatokat vagy jelzőket, hogy ismét felfedje vagy lefedje őket. Fedezze fel a kiválasztott tokenek körüli felfedéseket, mintha elmozdultak volna.',
+      locationsDesc:
+        'Jelölje ki a tokeneket, hogy elrejtse őket hexák alatti helyként. Válasszon hexákat vagy tokeneket a hexa elnevezéséhez.',
+      toolsDesc:
+        'Beállítások, oldalfelülírások, állapot, a másolt oldalak újraolvasása és a rács kalibrálása.',
+      footer: 'A teljes útmutatásért lásd a „{help}” tájékoztatót.',
+    },
+    handout: {
+      versionLabel: 'Változat',
+      subtitle: 'Hex-by-hex felfedezés a Roll20 számára',
+      footer: 'Használja a „{deck}” tájékoztatót az egykattintásos vezérlőkhöz.',
+      overview: {
+        heading: 'Áttekintés',
+        body: 'A Hexploration egy hexadecimális térképet fed le átlátszatlan hatszögekkel. Ahogy a csapat mozog, a hatszögek, amelyeken áthaladnak (és ha úgy tetszik, a körülöttük lévő hatszögek) eltávolításra kerülnek, így a térkép egyenként hatszögletű kerül felfedésre. A rejtett helyek hatszögek alá helyezhetők, és a rendszer kijelenti, ha megtalálják. Működik a Jumpgate és Legacy játékokban, bármilyen méretű Hex (V) és Hex (H) rácson.',
+        demo: 'Nézzen meg egy rövid bemutatót (az 1-es verziótól)',
+      },
+      quickStart: {
+        heading: 'Gyors kezdés',
+        steps: [
+          'Nyisson meg egy oldalt, amelynek rácsának beállítása Hex (V) vagy Hex (H).',
+          'Rajzoljon egy vagy több alakzatot (sokszög, téglalap, ellipszis vagy szabadkézi) az elrejteni kívánt terület köré.',
+          'Jelölje ki az alakzatokat, és kattintson a Kitöltés gombra a Command Deckben (vagy írja be a !hexploration fill parancsot). Az alakzatokat hatszögek helyettesítik.',
+          'Nem kötelező: a kitöltés előtt válassza ki a tokeneket a fontos helyekhez, és kattintson a Hely megjelölése lehetőségre. A hatszögek alatt vannak elrejtve, és felfedik őket, amikor felfedezik.',
+          'Mozgass egy játékos tokent. Minden hatszög, amelyen áthalad, és a látótávolságon belüli hatszögek feltárulnak.',
+        ],
+      },
+      commands: {
+        heading: 'Parancsok',
+        intro:
+          'Csak a GM-ek használhatják ezeket a parancsokat. A legtöbb a kiválasztott objektumokra hat; a többi az éppen megtekintett oldalon működik.',
+        colCommand: 'Parancs',
+        colDesc: 'Mit csinál',
+      },
+      revealing: {
+        heading: 'Hogyan működik a feltárás',
+        points: [
+          'Csak a token rétegen lévő tokenek mutatnak hatszögeket. A tokenek számát a Tokens That Reveal: alapértelmezés szerint a játékos tokenek állítják be, így a GM a térkép felfedése nélkül mozgathatja a szörnyeket.',
+          'A token felfedi minden általa lefedett hatszöget (a nagy tokenek többre is kiterjednek), és ha a Reveal Along Path be van kapcsolva, minden hexát az útvonalon, amelyen végighúzták, beleértve az útpontokat is.',
+          'A Sight Distance felfedi az egyes hatszögek körüli hatszögeket. Ha a Line of Sight be van kapcsolva, a hatszög csak akkor jelenik meg, ha nincs közöttük fedett hatszög.',
+          'A hexadecimális feltárási távolságot a rendszer a hexákon tárolja, ahogy rajzolják. Azok a hatszögek csak belülről tárulnak fel annyi hatszögből, bármennyire is lát egy token. Használja hegyekre vagy erdőkre, amelyek elrejtik azt, ami mögöttük van.',
+          'Pillantás módban a látótávolságon belüli hatszögek ahelyett, hogy eltűnnének, átlátszóvá válnak, és eltávolítódnak, amikor egy token belép beléjük.',
+          'Az API nem jelenti a más modok által végrehajtott mozgásokat. A TokenMod lépéseit a rendszer automatikusan felveszi; más modok esetén válassza ki a tokeneket, és kattintson az Explore gombra, vagy hívja a Hexploration.revealAround(token)-t a saját mododból.',
+          'Az API nem jelenti a más modok által végrehajtott mozgásokat. A TokenMod lépéseit a rendszer automatikusan felveszi; más modok esetén válassza ki a tokeneket, és kattintson az Explore gombra, vagy hívja a Hexploration.revealAround(token)-t a saját modjából.',
+        ],
+      },
+      locations: {
+        heading: 'Hexák és helyek neve',
+        points: [
+          'A Mark Location funkció rejtett helyekre változtatja a kiválasztott tokeneket. A már hatszög alatt lévő tokent azonnal elrejti; különben elrejti a következő kitöltés, amely lefedi.',
+          'A fehér torony állapotjelzővel ellátott tokeneket a rendszer az 1-es verzióhoz hasonlóan helyként kezeli kitöltésekor.',
+          'A rejtett helyjelzők a GM rétegre kerülnek. Amikor a hatszögük kiderül, a nevükkel együtt visszatérnek a token réteghez, és a felfedezésüket bejelentik.',
+          'Name Hex ad egy hexa nevet token nélkül. A név megjelenik a GM-nek címkeként a GM rétegen, és közli, amikor a hatszög megjelenik.',
+          'Az Announce Discoveries kiválasztja, hogy mindenki, csak a GM vagy senki sem látja a bejelentést. A Ping Discoveries a játékosok nézetét is áthelyezi a helyszínre.',
+        ],
+      },
+      settings: {
+        heading: 'Beállítások elemre',
+        intro:
+          'Módosítsa a beállításokat a !hexploration set segítségével (vagy a Beállítások gombbal). A Hex Layer, a Tokens That Reveal és a Language is beállítható a Mod beállítási oldalán.',
+        colKey: 'Kulcsfontosságú',
+        colName: 'Beállítás',
+        colDesc: 'Leírás',
+        perPage: '(Oldalonként beállítható.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate és Legacy',
+        points: [
+          'A Hexploration kidolgozza, hogy a játék melyik motort használja, és megrajzolja a megfelelő formát. Bármelyik szerkesztőben rajzolt alakzatok kitölthetők.',
+          'Ha a Hex Layer Auto-ra van állítva, a hexák az előtér rétegre, a tokenek fölé kerülnek, így a játékosok nem láthatják, mi van alatta. Ha az előtér réteg nem érhető el, a rendszer a token réteget használja helyette.',
+          'A Jumpgate matematikailag szabályos hatszögeket rajzol, amelyek kissé eltérnek az örökölt hatszögektől. Ha a hatszögek nem illeszkednek az oldal rácsához, illesszen egy tokent egy hatszögletű középponthoz, jelölje ki, majd kattintson a Kalibrálás gombra. Válasszon ki két tokent ugyanazon sor (Hex V) vagy oszlop (Hex H) szomszédos hatszögletéből a hexadecimális méret javításához.',
+          'Amikor egy oldalt vagy játékot másol, a hatszögei új azonosítókat kapnak. Futtassa az Újrakeresést az oldalon, hogy újra felvegye őket a névcímkéikkel és helyjelzőikkel együtt.',
+        ],
+      },
+      upgrading: {
+        heading: 'Frissítés az 1-es verzióról',
+        points: [
+          'A 2-es verziónak már nincs szüksége PathMath-ra, MatrixMath-ra, Vector Math-ra vagy HTML-készítőre. Eltávolíthatja őket, hacsak egy másik mod nem használja őket.',
+          'A meglévő hexa térképek, nevek, helyjelzők és beállítások automatikusan frissülnek az első indításkor.',
+          'Az 1-es verzió parancsai, beleértve a Hexploration_menu makrót is, továbbra is működnek.',
+          'Az 1-es verzió lehetővé teszi, hogy bármely karaktert ábrázoló token felfedjen hatszögleteket. Állítsa be a felfedő tokeneket karakterjelzőkre, hogy megtartsa ezt a viselkedést.',
+        ],
+        colV1: '1-es verzió parancs',
+        colV2: '2-es verzió parancs',
+      },
+      troubleshooting: {
+        heading: 'Hibaelhárítás',
+        points: [
+          'Semmi sem történik, amikor egy token mozog: ellenőrizze, hogy a token a tokenrétegen van-e, és egyezik-e a felfedő tokenekkel, és hogy az oldal rendelkezik-e hexákkal (!hexploration állapot).',
+          'A hatszögek el vannak tolva a rácstól: használja a Kalibrálást, majd ellenőrizze a token segítségével néhány hatszöget a térképen.',
+          'Egy oldal vagy játék másolása után a hexák nem jelennek meg: futtassa az Újrakeresést az oldalon.',
+          'Kitöltés szerint a területnek nincs hatszög középpontja: az alakzatnak tartalmaznia kell legalább egy hatszög középpontját.',
+          'Ha bármi mást szeretne, ellenőrizze az API-konzol naplóját, és adja meg az üzeneteit, amikor segítséget kér.',
+        ],
+      },
+      languages: {
+        heading: 'Nyelvek',
+        body: 'Válasszon nyelvet a !hexploration beállított nyelvvel. Elérhető nyelvek:',
+      },
+      credits: {
+        heading: 'Kredit',
+        original: 'Eredeti mod által',
+        maintainer: 'A 2-es verziót karbantartja',
+        marketplace: 'Ada művészeti csomagjai a Roll20 Marketplace-en',
+        support:
+          'Ha hibát talál, vagy ötlete van, tegye közzé a Roll20 Mod fórumban, vagy nyissa meg a problémát a GitHubon, és adja meg az API-konzol naplójából származó üzeneteket.',
+      },
+    },
+  };
 
-  var localeIt = {};
+  const TRANSLATION$a = {
+    titles: {
+      ready: "L'esplorazione è pronta.",
+      settings: 'Impostazioni di esplorazione',
+      languages: 'Scegli una lingua',
+      pageSettings: 'Impostazioni pagina: {page}',
+      status: 'Stato esplorazione: {page}',
+      help: 'Comandi di esplorazione',
+      confirm: 'Per favore conferma',
+    },
+    discovery: {
+      title: 'Posizione scoperta',
+    },
+    menu: {
+      draw: 'Disegno',
+      reveal: 'Rivelare e nascondere',
+      locations: 'Posizioni',
+      tools: 'Utensili',
+      layerInUse: 'Nuovi esagoni vengono disegnati su {layer}.',
+      pageSettingsHelp:
+        'Queste impostazioni si applicano solo a questa pagina. Le impostazioni contrassegnate con ★ sovrascrivono le impostazioni globali.',
+    },
+    buttons: {
+      fill: 'Riempire',
+      fillInverse: 'Riempimento inverso',
+      undo: 'Annulla riempimento',
+      reveal: 'Svelare',
+      conceal: 'Nascondere',
+      explore: 'Esplorare',
+      revealPage: 'Rivela pagina',
+      resetPage: 'Reimposta pagina',
+      mark: 'Segna posizione',
+      unmark: 'Deseleziona',
+      name: 'Nome esadecimale',
+      settings: 'Impostazioni',
+      pageSettings: 'Impostazioni della pagina',
+      status: 'Stato',
+      rescan: 'Nuova scansione',
+      calibrate: 'Calibrare',
+      calibrateReset: 'Ripristina calibrazione',
+      help: 'Aiuto',
+      change: 'Modifica',
+      menu: 'Menu',
+      clearOverrides: 'Cancella sostituzioni',
+      confirmReset: 'Sì, rimuovi tutti gli esagoni',
+    },
+    prompts: {
+      name: 'Nome della posizione (lascia vuoto per cancellare)',
+    },
+    values: {
+      on: 'SU',
+      off: 'Spento',
+      none: 'Nessuno',
+      hexLayer: {
+        auto: 'Automatico (in primo piano se disponibile)',
+        foreground: 'strato di primo piano',
+        objects: 'strato di token',
+      },
+      revealBy: {
+        players: 'Gettoni del giocatore',
+        characters: 'Segnalini personaggio',
+        all: 'Tutti i gettoni',
+      },
+      revealMode: {
+        clear: 'Chiaro',
+        glimpse: 'Occhiata',
+      },
+      announce: {
+        all: 'Tutti',
+        gm: 'Solo GM',
+        off: 'Spento',
+      },
+      orientation: {
+        vertical: 'Esadecimale (V)',
+        horizontal: 'Esadecimale (H)',
+      },
+      fillKind: {
+        fill: 'Riempire',
+        fillInverse: 'Riempimento inverso',
+        conceal: 'Nascondere',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Lingua',
+        desc: 'Lingua per menu, messaggi e dispense.',
+      },
+      hexLayer: {
+        label: 'Strato esagonale',
+        desc: 'Dove vengono tracciati nuovi esagoni. Auto prova il livello in primo piano (sopra i token) e torna al livello token se il gioco non lo supporta.',
+      },
+      fillColor: {
+        label: 'Colore riempimento',
+        desc: 'Colore dei nuovi esagoni. Utilizzare rgba() per esadecimali trasparenti, ad esempio rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Colore del bordo',
+        desc: 'Colore del contorno dei nuovi esagoni.',
+      },
+      labelColor: {
+        label: "Colore dell'etichetta",
+        desc: 'Colore delle etichette con i nomi riservati ai GM sugli esagoni con nome.',
+      },
+      glimpseColor: {
+        label: 'Colore scorcio',
+        desc: 'Gli esagoni colorati cambiano in quando vengono intravisti (modalità di rivelazione Glimpse). Utilizza un colore rgba() trasparente.',
+      },
+      strokeWidth: {
+        label: 'Larghezza del bordo',
+        desc: 'Larghezza del contorno dei nuovi esagoni, in pixel (da 0 a 20).',
+      },
+      maxDistance: {
+        label: 'Distanza di rivelazione esadecimale',
+        desc: 'Applicato agli esagoni mentre vengono disegnati: un segnalino deve trovarsi entro questo numero di esagoni per rivelarli, per quanto lontano possa vedere. Lascia vuoto per nessun limite.',
+      },
+      revealDistance: {
+        label: 'Distanza visiva',
+        desc: 'Quanti esagoni vengono rivelati attorno a un segnalino in movimento (da 0 a 20). 0 rivela solo gli esagoni attraversati dal segnalino.',
+      },
+      lineOfSight: {
+        label: 'Linea di vista',
+        desc: 'Quando è attivo, un esagono viene rivelato solo se non si trova alcun esagono coperto tra esso e il segnalino.',
+      },
+      revealPath: {
+        label: 'Rivela lungo il percorso',
+        desc: 'Quando è attivo, viene rivelato ogni esagono attraversato da un token mentre viene trascinato (inclusi i punti di passaggio), non solo dove si ferma.',
+      },
+      revealBy: {
+        label: 'Segnalini che rivelano',
+        desc: 'Quali gettoni sul livello dei gettoni rivelano esagoni: gettoni controllati da un giocatore, gettoni che rappresentano qualsiasi personaggio o ogni gettone.',
+      },
+      revealMode: {
+        label: 'Modalità Rivela',
+        desc: 'Pulito rimuove gli esagoni in vista. Glimpse li rende invece trasparenti; vengono rimossi quando un token vi entra.',
+      },
+      announce: {
+        label: 'Annunciare le scoperte',
+        desc: 'Chi vede il messaggio di chat quando viene scoperta una posizione denominata.',
+      },
+      pingDiscoveries: {
+        label: 'Scoperte del ping',
+        desc: 'Quando è attivo, i giocatori vengono collegati a una posizione denominata quando viene scoperta.',
+      },
+      hideCoveredTokens: {
+        label: 'Nascondi i token coperti',
+        desc: 'Roll20 disegna nomi, barre e aure sopra gli esagoni. Quando sono attivi, i gettoni sotto un esagono coperto hanno il nome, le barre e le aure visibili al giocatore disattivati ​​e riattivati ​​quando vengono scoperti.',
+      },
+    },
+    status: {
+      engine: 'Motore di gioco',
+      grid: 'Griglia',
+      layer: 'Strato esagonale',
+      hexes: 'Esagoni',
+      named: 'Esagoni con nome',
+      icons: 'Gettoni di posizione',
+      glimpsed: 'Esagoni intravisti',
+      pending: 'Posizioni in attesa di riempimento',
+      calibrated: 'Calibrato',
+      overrides: "La pagina esegue l'override",
+      undo: 'Annulla disponibile',
+    },
+    messages: {
+      filled:
+        'Riempimento completato. Esagoni tracciati: {created}. Restyling: {restyled}. Posizioni nascoste: {icons}.',
+      revealed: 'Esagoni rivelati: {count}.',
+      revealedPage: 'Ogni esadecimale sulla pagina è stato rivelato ({count}).',
+      confirmReset:
+        'Rimuovere ogni esagono da "{page}" ({count})? I token di posizione ritornano al livello dei token. L\'annullamento non può annullare questa operazione.',
+      resetPage: 'Esagoni rimossi dalla pagina: {count}.',
+      undone:
+        'Ultimo riempimento annullato. Esagoni rimossi: {removed}. Esagoni rinnovati ripristinati: {restored}.',
+      named: 'Esagoni denominati "{name}": {count}.',
+      unnamed: 'Nomi cancellati: {count}.',
+      marked:
+        'Posizioni nascoste negli esagoni esistenti: {attached}. In attesa del prossimo riempimento che li ricopra: {pending}.',
+      unmarked: 'Token che non rappresentano più posizioni: {count}.',
+      settingChanged: '{setting} impostato su {value}.',
+      rescanned:
+        'Nuova scansione completata. Conservato: {kept}. Adottato: {adopted}. Archiviato nuovamente: {moved}. Mancante e dimenticato: {dropped}. Etichette ricollegate: {labels}. Token di posizione ricollegati: {icons}.',
+      calibrated:
+        'Griglia calibrata (passo colonna {colStep}px, passo riga {rowStep}px). Nuova scansione: mantenuto {kept}, archiviato nuovamente {moved}, adottato {adopted}.',
+      calibrationReset:
+        'Calibrazione rimossa. Nuova scansione: mantenuto {kept}, archiviato nuovamente {moved}, adottato {adopted}.',
+      journalRebuilt: 'Le dispense "{help}" e "{deck}" sono state ricostruite.',
+      migrated:
+        'Le tue mappe esadecimali Hexploration 1.x sono state aggiornate. Se questo gioco è stato copiato da un gioco Legacy, esegui Rescan su ogni pagina della mappa esadecimale.',
+      pruned:
+        'Esagoni salvati che non esistono più e sono stati dimenticati: {dropped}. Se questo gioco o questa pagina sono stati copiati, esegui Rescan sulla pagina per riprenderne gli esagoni.',
+      readyHint:
+        'Digita !esplorazione nel menu o apri il volantino "Esplorazione - Mazzo di comandi".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Questo gioco non supporta il disegno sul livello in primo piano, quindi gli esagoni sono stati disegnati sul livello dei token.',
+      someFailed:
+        'Esagoni che non è stato possibile disegnare: {count}. Controlla la console API per i dettagli.',
+    },
+    errors: {
+      noPage: 'Impossibile trovare la pagina su cui lavorare.',
+      notHex: 'Questa pagina non utilizza una griglia esadecimale.',
+      noPolygons: 'Seleziona una o più forme disegnate da riempire.',
+      emptyArea: "L'area selezionata non contiene centri esadecimali.",
+      tooMany: 'Ciò creerebbe troppi esagoni in una volta sola ({count}).',
+      nothingToConceal: 'Seleziona forme disegnate o gettoni da nascondere.',
+      nothingToReveal: 'Seleziona esagoni, forme disegnate o gettoni da rivelare.',
+      noTokens: 'Seleziona prima uno o più token.',
+      noHexes: 'Seleziona prima uno o più esagoni (o gettoni che si trovano sugli esagoni).',
+      nothingToUndo: "Non c'è nessun riempimento da annullare.",
+      unknownCommand: 'Comando sconosciuto: {command}',
+      unknownSetting: 'Impostazione sconosciuta: {key}',
+      unknownPageSetting: 'Impostazioni che possono essere impostate per pagina: {keys}',
+      invalidValue: '"{value}" non è un valore valido per {key}.',
+      calibrateNeedsTokens: 'Seleziona uno o due token agganciati ai centri esagonali.',
+      calibrateFailed: 'Questi token non possono essere utilizzati per calibrare.',
+      unexpected: 'Qualcosa è andato storto: {message}',
+    },
+    hints: {
+      noPage: 'Apri la pagina su cui vuoi lavorare o seleziona qualcosa al suo interno.',
+      notHex:
+        'Imposta la griglia della pagina su Esadecimale (V) o Esadecimale (H) in Impostazioni pagina.',
+      noPolygons:
+        "Disegna un poligono, un rettangolo, un'ellisse o una forma a mano libera attorno all'area, selezionala e riprova.",
+      emptyArea:
+        'Disegna una forma più grande o controlla le impostazioni della griglia della pagina.',
+      tooMany: "Riempi un'area più piccola o dividi l'area in più forme.",
+      noHexes:
+        'Gli esagoni si trovano in primo piano o sul livello token; passare a quel livello per selezionarli.',
+      unknownCommand: 'Digita !hexploration help per elencare i comandi.',
+      unknownSetting: 'Digita !hexploration set per vedere tutte le impostazioni.',
+      calibrateNeedsTokens:
+        'Aggancia un gettone al centro di un esagono e selezionalo. Seleziona un secondo token agganciato a un esagono vicino nella stessa riga (Hex V) o colonna (Hex H) per correggere anche la dimensione esadecimale.',
+      calibrateFailed:
+        'Due gettoni devono trovarsi nella stessa riga (Hex V) o nella stessa colonna (Hex H), ad almeno un esagono di distanza.',
+      unexpected: 'I dettagli si trovano nel registro della console API.',
+    },
+    help: {
+      menu: 'Mostra il menù.',
+      fill: 'Copri le forme disegnate selezionate con esagoni.',
+      fillInverse: "Copri l'intera pagina tranne l'interno delle forme selezionate.",
+      undo: "Annulla l'ultimo riempimento, inverti il ​​riempimento o nascondi e ripristina le forme utilizzate.",
+      reveal:
+        'Rivela gli esagoni selezionati e gli esagoni sotto le forme e i gettoni selezionati.',
+      revealPage: 'Rivela ogni esagono sulla pagina senza annunci.',
+      conceal: "Copri nuovamente l'area sotto le forme e i gettoni selezionati con esagoni.",
+      explore: 'Rivela i gettoni selezionati come se si fossero appena spostati lì.',
+      resetPage: 'Rimuovi ogni esagono dalla pagina (chiede prima).',
+      name: 'Assegna un nome agli esagoni selezionati o agli esagoni sotto i gettoni selezionati. Lascia il nome vuoto per cancellarlo.',
+      mark: 'Trasforma i gettoni selezionati in luoghi nascosti.',
+      unmark: 'Impedisci che i token selezionati siano posizioni nascoste.',
+      set: "Modifica un'impostazione o mostra tutte le impostazioni.",
+      pageSet: "Sostituisci un'impostazione di visualizzazione solo nella pagina corrente.",
+      pageClear: 'Rimuovi le sostituzioni della pagina corrente.',
+      rescan:
+        "Ricostruisci l'elenco esadecimale della pagina, ad esempio dopo aver copiato una pagina o un gioco.",
+      calibrate:
+        'Allinea la griglia esagonale con uno o due gettoni selezionati agganciati ai centri esagonali.',
+      calibrateReset: 'Rimuovi la calibrazione della pagina corrente.',
+      status: 'Mostra cosa sa Hexploration sulla pagina corrente.',
+      journal: 'Ricostruisci le dispense del mazzo di aiuto e di comando.',
+      help: 'Mostra questo elenco.',
+      handout: 'Le istruzioni complete si trovano nel volantino "{name}".',
+    },
+    deck: {
+      subtitle: 'Mazzo di comando',
+      drawDesc:
+        "Disegna forme attorno a un'area, selezionale, quindi riempi. Annulla inverte l'ultimo riempimento.",
+      revealDesc:
+        'Seleziona esagoni, forme o gettoni per rivelarli o coprirli nuovamente. Esplora rivela i token selezionati come se si fossero spostati.',
+      locationsDesc:
+        'Seleziona i token per nasconderli come posizioni sotto esagoni. Seleziona esagoni o gettoni per nominare un esagono.',
+      toolsDesc:
+        'Impostazioni, sostituzioni di pagina, stato, nuova scansione delle pagine copiate e calibrazione della griglia.',
+      footer: 'Consulta il volantino "{help}" per le istruzioni complete.',
+    },
+    handout: {
+      versionLabel: 'Versione',
+      subtitle: 'Esplorazione esagono per esagono per Roll20',
+      footer: 'Utilizza il volantino "{deck}" per i controlli con un clic.',
+      overview: {
+        heading: 'Panoramica',
+        body: "L'esplorazione copre una mappa esagonale con esagoni opachi. Mentre il gruppo si muove, gli esagoni che attraversa (e, se preferisci, gli esagoni attorno a lui) vengono rimossi, quindi la mappa viene scoperta un esagono alla volta. I luoghi nascosti possono essere posizionati sotto esagoni e vengono annunciati quando vengono trovati. Funziona nei giochi Jumpgate e Legacy, su griglie Hex (V) e Hex (H) di qualsiasi dimensione.",
+        demo: 'Guarda una breve demo (dalla versione 1)',
+      },
+      quickStart: {
+        heading: 'Avvio rapido',
+        steps: [
+          'Apri una pagina la cui griglia è impostata su Hex (V) o Hex (H).',
+          "Disegna una o più forme (poligono, rettangolo, ellisse o a mano libera) attorno all'area da nascondere.",
+          'Seleziona le forme e fai clic su Compila il mazzo di comandi (o digita! Hexploration fill). Le forme sono sostituite da esagoni.',
+          'Facoltativo: prima di riempire, seleziona i token per i luoghi importanti e fai clic su Segna posizione. Sono nascosti sotto gli esagoni e annunciati quando vengono scoperti.',
+          'Muovi un gettone giocatore. Ogni esagono che attraversa, e gli esagoni entro la sua Distanza di Vista, vengono rivelati.',
+        ],
+      },
+      commands: {
+        heading: 'Comandi',
+        intro:
+          'Solo i GM possono utilizzare questi comandi. La maggior parte agisce sugli oggetti selezionati; il resto agisci sulla pagina che stai visualizzando.',
+        colCommand: 'Comando',
+        colDesc: 'Cosa fa',
+      },
+      revealing: {
+        heading: 'Come funziona la rivelazione',
+        points: [
+          'Solo i gettoni sul livello dei gettoni rivelano gli esagoni. Quali token contano è stabilito da Tokens That Reveal: token del giocatore per impostazione predefinita, quindi il GM può spostare i mostri senza scoprire la mappa.',
+          'Un gettone rivela ogni esagono che copre (i gettoni grandi ne coprono diversi) e, con Rivela lungo il percorso attivato, ogni esagono sul percorso lungo il quale è stato trascinato, compresi i waypoint.',
+          'La Distanza di Vista rivela gli esagoni attorno a ciascuno di quegli esagoni. Con la Linea di Vista attiva, un esagono viene rivelato solo se nel mezzo non si trova alcun esagono coperto.',
+          "La distanza di rivelazione esadecimale viene memorizzata sugli esagoni man mano che vengono disegnati. Quegli esagoni vengono rivelati solo dall'interno di quel numero di esagoni, per quanto lontano possa vedere un segnalino. Usalo per montagne o foreste che nascondono ciò che c'è dietro di loro.",
+          'Nella modalità Glimpse, gli esagoni in vista diventano trasparenti invece di scomparire e vengono rimossi quando un token vi entra.',
+          "L'API non segnala le mosse effettuate da altri mod. Le mosse TokenMod vengono rilevate automaticamente; per altre mod, seleziona i token e fai clic su Esplora o chiama Hexploration.revealAround(token) dalla tua mod.",
+          "L'API non segnala le mosse effettuate da altri mod. Le mosse TokenMod vengono rilevate automaticamente; per altre mod, seleziona i token e fai clic su Esplora o chiama Hexploration.revealAround(token) dalla tua mod.",
+        ],
+      },
+      locations: {
+        heading: 'Esagoni e posizioni con nome',
+        points: [
+          'Segna posizione trasforma i token selezionati in posizioni nascoste. Un gettone già sotto un esagono viene immediatamente nascosto; altrimenti viene nascosto dal riempimento successivo che lo ricopre.',
+          "Anche i gettoni con l'indicatore di stato della torre bianca vengono trattati come posizioni quando li riempi, come nella versione 1.",
+          'I segnalini posizione nascosta vengono spostati nel livello GM. Quando il loro esagono viene rivelato, ritornano al livello dei gettoni con il loro nome mostrato e la loro scoperta viene annunciata.',
+          "Nome esadecimale dà un nome a un esagono senza token. Il nome viene mostrato al GM come etichetta sul livello GM e annunciato quando l'esagono viene rivelato.",
+          "Annunciare le Scoperte sceglie se tutti, solo il GM o nessuno vedono l'annuncio. Ping Discoveries sposta anche la visuale dei giocatori sulla posizione.",
+        ],
+      },
+      settings: {
+        heading: 'Impostazioni',
+        intro:
+          'Modifica le impostazioni con !hexploration set (o il pulsante Impostazioni). Il livello esadecimale, i token rivelanti e la lingua possono essere impostati anche nella pagina delle impostazioni del Mod.',
+        colKey: 'Chiave',
+        colName: 'Collocamento',
+        colDesc: 'Descrizione',
+        perPage: '(Può essere impostato per pagina.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate e Legacy',
+        points: [
+          "L'esplorazione determina quale motore utilizza il gioco e disegna il tipo di forma corrispondente. È possibile riempire le forme disegnate in entrambi gli editor.",
+          "Con Livello esadecimale impostato su Auto, gli esagoni vengono disegnati sul livello in primo piano, sopra i token, in modo che i giocatori non possano vedere cosa c'è sotto. Se il livello in primo piano non è disponibile, viene utilizzato il livello token.",
+          "Jumpgate disegna esagoni matematicamente regolari, che hanno una forma leggermente diversa dagli esagoni Legacy. Se gli esagoni non si allineano con la griglia di una pagina, aggancia un token al centro dell'esagono, selezionalo e fai clic su Calibra. Seleziona due token negli esagoni vicini della stessa riga (Hex V) o colonna (Hex H) per correggere anche la dimensione esadecimale.",
+          'Quando una pagina o un gioco viene copiato, i suoi esagoni ottengono nuovi ID. Esegui Nuova scansione sulla pagina per riprenderli, insieme alle etichette dei nomi e ai token di posizione.',
+        ],
+      },
+      upgrading: {
+        heading: 'Aggiornamento dalla versione 1',
+        points: [
+          'La versione 2 non necessita più di PathMath, MatrixMath, Vector Math o HTML Builder. Puoi rimuoverli a meno che un altro mod non li utilizzi.',
+          'Le mappe esadecimali, i nomi, i token di posizione e le impostazioni esistenti vengono aggiornati automaticamente al primo avvio.',
+          'I comandi della versione 1, inclusa la macro Hexploration_menu, funzionano ancora.',
+          'La versione 1 permetteva a qualsiasi gettone che rappresentava un personaggio di rivelare esagoni. Imposta i gettoni che rivelano sui gettoni personaggio per mantenere quel comportamento.',
+        ],
+        colV1: 'Comando della versione 1',
+        colV2: 'Comando della versione 2',
+      },
+      troubleshooting: {
+        heading: 'Risoluzione dei problemi',
+        points: [
+          'Non succede nulla quando un token si muove: controlla che il token sia sul token layer e corrisponda a Tokens That Reveal e che la pagina abbia esagoni (stato!Hexploration).',
+          'Gli esagoni sono spostati rispetto alla griglia: usa Calibra, quindi controlla con un gettone su alcuni esagoni sulla mappa.',
+          'Gli esagoni non vengono più rivelati dopo aver copiato una pagina o un gioco: esegui Rescan sulla pagina.',
+          "Riempi dice che l'area non ha centri esadecimali: la forma deve contenere il centro di almeno un esagono.",
+          'Per qualsiasi altra cosa, controlla il registro della console API e includi i suoi messaggi quando chiedi aiuto.',
+        ],
+      },
+      languages: {
+        heading: 'Lingue',
+        body: "Scegli una lingua con la lingua impostata per l'esplorazione. Lingue disponibili:",
+      },
+      credits: {
+        heading: 'Crediti',
+        original: 'Mod originale di',
+        maintainer: 'Versione 2 mantenuta da',
+        marketplace: 'I pacchetti artistici di Ada sul Marketplace Roll20',
+        support:
+          "Se trovi un bug o hai un'idea, pubblica un post nel forum Roll20 Mod o apri un problema su GitHub e includi eventuali messaggi dal registro della console API.",
+      },
+    },
+  };
 
-  var localeJa = {};
+  const TRANSLATION$9 = {
+    titles: {
+      ready: 'H探索の準備は完了です。',
+      settings: 'H探索設定',
+      languages: '言語を選択してください',
+      pageSettings: 'ページ設定: {page}',
+      status: 'H探索ステータス: {page}',
+      help: 'H探索コマンド',
+      confirm: 'ご確認ください',
+    },
+    discovery: {
+      title: '場所が発見されました',
+    },
+    menu: {
+      draw: '描く',
+      reveal: '表示と非表示',
+      locations: '所在地',
+      tools: 'ツール',
+      layerInUse: '新しいヘクスが {layer} に描画されています。',
+      pageSettingsHelp:
+        'これらの設定は、このページにのみ適用されます。 ★ のマークが付いた設定は、グローバル設定をオーバーライドします。',
+    },
+    buttons: {
+      fill: '埋める',
+      fillInverse: '逆塗りつぶし',
+      undo: '塗りつぶしを元に戻す',
+      reveal: '明らかにする',
+      conceal: '隠す',
+      explore: '探検する',
+      revealPage: 'ページを公開',
+      resetPage: 'ページをリセット',
+      mark: '位置をマークする',
+      unmark: 'マークを外す',
+      name: '名前の 16 進数',
+      settings: '設定',
+      pageSettings: 'ページ設定',
+      status: '状態',
+      rescan: '再スキャン',
+      calibrate: '校正する',
+      calibrateReset: 'キャリブレーションをリセットする',
+      help: 'ヘルプ',
+      change: '変化',
+      menu: 'メニュー',
+      clearOverrides: 'オーバーライドのクリア',
+      confirmReset: 'はい、すべてのヘクスを削除します',
+    },
+    prompts: {
+      name: '場所の名前 (クリアするには空白のままにします)',
+    },
+    values: {
+      on: 'の上',
+      off: 'オフ',
+      none: 'なし',
+      hexLayer: {
+        auto: '自動 (利用可能な場合は前景)',
+        foreground: '前景レイヤー',
+        objects: 'トークン層',
+      },
+      revealBy: {
+        players: 'プレイヤートークン',
+        characters: 'キャラクタートークン',
+        all: 'すべてのトークン',
+      },
+      revealMode: {
+        clear: 'クリア',
+        glimpse: '垣間見る',
+      },
+      announce: {
+        all: 'みんな',
+        gm: 'GMのみ',
+        off: 'オフ',
+      },
+      orientation: {
+        vertical: 'ヘックス(V)',
+        horizontal: '六角(H)',
+      },
+      fillKind: {
+        fill: '埋める',
+        fillInverse: '逆塗りつぶし',
+        conceal: '隠す',
+      },
+    },
+    settings: {
+      language: {
+        label: '言語',
+        desc: 'メニュー、メッセージ、配布資料の言語。',
+      },
+      hexLayer: {
+        label: 'ヘックスレイヤー',
+        desc: '新しいヘクスが描画される場所。 Auto はフォアグラウンド レイヤー (トークンの上) を試行し、ゲームがサポートしていない場合はトークン レイヤーにフォールバックします。',
+      },
+      fillColor: {
+        label: '塗りつぶしの色',
+        desc: '新しいヘクスの色。シースルー ヘクスには rgba() を使用します (例: rgba(0,0,0,0.8))。',
+      },
+      strokeColor: {
+        label: '枠線の色',
+        desc: '新しいヘクスの輪郭の色。',
+      },
+      labelColor: {
+        label: 'ラベルの色',
+        desc: '名前付きヘクス上の GM 専用の名前ラベルの色。',
+      },
+      glimpseColor: {
+        label: '垣間見える色',
+        desc: 'チラッと見ると、ヘクスの色が に変わります (チラ見せモード)。シースルーの rgba() カラーを使用します。',
+      },
+      strokeWidth: {
+        label: '枠線の幅',
+        desc: '新しいヘクスのアウトラインの幅 (ピクセル単位) (0 ～ 20)。',
+      },
+      maxDistance: {
+        label: '16進数の表示距離',
+        desc: 'ヘクスが描画されるときに適用されます。トークンは、どれだけ遠くまで見えても、ヘクスを公開するにはこの数のヘクス内に存在する必要があります。制限を設けない場合は空のままにします。',
+      },
+      revealDistance: {
+        label: '視距離',
+        desc: '移動するトークンの周りのヘクス数が明らかになります (0 ～ 20)。 0 は、トークンが通過するヘクスのみを表示します。',
+      },
+      lineOfSight: {
+        label: '視線',
+        desc: 'オンの場合、ヘクスは、そのヘクスとトークンの間に覆われたヘクスがない場合にのみ公開されます。',
+      },
+      revealPath: {
+        label: 'パスに沿って表示',
+        desc: 'オンの場合、トークンが停止する場所だけでなく、ドラッグ中にトークンが通過するすべてのヘクス (ウェイポイントを含む) が表示されます。',
+      },
+      revealBy: {
+        label: '明らかにするトークン',
+        desc: 'トークン レイヤー上のどのトークンがヘックスを明らかにします: プレイヤーが制御するトークン、任意のキャラクターを表すトークン、またはすべてのトークン。',
+      },
+      revealMode: {
+        label: 'リビールモード',
+        desc: 'クリアは視界内のヘクスを削除します。 Glimpse では代わりにシースルーになります。トークンが入ると削除されます。',
+      },
+      announce: {
+        label: '発見の発表',
+        desc: '名前付きの場所が発見されたときにチャット メッセージを表示する人。',
+      },
+      pingDiscoveries: {
+        label: 'Ping の発見',
+        desc: 'オンにすると、プレーヤーは指定された場所が検出されたときに、その場所に ping されます。',
+      },
+      hideCoveredTokens: {
+        label: 'カバーされたトークンを非表示にする',
+        desc: 'Roll20 はヘクスの上に名前、バー、オーラを描画します。オンの場合、覆われたヘクスの下にあるトークンは、プレイヤーに表示される名前、バー、オーラがオフになり、覆われていないと再びオンになります。',
+      },
+    },
+    status: {
+      engine: 'ゲームエンジン',
+      grid: 'グリッド',
+      layer: 'ヘックスレイヤー',
+      hexes: 'ヘクス',
+      named: '名前付きヘクス',
+      icons: '位置トークン',
+      glimpsed: '垣間見えるヘクス',
+      pending: '埋まりを待っている場所',
+      calibrated: '校正済み',
+      overrides: 'ページの上書き',
+      undo: '元に戻すことが可能',
+    },
+    messages: {
+      filled:
+        '充填完了。描画されたヘクス: {created}。スタイル変更: {restyled}。非表示の場所: {icons}。',
+      revealed: '明らかになったヘクス: {count}。',
+      revealedPage: 'ページ上のすべてのヘクスが表示されます ({count})。',
+      confirmReset:
+        '「{page}」({count}) からすべてのヘックスを削除しますか?位置トークンはトークン層に戻ります。 「元に戻す」ではこれを元に戻すことはできません。',
+      resetPage: 'ページから削除されたヘクス: {count}。',
+      undone:
+        '最後の塗りつぶしが取り消されました。削除されたヘクス: {removed}。スタイル変更されたヘクスが復元されました: {restored}。',
+      named: '「{name}」という名前のヘクス: {count}。',
+      unnamed: '削除された名前: {count}。',
+      marked:
+        '既存のヘクスに隠されている場所: {attached}。それらをカバーする次のフィルを待っています: {pending}。',
+      unmarked: '場所ではなくなったトークン: {count}。',
+      settingChanged: '{setting} を {value} に設定します。',
+      rescanned:
+        '再スキャンが完了しました。保持: {kept}。採用されました: {adopted}。再提出: {moved}。行方不明または忘れられているもの: {dropped}。ラベルが再リンクされました: {labels}。位置トークンが再リンクされました: {icons}。',
+      calibrated:
+        'グリッドが調整されました (列ステップ {colStep}px、行ステップ {rowStep}px)。再スキャン: {kept} を保持し、{moved} を再ファイルし、{adopted} を採用しました。',
+      calibrationReset:
+        'キャリブレーションが削除されました。再スキャン: {kept} を保持し、{moved} を再ファイルし、{adopted} を採用しました。',
+      journalRebuilt: '「{help}」および「{deck}」の配布資料が再構築されました。',
+      migrated:
+        'Hexploration 1.x ヘックス マップがアップグレードされました。このゲームがレガシー ゲームからコピーされた場合は、各ヘクス マップ ページで再スキャンを実行します。',
+      pruned:
+        '存在せず忘れ去られた保存ヘクス: {dropped}。このゲームまたはページがコピーされている場合は、ページで再スキャンを実行してヘクスを再度取得します。',
+      readyHint:
+        'メニューに「!hexploration」と入力するか、配布資料「Hexploration - コマンドデッキ」を開きます。',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'このゲームは前景レイヤーでの描画をサポートしていないため、ヘクスはトークン レイヤーに描画されました。',
+      someFailed:
+        '描画できなかったヘクス: {count}。詳細については API コンソールを確認してください。',
+    },
+    errors: {
+      noPage: '作業するページが見つかりませんでした。',
+      notHex: 'このページでは 16 進グリッドは使用されていません。',
+      noPolygons: '塗りつぶす描画形状を 1 つまたは複数選択します。',
+      emptyArea: '選択した領域には六角中心が含まれていません。',
+      tooMany: 'これでは、一度に作成されるヘクスが多すぎます ({count})。',
+      nothingToConceal: '非表示にする描画された図形またはトークンを選択します。',
+      nothingToReveal: '表示するヘクス、描画された形状、またはトークンを選択します。',
+      noTokens: '最初に 1 つ以上のトークンを選択します。',
+      noHexes: '最初に 1 つ以上のヘクス (またはヘクス上にあるトークン) を選択します。',
+      nothingToUndo: '元に戻す塗りつぶしはありません。',
+      unknownCommand: '不明なコマンド: {command}',
+      unknownSetting: '不明な設定: {key}',
+      unknownPageSetting: 'ページごとに設定できる設定: {keys}',
+      invalidValue: '「{value}」は、{key} の有効な値ではありません。',
+      calibrateNeedsTokens: '六角中心にスナップされた 1 つまたは 2 つのトークンを選択します。',
+      calibrateFailed: 'これらのトークンは調整には使用できません。',
+      unexpected: '問題が発生しました: {message}',
+    },
+    hints: {
+      noPage: '作業したいページを開くか、ページ上で何かを選択します。',
+      notHex: 'ページ設定でページグリッドを 16 進数 (V) または 16 進数 (H) に設定します。',
+      noPolygons:
+        '領域の周囲に多角形、長方形、楕円、またはフリーハンド形状を描画し、それを選択してから、再試行してください。',
+      emptyArea: 'より大きな図形を描画するか、ページ グリッドの設定を確認してください。',
+      tooMany: 'より小さい領域を塗りつぶすか、領域をいくつかの形状に分割します。',
+      noHexes: 'ヘクスは前景またはトークン層にあります。そのレイヤーに切り替えて選択します。',
+      unknownCommand: '「!hexploration help」と入力してコマンドをリストします。',
+      unknownSetting: 'すべての設定を表示するには、「!hexploration set」と入力します。',
+      calibrateNeedsTokens:
+        'トークンをヘクスの中心にスナップして選択します。同じ行 (16 進数 V) または列 (16 進数 H) の隣接するヘクスにスナップされた 2 番目のトークンを選択して、16 進数のサイズも修正します。',
+      calibrateFailed:
+        '2 つのトークンは、同じ行 (16 進数 V) または同じ列 (16 進数 H) に、少なくとも 1 進数離れていなければなりません。',
+      unexpected: '詳細は API コンソールのログに記載されています。',
+    },
+    help: {
+      menu: 'メニューを表示します。',
+      fill: '選択した描画形状を六角形で覆います。',
+      fillInverse: '選択した図形の内側を除いてページ全体を覆います。',
+      undo: '最後の塗りつぶしを元に戻し、逆塗りつぶしまたは非表示にし、使用した形状を復元します。',
+      reveal: '選択したヘクスと、選択した図形とトークンの下のヘクスを表示します。',
+      revealPage: 'ページ上のすべてのヘクスをアナウンスなしで公開します。',
+      conceal: '選択したシェイプとトークンの下の領域を再度六角形で覆います。',
+      explore: '選択したトークンの周囲を、まるでそこに移動したかのように表示します。',
+      resetPage: 'ページ上のすべてのヘクスを削除します (最初に質問します)。',
+      name: '選択したヘクス、または選択したトークンの下のヘクスに名前を付けます。名前をクリアするには、名前を空のままにしておきます。',
+      mark: '選択したトークンを非表示の場所に変更します。',
+      unmark: '選択したトークンが非表示の場所になるのを停止します。',
+      set: '設定を変更するか、すべての設定を表示します。',
+      pageSet: '現在のページでのみ公開設定をオーバーライドします。',
+      pageClear: '現在のページのオーバーライドを削除します。',
+      rescan: 'たとえば、ページまたはゲームをコピーした後、ページの 16 進数リストを再構築します。',
+      calibrate:
+        '選択した 1 つまたは 2 つのトークンを六角形の中心にスナップして六角形のグリッドを並べます。',
+      calibrateReset: '現在のページの調整を削除します。',
+      status: '現在のページについて Hexploration が知っていることを表示します。',
+      journal: 'ヘルプとコマンドデッキの配布資料を再構築します。',
+      help: 'このリストを表示します。',
+      handout: '完全な手順は配布資料「{name}」に記載されています。',
+    },
+    deck: {
+      subtitle: 'コマンドデッキ',
+      drawDesc:
+        '領域の周囲に図形を描画し、選択して塗りつぶします。元に戻すと、最後の塗りつぶしが元に戻ります。',
+      revealDesc:
+        'ヘックス、シェイプ、またはトークンを選択して、それらを再度表示またはカバーします。 Explore では、選択したトークンの周囲が移動したかのように表示されます。',
+      locationsDesc:
+        'ヘクスの下の位置としてトークンを非表示にするには、トークンを選択します。ヘクスまたはトークンを選択してヘクスに名前を付けます。',
+      toolsDesc:
+        '設定、ページの上書き、ステータス、コピーされたページの再スキャン、グリッドの調整。',
+      footer: '完全な手順については、配布資料「{help}」を参照してください。',
+    },
+    handout: {
+      versionLabel: 'バージョン',
+      subtitle: 'Roll20 のヘックスごとの探索',
+      footer: 'ワンクリック コントロールについては、配布資料「{deck}」を使用してください。',
+      overview: {
+        heading: '概要',
+        body: 'Hexploration は、不透明なヘクスでヘクス マップをカバーします。パーティが移動すると、パーティが通過するヘクス (および必要に応じてパーティの周囲のヘクス) が削除されるため、マップは一度に 1 ヘクスずつ明らかになります。隠し場所はヘクスの下に配置することができ、見つかった場合にはアナウンスされます。 Jumpgate および Legacy ゲームでは、任意のサイズの 16 進数 (V) および 16 進数 (H) グリッドで動作します。',
+        demo: '短いデモを見る (バージョン 1 から)',
+      },
+      quickStart: {
+        heading: 'クイックスタート',
+        steps: [
+          'グリッドが 16 進数 (V) または 16 進数 (H) に設定されているページを開きます。',
+          '非表示にする領域の周囲に 1 つ以上の形状 (多角形、長方形、楕円、またはフリーハンド) を描画します。',
+          '図形を選択し、コマンド デッキで [塗りつぶし] をクリックします (または !hexploration fill と入力します)。形状は六角形に置き換えられます。',
+          'オプション: 入力する前に、重要な場所のトークンを選択し、「場所をマーク」をクリックします。それらはヘクスの下に隠されており、発見されると発表されます。',
+          'プレイヤートークンを移動します。通過するすべてのヘクスと、その視程距離内のヘクスが表示されます。',
+        ],
+      },
+      commands: {
+        heading: 'コマンド',
+        intro:
+          'これらのコマンドは GM のみが使用できます。ほとんどは、選択したオブジェクトに作用します。残りの部分は、表示しているページに基づいて動作します。',
+        colCommand: '指示',
+        colDesc: '何をするのか',
+      },
+      revealing: {
+        heading: '暴露の仕組み',
+        points: [
+          'トークン層上のトークンのみがヘクスを明らかにします。どのトークンの数は、デフォルトでは明らかにするトークン: プレイヤー トークンによって設定されるため、GM はマップを明らかにすることなくモンスターを移動できます。',
+          'トークンは、それがカバーするすべてのヘクスを表示し (大きなトークンは複数のヘクスをカバーします)、経路に沿って表示をオンにすると、ウェイポイントを含む、ドラッグされたルート上のすべてのヘクスが表示されます。',
+          '視程距離により、各ヘクスの周囲のヘクスが明らかになります。 Line of Sight がオンの場合、ヘクスは間に覆われたヘクスがない場合にのみ表示されます。',
+          'ヘクス表示距離は、ヘクスが描画されるときにヘクスに保存されます。これらのヘクスは、トークンがどれだけ遠くまで見えても、その多くのヘクス内からのみ明らかにされます。背後にあるものを隠してしまう山や森に使用します。',
+          'Glimpse モードでは、視界内のヘクスは消えるのではなく透明になり、トークンがヘクスに入ると削除されます。',
+          'API は他の MOD による動きを報告しません。 TokenMod の動きは自動的に取得されます。他の MOD の場合は、トークンを選択して [Explore] をクリックするか、独自の MOD から Hexploration.revealAround(token) を呼び出します。',
+          'API は他の MOD による動きを報告しません。 TokenMod の動きは自動的に取得されます。他の MOD の場合は、トークンを選択して [Explore] をクリックするか、独自の MOD から Hexploration.revealAround(token) を呼び出します。',
+        ],
+      },
+      locations: {
+        heading: '名前付きヘクスと場所',
+        points: [
+          '場所をマークすると、選択したトークンが非表示の場所に変わります。すでにヘクスの下にあるトークンはすぐに隠されます。それ以外の場合は、それを覆う次の塗りつぶしによって隠されます。',
+          'バージョン 1 と同様に、白い塔のステータス マーカーが付いたトークンも、埋めるときに場所として扱われます。',
+          '非表示の位置トークンは GM レイヤーに移動されます。彼らのヘクスが明らかになると、彼らは名前が表示された状態でトークン層に戻り、彼らの発見が発表されます。',
+          'Name Hex はトークンなしでヘックスに名前を付けます。名前は GM レイヤー上のラベルとして GM に表示され、ヘクスが公開されたときにアナウンスされます。',
+          '「発見の発表」では、発表を全員が見るか、GM のみが見るか、誰も見ないかを選択します。 Ping Discovery は、プレイヤーの視界をその場所に移動します。',
+        ],
+      },
+      settings: {
+        heading: '設定',
+        intro:
+          '!hexploration set (または設定ボタン) で設定を変更します。 Hex Layer、Tokens That Reveal、言語も Mod の設定ページで設定できます。',
+        colKey: '鍵',
+        colName: '設定',
+        colDesc: '説明',
+        perPage: '（ページごとに設定可能）',
+      },
+      jumpgate: {
+        heading: 'ジャンプゲートとレガシー',
+        points: [
+          'Hexploration は、ゲームがどのエンジンを使用しているかを判断し、一致する種類の形状を描画します。どちらのエディタでも描画された形状を塗りつぶすことができます。',
+          'ヘックス レイヤーを自動に設定すると、ヘックスは前景レイヤーのトークンの上に描画されるため、プレイヤーはその下にあるものを見ることができません。フォアグラウンド レイヤーが使用できない場合は、代わりにトークン レイヤーが使用されます。',
+          'Jumpgate は数学的に規則的なヘクスを描画しますが、これはレガシー ヘクスとは形状がわずかに異なります。ヘクスがページのグリッドと揃っていない場合は、ヘクスの中心にトークンをスナップし、それを選択して「調整」をクリックします。同じ行 (16 進 V) または列 (16 進 H) の隣接するヘクスにある 2 つのトークンを選択して、16 進サイズも修正します。',
+          'ページまたはゲームがコピーされると、そのヘクスは新しい ID を取得します。ページで再スキャンを実行して、名前ラベルと場所トークンとともにそれらを再度取得します。',
+        ],
+      },
+      upgrading: {
+        heading: 'バージョン1からのアップグレード',
+        points: [
+          'バージョン 2 では、PathMath、MatrixMath、Vector Math、または HTML Builder は必要なくなりました。別の MOD が使用していない限り、削除しても構いません。',
+          '既存のヘックス マップ、名前、位置トークン、および設定は、初回起動時に自動的にアップグレードされます。',
+          'Hexploration_menu マクロを含むバージョン 1 のコマンドは引き続き機能します。',
+          'バージョン 1 では、キャラクターを表すトークンにヘクスが表示されます。その動作を維持するには、[公開するトークン] を [文字トークン] に設定します。',
+        ],
+        colV1: 'バージョン1のコマンド',
+        colV2: 'バージョン 2 コマンド',
+      },
+      troubleshooting: {
+        heading: 'トラブルシューティング',
+        points: [
+          'トークンが移動しても何も起こりません。トークンがトークン レイヤー上にあり、明らかにするトークンと一致すること、およびページにヘクスがあること (!hexploration ステータス) を確認してください。',
+          'ヘクスはグリッドからオフセットされています。キャリブレーションを使用して、マップ上のいくつかのヘクスでトークンを使用してチェックします。',
+          'ページまたはゲームをコピーした後、ヘックスが表示されなくなりました。ページで再スキャンを実行してください。',
+          '塗りつぶしは、エリアに六角形の中心がないことを示します。形状には少なくとも 1 つの六角形の中心が含まれている必要があります。',
+          'その他の場合は、API コンソール ログを確認し、ヘルプを求めるときにそのメッセージを含めてください。',
+        ],
+      },
+      languages: {
+        heading: '言語',
+        body: '!hexploration set language で言語を選択します。利用可能な言語:',
+      },
+      credits: {
+        heading: 'クレジット',
+        original: 'オリジナルMODによる',
+        maintainer: 'バージョン 2 の保守者',
+        marketplace: 'Roll20 マーケットプレイスのエイダのアート パック',
+        support:
+          'バグを見つけた場合やアイデアがある場合は、Roll20 Mod フォーラムに投稿するか、GitHub で問題を開いて、API コンソール ログからのメッセージを含めてください。',
+      },
+    },
+  };
 
-  var localeKo = {};
+  const TRANSLATION$8 = {
+    titles: {
+      ready: '탐색이 준비되었습니다.',
+      settings: '탐색 설정',
+      languages: '언어를 선택하세요',
+      pageSettings: '페이지 설정: {page}',
+      status: '탐색 상태: {page}',
+      help: '탐색 명령',
+      confirm: '확인해주세요',
+    },
+    discovery: {
+      title: '발견된 위치',
+    },
+    menu: {
+      draw: '그리다',
+      reveal: '공개 및 숨기기',
+      locations: '위치',
+      tools: '도구',
+      layerInUse: '{layer}에 새로운 헥스가 그려지고 있습니다.',
+      pageSettingsHelp:
+        '이 설정은 이 페이지에만 적용됩니다. ★로 표시된 설정은 전역 설정보다 우선 적용됩니다.',
+    },
+    buttons: {
+      fill: '채우다',
+      fillInverse: '역 채우기',
+      undo: '채우기 실행 취소',
+      reveal: '드러내다',
+      conceal: '숨기다',
+      explore: '탐구하다',
+      revealPage: '페이지 공개',
+      resetPage: '페이지 재설정',
+      mark: '위치 표시',
+      unmark: '표시 해제',
+      name: '이름 헥스',
+      settings: '설정',
+      pageSettings: '페이지 설정',
+      status: '상태',
+      rescan: '다시 스캔',
+      calibrate: '교정',
+      calibrateReset: '교정 재설정',
+      help: '돕다',
+      change: '변화',
+      menu: '메뉴',
+      clearOverrides: '재정의 지우기',
+      confirmReset: '예, 모든 16진수를 제거합니다.',
+    },
+    prompts: {
+      name: '위치 이름(지우려면 비워 두세요)',
+    },
+    values: {
+      on: '~에',
+      off: '끄다',
+      none: '없음',
+      hexLayer: {
+        auto: '자동(사용 가능한 경우 전경)',
+        foreground: '전경 레이어',
+        objects: '토큰 레이어',
+      },
+      revealBy: {
+        players: '플레이어 토큰',
+        characters: '캐릭터 토큰',
+        all: '모든 토큰',
+      },
+      revealMode: {
+        clear: '분명한',
+        glimpse: '일견',
+      },
+      announce: {
+        all: '모든 사람',
+        gm: 'GM 전용',
+        off: '끄다',
+      },
+      orientation: {
+        vertical: '16진수(V)',
+        horizontal: '16진수(H)',
+      },
+      fillKind: {
+        fill: '채우다',
+        fillInverse: '역 채우기',
+        conceal: '숨기다',
+      },
+    },
+    settings: {
+      language: {
+        label: '언어',
+        desc: '메뉴, 메시지, 유인물에 대한 언어입니다.',
+      },
+      hexLayer: {
+        label: '육각 레이어',
+        desc: '새로운 육각형이 그려지는 곳. 자동은 전경 레이어(토큰 위)를 시도하고 게임이 지원하지 않으면 토큰 레이어로 대체합니다.',
+      },
+      fillColor: {
+        label: '채우기 색상',
+        desc: '새로운 육각형의 색상입니다. 투명한 16진수에는 rgba()를 사용합니다(예: rgba(0,0,0,0.8)).',
+      },
+      strokeColor: {
+        label: '테두리 색상',
+        desc: '새로운 육각형의 윤곽선 색상입니다.',
+      },
+      labelColor: {
+        label: '라벨 색상',
+        desc: '명명된 육각형의 GM 전용 이름 라벨 색상입니다.',
+      },
+      glimpseColor: {
+        label: '미리보기 색상',
+        desc: '엿볼 때 색상 육각형이 로 변경됩니다(Glimpse 공개 모드). 투명한 rgba() 색상을 사용하세요.',
+      },
+      strokeWidth: {
+        label: '테두리 너비',
+        desc: '새 헥스의 윤곽선 너비(픽셀 단위)(0~20).',
+      },
+      maxDistance: {
+        label: '16진수 공개 거리',
+        desc: '그려진 헥스에 적용됩니다. 토큰이 볼 수 있는 범위에 관계없이 토큰을 표시하려면 이 많은 헥스 내에 있어야 합니다. 제한이 없으면 비워 두세요.',
+      },
+      revealDistance: {
+        label: '시거리',
+        desc: '움직이는 토큰 주변의 헥스 수는 공개됩니다(0~20). 0은 토큰이 통과하는 헥스만 나타냅니다.',
+      },
+      lineOfSight: {
+        label: '시선',
+        desc: '켜져 있으면 헥스와 토큰 사이에 가려진 헥스가 없는 경우에만 헥스가 드러납니다.',
+      },
+      revealPath: {
+        label: '경로를 따라 표시',
+        desc: '켜져 있으면 토큰이 멈추는 위치뿐만 아니라 드래그되는 동안 토큰이 통과하는 모든 헥스(경유지 포함)가 표시됩니다.',
+      },
+      revealBy: {
+        label: '공개되는 토큰',
+        desc: '토큰 레이어의 토큰은 헥스(플레이어가 제어하는 ​​토큰, 모든 캐릭터를 나타내는 토큰 또는 모든 토큰)를 나타냅니다.',
+      },
+      revealMode: {
+        label: '공개 모드',
+        desc: 'Clear는 시야 내의 타일을 제거합니다. Glimpse는 대신 투명하게 만듭니다. 토큰이 입력되면 제거됩니다.',
+      },
+      announce: {
+        label: '발견 발표',
+        desc: '이름이 지정된 위치가 발견되면 채팅 메시지를 볼 수 있는 사람입니다.',
+      },
+      pingDiscoveries: {
+        label: '핑 발견',
+        desc: '켜져 있으면 이름이 지정된 위치가 발견되면 플레이어에게 해당 위치로 핑이 전송됩니다.',
+      },
+      hideCoveredTokens: {
+        label: '적용 토큰 숨기기',
+        desc: 'Roll20은 육각형 위에 이름, 막대 및 아우라를 그립니다. 켜져 있으면 덮여 있는 헥스 아래에 있는 토큰의 이름이 플레이어에게 표시되고 막대와 오라가 꺼지고, 덮혀 있으면 다시 켜집니다.',
+      },
+    },
+    status: {
+      engine: '게임 엔진',
+      grid: '그리드',
+      layer: '육각층',
+      hexes: '헥스',
+      named: '명명된 헥스',
+      icons: '위치 토큰',
+      glimpsed: '살짝 엿본 육각형',
+      pending: '채우기를 기다리는 위치',
+      calibrated: '교정됨',
+      overrides: '페이지 재정의',
+      undo: '실행 취소 가능',
+    },
+    messages: {
+      filled:
+        '채우기가 완료되었습니다. 그려진 헥스: {created}. 스타일이 변경되었습니다: {restyled}. 숨겨진 위치: {icons}.',
+      revealed: '공개된 헥스: {count}.',
+      revealedPage: '페이지의 모든 16진수가 공개되었습니다({count}).',
+      confirmReset:
+        '"{page}"({count})에서 모든 16진수를 제거하시겠습니까? 위치 토큰은 토큰 레이어로 돌아갑니다. 실행 취소하면 되돌릴 수 없습니다.',
+      resetPage: '페이지에서 제거된 16진수: {count}.',
+      undone:
+        '마지막 채우기가 취소되었습니다. 제거된 16진수: {removed}. 스타일이 변경된 16진수 복원: {restored}.',
+      named: '"{name}"이라는 헥스: {count}.',
+      unnamed: '지워진 이름: {count}.',
+      marked:
+        '기존 16진수에 숨겨진 위치: {attached}. 이를 포함하는 다음 채우기를 기다리는 중: {pending}.',
+      unmarked: '더 이상 위치가 아닌 토큰: {count}.',
+      settingChanged: '{setting}이(가) {value}로 설정되었습니다.',
+      rescanned:
+        '재검색이 완료되었습니다. 유지됨: {kept}. 채택됨: {adopted}. 다시 제출됨: {moved}. 누락 및 잊혀짐: {dropped}. 다시 연결된 라벨: {labels}. 다시 연결된 위치 토큰: {icons}.',
+      calibrated:
+        '그리드가 보정되었습니다(열 단계 {colStep}px, 행 단계 {rowStep}px). 재스캔: {kept} 유지, {moved} 다시 제출, {adopted} 채택.',
+      calibrationReset:
+        '보정이 제거되었습니다. 재스캔: {kept} 유지, {moved} 다시 제출, {adopted} 채택.',
+      journalRebuilt: '"{help}" 및 "{deck}" 유인물이 다시 작성되었습니다.',
+      migrated:
+        'Heexploration 1.x 육각형 지도가 업그레이드되었습니다. 이 게임이 레거시 게임에서 복사된 경우 각 육각형 지도 페이지에서 다시 스캔을 실행하세요.',
+      pruned:
+        '더 이상 존재하지 않고 잊혀진 저장된 헥스: {dropped}. 이 게임이나 페이지가 복사된 경우 페이지에서 다시 스캔을 실행하여 16진수를 다시 선택하세요.',
+      readyHint: '메뉴에 !hexploration을 입력하거나 "Hexploration - Command Deck" 유인물을 엽니다.',
+    },
+    warnings: {
+      foregroundUnavailable:
+        '이 게임은 전경 레이어 그리기를 지원하지 않으므로 토큰 레이어에 육각형을 그렸습니다.',
+      someFailed: '그릴 수 없는 육각형: {count}. 자세한 내용은 API 콘솔을 확인하세요.',
+    },
+    errors: {
+      noPage: '작업할 페이지를 찾을 수 없습니다.',
+      notHex: '이 페이지는 육각형 그리드를 사용하지 않습니다.',
+      noPolygons: '채울 하나 이상의 그려진 도형을 선택합니다.',
+      emptyArea: '선택한 영역에는 16진수 중심이 포함되어 있지 않습니다.',
+      tooMany: '그러면 한 번에 너무 많은 헥스가 생성됩니다({count}).',
+      nothingToConceal: '숨길 그려진 모양이나 토큰을 선택하세요.',
+      nothingToReveal: '공개할 육각형, 그려진 모양 또는 토큰을 선택하세요.',
+      noTokens: '먼저 하나 이상의 토큰을 선택하세요.',
+      noHexes: '먼저 하나 이상의 헥스(또는 헥스 위에 있는 토큰)를 선택하세요.',
+      nothingToUndo: '실행 취소할 채우기가 없습니다.',
+      unknownCommand: '알 수 없는 명령: {command}',
+      unknownSetting: '알 수 없는 설정: {key}',
+      unknownPageSetting: '페이지별로 설정할 수 있는 설정 : {keys}',
+      invalidValue: '"{value}"은(는) {key}에 유효한 값이 아닙니다.',
+      calibrateNeedsTokens: '육각형 중앙에 고정된 하나 또는 두 개의 토큰을 선택합니다.',
+      calibrateFailed: '해당 토큰은 보정에 사용할 수 없습니다.',
+      unexpected: '문제가 발생했습니다: {message}',
+    },
+    hints: {
+      noPage: '작업하려는 페이지를 열거나 페이지에서 항목을 선택하세요.',
+      notHex: '페이지 설정에서 페이지 격자를 16진수(V) 또는 16진수(H)로 설정하세요.',
+      noPolygons:
+        '영역 주위에 다각형, 직사각형, 타원 또는 자유형 모양을 그리고 선택한 다음 다시 시도하십시오.',
+      emptyArea: '더 큰 도형을 그리거나 페이지 그리드 설정을 확인하세요.',
+      tooMany: '더 작은 영역을 채우거나 영역을 여러 모양으로 분할합니다.',
+      noHexes: '육각형은 전경 또는 토큰 레이어에 있습니다. 해당 레이어로 전환하여 선택하세요.',
+      unknownCommand: '명령 목록을 보려면 !heexploration help를 입력하세요.',
+      unknownSetting: '모든 설정을 보려면 !heexploration set를 입력하세요.',
+      calibrateNeedsTokens:
+        '토큰을 육각형 중앙에 놓고 선택합니다. 동일한 행(16진수 V) 또는 열(16진수 H)의 인접한 16진수에 스냅된 두 번째 토큰을 선택하여 16진수 크기도 수정합니다.',
+      calibrateFailed:
+        '두 개의 토큰은 동일한 행(Hex V) 또는 동일한 열(Hex H)에 있어야 하며 최소 16진수 떨어져 있어야 합니다.',
+      unexpected: '세부정보는 API 콘솔 로그에 있습니다.',
+    },
+    help: {
+      menu: '메뉴를 보여주세요.',
+      fill: '선택한 그려진 모양을 육각형으로 덮습니다.',
+      fillInverse: '선택한 도형 내부를 제외하고 전체 페이지를 덮습니다.',
+      undo: '마지막 채우기를 실행 취소하고, 채우기를 반전하거나 숨기고, 사용한 모양을 복원합니다.',
+      reveal: '선택한 육각형과 선택한 모양 및 토큰 아래의 육각형을 표시합니다.',
+      revealPage: '공지 없이 페이지의 모든 16진수를 공개합니다.',
+      conceal: '선택한 모양과 토큰 아래 영역을 다시 16진수로 덮습니다.',
+      explore: '선택한 토큰이 방금 그곳으로 이동한 것처럼 주변을 드러냅니다.',
+      resetPage: '페이지의 모든 16진수를 제거합니다(먼저 묻습니다).',
+      name: '선택한 헥스 또는 선택한 토큰 아래의 헥스의 이름을 지정합니다. 이름을 지우려면 이름을 비워 두세요.',
+      mark: '선택한 토큰을 숨겨진 위치로 바꿉니다.',
+      unmark: '선택한 토큰이 숨겨진 위치가 되는 것을 중지하세요.',
+      set: '설정을 변경하거나 모든 설정을 표시합니다.',
+      pageSet: '현재 페이지에서만 표시 설정을 재정의합니다.',
+      pageClear: '현재 페이지의 재정의를 제거합니다.',
+      rescan: '예를 들어 페이지나 게임을 복사한 후 페이지의 16진수 목록을 다시 작성합니다.',
+      calibrate:
+        '16진수 중심에 맞춰진 하나 또는 두 개의 선택된 토큰을 사용하여 16진수 그리드를 정렬합니다.',
+      calibrateReset: '현재 페이지의 보정을 제거합니다.',
+      status: '현재 페이지에 대해 Heexploration이 알고 있는 내용을 보여줍니다.',
+      journal: '도움말 및 명령 데크 유인물을 재구성합니다.',
+      help: '이 목록을 보여주세요.',
+      handout: '전체 지침은 "{name}" 유인물에 있습니다.',
+    },
+    deck: {
+      subtitle: '커맨드 덱',
+      drawDesc:
+        '영역 주위에 모양을 그리고 선택한 다음 채웁니다. 실행 취소는 마지막 채우기를 되돌립니다.',
+      revealDesc:
+        '육각형, 모양 또는 토큰을 선택하여 다시 표시하거나 덮으세요. 선택한 토큰 주변을 마치 이동한 것처럼 탐색해 보세요.',
+      locationsDesc:
+        '토큰을 선택하여 16진수 아래 위치로 숨기세요. 16진수 또는 토큰을 선택하여 16진수 이름을 지정하세요.',
+      toolsDesc: '설정, 페이지 재정의, 상태, 복사된 페이지 다시 스캔 및 그리드 보정.',
+      footer: '전체 지침은 "{help}" 유인물을 참조하세요.',
+    },
+    handout: {
+      versionLabel: '버전',
+      subtitle: 'Roll20의 16진수 탐색',
+      footer: '원클릭 제어를 위해서는 "{deck}" 유인물을 사용하세요.',
+      overview: {
+        heading: '개요',
+        body: 'Heexploration은 불투명한 육각형 지도를 포함합니다. 파티가 이동함에 따라 그들이 통과하는 헥스(원하는 경우 주변의 헥스)가 제거되므로 지도는 한 번에 한 헥스씩 발견됩니다. 숨겨진 위치는 육각형 아래에 배치할 수 있으며 발견되면 알려줍니다. Jumpgate 및 Legacy 게임, 모든 크기의 Hex(V) 및 Hex(H) 그리드에서 작동합니다.',
+        demo: '짧은 데모 보기(버전 1부터)',
+      },
+      quickStart: {
+        heading: '빠른 시작',
+        steps: [
+          '그리드가 16진수(V) 또는 16진수(H)로 설정된 페이지를 엽니다.',
+          '숨길 영역 주위에 하나 이상의 도형(다각형, 직사각형, 타원 또는 자유형)을 그립니다.',
+          '모양을 선택하고 Command Deck에서 채우기를 클릭합니다(또는 !heexploration fill을 입력). 모양이 육각형으로 대체됩니다.',
+          '선택사항: 작성하기 전에 중요한 장소에 대한 토큰을 선택하고 위치 표시를 클릭하세요. 그것들은 육각형 아래에 숨겨져 있으며 발견되면 알려줍니다.',
+          '플레이어 토큰을 이동합니다. 통과하는 모든 헥스와 가시 거리 내에 있는 헥스가 공개됩니다.',
+        ],
+      },
+      commands: {
+        heading: '명령',
+        intro:
+          'GM만이 이 명령을 사용할 수 있습니다. 대부분은 선택한 개체에 작용합니다. 나머지는 현재 보고 있는 페이지에서 수행됩니다.',
+        colCommand: '명령',
+        colDesc: '기능',
+      },
+      revealing: {
+        heading: '공개 작동 방식',
+        points: [
+          '토큰 레이어의 토큰만 16진수를 나타냅니다. 공개하는 토큰(Tokens That Reveal)에 의해 설정된 토큰 수는 기본적으로 플레이어 토큰이므로 GM은 지도를 열지 않고도 몬스터를 이동할 수 있습니다.',
+          '토큰은 해당 토큰이 포함하는 모든 헥스를 표시하며(큰 토큰은 여러 개를 포함) 경로를 따라 표시를 설정하면 웨이포인트를 포함하여 드래그된 경로의 모든 헥스를 표시합니다.',
+          '시야 거리는 각 헥스 주변의 헥스를 나타냅니다. 시선이 켜진 상태에서, 가려진 헥스가 사이에 없는 경우에만 헥스가 드러납니다.',
+          'Hex Reveal Distance는 그려진 헥스에 저장됩니다. 이러한 헥스는 토큰이 볼 수 있는 거리에 관계없이 그 만큼의 헥스 내에서만 드러납니다. 뒤에 있는 것이 숨겨져 있는 산이나 숲에 사용하세요.',
+          'Glimpse 모드에서는 시야 내의 육각형이 사라지는 대신 투명해지며, 토큰이 들어갈 때 제거됩니다.',
+          'API는 다른 모드의 움직임을 보고하지 않습니다. TokenMod 이동은 자동으로 선택됩니다. 다른 모드의 경우 토큰을 선택하고 탐색을 클릭하거나 자신의 모드에서 Hexploration.revealAround(token)를 호출하세요.',
+          'API는 다른 모드의 움직임을 보고하지 않습니다. TokenMod 이동은 자동으로 선택됩니다. 다른 모드의 경우 토큰을 선택하고 탐색을 클릭하거나 자신의 모드에서 Hexploration.revealAround(token)를 호출하세요.',
+        ],
+      },
+      locations: {
+        heading: '명명된 육각형 및 위치',
+        points: [
+          'Mark Location은 선택한 토큰을 숨겨진 위치로 바꿉니다. 이미 헥스 아래에 있는 토큰은 즉시 숨겨집니다. 그렇지 않으면 그것을 덮는 다음 채우기에 의해 숨겨집니다.',
+          '흰색 타워 상태 표시가 있는 토큰도 버전 1에서와 같이 채우기 시 위치로 처리됩니다.',
+          '숨겨진 위치 토큰은 GM 레이어로 이동됩니다. 헥스가 공개되면 이름이 표시된 토큰 레이어로 돌아가고 발견이 발표됩니다.',
+          'Name Hex는 토큰 없이 16진수에 이름을 부여합니다. 이름은 GM 레이어의 라벨로 GM에게 표시되며 헥스가 공개되면 알려집니다.',
+          '발견 발표는 모든 사람, GM만 볼 수 있는지, 아니면 아무도 볼 수 없는지 선택합니다. Ping Discoveries는 또한 플레이어의 시야를 해당 위치로 이동시킵니다.',
+        ],
+      },
+      settings: {
+        heading: '설정',
+        intro:
+          '!heexploration set(또는 설정 버튼)을 사용하여 설정을 변경하세요. Hex Layer, Tokens That Reveal 및 언어도 Mod의 설정 페이지에서 설정할 수 있습니다.',
+        colKey: '열쇠',
+        colName: '환경',
+        colDesc: '설명',
+        perPage: '(페이지별로 설정 가능합니다.)',
+      },
+      jumpgate: {
+        heading: '점프게이트와 레거시',
+        points: [
+          'Heexploration은 게임이 어떤 엔진을 사용하는지 알아내고 그에 맞는 모양을 그립니다. 두 편집기 중 하나에서 그린 모양을 채울 수 있습니다.',
+          'Hex Layer를 Auto로 설정하면 토큰 위의 전경 레이어에 육각형이 그려지므로 플레이어는 그 아래에 무엇이 있는지 볼 수 없습니다. 전경 레이어를 사용할 수 없는 경우 토큰 레이어가 대신 사용됩니다.',
+          'Jumpgate는 레거시 육각형과 모양이 약간 다른 수학적으로 규칙적인 육각형을 그립니다. 16진수가 페이지의 그리드와 일치하지 않으면 토큰을 16진수 중앙에 맞춰 선택하고 보정을 클릭하세요. 동일한 행(Hex V) 또는 열(Hex H)의 인접한 헥스에서 두 개의 토큰을 선택하여 16진수 크기도 수정합니다.',
+          '페이지나 게임이 복사되면 해당 헥스에 새 ID가 부여됩니다. 페이지에서 다시 스캔을 실행하여 이름 라벨 및 위치 토큰과 함께 다시 가져옵니다.',
+        ],
+      },
+      upgrading: {
+        heading: '버전 1에서 업그레이드',
+        points: [
+          '버전 2에는 더 이상 PathMath, MatrixMath, Vector Math 또는 HTML Builder가 필요하지 않습니다. 다른 모드에서 사용하지 않는 한 제거할 수 있습니다.',
+          '기존 16진수 지도, 이름, 위치 토큰 및 설정은 처음 시작할 때 자동으로 업그레이드됩니다.',
+          'Heexploration_menu 매크로를 포함한 버전 1 명령은 여전히 ​​작동합니다.',
+          '버전 1에서는 문자를 나타내는 모든 토큰이 16진수를 표시할 수 있습니다. 해당 행동을 유지하려면 공개되는 토큰을 캐릭터 토큰으로 설정하세요.',
+        ],
+        colV1: '버전 1 명령',
+        colV2: '버전 2 명령',
+      },
+      troubleshooting: {
+        heading: '문제 해결',
+        points: [
+          '토큰이 이동할 때 아무 일도 일어나지 않습니다. 토큰이 토큰 레이어에 있고 공개되는 토큰과 일치하는지, 페이지에 16진수(!hexploration 상태)가 있는지 확인하세요.',
+          '육각형은 그리드에서 오프셋됩니다. 보정을 사용한 다음 지도 전체에 걸쳐 몇 개의 육각형에 대한 토큰을 확인하십시오.',
+          '페이지나 게임을 복사한 후 Hexes가 표시되지 않습니다. 페이지에서 다시 검색을 실행하세요.',
+          '채우기는 해당 영역에 16진수 중심이 없음을 나타냅니다. 모양에는 최소한 하나의 16진수 중심이 포함되어야 합니다.',
+          '그 밖의 사항은 API 콘솔 로그를 확인하고 도움을 요청할 때 해당 메시지를 포함하세요.',
+        ],
+      },
+      languages: {
+        heading: '언어',
+        body: '!heexploration set 언어로 언어를 선택하세요. 사용 가능한 언어:',
+      },
+      credits: {
+        heading: '크레딧',
+        original: '원본 모드 작성자:',
+        maintainer: '버전 2는 다음에 의해 유지 관리됩니다.',
+        marketplace: 'Roll20 마켓플레이스의 Ada 아트 팩',
+        support:
+          '버그를 발견하거나 아이디어가 있는 경우 Roll20 Mod 포럼에 게시하거나 GitHub에서 문제를 열고 API 콘솔 로그의 메시지를 포함하세요.',
+      },
+    },
+  };
 
-  var localePl = {};
+  const TRANSLATION$7 = {
+    titles: {
+      ready: 'Heksploracja jest gotowa.',
+      settings: 'Ustawienia Heksploracji',
+      languages: 'Wybierz język',
+      pageSettings: 'Ustawienia strony: {page}',
+      status: 'Stan heksploracji: {page}',
+      help: 'Komendy Heksploracji',
+      confirm: 'Proszę potwierdzić',
+    },
+    discovery: {
+      title: 'Lokalizacja odkryta',
+    },
+    menu: {
+      draw: 'Rysować',
+      reveal: 'Odkryj i ukryj',
+      locations: 'Lokalizacje',
+      tools: 'Narzędzia',
+      layerInUse: 'Nowe heksy są rysowane na {layer}.',
+      pageSettingsHelp:
+        'Te ustawienia dotyczą tylko tej strony. Ustawienia oznaczone ★ zastępują ustawienia globalne.',
+    },
+    buttons: {
+      fill: 'Wypełnić',
+      fillInverse: 'Odwrotne wypełnienie',
+      undo: 'Cofnij wypełnienie',
+      reveal: 'Ujawnić',
+      conceal: 'Ukryć',
+      explore: 'Badać',
+      revealPage: 'Odkryj stronę',
+      resetPage: 'Zresetuj stronę',
+      mark: 'Zaznacz lokalizację',
+      unmark: 'Odznacz',
+      name: 'Imię Hex',
+      settings: 'Ustawienia',
+      pageSettings: 'Ustawienia strony',
+      status: 'Status',
+      rescan: 'Skanuj ponownie',
+      calibrate: 'Kalibrować',
+      calibrateReset: 'Zresetuj kalibrację',
+      help: 'Pomoc',
+      change: 'Zmiana',
+      menu: 'Menu',
+      clearOverrides: 'Wyczyść zastąpienia',
+      confirmReset: 'Tak, usuń wszystkie heksy',
+    },
+    prompts: {
+      name: 'Nazwa lokalizacji (pozostaw puste, aby wyczyścić)',
+    },
+    values: {
+      on: 'NA',
+      off: 'Wyłączony',
+      none: 'Nic',
+      hexLayer: {
+        auto: 'Auto (pierwszy plan, jeśli jest dostępny)',
+        foreground: 'warstwa pierwszego planu',
+        objects: 'warstwa tokenów',
+      },
+      revealBy: {
+        players: 'Żetony graczy',
+        characters: 'Żetony postaci',
+        all: 'Wszystkie tokeny',
+      },
+      revealMode: {
+        clear: 'Jasne',
+        glimpse: 'Dojrzeć',
+      },
+      announce: {
+        all: 'Wszyscy',
+        gm: "Tylko GM'a",
+        off: 'Wyłączony',
+      },
+      orientation: {
+        vertical: 'Sześciokąt (V)',
+        horizontal: 'Sześciokąt (H)',
+      },
+      fillKind: {
+        fill: 'Wypełnić',
+        fillInverse: 'Odwrotne wypełnienie',
+        conceal: 'Ukryć',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Język',
+        desc: 'Język menu, komunikatów i materiałów informacyjnych.',
+      },
+      hexLayer: {
+        label: 'Warstwa szesnastkowa',
+        desc: 'Gdzie rysowane są nowe heksy. Automatycznie próbuje warstwy pierwszego planu (nad tokenami) i wraca do warstwy tokenów, jeśli gra jej nie obsługuje.',
+      },
+      fillColor: {
+        label: 'Kolor wypełnienia',
+        desc: 'Kolor nowych heksów. Użyj rgba() dla przezroczystych heksów, na przykład rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Kolor obramowania',
+        desc: 'Kolor konturu nowych heksów.',
+      },
+      labelColor: {
+        label: 'Kolor etykiety',
+        desc: 'Kolor etykiet z nazwami tylko dla GM na nazwanych heksach.',
+      },
+      glimpseColor: {
+        label: 'Kolor przebłysku',
+        desc: 'Kolor heksów zmienia się na po dostrzeżeniu (tryb ujawnienia przez spojrzenie). Użyj przezroczystego koloru rgba().',
+      },
+      strokeWidth: {
+        label: 'Szerokość obramowania',
+        desc: 'Szerokość konturu nowych heksów w pikselach (0 do 20).',
+      },
+      maxDistance: {
+        label: 'Odległość ujawnienia heksadecymalnego',
+        desc: 'Dotyczy to dobieranych heksów: żeton musi znajdować się w obrębie określonej liczby heksów, aby je odsłonić, bez względu na to, jak daleko sięga. Pozostaw puste bez ograniczeń.',
+      },
+      revealDistance: {
+        label: 'Odległość wzroku',
+        desc: 'Ile heksów wokół poruszającego się żetonu zostało odkrytych (od 0 do 20). 0 ujawnia tylko heksy, przez które przechodzi żeton.',
+      },
+      lineOfSight: {
+        label: 'Linia wzroku',
+        desc: 'Kiedy jest włączone, heks jest odkrywany tylko wtedy, gdy pomiędzy nim a żetonem nie leży żaden zakryty heks.',
+      },
+      revealPath: {
+        label: 'Odkryj wzdłuż ścieżki',
+        desc: 'Kiedy jest włączone, odkrywane jest każde pole, przez które przechodzi żeton podczas przeciągania (w tym punkty orientacyjne), a nie tylko miejsce, w którym się zatrzymuje.',
+      },
+      revealBy: {
+        label: 'Żetony, które ujawniają',
+        desc: 'Które żetony na warstwie żetonów odsłaniają heksy: żetony kontrolowane przez gracza, żetony reprezentujące dowolną postać lub każdy żeton.',
+      },
+      revealMode: {
+        label: 'Tryb ujawnienia',
+        desc: 'Clear usuwa heksy w zasięgu wzroku. Zamiast tego Glimpse sprawia, że ​​są przezroczyste; są usuwane, gdy wejdzie do nich żeton.',
+      },
+      announce: {
+        label: 'Ogłoś odkrycia',
+        desc: 'Kto widzi wiadomość na czacie po odkryciu nazwanej lokalizacji.',
+      },
+      pingDiscoveries: {
+        label: 'Odkrycia pingowe',
+        desc: 'Gdy ta opcja jest włączona, gracze są wysyłani sygnałem ping do nazwanej lokalizacji po jej wykryciu.',
+      },
+      hideCoveredTokens: {
+        label: 'Ukryj zakryte tokeny',
+        desc: 'Roll20 rysuje nazwy, słupki i aury nad heksami. Kiedy jest włączone, żetony pod zakrytym heksem mają widoczną dla gracza nazwę, paski i aury wyłączone i włączane ponownie, gdy zostaną odkryte.',
+      },
+    },
+    status: {
+      engine: 'Silnik gry',
+      grid: 'Siatka',
+      layer: 'Warstwa sześciokątna',
+      hexes: 'Heksy',
+      named: 'Nazwane heksy',
+      icons: 'Żetony lokalizacji',
+      glimpsed: 'Prześwietlone heksy',
+      pending: 'Lokalizacje oczekujące na zapełnienie',
+      calibrated: 'Kalibrowane',
+      overrides: 'Zastąpienia strony',
+      undo: 'Cofnij dostępne',
+    },
+    messages: {
+      filled:
+        'Wypełnienie zakończone. Wylosowane heksy: {created}. Zmiana stylu: {restyled}. Ukryte lokalizacje: {icons}.',
+      revealed: 'Ujawnione heksy: {count}.',
+      revealedPage: 'Każdy odkryty heks na stronie ({count}).',
+      confirmReset:
+        'Usunąć wszystkie heksy z „{page}” ({count})? Żetony lokalizacji wracają na warstwę żetonów. Opcja Cofnij nie może tego odwrócić.',
+      resetPage: 'Heksy usunięte ze strony: {count}.',
+      undone:
+        'Ostatnie wypełnienie nie zostało wykonane. Usunięte heksy: {removed}. Przywrócono nowe heksy: {restored}.',
+      named: 'Heksy o nazwie „{name}”: {count}.',
+      unnamed: 'Nazwy zostały usunięte: {count}.',
+      marked:
+        'Lokalizacje ukryte na istniejących heksach: {attached}. Czekam na następne wypełnienie, które je obejmuje: {pending}.',
+      unmarked: 'Tokeny, które nie są już lokalizacjami: {count}.',
+      settingChanged: '{setting} ustawiony na {value}.',
+      rescanned:
+        'Ponowne skanowanie zakończone. Zachowane: {kept}. Przyjęto: {adopted}. Zgłoszono ponownie: {moved}. Zaginione i zapomniane: {dropped}. Etykiety ponownie połączone: {labels}. Połączono ponownie tokeny lokalizacji: {icons}.',
+      calibrated:
+        'Skalibrowano siatkę (krok kolumny {colStep}px, krok wiersza {rowStep}px). Ponowne skanowanie: zachowane {kept}, ponownie złożone {moved}, przyjęte {adopted}.',
+      calibrationReset:
+        'Kalibracja usunięta. Ponowne skanowanie: zachowane {kept}, ponownie przesłane {moved}, przyjęte {adopted}.',
+      journalRebuilt: 'Przebudowano materiały informacyjne „{help}” i „{deck}”.',
+      migrated:
+        'Twoje heksowe mapy Heexploration 1.x zostały ulepszone. Jeśli ta gra została skopiowana z gry Legacy, uruchom ponowne skanowanie na każdej stronie mapy heksadecymalnej.',
+      pruned:
+        'Zapisane heksy, które już nie istnieją i zostały zapomniane: {dropped}. Jeśli ta gra lub strona została skopiowana, uruchom ponowne skanowanie strony, aby ponownie zebrać heksy.',
+      readyHint: 'Wpisz !hexploration w menu lub otwórz ulotkę „Hexploration – Talia poleceń”.',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Ta gra nie obsługuje rysowania na warstwie pierwszego planu, więc heksy zostały narysowane na warstwie żetonów.',
+      someFailed:
+        'Heksy, których nie można narysować: {count}. Aby uzyskać szczegółowe informacje, sprawdź konsolę API.',
+    },
+    errors: {
+      noPage: 'Nie udało się znaleźć strony, nad którą można pracować.',
+      notHex: 'Na tej stronie nie jest używana siatka szesnastkowa.',
+      noPolygons: 'Wybierz jeden lub więcej narysowanych kształtów do wypełnienia.',
+      emptyArea: 'Wybrany obszar nie zawiera żadnych środków heksadecymalnych.',
+      tooMany: 'Spowodowałoby to utworzenie zbyt wielu heksów za jednym razem ({count}).',
+      nothingToConceal: 'Wybierz narysowane kształty lub żetony do ukrycia.',
+      nothingToReveal: 'Wybierz heksy, narysowane kształty lub żetony do odsłonięcia.',
+      noTokens: 'Najpierw wybierz jeden lub więcej tokenów.',
+      noHexes: 'Najpierw wybierz jeden lub więcej heksów (lub żetonów stojących na heksach).',
+      nothingToUndo: 'Nie ma wypełnienia, które można cofnąć.',
+      unknownCommand: 'Nieznane polecenie: {command}',
+      unknownSetting: 'Nieznane ustawienie: {key}',
+      unknownPageSetting: 'Ustawienia, które można ustawić na stronie: {keys}',
+      invalidValue: '„{value}” nie jest prawidłową wartością dla {key}.',
+      calibrateNeedsTokens: 'Wybierz jeden lub dwa żetony przyciągnięte do środków heksów.',
+      calibrateFailed: 'Tych tokenów nie można używać do kalibracji.',
+      unexpected: 'Coś poszło nie tak: {message}',
+    },
+    hints: {
+      noPage: 'Otwórz stronę, nad którą chcesz pracować, lub wybierz coś na niej.',
+      notHex: 'Ustaw siatkę strony na Hex (V) lub Hex (H) w Ustawieniach strony.',
+      noPolygons:
+        'Narysuj wielokąt, prostokąt, elipsę lub odręczny kształt wokół obszaru, zaznacz go i spróbuj ponownie.',
+      emptyArea: 'Narysuj większy kształt lub sprawdź ustawienia siatki strony.',
+      tooMany: 'Wypełnij mniejszy obszar lub podziel obszar na kilka kształtów.',
+      noHexes:
+        'Heksy znajdują się na pierwszym planie lub w warstwie żetonów; przejdź do tej warstwy, aby je wybrać.',
+      unknownCommand: 'Wpisz !hexploration help, aby wyświetlić listę poleceń.',
+      unknownSetting: 'Wpisz !hexploration set, aby zobaczyć wszystkie ustawienia.',
+      calibrateNeedsTokens:
+        'Przyciągnij żeton do środka heksa i wybierz go. Wybierz drugi żeton przyciągnięty do sąsiedniego heksu w tym samym rzędzie (Hex V) lub kolumnie (Hex H), aby również skorygować rozmiar heksa.',
+      calibrateFailed:
+        'Dwa żetony muszą znajdować się w tym samym rzędzie (Hex V) lub w tej samej kolumnie (Hex H), w odległości co najmniej jednego heksa od siebie.',
+      unexpected: 'Szczegóły znajdują się w dzienniku konsoli API.',
+    },
+    help: {
+      menu: 'Pokaż menu.',
+      fill: 'Zakryj wybrane narysowane kształty heksami.',
+      fillInverse: 'Zakryj całą stronę z wyjątkiem wnętrza wybranych kształtów.',
+      undo: 'Cofnij ostatnie wypełnienie, odwróć wypełnienie lub ukryj i przywróć używane kształty.',
+      reveal: 'Odsłoń wybrane heksy oraz heksy pod wybranymi kształtami i żetonami.',
+      revealPage: 'Odkryj każdy heks na stronie bez ogłoszeń.',
+      conceal: 'Ponownie zakryj obszar pod wybranymi kształtami i żetonami heksami.',
+      explore: 'Odsłoń wokół wybranych żetonów tak, jakby właśnie się tam przesunęły.',
+      resetPage: 'Usuń wszystkie heksy na stronie (najpierw pyta).',
+      name: 'Nazwij wybrane heksy lub heksy pod wybranymi żetonami. Pozostaw nazwę pustą, aby ją wyczyścić.',
+      mark: 'Zamień wybrane żetony w ukryte lokalizacje.',
+      unmark: 'Zatrzymaj wybrane tokeny jako ukryte lokalizacje.',
+      set: 'Zmień ustawienie lub pokaż wszystkie ustawienia.',
+      pageSet: 'Zastąp ustawienie odkrywania tylko na bieżącej stronie.',
+      pageClear: 'Usuń zastąpienia bieżącej strony.',
+      rescan: 'Odbuduj listę szesnastkową strony, na przykład po skopiowaniu strony lub gry.',
+      calibrate:
+        'Wyrównaj siatkę heksów jednym lub dwoma wybranymi żetonami przyczepionymi do środków heksów.',
+      calibrateReset: 'Usuń kalibrację bieżącej strony.',
+      status: 'Pokaż, co Heexploration wie o bieżącej stronie.',
+      journal: 'Odbuduj materiały informacyjne dotyczące talii pomocy i dowodzenia.',
+      help: 'Pokaż tę listę.',
+      handout: 'Pełne instrukcje znajdują się w ulotce „{name}”.',
+    },
+    deck: {
+      subtitle: 'Pokład dowodzenia',
+      drawDesc:
+        'Narysuj kształty wokół obszaru, zaznacz je, a następnie wypełnij. Cofnij odwraca ostatnie wypełnienie.',
+      revealDesc:
+        'Wybierz heksy, kształty lub żetony, aby ponownie je odkryć lub zakryć. Przeglądaj odkrycia wokół wybranych żetonów, tak jakby się poruszyły.',
+      locationsDesc:
+        'Wybierz żetony, aby ukryć je jako lokalizacje pod heksami. Wybierz heksy lub żetony, aby nazwać heks.',
+      toolsDesc:
+        'Ustawienia, nadpisania stron, status, ponowne skanowanie skopiowanych stron i kalibracja siatki.',
+      footer: 'Pełne instrukcje znajdziesz w ulotce „{help}”.',
+    },
+    handout: {
+      versionLabel: 'Wersja',
+      subtitle: 'Eksploracja heks po heksie dla Roll20',
+      footer:
+        'Skorzystaj z materiałów informacyjnych „{deck}”, aby uzyskać informacje na temat elementów sterujących jednym kliknięciem.',
+      overview: {
+        heading: 'Przegląd',
+        body: 'Heksploracja obejmuje mapę heksów nieprzezroczystymi heksami. Gdy drużyna się porusza, heksy, przez które przechodzi (oraz, jeśli wolisz, heksy wokół niej) są usuwane, więc mapa jest odkrywana heks po heksie. Ukryte lokalizacje można umieszczać pod heksami i ogłaszać je po ich znalezieniu. Działa w grach Jumpgate i Legacy, na siatkach Hex (V) i Hex (H) o dowolnym rozmiarze.',
+        demo: 'Obejrzyj krótkie demo (od wersji 1)',
+      },
+      quickStart: {
+        heading: 'Szybki start',
+        steps: [
+          'Otwórz stronę, której siatka jest ustawiona na Hex (V) lub Hex (H).',
+          'Narysuj jeden lub więcej kształtów (wielokąt, prostokąt, elipsa lub odręcznie) wokół obszaru, który chcesz ukryć.',
+          'Wybierz kształty i kliknij Wypełnij talię poleceń (lub wpisz !hexploration fill). Kształty są zastępowane przez heksy.',
+          'Opcjonalnie: przed wypełnieniem wybierz żetony dla ważnych miejsc i kliknij Zaznacz lokalizację. Są ukryte pod heksami i ogłaszane po odkryciu.',
+          'Przesuń żeton gracza. Każdy heks, przez który przechodzi, oraz heks w zasięgu jego wzroku, zostają ujawnione.',
+        ],
+      },
+      commands: {
+        heading: 'Polecenia',
+        intro:
+          'Tylko MG mogą używać tych poleceń. Większość działa na wybrane obiekty; reszta działa na stronie, którą przeglądasz.',
+        colCommand: 'Rozkaz',
+        colDesc: 'Co to robi',
+      },
+      revealing: {
+        heading: 'Jak działa odkrywanie',
+        points: [
+          'Tylko żetony na warstwie żetonów ujawniają heksy. Liczba żetonów jest ustalana przez Tokeny, które ujawniają: domyślnie są to żetony graczy, więc MG może przesuwać potwory bez odkrywania mapy.',
+          'Żeton odkrywa każdy heks, który obejmuje (duże żetony obejmują kilka), a przy włączonej opcji „Odkryj wzdłuż ścieżki” każdy heks na trasie, po której został przeciągnięty, łącznie z punktami orientacyjnymi.',
+          'Odległość wzroku ujawnia heksy wokół każdego z tych heksów. Gdy pole widzenia jest włączone, heks zostaje ujawniony tylko wtedy, gdy pomiędzy nim nie znajduje się żaden zakryty heks.',
+          'Odległość ujawnienia heksów jest zapisywana na heksach w miarę ich rysowania. Te heksy są odkrywane tylko z określonej liczby heksów, niezależnie od tego, jak daleko sięga żeton. Używaj go do gór lub lasów, które ukrywają to, co jest za nimi.',
+          'W trybie Przejrzenia heksy w zasięgu wzroku stają się przezroczyste zamiast znikać i są usuwane, gdy wejdzie na nie żeton.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          'API nie raportuje ruchów wykonanych przez inne mody. Ruchy TokenMod są pobierane automatycznie; w przypadku innych modów wybierz tokeny i kliknij Eksploruj lub wywołaj Hexploration.revealAround(token) z własnego moda.',
+        ],
+      },
+      locations: {
+        heading: 'Nazwane heksy i lokalizacje',
+        points: [
+          'Oznacz lokalizację zamienia wybrane żetony w ukryte lokalizacje. Żeton znajdujący się już pod heksem jest natychmiast ukrywany; w przeciwnym razie zostanie ukryty przez następne wypełnienie, które je zakrywa.',
+          'Żetony ze znacznikiem stanu białej wieży są również traktowane jako lokalizacje podczas zapełniania, tak jak w wersji 1.',
+          'Żetony ukrytych lokalizacji są przenoszone na warstwę GM. Kiedy ich heks zostanie odkryty, wracają na warstwę żetonów z pokazaną nazwą i ogłaszają swoje odkrycie.',
+          'Nazwa Heks nadaje heksowi nazwę bez żetonu. Nazwa jest pokazywana MG jako etykieta na warstwie GM i ogłaszana po odkryciu heksu.',
+          'Announce Discoveries decyduje, czy wszyscy, tylko GM, czy nikt nie zobaczy ogłoszenia. Ping Discoveries przenosi także widok graczy na lokalizację.',
+        ],
+      },
+      settings: {
+        heading: 'Ustawienia',
+        intro:
+          'Zmień ustawienia za pomocą zestawu !hexploration (lub przycisku Ustawienia). Warstwa heksów, ujawniające tokeny i język można również ustawić na stronie ustawień moda.',
+        colKey: 'Klawisz',
+        colName: 'Ustawienie',
+        colDesc: 'Opis',
+        perPage: '(Można ustawić na stronę.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate i Dziedzictwo',
+        points: [
+          'Heexploration sprawdza, z jakiego silnika korzysta gra, i rysuje odpowiedni kształt. Kształty narysowane w dowolnym edytorze można wypełnić.',
+          'Gdy warstwa heksów jest ustawiona na wartość Auto, heksy są rysowane na warstwie pierwszego planu, nad żetonami, więc gracze nie widzą, co jest pod spodem. Jeśli warstwa pierwszego planu nie jest dostępna, zamiast niej używana jest warstwa tokenów.',
+          'Jumpgate rysuje matematycznie regularne heksy, które mają nieco inny kształt niż heksy Legacy. Jeśli heksy nie pokrywają się z siatką strony, przyciągnij żeton do środka heksa, wybierz go i kliknij Kalibruj. Wybierz dwa żetony na sąsiednich heksach tego samego rzędu (Hex V) lub kolumny (Hex H), aby również skorygować rozmiar heksaksu.',
+          'Kiedy strona lub gra zostanie skopiowana, jej heksy otrzymują nowe identyfikatory. Uruchom ponownie skanowanie na stronie, aby je ponownie zebrać wraz z etykietami z nazwami i tokenami lokalizacji.',
+        ],
+      },
+      upgrading: {
+        heading: 'Aktualizacja z wersji 1',
+        points: [
+          'Wersja 2 nie potrzebuje już PathMath, MatrixMath, Vector Math ani HTML Builder. Możesz je usunąć, chyba że użyje ich inny mod.',
+          'Istniejące mapy heksów, nazwy, tokeny lokalizacji i ustawienia są aktualizowane automatycznie przy pierwszym uruchomieniu.',
+          'Polecenia wersji 1, w tym makro Heexploration_menu, nadal działają.',
+          'Wersja 1 pozwala, aby dowolny żeton reprezentujący postać ujawniał heksy. Ustaw żetony, które ujawniają, na żetony postaci, aby zachować to zachowanie.',
+        ],
+        colV1: 'Polecenie wersji 1',
+        colV2: 'Polecenie wersji 2',
+      },
+      troubleshooting: {
+        heading: 'Rozwiązywanie problemów',
+        points: [
+          'Nic się nie dzieje, gdy token się porusza: sprawdź, czy token znajduje się na warstwie tokenów i pasuje do Tokenów, które ujawniają, oraz czy strona ma heksy (status!hexploration).',
+          'Heksy są przesunięte względem siatki: użyj opcji Kalibruj, a następnie sprawdź za pomocą żetonu na kilku heksach na mapie.',
+          'Heksy przestały się ujawniać po skopiowaniu strony lub gry: uruchom ponownie skanowanie na stronie.',
+          'Wypełnienie mówi, że obszar nie ma środków heksów: kształt musi zawierać środek co najmniej jednego heksa.',
+          'W innych przypadkach sprawdź dziennik konsoli API i dołącz zawarte w nim komunikaty, prosząc o pomoc.',
+        ],
+      },
+      languages: {
+        heading: 'Języki',
+        body: 'Wybierz język z ustawionym językiem !hexploration. Dostępne języki:',
+      },
+      credits: {
+        heading: 'Kredyty',
+        original: 'Oryginalny mod autorstwa',
+        maintainer: 'Wersja 2 obsługiwana przez',
+        marketplace: 'Pakiety grafik Ady na Roll20 Marketplace',
+        support:
+          'Jeśli znajdziesz błąd lub masz pomysł, opublikuj post na forum Roll20 Mod lub otwórz problem w GitHub i dołącz wszelkie komunikaty z dziennika konsoli API.',
+      },
+    },
+  };
 
-  var localePtPT = {};
+  const TRANSLATION$6 = {
+    titles: {
+      ready: 'A Hexploração está pronta.',
+      settings: 'Configurações de exploração',
+      languages: 'Escolha um idioma',
+      pageSettings: 'Definições da página: {page}',
+      status: 'Estado de exploração: {page}',
+      help: 'Comandos de Hexploração',
+      confirm: 'Por favor confirme',
+    },
+    discovery: {
+      title: 'Localização descoberta',
+    },
+    menu: {
+      draw: 'Desenhar',
+      reveal: 'Revelar e ocultar',
+      locations: 'Locais',
+      tools: 'Ferramentas',
+      layerInUse: 'Novos hexágonos estão a ser desenhados em {layer}.',
+      pageSettingsHelp:
+        'Estas definições aplicam-se somente a esta página. As definições marcadas com ★ substituem as definições globais.',
+    },
+    buttons: {
+      fill: 'Preencher',
+      fillInverse: 'Preenchimento Inverso',
+      undo: 'Desfazer preenchimento',
+      reveal: 'Revelar',
+      conceal: 'Esconder',
+      explore: 'Explorar',
+      revealPage: 'Revelar página',
+      resetPage: 'Redefinir página',
+      mark: 'Marcar localização',
+      unmark: 'Desmarcar',
+      name: 'Nome hexadecimal',
+      settings: 'Configurações',
+      pageSettings: 'Configurações de página',
+      status: 'Estatuto',
+      rescan: 'Digitalizar novamente',
+      calibrate: 'Calibrar',
+      calibrateReset: 'Redefinir calibração',
+      help: 'Ajuda',
+      change: 'Mudar',
+      menu: 'Menu',
+      clearOverrides: 'Limpar substituições',
+      confirmReset: 'Sim, remover todos os hexágonos',
+    },
+    prompts: {
+      name: 'Nome do local (deixar em branco para limpar)',
+    },
+    values: {
+      on: 'Em',
+      off: 'Desligado',
+      none: 'Nenhum',
+      hexLayer: {
+        auto: 'Automático (primeiro plano, se disponível)',
+        foreground: 'camada de primeiro plano',
+        objects: 'camada de token',
+      },
+      revealBy: {
+        players: 'Tokens de jogador',
+        characters: 'Fichas de personagem',
+        all: 'Todos os tokens',
+      },
+      revealMode: {
+        clear: 'Claro',
+        glimpse: 'Relance',
+      },
+      announce: {
+        all: 'Toda a gente',
+        gm: 'Apenas GM',
+        off: 'Desligado',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Preencher',
+        fillInverse: 'Preenchimento Inverso',
+        conceal: 'Esconder',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Idioma',
+        desc: 'Idioma para menus, mensagens e folhetos.',
+      },
+      hexLayer: {
+        label: 'Camada hexadecimal',
+        desc: 'Onde são desenhados novos hexágonos. O Auto tenta a camada de primeiro plano (acima dos tokens) e volta à camada de tokens se o jogo não o suportar.',
+      },
+      fillColor: {
+        label: 'Cor de preenchimento',
+        desc: 'Cor dos novos hexágonos. Utilize rgba() para hexágonos transparentes, por exemplo rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Cor da borda',
+        desc: 'Cor do contorno dos novos hexágonos.',
+      },
+      labelColor: {
+        label: 'Cor da etiqueta',
+        desc: 'Cor dos rótulos de nomes exclusivos do GM em hexágonos nomeados.',
+      },
+      glimpseColor: {
+        label: 'Vislumbre de cor',
+        desc: 'Os hexágonos coloridos mudam para quando vislumbrados (modo de revelação de vislumbre). Utilize uma cor rgba() transparente.',
+      },
+      strokeWidth: {
+        label: 'Largura da borda',
+        desc: 'Largura do contorno dos novos hexágonos, em pixéis (0 a 20).',
+      },
+      maxDistance: {
+        label: 'Distância de revelação hexadecimal',
+        desc: 'Aplicado aos hexágonos à medida que são desenhados: uma ficha deve estar dentro deste número de hexágonos para os revelar, por mais longe que possa ver. Deixe em branco sem limite.',
+      },
+      revealDistance: {
+        label: 'Distância de visão',
+        desc: 'Quantos hexágonos em redor de uma ficha em movimento são revelados (0 a 20). 0 revela apenas os hexágonos pelos quais o token passa.',
+      },
+      lineOfSight: {
+        label: 'Linha de visão',
+        desc: 'Quando ativado, um hexágono só é revelado se nenhum hexágono coberto estiver entre ele e a ficha.',
+      },
+      revealPath: {
+        label: 'Revelar ao longo do percurso',
+        desc: 'Quando ativado, cada hexágono que uma ficha passa enquanto é arrastada (incluindo pontos de passagem) é revelado, e não apenas onde pára.',
+      },
+      revealBy: {
+        label: 'Tokens que revelam',
+        desc: 'Quais as fichas na camada de fichas que revelam hexágonos: fichas controladas por um jogador, fichas que representam qualquer personagem ou todas as fichas.',
+      },
+      revealMode: {
+        label: 'Modo de revelação',
+        desc: 'Limpar remove os hexágonos à vista. O vislumbre torna-os transparentes; são removidos quando um token entra neles.',
+      },
+      announce: {
+        label: 'Anuncie descobertas',
+        desc: 'Quem vê a mensagem do chat quando um local nomeado é descoberto.',
+      },
+      pingDiscoveries: {
+        label: 'Descobertas de ping',
+        desc: 'Quando ativado, os jogadores recebem um ping para um local nomeado quando este é descoberto.',
+      },
+      hideCoveredTokens: {
+        label: 'Ocultar tokens cobertos',
+        desc: 'Roll20 desenha nomes, barras e auras por cima dos hexágonos. Quando ativado, os tokens sob um hexágono coberto têm o seu nome, barras e auras visíveis para o jogador desligados e ligados novamente quando são descobertos.',
+      },
+    },
+    status: {
+      engine: 'Motor de jogo',
+      grid: 'Rede',
+      layer: 'Camada hexadecimal',
+      hexes: 'Feitiços',
+      named: 'Hexágonos nomeados',
+      icons: 'Fichas de localização',
+      glimpsed: 'Feitiços vislumbrados',
+      pending: 'Locais a aguardar preenchimento',
+      calibrated: 'Calibrado',
+      overrides: 'Substituições de página',
+      undo: 'Desfazer disponível',
+    },
+    messages: {
+      filled:
+        'Preenchimento completo. Hexágonos desenhados: {created}. Reestilizado: {restyled}. Locais escondidos: {icons}.',
+      revealed: 'Feitiços revelados: {count}.',
+      revealedPage: 'Cada hexágono da página revelado ({count}).',
+      confirmReset:
+        'Remover todos os hexadecimais de "{page}" ({count})? Os tokens de localização regressam à camada de tokens. Desfazer não pode reverter isso.',
+      resetPage: 'Hexágonos removidos da página: {count}.',
+      undone:
+        'Último preenchimento desfeito. Hexágonos removidos: {removed}. Hexágonos reestilizados restaurados: {restored}.',
+      named: 'Hexágonos denominados "{name}": {count}.',
+      unnamed: 'Nomes apagados: {count}.',
+      marked:
+        'Locais escondidos em hexágonos existentes: {attached}. Aguardam o próximo enchimento que os cobre: ​​​​{pending}.',
+      unmarked: 'Tokens que já não são locais: {count}.',
+      settingChanged: '{setting} definido como {value}.',
+      rescanned:
+        'Nova verificação concluída. Mantido: {kept}. Adoptado: {adopted}. Arquivado novamente: {moved}. Ausente e esquecido: {dropped}. Rótulos novamente ligados: {labels}. Tokens de localização novamente ligados: {icons}.',
+      calibrated:
+        'Grelha calibrada (etapa de coluna {colStep}px, etapa de linha {rowStep}px). Nova análise: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      calibrationReset:
+        'Calibração removida. Nova análise: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      journalRebuilt: 'Os folhetos "{help}" e "{deck}" foram reconstruídos.',
+      migrated:
+        'Os seus mapas hexadecimais do Hexploration 1. x foram atualizados. Se este jogo foi copiado de um jogo Legacy, execute Rescan em cada página do mapa hexadecimal.',
+      pruned:
+        'Hexágonos salvos que já não existem e foram esquecidos: {dropped}. Se este jogo ou página tiver sido copiado, execute uma nova verificação na página para recuperar os seus hexágonos novamente.',
+      readyHint: 'Digite !hexploration no menu ou abra o folheto "Hexploration - Command Deck".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Este jogo não suporta o desenho na camada de primeiro plano, pelo que foram desenhados hexágonos na camada de tokens.',
+      someFailed:
+        'Hexágonos que não puderam ser desenhados: {count}. Verifique a consola da API para obter detalhes.',
+    },
+    errors: {
+      noPage: 'Não foi possível encontrar a página para trabalhar.',
+      notHex: 'Esta página não utiliza uma grelha hexadecimal.',
+      noPolygons: 'Selecione uma ou mais formas desenhadas para preencher.',
+      emptyArea: 'A área selecionada não contém centros hexadecimais.',
+      tooMany: 'Isto criaria muitos hexágonos de uma só vez ({count}).',
+      nothingToConceal: 'Selecione formas desenhadas ou fichas para ocultar.',
+      nothingToReveal: 'Selecione hexágonos, formas desenhadas ou fichas para revelar.',
+      noTokens: 'Selecione primeiro um ou mais tokens.',
+      noHexes: 'Selecione primeiro um ou mais hexágonos (ou fichas sobre hexágonos).',
+      nothingToUndo: 'Não há enchimento para desfazer.',
+      unknownCommand: 'Comando desconhecido: {command}',
+      unknownSetting: 'Configuração desconhecida: {key}',
+      unknownPageSetting: 'Configurações que podem ser definidas por página: {keys}',
+      invalidValue: '"{value}" não é um valor válido para {key}.',
+      calibrateNeedsTokens: 'Selecione um ou dois tokens encaixados nos centros hexadecimais.',
+      calibrateFailed: 'Estes tokens não podem ser utilizados para calibrar.',
+      unexpected: 'Algo correu mal: {message}',
+    },
+    hints: {
+      noPage: 'Abra a página na qual pretende trabalhar ou selecione algo da mesma.',
+      notHex: 'Defina a grelha da página para Hex (V) ou Hex (H) nas Definições da página.',
+      noPolygons:
+        'Desenhe um polígono, retângulo, elipse ou forma à mão livre à volta da área, selecione-o e tente novamente.',
+      emptyArea: 'Desenhe uma forma maior ou verifique as definições da grelha da página.',
+      tooMany: 'Preencha uma área mais pequena ou divida a área em várias formas.',
+      noHexes:
+        'Os hexágonos estão no primeiro plano ou na camada de tokens; mude para essa camada para os selecionar.',
+      unknownCommand: 'Introduza !hexploration help para listar os comandos.',
+      unknownSetting: 'Digite !hexploration set para ver todas as definições.',
+      calibrateNeedsTokens:
+        'Encaixe um token no centro de um hexágono e seleccione-o. Selecione um segundo token ajustado a um hexadecimal vizinho na mesma linha (Hex V) ou coluna (Hex H) para corrigir também o tamanho hexadecimal.',
+      calibrateFailed:
+        'Dois tokens devem estar na mesma linha (Hex V) ou na mesma coluna (Hex H), separados por pelo menos um hexadecimal.',
+      unexpected: 'Os detalhes estão no log da consola da API.',
+    },
+    help: {
+      menu: 'Mostre o menu.',
+      fill: 'Cubra as formas desenhadas selecionadas com hexágonos.',
+      fillInverse: 'Cubra a página inteira, exceto dentro das formas selecionadas.',
+      undo: 'Desfaça o último enchimento, inverta o enchimento ou ocultar e restaure as formas utilizadas.',
+      reveal:
+        'Revele os hexágonos selecionados e os hexágonos sob as formas e fichas selecionadas.',
+      revealPage: 'Revele cada hexágono da página sem anúncios.',
+      conceal: 'Cubra a área sob as formas e fichas selecionadas com hexágonos novamente.',
+      explore: 'Revele os tokens selecionados como se tivessem acabado de se mudar para lá.',
+      resetPage: 'Remova todos os hexadecimais da página (pergunta primeiro).',
+      name: 'Nomeie os hexágonos selecionados ou os hexágonos sob os tokens selecionados. Deixe o nome vazio para o limpar.',
+      mark: 'Transforme os tokens selecionados em locais ocultos.',
+      unmark: 'Impede que os tokens selecionados sejam locais ocultos.',
+      set: 'Altere uma definição ou mostre todas as definições.',
+      pageSet: 'Substituir uma configuração de revelação apenas na página atual.',
+      pageClear: 'Remova as substituições da página atual.',
+      rescan:
+        'Reconstrua a lista hexadecimal da página, por exemplo, após copiar uma página ou jogo.',
+      calibrate:
+        'Alinhe a grelha hexadecimal com um ou dois tokens selecionados encaixados nos centros hexadecimais.',
+      calibrateReset: 'Remova a calibração da página atual.',
+      status: 'Mostre o que o Hexploration sabe sobre a página atual.',
+      journal: 'Reconstrua os folhetos da Ajuda e da Plataforma de Comando.',
+      help: 'Mostre esta lista.',
+      handout: 'As instruções completas estão no folheto "{name}".',
+    },
+    deck: {
+      subtitle: 'Convés de Comando',
+      drawDesc:
+        'Desenhe formas à volta de uma área, selecione-as e preencha. Desfazer reverte o último enchimento.',
+      revealDesc:
+        'Selecione hexágonos, formas ou fichas para os revelar ou cobrir novamente. Explore as revelações em torno dos tokens selecionados como se se tivessem movido.',
+      locationsDesc:
+        'Selecione fichas para as ocultar como locais sob hexágonos. Selecione hexágonos ou tokens para nomear um hexágono.',
+      toolsDesc:
+        'Definições, substituições de páginas, estado, nova digitalização de páginas copiadas e calibração da grelha.',
+      footer: 'Consulte o folheto "{help}" para obter as instruções completas.',
+    },
+    handout: {
+      versionLabel: 'Versão',
+      subtitle: 'Exploração hexadecimal para Roll20',
+      footer: 'Utilize o folheto "{deck}" para controlos de um clique.',
+      overview: {
+        heading: 'Visão geral',
+        body: 'Hexploração cobre um mapa hexadecimal com hexágonos opacos. À medida que o grupo se move, os hexágonos por onde passam (e, se preferir, os hexágonos à sua volta) são removidos, pelo que o mapa é descoberto um hexágono de cada vez. Os locais ocultos podem ser colocados em hexágonos e são anunciados quando encontrados. Funciona em jogos Jumpgate e Legacy, em grelhas Hex (V) e Hex (H) de qualquer tamanho.',
+        demo: 'Assista a uma breve demonstração (da versão 1)',
+      },
+      quickStart: {
+        heading: 'Início rápido',
+        steps: [
+          'Abra uma página cuja grelha esteja definida para Hex (V) ou Hex (H).',
+          'Desenhe uma ou mais formas (polígono, retângulo, elipse ou à mão livre) à volta da área a ocultar.',
+          'Selecione as formas e clique em Preencher no painel de comandos (ou escreva !hexploration fill). As formas são substituídas por hexágonos.',
+          'Opcional: antes de preencher, selecione tokens de locais importantes e clique em Marcar Localização. Estão escondidos sob os hexágonos e anunciados quando descobertos.',
+          'Mover uma ficha de jogador. Cada hexágono que ele passa e os hexágonos dentro da sua Distância de Visão são revelados.',
+        ],
+      },
+      commands: {
+        heading: 'Comandos',
+        intro:
+          'Apenas os GMs podem usar estes comandos. A maioria atua sobre os objetos selecionados; o resto atua na página que está a visualizar.',
+        colCommand: 'Comando',
+        colDesc: 'O que faz',
+      },
+      revealing: {
+        heading: 'Como funciona a revelação',
+        points: [
+          'Apenas os tokens na camada de tokens revelam hexágonos. A contagem de fichas é definida por Tokens That Reveal: fichas de jogador por defeito, para que o Mestre possa mover monstros sem descobrir o mapa.',
+          'Uma ficha revela cada hexágono que cobre (as fichas grandes cobrem vários) e, com Revelar ao longo do caminho ativado, cada hexágono na rota pela qual foi arrastado, incluindo pontos de referência.',
+          'A Distância de Visão revela os hexágonos em torno de cada um destes hexágonos. Com a Linha de Visão ativada, um hexágono só é revelado se não existir nenhum hexágono coberto entre eles.',
+          'A distância de revelação hexadecimal é armazenada em hexadecimais à medida que são desenhados. Estes hexágonos só são revelados dentro desse número de hexágonos, por mais longe que uma ficha consiga ver. Utilize-o para montanhas ou florestas que escondem o que está por trás delas.',
+          'No modo Glimpse, os hexágonos à vista tornam-se transparentes em vez de desaparecerem e são removidos quando uma ficha entra neles.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          'A API não reporta movimentos feitos por outros mods. Os movimentos do TokenMod são captados automaticamente; para outros mods, selecione os tokens e clique em Explorar ou chame Hexploration.revealAround(token) do seu próprio mod.',
+        ],
+      },
+      locations: {
+        heading: 'Hexes e locais nomeados',
+        points: [
+          'O Mark Location transforma os tokens selecionados em locais escondidos. Uma ficha que já esteja sob um hexágono é imediatamente ocultada; caso contrário, ficará oculto pelo próximo enchimento que o cobrir.',
+          'Os tokens com o marcador de estado da torre branca também são tratados como locais quando preenche, como na versão 1.',
+          'As fichas de localização oculta são movidas para a camada GM. Quando o seu hexágono é revelado, regressam à camada de token com o seu nome mostrado e a sua descoberta é anunciada.',
+          'Name Hex dá um nome hexadecimal sem um token. O nome é mostrado ao GM como um rótulo na camada do GM e anunciado quando o hexágono é revelado.',
+          'Anunciar Descobertas escolhe se todos, apenas o GM, ou ninguém verá o anúncio. O Ping Discoveries também move a visão dos jogadores para o local.',
+        ],
+      },
+      settings: {
+        heading: 'Configurações',
+        intro:
+          'Altere as definições com !hexploration set (ou o botão Definições). A camada hexadecimal, os tokens que revelam e o idioma também podem ser definidos na página de definições do Mod.',
+        colKey: 'Chave',
+        colName: 'Definição',
+        colDesc: 'Descrição',
+        perPage: '(Pode ser definido por página.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate e Legado',
+        points: [
+          'Hexploration descobre qual o motor que o jogo utiliza e desenha o tipo de forma correspondente. As formas desenhadas em qualquer editor podem ser preenchidas.',
+          'Com a camada hexadecimal definida como Automático, os hexágonos são desenhados na camada de primeiro plano, acima dos tokens, para que os jogadores não consigam ver o que está por baixo. Se a camada de primeiro plano não estiver disponível, será utilizada a camada de token.',
+          'Jumpgate desenha hexágonos matematicamente regulares, que têm uma forma ligeiramente diferente dos hexágonos Legacy. Se os hexágonos não estiverem alinhados com a grelha da página, encaixe um token num centro hexadecimal, seleccione-o e clique em Calibrar. Selecione dois tokens em hexágonos vizinhos da mesma linha (Hex V) ou coluna (Hex H) para corrigir também o tamanho hexadecimal.',
+          'Quando uma página ou jogo é copiado, os seus hexágonos recebem novos IDs. Execute Rescan na página para os voltar a apanhar, juntamente com os seus rótulos de nome e tokens de localização.',
+        ],
+      },
+      upgrading: {
+        heading: 'Atualização da versão 1',
+        points: [
+          'A versão 2 já não precisa de PathMath, MatrixMath, Vector Math ou HTML Builder. Pode removê-los, a menos que outro mod os utilize.',
+          'Os mapas hexadecimais, os nomes, os tokens de localização e as definições existentes são atualizados automaticamente na primeira inicialização.',
+          'Os comandos da versão 1, incluindo a macro Hexploration_menu, ainda funcionam.',
+          'A versão 1 permitia que qualquer token que representasse uma personagem revelasse hexágonos. Defina os Tokens que Revelam como tokens de Personagem para manter este comportamento.',
+        ],
+        colV1: 'Comando da versão 1',
+        colV2: 'Comando da versão 2',
+      },
+      troubleshooting: {
+        heading: 'Solução de problemas',
+        points: [
+          'Nada acontece quando um token se move: verifique se o token está na camada de token e corresponde aos Tokens That Reveal e se a página tem hexágonos (status !hexploration).',
+          'Os hexágonos são deslocados da grelha: usa Calibrar e verifica com um token alguns hexágonos no mapa.',
+          'Os hexágonos deixaram de ser revelados após copiar uma página ou jogo: execute uma nova verificação na página.',
+          'Fill diz que a área não tem centros hexadecimais: a forma deve conter o centro de pelo menos um hexadecimal.',
+          'Para qualquer outra coisa, verifique o registo da consola da API e inclua as suas mensagens ao pedir ajuda.',
+        ],
+      },
+      languages: {
+        heading: 'Idiomas',
+        body: 'Escolha um idioma com !hexploration set language. Idiomas disponíveis:',
+      },
+      credits: {
+        heading: 'Créditos',
+        original: 'Mod original de',
+        maintainer: 'Versão 2 mantida pela',
+        marketplace: 'Pacotes de arte de Ada no Roll20 Marketplace',
+        support:
+          'Se encontrar um bug ou tiver uma ideia, publique no fórum Roll20 Mod ou abra um problema no GitHub e inclua quaisquer mensagens do registo da consola da API.',
+      },
+    },
+  };
 
-  var localePtBR = {};
+  const TRANSLATION$5 = {
+    titles: {
+      ready: 'A Hexploração está pronta.',
+      settings: 'Configurações de exploração',
+      languages: 'Escolha um idioma',
+      pageSettings: 'Configurações da página: {page}',
+      status: 'Status de exploração: {page}',
+      help: 'Comandos de Hexploração',
+      confirm: 'Por favor confirme',
+    },
+    discovery: {
+      title: 'Localização descoberta',
+    },
+    menu: {
+      draw: 'Empate',
+      reveal: 'Revelar e ocultar',
+      locations: 'Locais',
+      tools: 'Ferramentas',
+      layerInUse: 'Novos hexágonos estão sendo desenhados em {layer}.',
+      pageSettingsHelp:
+        'Essas configurações se aplicam somente a esta página. As configurações marcadas com ★ substituem as configurações globais.',
+    },
+    buttons: {
+      fill: 'Preencher',
+      fillInverse: 'Preenchimento Inverso',
+      undo: 'Desfazer preenchimento',
+      reveal: 'Revelar',
+      conceal: 'Esconder',
+      explore: 'Explorar',
+      revealPage: 'Revelar página',
+      resetPage: 'Redefinir página',
+      mark: 'Marcar localização',
+      unmark: 'Desmarcar',
+      name: 'Nome hexadecimal',
+      settings: 'Configurações',
+      pageSettings: 'Configurações de página',
+      status: 'Status',
+      rescan: 'Digitalizar novamente',
+      calibrate: 'Calibrar',
+      calibrateReset: 'Redefinir calibração',
+      help: 'Ajuda',
+      change: 'Mudar',
+      menu: 'Menu',
+      clearOverrides: 'Limpar substituições',
+      confirmReset: 'Sim, remover todos os hexágonos',
+    },
+    prompts: {
+      name: 'Nome do local (deixe em branco para limpar)',
+    },
+    values: {
+      on: 'Sobre',
+      off: 'Desligado',
+      none: 'Nenhum',
+      hexLayer: {
+        auto: 'Automático (primeiro plano, se disponível)',
+        foreground: 'camada de primeiro plano',
+        objects: 'camada de token',
+      },
+      revealBy: {
+        players: 'Tokens de jogador',
+        characters: 'Fichas de personagem',
+        all: 'Todos os tokens',
+      },
+      revealMode: {
+        clear: 'Claro',
+        glimpse: 'Vislumbre',
+      },
+      announce: {
+        all: 'Todos',
+        gm: 'Apenas GM',
+        off: 'Desligado',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Preencher',
+        fillInverse: 'Preenchimento Inverso',
+        conceal: 'Esconder',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Linguagem',
+        desc: 'Idioma para menus, mensagens e folhetos.',
+      },
+      hexLayer: {
+        label: 'Camada hexadecimal',
+        desc: 'Onde novos hexágonos são desenhados. Auto tenta a camada de primeiro plano (acima dos tokens) e volta para a camada de tokens se o jogo não suportar.',
+      },
+      fillColor: {
+        label: 'Cor de preenchimento',
+        desc: 'Cor dos novos hexágonos. Use rgba() para hexágonos transparentes, por exemplo rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Cor da borda',
+        desc: 'Cor do contorno dos novos hexágonos.',
+      },
+      labelColor: {
+        label: 'Cor da etiqueta',
+        desc: 'Cor dos rótulos de nomes exclusivos do GM em hexágonos nomeados.',
+      },
+      glimpseColor: {
+        label: 'Vislumbre de cor',
+        desc: 'Os hexágonos coloridos mudam para quando vislumbrados (modo de revelação de vislumbre). Use uma cor rgba() transparente.',
+      },
+      strokeWidth: {
+        label: 'Largura da borda',
+        desc: 'Largura do contorno dos novos hexágonos, em pixels (0 a 20).',
+      },
+      maxDistance: {
+        label: 'Distância de revelação hexadecimal',
+        desc: 'Aplicado aos hexágonos à medida que são desenhados: uma ficha deve estar dentro deste número de hexágonos para revelá-los, por mais longe que possa ver. Deixe em branco sem limite.',
+      },
+      revealDistance: {
+        label: 'Distância de visão',
+        desc: 'Quantos hexágonos ao redor de uma ficha em movimento são revelados (0 a 20). 0 revela apenas os hexágonos pelos quais o token passa.',
+      },
+      lineOfSight: {
+        label: 'Linha de visão',
+        desc: 'Quando ativado, um hexágono só é revelado se nenhum hexágono coberto estiver entre ele e a ficha.',
+      },
+      revealPath: {
+        label: 'Revelar ao longo do caminho',
+        desc: 'Quando ativado, cada hexágono que uma ficha passa enquanto é arrastada (incluindo waypoints) é revelado, não apenas onde ela para.',
+      },
+      revealBy: {
+        label: 'Tokens que revelam',
+        desc: 'Quais fichas na camada de fichas revelam hexágonos: fichas controladas por um jogador, fichas que representam qualquer personagem ou todas as fichas.',
+      },
+      revealMode: {
+        label: 'Modo de revelação',
+        desc: 'Limpar remove hexágonos à vista. O vislumbre os torna transparentes; eles são removidos quando um token entra neles.',
+      },
+      announce: {
+        label: 'Anuncie descobertas',
+        desc: 'Quem vê a mensagem do chat quando um local nomeado é descoberto.',
+      },
+      pingDiscoveries: {
+        label: 'Descobertas de ping',
+        desc: 'Quando ativado, os jogadores recebem um ping para um local nomeado quando ele é descoberto.',
+      },
+      hideCoveredTokens: {
+        label: 'Ocultar tokens cobertos',
+        desc: 'Roll20 desenha nomes, barras e auras acima dos hexágonos. Quando ativado, os tokens sob um hexágono coberto têm seu nome, barras e auras visíveis ao jogador desligados e ligados novamente quando são descobertos.',
+      },
+    },
+    status: {
+      engine: 'Motor de jogo',
+      grid: 'Grade',
+      layer: 'Camada hexadecimal',
+      hexes: 'Feitiços',
+      named: 'Hexágonos nomeados',
+      icons: 'Tokens de localização',
+      glimpsed: 'Feitiços vislumbrados',
+      pending: 'Locais aguardando preenchimento',
+      calibrated: 'Calibrado',
+      overrides: 'Substituições de página',
+      undo: 'Desfazer disponível',
+    },
+    messages: {
+      filled:
+        'Preenchimento completo. Hexágonos desenhados: {created}. Reestilizado: {restyled}. Locais ocultos: {icons}.',
+      revealed: 'Feitiços revelados: {count}.',
+      revealedPage: 'Cada hexágono da página revelado ({count}).',
+      confirmReset:
+        'Remover todos os hexadecimais de "{page}" ({count})? Os tokens de localização retornam para a camada de tokens. Desfazer não pode reverter isso.',
+      resetPage: 'Hexágonos removidos da página: {count}.',
+      undone:
+        'Último preenchimento desfeito. Hexágonos removidos: {removed}. Hexágonos reestilizados restaurados: {restored}.',
+      named: 'Hexágonos chamados "{name}": {count}.',
+      unnamed: 'Nomes apagados: {count}.',
+      marked:
+        'Locais ocultos em hexágonos existentes: {attached}. Aguardando o próximo preenchimento que os cobre: ​​{pending}.',
+      unmarked: 'Tokens que não são mais locais: {count}.',
+      settingChanged: '{setting} definido como {value}.',
+      rescanned:
+        'Nova verificação concluída. Mantido: {kept}. Adotado: {adopted}. Arquivado novamente: {moved}. Ausente e esquecido: {dropped}. Rótulos vinculados novamente: {labels}. Tokens de localização vinculados novamente: {icons}.',
+      calibrated:
+        'Grade calibrada (etapa de coluna {colStep}px, etapa de linha {rowStep}px). Nova varredura: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      calibrationReset:
+        'Calibração removida. Nova varredura: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      journalRebuilt: 'Os folhetos "{help}" e "{deck}" foram reconstruídos.',
+      migrated:
+        'Seus mapas hexadecimais do Hexploration 1.x foram atualizados. Se este jogo foi copiado de um jogo Legacy, execute Rescan em cada página do mapa hexadecimal.',
+      pruned:
+        'Hexágonos salvos que não existem mais e foram esquecidos: {dropped}. Se este jogo ou página foi copiado, execute uma nova varredura na página para recuperar seus hexágonos novamente.',
+      readyHint: 'Digite !hexploration no menu ou abra o folheto "Hexploration - Command Deck".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Este jogo não suporta desenho na camada de primeiro plano, então hexágonos foram desenhados na camada de token.',
+      someFailed:
+        'Hexágonos que não puderam ser desenhados: {count}. Verifique o console da API para obter detalhes.',
+    },
+    errors: {
+      noPage: 'Não foi possível encontrar a página para trabalhar.',
+      notHex: 'Esta página não usa uma grade hexadecimal.',
+      noPolygons: 'Selecione uma ou mais formas desenhadas para preencher.',
+      emptyArea: 'A área selecionada não contém centros hexadecimais.',
+      tooMany: 'Isso criaria muitos hexágonos de uma só vez ({count}).',
+      nothingToConceal: 'Selecione formas desenhadas ou fichas para ocultar.',
+      nothingToReveal: 'Selecione hexágonos, formas desenhadas ou fichas para revelar.',
+      noTokens: 'Selecione um ou mais tokens primeiro.',
+      noHexes: 'Selecione um ou mais hexágonos (ou fichas sobre hexágonos) primeiro.',
+      nothingToUndo: 'Não há preenchimento para desfazer.',
+      unknownCommand: 'Comando desconhecido: {command}',
+      unknownSetting: 'Configuração desconhecida: {key}',
+      unknownPageSetting: 'Configurações que podem ser definidas por página: {keys}',
+      invalidValue: '"{value}" não é um valor válido para {key}.',
+      calibrateNeedsTokens: 'Selecione um ou dois tokens encaixados nos centros hexadecimais.',
+      calibrateFailed: 'Esses tokens não podem ser usados ​​para calibrar.',
+      unexpected: 'Algo deu errado: {message}',
+    },
+    hints: {
+      noPage: 'Abra a página na qual deseja trabalhar ou selecione algo nela.',
+      notHex: 'Defina a grade da página como Hex (V) ou Hex (H) nas Configurações da página.',
+      noPolygons:
+        'Desenhe um polígono, retângulo, elipse ou forma à mão livre ao redor da área, selecione-o e tente novamente.',
+      emptyArea: 'Desenhe uma forma maior ou verifique as configurações da grade da página.',
+      tooMany: 'Preencha uma área menor ou divida a área em várias formas.',
+      noHexes:
+        'Os hexágonos estão no primeiro plano ou na camada de token; mude para essa camada para selecioná-los.',
+      unknownCommand: 'Digite !hexploration help para listar os comandos.',
+      unknownSetting: 'Digite !hexploration set para ver todas as configurações.',
+      calibrateNeedsTokens:
+        'Encaixe um token no centro de um hexágono e selecione-o. Selecione um segundo token ajustado a um hexadecimal vizinho na mesma linha (Hex V) ou coluna (Hex H) para corrigir também o tamanho hexadecimal.',
+      calibrateFailed:
+        'Dois tokens devem estar na mesma linha (Hex V) ou na mesma coluna (Hex H), separados por pelo menos um hexadecimal.',
+      unexpected: 'Os detalhes estão no log do console da API.',
+    },
+    help: {
+      menu: 'Mostre o cardápio.',
+      fill: 'Cubra as formas desenhadas selecionadas com hexágonos.',
+      fillInverse: 'Cubra a página inteira, exceto dentro das formas selecionadas.',
+      undo: 'Desfaça o último preenchimento, inverta o preenchimento ou oculte e restaure as formas usadas.',
+      reveal:
+        'Revele os hexágonos selecionados e os hexágonos sob as formas e fichas selecionadas.',
+      revealPage: 'Revele cada hexágono da página sem anúncios.',
+      conceal: 'Cubra a área sob as formas e fichas selecionadas com hexágonos novamente.',
+      explore: 'Revele os tokens selecionados como se eles tivessem acabado de se mudar para lá.',
+      resetPage: 'Remova todos os hexadecimais da página (pergunta primeiro).',
+      name: 'Nomeie os hexágonos selecionados ou os hexágonos sob os tokens selecionados. Deixe o nome vazio para limpá-lo.',
+      mark: 'Transforme os tokens selecionados em locais ocultos.',
+      unmark: 'Impede que os tokens selecionados sejam locais ocultos.',
+      set: 'Altere uma configuração ou mostre todas as configurações.',
+      pageSet: 'Substituir uma configuração de revelação somente na página atual.',
+      pageClear: 'Remova as substituições da página atual.',
+      rescan:
+        'Reconstrua a lista hexadecimal da página, por exemplo, após copiar uma página ou jogo.',
+      calibrate:
+        'Alinhe a grade hexadecimal com um ou dois tokens selecionados encaixados nos centros hexadecimais.',
+      calibrateReset: 'Remova a calibração da página atual.',
+      status: 'Mostre o que o Hexploration sabe sobre a página atual.',
+      journal: 'Reconstrua os folhetos da Ajuda e da Plataforma de Comando.',
+      help: 'Mostre esta lista.',
+      handout: 'As instruções completas estão no folheto "{name}".',
+    },
+    deck: {
+      subtitle: 'Convés de Comando',
+      drawDesc:
+        'Desenhe formas ao redor de uma área, selecione-as e preencha. Desfazer reverte o último preenchimento.',
+      revealDesc:
+        'Selecione hexágonos, formas ou fichas para revelá-los ou cobri-los novamente. Explore as revelações em torno dos tokens selecionados como se eles tivessem se movido.',
+      locationsDesc:
+        'Selecione fichas para ocultá-las como locais sob hexágonos. Selecione hexágonos ou tokens para nomear um hexágono.',
+      toolsDesc:
+        'Configurações, substituições de páginas, status, nova digitalização de páginas copiadas e calibração da grade.',
+      footer: 'Consulte o folheto "{help}" para obter instruções completas.',
+    },
+    handout: {
+      versionLabel: 'Versão',
+      subtitle: 'Exploração hexadecimal para Roll20',
+      footer: 'Use o folheto "{deck}" para controles de um clique.',
+      overview: {
+        heading: 'Visão geral',
+        body: 'Hexploração cobre um mapa hexadecimal com hexágonos opacos. À medida que o grupo se move, os hexágonos pelos quais eles passam (e, se preferir, os hexágonos ao seu redor) são removidos, então o mapa é descoberto um hexágono de cada vez. Locais ocultos podem ser colocados em hexágonos e são anunciados quando encontrados. Funciona em jogos Jumpgate e Legacy, em grades Hex (V) e Hex (H) de qualquer tamanho.',
+        demo: 'Assista a uma breve demonstração (da versão 1)',
+      },
+      quickStart: {
+        heading: 'Início rápido',
+        steps: [
+          'Abra uma página cuja grade esteja definida como Hex (V) ou Hex (H).',
+          'Desenhe uma ou mais formas (polígono, retângulo, elipse ou à mão livre) ao redor da área a ser ocultada.',
+          'Selecione as formas e clique em Preencher no painel de comandos (ou digite !hexploration fill). As formas são substituídas por hexágonos.',
+          'Opcional: antes de preencher, selecione tokens de locais importantes e clique em Marcar Localização. Eles estão escondidos sob os hexágonos e anunciados quando descobertos.',
+          'Mova uma ficha de jogador. Cada hexágono que ele passa e os hexágonos dentro de sua Distância de Visão são revelados.',
+        ],
+      },
+      commands: {
+        heading: 'Comandos',
+        intro:
+          'Somente GMs podem usar esses comandos. A maioria atua nos objetos selecionados; o resto atua na página que você está visualizando.',
+        colCommand: 'Comando',
+        colDesc: 'O que isso faz',
+      },
+      revealing: {
+        heading: 'Como funciona a revelação',
+        points: [
+          'Apenas os tokens na camada de tokens revelam hexágonos. A contagem de fichas é definida por Tokens That Reveal: fichas de jogador por padrão, para que o Mestre possa mover monstros sem descobrir o mapa.',
+          'Uma ficha revela cada hexágono que cobre (fichas grandes cobrem vários) e, com Revelar ao longo do caminho ativado, cada hexágono na rota pela qual foi arrastado, incluindo pontos de referência.',
+          'A Distância de Visão revela os hexágonos em torno de cada um desses hexágonos. Com a Linha de Visão ativada, um hexágono só é revelado se não houver nenhum hexágono coberto entre eles.',
+          'A distância de revelação hexadecimal é armazenada em hexadecimais à medida que são desenhados. Esses hexágonos só são revelados dentro daquele número de hexágonos, não importa quão longe uma ficha possa ver. Use-o para montanhas ou florestas que escondem o que está por trás delas.',
+          'No modo Glimpse, os hexágonos à vista tornam-se transparentes em vez de desaparecer e são removidos quando uma ficha entra neles.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          'A API não relata movimentos feitos por outros mods. Os movimentos do TokenMod são captados automaticamente; para outros mods, selecione os tokens e clique em Explorar ou chame Hexploration.revealAround(token) do seu próprio mod.',
+        ],
+      },
+      locations: {
+        heading: 'Hexes e locais nomeados',
+        points: [
+          'Mark Location transforma os tokens selecionados em locais ocultos. Uma ficha que já esteja sob um hexágono é ocultada imediatamente; caso contrário, ele ficará oculto pelo próximo preenchimento que o cobre.',
+          'Os tokens com o marcador de status da torre branca também são tratados como locais quando você preenche, como na versão 1.',
+          'As fichas de localização oculta são movidas para a camada GM. Quando seu hexágono é revelado, eles retornam à camada de token com seu nome mostrado e sua descoberta é anunciada.',
+          'Name Hex dá um nome hexadecimal sem um token. O nome é mostrado ao GM como um rótulo na camada do GM e anunciado quando o hexágono é revelado.',
+          'Anunciar Descobertas escolhe se todos, apenas o GM, ou ninguém verá o anúncio. Ping Discoveries também move a visão dos jogadores para o local.',
+        ],
+      },
+      settings: {
+        heading: 'Configurações',
+        intro:
+          'Altere as configurações com !hexploration set (ou o botão Configurações). Camada hexadecimal, tokens que revelam e idioma também podem ser definidos na página de configurações do Mod.',
+        colKey: 'Chave',
+        colName: 'Contexto',
+        colDesc: 'Descrição',
+        perPage: '(Pode ser definido por página.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate e Legado',
+        points: [
+          'Hexploration descobre qual motor o jogo usa e desenha o tipo de forma correspondente. As formas desenhadas em qualquer editor podem ser preenchidas.',
+          'Com a camada hexadecimal definida como Automático, os hexágonos são desenhados na camada de primeiro plano, acima dos tokens, para que os jogadores não possam ver o que está por baixo. Se a camada de primeiro plano não estiver disponível, a camada de token será usada.',
+          'Jumpgate desenha hexágonos matematicamente regulares, que têm uma forma ligeiramente diferente dos hexágonos Legacy. Se os hexágonos não estiverem alinhados com a grade da página, encaixe um token em um centro hexadecimal, selecione-o e clique em Calibrar. Selecione dois tokens em hexágonos vizinhos da mesma linha (Hex V) ou coluna (Hex H) para corrigir também o tamanho hexadecimal.',
+          'Quando uma página ou jogo é copiado, seus hexágonos recebem novos IDs. Execute Rescan na página para pegá-los novamente, junto com seus rótulos de nome e tokens de localização.',
+        ],
+      },
+      upgrading: {
+        heading: 'Atualizando da versão 1',
+        points: [
+          'A versão 2 não precisa mais de PathMath, MatrixMath, Vector Math ou HTML Builder. Você pode removê-los, a menos que outro mod os use.',
+          'Mapas hexadecimais, nomes, tokens de localização e configurações existentes são atualizados automaticamente na primeira inicialização.',
+          'Os comandos da versão 1, incluindo a macro Hexploration_menu, ainda funcionam.',
+          'A versão 1 permitiu que qualquer token que representasse um personagem revelasse hexágonos. Defina Tokens que Revelam como tokens de Personagem para manter esse comportamento.',
+        ],
+        colV1: 'Comando da versão 1',
+        colV2: 'Comando da versão 2',
+      },
+      troubleshooting: {
+        heading: 'Solução de problemas',
+        points: [
+          'Nada acontece quando um token se move: verifique se o token está na camada de token e corresponde aos Tokens That Reveal e se a página possui hexágonos (status !hexploration).',
+          'Os hexágonos são deslocados da grade: use Calibrar e verifique com um token alguns hexágonos no mapa.',
+          'Os hexágonos pararam de ser revelados após copiar uma página ou jogo: execute uma nova varredura na página.',
+          'Fill diz que a área não tem centros hexadecimais: a forma deve conter o centro de pelo menos um hexadecimal.',
+          'Para qualquer outra coisa, verifique o log do console da API e inclua suas mensagens ao pedir ajuda.',
+        ],
+      },
+      languages: {
+        heading: 'Idiomas',
+        body: 'Escolha um idioma com !hexploration set language. Idiomas disponíveis:',
+      },
+      credits: {
+        heading: 'Créditos',
+        original: 'Mod original por',
+        maintainer: 'Versão 2 mantida por',
+        marketplace: 'Pacotes de arte de Ada no Roll20 Marketplace',
+        support:
+          'Se você encontrar um bug ou tiver uma ideia, poste no fórum Roll20 Mod ou abra um problema no GitHub e inclua quaisquer mensagens do log do console da API.',
+      },
+    },
+  };
 
-  var localeRu = {};
+  const TRANSLATION$4 = {
+    titles: {
+      ready: 'Геразведка готова.',
+      settings: 'Настройки Hexploration',
+      languages: 'Выберите язык',
+      pageSettings: 'Настройки страницы: {page}',
+      status: 'Статус гексоразведки: {page}',
+      help: 'Команды гексоразведки',
+      confirm: 'Пожалуйста, подтвердите',
+    },
+    discovery: {
+      title: 'Местоположение обнаружено',
+    },
+    menu: {
+      draw: 'Рисовать',
+      reveal: 'Показать и скрыть',
+      locations: 'Локации',
+      tools: 'Инструменты',
+      layerInUse: 'Новые гексы рисуются на {layer}.',
+      pageSettingsHelp:
+        'Эти настройки применяются только к этой странице. Настройки, отмеченные знаком ★, переопределяют глобальные настройки.',
+    },
+    buttons: {
+      fill: 'Наполнять',
+      fillInverse: 'Обратная заливка',
+      undo: 'Отменить заливку',
+      reveal: 'Раскрывать',
+      conceal: 'Скрыть',
+      explore: 'Исследовать',
+      revealPage: 'Открыть страницу',
+      resetPage: 'Сбросить страницу',
+      mark: 'Отметить местоположение',
+      unmark: 'Снять отметку',
+      name: 'Шестнадцатеричное имя',
+      settings: 'Настройки',
+      pageSettings: 'Настройки страницы',
+      status: 'Статус',
+      rescan: 'Повторное сканирование',
+      calibrate: 'Калибровка',
+      calibrateReset: 'Сброс калибровки',
+      help: 'Помощь',
+      change: 'Изменять',
+      menu: 'Меню',
+      clearOverrides: 'Очистить переопределения',
+      confirmReset: 'Да, удалить все шестигранники',
+    },
+    prompts: {
+      name: 'Название местоположения (оставьте пустым, чтобы очистить)',
+    },
+    values: {
+      on: 'На',
+      off: 'Выключенный',
+      none: 'Никто',
+      hexLayer: {
+        auto: 'Авто (на переднем плане, если доступно)',
+        foreground: 'передний слой',
+        objects: 'слой токенов',
+      },
+      revealBy: {
+        players: 'Жетоны игроков',
+        characters: 'Жетоны персонажей',
+        all: 'Все токены',
+      },
+      revealMode: {
+        clear: 'Прозрачный',
+        glimpse: 'Случайно заметить',
+      },
+      announce: {
+        all: 'Каждый',
+        gm: 'только ГМ',
+        off: 'Выключенный',
+      },
+      orientation: {
+        vertical: 'Шестигранник (В)',
+        horizontal: 'Шестигранник (H)',
+      },
+      fillKind: {
+        fill: 'Наполнять',
+        fillInverse: 'Обратная заливка',
+        conceal: 'Скрыть',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Язык',
+        desc: 'Язык меню, сообщений и раздаточных материалов.',
+      },
+      hexLayer: {
+        label: 'Шестнадцатеричный слой',
+        desc: 'Где рисуются новые гексы. Автоматически пробует слой переднего плана (над жетонами) и возвращается к слою жетонов, если игра его не поддерживает.',
+      },
+      fillColor: {
+        label: 'Цвет заливки',
+        desc: 'Цвет новых гексов. Используйте rgba() для прозрачных шестигранников, например rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Цвет границы',
+        desc: 'Цвет контура новых гексов.',
+      },
+      labelColor: {
+        label: 'Цвет этикетки',
+        desc: 'Цвет меток с именами, предназначенными только для GM, на именованных гексах.',
+      },
+      glimpseColor: {
+        label: 'Взгляд цвета',
+        desc: 'Цветные гексы меняются при взгляде (режим просмотра). Используйте прозрачный цвет rgba().',
+      },
+      strokeWidth: {
+        label: 'Ширина границы',
+        desc: 'Ширина контура новых шестиугольников в пикселях (от 0 до 20).',
+      },
+      maxDistance: {
+        label: 'Расстояние раскрытия шестигранника',
+        desc: 'Применительно к нарисованным гексам: фишка должна находиться в пределах этого количества гексов, чтобы их можно было обнаружить, как бы далеко он ни видел. Оставьте пустым, чтобы не было ограничений.',
+      },
+      revealDistance: {
+        label: 'Расстояние обзора',
+        desc: 'Сколько гексов вокруг движущегося жетона обнаружено (от 0 до 20). 0 показывает только те гексы, через которые проходит фишка.',
+      },
+      lineOfSight: {
+        label: 'Линия видимости',
+        desc: 'Когда эта опция включена, гекс раскрывается только в том случае, если между ним и жетоном нет закрытого гекса.',
+      },
+      revealPath: {
+        label: 'Показать вдоль пути',
+        desc: 'Когда эта функция включена, отображается каждый гекс, через который проходит жетон во время перетаскивания (включая путевые точки), а не только то место, где он останавливается.',
+      },
+      revealBy: {
+        label: 'Жетоны, которые раскрывают',
+        desc: 'Какие жетоны на слое жетонов отображают гексы: жетоны, контролируемые игроком, жетоны, представляющие любого персонажа, или каждый жетон.',
+      },
+      revealMode: {
+        label: 'Режим раскрытия',
+        desc: 'Очистить удаляет гексы в пределах видимости. Вместо этого Glimpse делает их прозрачными; они удаляются, когда в них входит токен.',
+      },
+      announce: {
+        label: 'Объявлять об открытиях',
+        desc: 'Кто видит сообщение чата при обнаружении именованного местоположения.',
+      },
+      pingDiscoveries: {
+        label: 'Пинг-открытия',
+        desc: 'Если эта функция включена, игроки отправляются в указанное место при его обнаружении.',
+      },
+      hideCoveredTokens: {
+        label: 'Скрыть покрытые токены',
+        desc: 'Roll20 рисует имена, полосы и ауры над гексами. Когда эта функция включена, жетоны под закрытым гексом имеют видимое для игрока имя, полосы и ауры отключаются и снова включаются, когда они открываются.',
+      },
+    },
+    status: {
+      engine: 'Игровой движок',
+      grid: 'Сетка',
+      layer: 'Шестнадцатеричный слой',
+      hexes: 'шестиугольники',
+      named: 'Именованные шестигранники',
+      icons: 'Жетоны местоположения',
+      glimpsed: 'Замеченные гексы',
+      pending: 'Места, ожидающие заполнения',
+      calibrated: 'Калиброванный',
+      overrides: 'Переопределения страниц',
+      undo: 'Отмена доступна',
+    },
+    messages: {
+      filled:
+        'Заполнение завершено. Нарисованы гексы: {created}. Новый стиль: {restyled}. Местоположение скрыто: {icons}.',
+      revealed: 'Обнаружены гексы: {count}.',
+      revealedPage: 'Раскрыты все шестнадцатеричные числа на странице ({count}).',
+      confirmReset:
+        'Удалить все шестнадцатеричные числа из "{page}" ({count})? Токены местоположения возвращаются на уровень токенов. Отмена не может отменить это.',
+      resetPage: 'Со страницы удалены шестигранники: {count}.',
+      undone:
+        'Последнее заполнение отменено. Удалены шестигранники: {removed}. Восстановлены измененные гексы: {restored}.',
+      named: 'Шестигранники с именем "{name}": {count}.',
+      unnamed: 'Имена удалены: {count}.',
+      marked:
+        'Местоположение, скрытое в существующих гексах: {attached}. Ожидание следующей заливки, которая их закроет: {pending}.',
+      unmarked: 'Токены, которые больше не являются локациями: {count}.',
+      settingChanged: 'Для {setting} установлено значение {value}.',
+      rescanned:
+        'Повторное сканирование завершено. Сохранено: {kept}. Принято: {adopted}. Повторно отправлено: {moved}. Пропало и забыто: {dropped}. Ярлыки повторно связаны: {labels}. Токены местоположения повторно связаны: {icons}.',
+      calibrated:
+        'Сетка откалибрована (шаг столбца {colStep}px, шаг строки {rowStep}px). Повторное сканирование: сохранено {kept}, повторно сохранено {moved}, принято {adopted}.',
+      calibrationReset:
+        'Калибровка удалена. Повторное сканирование: сохранено {kept}, повторно сохранено {moved}, принято {adopted}.',
+      journalRebuilt: 'Раздаточные материалы «{help}» и «{deck}» были перестроены.',
+      migrated:
+        'Ваши шестигранные карты Hexploration 1.x были обновлены. Если эта игра была скопирована из игры Legacy, запустите повторное сканирование на каждой странице шестнадцатеричной карты.',
+      pruned:
+        'Сохранены гексы, которые больше не существуют и были забыты: {dropped}. Если эта игра или страница были скопированы, запустите повторное сканирование страницы, чтобы снова найти ее шестигранники.',
+      readyHint:
+        'Введите !hexploration в меню или откройте раздаточный материал «Hexploration — Command Deck».',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Эта игра не поддерживает рисование на слое переднего плана, поэтому шестигранники рисовались на слое жетонов.',
+      someFailed:
+        'Гексы, которые не удалось нарисовать: {count}. Подробности проверьте в консоли API.',
+    },
+    errors: {
+      noPage: 'Не удалось найти страницу для работы.',
+      notHex: 'На этой странице не используется шестигранная сетка.',
+      noPolygons: 'Выберите одну или несколько нарисованных фигур для заливки.',
+      emptyArea: 'Выбранная область не содержит шестигранных центров.',
+      tooMany: 'Это создаст слишком много шестигранников за один раз ({count}).',
+      nothingToConceal: 'Выберите нарисованные фигуры или жетоны, которые нужно скрыть.',
+      nothingToReveal:
+        'Выбирайте шестигранники, нарисованные фигуры или жетоны, чтобы их показать.',
+      noTokens: 'Сначала выберите один или несколько жетонов.',
+      noHexes: 'Сначала выберите один или несколько гексов (или жетоны, стоящие на гексах).',
+      nothingToUndo: 'Нет заливки, которую можно было бы отменить.',
+      unknownCommand: 'Неизвестная команда: {command}',
+      unknownSetting: 'Неизвестная настройка: {key}.',
+      unknownPageSetting: 'Настройки, которые можно установить для каждой страницы: {keys}.',
+      invalidValue: '«{value}» не является допустимым значением для {key}.',
+      calibrateNeedsTokens: 'Выберите один или два жетона, привязанных к шестигранным центрам.',
+      calibrateFailed: 'Эти жетоны нельзя использовать для калибровки.',
+      unexpected: 'Что-то пошло не так: {message}',
+    },
+    hints: {
+      noPage: 'Откройте страницу, над которой хотите работать, или выберите что-нибудь на ней.',
+      notHex: 'Установите сетку страницы на Hex (V) или Hex (H) в настройках страницы.',
+      noPolygons:
+        'Нарисуйте многоугольник, прямоугольник, эллипс или фигуру от руки вокруг области, выберите ее и повторите попытку.',
+      emptyArea: 'Нарисуйте фигуру большего размера или проверьте настройки сетки страницы.',
+      tooMany: 'Заполните меньшую область или разделите ее на несколько фигур.',
+      noHexes:
+        'Шестигранники находятся на переднем плане или на слое жетонов; переключитесь на этот слой, чтобы выбрать их.',
+      unknownCommand: 'Введите !hexploration help, чтобы просмотреть список команд.',
+      unknownSetting: 'Введите !hexploration set, чтобы увидеть все настройки.',
+      calibrateNeedsTokens:
+        'Прикрепите жетон к центру шестиугольника и выберите его. Выберите второй жетон, привязанный к соседнему шестиграннику в той же строке (шестнадцатеричный V) или столбце (шестнадцатеричный H), чтобы также исправить размер шестнадцатеричного числа.',
+      calibrateFailed:
+        'Два жетона должны находиться в одной строке (шестнадцатеричный V) или в одном столбце (шестнадцатеричный H), на расстоянии не менее одного шестигранника.',
+      unexpected: 'Подробности в журнале консоли API.',
+    },
+    help: {
+      menu: 'Покажите меню.',
+      fill: 'Покройте выбранные нарисованные фигуры шестигранниками.',
+      fillInverse: 'Закройте всю страницу, кроме выбранных фигур.',
+      undo: 'Отмените последнюю заливку, инвертируйте заливку или скройте и восстановите использованные фигуры.',
+      reveal: 'Покажите выбранные гексы, а также гексы под выбранными фигурами и жетонами.',
+      revealPage: 'Раскройте каждый гекс на странице без объявлений.',
+      conceal: 'Снова покройте область под выбранными фигурами и жетонами шестигранниками.',
+      explore: 'Раскройте выбранные жетоны, как будто они только что туда переместились.',
+      resetPage: 'Удалите все шестнадцатеричные числа на странице (сначала спрашивает).',
+      name: 'Назовите выбранные гексы или гексы под выбранными жетонами. Оставьте имя пустым, чтобы очистить его.',
+      mark: 'Превратите выбранные жетоны в скрытые локации.',
+      unmark: 'Препятствовать тому, чтобы выбранные токены были скрытыми местами.',
+      set: 'Измените настройку или отобразите все настройки.',
+      pageSet: 'Переопределить настройку отображения только на текущей странице.',
+      pageClear: 'Удалить переопределения текущей страницы.',
+      rescan:
+        'Перестройте шестнадцатеричный список страницы, например, после копирования страницы или игры.',
+      calibrate:
+        'Выровняйте шестигранную сетку с помощью одного или двух выбранных жетонов, привязанных к шестигранным центрам.',
+      calibrateReset: 'Удалить калибровку текущей страницы.',
+      status: 'Покажите, что Hexploration знает о текущей странице.',
+      journal: 'Восстановите раздаточные материалы «Помощь» и «Командная колода».',
+      help: 'Покажите этот список.',
+      handout: 'Полные инструкции приведены в раздаточном материале «{name}».',
+    },
+    deck: {
+      subtitle: 'Командная колода',
+      drawDesc:
+        'Нарисуйте фигуры вокруг области, выберите их, затем заполните. Отменить отменяет последнюю заливку.',
+      revealDesc:
+        'Выбирайте шестигранники, фигуры или жетоны, чтобы снова показать или закрыть их. Исследуйте объекты вокруг выбранных жетонов, как если бы они переместились.',
+      locationsDesc:
+        'Выберите жетоны, чтобы скрыть их как места под гексами. Выберите гексы или жетоны, чтобы назвать гекс.',
+      toolsDesc:
+        'Настройки, переопределение страниц, статус, повторное сканирование скопированных страниц и калибровка сетки.',
+      footer: 'Подробные инструкции см. в раздаточном материале «{help}».',
+    },
+    handout: {
+      versionLabel: 'Версия',
+      subtitle: 'Шестнадцатеричное исследование для Roll20',
+      footer: 'Используйте раздаточный материал «{deck}» для управления одним щелчком мыши.',
+      overview: {
+        heading: 'Обзор',
+        body: 'Hexploration покрывает шестнадцатеричную карту непрозрачными шестигранниками. По мере движения группы гексы, через которые они проходят (и, если хотите, гексы вокруг них) удаляются, поэтому карта открывается по одному гексу за раз. Скрытые локации могут быть размещены под гексами, и о их обнаружении будет объявлено. Он работает в играх Jumpgate и Legacy на сетках Hex (V) и Hex (H) любого размера.',
+        demo: 'Посмотрите короткую демонстрацию (из версии 1)',
+      },
+      quickStart: {
+        heading: 'Быстрый старт',
+        steps: [
+          'Откройте страницу, для сетки которой установлено значение Hex (V) или Hex (H).',
+          'Нарисуйте одну или несколько фигур (многоугольник, прямоугольник, эллипс или от руки) вокруг области, которую нужно скрыть.',
+          'Выделите фигуры и нажмите «Заполнить командную колоду» (или введите !hexploration fill). Фигуры заменяются шестигранниками.',
+          'Необязательно: перед заполнением выберите жетоны для важных мест и нажмите «Отметить местоположение». Они спрятаны под гексами и объявляются об обнаружении.',
+          'Переместите жетон игрока. Каждый гекс, через который он проходит, и гексы в пределах его видимости раскрываются.',
+        ],
+      },
+      commands: {
+        heading: 'Команды',
+        intro:
+          'Только GM могут использовать эти команды. Большинство действует на выбранные объекты; остальные действуют на просматриваемой вами странице.',
+        colCommand: 'Команда',
+        colDesc: 'Что он делает',
+      },
+      revealing: {
+        heading: 'Как работает выявление',
+        points: [
+          'Только жетоны на слое жетонов имеют шестигранники. Количество жетонов задается жетонами, которые раскрываются: жетоны игроков по умолчанию, поэтому GM может перемещать монстров, не открывая карту.',
+          'Жетон показывает каждый гекс, который он покрывает (большие жетоны покрывают несколько), а при включенной функции «Показать вдоль пути» - каждый гекс на маршруте, по которому он протащился, включая путевые точки.',
+          'Расстояние обзора показывает гексы вокруг каждого из этих гексов. При включенной линии видимости гекс открывается только в том случае, если между ним нет покрытого гекса.',
+          'Расстояние раскрытия шестигранников сохраняется в шестигранниках по мере их рисования. Эти гексы открываются только внутри определенного количества гексов, независимо от того, насколько далеко может видеть фишка. Используйте его для гор или лесов, которые скрывают то, что находится за ними.',
+          'В режиме «Проблеск» гексы в пределах видимости становятся прозрачными, а не исчезают, и удаляются, когда в них попадает жетон.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          'API не сообщает о действиях, сделанных другими модами. Ходы TokenMod подбираются автоматически; для других модов выберите токены и нажмите «Исследовать» или вызовите Hexploration.revealAround(token) из вашего собственного мода.',
+        ],
+      },
+      locations: {
+        heading: 'Именованные гексы и локации',
+        points: [
+          'Отметить местоположение превращает выбранные токены в скрытые места. Фишка, уже находящаяся под гексом, сразу прячется; в противном случае он скрыт следующей заливкой, закрывающей его.',
+          'Жетоны с маркером статуса белой башни также считаются локациями при заполнении, как и в версии 1.',
+          'Жетоны скрытых локаций перемещаются на уровень GM. Когда их гекс раскрывается, они возвращаются на слой жетонов с указанием своего имени, и об их открытии объявляется.',
+          'Name Hex дает шестнадцатеричному имени без токена. Имя отображается ГМу в виде метки на слое ГМ и объявляется при раскрытии шестнадцатеричного числа.',
+          'Объявление открытий позволяет выбрать, будут ли объявления видеть все, только ГМ или никто. Ping Discoveries также перемещает взгляд игроков на локацию.',
+        ],
+      },
+      settings: {
+        heading: 'Настройки',
+        intro:
+          'Измените настройки с помощью набора !hexploration (или кнопки «Настройки»). Шестнадцатеричный слой, отображаемые токены и язык также можно установить на странице настроек мода.',
+        colKey: 'Ключ',
+        colName: 'Параметр',
+        colDesc: 'Описание',
+        perPage: '(Можно установить для каждой страницы.)',
+      },
+      jumpgate: {
+        heading: 'Джампгейт и Наследие',
+        points: [
+          'Hexploration определяет, какой движок используется в игре, и рисует соответствующую форму. Фигуры, нарисованные в любом редакторе, можно закрашивать.',
+          'Если для Hex Layer установлено значение Auto, гексагоны рисуются на переднем слое над жетонами, поэтому игроки не могут видеть, что находится под ними. Если слой переднего плана недоступен, вместо него используется слой токена.',
+          'Jumpgate рисует математически правильные гексы, форма которых немного отличается от гексов Legacy. Если шестигранники не совпадают с сеткой страницы, привяжите жетон к центру шестигранника, выберите его и нажмите «Калибровать». Выберите два жетона в соседних шестиугольниках одной и той же строки (шестнадцатеричный V) или столбца (шестнадцатеричный H), чтобы также исправить размер шестнадцатеричного числа.',
+          'Когда страница или игра копируется, ее гексы получают новые идентификаторы. Запустите повторное сканирование страницы, чтобы снова найти их вместе с метками их имен и жетонами местоположения.',
+        ],
+      },
+      upgrading: {
+        heading: 'Обновление с версии 1',
+        points: [
+          'Версия 2 больше не требует PathMath, MatrixMath, Vector Math или HTML Builder. Вы можете удалить их, если их не использует другой мод.',
+          'Существующие шестнадцатеричные карты, имена, маркеры местоположения и настройки обновляются автоматически при первом запуске.',
+          'Команды версии 1, включая макрос Hexploration_menu, по-прежнему работают.',
+          'Версия 1 позволяла любому жетону, представляющему персонажа, показывать гексы. Установите жетоны, которые раскрываются, на жетоны персонажей, чтобы сохранить такое поведение.',
+        ],
+        colV1: 'Команда версии 1',
+        colV2: 'Команда версии 2',
+      },
+      troubleshooting: {
+        heading: 'Поиск неисправностей',
+        points: [
+          'При перемещении токена ничего не происходит: убедитесь, что токен находится на слое токена и соответствует токенам, которые раскрываются, а также что страница имеет шестнадцатеричные значения (статус!hexploration).',
+          'Гексаксисы смещены от сетки: используйте «Калибровку», затем проверьте жетоном несколько гексов по карте.',
+          'Шестигранники перестали проявляться после копирования страницы или игры: запустите повторное сканирование страницы.',
+          'Заливка говорит, что область не имеет шестигранных центров: фигура должна содержать центр хотя бы одного шестигранника.',
+          'В противном случае проверьте журнал консоли API и включите его сообщения при обращении за помощью.',
+        ],
+      },
+      languages: {
+        heading: 'Языки',
+        body: 'Выберите язык с помощью !hexploration set Language. Доступные языки:',
+      },
+      credits: {
+        heading: 'Кредиты',
+        original: 'Оригинальный мод от',
+        maintainer: 'Версия 2 поддерживается',
+        marketplace: 'Наборы произведений искусства Ады на торговой площадке Roll20',
+        support:
+          'Если вы обнаружили ошибку или у вас есть идея, напишите сообщение на форуме Roll20 Mod или откройте проблему на GitHub и включите все сообщения из журнала консоли API.',
+      },
+    },
+  };
 
-  var localeEs = {};
+  const TRANSLATION$3 = {
+    titles: {
+      ready: 'La hexploración está lista.',
+      settings: 'Configuración de hexploración',
+      languages: 'Elige un idioma',
+      pageSettings: 'Configuración de página: {page}',
+      status: 'Estado de exploración: {page}',
+      help: 'Comandos de hexploración',
+      confirm: 'Por favor confirme',
+    },
+    discovery: {
+      title: 'Ubicación descubierta',
+    },
+    menu: {
+      draw: 'Dibujar',
+      reveal: 'Revelar y ocultar',
+      locations: 'Ubicaciones',
+      tools: 'Herramientas',
+      layerInUse: 'Se están dibujando nuevos hexágonos en {layer}.',
+      pageSettingsHelp:
+        'Esta configuración se aplica únicamente a esta página. Las configuraciones marcadas con ★ anulan la configuración global.',
+    },
+    buttons: {
+      fill: 'Llenar',
+      fillInverse: 'Relleno inverso',
+      undo: 'Deshacer relleno',
+      reveal: 'Revelar',
+      conceal: 'Ocultar',
+      explore: 'Explorar',
+      revealPage: 'Revelar página',
+      resetPage: 'Restablecer página',
+      mark: 'Marcar ubicación',
+      unmark: 'Desmarcar',
+      name: 'Nombre hexadecimal',
+      settings: 'Ajustes',
+      pageSettings: 'Configuración de página',
+      status: 'Estado',
+      rescan: 'Volver a escanear',
+      calibrate: 'Calibrar',
+      calibrateReset: 'Restablecer calibración',
+      help: 'Ayuda',
+      change: 'Cambiar',
+      menu: 'Menú',
+      clearOverrides: 'Borrar anulaciones',
+      confirmReset: 'Sí, eliminar todos los hexágonos',
+    },
+    prompts: {
+      name: 'Nombre de la ubicación (déjelo vacío para borrarlo)',
+    },
+    values: {
+      on: 'En',
+      off: 'Apagado',
+      none: 'Ninguno',
+      hexLayer: {
+        auto: 'Auto (primer plano si está disponible)',
+        foreground: 'capa de primer plano',
+        objects: 'capa de token',
+      },
+      revealBy: {
+        players: 'fichas de jugador',
+        characters: 'Fichas de personaje',
+        all: 'Todas las fichas',
+      },
+      revealMode: {
+        clear: 'Claro',
+        glimpse: 'Vistazo',
+      },
+      announce: {
+        all: 'Todos',
+        gm: 'solo GM',
+        off: 'Apagado',
+      },
+      orientation: {
+        vertical: 'Hexágono (V)',
+        horizontal: 'Hexagonal (H)',
+      },
+      fillKind: {
+        fill: 'Llenar',
+        fillInverse: 'Relleno inverso',
+        conceal: 'Ocultar',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Idioma',
+        desc: 'Idioma para menús, mensajes y folletos.',
+      },
+      hexLayer: {
+        label: 'Capa hexagonal',
+        desc: 'Donde se dibujan nuevos hexágonos. Auto prueba la capa de primer plano (sobre las fichas) y vuelve a la capa de fichas si el juego no lo admite.',
+      },
+      fillColor: {
+        label: 'Color de relleno',
+        desc: 'Color de nuevos hexágonos. Utilice rgba() para hexágonos transparentes, por ejemplo rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Color del borde',
+        desc: 'Color del contorno de nuevos hexágonos.',
+      },
+      labelColor: {
+        label: 'Color de la etiqueta',
+        desc: 'Color de las etiquetas de nombres exclusivos para GM en hexágonos con nombre.',
+      },
+      glimpseColor: {
+        label: 'Color de vislumbre',
+        desc: 'Los hexágonos de color cambian cuando se vislumbran (modo de revelación Glimpse). Utilice un color rgba() transparente.',
+      },
+      strokeWidth: {
+        label: 'Ancho del borde',
+        desc: 'Ancho del contorno de nuevos hexágonos, en píxeles (0 a 20).',
+      },
+      maxDistance: {
+        label: 'Distancia de revelación hexagonal',
+        desc: 'Se aplica a los hexágonos a medida que se dibujan: una ficha debe estar dentro de esta cantidad de hexágonos para revelarlos, por muy lejos que pueda ver. Déjelo vacío sin límite.',
+      },
+      revealDistance: {
+        label: 'Distancia de visión',
+        desc: 'Cuántos hexágonos se revelan alrededor de una ficha en movimiento (0 a 20). 0 revela sólo los hexágonos por los que pasa la ficha.',
+      },
+      lineOfSight: {
+        label: 'Línea de visión',
+        desc: 'Cuando está activado, un hexágono sólo se revela si no hay ningún hexágono cubierto entre él y la ficha.',
+      },
+      revealPath: {
+        label: 'Revelar a lo largo del camino',
+        desc: 'Cuando está activado, se revela cada hexágono por el que pasa una ficha mientras es arrastrada (incluidos los puntos de ruta), no solo dónde se detiene.',
+      },
+      revealBy: {
+        label: 'Fichas que revelan',
+        desc: 'Qué fichas en la capa de fichas revelan hexágonos: fichas controladas por un jugador, fichas que representan cualquier personaje o todas las fichas.',
+      },
+      revealMode: {
+        label: 'Modo revelar',
+        desc: 'Borrar elimina hexágonos a la vista. En cambio, Glimpse los hace transparentes; se eliminan cuando una ficha ingresa en ellos.',
+      },
+      announce: {
+        label: 'Anunciar descubrimientos',
+        desc: 'Quién ve el mensaje de chat cuando se descubre una ubicación con nombre.',
+      },
+      pingDiscoveries: {
+        label: 'Descubrimientos de ping',
+        desc: 'Cuando está activado, los jugadores reciben un ping a una ubicación con nombre cuando se descubre.',
+      },
+      hideCoveredTokens: {
+        label: 'Ocultar tokens cubiertos',
+        desc: 'Roll20 dibuja nombres, barras y auras sobre hexágonos. Cuando están activadas, las fichas bajo un hexágono cubierto tienen su nombre, barras y auras visibles para el jugador desactivadas y se vuelven a activar cuando se descubren.',
+      },
+    },
+    status: {
+      engine: 'motor de juego',
+      grid: 'Red',
+      layer: 'capa hexagonal',
+      hexes: 'Hexágonos',
+      named: 'Hexágonos con nombre',
+      icons: 'Fichas de ubicación',
+      glimpsed: 'Hexágonos vislumbrados',
+      pending: 'Ubicaciones esperando ser llenadas',
+      calibrated: 'Calibrado',
+      overrides: 'Anulaciones de página',
+      undo: 'Deshacer disponible',
+    },
+    messages: {
+      filled:
+        'Llenar completo. Hexágonos dibujados: {created}. Rediseñado: {restyled}. Ubicaciones ocultas: {icons}.',
+      revealed: 'Hexágonos revelados: {count}.',
+      revealedPage: 'Cada hexágono en la página revelado ({count}).',
+      confirmReset:
+        '¿Eliminar todos los hexágonos de "{page}" ({count})? Los tokens de ubicación regresan a la capa de tokens. Deshacer no puede revertir esto.',
+      resetPage: 'Hexes eliminados de la página: {count}.',
+      undone:
+        'Último relleno deshecho. Hexágonos eliminados: {removed}. Hexágonos rediseñados restaurados: {restored}.',
+      named: 'Hexágonos denominados "{name}": {count}.',
+      unnamed: 'Nombres borrados: {count}.',
+      marked:
+        'Ubicaciones ocultas en hexágonos existentes: {attached}. Esperando el siguiente relleno que los cubra: {pending}.',
+      unmarked: 'Tokens que ya no son ubicaciones: {count}.',
+      settingChanged: '{setting} establecido en {value}.',
+      rescanned:
+        'Volver a escanear completo. Mantenido: {kept}. Adoptado: {adopted}. Representado nuevamente: {moved}. Desaparecido y olvidado: {dropped}. Etiquetas vinculadas nuevamente: {labels}. Tokens de ubicación vueltos a vincular: {icons}.',
+      calibrated:
+        'Cuadrícula calibrada (paso de columna {colStep}px, paso de fila {rowStep}px). Volver a escanear: mantuvo {kept}, volvió a presentar {moved}, adoptó {adopted}.',
+      calibrationReset:
+        'Se eliminó la calibración. Volver a escanear: mantuvo {kept}, volvió a presentar {moved}, adoptó {adopted}.',
+      journalRebuilt: 'Se han reconstruido los folletos "{help}" y "{deck}".',
+      migrated:
+        'Tus mapas hexadecimales de Hexploration 1.x han sido actualizados. Si este juego fue copiado de un juego heredado, ejecuta Volver a escanear en cada página del mapa hexadecimal.',
+      pruned:
+        'Hexágonos guardados que ya no existen y fueron olvidados: {dropped}. Si este juego o página fue copiado, ejecuta Volver a escanear en la página para recuperar sus hexágonos nuevamente.',
+      readyHint:
+        'Escriba !hexploration para el menú o abra el folleto "Hexploration - Command Deck".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Este juego no admite dibujar en la capa de primer plano, por lo que los hexágonos se dibujaron en la capa de fichas.',
+      someFailed:
+        'Hexágonos que no se pudieron dibujar: {count}. Consulte la consola API para obtener más detalles.',
+    },
+    errors: {
+      noPage: 'No se pudo encontrar la página para trabajar.',
+      notHex: 'Esta página no utiliza una cuadrícula hexadecimal.',
+      noPolygons: 'Seleccione una o más formas dibujadas para rellenar.',
+      emptyArea: 'El área seleccionada no contiene ningún centro hexadecimal.',
+      tooMany: 'Eso crearía demasiados hexágonos de una sola vez ({count}).',
+      nothingToConceal: 'Seleccione formas dibujadas o fichas para ocultar.',
+      nothingToReveal: 'Selecciona hexágonos, formas dibujadas o fichas para revelar.',
+      noTokens: 'Seleccione uno o más tokens primero.',
+      noHexes: 'Selecciona uno o más hexágonos (o fichas que se encuentren en hexágonos) primero.',
+      nothingToUndo: 'No hay ningún relleno que deshacer.',
+      unknownCommand: 'Comando desconocido: {command}',
+      unknownSetting: 'Configuración desconocida: {key}',
+      unknownPageSetting: 'Configuraciones que se pueden establecer por página: {keys}',
+      invalidValue: '"{value}" no es un valor válido para {key}.',
+      calibrateNeedsTokens: 'Seleccione una o dos fichas colocadas en centros hexadecimales.',
+      calibrateFailed: 'Esas fichas no se pueden utilizar para calibrar.',
+      unexpected: 'Algo salió mal: {message}',
+    },
+    hints: {
+      noPage: 'Abra la página en la que desea trabajar o seleccione algo en ella.',
+      notHex:
+        'Establezca la cuadrícula de la página en Hex (V) o Hex (H) en Configuración de página.',
+      noPolygons:
+        'Dibuja un polígono, un rectángulo, una elipse o una forma a mano alzada alrededor del área, selecciónala y vuelve a intentarlo.',
+      emptyArea:
+        'Dibuja una forma más grande o verifica la configuración de la cuadrícula de la página.',
+      tooMany: 'Rellene un área más pequeña o divida el área en varias formas.',
+      noHexes:
+        'Los hexágonos están en primer plano o en la capa de fichas; cambie a esa capa para seleccionarlas.',
+      unknownCommand: 'Escriba !hexploration help para enumerar los comandos.',
+      unknownSetting: 'Escriba !hexploration set para ver todas las configuraciones.',
+      calibrateNeedsTokens:
+        'Coloca una ficha en el centro de un hexágono y selecciónala. Seleccione una segunda ficha colocada en un hexágono vecino en la misma fila (Hex V) o columna (Hex H) para corregir también el tamaño del hex.',
+      calibrateFailed:
+        'Dos fichas deben estar en la misma fila (Hex V) o en la misma columna (Hex H), separadas por al menos un hex.',
+      unexpected: 'Los detalles se encuentran en el registro de la consola API.',
+    },
+    help: {
+      menu: 'Mostrar el menú.',
+      fill: 'Cubre las formas dibujadas seleccionadas con hexágonos.',
+      fillInverse: 'Cubre toda la página excepto el interior de las formas seleccionadas.',
+      undo: 'Deshaga el último relleno, invierta el relleno u oculte y restaure las formas que utilizó.',
+      reveal:
+        'Revela los hexágonos seleccionados y los hexágonos debajo de las formas y fichas seleccionadas.',
+      revealPage: 'Revela cada hexágono de la página sin anuncios.',
+      conceal:
+        'Cubre el área debajo de las formas y fichas seleccionadas con hexágonos nuevamente.',
+      explore: 'Muestra las fichas seleccionadas como si acabaran de mudarse allí.',
+      resetPage: 'Elimina todos los hexágonos de la página (pregunta primero).',
+      name: 'Nombra los hexágonos seleccionados, o los hexágonos debajo de las fichas seleccionadas. Deje el nombre vacío para borrarlo.',
+      mark: 'Convierte las fichas seleccionadas en ubicaciones ocultas.',
+      unmark: 'Evite que los tokens seleccionados sean ubicaciones ocultas.',
+      set: 'Cambie una configuración o muestre todas las configuraciones.',
+      pageSet: 'Anula una configuración de revelación solo en la página actual.',
+      pageClear: 'Elimine las anulaciones de la página actual.',
+      rescan:
+        'Reconstruya la lista hexadecimal de la página, por ejemplo, después de copiar una página o un juego.',
+      calibrate:
+        'Alinea la cuadrícula hexagonal con una o dos fichas seleccionadas encajadas en los centros hexagonales.',
+      calibrateReset: 'Elimina la calibración de la página actual.',
+      status: 'Muestra lo que Hexploration sabe sobre la página actual.',
+      journal: 'Reconstruya los folletos de Ayuda y Comando.',
+      help: 'Muestra esta lista.',
+      handout: 'Las instrucciones completas se encuentran en el folleto "{name}".',
+    },
+    deck: {
+      subtitle: 'Cubierta de mando',
+      drawDesc:
+        'Dibuja formas alrededor de un área, selecciónalas y luego rellénalas. Deshacer invierte el último relleno.',
+      revealDesc:
+        'Selecciona hexágonos, formas o fichas para revelarlos o cubrirlos nuevamente. Explore las revelaciones alrededor de las fichas seleccionadas como si se hubieran movido.',
+      locationsDesc:
+        'Selecciona fichas para ocultarlas como ubicaciones debajo de hexágonos. Selecciona hexágonos o fichas para nombrar un hexágono.',
+      toolsDesc:
+        'Configuraciones, anulaciones de páginas, estado, volver a escanear páginas copiadas y calibrar la cuadrícula.',
+      footer: 'Consulte el folleto "{help}" para obtener instrucciones completas.',
+    },
+    handout: {
+      versionLabel: 'Versión',
+      subtitle: 'Exploración hexágono por hexágono para Roll20',
+      footer: 'Utilice el folleto "{deck}" para obtener controles con un solo clic.',
+      overview: {
+        heading: 'Descripción general',
+        body: 'La hexploración cubre un mapa de hexágonos con hexágonos opacos. A medida que el grupo se mueve, los hexágonos por los que pasa (y, si lo desea, los hexágonos que los rodean) se eliminan, por lo que el mapa se descubre un hexágono a la vez. Las ubicaciones ocultas se pueden colocar debajo de hexágonos y se anuncian cuando se encuentran. Funciona en juegos Jumpgate y Legacy, en cuadrículas Hex (V) y Hex (H) de cualquier tamaño.',
+        demo: 'Vea una breve demostración (de la versión 1)',
+      },
+      quickStart: {
+        heading: 'Inicio rápido',
+        steps: [
+          'Abra una página cuya cuadrícula esté configurada en Hex (V) o Hex (H).',
+          'Dibuja una o más formas (polígono, rectángulo, elipse o a mano alzada) alrededor del área a ocultar.',
+          'Seleccione las formas y haga clic en Rellenar en Command Deck (o escriba !hexploration fill). Las formas son reemplazadas por hexágonos.',
+          'Opcional: antes de completar, seleccione fichas para lugares importantes y haga clic en Marcar ubicación. Están ocultos debajo de los hexágonos y se anuncian cuando se descubren.',
+          'Mueve una ficha de jugador. Se revelan cada hexágono por el que pasa y los hexágonos dentro de su distancia de visión.',
+        ],
+      },
+      commands: {
+        heading: 'Comandos',
+        intro:
+          'Sólo los GM pueden usar estos comandos. La mayoría actúa sobre los objetos seleccionados; el resto actúa sobre la página que estás viendo.',
+        colCommand: 'Dominio',
+        colDesc: 'que hace',
+      },
+      revealing: {
+        heading: 'Cómo funciona la revelación',
+        points: [
+          'Sólo las fichas en la capa de fichas revelan hexágonos. El número de fichas lo establece Fichas que revelan: fichas de jugador de forma predeterminada, por lo que el DJ puede mover monstruos sin descubrir el mapa.',
+          'Una ficha revela cada hexágono que cubre (las fichas grandes cubren varios) y, con Revelar a lo largo del camino activado, cada hexágono de la ruta por la que fue arrastrado, incluidos los puntos de ruta.',
+          'La distancia de visión revela los hexágonos alrededor de cada uno de esos hexágonos. Con la Línea de Visión activada, un hexágono sólo se revela si no hay ningún hexágono cubierto en el medio.',
+          'La distancia de revelación de hexágonos se almacena en los hexágonos a medida que se dibujan. Esos hexágonos sólo se revelan desde dentro de esa cantidad de hexágonos, por muy lejos que pueda ver una ficha. Úselo para montañas o bosques que ocultan lo que hay detrás de ellos.',
+          'En el modo Vistazo, los hexágonos a la vista se vuelven transparentes en lugar de desaparecer, y se eliminan cuando una ficha ingresa en ellos.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          'La API no informa movimientos realizados por otros mods. Los movimientos de TokenMod se detectan automáticamente; para otras modificaciones, seleccione los tokens y haga clic en Explorar, o llame a Hexploration.revealAround(token) desde su propio mod.',
+        ],
+      },
+      locations: {
+        heading: 'Hexágonos y ubicaciones con nombre',
+        points: [
+          'Marcar ubicación convierte los tokens seleccionados en ubicaciones ocultas. Una ficha que ya se encuentra bajo un hexágono se oculta inmediatamente; de lo contrario, queda oculto por el siguiente relleno que lo cubre.',
+          'Las fichas con el marcador de estado de la torre blanca también se tratan como ubicaciones cuando las llenas, como en la versión 1.',
+          'Las fichas de ubicación oculta se mueven a la capa de GM. Cuando se revela su hexágono, regresan a la capa de fichas con su nombre mostrado y se anuncia su descubrimiento.',
+          'Name Hex le da a un hexágono un nombre sin ficha. El nombre se muestra al DJ como una etiqueta en la capa del GM y se anuncia cuando se revela el hexágono.',
+          'Announce Discoveries elige si todos, solo el DJ o nadie, ven el anuncio. Ping Discoveries también mueve la vista de los jugadores a la ubicación.',
+        ],
+      },
+      settings: {
+        heading: 'Ajustes',
+        intro:
+          'Cambie la configuración con el conjunto de exploración (o el botón Configuración). La capa hexagonal, los tokens que revelan y el idioma también se pueden configurar en la página de configuración del Mod.',
+        colKey: 'Llave',
+        colName: 'Configuración',
+        colDesc: 'Descripción',
+        perPage: '(Se puede configurar por página).',
+      },
+      jumpgate: {
+        heading: 'Jumpgate y legado',
+        points: [
+          'Hexploration determina qué motor utiliza el juego y dibuja el tipo de forma correspondiente. Las formas dibujadas en cualquiera de los editores se pueden rellenar.',
+          'Con Hex Layer configurada en Auto, los hexágonos se dibujan en la capa de primer plano, encima de las fichas, para que los jugadores no puedan ver lo que hay debajo. Si la capa de primer plano no está disponible, se utiliza la capa de token en su lugar.',
+          'Jumpgate dibuja hexágonos matemáticamente regulares, que tienen una forma ligeramente diferente a los hexágonos Legacy. Si los hexágonos no se alinean con la cuadrícula de una página, ajuste una ficha a un centro hexadecimal, selecciónela y haga clic en Calibrar. Seleccione dos fichas en hexágonos vecinos de la misma fila (Hex V) o columna (Hex H) para corregir también el tamaño del hex.',
+          'Cuando se copia una página o un juego, sus hexágonos obtienen nuevos ID. Ejecute Volver a escanear en la página para recuperarlos nuevamente, junto con sus etiquetas de nombre y tokens de ubicación.',
+        ],
+      },
+      upgrading: {
+        heading: 'Actualización desde la versión 1',
+        points: [
+          'La versión 2 ya no necesita PathMath, MatrixMath, Vector Math o HTML Builder. Puedes eliminarlos a menos que otro mod los use.',
+          'Los mapas hexadecimales, los nombres, las fichas de ubicación y las configuraciones existentes se actualizan automáticamente en el primer inicio.',
+          'Los comandos de la versión 1, incluida la macro Hexploration_menu, todavía funcionan.',
+          'La versión 1 permitía que cualquier ficha que representara un personaje revelara hexágonos. Establezca fichas que revelen fichas de personaje para mantener ese comportamiento.',
+        ],
+        colV1: 'Comando versión 1',
+        colV2: 'Comando versión 2',
+      },
+      troubleshooting: {
+        heading: 'Solución de problemas',
+        points: [
+          'No sucede nada cuando un token se mueve: verifique que el token esté en la capa del token y coincida con los Tokens que revelan, y que la página tenga hexágonos (!hestado de exploración).',
+          'Los hexágonos están desplazados de la cuadrícula: usa Calibrar, luego verifica con una ficha en algunos hexágonos del mapa.',
+          'Los maleficios dejaron de revelarse después de copiar una página o un juego: ejecuta Volver a escanear en la página.',
+          'Fill dice que el área no tiene centros de hexágonos: la forma debe contener el centro de al menos un hexágono.',
+          'Para cualquier otra cosa, consulte el registro de la consola API e incluya sus mensajes cuando solicite ayuda.',
+        ],
+      },
+      languages: {
+        heading: 'Idiomas',
+        body: 'Elija un idioma con !hexploration set language. Idiomas disponibles:',
+      },
+      credits: {
+        heading: 'Créditos',
+        original: 'Mod original de',
+        maintainer: 'Versión 2 mantenida por',
+        marketplace: 'Paquetes de arte de Ada en Roll20 Marketplace',
+        support:
+          'Si encuentra un error o tiene una idea, publíquelo en el foro Roll20 Mod o abra un problema en GitHub e incluya cualquier mensaje del registro de la consola API.',
+      },
+    },
+  };
 
-  var localeSv = {};
+  const TRANSLATION$2 = {
+    titles: {
+      ready: 'Hexploration är redo.',
+      settings: 'Heexploration Inställningar',
+      languages: 'Välj ett språk',
+      pageSettings: 'Sidinställningar: {page}',
+      status: 'Hexploration Status: {page}',
+      help: 'Hexploration kommandon',
+      confirm: 'Vänligen bekräfta',
+    },
+    discovery: {
+      title: 'Plats upptäckt',
+    },
+    menu: {
+      draw: 'Dra',
+      reveal: 'Avslöja och göm',
+      locations: 'Platser',
+      tools: 'Verktyg',
+      layerInUse: 'Nya sexkanter ritas på {layer}.',
+      pageSettingsHelp:
+        'Dessa inställningar gäller endast för denna sida. Inställningar markerade ★ åsidosätter de globala inställningarna.',
+    },
+    buttons: {
+      fill: 'Fylla',
+      fillInverse: 'Omvänd fyllning',
+      undo: 'Ångra Fyll',
+      reveal: 'Avslöja',
+      conceal: 'Dölja',
+      explore: 'Utforska',
+      revealPage: 'Avslöja sidan',
+      resetPage: 'Återställ sida',
+      mark: 'Markera plats',
+      unmark: 'Avmarkera',
+      name: 'Namn Hex',
+      settings: 'Inställningar',
+      pageSettings: 'Sidinställningar',
+      status: 'Status',
+      rescan: 'Skanna igen',
+      calibrate: 'Kalibrera',
+      calibrateReset: 'Återställ kalibrering',
+      help: 'Hjälp',
+      change: 'Ändra',
+      menu: 'Meny',
+      clearOverrides: 'Rensa åsidosättningar',
+      confirmReset: 'Ja, ta bort alla hexar',
+    },
+    prompts: {
+      name: 'Platsnamn (låt vara tomt för att rensa)',
+    },
+    values: {
+      on: 'På',
+      off: 'Av',
+      none: 'Ingen',
+      hexLayer: {
+        auto: 'Auto (förgrund om tillgängligt)',
+        foreground: 'förgrundsskikt',
+        objects: 'symbollager',
+      },
+      revealBy: {
+        players: 'Spelarpoletter',
+        characters: 'Karaktärspoletter',
+        all: 'Alla tokens',
+      },
+      revealMode: {
+        clear: 'Rensa',
+        glimpse: 'Glimt',
+      },
+      announce: {
+        all: 'Alla',
+        gm: 'Endast GM',
+        off: 'Av',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Fylla',
+        fillInverse: 'Omvänd fyllning',
+        conceal: 'Dölja',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Språk',
+        desc: 'Språk för menyer, meddelanden och åhörarkopior.',
+      },
+      hexLayer: {
+        label: 'Hexlager',
+        desc: 'Där nya hexar ritas. Auto provar förgrundslagret (ovanför tokens) och faller tillbaka till tokenlagret om spelet inte stöder det.',
+      },
+      fillColor: {
+        label: 'Fyllningsfärg',
+        desc: 'Färg på nya sexkanter. Använd rgba() för genomskinliga hexadecimaler, till exempel rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Kantfärg',
+        desc: 'Färg på konturerna av nya sexkanter.',
+      },
+      labelColor: {
+        label: 'Etikettfärg',
+        desc: 'Färgen på namnetiketterna endast för GM på namngivna sexkanter.',
+      },
+      glimpseColor: {
+        label: 'Glimt färg',
+        desc: 'Hexfärgade färger ändras till när de skymtas (Glimpse-avslöjningsläge). Använd en genomskinlig rgba()-färg.',
+      },
+      strokeWidth: {
+        label: 'Kantbredd',
+        desc: 'Bredden på konturerna av nya hex, i pixlar (0 till 20).',
+      },
+      maxDistance: {
+        label: 'Hexavslöjande avstånd',
+        desc: 'Tillämpas på hexar när de ritas: en token måste finnas inom så många hexes för att avslöja dem, hur långt den än kan se. Lämna tomt utan gräns.',
+      },
+      revealDistance: {
+        label: 'Siktavstånd',
+        desc: 'Hur många hexar runt en rörlig token som avslöjas (0 till 20). 0 avslöjar endast de hexar som token passerar igenom.',
+      },
+      lineOfSight: {
+        label: 'Synlinje',
+        desc: 'När den är på avslöjas en hex endast om ingen täckt hex ligger mellan den och token.',
+      },
+      revealPath: {
+        label: 'Avslöja längs vägen',
+        desc: 'När den är på avslöjas varje hex som en token passerar genom medan den dras (inklusive waypoints), inte bara där den stannar.',
+      },
+      revealBy: {
+        label: 'Tokens som avslöjar',
+        desc: 'Vilka tokens på tokenlagret avslöjar hexes: tokens som kontrolleras av en spelare, tokens som representerar vilken karaktär som helst eller varje token.',
+      },
+      revealMode: {
+        label: 'Avslöjande läge',
+        desc: 'Clear tar bort sexkanter inom synhåll. Glimpse gör dem genomskinliga istället; de tas bort när en token kommer in i dem.',
+      },
+      announce: {
+        label: 'Tillkännage upptäckter',
+        desc: 'Vem ser chattmeddelandet när en namngiven plats upptäcks.',
+      },
+      pingDiscoveries: {
+        label: 'Ping upptäckter',
+        desc: 'När den är på pingas spelare till en namngiven plats när den upptäcks.',
+      },
+      hideCoveredTokens: {
+        label: 'Dölj täckta polletter',
+        desc: 'Roll20 ritar namn, staplar och auror ovanför hexen. När de är på, har tokens under en täckt sexkant sitt spelare-synliga namn, staplar och auror avstängda och påslagna igen när de avslöjas.',
+      },
+    },
+    status: {
+      engine: 'Spelmotor',
+      grid: 'Rutnät',
+      layer: 'Hexskikt',
+      hexes: 'Hex',
+      named: 'Namngivna hexar',
+      icons: 'Platsskyltar',
+      glimpsed: 'Glimmade hexar',
+      pending: 'Platser som väntar på fyllning',
+      calibrated: 'Kalibrerad',
+      overrides: 'Sida åsidosätter',
+      undo: 'Ångra tillgängligt',
+    },
+    messages: {
+      filled: 'Fyllning klar. Hex ritade: {created}. Omstylad: {restyled}. Gömda platser: {icons}.',
+      revealed: 'Hexen avslöjade: {count}.',
+      revealedPage: 'Varje hex på sidan avslöjas ({count}).',
+      confirmReset:
+        'Ta bort varje hex från "{page}" ({count})? Platssymboler återgår till tokenlagret. Ångra kan inte ångra detta.',
+      resetPage: 'Hexen har tagits bort från sidan: {count}.',
+      undone:
+        'Senaste fyllningen har ångrats. Hex borttagna: {removed}. Återställda hexadecimaler: {restored}.',
+      named: 'Hex med namnet "{name}": {count}.',
+      unnamed: 'Namn raderade: {count}.',
+      marked:
+        'Platser dolda i befintliga hexadecimaler: {attached}. Väntar på nästa fyllning som täcker dem: {pending}.',
+      unmarked: 'Tokens som inte längre är platser: {count}.',
+      settingChanged: '{setting} inställd på {value}.',
+      rescanned:
+        'Omsökningen är klar. Sparade: {kept}. Antagen: {adopted}. Återarkiverad: {moved}. Saknas och glöms: {dropped}. Etiketter återlänkade: {labels}. Platstokens återlänkade: {icons}.',
+      calibrated:
+        'Rutnät kalibrerat (kolumnsteg {colStep}px, radsteg {rowStep}px). Skanna om: behöll {kept}, arkiverade på nytt {moved}, antog {adopted}.',
+      calibrationReset:
+        'Kalibrering har tagits bort. Skanna om: behöll {kept}, arkiverade på nytt {moved}, antog {adopted}.',
+      journalRebuilt: '"{help}" och "{deck}" har byggts om.',
+      migrated:
+        'Dina Hexploration 1.x hex-kartor har uppgraderats. Om det här spelet kopierades från ett Legacy-spel, kör Rescan på varje hex-kartasida.',
+      pruned:
+        'Sparade hexar som inte längre finns och glömdes bort: {dropped}. Om det här spelet eller sidan kopierades, kör Rescan på sidan för att plocka upp dess hexes igen.',
+      readyHint:
+        'Skriv !hexploration för menyn, eller öppna utdelningen "Hexploration - Command Deck".',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Det här spelet stöder inte ritning på förgrundslagret, så hexadecken ritades på tokenlagret.',
+      someFailed: 'Hex som inte kunde ritas: {count}. Kontrollera API-konsolen för detaljer.',
+    },
+    errors: {
+      noPage: 'Kunde inte hitta sidan att arbeta på.',
+      notHex: 'Den här sidan använder inte ett hex-rutnät.',
+      noPolygons: 'Välj en eller flera ritade former att fylla.',
+      emptyArea: 'Det valda området innehåller inga hexa-center.',
+      tooMany: 'Det skulle skapa för många hexar på en gång ({count}).',
+      nothingToConceal: 'Välj ritade former eller tokens att dölja.',
+      nothingToReveal: 'Välj hex, ritade former eller polletter att avslöja.',
+      noTokens: 'Välj först en eller flera tokens.',
+      noHexes: 'Välj en eller flera hexes (eller polletter som står på hexes) först.',
+      nothingToUndo: 'Det finns ingen fyllning att ångra.',
+      unknownCommand: 'Okänt kommando: {command}',
+      unknownSetting: 'Okänd inställning: {key}',
+      unknownPageSetting: 'Inställningar som kan ställas in per sida: {keys}',
+      invalidValue: '"{value}" är inte ett giltigt värde för {key}.',
+      calibrateNeedsTokens: 'Välj en eller två polletter som knäpps till hexade centra.',
+      calibrateFailed: 'Dessa tokens kan inte användas för att kalibrera.',
+      unexpected: 'Något gick fel: {message}',
+    },
+    hints: {
+      noPage: 'Öppna sidan du vill arbeta på eller välj något på den.',
+      notHex: 'Ställ in sidrutnätet på Hex (V) eller Hex (H) i Sidinställningar.',
+      noPolygons:
+        'Rita en polygon, rektangel, ellips eller frihandsform runt området, markera det och försök sedan igen.',
+      emptyArea: 'Rita en större form eller kontrollera inställningarna för sidrutnätet.',
+      tooMany: 'Fyll ett mindre område, eller dela området i flera former.',
+      noHexes: 'Hex är på förgrunden eller symbollagret; växla till det lagret för att välja dem.',
+      unknownCommand: 'Skriv !hexploration help för att lista kommandona.',
+      unknownSetting: 'Skriv !hexploration set för att se alla inställningar.',
+      calibrateNeedsTokens:
+        'Fäst en token i mitten av en hex och välj den. Välj en andra token som fästs på en intilliggande hex i samma rad (Hex V) eller kolumn (Hex H) för att korrigera hexstorleken också.',
+      calibrateFailed:
+        'Två tokens måste vara i samma rad (Hex V) eller samma kolumn (Hex H), med minst en hexadecimal isär.',
+      unexpected: 'Detaljer finns i API-konsolloggen.',
+    },
+    help: {
+      menu: 'Visa menyn.',
+      fill: 'Täck de utvalda ritade formerna med hex.',
+      fillInverse: 'Täck hela sidan utom inuti de valda formerna.',
+      undo: 'Ångra den sista fyllningen, inverterad fyllning eller dölj och återställ formerna den använde.',
+      reveal: 'Avslöja de valda hexen och hexen under de valda formerna och symbolerna.',
+      revealPage: 'Avslöja varje hex på sidan utan tillkännagivanden.',
+      conceal: 'Täck området under de valda formerna och polletterna med hexar igen.',
+      explore: 'Avslöja runt de valda tokens som om de precis hade flyttat dit.',
+      resetPage: 'Ta bort varje hex på sidan (frågar först).',
+      name: 'Namnge de valda hexorna, eller hexarna under de valda polletterna. Lämna namnet tomt för att rensa det.',
+      mark: 'Förvandla de valda tokens till dolda platser.',
+      unmark: 'Stoppa de valda tokens från att vara dolda platser.',
+      set: 'Ändra en inställning eller visa alla inställningar.',
+      pageSet: 'Åsidosätt en avslöjningsinställning endast på den aktuella sidan.',
+      pageClear: 'Ta bort den aktuella sidans åsidosättningar.',
+      rescan:
+        'Bygg om sidans hex-lista, till exempel efter att du kopierat en sida eller ett spel.',
+      calibrate: 'Rada hex-rutnätet med en eller två utvalda tokens fästa till hex-centrum.',
+      calibrateReset: 'Ta bort den aktuella sidans kalibrering.',
+      status: 'Visa vad Hexploration vet om den aktuella sidan.',
+      journal: 'Bygg om hjälp- och kommandodäcken.',
+      help: 'Visa den här listan.',
+      handout: 'Fullständiga instruktioner finns i "{name}" handout.',
+    },
+    deck: {
+      subtitle: 'Kommandodäck',
+      drawDesc:
+        'Rita former runt ett område, markera dem och fyll sedan. Ångra vänder den senaste fyllningen.',
+      revealDesc:
+        'Välj hex, former eller tokens för att avslöja eller täcka dem igen. Utforska avslöjar runt utvalda tokens som om de hade rört sig.',
+      locationsDesc:
+        'Välj tokens för att dölja dem som platser under hex. Välj hex eller token för att namnge en hex.',
+      toolsDesc:
+        'Inställningar, sidöverstyrningar, status, skanna om kopierade sidor och kalibrering av rutnätet.',
+      footer: 'Se "{help}"-handouten för fullständiga instruktioner.',
+    },
+    handout: {
+      versionLabel: 'Version',
+      subtitle: 'Hex-by-hex-utforskning för Roll20',
+      footer: 'Använd "{deck}"-handouten för kontroller med ett klick.',
+      overview: {
+        heading: 'Översikt',
+        body: 'Hexploration täcker en hex-karta med ogenomskinliga hexes. När sällskapet rör sig tas hexen de passerar igenom (och, om du vill, hexen runt dem) bort, så kartan avslöjas en hex i taget. Dolda platser kan placeras under hex och meddelas när de hittas. Det fungerar i Jumpgate och Legacy-spel, på Hex (V) och Hex (H) rutnät av alla storlekar.',
+        demo: 'Se en kort demo (från version 1)',
+      },
+      quickStart: {
+        heading: 'Snabbstart',
+        steps: [
+          'Öppna en sida vars rutnät är inställt på Hex (V) eller Hex (H).',
+          'Rita en eller flera former (polygon, rektangel, ellips eller frihand) runt området för att dölja.',
+          'Välj formerna och klicka på Fyll i kommandodäcket (eller skriv !hexploration fill). Formerna ersätts av hexar.',
+          'Valfritt: innan du fyller, välj tokens för viktiga platser och klicka på Markera plats. De är gömda under hexen och tillkännages när de upptäcks.',
+          'Flytta en spelartoken. Varje hex den passerar igenom, och hexen inom dess siktavstånd, avslöjas.',
+        ],
+      },
+      commands: {
+        heading: 'Kommandon',
+        intro:
+          'Endast GM:er kan använda dessa kommandon. De flesta agerar på de valda objekten; resten agerar på sidan du tittar på.',
+        colCommand: 'Kommando',
+        colDesc: 'Vad den gör',
+      },
+      revealing: {
+        heading: 'Hur avslöjande fungerar',
+        points: [
+          'Endast polletter på tokenlagret avslöjar sexkanter. Vilket antal tokens bestäms av Tokens That Reveal: spelartokens som standard, så GM kan flytta monster utan att avslöja kartan.',
+          'En token avslöjar varje hex den täcker (stora tokens täcker flera) och, med Reveal Along Path på, varje hex på rutten den släpades längs, inklusive waypoints.',
+          'Sight Distance avslöjar hexen runt var och en av dessa hexes. Med Line of Sight på avslöjas en hex endast om ingen täckt hex ligger emellan.',
+          'Hexavslöjande avstånd lagras på hexar när de ritas. Dessa hexes avslöjas bara inifrån så många hexes, hur långt en token än kan se. Använd den för berg eller skogar som döljer vad som finns bakom dem.',
+          'I Glimpse-läget blir hexar inom synhåll genomskinliga istället för att försvinna och tas bort när en token kommer in i dem.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          'API:et rapporterar inte rörelser gjorda av andra mods. TokenMod-drag plockas upp automatiskt; för andra moddar, välj tokens och klicka på Utforska, eller ring Hexploration.revealAround(token) från din egen mod.',
+        ],
+      },
+      locations: {
+        heading: 'Namngivna Hex och platser',
+        points: [
+          'Markera plats förvandlar de valda tokens till dolda platser. En token redan under en hex döljs direkt; annars döljs den av nästa fyllning som täcker den.',
+          'Tokens med statusmarkören för det vita tornet behandlas också som platser när du fyller, som i version 1.',
+          'Dolda platssymboler flyttas till GM-lagret. När deras hex avslöjas återvänder de till tokenlagret med deras namn visat, och deras upptäckt tillkännages.',
+          'Namn Hex ger en hex ett namn utan en token. Namnet visas för GM som en etikett på GM-lagret och meddelas när hexen avslöjas.',
+          'Announce Discoveries väljer om alla, bara GM, eller ingen ser tillkännagivandet. Ping Discoveries flyttar också spelarnas vy till platsen.',
+        ],
+      },
+      settings: {
+        heading: 'Inställningar',
+        intro:
+          'Ändra inställningar med !hexploration set (eller knappen Inställningar). Hexlager, Tokens That Reveal och Language kan också ställas in på modens inställningssida.',
+        colKey: 'Nyckel',
+        colName: 'Miljö',
+        colDesc: 'Beskrivning',
+        perPage: '(Kan ställas in per sida.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate och Legacy',
+        points: [
+          'Hexploration tar reda på vilken motor spelet använder och ritar den matchande formen. Former ritade i någon av editorerna kan fyllas.',
+          'Med Hex Layer inställt på Auto, ritas hex på förgrundslagret, ovanför tokens, så att spelare inte kan se vad som finns under. Om förgrundslagret inte är tillgängligt används tokenlagret istället.',
+          'Jumpgate ritar matematiskt regelbundna hexes, som är en något annorlunda form från Legacy hexes. Om hexadelarna inte stämmer överens med en sidas rutnät, fäster du en token till en hex-centrum, markerar den och klickar på Kalibrera. Välj två tokens i angränsande hexadecimaler i samma rad (Hex V) eller kolumn (Hex H) för att även korrigera hexstorleken.',
+          'När en sida eller ett spel kopieras får dess hexar nya ID. Kör Rescan på sidan för att plocka upp dem igen, tillsammans med deras namnetiketter och platssymboler.',
+        ],
+      },
+      upgrading: {
+        heading: 'Uppgraderar från version 1',
+        points: [
+          'Version 2 behöver inte längre PathMath, MatrixMath, Vector Math eller HTML Builder. Du kan ta bort dem om inte en annan mod använder dem.',
+          'Befintliga hexadecimala kartor, namn, platssymboler och inställningar uppgraderas automatiskt vid första starten.',
+          'Version 1-kommandona, inklusive makrot Hexploration_menu, fungerar fortfarande.',
+          'Version 1 låter vilken token som helst som representerade en karaktär avslöja hexes. Ställ in Tokens That Reveal till Character-tokens för att behålla det beteendet.',
+        ],
+        colV1: 'Kommandot version 1',
+        colV2: 'Kommandot version 2',
+      },
+      troubleshooting: {
+        heading: 'Felsökning',
+        points: [
+          'Ingenting händer när en token rör sig: kontrollera att token finns på tokenlagret och matchar Tokens That Reveal, och att sidan har hexes (!hexploration-status).',
+          'Hexen är förskjutna från rutnätet: använd Kalibrera och kontrollera sedan med en token på några hexar över kartan.',
+          'Hexes slutade avslöjas efter att ha kopierat en sida eller ett spel: kör Rescan på sidan.',
+          'Fill säger att området inte har några sexkantscentrum: formen måste innehålla mitten av minst en sexkant.',
+          'För allt annat, kontrollera API-konsolloggen och inkludera dess meddelanden när du ber om hjälp.',
+        ],
+      },
+      languages: {
+        heading: 'Språk',
+        body: 'Välj ett språk med !hexploration set språk. Tillgängliga språk:',
+      },
+      credits: {
+        heading: 'Krediter',
+        original: 'Originalmod av',
+        maintainer: 'Version 2 underhålls av',
+        marketplace: 'Adas konstpaket på Roll20 Marketplace',
+        support:
+          'Om du hittar en bugg eller har en idé, posta i Roll20 Mod-forumet eller öppna ett problem på GitHub och inkludera eventuella meddelanden från API-konsolloggen.',
+      },
+    },
+  };
 
-  var localeTr = {};
+  const TRANSLATION$1 = {
+    titles: {
+      ready: 'Keşif hazır.',
+      settings: 'Keşif Ayarları',
+      languages: 'Bir Dil Seçin',
+      pageSettings: 'Sayfa Ayarları: {page}',
+      status: 'Keşif Durumu: {page}',
+      help: 'Keşif Komutları',
+      confirm: 'Lütfen Onaylayın',
+    },
+    discovery: {
+      title: 'Konum Keşfedildi',
+    },
+    menu: {
+      draw: 'Çizmek',
+      reveal: 'Göster ve Gizle',
+      locations: 'Konumlar',
+      tools: 'Aletler',
+      layerInUse: '{layer} üzerinde yeni altıgenler çiziliyor.',
+      pageSettingsHelp:
+        'Bu ayarlar yalnızca bu sayfa için geçerlidir. ★ işaretli ayarlar genel ayarları geçersiz kılar.',
+    },
+    buttons: {
+      fill: 'Doldurmak',
+      fillInverse: 'Ters Doldurma',
+      undo: 'Doldurmayı Geri Al',
+      reveal: 'Ortaya çıkarmak',
+      conceal: 'Gizle',
+      explore: 'Keşfetmek',
+      revealPage: 'Sayfayı Göster',
+      resetPage: 'Sayfayı Sıfırla',
+      mark: 'Konumu İşaretle',
+      unmark: 'İşareti kaldır',
+      name: 'Ad Hex',
+      settings: 'Ayarlar',
+      pageSettings: 'Sayfa Ayarları',
+      status: 'Durum',
+      rescan: 'Yeniden tara',
+      calibrate: 'Kalibre et',
+      calibrateReset: 'Kalibrasyonu Sıfırla',
+      help: 'Yardım',
+      change: 'Değiştirmek',
+      menu: 'Menü',
+      clearOverrides: 'Geçersiz Kılmaları Temizle',
+      confirmReset: 'Evet, Tüm Altıgenleri Kaldır',
+    },
+    prompts: {
+      name: 'Konum adı (temizlemek için boş bırakın)',
+    },
+    values: {
+      on: 'Açık',
+      off: 'Kapalı',
+      none: 'Hiçbiri',
+      hexLayer: {
+        auto: 'Otomatik (varsa ön planda)',
+        foreground: 'ön plan katmanı',
+        objects: 'belirteç katmanı',
+      },
+      revealBy: {
+        players: 'Oyuncu jetonları',
+        characters: 'Karakter belirteçleri',
+        all: 'Tüm jetonlar',
+      },
+      revealMode: {
+        clear: 'Temizlemek',
+        glimpse: 'Kısa bakış',
+      },
+      announce: {
+        all: 'Herkes',
+        gm: 'Yalnızca GM',
+        off: 'Kapalı',
+      },
+      orientation: {
+        vertical: 'Altıgen (V)',
+        horizontal: 'Altıgen (H)',
+      },
+      fillKind: {
+        fill: 'Doldurmak',
+        fillInverse: 'Ters Doldurma',
+        conceal: 'Gizle',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Dil',
+        desc: 'Menüler, mesajlar ve bildiriler için dil.',
+      },
+      hexLayer: {
+        label: 'Altıgen Katman',
+        desc: 'Yeni altıgenlerin çizildiği yer. Otomatik, ön plan katmanını (belirteçlerin üstünde) dener ve oyun desteklemiyorsa simge katmanına geri döner.',
+      },
+      fillColor: {
+        label: 'Dolgu Rengi',
+        desc: 'Yeni altıgenlerin rengi. Şeffaf altıgenler için rgba() kullanın; örneğin rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Kenarlık Rengi',
+        desc: 'Yeni altıgenlerin ana hatlarının rengi.',
+      },
+      labelColor: {
+        label: 'Etiket Rengi',
+        desc: 'Adlandırılmış altıgenlerdeki yalnızca GM ad etiketlerinin rengi.',
+      },
+      glimpseColor: {
+        label: 'Bakış Rengi',
+        desc: 'Renk altıgenleri, göz atıldığında (Glimpse ortaya çıkarma modu) olarak değişir. Şeffaf bir rgba() rengi kullanın.',
+      },
+      strokeWidth: {
+        label: 'Kenar Genişliği',
+        desc: 'Yeni altıgenlerin ana hattının genişliği, piksel cinsinden (0 ila 20).',
+      },
+      maxDistance: {
+        label: 'Hex Ortaya Çıkma Mesafesi',
+        desc: 'Altıgenlere çizilirken uygulanır: Bir jetonun, görebildiği kadar uzağı ortaya çıkarabilmesi için bu sayıda altıgen içinde olması gerekir. Sınırsız olarak boş bırakın.',
+      },
+      revealDistance: {
+        label: 'Görüş Mesafesi',
+        desc: 'Hareket eden bir jetonun etrafındaki kaç tane altıgen ortaya çıkar (0 ila 20). 0 yalnızca belirtecin geçtiği altıgenleri ortaya çıkarır.',
+      },
+      lineOfSight: {
+        label: 'Görüş Hattı',
+        desc: 'Açıkken, bir altıgen yalnızca onunla belirteç arasında örtülü bir altıgen bulunmadığında ortaya çıkar.',
+      },
+      revealPath: {
+        label: 'Yol Boyunca Ortaya Çıkar',
+        desc: 'Açık olduğunda, bir jetonun sürüklenirken geçtiği her altıgen (ara noktalar dahil) yalnızca durduğu yer değil, ortaya çıkar.',
+      },
+      revealBy: {
+        label: 'Ortaya Çıkan Tokenlar',
+        desc: 'Jeton katmanındaki hangi jetonlar altıgenleri ortaya çıkarır: bir oyuncu tarafından kontrol edilen jetonlar, herhangi bir karakteri temsil eden jetonlar veya her jeton.',
+      },
+      revealMode: {
+        label: 'Ortaya Çıkarma Modu',
+        desc: 'Clear, görüş alanındaki altıgenleri kaldırır. Glimpse onların içini görmelerini sağlar; bir jeton onlara girdiğinde kaldırılırlar.',
+      },
+      announce: {
+        label: 'Keşifleri Duyurun',
+        desc: 'Adlandırılmış bir konum keşfedildiğinde sohbet mesajını kimler görür?',
+      },
+      pingDiscoveries: {
+        label: 'Ping Keşifleri',
+        desc: 'Açık olduğunda, oyuncular keşfedildiklerinde adlandırılmış bir konuma ping atılır.',
+      },
+      hideCoveredTokens: {
+        label: 'Kapalı Jetonları Gizle',
+        desc: 'Roll20 altıgenlerin üzerine isimleri, çubukları ve auraları çizer. Açıkken, kapalı bir altıgen altındaki jetonların oyuncuların görebileceği adları vardır, çubuklar ve auralar kapatılır ve açığa çıktıklarında tekrar açılır.',
+      },
+    },
+    status: {
+      engine: 'Oyun motoru',
+      grid: 'Izgara',
+      layer: 'Altıgen katman',
+      hexes: 'Altıgenler',
+      named: 'Adlandırılmış altıgenler',
+      icons: 'Konum belirteçleri',
+      glimpsed: 'Kısa bir bakış altıgenler',
+      pending: 'Doldurulmayı bekleyen yerler',
+      calibrated: 'Kalibre edildi',
+      overrides: 'Sayfa geçersiz kılmaları',
+      undo: 'Geri alma seçeneği mevcut',
+    },
+    messages: {
+      filled:
+        'Doldurma tamamlandı. Çizilen altıgenler: {created}. Yeniden stil: {restyled}. Gizlenen konumlar: {icons}.',
+      revealed: 'Büyüler ortaya çıktı: {count}.',
+      revealedPage: 'Sayfadaki her altıgen ortaya çıktı ({count}).',
+      confirmReset:
+        '"{page}" ({count}) öğesindeki her altıgen kaldırılsın mı? Konum belirteçleri, belirteç katmanına geri döner. Geri alma işlemi bunu tersine çeviremez.',
+      resetPage: 'Onaltılıklar sayfadan kaldırıldı: {count}.',
+      undone:
+        'Son doldurma geri alındı. Kaldırılan altıgenler: {removed}. Yeniden biçimlendirilen altıgenler geri yüklendi: {restored}.',
+      named: '"{name}" adlı altıgenler: {count}.',
+      unnamed: 'İsimler temizlendi: {count}.',
+      marked:
+        'Mevcut altıgenlerde gizli konumlar: {attached}. Bunları kapsayan bir sonraki dolgu bekleniyor: {pending}.',
+      unmarked: 'Artık konum olmayan jetonlar: {count}.',
+      settingChanged: '{setting}, {value} olarak ayarlandı.',
+      rescanned:
+        'Yeniden tarama tamamlandı. Tutulan: {kept}. Kabul edildi: {adopted}. Yeniden dosyalandı: {moved}. Eksik ve unutulmuş: {dropped}. Etiketler yeniden bağlandı: {labels}. Konum jetonları yeniden bağlandı: {icons}.',
+      calibrated:
+        'Izgara kalibre edildi (sütun adımı {colStep}px, satır adımı {rowStep}px). Yeniden tarama: {kept} tutuldu, {moved} yeniden dosyalandı, {adopted} kabul edildi.',
+      calibrationReset:
+        'Kalibrasyon kaldırıldı. Yeniden tarama: {kept} tutuldu, {moved} yeniden dosyalandı, {adopted} kabul edildi.',
+      journalRebuilt: '"{help}" ve "{deck}" bildirileri yeniden oluşturuldu.',
+      migrated:
+        'Heexploration 1.x hex haritalarınız yükseltildi. Bu oyun Eski bir oyundan kopyalanmışsa, her altıgen harita sayfasında Yeniden Taramayı çalıştırın.',
+      pruned:
+        "Artık mevcut olmayan ve unutulan kayıtlı altıgenler: {dropped}. Bu oyun veya sayfa kopyalandıysa, altıgenleri tekrar almak için sayfada Yeniden Tarama'yı çalıştırın.",
+      readyHint: 'Menüye !hexploration yazın veya "Hexploration - Command Deck" broşürünü açın.',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Bu oyun ön plan katmanında çizimi desteklemediğinden, simge katmanına altıgenler çizildi.',
+      someFailed: 'Çizilemeyen altıgenler: {count}. Ayrıntılar için API konsolunu kontrol edin.',
+    },
+    errors: {
+      noPage: 'Üzerinde çalışılacak sayfa bulunamadı.',
+      notHex: 'Bu sayfada altıgen ızgara kullanılmamaktadır.',
+      noPolygons: 'Doldurulacak bir veya daha fazla çizilmiş şekli seçin.',
+      emptyArea: 'Seçilen alan herhangi bir altıgen merkez içermiyor.',
+      tooMany: 'Bu, tek seferde çok fazla altıgen oluşturacaktır ({count}).',
+      nothingToConceal: 'Gizlenecek çizilmiş şekilleri veya simgeleri seçin.',
+      nothingToReveal: 'Ortaya çıkarmak için altıgenleri, çizilmiş şekilleri veya jetonları seçin.',
+      noTokens: 'Önce bir veya daha fazla jeton seçin.',
+      noHexes:
+        'Önce bir veya daha fazla altıgen (veya altıgenlerin üzerinde duran jetonlar) seçin.',
+      nothingToUndo: 'Geri alınacak bir dolgu yok.',
+      unknownCommand: 'Bilinmeyen komut: {command}',
+      unknownSetting: 'Bilinmeyen ayar: {key}',
+      unknownPageSetting: 'Sayfa başına ayarlanabilen ayarlar: {keys}',
+      invalidValue: '"{value}", {key} için geçerli bir değer değil.',
+      calibrateNeedsTokens: 'Altıgen merkezlere tutturulmuş bir veya iki jeton seçin.',
+      calibrateFailed: 'Bu jetonlar kalibrasyon için kullanılamaz.',
+      unexpected: 'Bir şeyler ters gitti: {message}',
+    },
+    hints: {
+      noPage: 'Üzerinde çalışmak istediğiniz sayfayı açın veya üzerinde bir şey seçin.',
+      notHex: "Sayfa Ayarları'nda sayfa ızgarasını Hex (V) veya Hex (H) olarak ayarlayın.",
+      noPolygons:
+        'Alanın çevresine çokgen, dikdörtgen, elips veya serbest şekil çizin, seçin ve tekrar deneyin.',
+      emptyArea: 'Daha büyük bir şekil çizin veya sayfa ızgarası ayarlarını kontrol edin.',
+      tooMany: 'Daha küçük bir alanı doldurun veya alanı birkaç şekle bölün.',
+      noHexes:
+        'Altıgenler ön planda veya simge katmanındadır; bunları seçmek için o katmana geçin.',
+      unknownCommand: 'Komutları listelemek için !hexploration help yazın.',
+      unknownSetting: 'Her ayarı görmek için !hexploration set yazın.',
+      calibrateNeedsTokens:
+        'Bir altıgenin ortasına bir jeton tutturun ve onu seçin. Onaltılı boyutu da düzeltmek için aynı satırdaki (Hex V) veya sütundaki (Hex H) komşu altıgenlere tutturulmuş ikinci bir jeton seçin.',
+      calibrateFailed:
+        'İki jetonun aynı satırda (Hex V) veya aynı sütunda (Hex H) ve en az bir onaltılık aralıkta olması gerekir.',
+      unexpected: 'Ayrıntılar API konsolu günlüğündedir.',
+    },
+    help: {
+      menu: 'Menüyü göster.',
+      fill: 'Seçilen çizilen şekilleri altıgenlerle kaplayın.',
+      fillInverse: 'Seçilen şekillerin içi hariç tüm sayfayı kaplayın.',
+      undo: 'Son dolguyu geri alın, ters dolguyu ters çevirin veya gizleyin ve kullandığı şekilleri geri yükleyin.',
+      reveal:
+        'Seçilen altıgenleri ve seçilen şekillerin ve simgelerin altındaki altıgenleri ortaya çıkarın.',
+      revealPage: 'Sayfadaki her altıgeni duyuru yapmadan ortaya çıkarın.',
+      conceal: 'Seçilen şekillerin ve jetonların altındaki alanı tekrar altıgenlerle kaplayın.',
+      explore: 'Seçilen jetonların etrafını sanki oraya yeni taşınmışlar gibi gösterin.',
+      resetPage: 'Sayfadaki her altıgeni kaldırın (önce sorar).',
+      name: 'Seçilen altıgenleri veya seçilen belirteçlerin altındaki altıgenleri adlandırın. Temizlemek için adı boş bırakın.',
+      mark: 'Seçilen jetonları gizli konumlara dönüştürün.',
+      unmark: 'Seçilen belirteçlerin gizli konumlar olmasını durdurun.',
+      set: 'Bir ayarı değiştirin veya tüm ayarları gösterin.',
+      pageSet: 'Yalnızca geçerli sayfadaki bir gösterme ayarını geçersiz kılın.',
+      pageClear: 'Geçerli sayfanın geçersiz kılmalarını kaldırın.',
+      rescan:
+        'Örneğin bir sayfayı veya oyunu kopyaladıktan sonra sayfanın onaltılı listesini yeniden oluşturun.',
+      calibrate:
+        'Altıgen ızgarayı, altıgen merkezlerine tutturulmuş bir veya iki seçilmiş jetonla hizalayın.',
+      calibrateReset: 'Geçerli sayfanın kalibrasyonunu kaldırın.',
+      status: "Heexploration'ın mevcut sayfa hakkında bildiklerini gösterin.",
+      journal: 'Yardım ve Komut Paneli bildirilerini yeniden oluşturun.',
+      help: 'Bu listeyi göster.',
+      handout: 'Talimatların tamamı "{name}" broşüründe yer almaktadır.',
+    },
+    deck: {
+      subtitle: 'Komut Güvertesi',
+      drawDesc:
+        'Bir alanın etrafına şekiller çizin, bunları seçin ve ardından doldurun. Geri al, son dolguyu tersine çevirir.',
+      revealDesc:
+        'Tekrar ortaya çıkarmak veya kaplamak için altıgenleri, şekilleri veya jetonları seçin. Seçili tokenların etrafındaki gösterimleri sanki hareket etmişler gibi keşfedin.',
+      locationsDesc:
+        'Altıgenlerin altındaki konumlar olarak gizlemek için belirteçleri seçin. Bir altıgeni adlandırmak için altıgenleri veya belirteçleri seçin.',
+      toolsDesc:
+        'Ayarlar, sayfa geçersiz kılmaları, durum, kopyalanan sayfaları yeniden tarama ve ızgarayı kalibre etme.',
+      footer: 'Talimatların tamamı için "{help}" broşürüne bakın.',
+    },
+    handout: {
+      versionLabel: 'Sürüm',
+      subtitle: 'Roll20 için hex-hex keşif',
+      footer: 'Tek tıklamayla kontroller için "{deck}" broşürünü kullanın.',
+      overview: {
+        heading: 'Genel Bakış',
+        body: 'Heexploration, opak altıgenlere sahip bir altıgen haritayı kapsar. Grup ilerledikçe içinden geçtikleri altıgenler (ve isterseniz etraflarındaki altıgenler) kaldırılır, böylece harita her seferinde bir altıgen olarak ortaya çıkar. Gizli konumlar altıgenlerin altına yerleştirilebilir ve bulunduğunda duyurulur. Jumpgate ve Legacy oyunlarında, her boyuttaki Hex (V) ve Hex (H) ızgaralarında çalışır.',
+        demo: "Kısa bir demo izleyin (versiyon 1'den)",
+      },
+      quickStart: {
+        heading: 'Hızlı Başlangıç',
+        steps: [
+          'Izgarası Hex (V) veya Hex (H) olarak ayarlanmış bir sayfayı açın.',
+          'Gizlenecek alanın çevresine bir veya daha fazla şekil (çokgen, dikdörtgen, elips veya serbest çizim) çizin.',
+          "Şekilleri seçin ve Komut Panelinde Doldur'a tıklayın (veya !hexploration fill yazın). Şekillerin yerini altıgenler alır.",
+          "İsteğe bağlı: doldurmadan önce önemli yerler için jetonları seçin ve Konumu İşaretle'ye tıklayın. Altıgenlerin altında gizlenirler ve keşfedildiklerinde duyurulurlar.",
+          'Bir oyuncu jetonunu taşıyın. İçinden geçtiği her altıgen ve Görüş Mesafesindeki altıgenler ortaya çıkar.',
+        ],
+      },
+      commands: {
+        heading: 'Komutlar',
+        intro:
+          "Bu komutları yalnızca GM'ler kullanabilir. Çoğu seçilen nesneler üzerinde hareket eder; geri kalanı görüntülediğiniz sayfada hareket eder.",
+        colCommand: 'Emretmek',
+        colDesc: 'Ne işe yarar',
+      },
+      revealing: {
+        heading: 'Açığa Çıkarma Nasıl Çalışır?',
+        points: [
+          'Yalnızca jeton katmanındaki jetonlar altıgenleri ortaya çıkarır. Hangi jetonların sayılacağı, Ortaya Çıkarılan Jetonlar tarafından belirlenir: varsayılan olarak oyuncu jetonları, böylece GM, haritayı açığa çıkarmadan canavarları hareket ettirebilir.',
+          'Bir jeton, kapsadığı her altıgeni (büyük jetonlar birkaçını kapsar) ve Yol Boyunca Göster açıkken, ara noktalar da dahil olmak üzere sürüklendiği rotadaki her altıgeni ortaya çıkarır.',
+          'Görüş Mesafesi, bu altıgenlerin her birinin etrafındaki altıgenleri ortaya çıkarır. Görüş Hattı açıkken, bir altıgen yalnızca arada kapalı bir altıgen bulunmadığında ortaya çıkar.',
+          'Hex Reveal Distance, altıgenler çizildikçe depolanır. Bu büyüler, bir jetonun görebileceği kadar uzağa, yalnızca o kadar çok büyünün içinden ortaya çıkar. Arkalarında olanı gizleyen dağlar veya ormanlar için kullanın.',
+          'Bakış modunda, görüş alanındaki altıgenler kaybolmak yerine şeffaf hale gelir ve içlerine bir jeton girdiğinde kaldırılır.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          "API, diğer modların yaptığı hareketleri raporlamaz. TokenMod hareketleri otomatik olarak alınır; diğer modlar için belirteçleri seçin ve Araştır'a tıklayın veya kendi modunuzdan Heexploration.revealAround(token) öğesini çağırın.",
+        ],
+      },
+      locations: {
+        heading: 'Adlandırılmış Altıgenler ve Konumlar',
+        points: [
+          'Konumu İşaretle, seçilen jetonları gizli konumlara dönüştürür. Zaten altıgen altında olan bir jeton hemen gizlenir; aksi takdirde onu kapsayan bir sonraki dolgu tarafından gizlenir.',
+          "Beyaz kule durum işaretçisine sahip jetonlar da, sürüm 1'de olduğu gibi, doldurduğunuzda konum olarak kabul edilir.",
+          'Gizli konum belirteçleri GM katmanına taşınır. Altıgenleri ortaya çıktığında, adlarının gösterildiği simge katmanına geri dönerler ve keşifleri duyurulur.',
+          "Name Hex, onaltılıya belirteci olmayan bir ad verir. İsim, GM katmanında bir etiket olarak GM'ye gösterilir ve altıgen ortaya çıktığında duyurulur.",
+          "Announce Discoveries, duyuruyu herkesin mi, yalnızca GM'nin mi yoksa hiç kimsenin mi görmeyeceğini seçer. Ping Discoveries ayrıca oyuncuların görünümünü konuma taşır.",
+        ],
+      },
+      settings: {
+        heading: 'Ayarlar',
+        intro:
+          '!hexploration setiyle (veya Ayarlar düğmesiyle) ayarları değiştirin. Hex Katmanı, Ortaya Çıkan Tokenlar ve Dil ayrıca Modun ayarlar sayfasından da ayarlanabilir.',
+        colKey: 'Anahtar',
+        colName: 'Ayar',
+        colDesc: 'Tanım',
+        perPage: '(Sayfa başına ayarlanabilir.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate ve Eski',
+        points: [
+          'Heexploration, oyunun hangi motoru kullandığını bulur ve ona uygun şekli çizer. Her iki düzenleyicide de çizilen şekiller doldurulabilir.',
+          'Hex Layer Auto (Otomatik) olarak ayarlandığında, altıgenler ön plan katmanında jetonların üzerine çizilir, böylece oyuncular altta ne olduğunu göremez. Ön plan katmanı mevcut değilse bunun yerine simge katmanı kullanılır.',
+          "Jumpgate, Eski altıgenlerden biraz farklı bir şekle sahip olan matematiksel olarak düzenli altıgenler çizer. Altıgenler sayfanın ızgarasıyla aynı hizada değilse, altıgen merkeze bir jeton tutturun, onu seçin ve Kalibre Et'e tıklayın. Onaltılı boyutu da düzeltmek için aynı satırdaki (Hex V) veya sütundaki (Hex H) komşu altıgenlerden iki jeton seçin.",
+          "Bir sayfa veya oyun kopyalandığında altıgenleri yeni kimlikler alır. Bunları ad etiketleri ve konum belirteçleriyle birlikte yeniden almak için sayfada Yeniden Tarama'yı çalıştırın.",
+        ],
+      },
+      upgrading: {
+        heading: "Sürüm 1'den yükseltme",
+        points: [
+          "Sürüm 2'nin artık PathMath, MatrixMath, Vector Math veya HTML Builder'a ihtiyacı yok. Başka bir mod kullanmadığı sürece bunları kaldırabilirsiniz.",
+          'Mevcut altıgen haritalar, adlar, konum belirteçleri ve ayarlar ilk başlangıçta otomatik olarak yükseltilir.',
+          'Heexploration_menu makrosu da dahil olmak üzere sürüm 1 komutları hala çalışıyor.',
+          'Sürüm 1, bir karakteri temsil eden herhangi bir jetonun altıgenleri ortaya çıkarmasına izin veriyor. Bu davranışı korumak için Ortaya Çıkan Jetonları Karakter jetonlarına ayarlayın.',
+        ],
+        colV1: 'Sürüm 1 komutu',
+        colV2: 'Sürüm 2 komutu',
+      },
+      troubleshooting: {
+        heading: 'Sorun giderme',
+        points: [
+          'Bir jeton hareket ettiğinde hiçbir şey olmuyor: jetonun jeton katmanında olduğunu, Ortaya Çıkan Jetonlarla eşleştiğini ve sayfada altıgenlerin (!hexploration durumu) bulunduğunu kontrol edin.',
+          "Altıgenler ızgaradan kaydırılmıştır: Kalibre Et'i kullanın, ardından haritadaki birkaç altıgeni bir jetonla kontrol edin.",
+          "Bir sayfayı veya oyunu kopyaladıktan sonra Hexes'in görüntülenmesi durduruldu: Sayfada Yeniden Tarama'yı çalıştırın.",
+          'Fill, alanda altıgen merkezinin bulunmadığını söylüyor: şeklin en az bir altıgen merkezi içermesi gerekiyor.',
+          'Başka bir şey için API konsolu günlüğünü kontrol edin ve yardım isterken mesajlarını ekleyin.',
+        ],
+      },
+      languages: {
+        heading: 'Diller',
+        body: '!hexploration set diliyle bir dil seçin. Mevcut diller:',
+      },
+      credits: {
+        heading: 'Kredi',
+        original: 'Orijinal mod',
+        maintainer: 'Versiyon 2 tarafından sürdürülen',
+        marketplace: "Ada'nın sanat paketleri Roll20 Marketplace'te",
+        support:
+          "Bir hata bulursanız veya bir fikriniz varsa Roll20 Mod forumuna gönderin veya GitHub'da bir sorun açın ve API konsolu günlüğündeki tüm mesajları ekleyin.",
+      },
+    },
+  };
 
-  var localeUk = {};
+  const TRANSLATION = {
+    titles: {
+      ready: 'Hexploration готовий.',
+      settings: 'Налаштування Hexploration',
+      languages: 'Виберіть мову',
+      pageSettings: 'Параметри сторінки: {page}',
+      status: 'Статус дослідження: {page}',
+      help: 'Команди Hexploration',
+      confirm: 'Будь ласка, підтвердьте',
+    },
+    discovery: {
+      title: 'Розташування виявлено',
+    },
+    menu: {
+      draw: 'малювати',
+      reveal: 'Відкрити і приховати',
+      locations: 'Розташування',
+      tools: 'Інструменти',
+      layerInUse: 'Нові гекси малюються на {layer}.',
+      pageSettingsHelp:
+        'Ці налаштування застосовуються лише до цієї сторінки. Налаштування, позначені ★, замінюють глобальні налаштування.',
+    },
+    buttons: {
+      fill: 'Заповнити',
+      fillInverse: 'Зворотне заповнення',
+      undo: 'Скасувати заповнення',
+      reveal: 'Розкрити',
+      conceal: 'Приховати',
+      explore: 'Досліджуйте',
+      revealPage: 'Відкрити сторінку',
+      resetPage: 'Скинути сторінку',
+      mark: 'Позначте розташування',
+      unmark: 'Зняти позначку',
+      name: "Ім'я Hex",
+      settings: 'Налаштування',
+      pageSettings: 'Параметри сторінки',
+      status: 'Статус',
+      rescan: 'Повторне сканування',
+      calibrate: 'Відкалібрувати',
+      calibrateReset: 'Скинути калібрування',
+      help: 'Довідка',
+      change: 'Зміна',
+      menu: 'Меню',
+      clearOverrides: 'Очистити перевизначення',
+      confirmReset: 'Так, видалити всі гекси',
+    },
+    prompts: {
+      name: 'Назва місця (залиште порожнім, щоб очистити)',
+    },
+    values: {
+      on: 'Увімкнено',
+      off: 'Вимкнено',
+      none: 'Жодного',
+      hexLayer: {
+        auto: 'Автоматично (на передньому плані, якщо доступно)',
+        foreground: 'шар переднього плану',
+        objects: 'маркерний шар',
+      },
+      revealBy: {
+        players: 'Жетони гравців',
+        characters: 'Символьні маркери',
+        all: 'Усі жетони',
+      },
+      revealMode: {
+        clear: 'ясно',
+        glimpse: 'Поблиск',
+      },
+      announce: {
+        all: 'Всі',
+        gm: 'Тільки GM',
+        off: 'Вимкнено',
+      },
+      orientation: {
+        vertical: 'Hex (V)',
+        horizontal: 'Hex (H)',
+      },
+      fillKind: {
+        fill: 'Заповнити',
+        fillInverse: 'Зворотне заповнення',
+        conceal: 'Приховати',
+      },
+    },
+    settings: {
+      language: {
+        label: 'Мова',
+        desc: 'Мова для меню, повідомлень і роздаткових матеріалів.',
+      },
+      hexLayer: {
+        label: 'Шістнадцятковий шар',
+        desc: 'Де намальовані нові гекси. Автоматично пробує передній рівень (над маркерами) і повертається до рівня маркерів, якщо гра його не підтримує.',
+      },
+      fillColor: {
+        label: 'Колір заливки',
+        desc: 'Колір нових гексів. Використовуйте rgba() для прозорих шестигранників, наприклад rgba(0,0,0,0.8).',
+      },
+      strokeColor: {
+        label: 'Колір рамки',
+        desc: 'Колір контуру нових гексів.',
+      },
+      labelColor: {
+        label: 'Колір етикетки',
+        desc: 'Колір написів імен лише для GM на іменованих гексах.',
+      },
+      glimpseColor: {
+        label: 'Glimpse Color',
+        desc: 'Кольори гексів змінюються, коли їх бачать (режим розкриття проблиском). Використовуйте прозорий колір rgba().',
+      },
+      strokeWidth: {
+        label: 'Ширина кордону',
+        desc: 'Ширина контуру нових гексів у пікселях (від 0 до 20).',
+      },
+      maxDistance: {
+        label: 'Шестигранна відстань розкриття',
+        desc: 'Застосовується до гексів, коли вони намальовані: жетон має бути в межах такої кількості гексів, щоб відкрити їх, як би далеко він не бачив. Залиште порожнім, щоб не було обмежень.',
+      },
+      revealDistance: {
+        label: 'Дистанція огляду',
+        desc: 'Скільки гексів навколо рухомого жетона відкрито (від 0 до 20). 0 показує лише гекси, через які проходить жетон.',
+      },
+      lineOfSight: {
+        label: 'Пряма видимість',
+        desc: 'Коли ввімкнено, гекс відкривається, лише якщо між ним і жетоном немає закритого гексу.',
+      },
+      revealPath: {
+        label: 'Показати уздовж шляху',
+        desc: 'Коли ввімкнено, відображається кожен гекс, через який проходить жетон під час перетягування (включно з маршрутними точками), а не лише там, де він зупиняється.',
+      },
+      revealBy: {
+        label: 'Жетони, які розкривають',
+        desc: 'Які жетони на шарі жетонів розкривають гекси: жетони, якими керує гравець, жетони, які представляють будь-якого персонажа, або кожен жетон.',
+      },
+      revealMode: {
+        label: 'Режим виявлення',
+        desc: 'Clear видаляє прокляття в межах видимості. Натомість Glimpse робить їх прозорими; вони видаляються, коли в них входить маркер.',
+      },
+      announce: {
+        label: 'Оголосити відкриття',
+        desc: 'Хто бачить повідомлення чату, коли виявлено вказане місце.',
+      },
+      pingDiscoveries: {
+        label: 'Ping відкриття',
+        desc: 'Коли ввімкнено, гравці відправляються до вказаного місця, коли його виявляють.',
+      },
+      hideCoveredTokens: {
+        label: 'Приховати закриті токени',
+        desc: 'Roll20 малює імена, смужки та аури над гексами. Коли ввімкнено, жетони під закритим гексагоном мають видимі для гравця назви, смужки та аури вимикаються та знову вмикаються, коли їх відкривають.',
+      },
+    },
+    status: {
+      engine: 'Ігровий двигун',
+      grid: 'Сітка',
+      layer: 'Шестигранний шар',
+      hexes: 'Гекси',
+      named: 'Іменовані гекси',
+      icons: 'Жетони розташування',
+      glimpsed: 'Помітені прокляття',
+      pending: 'Локації очікують на заповнення',
+      calibrated: 'Відкалібрований',
+      overrides: 'Перевизначення сторінок',
+      undo: 'Доступне скасування',
+    },
+    messages: {
+      filled:
+        'Заповнення завершено. Намальовані гекси: {created}. Рестайлінг: {restyled}. Приховані місця: {icons}.',
+      revealed: 'Розкрито гекси: {count}.',
+      revealedPage: 'Розкрито кожен гекс на сторінці ({count}).',
+      confirmReset:
+        'Видалити всі шістнадцяткові з "{page}" ({count})? Жетони розташування повертаються на рівень маркерів. Скасувати це не можна.',
+      resetPage: 'Зі сторінки видалено шестигранники: {count}.',
+      undone:
+        'Останнє заповнення скасовано. Видалені гекси: {removed}. Відновлено оновлені гекси: {restored}.',
+      named: 'Гекси з назвою "{name}": {count}.',
+      unnamed: 'Імена видалено: {count}.',
+      marked:
+        'Місця, приховані в існуючих гексах: {attached}. Очікування наступного заповнення, яке охопить їх: {pending}.',
+      unmarked: 'Жетони, які більше не є місцеположеннями: {count}.',
+      settingChanged: '{setting} встановлено на {value}.',
+      rescanned:
+        'Повторне сканування завершено. Збережено: {kept}. Прийнято: {adopted}. Повторно подано: {moved}. Відсутній і забутий: {dropped}. Мітки повторно пов’язані: {labels}. Маркери розташування повторно пов’язані: {icons}.',
+      calibrated:
+        'Сітка відкалібрована (крок стовпця {colStep}px, крок рядка {rowStep}px). Повторне сканування: збережено {kept}, повторно подано {moved}, прийнято {adopted}.',
+      calibrationReset:
+        'Калібрування видалено. Повторне сканування: збережено {kept}, повторно подано {moved}, прийнято {adopted}.',
+      journalRebuilt: 'Роздаткові матеріали «{help}» та «{deck}» було перебудовано.',
+      migrated:
+        'Ваші шістнадцяткові карти Hexploration 1.x оновлено. Якщо цю гру було скопійовано з Legacy гри, запустіть Rescan на кожній сторінці шістнадцяткової карти.',
+      pruned:
+        'Збережені гекси, які більше не існують і були забуті: {dropped}. Якщо цю гру чи сторінку було скопійовано, запустіть Повторне сканування на сторінці, щоб знову вибрати її гекси.',
+      readyHint:
+        'Введіть !hexploration для меню або відкрийте роздатковий матеріал «Hexploration — командна колода».',
+    },
+    warnings: {
+      foregroundUnavailable:
+        'Ця гра не підтримує малювання на передньому шарі, тому гекси були намальовані на шарі жетонів.',
+      someFailed:
+        'Гекси, які не вдалося намалювати: {count}. Перевірте консоль API для отримання деталей.',
+    },
+    errors: {
+      noPage: 'Не вдалося знайти сторінку для роботи.',
+      notHex: 'На цій сторінці не використовується шістнадцяткова сітка.',
+      noPolygons: 'Виберіть одну або кілька намальованих фігур для заповнення.',
+      emptyArea: 'Вибрана область не містить шестигранних центрів.',
+      tooMany: 'Це призведе до створення забагато гексів за один раз ({count}).',
+      nothingToConceal: 'Виберіть намальовані фігури або жетони, щоб приховати.',
+      nothingToReveal: 'Виберіть шестигранники, намальовані фігури або жетони, щоб розкрити їх.',
+      noTokens: 'Спочатку виберіть один або кілька токенів.',
+      noHexes: 'Спочатку виберіть один або кілька гексів (або жетонів, що стоять на гексах).',
+      nothingToUndo: 'Немає заповнення, яке можна скасувати.',
+      unknownCommand: 'Невідома команда: {command}',
+      unknownSetting: 'Невідоме налаштування: {key}',
+      unknownPageSetting: 'Параметри, які можна встановити для кожної сторінки: {keys}',
+      invalidValue: '"{value}" не є дійсним значенням для {key}.',
+      calibrateNeedsTokens: 'Виберіть один або два жетони, прикріплені до шестигранних центрів.',
+      calibrateFailed: 'Ці жетони не можна використовувати для калібрування.',
+      unexpected: 'Щось пішло не так: {message}',
+    },
+    hints: {
+      noPage: 'Відкрийте сторінку, над якою хочете працювати, або виберіть щось на ній.',
+      notHex:
+        'Встановіть шістнадцяткову (V) або шістнадцяткову (H) сітку сторінки в параметрах сторінки.',
+      noPolygons:
+        'Намалюйте багатокутник, прямокутник, еліпс або форму від руки навколо області, виберіть її та повторіть спробу.',
+      emptyArea: 'Намалюйте більшу форму або перевірте параметри сітки сторінки.',
+      tooMany: 'Заповніть меншу область або розділіть її на кілька фігур.',
+      noHexes:
+        'Гекси знаходяться на передньому плані або шарі жетонів; перейдіть на цей шар, щоб вибрати їх.',
+      unknownCommand: 'Введіть !hexploration help, щоб отримати список команд.',
+      unknownSetting: 'Введіть !hexploration set, щоб побачити кожне налаштування.',
+      calibrateNeedsTokens:
+        'Прив’яжіть жетон до центру шестигранника та виберіть його. Виберіть другий жетон, прив’язаний до сусіднього шестигранника в тому ж рядку (Hex V) або стовпці (Hex H), щоб також виправити розмір шестигранника.',
+      calibrateFailed:
+        'Два жетони мають бути в одному рядку (Hex V) або в одному стовпці (Hex H) на відстані принаймні один гексагон.',
+      unexpected: 'Подробиці в журналі консолі API.',
+    },
+    help: {
+      menu: 'Показати меню.',
+      fill: 'Покрийте вибрані намальовані форми шестигранниками.',
+      fillInverse: 'Покрийте всю сторінку, за винятком вибраних форм.',
+      undo: 'Скасуйте останню заливку, інверсну заливку або приховання та відновіть використані форми.',
+      reveal: 'Розкрийте вибрані гекси та гекси під вибраними фігурами та жетонами.',
+      revealPage: 'Відкрийте кожен гекс на сторінці без оголошень.',
+      conceal: 'Знову покрийте область під вибраними фігурами та жетонами шестигранниками.',
+      explore: 'Розкрийте навколо вибраних жетонів так, ніби вони щойно туди перемістилися.',
+      resetPage: 'Видаліть кожен гекс на сторінці (спочатку запитує).',
+      name: 'Назвіть вибрані гекси або гекси під вибраними жетонами. Залиште ім’я порожнім, щоб очистити його.',
+      mark: 'Перетворіть вибрані жетони на приховані місця.',
+      unmark: 'Заборонити вибрані маркери бути прихованими місцями.',
+      set: 'Змінити налаштування або показати всі налаштування.',
+      pageSet: 'Перевизначити налаштування показу лише на поточній сторінці.',
+      pageClear: 'Видаліть перевизначення поточної сторінки.',
+      rescan:
+        'Перебудуйте шістнадцятковий список сторінки, наприклад, після копіювання сторінки чи гри.',
+      calibrate:
+        'Вирівняйте шістнадцяткову сітку одним або двома вибраними жетонами, прикріпленими до центрів шістнадцяткової форми.',
+      calibrateReset: 'Видалити калібрування поточної сторінки.',
+      status: 'Покажіть, що Hexploration знає про поточну сторінку.',
+      journal: 'Перебудуйте роздаткові матеріали довідки та командної колоди.',
+      help: 'Покажіть цей список.',
+      handout: 'Повні інструкції наведено в роздатковому матеріалі "{name}".',
+    },
+    deck: {
+      subtitle: 'Командна колода',
+      drawDesc:
+        'Намалюйте фігури навколо області, виділіть їх і заповніть. Скасувати зворотне останнє заповнення.',
+      revealDesc:
+        'Виберіть гексагони, фігури або жетони, щоб відкрити або закрити їх знову. Досліджуйте розкриття навколо вибраних жетонів, ніби вони перемістилися.',
+      locationsDesc:
+        'Виберіть жетони, щоб приховати їх як місця під гексами. Виберіть гекси або жетони, щоб назвати гекс.',
+      toolsDesc:
+        'Налаштування, перевизначення сторінок, статус, повторне сканування скопійованих сторінок і калібрування сітки.',
+      footer: 'Перегляньте роздатковий матеріал "{help}", щоб отримати повні інструкції.',
+    },
+    handout: {
+      versionLabel: 'Версія',
+      subtitle: 'Шістнадцяткове дослідження для Roll20',
+      footer: 'Використовуйте роздатковий матеріал "{deck}" для керування одним натисканням.',
+      overview: {
+        heading: 'Огляд',
+        body: 'Hexploration охоплює шестигранну карту з непрозорими гексами. Коли група рухається, гекси, через які вони проходять (і, якщо хочете, гекси навколо них) видаляються, тому карта відкривається по одному гексу за раз. Приховані локації можна розмістити під гексами та оголошувати, коли вони знайдені. Він працює в іграх Jumpgate і Legacy, на Hex (V) і Hex (H) сітках будь-якого розміру.',
+        demo: 'Перегляньте коротку демонстрацію (з версії 1)',
+      },
+      quickStart: {
+        heading: 'Швидкий старт',
+        steps: [
+          'Відкрийте сторінку, сітку якої встановлено як Hex (V) або Hex (H).',
+          'Намалюйте одну або кілька фігур (багатокутник, прямокутник, еліпс або від руки) навколо області, яку потрібно сховати.',
+          'Виберіть фігури та натисніть «Заповнити» на панелі команд (або введіть !hexploration fill). Фігури замінено шестигранниками.',
+          'Додатково: перед заповненням виберіть маркери для важливих місць і натисніть «Позначити місце». Вони ховаються під прокляттями та оголошуються, коли їх виявляють.',
+          'Перемістіть жетон гравця. Кожен гекс, через який він проходить, і гекси в межах його видимості розкриваються.',
+        ],
+      },
+      commands: {
+        heading: 'Команди',
+        intro:
+          "Тільки GM можуть використовувати ці команди. Більшість діють на обрані об'єкти; решта діють на сторінці, яку ви переглядаєте.",
+        colCommand: 'Команда',
+        colDesc: 'Що воно робить',
+      },
+      revealing: {
+        heading: 'Як працює розкриття',
+        points: [
+          'Лише жетони на шарі жетонів розкривають гексагони. Кількість жетонів встановлюється Tokens That Reveal: жетони гравця за замовчуванням, щоб GM міг пересувати монстрів, не відкриваючи карту.',
+          'Жетони показують кожен гексагон, який він охоплює (великі жетони охоплюють декілька), а з увімкненим параметром «Показати вздовж шляху» — кожен гексагон на маршруті, по якому його перетягнули, включно з маршрутними точками.',
+          'Відстань видимості показує гекси навколо кожного з цих гексів. З увімкненою лінією видимості гекс відкривається, лише якщо між ними немає закритого гексу.',
+          'Hex Reveal Distance зберігається в гексах під час їх малювання. Ці гекси відкриваються лише всередині такої кількості гексів, як би далеко не бачив жетон. Використовуйте його для гір або лісів, які приховують те, що за ними.',
+          'У режимі Glimpse гекси в межах видимості стають прозорими, а не зникають, і видаляються, коли в них потрапляє жетон.',
+          'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
+          'API не повідомляє про рухи, зроблені іншими модами. Рухи TokenMod підбираються автоматично; для інших модів виберіть маркери та натисніть «Дослідити» або викличте Hexploration.revealAround(токен) із власного моду.',
+        ],
+      },
+      locations: {
+        heading: 'Іменовані гекси та локації',
+        points: [
+          'Функція Mark Location перетворює вибрані маркери на приховані місця. Жетон, який вже знаходиться під гексом, відразу ховається; інакше він прихований наступною заливкою, яка його покриває.',
+          'Жетони з маркером статусу білої вежі також розглядаються як локації, коли ви заповнюєте, як у версії 1.',
+          'Жетони прихованого розташування переміщуються на рівень GM. Коли їхній гексагон розкривається, вони повертаються до рівня маркерів із показом свого імені та оголошують про своє відкриття.',
+          'Name Hex дає шістнадцятковій формі ім’я без маркера. Ім’я показується GM як мітка на шарі GM і оголошується, коли відкривається гекс.',
+          'Announce Discoveries вибирає, чи всі, лише GM, чи ніхто не бачитиме оголошення. Ping Discoveries також переміщує погляд гравців на місце.',
+        ],
+      },
+      settings: {
+        heading: 'Налаштування',
+        intro:
+          'Змініть налаштування за допомогою !hexploration set (або кнопки «Параметри»). Hex Layer, Tokens That Reveal і Language також можна встановити на сторінці налаштувань мода.',
+        colKey: 'ключ',
+        colName: 'Налаштування',
+        colDesc: 'опис',
+        perPage: '(Можна встановити на сторінку.)',
+      },
+      jumpgate: {
+        heading: 'Jumpgate і Legacy',
+        points: [
+          'Hexploration визначає, який двигун використовує гра, і малює відповідну форму. Фігури, намальовані в будь-якому редакторі, можна заливати.',
+          'Якщо для Hex Layer встановлено значення Auto, гекси малюються на передньому шарі над жетонами, тому гравці не можуть бачити, що знаходиться під ними. Якщо передній рівень недоступний, замість нього використовується рівень маркерів.',
+          'Jumpgate малює математично правильні гекси, які мають дещо іншу форму від гексів Legacy. Якщо шестигранники не збігаються з сіткою сторінки, прив’яжіть жетон до центру шестигранника, виберіть його та натисніть «Відкалібрувати». Виберіть два жетони в сусідніх шістнадцятках одного рядка (Hex V) або стовпця (Hex H), щоб також виправити розмір шістнадцятки.',
+          'Коли сторінка чи гра копіюються, її гекси отримують нові ідентифікатори. Запустіть Rescan на сторінці, щоб знову підібрати їх разом із мітками з іменами та маркерами розташування.',
+        ],
+      },
+      upgrading: {
+        heading: 'Оновлення з версії 1',
+        points: [
+          'Версія 2 більше не потребує PathMath, MatrixMath, Vector Math або HTML Builder. Ви можете видалити їх, якщо інший мод не використовує їх.',
+          'Існуючі шістнадцяткові карти, імена, маркери розташування та налаштування оновлюються автоматично під час першого запуску.',
+          'Команди версії 1, включаючи макрос Hexploration_menu, все ще працюють.',
+          'Версія 1 дозволяла будь-якій жетоні, яка представляла символ, розкривати гекси. Щоб зберегти таку поведінку, встановіть маркери, які розкриваються, на маркери символів.',
+        ],
+        colV1: 'Команда версії 1',
+        colV2: 'Команда версії 2',
+      },
+      troubleshooting: {
+        heading: 'Усунення несправностей',
+        points: [
+          'Нічого не відбувається, коли маркер рухається: перевірте, чи маркер знаходиться на рівні маркерів і відповідає маркерам, які розкривають, і чи сторінка має шестигранники (статус!hexploration).',
+          'Гекси зміщені відносно сітки: скористайтеся Калібруванням, а потім перевірте жетоном на кількох гексах на карті.',
+          'Гекси перестали виявлятися після копіювання сторінки або гри: запустіть Rescan на сторінці.',
+          'Заливка каже, що область не має шестигранних центрів: фігура має містити центр принаймні одного шестигранника.',
+          'Щодо іншого, перевірте журнал консолі API та включіть його повідомлення під час запиту про допомогу.',
+        ],
+      },
+      languages: {
+        heading: 'Мови',
+        body: 'Виберіть мову за допомогою !hexploration встановленої мови. Доступні мови:',
+      },
+      credits: {
+        heading: 'Кредити',
+        original: 'Оригінальний мод від',
+        maintainer: 'Версія 2 підтримується',
+        marketplace: 'Художні набори Ади на Roll20 Marketplace',
+        support:
+          'Якщо ви знайшли помилку або маєте ідею, опублікуйте на форумі Roll20 Mod або відкрийте проблему на GitHub і додайте будь-які повідомлення з журналу консолі API.',
+      },
+    },
+  };
 
   const DEFAULT_LOCALE = 'en-US';
 
@@ -3573,30 +10286,30 @@ const HexplorationMod = (() => {
   SUPPORTED_LOCALES.map((code) => LOCALE_LABELS[code]).join(' / ');
 
   const TRANSLATIONS = {
-    af: TRANSLATION$4,
-    ca: TRANSLATION$3,
-    'zh-TW': TRANSLATION$2,
-    cs: TRANSLATION$1,
-    da: TRANSLATION,
-    nl: localeNl,
+    af: TRANSLATION$m,
+    ca: TRANSLATION$l,
+    'zh-TW': TRANSLATION$k,
+    cs: TRANSLATION$j,
+    da: TRANSLATION$i,
+    nl: TRANSLATION$h,
     'en-US': localeEnUS,
-    fi: localeFi,
-    fr: localeFr,
-    de: localeDe,
-    el: localeEl,
-    he: localeHe,
-    hu: localeHu,
-    it: localeIt,
-    ja: localeJa,
-    ko: localeKo,
-    pl: localePl,
-    'pt-PT': localePtPT,
-    'pt-BR': localePtBR,
-    ru: localeRu,
-    es: localeEs,
-    sv: localeSv,
-    tr: localeTr,
-    uk: localeUk,
+    fi: TRANSLATION$g,
+    fr: TRANSLATION$f,
+    de: TRANSLATION$e,
+    el: TRANSLATION$d,
+    he: TRANSLATION$c,
+    hu: TRANSLATION$b,
+    it: TRANSLATION$a,
+    ja: TRANSLATION$9,
+    ko: TRANSLATION$8,
+    pl: TRANSLATION$7,
+    'pt-PT': TRANSLATION$6,
+    'pt-BR': TRANSLATION$5,
+    ru: TRANSLATION$4,
+    es: TRANSLATION$3,
+    sv: TRANSLATION$2,
+    tr: TRANSLATION$1,
+    uk: TRANSLATION,
   };
 
   /**
