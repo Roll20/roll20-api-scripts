@@ -20,7 +20,7 @@ import {
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
-import { getDirectionStyle, getLocale, LOCALE_LABELS, SUPPORTED_LOCALES, t, tRaw } from './i18n.js';
+import { getDirectionStyle, getLocale, LOCALE_DEFINITIONS, t, tRaw } from './i18n.js';
 import { getConfig } from './state.js';
 import { escapeHtml } from './utils.js';
 
@@ -137,7 +137,11 @@ export function buildHelpHtml(locale) {
     ['!hexploration_configModifyProperty …', `${COMMAND} set …`],
   ].map(([v1, v2]) => [code(v1), code(v2)]);
 
-  const locales = SUPPORTED_LOCALES.map((c) => escapeHtml(LOCALE_LABELS[c])).join(', ');
+  const locales = LOCALE_DEFINITIONS.map(({ code: localeCode, name, nativeName, flag }) => [
+    escapeHtml(flag ? `${flag} ${name}` : name),
+    escapeHtml(nativeName || name),
+    code(localeCode),
+  ]);
   const { original, maintainer } = AUTHOR_LINKS;
 
   return `<div style="${STYLE.outer}${getDirectionStyle(lang)}">
@@ -154,7 +158,7 @@ export function buildHelpHtml(locale) {
     ${section('jumpgate', list(raw('jumpgate.points')))}
     ${section('upgrading', `${list(raw('upgrading.points'))}${table([t('handout.upgrading.colV1', lang), t('handout.upgrading.colV2', lang)], legacyCommands)}`)}
     ${section('troubleshooting', list(raw('troubleshooting.points')))}
-    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p><p style="${STYLE.p};font-size:0.85em">${locales}</p>`)}
+    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p>${table([t('handout.languages.colLanguage', lang), t('handout.languages.colNative', lang), t('handout.languages.colCode', lang)], locales)}`)}
     ${section(
       'credits',
       `<p style="${STYLE.p}">${h('credits.original')} ${link(original.profile, original.name)} • ${link(original.marketplace, t('handout.credits.marketplace', lang))}</p>

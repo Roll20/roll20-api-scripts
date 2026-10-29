@@ -358,6 +358,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Kielet',
       body: 'Valitse kieli !hexploration set -kielellä. Käytettävissä olevat kielet:',
+      colLanguage: 'Kieli',
+      colNative: 'Alkuperäinen nimi',
+      colCode: 'Koodi',
     },
     credits: {
       heading: 'Krediitit',

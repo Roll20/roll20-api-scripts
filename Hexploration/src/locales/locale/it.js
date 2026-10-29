@@ -361,6 +361,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Lingue',
       body: "Scegli una lingua con la lingua impostata per l'esplorazione. Lingue disponibili:",
+      colLanguage: 'Lingua',
+      colNative: 'Nome nativo',
+      colCode: 'Codice',
     },
     credits: {
       heading: 'Crediti',

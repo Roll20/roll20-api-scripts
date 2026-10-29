@@ -357,6 +357,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Diller',
       body: '!hexploration set diliyle bir dil seçin. Mevcut diller:',
+      colLanguage: 'Dil',
+      colNative: 'Yerel ad',
+      colCode: 'Kod',
     },
     credits: {
       heading: 'Kredi',

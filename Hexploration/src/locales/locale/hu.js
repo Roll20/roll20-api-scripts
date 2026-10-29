@@ -361,6 +361,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Nyelvek',
       body: 'Válasszon nyelvet a !hexploration beállított nyelvvel. Elérhető nyelvek:',
+      colLanguage: 'Nyelv',
+      colNative: 'Natív név',
+      colCode: 'Kód',
     },
     credits: {
       heading: 'Kredit',

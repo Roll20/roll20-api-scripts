@@ -353,6 +353,9 @@ export default {
     languages: {
       heading: 'Languages',
       body: 'Choose a language with !hexploration set language. Available languages:',
+      colLanguage: 'Language',
+      colNative: 'Native name',
+      colCode: 'Code',
     },
     credits: {
       heading: 'Credits',

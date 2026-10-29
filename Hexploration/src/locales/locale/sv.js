@@ -354,6 +354,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Språk',
       body: 'Välj ett språk med !hexploration set språk. Tillgängliga språk:',
+      colLanguage: 'Språk',
+      colNative: 'Inhemskt namn',
+      colCode: 'Koda',
     },
     credits: {
       heading: 'Krediter',

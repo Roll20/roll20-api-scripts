@@ -350,6 +350,9 @@ const TRANSLATION = {
     languages: {
       heading: 'שפות',
       body: 'בחר שפה עם !hexploration set language. שפות זמינות:',
+      colLanguage: 'שָׂפָה',
+      colNative: 'שם יליד',
+      colCode: 'קוד',
     },
     credits: {
       heading: 'קרדיטים',

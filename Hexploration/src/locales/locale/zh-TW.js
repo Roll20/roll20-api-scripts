@@ -343,6 +343,9 @@ const TRANSLATION = {
     languages: {
       heading: '語言',
       body: '透過 !hexploration 設定語言來選擇語言。可用語言：',
+      colLanguage: '語言',
+      colNative: '原生名',
+      colCode: '程式碼',
     },
     credits: {
       heading: '製作人員',

@@ -5,7 +5,7 @@
  * Name: Hexploration
  * Script: Hexploration.js
  * Version: 2.0.0
- * Built: 2026-10-29T08:23:06.249Z
+ * Built: 2026-10-29T14:33:58.218Z
  */
 const HexplorationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const HexplorationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Hexploration';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T08:23:06.249Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T14:33:58.218Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1464,6 +1464,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Tale',
         body: "Kies 'n taal met !hexploration stel taal. Beskikbare tale:",
+        colLanguage: 'Taal',
+        colNative: 'Inheemse naam',
+        colCode: 'Kode',
       },
       credits: {
         heading: 'Krediete',
@@ -1840,6 +1843,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Idiomes',
         body: "Trieu un idioma amb l'idioma definit de !hexploration. Idiomes disponibles:",
+        colLanguage: 'Llengua',
+        colNative: 'Nom nadiu',
+        colCode: 'Codi',
       },
       credits: {
         heading: 'Crèdits',
@@ -2197,6 +2203,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: '語言',
         body: '透過 !hexploration 設定語言來選擇語言。可用語言：',
+        colLanguage: '語言',
+        colNative: '原生名',
+        colCode: '程式碼',
       },
       credits: {
         heading: '製作人員',
@@ -2568,6 +2577,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Jazyky',
         body: 'Vyberte jazyk pomocí nastavení jazyka !hexploration. Dostupné jazyky:',
+        colLanguage: 'Jazyk',
+        colNative: 'Rodné jméno',
+        colCode: 'Kód',
       },
       credits: {
         heading: 'Kredity',
@@ -2939,6 +2951,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Sprog',
         body: 'Vælg et sprog med !hexploration set sprog. Tilgængelige sprog:',
+        colLanguage: 'Sprog',
+        colNative: 'Indfødt navn',
+        colCode: 'Kode',
       },
       credits: {
         heading: 'Kreditter',
@@ -3314,6 +3329,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Talen',
         body: 'Kies een taal met de door !hexploration ingestelde taal. Beschikbare talen:',
+        colLanguage: 'Taal',
+        colNative: 'Inheemse naam',
+        colCode: 'Code',
       },
       credits: {
         heading: 'Kredieten',
@@ -3681,6 +3699,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Languages',
         body: 'Choose a language with !hexploration set language. Available languages:',
+        colLanguage: 'Language',
+        colNative: 'Native name',
+        colCode: 'Code',
       },
       credits: {
         heading: 'Credits',
@@ -4053,6 +4074,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Kielet',
         body: 'Valitse kieli !hexploration set -kielellä. Käytettävissä olevat kielet:',
+        colLanguage: 'Kieli',
+        colNative: 'Alkuperäinen nimi',
+        colCode: 'Koodi',
       },
       credits: {
         heading: 'Krediitit',
@@ -4431,6 +4455,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Langues',
         body: 'Choisissez une langue avec !hexploration set language. Langues disponibles :',
+        colLanguage: 'Langue',
+        colNative: 'Nom natif',
+        colCode: 'Code',
       },
       credits: {
         heading: 'Crédits',
@@ -4815,6 +4842,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Sprachen',
         body: 'Wählen Sie eine Sprache mit !hexploration set language. Verfügbare Sprachen:',
+        colLanguage: 'Sprache',
+        colNative: 'Einheimischer Name',
+        colCode: 'Code',
       },
       credits: {
         heading: 'Credits',
@@ -5189,6 +5219,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Γλώσσες',
         body: 'Επιλέξτε μια γλώσσα με !hexploration set language. Διαθέσιμες γλώσσες:',
+        colLanguage: 'Γλώσσα',
+        colNative: 'Εγγενές όνομα',
+        colCode: 'Κώδικας',
       },
       credits: {
         heading: 'Πιστώσεις',
@@ -5554,6 +5587,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'שפות',
         body: 'בחר שפה עם !hexploration set language. שפות זמינות:',
+        colLanguage: 'שָׂפָה',
+        colNative: 'שם יליד',
+        colCode: 'קוד',
       },
       credits: {
         heading: 'קרדיטים',
@@ -5929,6 +5965,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Nyelvek',
         body: 'Válasszon nyelvet a !hexploration beállított nyelvvel. Elérhető nyelvek:',
+        colLanguage: 'Nyelv',
+        colNative: 'Natív név',
+        colCode: 'Kód',
       },
       credits: {
         heading: 'Kredit',
@@ -6305,6 +6344,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Lingue',
         body: "Scegli una lingua con la lingua impostata per l'esplorazione. Lingue disponibili:",
+        colLanguage: 'Lingua',
+        colNative: 'Nome nativo',
+        colCode: 'Codice',
       },
       credits: {
         heading: 'Crediti',
@@ -6676,6 +6718,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: '言語',
         body: '!hexploration set language で言語を選択します。利用可能な言語:',
+        colLanguage: '言語',
+        colNative: 'ネイティブネーム',
+        colCode: 'コード',
       },
       credits: {
         heading: 'クレジット',
@@ -7044,6 +7089,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: '언어',
         body: '!heexploration set 언어로 언어를 선택하세요. 사용 가능한 언어:',
+        colLanguage: '언어',
+        colNative: '본명',
+        colCode: '암호',
       },
       credits: {
         heading: '크레딧',
@@ -7416,6 +7464,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Języki',
         body: 'Wybierz język z ustawionym językiem !hexploration. Dostępne języki:',
+        colLanguage: 'Język',
+        colNative: 'Imię rodzime',
+        colCode: 'Kod',
       },
       credits: {
         heading: 'Kredyty',
@@ -7789,6 +7840,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Idiomas',
         body: 'Escolha um idioma com !hexploration set language. Idiomas disponíveis:',
+        colLanguage: 'Idioma',
+        colNative: 'Nome nativo',
+        colCode: 'Código',
       },
       credits: {
         heading: 'Créditos',
@@ -8162,6 +8216,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Idiomas',
         body: 'Escolha um idioma com !hexploration set language. Idiomas disponíveis:',
+        colLanguage: 'Linguagem',
+        colNative: 'Nome nativo',
+        colCode: 'Código',
       },
       credits: {
         heading: 'Créditos',
@@ -8536,6 +8593,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Языки',
         body: 'Выберите язык с помощью !hexploration set Language. Доступные языки:',
+        colLanguage: 'Язык',
+        colNative: 'Родное имя',
+        colCode: 'Код',
       },
       credits: {
         heading: 'Кредиты',
@@ -8913,6 +8973,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Idiomas',
         body: 'Elija un idioma con !hexploration set language. Idiomas disponibles:',
+        colLanguage: 'Idioma',
+        colNative: 'nombre nativo',
+        colCode: 'Código',
       },
       credits: {
         heading: 'Créditos',
@@ -9282,6 +9345,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Språk',
         body: 'Välj ett språk med !hexploration set språk. Tillgängliga språk:',
+        colLanguage: 'Språk',
+        colNative: 'Inhemskt namn',
+        colCode: 'Koda',
       },
       credits: {
         heading: 'Krediter',
@@ -9655,6 +9721,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Diller',
         body: '!hexploration set diliyle bir dil seçin. Mevcut diller:',
+        colLanguage: 'Dil',
+        colNative: 'Yerel ad',
+        colCode: 'Kod',
       },
       credits: {
         heading: 'Kredi',
@@ -10029,6 +10098,9 @@ const HexplorationMod = (() => {
       languages: {
         heading: 'Мови',
         body: 'Виберіть мову за допомогою !hexploration встановленої мови. Доступні мови:',
+        colLanguage: 'Мова',
+        colNative: 'Рідна назва',
+        colCode: 'Код',
       },
       credits: {
         heading: 'Кредити',
@@ -12576,7 +12648,11 @@ const HexplorationMod = (() => {
       ['!hexploration_configModifyProperty …', `${COMMAND} set …`],
     ].map(([v1, v2]) => [code(v1), code(v2)]);
 
-    const locales = SUPPORTED_LOCALES.map((c) => escapeHtml(LOCALE_LABELS[c])).join(', ');
+    const locales = LOCALE_DEFINITIONS.map(({ code: localeCode, name, nativeName, flag }) => [
+      escapeHtml(flag ? `${flag} ${name}` : name),
+      escapeHtml(nativeName || name),
+      code(localeCode),
+    ]);
     const { original, maintainer } = AUTHOR_LINKS;
 
     return `<div style="${STYLE.outer}${getDirectionStyle(lang)}">
@@ -12593,7 +12669,7 @@ const HexplorationMod = (() => {
     ${section('jumpgate', list(raw('jumpgate.points')))}
     ${section('upgrading', `${list(raw('upgrading.points'))}${table([t('handout.upgrading.colV1', lang), t('handout.upgrading.colV2', lang)], legacyCommands)}`)}
     ${section('troubleshooting', list(raw('troubleshooting.points')))}
-    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p><p style="${STYLE.p};font-size:0.85em">${locales}</p>`)}
+    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p>${table([t('handout.languages.colLanguage', lang), t('handout.languages.colNative', lang), t('handout.languages.colCode', lang)], locales)}`)}
     ${section(
       'credits',
       `<p style="${STYLE.p}">${h('credits.original')} ${link(original.profile, original.name)} • ${link(original.marketplace, t('handout.credits.marketplace', lang))}</p>

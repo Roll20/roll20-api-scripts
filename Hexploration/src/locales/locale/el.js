@@ -360,6 +360,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Γλώσσες',
       body: 'Επιλέξτε μια γλώσσα με !hexploration set language. Διαθέσιμες γλώσσες:',
+      colLanguage: 'Γλώσσα',
+      colNative: 'Εγγενές όνομα',
+      colCode: 'Κώδικας',
     },
     credits: {
       heading: 'Πιστώσεις',

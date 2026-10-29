@@ -358,6 +358,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Idiomas',
       body: 'Escolha um idioma com !hexploration set language. Idiomas disponíveis:',
+      colLanguage: 'Linguagem',
+      colNative: 'Nome nativo',
+      colCode: 'Código',
     },
     credits: {
       heading: 'Créditos',

@@ -354,6 +354,9 @@ const TRANSLATION = {
     languages: {
       heading: '언어',
       body: '!heexploration set 언어로 언어를 선택하세요. 사용 가능한 언어:',
+      colLanguage: '언어',
+      colNative: '본명',
+      colCode: '암호',
     },
     credits: {
       heading: '크레딧',

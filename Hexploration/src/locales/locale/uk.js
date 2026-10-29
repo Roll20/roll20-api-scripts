@@ -360,6 +360,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Мови',
       body: 'Виберіть мову за допомогою !hexploration встановленої мови. Доступні мови:',
+      colLanguage: 'Мова',
+      colNative: 'Рідна назва',
+      colCode: 'Код',
     },
     credits: {
       heading: 'Кредити',

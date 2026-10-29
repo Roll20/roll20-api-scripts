@@ -357,6 +357,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Tale',
       body: "Kies 'n taal met !hexploration stel taal. Beskikbare tale:",
+      colLanguage: 'Taal',
+      colNative: 'Inheemse naam',
+      colCode: 'Kode',
     },
     credits: {
       heading: 'Krediete',

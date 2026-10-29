@@ -355,6 +355,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Sprog',
       body: 'Vælg et sprog med !hexploration set sprog. Tilgængelige sprog:',
+      colLanguage: 'Sprog',
+      colNative: 'Indfødt navn',
+      colCode: 'Kode',
     },
     credits: {
       heading: 'Kreditter',

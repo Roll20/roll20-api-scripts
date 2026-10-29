@@ -360,6 +360,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Talen',
       body: 'Kies een taal met de door !hexploration ingestelde taal. Beschikbare talen:',
+      colLanguage: 'Taal',
+      colNative: 'Inheemse naam',
+      colCode: 'Code',
     },
     credits: {
       heading: 'Kredieten',

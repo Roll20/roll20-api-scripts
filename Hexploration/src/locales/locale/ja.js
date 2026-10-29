@@ -356,6 +356,9 @@ const TRANSLATION = {
     languages: {
       heading: '言語',
       body: '!hexploration set language で言語を選択します。利用可能な言語:',
+      colLanguage: '言語',
+      colNative: 'ネイティブネーム',
+      colCode: 'コード',
     },
     credits: {
       heading: 'クレジット',
