@@ -177,7 +177,7 @@ CRL.onMatch(({ id, listener, message, verdict }) => {}); // called when a listen
 
 ## Languages
 
-Menus, messages and handouts can be translated (`!crl config language`). Translations are being prepared; until then every language shows English.
+Menus, messages and handouts are translated into 23 languages; choose one with `!crl config language`. The Help handout lists them. Commands, options and the values you type (such as `crit` or `on`) stay in English in every language.
 
 ## Support
 

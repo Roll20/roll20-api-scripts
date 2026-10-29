@@ -114,7 +114,7 @@ Loop protection: messages from `playerid === 'API'` with speaker `CRL` or the sc
 
 ## Translations
 
-`en-US.js` is the source. The other 23 locale files are currently empty stubs, so every language falls back to English. When translations are ready, run `npm run sync-locales` (one process at a time; Google Translate rate-limits parallel runs), then check that the files are not English copies. Placeholders in `{braces}` and `--options` are protected during translation; `${name}` placeholders appear in strings as literal text and must survive translation too.
+`en-US.js` is the source. The other 23 locale files are complete translations; a missing key falls back to English. When you add or change English text, update every locale. `npm run sync-locales` (one process at a time; Google Translate rate-limits parallel runs) can draft new strings, but review its output: machine translation produced literal errors ("die" as dying, "roll" as bread rolls) and translated text that must stay literal. Keep these exactly as in English: `{braces}` and `${name}` placeholders, `--options`, `!crl` commands with their subcommands, `\\`, `@{}`, `%{}`, and the values users type (`crit`, `fumble`, `on`, `none`, message types and so on). Check that every array has the same number of items as in `en-US.js`.
 
 `tests/parse.test.mjs` checks that every literal key used in `src/` exists in `en-US.js`, and `tests/crl.test.mjs` checks that no whisper shows an untranslated key.
 

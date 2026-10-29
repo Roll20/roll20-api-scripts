@@ -41,7 +41,7 @@ A full rewrite by MidNiteShadow7 of Scott C.'s Customizable Roll Listener, which
 - Option to ignore chat sent by other mods.
 - Listener rules are mirrored into each ability's description, so listeners survive copying the game.
 - Public API for other mods: `CRL.analyse`, `CRL.matches`, `CRL.onMatch`.
-- Translation support with a language setting (English for now).
+- Translations into 23 languages, chosen with a language setting.
 
 ### Changed
 
