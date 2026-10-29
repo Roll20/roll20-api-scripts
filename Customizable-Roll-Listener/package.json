@@ -1,0 +1,20 @@
+{
+  "name": "customizable-roll-listener-roll20",
+  "version": "2.0.0",
+  "description": "Roll20 API Mod that runs chat commands when a roll or chat message matches a listener.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "format": "prettier --write \"CRL.js\" \"rollup.config.js\" \"src/**/*.js\" \"tests/**/*.mjs\" \"*.md\" \"scripts/**/*.mjs\"",
+    "sync-locales": "node scripts/sync-locales.mjs",
+    "regenerate-locales": "node scripts/sync-locales.mjs --regenerate"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "rollup": "^4.34.8"
+  }
+}
