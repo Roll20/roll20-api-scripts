@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0
+## [2.0.0] – 2026-10-29
 
 A full rewrite by MidNiteShadow7 of Scott C.'s Customizable Roll Listener, which was reported as working on some chat output but not all, especially since Beacon sheets arrived, and is no longer supported.
 
@@ -49,10 +49,10 @@ A full rewrite by MidNiteShadow7 of Scott C.'s Customizable Roll Listener, which
 - Version 1 listeners are converted automatically; the version 1 `\\create`, `\\edit`, `\\delete`, `\\config` and `\\set` commands still work.
 - Source split into ES modules under `src/`, bundled with Rollup and tested with the Node test runner.
 
-## 1.1
+## [1.1] – 2020-07-20
 
 - Fixed crit and fumble matching (The Aaron).
 
-## 1.0
+## [1.0] – 2016-11-17
 
 - First release by Scott C.
