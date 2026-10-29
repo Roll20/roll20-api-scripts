@@ -52,6 +52,8 @@ A listener triggers when **every** filter it has matches. Empty filters match ev
 
 Roll checks look at every roll in the message, or only the rolls a `##` in the text found. Dropped dice (advantage and disadvantage) and rerolled dice are ignored. A listener triggers when at least one roll meets every roll check.
 
+The D&D 5E by Roll20 (2014) sheet rolls advantage and disadvantage as two separate d20 rolls (`r1` and `r2`) instead of keeping one, so CRL cannot tell which one counts and checks both. With advantage, a 1 on the lower die still counts as a fumble; with disadvantage, a 20 on the higher die still counts as a crit.
+
 ## Roll Template Names
 
 A roll template is the layout a character sheet uses for its roll cards. Its name is the part after `template:` in a macro, so `&{template:atkdmg}` uses the `atkdmg` template. Each sheet has its own templates, so `--templates` takes whatever names your game's sheet uses.
@@ -64,16 +66,16 @@ To find a name:
 
 Templates of common sheets:
 
-| Sheet                       | Template names                                                                     |
-| --------------------------- | ---------------------------------------------------------------------------------- |
-| Any game (built in)         | `default`                                                                          |
-| D&D 5E by Roll20 (2014)     | `simple`, `atk`, `dmg`, `atkdmg`, `spell`, `desc`, `npcaction`, `npcatk`, `npcdmg` |
-| D&D 2024 by Roll20 (Beacon) | `dnd-2024` (see [Beacon Sheets](#beacon-sheets-dd-2024-and-others) for its fields) |
+| Sheet                       | Template names                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| Any game (built in)         | `default`                                                                                        |
+| D&D 5E by Roll20 (2014)     | `simple`, `atk`, `dmg`, `atkdmg`, `spell`, `desc`, `npcaction`, `npcfullatk`, `npcatk`, `npcdmg` |
+| D&D 2024 by Roll20 (Beacon) | `dnd-2024` (see [Beacon Sheets](#beacon-sheets-dd-2024-and-others) for its fields)               |
 
 More about roll templates:
 
 - [How to Make Roll Templates](https://help.roll20.net/hc/en-us/articles/360037257334-How-to-Make-Roll-Templates) (Roll20 Help Center): the built-in `default` template and how sheets define theirs.
-- [D&D 5e OGL Roll Templates](https://help.roll20.net/hc/en-us/articles/360037257834-D-D-5e-OGL-Roll-Templates) (Roll20 Help Center): every D&D 5E by Roll20 (2014) template and its fields, useful for `${field:name}`.
+- [D&D 5e OGL Roll Templates](https://help.roll20.net/hc/en-us/articles/360037257834-D-D-5e-OGL-Roll-Templates) (Roll20 Help Center): the D&D 5E by Roll20 (2014) templates and their fields, useful for `${field:name}`. NPC attacks use `npcfullatk`, which the article does not list.
 - [Roll20 character sheets repository](https://github.com/Roll20/roll20-character-sheets): the source of community sheets and their templates.
 
 ## Other Options

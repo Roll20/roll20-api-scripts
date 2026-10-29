@@ -45,7 +45,7 @@ export const COMMON_TEMPLATES = [
   { sheet: 'Any game (built in)', names: 'default' },
   {
     sheet: 'D&D 5E by Roll20 (2014)',
-    names: 'simple, atk, dmg, atkdmg, spell, desc, npcaction, npcatk, npcdmg',
+    names: 'simple, atk, dmg, atkdmg, spell, desc, npcaction, npcfullatk, npcatk, npcdmg',
   },
   { sheet: 'D&D 2024 by Roll20 (Beacon)', names: 'dnd-2024' },
 ];

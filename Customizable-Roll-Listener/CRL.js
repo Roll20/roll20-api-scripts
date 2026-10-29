@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.0.0
- * Built: 2026-10-29T16:56:32.270Z
+ * Built: 2026-10-29T16:53:22.667Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -610,7 +610,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T16:56:32.270Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T16:53:22.667Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -654,7 +654,7 @@ const CustomizableRollListenerMod = (() => {
     { sheet: 'Any game (built in)', names: 'default' },
     {
       sheet: 'D&D 5E by Roll20 (2014)',
-      names: 'simple, atk, dmg, atkdmg, spell, desc, npcaction, npcatk, npcdmg',
+      names: 'simple, atk, dmg, atkdmg, spell, desc, npcaction, npcfullatk, npcatk, npcdmg',
     },
     { sheet: 'D&D 2024 by Roll20 (Beacon)', names: 'dnd-2024' },
   ];
@@ -1498,6 +1498,7 @@ const CustomizableRollListenerMod = (() => {
           'Natural die: the face a die landed on, such as 20, or <=2.',
           'Dice checked: auto looks only at d20s when one was rolled, so damage dice rolling their highest face do not count as crits. Choose any die, or a size such as d100, to change that.',
           'Dropped dice (advantage and disadvantage) and rerolled dice are ignored.',
+          'The D&D 5E by Roll20 (2014) sheet rolls advantage and disadvantage as two separate d20 rolls (r1 and r2), so CRL checks both: with advantage a 1 on the lower die still counts as a fumble, and with disadvantage a 20 on the higher die still counts as a crit.',
           'A listener triggers when at least one roll meets every roll check.',
         ],
       },
