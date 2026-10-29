@@ -5,7 +5,7 @@
  * Name: Hexploration
  * Script: Hexploration.js
  * Version: 2.0.0
- * Built: 2026-10-29T15:52:46.956Z
+ * Built: 2026-10-29T19:48:15.389Z
  */
 const HexplorationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const HexplorationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Hexploration';
   const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T15:52:46.956Z';
+  const SCRIPT_LAST_UPDATED = '2026-10-29T19:48:15.389Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -6362,7 +6362,7 @@ const HexplorationMod = (() => {
       },
       languages: {
         heading: 'Lingue',
-        body: "Scegli una lingua con la lingua impostata per l'esplorazione. Lingue disponibili:",
+        body: 'Scegli una lingua con !hexploration set language. Lingue disponibili:',
         colLanguage: 'Lingua',
         colNative: 'Nome originale',
         colCode: 'Codice',

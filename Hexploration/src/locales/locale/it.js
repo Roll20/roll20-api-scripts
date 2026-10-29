@@ -358,7 +358,7 @@ const TRANSLATION = {
     },
     languages: {
       heading: 'Lingue',
-      body: "Scegli una lingua con la lingua impostata per l'esplorazione. Lingue disponibili:",
+      body: 'Scegli una lingua con !hexploration set language. Lingue disponibili:',
       colLanguage: 'Lingua',
       colNative: 'Nome originale',
       colCode: 'Codice',
