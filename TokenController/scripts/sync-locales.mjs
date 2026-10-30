@@ -163,18 +163,18 @@ async function translateSingle(text, targetLocale, cache, config, attempt = 0) {
     cache.set(cacheKey, translated);
     return translated;
   } catch (error) {
-    if (attempt < config.maxRetries && error.message.includes('timed out')) {
+    // Rate limits (429) and server errors are worth waiting out, like timeouts.
+    const retryable = /timed out|HTTP (429|5\d\d)/u.test(error.message);
+    if (attempt < config.maxRetries && retryable) {
       const delayMs = config.retryDelayMs * Math.pow(2, attempt);
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       return translateSingle(text, targetLocale, cache, config, attempt + 1);
     }
 
-    if (attempt === config.maxRetries) {
-      console.error(
-        `[sync-locales] Translation failed for ${targetLocale} after ${config.maxRetries} retries: ${error.message}`
-      );
-    }
-    cache.set(cacheKey, text);
+    // Keep the English text without caching it, so the next sync tries it again.
+    console.error(
+      `[sync-locales] Translation failed for ${targetLocale} after ${attempt} retries: ${error.message}`
+    );
     return text;
   }
 }
@@ -396,7 +396,8 @@ async function writeLocale(localeCode, localeData) {
   const filePath = resolve(LOCALE_DIR, `${localeCode}.js`);
   const content = `const TRANSLATION = ${JSON.stringify(localeData, null, 2)};\n\nexport default TRANSLATION;\n`;
   writeFileSync(filePath, content, 'utf8');
-  const formatted = await prettier.format(content, { filepath: filePath });
+  const config = (await prettier.resolveConfig(filePath)) ?? {};
+  const formatted = await prettier.format(content, { ...config, filepath: filePath });
   writeFileSync(filePath, formatted, 'utf8');
 }
 
