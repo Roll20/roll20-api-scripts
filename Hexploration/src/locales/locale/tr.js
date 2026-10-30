@@ -115,7 +115,7 @@ const TRANSLATION = {
     },
     revealDistance: {
       label: 'Görüş Mesafesi',
-      desc: 'Hareket eden bir jetonun etrafındaki kaç tane altıgen ortaya çıkar (0 ila 20). 0 yalnızca belirtecin geçtiği altıgenleri ortaya çıkarır.',
+      desc: 'Hareket eden bir jetonun çevresinde kaç altıgenin açığa çıkacağı (0 ila 20). 0 yalnızca jetonun geçtiği altıgenleri açığa çıkarır.',
     },
     lineOfSight: {
       label: 'Görüş Hattı',
@@ -123,7 +123,7 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Yol Boyunca Açığa Çıkar',
-      desc: 'Açık olduğunda, bir jetonun sürüklenirken geçtiği her altıgen (ara noktalar dahil) yalnızca durduğu yer değil, ortaya çıkar.',
+      desc: 'Açık olduğunda, bir jetonun yalnızca durduğu yer değil, sürüklenirken geçtiği her altıgen (ara noktalar dahil) açığa çıkar.',
     },
     revealBy: {
       label: 'Açığa Çıkaran Jetonlar',
@@ -139,11 +139,11 @@ const TRANSLATION = {
     },
     pingDiscoveries: {
       label: 'Keşifleri Pingle',
-      desc: 'Açık olduğunda, oyuncular keşfedildiklerinde adlandırılmış bir konuma ping atılır.',
+      desc: 'Açık olduğunda, adlandırılmış bir konum keşfedildiğinde oyunculara o konuma ping atılır.',
     },
     hideCoveredTokens: {
       label: 'Örtülü Jetonları Gizle',
-      desc: 'Roll20 altıgenlerin üzerine isimleri, çubukları ve auraları çizer. Açıkken, kapalı bir altıgen altındaki jetonların oyuncuların görebileceği adları vardır, çubuklar ve auralar kapatılır ve açığa çıktıklarında tekrar açılır.',
+      desc: 'Roll20 adları, çubukları ve auraları altıgenlerin üzerine çizer. Açıkken, örtülü bir altıgenin altındaki jetonların oyunculara görünen adı, çubukları ve auraları kapatılır ve açığa çıktıklarında yeniden açılır.',
     },
   },
   status: {
@@ -162,10 +162,10 @@ const TRANSLATION = {
   messages: {
     filled:
       'Doldurma tamamlandı. Çizilen altıgenler: {created}. Yeniden stil: {restyled}. Gizlenen konumlar: {icons}.',
-    revealed: 'Büyüler ortaya çıktı: {count}.',
+    revealed: 'Açığa çıkan altıgenler: {count}.',
     revealedPage: 'Sayfadaki her altıgen ortaya çıktı ({count}).',
     confirmReset:
-      '"{page}" ({count}) öğesindeki her altıgen kaldırılsın mı? Konum belirteçleri, belirteç katmanına geri döner. Geri alma işlemi bunu tersine çeviremez.',
+      '"{page}" sayfasındaki tüm altıgenler ({count}) kaldırılsın mı? Konum jetonları jeton katmanına geri döner. Geri Al bunu tersine çeviremez.',
     resetPage: 'Sayfadan kaldırılan altıgenler: {count}.',
     undone:
       'Son doldurma geri alındı. Kaldırılan altıgenler: {removed}. Yeniden biçimlendirilen altıgenler geri yüklendi: {restored}.',
@@ -190,7 +190,7 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      'Bu oyun ön plan katmanında çizimi desteklemediğinden, simge katmanına altıgenler çizildi.',
+      'Bu oyun ön plan katmanında çizimi desteklemediğinden, altıgenler jeton katmanına çizildi.',
     someFailed: 'Çizilemeyen altıgenler: {count}. Ayrıntılar için API konsolunu kontrol edin.',
   },
   errors: {
@@ -199,7 +199,7 @@ const TRANSLATION = {
     noPolygons: 'Doldurulacak bir veya daha fazla çizilmiş şekli seçin.',
     emptyArea: 'Seçilen alan herhangi bir altıgen merkez içermiyor.',
     tooMany: 'Bu, tek seferde çok fazla altıgen oluşturacaktır ({count}).',
-    nothingToConceal: 'Gizlenecek çizilmiş şekilleri veya simgeleri seçin.',
+    nothingToConceal: 'Gizlenecek çizilmiş şekilleri veya jetonları seçin.',
     nothingToReveal: 'Ortaya çıkarmak için altıgenleri, çizilmiş şekilleri veya jetonları seçin.',
     noTokens: 'Önce bir veya daha fazla jeton seçin.',
     noHexes: 'Önce bir veya daha fazla altıgen (veya altıgenlerin üzerinde duran jetonlar) seçin.',
@@ -219,7 +219,8 @@ const TRANSLATION = {
       'Alanın çevresine çokgen, dikdörtgen, elips veya serbest şekil çizin, seçin ve tekrar deneyin.',
     emptyArea: 'Daha büyük bir şekil çizin veya sayfa ızgarası ayarlarını kontrol edin.',
     tooMany: 'Daha küçük bir alanı doldurun veya alanı birkaç şekle bölün.',
-    noHexes: 'Altıgenler ön planda veya simge katmanındadır; bunları seçmek için o katmana geçin.',
+    noHexes:
+      'Altıgenler ön plan katmanında veya jeton katmanındadır; bunları seçmek için o katmana geçin.',
     unknownCommand: 'Komutları listelemek için !hexploration help yazın.',
     unknownSetting: 'Her ayarı görmek için !hexploration set yazın.',
     calibrateNeedsTokens:
@@ -232,18 +233,18 @@ const TRANSLATION = {
     menu: 'Menüyü göster.',
     fill: 'Seçilen çizilen şekilleri altıgenlerle kaplayın.',
     fillInverse: 'Seçilen şekillerin içi hariç tüm sayfayı kaplayın.',
-    undo: 'Son dolguyu geri alın, ters dolguyu ters çevirin veya gizleyin ve kullandığı şekilleri geri yükleyin.',
+    undo: 'Son doldurmayı, ters doldurmayı veya gizlemeyi geri alın ve kullandığı şekilleri geri yükleyin.',
     reveal:
-      'Seçilen altıgenleri ve seçilen şekillerin ve simgelerin altındaki altıgenleri ortaya çıkarın.',
+      'Seçilen altıgenleri ve seçilen şekillerin ve jetonların altındaki altıgenleri açığa çıkarın.',
     revealPage: 'Sayfadaki her altıgeni duyuru yapmadan ortaya çıkarın.',
     conceal: 'Seçilen şekillerin ve jetonların altındaki alanı tekrar altıgenlerle kaplayın.',
     explore: 'Seçilen jetonların etrafını sanki oraya yeni taşınmışlar gibi gösterin.',
     resetPage: 'Sayfadaki her altıgeni kaldırın (önce sorar).',
-    name: 'Seçilen altıgenleri veya seçilen belirteçlerin altındaki altıgenleri adlandırın. Temizlemek için adı boş bırakın.',
+    name: 'Seçilen altıgenleri veya seçilen jetonların altındaki altıgenleri adlandırın. Temizlemek için adı boş bırakın.',
     mark: 'Seçilen jetonları gizli konumlara dönüştürün.',
-    unmark: 'Seçilen belirteçlerin gizli konumlar olmasını durdurun.',
+    unmark: 'Seçilen jetonların gizli konum olmasını sonlandırın.',
     set: 'Bir ayarı değiştirin veya tüm ayarları gösterin.',
-    pageSet: 'Yalnızca geçerli sayfadaki bir gösterme ayarını geçersiz kılın.',
+    pageSet: 'Yalnızca geçerli sayfadaki bir açığa çıkarma ayarını geçersiz kılın.',
     pageClear: 'Geçerli sayfanın geçersiz kılmalarını kaldırın.',
     rescan:
       'Sayfanın altıgen listesini yeniden oluşturun; örneğin bir sayfayı veya oyunu kopyaladıktan sonra.',
@@ -261,14 +262,14 @@ const TRANSLATION = {
     revealDesc:
       'Altıgenleri, şekilleri veya jetonları açığa çıkarmak ya da yeniden örtmek için seçin. Keşfet, seçili jetonların çevresini sanki oraya yeni gitmişler gibi açığa çıkarır.',
     locationsDesc:
-      'Altıgenlerin altındaki konumlar olarak gizlemek için belirteçleri seçin. Bir altıgeni adlandırmak için altıgenleri veya belirteçleri seçin.',
+      'Jetonları altıgenlerin altında konum olarak gizlemek için seçin. Bir altıgeni adlandırmak için altıgenleri veya jetonları seçin.',
     toolsDesc:
       'Ayarlar, sayfa geçersiz kılmaları, durum, kopyalanan sayfaları yeniden tarama ve ızgarayı kalibre etme.',
     footer: 'Talimatların tamamı için "{help}" broşürüne bakın.',
   },
   handout: {
     versionLabel: 'Sürüm',
-    subtitle: 'Roll20 için hex-hex keşif',
+    subtitle: 'Roll20 için altıgen altıgen keşif',
     footer: 'Tek tıklamayla kontroller için "{deck}" broşürünü kullanın.',
     overview: {
       heading: 'Genel Bakış',
@@ -288,8 +289,8 @@ const TRANSLATION = {
     commands: {
       heading: 'Komutlar',
       intro:
-        "Bu komutları yalnızca GM'ler kullanabilir. Çoğu seçilen nesneler üzerinde hareket eder; geri kalanı görüntülediğiniz sayfada hareket eder.",
-      colCommand: 'Emretmek',
+        "Bu komutları yalnızca GM'ler kullanabilir. Çoğu seçili nesneler üzerinde çalışır; geri kalanı görüntülediğiniz sayfada çalışır.",
+      colCommand: 'Komut',
       colDesc: 'Ne işe yarar',
     },
     revealing: {
@@ -309,7 +310,7 @@ const TRANSLATION = {
       points: [
         'Konumu İşaretle, seçilen jetonları gizli konumlara dönüştürür. Zaten altıgen altında olan bir jeton hemen gizlenir; aksi takdirde onu kapsayan bir sonraki dolgu tarafından gizlenir.',
         "Beyaz kule durum işaretçisine sahip jetonlar da, sürüm 1'de olduğu gibi, doldurduğunuzda konum olarak kabul edilir.",
-        'Gizli konum belirteçleri GM katmanına taşınır. Altıgenleri ortaya çıktığında, adlarının gösterildiği simge katmanına geri dönerler ve keşifleri duyurulur.',
+        'Gizli konum jetonları GM katmanına taşınır. Altıgenleri açığa çıktığında adları görünür şekilde jeton katmanına geri dönerler ve keşifleri duyurulur.',
         "Altıgeni Adlandır, bir altıgene jeton olmadan ad verir. Ad, GM katmanında bir etiket olarak GM'ye gösterilir ve altıgen açığa çıktığında duyurulur. Jumpgate, GM katmanını ön plan katmanının altında çizer; bu nedenle Jumpgate'te etiketler yalnızca Altıgen Katmanı jeton katmanı olarak ayarlandığında görünür.",
         "Keşifleri Duyur, duyuruyu herkesin mi, yalnızca GM'nin mi yoksa hiç kimsenin mi göreceğini seçer. Keşifleri Pingle ayrıca oyuncuların görünümünü konuma taşır.",
       ],
@@ -324,7 +325,7 @@ const TRANSLATION = {
       perPage: '(Sayfa başına ayarlanabilir.)',
     },
     jumpgate: {
-      heading: 'Jumpgate ve Eski',
+      heading: 'Jumpgate ve Legacy',
       points: [
         'Hexploration, oyunun hangi motoru kullandığını belirler ve uygun türde şekil çizer. Her iki düzenleyicide çizilen şekiller doldurulabilir.',
         'Altıgen Katmanı Otomatik olarak ayarlandığında altıgenler ön plan katmanında, jetonların üzerine çizilir; böylece oyuncular altında ne olduğunu göremez. Ön plan katmanı kullanılamıyorsa bunun yerine jeton katmanı kullanılır.',
@@ -336,7 +337,7 @@ const TRANSLATION = {
       heading: "Sürüm 1'den yükseltme",
       points: [
         "Sürüm 2'nin artık PathMath, MatrixMath, Vector Math veya HTML Builder'a ihtiyacı yok. Başka bir mod kullanmadığı sürece bunları kaldırabilirsiniz.",
-        'Mevcut altıgen haritalar, adlar, konum belirteçleri ve ayarlar ilk başlangıçta otomatik olarak yükseltilir.',
+        'Mevcut altıgen haritalar, adlar, konum jetonları ve ayarlar ilk başlangıçta otomatik olarak yükseltilir.',
         'Hexploration_menu makrosu dahil sürüm 1 komutları hâlâ çalışır.',
         "Sürüm 1, bir karakteri temsil eden her jetonun altıgenleri açığa çıkarmasına izin veriyordu. Bu davranışı korumak için Açığa Çıkaran Jetonlar'ı Karakter jetonları olarak ayarlayın.",
       ],
@@ -361,9 +362,9 @@ const TRANSLATION = {
       colCode: 'Kod',
     },
     credits: {
-      heading: 'Kredi',
+      heading: 'Emeği Geçenler',
       original: 'Orijinal modun yapımcısı',
-      maintainer: 'Versiyon 2 tarafından sürdürülen',
+      maintainer: "Sürüm 2'nin bakımını yapan",
       marketplace: "Ada'nın sanat paketleri Roll20 Marketplace'te",
       support:
         "Bir hata bulursanız veya bir fikriniz varsa Roll20 Mod forumuna gönderin veya GitHub'da bir sorun açın ve API konsolu günlüğündeki tüm mesajları ekleyin.",

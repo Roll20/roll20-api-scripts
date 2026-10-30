@@ -95,11 +95,11 @@ const TRANSLATION = {
     },
     strokeColor: {
       label: '테두리 색상',
-      desc: '새로운 육각형의 윤곽선 색상입니다.',
+      desc: '새 헥스의 윤곽선 색상입니다.',
     },
     labelColor: {
       label: '라벨 색상',
-      desc: '명명된 육각형의 GM 전용 이름 라벨 색상입니다.',
+      desc: '이름이 지정된 헥스에 표시되는 GM 전용 이름 라벨의 색상입니다.',
     },
     glimpseColor: {
       label: '반투명 색상',
@@ -115,7 +115,7 @@ const TRANSLATION = {
     },
     revealDistance: {
       label: '시야 거리',
-      desc: '움직이는 토큰 주변의 헥스 수는 공개됩니다(0~20). 0은 토큰이 통과하는 헥스만 나타냅니다.',
+      desc: '움직이는 토큰 주변에서 공개되는 헥스 수입니다(0~20). 0이면 토큰이 통과하는 헥스만 공개합니다.',
     },
     lineOfSight: {
       label: '시선',
@@ -176,11 +176,11 @@ const TRANSLATION = {
     unmarked: '더 이상 위치가 아닌 토큰: {count}.',
     settingChanged: '{setting}이(가) {value}로 설정되었습니다.',
     rescanned:
-      '재검색이 완료되었습니다. 유지됨: {kept}. 채택됨: {adopted}. 다시 제출됨: {moved}. 누락 및 잊혀짐: {dropped}. 다시 연결된 라벨: {labels}. 다시 연결된 위치 토큰: {icons}.',
+      '다시 스캔이 완료되었습니다. 유지됨: {kept}. 채택됨: {adopted}. 재배치됨: {moved}. 누락 및 잊혀짐: {dropped}. 다시 연결된 라벨: {labels}. 다시 연결된 위치 토큰: {icons}.',
     calibrated:
-      '그리드가 보정되었습니다(열 단계 {colStep}px, 행 단계 {rowStep}px). 재스캔: {kept} 유지, {moved} 다시 제출, {adopted} 채택.',
+      '그리드가 보정되었습니다(열 간격 {colStep}px, 행 간격 {rowStep}px). 다시 스캔: {kept} 유지, {moved} 재배치, {adopted} 채택.',
     calibrationReset:
-      '보정이 제거되었습니다. 재스캔: {kept} 유지, {moved} 다시 제출, {adopted} 채택.',
+      '보정이 제거되었습니다. 다시 스캔: {kept} 유지, {moved} 재배치, {adopted} 채택.',
     journalRebuilt: '"{help}" 및 "{deck}" 유인물이 다시 작성되었습니다.',
     migrated:
       'Hexploration 1.x 헥스 지도가 업그레이드되었습니다. 이 게임이 Legacy 게임에서 복사된 경우 각 헥스 지도 페이지에서 다시 스캔을 실행하세요.',
@@ -191,17 +191,17 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      '이 게임은 전경 레이어 그리기를 지원하지 않으므로 토큰 레이어에 육각형을 그렸습니다.',
-    someFailed: '그릴 수 없는 육각형: {count}. 자세한 내용은 API 콘솔을 확인하세요.',
+      '이 게임은 전경 레이어 그리기를 지원하지 않으므로 토큰 레이어에 헥스를 그렸습니다.',
+    someFailed: '그릴 수 없는 헥스: {count}. 자세한 내용은 API 콘솔을 확인하세요.',
   },
   errors: {
     noPage: '작업할 페이지를 찾을 수 없습니다.',
-    notHex: '이 페이지는 육각형 그리드를 사용하지 않습니다.',
+    notHex: '이 페이지는 헥스 그리드를 사용하지 않습니다.',
     noPolygons: '채울 하나 이상의 그려진 도형을 선택합니다.',
     emptyArea: '선택한 영역에 헥스 중심이 하나도 없습니다.',
     tooMany: '그러면 한 번에 너무 많은 헥스가 생성됩니다({count}).',
     nothingToConceal: '숨길 그려진 모양이나 토큰을 선택하세요.',
-    nothingToReveal: '공개할 육각형, 그려진 모양 또는 토큰을 선택하세요.',
+    nothingToReveal: '공개할 헥스, 그려진 도형 또는 토큰을 선택하세요.',
     noTokens: '먼저 하나 이상의 토큰을 선택하세요.',
     noHexes: '먼저 하나 이상의 헥스(또는 헥스 위에 있는 토큰)를 선택하세요.',
     nothingToUndo: '실행 취소할 채우기가 없습니다.',
@@ -209,7 +209,7 @@ const TRANSLATION = {
     unknownSetting: '알 수 없는 설정: {key}',
     unknownPageSetting: '페이지별로 설정할 수 있는 설정 : {keys}',
     invalidValue: '"{value}"은(는) {key}에 유효한 값이 아닙니다.',
-    calibrateNeedsTokens: '육각형 중앙에 고정된 하나 또는 두 개의 토큰을 선택합니다.',
+    calibrateNeedsTokens: '헥스 중심에 스냅된 토큰을 하나 또는 두 개 선택하세요.',
     calibrateFailed: '해당 토큰은 보정에 사용할 수 없습니다.',
     unexpected: '문제가 발생했습니다: {message}',
   },
@@ -220,7 +220,7 @@ const TRANSLATION = {
       '영역 주위에 다각형, 직사각형, 타원 또는 자유형 모양을 그리고 선택한 다음 다시 시도하십시오.',
     emptyArea: '더 큰 도형을 그리거나 페이지 그리드 설정을 확인하세요.',
     tooMany: '더 작은 영역을 채우거나 영역을 여러 모양으로 분할합니다.',
-    noHexes: '육각형은 전경 또는 토큰 레이어에 있습니다. 해당 레이어로 전환하여 선택하세요.',
+    noHexes: '헥스는 전경 레이어나 토큰 레이어에 있습니다. 해당 레이어로 전환하여 선택하세요.',
     unknownCommand: '명령 목록을 보려면 !hexploration help를 입력하세요.',
     unknownSetting: '모든 설정을 보려면 !hexploration set를 입력하세요.',
     calibrateNeedsTokens:
@@ -231,10 +231,10 @@ const TRANSLATION = {
   },
   help: {
     menu: '메뉴를 보여주세요.',
-    fill: '선택한 그려진 모양을 육각형으로 덮습니다.',
+    fill: '선택한 그려진 도형을 헥스로 덮습니다.',
     fillInverse: '선택한 도형 내부를 제외하고 전체 페이지를 덮습니다.',
-    undo: '마지막 채우기를 실행 취소하고, 채우기를 반전하거나 숨기고, 사용한 모양을 복원합니다.',
-    reveal: '선택한 육각형과 선택한 모양 및 토큰 아래의 육각형을 표시합니다.',
+    undo: '마지막 채우기, 반전 채우기 또는 숨기기를 취소하고, 사용한 도형을 복원합니다.',
+    reveal: '선택한 헥스와, 선택한 도형 및 토큰 아래의 헥스를 공개합니다.',
     revealPage: '알림 없이 페이지의 모든 헥스를 공개합니다.',
     conceal: '선택한 모양과 토큰 아래 영역을 다시 헥스로 덮습니다.',
     explore: '선택한 토큰이 방금 그곳으로 이동한 것처럼 주변을 드러냅니다.',
@@ -298,11 +298,11 @@ const TRANSLATION = {
         '헥스 공개 거리는 헥스를 채울 때 각 헥스에 저장되므로 채우기 전에 설정하세요. 나중에 바꿔도 이미 맵에 있는 헥스에는 영향을 주지 않습니다. 토큰이 얼마나 멀리 볼 수 있든, 헥스를 공개하려면 그 헥스 수 이내에 있어야 하며, 0이면 헥스에 들어가야만 공개됩니다. 산맥의 경우: 헥스 공개 거리를 0으로 설정하고 산을 채운 다음, 다시 없음으로 되돌리고 그 너머의 땅을 채우세요. 시야 거리 3에 시선을 켜면, 일행은 주변의 탁 트인 땅은 보지만 산이나 그 뒤에 있는 것은 보지 못합니다. 각 산 헥스는 토큰이 그 안으로 걸어 들어갈 때 공개됩니다.',
         '반투명 모드에서는 시야 안의 헥스가 사라지는 대신 비쳐 보이게 되며, 토큰이 들어가면 제거됩니다. 반투명이 된 헥스는 시선을 가리지 않습니다.',
         'Roll20은 토큰 이름, 막대, 오라를 헥스 위에 그립니다. 덮인 토큰 숨기기를 켜면 덮인 헥스 아래에 있는 토큰은 덮개가 벗겨질 때까지 플레이어에게 보이는 이름, 막대, 오라가 꺼지므로, 숨은 몬스터가 정체를 드러내지 않습니다. 토큰이 덮여 있는 동안 그중 하나를 켜면 숨겨진 상태로 유지되다가 덮개가 벗겨질 때 켜집니다.',
-        'API는 다른 모드의 움직임을 보고하지 않습니다. TokenMod 이동은 자동으로 선택됩니다. 다른 모드의 경우 토큰을 선택하고 탐색을 클릭하거나 자신의 모드에서 Hexploration.revealAround(token)를 호출하세요.',
+        'API는 다른 모드의 움직임을 보고하지 않습니다. TokenMod 이동은 자동으로 감지됩니다. 다른 모드의 경우 토큰을 선택하고 탐색을 클릭하거나 자신의 모드에서 Hexploration.revealAround(token)를 호출하세요.',
       ],
     },
     locations: {
-      heading: '명명된 육각형 및 위치',
+      heading: '이름 붙은 헥스와 위치',
       points: [
         '위치 표시는 선택한 토큰을 숨겨진 위치로 바꿉니다. 이미 헥스 아래에 있는 토큰은 즉시 숨겨지고, 그렇지 않으면 그 토큰을 덮는 다음 채우기 때 숨겨집니다.',
         '흰색 타워 상태 표시가 있는 토큰도 버전 1에서와 같이 채우기 시 위치로 처리됩니다.',
@@ -315,8 +315,8 @@ const TRANSLATION = {
       heading: '설정',
       intro:
         '!hexploration set(또는 설정 버튼)으로 설정을 변경하세요. 헥스 레이어, 공개하는 토큰, 언어는 Mod 설정 페이지에서도 설정할 수 있습니다.',
-      colKey: '열쇠',
-      colName: '환경',
+      colKey: '키',
+      colName: '설정',
       colDesc: '설명',
       perPage: '(페이지별로 설정 가능합니다.)',
     },
@@ -355,7 +355,7 @@ const TRANSLATION = {
       body: '!hexploration set language로 언어를 선택하세요. 사용 가능한 언어:',
       colLanguage: '언어',
       colNative: '현지어 이름',
-      colCode: '암호',
+      colCode: '코드',
     },
     credits: {
       heading: '크레딧',

@@ -99,7 +99,7 @@ const TRANSLATION = {
     },
     labelColor: {
       label: "Couleur de l'étiquette",
-      desc: 'Couleur des étiquettes de nom réservées aux GM sur les hexs nommés.',
+      desc: 'Couleur des étiquettes de nom réservées au MJ sur les hexagones nommés.',
     },
     glimpseColor: {
       label: "Couleur d'aperçu",
@@ -107,7 +107,7 @@ const TRANSLATION = {
     },
     strokeWidth: {
       label: 'Largeur de la bordure',
-      desc: 'Largeur du contour des nouveaux hexs, en pixels (0 à 20).',
+      desc: 'Largeur du contour des nouveaux hexagones, en pixels (0 à 20).',
     },
     maxDistance: {
       label: 'Distance de révélation des hexagones',
@@ -123,7 +123,7 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Révéler le long du chemin',
-      desc: "Lorsque cette option est activée, chaque hexagone traversé par un jeton lorsqu'il est déplacé (y compris les waypoints) est révélé, pas seulement l'endroit où il s'arrête.",
+      desc: "Lorsque cette option est activée, chaque hexagone traversé par un jeton lorsqu'il est déplacé (y compris les points de passage) est révélé, pas seulement l'endroit où il s'arrête.",
     },
     revealBy: {
       label: 'Jetons révélateurs',
@@ -143,7 +143,7 @@ const TRANSLATION = {
     },
     hideCoveredTokens: {
       label: 'Masquer les jetons couverts',
-      desc: "Roll20 dessine des noms, des barres et des auras au-dessus des hexagones. Lorsqu'ils sont activés, les jetons situés sous un hexagone couvert ont leur nom visible par le joueur, leurs barres et leurs auras éteints, et réactivés lorsqu'ils sont découverts.",
+      desc: "Roll20 dessine des noms, des barres et des auras au-dessus des hexagones. Lorsque cette option est activée, les jetons situés sous un hexagone couvert ont leur nom visible par les joueurs, leurs barres et leurs auras désactivés, puis réactivés lorsqu'ils sont découverts.",
     },
   },
   status: {
@@ -162,21 +162,21 @@ const TRANSLATION = {
   messages: {
     filled:
       'Remplissage terminé. Hexagones dessinés : {created}. Restylés : {restyled}. Emplacements cachés : {icons}.',
-    revealed: 'Hexs révélés : {count}.',
+    revealed: 'Hexagones révélés : {count}.',
     revealedPage: 'Chaque hexagone de la page révélé ({count}).',
     confirmReset:
-      'Supprimer chaque hexagone de "{page}" ({count}) ? Les jetons d\'emplacement reviennent à la couche de jetons. L\'annulation ne peut pas inverser cette situation.',
-    resetPage: 'Hexs supprimés de la page : {count}.',
+      'Supprimer chaque hexagone de "{page}" ({count}) ? Les jetons d\'emplacement reviennent sur le calque des jetons. Annuler le remplissage ne pourra pas revenir sur cette action.',
+    resetPage: 'Hexagones supprimés de la page : {count}.',
     undone:
-      'Dernier remplissage annulé. Hexs supprimés : {removed}. Hexs relookés restaurés : {restored}.',
-    named: 'Hexs nommés "{name}" : {count}.',
+      'Dernier remplissage annulé. Hexagones supprimés : {removed}. Hexagones restylés restaurés : {restored}.',
+    named: 'Hexagones nommés "{name}" : {count}.',
     unnamed: 'Noms effacés : {count}.',
     marked:
-      'Emplacements cachés dans les hexs existants : {attached}. En attente du prochain remplissage qui les couvre : {pending}.',
+      'Emplacements cachés dans les hexagones existants : {attached}. En attente du prochain remplissage qui les couvre : {pending}.',
     unmarked: 'Jetons qui ne sont plus des emplacements : {count}.',
     settingChanged: '{setting} défini sur {value}.',
     rescanned:
-      'Nouvelle analyse terminée. Conservé : {kept}. Adopté : {adopted}. Re-déposé : {moved}. Manquant et oublié : {dropped}. Libellés réassociés : {labels}. Jetons de localisation réassociés : {icons}.',
+      "Nouvelle analyse terminée. Conservés : {kept}. Adoptés : {adopted}. Reclassés : {moved}. Manquants et oubliés : {dropped}. Libellés réassociés : {labels}. Jetons d'emplacement réassociés : {icons}.",
     calibrated:
       'Grille calibrée (pas de colonne {colStep}px, pas de ligne {rowStep}px). Nouvelle analyse : conservé {kept}, reclassé {moved}, adopté {adopted}.',
     calibrationReset:
@@ -185,7 +185,7 @@ const TRANSLATION = {
     migrated:
       "Vos cartes hexagonales Hexploration 1.x ont été mises à niveau. Si ce jeu a été copié à partir d'un jeu Legacy, lancez une nouvelle analyse sur chaque page de carte hexagonale.",
     pruned:
-      "Hexs enregistrés qui n'existent plus et ont été oubliés : {dropped}. Si ce jeu ou cette page a été copié, lancez une nouvelle analyse sur la page pour récupérer ses hexagones.",
+      "Hexagones enregistrés qui n'existent plus et ont été oubliés : {dropped}. Si ce jeu ou cette page a été copié, lancez une nouvelle analyse sur la page pour récupérer ses hexagones.",
     readyHint:
       'Tapez !hexploration pour afficher le menu, ou ouvrez le document "Hexploration - Command Deck".',
   },
@@ -193,11 +193,11 @@ const TRANSLATION = {
     foregroundUnavailable:
       'Ce jeu ne prend pas en charge le dessin sur la couche de premier plan, les hexagones ont donc été dessinés sur la couche de jetons.',
     someFailed:
-      "Hexs qui n'ont pas pu être tirés : {count}. Consultez la console API pour plus de détails.",
+      "Hexagones qui n'ont pas pu être dessinés : {count}. Consultez la console API pour plus de détails.",
   },
   errors: {
     noPage: 'Impossible de trouver la page sur laquelle travailler.',
-    notHex: "Cette page n'utilise pas de grille hexadécimale.",
+    notHex: "Cette page n'utilise pas de grille hexagonale.",
     noPolygons: 'Sélectionnez une ou plusieurs formes dessinées à remplir.',
     emptyArea: "La zone sélectionnée ne contient aucun centre d'hexagone.",
     tooMany: "Cela créerait trop d'hexagones en une seule fois ({count}).",
@@ -230,21 +230,21 @@ const TRANSLATION = {
     calibrateNeedsTokens:
       "Placez un jeton au centre d'un hexagone et sélectionnez-le. Sélectionnez un deuxième jeton accroché à un hexagone voisin dans la même ligne (Hex V) ou colonne (Hex H) pour corriger également la taille de l'hexagone.",
     calibrateFailed:
-      "Deux jetons doivent être dans la même ligne (Hex V) ou dans la même colonne (Hex H), à au moins un hex l'un de l'autre.",
+      "Les deux jetons doivent être dans la même ligne (Hex V) ou dans la même colonne (Hex H), à au moins un hexagone l'un de l'autre.",
     unexpected: 'Les détails se trouvent dans le journal de la console API.',
   },
   help: {
     menu: 'Afficher le menu.',
     fill: 'Couvrez les formes dessinées sélectionnées avec des hexagones.',
     fillInverse: "Couvrez toute la page sauf à l'intérieur des formes sélectionnées.",
-    undo: 'Annulez le dernier remplissage, inversez le remplissage ou masquez-le et restaurez les formes utilisées.',
+    undo: "Annulez le dernier remplissage, remplissage inversé ou masquage, et restaurez les formes qu'il a utilisées.",
     reveal:
       'Révélez les hexagones sélectionnés et les hexagones sous les formes et les jetons sélectionnés.',
     revealPage: 'Révélez chaque hexagone de la page sans annonce.',
     conceal:
       'Couvrez à nouveau la zone sous les formes et les jetons sélectionnés avec des hexagones.',
     explore: "Révélez autour des jetons sélectionnés comme s'ils venaient de s'y déplacer.",
-    resetPage: 'Supprimez tous les hexagones de la page (demande en premier).',
+    resetPage: 'Supprimez tous les hexagones de la page (avec confirmation).',
     name: "Nommez les hexagones sélectionnés ou les hexagones sous les jetons sélectionnés. Laissez le nom vide pour l'effacer.",
     mark: 'Transformez les jetons sélectionnés en emplacements cachés.',
     unmark: "Empêchez les jetons sélectionnés d'être des emplacements cachés.",
@@ -252,7 +252,7 @@ const TRANSLATION = {
     pageSet: 'Remplacer un paramètre de révélation sur la page actuelle uniquement.',
     pageClear: 'Supprimez les remplacements de la page actuelle.',
     rescan:
-      'Reconstruisez la liste hexadécimale de la page, par exemple après avoir copié une page ou un jeu.',
+      'Reconstruisez la liste des hexagones de la page, par exemple après avoir copié une page ou un jeu.',
     calibrate:
       'Alignez la grille hexagonale avec un ou deux jetons sélectionnés accrochés aux centres des hexagones.',
     calibrateReset: 'Supprimez le calibrage de la page actuelle.',
@@ -269,16 +269,16 @@ const TRANSLATION = {
     locationsDesc:
       "Sélectionnez les jetons pour les cacher en tant qu'emplacements sous les hexagones. Sélectionnez des hexagones ou des jetons pour nommer un hexagone.",
     toolsDesc:
-      'Paramètres, remplacements de pages, statut, nouvelle numérisation des pages copiées et calibrage de la grille.',
+      'Paramètres, remplacements de page, statut, nouvelle analyse des pages copiées et calibrage de la grille.',
     footer: 'Consultez le document « {help} » pour obtenir des instructions complètes.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Exploration hex par hex pour Roll20',
+    subtitle: 'Exploration hexagone par hexagone pour Roll20',
     footer: 'Utilisez le document "{deck}" pour les contrôles en un clic.',
     overview: {
-      heading: 'Aperçu',
-      body: "L'hexploration couvre une carte d'hexagones avec des hexagones opaques. Au fur et à mesure que le groupe se déplace, les hexagones qu'il traverse (et, si vous le souhaitez, les hexagones qui l'entourent) sont supprimés, de sorte que la carte est découverte un hexagone à la fois. Les emplacements cachés peuvent être placés sous les hexagones et sont annoncés lorsqu'ils sont trouvés. Il fonctionne dans les jeux Jumpgate et Legacy, sur les grilles Hex (V) et Hex (H) de n'importe quelle taille.",
+      heading: "Vue d'ensemble",
+      body: "Hexploration recouvre une carte hexagonale d'hexagones opaques. Au fur et à mesure que le groupe se déplace, les hexagones qu'il traverse (et, si vous le souhaitez, les hexagones qui l'entourent) sont supprimés, de sorte que la carte est découverte un hexagone à la fois. Les emplacements cachés peuvent être placés sous les hexagones et sont annoncés lorsqu'ils sont trouvés. Il fonctionne dans les jeux Jumpgate et Legacy, sur les grilles Hex (V) et Hex (H) de n'importe quelle taille.",
       demo: 'Regardez une courte démo (à partir de la version 1)',
     },
     quickStart: {
@@ -288,7 +288,7 @@ const TRANSLATION = {
         'Dessinez une ou plusieurs formes (polygone, rectangle, ellipse ou à main levée) autour de la zone à masquer.',
         'Sélectionnez les formes et cliquez sur Remplir dans le Command Deck (ou tapez !hexploration fill). Les formes sont remplacées par des hexagones.',
         "Facultatif : avant de remplir, sélectionnez les jetons pour les lieux importants et cliquez sur Marquer l'emplacement. Ils sont cachés sous les hexagones et annoncés dès leur découverte.",
-        "Déplacez un jeton de joueur. Chaque hex qu'il traverse, ainsi que les hexs situés à sa distance de vue, sont révélés.",
+        "Déplacez un jeton de joueur. Chaque hexagone qu'il traverse, ainsi que les hexagones situés dans sa Distance de vue, sont révélés.",
       ],
     },
     commands: {
@@ -302,7 +302,7 @@ const TRANSLATION = {
       heading: 'Comment fonctionne la révélation',
       points: [
         'Seuls les jetons sur le calque des jetons révèlent des hexagones. Les jetons concernés sont définis par Jetons révélateurs : les jetons de joueur par défaut, afin que le MJ puisse déplacer des monstres sans découvrir la carte.',
-        "Un jeton révèle chaque hex qu'il couvre (les gros jetons en couvrent plusieurs) et, avec Révéler le long du chemin activé, chaque hex de la route qu'il a parcouru, y compris les waypoints.",
+        "Un jeton révèle chaque hexagone qu'il couvre (les gros jetons en couvrent plusieurs) et, avec Révéler le long du chemin activé, chaque hexagone du trajet le long duquel il a été déplacé, y compris les points de passage.",
         "La Distance de vue révèle les hexagones autour de chacun de ces hexagones, en commençant par les plus proches. Avec Ligne de vue activée, un hexagone n'est pas révélé tant qu'un hexagone couvert se trouve entre lui et le jeton. Les hexagones les plus proches sont généralement révélés en premier, donc en terrain dégagé la Ligne de vue ne change rien : elle ne compte qu'avec une Distance de vue de 2 ou plus et des hexagones qui restent couverts, comme un terrain rempli avec une Distance de révélation des hexagones.",
         "La Distance de révélation des hexagones est enregistrée sur chaque hexagone au moment où il est rempli, donc réglez-la avant de remplir ; la modifier ensuite n'affecte pas les hexagones déjà présents sur la carte. Un jeton doit se trouver à ce nombre d'hexagones au plus pour les révéler, aussi loin qu'il puisse voir, et avec 0 ils ne sont révélés qu'en y entrant. Pour une chaîne de montagnes : réglez la Distance de révélation des hexagones sur 0, remplissez les montagnes, remettez-la sans limite, puis remplissez les terres au-delà. Avec une Distance de vue de 3 et la Ligne de vue activée, le groupe voit le terrain dégagé autour de lui, mais pas les montagnes ni ce qui se trouve derrière. Chaque hexagone de montagne est révélé lorsqu'un jeton y pénètre.",
         "En mode Aperçu, les hexagones visibles deviennent transparents au lieu de disparaître et sont supprimés lorsqu'un jeton y pénètre. Les hexagones aperçus ne bloquent pas la Ligne de vue.",
@@ -311,11 +311,11 @@ const TRANSLATION = {
       ],
     },
     locations: {
-      heading: 'Hexs et emplacements nommés',
+      heading: 'Hexagones nommés et emplacements',
       points: [
         "Marquer l'emplacement transforme les jetons sélectionnés en emplacements cachés. Un jeton déjà sous un hexagone est caché immédiatement ; sinon, il est caché par le prochain remplissage qui le recouvre.",
         'Les jetons avec le marqueur de statut tour blanche sont également traités comme des emplacements lorsque vous remplissez, comme dans la version 1.',
-        "Les jetons d'emplacement cachés sont déplacés vers la couche GM. Lorsque leur hexagone est révélé, ils retournent à la couche de jetons avec leur nom affiché et leur découverte est annoncée.",
+        "Les jetons d'emplacement cachés sont déplacés vers le calque MJ. Lorsque leur hexagone est révélé, ils retournent sur le calque des jetons avec leur nom affiché et leur découverte est annoncée.",
         "Nommer l'hexagone donne un nom à un hexagone sans jeton. Le nom est montré au MJ sous forme d'étiquette sur le calque MJ et annoncé lorsque l'hexagone est révélé. Jumpgate dessine le calque MJ sous le calque de premier plan, donc dans Jumpgate les étiquettes ne sont visibles que si Calque des hexagones est réglé sur le calque des jetons.",
         "Annoncer les découvertes détermine si tout le monde, seulement le MJ ou personne ne voit l'annonce. Pinger les découvertes déplace aussi la vue des joueurs vers l'emplacement.",
       ],
@@ -330,7 +330,7 @@ const TRANSLATION = {
       perPage: '(Peut être défini par page.)',
     },
     jumpgate: {
-      heading: 'Jumpgate et héritage',
+      heading: 'Jumpgate et Legacy',
       points: [
         "Hexploration détermine quel moteur le jeu utilise et dessine le type de forme correspondant. Les formes dessinées dans l'un ou l'autre éditeur peuvent être remplies.",
         "Avec Calque des hexagones réglé sur Auto, les hexagones sont dessinés sur le calque de premier plan, au-dessus des jetons, afin que les joueurs ne puissent pas voir ce qu'il y a en dessous. Si le calque de premier plan n'est pas disponible, le calque des jetons est utilisé à la place.",
@@ -353,8 +353,8 @@ const TRANSLATION = {
       heading: 'Dépannage',
       points: [
         'Rien ne se passe quand un jeton se déplace : vérifiez que le jeton est sur le calque des jetons et correspond à Jetons révélateurs, et que la page contient des hexagones (!hexploration status).',
-        'Les hexs sont décalés par rapport à la grille : utilisez Calibrer, puis vérifiez avec un jeton sur quelques hexs de la carte.',
-        "Les hexagones ont cessé de s'afficher après la copie d'une page ou d'un jeu : lancez une nouvelle analyse de la page.",
+        'Les hexagones sont décalés par rapport à la grille : utilisez Calibrer, puis vérifiez avec un jeton sur quelques hexagones répartis sur la carte.',
+        "Les hexagones ne sont plus révélés après la copie d'une page ou d'un jeu : lancez une nouvelle analyse de la page.",
         "Remplir indique que la zone ne contient aucun centre d'hexagone : la forme doit contenir le centre d'au moins un hexagone.",
         "Pour toute autre chose, consultez le journal de la console API et incluez ses messages lorsque vous demandez de l'aide.",
       ],

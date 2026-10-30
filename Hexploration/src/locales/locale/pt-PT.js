@@ -115,7 +115,7 @@ const TRANSLATION = {
     },
     revealDistance: {
       label: 'Distância de visão',
-      desc: 'Quantos hexágonos em redor de uma ficha em movimento são revelados (0 a 20). 0 revela apenas os hexágonos pelos quais o token passa.',
+      desc: 'Quantos hexágonos em redor de uma ficha em movimento são revelados (0 a 20). 0 revela apenas os hexágonos por onde a ficha passa.',
     },
     lineOfSight: {
       label: 'Linha de visão',
@@ -123,7 +123,7 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Revelar ao longo do percurso',
-      desc: 'Quando ativado, cada hexágono que uma ficha passa enquanto é arrastada (incluindo pontos de passagem) é revelado, e não apenas onde pára.',
+      desc: 'Quando ativado, cada hexágono por onde uma ficha passa enquanto é arrastada (incluindo pontos de passagem) é revelado, e não apenas onde para.',
     },
     revealBy: {
       label: 'Fichas que revelam',
@@ -143,7 +143,7 @@ const TRANSLATION = {
     },
     hideCoveredTokens: {
       label: 'Ocultar fichas cobertas',
-      desc: 'Roll20 desenha nomes, barras e auras por cima dos hexágonos. Quando ativado, os tokens sob um hexágono coberto têm o seu nome, barras e auras visíveis para o jogador desligados e ligados novamente quando são descobertos.',
+      desc: 'O Roll20 desenha nomes, barras e auras por cima dos hexágonos. Quando ativado, as fichas sob um hexágono coberto têm o seu nome, barras e auras visíveis para os jogadores desligados, que voltam a ser ligados quando as fichas são descobertas.',
     },
   },
   status: {
@@ -162,7 +162,7 @@ const TRANSLATION = {
   messages: {
     filled:
       'Preenchimento completo. Hexágonos desenhados: {created}. Reestilizado: {restyled}. Locais escondidos: {icons}.',
-    revealed: 'Feitiços revelados: {count}.',
+    revealed: 'Hexágonos revelados: {count}.',
     revealedPage: 'Cada hexágono da página revelado ({count}).',
     confirmReset:
       'Remover todos os hexágonos de "{page}" ({count})? As fichas de localização regressam à camada de fichas. Esta ação não pode ser revertida com Desfazer.',
@@ -172,15 +172,15 @@ const TRANSLATION = {
     named: 'Hexágonos denominados "{name}": {count}.',
     unnamed: 'Nomes apagados: {count}.',
     marked:
-      'Locais escondidos em hexágonos existentes: {attached}. Aguardam o próximo enchimento que os cobre: ​​​​{pending}.',
-    unmarked: 'Tokens que já não são locais: {count}.',
+      'Locais escondidos em hexágonos existentes: {attached}. A aguardar o próximo preenchimento que os cubra: {pending}.',
+    unmarked: 'Fichas que já não são locais: {count}.',
     settingChanged: '{setting} definido como {value}.',
     rescanned:
-      'Nova verificação concluída. Mantido: {kept}. Adoptado: {adopted}. Arquivado novamente: {moved}. Ausente e esquecido: {dropped}. Rótulos novamente ligados: {labels}. Tokens de localização novamente ligados: {icons}.',
+      'Reanálise concluída. Mantidos: {kept}. Adotados: {adopted}. Realocados: {moved}. Ausentes e esquecidos: {dropped}. Rótulos novamente ligados: {labels}. Fichas de local novamente ligadas: {icons}.',
     calibrated:
-      'Grelha calibrada (etapa de coluna {colStep}px, etapa de linha {rowStep}px). Nova análise: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      'Grelha calibrada (passo da coluna {colStep}px, passo da linha {rowStep}px). Reanálise: mantidos {kept}, realocados {moved}, adotados {adopted}.',
     calibrationReset:
-      'Calibração removida. Nova análise: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      'Calibração removida. Reanálise: mantidos {kept}, realocados {moved}, adotados {adopted}.',
     journalRebuilt: 'Os folhetos "{help}" e "{deck}" foram reconstruídos.',
     migrated:
       'Os seus mapas de hexágonos do Hexploration 1.x foram atualizados. Se este jogo foi copiado de um jogo Legacy, execute Reanalisar em cada página com mapa de hexágonos.',
@@ -191,7 +191,7 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      'Este jogo não suporta o desenho na camada de primeiro plano, pelo que foram desenhados hexágonos na camada de tokens.',
+      'Este jogo não suporta o desenho na camada de primeiro plano, pelo que os hexágonos foram desenhados na camada de fichas.',
     someFailed:
       'Hexágonos que não puderam ser desenhados: {count}. Verifique a consola da API para obter detalhes.',
   },
@@ -203,15 +203,15 @@ const TRANSLATION = {
     tooMany: 'Isto criaria muitos hexágonos de uma só vez ({count}).',
     nothingToConceal: 'Selecione formas desenhadas ou fichas para ocultar.',
     nothingToReveal: 'Selecione hexágonos, formas desenhadas ou fichas para revelar.',
-    noTokens: 'Selecione primeiro um ou mais tokens.',
+    noTokens: 'Selecione primeiro uma ou mais fichas.',
     noHexes: 'Selecione primeiro um ou mais hexágonos (ou fichas sobre hexágonos).',
-    nothingToUndo: 'Não há enchimento para desfazer.',
+    nothingToUndo: 'Não há preenchimento para desfazer.',
     unknownCommand: 'Comando desconhecido: {command}',
     unknownSetting: 'Configuração desconhecida: {key}',
     unknownPageSetting: 'Configurações que podem ser definidas por página: {keys}',
     invalidValue: '"{value}" não é um valor válido para {key}.',
     calibrateNeedsTokens: 'Selecione uma ou duas fichas encaixadas em centros de hexágonos.',
-    calibrateFailed: 'Estes tokens não podem ser utilizados para calibrar.',
+    calibrateFailed: 'Estas fichas não podem ser utilizadas para calibrar.',
     unexpected: 'Algo correu mal: {message}',
   },
   hints: {
@@ -222,7 +222,7 @@ const TRANSLATION = {
     emptyArea: 'Desenhe uma forma maior ou verifique as definições da grelha da página.',
     tooMany: 'Preencha uma área mais pequena ou divida a área em várias formas.',
     noHexes:
-      'Os hexágonos estão no primeiro plano ou na camada de tokens; mude para essa camada para os selecionar.',
+      'Os hexágonos estão na camada de primeiro plano ou na camada de fichas; mude para essa camada para os selecionar.',
     unknownCommand: 'Introduza !hexploration help para listar os comandos.',
     unknownSetting: 'Digite !hexploration set para ver todas as definições.',
     calibrateNeedsTokens:
@@ -235,15 +235,15 @@ const TRANSLATION = {
     menu: 'Mostre o menu.',
     fill: 'Cubra as formas desenhadas selecionadas com hexágonos.',
     fillInverse: 'Cubra a página inteira, exceto dentro das formas selecionadas.',
-    undo: 'Desfaça o último enchimento, inverta o enchimento ou ocultar e restaure as formas utilizadas.',
+    undo: 'Desfaça o último preenchimento, preenchimento inverso ou ocultação e restaure as formas que este utilizou.',
     reveal: 'Revele os hexágonos selecionados e os hexágonos sob as formas e fichas selecionadas.',
     revealPage: 'Revele cada hexágono da página sem anúncios.',
     conceal: 'Cubra a área sob as formas e fichas selecionadas com hexágonos novamente.',
     explore: 'Revele à volta das fichas selecionadas como se tivessem acabado de se mover para lá.',
     resetPage: 'Remova todos os hexágonos da página (pergunta primeiro).',
-    name: 'Nomeie os hexágonos selecionados ou os hexágonos sob os tokens selecionados. Deixe o nome vazio para o limpar.',
-    mark: 'Transforme os tokens selecionados em locais ocultos.',
-    unmark: 'Impede que os tokens selecionados sejam locais ocultos.',
+    name: 'Nomeie os hexágonos selecionados ou os hexágonos sob as fichas selecionadas. Deixe o nome vazio para o limpar.',
+    mark: 'Transforme as fichas selecionadas em locais ocultos.',
+    unmark: 'Faça com que as fichas selecionadas deixem de ser locais ocultos.',
     set: 'Altere uma definição ou mostre todas as definições.',
     pageSet: 'Substituir uma configuração de revelação apenas na página atual.',
     pageClear: 'Remova as substituições da página atual.',
@@ -265,7 +265,7 @@ const TRANSLATION = {
     locationsDesc:
       'Selecione fichas para as ocultar como locais sob hexágonos. Selecione hexágonos ou fichas para nomear um hexágono.',
     toolsDesc:
-      'Definições, substituições de páginas, estado, nova digitalização de páginas copiadas e calibração da grelha.',
+      'Definições, substituições de páginas, estado, reanálise de páginas copiadas e calibração da grelha.',
     footer: 'Consulte o folheto "{help}" para obter as instruções completas.',
   },
   handout: {
@@ -307,11 +307,11 @@ const TRANSLATION = {
       ],
     },
     locations: {
-      heading: 'Hexes e locais nomeados',
+      heading: 'Hexágonos nomeados e locais',
       points: [
         'Marcar local transforma as fichas selecionadas em locais escondidos. Uma ficha que já esteja sob um hexágono é ocultada imediatamente; caso contrário, ficará oculta pelo próximo preenchimento que a cobrir.',
-        'Os tokens com o marcador de estado da torre branca também são tratados como locais quando preenche, como na versão 1.',
-        'As fichas de localização oculta são movidas para a camada GM. Quando o seu hexágono é revelado, regressam à camada de token com o seu nome mostrado e a sua descoberta é anunciada.',
+        'As fichas com o marcador de estado da torre branca também são tratadas como locais quando preenche, como na versão 1.',
+        'As fichas de local ocultas são movidas para a camada do GM. Quando o seu hexágono é revelado, regressam à camada de fichas com o nome visível e a sua descoberta é anunciada.',
         'Nomear hexágono dá um nome a um hexágono sem precisar de uma ficha. O nome é mostrado ao GM como uma etiqueta na camada do GM e anunciado quando o hexágono é revelado. O Jumpgate desenha a camada do GM por baixo da camada de primeiro plano, pelo que no Jumpgate as etiquetas só aparecem quando a opção Camada dos hexágonos está definida como camada de fichas.',
         'Anunciar descobertas escolhe se todos, apenas o GM ou ninguém vê o anúncio. Pingar descobertas também move a vista dos jogadores para o local.',
       ],
@@ -326,7 +326,7 @@ const TRANSLATION = {
       perPage: '(Pode ser definido por página.)',
     },
     jumpgate: {
-      heading: 'Jumpgate e Legado',
+      heading: 'Jumpgate e Legacy',
       points: [
         'Hexploration descobre qual o motor que o jogo utiliza e desenha o tipo de forma correspondente. As formas desenhadas em qualquer editor podem ser preenchidas.',
         'Com a Camada dos hexágonos definida como Automático, os hexágonos são desenhados na camada de primeiro plano, por cima das fichas, para que os jogadores não consigam ver o que está por baixo. Se a camada de primeiro plano não estiver disponível, é utilizada a camada de fichas.',
@@ -365,7 +365,7 @@ const TRANSLATION = {
     credits: {
       heading: 'Créditos',
       original: 'Mod original de',
-      maintainer: 'Versão 2 mantida pela',
+      maintainer: 'Versão 2 mantida por',
       marketplace: 'Pacotes de arte de Ada no Roll20 Marketplace',
       support:
         'Se encontrar um bug ou tiver uma ideia, publique no fórum Roll20 Mod ou abra um problema no GitHub e inclua quaisquer mensagens do registo da consola da API.',

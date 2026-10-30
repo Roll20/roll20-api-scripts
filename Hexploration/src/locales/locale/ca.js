@@ -95,7 +95,7 @@ const TRANSLATION = {
     },
     strokeColor: {
       label: 'Color de la vora',
-      desc: 'Color del contorn dels nous hexagonals.',
+      desc: 'Color del contorn dels hexàgons nous.',
     },
     labelColor: {
       label: "Color de l'etiqueta",
@@ -115,7 +115,7 @@ const TRANSLATION = {
     },
     revealDistance: {
       label: 'Distància de visió',
-      desc: "Quants hexagones es mostren al voltant d'una fitxa en moviment (de 0 a 20). 0 només revela els hexagones pels quals passa la fitxa.",
+      desc: "Quants hexàgons es revelen al voltant d'una fitxa en moviment (de 0 a 20). 0 només revela els hexàgons per on passa la fitxa.",
     },
     lineOfSight: {
       label: 'Línia de visió',
@@ -123,11 +123,11 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Revela al llarg del camí',
-      desc: "Quan està activat, es revela cada hexàgono per on passa una fitxa mentre és arrossegada (inclosos els waypoints), no només on s'atura.",
+      desc: "Quan està activat, es revela cada hexàgon per on passa una fitxa mentre és arrossegada (inclosos els punts de pas), no només on s'atura.",
     },
     revealBy: {
       label: 'Fitxes que revelen',
-      desc: 'Quines fitxes de la capa de fitxes revelen hexagones: fitxes controlades per un jugador, fitxes que representen qualsevol personatge o cada fitxa.',
+      desc: 'Quines fitxes de la capa de fitxes revelen hexàgons: fitxes controlades per un jugador, fitxes que representen qualsevol personatge o totes les fitxes.',
     },
     revealMode: {
       label: 'Mode de revelació',
@@ -143,7 +143,7 @@ const TRANSLATION = {
     },
     hideCoveredTokens: {
       label: 'Amaga les fitxes cobertes',
-      desc: 'Roll20 dibuixa noms, barres i aures per sobre dels hexagones. Quan està activat, les fitxes sota un hexagonal cobert tenen el seu nom visible per al jugador, les barres i les aures desactivades, i tornen a activar-se quan es destaquen.',
+      desc: "Roll20 dibuixa noms, barres i aures per sobre dels hexàgons. Quan està activat, a les fitxes que són sota un hexàgon cobert se'ls desactiven el nom visible per als jugadors, les barres i les aures, que es tornen a activar quan es descobreixen.",
     },
   },
   status: {
@@ -162,13 +162,13 @@ const TRANSLATION = {
   messages: {
     filled:
       'Emplenament completat. Hexàgons dibuixats: {created}. Amb estil nou: {restyled}. Ubicacions amagades: {icons}.',
-    revealed: 'Hexagones revelats: {count}.',
+    revealed: 'Hexàgons revelats: {count}.',
     revealedPage: "S'han revelat tots els hexàgons de la pàgina ({count}).",
     confirmReset:
       'Voleu eliminar tots els hexàgons de "{page}" ({count})? Les fitxes d\'ubicació tornen a la capa de fitxes. Aquesta acció no es pot revertir amb Desfer.',
     resetPage: 'Hexàgons eliminats de la pàgina: {count}.',
     undone:
-      'Últim farciment desfet. Hexagones eliminats: {removed}. Hexagones redissenyats restaurats: {restored}.',
+      "Últim emplenament desfet. Hexàgons eliminats: {removed}. Hexàgons amb l'estil restaurat: {restored}.",
     named: 'Hexàgons anomenats "{name}": {count}.',
     unnamed: 'Noms esborrats: {count}.',
     marked:
@@ -176,11 +176,11 @@ const TRANSLATION = {
     unmarked: 'Fitxes que ja no són ubicacions: {count}.',
     settingChanged: "{setting} s'ha establert en {value}.",
     rescanned:
-      "Torna a escanejar completat. Conservat: {kept}. Adoptat: {adopted}. Tornada a arxivar: {moved}. Falta i oblidat: {dropped}. Etiquetes tornades a enllaçar: {labels}. S'han tornat a enllaçar fitxes d'ubicació: {icons}.",
+      "Reescaneig completat. Conservats: {kept}. Adoptats: {adopted}. Reubicats: {moved}. Desapareguts i oblidats: {dropped}. Etiquetes tornades a enllaçar: {labels}. Fitxes d'ubicació tornades a enllaçar: {icons}.",
     calibrated:
-      "Quadrícula calibrada (pas de columna {colStep}px, pas de fila {rowStep}px). Torna a escanejar: s'ha mantingut {kept}, s'ha tornat a arxivar {moved}, s'ha adoptat {adopted}.",
+      'Quadrícula calibrada (pas de columna {colStep}px, pas de fila {rowStep}px). Reescaneig: conservats {kept}, reubicats {moved}, adoptats {adopted}.',
     calibrationReset:
-      "S'ha eliminat el calibratge. Torna a escanejar: s'ha mantingut {kept}, s'ha tornat a arxivar {moved}, s'ha adoptat {adopted}.",
+      "S'ha eliminat el calibratge. Reescaneig: conservats {kept}, reubicats {moved}, adoptats {adopted}.",
     journalRebuilt: 'Els fullets "{help}" i "{deck}" s\'han reconstruït.',
     migrated:
       "Els vostres mapes d'hexàgons d'Hexploration 1.x s'han actualitzat. Si aquest joc s'ha copiat d'un joc Legacy, executeu Torna a escanejar a cada pàgina amb mapa d'hexàgons.",
@@ -191,26 +191,26 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      'Aquest joc no admet dibuixar a la capa de primer pla, de manera que es van dibuixar hexagones a la capa de fitxes.',
+      "Aquest joc no admet dibuixar a la capa de primer pla, de manera que els hexàgons s'han dibuixat a la capa de fitxes.",
     someFailed:
-      "Hexagones que no s'han pogut dibuixar: {count}. Consulteu la consola de l'API per obtenir més informació.",
+      "Hexàgons que no s'han pogut dibuixar: {count}. Consulteu la consola de l'API per obtenir més informació.",
   },
   errors: {
     noPage: "No s'ha pogut trobar la pàgina per treballar.",
     notHex: 'Aquesta pàgina no utilitza una graella hexagonal.',
     noPolygons: 'Seleccioneu una o més formes dibuixades per omplir.',
-    emptyArea: "L'àrea seleccionada no conté cap centre hexagonal.",
-    tooMany: "Això crearia massa hexagones d'una vegada ({count}).",
+    emptyArea: "L'àrea seleccionada no conté cap centre d'hexàgon.",
+    tooMany: "Això crearia massa hexàgons d'una vegada ({count}).",
     nothingToConceal: 'Seleccioneu formes dibuixades o fitxes per ocultar.',
-    nothingToReveal: 'Seleccioneu hexagonals, formes dibuixades o fitxes per revelar.',
-    noTokens: 'Seleccioneu primer un o més fitxes.',
-    noHexes: 'Seleccioneu primer un o més hexagones (o fitxes situades en hexagones).',
+    nothingToReveal: 'Seleccioneu hexàgons, formes dibuixades o fitxes per revelar.',
+    noTokens: 'Seleccioneu primer una o més fitxes.',
+    noHexes: 'Seleccioneu primer un o més hexàgons (o fitxes situades en hexàgons).',
     nothingToUndo: 'No hi ha cap emplenament per desfer.',
     unknownCommand: 'Ordre desconeguda: {command}',
     unknownSetting: 'Configuració desconeguda: {key}',
     unknownPageSetting: 'Configuració que es pot establir per pàgina: {keys}',
     invalidValue: '"{value}" no és un valor vàlid per a {key}.',
-    calibrateNeedsTokens: 'Seleccioneu una o dues fitxes encaixades als centres hexagonals.',
+    calibrateNeedsTokens: 'Seleccioneu una o dues fitxes ajustades als centres dels hexàgons.',
     calibrateFailed: 'Aquestes fitxes no es poden utilitzar per calibrar.',
     unexpected: "S'ha produït un error: {message}",
   },
@@ -235,25 +235,26 @@ const TRANSLATION = {
   },
   help: {
     menu: 'Mostra el menú.',
-    fill: 'Cobriu les formes dibuixades seleccionades amb hexagonals.',
+    fill: 'Cobriu les formes dibuixades seleccionades amb hexàgons.',
     fillInverse: 'Cobriu tota la pàgina excepte dins de les formes seleccionades.',
-    undo: "Desfer l'últim farciment, farciment invers o ocultar i restaurar les formes que utilitzava.",
+    undo: "Desfà l'últim emplenament, emplenament invers o ocultació, i restaura les formes que va utilitzar.",
     reveal:
-      'Revela els hexagones seleccionats i els hexagonals sota les formes i fitxes seleccionades.',
+      'Revela els hexàgons seleccionats i els hexàgons que hi ha sota les formes i fitxes seleccionades.',
     revealPage: 'Revela tots els hexàgons de la pàgina sense anuncis.',
-    conceal: "Torneu a cobrir l'àrea sota les formes i fitxes seleccionades amb hexagonals.",
-    explore: "Revela les fitxes seleccionades com si acabessin de moure's allà.",
+    conceal:
+      "Torneu a cobrir amb hexàgons l'àrea que hi ha sota les formes i fitxes seleccionades.",
+    explore: "Revela el voltant de les fitxes seleccionades com si s'hi acabessin de moure.",
     resetPage: 'Elimina tots els hexàgons de la pàgina (primer ho pregunta).',
-    name: 'Anomena els hexagones seleccionats o els hexadegons que hi ha a sota de les fitxes seleccionades. Deixeu el nom buit per esborrar-lo.',
+    name: 'Anomena els hexàgons seleccionats o els hexàgons que hi ha a sota de les fitxes seleccionades. Deixeu el nom buit per esborrar-lo.',
     mark: 'Converteix les fitxes seleccionades en llocs ocults.',
-    unmark: 'Deixeu que les fitxes seleccionades siguin ubicacions ocultes.',
+    unmark: 'Fa que les fitxes seleccionades deixin de ser ubicacions ocultes.',
     set: 'Canvia un paràmetre o mostra tots els paràmetres.',
     pageSet: 'Substituïu una configuració de revelació només a la pàgina actual.',
     pageClear: 'Elimina les substitucions de la pàgina actual.',
     rescan:
       "Reconstrueix la llista d'hexàgons de la pàgina, per exemple després de copiar una pàgina o un joc.",
     calibrate:
-      'Alineeu la quadrícula hexagonal amb una o dues fitxes seleccionades enganxades als centres hexagonals.',
+      'Alineeu la quadrícula hexagonal amb una o dues fitxes seleccionades ajustades als centres dels hexàgons.',
     calibrateReset: 'Elimineu el calibratge de la pàgina actual.',
     status: 'Mostra què sap Hexploration sobre la pàgina actual.',
     journal: "Reconstrueix els fullets d'Ajuda i del Command Deck.",
@@ -277,7 +278,7 @@ const TRANSLATION = {
     footer: 'Utilitzeu el fullet "{deck}" per als controls amb un sol clic.',
     overview: {
       heading: 'Visió general',
-      body: "Hexploration cobreix un mapa hexagonal amb hexagonals opacs. A mesura que el grup es mou, els hexàgons pels quals travessen (i, si voleu, els hexagonals que els envolten) s'eliminen, de manera que el mapa es descobreix un hexàgono a la vegada. Les ubicacions ocultes es poden col·locar sota hexagones i s'anuncien quan es troben. Funciona en jocs Jumpgate i Legacy, en quadrícules Hex (V) i Hex (H) de qualsevol mida.",
+      body: "Hexploration cobreix un mapa hexagonal amb hexàgons opacs. A mesura que el grup es mou, els hexàgons per on passa (i, si voleu, els hexàgons del voltant) s'eliminen, de manera que el mapa es descobreix hexàgon a hexàgon. Les ubicacions ocultes es poden col·locar sota hexàgons i s'anuncien quan es troben. Funciona en jocs Jumpgate i Legacy, en quadrícules Hex (V) i Hex (H) de qualsevol mida.",
       demo: 'Mira una petita demostració (de la versió 1)',
     },
     quickStart: {
@@ -294,7 +295,7 @@ const TRANSLATION = {
       heading: 'Ordres',
       intro:
         'Només els GM poden utilitzar aquestes ordres. La majoria actuen sobre els objectes seleccionats; la resta actuen a la pàgina que esteu veient.',
-      colCommand: 'Comandament',
+      colCommand: 'Ordre',
       colDesc: 'Què fa',
     },
     revealing: {
@@ -306,15 +307,15 @@ const TRANSLATION = {
         "La Distància de revelació dels hexàgons es desa a cada hexàgon quan s'omple, així que configureu-la abans d'omplir; canviar-la després no afecta els hexàgons que ja són al mapa. Una fitxa ha d'estar com a màxim a aquest nombre d'hexàgons per revelar-los, per lluny que pugui veure, i amb 0 només es revelen quan s'hi entra. Per a una serralada: poseu la Distància de revelació dels hexàgons a 0, ompliu les muntanyes, torneu-la a deixar sense límit i després ompliu les terres de més enllà. Amb una Distància de visió de 3 i la Línia de visió activada, el grup veu el terreny obert al seu voltant, però no les muntanyes ni el que hi ha darrere. Cada hexàgon de muntanya es revela quan una fitxa hi entra.",
         "En el mode Cop d'ull, els hexàgons a la vista es tornen transparents en lloc de desaparèixer, i s'eliminen quan hi entra una fitxa. Els hexàgons transparents del mode Cop d'ull no bloquegen la Línia de visió.",
         "Roll20 dibuixa els noms, les barres i les aures de les fitxes per sobre dels hexàgons. Amb Amaga les fitxes cobertes activat, una fitxa sota un hexàgon cobert té el nom, les barres i les aures visibles per als jugadors desactivats fins que es descobreix, perquè els monstres amagats no es delatin. Si n'activeu algun mentre la fitxa està coberta, continua amagat i s'activa quan la fitxa es descobreix.",
-        "L'API no informa dels moviments fets per altres modificacions. Els moviments de TokenMod es recullen automàticament; per a altres modificacions, seleccioneu les fitxes i feu clic a Explora, o truqueu a Hexploration.revealAround(token) des del vostre propi mod.",
+        "L'API no informa dels moviments fets per altres mods. Els moviments de TokenMod es recullen automàticament; per a altres mods, seleccioneu les fitxes i feu clic a Explora, o crideu Hexploration.revealAround(token) des del vostre propi mod.",
       ],
     },
     locations: {
-      heading: 'Hexes i ubicacions anomenades',
+      heading: 'Hexàgons amb nom i ubicacions',
       points: [
-        "Marca la ubicació converteix les fitxes seleccionades en ubicacions ocultes. Una fitxa que ja està sota un hexàgon s'amaga immediatament; en cas contrari queda amagat pel següent farciment que el cobreix.",
-        "Els fitxes amb el marcador d'estat de la torre blanca també es tracten com a ubicacions quan ompliu, com a la versió 1.",
-        "Les fitxes d'ubicació ocultes es mouen a la capa de GM. Quan es revela el seu hex, tornen a la capa de fitxes amb el seu nom mostrat i s'anuncia el seu descobriment.",
+        "Marca la ubicació converteix les fitxes seleccionades en ubicacions ocultes. Una fitxa que ja està sota un hexàgon s'amaga immediatament; en cas contrari, l'amaga el següent emplenament que la cobreixi.",
+        "Les fitxes amb el marcador d'estat de la torre blanca també es tracten com a ubicacions quan ompliu, com a la versió 1.",
+        "Les fitxes d'ubicació ocultes es mouen a la capa del GM. Quan es revela el seu hexàgon, tornen a la capa de fitxes amb el nom visible i s'anuncia el seu descobriment.",
         "Anomena l'hexàgon dona nom a un hexàgon sense cap fitxa. El nom es mostra al GM com una etiqueta a la capa del GM i s'anuncia quan es revela l'hexàgon. Jumpgate dibuixa la capa del GM per sota de la capa de primer pla, així que a Jumpgate les etiquetes només es veuen quan Capa dels hexàgons està establerta a la capa de fitxes.",
         "Anunciar descobriments tria si veuen l'anunci tothom, només el GM o ningú. Fer ping als descobriments també mou la vista dels jugadors a la ubicació.",
       ],
@@ -323,7 +324,7 @@ const TRANSLATION = {
       heading: 'Configuració',
       intro:
         'Canvieu la configuració amb !hexploration set (o amb el botó Configuració). Capa dels hexàgons, Fitxes que revelen i Llengua també es poden configurar a la pàgina de configuració del mod.',
-      colKey: 'clau',
+      colKey: 'Clau',
       colName: 'Configuració',
       colDesc: 'Descripció',
       perPage: '(Es pot configurar per pàgina.)',
@@ -345,8 +346,8 @@ const TRANSLATION = {
         'Les ordres de la versió 1, inclosa la macro Hexploration_menu, encara funcionen.',
         'La versió 1 permetia que qualsevol fitxa que representés un personatge revelés hexàgons. Establiu Fitxes que revelen a Fitxes de personatges per mantenir aquest comportament.',
       ],
-      colV1: 'Comandament de la versió 1',
-      colV2: 'Comandament de la versió 2',
+      colV1: 'Ordre de la versió 1',
+      colV2: 'Ordre de la versió 2',
     },
     troubleshooting: {
       heading: 'Resolució de problemes',
@@ -360,7 +361,7 @@ const TRANSLATION = {
     },
     languages: {
       heading: 'Idiomes',
-      body: "Trieu un idioma amb l'idioma definit de !hexploration. Idiomes disponibles:",
+      body: 'Trieu un idioma amb !hexploration set language. Idiomes disponibles:',
       colLanguage: 'Llengua',
       colNative: 'Nom original',
       colCode: 'Codi',

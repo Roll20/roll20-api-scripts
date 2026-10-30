@@ -111,11 +111,11 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Distância de revelação dos hexágonos',
-      desc: 'Gravada nos hexágonos quando eles são preenchidos, então defina-a antes de preencher: alterá-la depois não afeta os hexágonos que já estão no mapa. Uma ficha deve estar a no máximo este número de hexágonos para revelá-los, por mais longe que possa ver; com 0, eles só são revelados quando se entra neles. Use-a para montanhas ou florestas. Deixe em branco para não ter limite.',
+      desc: 'Gravada nos hexágonos quando eles são preenchidos, então defina-a antes de preencher: alterá-la depois não afeta os hexágonos que já estão no mapa. Um token deve estar a no máximo este número de hexágonos para revelá-los, por mais longe que possa ver; com 0, eles só são revelados quando se entra neles. Use-a para montanhas ou florestas. Deixe em branco para não ter limite.',
     },
     revealDistance: {
       label: 'Distância de visão',
-      desc: 'Quantos hexágonos ao redor de uma ficha em movimento são revelados (0 a 20). 0 revela apenas os hexágonos pelos quais o token passa.',
+      desc: 'Quantos hexágonos ao redor de um token em movimento são revelados (0 a 20). 0 revela apenas os hexágonos pelos quais o token passa.',
     },
     lineOfSight: {
       label: 'Linha de visão',
@@ -123,11 +123,11 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Revelar ao longo do caminho',
-      desc: 'Quando ativado, cada hexágono que uma ficha passa enquanto é arrastada (incluindo waypoints) é revelado, não apenas onde ela para.',
+      desc: 'Quando ativado, cada hexágono pelo qual um token passa enquanto é arrastado (incluindo pontos de passagem) é revelado, não apenas onde ele para.',
     },
     revealBy: {
       label: 'Tokens que revelam',
-      desc: 'Quais fichas na camada de fichas revelam hexágonos: fichas controladas por um jogador, fichas que representam qualquer personagem ou todas as fichas.',
+      desc: 'Quais tokens na camada de tokens revelam hexágonos: tokens controlados por um jogador, tokens que representam qualquer personagem ou todos os tokens.',
     },
     revealMode: {
       label: 'Modo de revelação',
@@ -162,7 +162,7 @@ const TRANSLATION = {
   messages: {
     filled:
       'Preenchimento completo. Hexágonos desenhados: {created}. Reestilizado: {restyled}. Locais ocultos: {icons}.',
-    revealed: 'Feitiços revelados: {count}.',
+    revealed: 'Hexágonos revelados: {count}.',
     revealedPage: 'Cada hexágono da página revelado ({count}).',
     confirmReset:
       'Remover todos os hexágonos de "{page}" ({count})? Os tokens de localização voltam para a camada de tokens. Esta ação não pode ser revertida com Desfazer.',
@@ -172,15 +172,15 @@ const TRANSLATION = {
     named: 'Hexágonos chamados "{name}": {count}.',
     unnamed: 'Nomes apagados: {count}.',
     marked:
-      'Locais ocultos em hexágonos existentes: {attached}. Aguardando o próximo preenchimento que os cobre: ​​{pending}.',
+      'Locais ocultos em hexágonos existentes: {attached}. Aguardando o próximo preenchimento que os cubra: {pending}.',
     unmarked: 'Tokens que não são mais locais: {count}.',
     settingChanged: '{setting} definido como {value}.',
     rescanned:
-      'Nova verificação concluída. Mantido: {kept}. Adotado: {adopted}. Arquivado novamente: {moved}. Ausente e esquecido: {dropped}. Rótulos vinculados novamente: {labels}. Tokens de localização vinculados novamente: {icons}.',
+      'Reescaneamento concluído. Mantidos: {kept}. Adotados: {adopted}. Realocados: {moved}. Ausentes e esquecidos: {dropped}. Rótulos vinculados novamente: {labels}. Tokens de local vinculados novamente: {icons}.',
     calibrated:
-      'Grade calibrada (etapa de coluna {colStep}px, etapa de linha {rowStep}px). Nova varredura: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      'Grade calibrada (passo da coluna {colStep}px, passo da linha {rowStep}px). Reescaneamento: mantidos {kept}, realocados {moved}, adotados {adopted}.',
     calibrationReset:
-      'Calibração removida. Nova varredura: mantido {kept}, arquivado novamente {moved}, adotado {adopted}.',
+      'Calibração removida. Reescaneamento: mantidos {kept}, realocados {moved}, adotados {adopted}.',
     journalRebuilt: 'Os folhetos "{help}" e "{deck}" foram reconstruídos.',
     migrated:
       'Seus mapas de hexágonos do Hexploration 1.x foram atualizados. Se este jogo foi copiado de um jogo Legacy, execute Reescanear em cada página com mapa de hexágonos.',
@@ -191,7 +191,7 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      'Este jogo não suporta desenho na camada de primeiro plano, então hexágonos foram desenhados na camada de token.',
+      'Este jogo não suporta desenho na camada de primeiro plano, então os hexágonos foram desenhados na camada de tokens.',
     someFailed:
       'Hexágonos que não puderam ser desenhados: {count}. Verifique o console da API para obter detalhes.',
   },
@@ -201,17 +201,17 @@ const TRANSLATION = {
     noPolygons: 'Selecione uma ou mais formas desenhadas para preencher.',
     emptyArea: 'A área selecionada não contém nenhum centro de hexágono.',
     tooMany: 'Isso criaria muitos hexágonos de uma só vez ({count}).',
-    nothingToConceal: 'Selecione formas desenhadas ou fichas para ocultar.',
-    nothingToReveal: 'Selecione hexágonos, formas desenhadas ou fichas para revelar.',
+    nothingToConceal: 'Selecione formas desenhadas ou tokens para ocultar.',
+    nothingToReveal: 'Selecione hexágonos, formas desenhadas ou tokens para revelar.',
     noTokens: 'Selecione um ou mais tokens primeiro.',
-    noHexes: 'Selecione um ou mais hexágonos (ou fichas sobre hexágonos) primeiro.',
+    noHexes: 'Selecione um ou mais hexágonos (ou tokens sobre hexágonos) primeiro.',
     nothingToUndo: 'Não há preenchimento para desfazer.',
     unknownCommand: 'Comando desconhecido: {command}',
     unknownSetting: 'Configuração desconhecida: {key}',
     unknownPageSetting: 'Configurações que podem ser definidas por página: {keys}',
     invalidValue: '"{value}" não é um valor válido para {key}.',
     calibrateNeedsTokens: 'Selecione um ou dois tokens encaixados em centros de hexágonos.',
-    calibrateFailed: 'Esses tokens não podem ser usados ​​para calibrar.',
+    calibrateFailed: 'Esses tokens não podem ser usados para calibrar.',
     unexpected: 'Algo deu errado: {message}',
   },
   hints: {
@@ -222,7 +222,7 @@ const TRANSLATION = {
     emptyArea: 'Desenhe uma forma maior ou verifique as configurações da grade da página.',
     tooMany: 'Preencha uma área menor ou divida a área em várias formas.',
     noHexes:
-      'Os hexágonos estão no primeiro plano ou na camada de token; mude para essa camada para selecioná-los.',
+      'Os hexágonos estão na camada de primeiro plano ou na camada de tokens; mude para essa camada para selecioná-los.',
     unknownCommand: 'Digite !hexploration help para listar os comandos.',
     unknownSetting: 'Digite !hexploration set para ver todas as configurações.',
     calibrateNeedsTokens:
@@ -235,10 +235,10 @@ const TRANSLATION = {
     menu: 'Mostrar o menu.',
     fill: 'Cubra as formas desenhadas selecionadas com hexágonos.',
     fillInverse: 'Cubra a página inteira, exceto dentro das formas selecionadas.',
-    undo: 'Desfaça o último preenchimento, inverta o preenchimento ou oculte e restaure as formas usadas.',
-    reveal: 'Revele os hexágonos selecionados e os hexágonos sob as formas e fichas selecionadas.',
+    undo: 'Desfaça o último preenchimento, preenchimento inverso ou ocultação e restaure as formas que ele usou.',
+    reveal: 'Revele os hexágonos selecionados e os hexágonos sob as formas e tokens selecionados.',
     revealPage: 'Revele cada hexágono da página sem anúncios.',
-    conceal: 'Cubra a área sob as formas e fichas selecionadas com hexágonos novamente.',
+    conceal: 'Cubra novamente com hexágonos a área sob as formas e tokens selecionados.',
     explore:
       'Revele ao redor dos tokens selecionados como se eles tivessem acabado de se mover para lá.',
     resetPage: 'Remova todos os hexágonos da página (pergunta antes).',
@@ -266,7 +266,7 @@ const TRANSLATION = {
     locationsDesc:
       'Selecione tokens para ocultá-los como locais sob hexágonos. Selecione hexágonos ou tokens para nomear um hexágono.',
     toolsDesc:
-      'Configurações, substituições de páginas, status, nova digitalização de páginas copiadas e calibração da grade.',
+      'Configurações, substituições de páginas, status, reescaneamento de páginas copiadas e calibração da grade.',
     footer: 'Consulte o folheto "{help}" para obter instruções completas.',
   },
   handout: {
@@ -308,11 +308,11 @@ const TRANSLATION = {
       ],
     },
     locations: {
-      heading: 'Hexes e locais nomeados',
+      heading: 'Hexágonos nomeados e locais',
       points: [
         'Marcar local transforma os tokens selecionados em locais ocultos. Um token que já esteja sob um hexágono é ocultado imediatamente; caso contrário, ele será ocultado pelo próximo preenchimento que o cobrir.',
         'Os tokens com o marcador de status da torre branca também são tratados como locais quando você preenche, como na versão 1.',
-        'As fichas de localização oculta são movidas para a camada GM. Quando seu hexágono é revelado, eles retornam à camada de token com seu nome mostrado e sua descoberta é anunciada.',
+        'Os tokens de local ocultos são movidos para a camada do GM. Quando seu hexágono é revelado, eles retornam à camada de tokens com seu nome à mostra e sua descoberta é anunciada.',
         'Nomear hexágono dá um nome a um hexágono sem precisar de um token. O nome é mostrado ao GM como um rótulo na camada do GM e anunciado quando o hexágono é revelado. O Jumpgate desenha a camada do GM abaixo da camada de primeiro plano, então no Jumpgate os rótulos só aparecem quando a opção Camada dos hexágonos está definida como camada de tokens.',
         'Anunciar descobertas escolhe se todos, apenas o GM ou ninguém verá o anúncio. Pingar descobertas também move a visão dos jogadores para o local.',
       ],
@@ -327,7 +327,7 @@ const TRANSLATION = {
       perPage: '(Pode ser definido por página.)',
     },
     jumpgate: {
-      heading: 'Jumpgate e Legado',
+      heading: 'Jumpgate e Legacy',
       points: [
         'Hexploration descobre qual motor o jogo usa e desenha o tipo de forma correspondente. As formas desenhadas em qualquer editor podem ser preenchidas.',
         'Com a Camada dos hexágonos definida como Automático, os hexágonos são desenhados na camada de primeiro plano, acima dos tokens, para que os jogadores não possam ver o que está por baixo. Se a camada de primeiro plano não estiver disponível, a camada de tokens é usada no lugar.',
@@ -350,7 +350,7 @@ const TRANSLATION = {
       heading: 'Solução de problemas',
       points: [
         'Nada acontece quando um token se move: verifique se o token está na camada de tokens e corresponde a Tokens que revelam, e se a página possui hexágonos (!hexploration status).',
-        'Os hexágonos são deslocados da grade: use Calibrar e verifique com um token alguns hexágonos no mapa.',
+        'Os hexágonos estão deslocados em relação à grade: use Calibrar e depois verifique com um token em alguns hexágonos pelo mapa.',
         'Os hexágonos pararam de ser revelados após copiar uma página ou jogo: execute Reescanear na página.',
         'Preencher diz que a área não tem centros de hexágonos: a forma precisa conter o centro de pelo menos um hexágono.',
         'Para qualquer outra coisa, verifique o log do console da API e inclua suas mensagens ao pedir ajuda.',
@@ -359,7 +359,7 @@ const TRANSLATION = {
     languages: {
       heading: 'Idiomas',
       body: 'Escolha um idioma com !hexploration set language. Idiomas disponíveis:',
-      colLanguage: 'Linguagem',
+      colLanguage: 'Idioma',
       colNative: 'Nome original',
       colCode: 'Código',
     },

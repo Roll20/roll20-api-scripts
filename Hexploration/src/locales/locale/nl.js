@@ -91,15 +91,15 @@ const TRANSLATION = {
     },
     fillColor: {
       label: 'Vulkleur',
-      desc: 'Kleur van nieuwe vakjes. Gebruik rgba() voor doorzichtige hexen, bijvoorbeeld rgba(0,0,0,0.8).',
+      desc: 'Kleur van nieuwe zeshoeken. Gebruik rgba() voor doorzichtige zeshoeken, bijvoorbeeld rgba(0,0,0,0.8).',
     },
     strokeColor: {
       label: 'Randkleur',
-      desc: 'Kleur van de omtrek van nieuwe vakjes.',
+      desc: 'Kleur van de omtrek van nieuwe zeshoeken.',
     },
     labelColor: {
       label: 'Labelkleur',
-      desc: 'Kleur van de GM-only naamlabels op benoemde vakjes.',
+      desc: 'Kleur van de naamlabels die alleen de GM ziet, op benoemde zeshoeken.',
     },
     glimpseColor: {
       label: 'Glimpkleur',
@@ -107,7 +107,7 @@ const TRANSLATION = {
     },
     strokeWidth: {
       label: 'Randbreedte',
-      desc: 'Breedte van de omtrek van nieuwe vakken, in pixels (0 tot 20).',
+      desc: 'Breedte van de omtrek van nieuwe zeshoeken, in pixels (0 tot 20).',
     },
     maxDistance: {
       label: 'Onthullingsafstand van zeshoeken',
@@ -115,7 +115,7 @@ const TRANSLATION = {
     },
     revealDistance: {
       label: 'Zichtafstand',
-      desc: 'Hoeveel vakjes rond een bewegend pion worden onthuld (0 tot 20). 0 onthult alleen de vakjes waar het fiche doorheen gaat.',
+      desc: 'Hoeveel zeshoeken rond een bewegend token worden onthuld (0 tot 20). 0 onthult alleen de zeshoeken waar het token doorheen gaat.',
     },
     lineOfSight: {
       label: 'Zichtlijn',
@@ -123,11 +123,11 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Onthullen langs pad',
-      desc: 'Wanneer deze optie is ingeschakeld, wordt elke vakje waar een token doorheen gaat tijdens het slepen (inclusief tussenpunten) onthuld, niet alleen waar het stopt.',
+      desc: 'Wanneer deze optie is ingeschakeld, wordt elke zeshoek waar een token doorheen gaat tijdens het slepen (inclusief tussenpunten) onthuld, niet alleen waar het stopt.',
     },
     revealBy: {
       label: 'Tokens die onthullen',
-      desc: 'Welke tokens op de tokenlaag onthullen hexen: tokens die door een speler worden beheerd, tokens die een willekeurig personage vertegenwoordigen, of elk token.',
+      desc: 'Welke tokens op de tokenlaag zeshoeken onthullen: tokens die door een speler worden beheerd, tokens die een willekeurig personage vertegenwoordigen, of elk token.',
     },
     revealMode: {
       label: 'Onthullingsmodus',
@@ -135,15 +135,15 @@ const TRANSLATION = {
     },
     announce: {
       label: 'Ontdekkingen aankondigen',
-      desc: 'Wie ziet het chatbericht wanneer een genoemde locatie wordt ontdekt?',
+      desc: 'Wie het chatbericht ziet wanneer een benoemde locatie wordt ontdekt.',
     },
     pingDiscoveries: {
       label: 'Ontdekkingen pingen',
-      desc: 'Wanneer deze optie is ingeschakeld, worden spelers naar een genoemde locatie gepingd wanneer deze wordt ontdekt.',
+      desc: 'Wanneer deze optie is ingeschakeld, worden spelers naar een benoemde locatie gepingd wanneer deze wordt ontdekt.',
     },
     hideCoveredTokens: {
       label: 'Bedekte tokens verbergen',
-      desc: "Roll20 tekent namen, balken en aura's boven velden. Wanneer deze zijn ingeschakeld, zijn de voor de speler zichtbare naam, balken en aura's van tokens onder een afgedekt vakje uitgeschakeld, en weer ingeschakeld wanneer ze worden blootgelegd.",
+      desc: "Roll20 tekent namen, balken en aura's boven zeshoeken. Wanneer deze optie is ingeschakeld, worden de voor spelers zichtbare naam, balken en aura's van tokens onder een bedekte zeshoek uitgeschakeld, en weer ingeschakeld wanneer ze worden blootgelegd.",
     },
   },
   status: {
@@ -161,26 +161,26 @@ const TRANSLATION = {
   },
   messages: {
     filled:
-      'Vul compleet. Getekende vakjes: {created}. Gerestyled: {restyled}. Locaties verborgen: {icons}.',
-    revealed: 'Hexen onthuld: {count}.',
-    revealedPage: 'Elke zeshoek op de pagina wordt onthuld ({count}).',
+      'Vullen voltooid. Getekende zeshoeken: {created}. Opnieuw opgemaakt: {restyled}. Locaties verborgen: {icons}.',
+    revealed: 'Zeshoeken onthuld: {count}.',
+    revealedPage: 'Alle zeshoeken op de pagina onthuld ({count}).',
     confirmReset:
-      'Elke hex verwijderen uit "{page}" ({count})? Locatietokens keren terug naar de tokenlaag. Ongedaan maken kan dit niet ongedaan maken.',
-    resetPage: 'Hexes verwijderd van de pagina: {count}.',
+      'Alle zeshoeken verwijderen uit "{page}" ({count})? Locatietokens keren terug naar de tokenlaag. Ongedaan maken kan dit niet ongedaan maken.',
+    resetPage: 'Zeshoeken verwijderd van de pagina: {count}.',
     undone:
-      'Laatste vulling ongedaan gemaakt. Hexen verwijderd: {removed}. Gerestylede velden hersteld: {restored}.',
-    named: 'Hexen met de naam "{name}": {count}.',
+      'Laatste vulling ongedaan gemaakt. Zeshoeken verwijderd: {removed}. Opnieuw opgemaakte zeshoeken hersteld: {restored}.',
+    named: 'Zeshoeken met de naam "{name}": {count}.',
     unnamed: 'Namen gewist: {count}.',
     marked:
-      'Locaties verborgen in bestaande vakjes: {attached}. Wachten op de volgende vulling die ze bedekt: {pending}.',
+      'Locaties verborgen in bestaande zeshoeken: {attached}. Wachten op de volgende vulling die ze bedekt: {pending}.',
     unmarked: 'Tokens die niet langer locaties zijn: {count}.',
     settingChanged: '{setting} ingesteld op {value}.',
     rescanned:
-      'Opnieuw scannen voltooid. Bewaarde: {kept}. Aangenomen: {adopted}. Opnieuw ingediend: {moved}. Vermist en vergeten: {dropped}. Labels opnieuw gekoppeld: {labels}. Locatietokens opnieuw gekoppeld: {icons}.',
+      'Opnieuw scannen voltooid. Behouden: {kept}. Overgenomen: {adopted}. Opnieuw ingedeeld: {moved}. Ontbrekend en vergeten: {dropped}. Labels opnieuw gekoppeld: {labels}. Locatietokens opnieuw gekoppeld: {icons}.',
     calibrated:
-      'Raster gekalibreerd (kolomstap {colStep}px, rijstap {rowStep}px). Opnieuw scannen: {kept} behouden, opnieuw gearchiveerd {moved}, {adopted} overgenomen.',
+      'Raster gekalibreerd (kolomstap {colStep}px, rijstap {rowStep}px). Opnieuw scannen: {kept} behouden, {moved} opnieuw ingedeeld, {adopted} overgenomen.',
     calibrationReset:
-      'Kalibratie verwijderd. Opnieuw scannen: {kept} behouden, opnieuw gearchiveerd {moved}, {adopted} overgenomen.',
+      'Kalibratie verwijderd. Opnieuw scannen: {kept} behouden, {moved} opnieuw ingedeeld, {adopted} overgenomen.',
     journalRebuilt: 'De hand-outs "{help}" en "{deck}" zijn opnieuw opgebouwd.',
     migrated:
       'Uw Hexploration 1.x-zeshoekkaarten zijn bijgewerkt. Als dit spel is gekopieerd uit een Legacy-spel, voer dan Opnieuw scannen uit op elke pagina met een zeshoekkaart.',
@@ -191,20 +191,20 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      'Dit spel biedt geen ondersteuning voor tekenen op de voorgrondlaag, dus werden er vakjes op de tokenlaag getekend.',
+      'Dit spel biedt geen ondersteuning voor tekenen op de voorgrondlaag, dus werden de zeshoeken op de tokenlaag getekend.',
     someFailed:
-      'Velden die niet konden worden getekend: {count}. Controleer de API-console voor meer informatie.',
+      'Zeshoeken die niet konden worden getekend: {count}. Controleer de API-console voor meer informatie.',
   },
   errors: {
     noPage: 'Kon de pagina niet vinden om aan te werken.',
     notHex: 'Deze pagina maakt geen gebruik van een hex-raster.',
     noPolygons: 'Selecteer een of meer getekende vormen om te vullen.',
-    emptyArea: 'Het geselecteerde gebied bevat geen hex-centra.',
-    tooMany: 'Dat zou te veel velden in één keer creëren ({count}).',
+    emptyArea: 'Het geselecteerde gebied bevat geen middelpunten van zeshoeken.',
+    tooMany: 'Dat zou te veel zeshoeken in één keer creëren ({count}).',
     nothingToConceal: 'Selecteer getekende vormen of tokens om te verbergen.',
-    nothingToReveal: 'Selecteer vakjes, getekende vormen of tokens om te onthullen.',
+    nothingToReveal: 'Selecteer zeshoeken, getekende vormen of tokens om te onthullen.',
     noTokens: 'Selecteer eerst een of meer tokens.',
-    noHexes: 'Selecteer eerst een of meer vakjes (of fiches die op vakjes staan).',
+    noHexes: 'Selecteer eerst een of meer zeshoeken (of tokens die op zeshoeken staan).',
     nothingToUndo: 'Er is geen vulling die ongedaan kan worden gemaakt.',
     unknownCommand: 'Onbekend commando: {command}',
     unknownSetting: 'Onbekende instelling: {key}',
@@ -223,26 +223,28 @@ const TRANSLATION = {
     emptyArea: 'Teken een grotere vorm of controleer de paginarasterinstellingen.',
     tooMany: 'Vul een kleiner gebied, of splits het gebied in verschillende vormen.',
     noHexes:
-      'Hexes bevinden zich op de voorgrond of tokenlaag; ga naar die laag om ze te selecteren.',
+      'Zeshoeken bevinden zich op de voorgrondlaag of de tokenlaag; ga naar die laag om ze te selecteren.',
     unknownCommand: 'Typ !hexploration help om de opdrachten weer te geven.',
     unknownSetting: 'Typ !hexploration set om elke instelling te bekijken.',
     calibrateNeedsTokens:
-      'Plaats een token in het midden van een vakje en selecteer het. Selecteer een tweede token dat is vastgemaakt aan een aangrenzende hex in dezelfde rij (Hex V) of kolom (Hex H) om ook de hex-grootte te corrigeren.',
+      'Zet een token vast op het midden van een zeshoek en selecteer het. Selecteer een tweede token dat is vastgezet op een aangrenzende zeshoek in dezelfde rij (Hex V) of kolom (Hex H) om ook de grootte van de zeshoeken te corrigeren.',
     calibrateFailed:
-      'Twee fiches moeten zich in dezelfde rij (Hex V) of dezelfde kolom (Hex H) bevinden, met minstens één vakje uit elkaar.',
-    unexpected: 'Details staan ​​in het API-consolelogboek.',
+      'Twee tokens moeten zich in dezelfde rij (Hex V) of dezelfde kolom (Hex H) bevinden, minstens één zeshoek uit elkaar.',
+    unexpected: 'Details staan in het API-consolelogboek.',
   },
   help: {
-    menu: 'Laat de menukaart zien.',
-    fill: 'Bedek de geselecteerde getekende vormen met vakjes.',
+    menu: 'Toon het menu.',
+    fill: 'Bedek de geselecteerde getekende vormen met zeshoeken.',
     fillInverse: 'Bedek de hele pagina, behalve binnen de geselecteerde vormen.',
-    undo: 'Maak de laatste vulling ongedaan, keer de vulling om of verberg deze, en herstel de gebruikte vormen.',
-    reveal: 'Onthul de geselecteerde velden en de velden onder de geselecteerde vormen en fiches.',
-    revealPage: 'Onthul elke hex op de pagina zonder aankondigingen.',
-    conceal: 'Bedek het gebied onder de geselecteerde vormen en fiches opnieuw met vakjes.',
-    explore: 'Onthul de geselecteerde tokens alsof ze er net naartoe zijn verhuisd.',
-    resetPage: 'Verwijder elk vakje op de pagina (eerst gevraagd).',
-    name: 'Geef de geselecteerde velden een naam, of de velden onder de geselecteerde tokens. Laat de naam leeg om deze te wissen.',
+    undo: 'Maak de laatste vulling, omgekeerde vulling of verberging ongedaan, en herstel de gebruikte vormen.',
+    reveal:
+      'Onthul de geselecteerde zeshoeken en de zeshoeken onder de geselecteerde vormen en tokens.',
+    revealPage: 'Onthul alle zeshoeken op de pagina zonder aankondigingen.',
+    conceal: 'Bedek het gebied onder de geselecteerde vormen en tokens opnieuw met zeshoeken.',
+    explore:
+      'Onthul de omgeving van de geselecteerde tokens alsof ze er net naartoe zijn verplaatst.',
+    resetPage: 'Verwijder alle zeshoeken op de pagina (vraagt eerst om bevestiging).',
+    name: 'Geef de geselecteerde zeshoeken een naam, of de zeshoeken onder de geselecteerde tokens. Laat de naam leeg om deze te wissen.',
     mark: 'Verander de geselecteerde tokens in verborgen locaties.',
     unmark: 'Voorkom dat de geselecteerde tokens verborgen locaties zijn.',
     set: 'Wijzig een instelling of toon alle instellingen.',
@@ -251,7 +253,7 @@ const TRANSLATION = {
     rescan:
       'Bouw de hexlijst van de pagina opnieuw op, bijvoorbeeld na het kopiëren van een pagina of spel.',
     calibrate:
-      'Lijn het hexraster uit met een of twee geselecteerde tokens die op het midden van een hex zijn vastgeklikt.',
+      'Lijn het hexraster uit met een of twee geselecteerde tokens die op het midden van een zeshoek zijn vastgezet.',
     calibrateReset: 'Verwijder de kalibratie van de huidige pagina.',
     status: 'Laat zien wat Hexploration weet over de huidige pagina.',
     journal: 'Bouw de hand-outs Help en Command Deck opnieuw op.',
@@ -264,18 +266,18 @@ const TRANSLATION = {
     revealDesc:
       'Selecteer zeshoeken, vormen of tokens om ze te onthullen of weer te bedekken. Verkennen onthult de omgeving van geselecteerde tokens alsof ze daarheen zijn verplaatst.',
     locationsDesc:
-      'Selecteer tokens om ze te verbergen als locaties onder vakjes. Selecteer vakken of tokens om een ​​vak een naam te geven.',
+      'Selecteer tokens om ze als locaties onder zeshoeken te verbergen. Selecteer zeshoeken of tokens om een zeshoek een naam te geven.',
     toolsDesc:
       "Instellingen, paginaoverschrijvingen, status, gekopieerde pagina's opnieuw scannen en het raster kalibreren.",
     footer: 'Zie de hand-out "{help}" voor volledige instructies.',
   },
   handout: {
     versionLabel: 'Versie',
-    subtitle: 'Hex-voor-hex verkenning voor Roll20',
+    subtitle: 'Verkenning zeshoek voor zeshoek in Roll20',
     footer: 'Gebruik de hand-out "{deck}" voor bediening met één klik.',
     overview: {
       heading: 'Overzicht',
-      body: 'Hexploration beslaat een hex-kaart met ondoorzichtige vakjes. Terwijl het gezelschap beweegt, worden de vakken waar ze doorheen gaan (en, als je wilt, de vakken eromheen) verwijderd, zodat de kaart vakje voor vakje wordt blootgelegd. Verborgen locaties kunnen onder vakjes worden geplaatst en worden aangekondigd wanneer ze worden gevonden. Het werkt in Jumpgate- en Legacy-spellen, op Hex (V) en Hex (H) rasters van elke grootte.',
+      body: 'Hexploration bedekt een hexkaart met ondoorzichtige zeshoeken. Terwijl het gezelschap beweegt, worden de zeshoeken waar het doorheen gaat (en, als je wilt, de zeshoeken eromheen) verwijderd, zodat de kaart zeshoek voor zeshoek wordt blootgelegd. Verborgen locaties kunnen onder zeshoeken worden geplaatst en worden aangekondigd wanneer ze worden gevonden. Het werkt in Jumpgate- en Legacy-spellen, op Hex (V)- en Hex (H)-rasters van elke grootte.',
       demo: 'Bekijk een korte demo (vanaf versie 1)',
     },
     quickStart: {
@@ -308,11 +310,11 @@ const TRANSLATION = {
       ],
     },
     locations: {
-      heading: 'Genoemde velden en locaties',
+      heading: 'Benoemde zeshoeken en locaties',
       points: [
         'Locatie markeren verandert de geselecteerde tokens in verborgen locaties. Een token dat al onder een zeshoek ligt, wordt meteen verborgen; anders wordt het verborgen door de volgende vulling die het bedekt.',
         'Tokens met de statusmarkering van de witte toren worden bij het vullen ook behandeld als locaties, zoals in versie 1.',
-        'Verborgen locatiefiches worden verplaatst naar de GM-laag. Wanneer hun hex wordt onthuld, keren ze terug naar de tokenlaag met hun naam weergegeven, en wordt hun ontdekking aangekondigd.',
+        'Verborgen locatietokens worden verplaatst naar de GM-laag. Wanneer hun zeshoek wordt onthuld, keren ze terug naar de tokenlaag met hun naam weergegeven, en wordt hun ontdekking aangekondigd.',
         'Zeshoek benoemen geeft een zeshoek een naam zonder token. De naam wordt aan de GM getoond als label op de GM-laag en aangekondigd wanneer de zeshoek wordt onthuld. Jumpgate tekent de GM-laag onder de voorgrondlaag, dus in Jumpgate zijn de labels alleen zichtbaar als Laag voor zeshoeken op de tokenlaag staat.',
         'Ontdekkingen aankondigen bepaalt of iedereen, alleen de GM of niemand de aankondiging ziet. Ontdekkingen pingen verplaatst bovendien het beeld van de spelers naar de locatie.',
       ],
@@ -327,7 +329,7 @@ const TRANSLATION = {
       perPage: '(Kan per pagina worden ingesteld.)',
     },
     jumpgate: {
-      heading: 'Jumpgate en erfenis',
+      heading: 'Jumpgate en Legacy',
       points: [
         'Hexploration zoekt uit welke engine het spel gebruikt en tekent de bijpassende vorm. Vormen die in beide editors zijn getekend, kunnen worden gevuld.',
         'Als Laag voor zeshoeken op Automatisch staat, worden zeshoeken op de voorgrondlaag getekend, boven de tokens, zodat spelers niet kunnen zien wat eronder ligt. Als de voorgrondlaag niet beschikbaar is, wordt in plaats daarvan de tokenlaag gebruikt.',
@@ -358,13 +360,13 @@ const TRANSLATION = {
     },
     languages: {
       heading: 'Talen',
-      body: 'Kies een taal met de door !hexploration ingestelde taal. Beschikbare talen:',
+      body: 'Kies een taal met !hexploration set language. Beschikbare talen:',
       colLanguage: 'Taal',
       colNative: 'Eigen naam',
       colCode: 'Code',
     },
     credits: {
-      heading: 'Kredieten',
+      heading: 'Credits',
       original: 'Originele mod door',
       maintainer: 'Versie 2 onderhouden door',
       marketplace: "Ada's kunstpakketten op de Roll20 Marketplace",

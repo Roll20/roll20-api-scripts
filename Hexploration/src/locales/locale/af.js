@@ -135,11 +135,11 @@ const TRANSLATION = {
     },
     announce: {
       label: 'Kondig ontdekkings aan',
-      desc: "Wie sien die kletsboodskap wanneer 'n genoemde ligging ontdek word.",
+      desc: "Wie sien die kletsboodskap wanneer 'n benoemde ligging ontdek word.",
     },
     pingDiscoveries: {
       label: 'Ping ontdekkings',
-      desc: "Wanneer aan, word spelers na 'n genoemde plek geping wanneer dit ontdek word.",
+      desc: "Wanneer aan, word spelers na 'n benoemde ligging geping wanneer dit ontdek word.",
     },
     hideCoveredTokens: {
       label: 'Versteek bedekte tokens',
@@ -291,7 +291,7 @@ const TRANSLATION = {
       heading: 'Opdragte',
       intro:
         "Slegs GM'e kan hierdie opdragte gebruik. Die meeste werk op die geselekteerde voorwerpe; die res tree op op die bladsy wat jy bekyk.",
-      colCommand: 'Bevel',
+      colCommand: 'Opdrag',
       colDesc: 'Wat dit doen',
     },
     revealing: {
@@ -303,7 +303,7 @@ const TRANSLATION = {
         "Seshoek-onthullingsafstand word op elke seshoek gestoor wanneer dit gevul word, so stel dit in voordat jy vul; om dit later te verander, raak nie seshoeke wat reeds op die kaart is nie. 'n Token moet binne soveel seshoeke wees om hulle te onthul, hoe ver dit ook al kan sien, en met 0 word hulle slegs onthul deur hulle binne te gaan. Vir 'n bergreeks: stel Seshoek-onthullingsafstand op 0, vul die berge, stel dit terug na geen, en vul dan die land daaragter. Met Sigafstand 3 en Siglyn aan sien die groep die oop grond rondom hulle, maar nie die berge of wat agter hulle lê nie. Elke bergseshoek word onthul wanneer 'n token daarin instap.",
         "In Glimp-modus word seshoeke binne sig deurskynend in plaas daarvan om te verdwyn, en hulle word verwyder wanneer 'n token hulle binnegaan. Deurskynende Glimp-seshoeke blokkeer nie Siglyn nie.",
         "Roll20 teken tokenname, balke en auras bo seshoeke. Met Versteek bedekte tokens aan, word die naam, balke en auras wat spelers kan sien, afgeskakel vir 'n token onder 'n bedekte seshoek totdat dit ontbloot word, sodat versteekte monsters hulself nie verklap nie. As jy een daarvan aanskakel terwyl die token bedek is, bly dit versteek en word dit aangeskakel wanneer die token ontbloot word.",
-        'Die API rapporteer nie bewegings wat deur ander mods gemaak is nie. TokenMod-skuiwe word outomaties opgetel; vir ander mods, kies die tokens en klik Explore, of bel Hexploration.revealAround(token) vanaf jou eie mod.',
+        'Die API rapporteer nie bewegings wat deur ander mods gemaak is nie. TokenMod-skuiwe word outomaties opgetel; vir ander mods, kies die tokens en klik Verken, of roep Hexploration.revealAround(token) vanaf jou eie mod aan.',
       ],
     },
     locations: {
@@ -313,7 +313,7 @@ const TRANSLATION = {
         'Tokens met die wittoring-statusmerker word ook as liggings hanteer wanneer jy vul, soos in weergawe 1.',
         'Versteekte liggingtokens word na die GM-laag geskuif. Wanneer hul seshoek onthul word, keer hulle terug na die tokenlaag met hul naam sigbaar, en hul ontdekking word aangekondig.',
         "Benoem seshoek gee 'n seshoek 'n naam sonder 'n token. Die naam word aan die GM gewys as 'n etiket op die GM-laag en aangekondig wanneer die seshoek onthul word. Jumpgate teken die GM-laag onder die voorgrondlaag, dus is die etikette in Jumpgate slegs sigbaar wanneer Seshoeklaag op die tokenlaag gestel is.",
-        'Announce Discoveries kies of almal, net die GM, of niemand die aankondiging sien nie. Ping Discoveries skuif ook die spelers se uitsig na die ligging.',
+        'Kondig ontdekkings aan kies of almal, net die GM, of niemand die aankondiging sien nie. Ping ontdekkings skuif ook die spelers se uitsig na die ligging.',
       ],
     },
     settings: {
@@ -357,13 +357,13 @@ const TRANSLATION = {
     },
     languages: {
       heading: 'Tale',
-      body: "Kies 'n taal met !hexploration stel taal. Beskikbare tale:",
+      body: "Kies 'n taal met !hexploration set language. Beskikbare tale:",
       colLanguage: 'Taal',
       colNative: 'Naam in eie taal',
       colCode: 'Kode',
     },
     credits: {
-      heading: 'Krediete',
+      heading: 'Erkennings',
       original: 'Oorspronklike mod deur',
       maintainer: 'Weergawe 2 onderhou deur',
       marketplace: 'Ada se kunspakkies op die Roll20 Marketplace',

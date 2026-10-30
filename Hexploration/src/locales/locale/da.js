@@ -91,15 +91,15 @@ const TRANSLATION = {
     },
     fillColor: {
       label: 'Fyldfarve',
-      desc: 'Farve på nye sekskanter. Brug rgba() til gennemsigtige hexes, for eksempel rgba(0,0,0,0.8).',
+      desc: 'Farve på nye hexfelter. Brug rgba() til gennemsigtige hexfelter, for eksempel rgba(0,0,0,0.8).',
     },
     strokeColor: {
       label: 'Kantfarve',
-      desc: 'Farve på omridset af nye sekskanter.',
+      desc: 'Farve på omridset af nye hexfelter.',
     },
     labelColor: {
       label: 'Etiketfarve',
-      desc: 'Farven på GM-only navneetiketter på navngivne sekskanter.',
+      desc: 'Farven på navneetiketterne, som kun GM kan se, på navngivne hexfelter.',
     },
     glimpseColor: {
       label: 'Glimtfarve',
@@ -107,7 +107,7 @@ const TRANSLATION = {
     },
     strokeWidth: {
       label: 'Kantbredde',
-      desc: 'Bredden af ​​omridset af nye sekskanter, i pixels (0 til 20).',
+      desc: 'Bredden af omridset af nye hexfelter, i pixels (0 til 20).',
     },
     maxDistance: {
       label: 'Afsløringsafstand for hexfelter',
@@ -115,7 +115,7 @@ const TRANSLATION = {
     },
     revealDistance: {
       label: 'Synsafstand',
-      desc: 'Hvor mange sekskanter omkring et bevægeligt token afsløres (0 til 20). 0 afslører kun de sekskanter, som tokenet passerer igennem.',
+      desc: 'Hvor mange hexfelter omkring et token i bevægelse afsløres (0 til 20). 0 afslører kun de hexfelter, som tokenet passerer igennem.',
     },
     lineOfSight: {
       label: 'Synslinje',
@@ -123,11 +123,11 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Afslør langs ruten',
-      desc: 'Når den er tændt, afsløres hver hex, et token passerer igennem, mens det trækkes (inklusive waypoints), ikke kun hvor det stopper.',
+      desc: 'Når den er tændt, afsløres hvert hexfelt, et token passerer igennem, mens det trækkes (inklusive mellempunkter), ikke kun hvor det stopper.',
     },
     revealBy: {
       label: 'Afslørende tokens',
-      desc: 'Hvilke tokens på tokenlaget afslører hexes: tokens kontrolleret af en spiller, tokens, der repræsenterer en hvilken som helst karakter, eller hver token.',
+      desc: 'Hvilke tokens på tokenlaget afslører hexfelter: tokens kontrolleret af en spiller, tokens, der repræsenterer en hvilken som helst karakter, eller alle tokens.',
     },
     revealMode: {
       label: 'Afsløringstilstand',
@@ -143,7 +143,7 @@ const TRANSLATION = {
     },
     hideCoveredTokens: {
       label: 'Skjul dækkede tokens',
-      desc: 'Roll20 tegner navne, streger og auraer over sekskanter. Når den er tændt, har tokens under en dækket sekskant deres spillersynlige navn, bjælker og auraer slået fra og tændt igen, når de afsløres.',
+      desc: 'Roll20 tegner navne, bjælker og auraer over hexfelter. Når den er tændt, får tokens under et dækket hexfelt deres spillersynlige navn, bjælker og auraer slået fra, og de slås til igen, når tokens afdækkes.',
     },
   },
   status: {
@@ -160,26 +160,27 @@ const TRANSLATION = {
     undo: 'Fortryd tilgængelig',
   },
   messages: {
-    filled: 'Fyld færdig. Hexer tegnede: {created}. Omstilet: {restyled}. Steder skjult: {icons}.',
-    revealed: 'Hexer afsløret: {count}.',
-    revealedPage: 'Hver hex på siden afsløret ({count}).',
+    filled:
+      'Udfyldning færdig. Hexfelter tegnet: {created}. Stil ændret: {restyled}. Steder skjult: {icons}.',
+    revealed: 'Hexfelter afsløret: {count}.',
+    revealedPage: 'Alle hexfelter på siden afsløret ({count}).',
     confirmReset:
-      'Vil du fjerne hver hex fra "{page}" ({count})? Placeringstokens vender tilbage til tokenlaget. Fortryd kan ikke fortryde dette.',
-    resetPage: 'Hexer fjernet fra siden: {count}.',
+      'Vil du fjerne alle hexfelter fra "{page}" ({count})? Placeringstokens vender tilbage til tokenlaget. Fortryd kan ikke fortryde dette.',
+    resetPage: 'Hexfelter fjernet fra siden: {count}.',
     undone:
-      'Sidste udfyldning fortrydet. Hekser fjernet: {removed}. Restyled hexes gendannet: {restored}.',
-    named: 'Hexer med navnet "{name}": {count}.',
+      'Sidste udfyldning fortrydet. Hexfelter fjernet: {removed}. Hexfelter med ændret stil gendannet: {restored}.',
+    named: 'Hexfelter med navnet "{name}": {count}.',
     unnamed: 'Navne ryddet: {count}.',
     marked:
-      'Placeringer skjult i eksisterende hexes: {attached}. Venter på den næste fyldning, der dækker dem: {pending}.',
+      'Placeringer skjult i eksisterende hexfelter: {attached}. Venter på den næste fyldning, der dækker dem: {pending}.',
     unmarked: 'Tokens, der ikke længere er placeringer: {count}.',
     settingChanged: '{setting} indstillet til {value}.',
     rescanned:
-      'Genscanning fuldført. Gemt: {kept}. Vedtaget: {adopted}. Genindgivet: {moved}. Manglende og glemt: {dropped}. Etiketter genlinket: {labels}. Placeringstokens genlinket: {icons}.',
+      'Genscanning fuldført. Beholdt: {kept}. Overtaget: {adopted}. Omplaceret: {moved}. Manglende og glemt: {dropped}. Etiketter genlinket: {labels}. Placeringstokens genlinket: {icons}.',
     calibrated:
-      'Gitter kalibreret (kolonnetrin {colStep}px, rækketrin {rowStep}px). Genscan: beholdt {kept}, genindsendt {moved}, adopteret {adopted}.',
+      'Gitter kalibreret (kolonnetrin {colStep}px, rækketrin {rowStep}px). Genscan: beholdt {kept}, omplaceret {moved}, overtaget {adopted}.',
     calibrationReset:
-      'Kalibrering fjernet. Genscan: beholdt {kept}, genindleveret {moved}, adopteret {adopted}.',
+      'Kalibrering fjernet. Genscan: beholdt {kept}, omplaceret {moved}, overtaget {adopted}.',
     journalRebuilt: 'Uddelingsarkene "{help}" og "{deck}" er blevet genopbygget.',
     migrated:
       'Dine Hexploration 1.x-hexkort er blevet opgraderet. Hvis dette spil blev kopieret fra et Legacy-spil, skal du køre Scan igen på hver side med et hexkort.',
@@ -190,25 +191,25 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      'Dette spil understøtter ikke tegning på forgrundslaget, så der blev tegnet sekskanter på tokenlaget.',
-    someFailed: 'Hexer, der ikke kunne tegnes: {count}. Tjek API-konsollen for detaljer.',
+      'Dette spil understøtter ikke tegning på forgrundslaget, så hexfelterne blev tegnet på tokenlaget.',
+    someFailed: 'Hexfelter, der ikke kunne tegnes: {count}. Tjek API-konsollen for detaljer.',
   },
   errors: {
     noPage: 'Kunne ikke finde siden at arbejde på.',
     notHex: 'Denne side bruger ikke et hex-gitter.',
     noPolygons: 'Vælg en eller flere tegnede figurer, der skal udfyldes.',
-    emptyArea: 'Det valgte område indeholder ingen hex-centre.',
-    tooMany: 'Det ville skabe for mange hexes på én gang ({count}).',
+    emptyArea: 'Det valgte område indeholder ingen hexfeltcentre.',
+    tooMany: 'Det ville skabe for mange hexfelter på én gang ({count}).',
     nothingToConceal: 'Vælg tegnede figurer eller tokens til at skjule.',
-    nothingToReveal: 'Vælg sekskanter, tegnede figurer eller tokens for at afsløre.',
+    nothingToReveal: 'Vælg hexfelter, tegnede figurer eller tokens, der skal afsløres.',
     noTokens: 'Vælg først et eller flere tokens.',
-    noHexes: 'Vælg først en eller flere hexes (eller poletter stående på hexes).',
+    noHexes: 'Vælg først et eller flere hexfelter (eller tokens, der står på hexfelter).',
     nothingToUndo: 'Der er ingen udfyldning at fortryde.',
     unknownCommand: 'Ukendt kommando: {command}',
     unknownSetting: 'Ukendt indstilling: {key}',
     unknownPageSetting: 'Indstillinger, der kan indstilles pr. side: {keys}',
     invalidValue: '"{value}" er ikke en gyldig værdi for {key}.',
-    calibrateNeedsTokens: 'Vælg et eller to tokens fastgjort til hex-centre.',
+    calibrateNeedsTokens: 'Vælg et eller to tokens fastgjort til hexfeltcentre.',
     calibrateFailed: 'Disse tokens kan ikke bruges til at kalibrere.',
     unexpected: 'Noget gik galt: {message}',
   },
@@ -219,34 +220,36 @@ const TRANSLATION = {
       'Tegn en polygon, et rektangel, en ellipse eller en frihåndsform rundt om området, vælg det, og prøv derefter igen.',
     emptyArea: 'Tegn en større form, eller kontroller indstillingerne for sidegitteret.',
     tooMany: 'Udfyld et mindre område, eller opdel området i flere former.',
-    noHexes: 'Hekser er på forgrunden eller symbollaget; skift til det lag for at vælge dem.',
+    noHexes:
+      'Hexfelterne ligger på forgrundslaget eller tokenlaget; skift til det lag for at vælge dem.',
     unknownCommand: 'Skriv !hexploration help for at vise kommandoerne.',
     unknownSetting: 'Skriv !hexploration set for at se alle indstillinger.',
     calibrateNeedsTokens:
-      'Snap et token til midten af ​​en sekskant, og vælg det. Vælg en anden token, der er snappet til en tilstødende hex i samme række (Hex V) eller kolonne (Hex H) for også at rette hex-størrelsen.',
+      'Fastgør et token til midten af et hexfelt, og vælg det. Vælg et andet token, der er fastgjort til et tilstødende hexfelt i samme række (Hex V) eller kolonne (Hex H), for også at rette hexfeltstørrelsen.',
     calibrateFailed:
-      'To tokens skal være i samme række (Hex V) eller den samme kolonne (Hex H), med mindst én hex fra hinanden.',
+      'To tokens skal være i samme række (Hex V) eller den samme kolonne (Hex H), mindst ét hexfelt fra hinanden.',
     unexpected: 'Detaljer er i API-konsolloggen.',
   },
   help: {
     menu: 'Vis menuen.',
-    fill: 'Dæk de valgte tegnede figurer med sekskanter.',
+    fill: 'Dæk de valgte tegnede figurer med hexfelter.',
     fillInverse: 'Dæk hele siden undtagen inde i de valgte former.',
     undo: 'Fortryd den sidste fyldning, omvendt fyld eller skjul, og gendan de former, den brugte.',
-    reveal: 'Afslør de valgte hexes og hexes under de valgte former og tokens.',
-    revealPage: 'Afslør hver hex på siden uden meddelelser.',
-    conceal: 'Dæk området under de valgte former og tokens med sekskanter igen.',
+    reveal: 'Afslør de valgte hexfelter og hexfelterne under de valgte former og tokens.',
+    revealPage: 'Afslør alle hexfelter på siden uden meddelelser.',
+    conceal: 'Dæk området under de valgte former og tokens med hexfelter igen.',
     explore: 'Afslør omkring de valgte tokens, som om de lige var flyttet dertil.',
-    resetPage: 'Fjern hver hex på siden (spørg først).',
-    name: 'Navngiv de valgte hexes, eller hexes under de valgte tokens. Lad navnet stå tomt for at rydde det.',
+    resetPage: 'Fjern alle hexfelter på siden (spørger først).',
+    name: 'Navngiv de valgte hexfelter eller hexfelterne under de valgte tokens. Lad navnet stå tomt for at rydde det.',
     mark: 'Gør de valgte tokens til skjulte placeringer.',
     unmark: 'Stop de valgte tokens med at være skjulte placeringer.',
     set: 'Skift en indstilling, eller vis alle indstillinger.',
     pageSet: 'Tilsidesæt kun en afsløringsindstilling på den aktuelle side.',
     pageClear: 'Fjern den aktuelle sides tilsidesættelser.',
-    rescan: 'Genopbyg sidens hex-liste, for eksempel efter at have kopieret en side eller et spil.',
+    rescan:
+      'Genopbyg sidens liste over hexfelter, for eksempel efter at have kopieret en side eller et spil.',
     calibrate:
-      'Sæt hex-gitteret på linje med et eller to udvalgte tokens, der er fastgjort til hex-centre.',
+      'Sæt hex-gitteret på linje med et eller to udvalgte tokens, der er fastgjort til hexfeltcentre.',
     calibrateReset: 'Fjern den aktuelle sides kalibrering.',
     status: 'Vis, hvad Hexploration ved om den aktuelle side.',
     journal: 'Genopbyg uddelingsarkene Help og Command Deck.',
@@ -259,18 +262,18 @@ const TRANSLATION = {
     revealDesc:
       'Vælg hexfelter, figurer eller tokens for at afsløre dem eller dække dem igen. Udforsk afslører omkring valgte tokens, som om de var flyttet.',
     locationsDesc:
-      'Vælg tokens for at skjule dem som placeringer under hexes. Vælg hexes eller tokens for at navngive en hex.',
+      'Vælg tokens for at skjule dem som placeringer under hexfelter. Vælg hexfelter eller tokens for at navngive et hexfelt.',
     toolsDesc:
       'Indstillinger, sidetilsidesættelser, status, genscanning af kopierede sider og kalibrering af gitteret.',
     footer: 'Se "{help}"-uddelingsark for fuldstændige instruktioner.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Hex-by-hex-udforskning for Roll20',
+    subtitle: 'Udforskning hexfelt for hexfelt i Roll20',
     footer: 'Brug "{deck}"-uddelingsark til kontrolelementer med et enkelt klik.',
     overview: {
       heading: 'Oversigt',
-      body: 'Hexploration dækker et hex-kort med uigennemsigtige hexes. Efterhånden som partiet bevæger sig, fjernes de hexes, de passerer igennem (og, hvis du vil, hexes omkring dem), så kortet afsløres en hex ad gangen. Skjulte placeringer kan placeres under hexes og annonceres, når de findes. Det fungerer i Jumpgate og Legacy-spil, på Hex (V) og Hex (H) gitter af enhver størrelse.',
+      body: 'Hexploration dækker et hexkort med uigennemsigtige hexfelter. Efterhånden som gruppen bevæger sig, fjernes de hexfelter, den passerer igennem (og, hvis du vil, hexfelterne omkring den), så kortet afdækkes ét hexfelt ad gangen. Skjulte steder kan placeres under hexfelter og annonceres, når de findes. Det fungerer i Jumpgate- og Legacy-spil, på Hex (V)- og Hex (H)-gitre af enhver størrelse.',
       demo: 'Se en kort demo (fra version 1)',
     },
     quickStart: {
@@ -303,11 +306,11 @@ const TRANSLATION = {
       ],
     },
     locations: {
-      heading: 'Navngivne Hekser og Steder',
+      heading: 'Navngivne hexfelter og steder',
       points: [
         'Marker sted forvandler de valgte tokens til skjulte steder. Et token, der allerede ligger under et hexfelt, skjules med det samme; ellers skjules det af den næste fyldning, der dækker det.',
         'Tokens med det hvide tårns statusmarkør behandles også som placeringer, når du udfylder, som i version 1.',
-        'Skjulte placeringstokens flyttes til GM-laget. Når deres hex afsløres, vender de tilbage til token-laget med deres navn vist, og deres opdagelse annonceres.',
+        'Skjulte placeringstokens flyttes til GM-laget. Når deres hexfelt afsløres, vender de tilbage til tokenlaget med deres navn vist, og deres opdagelse annonceres.',
         'Navngiv hexfelt giver et hexfelt et navn uden et token. Navnet vises for GM som en etiket på GM-laget og annonceres, når hexfeltet afsløres. Jumpgate tegner GM-laget under forgrundslaget, så i Jumpgate vises etiketterne kun, når Lag for hexfelter er sat til tokenlaget.',
         'Annoncer opdagelser bestemmer, om alle, kun GM eller ingen ser meddelelsen. Ping opdagelser flytter desuden spillernes visning hen til stedet.',
       ],
@@ -334,7 +337,7 @@ const TRANSLATION = {
       heading: 'Opgradering fra version 1',
       points: [
         'Version 2 behøver ikke længere PathMath, MatrixMath, Vector Math eller HTML Builder. Du kan fjerne dem, medmindre en anden mod bruger dem.',
-        'Eksisterende hex-kort, navne, placeringstokens og indstillinger opgraderes automatisk ved første start.',
+        'Eksisterende hexkort, navne, placeringstokens og indstillinger opgraderes automatisk ved første start.',
         'Version 1-kommandoerne, inklusive makroen Hexploration_menu, virker stadig.',
         'I version 1 kunne ethvert token, der repræsenterede en karakter, afsløre hexfelter. Sæt Afslørende tokens til Karaktertokens for at bevare den adfærd.',
       ],
@@ -353,13 +356,13 @@ const TRANSLATION = {
     },
     languages: {
       heading: 'Sprog',
-      body: 'Vælg et sprog med !hexploration set sprog. Tilgængelige sprog:',
+      body: 'Vælg et sprog med !hexploration set language. Tilgængelige sprog:',
       colLanguage: 'Sprog',
       colNative: 'Eget navn',
       colCode: 'Kode',
     },
     credits: {
-      heading: 'Kreditter',
+      heading: 'Medvirkende',
       original: 'Original mod af',
       maintainer: 'Version 2 vedligeholdes af',
       marketplace: 'Adas kunstpakker på Roll20 Marketplace',

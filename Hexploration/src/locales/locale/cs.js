@@ -86,12 +86,12 @@ const TRANSLATION = {
       desc: 'Jazyk pro nabídky, zprávy a letáky.',
     },
     hexLayer: {
-      label: 'Vrstva šestiúhelníků',
+      label: 'Vrstva hexů',
       desc: 'Kde se kreslí nové hexy. Auto zkouší vrstvu popředí (nad žetony) a pokud ji hra nepodporuje, přejde zpět na vrstvu žetonů.',
     },
     fillColor: {
       label: 'Barva výplně',
-      desc: 'Barva nových hexů. Použijte rgba() pro průhledné hexy, například rgba(0,0,0,0,8).',
+      desc: 'Barva nových hexů. Použijte rgba() pro průhledné hexy, například rgba(0,0,0,0.8).',
     },
     strokeColor: {
       label: 'Barva ohraničení',
@@ -110,7 +110,7 @@ const TRANSLATION = {
       desc: 'Šířka obrysu nových hexů v pixelech (0 až 20).',
     },
     maxDistance: {
-      label: 'Vzdálenost odhalení šestiúhelníků',
+      label: 'Vzdálenost odhalení hexů',
       desc: 'Ukládá se do hexů při jejich vyplňování, proto ji nastavte před vyplněním: pozdější změna neovlivní hexy, které už jsou na mapě. Žeton musí být v dosahu tohoto počtu hexů, aby je odhalil, ať vidí jakkoli daleko; při hodnotě 0 se odhalí jen tím, že do nich vstoupí. Použijte ji pro hory nebo lesy. Nechte prázdné bez omezení.',
     },
     revealDistance: {
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Přímá viditelnost',
-      desc: 'Když je zapnuto, hexy, které zůstávají zakryté, například hory vyplněné s nastavením Vzdálenost odhalení šestiúhelníků, skrývají hexy za sebou. Projeví se to pouze tehdy, když je Vzdálenost dohledu 2 nebo více.',
+      desc: 'Když je zapnuto, hexy, které zůstávají zakryté, například hory vyplněné s nastavením Vzdálenost odhalení hexů, skrývají hexy za sebou. Projeví se to pouze tehdy, když je Vzdálenost dohledu 2 nebo více.',
     },
     revealPath: {
       label: 'Odhalovat po cestě',
@@ -143,7 +143,7 @@ const TRANSLATION = {
     },
     hideCoveredTokens: {
       label: 'Skrýt zakryté žetony',
-      desc: 'Roll20 kreslí jména, pruhy a aury nad hexy. Když jsou žetony pod krytým hexem zapnuté, jejich jméno, pruhy a aury viditelné pro hráče jsou vypnuté a znovu zapnuté, když jsou odkryty.',
+      desc: 'Roll20 kreslí jména, pruhy a aury nad hexy. Když je zapnuto, žetonům pod zakrytým hexem se vypnou jméno, pruhy a aury viditelné pro hráče a znovu se zapnou, až budou odkryty.',
     },
   },
   status: {
@@ -161,26 +161,26 @@ const TRANSLATION = {
   },
   messages: {
     filled:
-      'Vyplnění dokončeno. Vylosované hexy: {created}. Změna stylu: {restyled}. Skrytá místa: {icons}.',
+      'Vyplnění dokončeno. Nakreslené hexy: {created}. Změna stylu: {restyled}. Skrytá místa: {icons}.',
     revealed: 'Odhalené hexy: {count}.',
-    revealedPage: 'Každé odhalené hex na stránce ({count}).',
+    revealedPage: 'Odhaleny všechny hexy na stránce ({count}).',
     confirmReset:
-      'Odebrat každé hex z „{page}“ ({count})? Tokeny umístění se vrátí do vrstvy tokenů. Zpět to nelze vrátit.',
+      'Odebrat všechny hexy ze stránky „{page}“ ({count})? Žetony míst se vrátí do vrstvy žetonů. Funkce Vrátit to nevrátí.',
     resetPage: 'Ze stránky byly odstraněny hexy: {count}.',
     undone:
       'Poslední výplň vrácena. Odstraněné hexy: {removed}. Hexy s obnoveným stylem: {restored}.',
-    named: 'Hexusy s názvem „{name}“: {count}.',
+    named: 'Hexy s názvem „{name}“: {count}.',
     unnamed: 'Jména vymazána: {count}.',
     marked:
       'Místa skrytá na stávajících hexech: {attached}. Čekání na další výplň, která je pokryje: {pending}.',
     unmarked: 'Tokeny, které již nejsou umístěními: {count}.',
     settingChanged: '{setting} nastaveno na {value}.',
     rescanned:
-      'Opětovné skenování dokončeno. Uchováno: {kept}. Přijato: {adopted}. Znovu vyplněno: {moved}. Chybějící a zapomenuté: {dropped}. Znovu propojené štítky: {labels}. Tokeny polohy byly znovu propojeny: {icons}.',
+      'Opětovné skenování dokončeno. Uchováno: {kept}. Přijato: {adopted}. Přeřazeno: {moved}. Chybějící a zapomenuté: {dropped}. Znovu propojené štítky: {labels}. Tokeny polohy byly znovu propojeny: {icons}.',
     calibrated:
-      'Mřížka zkalibrována (krok sloupce {colStep}px, krok řádku {rowStep}px). Znovu naskenovat: ponecháno {kept}, znovu zadáno {moved}, přijato {adopted}.',
+      'Mřížka zkalibrována (krok sloupce {colStep}px, krok řádku {rowStep}px). Opětovné skenování: ponecháno {kept}, přeřazeno {moved}, přijato {adopted}.',
     calibrationReset:
-      'Kalibrace odstraněna. Znovu naskenovat: ponecháno {kept}, znovu uloženo {moved}, přijato {adopted}.',
+      'Kalibrace odstraněna. Opětovné skenování: ponecháno {kept}, přeřazeno {moved}, přijato {adopted}.',
     journalRebuilt: 'Materiály „{help}“ a „{deck}“ byly přepracovány.',
     migrated:
       'Vaše hexové mapy z Hexploration 1.x byly aktualizovány. Pokud byla tato hra zkopírována z hry Legacy, spusťte Znovu skenovat na každé stránce s hexovou mapou.',
@@ -192,14 +192,13 @@ const TRANSLATION = {
   warnings: {
     foregroundUnavailable:
       'Tato hra nepodporuje kreslení na vrstvě popředí, takže hexy byly nakresleny na vrstvu žetonů.',
-    someFailed:
-      'Hexametry, které nebylo možné nakreslit: {count}. Podrobnosti naleznete v konzole API.',
+    someFailed: 'Hexy, které nebylo možné nakreslit: {count}. Podrobnosti naleznete v konzole API.',
   },
   errors: {
     noPage: 'Nelze najít stránku, na které by se dalo pracovat.',
     notHex: 'Tato stránka nepoužívá hexovou mřížku.',
     noPolygons: 'Vyberte jeden nebo více nakreslených tvarů, které chcete vyplnit.',
-    emptyArea: 'Vybraná oblast neobsahuje žádné středy šestihran.',
+    emptyArea: 'Vybraná oblast neobsahuje žádné středy hexů.',
     tooMany: 'To by vytvořilo příliš mnoho hexů najednou ({count}).',
     nothingToConceal: 'Vyberte nakreslené tvary nebo žetony, které chcete skrýt.',
     nothingToReveal: 'Vyberte hexy, nakreslené tvary nebo žetony, které chcete odhalit.',
@@ -236,17 +235,17 @@ const TRANSLATION = {
     fillInverse: 'Zakryjte celou stránku kromě vybraných tvarů.',
     undo: 'Zrušte poslední výplň, inverzní výplň nebo skrytí a obnovte tvary, které použila.',
     reveal: 'Odhalte vybrané hexy a hexy pod vybranými tvary a žetony.',
-    revealPage: 'Odhalte každé hex na stránce bez oznámení.',
+    revealPage: 'Odhalte každý hex na stránce bez oznámení.',
     conceal: 'Znovu zakryjte oblast pod vybranými tvary a žetony hexy.',
     explore: 'Odhalte kolem vybraných žetonů, jako by se tam právě přesunuly.',
     resetPage: 'Odstraňte každý hex na stránce (nejprve se ptá).',
     name: 'Pojmenujte vybrané hexy nebo hexy pod vybranými žetony. Chcete-li jej vymazat, ponechte název prázdný.',
     mark: 'Proměňte vybrané žetony na skrytá místa.',
-    unmark: 'Zabraňte tomu, aby se vybrané tokeny staly skrytými místy.',
+    unmark: 'Zrušte u vybraných žetonů označení skrytých míst.',
     set: 'Změňte nastavení nebo zobrazte všechna nastavení.',
     pageSet: 'Přepsat nastavení odkrytí pouze na aktuální stránce.',
     pageClear: 'Odstraňte přepsání aktuální stránky.',
-    rescan: 'Znovu vytvořte seznam hex na stránce, například po zkopírování stránky nebo hry.',
+    rescan: 'Znovu vytvořte seznam hexů na stránce, například po zkopírování stránky nebo hry.',
     calibrate:
       'Zarovnejte hexovou mřížku jedním nebo dvěma vybranými žetony přichycenými do středů hexů.',
     calibrateReset: 'Odstraňte kalibraci aktuální stránky.',
@@ -273,7 +272,7 @@ const TRANSLATION = {
     overview: {
       heading: 'Přehled',
       body: 'Hexploration pokrývá hexovou mapu s neprůhlednými hexy. Jak se skupina pohybuje, hexy, kterými prochází (a chcete-li, hexy kolem nich), jsou odstraněny, takže mapa je odkrývána jeden hex po druhém. Skrytá místa mohou být umístěna pod hexy a jsou oznámena, když jsou nalezena. Funguje ve hrách Jumpgate a Legacy, na mřížkách Hex (V) a Hex (H) jakékoli velikosti.',
-      demo: 'Podívejte se na krátkou ukázku (od verze 1)',
+      demo: 'Podívejte se na krátkou ukázku (z verze 1)',
     },
     quickStart: {
       heading: 'Rychlý start',
@@ -297,8 +296,8 @@ const TRANSLATION = {
       points: [
         'Hexy odhalují pouze žetony na vrstvě žetonů. Které žetony se počítají, určuje nastavení Žetony, které odhalují: ve výchozím stavu žetony hráčů, takže GM může pohybovat příšerami, aniž by odkrýval mapu.',
         'Žeton odhalí každý hex, který zakrývá (velké žetony zakrývají několik), a se zapnutým nastavením Odhalovat po cestě také každý hex na trase, po které byl tažen, včetně průchozích bodů.',
-        'Vzdálenost dohledu odhaluje hexy kolem každého z těchto hexů, od nejbližších. Když je zapnutá Přímá viditelnost, hex se neodhalí, dokud mezi ním a žetonem leží zakrytý hex. Bližší hexy se obvykle odhalí jako první, takže v otevřené krajině Přímá viditelnost nic nemění: projeví se jen tehdy, když je Vzdálenost dohledu 2 nebo více a existují hexy, které zůstávají zakryté, například terén vyplněný s nastavením Vzdálenost odhalení šestiúhelníků.',
-        'Vzdálenost odhalení šestiúhelníků se ukládá do každého hexu při jeho vyplnění, proto ji nastavte před vyplňováním; pozdější změna neovlivní hexy, které už jsou na mapě. Žeton musí být v dosahu tolika hexů, aby je odhalil, ať vidí jakkoli daleko, a při hodnotě 0 se odhalí jen tím, že do nich vstoupí. Pro horské pásmo: nastavte Vzdálenost odhalení šestiúhelníků na 0, vyplňte hory, pak hodnotu opět vymažte (bez omezení) a nakonec vyplňte krajinu za nimi. Když je Vzdálenost dohledu 3 a Přímá viditelnost zapnutá, družina vidí otevřený terén kolem sebe, ale ne hory ani to, co leží za nimi. Každý horský hex se odhalí, když do něj vstoupí žeton.',
+        'Vzdálenost dohledu odhaluje hexy kolem každého z těchto hexů, od nejbližších. Když je zapnutá Přímá viditelnost, hex se neodhalí, dokud mezi ním a žetonem leží zakrytý hex. Bližší hexy se obvykle odhalí jako první, takže v otevřené krajině Přímá viditelnost nic nemění: projeví se jen tehdy, když je Vzdálenost dohledu 2 nebo více a existují hexy, které zůstávají zakryté, například terén vyplněný s nastavením Vzdálenost odhalení hexů.',
+        'Vzdálenost odhalení hexů se ukládá do každého hexu při jeho vyplnění, proto ji nastavte před vyplňováním; pozdější změna neovlivní hexy, které už jsou na mapě. Žeton musí být v dosahu tolika hexů, aby je odhalil, ať vidí jakkoli daleko, a při hodnotě 0 se odhalí jen tím, že do nich vstoupí. Pro horské pásmo: nastavte Vzdálenost odhalení hexů na 0, vyplňte hory, pak hodnotu opět vymažte (bez omezení) a nakonec vyplňte krajinu za nimi. Když je Vzdálenost dohledu 3 a Přímá viditelnost zapnutá, družina vidí otevřený terén kolem sebe, ale ne hory ani to, co leží za nimi. Každý horský hex se odhalí, když do něj vstoupí žeton.',
         'V režimu Záblesk se hexy v dohledu místo zmizení stanou průhlednými a odstraní se, když do nich vstoupí žeton. Hexy zahlédnuté v režimu Záblesk nezakrývají výhled pro nastavení Přímá viditelnost.',
         'Roll20 kreslí jména, ukazatele a aury žetonů nad hexy. Se zapnutým nastavením Skrýt zakryté žetony má žeton pod zakrytým hexem vypnuté jméno, ukazatele a aury viditelné pro hráče, dokud není odkryt, takže se skryté příšery neprozradí. Pokud některý z nich zapnete, zatímco je žeton zakrytý, zůstane skrytý a zapne se, až bude žeton odkryt.',
         'API nehlásí pohyby provedené jinými mody. Pohyby z TokenMod se zachytí automaticky; u ostatních modů vyberte žetony a klikněte na Prozkoumat, nebo zavolejte Hexploration.revealAround(token) z vlastního modu.',
@@ -307,17 +306,17 @@ const TRANSLATION = {
     locations: {
       heading: 'Pojmenované hexy a umístění',
       points: [
-        'Označit místo změní vybrané žetony na skrytá místa. Žeton, který je již pod hexem, je okamžitě skryt; jinak je skryta další výplní, která jej zakrývá.',
+        'Označit místo změní vybrané žetony na skrytá místa. Žeton, který je již pod hexem, je okamžitě skryt; jinak jej skryje další výplň, která jej zakryje.',
         'Žetony se značkou stavu bílé věže jsou při vyplňování také považovány za místa, jako ve verzi 1.',
         'Žetony skrytých umístění se přesunou do vrstvy GM. Když je jejich hex odhalen, vrátí se do vrstvy žetonů se zobrazeným jménem a jejich objev je oznámen.',
-        'Pojmenovat hex dá hexu jméno bez žetonu. Jméno se GM zobrazí jako popisek na vrstvě GM a oznámí se, když je hex odhalen. Jumpgate vykresluje vrstvu GM pod vrstvou popředí, takže v Jumpgate se popisky zobrazí jen tehdy, když je Vrstva šestiúhelníků nastavena na vrstvu žetonů.',
+        'Pojmenovat hex dá hexu jméno bez žetonu. Jméno se GM zobrazí jako popisek na vrstvě GM a oznámí se, když je hex odhalen. Jumpgate vykresluje vrstvu GM pod vrstvou popředí, takže v Jumpgate se popisky zobrazí jen tehdy, když je Vrstva hexů nastavena na vrstvu žetonů.',
         'Oznamovat objevy určuje, zda oznámení uvidí všichni, pouze GM, nebo nikdo. Pingnout objevy navíc přesune pohled hráčů na dané místo.',
       ],
     },
     settings: {
       heading: 'Nastavení',
       intro:
-        'Nastavení změníte příkazem !hexploration set (nebo tlačítkem Nastavení). Vrstvu šestiúhelníků, Žetony, které odhalují, a Jazyk lze nastavit také na stránce nastavení modu.',
+        'Nastavení změníte příkazem !hexploration set (nebo tlačítkem Nastavení). Vrstvu hexů, Žetony, které odhalují, a Jazyk lze nastavit také na stránce nastavení modu.',
       colKey: 'Klíč',
       colName: 'Nastavení',
       colDesc: 'Popis',
@@ -326,8 +325,8 @@ const TRANSLATION = {
     jumpgate: {
       heading: 'Jumpgate a Legacy',
       points: [
-        'Heexploration zjistí, který engine hra používá, a nakreslí odpovídající druh tvaru. Tvary nakreslené v obou editorech lze vyplnit.',
-        'Když je Vrstva šestiúhelníků nastavena na Auto, hexy se kreslí na vrstvu popředí nad žetony, takže hráči nevidí, co je pod nimi. Pokud vrstva popředí není k dispozici, použije se místo ní vrstva žetonů.',
+        'Hexploration zjistí, který engine hra používá, a nakreslí odpovídající druh tvaru. Tvary nakreslené v obou editorech lze vyplnit.',
+        'Když je Vrstva hexů nastavena na Auto, hexy se kreslí na vrstvu popředí nad žetony, takže hráči nevidí, co je pod nimi. Pokud vrstva popředí není k dispozici, použije se místo ní vrstva žetonů.',
         'Jumpgate kreslí matematicky pravidelné hexy, které mají trochu jiný tvar než hexy Legacy. Pokud hexy nejsou zarovnány s mřížkou stránky, přichyťte token ke středu hexu, vyberte jej a klikněte na Kalibrovat. Vyberte dva žetony na sousedních hexech stejného řádku (Hex V) nebo sloupce (Hex H), abyste také opravili velikost hexu.',
         'Když se stránka nebo hra zkopíruje, její hexy získají nová ID. Spusťte na stránce Znovu skenovat, aby se znovu načetly spolu se svými popisky jmen a žetony míst.',
       ],
@@ -361,9 +360,9 @@ const TRANSLATION = {
       colCode: 'Kód',
     },
     credits: {
-      heading: 'Kredity',
+      heading: 'Autoři',
       original: 'Původní mod od',
-      maintainer: 'Verze 2 spravovaná společností',
+      maintainer: 'Verzi 2 spravuje',
       marketplace: 'Adiny umělecké balíčky na Roll20 Marketplace',
       support:
         'Pokud najdete chybu nebo máte nápad, zveřejněte příspěvek na fóru Roll20 Mod nebo otevřete problém na GitHubu a zahrňte všechny zprávy z protokolu konzoly API.',

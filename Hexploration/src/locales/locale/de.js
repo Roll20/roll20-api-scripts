@@ -91,7 +91,7 @@ const TRANSLATION = {
     },
     fillColor: {
       label: 'Füllfarbe',
-      desc: 'Farbe neuer Hexfelder. Verwenden Sie rgba() für durchsichtige Hexadezimalwerte, zum Beispiel rgba(0,0,0,0.8).',
+      desc: 'Farbe neuer Hexfelder. Verwenden Sie rgba() für durchsichtige Hexfelder, zum Beispiel rgba(0,0,0,0.8).',
     },
     strokeColor: {
       label: 'Randfarbe',
@@ -127,7 +127,7 @@ const TRANSLATION = {
     },
     revealBy: {
       label: 'Aufdeckende Token',
-      desc: 'Welche Spielsteine ​​auf der Spielsteinebene zeigen Hexereien an: Spielsteine, die von einem Spieler kontrolliert werden, Spielsteine, die einen beliebigen Charakter repräsentieren, oder jeder Spielstein.',
+      desc: 'Welche Token auf der Token-Ebene Hexfelder aufdecken: Token, die von einem Spieler gesteuert werden, Token, die einen beliebigen Charakter darstellen, oder alle Token.',
     },
     revealMode: {
       label: 'Aufdeckmodus',
@@ -161,26 +161,26 @@ const TRANSLATION = {
   },
   messages: {
     filled:
-      'Vollständig ausfüllen. Gezeichnete Hexen: {created}. Neu gestaltet: {restyled}. Ausgeblendete Orte: {icons}.',
-    revealed: 'Aufgedeckte Verhexungen: {count}.',
-    revealedPage: 'Jedes Hex auf der Seite wird angezeigt ({count}).',
+      'Füllen abgeschlossen. Gezeichnete Hexfelder: {created}. Neu gestaltet: {restyled}. Versteckte Standorte: {icons}.',
+    revealed: 'Aufgedeckte Hexfelder: {count}.',
+    revealedPage: 'Alle Hexfelder auf der Seite aufgedeckt ({count}).',
     confirmReset:
-      'Jedes Hex aus „{page}“ ({count}) entfernen? Standort-Tokens kehren zur Token-Ebene zurück. Durch Rückgängigmachen kann dies nicht rückgängig gemacht werden.',
-    resetPage: 'Hexes wurden von der Seite entfernt: {count}.',
+      'Alle Hexfelder aus „{page}“ ({count}) entfernen? Standort-Tokens kehren zur Token-Ebene zurück. Durch Rückgängigmachen kann dies nicht rückgängig gemacht werden.',
+    resetPage: 'Von der Seite entfernte Hexfelder: {count}.',
     undone:
-      'Letzte Füllung rückgängig gemacht. Entfernte Verhexungen: {removed}. Neu gestaltete Hexfelder wiederhergestellt: {restored}.',
-    named: 'Hexen mit dem Namen „{name}“: {count}.',
+      'Letzte Füllung rückgängig gemacht. Entfernte Hexfelder: {removed}. Neu gestaltete Hexfelder wiederhergestellt: {restored}.',
+    named: 'Hexfelder mit dem Namen „{name}“: {count}.',
     unnamed: 'Gelöschte Namen: {count}.',
     marked:
       'In vorhandenen Hexfeldern versteckte Orte: {attached}. Warten auf die nächste Füllung, die sie abdeckt: {pending}.',
     unmarked: 'Token, die keine Standorte mehr sind: {count}.',
     settingChanged: '{setting} wird auf {value} gesetzt.',
     rescanned:
-      'Neuscan abgeschlossen. Behalten: {kept}. Angenommen: {adopted}. Erneut eingereicht: {moved}. Fehlt und vergessen: {dropped}. Neu verknüpfte Etiketten: {labels}. Standort-Tokens neu verknüpft: {icons}.',
+      'Erneuter Scan abgeschlossen. Behalten: {kept}. Übernommen: {adopted}. Neu zugeordnet: {moved}. Fehlend und vergessen: {dropped}. Neu verknüpfte Beschriftungen: {labels}. Neu verknüpfte Standort-Token: {icons}.',
     calibrated:
-      'Rasterkalibriert (Spaltenschritt {colStep}px, Zeilenschritt {rowStep}px). Erneut scannen: beibehalten {kept}, erneut eingereicht {moved}, übernommen {adopted}.',
+      'Raster kalibriert (Spaltenschritt {colStep}px, Zeilenschritt {rowStep}px). Erneut scannen: beibehalten {kept}, neu zugeordnet {moved}, übernommen {adopted}.',
     calibrationReset:
-      'Kalibrierung entfernt. Erneut scannen: beibehalten {kept}, erneut eingereicht {moved}, übernommen {adopted}.',
+      'Kalibrierung entfernt. Erneut scannen: beibehalten {kept}, neu zugeordnet {moved}, übernommen {adopted}.',
     journalRebuilt: 'Die Handouts „{help}“ und „{deck}“ wurden neu erstellt.',
     migrated:
       'Ihre Hexploration-1.x-Hexkarten wurden aktualisiert. Wenn dieses Spiel aus einem Legacy-Spiel kopiert wurde, führen Sie auf jeder Hexkartenseite „Erneut scannen“ aus.',
@@ -193,18 +193,18 @@ const TRANSLATION = {
     foregroundUnavailable:
       'Dieses Spiel unterstützt das Zeichnen auf der Vordergrundebene nicht, daher wurden Hexfelder auf der Tokenebene gezeichnet.',
     someFailed:
-      'Hexen, die nicht gezeichnet werden konnten: {count}. Weitere Informationen finden Sie in der API-Konsole.',
+      'Hexfelder, die nicht gezeichnet werden konnten: {count}. Weitere Informationen finden Sie in der API-Konsole.',
   },
   errors: {
     noPage: 'Die Seite, an der gearbeitet werden soll, konnte nicht gefunden werden.',
     notHex: 'Diese Seite verwendet kein Hex-Raster.',
     noPolygons: 'Wählen Sie eine oder mehrere gezeichnete Formen zum Füllen aus.',
-    emptyArea: 'Der ausgewählte Bereich enthält keine Hex-Zentren.',
-    tooMany: 'Das würde zu viele Verhexungen auf einmal erzeugen ({count}).',
+    emptyArea: 'Der ausgewählte Bereich enthält keine Hexfeld-Mittelpunkte.',
+    tooMany: 'Das würde zu viele Hexfelder auf einmal erzeugen ({count}).',
     nothingToConceal:
-      'Wählen Sie gezeichnete Formen oder Spielsteine ​​aus, die Sie verbergen möchten.',
+      'Wählen Sie gezeichnete Formen oder Spielsteine aus, die Sie verbergen möchten.',
     nothingToReveal:
-      'Wählen Sie Hexfelder, gezeichnete Formen oder Spielsteine ​​aus, die Sie aufdecken möchten.',
+      'Wählen Sie Hexfelder, gezeichnete Formen oder Spielsteine aus, die Sie aufdecken möchten.',
     noTokens: 'Wählen Sie zunächst einen oder mehrere Token aus.',
     noHexes:
       'Wählen Sie zunächst ein oder mehrere Hexfelder (oder darauf stehende Spielsteine) aus.',
@@ -214,7 +214,7 @@ const TRANSLATION = {
     unknownPageSetting: 'Einstellungen, die pro Seite festgelegt werden können: {keys}',
     invalidValue: '„{value}“ ist kein gültiger Wert für {key}.',
     calibrateNeedsTokens:
-      'Wählen Sie ein oder zwei Token aus, die an den Sechseckzentren befestigt werden.',
+      'Wählen Sie ein oder zwei Token aus, die an Hexfeld-Mittelpunkten eingerastet sind.',
     calibrateFailed: 'Diese Token können nicht zur Kalibrierung verwendet werden.',
     unexpected: 'Es ist ein Fehler aufgetreten: {message}',
   },
@@ -227,38 +227,38 @@ const TRANSLATION = {
     tooMany:
       'Füllen Sie einen kleineren Bereich oder teilen Sie den Bereich in mehrere Formen auf.',
     noHexes:
-      'Verhexungen befinden sich im Vordergrund oder auf der Token-Ebene. Wechseln Sie zu dieser Ebene, um sie auszuwählen.',
+      'Hexfelder liegen auf der Vordergrund- oder Token-Ebene. Wechseln Sie zu dieser Ebene, um sie auszuwählen.',
     unknownCommand: 'Geben Sie !hexploration help ein, um die Befehle aufzulisten.',
     unknownSetting: 'Geben Sie !hexploration set ein, um alle Einstellungen anzuzeigen.',
     calibrateNeedsTokens:
       'Rasten Sie einen Spielstein in der Mitte eines Hexfelds ein und wählen Sie ihn aus. Wählen Sie ein zweites Token aus, das an einem benachbarten Hexfeld in derselben Zeile (Hex V) oder Spalte (Hex H) eingerastet ist, um auch die Hexfeldgröße zu korrigieren.',
     calibrateFailed:
-      'Zwei Spielsteine ​​müssen sich in derselben Reihe (Hex V) oder derselben Spalte (Hex H) befinden und mindestens ein Hex voneinander entfernt sein.',
+      'Zwei Spielsteine müssen sich in derselben Reihe (Hex V) oder derselben Spalte (Hex H) befinden und mindestens ein Hexfeld voneinander entfernt sein.',
     unexpected: 'Details finden Sie im API-Konsolenprotokoll.',
   },
   help: {
     menu: 'Zeigen Sie das Menü an.',
-    fill: 'Decken Sie die ausgewählten gezeichneten Formen mit Hexen ab.',
+    fill: 'Decken Sie die ausgewählten gezeichneten Formen mit Hexfeldern ab.',
     fillInverse: 'Bedecken Sie die gesamte Seite mit Ausnahme der ausgewählten Formen.',
-    undo: 'Machen Sie die letzte Füllung rückgängig, kehren Sie die Füllung um oder verbergen Sie sie und stellen Sie die verwendeten Formen wieder her.',
+    undo: 'Machen Sie die letzte Füllung, umgekehrte Füllung oder Verbergung rückgängig und stellen Sie die dabei verwendeten Formen wieder her.',
     reveal:
       'Zeigt die ausgewählten Hexfelder und die Hexfelder unter den ausgewählten Formen und Spielsteinen an.',
-    revealPage: 'Enthülle jedes Hex auf der Seite ohne Ankündigungen.',
+    revealPage: 'Decken Sie alle Hexfelder auf der Seite ohne Ankündigungen auf.',
     conceal:
-      'Decken Sie den Bereich unter den ausgewählten Formen und Spielsteinen erneut mit Hexen ab.',
+      'Decken Sie den Bereich unter den ausgewählten Formen und Spielsteinen erneut mit Hexfeldern ab.',
     explore:
-      'Zeigen Sie die ausgewählten Spielsteine ​​an, als ob sie sich gerade dorthin bewegt hätten.',
-    resetPage: 'Entferne jedes Hex auf der Seite (fragt zuerst).',
+      'Decken Sie die Umgebung der ausgewählten Spielsteine auf, als ob sie sich gerade dorthin bewegt hätten.',
+    resetPage: 'Entfernen Sie alle Hexfelder auf der Seite (mit Rückfrage).',
     name: 'Benennen Sie die ausgewählten Hexfelder oder die Hexfelder unter den ausgewählten Spielsteinen. Lassen Sie den Namen leer, um ihn zu löschen.',
-    mark: 'Verwandeln Sie die ausgewählten Spielsteine ​​in versteckte Orte.',
+    mark: 'Verwandeln Sie die ausgewählten Spielsteine in versteckte Orte.',
     unmark: 'Verhindern Sie, dass die ausgewählten Token versteckte Orte sind.',
     set: 'Ändern Sie eine Einstellung oder zeigen Sie alle Einstellungen an.',
-    pageSet: 'Überschreiben Sie eine Anzeigeeinstellung nur auf der aktuellen Seite.',
+    pageSet: 'Überschreiben Sie eine Aufdeck-Einstellung nur auf der aktuellen Seite.',
     pageClear: 'Entfernen Sie die Überschreibungen der aktuellen Seite.',
     rescan:
-      'Erstellen Sie die Hex-Liste der Seite neu, beispielsweise nach dem Kopieren einer Seite oder eines Spiels.',
+      'Erstellen Sie die Hexfeldliste der Seite neu, beispielsweise nach dem Kopieren einer Seite oder eines Spiels.',
     calibrate:
-      'Richten Sie das Sechseckgitter so aus, dass ein oder zwei ausgewählte Spielsteine ​​in die Sechseckmitten eingerastet werden.',
+      'Richten Sie das Hexfeld-Raster an einem oder zwei ausgewählten Spielsteinen aus, die an Hexfeld-Mittelpunkten eingerastet sind.',
     calibrateReset: 'Entfernen Sie die Kalibrierung der aktuellen Seite.',
     status: 'Zeigen Sie, was Hexploration über die aktuelle Seite weiß.',
     journal: 'Erstellen Sie die Handouts Help und Command Deck neu.',
@@ -271,18 +271,18 @@ const TRANSLATION = {
     revealDesc:
       'Wählen Sie Hexfelder, Formen oder Token aus, um sie aufzudecken oder wieder zu verdecken. „Erkunden“ deckt die Umgebung ausgewählter Token auf, als hätten sie sich bewegt.',
     locationsDesc:
-      'Wählen Sie Spielsteine ​​aus, um sie als Standorte unter Hexfeldern zu verbergen. Wählen Sie Hexfelder oder Token aus, um einem Hexfeld einen Namen zu geben.',
+      'Wählen Sie Spielsteine aus, um sie als Standorte unter Hexfeldern zu verbergen. Wählen Sie Hexfelder oder Token aus, um einem Hexfeld einen Namen zu geben.',
     toolsDesc:
       'Einstellungen, Seitenüberschreibungen, Status, erneutes Scannen kopierter Seiten und Kalibrieren des Rasters.',
     footer: 'Vollständige Anweisungen finden Sie im Handout „{help}“.',
   },
   handout: {
     versionLabel: 'Version',
-    subtitle: 'Hex-für-Hex-Erkundung für Roll20',
+    subtitle: 'Erkundung Hexfeld für Hexfeld in Roll20',
     footer: 'Verwenden Sie das Handout „{deck}“ für Ein-Klick-Steuerungen.',
     overview: {
       heading: 'Überblick',
-      body: 'Hexploration umfasst eine Hexfeldkarte mit undurchsichtigen Hexfeldern. Während sich die Gruppe bewegt, werden die Hexfelder, die sie durchquert (und, wenn Sie möchten, die Hexfelder um sie herum) entfernt, sodass die Karte jeweils ein Hexfeld freigelegt wird. Versteckte Orte können unter Hexfeldern platziert werden und werden bekannt gegeben, wenn sie gefunden werden. Es funktioniert in Jumpgate- und Legacy-Spielen auf Hex- (V) und Hex- (H) Gittern jeder Größe.',
+      body: 'Hexploration deckt eine Hexfeldkarte mit undurchsichtigen Hexfeldern ab. Während sich die Gruppe bewegt, werden die Hexfelder, die sie durchquert (und, wenn Sie möchten, die Hexfelder um sie herum), entfernt, sodass die Karte Hexfeld für Hexfeld freigelegt wird. Versteckte Orte können unter Hexfeldern platziert werden und werden bekannt gegeben, wenn sie gefunden werden. Es funktioniert in Jumpgate- und Legacy-Spielen, auf Hex (V)- und Hex (H)-Rastern jeder Größe.',
       demo: 'Sehen Sie sich eine kurze Demo an (ab Version 1)',
     },
     quickStart: {
@@ -303,7 +303,7 @@ const TRANSLATION = {
       colDesc: 'Was es bewirkt',
     },
     revealing: {
-      heading: 'Wie Offenlegung funktioniert',
+      heading: 'Wie das Aufdecken funktioniert',
       points: [
         'Nur Token auf der Token-Ebene decken Hexfelder auf. Welche Token zählen, legt „Aufdeckende Token“ fest: standardmäßig Spieler-Token, sodass der GM Monster bewegen kann, ohne die Karte aufzudecken.',
         'Ein Token deckt jedes Hexfeld auf, das er bedeckt (große Token bedecken mehrere), und bei aktiviertem „Entlang des Wegs aufdecken“ jedes Hexfeld auf der Route, entlang der er gezogen wurde, einschließlich Wegpunkten.',
@@ -346,7 +346,7 @@ const TRANSLATION = {
       heading: 'Upgrade von Version 1',
       points: [
         'Version 2 benötigt PathMath, MatrixMath, Vector Math oder HTML Builder nicht mehr. Sie können sie entfernen, es sei denn, ein anderer Mod verwendet sie.',
-        'Vorhandene Hex-Karten, Namen, Standort-Tokens und Einstellungen werden beim ersten Start automatisch aktualisiert.',
+        'Vorhandene Hexkarten, Namen, Standort-Tokens und Einstellungen werden beim ersten Start automatisch aktualisiert.',
         'Die Befehle der Version 1, einschließlich des Hexploration_menu-Makros, funktionieren weiterhin.',
         'In Version 1 konnte jeder Token, der einen Charakter darstellt, Hexfelder aufdecken. Setzen Sie „Aufdeckende Token“ auf „Charaktertoken“, um dieses Verhalten beizubehalten.',
       ],

@@ -86,7 +86,7 @@ const TRANSLATION = {
       desc: 'Język menu, komunikatów i materiałów informacyjnych.',
     },
     hexLayer: {
-      label: 'Warstwa heksagonów',
+      label: 'Warstwa heksów',
       desc: 'Gdzie rysowane są nowe heksy. Auto próbuje warstwy pierwszego planu (nad żetonami), a jeśli gra jej nie obsługuje, używa warstwy żetonów.',
     },
     fillColor: {
@@ -99,7 +99,7 @@ const TRANSLATION = {
     },
     labelColor: {
       label: 'Kolor etykiety',
-      desc: 'Kolor etykiet z nazwami tylko dla GM na nazwanych heksach.',
+      desc: 'Kolor etykiet z nazwami tylko dla MG na nazwanych heksach.',
     },
     glimpseColor: {
       label: 'Kolor przebłysku',
@@ -110,7 +110,7 @@ const TRANSLATION = {
       desc: 'Szerokość konturu nowych heksów w pikselach (0 do 20).',
     },
     maxDistance: {
-      label: 'Odległość odkrywania heksagonów',
+      label: 'Odległość odkrywania heksów',
       desc: 'Zapisywana na heksach w chwili ich wypełniania, więc ustaw ją przed wypełnianiem: późniejsza zmiana nie wpływa na heksy, które już są na mapie. Żeton musi znajdować się w obrębie tylu heksów, aby je odkryć, niezależnie od tego, jak daleko widzi; przy 0 odkrywa się je tylko przez wejście na nie. Używaj jej dla gór lub lasów. Pozostaw puste, aby nie było ograniczenia.',
     },
     revealDistance: {
@@ -119,11 +119,11 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Linia wzroku',
-      desc: 'Kiedy jest włączone, heksy, które pozostają zakryte, np. góry wypełnione przy ustawieniu „Odległość odkrywania heksagonów”, zasłaniają heksy za nimi. Ma to znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej.',
+      desc: 'Kiedy jest włączone, heksy, które pozostają zakryte, np. góry wypełnione przy ustawieniu „Odległość odkrywania heksów”, zasłaniają heksy za nimi. Ma to znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej.',
     },
     revealPath: {
       label: 'Odkrywaj wzdłuż ścieżki',
-      desc: 'Kiedy jest włączone, odkrywane jest każde pole, przez które przechodzi żeton podczas przeciągania (w tym punkty orientacyjne), a nie tylko miejsce, w którym się zatrzymuje.',
+      desc: 'Kiedy jest włączone, odkrywany jest każdy heks, przez które przechodzi żeton podczas przeciągania (w tym punkty orientacyjne), a nie tylko miejsce, w którym się zatrzymuje.',
     },
     revealBy: {
       label: 'Żetony odkrywające',
@@ -149,7 +149,7 @@ const TRANSLATION = {
   status: {
     engine: 'Silnik gry',
     grid: 'Siatka',
-    layer: 'Warstwa heksagonów',
+    layer: 'Warstwa heksów',
     hexes: 'Heksy',
     named: 'Nazwane heksy',
     icons: 'Żetony lokalizacji',
@@ -161,14 +161,14 @@ const TRANSLATION = {
   },
   messages: {
     filled:
-      'Wypełnienie zakończone. Wylosowane heksy: {created}. Zmiana stylu: {restyled}. Ukryte lokalizacje: {icons}.',
+      'Wypełnienie zakończone. Narysowane heksy: {created}. Zmiana stylu: {restyled}. Ukryte lokalizacje: {icons}.',
     revealed: 'Ujawnione heksy: {count}.',
-    revealedPage: 'Każdy odkryty heks na stronie ({count}).',
+    revealedPage: 'Odkryto wszystkie heksy na stronie ({count}).',
     confirmReset:
       'Usunąć wszystkie heksy z „{page}” ({count})? Żetony lokalizacji wracają na warstwę żetonów. Opcja Cofnij nie może tego odwrócić.',
     resetPage: 'Heksy usunięte ze strony: {count}.',
     undone:
-      'Ostatnie wypełnienie nie zostało wykonane. Usunięte heksy: {removed}. Przywrócono nowe heksy: {restored}.',
+      'Cofnięto ostatnie wypełnienie. Usunięte heksy: {removed}. Przywrócone heksy ze zmienionym stylem: {restored}.',
     named: 'Heksy o nazwie „{name}”: {count}.',
     unnamed: 'Nazwy zostały usunięte: {count}.',
     marked:
@@ -176,11 +176,11 @@ const TRANSLATION = {
     unmarked: 'Tokeny, które nie są już lokalizacjami: {count}.',
     settingChanged: '{setting} ustawiony na {value}.',
     rescanned:
-      'Ponowne skanowanie zakończone. Zachowane: {kept}. Przyjęto: {adopted}. Zgłoszono ponownie: {moved}. Zaginione i zapomniane: {dropped}. Etykiety ponownie połączone: {labels}. Połączono ponownie tokeny lokalizacji: {icons}.',
+      'Ponowne skanowanie zakończone. Zachowane: {kept}. Przyjęto: {adopted}. Przeniesione: {moved}. Zaginione i zapomniane: {dropped}. Etykiety ponownie połączone: {labels}. Połączono ponownie tokeny lokalizacji: {icons}.',
     calibrated:
-      'Skalibrowano siatkę (krok kolumny {colStep}px, krok wiersza {rowStep}px). Ponowne skanowanie: zachowane {kept}, ponownie złożone {moved}, przyjęte {adopted}.',
+      'Skalibrowano siatkę (krok kolumny {colStep}px, krok wiersza {rowStep}px). Ponowne skanowanie: zachowane {kept}, przeniesione {moved}, przyjęte {adopted}.',
     calibrationReset:
-      'Kalibracja usunięta. Ponowne skanowanie: zachowane {kept}, ponownie przesłane {moved}, przyjęte {adopted}.',
+      'Kalibracja usunięta. Ponowne skanowanie: zachowane {kept}, przeniesione {moved}, przyjęte {adopted}.',
     journalRebuilt: 'Przebudowano materiały informacyjne „{help}” i „{deck}”.',
     migrated:
       'Twoje mapy heksowe z Hexploration 1.x zostały zaktualizowane. Jeśli ta gra została skopiowana z gry Legacy, uruchom „Skanuj ponownie” na każdej stronie z mapą heksową.',
@@ -235,7 +235,7 @@ const TRANSLATION = {
     menu: 'Pokaż menu.',
     fill: 'Zakryj wybrane narysowane kształty heksami.',
     fillInverse: 'Zakryj całą stronę z wyjątkiem wnętrza wybranych kształtów.',
-    undo: 'Cofnij ostatnie wypełnienie, odwróć wypełnienie lub ukryj i przywróć używane kształty.',
+    undo: 'Cofnij ostatnie wypełnienie, odwrotne wypełnienie lub zakrycie i przywróć użyte kształty.',
     reveal: 'Odsłoń wybrane heksy oraz heksy pod wybranymi kształtami i żetonami.',
     revealPage: 'Odkryj każdy heks na stronie bez ogłoszeń.',
     conceal: 'Ponownie zakryj obszar pod wybranymi kształtami i żetonami heksami.',
@@ -270,12 +270,11 @@ const TRANSLATION = {
   handout: {
     versionLabel: 'Wersja',
     subtitle: 'Eksploracja heks po heksie dla Roll20',
-    footer:
-      'Skorzystaj z materiałów informacyjnych „{deck}”, aby uzyskać informacje na temat elementów sterujących jednym kliknięciem.',
+    footer: 'Używaj materiału informacyjnego „{deck}”, aby sterować jednym kliknięciem.',
     overview: {
       heading: 'Przegląd',
-      body: 'Heksploracja obejmuje mapę heksów nieprzezroczystymi heksami. Gdy drużyna się porusza, heksy, przez które przechodzi (oraz, jeśli wolisz, heksy wokół niej) są usuwane, więc mapa jest odkrywana heks po heksie. Ukryte lokalizacje można umieszczać pod heksami i ogłaszać je po ich znalezieniu. Działa w grach Jumpgate i Legacy, na siatkach Hex (V) i Hex (H) o dowolnym rozmiarze.',
-      demo: 'Obejrzyj krótkie demo (od wersji 1)',
+      body: 'Hexploration zakrywa mapę heksową nieprzezroczystymi heksami. Gdy drużyna się porusza, heksy, przez które przechodzi (oraz, jeśli wolisz, heksy wokół niej) są usuwane, więc mapa jest odkrywana heks po heksie. Ukryte lokalizacje można umieszczać pod heksami i ogłaszać je po ich znalezieniu. Działa w grach Jumpgate i Legacy, na siatkach Hex (V) i Hex (H) o dowolnym rozmiarze.',
+      demo: 'Obejrzyj krótkie demo (z wersji 1)',
     },
     quickStart: {
       heading: 'Szybki start',
@@ -299,8 +298,8 @@ const TRANSLATION = {
       points: [
         'Heksy odkrywają tylko żetony na warstwie żetonów. To, które żetony się liczą, określa ustawienie „Żetony odkrywające”: domyślnie żetony graczy, więc MG może przesuwać potwory bez odkrywania mapy.',
         'Żeton odkrywa każdy heks, który zajmuje (duże żetony zajmują kilka), a przy włączonej opcji „Odkrywaj wzdłuż ścieżki” także każdy heks na trasie, po której był przeciągany, łącznie z punktami pośrednimi.',
-        '„Zasięg wzroku” odkrywa heksy wokół każdego z tych heksów, zaczynając od najbliższych. Gdy „Linia wzroku” jest włączona, heks nie zostaje odkryty, dopóki między nim a żetonem leży zakryty heks. Bliższe heksy są zwykle odkrywane jako pierwsze, więc na otwartym terenie „Linia wzroku” niczego nie zmienia: ma znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej i istnieją heksy, które pozostają zakryte, np. teren wypełniony przy ustawieniu „Odległość odkrywania heksagonów”.',
-        '„Odległość odkrywania heksagonów” jest zapisywana na każdym heksie w chwili jego wypełniania, więc ustaw ją przed wypełnianiem; późniejsza zmiana nie wpływa na heksy, które już są na mapie. Żeton musi znajdować się w obrębie tylu heksów, aby je odkryć, niezależnie od tego, jak daleko widzi, a przy 0 odkrywa się je tylko przez wejście na nie. Dla pasma górskiego: ustaw „Odległość odkrywania heksagonów” na 0, wypełnij góry, ponownie wyczyść tę wartość (bez limitu), a potem wypełnij teren za nimi. Gdy „Zasięg wzroku” wynosi 3, a „Linia wzroku” jest włączona, drużyna widzi otwarty teren wokół siebie, ale nie góry ani to, co leży za nimi. Każdy heks górski zostaje odkryty, gdy wejdzie na niego żeton.',
+        '„Zasięg wzroku” odkrywa heksy wokół każdego z tych heksów, zaczynając od najbliższych. Gdy „Linia wzroku” jest włączona, heks nie zostaje odkryty, dopóki między nim a żetonem leży zakryty heks. Bliższe heksy są zwykle odkrywane jako pierwsze, więc na otwartym terenie „Linia wzroku” niczego nie zmienia: ma znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej i istnieją heksy, które pozostają zakryte, np. teren wypełniony przy ustawieniu „Odległość odkrywania heksów”.',
+        '„Odległość odkrywania heksów” jest zapisywana na każdym heksie w chwili jego wypełniania, więc ustaw ją przed wypełnianiem; późniejsza zmiana nie wpływa na heksy, które już są na mapie. Żeton musi znajdować się w obrębie tylu heksów, aby je odkryć, niezależnie od tego, jak daleko widzi, a przy 0 odkrywa się je tylko przez wejście na nie. Dla pasma górskiego: ustaw „Odległość odkrywania heksów” na 0, wypełnij góry, ponownie wyczyść tę wartość (bez limitu), a potem wypełnij teren za nimi. Gdy „Zasięg wzroku” wynosi 3, a „Linia wzroku” jest włączona, drużyna widzi otwarty teren wokół siebie, ale nie góry ani to, co leży za nimi. Każdy heks górski zostaje odkryty, gdy wejdzie na niego żeton.',
         'W trybie Przebłysk heksy w zasięgu wzroku stają się przezroczyste zamiast znikać i są usuwane, gdy wejdzie na nie żeton. Heksy widziane w trybie Przebłysk nie zasłaniają widoku przy włączonej opcji „Linia wzroku”.',
         'Roll20 rysuje nazwy, paski i aury żetonów nad heksami. Przy włączonej opcji „Ukrywaj zakryte żetony” żeton pod zakrytym heksem ma wyłączone widoczne dla graczy nazwę, paski i aury, dopóki nie zostanie odkryty, więc ukryte potwory się nie zdradzą. Jeśli włączysz któryś z tych elementów, gdy żeton jest zakryty, pozostanie on ukryty i zostanie włączony po odkryciu żetonu.',
         'API nie zgłasza ruchów wykonanych przez inne mody. Ruchy TokenMod są wychwytywane automatycznie; w przypadku innych modów zaznacz żetony i kliknij „Eksploruj” albo wywołaj Hexploration.revealAround(token) z własnego moda.',
@@ -309,27 +308,27 @@ const TRANSLATION = {
     locations: {
       heading: 'Nazwane heksy i lokalizacje',
       points: [
-        'Oznacz lokalizację zamienia wybrane żetony w ukryte lokalizacje. Żeton znajdujący się już pod heksem jest natychmiast ukrywany; w przeciwnym razie zostanie ukryty przez następne wypełnienie, które je zakrywa.',
+        'Oznacz lokalizację zamienia wybrane żetony w ukryte lokalizacje. Żeton znajdujący się już pod heksem jest natychmiast ukrywany; w przeciwnym razie zostanie ukryty przez następne wypełnienie, które go zakryje.',
         'Żetony ze znacznikiem stanu białej wieży są również traktowane jako lokalizacje podczas zapełniania, tak jak w wersji 1.',
-        'Żetony ukrytych lokalizacji są przenoszone na warstwę GM. Kiedy ich heks zostanie odkryty, wracają na warstwę żetonów z pokazaną nazwą i ogłaszają swoje odkrycie.',
-        '„Nazwij heks” nadaje heksowi nazwę bez żetonu. Nazwa jest pokazywana MG jako etykieta na warstwie MG i ogłaszana, gdy heks zostanie odkryty. Jumpgate rysuje warstwę MG pod warstwą pierwszego planu, więc w Jumpgate etykiety są widoczne tylko wtedy, gdy „Warstwa heksagonów” jest ustawiona na warstwę żetonów.',
+        'Żetony ukrytych lokalizacji są przenoszone na warstwę MG. Kiedy ich heks zostanie odkryty, wracają na warstwę żetonów z widoczną nazwą, a ich odkrycie zostaje ogłoszone.',
+        '„Nazwij heks” nadaje heksowi nazwę bez żetonu. Nazwa jest pokazywana MG jako etykieta na warstwie MG i ogłaszana, gdy heks zostanie odkryty. Jumpgate rysuje warstwę MG pod warstwą pierwszego planu, więc w Jumpgate etykiety są widoczne tylko wtedy, gdy „Warstwa heksów” jest ustawiona na warstwę żetonów.',
         '„Ogłaszaj odkrycia” określa, czy ogłoszenie widzą wszyscy, tylko MG, czy nikt. „Pinguj odkrycia” dodatkowo przenosi widok graczy na lokalizację.',
       ],
     },
     settings: {
       heading: 'Ustawienia',
       intro:
-        'Zmieniaj ustawienia poleceniem !hexploration set (lub przyciskiem Ustawienia). „Warstwa heksagonów”, „Żetony odkrywające” i „Język” można też ustawić na stronie ustawień moda.',
+        'Zmieniaj ustawienia poleceniem !hexploration set (lub przyciskiem Ustawienia). „Warstwa heksów”, „Żetony odkrywające” i „Język” można też ustawić na stronie ustawień moda.',
       colKey: 'Klucz',
       colName: 'Ustawienie',
       colDesc: 'Opis',
       perPage: '(Można ustawić na stronę.)',
     },
     jumpgate: {
-      heading: 'Jumpgate i Dziedzictwo',
+      heading: 'Jumpgate i Legacy',
       points: [
-        'Heexploration sprawdza, z jakiego silnika korzysta gra, i rysuje odpowiedni kształt. Kształty narysowane w dowolnym edytorze można wypełnić.',
-        'Gdy „Warstwa heksagonów” jest ustawiona na Auto, heksy są rysowane na warstwie pierwszego planu, nad żetonami, więc gracze nie widzą, co jest pod spodem. Jeśli warstwa pierwszego planu jest niedostępna, używana jest warstwa żetonów.',
+        'Hexploration sprawdza, z jakiego silnika korzysta gra, i rysuje odpowiedni kształt. Kształty narysowane w dowolnym edytorze można wypełnić.',
+        'Gdy „Warstwa heksów” jest ustawiona na Auto, heksy są rysowane na warstwie pierwszego planu, nad żetonami, więc gracze nie widzą, co jest pod spodem. Jeśli warstwa pierwszego planu jest niedostępna, używana jest warstwa żetonów.',
         'Jumpgate rysuje matematycznie regularne heksy, które mają nieco inny kształt niż heksy Legacy. Jeśli heksy nie pokrywają się z siatką strony, przyciągnij żeton do środka heksu, zaznacz go i kliknij „Kalibruj”. Zaznacz dwa żetony na sąsiednich heksach tego samego rzędu (Hex V) lub kolumny (Hex H), aby skorygować także rozmiar heksu.',
         'Po skopiowaniu strony lub gry jej heksy otrzymują nowe identyfikatory. Uruchom „Skanuj ponownie” na stronie, aby ponownie je odnaleźć wraz z etykietami nazw i żetonami lokalizacji.',
       ],
@@ -363,7 +362,7 @@ const TRANSLATION = {
       colCode: 'Kod',
     },
     credits: {
-      heading: 'Kredyty',
+      heading: 'Autorzy',
       original: 'Oryginalny mod autorstwa',
       maintainer: 'Wersja 2 obsługiwana przez',
       marketplace: 'Pakiety grafik Ady na Roll20 Marketplace',

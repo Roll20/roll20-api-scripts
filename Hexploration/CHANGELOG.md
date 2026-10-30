@@ -6,6 +6,7 @@
 
 - Naming a hex no longer stops Jumpgate drawing the tabletop. Name labels were made without a font, which Jumpgate cannot draw, so Roll20 showed "Something Went Wrong" until the page was refreshed, and again whenever the page was opened. Labels now use Arial, and labels made by 2.0.0 and 2.0.1 are given the font on startup or when the page is rescanned.
 - Undoing a fill no longer forgets the locations it hid. A token marked with Mark Location went back to the token layer as an ordinary token, so the next fill covered it without hiding it, and finding it was not announced.
+- Translations: "hex" had been translated as hexadecimal, witch, spell or magic in several languages, some messages were partly left in English, and a few said the opposite of the English. All 23 translations were proofread; each language now uses one word for hex, and the `!hexploration set language` command in the help is no longer translated.
 
 ### Changed
 

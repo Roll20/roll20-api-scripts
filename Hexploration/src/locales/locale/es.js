@@ -99,7 +99,7 @@ const TRANSLATION = {
     },
     labelColor: {
       label: 'Color de la etiqueta',
-      desc: 'Color de las etiquetas de nombres exclusivos para GM en hexágonos con nombre.',
+      desc: 'Color de las etiquetas de nombre, visibles solo para el DJ, en los hexágonos con nombre.',
     },
     glimpseColor: {
       label: 'Color de vistazo',
@@ -143,7 +143,7 @@ const TRANSLATION = {
     },
     hideCoveredTokens: {
       label: 'Ocultar fichas cubiertas',
-      desc: 'Roll20 dibuja nombres, barras y auras sobre hexágonos. Cuando están activadas, las fichas bajo un hexágono cubierto tienen su nombre, barras y auras visibles para el jugador desactivadas y se vuelven a activar cuando se descubren.',
+      desc: 'Roll20 dibuja nombres, barras y auras sobre los hexágonos. Cuando está activado, las fichas bajo un hexágono cubierto tienen desactivados su nombre, barras y auras visibles para los jugadores, que se vuelven a activar cuando se descubren.',
     },
   },
   status: {
@@ -165,22 +165,22 @@ const TRANSLATION = {
     revealed: 'Hexágonos revelados: {count}.',
     revealedPage: 'Cada hexágono en la página revelado ({count}).',
     confirmReset:
-      '¿Eliminar todos los hexágonos de "{page}" ({count})? Los tokens de ubicación regresan a la capa de tokens. Deshacer no puede revertir esto.',
-    resetPage: 'Hexes eliminados de la página: {count}.',
+      '¿Eliminar todos los hexágonos de "{page}" ({count})? Las fichas de ubicación regresan a la capa de fichas. Deshacer no puede revertir esto.',
+    resetPage: 'Hexágonos eliminados de la página: {count}.',
     undone:
       'Último relleno deshecho. Hexágonos eliminados: {removed}. Hexágonos rediseñados restaurados: {restored}.',
     named: 'Hexágonos denominados "{name}": {count}.',
     unnamed: 'Nombres borrados: {count}.',
     marked:
       'Ubicaciones ocultas en hexágonos existentes: {attached}. Esperando el siguiente relleno que los cubra: {pending}.',
-    unmarked: 'Tokens que ya no son ubicaciones: {count}.',
+    unmarked: 'Fichas que ya no son ubicaciones: {count}.',
     settingChanged: '{setting} establecido en {value}.',
     rescanned:
-      'Volver a escanear completo. Mantenido: {kept}. Adoptado: {adopted}. Representado nuevamente: {moved}. Desaparecido y olvidado: {dropped}. Etiquetas vinculadas nuevamente: {labels}. Tokens de ubicación vueltos a vincular: {icons}.',
+      'Nuevo escaneo completado. Conservados: {kept}. Adoptados: {adopted}. Reubicados: {moved}. Desaparecidos y olvidados: {dropped}. Etiquetas vinculadas de nuevo: {labels}. Fichas de ubicación vinculadas de nuevo: {icons}.',
     calibrated:
-      'Cuadrícula calibrada (paso de columna {colStep}px, paso de fila {rowStep}px). Volver a escanear: mantuvo {kept}, volvió a presentar {moved}, adoptó {adopted}.',
+      'Cuadrícula calibrada (paso de columna {colStep}px, paso de fila {rowStep}px). Nuevo escaneo: conservados {kept}, reubicados {moved}, adoptados {adopted}.',
     calibrationReset:
-      'Se eliminó la calibración. Volver a escanear: mantuvo {kept}, volvió a presentar {moved}, adoptó {adopted}.',
+      'Se eliminó la calibración. Nuevo escaneo: conservados {kept}, reubicados {moved}, adoptados {adopted}.',
     journalRebuilt: 'Se han reconstruido los folletos "{help}" y "{deck}".',
     migrated:
       'Tus mapas de hexágonos de Hexploration 1.x se han actualizado. Si este juego se copió de un juego Legacy, ejecuta Volver a escanear en cada página con mapa de hexágonos.',
@@ -203,7 +203,7 @@ const TRANSLATION = {
     tooMany: 'Eso crearía demasiados hexágonos de una sola vez ({count}).',
     nothingToConceal: 'Seleccione formas dibujadas o fichas para ocultar.',
     nothingToReveal: 'Selecciona hexágonos, formas dibujadas o fichas para revelar.',
-    noTokens: 'Seleccione uno o más tokens primero.',
+    noTokens: 'Seleccione una o más fichas primero.',
     noHexes: 'Selecciona uno o más hexágonos (o fichas que se encuentren en hexágonos) primero.',
     nothingToUndo: 'No hay ningún relleno que deshacer.',
     unknownCommand: 'Comando desconocido: {command}',
@@ -228,32 +228,32 @@ const TRANSLATION = {
     unknownCommand: 'Escriba !hexploration help para enumerar los comandos.',
     unknownSetting: 'Escriba !hexploration set para ver todas las configuraciones.',
     calibrateNeedsTokens:
-      'Coloca una ficha en el centro de un hexágono y selecciónala. Seleccione una segunda ficha colocada en un hexágono vecino en la misma fila (Hex V) o columna (Hex H) para corregir también el tamaño del hex.',
+      'Coloca una ficha en el centro de un hexágono y selecciónala. Seleccione una segunda ficha colocada en un hexágono vecino en la misma fila (Hex V) o columna (Hex H) para corregir también el tamaño del hexágono.',
     calibrateFailed:
-      'Dos fichas deben estar en la misma fila (Hex V) o en la misma columna (Hex H), separadas por al menos un hex.',
+      'Las dos fichas deben estar en la misma fila (Hex V) o en la misma columna (Hex H), separadas por al menos un hexágono.',
     unexpected: 'Los detalles se encuentran en el registro de la consola API.',
   },
   help: {
     menu: 'Mostrar el menú.',
     fill: 'Cubre las formas dibujadas seleccionadas con hexágonos.',
     fillInverse: 'Cubre toda la página excepto el interior de las formas seleccionadas.',
-    undo: 'Deshaga el último relleno, invierta el relleno u oculte y restaure las formas que utilizó.',
+    undo: 'Deshace el último relleno, relleno inverso u ocultación, y restaura las formas que usó.',
     reveal:
       'Revela los hexágonos seleccionados y los hexágonos debajo de las formas y fichas seleccionadas.',
     revealPage: 'Revela cada hexágono de la página sin anuncios.',
     conceal: 'Cubre el área debajo de las formas y fichas seleccionadas con hexágonos nuevamente.',
-    explore: 'Muestra las fichas seleccionadas como si acabaran de mudarse allí.',
+    explore: 'Revela alrededor de las fichas seleccionadas como si acabaran de moverse allí.',
     resetPage: 'Elimina todos los hexágonos de la página (pregunta primero).',
     name: 'Nombra los hexágonos seleccionados, o los hexágonos debajo de las fichas seleccionadas. Deje el nombre vacío para borrarlo.',
     mark: 'Convierte las fichas seleccionadas en ubicaciones ocultas.',
-    unmark: 'Evite que los tokens seleccionados sean ubicaciones ocultas.',
+    unmark: 'Hace que las fichas seleccionadas dejen de ser ubicaciones ocultas.',
     set: 'Cambie una configuración o muestre todas las configuraciones.',
     pageSet: 'Anula una configuración de revelación solo en la página actual.',
     pageClear: 'Elimine las anulaciones de la página actual.',
     rescan:
       'Reconstruye la lista de hexágonos de la página, por ejemplo, después de copiar una página o un juego.',
     calibrate:
-      'Alinea la cuadrícula hexagonal con una o dos fichas seleccionadas encajadas en los centros hexagonales.',
+      'Alinea la cuadrícula hexagonal con una o dos fichas seleccionadas ajustadas a los centros de los hexágonos.',
     calibrateReset: 'Elimina la calibración de la página actual.',
     status: 'Muestra lo que Hexploration sabe sobre la página actual.',
     journal: 'Reconstruye los folletos de Ayuda y del Command Deck.',
@@ -277,7 +277,7 @@ const TRANSLATION = {
     footer: 'Utilice el folleto "{deck}" para obtener controles con un solo clic.',
     overview: {
       heading: 'Descripción general',
-      body: 'La hexploración cubre un mapa de hexágonos con hexágonos opacos. A medida que el grupo se mueve, los hexágonos por los que pasa (y, si lo desea, los hexágonos que los rodean) se eliminan, por lo que el mapa se descubre un hexágono a la vez. Las ubicaciones ocultas se pueden colocar debajo de hexágonos y se anuncian cuando se encuentran. Funciona en juegos Jumpgate y Legacy, en cuadrículas Hex (V) y Hex (H) de cualquier tamaño.',
+      body: 'Hexploration cubre un mapa hexagonal con hexágonos opacos. A medida que el grupo se mueve, los hexágonos por los que pasa (y, si lo desea, los hexágonos que los rodean) se eliminan, por lo que el mapa se descubre un hexágono a la vez. Las ubicaciones ocultas se pueden colocar debajo de hexágonos y se anuncian cuando se encuentran. Funciona en juegos Jumpgate y Legacy, en cuadrículas Hex (V) y Hex (H) de cualquier tamaño.',
       demo: 'Vea una breve demostración (de la versión 1)',
     },
     quickStart: {
@@ -286,22 +286,22 @@ const TRANSLATION = {
         'Abra una página cuya cuadrícula esté configurada en Hex (V) o Hex (H).',
         'Dibuja una o más formas (polígono, rectángulo, elipse o a mano alzada) alrededor del área a ocultar.',
         'Seleccione las formas y haga clic en Rellenar en el Command Deck (o escriba !hexploration fill). Las formas se sustituyen por hexágonos.',
-        'Opcional: antes de completar, seleccione fichas para lugares importantes y haga clic en Marcar ubicación. Están ocultos debajo de los hexágonos y se anuncian cuando se descubren.',
+        'Opcional: antes de rellenar, seleccione fichas para lugares importantes y haga clic en Marcar ubicación. Quedan ocultas debajo de los hexágonos y se anuncian cuando se descubren.',
         'Mueve una ficha de jugador. Se revelan cada hexágono por el que pasa y los hexágonos dentro de su distancia de visión.',
       ],
     },
     commands: {
       heading: 'Comandos',
       intro:
-        'Sólo los GM pueden usar estos comandos. La mayoría actúa sobre los objetos seleccionados; el resto actúa sobre la página que estás viendo.',
-      colCommand: 'Dominio',
-      colDesc: 'que hace',
+        'Solo los DJ pueden usar estos comandos. La mayoría actúa sobre los objetos seleccionados; el resto actúa sobre la página que estás viendo.',
+      colCommand: 'Comando',
+      colDesc: 'Qué hace',
     },
     revealing: {
       heading: 'Cómo funciona la revelación',
       points: [
         'Solo las fichas de la capa de fichas revelan hexágonos. Qué fichas cuentan se define con Fichas que revelan: por defecto, las fichas de jugador, para que el DJ pueda mover monstruos sin descubrir el mapa.',
-        'Una ficha revela cada hexágono que cubre (las fichas grandes cubren varios) y, con Revelar a lo largo del camino activado, cada hexágono de la ruta por la que fue arrastrado, incluidos los puntos de ruta.',
+        'Una ficha revela cada hexágono que cubre (las fichas grandes cubren varios) y, con Revelar a lo largo del camino activado, cada hexágono de la ruta por la que fue arrastrada, incluidos los puntos de ruta.',
         'La Distancia de visión revela los hexágonos alrededor de cada uno de esos hexágonos, empezando por los más cercanos. Con la Línea de visión activada, un hexágono no se revela mientras haya un hexágono cubierto entre él y la ficha. Los hexágonos más cercanos suelen revelarse primero, así que en terreno abierto la Línea de visión no cambia nada: sólo importa con una Distancia de visión de 2 o más y hexágonos que siguen cubiertos, como el terreno rellenado con una Distancia de revelación de hexágonos.',
         'La Distancia de revelación de hexágonos se guarda en cada hexágono cuando se rellena, así que configúrela antes de rellenar; cambiarla después no afecta a los hexágonos que ya están en el mapa. Una ficha debe estar a esa cantidad de hexágonos como máximo para revelarlos, por muy lejos que pueda ver, y con 0 sólo se revelan al entrar en ellos. Para una cordillera: ponga la Distancia de revelación de hexágonos en 0, rellene las montañas, vuelva a dejarla sin límite y después rellene las tierras que hay más allá. Con una Distancia de visión de 3 y la Línea de visión activada, el grupo ve el terreno abierto a su alrededor, pero no las montañas ni lo que hay detrás de ellas. Cada hexágono de montaña se revela cuando una ficha entra en él.',
         'En el modo Vistazo, los hexágonos a la vista se vuelven transparentes en lugar de desaparecer, y se eliminan cuando una ficha entra en ellos. Los hexágonos transparentes del modo Vistazo no bloquean la Línea de visión.',
@@ -313,8 +313,8 @@ const TRANSLATION = {
       heading: 'Hexágonos y ubicaciones con nombre',
       points: [
         'Marcar ubicación convierte las fichas seleccionadas en ubicaciones ocultas. Una ficha que ya está bajo un hexágono se oculta de inmediato; si no, la oculta el siguiente relleno que la cubra.',
-        'Las fichas con el marcador de estado de la torre blanca también se tratan como ubicaciones cuando las llenas, como en la versión 1.',
-        'Las fichas de ubicación oculta se mueven a la capa de GM. Cuando se revela su hexágono, regresan a la capa de fichas con su nombre mostrado y se anuncia su descubrimiento.',
+        'Las fichas con el marcador de estado de la torre blanca también se tratan como ubicaciones cuando rellenas, como en la versión 1.',
+        'Las fichas de ubicación oculta se mueven a la capa del DJ. Cuando se revela su hexágono, regresan a la capa de fichas con su nombre mostrado y se anuncia su descubrimiento.',
         'Nombrar hexágono da un nombre a un hexágono sin usar ninguna ficha. El nombre se muestra al DJ como una etiqueta en la capa del DJ y se anuncia cuando se revela el hexágono. Jumpgate dibuja la capa del DJ por debajo de la capa de primer plano, así que en Jumpgate las etiquetas solo se ven cuando Capa de hexágonos está configurada en la capa de fichas.',
         'Anunciar descubrimientos elige si ven el anuncio todos, solo el DJ o nadie. Hacer ping a los descubrimientos también mueve la vista de los jugadores a la ubicación.',
       ],
@@ -323,13 +323,13 @@ const TRANSLATION = {
       heading: 'Ajustes',
       intro:
         'Cambie la configuración con !hexploration set (o el botón Configuración). Capa de hexágonos, Fichas que revelan e Idioma también se pueden configurar en la página de configuración del mod.',
-      colKey: 'Llave',
+      colKey: 'Clave',
       colName: 'Configuración',
       colDesc: 'Descripción',
       perPage: '(Se puede configurar por página).',
     },
     jumpgate: {
-      heading: 'Jumpgate y legado',
+      heading: 'Jumpgate y Legacy',
       points: [
         'Hexploration determina qué motor utiliza el juego y dibuja el tipo de forma correspondiente. Las formas dibujadas en cualquiera de los editores se pueden rellenar.',
         'Con Capa de hexágonos en Auto, los hexágonos se dibujan en la capa de primer plano, encima de las fichas, para que los jugadores no puedan ver lo que hay debajo. Si la capa de primer plano no está disponible, se usa la capa de fichas.',

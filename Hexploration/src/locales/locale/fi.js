@@ -91,15 +91,15 @@ const TRANSLATION = {
     },
     fillColor: {
       label: 'Täyttöväri',
-      desc: 'Uusien kuusioiden väri. Käytä rgba()-funktiota läpinäkyville heksadesille, esimerkiksi rgba(0,0,0,0.8).',
+      desc: 'Uusien heksojen väri. Käytä rgba()-funktiota läpikuultaville heksoille, esimerkiksi rgba(0,0,0,0.8).',
     },
     strokeColor: {
       label: 'Reunan väri',
-      desc: 'Uusien kuusioiden ääriviivan väri.',
+      desc: 'Uusien heksojen ääriviivan väri.',
     },
     labelColor: {
       label: 'Nimilappujen väri',
-      desc: 'Vain GM:n nimitarrojen väri nimetyissä heksadesissä.',
+      desc: 'Vain GM:n näkemien nimilappujen väri nimetyissä heksoissa.',
     },
     glimpseColor: {
       label: 'Vilkaisun väri',
@@ -123,11 +123,11 @@ const TRANSLATION = {
     },
     revealPath: {
       label: 'Paljasta reitin varrelta',
-      desc: 'Kun se on päällä, jokainen hex, jonka läpi merkki kulkee vedettäessä (mukaan lukien reittipisteet), paljastetaan, ei vain sen pysähtymiskohtaa.',
+      desc: 'Kun se on päällä, jokainen heksa, jonka läpi merkki kulkee vedettäessä (mukaan lukien reittipisteet), paljastetaan, ei vain sen pysähtymiskohtaa.',
     },
     revealBy: {
       label: 'Paljastavat merkit',
-      desc: 'Token-kerroksen merkit paljastavat heksioita: pelaajan hallitsemia merkkejä, mitä tahansa hahmoa edustavia merkkejä tai jokaista merkkiä.',
+      desc: 'Mitkä merkkitason merkit paljastavat heksoja: pelaajan hallitsemat merkit, mitä tahansa hahmoa edustavat merkit tai kaikki merkit.',
     },
     revealMode: {
       label: 'Paljastustila',
@@ -143,7 +143,7 @@ const TRANSLATION = {
     },
     hideCoveredTokens: {
       label: 'Piilota peitetyt merkit',
-      desc: 'Roll20 piirtää nimiä, palkkeja ja auloja heksaan yläpuolelle. Kun se on päällä, peitetyn heksan alla olevilla rahakkeilla on pelaajalle näkyvä nimi, palkit ja aurat pois päältä ja takaisin päälle, kun ne paljastuvat.',
+      desc: 'Roll20 piirtää nimet, palkit ja aurat heksojen päälle. Kun se on päällä, peitetyn heksan alla olevien merkkien pelaajille näkyvä nimi, palkit ja aurat kytketään pois päältä ja takaisin päälle, kun merkit paljastuvat.',
     },
   },
   status: {
@@ -165,22 +165,22 @@ const TRANSLATION = {
     revealed: 'Heksat paljastettiin: {count}.',
     revealedPage: 'Jokainen sivun heksa paljastettiin ({count}).',
     confirmReset:
-      'Poistetaanko jokainen heksa kohdasta "{page}" ({count})? Sijaintitunnukset palaavat merkkikerrokseen. Kumoa ei voi peruuttaa tätä.',
-    resetPage: 'Heksit poistettu sivulta: {count}.',
+      'Poistetaanko kaikki heksat sivulta "{page}" ({count})? Sijaintimerkit palaavat merkkitasolle. Kumoa ei voi peruuttaa tätä.',
+    resetPage: 'Sivulta poistetut heksat: {count}.',
     undone:
-      'Viimeinen täyttö kumottu. Heksit poistettu: {removed}. Uudelleen muotoillut heksat palautettu: {restored}.',
-    named: 'Heksaalit nimeltä "{name}": {count}.',
+      'Viimeinen täyttö kumottu. Poistetut heksat: {removed}. Uudelleen muotoillut heksat palautettu: {restored}.',
+    named: 'Heksat nimeltä "{name}": {count}.',
     unnamed: 'Poistetut nimet: {count}.',
     marked:
-      'Olemassa oleviin heksaan piilotetut sijainnit: {attached}. Odotetaan seuraavaa täyttöä, joka kattaa ne: {pending}.',
-    unmarked: 'Tunnukset, jotka eivät ole enää sijainteja: {count}.',
+      'Olemassa oleviin heksoihin piilotetut sijainnit: {attached}. Odotetaan seuraavaa täyttöä, joka kattaa ne: {pending}.',
+    unmarked: 'Merkit, jotka eivät ole enää sijainteja: {count}.',
     settingChanged: '{setting} asetettu arvoon {value}.',
     rescanned:
-      'Uudelleenskannaus valmis. Säilytetty: {kept}. Hyväksytty: {adopted}. Arkistoitu uudelleen: {moved}. Kadonnut ja unohdettu: {dropped}. Uudelleen linkitetyt tunnisteet: {labels}. Sijaintitunnukset linkitetty uudelleen: {icons}.',
+      'Uudelleenskannaus valmis. Säilytetty: {kept}. Otettu käyttöön: {adopted}. Sijoitettu uudelleen: {moved}. Kadonnut ja unohdettu: {dropped}. Uudelleen linkitetyt nimilaput: {labels}. Uudelleen linkitetyt sijaintimerkit: {icons}.',
     calibrated:
-      'Ruudukko kalibroitu (sarakkeen vaihe {colStep}px, rivin vaihe {rowStep}px). Tarkista uudelleen: säilytetty {kept}, arkistoitu uudelleen {moved}, hyväksytty {adopted}.',
+      'Ruudukko kalibroitu (sarakeaskel {colStep}px, riviaskel {rowStep}px). Uudelleenskannaus: säilytetty {kept}, sijoitettu uudelleen {moved}, otettu käyttöön {adopted}.',
     calibrationReset:
-      'Kalibrointi poistettu. Tarkista uudelleen: säilytetty {kept}, arkistoitu uudelleen {moved}, hyväksytty {adopted}.',
+      'Kalibrointi poistettu. Uudelleenskannaus: säilytetty {kept}, sijoitettu uudelleen {moved}, otettu käyttöön {adopted}.',
     journalRebuilt: 'Monisteet "{help}" ja "{deck}" on rakennettu uudelleen.',
     migrated:
       'Hexploration 1.x -heksakarttasi on päivitetty. Jos tämä peli on kopioitu Legacy-pelistä, suorita Skannaa uudelleen jokaisella heksakarttasivulla.',
@@ -191,26 +191,27 @@ const TRANSLATION = {
   },
   warnings: {
     foregroundUnavailable:
-      'Tämä peli ei tue piirtämistä etualan kerrokselle, joten heksaat piirrettiin merkkikerrokseen.',
+      'Tämä peli ei tue piirtämistä etualan tasolle, joten heksat piirrettiin merkkitasolle.',
     someFailed: 'Heksat, joita ei voitu piirtää: {count}. Katso lisätietoja API-konsolista.',
   },
   errors: {
     noPage: 'Työstettävää sivua ei löytynyt.',
-    notHex: 'Tämä sivu ei käytä kuusioruudukkoa.',
+    notHex: 'Tämä sivu ei käytä heksaruudukkoa.',
     noPolygons: 'Valitse yksi tai useampi piirretty muoto täytettäväksi.',
     emptyArea: 'Valittu alue ei sisällä heksakeskuksia.',
     tooMany: 'Tämä loisi liian monta heksaa kerralla ({count}).',
     nothingToConceal: 'Valitse piilotettavat piirretyt muodot tai merkit.',
-    nothingToReveal: 'Valitse paljastettavat kuusikat, piirretyt muodot tai merkit.',
+    nothingToReveal: 'Valitse paljastettavat heksat, piirretyt muodot tai merkit.',
     noTokens: 'Valitse ensin yksi tai useampi merkki.',
-    noHexes: 'Valitse ensin yksi tai useampi heksa (tai heksoilla seisova rahake).',
+    noHexes: 'Valitse ensin yksi tai useampi heksa (tai heksoilla seisova merkki).',
     nothingToUndo: 'Kumoavaa täyttöä ei ole.',
     unknownCommand: 'Tuntematon komento: {command}',
     unknownSetting: 'Tuntematon asetus: {key}',
     unknownPageSetting: 'Sivukohtaisesti määritettävissä olevat asetukset: {keys}',
     invalidValue: '"{value}" ei ole kelvollinen arvo kohteelle {key}.',
-    calibrateNeedsTokens: 'Valitse yksi tai kaksi kuusiokeskuksiin napsautettua rahaketta.',
-    calibrateFailed: 'Näitä tunnuksia ei voi käyttää kalibrointiin.',
+    calibrateNeedsTokens:
+      'Valitse yksi tai kaksi merkkiä, jotka on kiinnitetty heksojen keskipisteisiin.',
+    calibrateFailed: 'Näitä merkkejä ei voi käyttää kalibrointiin.',
     unexpected: 'Jotain meni pieleen: {message}',
   },
   hints: {
@@ -221,36 +222,36 @@ const TRANSLATION = {
     emptyArea: 'Piirrä suurempi muoto tai tarkista sivuruudukon asetukset.',
     tooMany: 'Täytä pienempi alue tai jaa alue useisiin muotoihin.',
     noHexes:
-      'Heksit ovat etualalla tai merkkikerroksessa; vaihda kyseiselle tasolle valitaksesi ne.',
+      'Heksat ovat etualan tasolla tai merkkitasolla; vaihda kyseiselle tasolle valitaksesi ne.',
     unknownCommand: 'Kirjoita !hexploration help listataksesi komennot.',
     unknownSetting: 'Näet kaikki asetukset kirjoittamalla !hexploration set.',
     calibrateNeedsTokens:
       'Kiinnitä merkki heksan keskelle ja valitse se. Korjaa myös heksan koko valitsemalla toinen merkki, joka on kiinnitetty viereiseen heksaan samalla rivillä (Hex V) tai samassa sarakkeessa (Hex H).',
     calibrateFailed:
-      'Kahden tunnuksen on oltava samalla rivillä (Hex V) tai samassa sarakkeessa (Hex H), vähintään yhden heksan päässä toisistaan.',
+      'Kahden merkin on oltava samalla rivillä (Hex V) tai samassa sarakkeessa (Hex H), vähintään yhden heksan päässä toisistaan.',
     unexpected: 'Yksityiskohdat ovat API-konsolin lokissa.',
   },
   help: {
     menu: 'Näytä valikko.',
-    fill: 'Peitä valitut piirretyt muodot kuusioilla.',
+    fill: 'Peitä valitut piirretyt muodot heksoilla.',
     fillInverse: 'Peitä koko sivu paitsi valittujen muotojen sisällä.',
-    undo: 'Kumoa viimeinen täyttö, käänteinen täyttö tai piilota ja palauta käytetyt muodot.',
-    reveal: 'Näytä valitut heksat ja valittujen muotojen ja merkkien alla olevat heksat.',
-    revealPage: 'Paljasta sivun jokainen hex ilman ilmoituksia.',
-    conceal: 'Peitä alue valittujen muotojen ja merkkien alla uudelleen kuusioilla.',
+    undo: 'Kumoa viimeinen täyttö, käänteinen täyttö tai peitto ja palauta sen käyttämät muodot.',
+    reveal: 'Paljasta valitut heksat ja valittujen muotojen ja merkkien alla olevat heksat.',
+    revealPage: 'Paljasta sivun kaikki heksat ilman ilmoituksia.',
+    conceal: 'Peitä alue valittujen muotojen ja merkkien alla uudelleen heksoilla.',
     explore:
-      'Paljasta valittujen rahakkeiden ympärillä ikään kuin ne olisivat juuri muuttaneet sinne.',
-    resetPage: 'Poista sivulta jokainen hekseli (kysyy ensin).',
+      'Paljasta valittujen merkkien ympäristö ikään kuin ne olisivat juuri siirtyneet sinne.',
+    resetPage: 'Poista sivulta kaikki heksat (kysyy ensin).',
     name: 'Nimeä valitut heksat tai valittujen merkkien alla olevat heksat. Tyhjennä se jättämällä nimen tyhjäksi.',
-    mark: 'Muuta valitut merkit piilotettuihin paikkoihin.',
-    unmark: 'Estä valittujen merkkien piilottaminen.',
+    mark: 'Muuta valitut merkit piilotetuiksi sijainneiksi.',
+    unmark: 'Lopeta valittujen merkkien käyttö piilotettuina sijainteina.',
     set: 'Muuta asetusta tai näytä kaikki asetukset.',
     pageSet: 'Ohita paljastamisasetus vain nykyisellä sivulla.',
     pageClear: 'Poista nykyisen sivun ohitukset.',
     rescan:
       'Rakenna sivun heksaluettelo uudelleen, esimerkiksi sivun tai pelin kopioinnin jälkeen.',
     calibrate:
-      'Linjaa kuusioruudukko yhdellä tai kahdella valitulla kentällä, jotka on napsautettu kuusiokeskuksiin.',
+      'Kohdista heksaruudukko yhteen tai kahteen valittuun merkkiin, jotka on kiinnitetty heksojen keskipisteisiin.',
     calibrateReset: 'Poista nykyisen sivun kalibrointi.',
     status: 'Näytä, mitä Hexploration tietää nykyisestä sivusta.',
     journal: 'Rakenna monisteet Help ja Command Deck uudelleen.',
@@ -270,11 +271,11 @@ const TRANSLATION = {
   },
   handout: {
     versionLabel: 'Versio',
-    subtitle: 'Hex-by-hex tutkiminen Roll20:lle',
+    subtitle: 'Tutkimista heksa kerrallaan Roll20:lle',
     footer: 'Käytä "{deck}" -monistetta yhden napsautuksen ohjaimiin.',
     overview: {
       heading: 'Yleiskatsaus',
-      body: 'Hexploration kattaa hex-kartan läpinäkymättömillä heksailla. Kun seurue liikkuu, niiden läpi kulkevat heksat (ja halutessasi niiden ympärillä olevat heksat) poistetaan, joten kartta paljastuu heksa kerrallaan. Piilotetut paikat voidaan sijoittaa heksojen alle ja niistä ilmoitetaan, kun ne löydetään. Se toimii Jumpgate- ja Legacy-peleissä, minkä tahansa kokoisissa Hex (V) ja Hex (H) -ruudukoissa.',
+      body: 'Hexploration peittää heksakartan läpinäkymättömillä heksoilla. Kun seurue liikkuu, heksat, joiden läpi se kulkee (ja halutessasi sen ympärillä olevat heksat), poistetaan, joten kartta paljastuu heksa kerrallaan. Piilotetut paikat voidaan sijoittaa heksojen alle ja niistä ilmoitetaan, kun ne löydetään. Se toimii Jumpgate- ja Legacy-peleissä, minkä tahansa kokoisissa Hex (V)- ja Hex (H) -ruudukoissa.',
       demo: 'Katso lyhyt esittely (versiosta 1)',
     },
     quickStart: {
@@ -288,7 +289,7 @@ const TRANSLATION = {
       ],
     },
     commands: {
-      heading: 'komennot',
+      heading: 'Komennot',
       intro:
         'Vain GM:t voivat käyttää näitä komentoja. Useimmat toimivat valittuihin objekteihin; loput toimivat katsomallasi sivulla.',
       colCommand: 'Komento',
@@ -307,11 +308,11 @@ const TRANSLATION = {
       ],
     },
     locations: {
-      heading: 'Nimetty Heksit ja sijainnit',
+      heading: 'Nimetyt heksat ja sijainnit',
       points: [
         'Merkitse sijainti muuttaa valitut merkit piilotetuiksi sijainneiksi. Jo heksan alla oleva merkki piilotetaan heti; muuten sen piilottaa seuraava täyttö, joka peittää sen.',
-        'Valkoisen tornin tilamerkillä varustetut rahakkeet käsitellään myös sijainneina, kun täytät, kuten versiossa 1.',
-        'Piilotetut sijaintitunnukset siirretään GM-tasolle. Kun heidän heksansa paljastetaan, he palaavat merkkikerrokseen ja heidän nimensä näytetään, ja heidän löytönsä ilmoitetaan.',
+        'Valkoisen tornin tilamerkillä varustetut merkit käsitellään myös sijainteina, kun täytät, kuten versiossa 1.',
+        'Piilotetut sijaintimerkit siirretään GM-tasolle. Kun niiden heksa paljastetaan, ne palaavat merkkitasolle nimi näkyvissä, ja niiden löytymisestä ilmoitetaan.',
         'Nimeä heksa antaa heksalle nimen ilman merkkiä. Nimi näytetään GM:lle nimilappuna GM-tasolla, ja siitä ilmoitetaan, kun heksa paljastetaan. Jumpgate piirtää GM-tason etualan tason alle, joten Jumpgatessa nimilaput näkyvät vain, kun Heksataso-asetuksena on merkkitaso.',
         'Ilmoita löydöt valitsee, näkevätkö ilmoituksen kaikki, vain GM vai ei kukaan. Pingaa löydöt siirtää lisäksi pelaajien näkymän sijaintiin.',
       ],
