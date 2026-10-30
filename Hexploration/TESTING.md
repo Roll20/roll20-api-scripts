@@ -70,6 +70,9 @@ For the Legacy game, install Hexploration **1.3** first (with PathMath, MatrixMa
 - [ ] A 2 × 2 or 3 × 3 token reveals every hex it covers.
 - [ ] With Line of Sight on, hexes behind a hex drawn with Hex Reveal Distance 0 stay hidden until it is entered.
 - [ ] Glimpse mode: hexes within sight turn see-through; entering them removes them.
+- [ ] Repeat glimpse with Glimpse Colour set to `rgba(140,135,122,0.9)`, `rgb(140,135,122,0.9)` and `#8c877ae6`. In Jumpgate all three give the same see-through colour, drawn as `#8c877ae6`.
+- [ ] Fill with Fill Colour set to `rgba(255,0,0,0.25)`. The hexes are see-through red in both engines.
+- [ ] `!hexploration set` shows a swatch for every colour, including `#rrggbbaa` and `rgba()` colours.
 - [ ] `!hexploration explore` with tokens selected reveals around them.
 - [ ] An NPC with player-visible name and bars moved under a hex shows neither to players; revealing its hex restores them. `set hideCoveredTokens off` restores every hidden token.
 - [ ] A TokenMod move (`!token-mod --set left|+70`) reveals hexes.

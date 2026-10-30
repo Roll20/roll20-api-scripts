@@ -80,10 +80,10 @@ The version 1 commands still work, including the `Hexploration_menu` macro:
 | Key                 | Setting              | Default              | Per page | Description                                                                    |
 | ------------------- | -------------------- | -------------------- | -------- | ------------------------------------------------------------------------------ |
 | `hexLayer`          | Hex Layer            | `auto`               |          | `auto`, `foreground` or `objects`. Auto tries the foreground layer first.      |
-| `fillColor`         | Fill Colour          | `#222222`            |          | Colour of new hexes. `rgba()` makes see-through hexes.                         |
+| `fillColor`         | Fill Colour          | `#222222`            |          | Colour of new hexes. A colour with transparency makes see-through hexes.       |
 | `strokeColor`       | Border Colour        | `#444444`            |          | Outline colour of new hexes.                                                   |
 | `labelColor`        | Label Colour         | `#FFFFFF`            |          | Colour of GM-only name labels.                                                 |
-| `glimpseColor`      | Glimpse Colour       | `rgba(34,34,34,0.5)` |          | Colour of glimpsed hexes.                                                      |
+| `glimpseColor`      | Glimpse Colour       | `rgba(34,34,34,0.5)` |          | Colour of glimpsed hexes. Use a colour with transparency.                      |
 | `strokeWidth`       | Border Width         | `1`                  |          | Outline width in pixels (0–20).                                                |
 | `maxDistance`       | Hex Reveal Distance  | none                 |          | Stored on new hexes; they reveal only from within this many hexes.             |
 | `revealDistance`    | Sight Distance       | `1`                  | ✓        | Hexes revealed around a moving token (0–20).                                   |
@@ -99,6 +99,26 @@ The version 1 commands still work, including the `Hexploration_menu` macro:
 **Hex Layer**, **Tokens That Reveal** and **Language** can also be set on the Mod's settings page in the API Scripts screen.
 
 Games upgraded from version 1 keep their colours, border width and sight distance.
+
+### Colours
+
+The colour settings accept:
+
+| Format              | Example                | Transparency                         |
+| ------------------- | ---------------------- | ------------------------------------ |
+| `#rrggbb` or `#rgb` | `#222222`              | None                                 |
+| `#rrggbbaa`         | `#22222280`            | The last pair, from `00` to `ff`     |
+| `rgb(r,g,b)`        | `rgb(34,34,34)`        | None                                 |
+| `rgba(r,g,b,a)`     | `rgba(34,34,34,0.5)`   | `a`, from `0` (clear) to `1` (solid) |
+| Colour names        | `black`, `transparent` | `transparent` only                   |
+
+The red, green and blue values run from 0 to 255 or 0% to 100%. An `rgb()` with a fourth value is read as `rgba()`.
+
+Use a colour with transparency for **Glimpse Colour**, and for **Fill Colour** if you want see-through hexes. For example, `rgba(0,0,0,0.8)` and `#000000cc` are the same dark, mostly solid colour.
+
+Jumpgate ignores `rgb()` and `rgba()` colours on drawn shapes, so Hexploration converts the fill, border and glimpse colours of Jumpgate hexes to `#rrggbb` or `#rrggbbaa`. For example, `rgba(34,34,34,0.5)` is drawn as `#22222280`. The setting keeps the colour as you typed it, and Legacy games use it unchanged. Colour names cannot be converted, so in Jumpgate use a hex, `rgb()` or `rgba()` colour instead of a name.
+
+The swatch next to each colour on the settings card shows the colour with its transparency.
 
 ## Jumpgate and Legacy
 
