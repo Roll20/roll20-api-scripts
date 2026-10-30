@@ -236,7 +236,10 @@ export function fillCells(ctx, cells, { sources = [], kind, onDone }) {
 
       const token = locations.get(key);
       if (token && !hex.iconId) {
-        record.icons.push({ id: token.get('_id'), layer: token.get('layer') });
+        // Remember a Mark Location token so undo can mark it again
+        const id = token.get('_id');
+        const pending = getPendingLocations(ctx.pageId).includes(id);
+        record.icons.push({ id, layer: token.get('layer'), pending });
         attachIcon(hex, token);
         summary.icons++;
       }
@@ -320,7 +323,7 @@ export function undoLastFill() {
     }
   }
 
-  for (const { id, layer } of record.icons || []) {
+  for (const { id, layer, pending } of record.icons || []) {
     const token = getObj('graphic', id);
     if (token) {
       for (const hex of getPageHexes(record.pageId)) {
@@ -329,6 +332,10 @@ export function undoLastFill() {
         }
       }
       token.set('layer', layer || LAYER_TOKEN);
+      // Hiding it used up its Mark Location; mark it again so the next fill hides it
+      if (pending) {
+        setPendingLocation(id, record.pageId);
+      }
     }
   }
 

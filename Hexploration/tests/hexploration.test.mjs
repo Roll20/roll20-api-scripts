@@ -391,6 +391,17 @@ describe('locations', () => {
     );
   });
 
+  it('keeps a marked location after undoing the fill that hid it', () => {
+    const game = readyGame();
+    const tower = addToken(game, JG_V, 3, 3, { name: 'Old Tower', controlledby: '' });
+    game.command('!hexploration mark', [tower]);
+    game.command('!hexploration fill', [drawRect(game, 0, 0, 700, 500)]);
+    game.command('!hexploration undo');
+    assert.equal(tower.attrs.layer, 'objects');
+    game.command('!hexploration fill', [drawRect(game, 0, 0, 700, 500)]);
+    assert.equal(tower.attrs.layer, 'gmlayer', 'hidden again by the next fill');
+  });
+
   it('honours the v1 white-tower marker', () => {
     const game = readyGame();
     const tower = addToken(game, JG_V, 2, 2, {
