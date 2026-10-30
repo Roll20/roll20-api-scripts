@@ -130,6 +130,26 @@ export function toPathV2Color(raw) {
 }
 
 /**
+ * Converts a colour to a form Roll20 chat keeps in inline styles. Chat drops
+ * #rrggbbaa colours and rgb() with an alpha value, leaving the style empty;
+ * #rrggbb and rgba() survive. Colour names are returned unchanged.
+ *
+ * @param {*} raw Colour text.
+ * @returns {string} Colour for chat HTML.
+ */
+export function toChatColor(raw) {
+  const color = parseColor(raw);
+  if (!color) {
+    return toText(raw);
+  }
+  if (color.a >= 1) {
+    return toPathV2Color(raw);
+  }
+  const [r, g, b] = [color.r, color.g, color.b].map(Math.round);
+  return `rgba(${r},${g},${b},${Math.round(color.a * 100) / 100})`;
+}
+
+/**
  * Clamps a number into a range.
  *
  * @param {number} value Value.

@@ -17,7 +17,7 @@ import {
   COLOR_WARNING_TEXT,
   SCRIPT_NAME,
 } from './constants.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, toChatColor } from './utils.js';
 
 const CHAT_CARD_STYLE = [
   'width:100%',
@@ -279,5 +279,5 @@ export function buildRow(label, valueHtml) {
  */
 export function buildSwatch(color) {
   const safe = escapeHtml(color);
-  return `<span style="display:inline-block;width:12px;height:12px;vertical-align:middle;border:1px solid #888;background:${safe}"></span> <code>${safe}</code>`;
+  return `<span style="display:inline-block;width:12px;height:12px;vertical-align:middle;border:1px solid #888;background:${escapeHtml(toChatColor(color))}"></span> <code>${safe}</code>`;
 }
