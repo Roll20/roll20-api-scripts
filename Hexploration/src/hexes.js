@@ -26,6 +26,7 @@ import {
   findLocationTokens,
   getHexIcon,
   removeLabel,
+  repairLabelFont,
 } from './locations.js';
 import {
   createHexPath,
@@ -459,6 +460,7 @@ export function rescanPage(ctx) {
     const [cx, cy] = hexToPixel(ctx.grid, row, col);
     const hex = getHex(ctx.pageId, hexKey(row, col));
     if (hex && !hex.nameId && Math.hypot(x - cx, y - cy) <= RESCAN_LABEL_TOLERANCE) {
+      repairLabelFont(text);
       hex.nameId = text.get('_id');
       hex.name = String(text.get('text') || '').trim() || hex.name;
       counts.labels++;

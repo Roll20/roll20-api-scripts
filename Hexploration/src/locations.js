@@ -4,7 +4,14 @@
 // icon (a token hidden on the GM layer). Both are announced when the hex is
 // revealed, and the icon is moved back to the token layer.
 
-import { LAYER_GM, LAYER_TOKEN, LOCATION_MARKER, MAX_NAME_LENGTH } from './constants.js';
+import {
+  LABEL_FONT_FAMILY,
+  LABEL_FONT_SIZE,
+  LAYER_GM,
+  LAYER_TOKEN,
+  LOCATION_MARKER,
+  MAX_NAME_LENGTH,
+} from './constants.js';
 import { hexKey, hexToPixel, pixelToHex } from './grid.js';
 import {
   getConfig,
@@ -51,6 +58,43 @@ export function removeLabel(hex) {
 }
 
 /**
+ * Gives a name label a font Jumpgate can draw. A text created through the API
+ * without one gets the font "unset", and Jumpgate stops drawing the whole
+ * tabletop ("Something Went Wrong") when it meets it. Labels made by 2.0.0 and
+ * 2.0.1 have that font.
+ *
+ * @param {object} text Roll20 text object.
+ * @returns {boolean} Whether the font was changed.
+ */
+export function repairLabelFont(text) {
+  const font = toText(text.get('font_family'));
+  if (font && font !== 'unset') {
+    return false;
+  }
+  text.set('font_family', LABEL_FONT_FAMILY);
+  return true;
+}
+
+/**
+ * Repairs the font of every name label Hexploration knows about.
+ *
+ * @param {string[]} pageIds Pages with hexes.
+ * @returns {number} Number of labels repaired.
+ */
+export function repairLabelFonts(pageIds) {
+  let count = 0;
+  for (const pageId of pageIds) {
+    for (const hex of getPageHexes(pageId)) {
+      const text = hex.nameId ? getObj('text', hex.nameId) : null;
+      if (text && repairLabelFont(text)) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+/**
  * Sets or clears a hex's name and redraws its GM-layer label.
  *
  * @param {object} ctx Page context.
@@ -74,6 +118,8 @@ export function setHexName(ctx, hex, name) {
     top: y,
     text: clean,
     color: getConfig().labelColor,
+    font_family: LABEL_FONT_FAMILY,
+    font_size: LABEL_FONT_SIZE,
   });
   if (label) {
     hex.nameId = label.get('_id');

@@ -411,6 +411,8 @@ describe('locations', () => {
     game.command('!hexploration name <b>Cave</b>', [hex]);
     const label = game.ofType('text')[0];
     assert.equal(label.attrs.layer, 'gmlayer');
+    // Jumpgate stops drawing the tabletop when a text has no font
+    assert.equal(label.attrs.font_family, 'Arial');
     const hero = addToken(game, JG_V, 2, 1);
     game.move(hero, ...hexToPixel(JG_V, 2, 3));
     const announcement = game.chat.find((c) => /Location Discovered/.test(c.text));
@@ -432,6 +434,20 @@ describe('locations', () => {
 });
 
 describe('maintenance', () => {
+  it('gives name labels from earlier versions a font on startup', () => {
+    const first = readyGame();
+    first.command('!hexploration fill', [drawRect(first, 0, 0, 700, 500)]);
+    const hex = first.objects.get(first.hexState().pages.page1.hexes['2,3'].id);
+    first.command('!hexploration name Cave', [hex]);
+    const label = first.ofType('text')[0];
+    // As 2.0.0 and 2.0.1 made it
+    label.attrs.font_family = 'unset';
+    // Restart the sandbox with the same objects and state
+    first.ready();
+    assert.equal(label.attrs.font_family, 'Arial');
+    assert.ok(first.logs.some((line) => /gave 1 hex name label/.test(line)));
+  });
+
   it('forgets hexes deleted by hand', () => {
     const game = readyGame();
     game.command('!hexploration fill', [drawRect(game, 0, 0, 400, 400)]);

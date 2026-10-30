@@ -52,6 +52,10 @@ export const PATH_TYPE_LEGACY = 'path';
 export const PATH_TYPE_V2 = 'pathv2';
 export const PATH_TYPES = [PATH_TYPE_V2, PATH_TYPE_LEGACY];
 
+// Font for hex name labels. Jumpgate cannot draw a text without a font.
+export const LABEL_FONT_FAMILY = 'Arial';
+export const LABEL_FONT_SIZE = 16;
+
 // Status marker v1 used to flag location tokens. Still honoured as a fallback.
 export const LOCATION_MARKER = 'white-tower';
 

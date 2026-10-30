@@ -118,7 +118,8 @@ export function createSandbox({
       if (type === 'pathv2' && !jumpgate) {
         return undefined;
       }
-      const obj = new Obj(type, attrs);
+      // Roll20 gives a text made without a font the font "unset", which Jumpgate cannot draw.
+      const obj = new Obj(type, type === 'text' ? { font_family: 'unset', ...attrs } : attrs);
       if (attrs.layer === 'foreground' && !foreground) {
         obj.attrs.layer = 'objects';
       }

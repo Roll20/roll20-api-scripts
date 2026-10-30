@@ -11,7 +11,7 @@ import { refreshPage, refreshToken } from './cover.js';
 import { pruneMissingHexes } from './hexes.js';
 import { t } from './i18n.js';
 import { installHandouts } from './journals.js';
-import { removeLabel } from './locations.js';
+import { removeLabel, repairLabelFonts } from './locations.js';
 import { revealAroundToken, handleTokenChange } from './reveal.js';
 import {
   applyGlobalConfig,
@@ -143,6 +143,10 @@ function checkInstall() {
   const migratedFrom = initialiseState();
   applyGlobalConfig();
   const pruned = pruneMissingHexes();
+  const repairedLabels = repairLabelFonts(getPageIds());
+  if (repairedLabels > 0) {
+    log(`${SCRIPT_NAME}: gave ${repairedLabels} hex name label(s) a font Jumpgate can draw.`);
+  }
   for (const pageId of new Set([
     ...getPageIds(),
     ...Object.values(getCoveredTokens()).map((entry) => entry.pageId),
