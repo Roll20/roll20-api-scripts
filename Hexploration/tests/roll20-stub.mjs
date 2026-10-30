@@ -40,9 +40,24 @@ export function createSandbox({
     }
   };
 
+  // Jumpgate keeps a pathv2's old fill or stroke when given rgb(), rgba() or
+  // other forms it does not accept; #rrggbb and #rrggbbaa work.
+  const dropRejectedColors = (type, attrs) => {
+    if (type !== 'pathv2') {
+      return attrs;
+    }
+    const kept = { ...attrs };
+    for (const key of ['fill', 'stroke']) {
+      if (key in kept && !/^(#[0-9a-f]{6}([0-9a-f]{2})?|transparent)$/i.test(String(kept[key]))) {
+        delete kept[key];
+      }
+    }
+    return kept;
+  };
+
   class Obj {
     constructor(type, attrs) {
-      this.attrs = { ...attrs, _type: type };
+      this.attrs = { ...dropRejectedColors(type, attrs), _type: type };
       if ('pageid' in this.attrs && !('_pageid' in this.attrs)) {
         this.attrs._pageid = this.attrs.pageid;
       }
@@ -63,7 +78,10 @@ export function createSandbox({
       return this.attrs[`_${key}`];
     }
     set(key, value) {
-      const updates = typeof key === 'object' ? key : { [key]: value };
+      const updates = dropRejectedColors(
+        this.attrs._type,
+        typeof key === 'object' ? key : { [key]: value }
+      );
       const prev = { ...this.attrs };
       Object.assign(this.attrs, updates);
       // Roll20 does not raise change events for API changes.

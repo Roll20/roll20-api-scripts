@@ -11,7 +11,7 @@ import {
 } from './constants.js';
 import { pathToRings, polygonPathProps } from './polygon.js';
 import { getConfig } from './state.js';
-import { isJumpgate } from './utils.js';
+import { isJumpgate, toPathV2Color } from './utils.js';
 
 // Set when the foreground layer turns out to be unavailable, so later hexes
 // go straight to the token layer instead of failing one by one.
@@ -47,6 +47,35 @@ export function getPathObject(id, type = null) {
  */
 export function isPathObject(obj) {
   return !!obj && PATH_TYPES.includes(obj.get('_type'));
+}
+
+/**
+ * Returns a colour in a form the given path type accepts.
+ *
+ * @param {string} color Colour from the settings.
+ * @param {string} type Path type.
+ * @returns {string} Colour to write.
+ */
+export function pathColor(color, type) {
+  return type === PATH_TYPE_V2 ? toPathV2Color(color) : color;
+}
+
+/**
+ * Sets a path's colours, converting them for Jumpgate pathv2 objects.
+ *
+ * @param {object} obj Roll20 path or pathv2.
+ * @param {object} attrs Attributes to set; `fill` and `stroke` are converted.
+ * @returns {void}
+ */
+export function setPathStyle(obj, attrs) {
+  const type = obj.get('_type');
+  const converted = { ...attrs };
+  for (const key of ['fill', 'stroke']) {
+    if (key in converted) {
+      converted[key] = pathColor(converted[key], type);
+    }
+  }
+  obj.set(converted);
 }
 
 /**
@@ -150,8 +179,8 @@ export function createHexPath(pageId, corners, style) {
   const attrs = {
     ...geometry,
     _pageid: pageId,
-    fill: style.fill,
-    stroke: style.stroke,
+    fill: pathColor(style.fill, type),
+    stroke: pathColor(style.stroke, type),
     stroke_width: style.strokeWidth,
     controlledby: '',
   };

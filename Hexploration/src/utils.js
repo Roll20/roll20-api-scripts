@@ -82,6 +82,54 @@ export function isValidColor(raw) {
 }
 
 /**
+ * Parses a hex, rgb() or rgba() colour into its channels.
+ *
+ * @param {*} raw Colour text.
+ * @returns {{r: number, g: number, b: number, a: number}|null} Channels 0–255 and alpha 0–1, or null for other colours such as names.
+ */
+function parseColor(raw) {
+  const text = toText(raw);
+
+  const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(text);
+  if (hex) {
+    const digits = hex[1].length <= 4 ? [...hex[1]].map((c) => c + c).join('') : hex[1];
+    const [r, g, b, a = 255] = digits.match(/../g).map((pair) => parseInt(pair, 16));
+    return { r, g, b, a: a / 255 };
+  }
+
+  const fn =
+    /^rgba?\(\s*([\d.]+%?)\s*,\s*([\d.]+%?)\s*,\s*([\d.]+%?)\s*(?:,\s*([\d.]+%?)\s*)?\)$/i.exec(
+      text
+    );
+  if (!fn) {
+    return null;
+  }
+  const channel = (v) =>
+    clamp(v.endsWith('%') ? (parseFloat(v) * 255) / 100 : parseFloat(v), 0, 255);
+  const alpha =
+    fn[4] === undefined ? 1 : fn[4].endsWith('%') ? parseFloat(fn[4]) / 100 : parseFloat(fn[4]);
+  return { r: channel(fn[1]), g: channel(fn[2]), b: channel(fn[3]), a: clamp(alpha, 0, 1) };
+}
+
+/**
+ * Converts a colour to the #rrggbb or #rrggbbaa form Jumpgate's pathv2 objects
+ * accept. Jumpgate silently ignores rgb(), rgba() and short hex colours, so a
+ * hex keeps its old colour. Colour names are returned unchanged.
+ *
+ * @param {*} raw Colour text.
+ * @returns {string} Colour for a pathv2 fill or stroke.
+ */
+export function toPathV2Color(raw) {
+  const color = parseColor(raw);
+  if (!color) {
+    return toText(raw);
+  }
+  const hex = (n) => Math.round(n).toString(16).padStart(2, '0');
+  const rgb = `#${hex(color.r)}${hex(color.g)}${hex(color.b)}`;
+  return color.a >= 1 ? rgb : `${rgb}${hex(color.a * 255)}`;
+}
+
+/**
  * Clamps a number into a range.
  *
  * @param {number} value Value.

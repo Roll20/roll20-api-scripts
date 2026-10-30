@@ -35,6 +35,7 @@ import {
   readPathProps,
   recreatePath,
   safeRemove,
+  setPathStyle,
 } from './paths.js';
 import { boundingBox, distinctVertices, pointInShape, ringCentre } from './polygon.js';
 import {
@@ -204,7 +205,7 @@ export function fillCells(ctx, cells, { sources = [], kind, onDone }) {
           maxDistance: hex.maxDistance ?? null,
           glimpsed: hex.glimpsed === true,
         });
-        existingPath.set({
+        setPathStyle(existingPath, {
           fill: style.fill,
           stroke: style.stroke,
           stroke_width: style.strokeWidth,
@@ -305,7 +306,7 @@ export function undoLastFill() {
     const hex = getHex(record.pageId, prev.key);
     const path = hex ? getPathObject(hex.id, hex.type) : null;
     if (path) {
-      path.set({ fill: prev.fill, stroke: prev.stroke, stroke_width: prev.strokeWidth });
+      setPathStyle(path, { fill: prev.fill, stroke: prev.stroke, stroke_width: prev.strokeWidth });
       if (Number.isInteger(prev.maxDistance)) {
         hex.maxDistance = prev.maxDistance;
       } else {

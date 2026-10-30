@@ -16,7 +16,7 @@ import {
 import { removeHex } from './hexes.js';
 import { t } from './i18n.js';
 import { getDiscoveryName, getHexIcon } from './locations.js';
-import { getPathObject } from './paths.js';
+import { getPathObject, pathColor } from './paths.js';
 import { getConfig, getHex, getPageHexes, getPageSettings } from './state.js';
 import { escapeHtml, getTokenControllers, runInBatches, toText } from './utils.js';
 
@@ -114,17 +114,26 @@ export function revealHex(ctx, key, settings, { distance = 0, announce = true } 
  */
 export function glimpseHex(ctx, key, distance) {
   const hex = getHex(ctx.pageId, key);
-  if (!hex || hex.glimpsed) {
-    return false;
-  }
-  if (Number.isInteger(hex.maxDistance) && distance > hex.maxDistance) {
+  if (!hex) {
     return false;
   }
   const path = getPathObject(hex.id, hex.type);
   if (!path) {
     return false;
   }
-  path.set('fill', getConfig().glimpseColor);
+  const fill = pathColor(getConfig().glimpseColor, path.get('_type'));
+  if (hex.glimpsed) {
+    // Versions before this fix marked Jumpgate hexes as glimpsed without
+    // changing their colour; repaint them when they are seen again.
+    if (path.get('fill') !== fill) {
+      path.set('fill', fill);
+    }
+    return false;
+  }
+  if (Number.isInteger(hex.maxDistance) && distance > hex.maxDistance) {
+    return false;
+  }
+  path.set('fill', fill);
   hex.glimpsed = true;
   return true;
 }

@@ -232,7 +232,40 @@ describe('revealing', () => {
     const neighbour = game.hexState().pages.page1.hexes['2,4'];
     assert.equal(neighbour.glimpsed, true);
     const path = game.objects.get(neighbour.id);
-    assert.equal(path.attrs.fill, 'rgba(34,34,34,0.5)');
+    // Jumpgate ignores rgba(), so the default glimpse colour is converted.
+    assert.equal(path.attrs.fill, '#22222280');
+  });
+
+  it('converts rgba() hex colours for Jumpgate', () => {
+    const game = readyGame();
+    game.command('!hexploration set fillColor rgba(255,0,0,0.25)');
+    game.command('!hexploration set strokeColor rgb(0,128,255)');
+    game.command('!hexploration fill', [drawRect(game, 0, 0, 300, 300)]);
+    const hexes = game.ofType('pathv2');
+    assert.ok(hexes.length > 0);
+    assert.ok(hexes.every((h) => h.attrs.fill === '#ff000040' && h.attrs.stroke === '#0080ff'));
+  });
+
+  it('repaints Jumpgate hexes glimpsed before the colour fix', () => {
+    const game = readyGame();
+    game.command('!hexploration set revealMode glimpse');
+    game.command('!hexploration fill', [drawRect(game, 0, 0, 700, 500)]);
+    const neighbour = game.hexState().pages.page1.hexes['2,4'];
+    neighbour.glimpsed = true;
+    const token = addToken(game, JG_V, 2, 2);
+    game.move(token, ...hexToPixel(JG_V, 2, 3));
+    assert.equal(game.objects.get(neighbour.id).attrs.fill, '#22222280');
+  });
+
+  it('keeps rgba() glimpse colours in Legacy games', () => {
+    const game = readyGame({ jumpgate: false });
+    game.command('!hexploration set revealMode glimpse');
+    game.command('!hexploration fill', [drawRect(game, 0, 0, 700, 500, false)]);
+    const token = addToken(game, LEGACY_V, 2, 2);
+    game.move(token, ...hexToPixel(LEGACY_V, 2, 3));
+    const neighbour = game.hexState().pages.page1.hexes['2,4'];
+    assert.equal(neighbour.glimpsed, true);
+    assert.equal(game.objects.get(neighbour.id).attrs.fill, 'rgba(34,34,34,0.5)');
   });
 
   it('reveals through the public API and the explore command', () => {
