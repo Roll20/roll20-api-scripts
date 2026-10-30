@@ -3179,15 +3179,23 @@ Thanks to: The Aaron for helping with figuring out the statblock parsing. Vince 
                 if((index =_.indexOf(tIDs,token.id))>-1){
                     if(_.every([1,2,3],(n)=>{return _.isEmpty(token.get('bar'+n+'_link'))})){
                         character = getObj('character',token.get('represents'));
-                        if(character){
-                            var tokenNames = _.chain(findObjs({type:'graphic',represents:character.id,pageid:token.get('pageid')}))
+                        // A new token has no bar links yet when it is created, so the check above
+                        // also matches PCs and unique NPCs. Skip characters controlled by a player
+                        // and characters whose default token has a linked bar (not mooks).
+                        if(character && _.isEmpty(character.get('controlledby'))){
+                            character.get('_defaulttoken',(raw)=>{
+                                var dt;
+                                try{ dt = !_.isEmpty(raw) ? JSON.parse(raw) : {}; }catch(e){ dt = {}; }
+                                if(!_.every([1,2,3],(n)=>{return _.isEmpty(dt['bar'+n+'_link'])})) return;
+                                var tokenNames = _.chain(findObjs({type:'graphic',represents:character.id,pageid:token.get('pageid')}))
                                     .reject((t)=>{return t.id===token.id})
                                     .map((t)=>{return t.get('name').replace(character.get('name')+' ','')*1 || 0})
                                     .reject((t)=>{return _.isNull(t)})
                                     .value(),
-                                number;
-                            number = _.isEmpty(tokenNames) ? 1 : _.max(tokenNames)+ 1;
-                            token.set('name',character.get('name')+' '+number);
+                                    number;
+                                number = _.isEmpty(tokenNames) ? 1 : _.max(tokenNames)+ 1;
+                                token.set('name',character.get('name')+' '+number);
+                            });
                         }
                     }
                     tIDs.splice(index,1);
