@@ -1,31 +1,135 @@
 {
-    "name": "TokenController",
-    "script": "TokenController.js",
-    "version": "4.0.1",
-    "previousversions": ["4.0.0"],
-    "description": "# Token Controller\n\rBring your scene to life with simple but dynamic patrol pathing. Select a pre-defined path or quickly create your own (not map or position dependent, just works with grids), select a token, and click start. Tokens may have multiple paths assigned to them at a time, allowing for intricate path layering. Version 2 will have a Path Building tool!",
-    "authors": "Developesque",
-    "roll20userid": "6975764",
-    "useroptions": [],
-    "dependencies": [
-        "HTML Builder"
-    ],
-    "modifies": {
-        "state.TokenController.module": "read,write",
-        "state.TokenController.schemaVersion": "read,write",
-        "state.TokenController.resets": "read,write",
-        "state.TokenController.storedVariables.paths.name": "read,write",
-        "state.TokenController.storedVariables.paths.path": "read,write",
-        "state.TokenController.storedVariables.activeTokenPaths.tokenId": "read,write",
-        "state.TokenController.storedVariables.activeTokenPaths.pathName": "read,write",
-        "state.TokenController.storedVariables.activeTokenPaths.step": "read,write",
-        "state.TokenController.storedVariables.activeTokenPaths.initialLeft": "read,write",
-        "state.TokenController.storedVariables.activeTokenPaths.initialTop": "read,write",
-        "state.TokenController.storedVariables.interval": "read,write",
-        "state.TokenController.storedVariables.hideCommands": "read,write",
-        "token.top": "read,write",
-        "token.left": "read,write"
+  "name": "TokenController",
+  "script": "TokenController.js",
+  "version": "5.0.0",
+  "previousversions": [
+    "1.0.0",
+    "2.1.1",
+    "2.1.3",
+    "2.2.0",
+    "3.0.0",
+    "4.0.0",
+    "4.0.1"
+  ],
+  "description": "# TokenController\n\nBring your maps to life: guards walk their rounds, carts follow their drivers and statues stay put.\n\n**Version 5.0.0 is a full rewrite that works in Jumpgate and in Legacy games.** It no longer needs HTML Builder. Version 4 paths, patrols, locks, followers, macros and `!tc` commands keep working.\n\n## Getting started\n\n1. Open the **TokenController - Command Deck** handout, or type `!tokencontroller`.\n2. Click **Examples** to add ready-made routes, or **Step Code** to type one (for example `U2R2D2L2`).\n3. Select tokens and click **Start** next to a route.\n\nType `!tokencontroller help` for every command. The **TokenController - Help** handout (GM only) is created in the Journal on startup.\n\n## Features\n\n* Routes from step codes (with diagonals, waits and stealth), from drawings on the map (Jumpgate `pathv2` and Legacy `path`), or recorded by moving a token with buttons or by dragging it.\n* Square, hex (V and H), isometric, dimetric and gridless pages, with the cell size read from each page and a calibration tool.\n* Loop, back-and-forth and run-once routes, each with its own speed, token limit, random start and fixed start.\n* Followers walk single file or keep formation, and can follow patrols, dragged tokens and tokens moved by TokenMod.\n* Locks use Roll20's own position lock, or undo moves, or simply hold a token still.\n* Patrols pause, move each turn or carry on in combat, detected from the turn tracker, a GM switch or both.\n* Short replies instead of a menu after every action, a Command Deck handout and a GM-only Help handout.\n* Works with Hexploration: patrolling tokens reveal hexes as they move.\n* Translated into 24 languages.\n\nOriginal Mod by Developesque. Version 5 is maintained by MidNiteShadow7.",
+  "authors": "Developesque, MidNiteShadow7",
+  "roll20userid": "6975764, 16506286",
+  "patreon": "https://www.patreon.com/Developesque",
+  "useroptions": [
+    {
+      "name": "movement",
+      "displayname": "Movement",
+      "type": "select",
+      "options": [
+        "cell",
+        "segment"
+      ],
+      "default": "cell",
+      "description": "cell moves tokens one cell per step; segment moves a whole step of a route (such as U3) at once, as version 4 did."
     },
-    "conflicts": [],
-    "patreon": "https://www.patreon.com/Developesque"
+    {
+      "name": "facing",
+      "displayname": "Turn Tokens",
+      "type": "select",
+      "options": [
+        "off",
+        "up",
+        "down",
+        "left",
+        "right"
+      ],
+      "default": "off",
+      "description": "Turn tokens to face where they are going: off, or the way the token art faces."
+    },
+    {
+      "name": "combatDetection",
+      "displayname": "Combat Detection",
+      "type": "select",
+      "options": [
+        "both",
+        "tracker",
+        "manual"
+      ],
+      "default": "both",
+      "description": "How combat is noticed: the turn tracker (open with someone in it), the GM's Combat On/Off switch, or both."
+    },
+    {
+      "name": "combatBehaviour",
+      "displayname": "Combat Behaviour",
+      "type": "select",
+      "options": [
+        "pause",
+        "step",
+        "ignore"
+      ],
+      "default": "pause",
+      "description": "What patrols do in combat: pause, step (move once each time the turn passes) or ignore (keep moving)."
+    },
+    {
+      "name": "lockMode",
+      "displayname": "Lock Mode",
+      "type": "select",
+      "options": [
+        "native",
+        "revert",
+        "freeze"
+      ],
+      "default": "native",
+      "description": "How Lock holds a token: native (Roll20's own position lock), revert (moves are undone) or freeze (it stops patrolling and following but can still be dragged)."
+    },
+    {
+      "name": "followMode",
+      "displayname": "Follow Mode",
+      "type": "select",
+      "options": [
+        "trail",
+        "formation"
+      ],
+      "default": "trail",
+      "description": "trail: followers walk single file in the leader's footsteps. formation: followers keep their place around the leader."
+    },
+    {
+      "name": "language",
+      "displayname": "Language",
+      "type": "select",
+      "options": [
+        "af",
+        "ca",
+        "zh-TW",
+        "cs",
+        "da",
+        "nl",
+        "en-US",
+        "fi",
+        "fr",
+        "de",
+        "el",
+        "he",
+        "hu",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-PT",
+        "pt-BR",
+        "ru",
+        "es",
+        "sv",
+        "tr",
+        "uk"
+      ],
+      "default": "en-US",
+      "description": "Language code for GM messages, menus and handouts. Run !tokencontroller set language to see all supported codes."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "graphic": "read,write",
+    "path": "read",
+    "pathv2": "read",
+    "page": "read",
+    "campaign.turnorder": "read",
+    "handouts": "read,write"
+  },
+  "conflicts": []
 }
