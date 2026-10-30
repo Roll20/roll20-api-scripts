@@ -308,7 +308,7 @@ const TRANSLATION = {
         'Marker sted forvandler de valgte tokens til skjulte steder. Et token, der allerede ligger under et hexfelt, skjules med det samme; ellers skjules det af den næste fyldning, der dækker det.',
         'Tokens med det hvide tårns statusmarkør behandles også som placeringer, når du udfylder, som i version 1.',
         'Skjulte placeringstokens flyttes til GM-laget. Når deres hex afsløres, vender de tilbage til token-laget med deres navn vist, og deres opdagelse annonceres.',
-        'Navngiv hexfelt giver et hexfelt et navn uden et token. Navnet vises for GM som en etiket på GM-laget og annonceres, når hexfeltet afsløres.',
+        'Navngiv hexfelt giver et hexfelt et navn uden et token. Navnet vises for GM som en etiket på GM-laget og annonceres, når hexfeltet afsløres. Jumpgate tegner GM-laget under forgrundslaget, så i Jumpgate vises etiketterne kun, når Lag for hexfelter er sat til tokenlaget.',
         'Annoncer opdagelser bestemmer, om alle, kun GM eller ingen ser meddelelsen. Ping opdagelser flytter desuden spillernes visning hen til stedet.',
       ],
     },

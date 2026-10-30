@@ -312,7 +312,7 @@ const TRANSLATION = {
         "Merk ligging verander die geselekteerde tokens in versteekte liggings. 'n Token wat reeds onder 'n seshoek is, word dadelik versteek; anders word dit versteek deur die volgende vulling wat dit bedek.",
         'Tokens met die wittoring-statusmerker word ook as liggings hanteer wanneer jy vul, soos in weergawe 1.',
         'Versteekte liggingtokens word na die GM-laag geskuif. Wanneer hul seshoek onthul word, keer hulle terug na die tokenlaag met hul naam sigbaar, en hul ontdekking word aangekondig.',
-        "Benoem seshoek gee 'n seshoek 'n naam sonder 'n token. Die naam word aan die GM gewys as 'n etiket op die GM-laag en aangekondig wanneer die seshoek onthul word.",
+        "Benoem seshoek gee 'n seshoek 'n naam sonder 'n token. Die naam word aan die GM gewys as 'n etiket op die GM-laag en aangekondig wanneer die seshoek onthul word. Jumpgate teken die GM-laag onder die voorgrondlaag, dus is die etikette in Jumpgate slegs sigbaar wanneer Seshoeklaag op die tokenlaag gestel is.",
         'Announce Discoveries kies of almal, net die GM, of niemand die aankondiging sien nie. Ping Discoveries skuif ook die spelers se uitsig na die ligging.',
       ],
     },

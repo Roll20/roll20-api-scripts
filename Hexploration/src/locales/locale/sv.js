@@ -307,7 +307,7 @@ const TRANSLATION = {
         'Markera plats förvandlar de valda tokens till dolda platser. En token redan under en hex döljs direkt; annars döljs den av nästa fyllning som täcker den.',
         'Tokens med statusmarkören för det vita tornet behandlas också som platser när du fyller, som i version 1.',
         'Dolda platssymboler flyttas till GM-lagret. När deras hex avslöjas återvänder de till tokenlagret med deras namn visat, och deras upptäckt tillkännages.',
-        'Namnge hex ger en hex ett namn utan en token. Namnet visas för GM som en etikett på GM-lagret och tillkännages när hexen avslöjas.',
+        'Namnge hex ger en hex ett namn utan en token. Namnet visas för GM som en etikett på GM-lagret och tillkännages när hexen avslöjas. Jumpgate ritar GM-lagret under förgrundslagret, så i Jumpgate syns etiketterna bara när Lager för hexar är inställt på tokenlagret.',
         'Tillkännage upptäckter väljer om alla, bara GM eller ingen ser tillkännagivandet. Pinga upptäckter flyttar också spelarnas vy till platsen.',
       ],
     },

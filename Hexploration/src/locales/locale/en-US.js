@@ -306,7 +306,7 @@ export default {
         'Mark Location turns the selected tokens into hidden locations. A token already under a hex is hidden straight away; otherwise it is hidden by the next fill that covers it.',
         'Tokens with the white-tower status marker are also treated as locations when you fill, as in version 1.',
         'Hidden location tokens are moved to the GM layer. When their hex is revealed they return to the token layer with their name shown, and their discovery is announced.',
-        'Name Hex gives a hex a name without a token. The name is shown to the GM as a label on the GM layer and announced when the hex is revealed.',
+        'Name Hex gives a hex a name without a token. The name is shown to the GM as a label on the GM layer and announced when the hex is revealed. Jumpgate draws the GM layer below the foreground layer, so in Jumpgate the labels only show when Hex Layer is set to the token layer.',
         'Announce Discoveries chooses whether everyone, only the GM, or nobody sees the announcement. Ping Discoveries also moves the players’ view to the location.',
       ],
     },

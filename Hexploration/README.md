@@ -100,7 +100,7 @@ Glimpsed hexes do not block Line of Sight.
 | `hexLayer`          | Hex Layer            | `auto`               |          | `auto`, `foreground` or `objects`. Auto tries the foreground layer first.                                                                                             |
 | `fillColor`         | Fill Colour          | `#222222`            |          | Colour of new hexes. A colour with transparency makes see-through hexes.                                                                                              |
 | `strokeColor`       | Border Colour        | `#444444`            |          | Outline colour of new hexes.                                                                                                                                          |
-| `labelColor`        | Label Colour         | `#FFFFFF`            |          | Colour of GM-only name labels.                                                                                                                                        |
+| `labelColor`        | Label Colour         | `#FFFFFF`            |          | Colour of GM-only name labels. In Jumpgate they only show over covered hexes when Hex Layer is `objects`.                                                             |
 | `glimpseColor`      | Glimpse Colour       | `rgba(34,34,34,0.5)` |          | Colour of glimpsed hexes. Use a colour with transparency.                                                                                                             |
 | `strokeWidth`       | Border Width         | `1`                  |          | Outline width in pixels (0–20).                                                                                                                                       |
 | `maxDistance`       | Hex Reveal Distance  | none                 |          | Stored on hexes as they are filled; they reveal only from within this many hexes. Set it before filling. See [Terrain That Blocks Sight](#terrain-that-blocks-sight). |
@@ -143,6 +143,7 @@ The swatch next to each colour on the settings card shows the colour with its tr
 - Hexploration detects the engine and draws `pathv2` shapes in Jumpgate and `path` shapes in Legacy games. Shapes drawn in either editor can be filled.
 - With **Hex Layer** on `auto`, hexes go on the foreground layer, above tokens. If the game rejects that layer, the token layer is used instead and the GM is told.
 - Jumpgate draws regular hexes, which differ slightly from Legacy's. If hexes do not line up with a page's grid, snap a token to a hex centre, select it and run `!hexploration calibrate`. Select two tokens in neighbouring hexes of the same row (Hex V) or column (Hex H) to correct the hex size as well.
+- Name Hex labels sit on the GM layer, which Jumpgate draws below the foreground layer. With hexes on the foreground layer, the labels are hidden under them; set Hex Layer to `objects` to see them. Each name is still announced when its hex is revealed.
 - Copying a page or game gives its hexes new IDs. Run `!hexploration rescan` on the page to pick them up again, together with their name labels and location tokens.
 
 ## API for Other Mods

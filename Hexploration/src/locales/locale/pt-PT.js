@@ -312,7 +312,7 @@ const TRANSLATION = {
         'Marcar local transforma as fichas selecionadas em locais escondidos. Uma ficha que já esteja sob um hexágono é ocultada imediatamente; caso contrário, ficará oculta pelo próximo preenchimento que a cobrir.',
         'Os tokens com o marcador de estado da torre branca também são tratados como locais quando preenche, como na versão 1.',
         'As fichas de localização oculta são movidas para a camada GM. Quando o seu hexágono é revelado, regressam à camada de token com o seu nome mostrado e a sua descoberta é anunciada.',
-        'Nomear hexágono dá um nome a um hexágono sem precisar de uma ficha. O nome é mostrado ao GM como uma etiqueta na camada do GM e anunciado quando o hexágono é revelado.',
+        'Nomear hexágono dá um nome a um hexágono sem precisar de uma ficha. O nome é mostrado ao GM como uma etiqueta na camada do GM e anunciado quando o hexágono é revelado. O Jumpgate desenha a camada do GM por baixo da camada de primeiro plano, pelo que no Jumpgate as etiquetas só aparecem quando a opção Camada dos hexágonos está definida como camada de fichas.',
         'Anunciar descobertas escolhe se todos, apenas o GM ou ninguém vê o anúncio. Pingar descobertas também move a vista dos jogadores para o local.',
       ],
     },

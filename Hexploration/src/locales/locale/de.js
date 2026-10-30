@@ -320,7 +320,7 @@ const TRANSLATION = {
         '„Standort markieren“ verwandelt die ausgewählten Token in versteckte Standorte. Ein Token, der bereits unter einem Hexfeld liegt, wird sofort versteckt; andernfalls wird er von der nächsten Füllung versteckt, die ihn bedeckt.',
         'Token mit der Statusmarkierung „Weißer Turm“ werden beim Ausfüllen ebenfalls als Orte behandelt, wie in Version 1.',
         'Versteckte Standortmarker werden auf die GM-Ebene verschoben. Wenn ihr Hexfeld aufgedeckt wird, kehren sie mit angezeigtem Namen zur Spielsteinebene zurück und ihre Entdeckung wird bekannt gegeben.',
-        '„Hexfeld benennen“ gibt einem Hexfeld einen Namen ohne Token. Der Name wird dem GM als Beschriftung auf der GM-Ebene angezeigt und angekündigt, wenn das Hexfeld aufgedeckt wird.',
+        '„Hexfeld benennen“ gibt einem Hexfeld einen Namen ohne Token. Der Name wird dem GM als Beschriftung auf der GM-Ebene angezeigt und angekündigt, wenn das Hexfeld aufgedeckt wird. Jumpgate zeichnet die GM-Ebene unterhalb der Vordergrundebene, daher sind die Beschriftungen in Jumpgate nur sichtbar, wenn „Hexfeld-Ebene“ auf die Token-Ebene gesetzt ist.',
         '„Entdeckungen ankündigen“ legt fest, ob alle, nur der GM oder niemand die Ankündigung sieht. „Entdeckungen anpingen“ verschiebt außerdem die Ansicht der Spieler zum Standort.',
       ],
     },
