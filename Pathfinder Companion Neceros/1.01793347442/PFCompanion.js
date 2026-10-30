@@ -1410,10 +1410,12 @@ Thanks to: The Aaron for helping with figuring out the statblock parsing. Vince 
     },
     
     applyStatus = function(character,status,state,mook){
-        var graphic = mook ? character : findObjs({type:'graphic',represents:character.id})[0];
-        if(!graphic){return}
-        graphic.set('status_'+status,state);
-        mook ? undefined : updateAllTokens(character,graphic);
+        // Set the marker on every token of the character. Do not call updateAllTokens here:
+        // it saved the first token found (possibly an old copy on another page) as the default
+        // token and copied its bars and name onto every other token, resetting their HP
+        // whenever a condition changed.
+        var graphics = mook ? [character] : findObjs({type:'graphic',represents:character.id});
+        _.each(graphics,(g)=>{ if(g){ g.set('status_'+status,state); } });
     },
     
     mapBars = function(graphic,character){
