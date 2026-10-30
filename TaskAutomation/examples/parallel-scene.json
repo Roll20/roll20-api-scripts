@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "id": "parallel-scene",
+  "revision": 1,
+  "name": "Parallel scene",
+  "description": "Fade the \"Ambience\" jukebox track in steps while a door token changes after a wait; when both finish, chain Scene cleanup.",
+  "enabled": true,
+  "parameters": {
+    "track": {
+      "type": "string",
+      "default": "Ambience",
+      "maxLength": 100
+    }
+  },
+  "bindings": {
+    "door": {
+      "from": "selected",
+      "objectType": "graphic",
+      "max": 1
+    }
+  },
+  "access": {
+    "mode": "gmOnly",
+    "authority": "initiator"
+  },
+  "triggers": [
+    {
+      "id": "manual",
+      "type": "manual"
+    }
+  ],
+  "policy": {
+    "concurrency": "skipIfRunning",
+    "maxConcurrent": 1,
+    "onError": "fail",
+    "restart": "reconcile"
+  },
+  "steps": [
+    {
+      "id": "scene",
+      "type": "parallel",
+      "join": "all",
+      "branches": [
+        {
+          "id": "music",
+          "steps": [
+            {
+              "id": "fade",
+              "type": "loop",
+              "mode": "count",
+              "count": 5,
+              "steps": [
+                {
+                  "id": "volume",
+                  "type": "audio.control",
+                  "track": "{{param.track}}",
+                  "op": "volume",
+                  "volume": {
+                    "op": "sub",
+                    "left": 60,
+                    "right": {
+                      "op": "mul",
+                      "left": {
+                        "ref": "run.iteration"
+                      },
+                      "right": 10
+                    }
+                  },
+                  "onError": "skip"
+                },
+                {
+                  "id": "fade-step",
+                  "type": "wait",
+                  "durationMs": 1000
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "door",
+          "steps": [
+            {
+              "id": "door-wait",
+              "type": "wait",
+              "durationMs": 3000
+            },
+            {
+              "id": "door-open",
+              "type": "token.advanceSide",
+              "target": {
+                "binding": "door"
+              },
+              "delta": 1,
+              "wrap": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cleanup",
+      "type": "call",
+      "definition": "scene-cleanup",
+      "await": true,
+      "params": {
+        "track": {
+          "ref": "param.track"
+        }
+      }
+    }
+  ]
+}

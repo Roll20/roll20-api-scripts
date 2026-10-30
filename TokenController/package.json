@@ -1,0 +1,20 @@
+{
+  "name": "tokencontroller-roll20",
+  "version": "5.0.0",
+  "description": "Roll20 API Mod that moves tokens along patrol routes, makes tokens follow each other and locks tokens in place.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "set-version": "node scripts/bump-version.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "format": "prettier --write \"TokenController.js\" \"rollup.config.js\" \"src/**/*.js\" \"tests/**/*.mjs\" \"*.md\" \"scripts/**/*.mjs\"",
+    "sync-locales": "node scripts/sync-locales.mjs",
+    "regenerate-locales": "node scripts/sync-locales.mjs --regenerate"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "rollup": "^4.34.8"
+  }
+}
