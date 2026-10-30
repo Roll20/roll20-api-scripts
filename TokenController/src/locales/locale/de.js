@@ -1,3 +1,512 @@
-const TRANSLATION = {};
+const TRANSLATION = {
+  titles: {
+    ready: 'TokenController ist bereit.',
+    settings: 'TokenController-Einstellungen',
+    help: 'TokenController-Befehle',
+    export: 'Routenexport',
+    routes: 'Routen',
+    tokens: 'Kontrollierte Token',
+    status: 'TokenController-Status',
+  },
+  messages: {
+    migrated:
+      'Von Version 4 aktualisiert. Routen beibehalten: {routes}. Behaltene Patrouillentoken: {patrols}. Ihre alten Makros und !tc-Befehle funktionieren weiterhin.',
+    removedGuide:
+      'Das alte „TokenController Usage Guide“-Handout, das die Spieler sehen konnten, wurde durch das Nur-GM-Hilfe-Handout ersetzt.',
+    pruned: 'Patrouillen vergessen, weil ihre Token nicht mehr existieren: {count}.',
+    readyHint:
+      'Geben Sie !tokencontroller für das Menü ein oder öffnen Sie das Command Deck-Handout.',
+    combatStarted: {
+      pause: 'Der Kampf hat begonnen: Die Patrouillen werden bis zum Ende unterbrochen.',
+      step: 'Der Kampf hat begonnen: Patrouillen bewegen sich in jeder Runde einen Schritt.',
+    },
+    combatEnded: 'Der Kampf ist beendet: Die Patrouillen gehen weiter.',
+    routeAdded: 'Route „{name}“ hinzugefügt ({mode}).',
+    routeUpdated:
+      'Route „{name}“ aktualisiert. Darauf befindliche Token fahren mit der neuen Route fort.',
+    confirmRemove:
+      'Route „{name}“ entfernen? Darauf befinden sich Token, die angehalten werden: {count}.',
+    routeRemoved: 'Route „{name}“ entfernt. Gestoppte Token: {count}.',
+    routeRenamed: 'Route „{from}“ umbenannt in „{to}“.',
+    examplesAdded: 'Beispielrouten hinzugefügt: {count}.',
+    exportHint:
+      'Kopieren Sie den Text unten und fügen Sie ihn nach {command} in ein beliebiges Spiel ein.',
+    imported:
+      'Importierte {added} Routen; übersprungen {skipped} (Name bereits verwendet oder ungültig).',
+    started: '{tokens} begann am „{name}“.',
+    stopped: 'Gestoppte Token: {count}.',
+    reset: 'Die Tokens kehrten dorthin zurück, wo sie begonnen haben: {count}.',
+    locked: 'Gesperrt: {tokens} ({mode}).',
+    unlocked: 'Entsperrt: {tokens}.',
+    leaderSet:
+      '{token} ist der Anführer. Wählen Sie die Follower aus und klicken Sie auf „Folgen“.',
+    following: 'Nun folgt {leader} ({mode}): {tokens}.',
+    unfollowed: 'Token folgen nicht mehr: {count}.',
+    noRecordings: 'Es wird nichts aufgezeichnet.',
+    recordingCancelled: 'Aufnahme „{name}“ abgebrochen.',
+    languages: 'Unterstützte Sprachen: {list}',
+    settingChanged: '{setting} ist jetzt {value}.',
+    combatOn: 'Kampf eingeschaltet.',
+    combatOff: 'Kampf ausgeschaltet.',
+    calibrationCleared: 'Die Gitterkalibrierung wurde von dieser Seite entfernt.',
+    calibrated: 'Raster für diese Seite kalibriert (Zellengröße × {scale}).',
+    paused: 'Alle Patrouillen pausierten.',
+    resumed: 'Die Patrouillen wurden wieder aufgenommen.',
+    journalRebuilt: 'Handouts neu erstellt: {help} und {deck}.',
+  },
+  errors: {
+    noTokens: 'Keine Token ausgewählt.',
+    noRouteName: 'Kein Routenname angegeben.',
+    routeNotFound: 'Es gibt keine Route namens „{name}“.',
+    routeExists: 'Es gibt bereits eine Route namens „{name}“.',
+    code: {
+      empty: 'Der Schrittcode ist leer.',
+      badToken: 'Der Schrittcode „{code}“ hat etwas, das er bei „{at}“ nicht versteht.',
+      tooFar: 'Der Schritt „{at}“ ist zu lang.',
+    },
+    routeInvalid: 'Diese Route konnte nicht gespeichert werden.',
+    usageAdd: 'Geben Sie einen Namen und einen Schrittcode ein.',
+    usageEdit: 'Geben Sie eine Route und einen neuen Schrittcode ein.',
+    selectOneDrawing:
+      'Wählen Sie genau eine Zeichnung aus (eine Linie, ein Polygon, eine Freihandform, ein Rechteck oder eine Ellipse).',
+    drawingEmpty: 'Die ausgewählte Zeichnung enthält zu wenige Punkte, denen gefolgt werden kann.',
+    usageRoute: 'Geben Sie eine Route, eine Option und einen Wert an.',
+    unknownRouteOption: 'Es gibt keine Routenoption namens „{option}“.',
+    selectOneToken: 'Wählen Sie genau einen Token aus.',
+    badRouteValue: '„{value}“ ist kein gültiger Wert für {option}.',
+    usageRename: 'Geben Sie eine Route und ihren neuen Namen ein.',
+    usageCopy: 'Geben Sie eine Route und einen Namen für die Kopie ein.',
+    badJson: 'Das ist kein Routenexporttext.',
+    tokenLocked: '{tokens} kann nicht gestartet werden: gesperrt.',
+    routeOnOtherPage:
+      '{tokens} kann nicht gestartet werden: „{name}“ wurde auf einer anderen Seite gezeichnet.',
+    startOnOtherPage:
+      '{tokens} kann nicht starten: Der feste Anfang von „{name}“ liegt auf einer anderen Seite.',
+    routeFull: '{tokens} kann nicht gestartet werden: „{name}“ verfügt bereits über {max} Token.',
+    noPage: 'Die Seite konnte nicht gefunden werden.',
+    emptyTrack: '{tokens} kann nicht starten: „{name}“ hat keine Züge.',
+    leaderNotFound: 'Auf dieser Seite wurde kein Token mit dem Namen „{name}“ gefunden.',
+    noLeader: 'Es gibt noch keinen Anführer.',
+    followLoop: '{tokens} kann einem Token, das ihnen folgt, nicht folgen.',
+    alreadyRecording: '{token} wird bereits aufgezeichnet.',
+    recordingTokenGone: 'Das Token für die Aufzeichnung „{name}“ existiert nicht mehr.',
+    recordingEmpty: 'Es wurde noch nichts aufgezeichnet.',
+    unknownSetting: 'Es gibt keine Einstellung namens „{key}“.',
+    badSettingValue: '„{value}“ ist kein gültiger Wert für {key}.',
+    calibrateNeedsTokens:
+      'Wählen Sie ein oder zwei Token aus, die an den Zellmitten eingerastet sind.',
+    calibrateFailed:
+      'Die ausgewählten Token konnten nicht zur Kalibrierung des Rasters verwendet werden.',
+    unknownCommand: 'Unbekannter Befehl „{command}“.',
+    gmOnly: 'Nur der GM kann TokenController verwenden.',
+    internal: 'Etwas ist schief gelaufen. Details finden Sie in der API-Konsole.',
+  },
+  hints: {
+    noTokens: 'Wählen Sie zuerst die Token auf der Karte aus.',
+    noRouteName: 'Beispiel: !tokencontroller fügt Guard Walk U2R2D2L2 hinzu',
+    routeNotFound: 'Geben Sie !tokencontroller list ein, um alle Routen anzuzeigen.',
+    code: {
+      empty: 'Zum Beispiel: U2R2D2L2',
+      badToken:
+        'Verwenden Sie U, D, L, R, UL, UR, DL oder DR mit mehreren Zellen, W zum Warten und S zum Stealth.',
+      tooFar:
+        'Ein einzelner Schritt kann höchstens 100 Zellen umfassen; wartet höchstens 100 Ticks.',
+    },
+    selectOneDrawing:
+      'Zeichnen Sie die Route mit einem Zeichenwerkzeug, wählen Sie sie aus (ziehen Sie einen Rahmen um einen dünnen Umriss, wenn Sie darauf klicken, und versuchen Sie es erneut).',
+    usageRoute: 'Optionen: Modus, Intervall, Max, Zufall, Start.',
+    routeOnOtherPage:
+      'Gezeichnete Routen funktionieren nur auf der Seite, auf der sie gezeichnet wurden.',
+    startOnOtherPage:
+      'Löschen Sie den festen Anfang oder verschieben Sie das Token zuerst auf diese Seite.',
+    noLeader:
+      'Wählen Sie den Anführer aus und klicken Sie auf „Anführer“ oder geben Sie seinen Namen ein: !tokencontroller follow Name',
+    leaderNotFound:
+      'Verwenden Sie den Token-Namen genau so, wie er auf der Karte angezeigt wird, oder seine Token-ID.',
+    badJson: 'Fügen Sie den Text aus !tokencontroller export (oder v4 exportpaths) genau ein.',
+    unknownSetting: 'Geben Sie !tokencontroller set ein, um alle Einstellungen anzuzeigen.',
+    calibrateNeedsTokens:
+      'Ein Spielstein richtet das Raster aus; Zwei Spielsteine ​​in benachbarten Zellen einer Zeile legen ebenfalls die Zellengröße fest.',
+    calibrateFailed:
+      'Stellen Sie sicher, dass sich die Token in benachbarten Zellen derselben Zeile (Spalte auf Hex-Seiten (H)) befinden.',
+    unknownCommand: 'Geben Sie !tokencontroller help für die Liste der Befehle ein.',
+    tokenLocked: 'Entsperren Sie zuerst den Token.',
+  },
+  warnings: {
+    offPage:
+      'Ein Teil der Route verläuft außerhalb der Seite (Schritte: {count}). Diese Schritte werden übersprungen.',
+    combatTrackerOnly:
+      'Die Kampferkennung ist auf den Runden-Tracker eingestellt, sodass dieser Schalter keine Wirkung hat, bis Sie ihn ändern.',
+    unitPx:
+      'Version 5 liest die Zellengröße von jeder Seite, sodass die alte Einstellung „Pixel pro Einheit“ nicht mehr verwendet wird. Wenn die Token nicht ausgerichtet sind, verwenden Sie !tokencontroller kalibrieren.',
+  },
+  values: {
+    on: 'An',
+    off: 'Aus',
+    none: 'Keiner',
+    default: 'Standard',
+    noLimit: 'Keine Begrenzung',
+    ms: '{ms} ms',
+    andMore: 'und {count} mehr',
+    following: 'folge {leader}',
+    locked: 'gesperrt',
+    gridless: 'kein Knacken',
+    grid: {
+      square: 'Quadrat',
+      hex: 'Verhexen',
+      iso: 'Isometrisch / dimetrisch',
+    },
+    mode: {
+      loop: 'Schleife',
+      pingpong: 'Hin und her',
+      once: 'Einmal',
+    },
+    movement: {
+      cell: 'Eine Zelle nach der anderen',
+      segment: 'Ganzer Schritt auf einmal',
+    },
+    facing: {
+      off: 'Nicht umdrehen',
+      up: 'Die Kunst zeigt nach oben',
+      down: 'Die Kunst ist mit der Vorderseite nach unten gerichtet',
+      left: 'Kunstgesichter übrig',
+      right: 'Die Kunst zeigt nach rechts',
+    },
+    combatDetection: {
+      tracker: 'Turn-Tracker',
+      manual: 'GM-Schalter',
+      both: 'Drehen Sie den Tracker oder den GM-Schalter',
+    },
+    combatBehaviour: {
+      pause: 'Pause',
+      step: 'Bewegen Sie sich jede Runde',
+      ignore: 'Bleiben Sie in Bewegung',
+    },
+    lockMode: {
+      native: 'Positionssperre des Roll20',
+      revert: 'Machen Sie Bewegungen rückgängig',
+      freeze: 'Nur stillhalten',
+    },
+    followMode: {
+      trail: 'Einzelne Datei',
+      formation: 'Bildung',
+    },
+    manualMove: {
+      continue: 'Von dort aus weitermachen',
+      stop: 'Stoppen Sie die Patrouille',
+    },
+  },
+  menu: {
+    statusRunning: 'Patrouillentoken: {patrols}. Routen: {routes}.',
+    statusPaused: 'Alle Patrouillen sind pausiert.',
+    statusCombat: {
+      pause: 'Im Kampf: Patrouillen werden pausiert.',
+      step: 'Im Kampf: Patrouillen bewegen sich jede Runde.',
+    },
+    routes: 'Routen',
+    noRoutes:
+      'Noch keine Routen. Fügen Sie eines hinzu, zeichnen Sie eines, zeichnen Sie eines auf oder fügen Sie die Beispiele hinzu.',
+    create: 'Neue Route',
+    selected: 'Ausgewählte Token',
+    tools: 'Werkzeuge',
+    recordings: 'Aufnahmen',
+    patrols: 'Patrouillen',
+  },
+  buttons: {
+    start: 'Start',
+    stop: 'Stoppen',
+    add: 'Schrittcode',
+    draw: 'Aus der Zeichnung',
+    record: 'Aufzeichnen',
+    examples: 'Beispiele',
+    reset: 'Zurücksetzen',
+    lock: 'Sperren',
+    unlock: 'Entsperren',
+    leader: 'Führer',
+    follow: 'Folgen',
+    unfollow: 'Nicht mehr folgen',
+    resume: 'Wieder aufnehmen',
+    pause: 'Alles anhalten',
+    combatOn: 'Kampf weiter',
+    combatOff: 'Kampf aus',
+    stopAll: 'Alles stoppen',
+    settings: 'Einstellungen',
+    status: 'Status',
+    help: 'Helfen',
+    open: 'Offen',
+    clearStart: 'Klar',
+    setStart: 'Auf „Ausgewählt“ setzen',
+    edit: 'Code bearbeiten',
+    rename: 'Umbenennen',
+    copy: 'Kopie',
+    export: 'Export',
+    remove: 'Entfernen',
+    menu: 'Speisekarte',
+    wait: 'Warten',
+    stealth: 'Heimlichkeit',
+    undo: 'Rückgängig machen',
+    save: 'Speichern',
+    cancel: 'Stornieren',
+    confirm: 'Ja, entfernen Sie es',
+    startRoute: 'Route starten',
+    list: 'Routen auflisten',
+    calibrate: 'Kalibrieren',
+  },
+  prompts: {
+    name: 'Routenname',
+    code: 'Schrittcode',
+    interval: 'Millisekunden pro Schritt (0 = Standard)',
+    maxTokens: 'Die meisten Token auf einmal (0 = kein Limit)',
+    newName: 'Neuer Name',
+    route: 'Routenname',
+  },
+  route: {
+    drawn: 'Gezeichnete Route, {points} Punkte',
+    recorded: 'Aufgezeichnete Route, {points} Punkte',
+    path: 'Weg',
+    mode: 'Modus',
+    interval: 'Intervall',
+    maxTokens: 'Die meisten Token',
+    randomStart: 'Zufälliger Start',
+    start: 'Fester Start',
+    tokens: 'Token',
+  },
+  record: {
+    title: 'Aufnahme „{name}“',
+    intro:
+      'Aufnahme {token} (Bisherige Verschiebungen: {count}). Klicken Sie auf die Pfeile oder ziehen Sie das Token auf der Karte. Jede Bewegung wird aufgezeichnet.',
+  },
+  settings: {
+    interval: {
+      label: 'Intervall',
+      desc: 'Millisekunden zwischen Schritten. Jede Route kann es überschreiben.',
+    },
+    movement: {
+      label: 'Bewegung',
+      desc: 'Zelle bewegt sich eine Zelle pro Schritt; Das Segment bewegt einen ganzen Schritt (z. B. U3) auf einmal, wie es in Version 4 der Fall war.',
+    },
+    facing: {
+      label: 'Spielsteine ​​umdrehen',
+      desc: 'Drehen Sie die Spielsteine ​​so, dass sie dorthin zeigen, wo sie hingehören: weg, oder in die Richtung, in die das Spielsteinbild zeigt (nach oben, unten, links oder rechts).',
+    },
+    combatDetection: {
+      label: 'Kampferkennung',
+      desc: 'Wie der Kampf wahrgenommen wird: Tracker (der Turn-Tracker ist geöffnet, wenn sich jemand darin befindet), manuell (die Schaltflächen „Kampf ein/aus“) oder beides.',
+    },
+    combatBehaviour: {
+      label: 'Kampfverhalten',
+      desc: 'Was Patrouillen im Kampf tun: Pause, Schritt (sich einmal bewegen, wenn die Runde vorbei ist) oder ignorieren (sich weiterbewegen).',
+    },
+    lockMode: {
+      label: 'Sperrmodus',
+      desc: 'Wie Lock ein Token hält: native (Roll20s eigene Positionssperre, sodass niemand es ziehen kann), Revert (Bewegungen werden rückgängig gemacht) oder Freeze (es hört auf zu patrouillieren und zu folgen, kann aber immer noch gezogen werden).',
+    },
+    lockMarker: {
+      label: 'Sperrmarkierung',
+      desc: 'Statusmarkierung wird auf gesperrten Token angezeigt oder keine. Spieler können Markierungen sehen.',
+    },
+    followMode: {
+      label: 'Folgemodus',
+      desc: 'Spur: Anhänger gehen im Gänsemarsch in die Fußstapfen des Anführers. Formation: Anhänger behalten ihren Platz um den Anführer herum (ziehen Sie einen Anhänger, um seinen Platz zu ändern).',
+    },
+    manualMove: {
+      label: 'Eine Patrouille ziehen',
+      desc: 'Wenn Sie einen Patrouillenmarker ziehen: Fahren Sie fort (die Route wird an der Stelle fortgesetzt, an der Sie sie abgelegt haben) oder stoppen Sie (die Patrouille endet).',
+    },
+    buttonStep: {
+      label: 'Zellen pro Klick',
+      desc: 'Wie weit bewegen die Aufzeichnungspfeile einen Spielstein?',
+    },
+    language: {
+      label: 'Sprache',
+      desc: 'Sprache für Menüs, Nachrichten und Handouts.',
+    },
+  },
+  status: {
+    routes: 'Routen',
+    patrols: 'Patrouillenmarken',
+    followers: 'Folgende Token',
+    locked: 'Gesperrte Token',
+    recordings: 'Aufnahmen',
+    paused: 'Angehalten',
+    combat: 'Kampf',
+    page: 'Aktuelle Seite',
+    grid: 'Netz',
+    cell: 'Zellgröße',
+    calibration: 'Kalibrierung',
+  },
+  help: {
+    menu: 'Zeigen Sie das Menü an.',
+    start: 'Platzieren Sie die ausgewählten Token auf einer Route.',
+    stop: 'Stoppen Sie die ausgewählten Token (Patrouillen und Verfolger), jeden Token auf einer Route oder alle.',
+    reset: 'Bringen Sie die Token dorthin zurück, wo sie begonnen haben, und stoppen Sie sie.',
+    pause: 'Unterbrechen Sie jede Patrouille oder setzen Sie sie fort.',
+    lock: 'Halten Sie die ausgewählten Token fest oder lassen Sie sie los.',
+    leader: 'Wählen Sie den ausgewählten Token als Anführer aus, dem Sie folgen möchten.',
+    follow:
+      'Lassen Sie die ausgewählten Spielsteine ​​dem Anführer oder einem namentlich genannten Spielstein folgen.',
+    unfollow: 'Stoppen Sie die folgenden ausgewählten Token.',
+    add: 'Erstellen Sie eine Route aus einem Schrittcode, z. B. U2R2D2L2.',
+    edit: 'Ändern Sie den Schrittcode einer Route.',
+    draw: 'Erstellen Sie eine Route, die der ausgewählten Zeichnung auf dieser Seite folgt.',
+    record:
+      'Zeichnen Sie eine Route auf, indem Sie das ausgewählte Token mit den Tasten verschieben oder ziehen.',
+    route: 'Ändern Sie eine Routenoption: Modus, Intervall, Maximum, Zufall oder Start.',
+    show: 'Zeigt die Details und Schaltflächen einer Route an.',
+    rename: 'Benennen Sie eine Route um.',
+    copy: 'Kopieren Sie eine Route unter einem neuen Namen.',
+    remove: 'Eine Route entfernen (fragt zuerst).',
+    list: 'Listen Sie die Routen oder die kontrollierten Token auf.',
+    examples: 'Fügen Sie die Beispielrouten hinzu.',
+    export: 'Routen als Text anzeigen, um sie in ein anderes Spiel zu kopieren.',
+    import: 'Routen aus Exporttext hinzufügen.',
+    combat: 'Schalten Sie den Kampf manuell ein oder aus.',
+    set: 'Ändern Sie eine Einstellung oder zeigen Sie alle Einstellungen an.',
+    calibrate:
+      'Richten Sie das Raster so aus, dass die Token in die Zellmitte eingerastet sind, oder entfernen Sie die Kalibrierung.',
+    status: 'Zeigen Sie, was der Mod macht und wie er diese Seite sieht.',
+    journal: 'Erstellen Sie die Handzettel für das Hilfe- und Befehlsdeck neu.',
+    help: 'Diese Liste anzeigen.',
+    footer:
+      'Vollständige Anweisungen finden Sie im Handout „{help}“. Schaltflächen befinden sich in „{deck}“. {legacy} funktionieren weiterhin mit den Befehlen der Version 4.',
+  },
+  handout: {
+    versionLabel: 'Version',
+    subtitle: 'Patrouillen, Anhänger und Schlösser für Jumpgate- und Legacy-Spiele',
+    overview: {
+      heading: 'Überblick',
+      body: 'TokenController verschiebt Token für Sie. Geben Sie einem Wachmann eine Patrouillenroute, lassen Sie einen Karren seinem Fahrer folgen oder fixieren Sie eine Statue. Routen können als Schrittcode eingegeben, anhand einer Zeichnung auf der Karte verfolgt oder durch Verschieben eines Tokens aufgezeichnet werden. Routen funktionieren auf quadratischen, sechseckigen, isometrischen, dimetrischen und rasterlosen Seiten.',
+    },
+    quickStart: {
+      heading: 'Schnellstart',
+      steps: [
+        'Öffnen Sie das Command Deck-Handout oder geben Sie !tokencontroller für das Menü ein.',
+        'Klicken Sie auf Beispiele, um einige vorgefertigte Routen hinzuzufügen, oder auf Schrittcode, um Ihren eigenen einzugeben (z. B. U2R2D2L2).',
+        'Wählen Sie einen oder mehrere Token aus und klicken Sie neben einer Route auf „Starten“.',
+        'Wählen Sie ein Token aus und klicken Sie auf „Stopp“, um es zu stoppen, oder auf „Zurücksetzen“, um es an den Ausgangspunkt zurückzusetzen.',
+      ],
+    },
+    routes: {
+      heading: 'Routen erstellen',
+      points: [
+        'Schrittcode: Geben Sie Bewegungen wie U2R2D2L2 ein. Codes sind nicht an einen Ort auf der Karte gebunden, sodass überall dieselbe Route funktioniert.',
+        'Aus Zeichnung: Zeichnen Sie mit den Zeichenwerkzeugen eine Linie, ein Polygon, eine Freihandform, ein Rechteck oder eine Ellipse, wählen Sie sie aus und klicken Sie auf „Aus Zeichnung“. Token laufen daran entlang, nur auf dieser Seite. Sie können die Zeichnung anschließend löschen.',
+        'Aufzeichnen: Wählen Sie ein Token aus und klicken Sie auf Aufzeichnen. Bewegen Sie es mit den Pfeiltasten oder ziehen Sie es auf der Karte (Roll20 Wegpunkte werden verfolgt) und klicken Sie dann auf Speichern. Auf quadratischen Rastern wird die Aufnahme zu einem Schrittcode, den Sie bearbeiten können.',
+        'Rundrouten beginnen wieder von vorne; Hin- und Herrouten gehen den Weg zurück, den sie gekommen sind; Sobald Routen am Ende anhalten. Neue Routen, die dort enden, wo sie beginnen, Schleife; andere gehen hin und her.',
+      ],
+    },
+    codes: {
+      colCode: 'Code',
+      colMeaning: 'Bedeutung',
+      move: 'Eine Zelle nach oben, unten, links oder rechts bewegen.',
+      diagonal: 'Bewegen Sie sich diagonal.',
+      distance: 'Eine Zahl hinter einer Richtung verschiebt so viele Zellen.',
+      face: 'Drehen Sie sich, um in eine Richtung zu schauen, ohne sich zu bewegen (erfordert Turn-Token).',
+      wait: 'Warten Sie einen Schritt oder die angegebene Anzahl von Schritten.',
+      stealth:
+        'Bewegen Sie den Token zwischen der Token-Ebene und der GM-Ebene, sodass er verschwindet und wieder erscheint.',
+    },
+    routeOptions: {
+      heading: 'Routenoptionen',
+      colOption: 'Option',
+      colMeaning: 'Bedeutung',
+      mode: 'Schleife, Pingpong (hin und her) oder einmal.',
+      interval: 'Millisekunden pro Schritt für diese Route oder 0 für das globale Intervall.',
+      max: 'Die meisten Token, die gleichzeitig auf der Route sein können, oder 0 für keine Begrenzung.',
+      random: 'on: Jeder Token beginnt an einem zufälligen Punkt entlang der Route.',
+      start:
+        'Set: Token springen beim Start zur Position des ausgewählten Tokens. Klar: Sie fangen dort an, wo sie stehen.',
+    },
+    tokens: {
+      heading: 'Kontrollierte Token',
+      points: [
+        'Ein Token befindet sich jeweils auf einer Route. Das Starten auf einer anderen Route ersetzt die erste.',
+        'Stop lässt die Token dort, wo sie sind. Beim Zurücksetzen werden sie auf die ursprüngliche Ebene zurückgesetzt, wo sie sich vor dem Start befanden.',
+        'Das Schloss hält einen Token an Ort und Stelle. Gesperrte Token patrouillieren oder folgen nicht, bis sie entsperrt werden.',
+        'Folgen: Wählen Sie den Anführer aus und klicken Sie auf „Anführer“. Wählen Sie dann die Follower aus und klicken Sie auf „Folgen“. Sie können auch den Namen des Anführers eingeben: !tokencontroller follow Goblin Boss. Follower folgen Token, die patrouillieren, Token, die Sie ziehen, und Token, die von TokenMod verschoben werden.',
+        'Follower können anderen Followern folgen und so eine Kette oder Spalte bilden.',
+        'Durch Ziehen eines Patrouillenmarkers wird die Patrouille an der Stelle fortgesetzt, an der Sie sie abgelegt haben, es sei denn, das Ziehen einer Patrouille ist auf Stopp eingestellt.',
+      ],
+    },
+    grids: {
+      heading: 'Gitter',
+      points: [
+        'Die Zellengröße und der Rastertyp werden von jeder Seite gelesen, sodass verschiedene Seiten unterschiedliche Raster verwenden können.',
+        'U und D bedeuten immer auf und ab auf dem Bildschirm. Auf Hex-Gittern erfolgt die Bewegung ohne passenden Nachbarn im Zickzack; Auf isometrischen und dimetrischen Gittern kreuzen Diagonalen eine Raute.',
+        'Seiten mit deaktivierter Einrastfunktion werden in 70-Pixel-Schritten verschoben, ohne dass sie in einem Raster ausgerichtet werden.',
+        'Wenn Token vom Raster abweichen, rasten Sie einen Token in der Mitte einer Zelle ein, wählen Sie ihn aus und klicken Sie auf Kalibrieren. Wählen Sie zwei Token in benachbarten Zellen einer Zeile aus, um auch die Zellengröße festzulegen.',
+      ],
+    },
+    combat: {
+      heading: 'Kampf',
+      points: [
+        'Die Kampferkennung legt fest, wie der Kampf erkannt wird: der Turn-Tracker, die Schaltflächen „Kampf ein/aus“ oder beides.',
+        'Das Kampfverhalten legt fest, was Patrouillen tun: pausieren, bei jedem Durchgang einen Schritt weitergehen oder in Bewegung bleiben.',
+        '„Alles anhalten“ stoppt jede Patrouille jederzeit; Resume startet sie erneut.',
+      ],
+    },
+    commands: {
+      heading: 'Befehle',
+      intro:
+        'Nur GMs können diese Befehle verwenden. Routen können über die Menüschaltflächen benannt oder mit ihrer #id bezeichnet werden. Setzen Sie Namen mit Leerzeichen in „Anführungszeichen“, wenn ein Befehl zwei Namen annimmt.',
+      colCommand: 'Befehl',
+      colDesc: 'Was es bewirkt',
+    },
+    settings: {
+      heading: 'Einstellungen',
+      intro:
+        'Ändern Sie die Einstellungen über das Menü, mit !tokencontroller set <setting> <value>, oder auf der Seite „Mod-Einstellungen“ im Bildschirm „API-Skripte“.',
+      colKey: 'Schlüssel',
+      colName: 'Einstellung',
+      colDesc: 'Beschreibung',
+    },
+    upgrading: {
+      heading: 'Upgrade von Version 4',
+      points: [
+        'Pfade, Patrouillenmarken, Schlösser, Anhänger und unvollendete Entwürfe bleiben erhalten. Entwürfe werden zu Routen, die mit „(Entwurf)“ enden.',
+        'Ihre Einstellungen der Version 4 bleiben erhalten: Intervall, Unterschritte, Rotation, Kampfpatrouille und Einheiten pro Klick.',
+        'Die Befehle !tc und !token-control sowie die T-Cntrl_-Makros funktionieren weiterhin. Die Tabelle zeigt die neuen Befehle.',
+        'Version 4 sendete nach jeder Aktion das gesamte Menü; Version 5 sendet stattdessen eine kurze Antwort.',
+        'Die Einstellung „Pixel pro Einheit“ ist weg: Die Zellengröße stammt von jeder Seite. HTML Builder wird nicht mehr benötigt.',
+        'Das alte Handout zur Benutzungsanleitung, das jeder Spieler sehen konnte, wird durch dieses Nur-GM-Handout ersetzt.',
+      ],
+      colV4: 'Version 4',
+      colV5: 'Version 5',
+    },
+    troubleshooting: {
+      heading: 'Fehlerbehebung',
+      points: [
+        'Token bewegen sich nicht: Überprüfen Sie den Status. Patrouillen warten, während sie pausiert sind, während sie gesperrt sind, und im Kampf, wenn das Kampfverhalten pausiert ist.',
+        'Token bewegen sich im falschen Abstand: Die Rastergröße oder Ausrichtung der Seite hat sich möglicherweise geändert; Versuchen Sie es mit Kalibrieren.',
+        'Eine gezeichnete Route startet nicht: Gezeichnete Routen funktionieren nur auf der Seite, auf der sie gezeichnet wurden.',
+        'Anhänger bewegen sich nicht, wenn ein anderer Mod den Anführer bewegt: Nur TokenMod meldet seine Bewegungen. Andere Mods können TokenController.ObserveTokenChange aufrufen.',
+        'Melden Sie Probleme im Roll20-Forum mit Nachrichten von der API-Konsole.',
+      ],
+    },
+    languages: {
+      heading: 'Sprachen',
+      body: 'TokenController ist in die folgenden Sprachen übersetzt. Wählen Sie eine mit der Spracheinstellung aus.',
+      colCode: 'Code',
+      colName: 'Sprache',
+      colNative: 'Einheimischer Name',
+    },
+    credits: {
+      heading: 'Credits',
+      original: 'Original Mod von',
+      maintainer: 'Version 5, gepflegt von',
+      support: 'Melden Sie Fehler und Ideen im Roll20 Mod-Forum oder auf GitHub.',
+    },
+    footer: 'Schaltflächen für jede Aktion finden Sie im Handout „{deck}“.',
+  },
+  deck: {
+    subtitle: 'Kommandodeck',
+    patrolsDesc: 'Starten, stoppen und pausieren Sie Patrouillen. Wählen Sie zuerst Token aus.',
+    createDesc:
+      'Erstellen Sie Routen anhand eines Schrittcodes, einer Zeichnung oder durch Aufzeichnen eines Tokens.',
+    selectedDesc: 'Sperren Sie Token oder lassen Sie sie einem Anführer folgen.',
+    toolsDesc: 'Kampf, Einstellungen und Rasterwerkzeuge.',
+    footer: 'Vollständige Anweisungen finden Sie im Handout „{help}“.',
+  },
+};
 
 export default TRANSLATION;
