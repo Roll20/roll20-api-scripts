@@ -1,18 +1,77 @@
 {
-	"name": "Customizable Roll Listener",
-	"script": "CRL.js",
-	"version": "1.1",
-	"previousversions": ["1.0"],
-	"description": "# Customizable Roll Listener\r\r### The script allows you to define custom reactions to various chat input and roll results. Listeners are stored as abilities in a script created character, which also holds the script's help menu. Access the help menu via by typing '!crl' in to chat.",
-	"authors": "Scott C.",
-	"roll20userid": "459831",
-	"useroptions": [],
-	"dependencies": [],
-	"modifies": {
-		"state.CRL": "read,write",
-		"ability": "read,write",
-		"attribute": "read,write",
-		"character": "read,write"
-	},
-	"conflicts": []
+  "name": "Customizable Roll Listener",
+  "script": "CRL.js",
+  "version": "2.0.0",
+  "previousversions": [
+    "1.0",
+    "1.1"
+  ],
+  "description": "# Customizable Roll Listener\n\nRun chat commands automatically when a matching roll or message appears in chat: play a sound on a critical hit, roll on a fumble table on a natural 1, post a reminder when a character uses a certain attack, and so on.\n\n**Version 2.0.0 is a full rewrite.** It reads roll templates, plain chat, emotes, `/roll` results, rollable table results and the output of other mods, and has an inspector that shows exactly what a message contains (useful for Beacon sheets such as D&D 2024). Existing v1 listeners are upgraded automatically and the v1 `!crl \\\\create` style commands keep working.\n\n## Getting started\n\n1. Type `!crl` in chat, or open the **Customizable Roll Listener - Command Deck** handout.\n2. Click **New Listener** and give it a name.\n3. Choose what it listens for: roll templates, text, characters, and roll results such as *critical*, *fumble*, a natural 20 or a total of 15 or more.\n4. Enter the commands to run, for example `!roll20AM --audio,play|Crit` or `/em lands a devastating blow!`.\n\nType `!crl help` for every command. The **Customizable Roll Listener - Help** handout is created in the Journal on startup.\n\n## Features\n\n* Filters for roll templates, message types, text (plain or regular expression), speakers, characters and players.\n* Roll checks: critical, fumble, success and failure (dropped dice are ignored), totals and natural die results, optionally limited to one die size.\n* Matches rollable table results by their text.\n* Placeholders such as `${who}`, `${character}` and `${total}` in commands.\n* Commands can be sent as CRL or as the character who rolled.\n* Per-listener on/off switch, cooldown, ordering and \"stop after this one\".\n* Inspector, test button, and loop protection that switches off a listener that keeps triggering itself.\n* Listener commands are kept as abilities on the hidden **Customizable Roll Listener** character, so `@{}`, `%{}` and inline rolls can be edited in the Journal.\n\nOriginal mod by Scott C., with version 1.1 fixes by The Aaron. Version 2 is maintained by MidNiteShadow7.",
+  "authors": "Scott C., The Aaron, MidNiteShadow7",
+  "roll20userid": "459831, 104025, 16506286",
+  "useroptions": [
+    {
+      "name": "speaker",
+      "displayname": "Send Commands As",
+      "type": "select",
+      "options": [
+        "crl",
+        "roller"
+      ],
+      "default": "crl",
+      "description": "Who listener commands are sent as, unless a listener says otherwise: crl (as \"CRL\", like version 1) or roller (as the character, or player, whose message triggered the listener)."
+    },
+    {
+      "name": "listenToMods",
+      "displayname": "Listen to Other Mods",
+      "type": "select",
+      "options": [
+        "on",
+        "off"
+      ],
+      "default": "on",
+      "description": "Whether chat sent by other mods (for example ScriptCards or Group Check) can trigger listeners. CRL never reacts to its own messages."
+    },
+    {
+      "name": "language",
+      "displayname": "Language",
+      "type": "select",
+      "options": [
+        "af",
+        "ca",
+        "zh-TW",
+        "cs",
+        "da",
+        "nl",
+        "en-US",
+        "fi",
+        "fr",
+        "de",
+        "el",
+        "he",
+        "hu",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-PT",
+        "pt-BR",
+        "ru",
+        "es",
+        "sv",
+        "tr",
+        "uk"
+      ],
+      "default": "en-US",
+      "description": "Language code for GM messages, menus and handouts. Run !crl config language to see all supported codes."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "state.CRL": "read,write",
+    "ability": "read,write",
+    "character": "read,write",
+    "handouts": "read,write"
+  },
+  "conflicts": []
 }
