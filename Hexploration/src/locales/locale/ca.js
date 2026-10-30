@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Distància de revelació dels hexàgons',
-      desc: "S'aplica als hexàgons a mesura que es dibuixen: una fitxa ha d'estar dins d'aquests hexagones per revelar-los, per molt lluny que pugui veure. Deixeu buit sense límit.",
+      desc: "Es desa als hexàgons quan s'omplen, així que configureu-la abans d'omplir: canviar-la després no afecta els hexàgons que ja són al mapa. Una fitxa ha d'estar com a màxim a aquest nombre d'hexàgons per revelar-los, per lluny que pugui veure; amb 0, només es revelen quan s'hi entra. Utilitzeu-la per a muntanyes o boscos. Deixeu-ho buit perquè no hi hagi límit.",
     },
     revealDistance: {
       label: 'Distància de visió',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Línia de visió',
-      desc: 'Quan està activat, un hexàgon només es revela si no hi ha cap hexagonal cobert entre ell i la fitxa.',
+      desc: 'Quan està activat, els hexàgons que continuen coberts, com ara muntanyes omplertes amb una Distància de revelació dels hexàgons, amaguen els hexàgons que hi ha darrere. Només té efecte amb una Distància de visió de 2 o més.',
     },
     revealPath: {
       label: 'Revela al llarg del camí',
@@ -302,9 +302,9 @@ const TRANSLATION = {
       points: [
         'Només les fitxes de la capa de fitxes revelen hexàgons. Quines fitxes compten ho determina Fitxes que revelen: per defecte, les fitxes de jugador, de manera que el GM pot moure monstres sense descobrir el mapa.',
         "Una fitxa revela tots els hexàgons que cobreix (les fitxes grans en cobreixen diversos) i, amb Revela al llarg del camí activat, tots els hexàgons de la ruta per on s'ha arrossegat, inclosos els punts de pas.",
-        "La distància de visió revela els hexàgons al voltant de cadascun d'aquests hexàgons. Amb Línia de visió activada, un hexàgon només es revela si no hi ha cap hexàgon cobert entremig.",
-        "La distància de revelació dels hexàgons s'emmagatzema als hexàgons quan es dibuixen. Aquests hexàgons només es revelen des d'un màxim d'aquest nombre d'hexàgons, per lluny que pugui veure una fitxa. Utilitzeu-la per a muntanyes o boscos que amaguen el que hi ha darrere.",
-        "En el mode Cop d'ull, els hexàgons a la vista es tornen transparents en lloc de desaparèixer, i s'eliminen quan hi entra una fitxa.",
+        "La Distància de visió revela els hexàgons al voltant de cadascun d'aquests hexàgons, començant pels més propers. Amb la Línia de visió activada, un hexàgon no es revela mentre hi hagi un hexàgon cobert entre ell i la fitxa. Normalment els hexàgons més propers es revelen primer, de manera que en terreny obert la Línia de visió no canvia res: només importa amb una Distància de visió de 2 o més i hexàgons que continuen coberts, com ara terreny omplert amb una Distància de revelació dels hexàgons.",
+        "La Distància de revelació dels hexàgons es desa a cada hexàgon quan s'omple, així que configureu-la abans d'omplir; canviar-la després no afecta els hexàgons que ja són al mapa. Una fitxa ha d'estar com a màxim a aquest nombre d'hexàgons per revelar-los, per lluny que pugui veure, i amb 0 només es revelen quan s'hi entra. Per a una serralada: poseu la Distància de revelació dels hexàgons a 0, ompliu les muntanyes, torneu-la a deixar sense límit i després ompliu les terres de més enllà. Amb una Distància de visió de 3 i la Línia de visió activada, el grup veu el terreny obert al seu voltant, però no les muntanyes ni el que hi ha darrere. Cada hexàgon de muntanya es revela quan una fitxa hi entra.",
+        "En el mode Cop d'ull, els hexàgons a la vista es tornen transparents en lloc de desaparèixer, i s'eliminen quan hi entra una fitxa. Els hexàgons transparents del mode Cop d'ull no bloquegen la Línia de visió.",
         "Roll20 dibuixa els noms, les barres i les aures de les fitxes per sobre dels hexàgons. Amb Amaga les fitxes cobertes activat, una fitxa sota un hexàgon cobert té el nom, les barres i les aures visibles per als jugadors desactivats fins que es descobreix, perquè els monstres amagats no es delatin. Si n'activeu algun mentre la fitxa està coberta, continua amagat i s'activa quan la fitxa es descobreix.",
         "L'API no informa dels moviments fets per altres modificacions. Els moviments de TokenMod es recullen automàticament; per a altres modificacions, seleccioneu les fitxes i feu clic a Explora, o truqueu a Hexploration.revealAround(token) des del vostre propi mod.",
       ],

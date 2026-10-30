@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Seshoek-onthullingsafstand',
-      desc: "Word op seshoeke toegepas wanneer hulle geteken word: 'n token moet binne soveel seshoeke wees om hulle te onthul, hoe ver dit ook al kan sien. Laat leeg vir geen beperking nie.",
+      desc: "Word op seshoeke gestoor wanneer hulle gevul word, so stel dit in voordat jy vul: om dit later te verander, raak nie seshoeke wat reeds op die kaart is nie. 'n Token moet binne soveel seshoeke wees om hulle te onthul, hoe ver dit ook al kan sien; met 0 word hulle slegs onthul deur hulle binne te gaan. Gebruik dit vir berge of woude. Laat leeg vir geen beperking nie.",
     },
     revealDistance: {
       label: 'Sigafstand',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Siglyn',
-      desc: "Wanneer dit aan is, word 'n seshoek slegs onthul as geen bedekte seshoek tussen dit en die token lê nie.",
+      desc: "Wanneer dit aan is, versteek seshoeke wat bedek bly, soos berge wat met 'n Seshoek-onthullingsafstand gevul is, die seshoeke agter hulle. Dit maak slegs 'n verskil met 'n Sigafstand van 2 of meer.",
     },
     revealPath: {
       label: 'Onthul langs pad',
@@ -299,9 +299,9 @@ const TRANSLATION = {
       points: [
         'Slegs tokens op die tokenlaag onthul seshoeke. Watter tokens tel, word deur Tokens wat onthul bepaal: by verstek speler-tokens, sodat die GM monsters kan skuif sonder om die kaart te ontbloot.',
         "'n Token onthul elke seshoek wat dit bedek (groot tokens bedek verskeie) en, met Onthul langs pad aan, elke seshoek op die roete waarlangs dit gesleep is, insluitend tussenpunte.",
-        "Sigafstand onthul die seshoeke rondom elk van daardie seshoeke. Met Siglyn aan, word 'n seshoek slegs onthul as geen bedekte seshoek tussenin lê nie.",
-        "Seshoek-onthullingsafstand word op seshoeke gestoor wanneer hulle geteken word. Daardie seshoeke word slegs van binne soveel seshoeke onthul, hoe ver 'n token ook al kan sien. Gebruik dit vir berge of woude wat versteek wat agter hulle lê.",
-        "In Glimp-modus word seshoeke binne sig deurskynend in plaas daarvan om te verdwyn, en hulle word verwyder wanneer 'n token hulle binnegaan.",
+        "Sigafstand onthul die seshoeke rondom elk van daardie seshoeke, die naaste eerste. Met Siglyn aan word 'n seshoek nie onthul solank 'n bedekte seshoek tussen dit en die token lê nie. Nader seshoeke word gewoonlik eerste onthul, so in oop terrein verander Siglyn niks nie: dit maak slegs saak met 'n Sigafstand van 2 of meer en seshoeke wat bedek bly, soos terrein wat met 'n Seshoek-onthullingsafstand gevul is.",
+        "Seshoek-onthullingsafstand word op elke seshoek gestoor wanneer dit gevul word, so stel dit in voordat jy vul; om dit later te verander, raak nie seshoeke wat reeds op die kaart is nie. 'n Token moet binne soveel seshoeke wees om hulle te onthul, hoe ver dit ook al kan sien, en met 0 word hulle slegs onthul deur hulle binne te gaan. Vir 'n bergreeks: stel Seshoek-onthullingsafstand op 0, vul die berge, stel dit terug na geen, en vul dan die land daaragter. Met Sigafstand 3 en Siglyn aan sien die groep die oop grond rondom hulle, maar nie die berge of wat agter hulle lê nie. Elke bergseshoek word onthul wanneer 'n token daarin instap.",
+        "In Glimp-modus word seshoeke binne sig deurskynend in plaas daarvan om te verdwyn, en hulle word verwyder wanneer 'n token hulle binnegaan. Deurskynende Glimp-seshoeke blokkeer nie Siglyn nie.",
         "Roll20 teken tokenname, balke en auras bo seshoeke. Met Versteek bedekte tokens aan, word die naam, balke en auras wat spelers kan sien, afgeskakel vir 'n token onder 'n bedekte seshoek totdat dit ontbloot word, sodat versteekte monsters hulself nie verklap nie. As jy een daarvan aanskakel terwyl die token bedek is, bly dit versteek en word dit aangeskakel wanneer die token ontbloot word.",
         'Die API rapporteer nie bewegings wat deur ander mods gemaak is nie. TokenMod-skuiwe word outomaties opgetel; vir ander mods, kies die tokens en klik Explore, of bel Hexploration.revealAround(token) vanaf jou eie mod.',
       ],

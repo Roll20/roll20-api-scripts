@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Onthullingsafstand van zeshoeken',
-      desc: 'Toegepast op velden zoals ze worden getrokken: een token moet zich binnen zoveel velden bevinden om ze te onthullen, hoe ver hij ook kan kijken. Laat leeg voor geen limiet.',
+      desc: 'Wordt bij het vullen in de zeshoeken opgeslagen, dus stel dit in vóór het vullen: later wijzigen heeft geen effect op zeshoeken die al op de kaart staan. Een token moet zich binnen zoveel zeshoeken bevinden om ze te onthullen, hoe ver het ook kan kijken; bij 0 worden ze alleen onthuld door ze te betreden. Gebruik dit voor bergen of bossen. Laat leeg voor geen limiet.',
     },
     revealDistance: {
       label: 'Zichtafstand',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Zichtlijn',
-      desc: 'Wanneer deze optie is ingeschakeld, wordt een vakje alleen onthuld als er geen afgedekt vakje tussen het vakje en het fiche ligt.',
+      desc: 'Wanneer deze optie aan staat, verbergen zeshoeken die bedekt blijven, zoals bergen die zijn gevuld met een Onthullingsafstand van zeshoeken, de zeshoeken erachter. Het maakt alleen verschil bij een Zichtafstand van 2 of meer.',
     },
     revealPath: {
       label: 'Onthullen langs pad',
@@ -300,9 +300,9 @@ const TRANSLATION = {
       points: [
         'Alleen tokens op de tokenlaag onthullen zeshoeken. Welke tokens meetellen, bepaalt Tokens die onthullen: standaard spelertokens, zodat de GM monsters kan verplaatsen zonder de kaart bloot te leggen.',
         'Een token onthult elke zeshoek die het bedekt (grote tokens bedekken er meerdere) en, als Onthullen langs pad aan staat, elke zeshoek op de route waarlangs het is gesleept, inclusief tussenpunten.',
-        'Zichtafstand onthult de zeshoeken rond elk van die zeshoeken. Als Zichtlijn aan staat, wordt een zeshoek alleen onthuld als er geen bedekte zeshoek tussen ligt.',
-        'Onthullingsafstand van zeshoeken wordt bij het tekenen in de zeshoeken opgeslagen. Die zeshoeken worden alleen onthuld vanaf hooguit zoveel zeshoeken afstand, hoe ver een token ook kan kijken. Gebruik dit voor bergen of bossen die verbergen wat erachter ligt.',
-        'In de modus Glimp worden zeshoeken binnen het zicht doorzichtig in plaats van te verdwijnen, en ze worden verwijderd wanneer een token ze betreedt.',
+        'Zichtafstand onthult de zeshoeken rond elk van die zeshoeken, de dichtstbijzijnde eerst. Als Zichtlijn aan staat, wordt een zeshoek niet onthuld zolang er een bedekte zeshoek tussen die zeshoek en het token ligt. Dichterbij gelegen zeshoeken worden meestal eerst onthuld, dus in open terrein verandert Zichtlijn niets: het telt alleen bij een Zichtafstand van 2 of meer en zeshoeken die bedekt blijven, zoals terrein dat is gevuld met een Onthullingsafstand van zeshoeken.',
+        'Onthullingsafstand van zeshoeken wordt bij het vullen in elke zeshoek opgeslagen, dus stel dit in vóór het vullen; later wijzigen heeft geen effect op zeshoeken die al op de kaart staan. Een token moet zich binnen zoveel zeshoeken bevinden om ze te onthullen, hoe ver het ook kan kijken, en bij 0 worden ze alleen onthuld door ze te betreden. Voor een bergketen: stel Onthullingsafstand van zeshoeken in op 0, vul de bergen, zet de waarde terug op geen en vul daarna het land erachter. Met Zichtafstand 3 en Zichtlijn aan ziet de groep het open terrein om zich heen, maar niet de bergen of wat erachter ligt. Elke bergzeshoek wordt onthuld wanneer een token erin stapt.',
+        'In de modus Glimp worden zeshoeken binnen het zicht doorzichtig in plaats van te verdwijnen, en ze worden verwijderd wanneer een token ze betreedt. Doorzichtige Glimp-zeshoeken blokkeren de Zichtlijn niet.',
         'Roll20 tekent tokennamen, balken en aura’s boven de zeshoeken. Als Bedekte tokens verbergen aan staat, worden bij een token onder een bedekte zeshoek de voor spelers zichtbare naam, balken en aura’s uitgeschakeld totdat het wordt onthuld, zodat verborgen monsters zichzelf niet verraden. Als u een ervan inschakelt terwijl het token bedekt is, blijft het verborgen en wordt het ingeschakeld zodra het token wordt onthuld.',
         'De API meldt geen verplaatsingen door andere mods. Verplaatsingen door TokenMod worden automatisch opgepikt; voor andere mods selecteert u de tokens en klikt u op Verkennen, of roept u Hexploration.revealAround(token) aan vanuit uw eigen mod.',
       ],

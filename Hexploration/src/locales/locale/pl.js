@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Odległość odkrywania heksagonów',
-      desc: 'Dotyczy to dobieranych heksów: żeton musi znajdować się w obrębie określonej liczby heksów, aby je odsłonić, bez względu na to, jak daleko sięga. Pozostaw puste bez ograniczeń.',
+      desc: 'Zapisywana na heksach w chwili ich wypełniania, więc ustaw ją przed wypełnianiem: późniejsza zmiana nie wpływa na heksy, które już są na mapie. Żeton musi znajdować się w obrębie tylu heksów, aby je odkryć, niezależnie od tego, jak daleko widzi; przy 0 odkrywa się je tylko przez wejście na nie. Używaj jej dla gór lub lasów. Pozostaw puste, aby nie było ograniczenia.',
     },
     revealDistance: {
       label: 'Zasięg wzroku',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Linia wzroku',
-      desc: 'Kiedy jest włączone, heks jest odkrywany tylko wtedy, gdy pomiędzy nim a żetonem nie leży żaden zakryty heks.',
+      desc: 'Kiedy jest włączone, heksy, które pozostają zakryte, np. góry wypełnione przy ustawieniu „Odległość odkrywania heksagonów”, zasłaniają heksy za nimi. Ma to znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej.',
     },
     revealPath: {
       label: 'Odkrywaj wzdłuż ścieżki',
@@ -299,9 +299,9 @@ const TRANSLATION = {
       points: [
         'Heksy odkrywają tylko żetony na warstwie żetonów. To, które żetony się liczą, określa ustawienie „Żetony odkrywające”: domyślnie żetony graczy, więc MG może przesuwać potwory bez odkrywania mapy.',
         'Żeton odkrywa każdy heks, który zajmuje (duże żetony zajmują kilka), a przy włączonej opcji „Odkrywaj wzdłuż ścieżki” także każdy heks na trasie, po której był przeciągany, łącznie z punktami pośrednimi.',
-        '„Zasięg wzroku” odkrywa heksy wokół każdego z tych heksów. Gdy „Linia wzroku” jest włączona, heks zostaje odkryty tylko wtedy, gdy między nim a żetonem nie leży żaden zakryty heks.',
-        '„Odległość odkrywania heksagonów” jest zapisywana na heksach w chwili ich rysowania. Takie heksy można odkryć tylko z odległości najwyżej tylu heksów, niezależnie od tego, jak daleko widzi żeton. Używaj jej dla gór lub lasów, które zasłaniają to, co jest za nimi.',
-        'W trybie Przebłysk heksy w zasięgu wzroku stają się przezroczyste zamiast znikać i są usuwane, gdy wejdzie na nie żeton.',
+        '„Zasięg wzroku” odkrywa heksy wokół każdego z tych heksów, zaczynając od najbliższych. Gdy „Linia wzroku” jest włączona, heks nie zostaje odkryty, dopóki między nim a żetonem leży zakryty heks. Bliższe heksy są zwykle odkrywane jako pierwsze, więc na otwartym terenie „Linia wzroku” niczego nie zmienia: ma znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej i istnieją heksy, które pozostają zakryte, np. teren wypełniony przy ustawieniu „Odległość odkrywania heksagonów”.',
+        '„Odległość odkrywania heksagonów” jest zapisywana na każdym heksie w chwili jego wypełniania, więc ustaw ją przed wypełnianiem; późniejsza zmiana nie wpływa na heksy, które już są na mapie. Żeton musi znajdować się w obrębie tylu heksów, aby je odkryć, niezależnie od tego, jak daleko widzi, a przy 0 odkrywa się je tylko przez wejście na nie. Dla pasma górskiego: ustaw „Odległość odkrywania heksagonów” na 0, wypełnij góry, ponownie wyczyść tę wartość (bez limitu), a potem wypełnij teren za nimi. Gdy „Zasięg wzroku” wynosi 3, a „Linia wzroku” jest włączona, drużyna widzi otwarty teren wokół siebie, ale nie góry ani to, co leży za nimi. Każdy heks górski zostaje odkryty, gdy wejdzie na niego żeton.',
+        'W trybie Przebłysk heksy w zasięgu wzroku stają się przezroczyste zamiast znikać i są usuwane, gdy wejdzie na nie żeton. Heksy widziane w trybie Przebłysk nie zasłaniają widoku przy włączonej opcji „Linia wzroku”.',
         'Roll20 rysuje nazwy, paski i aury żetonów nad heksami. Przy włączonej opcji „Ukrywaj zakryte żetony” żeton pod zakrytym heksem ma wyłączone widoczne dla graczy nazwę, paski i aury, dopóki nie zostanie odkryty, więc ukryte potwory się nie zdradzą. Jeśli włączysz któryś z tych elementów, gdy żeton jest zakryty, pozostanie on ukryty i zostanie włączony po odkryciu żetonu.',
         'API nie zgłasza ruchów wykonanych przez inne mody. Ruchy TokenMod są wychwytywane automatycznie; w przypadku innych modów zaznacz żetony i kliknij „Eksploruj” albo wywołaj Hexploration.revealAround(token) z własnego moda.',
       ],

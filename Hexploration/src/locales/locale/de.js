@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Aufdeckungsdistanz für Hexfelder',
-      desc: 'Wird auf Hexfelder angewendet, wenn sie gezogen werden: Ein Spielstein muss sich innerhalb dieser Anzahl von Hexfeldern befinden, um sie aufzudecken, egal wie weit er sehen kann. Für keine Begrenzung leer lassen.',
+      desc: 'Wird beim Füllen in den Hexfeldern gespeichert, also vor dem Füllen festlegen: Spätere Änderungen wirken sich nicht auf Hexfelder aus, die bereits auf der Karte liegen. Ein Spielstein muss sich innerhalb dieser Anzahl von Hexfeldern befinden, um sie aufzudecken, egal wie weit er sehen kann; bei 0 werden sie nur aufgedeckt, wenn man sie betritt. Für Berge oder Wälder verwenden. Für keine Begrenzung leer lassen.',
     },
     revealDistance: {
       label: 'Sichtweite',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Sichtlinie',
-      desc: 'Wenn diese Option aktiviert ist, wird ein Hexfeld nur dann aufgedeckt, wenn kein abgedecktes Hexfeld zwischen ihm und dem Spielstein liegt.',
+      desc: 'Wenn diese Option aktiviert ist, verbergen Hexfelder, die verdeckt bleiben, etwa Berge, die mit einer Aufdeckungsdistanz für Hexfelder gefüllt wurden, die Hexfelder dahinter. Das macht nur bei einer Sichtweite von 2 oder mehr einen Unterschied.',
     },
     revealPath: {
       label: 'Entlang des Wegs aufdecken',
@@ -307,9 +307,9 @@ const TRANSLATION = {
       points: [
         'Nur Token auf der Token-Ebene decken Hexfelder auf. Welche Token zählen, legt „Aufdeckende Token“ fest: standardmäßig Spieler-Token, sodass der GM Monster bewegen kann, ohne die Karte aufzudecken.',
         'Ein Token deckt jedes Hexfeld auf, das er bedeckt (große Token bedecken mehrere), und bei aktiviertem „Entlang des Wegs aufdecken“ jedes Hexfeld auf der Route, entlang der er gezogen wurde, einschließlich Wegpunkten.',
-        '„Sichtweite“ deckt die Hexfelder um jedes dieser Hexfelder auf. Ist „Sichtlinie“ aktiviert, wird ein Hexfeld nur aufgedeckt, wenn kein verdecktes Hexfeld dazwischen liegt.',
-        '„Aufdeckungsdistanz für Hexfelder“ wird beim Zeichnen in den Hexfeldern gespeichert. Diese Hexfelder werden nur aus höchstens so vielen Hexfeldern Entfernung aufgedeckt, egal wie weit ein Token sehen kann. Nutzen Sie dies für Berge oder Wälder, die verbergen, was dahinter liegt.',
-        'Im Modus „Durchsicht“ werden Hexfelder in Sichtweite durchsichtig, statt zu verschwinden, und werden entfernt, sobald ein Token sie betritt.',
+        '„Sichtweite“ deckt die Hexfelder um jedes dieser Hexfelder auf, die nächstgelegenen zuerst. Ist „Sichtlinie“ aktiviert, wird ein Hexfeld nicht aufgedeckt, solange ein verdecktes Hexfeld zwischen ihm und dem Token liegt. Nähere Hexfelder werden meist zuerst aufgedeckt, daher ändert „Sichtlinie“ in offenem Gelände nichts: Sie spielt nur bei einer „Sichtweite“ von 2 oder mehr und bei Hexfeldern eine Rolle, die verdeckt bleiben, etwa Gelände, das mit einer „Aufdeckungsdistanz für Hexfelder“ gefüllt wurde.',
+        '„Aufdeckungsdistanz für Hexfelder“ wird beim Füllen in jedem Hexfeld gespeichert, legen Sie sie also vor dem Füllen fest; spätere Änderungen wirken sich nicht auf Hexfelder aus, die bereits auf der Karte liegen. Ein Token muss sich innerhalb so vieler Hexfelder befinden, um sie aufzudecken, egal wie weit es sehen kann, und bei 0 werden sie nur aufgedeckt, wenn man sie betritt. Für eine Bergkette: Setzen Sie „Aufdeckungsdistanz für Hexfelder“ auf 0, füllen Sie die Berge, setzen Sie den Wert wieder auf „keine“ zurück und füllen Sie dann das Land dahinter. Mit „Sichtweite“ 3 und aktivierter „Sichtlinie“ sieht die Gruppe das offene Gelände um sich herum, aber weder die Berge noch das, was dahinter liegt. Jedes Berg-Hexfeld wird aufgedeckt, wenn ein Token es betritt.',
+        'Im Modus „Durchsicht“ werden Hexfelder in Sichtweite durchsichtig, statt zu verschwinden, und werden entfernt, sobald ein Token sie betritt. Durchsichtige Hexfelder blockieren die „Sichtlinie“ nicht.',
         'Roll20 zeichnet Token-Namen, Leisten und Auren über den Hexfeldern. Ist „Verdeckte Token ausblenden“ aktiviert, werden bei einem Token unter einem verdeckten Hexfeld der für Spieler sichtbare Name, die Leisten und die Auren ausgeschaltet, bis er aufgedeckt wird, damit versteckte Monster sich nicht verraten. Schalten Sie eines davon ein, während der Token verdeckt ist, bleibt es verborgen und wird eingeschaltet, sobald der Token aufgedeckt wird.',
         'Die API meldet keine Bewegungen anderer Mods. TokenMod-Bewegungen werden automatisch übernommen; Wählen Sie für andere Mods die Token aus und klicken Sie auf „Erkunden“ oder rufen Sie Hexploration.revealAround(token) von Ihrem eigenen Mod aus auf.',
       ],

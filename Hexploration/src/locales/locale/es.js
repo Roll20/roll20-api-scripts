@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Distancia de revelación de hexágonos',
-      desc: 'Se aplica a los hexágonos a medida que se dibujan: una ficha debe estar dentro de esta cantidad de hexágonos para revelarlos, por muy lejos que pueda ver. Déjelo vacío sin límite.',
+      desc: 'Se guarda en los hexágonos cuando se rellenan, así que configúrelo antes de rellenar: cambiarlo después no afecta a los hexágonos que ya están en el mapa. Una ficha debe estar a esta cantidad de hexágonos como máximo para revelarlos, por muy lejos que pueda ver; con 0, sólo se revelan al entrar en ellos. Úselo para montañas o bosques. Déjelo vacío para no tener límite.',
     },
     revealDistance: {
       label: 'Distancia de visión',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Línea de visión',
-      desc: 'Cuando está activado, un hexágono sólo se revela si no hay ningún hexágono cubierto entre él y la ficha.',
+      desc: 'Cuando está activado, los hexágonos que siguen cubiertos, como las montañas rellenadas con una Distancia de revelación de hexágonos, ocultan los hexágonos que hay detrás de ellos. Sólo tiene efecto con una Distancia de visión de 2 o más.',
     },
     revealPath: {
       label: 'Revelar a lo largo del camino',
@@ -302,9 +302,9 @@ const TRANSLATION = {
       points: [
         'Solo las fichas de la capa de fichas revelan hexágonos. Qué fichas cuentan se define con Fichas que revelan: por defecto, las fichas de jugador, para que el DJ pueda mover monstruos sin descubrir el mapa.',
         'Una ficha revela cada hexágono que cubre (las fichas grandes cubren varios) y, con Revelar a lo largo del camino activado, cada hexágono de la ruta por la que fue arrastrado, incluidos los puntos de ruta.',
-        'La distancia de visión revela los hexágonos alrededor de cada uno de esos hexágonos. Con la Línea de Visión activada, un hexágono sólo se revela si no hay ningún hexágono cubierto en el medio.',
-        'La distancia de revelación de hexágonos se almacena en los hexágonos a medida que se dibujan. Esos hexágonos sólo se revelan desde dentro de esa cantidad de hexágonos, por muy lejos que pueda ver una ficha. Úselo para montañas o bosques que ocultan lo que hay detrás de ellos.',
-        'En el modo Vistazo, los hexágonos a la vista se vuelven transparentes en lugar de desaparecer, y se eliminan cuando una ficha ingresa en ellos.',
+        'La Distancia de visión revela los hexágonos alrededor de cada uno de esos hexágonos, empezando por los más cercanos. Con la Línea de visión activada, un hexágono no se revela mientras haya un hexágono cubierto entre él y la ficha. Los hexágonos más cercanos suelen revelarse primero, así que en terreno abierto la Línea de visión no cambia nada: sólo importa con una Distancia de visión de 2 o más y hexágonos que siguen cubiertos, como el terreno rellenado con una Distancia de revelación de hexágonos.',
+        'La Distancia de revelación de hexágonos se guarda en cada hexágono cuando se rellena, así que configúrela antes de rellenar; cambiarla después no afecta a los hexágonos que ya están en el mapa. Una ficha debe estar a esa cantidad de hexágonos como máximo para revelarlos, por muy lejos que pueda ver, y con 0 sólo se revelan al entrar en ellos. Para una cordillera: ponga la Distancia de revelación de hexágonos en 0, rellene las montañas, vuelva a dejarla sin límite y después rellene las tierras que hay más allá. Con una Distancia de visión de 3 y la Línea de visión activada, el grupo ve el terreno abierto a su alrededor, pero no las montañas ni lo que hay detrás de ellas. Cada hexágono de montaña se revela cuando una ficha entra en él.',
+        'En el modo Vistazo, los hexágonos a la vista se vuelven transparentes en lugar de desaparecer, y se eliminan cuando una ficha entra en ellos. Los hexágonos transparentes del modo Vistazo no bloquean la Línea de visión.',
         'Roll20 dibuja los nombres, barras y auras de las fichas por encima de los hexágonos. Con Ocultar fichas cubiertas activado, una ficha bajo un hexágono cubierto tiene desactivados su nombre, barras y auras visibles para los jugadores hasta que se descubre, para que los monstruos ocultos no se delaten. Si activa alguno mientras la ficha está cubierta, permanece oculto y se activa cuando la ficha se descubre.',
         'La API no informa de los movimientos hechos por otros mods. Los movimientos de TokenMod se detectan automáticamente; para otros mods, seleccione las fichas y haga clic en Explorar, o llame a Hexploration.revealAround(token) desde su propio mod.',
       ],

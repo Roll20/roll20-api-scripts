@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Altıgen Açığa Çıkarma Mesafesi',
-      desc: 'Altıgenlere çizilirken uygulanır: Bir jetonun, görebildiği kadar uzağı ortaya çıkarabilmesi için bu sayıda altıgen içinde olması gerekir. Sınırsız olarak boş bırakın.',
+      desc: 'Altıgenler doldurulurken onlara kaydedilir, bu yüzden doldurmadan önce ayarlayın: sonradan değiştirmek haritada zaten bulunan altıgenleri etkilemez. Bir jeton ne kadar uzağı görürse görsün, altıgenleri açığa çıkarmak için bu kadar altıgen mesafede olmalıdır; 0 ile yalnızca içlerine girilerek açığa çıkarlar. Dağlar veya ormanlar için kullanın. Sınır olmaması için boş bırakın.',
     },
     revealDistance: {
       label: 'Görüş Mesafesi',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Görüş Hattı',
-      desc: 'Açıkken, bir altıgen yalnızca onunla belirteç arasında örtülü bir altıgen bulunmadığında ortaya çıkar.',
+      desc: 'Açıkken, Altıgen Açığa Çıkarma Mesafesi ile doldurulmuş dağlar gibi örtülü kalan altıgenler, arkalarındaki altıgenleri gizler. Yalnızca 2 veya daha fazla Görüş Mesafesi ile fark yaratır.',
     },
     revealPath: {
       label: 'Yol Boyunca Açığa Çıkar',
@@ -297,9 +297,9 @@ const TRANSLATION = {
       points: [
         'Altıgenleri yalnızca jeton katmanındaki jetonlar açığa çıkarır. Hangi jetonların sayılacağını Açığa Çıkaran Jetonlar ayarı belirler: varsayılan olarak oyuncu jetonları; böylece GM haritayı açmadan canavarları hareket ettirebilir.',
         'Bir jeton kapladığı her altıgeni (büyük jetonlar birkaç altıgen kaplar) ve Yol Boyunca Açığa Çıkar açıkken, ara noktalar dahil sürüklendiği rotadaki her altıgeni açığa çıkarır.',
-        'Görüş Mesafesi, bu altıgenlerin her birinin çevresindeki altıgenleri açığa çıkarır. Görüş Hattı açıkken bir altıgen yalnızca arada örtülü bir altıgen yoksa açığa çıkar.',
-        'Altıgen Açığa Çıkarma Mesafesi, altıgenler çizilirken onlara kaydedilir. Bu altıgenler, bir jeton ne kadar uzağı görürse görsün, yalnızca o kadar altıgen mesafeden açığa çıkar. Arkasındakini gizleyen dağlar veya ormanlar için kullanın.',
-        'Bakış modunda, görüş alanındaki altıgenler kaybolmak yerine yarı saydam olur ve içlerine bir jeton girdiğinde kaldırılır.',
+        'Görüş Mesafesi, bu altıgenlerin her birinin çevresindeki altıgenleri en yakından başlayarak açığa çıkarır. Görüş Hattı açıkken, bir altıgen ile jeton arasında örtülü bir altıgen bulunduğu sürece o altıgen açığa çıkmaz. Yakın altıgenler genellikle önce açığa çıktığından, açık arazide Görüş Hattı hiçbir şeyi değiştirmez: yalnızca 2 veya daha fazla Görüş Mesafesi ve Altıgen Açığa Çıkarma Mesafesi ile doldurulmuş arazi gibi örtülü kalan altıgenler olduğunda önem taşır.',
+        'Altıgen Açığa Çıkarma Mesafesi, her altıgen doldurulurken ona kaydedilir, bu yüzden doldurmadan önce ayarlayın; sonradan değiştirmek haritada zaten bulunan altıgenleri etkilemez. Bir jeton ne kadar uzağı görürse görsün, altıgenleri açığa çıkarmak için o kadar altıgen mesafede olmalıdır ve 0 ile yalnızca içlerine girilerek açığa çıkarlar. Bir sıradağ için: Altıgen Açığa Çıkarma Mesafesi ayarını 0 yapın, dağları doldurun, ayarı yeniden boşaltın, ardından ötedeki araziyi doldurun. Görüş Mesafesi 3 ve Görüş Hattı açıkken grup çevresindeki açık araziyi görür, ancak dağları ya da arkalarında olanları göremez. Her dağ altıgeni, bir jeton içine girdiğinde açığa çıkar.',
+        "Bakış modunda, görüş alanındaki altıgenler kaybolmak yerine yarı saydam olur ve içlerine bir jeton girdiğinde kaldırılır. Bakış durumundaki altıgenler Görüş Hattı'nı engellemez.",
         'Roll20, jeton adlarını, çubuklarını ve auralarını altıgenlerin üzerine çizer. Örtülü Jetonları Gizle açıkken, örtülü bir altıgenin altındaki jetonun oyunculara görünen adı, çubukları ve auraları açığa çıkana kadar kapatılır; böylece gizli canavarlar kendilerini belli etmez. Jeton örtülüyken bunlardan birini açarsanız gizli kalır ve jeton açığa çıktığında açılır.',
         "API, diğer modların yaptığı hareketleri bildirmez. TokenMod hareketleri otomatik olarak algılanır; diğer modlar için jetonları seçip Keşfet'e tıklayın veya kendi modunuzdan Hexploration.revealAround(token) çağırın.",
       ],

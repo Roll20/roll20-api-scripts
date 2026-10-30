@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Distância de revelação dos hexágonos',
-      desc: 'Aplicado aos hexágonos à medida que são desenhados: uma ficha deve estar dentro deste número de hexágonos para revelá-los, por mais longe que possa ver. Deixe em branco sem limite.',
+      desc: 'Gravada nos hexágonos quando eles são preenchidos, então defina-a antes de preencher: alterá-la depois não afeta os hexágonos que já estão no mapa. Uma ficha deve estar a no máximo este número de hexágonos para revelá-los, por mais longe que possa ver; com 0, eles só são revelados quando se entra neles. Use-a para montanhas ou florestas. Deixe em branco para não ter limite.',
     },
     revealDistance: {
       label: 'Distância de visão',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Linha de visão',
-      desc: 'Quando ativado, um hexágono só é revelado se nenhum hexágono coberto estiver entre ele e a ficha.',
+      desc: 'Quando ativado, os hexágonos que permanecem cobertos, como montanhas preenchidas com uma Distância de revelação dos hexágonos, escondem os hexágonos atrás deles. Só faz diferença com uma Distância de visão de 2 ou mais.',
     },
     revealPath: {
       label: 'Revelar ao longo do caminho',
@@ -300,9 +300,9 @@ const TRANSLATION = {
       points: [
         'Apenas tokens na camada de tokens revelam hexágonos. Quais tokens contam é definido por Tokens que revelam: tokens de jogador por padrão, para que o GM possa mover monstros sem descobrir o mapa.',
         'Um token revela cada hexágono que cobre (tokens grandes cobrem vários) e, com Revelar ao longo do caminho ativado, cada hexágono da rota pela qual foi arrastado, incluindo os pontos de passagem.',
-        'A Distância de Visão revela os hexágonos em torno de cada um desses hexágonos. Com a Linha de Visão ativada, um hexágono só é revelado se não houver nenhum hexágono coberto entre eles.',
-        'A Distância de revelação dos hexágonos é gravada nos hexágonos quando eles são desenhados. Esses hexágonos só são revelados a no máximo essa quantidade de hexágonos de distância, por mais longe que um token consiga ver. Use-a para montanhas ou florestas que escondem o que há atrás delas.',
-        'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecer e são removidos quando um token entra neles.',
+        'A Distância de visão revela os hexágonos em torno de cada um desses hexágonos, começando pelos mais próximos. Com a Linha de visão ativada, um hexágono não é revelado enquanto houver um hexágono coberto entre ele e o token. Os hexágonos mais próximos costumam ser revelados primeiro, então em terreno aberto a Linha de visão não muda nada: ela só importa com uma Distância de visão de 2 ou mais e hexágonos que permanecem cobertos, como terreno preenchido com uma Distância de revelação dos hexágonos.',
+        'A Distância de revelação dos hexágonos é gravada em cada hexágono quando ele é preenchido, então defina-a antes de preencher; alterá-la depois não afeta os hexágonos que já estão no mapa. Um token deve estar a no máximo essa quantidade de hexágonos para revelá-los, por mais longe que consiga ver, e com 0 eles só são revelados quando se entra neles. Para uma cordilheira: defina a Distância de revelação dos hexágonos como 0, preencha as montanhas, volte a deixá-la sem limite e então preencha as terras mais adiante. Com Distância de visão 3 e Linha de visão ativada, o grupo vê o terreno aberto ao seu redor, mas não as montanhas nem o que há atrás delas. Cada hexágono de montanha é revelado quando um token entra nele.',
+        'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecer e são removidos quando um token entra neles. Os hexágonos vislumbrados não bloqueiam a Linha de visão.',
         'O Roll20 desenha nomes, barras e auras de tokens acima dos hexágonos. Com Ocultar tokens cobertos ativado, um token sob um hexágono coberto tem o nome, as barras e as auras visíveis aos jogadores desativados até ser descoberto, para que monstros escondidos não se denunciem. Se você ativar um deles enquanto o token estiver coberto, ele continua oculto e é ativado quando o token for descoberto.',
         'A API não relata movimentos feitos por outros mods. Os movimentos do TokenMod são captados automaticamente; para outros mods, selecione os tokens e clique em Explorar ou chame Hexploration.revealAround(token) do seu próprio mod.',
       ],

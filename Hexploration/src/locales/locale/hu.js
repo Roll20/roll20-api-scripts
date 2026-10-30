@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Hatszögek felfedési távolsága',
-      desc: 'A húzott hatszögekre alkalmazva: egy jelzőnek ezen a sok hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire is lásson. Hagyja üresen korlátozás nélkül.',
+      desc: 'A hatszögek kitöltésekor kerül tárolásra rajtuk, ezért a kitöltés előtt állítsa be: a későbbi módosítás nem hat a térképen már meglévő hatszögekre. Egy tokennek ennyi hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire lát is; 0 esetén csak akkor fedődnek fel, ha belépnek beléjük. Hegyekhez vagy erdőkhöz használja. Hagyja üresen, ha nem kíván korlátozást.',
     },
     revealDistance: {
       label: 'Látótávolság',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Látóvonal',
-      desc: 'Ha be van kapcsolva, egy hatszög csak akkor derül ki, ha nincs fedett hatszög közte és a token között.',
+      desc: 'Ha be van kapcsolva, a fedve maradó hatszögek, például a Hatszögek felfedési távolsága beállítással kitöltött hegyek, eltakarják a mögöttük lévő hatszögeket. Csak akkor számít, ha a Látótávolság legalább 2.',
     },
     revealPath: {
       label: 'Felfedés az útvonal mentén',
@@ -300,9 +300,9 @@ const TRANSLATION = {
       points: [
         'Csak a tokenrétegen lévő tokenek fednek fel hatszögeket. Hogy mely tokenek számítanak, azt a Felfedő tokenek beállítás határozza meg: alapértelmezés szerint a játékosok tokenjei, így a GM a térkép felfedése nélkül mozgathatja a szörnyeket.',
         'Egy token felfed minden hatszöget, amelyet lefed (a nagy tokenek többet is), és ha a Felfedés az útvonal mentén be van kapcsolva, minden hatszöget azon az útvonalon is, amelyen végighúzták, az útpontokat is beleértve.',
-        'A Látótávolság az egyes ilyen hatszögek körüli hatszögeket fedi fel. Ha a Látóvonal be van kapcsolva, egy hatszög csak akkor fedődik fel, ha nincs közte és a token között lefedett hatszög.',
-        'A Hatszögek felfedési távolsága a hatszögek megrajzolásakor kerül tárolásra rajtuk. Ezek a hatszögek csak ennyi hatszögnyi távolságon belülről fedhetők fel, bármilyen messzire lát is egy token. Hegyekhez vagy erdőkhöz használja, amelyek eltakarják, ami mögöttük van.',
-        'Bepillantás módban a látótávolságon belüli hatszögek eltűnés helyett átlátszóvá válnak, és akkor tűnnek el, amikor egy token belép beléjük.',
+        'A Látótávolság az egyes ilyen hatszögek körüli hatszögeket fedi fel, a legközelebbiekkel kezdve. Ha a Látóvonal be van kapcsolva, egy hatszög nem fedődik fel, amíg közte és a token között lefedett hatszög van. A közelebbi hatszögek általában előbb fedődnek fel, így nyílt terepen a Látóvonal semmin sem változtat: csak akkor számít, ha a Látótávolság legalább 2, és vannak fedve maradó hatszögek, például a Hatszögek felfedési távolsága beállítással kitöltött terep.',
+        'A Hatszögek felfedési távolsága minden hatszögön a kitöltésekor kerül tárolásra, ezért a kitöltés előtt állítsa be; a későbbi módosítás nem hat a térképen már meglévő hatszögekre. Egy tokennek ennyi hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire lát is, 0 esetén pedig csak akkor fedődnek fel, ha belépnek beléjük. Hegyvonulathoz: állítsa a Hatszögek felfedési távolsága értékét 0-ra, töltse ki a hegyeket, állítsa vissza üresre (korlátozás nélkül), majd töltse ki a mögöttük lévő vidéket. Ha a Látótávolság 3 és a Látóvonal be van kapcsolva, a csapat látja a körülötte lévő nyílt terepet, de a hegyeket és azt, ami mögöttük van, nem. Minden hegyi hatszög akkor fedődik fel, amikor egy token belép bele.',
+        'Bepillantás módban a látótávolságon belüli hatszögek eltűnés helyett átlátszóvá válnak, és eltávolításra kerülnek, amikor egy token belép beléjük. A Bepillantás módban látott hatszögek a Látóvonal szempontjából nem számítanak takarásnak.',
         'A Roll20 a tokenek nevét, sávjait és auráit a hatszögek fölé rajzolja. Ha a Lefedett tokenek elrejtése be van kapcsolva, a lefedett hatszög alatti token játékosok által látható neve, sávjai és aurái kikapcsolnak, amíg fel nem fedik, így a rejtett szörnyek nem árulják el magukat. Ha ezek közül bármelyiket bekapcsolja, amíg a token le van fedve, rejtve marad, és a token felfedésekor kapcsol be.',
         'Az API nem jelzi a más modok által végrehajtott mozgásokat. A TokenMod mozgásait a rendszer automatikusan észleli; más modok esetén jelölje ki a tokeneket, és kattintson a Felderítés gombra, vagy hívja meg a Hexploration.revealAround(token) függvényt a saját modjából.',
       ],

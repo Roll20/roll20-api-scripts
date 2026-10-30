@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Distanza di rivelazione degli esagoni',
-      desc: 'Applicato agli esagoni mentre vengono disegnati: un segnalino deve trovarsi entro questo numero di esagoni per rivelarli, per quanto lontano possa vedere. Lascia vuoto per nessun limite.',
+      desc: 'Memorizzata sugli esagoni quando vengono riempiti, quindi impostala prima di riempire: modificarla in seguito non influisce sugli esagoni già presenti sulla mappa. Un segnalino deve trovarsi entro questo numero di esagoni per rivelarli, per quanto lontano possa vedere; con 0 vengono rivelati solo entrandoci. Usala per montagne o foreste. Lascia vuoto per nessun limite.',
     },
     revealDistance: {
       label: 'Distanza di vista',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Linea di vista',
-      desc: 'Quando è attivo, un esagono viene rivelato solo se non si trova alcun esagono coperto tra esso e il segnalino.',
+      desc: 'Quando è attivo, gli esagoni che restano coperti, come le montagne riempite con una Distanza di rivelazione degli esagoni, nascondono gli esagoni dietro di essi. Fa differenza solo con una Distanza di vista di 2 o più.',
     },
     revealPath: {
       label: 'Rivela lungo il percorso',
@@ -300,9 +300,9 @@ const TRANSLATION = {
       points: [
         'Solo i segnalini sul livello dei segnalini rivelano gli esagoni. Quali segnalini contano lo stabilisce Segnalini che rivelano: per impostazione predefinita i segnalini dei giocatori, così il GM può spostare i mostri senza scoprire la mappa.',
         'Un segnalino rivela ogni esagono che copre (i segnalini grandi ne coprono diversi) e, con Rivela lungo il percorso attivo, ogni esagono del percorso lungo il quale è stato trascinato, compresi i waypoint.',
-        "La Distanza di vista rivela gli esagoni attorno a ciascuno di quegli esagoni. Con Linea di vista attiva, un esagono viene rivelato solo se in mezzo non c'è alcun esagono coperto.",
-        "La Distanza di rivelazione degli esagoni viene memorizzata sugli esagoni nel momento in cui vengono disegnati. Quegli esagoni vengono rivelati solo da non più di quel numero di esagoni di distanza, per quanto lontano possa vedere un segnalino. Usala per montagne o foreste che nascondono ciò che c'è dietro.",
-        'Nella modalità Intravedi, gli esagoni in vista diventano trasparenti invece di scomparire e vengono rimossi quando un segnalino vi entra.',
+        'La Distanza di vista rivela gli esagoni attorno a ciascuno di quegli esagoni, a partire dai più vicini. Con Linea di vista attiva, un esagono non viene rivelato finché tra esso e il segnalino si trova un esagono coperto. Di solito gli esagoni più vicini vengono rivelati per primi, quindi in campo aperto la Linea di vista non cambia nulla: conta solo con una Distanza di vista di 2 o più ed esagoni che restano coperti, come il terreno riempito con una Distanza di rivelazione degli esagoni.',
+        "La Distanza di rivelazione degli esagoni viene memorizzata su ciascun esagono quando viene riempito, quindi impostala prima di riempire; modificarla in seguito non influisce sugli esagoni già presenti sulla mappa. Un segnalino deve trovarsi entro quel numero di esagoni per rivelarli, per quanto lontano possa vedere, e con 0 vengono rivelati solo entrandoci. Per una catena montuosa: imposta la Distanza di rivelazione degli esagoni a 0, riempi le montagne, riportala a nessun limite, poi riempi le terre al di là. Con Distanza di vista 3 e Linea di vista attiva, il gruppo vede il terreno aperto attorno a sé, ma non le montagne né ciò che c'è dietro. Ogni esagono di montagna viene rivelato quando un segnalino vi entra.",
+        'Nella modalità Intravedi, gli esagoni in vista diventano trasparenti invece di scomparire e vengono rimossi quando un segnalino vi entra. Gli esagoni intravisti non bloccano la Linea di vista.',
         'Roll20 disegna nomi, barre e aure dei segnalini sopra gli esagoni. Con Nascondi i segnalini coperti attivo, un segnalino sotto un esagono coperto ha nome, barre e aure visibili ai giocatori disattivati finché non viene scoperto, così i mostri nascosti non si tradiscono. Se ne attivi uno mentre il segnalino è coperto, resta nascosto e viene attivato quando il segnalino viene scoperto.',
         "L'API non segnala gli spostamenti effettuati da altre mod. Gli spostamenti di TokenMod vengono rilevati automaticamente; per altre mod, seleziona i segnalini e fai clic su Esplora, oppure chiama Hexploration.revealAround(token) dalla tua mod.",
       ],

@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Heksojen paljastusetäisyys',
-      desc: 'Soveltuu heksaan, kun ne on piirretty: merkki on oltava tämän monen heksan sisällä paljastaakseen ne, riippumatta siitä, kuinka kauas se näkee. Jätä tyhjäksi ilman rajoituksia.',
+      desc: 'Tallennetaan heksoihin, kun ne täytetään, joten aseta se ennen täyttämistä: myöhempi muutos ei vaikuta kartalla jo oleviin heksoihin. Merkin on oltava enintään näin monen heksan päässä paljastaakseen ne, riippumatta siitä, kuinka kauas se näkee; arvolla 0 ne paljastuvat vain, kun niihin astutaan. Käytä sitä vuorille tai metsille. Jätä tyhjäksi, jos rajaa ei haluta.',
     },
     revealDistance: {
       label: 'Näköetäisyys',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Näköyhteys',
-      desc: 'Kun heksa on päällä, se paljastuu vain, jos sen ja merkin välissä ei ole peitettyä heksaa.',
+      desc: 'Kun asetus on päällä, peitettyinä pysyvät heksat, kuten Heksojen paljastusetäisyys -asetuksella täytetyt vuoret, kätkevät takanaan olevat heksat. Sillä on merkitystä vain, kun Näköetäisyys on 2 tai enemmän.',
     },
     revealPath: {
       label: 'Paljasta reitin varrelta',
@@ -299,9 +299,9 @@ const TRANSLATION = {
       points: [
         'Heksoja paljastavat vain merkkitason merkit. Asetus Paljastavat merkit määrää, mitkä merkit lasketaan: oletuksena pelaajien merkit, joten GM voi siirtää hirviöitä paljastamatta karttaa.',
         'Merkki paljastaa jokaisen heksan, jonka se peittää (suuret merkit peittävät useita), ja kun Paljasta reitin varrelta on päällä, jokaisen heksan reitillä, jota pitkin sitä vedettiin, välipisteet mukaan lukien.',
-        'Näköetäisyys paljastaa kunkin näiden heksojen ympärillä olevat heksat. Kun Näköyhteys on päällä, heksa paljastetaan vain, jos välissä ei ole peitettyä heksaa.',
-        'Heksojen paljastusetäisyys tallennetaan heksoihin niitä piirrettäessä. Nämä heksat paljastuvat vain enintään näin monen heksan päästä, vaikka merkki näkisi kauemmas. Käytä sitä vuorille tai metsille, jotka kätkevät taakseen jäävän.',
-        'Vilkaisu-tilassa näköetäisyydellä olevat heksat muuttuvat läpikuultaviksi katoamisen sijaan, ja ne poistetaan, kun merkki astuu niihin.',
+        'Näköetäisyys paljastaa kunkin näiden heksojen ympärillä olevat heksat, lähimmät ensin. Kun Näköyhteys on päällä, heksaa ei paljasteta niin kauan kuin sen ja merkin välissä on peitetty heksa. Lähemmät heksat paljastuvat yleensä ensin, joten avoimessa maastossa Näköyhteys ei muuta mitään: sillä on merkitystä vain, kun Näköetäisyys on 2 tai enemmän ja jotkin heksat pysyvät peitettyinä, kuten Heksojen paljastusetäisyys -asetuksella täytetty maasto.',
+        'Heksojen paljastusetäisyys tallennetaan jokaiseen heksaan, kun se täytetään, joten aseta se ennen täyttämistä; myöhempi muutos ei vaikuta kartalla jo oleviin heksoihin. Merkin on oltava enintään näin monen heksan päässä paljastaakseen ne, vaikka se näkisi kauemmas, ja arvolla 0 ne paljastuvat vain, kun niihin astutaan. Vuorijonoa varten: aseta Heksojen paljastusetäisyys arvoon 0, täytä vuoret, palauta asetus tyhjäksi ja täytä sitten takana oleva maa. Kun Näköetäisyys on 3 ja Näköyhteys on päällä, seurue näkee ympärillään olevan avoimen maaston mutta ei vuoria eikä sitä, mitä niiden takana on. Kukin vuoriheksa paljastuu, kun merkki astuu siihen.',
+        'Vilkaisu-tilassa näköetäisyydellä olevat heksat muuttuvat läpikuultaviksi katoamisen sijaan, ja ne poistetaan, kun merkki astuu niihin. Vilkaisun läpikuultavat heksat eivät estä näkyvyyttä Näköyhteys-asetuksessa.',
         'Roll20 piirtää merkkien nimet, palkit ja aurat heksojen päälle. Kun Piilota peitetyt merkit on päällä, peitetyn heksan alla olevan merkin pelaajille näkyvä nimi, palkit ja aurat kytketään pois, kunnes se paljastuu, joten piilotetut hirviöt eivät paljasta itseään. Jos kytket jonkin niistä päälle merkin ollessa peitettynä, se pysyy piilossa ja kytkeytyy päälle, kun merkki paljastuu.',
         'API ei ilmoita muiden modien tekemistä siirroista. TokenModin siirrot huomataan automaattisesti; muiden modien kohdalla valitse merkit ja napsauta Tutki tai kutsu Hexploration.revealAround(token) omasta modistasi.',
       ],

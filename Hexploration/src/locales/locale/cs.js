@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Vzdálenost odhalení šestiúhelníků',
-      desc: 'Aplikuje se na hexy, když jsou taženy: žeton musí být v tomto počtu hexů, aby je odhalil, ať už vidí jakkoli daleko. Nechte prázdné bez omezení.',
+      desc: 'Ukládá se do hexů při jejich vyplňování, proto ji nastavte před vyplněním: pozdější změna neovlivní hexy, které už jsou na mapě. Žeton musí být v dosahu tohoto počtu hexů, aby je odhalil, ať vidí jakkoli daleko; při hodnotě 0 se odhalí jen tím, že do nich vstoupí. Použijte ji pro hory nebo lesy. Nechte prázdné bez omezení.',
     },
     revealDistance: {
       label: 'Vzdálenost dohledu',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Přímá viditelnost',
-      desc: 'Když je zapnuto, hex je odhalen pouze v případě, že mezi ním a žetonem není žádný krytý hex.',
+      desc: 'Když je zapnuto, hexy, které zůstávají zakryté, například hory vyplněné s nastavením Vzdálenost odhalení šestiúhelníků, skrývají hexy za sebou. Projeví se to pouze tehdy, když je Vzdálenost dohledu 2 nebo více.',
     },
     revealPath: {
       label: 'Odhalovat po cestě',
@@ -297,9 +297,9 @@ const TRANSLATION = {
       points: [
         'Hexy odhalují pouze žetony na vrstvě žetonů. Které žetony se počítají, určuje nastavení Žetony, které odhalují: ve výchozím stavu žetony hráčů, takže GM může pohybovat příšerami, aniž by odkrýval mapu.',
         'Žeton odhalí každý hex, který zakrývá (velké žetony zakrývají několik), a se zapnutým nastavením Odhalovat po cestě také každý hex na trase, po které byl tažen, včetně průchozích bodů.',
-        'Vzdálenost dohledu odhaluje hexy kolem každého z těchto hexů. Se zapnutou Přímou viditelností je hex odhalen pouze tehdy, když mezi ním a žetonem neleží žádný zakrytý hex.',
-        'Vzdálenost odhalení šestiúhelníků se ukládá do hexů při jejich kreslení. Tyto hexy lze odhalit jen ze vzdálenosti nejvýše tolika hexů, ať žeton vidí jakkoli daleko. Použijte ji pro hory nebo lesy, které zakrývají, co je za nimi.',
-        'V režimu Záblesk se hexy v dohledu místo zmizení stanou průhlednými a odstraní se, když do nich vstoupí žeton.',
+        'Vzdálenost dohledu odhaluje hexy kolem každého z těchto hexů, od nejbližších. Když je zapnutá Přímá viditelnost, hex se neodhalí, dokud mezi ním a žetonem leží zakrytý hex. Bližší hexy se obvykle odhalí jako první, takže v otevřené krajině Přímá viditelnost nic nemění: projeví se jen tehdy, když je Vzdálenost dohledu 2 nebo více a existují hexy, které zůstávají zakryté, například terén vyplněný s nastavením Vzdálenost odhalení šestiúhelníků.',
+        'Vzdálenost odhalení šestiúhelníků se ukládá do každého hexu při jeho vyplnění, proto ji nastavte před vyplňováním; pozdější změna neovlivní hexy, které už jsou na mapě. Žeton musí být v dosahu tolika hexů, aby je odhalil, ať vidí jakkoli daleko, a při hodnotě 0 se odhalí jen tím, že do nich vstoupí. Pro horské pásmo: nastavte Vzdálenost odhalení šestiúhelníků na 0, vyplňte hory, pak hodnotu opět vymažte (bez omezení) a nakonec vyplňte krajinu za nimi. Když je Vzdálenost dohledu 3 a Přímá viditelnost zapnutá, družina vidí otevřený terén kolem sebe, ale ne hory ani to, co leží za nimi. Každý horský hex se odhalí, když do něj vstoupí žeton.',
+        'V režimu Záblesk se hexy v dohledu místo zmizení stanou průhlednými a odstraní se, když do nich vstoupí žeton. Hexy zahlédnuté v režimu Záblesk nezakrývají výhled pro nastavení Přímá viditelnost.',
         'Roll20 kreslí jména, ukazatele a aury žetonů nad hexy. Se zapnutým nastavením Skrýt zakryté žetony má žeton pod zakrytým hexem vypnuté jméno, ukazatele a aury viditelné pro hráče, dokud není odkryt, takže se skryté příšery neprozradí. Pokud některý z nich zapnete, zatímco je žeton zakrytý, zůstane skrytý a zapne se, až bude žeton odkryt.',
         'API nehlásí pohyby provedené jinými mody. Pohyby z TokenMod se zachytí automaticky; u ostatních modů vyberte žetony a klikněte na Prozkoumat, nebo zavolejte Hexploration.revealAround(token) z vlastního modu.',
       ],

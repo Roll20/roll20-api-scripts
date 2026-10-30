@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Afsløringsafstand for hexfelter',
-      desc: 'Anvendes på hexes, efterhånden som de tegnes: Et symbol skal være inden for så mange hexes for at afsløre dem, uanset hvor langt det kan se. Lad være tomt uden grænse.',
+      desc: 'Gemmes på hexfelterne, når de udfyldes, så indstil den før udfyldning: Ændres den senere, påvirker det ikke hexfelter, der allerede er på kortet. Et token skal være inden for så mange hexfelter for at afsløre dem, uanset hvor langt det kan se; med 0 afsløres de kun ved at gå ind i dem. Brug den til bjerge eller skove. Lad feltet stå tomt for ingen grænse.',
     },
     revealDistance: {
       label: 'Synsafstand',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Synslinje',
-      desc: 'Når den er aktiveret, afsløres en hex kun, hvis der ikke er nogen dækket hex mellem den og tokenet.',
+      desc: 'Når den er slået til, skjuler hexfelter, der forbliver dækket, såsom bjerge udfyldt med en Afsløringsafstand for hexfelter, hexfelterne bag dem. Den gør kun en forskel med en Synsafstand på 2 eller mere.',
     },
     revealPath: {
       label: 'Afslør langs ruten',
@@ -295,9 +295,9 @@ const TRANSLATION = {
       points: [
         'Kun tokens på tokenlaget afslører hexfelter. Hvilke tokens der tæller, bestemmes af Afslørende tokens: som standard spillertokens, så GM kan flytte monstre uden at afdække kortet.',
         'Et token afslører hvert hexfelt, det dækker (store tokens dækker flere), og med Afslør langs ruten slået til hvert hexfelt på den rute, det blev trukket langs, inklusive mellempunkter.',
-        'Synsafstand afslører hexfelterne omkring hvert af disse hexfelter. Med Synslinje slået til afsløres et hexfelt kun, hvis der ikke ligger noget dækket hexfelt imellem.',
-        'Afsløringsafstand for hexfelter gemmes på hexfelterne, når de tegnes. Disse hexfelter afsløres kun inden for så mange hexfelters afstand, uanset hvor langt et token kan se. Brug det til bjerge eller skove, der skjuler, hvad der ligger bag dem.',
-        'I tilstanden Glimt bliver hexfelter inden for synsvidde gennemsigtige i stedet for at forsvinde og fjernes, når et token går ind i dem.',
+        'Synsafstand afslører hexfelterne omkring hvert af disse hexfelter, de nærmeste først. Med Synslinje slået til afsløres et hexfelt ikke, så længe der ligger et dækket hexfelt mellem det og tokenet. Nærmere hexfelter afsløres som regel først, så i åbent terræn ændrer Synslinje intet: Den har kun betydning med en Synsafstand på 2 eller mere og hexfelter, der forbliver dækket, såsom terræn udfyldt med en Afsløringsafstand for hexfelter.',
+        'Afsløringsafstand for hexfelter gemmes på hvert hexfelt, når det udfyldes, så indstil den før udfyldning; ændres den senere, påvirker det ikke hexfelter, der allerede er på kortet. Et token skal være inden for så mange hexfelter for at afsløre dem, uanset hvor langt det kan se, og med 0 afsløres de kun ved at gå ind i dem. Til en bjergkæde: Sæt Afsløringsafstand for hexfelter til 0, udfyld bjergene, sæt den tilbage til ingen, og udfyld derefter landet bagved. Med Synsafstand 3 og Synslinje slået til ser gruppen det åbne terræn omkring sig, men ikke bjergene eller det, der ligger bag dem. Hvert bjerghexfelt afsløres, når et token går ind i det.',
+        'I tilstanden Glimt bliver hexfelter inden for synsvidde gennemsigtige i stedet for at forsvinde og fjernes, når et token går ind i dem. Gennemsigtige Glimt-hexfelter blokerer ikke Synslinje.',
         'Roll20 tegner tokennavne, bjælker og auraer oven over hexfelterne. Med Skjul dækkede tokens slået til får et token under et dækket hexfelt sit navn, sine bjælker og auraer, som spillerne kan se, slået fra, indtil det afdækkes, så skjulte monstre ikke afslører sig selv. Hvis du slår en af dem til, mens tokenet er dækket, forbliver den skjult og slås til, når tokenet afdækkes.',
         'API’en rapporterer ikke flytninger foretaget af andre mods. Flytninger med TokenMod opfanges automatisk; for andre mods skal du vælge tokens og klikke på Udforsk eller kalde Hexploration.revealAround(token) fra din egen mod.',
       ],

@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Avslöjandeavstånd för hexar',
-      desc: 'Tillämpas på hexar när de ritas: en token måste finnas inom så många hexes för att avslöja dem, hur långt den än kan se. Lämna tomt utan gräns.',
+      desc: 'Lagras på hexarna när de fylls, så ställ in det innan du fyller: att ändra det senare påverkar inte hexar som redan finns på kartan. En token måste vara inom så många hexar för att avslöja dem, hur långt den än kan se; med 0 avslöjas de bara när man går in i dem. Använd det för berg eller skogar. Lämna tomt för ingen gräns.',
     },
     revealDistance: {
       label: 'Siktavstånd',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Siktlinje',
-      desc: 'När den är på avslöjas en hex endast om ingen täckt hex ligger mellan den och token.',
+      desc: 'När den är på döljer hexar som förblir täckta, till exempel berg som fyllts med ett Avslöjandeavstånd för hexar, hexarna bakom dem. Det gör bara skillnad med ett Siktavstånd på 2 eller mer.',
     },
     revealPath: {
       label: 'Avslöja längs vägen',
@@ -294,9 +294,9 @@ const TRANSLATION = {
       points: [
         'Endast tokens på tokenlagret avslöjar hexar. Vilka tokens som räknas bestäms av Tokens som avslöjar: spelartokens som standard, så att GM kan flytta monster utan att avslöja kartan.',
         'En token avslöjar varje hex den täcker (stora tokens täcker flera) och, med Avslöja längs vägen på, varje hex på rutten den drogs längs, inklusive mellanpunkter.',
-        'Siktavstånd avslöjar hexarna runt var och en av dessa hexar. Med Siktlinje på avslöjas en hex bara om ingen täckt hex ligger emellan.',
-        'Avslöjandeavstånd för hexar lagras på hexarna när de ritas. Dessa hexar avslöjas bara inom så många hexars avstånd, hur långt en token än kan se. Använd det för berg eller skogar som döljer vad som finns bakom dem.',
-        'I läget Glimt blir hexar inom synhåll genomskinliga i stället för att försvinna, och de tas bort när en token går in i dem.',
+        'Siktavstånd avslöjar hexarna runt var och en av dessa hexar, de närmaste först. Med Siktlinje på avslöjas en hex inte så länge en täckt hex ligger mellan den och token. Närmare hexar avslöjas oftast först, så i öppen terräng ändrar Siktlinje ingenting: den spelar bara roll med ett Siktavstånd på 2 eller mer och hexar som förblir täckta, till exempel terräng som fyllts med ett Avslöjandeavstånd för hexar.',
+        'Avslöjandeavstånd för hexar lagras på varje hex när den fylls, så ställ in det innan du fyller; att ändra det senare påverkar inte hexar som redan finns på kartan. En token måste vara inom så många hexar för att avslöja dem, hur långt den än kan se, och med 0 avslöjas de bara när man går in i dem. För en bergskedja: ställ in Avslöjandeavstånd för hexar på 0, fyll bergen, återställ det till inget och fyll sedan landet bortom. Med Siktavstånd 3 och Siktlinje på ser gruppen den öppna marken runt sig, men inte bergen eller det som ligger bakom dem. Varje berghex avslöjas när en token går in i den.',
+        'I läget Glimt blir hexar inom synhåll genomskinliga i stället för att försvinna, och de tas bort när en token går in i dem. Genomskinliga Glimt-hexar blockerar inte Siktlinje.',
         'Roll20 ritar tokennamn, staplar och auror ovanpå hexarna. Med Dölj täckta tokens på stängs det namn, de staplar och de auror som spelarna kan se av för en token under en täckt hex tills den avtäcks, så att dolda monster inte avslöjar sig. Om du slår på något av dem medan token är täckt förblir det dolt och slås på när token avtäcks.',
         'API:et rapporterar inte förflyttningar som görs av andra moddar. TokenMod-förflyttningar fångas upp automatiskt; för andra moddar markerar du tokens och klickar på Utforska, eller anropar Hexploration.revealAround(token) från din egen mod.',
       ],

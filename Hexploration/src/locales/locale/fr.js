@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Distance de révélation des hexagones',
-      desc: "Appliqué aux hexagones au fur et à mesure qu'ils sont dessinés : un jeton doit se trouver dans ce nombre d'hexagones pour les révéler, aussi loin qu'il puisse voir. Laissez vide sans limite.",
+      desc: "Enregistrée sur les hexagones au moment où ils sont remplis, donc réglez-la avant de remplir : la modifier ensuite n'affecte pas les hexagones déjà présents sur la carte. Un jeton doit se trouver à ce nombre d'hexagones au plus pour les révéler, aussi loin qu'il puisse voir ; avec 0, ils ne sont révélés qu'en y entrant. Utilisez-la pour des montagnes ou des forêts. Laissez vide pour ne fixer aucune limite.",
     },
     revealDistance: {
       label: 'Distance de vue',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Ligne de vue',
-      desc: "Lorsque cette option est activée, un hexagone n'est révélé que si aucun hexagone couvert ne se trouve entre lui et le jeton.",
+      desc: "Lorsque cette option est activée, les hexagones qui restent couverts, comme des montagnes remplies avec une Distance de révélation des hexagones, cachent les hexagones situés derrière eux. Elle n'a d'effet qu'avec une Distance de vue de 2 ou plus.",
     },
     revealPath: {
       label: 'Révéler le long du chemin',
@@ -303,9 +303,9 @@ const TRANSLATION = {
       points: [
         'Seuls les jetons sur le calque des jetons révèlent des hexagones. Les jetons concernés sont définis par Jetons révélateurs : les jetons de joueur par défaut, afin que le MJ puisse déplacer des monstres sans découvrir la carte.',
         "Un jeton révèle chaque hex qu'il couvre (les gros jetons en couvrent plusieurs) et, avec Révéler le long du chemin activé, chaque hex de la route qu'il a parcouru, y compris les waypoints.",
-        "La distance de vue révèle les hexagones autour de chacun de ces hexagones. Avec Ligne de vue activée, un hexagone n'est révélé que si aucun hexagone couvert ne se trouve entre les deux.",
-        "La distance de révélation des hexagones est enregistrée sur les hexagones au moment où ils sont dessinés. Ces hexagones ne sont révélés que depuis ce nombre d'hexagones au plus, quelle que soit la distance à laquelle un jeton peut voir. Utilisez-la pour des montagnes ou des forêts qui cachent ce qui se trouve derrière elles.",
-        "En mode Aperçu, les hexagones visibles deviennent transparents au lieu de disparaître et sont supprimés lorsqu'un jeton y pénètre.",
+        "La Distance de vue révèle les hexagones autour de chacun de ces hexagones, en commençant par les plus proches. Avec Ligne de vue activée, un hexagone n'est pas révélé tant qu'un hexagone couvert se trouve entre lui et le jeton. Les hexagones les plus proches sont généralement révélés en premier, donc en terrain dégagé la Ligne de vue ne change rien : elle ne compte qu'avec une Distance de vue de 2 ou plus et des hexagones qui restent couverts, comme un terrain rempli avec une Distance de révélation des hexagones.",
+        "La Distance de révélation des hexagones est enregistrée sur chaque hexagone au moment où il est rempli, donc réglez-la avant de remplir ; la modifier ensuite n'affecte pas les hexagones déjà présents sur la carte. Un jeton doit se trouver à ce nombre d'hexagones au plus pour les révéler, aussi loin qu'il puisse voir, et avec 0 ils ne sont révélés qu'en y entrant. Pour une chaîne de montagnes : réglez la Distance de révélation des hexagones sur 0, remplissez les montagnes, remettez-la sans limite, puis remplissez les terres au-delà. Avec une Distance de vue de 3 et la Ligne de vue activée, le groupe voit le terrain dégagé autour de lui, mais pas les montagnes ni ce qui se trouve derrière. Chaque hexagone de montagne est révélé lorsqu'un jeton y pénètre.",
+        "En mode Aperçu, les hexagones visibles deviennent transparents au lieu de disparaître et sont supprimés lorsqu'un jeton y pénètre. Les hexagones aperçus ne bloquent pas la Ligne de vue.",
         "Roll20 dessine les noms, les barres et les auras des jetons au-dessus des hexagones. Avec Masquer les jetons couverts activé, un jeton sous un hexagone couvert voit son nom, ses barres et ses auras visibles par les joueurs désactivés jusqu'à ce qu'il soit découvert, afin que les monstres cachés ne se trahissent pas. Si vous en réactivez un pendant que le jeton est couvert, il reste masqué et sera activé lorsque le jeton sera découvert.",
         "L'API ne signale pas les mouvements effectués par d'autres mods. Les mouvements TokenMod sont récupérés automatiquement ; pour les autres mods, sélectionnez les jetons et cliquez sur Explorer, ou appelez Hexploration.revealAround(token) depuis votre propre mod.",
       ],

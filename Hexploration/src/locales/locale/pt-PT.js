@@ -111,7 +111,7 @@ const TRANSLATION = {
     },
     maxDistance: {
       label: 'Distância de revelação dos hexágonos',
-      desc: 'Aplicado aos hexágonos à medida que são desenhados: uma ficha deve estar dentro deste número de hexágonos para os revelar, por mais longe que possa ver. Deixe em branco sem limite.',
+      desc: 'Guardada nos hexágonos quando são preenchidos, por isso defina-a antes de preencher: alterá-la depois não afeta os hexágonos que já estão no mapa. Uma ficha tem de estar a, no máximo, este número de hexágonos para os revelar, por mais longe que consiga ver; com 0, só são revelados quando se entra neles. Utilize-a para montanhas ou florestas. Deixe em branco para não haver limite.',
     },
     revealDistance: {
       label: 'Distância de visão',
@@ -119,7 +119,7 @@ const TRANSLATION = {
     },
     lineOfSight: {
       label: 'Linha de visão',
-      desc: 'Quando ativado, um hexágono só é revelado se nenhum hexágono coberto estiver entre ele e a ficha.',
+      desc: 'Quando ativado, os hexágonos que continuam cobertos, como montanhas preenchidas com uma Distância de revelação dos hexágonos, escondem os hexágonos que estão por trás deles. Só faz diferença com uma Distância de visão de 2 ou mais.',
     },
     revealPath: {
       label: 'Revelar ao longo do percurso',
@@ -299,9 +299,9 @@ const TRANSLATION = {
       points: [
         'Apenas as fichas na camada de fichas revelam hexágonos. Quais as fichas que contam é definido por Fichas que revelam: fichas de jogador por predefinição, para que o GM possa mover monstros sem descobrir o mapa.',
         'Uma ficha revela cada hexágono que cobre (as fichas grandes cobrem vários) e, com Revelar ao longo do percurso ativado, cada hexágono do percurso pelo qual foi arrastada, incluindo os pontos de passagem.',
-        'A Distância de Visão revela os hexágonos em torno de cada um destes hexágonos. Com a Linha de Visão ativada, um hexágono só é revelado se não existir nenhum hexágono coberto entre eles.',
-        'A Distância de revelação dos hexágonos é guardada nos hexágonos quando são desenhados. Esses hexágonos só são revelados a, no máximo, esse número de hexágonos de distância, por mais longe que uma ficha consiga ver. Utilize-a para montanhas ou florestas que escondem o que está por trás delas.',
-        'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecerem e são removidos quando uma ficha entra neles.',
+        'A Distância de visão revela os hexágonos em torno de cada um destes hexágonos, começando pelos mais próximos. Com a Linha de visão ativada, um hexágono não é revelado enquanto existir um hexágono coberto entre ele e a ficha. Os hexágonos mais próximos são normalmente revelados primeiro, por isso em terreno aberto a Linha de visão não altera nada: só tem importância com uma Distância de visão de 2 ou mais e hexágonos que continuam cobertos, como terreno preenchido com uma Distância de revelação dos hexágonos.',
+        'A Distância de revelação dos hexágonos é guardada em cada hexágono quando este é preenchido, por isso defina-a antes de preencher; alterá-la depois não afeta os hexágonos que já estão no mapa. Uma ficha tem de estar a, no máximo, esse número de hexágonos para os revelar, por mais longe que consiga ver, e com 0 só são revelados quando se entra neles. Para uma cordilheira: defina a Distância de revelação dos hexágonos como 0, preencha as montanhas, volte a deixá-la sem limite e depois preencha as terras mais além. Com Distância de visão 3 e Linha de visão ativada, o grupo vê o terreno aberto à sua volta, mas não as montanhas nem o que está por trás delas. Cada hexágono de montanha é revelado quando uma ficha entra nele.',
+        'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecerem e são removidos quando uma ficha entra neles. Os hexágonos vislumbrados não bloqueiam a Linha de visão.',
         'O Roll20 desenha os nomes, barras e auras das fichas por cima dos hexágonos. Com Ocultar fichas cobertas ativado, uma ficha sob um hexágono coberto tem o nome, as barras e as auras visíveis para os jogadores desativados até ser descoberta, para que os monstros escondidos não se denunciem. Se ativar um deles enquanto a ficha estiver coberta, este continua oculto e é ativado quando a ficha for descoberta.',
         'A API não reporta movimentos feitos por outros mods. Os movimentos do TokenMod são captados automaticamente; para outros mods, selecione as fichas e clique em Explorar, ou chame Hexploration.revealAround(token) a partir do seu próprio mod.',
       ],

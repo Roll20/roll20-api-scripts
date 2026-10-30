@@ -111,7 +111,7 @@ export default {
     },
     maxDistance: {
       label: 'Hex Reveal Distance',
-      desc: 'Applied to hexes as they are drawn: a token must be within this many hexes to reveal them, however far it can see. Leave empty for no limit.',
+      desc: 'Stored on hexes when they are filled, so set it before filling: changing it later does not affect hexes already on the map. A token must be within this many hexes to reveal them, however far it can see; with 0 they are only revealed by entering them. Use it for mountains or forests. Leave empty for no limit.',
     },
     revealDistance: {
       label: 'Sight Distance',
@@ -119,7 +119,7 @@ export default {
     },
     lineOfSight: {
       label: 'Line of Sight',
-      desc: 'When on, a hex is only revealed if no covered hex lies between it and the token.',
+      desc: 'When on, hexes that stay covered, such as mountains filled with a Hex Reveal Distance, hide the hexes behind them. It only makes a difference with a Sight Distance of 2 or more.',
     },
     revealPath: {
       label: 'Reveal Along Path',
@@ -293,9 +293,9 @@ export default {
       points: [
         'Only tokens on the token layer reveal hexes. Which tokens count is set by Tokens That Reveal: player tokens by default, so the GM can move monsters without uncovering the map.',
         'A token reveals every hex it covers (large tokens cover several) and, with Reveal Along Path on, every hex on the route it was dragged along, including waypoints.',
-        'Sight Distance reveals the hexes around each of those hexes. With Line of Sight on, a hex is only revealed if no covered hex lies in between.',
-        'Hex Reveal Distance is stored on hexes as they are drawn. Those hexes are only revealed from within that many hexes, however far a token can see. Use it for mountains or forests that hide what is behind them.',
-        'In Glimpse mode, hexes within sight become see-through instead of disappearing, and are removed when a token enters them.',
+        'Sight Distance reveals the hexes around each of those hexes, nearest first. With Line of Sight on, a hex is not revealed while a covered hex lies between it and the token. Nearer hexes are usually revealed first, so in open country Line of Sight changes nothing: it only matters with a Sight Distance of 2 or more and hexes that stay covered, such as terrain filled with a Hex Reveal Distance.',
+        'Hex Reveal Distance is stored on each hex when it is filled, so set it before filling; changing it later does not affect hexes already on the map. A token must be within that many hexes to reveal them, however far it can see, and with 0 they are only revealed by entering them. For a mountain range: set Hex Reveal Distance to 0, fill the mountains, set it back to none, then fill the land beyond. With Sight Distance 3 and Line of Sight on, the party sees the open ground around them, but not the mountains or what lies behind them. Each mountain hex is revealed when a token walks into it.',
+        'In Glimpse mode, hexes within sight become see-through instead of disappearing, and are removed when a token enters them. Glimpsed hexes do not block Line of Sight.',
         'Roll20 draws token names, bars and auras above hexes. With Hide Covered Tokens on, a token under a covered hex has its player-visible name, bars and auras switched off until it is uncovered, so hidden monsters do not give themselves away. If you switch one of them on while the token is covered, it stays hidden and is switched on when the token is uncovered.',
         'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
       ],

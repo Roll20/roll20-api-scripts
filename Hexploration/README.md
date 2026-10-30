@@ -69,32 +69,50 @@ The version 1 commands still work, including the `Hexploration_menu` macro:
 
 - Only tokens on the token layer reveal hexes. **Tokens That Reveal** chooses which: tokens controlled by a player (the default, so the GM can move monsters freely), tokens that represent any character (the version 1 behaviour), or all tokens.
 - A token reveals every hex it covers, so large tokens reveal several. With **Reveal Along Path** on, it also reveals every hex on the route it was dragged along, waypoints included.
-- **Sight Distance** reveals the hexes around each of those hexes. With **Line of Sight** on, a hex is only revealed if no covered hex lies in between.
-- **Hex Reveal Distance** is stored on hexes as they are drawn: those hexes can only be revealed from within that many hexes. Use it for terrain that hides what lies behind it.
+- **Sight Distance** reveals the hexes around each of those hexes, nearest first.
 - **Reveal Mode: Glimpse** turns hexes within sight see-through instead of removing them; they are removed when a token enters them.
 - Roll20 draws token names, bars and auras above hexes. With **Hide Covered Tokens** on (the default), tokens under a covered hex have their player-visible name, bars and auras switched off until they are uncovered, so hidden monsters do not give themselves away.
 - The Roll20 API does not report token moves made by other Mods. Moves made by TokenMod are picked up automatically. For other Mods, select the tokens and use `!hexploration explore`, or call the API below.
 
+### Terrain That Blocks Sight
+
+**Hex Reveal Distance** and **Line of Sight** work together to make terrain, such as mountains or dense forest, that the party cannot see into or past.
+
+- **Hex Reveal Distance** is stored on each hex when it is filled. A token must be within that many hexes to reveal the hex, however far it can see; with `0`, the hex is only revealed by entering it. Set it _before_ filling: changing it does not affect hexes already on the map.
+- **Line of Sight** stops a hex being revealed while a covered hex lies between it and the token. Nearer hexes are revealed first, so in open country nothing is in the way and Line of Sight changes nothing. It only blocks behind hexes that stay covered, such as terrain filled with a Hex Reveal Distance.
+
+Neither makes a difference with the default **Sight Distance** of 1, apart from a Hex Reveal Distance of 0: a token only looks at the six hexes next to it, with nothing in between.
+
+For example, to add a mountain range:
+
+1. `!hexploration set revealDistance 3`
+2. `!hexploration set maxDistance 0`, then select the shapes over the mountains and fill them.
+3. `!hexploration set maxDistance none`, then fill the land beyond the mountains.
+
+A token walking up to the mountains reveals the open ground within 3 hexes, but the mountain hexes stay covered and so does everything behind them. Each mountain hex is revealed when a token walks into it. With Line of Sight off, the land behind the mountains is revealed from a distance, but the mountains still are not.
+
+Glimpsed hexes do not block Line of Sight.
+
 ## Settings
 
-| Key                 | Setting              | Default              | Per page | Description                                                                    |
-| ------------------- | -------------------- | -------------------- | -------- | ------------------------------------------------------------------------------ |
-| `hexLayer`          | Hex Layer            | `auto`               |          | `auto`, `foreground` or `objects`. Auto tries the foreground layer first.      |
-| `fillColor`         | Fill Colour          | `#222222`            |          | Colour of new hexes. A colour with transparency makes see-through hexes.       |
-| `strokeColor`       | Border Colour        | `#444444`            |          | Outline colour of new hexes.                                                   |
-| `labelColor`        | Label Colour         | `#FFFFFF`            |          | Colour of GM-only name labels.                                                 |
-| `glimpseColor`      | Glimpse Colour       | `rgba(34,34,34,0.5)` |          | Colour of glimpsed hexes. Use a colour with transparency.                      |
-| `strokeWidth`       | Border Width         | `1`                  |          | Outline width in pixels (0–20).                                                |
-| `maxDistance`       | Hex Reveal Distance  | none                 |          | Stored on new hexes; they reveal only from within this many hexes.             |
-| `revealDistance`    | Sight Distance       | `1`                  | ✓        | Hexes revealed around a moving token (0–20).                                   |
-| `lineOfSight`       | Line of Sight        | `on`                 | ✓        | Covered hexes block sight.                                                     |
-| `revealPath`        | Reveal Along Path    | `on`                 | ✓        | Reveal the whole route a token is dragged along.                               |
-| `revealBy`          | Tokens That Reveal   | `players`            | ✓        | `players`, `characters` or `all`.                                              |
-| `revealMode`        | Reveal Mode          | `clear`              | ✓        | `clear` or `glimpse`.                                                          |
-| `announce`          | Announce Discoveries | `all`                | ✓        | `all`, `gm` or `off`.                                                          |
-| `pingDiscoveries`   | Ping Discoveries     | `off`                | ✓        | Ping players to discovered locations.                                          |
-| `hideCoveredTokens` | Hide Covered Tokens  | `on`                 |          | Switch off player-visible names, bars and auras of tokens under covered hexes. |
-| `language`          | Language             | `en-US`              |          | One of 24 languages. `!hexploration set language` lists them.                  |
+| Key                 | Setting              | Default              | Per page | Description                                                                                                                                                           |
+| ------------------- | -------------------- | -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hexLayer`          | Hex Layer            | `auto`               |          | `auto`, `foreground` or `objects`. Auto tries the foreground layer first.                                                                                             |
+| `fillColor`         | Fill Colour          | `#222222`            |          | Colour of new hexes. A colour with transparency makes see-through hexes.                                                                                              |
+| `strokeColor`       | Border Colour        | `#444444`            |          | Outline colour of new hexes.                                                                                                                                          |
+| `labelColor`        | Label Colour         | `#FFFFFF`            |          | Colour of GM-only name labels.                                                                                                                                        |
+| `glimpseColor`      | Glimpse Colour       | `rgba(34,34,34,0.5)` |          | Colour of glimpsed hexes. Use a colour with transparency.                                                                                                             |
+| `strokeWidth`       | Border Width         | `1`                  |          | Outline width in pixels (0–20).                                                                                                                                       |
+| `maxDistance`       | Hex Reveal Distance  | none                 |          | Stored on hexes as they are filled; they reveal only from within this many hexes. Set it before filling. See [Terrain That Blocks Sight](#terrain-that-blocks-sight). |
+| `revealDistance`    | Sight Distance       | `1`                  | ✓        | Hexes revealed around a moving token (0–20).                                                                                                                          |
+| `lineOfSight`       | Line of Sight        | `on`                 | ✓        | Hexes that stay covered hide the hexes behind them. Needs a Sight Distance of 2 or more.                                                                              |
+| `revealPath`        | Reveal Along Path    | `on`                 | ✓        | Reveal the whole route a token is dragged along.                                                                                                                      |
+| `revealBy`          | Tokens That Reveal   | `players`            | ✓        | `players`, `characters` or `all`.                                                                                                                                     |
+| `revealMode`        | Reveal Mode          | `clear`              | ✓        | `clear` or `glimpse`.                                                                                                                                                 |
+| `announce`          | Announce Discoveries | `all`                | ✓        | `all`, `gm` or `off`.                                                                                                                                                 |
+| `pingDiscoveries`   | Ping Discoveries     | `off`                | ✓        | Ping players to discovered locations.                                                                                                                                 |
+| `hideCoveredTokens` | Hide Covered Tokens  | `on`                 |          | Switch off player-visible names, bars and auras of tokens under covered hexes.                                                                                        |
+| `language`          | Language             | `en-US`              |          | One of 24 languages. `!hexploration set language` lists them.                                                                                                         |
 
 **Hex Layer**, **Tokens That Reveal** and **Language** can also be set on the Mod's settings page in the API Scripts screen.
 
