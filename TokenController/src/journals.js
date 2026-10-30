@@ -22,7 +22,7 @@ import {
   SCRIPT_NAME,
   SCRIPT_VERSION,
 } from './constants.js';
-import { getDirectionStyle, getLocale, LOCALE_LABELS, SUPPORTED_LOCALES, t, tRaw } from './i18n.js';
+import { getDirectionStyle, getLocale, LOCALE_DEFINITIONS, t, tRaw } from './i18n.js';
 import { getConfig } from './state.js';
 import { escapeHtml } from './utils.js';
 
@@ -88,6 +88,37 @@ function link(url, label) {
 }
 
 /**
+ * Builds a Twemoji asset URL for a locale flag.
+ *
+ * @param {string} flag Unicode regional-indicator flag.
+ * @returns {string} SVG asset URL or an empty string.
+ */
+function flagAssetUrl(flag) {
+  const codepoints = Array.from(String(flag || '').trim())
+    .map((character) => character.codePointAt(0).toString(16))
+    .join('-');
+  return codepoints
+    ? `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${codepoints}.svg`
+    : '';
+}
+
+/**
+ * Builds a flag image for a locale. An image is used because Roll20 on Windows
+ * shows emoji flags as letter pairs.
+ *
+ * @param {object} locale Locale metadata.
+ * @returns {string} Trusted locale flag HTML.
+ */
+function buildLocaleFlag(locale) {
+  const label = escapeHtml(locale.flagLabel || locale.name);
+  const url = flagAssetUrl(locale.flag);
+  if (!url) {
+    return '';
+  }
+  return `<img src="${escapeHtml(url)}" alt="${label}" title="${label}" style="width:1.1em;height:1.1em;vertical-align:-0.15em;margin-right:4px;" />`;
+}
+
+/**
  * Builds the Help handout HTML.
  *
  * @param {string} locale Locale code.
@@ -139,7 +170,11 @@ export function buildHelpHtml(locale) {
     ['!tc follow <follower> <leader>', `${COMMAND} follow <leader>`],
   ].map(([v4, v5]) => [code(v4), code(v5)]);
 
-  const locales = SUPPORTED_LOCALES.map((c) => escapeHtml(LOCALE_LABELS[c])).join(', ');
+  const locales = LOCALE_DEFINITIONS.map((locale) => [
+    `${buildLocaleFlag(locale)}${code(locale.code)}`,
+    escapeHtml(locale.name),
+    escapeHtml(locale.nativeName || locale.name),
+  ]);
   const { original, maintainer } = AUTHOR_LINKS;
 
   return `<div style="${STYLE.outer}${getDirectionStyle(lang)}">
@@ -158,7 +193,7 @@ export function buildHelpHtml(locale) {
     ${section('settings', `<p style="${STYLE.p}">${h('settings.intro')}</p>${table([t('handout.settings.colKey', lang), t('handout.settings.colName', lang), t('handout.settings.colDesc', lang)], settings)}`)}
     ${section('upgrading', `${list(raw('upgrading.points'))}${table([t('handout.upgrading.colV4', lang), t('handout.upgrading.colV5', lang)], legacyCommands)}`)}
     ${section('troubleshooting', list(raw('troubleshooting.points')))}
-    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p><p style="${STYLE.p};font-size:0.85em">${locales}</p>`)}
+    ${section('languages', `<p style="${STYLE.p}">${h('languages.body')}</p>${table([t('handout.languages.colCode', lang), t('handout.languages.colName', lang), t('handout.languages.colNative', lang)], locales)}`)}
     ${section(
       'credits',
       `<p style="${STYLE.p}">${h('credits.original')} ${link(original.profile, original.name)} • ${link(original.patreon, 'Patreon')}</p>

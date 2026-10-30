@@ -466,6 +466,9 @@ const TRANSLATION = {
     languages: {
       heading: 'Languages',
       body: 'TokenController is translated into the languages below. Choose one with the Language setting.',
+      colCode: 'Code',
+      colName: 'Language',
+      colNative: 'Native name',
     },
     credits: {
       heading: 'Credits',
