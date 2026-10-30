@@ -54,8 +54,9 @@ const HEX_PROFILES = {
 };
 
 // Isometric and dimetric cells are diamonds one unit tall. Isometric ones are
-// √3 units wide and dimetric ones 2 units wide. Measured in Jumpgate: with no
-// grid offset, a diamond centre sits at (0, ¾ of a diamond height).
+// √3 units wide and dimetric ones 2 units wide. Measured in Jumpgate and
+// Legacy: with no grid offset, a diamond centre sits at (0, ¾ of a diamond
+// height).
 const ISO_WIDTH_RATIO = { isometric: SQRT3, dimetric: 2 };
 
 // Screen direction vectors (x right, y down), before scaling.

@@ -44,7 +44,7 @@ For the upgrade test, install TokenController **4.0.1** in the Legacy game first
 
 - [ ] On **Square**, add `Box` = `R2D2L2U2`, start a token in a cell centre: it stays on cell centres and returns to its start.
 - [ ] Repeat on **Square Half**, **Hex V**, **Hex H** and **Gridless**. On hex pages, `U3D3` and `L3R3` zigzag and come back to the start.
-- [ ] Repeat on **Isometric** and **Dimetric**; diagonals (`UR2DL2`) follow the diamonds. (Jumpgate geometry measured 2026-10-29; Legacy is still unchecked.)
+- [ ] Repeat on **Isometric** and **Dimetric**; diagonals (`UR2DL2`) follow the diamonds. (Geometry measured in both engines 2026-10-29; Legacy stores `top` up to half a pixel lower, which does not matter.)
 - [ ] Jumpgate: move a page's grid with the map alignment tool; tokens still land on cell centres.
 - [ ] If any grid drifts: snap a token to a cell centre, `calibrate`; then two tokens in neighbouring cells of one row (column on Hex H). Note the scale reported so the defaults in `src/grid.js` can be corrected. `calibrate reset` removes it.
 - [ ] `status` shows the right grid type and cell size for each page.

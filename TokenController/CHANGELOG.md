@@ -1,6 +1,6 @@
 # Changelog
 
-## 5.0.0
+## 5.0.0 (2026-10-29)
 
 A full rewrite by MidNiteShadow7 of Developesque's TokenController, which was reported as not working in Jumpgate and no longer supported.
 
@@ -50,30 +50,30 @@ A full rewrite by MidNiteShadow7 of Developesque's TokenController, which was re
 - Version 4 state is migrated on startup: paths, patrols, locks, followers, unfinished drafts and settings are kept.
 - The default interval for new games is 2 seconds, moving one cell per step.
 
-## 4.0.1
+## 4.0.1 (2026-02-22)
 
 Metascript support: event handlers are registered when the game is ready. (The `4.0.1/` folder was missing from the release, so One-Click installs of this version failed until 5.0.0.)
 
-## 4.0.0
+## 4.0.0 (2026-02-10)
 
 Bug fixes and safety improvements, plus the features its code labels 4.1.0 and 4.2.0: fixed start per path, live tick changes, stale token clean-up, sub-step movement, per-path interval, run once, duplicate, export and import, maximum tokens, cycle toggle, random start step and bounds warnings.
 
-## 3.0.0
+## 3.0.0 (2025-03-27)
 
 Pixel unit size fix, rotate tokens, combat detection and combat patrol, rebuilt following, stealth toggle.
 
-## 2.2.0
+## 2.2.0 (2022-07-27)
 
 Paths reverse automatically at the end.
 
-## 2.1.3
+## 2.1.3 (2022-01-25)
 
 Pixels Per Unit setting.
 
-## 2.1.1
+## 2.1.1 (2022-01-24)
 
 Path builder and reversals.
 
-## 1.0.0
+## 1.0.0 (2022-01-24)
 
 First release.
