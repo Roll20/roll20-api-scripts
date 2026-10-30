@@ -4,16 +4,16 @@
  * ------------------------------------------------
  * Name: Hexploration
  * Script: Hexploration.js
- * Version: 2.0.1
- * Built: 2026-10-30T15:35:23.371Z
+ * Version: 2.0.2
+ * Built: 2026-10-30T22:13:47.401Z
  */
 const HexplorationMod = (() => {
   'use strict';
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Hexploration';
-  const SCRIPT_VERSION = '2.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-10-30T15:35:23.371Z';
+  const SCRIPT_VERSION = '2.0.2';
+  const SCRIPT_LAST_UPDATED = '2026-10-30T22:13:47.401Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -63,6 +63,10 @@ const HexplorationMod = (() => {
   const PATH_TYPE_LEGACY = 'path';
   const PATH_TYPE_V2 = 'pathv2';
   const PATH_TYPES = [PATH_TYPE_V2, PATH_TYPE_LEGACY];
+
+  // Font for hex name labels. Jumpgate cannot draw a text without a font.
+  const LABEL_FONT_FAMILY = 'Arial';
+  const LABEL_FONT_SIZE = 16;
 
   // Status marker v1 used to flag location tokens. Still honoured as a fallback.
   const LOCATION_MARKER = 'white-tower';
@@ -1519,7 +1523,7 @@ const HexplorationMod = (() => {
           "Merk ligging verander die geselekteerde tokens in versteekte liggings. 'n Token wat reeds onder 'n seshoek is, word dadelik versteek; anders word dit versteek deur die volgende vulling wat dit bedek.",
           'Tokens met die wittoring-statusmerker word ook as liggings hanteer wanneer jy vul, soos in weergawe 1.',
           'Versteekte liggingtokens word na die GM-laag geskuif. Wanneer hul seshoek onthul word, keer hulle terug na die tokenlaag met hul naam sigbaar, en hul ontdekking word aangekondig.',
-          "Benoem seshoek gee 'n seshoek 'n naam sonder 'n token. Die naam word aan die GM gewys as 'n etiket op die GM-laag en aangekondig wanneer die seshoek onthul word.",
+          "Benoem seshoek gee 'n seshoek 'n naam sonder 'n token. Die naam word aan die GM gewys as 'n etiket op die GM-laag en aangekondig wanneer die seshoek onthul word. Jumpgate teken die GM-laag onder die voorgrondlaag, dus is die etikette in Jumpgate slegs sigbaar wanneer Seshoeklaag op die tokenlaag gestel is.",
           'Announce Discoveries kies of almal, net die GM, of niemand die aankondiging sien nie. Ping Discoveries skuif ook die spelers se uitsig na die ligging.',
         ],
       },
@@ -1897,7 +1901,7 @@ const HexplorationMod = (() => {
           "Marca la ubicació converteix les fitxes seleccionades en ubicacions ocultes. Una fitxa que ja està sota un hexàgon s'amaga immediatament; en cas contrari queda amagat pel següent farciment que el cobreix.",
           "Els fitxes amb el marcador d'estat de la torre blanca també es tracten com a ubicacions quan ompliu, com a la versió 1.",
           "Les fitxes d'ubicació ocultes es mouen a la capa de GM. Quan es revela el seu hex, tornen a la capa de fitxes amb el seu nom mostrat i s'anuncia el seu descobriment.",
-          "Anomena l'hexàgon dona nom a un hexàgon sense cap fitxa. El nom es mostra al GM com una etiqueta a la capa del GM i s'anuncia quan es revela l'hexàgon.",
+          "Anomena l'hexàgon dona nom a un hexàgon sense cap fitxa. El nom es mostra al GM com una etiqueta a la capa del GM i s'anuncia quan es revela l'hexàgon. Jumpgate dibuixa la capa del GM per sota de la capa de primer pla, així que a Jumpgate les etiquetes només es veuen quan Capa dels hexàgons està establerta a la capa de fitxes.",
           "Anunciar descobriments tria si veuen l'anunci tothom, només el GM o ningú. Fer ping als descobriments també mou la vista dels jugadors a la ubicació.",
         ],
       },
@@ -2256,7 +2260,7 @@ const HexplorationMod = (() => {
           '「標記地點」會將選取的令牌變成隱藏地點。已在六角格下的令牌會立即隱藏；否則會在下一次覆蓋它的填充時隱藏。',
           '與版本 1 一樣，帶有白塔狀態標記的標記在您填充時也被視為位置。',
           '隱藏的地點令牌會移到 GM 層。當其所在的六角格被揭示時，它們會回到令牌層並顯示名稱，同時公告其發現。',
-          '「命名六角格」可在沒有令牌的情況下為六角格命名。名稱會以標籤形式顯示在 GM 層上供 GM 查看，並在該六角格被揭示時公告。',
+          '「命名六角格」可在沒有令牌的情況下為六角格命名。名稱會以標籤形式顯示在 GM 層上供 GM 查看，並在該六角格被揭示時公告。 Jumpgate 會把 GM 層繪製在前景層之下，因此在 Jumpgate 中，只有當「六角格圖層」設為令牌層時才會顯示標籤。',
           '「公告發現」決定所有人、僅 GM 或沒有人看到公告。「標示發現位置」還會把玩家的視野移到該地點。',
         ],
       },
@@ -2629,7 +2633,7 @@ const HexplorationMod = (() => {
           'Označit místo změní vybrané žetony na skrytá místa. Žeton, který je již pod hexem, je okamžitě skryt; jinak je skryta další výplní, která jej zakrývá.',
           'Žetony se značkou stavu bílé věže jsou při vyplňování také považovány za místa, jako ve verzi 1.',
           'Žetony skrytých umístění se přesunou do vrstvy GM. Když je jejich hex odhalen, vrátí se do vrstvy žetonů se zobrazeným jménem a jejich objev je oznámen.',
-          'Pojmenovat hex dá hexu jméno bez žetonu. Jméno se GM zobrazí jako popisek na vrstvě GM a oznámí se, když je hex odhalen.',
+          'Pojmenovat hex dá hexu jméno bez žetonu. Jméno se GM zobrazí jako popisek na vrstvě GM a oznámí se, když je hex odhalen. Jumpgate vykresluje vrstvu GM pod vrstvou popředí, takže v Jumpgate se popisky zobrazí jen tehdy, když je Vrstva šestiúhelníků nastavena na vrstvu žetonů.',
           'Oznamovat objevy určuje, zda oznámení uvidí všichni, pouze GM, nebo nikdo. Pingnout objevy navíc přesune pohled hráčů na dané místo.',
         ],
       },
@@ -3002,7 +3006,7 @@ const HexplorationMod = (() => {
           'Marker sted forvandler de valgte tokens til skjulte steder. Et token, der allerede ligger under et hexfelt, skjules med det samme; ellers skjules det af den næste fyldning, der dækker det.',
           'Tokens med det hvide tårns statusmarkør behandles også som placeringer, når du udfylder, som i version 1.',
           'Skjulte placeringstokens flyttes til GM-laget. Når deres hex afsløres, vender de tilbage til token-laget med deres navn vist, og deres opdagelse annonceres.',
-          'Navngiv hexfelt giver et hexfelt et navn uden et token. Navnet vises for GM som en etiket på GM-laget og annonceres, når hexfeltet afsløres.',
+          'Navngiv hexfelt giver et hexfelt et navn uden et token. Navnet vises for GM som en etiket på GM-laget og annonceres, når hexfeltet afsløres. Jumpgate tegner GM-laget under forgrundslaget, så i Jumpgate vises etiketterne kun, når Lag for hexfelter er sat til tokenlaget.',
           'Annoncer opdagelser bestemmer, om alle, kun GM eller ingen ser meddelelsen. Ping opdagelser flytter desuden spillernes visning hen til stedet.',
         ],
       },
@@ -3379,7 +3383,7 @@ const HexplorationMod = (() => {
           'Locatie markeren verandert de geselecteerde tokens in verborgen locaties. Een token dat al onder een zeshoek ligt, wordt meteen verborgen; anders wordt het verborgen door de volgende vulling die het bedekt.',
           'Tokens met de statusmarkering van de witte toren worden bij het vullen ook behandeld als locaties, zoals in versie 1.',
           'Verborgen locatiefiches worden verplaatst naar de GM-laag. Wanneer hun hex wordt onthuld, keren ze terug naar de tokenlaag met hun naam weergegeven, en wordt hun ontdekking aangekondigd.',
-          'Zeshoek benoemen geeft een zeshoek een naam zonder token. De naam wordt aan de GM getoond als label op de GM-laag en aangekondigd wanneer de zeshoek wordt onthuld.',
+          'Zeshoek benoemen geeft een zeshoek een naam zonder token. De naam wordt aan de GM getoond als label op de GM-laag en aangekondigd wanneer de zeshoek wordt onthuld. Jumpgate tekent de GM-laag onder de voorgrondlaag, dus in Jumpgate zijn de labels alleen zichtbaar als Laag voor zeshoeken op de tokenlaag staat.',
           'Ontdekkingen aankondigen bepaalt of iedereen, alleen de GM of niemand de aankondiging ziet. Ontdekkingen pingen verplaatst bovendien het beeld van de spelers naar de locatie.',
         ],
       },
@@ -3748,7 +3752,7 @@ const HexplorationMod = (() => {
           'Mark Location turns the selected tokens into hidden locations. A token already under a hex is hidden straight away; otherwise it is hidden by the next fill that covers it.',
           'Tokens with the white-tower status marker are also treated as locations when you fill, as in version 1.',
           'Hidden location tokens are moved to the GM layer. When their hex is revealed they return to the token layer with their name shown, and their discovery is announced.',
-          'Name Hex gives a hex a name without a token. The name is shown to the GM as a label on the GM layer and announced when the hex is revealed.',
+          'Name Hex gives a hex a name without a token. The name is shown to the GM as a label on the GM layer and announced when the hex is revealed. Jumpgate draws the GM layer below the foreground layer, so in Jumpgate the labels only show when Hex Layer is set to the token layer.',
           'Announce Discoveries chooses whether everyone, only the GM, or nobody sees the announcement. Ping Discoveries also moves the players’ view to the location.',
         ],
       },
@@ -4123,7 +4127,7 @@ const HexplorationMod = (() => {
           'Merkitse sijainti muuttaa valitut merkit piilotetuiksi sijainneiksi. Jo heksan alla oleva merkki piilotetaan heti; muuten sen piilottaa seuraava täyttö, joka peittää sen.',
           'Valkoisen tornin tilamerkillä varustetut rahakkeet käsitellään myös sijainneina, kun täytät, kuten versiossa 1.',
           'Piilotetut sijaintitunnukset siirretään GM-tasolle. Kun heidän heksansa paljastetaan, he palaavat merkkikerrokseen ja heidän nimensä näytetään, ja heidän löytönsä ilmoitetaan.',
-          'Nimeä heksa antaa heksalle nimen ilman merkkiä. Nimi näytetään GM:lle nimilappuna GM-tasolla, ja siitä ilmoitetaan, kun heksa paljastetaan.',
+          'Nimeä heksa antaa heksalle nimen ilman merkkiä. Nimi näytetään GM:lle nimilappuna GM-tasolla, ja siitä ilmoitetaan, kun heksa paljastetaan. Jumpgate piirtää GM-tason etualan tason alle, joten Jumpgatessa nimilaput näkyvät vain, kun Heksataso-asetuksena on merkkitaso.',
           'Ilmoita löydöt valitsee, näkevätkö ilmoituksen kaikki, vain GM vai ei kukaan. Pingaa löydöt siirtää lisäksi pelaajien näkymän sijaintiin.',
         ],
       },
@@ -4503,7 +4507,7 @@ const HexplorationMod = (() => {
           "Marquer l'emplacement transforme les jetons sélectionnés en emplacements cachés. Un jeton déjà sous un hexagone est caché immédiatement ; sinon, il est caché par le prochain remplissage qui le recouvre.",
           'Les jetons avec le marqueur de statut tour blanche sont également traités comme des emplacements lorsque vous remplissez, comme dans la version 1.',
           "Les jetons d'emplacement cachés sont déplacés vers la couche GM. Lorsque leur hexagone est révélé, ils retournent à la couche de jetons avec leur nom affiché et leur découverte est annoncée.",
-          "Nommer l'hexagone donne un nom à un hexagone sans jeton. Le nom est montré au MJ sous forme d'étiquette sur le calque MJ et annoncé lorsque l'hexagone est révélé.",
+          "Nommer l'hexagone donne un nom à un hexagone sans jeton. Le nom est montré au MJ sous forme d'étiquette sur le calque MJ et annoncé lorsque l'hexagone est révélé. Jumpgate dessine le calque MJ sous le calque de premier plan, donc dans Jumpgate les étiquettes ne sont visibles que si Calque des hexagones est réglé sur le calque des jetons.",
           "Annoncer les découvertes détermine si tout le monde, seulement le MJ ou personne ne voit l'annonce. Pinger les découvertes déplace aussi la vue des joueurs vers l'emplacement.",
         ],
       },
@@ -4889,7 +4893,7 @@ const HexplorationMod = (() => {
           '„Standort markieren“ verwandelt die ausgewählten Token in versteckte Standorte. Ein Token, der bereits unter einem Hexfeld liegt, wird sofort versteckt; andernfalls wird er von der nächsten Füllung versteckt, die ihn bedeckt.',
           'Token mit der Statusmarkierung „Weißer Turm“ werden beim Ausfüllen ebenfalls als Orte behandelt, wie in Version 1.',
           'Versteckte Standortmarker werden auf die GM-Ebene verschoben. Wenn ihr Hexfeld aufgedeckt wird, kehren sie mit angezeigtem Namen zur Spielsteinebene zurück und ihre Entdeckung wird bekannt gegeben.',
-          '„Hexfeld benennen“ gibt einem Hexfeld einen Namen ohne Token. Der Name wird dem GM als Beschriftung auf der GM-Ebene angezeigt und angekündigt, wenn das Hexfeld aufgedeckt wird.',
+          '„Hexfeld benennen“ gibt einem Hexfeld einen Namen ohne Token. Der Name wird dem GM als Beschriftung auf der GM-Ebene angezeigt und angekündigt, wenn das Hexfeld aufgedeckt wird. Jumpgate zeichnet die GM-Ebene unterhalb der Vordergrundebene, daher sind die Beschriftungen in Jumpgate nur sichtbar, wenn „Hexfeld-Ebene“ auf die Token-Ebene gesetzt ist.',
           '„Entdeckungen ankündigen“ legt fest, ob alle, nur der GM oder niemand die Ankündigung sieht. „Entdeckungen anpingen“ verschiebt außerdem die Ansicht der Spieler zum Standort.',
         ],
       },
@@ -5265,7 +5269,7 @@ const HexplorationMod = (() => {
           'Η «Επισήμανση τοποθεσίας» μετατρέπει τα επιλεγμένα διακριτικά σε κρυφές τοποθεσίες. Ένα διακριτικό που βρίσκεται ήδη κάτω από εξάγωνο κρύβεται αμέσως· αλλιώς κρύβεται από το επόμενο γέμισμα που το καλύπτει.',
           'Τα διακριτικά με τον δείκτη κατάστασης του λευκού πύργου αντιμετωπίζονται επίσης ως τοποθεσίες όταν συμπληρώνετε, όπως στην έκδοση 1.',
           'Τα κρυφά διακριτικά τοποθεσίας μετακινούνται στο επίπεδο GM. Όταν το εξάγωνό τους αποκαλύπτεται, επιστρέφουν στο στρώμα συμβολικών με το όνομά τους που φαίνεται και η ανακάλυψή τους ανακοινώνεται.',
-          'Η «Ονομασία εξαγώνου» δίνει όνομα σε ένα εξάγωνο χωρίς διακριτικό. Το όνομα εμφανίζεται στον GM ως ετικέτα στο επίπεδο GM και ανακοινώνεται όταν αποκαλυφθεί το εξάγωνο.',
+          'Η «Ονομασία εξαγώνου» δίνει όνομα σε ένα εξάγωνο χωρίς διακριτικό. Το όνομα εμφανίζεται στον GM ως ετικέτα στο επίπεδο GM και ανακοινώνεται όταν αποκαλυφθεί το εξάγωνο. Το Jumpgate σχεδιάζει το επίπεδο GM κάτω από το επίπεδο πρώτου πλάνου, οπότε στο Jumpgate οι ετικέτες εμφανίζονται μόνο όταν το «Επίπεδο εξαγώνων» έχει οριστεί στο επίπεδο διακριτικών.',
           'Η «Ανακοίνωση ανακαλύψεων» ορίζει αν θα βλέπουν την ανακοίνωση όλοι, μόνο ο GM ή κανείς. Το «Ping στις ανακαλύψεις» μετακινεί επίσης την προβολή των παικτών στην τοποθεσία.',
         ],
       },
@@ -5632,7 +5636,7 @@ const HexplorationMod = (() => {
           'סימון מיקום הופך את האסימונים שנבחרו למיקומים מוסתרים. אסימון שכבר נמצא מתחת למשושה מוסתר מיד; אחרת הוא מוסתר במילוי הבא שמכסה אותו.',
           'אסימונים עם סמן המצב של המגדל הלבן מטופלים גם כמיקומים בעת מילוי, כמו בגרסה 1.',
           'אסימוני מיקום מוסתרים מועברים לשכבת GM. כאשר הקסם שלהם מתגלה הם חוזרים לשכבת האסימון עם שמם מוצג, והגילוי שלהם מוכרז.',
-          'מתן שם למשושה נותן למשושה שם ללא אסימון. השם מוצג ל-GM כתווית בשכבת ה-GM ומוכרז כשהמשושה נחשף.',
+          'מתן שם למשושה נותן למשושה שם ללא אסימון. השם מוצג ל-GM כתווית בשכבת ה-GM ומוכרז כשהמשושה נחשף. Jumpgate מצייר את שכבת ה-GM מתחת לשכבת החזית, ולכן ב-Jumpgate התוויות מוצגות רק כאשר "שכבת המשושים" מוגדרת לשכבת האסימונים.',
           'הכרזה על תגליות קובעת אם כולם, רק ה-GM או אף אחד לא יראו את ההכרזה. פינג לתגליות גם מעביר את תצוגת השחקנים למיקום.',
         ],
       },
@@ -6008,7 +6012,7 @@ const HexplorationMod = (() => {
           'A Helyszín megjelölése a kijelölt tokeneket rejtett helyszínekké alakítja. A már hatszög alatt lévő token azonnal elrejtődik; különben a következő kitöltés rejti el, amely lefedi.',
           'A fehér torony állapotjelzővel ellátott tokeneket a rendszer az 1-es verzióhoz hasonlóan helyként kezeli kitöltésekor.',
           'A rejtett helyjelzők a GM rétegre kerülnek. Amikor a hatszögük kiderül, a nevükkel együtt visszatérnek a token réteghez, és a felfedezésüket bejelentik.',
-          'A Hatszög elnevezése token nélkül ad nevet egy hatszögnek. A nevet a GM címkeként látja a GM-rétegen, és a rendszer bejelenti, amikor a hatszög felfedődik.',
+          'A Hatszög elnevezése token nélkül ad nevet egy hatszögnek. A nevet a GM címkeként látja a GM-rétegen, és a rendszer bejelenti, amikor a hatszög felfedődik. A Jumpgate a GM-réteget az előtérréteg alá rajzolja, ezért a Jumpgate-ben a címkék csak akkor látszanak, ha a Hatszögek rétege beállítás értéke tokenréteg.',
           'A Felfedezések bejelentése határozza meg, hogy mindenki, csak a GM vagy senki sem látja a bejelentést. A Felfedezések pingelése a játékosok nézetét is a helyszínre mozgatja.',
         ],
       },
@@ -6385,7 +6389,7 @@ const HexplorationMod = (() => {
           'Segna posizione trasforma i segnalini selezionati in posizioni nascoste. Un segnalino già sotto un esagono viene nascosto subito; altrimenti viene nascosto dal riempimento successivo che lo copre.',
           "Anche i gettoni con l'indicatore di stato della torre bianca vengono trattati come posizioni quando li riempi, come nella versione 1.",
           'I segnalini posizione nascosta vengono spostati nel livello GM. Quando il loro esagono viene rivelato, ritornano al livello dei gettoni con il loro nome mostrato e la loro scoperta viene annunciata.',
-          "Nomina esagono dà un nome a un esagono senza usare un segnalino. Il nome viene mostrato al GM come etichetta sul livello GM e annunciato quando l'esagono viene rivelato.",
+          "Nomina esagono dà un nome a un esagono senza usare un segnalino. Il nome viene mostrato al GM come etichetta sul livello GM e annunciato quando l'esagono viene rivelato. Jumpgate disegna il livello GM sotto il livello in primo piano, quindi in Jumpgate le etichette sono visibili solo quando Livello degli esagoni è impostato sul livello dei segnalini.",
           "Annuncia le scoperte sceglie se l'annuncio lo vedono tutti, solo il GM o nessuno. Ping sulle scoperte sposta anche la visuale dei giocatori sulla posizione.",
         ],
       },
@@ -6758,7 +6762,7 @@ const HexplorationMod = (() => {
           '「場所としてマーク」は、選択したトークンを隠し場所に変えます。すでにヘクスの下にあるトークンはすぐに隠されます。それ以外の場合は、そのトークンを覆う次の塗りつぶしで隠されます。',
           'バージョン 1 と同様に、白い塔のステータス マーカーが付いたトークンも、埋めるときに場所として扱われます。',
           '非表示の位置トークンは GM レイヤーに移動されます。彼らのヘクスが明らかになると、彼らは名前が表示された状態でトークン層に戻り、彼らの発見が発表されます。',
-          '「ヘクスに名前を付ける」は、トークンなしでヘクスに名前を付けます。名前は GM レイヤー上のラベルとして GM に表示され、ヘクスが表示されたときにアナウンスされます。',
+          '「ヘクスに名前を付ける」は、トークンなしでヘクスに名前を付けます。名前は GM レイヤー上のラベルとして GM に表示され、ヘクスが表示されたときにアナウンスされます。 Jumpgate では GM レイヤーが前景レイヤーの下に描画されるため、Jumpgate でラベルが表示されるのは「ヘクスのレイヤー」がトークンレイヤーに設定されている場合のみです。',
           '「発見を通知」では、アナウンスを全員が見るか、GM のみが見るか、誰も見ないかを選択します。「発見地点をピン」は、さらにプレイヤーの視点をその場所へ移動します。',
         ],
       },
@@ -7129,7 +7133,7 @@ const HexplorationMod = (() => {
           '위치 표시는 선택한 토큰을 숨겨진 위치로 바꿉니다. 이미 헥스 아래에 있는 토큰은 즉시 숨겨지고, 그렇지 않으면 그 토큰을 덮는 다음 채우기 때 숨겨집니다.',
           '흰색 타워 상태 표시가 있는 토큰도 버전 1에서와 같이 채우기 시 위치로 처리됩니다.',
           '숨겨진 위치 토큰은 GM 레이어로 이동됩니다. 헥스가 공개되면 이름이 표시된 토큰 레이어로 돌아가고 발견이 발표됩니다.',
-          '헥스 이름 지정은 토큰 없이 헥스에 이름을 붙입니다. 이름은 GM 레이어에 라벨로 표시되어 GM에게 보이며, 헥스가 공개되면 발표됩니다.',
+          '헥스 이름 지정은 토큰 없이 헥스에 이름을 붙입니다. 이름은 GM 레이어에 라벨로 표시되어 GM에게 보이며, 헥스가 공개되면 발표됩니다. Jumpgate는 GM 레이어를 전경 레이어 아래에 그리므로, Jumpgate에서는 헥스 레이어 설정이 토큰 레이어로 되어 있을 때만 라벨이 표시됩니다.',
           '발견 알림은 모든 사람, GM만, 또는 아무도 알림을 보지 않을지 선택합니다. 발견 위치 핑은 플레이어의 시점도 해당 위치로 옮깁니다.',
         ],
       },
@@ -7504,7 +7508,7 @@ const HexplorationMod = (() => {
           'Oznacz lokalizację zamienia wybrane żetony w ukryte lokalizacje. Żeton znajdujący się już pod heksem jest natychmiast ukrywany; w przeciwnym razie zostanie ukryty przez następne wypełnienie, które je zakrywa.',
           'Żetony ze znacznikiem stanu białej wieży są również traktowane jako lokalizacje podczas zapełniania, tak jak w wersji 1.',
           'Żetony ukrytych lokalizacji są przenoszone na warstwę GM. Kiedy ich heks zostanie odkryty, wracają na warstwę żetonów z pokazaną nazwą i ogłaszają swoje odkrycie.',
-          '„Nazwij heks” nadaje heksowi nazwę bez żetonu. Nazwa jest pokazywana MG jako etykieta na warstwie MG i ogłaszana, gdy heks zostanie odkryty.',
+          '„Nazwij heks” nadaje heksowi nazwę bez żetonu. Nazwa jest pokazywana MG jako etykieta na warstwie MG i ogłaszana, gdy heks zostanie odkryty. Jumpgate rysuje warstwę MG pod warstwą pierwszego planu, więc w Jumpgate etykiety są widoczne tylko wtedy, gdy „Warstwa heksagonów” jest ustawiona na warstwę żetonów.',
           '„Ogłaszaj odkrycia” określa, czy ogłoszenie widzą wszyscy, tylko MG, czy nikt. „Pinguj odkrycia” dodatkowo przenosi widok graczy na lokalizację.',
         ],
       },
@@ -7881,7 +7885,7 @@ const HexplorationMod = (() => {
           'Marcar local transforma as fichas selecionadas em locais escondidos. Uma ficha que já esteja sob um hexágono é ocultada imediatamente; caso contrário, ficará oculta pelo próximo preenchimento que a cobrir.',
           'Os tokens com o marcador de estado da torre branca também são tratados como locais quando preenche, como na versão 1.',
           'As fichas de localização oculta são movidas para a camada GM. Quando o seu hexágono é revelado, regressam à camada de token com o seu nome mostrado e a sua descoberta é anunciada.',
-          'Nomear hexágono dá um nome a um hexágono sem precisar de uma ficha. O nome é mostrado ao GM como uma etiqueta na camada do GM e anunciado quando o hexágono é revelado.',
+          'Nomear hexágono dá um nome a um hexágono sem precisar de uma ficha. O nome é mostrado ao GM como uma etiqueta na camada do GM e anunciado quando o hexágono é revelado. O Jumpgate desenha a camada do GM por baixo da camada de primeiro plano, pelo que no Jumpgate as etiquetas só aparecem quando a opção Camada dos hexágonos está definida como camada de fichas.',
           'Anunciar descobertas escolhe se todos, apenas o GM ou ninguém vê o anúncio. Pingar descobertas também move a vista dos jogadores para o local.',
         ],
       },
@@ -8258,7 +8262,7 @@ const HexplorationMod = (() => {
           'Marcar local transforma os tokens selecionados em locais ocultos. Um token que já esteja sob um hexágono é ocultado imediatamente; caso contrário, ele será ocultado pelo próximo preenchimento que o cobrir.',
           'Os tokens com o marcador de status da torre branca também são tratados como locais quando você preenche, como na versão 1.',
           'As fichas de localização oculta são movidas para a camada GM. Quando seu hexágono é revelado, eles retornam à camada de token com seu nome mostrado e sua descoberta é anunciada.',
-          'Nomear hexágono dá um nome a um hexágono sem precisar de um token. O nome é mostrado ao GM como um rótulo na camada do GM e anunciado quando o hexágono é revelado.',
+          'Nomear hexágono dá um nome a um hexágono sem precisar de um token. O nome é mostrado ao GM como um rótulo na camada do GM e anunciado quando o hexágono é revelado. O Jumpgate desenha a camada do GM abaixo da camada de primeiro plano, então no Jumpgate os rótulos só aparecem quando a opção Camada dos hexágonos está definida como camada de tokens.',
           'Anunciar descobertas escolhe se todos, apenas o GM ou ninguém verá o anúncio. Pingar descobertas também move a visão dos jogadores para o local.',
         ],
       },
@@ -8633,7 +8637,7 @@ const HexplorationMod = (() => {
           '«Отметить локацию» превращает выбранные токены в скрытые локации. Токен, уже находящийся под гексом, прячется сразу; иначе его спрячет следующая заливка, которая его накроет.',
           'Жетоны с маркером статуса белой башни также считаются локациями при заполнении, как и в версии 1.',
           'Жетоны скрытых локаций перемещаются на уровень GM. Когда их гекс раскрывается, они возвращаются на слой жетонов с указанием своего имени, и об их открытии объявляется.',
-          '«Назвать гекс» даёт гексу имя без токена. Имя показывается ГМу в виде метки на слое ГМ и объявляется, когда гекс открывается.',
+          '«Назвать гекс» даёт гексу имя без токена. Имя показывается ГМу в виде метки на слое ГМ и объявляется, когда гекс открывается. Jumpgate рисует слой ГМ под слоем переднего плана, поэтому в Jumpgate метки видны, только если для параметра «Слой шестиугольников» выбран слой токенов.',
           '«Объявлять об открытиях» определяет, увидят ли объявление все, только ГМ или никто. «Пинговать находки» также переводит взгляд игроков на локацию.',
         ],
       },
@@ -9012,7 +9016,7 @@ const HexplorationMod = (() => {
           'Marcar ubicación convierte las fichas seleccionadas en ubicaciones ocultas. Una ficha que ya está bajo un hexágono se oculta de inmediato; si no, la oculta el siguiente relleno que la cubra.',
           'Las fichas con el marcador de estado de la torre blanca también se tratan como ubicaciones cuando las llenas, como en la versión 1.',
           'Las fichas de ubicación oculta se mueven a la capa de GM. Cuando se revela su hexágono, regresan a la capa de fichas con su nombre mostrado y se anuncia su descubrimiento.',
-          'Nombrar hexágono da un nombre a un hexágono sin usar ninguna ficha. El nombre se muestra al DJ como una etiqueta en la capa del DJ y se anuncia cuando se revela el hexágono.',
+          'Nombrar hexágono da un nombre a un hexágono sin usar ninguna ficha. El nombre se muestra al DJ como una etiqueta en la capa del DJ y se anuncia cuando se revela el hexágono. Jumpgate dibuja la capa del DJ por debajo de la capa de primer plano, así que en Jumpgate las etiquetas solo se ven cuando Capa de hexágonos está configurada en la capa de fichas.',
           'Anunciar descubrimientos elige si ven el anuncio todos, solo el DJ o nadie. Hacer ping a los descubrimientos también mueve la vista de los jugadores a la ubicación.',
         ],
       },
@@ -9383,7 +9387,7 @@ const HexplorationMod = (() => {
           'Markera plats förvandlar de valda tokens till dolda platser. En token redan under en hex döljs direkt; annars döljs den av nästa fyllning som täcker den.',
           'Tokens med statusmarkören för det vita tornet behandlas också som platser när du fyller, som i version 1.',
           'Dolda platssymboler flyttas till GM-lagret. När deras hex avslöjas återvänder de till tokenlagret med deras namn visat, och deras upptäckt tillkännages.',
-          'Namnge hex ger en hex ett namn utan en token. Namnet visas för GM som en etikett på GM-lagret och tillkännages när hexen avslöjas.',
+          'Namnge hex ger en hex ett namn utan en token. Namnet visas för GM som en etikett på GM-lagret och tillkännages när hexen avslöjas. Jumpgate ritar GM-lagret under förgrundslagret, så i Jumpgate syns etiketterna bara när Lager för hexar är inställt på tokenlagret.',
           'Tillkännage upptäckter väljer om alla, bara GM eller ingen ser tillkännagivandet. Pinga upptäckter flyttar också spelarnas vy till platsen.',
         ],
       },
@@ -9758,7 +9762,7 @@ const HexplorationMod = (() => {
           'Konumu İşaretle, seçilen jetonları gizli konumlara dönüştürür. Zaten altıgen altında olan bir jeton hemen gizlenir; aksi takdirde onu kapsayan bir sonraki dolgu tarafından gizlenir.',
           "Beyaz kule durum işaretçisine sahip jetonlar da, sürüm 1'de olduğu gibi, doldurduğunuzda konum olarak kabul edilir.",
           'Gizli konum belirteçleri GM katmanına taşınır. Altıgenleri ortaya çıktığında, adlarının gösterildiği simge katmanına geri dönerler ve keşifleri duyurulur.',
-          "Altıgeni Adlandır, bir altıgene jeton olmadan ad verir. Ad, GM katmanında bir etiket olarak GM'ye gösterilir ve altıgen açığa çıktığında duyurulur.",
+          "Altıgeni Adlandır, bir altıgene jeton olmadan ad verir. Ad, GM katmanında bir etiket olarak GM'ye gösterilir ve altıgen açığa çıktığında duyurulur. Jumpgate, GM katmanını ön plan katmanının altında çizer; bu nedenle Jumpgate'te etiketler yalnızca Altıgen Katmanı jeton katmanı olarak ayarlandığında görünür.",
           "Keşifleri Duyur, duyuruyu herkesin mi, yalnızca GM'nin mi yoksa hiç kimsenin mi göreceğini seçer. Keşifleri Pingle ayrıca oyuncuların görünümünü konuma taşır.",
         ],
       },
@@ -10132,7 +10136,7 @@ const HexplorationMod = (() => {
           '«Позначити локацію» перетворює вибрані маркери на приховані локації. Маркер, який уже стоїть під гексом, ховається відразу; інакше його сховає наступне заповнення, що його накриє.',
           'Жетони з маркером статусу білої вежі також розглядаються як локації, коли ви заповнюєте, як у версії 1.',
           'Жетони прихованого розташування переміщуються на рівень GM. Коли їхній гексагон розкривається, вони повертаються до рівня маркерів із показом свого імені та оголошують про своє відкриття.',
-          '«Назвати гекс» дає гексу назву без маркера. Назва показується GM як мітка на шарі GM і оголошується, коли гекс відкривається.',
+          '«Назвати гекс» дає гексу назву без маркера. Назва показується GM як мітка на шарі GM і оголошується, коли гекс відкривається. Jumpgate малює шар GM під шаром переднього плану, тому в Jumpgate мітки видно лише тоді, коли для параметра «Шар шестикутників» вибрано шар маркерів.',
           '«Оголошувати відкриття» визначає, чи бачитимуть оголошення всі, лише GM чи ніхто. «Пінгувати знахідки» також переміщує погляд гравців на локацію.',
         ],
       },
@@ -11386,6 +11390,43 @@ const HexplorationMod = (() => {
   }
 
   /**
+   * Gives a name label a font Jumpgate can draw. A text created through the API
+   * without one gets the font "unset", and Jumpgate stops drawing the whole
+   * tabletop ("Something Went Wrong") when it meets it. Labels made by 2.0.0 and
+   * 2.0.1 have that font.
+   *
+   * @param {object} text Roll20 text object.
+   * @returns {boolean} Whether the font was changed.
+   */
+  function repairLabelFont(text) {
+    const font = toText(text.get('font_family'));
+    if (font && font !== 'unset') {
+      return false;
+    }
+    text.set('font_family', LABEL_FONT_FAMILY);
+    return true;
+  }
+
+  /**
+   * Repairs the font of every name label Hexploration knows about.
+   *
+   * @param {string[]} pageIds Pages with hexes.
+   * @returns {number} Number of labels repaired.
+   */
+  function repairLabelFonts(pageIds) {
+    let count = 0;
+    for (const pageId of pageIds) {
+      for (const hex of getPageHexes(pageId)) {
+        const text = hex.nameId ? getObj('text', hex.nameId) : null;
+        if (text && repairLabelFont(text)) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /**
    * Sets or clears a hex's name and redraws its GM-layer label.
    *
    * @param {object} ctx Page context.
@@ -11409,6 +11450,8 @@ const HexplorationMod = (() => {
       top: y,
       text: clean,
       color: getConfig().labelColor,
+      font_family: LABEL_FONT_FAMILY,
+      font_size: LABEL_FONT_SIZE,
     });
     if (label) {
       hex.nameId = label.get('_id');
@@ -12328,7 +12371,10 @@ const HexplorationMod = (() => {
 
         const token = locations.get(key);
         if (token && !hex.iconId) {
-          record.icons.push({ id: token.get('_id'), layer: token.get('layer') });
+          // Remember a Mark Location token so undo can mark it again
+          const id = token.get('_id');
+          const pending = getPendingLocations(ctx.pageId).includes(id);
+          record.icons.push({ id, layer: token.get('layer'), pending });
           attachIcon(hex, token);
           summary.icons++;
         }
@@ -12416,7 +12462,7 @@ const HexplorationMod = (() => {
       }
     }
 
-    for (const { id, layer } of record.icons || []) {
+    for (const { id, layer, pending } of record.icons || []) {
       const token = getObj('graphic', id);
       if (token) {
         for (const hex of getPageHexes(record.pageId)) {
@@ -12425,6 +12471,10 @@ const HexplorationMod = (() => {
           }
         }
         token.set('layer', layer || LAYER_TOKEN);
+        // Hiding it used up its Mark Location; mark it again so the next fill hides it
+        if (pending) {
+          setPendingLocation(id, record.pageId);
+        }
       }
     }
 
@@ -12560,6 +12610,7 @@ const HexplorationMod = (() => {
       const [cx, cy] = hexToPixel(ctx.grid, row, col);
       const hex = getHex(ctx.pageId, hexKey(row, col));
       if (hex && !hex.nameId && Math.hypot(x - cx, y - cy) <= RESCAN_LABEL_TOLERANCE) {
+        repairLabelFont(text);
         hex.nameId = text.get('_id');
         hex.name = String(text.get('text') || '').trim() || hex.name;
         counts.labels++;
@@ -14227,6 +14278,10 @@ const HexplorationMod = (() => {
     const migratedFrom = initialiseState();
     applyGlobalConfig();
     const pruned = pruneMissingHexes();
+    const repairedLabels = repairLabelFonts(getPageIds());
+    if (repairedLabels > 0) {
+      log(`${SCRIPT_NAME}: gave ${repairedLabels} hex name label(s) a font Jumpgate can draw.`);
+    }
     for (const pageId of new Set([
       ...getPageIds(),
       ...Object.values(getCoveredTokens()).map((entry) => entry.pageId),

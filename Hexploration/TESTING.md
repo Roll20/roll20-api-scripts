@@ -34,7 +34,7 @@ For the Legacy game, install Hexploration **1.3** first (with PathMath, MatrixMa
 
 ## Setup
 
-- [ ] Install `Hexploration.js` and save. The API console shows `-=> Hexploration v2.0.1 … (Jumpgate) <=-` (or `(Legacy)`).
+- [ ] Install `Hexploration.js` and save. The API console shows `-=> Hexploration v2.0.2 … (Jumpgate) <=-` (or `(Legacy)`).
 - [ ] The GM receives the "Hexploration is ready." whisper.
 - [ ] The Journal contains **Hexploration - Help** and **Hexploration - Command Deck**, neither visible to players.
 - [ ] Every button in the Command Deck works.
@@ -86,6 +86,9 @@ For the Legacy game, install Hexploration **1.3** first (with PathMath, MatrixMa
 - [ ] A `white-tower` token is hidden when filled over.
 - [ ] Revealing the hex returns the token to the token layer with its name shown and announces it.
 - [ ] Name Hex shows a GM-only label; revealing announces the name and removes the label.
+- [ ] Jumpgate: after Name Hex the tabletop keeps drawing (no "Something Went Wrong"). With Hex Layer `objects` the label shows over the covered hex.
+- [ ] Mark Location, fill, Undo Fill, then fill again: the location is hidden again and announced when found.
+- [ ] Jumpgate: a label made by 2.0.1 (font "unset") stops crashing the page after the sandbox restarts.
 - [ ] Announce Discoveries: GM only whispers to the GM; Off sends nothing.
 - [ ] Ping Discoveries moves the players' view.
 - [ ] A name containing `<b>` appears literally in chat.
@@ -98,7 +101,7 @@ For the Legacy game, install Hexploration **1.3** first (with PathMath, MatrixMa
 
 ## Upgrading from Version 1 (Legacy game)
 
-- [ ] Replace v1.3 with v2.0.1. The startup whisper says the maps were upgraded.
+- [ ] Replace v1.3 with v2.0.2. The startup whisper says the maps were upgraded.
 - [ ] Existing hexes reveal when tokens move; names and location tokens are announced.
 - [ ] Colours, border width and reveal distance match the v1 settings.
 - [ ] The `Hexploration_menu` macro opens the new menu; the v1 Fill buttons in old macros still work.

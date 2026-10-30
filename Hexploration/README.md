@@ -153,7 +153,7 @@ The swatch next to each colour on the settings card shows the colour with its tr
 // Pass its previous position to reveal along the route as well.
 Hexploration.revealAround(token, { left: oldLeft, top: oldTop });
 Hexploration.revealAround(tokenId);
-Hexploration.version; // "2.0.1"
+Hexploration.version; // "2.0.2"
 ```
 
 ## Credits

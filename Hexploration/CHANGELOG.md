@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.2 - 2026-10-30
+
+### Fixed
+
+- Naming a hex no longer stops Jumpgate drawing the tabletop. Name labels were made without a font, which Jumpgate cannot draw, so Roll20 showed "Something Went Wrong" until the page was refreshed, and again whenever the page was opened. Labels now use Arial, and labels made by 2.0.0 and 2.0.1 are given the font on startup or when the page is rescanned.
+- Undoing a fill no longer forgets the locations it hid. A token marked with Mark Location went back to the token layer as an ordinary token, so the next fill covered it without hiding it, and finding it was not announced.
+
+### Changed
+
+- The help handout and README explain that Jumpgate draws the GM layer below the foreground layer, so name labels only show over covered hexes when Hex Layer is set to the token layer.
+
 ## 2.0.1 - 2026-10-30
 
 ### Fixed

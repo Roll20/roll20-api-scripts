@@ -1,13 +1,13 @@
 {
   "name": "Hexploration",
   "script": "Hexploration.js",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "previousversions": [
-    "1.0",
     "1.1",
     "1.2",
     "1.3",
-    "2.0.0"
+    "2.0.0",
+    "2.0.1"
   ],
   "description": "# Hexploration\n\nCover a hex map with opaque hexes that are revealed as the party explores. Draw a polygon over the area to hide, fill it with hexes, and every hex a player token moves through (and, optionally, the hexes around it) is uncovered. Hidden locations are announced in chat when they are discovered.\n\n**Version 2.0.0 is a full rewrite that works in Jumpgate and in Legacy games.** It no longer needs PathMath, MatrixMath, Vector Math or HTML Builder. Existing v1 hex maps and the v1 `!hexploration_*` commands keep working.\n\n## Getting started\n\n1. Use a page with a **Hex (V)** or **Hex (H)** grid.\n2. Draw one or more polygons over the area to hide and select them.\n3. Type `!hexploration fill`, or open the **Hexploration - Command Deck** handout and click **Fill**.\n4. Move a player token and watch the map open up.\n\nType `!hexploration` for the menu, or `!hexploration help` for every command. The **Hexploration - Help** handout is created in the Journal on startup.\n\n## Features\n\n* Works with Jumpgate (`pathv2`) and Legacy paths, on both hex grid orientations and any cell size.\n* Hexes are drawn on the foreground layer when the game has one, otherwise on the token layer.\n* Reveals along the whole path a token travels, covers every hex a large token occupies, and respects line of sight.\n* Optional glimpse mode: nearby hexes turn see-through and clear when a token enters them.\n* Named locations and hidden location tokens, announced (and optionally pinged) when discovered.\n* Reveal or re-cover selected hexes, reveal or clear a page, undo the last fill, and per-page settings.\n* Rescan rebuilds the hex list after a page is duplicated or a Legacy game is copied to Jumpgate.\n* Grid calibration for maps whose hexes do not line up.\n* Translated into 24 languages.\n\nOriginal mod by Ada Lindberg. Version 2 is maintained by MidNiteShadow7.",
   "authors": "Ada Lindberg, MidNiteShadow7",
