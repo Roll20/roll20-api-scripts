@@ -34,7 +34,7 @@ For the Legacy game, install Hexploration **1.3** first (with PathMath, MatrixMa
 
 ## Setup
 
-- [ ] Install `Hexploration.js` and save. The API console shows `-=> Hexploration v2.0.0 … (Jumpgate) <=-` (or `(Legacy)`).
+- [ ] Install `Hexploration.js` and save. The API console shows `-=> Hexploration v2.0.1 … (Jumpgate) <=-` (or `(Legacy)`).
 - [ ] The GM receives the "Hexploration is ready." whisper.
 - [ ] The Journal contains **Hexploration - Help** and **Hexploration - Command Deck**, neither visible to players.
 - [ ] Every button in the Command Deck works.
@@ -98,7 +98,7 @@ For the Legacy game, install Hexploration **1.3** first (with PathMath, MatrixMa
 
 ## Upgrading from Version 1 (Legacy game)
 
-- [ ] Replace v1.3 with v2.0.0. The startup whisper says the maps were upgraded.
+- [ ] Replace v1.3 with v2.0.1. The startup whisper says the maps were upgraded.
 - [ ] Existing hexes reveal when tokens move; names and location tokens are announced.
 - [ ] Colours, border width and reveal distance match the v1 settings.
 - [ ] The `Hexploration_menu` macro opens the new menu; the v1 Fill buttons in old macros still work.

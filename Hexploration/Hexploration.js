@@ -4,16 +4,16 @@
  * ------------------------------------------------
  * Name: Hexploration
  * Script: Hexploration.js
- * Version: 2.0.0
- * Built: 2026-10-29T19:48:15.389Z
+ * Version: 2.0.1
+ * Built: 2026-10-30T15:35:23.371Z
  */
 const HexplorationMod = (() => {
   'use strict';
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Hexploration';
-  const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T19:48:15.389Z';
+  const SCRIPT_VERSION = '2.0.1';
+  const SCRIPT_LAST_UPDATED = '2026-10-30T15:35:23.371Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -232,6 +232,74 @@ const HexplorationMod = (() => {
       /^rgba?\(\s*[\d.]+%?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?\s*(?:,\s*[\d.]+%?\s*)?\)$/i.test(text) ||
       /^[a-z]{3,20}$/i.test(text)
     );
+  }
+
+  /**
+   * Parses a hex, rgb() or rgba() colour into its channels.
+   *
+   * @param {*} raw Colour text.
+   * @returns {{r: number, g: number, b: number, a: number}|null} Channels 0–255 and alpha 0–1, or null for other colours such as names.
+   */
+  function parseColor(raw) {
+    const text = toText(raw);
+
+    const hex = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(text);
+    if (hex) {
+      const digits = hex[1].length <= 4 ? [...hex[1]].map((c) => c + c).join('') : hex[1];
+      const [r, g, b, a = 255] = digits.match(/../g).map((pair) => parseInt(pair, 16));
+      return { r, g, b, a: a / 255 };
+    }
+
+    const fn =
+      /^rgba?\(\s*([\d.]+%?)\s*,\s*([\d.]+%?)\s*,\s*([\d.]+%?)\s*(?:,\s*([\d.]+%?)\s*)?\)$/i.exec(
+        text
+      );
+    if (!fn) {
+      return null;
+    }
+    const channel = (v) =>
+      clamp(v.endsWith('%') ? (parseFloat(v) * 255) / 100 : parseFloat(v), 0, 255);
+    const alpha =
+      fn[4] === undefined ? 1 : fn[4].endsWith('%') ? parseFloat(fn[4]) / 100 : parseFloat(fn[4]);
+    return { r: channel(fn[1]), g: channel(fn[2]), b: channel(fn[3]), a: clamp(alpha, 0, 1) };
+  }
+
+  /**
+   * Converts a colour to the #rrggbb or #rrggbbaa form Jumpgate's pathv2 objects
+   * accept. Jumpgate silently ignores rgb(), rgba() and short hex colours, so a
+   * hex keeps its old colour. Colour names are returned unchanged.
+   *
+   * @param {*} raw Colour text.
+   * @returns {string} Colour for a pathv2 fill or stroke.
+   */
+  function toPathV2Color(raw) {
+    const color = parseColor(raw);
+    if (!color) {
+      return toText(raw);
+    }
+    const hex = (n) => Math.round(n).toString(16).padStart(2, '0');
+    const rgb = `#${hex(color.r)}${hex(color.g)}${hex(color.b)}`;
+    return color.a >= 1 ? rgb : `${rgb}${hex(color.a * 255)}`;
+  }
+
+  /**
+   * Converts a colour to a form Roll20 chat keeps in inline styles. Chat drops
+   * #rrggbbaa colours and rgb() with an alpha value, leaving the style empty;
+   * #rrggbb and rgba() survive. Colour names are returned unchanged.
+   *
+   * @param {*} raw Colour text.
+   * @returns {string} Colour for chat HTML.
+   */
+  function toChatColor(raw) {
+    const color = parseColor(raw);
+    if (!color) {
+      return toText(raw);
+    }
+    if (color.a >= 1) {
+      return toPathV2Color(raw);
+    }
+    const [r, g, b] = [color.r, color.g, color.b].map(Math.round);
+    return `rgba(${r},${g},${b},${Math.round(color.a * 100) / 100})`;
   }
 
   /**
@@ -612,7 +680,7 @@ const HexplorationMod = (() => {
    */
   function buildSwatch(color) {
     const safe = escapeHtml(color);
-    return `<span style="display:inline-block;width:12px;height:12px;vertical-align:middle;border:1px solid #888;background:${safe}"></span> <code>${safe}</code>`;
+    return `<span style="display:inline-block;width:12px;height:12px;vertical-align:middle;border:1px solid #888;background:${escapeHtml(toChatColor(color))}"></span> <code>${safe}</code>`;
   }
 
   // Hex grid geometry. Pure functions only: nothing here touches the Roll20 API,
@@ -1249,7 +1317,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Seshoek-onthullingsafstand',
-        desc: "Word op seshoeke toegepas wanneer hulle geteken word: 'n token moet binne soveel seshoeke wees om hulle te onthul, hoe ver dit ook al kan sien. Laat leeg vir geen beperking nie.",
+        desc: "Word op seshoeke gestoor wanneer hulle gevul word, so stel dit in voordat jy vul: om dit later te verander, raak nie seshoeke wat reeds op die kaart is nie. 'n Token moet binne soveel seshoeke wees om hulle te onthul, hoe ver dit ook al kan sien; met 0 word hulle slegs onthul deur hulle binne te gaan. Gebruik dit vir berge of woude. Laat leeg vir geen beperking nie.",
       },
       revealDistance: {
         label: 'Sigafstand',
@@ -1257,7 +1325,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Siglyn',
-        desc: "Wanneer dit aan is, word 'n seshoek slegs onthul as geen bedekte seshoek tussen dit en die token lê nie.",
+        desc: "Wanneer dit aan is, versteek seshoeke wat bedek bly, soos berge wat met 'n Seshoek-onthullingsafstand gevul is, die seshoeke agter hulle. Dit maak slegs 'n verskil met 'n Sigafstand van 2 of meer.",
       },
       revealPath: {
         label: 'Onthul langs pad',
@@ -1438,9 +1506,9 @@ const HexplorationMod = (() => {
         points: [
           'Slegs tokens op die tokenlaag onthul seshoeke. Watter tokens tel, word deur Tokens wat onthul bepaal: by verstek speler-tokens, sodat die GM monsters kan skuif sonder om die kaart te ontbloot.',
           "'n Token onthul elke seshoek wat dit bedek (groot tokens bedek verskeie) en, met Onthul langs pad aan, elke seshoek op die roete waarlangs dit gesleep is, insluitend tussenpunte.",
-          "Sigafstand onthul die seshoeke rondom elk van daardie seshoeke. Met Siglyn aan, word 'n seshoek slegs onthul as geen bedekte seshoek tussenin lê nie.",
-          "Seshoek-onthullingsafstand word op seshoeke gestoor wanneer hulle geteken word. Daardie seshoeke word slegs van binne soveel seshoeke onthul, hoe ver 'n token ook al kan sien. Gebruik dit vir berge of woude wat versteek wat agter hulle lê.",
-          "In Glimp-modus word seshoeke binne sig deurskynend in plaas daarvan om te verdwyn, en hulle word verwyder wanneer 'n token hulle binnegaan.",
+          "Sigafstand onthul die seshoeke rondom elk van daardie seshoeke, die naaste eerste. Met Siglyn aan word 'n seshoek nie onthul solank 'n bedekte seshoek tussen dit en die token lê nie. Nader seshoeke word gewoonlik eerste onthul, so in oop terrein verander Siglyn niks nie: dit maak slegs saak met 'n Sigafstand van 2 of meer en seshoeke wat bedek bly, soos terrein wat met 'n Seshoek-onthullingsafstand gevul is.",
+          "Seshoek-onthullingsafstand word op elke seshoek gestoor wanneer dit gevul word, so stel dit in voordat jy vul; om dit later te verander, raak nie seshoeke wat reeds op die kaart is nie. 'n Token moet binne soveel seshoeke wees om hulle te onthul, hoe ver dit ook al kan sien, en met 0 word hulle slegs onthul deur hulle binne te gaan. Vir 'n bergreeks: stel Seshoek-onthullingsafstand op 0, vul die berge, stel dit terug na geen, en vul dan die land daaragter. Met Sigafstand 3 en Siglyn aan sien die groep die oop grond rondom hulle, maar nie die berge of wat agter hulle lê nie. Elke bergseshoek word onthul wanneer 'n token daarin instap.",
+          "In Glimp-modus word seshoeke binne sig deurskynend in plaas daarvan om te verdwyn, en hulle word verwyder wanneer 'n token hulle binnegaan. Deurskynende Glimp-seshoeke blokkeer nie Siglyn nie.",
           "Roll20 teken tokenname, balke en auras bo seshoeke. Met Versteek bedekte tokens aan, word die naam, balke en auras wat spelers kan sien, afgeskakel vir 'n token onder 'n bedekte seshoek totdat dit ontbloot word, sodat versteekte monsters hulself nie verklap nie. As jy een daarvan aanskakel terwyl die token bedek is, bly dit versteek en word dit aangeskakel wanneer die token ontbloot word.",
           'Die API rapporteer nie bewegings wat deur ander mods gemaak is nie. TokenMod-skuiwe word outomaties opgetel; vir ander mods, kies die tokens en klik Explore, of bel Hexploration.revealAround(token) vanaf jou eie mod.',
         ],
@@ -1625,7 +1693,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Distància de revelació dels hexàgons',
-        desc: "S'aplica als hexàgons a mesura que es dibuixen: una fitxa ha d'estar dins d'aquests hexagones per revelar-los, per molt lluny que pugui veure. Deixeu buit sense límit.",
+        desc: "Es desa als hexàgons quan s'omplen, així que configureu-la abans d'omplir: canviar-la després no afecta els hexàgons que ja són al mapa. Una fitxa ha d'estar com a màxim a aquest nombre d'hexàgons per revelar-los, per lluny que pugui veure; amb 0, només es revelen quan s'hi entra. Utilitzeu-la per a muntanyes o boscos. Deixeu-ho buit perquè no hi hagi límit.",
       },
       revealDistance: {
         label: 'Distància de visió',
@@ -1633,7 +1701,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Línia de visió',
-        desc: 'Quan està activat, un hexàgon només es revela si no hi ha cap hexagonal cobert entre ell i la fitxa.',
+        desc: 'Quan està activat, els hexàgons que continuen coberts, com ara muntanyes omplertes amb una Distància de revelació dels hexàgons, amaguen els hexàgons que hi ha darrere. Només té efecte amb una Distància de visió de 2 o més.',
       },
       revealPath: {
         label: 'Revela al llarg del camí',
@@ -1816,9 +1884,9 @@ const HexplorationMod = (() => {
         points: [
           'Només les fitxes de la capa de fitxes revelen hexàgons. Quines fitxes compten ho determina Fitxes que revelen: per defecte, les fitxes de jugador, de manera que el GM pot moure monstres sense descobrir el mapa.',
           "Una fitxa revela tots els hexàgons que cobreix (les fitxes grans en cobreixen diversos) i, amb Revela al llarg del camí activat, tots els hexàgons de la ruta per on s'ha arrossegat, inclosos els punts de pas.",
-          "La distància de visió revela els hexàgons al voltant de cadascun d'aquests hexàgons. Amb Línia de visió activada, un hexàgon només es revela si no hi ha cap hexàgon cobert entremig.",
-          "La distància de revelació dels hexàgons s'emmagatzema als hexàgons quan es dibuixen. Aquests hexàgons només es revelen des d'un màxim d'aquest nombre d'hexàgons, per lluny que pugui veure una fitxa. Utilitzeu-la per a muntanyes o boscos que amaguen el que hi ha darrere.",
-          "En el mode Cop d'ull, els hexàgons a la vista es tornen transparents en lloc de desaparèixer, i s'eliminen quan hi entra una fitxa.",
+          "La Distància de visió revela els hexàgons al voltant de cadascun d'aquests hexàgons, començant pels més propers. Amb la Línia de visió activada, un hexàgon no es revela mentre hi hagi un hexàgon cobert entre ell i la fitxa. Normalment els hexàgons més propers es revelen primer, de manera que en terreny obert la Línia de visió no canvia res: només importa amb una Distància de visió de 2 o més i hexàgons que continuen coberts, com ara terreny omplert amb una Distància de revelació dels hexàgons.",
+          "La Distància de revelació dels hexàgons es desa a cada hexàgon quan s'omple, així que configureu-la abans d'omplir; canviar-la després no afecta els hexàgons que ja són al mapa. Una fitxa ha d'estar com a màxim a aquest nombre d'hexàgons per revelar-los, per lluny que pugui veure, i amb 0 només es revelen quan s'hi entra. Per a una serralada: poseu la Distància de revelació dels hexàgons a 0, ompliu les muntanyes, torneu-la a deixar sense límit i després ompliu les terres de més enllà. Amb una Distància de visió de 3 i la Línia de visió activada, el grup veu el terreny obert al seu voltant, però no les muntanyes ni el que hi ha darrere. Cada hexàgon de muntanya es revela quan una fitxa hi entra.",
+          "En el mode Cop d'ull, els hexàgons a la vista es tornen transparents en lloc de desaparèixer, i s'eliminen quan hi entra una fitxa. Els hexàgons transparents del mode Cop d'ull no bloquegen la Línia de visió.",
           "Roll20 dibuixa els noms, les barres i les aures de les fitxes per sobre dels hexàgons. Amb Amaga les fitxes cobertes activat, una fitxa sota un hexàgon cobert té el nom, les barres i les aures visibles per als jugadors desactivats fins que es descobreix, perquè els monstres amagats no es delatin. Si n'activeu algun mentre la fitxa està coberta, continua amagat i s'activa quan la fitxa es descobreix.",
           "L'API no informa dels moviments fets per altres modificacions. Els moviments de TokenMod es recullen automàticament; per a altres modificacions, seleccioneu les fitxes i feu clic a Explora, o truqueu a Hexploration.revealAround(token) des del vostre propi mod.",
         ],
@@ -2002,7 +2070,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: '六角格揭示距離',
-        desc: '應用於繪製的六角形：令牌必須位於這麼多六角形內才能顯示它們，無論它能看到多遠。留空則無限制。',
+        desc: '六角格在填充時會儲存此值，因此請在填充前設定：之後再更改不會影響地圖上已有的六角格。無論令牌能看多遠，都必須位於這麼多格以內才能揭示它們；設為 0 時，只有進入六角格才會揭示。可用於山脈或森林。留空則無限制。',
       },
       revealDistance: {
         label: '視距',
@@ -2010,7 +2078,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: '視線',
-        desc: '啟用後，僅當六角形與令牌之間沒有被覆蓋的六角形時，該六角形才會顯示。',
+        desc: '啟用後，持續被覆蓋的六角格（例如以「六角格揭示距離」填充的山脈）會遮住其後方的六角格。只有在「視距」為 2 或以上時才會有差別。',
       },
       revealPath: {
         label: '沿路徑顯示',
@@ -2175,9 +2243,9 @@ const HexplorationMod = (() => {
         points: [
           '只有令牌層上的令牌才會揭示六角格。哪些令牌算數由「可揭示的令牌」決定：預設為玩家令牌，因此 GM 可以移動怪物而不揭開地圖。',
           '標記會顯示它所覆蓋的每個六角形（大標記會覆蓋幾個），並且在啟用「沿路徑顯示」的情況下，會顯示它所拖曳的路線上的每個六角形，包括航路點。',
-          '視距顯示每個六角形周圍的六角形。當視線打開時，只有當中間沒有被覆蓋的六角形時才會顯示六角形。',
-          '「六角格揭示距離」會在六角格繪製時儲存在六角格上。無論令牌能看多遠，這些六角格都只會在該格數範圍內被揭示。可用於遮擋後方景物的山脈或森林。',
-          '在「瞥見」模式中，視線內的六角格會變為半透明而非消失，並在令牌進入時被移除。',
+          '「視距」會由近而遠揭示這些六角格周圍的六角格。啟用「視線」時，只要六角格與令牌之間有被覆蓋的六角格，該六角格就不會被揭示。較近的六角格通常會先被揭示，因此在開闊地區「視線」不會帶來任何改變：只有在「視距」為 2 或以上，且有持續被覆蓋的六角格（例如以「六角格揭示距離」填充的地形）時才有作用。',
+          '「六角格揭示距離」會在六角格填充時儲存在每個六角格上，因此請在填充前設定；之後再更改不會影響地圖上已有的六角格。無論令牌能看多遠，都必須位於該格數以內才能揭示它們；設為 0 時，只有進入六角格才會揭示。以山脈為例：將「六角格揭示距離」設為 0，填充山脈，再將其設回無，然後填充山脈後方的土地。在「視距」為 3 且啟用「視線」時，隊伍能看到周圍的開闊地，但看不到山脈或山後的事物。每個山脈六角格會在令牌走進時被揭示。',
+          '在「瞥見」模式中，視野內的六角格會變為半透明而非消失，並在令牌進入時被移除。處於瞥見狀態的六角格不會阻擋「視線」。',
           'Roll20 會把令牌的名稱、條和光環繪製在六角格上方。啟用「隱藏被覆蓋的令牌」後，位於被覆蓋六角格下的令牌，其玩家可見的名稱、條和光環會關閉，直到被揭開為止，讓隱藏的怪物不會暴露行蹤。若在令牌仍被覆蓋時開啟其中任何一項，它會保持隱藏，並在令牌被揭開時開啟。',
           'API 不會回報其他模組造成的移動。TokenMod 的移動會自動偵測；對於其他模組，請選取令牌並點選「探索」，或從你自己的模組呼叫 Hexploration.revealAround(token)。',
         ],
@@ -2362,7 +2430,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Vzdálenost odhalení šestiúhelníků',
-        desc: 'Aplikuje se na hexy, když jsou taženy: žeton musí být v tomto počtu hexů, aby je odhalil, ať už vidí jakkoli daleko. Nechte prázdné bez omezení.',
+        desc: 'Ukládá se do hexů při jejich vyplňování, proto ji nastavte před vyplněním: pozdější změna neovlivní hexy, které už jsou na mapě. Žeton musí být v dosahu tohoto počtu hexů, aby je odhalil, ať vidí jakkoli daleko; při hodnotě 0 se odhalí jen tím, že do nich vstoupí. Použijte ji pro hory nebo lesy. Nechte prázdné bez omezení.',
       },
       revealDistance: {
         label: 'Vzdálenost dohledu',
@@ -2370,7 +2438,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Přímá viditelnost',
-        desc: 'Když je zapnuto, hex je odhalen pouze v případě, že mezi ním a žetonem není žádný krytý hex.',
+        desc: 'Když je zapnuto, hexy, které zůstávají zakryté, například hory vyplněné s nastavením Vzdálenost odhalení šestiúhelníků, skrývají hexy za sebou. Projeví se to pouze tehdy, když je Vzdálenost dohledu 2 nebo více.',
       },
       revealPath: {
         label: 'Odhalovat po cestě',
@@ -2548,9 +2616,9 @@ const HexplorationMod = (() => {
         points: [
           'Hexy odhalují pouze žetony na vrstvě žetonů. Které žetony se počítají, určuje nastavení Žetony, které odhalují: ve výchozím stavu žetony hráčů, takže GM může pohybovat příšerami, aniž by odkrýval mapu.',
           'Žeton odhalí každý hex, který zakrývá (velké žetony zakrývají několik), a se zapnutým nastavením Odhalovat po cestě také každý hex na trase, po které byl tažen, včetně průchozích bodů.',
-          'Vzdálenost dohledu odhaluje hexy kolem každého z těchto hexů. Se zapnutou Přímou viditelností je hex odhalen pouze tehdy, když mezi ním a žetonem neleží žádný zakrytý hex.',
-          'Vzdálenost odhalení šestiúhelníků se ukládá do hexů při jejich kreslení. Tyto hexy lze odhalit jen ze vzdálenosti nejvýše tolika hexů, ať žeton vidí jakkoli daleko. Použijte ji pro hory nebo lesy, které zakrývají, co je za nimi.',
-          'V režimu Záblesk se hexy v dohledu místo zmizení stanou průhlednými a odstraní se, když do nich vstoupí žeton.',
+          'Vzdálenost dohledu odhaluje hexy kolem každého z těchto hexů, od nejbližších. Když je zapnutá Přímá viditelnost, hex se neodhalí, dokud mezi ním a žetonem leží zakrytý hex. Bližší hexy se obvykle odhalí jako první, takže v otevřené krajině Přímá viditelnost nic nemění: projeví se jen tehdy, když je Vzdálenost dohledu 2 nebo více a existují hexy, které zůstávají zakryté, například terén vyplněný s nastavením Vzdálenost odhalení šestiúhelníků.',
+          'Vzdálenost odhalení šestiúhelníků se ukládá do každého hexu při jeho vyplnění, proto ji nastavte před vyplňováním; pozdější změna neovlivní hexy, které už jsou na mapě. Žeton musí být v dosahu tolika hexů, aby je odhalil, ať vidí jakkoli daleko, a při hodnotě 0 se odhalí jen tím, že do nich vstoupí. Pro horské pásmo: nastavte Vzdálenost odhalení šestiúhelníků na 0, vyplňte hory, pak hodnotu opět vymažte (bez omezení) a nakonec vyplňte krajinu za nimi. Když je Vzdálenost dohledu 3 a Přímá viditelnost zapnutá, družina vidí otevřený terén kolem sebe, ale ne hory ani to, co leží za nimi. Každý horský hex se odhalí, když do něj vstoupí žeton.',
+          'V režimu Záblesk se hexy v dohledu místo zmizení stanou průhlednými a odstraní se, když do nich vstoupí žeton. Hexy zahlédnuté v režimu Záblesk nezakrývají výhled pro nastavení Přímá viditelnost.',
           'Roll20 kreslí jména, ukazatele a aury žetonů nad hexy. Se zapnutým nastavením Skrýt zakryté žetony má žeton pod zakrytým hexem vypnuté jméno, ukazatele a aury viditelné pro hráče, dokud není odkryt, takže se skryté příšery neprozradí. Pokud některý z nich zapnete, zatímco je žeton zakrytý, zůstane skrytý a zapne se, až bude žeton odkryt.',
           'API nehlásí pohyby provedené jinými mody. Pohyby z TokenMod se zachytí automaticky; u ostatních modů vyberte žetony a klikněte na Prozkoumat, nebo zavolejte Hexploration.revealAround(token) z vlastního modu.',
         ],
@@ -2735,7 +2803,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Afsløringsafstand for hexfelter',
-        desc: 'Anvendes på hexes, efterhånden som de tegnes: Et symbol skal være inden for så mange hexes for at afsløre dem, uanset hvor langt det kan se. Lad være tomt uden grænse.',
+        desc: 'Gemmes på hexfelterne, når de udfyldes, så indstil den før udfyldning: Ændres den senere, påvirker det ikke hexfelter, der allerede er på kortet. Et token skal være inden for så mange hexfelter for at afsløre dem, uanset hvor langt det kan se; med 0 afsløres de kun ved at gå ind i dem. Brug den til bjerge eller skove. Lad feltet stå tomt for ingen grænse.',
       },
       revealDistance: {
         label: 'Synsafstand',
@@ -2743,7 +2811,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Synslinje',
-        desc: 'Når den er aktiveret, afsløres en hex kun, hvis der ikke er nogen dækket hex mellem den og tokenet.',
+        desc: 'Når den er slået til, skjuler hexfelter, der forbliver dækket, såsom bjerge udfyldt med en Afsløringsafstand for hexfelter, hexfelterne bag dem. Den gør kun en forskel med en Synsafstand på 2 eller mere.',
       },
       revealPath: {
         label: 'Afslør langs ruten',
@@ -2921,9 +2989,9 @@ const HexplorationMod = (() => {
         points: [
           'Kun tokens på tokenlaget afslører hexfelter. Hvilke tokens der tæller, bestemmes af Afslørende tokens: som standard spillertokens, så GM kan flytte monstre uden at afdække kortet.',
           'Et token afslører hvert hexfelt, det dækker (store tokens dækker flere), og med Afslør langs ruten slået til hvert hexfelt på den rute, det blev trukket langs, inklusive mellempunkter.',
-          'Synsafstand afslører hexfelterne omkring hvert af disse hexfelter. Med Synslinje slået til afsløres et hexfelt kun, hvis der ikke ligger noget dækket hexfelt imellem.',
-          'Afsløringsafstand for hexfelter gemmes på hexfelterne, når de tegnes. Disse hexfelter afsløres kun inden for så mange hexfelters afstand, uanset hvor langt et token kan se. Brug det til bjerge eller skove, der skjuler, hvad der ligger bag dem.',
-          'I tilstanden Glimt bliver hexfelter inden for synsvidde gennemsigtige i stedet for at forsvinde og fjernes, når et token går ind i dem.',
+          'Synsafstand afslører hexfelterne omkring hvert af disse hexfelter, de nærmeste først. Med Synslinje slået til afsløres et hexfelt ikke, så længe der ligger et dækket hexfelt mellem det og tokenet. Nærmere hexfelter afsløres som regel først, så i åbent terræn ændrer Synslinje intet: Den har kun betydning med en Synsafstand på 2 eller mere og hexfelter, der forbliver dækket, såsom terræn udfyldt med en Afsløringsafstand for hexfelter.',
+          'Afsløringsafstand for hexfelter gemmes på hvert hexfelt, når det udfyldes, så indstil den før udfyldning; ændres den senere, påvirker det ikke hexfelter, der allerede er på kortet. Et token skal være inden for så mange hexfelter for at afsløre dem, uanset hvor langt det kan se, og med 0 afsløres de kun ved at gå ind i dem. Til en bjergkæde: Sæt Afsløringsafstand for hexfelter til 0, udfyld bjergene, sæt den tilbage til ingen, og udfyld derefter landet bagved. Med Synsafstand 3 og Synslinje slået til ser gruppen det åbne terræn omkring sig, men ikke bjergene eller det, der ligger bag dem. Hvert bjerghexfelt afsløres, når et token går ind i det.',
+          'I tilstanden Glimt bliver hexfelter inden for synsvidde gennemsigtige i stedet for at forsvinde og fjernes, når et token går ind i dem. Gennemsigtige Glimt-hexfelter blokerer ikke Synslinje.',
           'Roll20 tegner tokennavne, bjælker og auraer oven over hexfelterne. Med Skjul dækkede tokens slået til får et token under et dækket hexfelt sit navn, sine bjælker og auraer, som spillerne kan se, slået fra, indtil det afdækkes, så skjulte monstre ikke afslører sig selv. Hvis du slår en af dem til, mens tokenet er dækket, forbliver den skjult og slås til, når tokenet afdækkes.',
           'API’en rapporterer ikke flytninger foretaget af andre mods. Flytninger med TokenMod opfanges automatisk; for andre mods skal du vælge tokens og klikke på Udforsk eller kalde Hexploration.revealAround(token) fra din egen mod.',
         ],
@@ -3108,7 +3176,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Onthullingsafstand van zeshoeken',
-        desc: 'Toegepast op velden zoals ze worden getrokken: een token moet zich binnen zoveel velden bevinden om ze te onthullen, hoe ver hij ook kan kijken. Laat leeg voor geen limiet.',
+        desc: 'Wordt bij het vullen in de zeshoeken opgeslagen, dus stel dit in vóór het vullen: later wijzigen heeft geen effect op zeshoeken die al op de kaart staan. Een token moet zich binnen zoveel zeshoeken bevinden om ze te onthullen, hoe ver het ook kan kijken; bij 0 worden ze alleen onthuld door ze te betreden. Gebruik dit voor bergen of bossen. Laat leeg voor geen limiet.',
       },
       revealDistance: {
         label: 'Zichtafstand',
@@ -3116,7 +3184,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Zichtlijn',
-        desc: 'Wanneer deze optie is ingeschakeld, wordt een vakje alleen onthuld als er geen afgedekt vakje tussen het vakje en het fiche ligt.',
+        desc: 'Wanneer deze optie aan staat, verbergen zeshoeken die bedekt blijven, zoals bergen die zijn gevuld met een Onthullingsafstand van zeshoeken, de zeshoeken erachter. Het maakt alleen verschil bij een Zichtafstand van 2 of meer.',
       },
       revealPath: {
         label: 'Onthullen langs pad',
@@ -3298,9 +3366,9 @@ const HexplorationMod = (() => {
         points: [
           'Alleen tokens op de tokenlaag onthullen zeshoeken. Welke tokens meetellen, bepaalt Tokens die onthullen: standaard spelertokens, zodat de GM monsters kan verplaatsen zonder de kaart bloot te leggen.',
           'Een token onthult elke zeshoek die het bedekt (grote tokens bedekken er meerdere) en, als Onthullen langs pad aan staat, elke zeshoek op de route waarlangs het is gesleept, inclusief tussenpunten.',
-          'Zichtafstand onthult de zeshoeken rond elk van die zeshoeken. Als Zichtlijn aan staat, wordt een zeshoek alleen onthuld als er geen bedekte zeshoek tussen ligt.',
-          'Onthullingsafstand van zeshoeken wordt bij het tekenen in de zeshoeken opgeslagen. Die zeshoeken worden alleen onthuld vanaf hooguit zoveel zeshoeken afstand, hoe ver een token ook kan kijken. Gebruik dit voor bergen of bossen die verbergen wat erachter ligt.',
-          'In de modus Glimp worden zeshoeken binnen het zicht doorzichtig in plaats van te verdwijnen, en ze worden verwijderd wanneer een token ze betreedt.',
+          'Zichtafstand onthult de zeshoeken rond elk van die zeshoeken, de dichtstbijzijnde eerst. Als Zichtlijn aan staat, wordt een zeshoek niet onthuld zolang er een bedekte zeshoek tussen die zeshoek en het token ligt. Dichterbij gelegen zeshoeken worden meestal eerst onthuld, dus in open terrein verandert Zichtlijn niets: het telt alleen bij een Zichtafstand van 2 of meer en zeshoeken die bedekt blijven, zoals terrein dat is gevuld met een Onthullingsafstand van zeshoeken.',
+          'Onthullingsafstand van zeshoeken wordt bij het vullen in elke zeshoek opgeslagen, dus stel dit in vóór het vullen; later wijzigen heeft geen effect op zeshoeken die al op de kaart staan. Een token moet zich binnen zoveel zeshoeken bevinden om ze te onthullen, hoe ver het ook kan kijken, en bij 0 worden ze alleen onthuld door ze te betreden. Voor een bergketen: stel Onthullingsafstand van zeshoeken in op 0, vul de bergen, zet de waarde terug op geen en vul daarna het land erachter. Met Zichtafstand 3 en Zichtlijn aan ziet de groep het open terrein om zich heen, maar niet de bergen of wat erachter ligt. Elke bergzeshoek wordt onthuld wanneer een token erin stapt.',
+          'In de modus Glimp worden zeshoeken binnen het zicht doorzichtig in plaats van te verdwijnen, en ze worden verwijderd wanneer een token ze betreedt. Doorzichtige Glimp-zeshoeken blokkeren de Zichtlijn niet.',
           'Roll20 tekent tokennamen, balken en aura’s boven de zeshoeken. Als Bedekte tokens verbergen aan staat, worden bij een token onder een bedekte zeshoek de voor spelers zichtbare naam, balken en aura’s uitgeschakeld totdat het wordt onthuld, zodat verborgen monsters zichzelf niet verraden. Als u een ervan inschakelt terwijl het token bedekt is, blijft het verborgen en wordt het ingeschakeld zodra het token wordt onthuld.',
           'De API meldt geen verplaatsingen door andere mods. Verplaatsingen door TokenMod worden automatisch opgepikt; voor andere mods selecteert u de tokens en klikt u op Verkennen, of roept u Hexploration.revealAround(token) aan vanuit uw eigen mod.',
         ],
@@ -3485,7 +3553,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Hex Reveal Distance',
-        desc: 'Applied to hexes as they are drawn: a token must be within this many hexes to reveal them, however far it can see. Leave empty for no limit.',
+        desc: 'Stored on hexes when they are filled, so set it before filling: changing it later does not affect hexes already on the map. A token must be within this many hexes to reveal them, however far it can see; with 0 they are only revealed by entering them. Use it for mountains or forests. Leave empty for no limit.',
       },
       revealDistance: {
         label: 'Sight Distance',
@@ -3493,7 +3561,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Line of Sight',
-        desc: 'When on, a hex is only revealed if no covered hex lies between it and the token.',
+        desc: 'When on, hexes that stay covered, such as mountains filled with a Hex Reveal Distance, hide the hexes behind them. It only makes a difference with a Sight Distance of 2 or more.',
       },
       revealPath: {
         label: 'Reveal Along Path',
@@ -3667,9 +3735,9 @@ const HexplorationMod = (() => {
         points: [
           'Only tokens on the token layer reveal hexes. Which tokens count is set by Tokens That Reveal: player tokens by default, so the GM can move monsters without uncovering the map.',
           'A token reveals every hex it covers (large tokens cover several) and, with Reveal Along Path on, every hex on the route it was dragged along, including waypoints.',
-          'Sight Distance reveals the hexes around each of those hexes. With Line of Sight on, a hex is only revealed if no covered hex lies in between.',
-          'Hex Reveal Distance is stored on hexes as they are drawn. Those hexes are only revealed from within that many hexes, however far a token can see. Use it for mountains or forests that hide what is behind them.',
-          'In Glimpse mode, hexes within sight become see-through instead of disappearing, and are removed when a token enters them.',
+          'Sight Distance reveals the hexes around each of those hexes, nearest first. With Line of Sight on, a hex is not revealed while a covered hex lies between it and the token. Nearer hexes are usually revealed first, so in open country Line of Sight changes nothing: it only matters with a Sight Distance of 2 or more and hexes that stay covered, such as terrain filled with a Hex Reveal Distance.',
+          'Hex Reveal Distance is stored on each hex when it is filled, so set it before filling; changing it later does not affect hexes already on the map. A token must be within that many hexes to reveal them, however far it can see, and with 0 they are only revealed by entering them. For a mountain range: set Hex Reveal Distance to 0, fill the mountains, set it back to none, then fill the land beyond. With Sight Distance 3 and Line of Sight on, the party sees the open ground around them, but not the mountains or what lies behind them. Each mountain hex is revealed when a token walks into it.',
+          'In Glimpse mode, hexes within sight become see-through instead of disappearing, and are removed when a token enters them. Glimpsed hexes do not block Line of Sight.',
           'Roll20 draws token names, bars and auras above hexes. With Hide Covered Tokens on, a token under a covered hex has its player-visible name, bars and auras switched off until it is uncovered, so hidden monsters do not give themselves away. If you switch one of them on while the token is covered, it stays hidden and is switched on when the token is uncovered.',
           'The API does not report moves made by other mods. TokenMod moves are picked up automatically; for other mods, select the tokens and click Explore, or call Hexploration.revealAround(token) from your own mod.',
         ],
@@ -3854,7 +3922,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Heksojen paljastusetäisyys',
-        desc: 'Soveltuu heksaan, kun ne on piirretty: merkki on oltava tämän monen heksan sisällä paljastaakseen ne, riippumatta siitä, kuinka kauas se näkee. Jätä tyhjäksi ilman rajoituksia.',
+        desc: 'Tallennetaan heksoihin, kun ne täytetään, joten aseta se ennen täyttämistä: myöhempi muutos ei vaikuta kartalla jo oleviin heksoihin. Merkin on oltava enintään näin monen heksan päässä paljastaakseen ne, riippumatta siitä, kuinka kauas se näkee; arvolla 0 ne paljastuvat vain, kun niihin astutaan. Käytä sitä vuorille tai metsille. Jätä tyhjäksi, jos rajaa ei haluta.',
       },
       revealDistance: {
         label: 'Näköetäisyys',
@@ -3862,7 +3930,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Näköyhteys',
-        desc: 'Kun heksa on päällä, se paljastuu vain, jos sen ja merkin välissä ei ole peitettyä heksaa.',
+        desc: 'Kun asetus on päällä, peitettyinä pysyvät heksat, kuten Heksojen paljastusetäisyys -asetuksella täytetyt vuoret, kätkevät takanaan olevat heksat. Sillä on merkitystä vain, kun Näköetäisyys on 2 tai enemmän.',
       },
       revealPath: {
         label: 'Paljasta reitin varrelta',
@@ -4042,9 +4110,9 @@ const HexplorationMod = (() => {
         points: [
           'Heksoja paljastavat vain merkkitason merkit. Asetus Paljastavat merkit määrää, mitkä merkit lasketaan: oletuksena pelaajien merkit, joten GM voi siirtää hirviöitä paljastamatta karttaa.',
           'Merkki paljastaa jokaisen heksan, jonka se peittää (suuret merkit peittävät useita), ja kun Paljasta reitin varrelta on päällä, jokaisen heksan reitillä, jota pitkin sitä vedettiin, välipisteet mukaan lukien.',
-          'Näköetäisyys paljastaa kunkin näiden heksojen ympärillä olevat heksat. Kun Näköyhteys on päällä, heksa paljastetaan vain, jos välissä ei ole peitettyä heksaa.',
-          'Heksojen paljastusetäisyys tallennetaan heksoihin niitä piirrettäessä. Nämä heksat paljastuvat vain enintään näin monen heksan päästä, vaikka merkki näkisi kauemmas. Käytä sitä vuorille tai metsille, jotka kätkevät taakseen jäävän.',
-          'Vilkaisu-tilassa näköetäisyydellä olevat heksat muuttuvat läpikuultaviksi katoamisen sijaan, ja ne poistetaan, kun merkki astuu niihin.',
+          'Näköetäisyys paljastaa kunkin näiden heksojen ympärillä olevat heksat, lähimmät ensin. Kun Näköyhteys on päällä, heksaa ei paljasteta niin kauan kuin sen ja merkin välissä on peitetty heksa. Lähemmät heksat paljastuvat yleensä ensin, joten avoimessa maastossa Näköyhteys ei muuta mitään: sillä on merkitystä vain, kun Näköetäisyys on 2 tai enemmän ja jotkin heksat pysyvät peitettyinä, kuten Heksojen paljastusetäisyys -asetuksella täytetty maasto.',
+          'Heksojen paljastusetäisyys tallennetaan jokaiseen heksaan, kun se täytetään, joten aseta se ennen täyttämistä; myöhempi muutos ei vaikuta kartalla jo oleviin heksoihin. Merkin on oltava enintään näin monen heksan päässä paljastaakseen ne, vaikka se näkisi kauemmas, ja arvolla 0 ne paljastuvat vain, kun niihin astutaan. Vuorijonoa varten: aseta Heksojen paljastusetäisyys arvoon 0, täytä vuoret, palauta asetus tyhjäksi ja täytä sitten takana oleva maa. Kun Näköetäisyys on 3 ja Näköyhteys on päällä, seurue näkee ympärillään olevan avoimen maaston mutta ei vuoria eikä sitä, mitä niiden takana on. Kukin vuoriheksa paljastuu, kun merkki astuu siihen.',
+          'Vilkaisu-tilassa näköetäisyydellä olevat heksat muuttuvat läpikuultaviksi katoamisen sijaan, ja ne poistetaan, kun merkki astuu niihin. Vilkaisun läpikuultavat heksat eivät estä näkyvyyttä Näköyhteys-asetuksessa.',
           'Roll20 piirtää merkkien nimet, palkit ja aurat heksojen päälle. Kun Piilota peitetyt merkit on päällä, peitetyn heksan alla olevan merkin pelaajille näkyvä nimi, palkit ja aurat kytketään pois, kunnes se paljastuu, joten piilotetut hirviöt eivät paljasta itseään. Jos kytket jonkin niistä päälle merkin ollessa peitettynä, se pysyy piilossa ja kytkeytyy päälle, kun merkki paljastuu.',
           'API ei ilmoita muiden modien tekemistä siirroista. TokenModin siirrot huomataan automaattisesti; muiden modien kohdalla valitse merkit ja napsauta Tutki tai kutsu Hexploration.revealAround(token) omasta modistasi.',
         ],
@@ -4229,7 +4297,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Distance de révélation des hexagones',
-        desc: "Appliqué aux hexagones au fur et à mesure qu'ils sont dessinés : un jeton doit se trouver dans ce nombre d'hexagones pour les révéler, aussi loin qu'il puisse voir. Laissez vide sans limite.",
+        desc: "Enregistrée sur les hexagones au moment où ils sont remplis, donc réglez-la avant de remplir : la modifier ensuite n'affecte pas les hexagones déjà présents sur la carte. Un jeton doit se trouver à ce nombre d'hexagones au plus pour les révéler, aussi loin qu'il puisse voir ; avec 0, ils ne sont révélés qu'en y entrant. Utilisez-la pour des montagnes ou des forêts. Laissez vide pour ne fixer aucune limite.",
       },
       revealDistance: {
         label: 'Distance de vue',
@@ -4237,7 +4305,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Ligne de vue',
-        desc: "Lorsque cette option est activée, un hexagone n'est révélé que si aucun hexagone couvert ne se trouve entre lui et le jeton.",
+        desc: "Lorsque cette option est activée, les hexagones qui restent couverts, comme des montagnes remplies avec une Distance de révélation des hexagones, cachent les hexagones situés derrière eux. Elle n'a d'effet qu'avec une Distance de vue de 2 ou plus.",
       },
       revealPath: {
         label: 'Révéler le long du chemin',
@@ -4422,9 +4490,9 @@ const HexplorationMod = (() => {
         points: [
           'Seuls les jetons sur le calque des jetons révèlent des hexagones. Les jetons concernés sont définis par Jetons révélateurs : les jetons de joueur par défaut, afin que le MJ puisse déplacer des monstres sans découvrir la carte.',
           "Un jeton révèle chaque hex qu'il couvre (les gros jetons en couvrent plusieurs) et, avec Révéler le long du chemin activé, chaque hex de la route qu'il a parcouru, y compris les waypoints.",
-          "La distance de vue révèle les hexagones autour de chacun de ces hexagones. Avec Ligne de vue activée, un hexagone n'est révélé que si aucun hexagone couvert ne se trouve entre les deux.",
-          "La distance de révélation des hexagones est enregistrée sur les hexagones au moment où ils sont dessinés. Ces hexagones ne sont révélés que depuis ce nombre d'hexagones au plus, quelle que soit la distance à laquelle un jeton peut voir. Utilisez-la pour des montagnes ou des forêts qui cachent ce qui se trouve derrière elles.",
-          "En mode Aperçu, les hexagones visibles deviennent transparents au lieu de disparaître et sont supprimés lorsqu'un jeton y pénètre.",
+          "La Distance de vue révèle les hexagones autour de chacun de ces hexagones, en commençant par les plus proches. Avec Ligne de vue activée, un hexagone n'est pas révélé tant qu'un hexagone couvert se trouve entre lui et le jeton. Les hexagones les plus proches sont généralement révélés en premier, donc en terrain dégagé la Ligne de vue ne change rien : elle ne compte qu'avec une Distance de vue de 2 ou plus et des hexagones qui restent couverts, comme un terrain rempli avec une Distance de révélation des hexagones.",
+          "La Distance de révélation des hexagones est enregistrée sur chaque hexagone au moment où il est rempli, donc réglez-la avant de remplir ; la modifier ensuite n'affecte pas les hexagones déjà présents sur la carte. Un jeton doit se trouver à ce nombre d'hexagones au plus pour les révéler, aussi loin qu'il puisse voir, et avec 0 ils ne sont révélés qu'en y entrant. Pour une chaîne de montagnes : réglez la Distance de révélation des hexagones sur 0, remplissez les montagnes, remettez-la sans limite, puis remplissez les terres au-delà. Avec une Distance de vue de 3 et la Ligne de vue activée, le groupe voit le terrain dégagé autour de lui, mais pas les montagnes ni ce qui se trouve derrière. Chaque hexagone de montagne est révélé lorsqu'un jeton y pénètre.",
+          "En mode Aperçu, les hexagones visibles deviennent transparents au lieu de disparaître et sont supprimés lorsqu'un jeton y pénètre. Les hexagones aperçus ne bloquent pas la Ligne de vue.",
           "Roll20 dessine les noms, les barres et les auras des jetons au-dessus des hexagones. Avec Masquer les jetons couverts activé, un jeton sous un hexagone couvert voit son nom, ses barres et ses auras visibles par les joueurs désactivés jusqu'à ce qu'il soit découvert, afin que les monstres cachés ne se trahissent pas. Si vous en réactivez un pendant que le jeton est couvert, il reste masqué et sera activé lorsque le jeton sera découvert.",
           "L'API ne signale pas les mouvements effectués par d'autres mods. Les mouvements TokenMod sont récupérés automatiquement ; pour les autres mods, sélectionnez les jetons et cliquez sur Explorer, ou appelez Hexploration.revealAround(token) depuis votre propre mod.",
         ],
@@ -4609,7 +4677,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Aufdeckungsdistanz für Hexfelder',
-        desc: 'Wird auf Hexfelder angewendet, wenn sie gezogen werden: Ein Spielstein muss sich innerhalb dieser Anzahl von Hexfeldern befinden, um sie aufzudecken, egal wie weit er sehen kann. Für keine Begrenzung leer lassen.',
+        desc: 'Wird beim Füllen in den Hexfeldern gespeichert, also vor dem Füllen festlegen: Spätere Änderungen wirken sich nicht auf Hexfelder aus, die bereits auf der Karte liegen. Ein Spielstein muss sich innerhalb dieser Anzahl von Hexfeldern befinden, um sie aufzudecken, egal wie weit er sehen kann; bei 0 werden sie nur aufgedeckt, wenn man sie betritt. Für Berge oder Wälder verwenden. Für keine Begrenzung leer lassen.',
       },
       revealDistance: {
         label: 'Sichtweite',
@@ -4617,7 +4685,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Sichtlinie',
-        desc: 'Wenn diese Option aktiviert ist, wird ein Hexfeld nur dann aufgedeckt, wenn kein abgedecktes Hexfeld zwischen ihm und dem Spielstein liegt.',
+        desc: 'Wenn diese Option aktiviert ist, verbergen Hexfelder, die verdeckt bleiben, etwa Berge, die mit einer Aufdeckungsdistanz für Hexfelder gefüllt wurden, die Hexfelder dahinter. Das macht nur bei einer Sichtweite von 2 oder mehr einen Unterschied.',
       },
       revealPath: {
         label: 'Entlang des Wegs aufdecken',
@@ -4808,9 +4876,9 @@ const HexplorationMod = (() => {
         points: [
           'Nur Token auf der Token-Ebene decken Hexfelder auf. Welche Token zählen, legt „Aufdeckende Token“ fest: standardmäßig Spieler-Token, sodass der GM Monster bewegen kann, ohne die Karte aufzudecken.',
           'Ein Token deckt jedes Hexfeld auf, das er bedeckt (große Token bedecken mehrere), und bei aktiviertem „Entlang des Wegs aufdecken“ jedes Hexfeld auf der Route, entlang der er gezogen wurde, einschließlich Wegpunkten.',
-          '„Sichtweite“ deckt die Hexfelder um jedes dieser Hexfelder auf. Ist „Sichtlinie“ aktiviert, wird ein Hexfeld nur aufgedeckt, wenn kein verdecktes Hexfeld dazwischen liegt.',
-          '„Aufdeckungsdistanz für Hexfelder“ wird beim Zeichnen in den Hexfeldern gespeichert. Diese Hexfelder werden nur aus höchstens so vielen Hexfeldern Entfernung aufgedeckt, egal wie weit ein Token sehen kann. Nutzen Sie dies für Berge oder Wälder, die verbergen, was dahinter liegt.',
-          'Im Modus „Durchsicht“ werden Hexfelder in Sichtweite durchsichtig, statt zu verschwinden, und werden entfernt, sobald ein Token sie betritt.',
+          '„Sichtweite“ deckt die Hexfelder um jedes dieser Hexfelder auf, die nächstgelegenen zuerst. Ist „Sichtlinie“ aktiviert, wird ein Hexfeld nicht aufgedeckt, solange ein verdecktes Hexfeld zwischen ihm und dem Token liegt. Nähere Hexfelder werden meist zuerst aufgedeckt, daher ändert „Sichtlinie“ in offenem Gelände nichts: Sie spielt nur bei einer „Sichtweite“ von 2 oder mehr und bei Hexfeldern eine Rolle, die verdeckt bleiben, etwa Gelände, das mit einer „Aufdeckungsdistanz für Hexfelder“ gefüllt wurde.',
+          '„Aufdeckungsdistanz für Hexfelder“ wird beim Füllen in jedem Hexfeld gespeichert, legen Sie sie also vor dem Füllen fest; spätere Änderungen wirken sich nicht auf Hexfelder aus, die bereits auf der Karte liegen. Ein Token muss sich innerhalb so vieler Hexfelder befinden, um sie aufzudecken, egal wie weit es sehen kann, und bei 0 werden sie nur aufgedeckt, wenn man sie betritt. Für eine Bergkette: Setzen Sie „Aufdeckungsdistanz für Hexfelder“ auf 0, füllen Sie die Berge, setzen Sie den Wert wieder auf „keine“ zurück und füllen Sie dann das Land dahinter. Mit „Sichtweite“ 3 und aktivierter „Sichtlinie“ sieht die Gruppe das offene Gelände um sich herum, aber weder die Berge noch das, was dahinter liegt. Jedes Berg-Hexfeld wird aufgedeckt, wenn ein Token es betritt.',
+          'Im Modus „Durchsicht“ werden Hexfelder in Sichtweite durchsichtig, statt zu verschwinden, und werden entfernt, sobald ein Token sie betritt. Durchsichtige Hexfelder blockieren die „Sichtlinie“ nicht.',
           'Roll20 zeichnet Token-Namen, Leisten und Auren über den Hexfeldern. Ist „Verdeckte Token ausblenden“ aktiviert, werden bei einem Token unter einem verdeckten Hexfeld der für Spieler sichtbare Name, die Leisten und die Auren ausgeschaltet, bis er aufgedeckt wird, damit versteckte Monster sich nicht verraten. Schalten Sie eines davon ein, während der Token verdeckt ist, bleibt es verborgen und wird eingeschaltet, sobald der Token aufgedeckt wird.',
           'Die API meldet keine Bewegungen anderer Mods. TokenMod-Bewegungen werden automatisch übernommen; Wählen Sie für andere Mods die Token aus und klicken Sie auf „Erkunden“ oder rufen Sie Hexploration.revealAround(token) von Ihrem eigenen Mod aus auf.',
         ],
@@ -4995,7 +5063,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Απόσταση αποκάλυψης εξαγώνων',
-        desc: 'Εφαρμόζεται στα εξάγωνα καθώς σχεδιάζονται: ένα διακριτικό πρέπει να βρίσκεται μέσα σε τόσα εξάγωνα για να τα αποκαλύψει, όσο μακριά μπορεί να δει. Αφήστε κενό χωρίς όριο.',
+        desc: 'Αποθηκεύεται στα εξάγωνα όταν γεμίζονται, οπότε ορίστε το πριν από το γέμισμα: αν το αλλάξετε αργότερα, δεν επηρεάζονται τα εξάγωνα που υπάρχουν ήδη στον χάρτη. Ένα διακριτικό πρέπει να βρίσκεται σε απόσταση έως τόσα εξάγωνα για να τα αποκαλύψει, όσο μακριά κι αν βλέπει· με 0 αποκαλύπτονται μόνο όταν μπει σε αυτά. Χρησιμοποιήστε το για βουνά ή δάση. Αφήστε το κενό για να μην υπάρχει όριο.',
       },
       revealDistance: {
         label: 'Απόσταση όρασης',
@@ -5003,7 +5071,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Γραμμή όρασης',
-        desc: 'Όταν είναι ενεργοποιημένο, ένα εξάγωνο αποκαλύπτεται μόνο εάν δεν υπάρχει καλυμμένο εξάγωνο μεταξύ αυτού και του διακριτικού.',
+        desc: 'Όταν είναι ενεργοποιημένο, τα εξάγωνα που παραμένουν καλυμμένα, όπως βουνά που γεμίστηκαν με «Απόσταση αποκάλυψης εξαγώνων», κρύβουν τα εξάγωνα πίσω τους. Κάνει διαφορά μόνο με «Απόσταση όρασης» 2 ή μεγαλύτερη.',
       },
       revealPath: {
         label: 'Αποκάλυψη κατά μήκος της διαδρομής',
@@ -5184,9 +5252,9 @@ const HexplorationMod = (() => {
         points: [
           'Εξάγωνα αποκαλύπτουν μόνο τα διακριτικά στο επίπεδο διακριτικών. Ποια διακριτικά μετράνε ορίζεται από τη ρύθμιση «Διακριτικά που αποκαλύπτουν»: από προεπιλογή τα διακριτικά παικτών, ώστε ο GM να μπορεί να μετακινεί τέρατα χωρίς να αποκαλύπτει τον χάρτη.',
           'Ένα διακριτικό αποκαλύπτει κάθε εξάγωνο που καλύπτει (τα μεγάλα διακριτικά καλύπτουν πολλά) και, με ενεργή την «Αποκάλυψη κατά μήκος της διαδρομής», κάθε εξάγωνο της διαδρομής στην οποία σύρθηκε, μαζί με τα ενδιάμεσα σημεία.',
-          'Η «Απόσταση όρασης» αποκαλύπτει τα εξάγωνα γύρω από καθένα από αυτά τα εξάγωνα. Με ενεργή τη «Γραμμή όρασης», ένα εξάγωνο αποκαλύπτεται μόνο αν δεν παρεμβάλλεται καλυμμένο εξάγωνο.',
-          'Η «Απόσταση αποκάλυψης εξαγώνων» αποθηκεύεται στα εξάγωνα καθώς σχεδιάζονται. Αυτά τα εξάγωνα αποκαλύπτονται μόνο από απόσταση έως τόσα εξάγωνα, όσο μακριά κι αν βλέπει ένα διακριτικό. Χρησιμοποιήστε την για βουνά ή δάση που κρύβουν ό,τι βρίσκεται πίσω τους.',
-          'Στη λειτουργία «Ματιά», τα εξάγωνα εντός όρασης γίνονται διαφανή αντί να εξαφανίζονται και αφαιρούνται όταν μπει σε αυτά ένα διακριτικό.',
+          'Η «Απόσταση όρασης» αποκαλύπτει τα εξάγωνα γύρω από καθένα από αυτά τα εξάγωνα, ξεκινώντας από τα πλησιέστερα. Με ενεργή τη «Γραμμή όρασης», ένα εξάγωνο δεν αποκαλύπτεται όσο παρεμβάλλεται καλυμμένο εξάγωνο ανάμεσα σε αυτό και στο διακριτικό. Τα πλησιέστερα εξάγωνα συνήθως αποκαλύπτονται πρώτα, οπότε σε ανοιχτό έδαφος η «Γραμμή όρασης» δεν αλλάζει τίποτα: έχει σημασία μόνο με «Απόσταση όρασης» 2 ή μεγαλύτερη και εξάγωνα που παραμένουν καλυμμένα, όπως έδαφος που γεμίστηκε με «Απόσταση αποκάλυψης εξαγώνων».',
+          'Η «Απόσταση αποκάλυψης εξαγώνων» αποθηκεύεται σε κάθε εξάγωνο όταν γεμίζεται, οπότε ορίστε την πριν από το γέμισμα· αν την αλλάξετε αργότερα, δεν επηρεάζονται τα εξάγωνα που υπάρχουν ήδη στον χάρτη. Ένα διακριτικό πρέπει να βρίσκεται σε απόσταση έως τόσα εξάγωνα για να τα αποκαλύψει, όσο μακριά κι αν βλέπει, και με 0 αποκαλύπτονται μόνο όταν μπει σε αυτά. Για μια οροσειρά: ορίστε την «Απόσταση αποκάλυψης εξαγώνων» σε 0, γεμίστε τα βουνά, επαναφέρετέ την σε καμία τιμή και μετά γεμίστε τη γη πέρα από αυτά. Με «Απόσταση όρασης» 3 και ενεργή τη «Γραμμή όρασης», η ομάδα βλέπει το ανοιχτό έδαφος γύρω της, αλλά όχι τα βουνά ή ό,τι βρίσκεται πίσω τους. Κάθε ορεινό εξάγωνο αποκαλύπτεται όταν ένα διακριτικό μπει σε αυτό.',
+          'Στη λειτουργία «Ματιά», τα εξάγωνα εντός όρασης γίνονται διαφανή αντί να εξαφανίζονται και αφαιρούνται όταν μπει σε αυτά ένα διακριτικό. Τα εξάγωνα σε κατάσταση «Ματιά» δεν εμποδίζουν τη «Γραμμή όρασης».',
           'Το Roll20 σχεδιάζει τα ονόματα, τις μπάρες και τις αύρες των διακριτικών πάνω από τα εξάγωνα. Με ενεργή την «Απόκρυψη καλυμμένων διακριτικών», ένα διακριτικό κάτω από καλυμμένο εξάγωνο έχει απενεργοποιημένα το ορατό στους παίκτες όνομα, τις μπάρες και τις αύρες μέχρι να αποκαλυφθεί, ώστε τα κρυμμένα τέρατα να μην προδίδονται. Αν ενεργοποιήσετε κάποιο από αυτά ενώ το διακριτικό είναι καλυμμένο, παραμένει κρυφό και ενεργοποιείται όταν το διακριτικό αποκαλυφθεί.',
           'Το API δεν αναφέρει κινήσεις που κάνουν άλλα mods. Οι κινήσεις του TokenMod εντοπίζονται αυτόματα· για άλλα mods, επιλέξτε τα διακριτικά και κάντε κλικ στην «Εξερεύνηση» ή καλέστε το Hexploration.revealAround(token) από το δικό σας mod.',
         ],
@@ -5371,7 +5439,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'מרחק חשיפת משושים',
-        desc: 'מיושם על משושים כשהם מצוירים: אסימון חייב להיות בתוך כל כך הרבה משושות כדי לחשוף אותם, כמה רחוק שהוא יכול לראות. השאר ריק ללא הגבלה.',
+        desc: 'נשמר על המשושים בעת מילוים, לכן הגדר אותו לפני המילוי: שינוי מאוחר יותר אינו משפיע על משושים שכבר נמצאים במפה. אסימון חייב להיות בטווח של מספר המשושים הזה כדי לחשוף אותם, לא משנה כמה רחוק הוא יכול לראות; עם 0 הם נחשפים רק כשנכנסים אליהם. השתמש בו להרים או ליערות. השאר ריק ללא הגבלה.',
       },
       revealDistance: {
         label: 'מרחק ראייה',
@@ -5379,7 +5447,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'קו ראייה',
-        desc: 'כאשר מופעל, משושה מתגלה רק אם אין משושה מכוסה בינו לבין האסימון.',
+        desc: 'כאשר מופעל, משושים שנשארים מכוסים, כמו הרים שמולאו עם מרחק חשיפת משושים, מסתירים את המשושים שמאחוריהם. יש לכך השפעה רק עם מרחק ראייה של 2 ומעלה.',
       },
       revealPath: {
         label: 'חשיפה לאורך המסלול',
@@ -5551,9 +5619,9 @@ const HexplorationMod = (() => {
         points: [
           'רק אסימונים בשכבת האסימונים חושפים משושים. אילו אסימונים נחשבים נקבע בהגדרה אסימונים חושפים: כברירת מחדל אסימוני שחקנים, כך שה-GM יכול להזיז מפלצות בלי לחשוף את המפה.',
           'אסימון חושף כל משושה שהוא מכסה (אסימונים גדולים מכסים כמה), וכשחשיפה לאורך המסלול מופעלת, גם כל משושה במסלול שלאורכו נגרר, כולל נקודות ציון.',
-          'מרחק ראייה חושף את המשושים סביב כל אחד מאותם משושות. כשקו הראייה פועל, משושה מתגלה רק אם אין שום משושה מכוסה באמצע.',
-          'מרחק חשיפת משושים נשמר על המשושים בזמן שהם מצוירים. משושים אלה נחשפים רק מטווח של מספר המשושים הזה, לא משנה כמה רחוק אסימון יכול לראות. השתמש בו להרים או ליערות שמסתירים את מה שמאחוריהם.',
-          'במצב הצצה, משושים בטווח ראייה הופכים שקופים במקום להיעלם, והם מוסרים כאשר אסימון נכנס אליהם.',
+          'מרחק ראייה חושף את המשושים סביב כל אחד מאותם משושים, מהקרוב ביותר תחילה. כשקו ראייה מופעל, משושה אינו נחשף כל עוד יש משושה מכוסה בינו לבין האסימון. משושים קרובים יותר נחשפים בדרך כלל ראשונים, ולכן בשטח פתוח קו ראייה אינו משנה דבר: יש לו השפעה רק עם מרחק ראייה של 2 ומעלה ומשושים שנשארים מכוסים, כמו שטח שמולא עם מרחק חשיפת משושים.',
+          'מרחק חשיפת משושים נשמר על כל משושה בעת מילויו, לכן הגדר אותו לפני המילוי; שינוי מאוחר יותר אינו משפיע על משושים שכבר נמצאים במפה. אסימון חייב להיות בטווח של מספר המשושים הזה כדי לחשוף אותם, לא משנה כמה רחוק הוא יכול לראות, ועם 0 הם נחשפים רק כשנכנסים אליהם. לרכס הרים: הגדר את מרחק חשיפת משושים ל-0, מלא את ההרים, החזר אותו ל"ללא", ואז מלא את השטח שמעבר להם. עם מרחק ראייה 3 וקו ראייה מופעל, החבורה רואה את השטח הפתוח סביבה, אך לא את ההרים או את מה שמאחוריהם. כל משושה הר נחשף כאשר אסימון נכנס אליו.',
+          'במצב הצצה, משושים בטווח ראייה הופכים שקופים במקום להיעלם, והם מוסרים כאשר אסימון נכנס אליהם. משושים במצב הצצה אינם חוסמים קו ראייה.',
           'Roll20 מצייר את שמות האסימונים, הפסים וההילות מעל משושים. כשהסתר אסימונים מכוסים מופעל, לאסימון שמתחת למשושה מכוסה נכבים השם, הפסים וההילות הגלויים לשחקנים עד שהוא נחשף, כך שמפלצות מוסתרות לא מסגירות את עצמן. אם תפעיל אחד מהם בזמן שהאסימון מכוסה, הוא יישאר מוסתר ויופעל כשהאסימון ייחשף.',
           'ה-API אינו מדווח על תזוזות שבוצעו על ידי מודים אחרים. תזוזות של TokenMod נקלטות אוטומטית; עבור מודים אחרים, בחר את האסימונים ולחץ על חקירה, או קרא ל-Hexploration.revealAround(token) מהמוד שלך.',
         ],
@@ -5738,7 +5806,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Hatszögek felfedési távolsága',
-        desc: 'A húzott hatszögekre alkalmazva: egy jelzőnek ezen a sok hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire is lásson. Hagyja üresen korlátozás nélkül.',
+        desc: 'A hatszögek kitöltésekor kerül tárolásra rajtuk, ezért a kitöltés előtt állítsa be: a későbbi módosítás nem hat a térképen már meglévő hatszögekre. Egy tokennek ennyi hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire lát is; 0 esetén csak akkor fedődnek fel, ha belépnek beléjük. Hegyekhez vagy erdőkhöz használja. Hagyja üresen, ha nem kíván korlátozást.',
       },
       revealDistance: {
         label: 'Látótávolság',
@@ -5746,7 +5814,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Látóvonal',
-        desc: 'Ha be van kapcsolva, egy hatszög csak akkor derül ki, ha nincs fedett hatszög közte és a token között.',
+        desc: 'Ha be van kapcsolva, a fedve maradó hatszögek, például a Hatszögek felfedési távolsága beállítással kitöltött hegyek, eltakarják a mögöttük lévő hatszögeket. Csak akkor számít, ha a Látótávolság legalább 2.',
       },
       revealPath: {
         label: 'Felfedés az útvonal mentén',
@@ -5927,9 +5995,9 @@ const HexplorationMod = (() => {
         points: [
           'Csak a tokenrétegen lévő tokenek fednek fel hatszögeket. Hogy mely tokenek számítanak, azt a Felfedő tokenek beállítás határozza meg: alapértelmezés szerint a játékosok tokenjei, így a GM a térkép felfedése nélkül mozgathatja a szörnyeket.',
           'Egy token felfed minden hatszöget, amelyet lefed (a nagy tokenek többet is), és ha a Felfedés az útvonal mentén be van kapcsolva, minden hatszöget azon az útvonalon is, amelyen végighúzták, az útpontokat is beleértve.',
-          'A Látótávolság az egyes ilyen hatszögek körüli hatszögeket fedi fel. Ha a Látóvonal be van kapcsolva, egy hatszög csak akkor fedődik fel, ha nincs közte és a token között lefedett hatszög.',
-          'A Hatszögek felfedési távolsága a hatszögek megrajzolásakor kerül tárolásra rajtuk. Ezek a hatszögek csak ennyi hatszögnyi távolságon belülről fedhetők fel, bármilyen messzire lát is egy token. Hegyekhez vagy erdőkhöz használja, amelyek eltakarják, ami mögöttük van.',
-          'Bepillantás módban a látótávolságon belüli hatszögek eltűnés helyett átlátszóvá válnak, és akkor tűnnek el, amikor egy token belép beléjük.',
+          'A Látótávolság az egyes ilyen hatszögek körüli hatszögeket fedi fel, a legközelebbiekkel kezdve. Ha a Látóvonal be van kapcsolva, egy hatszög nem fedődik fel, amíg közte és a token között lefedett hatszög van. A közelebbi hatszögek általában előbb fedődnek fel, így nyílt terepen a Látóvonal semmin sem változtat: csak akkor számít, ha a Látótávolság legalább 2, és vannak fedve maradó hatszögek, például a Hatszögek felfedési távolsága beállítással kitöltött terep.',
+          'A Hatszögek felfedési távolsága minden hatszögön a kitöltésekor kerül tárolásra, ezért a kitöltés előtt állítsa be; a későbbi módosítás nem hat a térképen már meglévő hatszögekre. Egy tokennek ennyi hatszögön belül kell lennie ahhoz, hogy felfedje őket, bármilyen messzire lát is, 0 esetén pedig csak akkor fedődnek fel, ha belépnek beléjük. Hegyvonulathoz: állítsa a Hatszögek felfedési távolsága értékét 0-ra, töltse ki a hegyeket, állítsa vissza üresre (korlátozás nélkül), majd töltse ki a mögöttük lévő vidéket. Ha a Látótávolság 3 és a Látóvonal be van kapcsolva, a csapat látja a körülötte lévő nyílt terepet, de a hegyeket és azt, ami mögöttük van, nem. Minden hegyi hatszög akkor fedődik fel, amikor egy token belép bele.',
+          'Bepillantás módban a látótávolságon belüli hatszögek eltűnés helyett átlátszóvá válnak, és eltávolításra kerülnek, amikor egy token belép beléjük. A Bepillantás módban látott hatszögek a Látóvonal szempontjából nem számítanak takarásnak.',
           'A Roll20 a tokenek nevét, sávjait és auráit a hatszögek fölé rajzolja. Ha a Lefedett tokenek elrejtése be van kapcsolva, a lefedett hatszög alatti token játékosok által látható neve, sávjai és aurái kikapcsolnak, amíg fel nem fedik, így a rejtett szörnyek nem árulják el magukat. Ha ezek közül bármelyiket bekapcsolja, amíg a token le van fedve, rejtve marad, és a token felfedésekor kapcsol be.',
           'Az API nem jelzi a más modok által végrehajtott mozgásokat. A TokenMod mozgásait a rendszer automatikusan észleli; más modok esetén jelölje ki a tokeneket, és kattintson a Felderítés gombra, vagy hívja meg a Hexploration.revealAround(token) függvényt a saját modjából.',
         ],
@@ -6114,7 +6182,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Distanza di rivelazione degli esagoni',
-        desc: 'Applicato agli esagoni mentre vengono disegnati: un segnalino deve trovarsi entro questo numero di esagoni per rivelarli, per quanto lontano possa vedere. Lascia vuoto per nessun limite.',
+        desc: 'Memorizzata sugli esagoni quando vengono riempiti, quindi impostala prima di riempire: modificarla in seguito non influisce sugli esagoni già presenti sulla mappa. Un segnalino deve trovarsi entro questo numero di esagoni per rivelarli, per quanto lontano possa vedere; con 0 vengono rivelati solo entrandoci. Usala per montagne o foreste. Lascia vuoto per nessun limite.',
       },
       revealDistance: {
         label: 'Distanza di vista',
@@ -6122,7 +6190,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Linea di vista',
-        desc: 'Quando è attivo, un esagono viene rivelato solo se non si trova alcun esagono coperto tra esso e il segnalino.',
+        desc: 'Quando è attivo, gli esagoni che restano coperti, come le montagne riempite con una Distanza di rivelazione degli esagoni, nascondono gli esagoni dietro di essi. Fa differenza solo con una Distanza di vista di 2 o più.',
       },
       revealPath: {
         label: 'Rivela lungo il percorso',
@@ -6304,9 +6372,9 @@ const HexplorationMod = (() => {
         points: [
           'Solo i segnalini sul livello dei segnalini rivelano gli esagoni. Quali segnalini contano lo stabilisce Segnalini che rivelano: per impostazione predefinita i segnalini dei giocatori, così il GM può spostare i mostri senza scoprire la mappa.',
           'Un segnalino rivela ogni esagono che copre (i segnalini grandi ne coprono diversi) e, con Rivela lungo il percorso attivo, ogni esagono del percorso lungo il quale è stato trascinato, compresi i waypoint.',
-          "La Distanza di vista rivela gli esagoni attorno a ciascuno di quegli esagoni. Con Linea di vista attiva, un esagono viene rivelato solo se in mezzo non c'è alcun esagono coperto.",
-          "La Distanza di rivelazione degli esagoni viene memorizzata sugli esagoni nel momento in cui vengono disegnati. Quegli esagoni vengono rivelati solo da non più di quel numero di esagoni di distanza, per quanto lontano possa vedere un segnalino. Usala per montagne o foreste che nascondono ciò che c'è dietro.",
-          'Nella modalità Intravedi, gli esagoni in vista diventano trasparenti invece di scomparire e vengono rimossi quando un segnalino vi entra.',
+          'La Distanza di vista rivela gli esagoni attorno a ciascuno di quegli esagoni, a partire dai più vicini. Con Linea di vista attiva, un esagono non viene rivelato finché tra esso e il segnalino si trova un esagono coperto. Di solito gli esagoni più vicini vengono rivelati per primi, quindi in campo aperto la Linea di vista non cambia nulla: conta solo con una Distanza di vista di 2 o più ed esagoni che restano coperti, come il terreno riempito con una Distanza di rivelazione degli esagoni.',
+          "La Distanza di rivelazione degli esagoni viene memorizzata su ciascun esagono quando viene riempito, quindi impostala prima di riempire; modificarla in seguito non influisce sugli esagoni già presenti sulla mappa. Un segnalino deve trovarsi entro quel numero di esagoni per rivelarli, per quanto lontano possa vedere, e con 0 vengono rivelati solo entrandoci. Per una catena montuosa: imposta la Distanza di rivelazione degli esagoni a 0, riempi le montagne, riportala a nessun limite, poi riempi le terre al di là. Con Distanza di vista 3 e Linea di vista attiva, il gruppo vede il terreno aperto attorno a sé, ma non le montagne né ciò che c'è dietro. Ogni esagono di montagna viene rivelato quando un segnalino vi entra.",
+          'Nella modalità Intravedi, gli esagoni in vista diventano trasparenti invece di scomparire e vengono rimossi quando un segnalino vi entra. Gli esagoni intravisti non bloccano la Linea di vista.',
           'Roll20 disegna nomi, barre e aure dei segnalini sopra gli esagoni. Con Nascondi i segnalini coperti attivo, un segnalino sotto un esagono coperto ha nome, barre e aure visibili ai giocatori disattivati finché non viene scoperto, così i mostri nascosti non si tradiscono. Se ne attivi uno mentre il segnalino è coperto, resta nascosto e viene attivato quando il segnalino viene scoperto.',
           "L'API non segnala gli spostamenti effettuati da altre mod. Gli spostamenti di TokenMod vengono rilevati automaticamente; per altre mod, seleziona i segnalini e fai clic su Esplora, oppure chiama Hexploration.revealAround(token) dalla tua mod.",
         ],
@@ -6491,7 +6559,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'ヘクスの公開距離',
-        desc: 'ヘクスが描画されるときに適用されます。トークンは、どれだけ遠くまで見えても、ヘクスを公開するにはこの数のヘクス内に存在する必要があります。制限を設けない場合は空のままにします。',
+        desc: 'ヘクスを塗りつぶすときにヘクスに保存されるため、塗りつぶす前に設定してください。後から変更しても、すでにマップ上にあるヘクスには影響しません。トークンがどれだけ遠くまで見えても、ヘクスを公開するにはこの数のヘクス以内にいる必要があります。0の場合、ヘクスに入ったときにのみ公開されます。山や森に使用します。制限を設けない場合は空のままにします。',
       },
       revealDistance: {
         label: '視界距離',
@@ -6499,7 +6567,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: '視線',
-        desc: 'オンの場合、ヘクスは、そのヘクスとトークンの間に覆われたヘクスがない場合にのみ公開されます。',
+        desc: 'オンの場合、「ヘクスの公開距離」を設定して塗りつぶした山など、覆われたままのヘクスが、その背後のヘクスを隠します。「視界距離」が2以上の場合にのみ違いが出ます。',
       },
       revealPath: {
         label: '経路に沿って表示',
@@ -6677,9 +6745,9 @@ const HexplorationMod = (() => {
         points: [
           'ヘクスを表示するのは、トークンレイヤー上のトークンだけです。どのトークンが対象かは「公開するトークン」で設定します。既定ではプレイヤートークンなので、GM はマップを表示させずにモンスターを動かせます。',
           'トークンは自分が覆うすべてのヘクスを表示し（大きなトークンは複数のヘクスを覆います）、「経路に沿って表示」がオンの場合は、ドラッグされた経路上のすべてのヘクス（ウェイポイントを含む）も表示します。',
-          '「視界距離」は、それらの各ヘクスの周囲のヘクスを表示します。「視線」がオンの場合、間に覆われたヘクスがないときだけヘクスが表示されます。',
-          '「ヘクスの公開距離」は、ヘクスを描画するときにそのヘクスに保存されます。それらのヘクスは、トークンがどれだけ遠くまで見えても、その数のヘクス以内からしか表示されません。背後を隠す山や森に使用します。',
-          '「透過」モードでは、視界内のヘクスは消えずに半透明になり、トークンが入ると取り除かれます。',
+          '「視界距離」は、それらの各ヘクスの周囲のヘクスを近い順に公開します。「視線」がオンの場合、ヘクスとトークンの間に覆われたヘクスがある間は、そのヘクスは公開されません。通常は近いヘクスから先に公開されるため、開けた土地では「視線」は何も変えません。意味を持つのは、「視界距離」が2以上で、「ヘクスの公開距離」を設定して塗りつぶした地形など、覆われたままのヘクスがある場合だけです。',
+          '「ヘクスの公開距離」は、ヘクスを塗りつぶすときに各ヘクスに保存されるため、塗りつぶす前に設定してください。後から変更しても、すでにマップ上にあるヘクスには影響しません。トークンがどれだけ遠くまで見えても、ヘクスを公開するにはその数のヘクス以内にいる必要があり、0の場合はヘクスに入ったときにのみ公開されます。山脈の場合：「ヘクスの公開距離」を0に設定して山を塗りつぶし、設定をなしに戻してから、その先の土地を塗りつぶします。「視界距離」を3にして「視線」をオンにすると、パーティーは周囲の開けた土地は見えますが、山やその背後にあるものは見えません。各山岳ヘクスは、トークンがその中に入ったときに公開されます。',
+          '「透過」モードでは、視界内のヘクスは消えずに半透明になり、トークンが入ると取り除かれます。透過状態のヘクスは「視線」を遮りません。',
           'Roll20 はトークンの名前、バー、オーラをヘクスの上に描画します。「覆われたトークンを隠す」がオンの場合、覆われたヘクスの下にあるトークンは、覆いが外れるまでプレイヤーに見える名前、バー、オーラがオフになるため、隠れたモンスターの存在がばれません。トークンが覆われている間にそれらのいずれかをオンにしても隠されたままになり、覆いが外れたときにオンになります。',
           'API は他の Mod による移動を報告しません。TokenMod による移動は自動的に検出されます。その他の Mod の場合は、トークンを選択して「探索」をクリックするか、独自の Mod から Hexploration.revealAround(token) を呼び出してください。',
         ],
@@ -6864,7 +6932,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: '헥스 공개 거리',
-        desc: '그려진 헥스에 적용됩니다. 토큰이 볼 수 있는 범위에 관계없이 토큰을 표시하려면 이 많은 헥스 내에 있어야 합니다. 제한이 없으면 비워 두세요.',
+        desc: '헥스를 채울 때 헥스에 저장되므로 채우기 전에 설정하세요. 나중에 바꿔도 이미 맵에 있는 헥스에는 영향을 주지 않습니다. 토큰이 얼마나 멀리 볼 수 있든, 헥스를 공개하려면 이 헥스 수 이내에 있어야 합니다. 0이면 헥스에 들어가야만 공개됩니다. 산이나 숲에 사용하세요. 제한이 없으면 비워 두세요.',
       },
       revealDistance: {
         label: '시야 거리',
@@ -6872,7 +6940,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: '시선',
-        desc: '켜져 있으면 헥스와 토큰 사이에 가려진 헥스가 없는 경우에만 헥스가 드러납니다.',
+        desc: '켜져 있으면, 헥스 공개 거리로 채운 산처럼 계속 덮여 있는 헥스가 그 뒤의 헥스를 가립니다. 시야 거리가 2 이상일 때만 차이가 있습니다.',
       },
       revealPath: {
         label: '경로를 따라 표시',
@@ -7048,9 +7116,9 @@ const HexplorationMod = (() => {
         points: [
           '토큰 레이어에 있는 토큰만 헥스를 공개합니다. 어떤 토큰이 해당되는지는 공개하는 토큰 설정으로 정합니다. 기본값은 플레이어 토큰이므로 GM은 지도를 드러내지 않고 몬스터를 움직일 수 있습니다.',
           '토큰은 해당 토큰이 포함하는 모든 헥스를 표시하며(큰 토큰은 여러 개를 포함) 경로를 따라 표시를 설정하면 웨이포인트를 포함하여 드래그된 경로의 모든 헥스를 표시합니다.',
-          '시야 거리는 각 헥스 주변의 헥스를 나타냅니다. 시선이 켜진 상태에서, 가려진 헥스가 사이에 없는 경우에만 헥스가 드러납니다.',
-          '헥스 공개 거리는 헥스를 그릴 때 그 헥스에 저장됩니다. 그런 헥스는 토큰이 얼마나 멀리 볼 수 있든 그 헥스 수 이내에서만 공개됩니다. 뒤에 있는 것을 가리는 산이나 숲에 사용하세요.',
-          '반투명 모드에서는 시야 안의 헥스가 사라지는 대신 비쳐 보이게 되며, 토큰이 들어가면 제거됩니다.',
+          '시야 거리는 그 각 헥스 주변의 헥스를 가까운 것부터 공개합니다. 시선이 켜져 있으면, 헥스와 토큰 사이에 덮인 헥스가 있는 동안에는 그 헥스가 공개되지 않습니다. 보통 가까운 헥스가 먼저 공개되므로 탁 트인 지형에서는 시선이 아무것도 바꾸지 않습니다. 시야 거리가 2 이상이고, 헥스 공개 거리로 채운 지형처럼 계속 덮여 있는 헥스가 있을 때만 의미가 있습니다.',
+          '헥스 공개 거리는 헥스를 채울 때 각 헥스에 저장되므로 채우기 전에 설정하세요. 나중에 바꿔도 이미 맵에 있는 헥스에는 영향을 주지 않습니다. 토큰이 얼마나 멀리 볼 수 있든, 헥스를 공개하려면 그 헥스 수 이내에 있어야 하며, 0이면 헥스에 들어가야만 공개됩니다. 산맥의 경우: 헥스 공개 거리를 0으로 설정하고 산을 채운 다음, 다시 없음으로 되돌리고 그 너머의 땅을 채우세요. 시야 거리 3에 시선을 켜면, 일행은 주변의 탁 트인 땅은 보지만 산이나 그 뒤에 있는 것은 보지 못합니다. 각 산 헥스는 토큰이 그 안으로 걸어 들어갈 때 공개됩니다.',
+          '반투명 모드에서는 시야 안의 헥스가 사라지는 대신 비쳐 보이게 되며, 토큰이 들어가면 제거됩니다. 반투명이 된 헥스는 시선을 가리지 않습니다.',
           'Roll20은 토큰 이름, 막대, 오라를 헥스 위에 그립니다. 덮인 토큰 숨기기를 켜면 덮인 헥스 아래에 있는 토큰은 덮개가 벗겨질 때까지 플레이어에게 보이는 이름, 막대, 오라가 꺼지므로, 숨은 몬스터가 정체를 드러내지 않습니다. 토큰이 덮여 있는 동안 그중 하나를 켜면 숨겨진 상태로 유지되다가 덮개가 벗겨질 때 켜집니다.',
           'API는 다른 모드의 움직임을 보고하지 않습니다. TokenMod 이동은 자동으로 선택됩니다. 다른 모드의 경우 토큰을 선택하고 탐색을 클릭하거나 자신의 모드에서 Hexploration.revealAround(token)를 호출하세요.',
         ],
@@ -7235,7 +7303,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Odległość odkrywania heksagonów',
-        desc: 'Dotyczy to dobieranych heksów: żeton musi znajdować się w obrębie określonej liczby heksów, aby je odsłonić, bez względu na to, jak daleko sięga. Pozostaw puste bez ograniczeń.',
+        desc: 'Zapisywana na heksach w chwili ich wypełniania, więc ustaw ją przed wypełnianiem: późniejsza zmiana nie wpływa na heksy, które już są na mapie. Żeton musi znajdować się w obrębie tylu heksów, aby je odkryć, niezależnie od tego, jak daleko widzi; przy 0 odkrywa się je tylko przez wejście na nie. Używaj jej dla gór lub lasów. Pozostaw puste, aby nie było ograniczenia.',
       },
       revealDistance: {
         label: 'Zasięg wzroku',
@@ -7243,7 +7311,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Linia wzroku',
-        desc: 'Kiedy jest włączone, heks jest odkrywany tylko wtedy, gdy pomiędzy nim a żetonem nie leży żaden zakryty heks.',
+        desc: 'Kiedy jest włączone, heksy, które pozostają zakryte, np. góry wypełnione przy ustawieniu „Odległość odkrywania heksagonów”, zasłaniają heksy za nimi. Ma to znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej.',
       },
       revealPath: {
         label: 'Odkrywaj wzdłuż ścieżki',
@@ -7423,9 +7491,9 @@ const HexplorationMod = (() => {
         points: [
           'Heksy odkrywają tylko żetony na warstwie żetonów. To, które żetony się liczą, określa ustawienie „Żetony odkrywające”: domyślnie żetony graczy, więc MG może przesuwać potwory bez odkrywania mapy.',
           'Żeton odkrywa każdy heks, który zajmuje (duże żetony zajmują kilka), a przy włączonej opcji „Odkrywaj wzdłuż ścieżki” także każdy heks na trasie, po której był przeciągany, łącznie z punktami pośrednimi.',
-          '„Zasięg wzroku” odkrywa heksy wokół każdego z tych heksów. Gdy „Linia wzroku” jest włączona, heks zostaje odkryty tylko wtedy, gdy między nim a żetonem nie leży żaden zakryty heks.',
-          '„Odległość odkrywania heksagonów” jest zapisywana na heksach w chwili ich rysowania. Takie heksy można odkryć tylko z odległości najwyżej tylu heksów, niezależnie od tego, jak daleko widzi żeton. Używaj jej dla gór lub lasów, które zasłaniają to, co jest za nimi.',
-          'W trybie Przebłysk heksy w zasięgu wzroku stają się przezroczyste zamiast znikać i są usuwane, gdy wejdzie na nie żeton.',
+          '„Zasięg wzroku” odkrywa heksy wokół każdego z tych heksów, zaczynając od najbliższych. Gdy „Linia wzroku” jest włączona, heks nie zostaje odkryty, dopóki między nim a żetonem leży zakryty heks. Bliższe heksy są zwykle odkrywane jako pierwsze, więc na otwartym terenie „Linia wzroku” niczego nie zmienia: ma znaczenie tylko wtedy, gdy „Zasięg wzroku” wynosi 2 lub więcej i istnieją heksy, które pozostają zakryte, np. teren wypełniony przy ustawieniu „Odległość odkrywania heksagonów”.',
+          '„Odległość odkrywania heksagonów” jest zapisywana na każdym heksie w chwili jego wypełniania, więc ustaw ją przed wypełnianiem; późniejsza zmiana nie wpływa na heksy, które już są na mapie. Żeton musi znajdować się w obrębie tylu heksów, aby je odkryć, niezależnie od tego, jak daleko widzi, a przy 0 odkrywa się je tylko przez wejście na nie. Dla pasma górskiego: ustaw „Odległość odkrywania heksagonów” na 0, wypełnij góry, ponownie wyczyść tę wartość (bez limitu), a potem wypełnij teren za nimi. Gdy „Zasięg wzroku” wynosi 3, a „Linia wzroku” jest włączona, drużyna widzi otwarty teren wokół siebie, ale nie góry ani to, co leży za nimi. Każdy heks górski zostaje odkryty, gdy wejdzie na niego żeton.',
+          'W trybie Przebłysk heksy w zasięgu wzroku stają się przezroczyste zamiast znikać i są usuwane, gdy wejdzie na nie żeton. Heksy widziane w trybie Przebłysk nie zasłaniają widoku przy włączonej opcji „Linia wzroku”.',
           'Roll20 rysuje nazwy, paski i aury żetonów nad heksami. Przy włączonej opcji „Ukrywaj zakryte żetony” żeton pod zakrytym heksem ma wyłączone widoczne dla graczy nazwę, paski i aury, dopóki nie zostanie odkryty, więc ukryte potwory się nie zdradzą. Jeśli włączysz któryś z tych elementów, gdy żeton jest zakryty, pozostanie on ukryty i zostanie włączony po odkryciu żetonu.',
           'API nie zgłasza ruchów wykonanych przez inne mody. Ruchy TokenMod są wychwytywane automatycznie; w przypadku innych modów zaznacz żetony i kliknij „Eksploruj” albo wywołaj Hexploration.revealAround(token) z własnego moda.',
         ],
@@ -7610,7 +7678,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Distância de revelação dos hexágonos',
-        desc: 'Aplicado aos hexágonos à medida que são desenhados: uma ficha deve estar dentro deste número de hexágonos para os revelar, por mais longe que possa ver. Deixe em branco sem limite.',
+        desc: 'Guardada nos hexágonos quando são preenchidos, por isso defina-a antes de preencher: alterá-la depois não afeta os hexágonos que já estão no mapa. Uma ficha tem de estar a, no máximo, este número de hexágonos para os revelar, por mais longe que consiga ver; com 0, só são revelados quando se entra neles. Utilize-a para montanhas ou florestas. Deixe em branco para não haver limite.',
       },
       revealDistance: {
         label: 'Distância de visão',
@@ -7618,7 +7686,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Linha de visão',
-        desc: 'Quando ativado, um hexágono só é revelado se nenhum hexágono coberto estiver entre ele e a ficha.',
+        desc: 'Quando ativado, os hexágonos que continuam cobertos, como montanhas preenchidas com uma Distância de revelação dos hexágonos, escondem os hexágonos que estão por trás deles. Só faz diferença com uma Distância de visão de 2 ou mais.',
       },
       revealPath: {
         label: 'Revelar ao longo do percurso',
@@ -7800,9 +7868,9 @@ const HexplorationMod = (() => {
         points: [
           'Apenas as fichas na camada de fichas revelam hexágonos. Quais as fichas que contam é definido por Fichas que revelam: fichas de jogador por predefinição, para que o GM possa mover monstros sem descobrir o mapa.',
           'Uma ficha revela cada hexágono que cobre (as fichas grandes cobrem vários) e, com Revelar ao longo do percurso ativado, cada hexágono do percurso pelo qual foi arrastada, incluindo os pontos de passagem.',
-          'A Distância de Visão revela os hexágonos em torno de cada um destes hexágonos. Com a Linha de Visão ativada, um hexágono só é revelado se não existir nenhum hexágono coberto entre eles.',
-          'A Distância de revelação dos hexágonos é guardada nos hexágonos quando são desenhados. Esses hexágonos só são revelados a, no máximo, esse número de hexágonos de distância, por mais longe que uma ficha consiga ver. Utilize-a para montanhas ou florestas que escondem o que está por trás delas.',
-          'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecerem e são removidos quando uma ficha entra neles.',
+          'A Distância de visão revela os hexágonos em torno de cada um destes hexágonos, começando pelos mais próximos. Com a Linha de visão ativada, um hexágono não é revelado enquanto existir um hexágono coberto entre ele e a ficha. Os hexágonos mais próximos são normalmente revelados primeiro, por isso em terreno aberto a Linha de visão não altera nada: só tem importância com uma Distância de visão de 2 ou mais e hexágonos que continuam cobertos, como terreno preenchido com uma Distância de revelação dos hexágonos.',
+          'A Distância de revelação dos hexágonos é guardada em cada hexágono quando este é preenchido, por isso defina-a antes de preencher; alterá-la depois não afeta os hexágonos que já estão no mapa. Uma ficha tem de estar a, no máximo, esse número de hexágonos para os revelar, por mais longe que consiga ver, e com 0 só são revelados quando se entra neles. Para uma cordilheira: defina a Distância de revelação dos hexágonos como 0, preencha as montanhas, volte a deixá-la sem limite e depois preencha as terras mais além. Com Distância de visão 3 e Linha de visão ativada, o grupo vê o terreno aberto à sua volta, mas não as montanhas nem o que está por trás delas. Cada hexágono de montanha é revelado quando uma ficha entra nele.',
+          'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecerem e são removidos quando uma ficha entra neles. Os hexágonos vislumbrados não bloqueiam a Linha de visão.',
           'O Roll20 desenha os nomes, barras e auras das fichas por cima dos hexágonos. Com Ocultar fichas cobertas ativado, uma ficha sob um hexágono coberto tem o nome, as barras e as auras visíveis para os jogadores desativados até ser descoberta, para que os monstros escondidos não se denunciem. Se ativar um deles enquanto a ficha estiver coberta, este continua oculto e é ativado quando a ficha for descoberta.',
           'A API não reporta movimentos feitos por outros mods. Os movimentos do TokenMod são captados automaticamente; para outros mods, selecione as fichas e clique em Explorar, ou chame Hexploration.revealAround(token) a partir do seu próprio mod.',
         ],
@@ -7987,7 +8055,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Distância de revelação dos hexágonos',
-        desc: 'Aplicado aos hexágonos à medida que são desenhados: uma ficha deve estar dentro deste número de hexágonos para revelá-los, por mais longe que possa ver. Deixe em branco sem limite.',
+        desc: 'Gravada nos hexágonos quando eles são preenchidos, então defina-a antes de preencher: alterá-la depois não afeta os hexágonos que já estão no mapa. Uma ficha deve estar a no máximo este número de hexágonos para revelá-los, por mais longe que possa ver; com 0, eles só são revelados quando se entra neles. Use-a para montanhas ou florestas. Deixe em branco para não ter limite.',
       },
       revealDistance: {
         label: 'Distância de visão',
@@ -7995,7 +8063,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Linha de visão',
-        desc: 'Quando ativado, um hexágono só é revelado se nenhum hexágono coberto estiver entre ele e a ficha.',
+        desc: 'Quando ativado, os hexágonos que permanecem cobertos, como montanhas preenchidas com uma Distância de revelação dos hexágonos, escondem os hexágonos atrás deles. Só faz diferença com uma Distância de visão de 2 ou mais.',
       },
       revealPath: {
         label: 'Revelar ao longo do caminho',
@@ -8177,9 +8245,9 @@ const HexplorationMod = (() => {
         points: [
           'Apenas tokens na camada de tokens revelam hexágonos. Quais tokens contam é definido por Tokens que revelam: tokens de jogador por padrão, para que o GM possa mover monstros sem descobrir o mapa.',
           'Um token revela cada hexágono que cobre (tokens grandes cobrem vários) e, com Revelar ao longo do caminho ativado, cada hexágono da rota pela qual foi arrastado, incluindo os pontos de passagem.',
-          'A Distância de Visão revela os hexágonos em torno de cada um desses hexágonos. Com a Linha de Visão ativada, um hexágono só é revelado se não houver nenhum hexágono coberto entre eles.',
-          'A Distância de revelação dos hexágonos é gravada nos hexágonos quando eles são desenhados. Esses hexágonos só são revelados a no máximo essa quantidade de hexágonos de distância, por mais longe que um token consiga ver. Use-a para montanhas ou florestas que escondem o que há atrás delas.',
-          'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecer e são removidos quando um token entra neles.',
+          'A Distância de visão revela os hexágonos em torno de cada um desses hexágonos, começando pelos mais próximos. Com a Linha de visão ativada, um hexágono não é revelado enquanto houver um hexágono coberto entre ele e o token. Os hexágonos mais próximos costumam ser revelados primeiro, então em terreno aberto a Linha de visão não muda nada: ela só importa com uma Distância de visão de 2 ou mais e hexágonos que permanecem cobertos, como terreno preenchido com uma Distância de revelação dos hexágonos.',
+          'A Distância de revelação dos hexágonos é gravada em cada hexágono quando ele é preenchido, então defina-a antes de preencher; alterá-la depois não afeta os hexágonos que já estão no mapa. Um token deve estar a no máximo essa quantidade de hexágonos para revelá-los, por mais longe que consiga ver, e com 0 eles só são revelados quando se entra neles. Para uma cordilheira: defina a Distância de revelação dos hexágonos como 0, preencha as montanhas, volte a deixá-la sem limite e então preencha as terras mais adiante. Com Distância de visão 3 e Linha de visão ativada, o grupo vê o terreno aberto ao seu redor, mas não as montanhas nem o que há atrás delas. Cada hexágono de montanha é revelado quando um token entra nele.',
+          'No modo Vislumbre, os hexágonos à vista tornam-se transparentes em vez de desaparecer e são removidos quando um token entra neles. Os hexágonos vislumbrados não bloqueiam a Linha de visão.',
           'O Roll20 desenha nomes, barras e auras de tokens acima dos hexágonos. Com Ocultar tokens cobertos ativado, um token sob um hexágono coberto tem o nome, as barras e as auras visíveis aos jogadores desativados até ser descoberto, para que monstros escondidos não se denunciem. Se você ativar um deles enquanto o token estiver coberto, ele continua oculto e é ativado quando o token for descoberto.',
           'A API não relata movimentos feitos por outros mods. Os movimentos do TokenMod são captados automaticamente; para outros mods, selecione os tokens e clique em Explorar ou chame Hexploration.revealAround(token) do seu próprio mod.',
         ],
@@ -8364,7 +8432,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Дальность раскрытия шестиугольников',
-        desc: 'Применительно к нарисованным гексам: фишка должна находиться в пределах этого количества гексов, чтобы их можно было обнаружить, как бы далеко он ни видел. Оставьте пустым, чтобы не было ограничений.',
+        desc: 'Сохраняется в гексах при их заполнении, поэтому задайте значение до заполнения: его последующее изменение не влияет на гексы, уже находящиеся на карте. Жетон должен находиться в пределах этого количества гексов, чтобы раскрыть их, как бы далеко он ни видел; при значении 0 они раскрываются, только когда в них входят. Используйте для гор или лесов. Оставьте пустым, чтобы не было ограничений.',
       },
       revealDistance: {
         label: 'Расстояние обзора',
@@ -8372,7 +8440,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Линия видимости',
-        desc: 'Когда эта опция включена, гекс раскрывается только в том случае, если между ним и жетоном нет закрытого гекса.',
+        desc: 'Когда эта опция включена, гексы, которые остаются закрытыми, например горы, заполненные с параметром «Дальность раскрытия шестиугольников», скрывают гексы за ними. Это имеет значение, только если «Расстояние обзора» равно 2 или больше.',
       },
       revealPath: {
         label: 'Раскрывать вдоль пути',
@@ -8552,9 +8620,9 @@ const HexplorationMod = (() => {
         points: [
           'Гексы раскрывают только токены на слое токенов. Какие именно, задаёт настройка «Раскрывающие токены»: по умолчанию это токены игроков, поэтому ГМ может перемещать монстров, не открывая карту.',
           'Токен раскрывает каждый гекс, который он занимает (большие токены занимают несколько), а при включённой настройке «Раскрывать вдоль пути» — и каждый гекс на маршруте, по которому его перетаскивали, включая промежуточные точки.',
-          '«Расстояние обзора» раскрывает гексы вокруг каждого из этих гексов. При включённой «Линии видимости» гекс раскрывается, только если между ним и токеном нет закрытого гекса.',
-          '«Дальность раскрытия шестиугольников» сохраняется в гексах при их рисовании. Такие гексы раскрываются только с расстояния не больше этого числа гексов, как бы далеко ни видел токен. Используйте её для гор или лесов, скрывающих то, что за ними.',
-          'В режиме «Проблеск» гексы в пределах видимости не исчезают, а становятся полупрозрачными и удаляются, когда в них входит токен.',
+          '«Расстояние обзора» раскрывает гексы вокруг каждого из этих гексов, начиная с ближайших. Когда «Линия видимости» включена, гекс не раскрывается, пока между ним и токеном лежит закрытый гекс. Ближние гексы обычно раскрываются первыми, поэтому на открытой местности «Линия видимости» ничего не меняет: она важна, только если «Расстояние обзора» равно 2 или больше и есть гексы, которые остаются закрытыми, например местность, заполненная с параметром «Дальность раскрытия шестиугольников».',
+          '«Дальность раскрытия шестиугольников» сохраняется в каждом гексе при его заполнении, поэтому задайте её до заполнения; последующее изменение не влияет на гексы, уже находящиеся на карте. Токен должен находиться в пределах этого количества гексов, чтобы раскрыть их, как бы далеко он ни видел, а при значении 0 они раскрываются, только когда в них входят. Для горного хребта: установите «Дальность раскрытия шестиугольников» на 0, заполните горы, снова очистите значение (без ограничений), затем заполните земли за ними. Если «Расстояние обзора» равно 3, а «Линия видимости» включена, отряд видит открытую местность вокруг себя, но не горы и не то, что лежит за ними. Каждый горный гекс раскрывается, когда в него входит токен.',
+          'В режиме «Проблеск» гексы в пределах видимости не исчезают, а становятся полупрозрачными и удаляются, когда в них входит токен. Гексы, видимые в режиме «Проблеск», не загораживают обзор для параметра «Линия видимости».',
           'Roll20 рисует имена, полоски и ауры токенов поверх гексов. При включённой настройке «Скрывать токены под гексами» у токена под закрытым гексом отключаются видимые игрокам имя, полоски и ауры, пока его не откроют, так что спрятанные монстры не выдают себя. Если включить что-то из этого, пока токен закрыт, оно останется скрытым и включится, когда токен откроется.',
           'API не сообщает о перемещениях, сделанных другими модами. Перемещения TokenMod подхватываются автоматически; для других модов выделите токены и нажмите «Исследовать» или вызовите Hexploration.revealAround(token) из своего мода.',
         ],
@@ -8739,7 +8807,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Distancia de revelación de hexágonos',
-        desc: 'Se aplica a los hexágonos a medida que se dibujan: una ficha debe estar dentro de esta cantidad de hexágonos para revelarlos, por muy lejos que pueda ver. Déjelo vacío sin límite.',
+        desc: 'Se guarda en los hexágonos cuando se rellenan, así que configúrelo antes de rellenar: cambiarlo después no afecta a los hexágonos que ya están en el mapa. Una ficha debe estar a esta cantidad de hexágonos como máximo para revelarlos, por muy lejos que pueda ver; con 0, sólo se revelan al entrar en ellos. Úselo para montañas o bosques. Déjelo vacío para no tener límite.',
       },
       revealDistance: {
         label: 'Distancia de visión',
@@ -8747,7 +8815,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Línea de visión',
-        desc: 'Cuando está activado, un hexágono sólo se revela si no hay ningún hexágono cubierto entre él y la ficha.',
+        desc: 'Cuando está activado, los hexágonos que siguen cubiertos, como las montañas rellenadas con una Distancia de revelación de hexágonos, ocultan los hexágonos que hay detrás de ellos. Sólo tiene efecto con una Distancia de visión de 2 o más.',
       },
       revealPath: {
         label: 'Revelar a lo largo del camino',
@@ -8931,9 +8999,9 @@ const HexplorationMod = (() => {
         points: [
           'Solo las fichas de la capa de fichas revelan hexágonos. Qué fichas cuentan se define con Fichas que revelan: por defecto, las fichas de jugador, para que el DJ pueda mover monstruos sin descubrir el mapa.',
           'Una ficha revela cada hexágono que cubre (las fichas grandes cubren varios) y, con Revelar a lo largo del camino activado, cada hexágono de la ruta por la que fue arrastrado, incluidos los puntos de ruta.',
-          'La distancia de visión revela los hexágonos alrededor de cada uno de esos hexágonos. Con la Línea de Visión activada, un hexágono sólo se revela si no hay ningún hexágono cubierto en el medio.',
-          'La distancia de revelación de hexágonos se almacena en los hexágonos a medida que se dibujan. Esos hexágonos sólo se revelan desde dentro de esa cantidad de hexágonos, por muy lejos que pueda ver una ficha. Úselo para montañas o bosques que ocultan lo que hay detrás de ellos.',
-          'En el modo Vistazo, los hexágonos a la vista se vuelven transparentes en lugar de desaparecer, y se eliminan cuando una ficha ingresa en ellos.',
+          'La Distancia de visión revela los hexágonos alrededor de cada uno de esos hexágonos, empezando por los más cercanos. Con la Línea de visión activada, un hexágono no se revela mientras haya un hexágono cubierto entre él y la ficha. Los hexágonos más cercanos suelen revelarse primero, así que en terreno abierto la Línea de visión no cambia nada: sólo importa con una Distancia de visión de 2 o más y hexágonos que siguen cubiertos, como el terreno rellenado con una Distancia de revelación de hexágonos.',
+          'La Distancia de revelación de hexágonos se guarda en cada hexágono cuando se rellena, así que configúrela antes de rellenar; cambiarla después no afecta a los hexágonos que ya están en el mapa. Una ficha debe estar a esa cantidad de hexágonos como máximo para revelarlos, por muy lejos que pueda ver, y con 0 sólo se revelan al entrar en ellos. Para una cordillera: ponga la Distancia de revelación de hexágonos en 0, rellene las montañas, vuelva a dejarla sin límite y después rellene las tierras que hay más allá. Con una Distancia de visión de 3 y la Línea de visión activada, el grupo ve el terreno abierto a su alrededor, pero no las montañas ni lo que hay detrás de ellas. Cada hexágono de montaña se revela cuando una ficha entra en él.',
+          'En el modo Vistazo, los hexágonos a la vista se vuelven transparentes en lugar de desaparecer, y se eliminan cuando una ficha entra en ellos. Los hexágonos transparentes del modo Vistazo no bloquean la Línea de visión.',
           'Roll20 dibuja los nombres, barras y auras de las fichas por encima de los hexágonos. Con Ocultar fichas cubiertas activado, una ficha bajo un hexágono cubierto tiene desactivados su nombre, barras y auras visibles para los jugadores hasta que se descubre, para que los monstruos ocultos no se delaten. Si activa alguno mientras la ficha está cubierta, permanece oculto y se activa cuando la ficha se descubre.',
           'La API no informa de los movimientos hechos por otros mods. Los movimientos de TokenMod se detectan automáticamente; para otros mods, seleccione las fichas y haga clic en Explorar, o llame a Hexploration.revealAround(token) desde su propio mod.',
         ],
@@ -9118,7 +9186,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Avslöjandeavstånd för hexar',
-        desc: 'Tillämpas på hexar när de ritas: en token måste finnas inom så många hexes för att avslöja dem, hur långt den än kan se. Lämna tomt utan gräns.',
+        desc: 'Lagras på hexarna när de fylls, så ställ in det innan du fyller: att ändra det senare påverkar inte hexar som redan finns på kartan. En token måste vara inom så många hexar för att avslöja dem, hur långt den än kan se; med 0 avslöjas de bara när man går in i dem. Använd det för berg eller skogar. Lämna tomt för ingen gräns.',
       },
       revealDistance: {
         label: 'Siktavstånd',
@@ -9126,7 +9194,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Siktlinje',
-        desc: 'När den är på avslöjas en hex endast om ingen täckt hex ligger mellan den och token.',
+        desc: 'När den är på döljer hexar som förblir täckta, till exempel berg som fyllts med ett Avslöjandeavstånd för hexar, hexarna bakom dem. Det gör bara skillnad med ett Siktavstånd på 2 eller mer.',
       },
       revealPath: {
         label: 'Avslöja längs vägen',
@@ -9302,9 +9370,9 @@ const HexplorationMod = (() => {
         points: [
           'Endast tokens på tokenlagret avslöjar hexar. Vilka tokens som räknas bestäms av Tokens som avslöjar: spelartokens som standard, så att GM kan flytta monster utan att avslöja kartan.',
           'En token avslöjar varje hex den täcker (stora tokens täcker flera) och, med Avslöja längs vägen på, varje hex på rutten den drogs längs, inklusive mellanpunkter.',
-          'Siktavstånd avslöjar hexarna runt var och en av dessa hexar. Med Siktlinje på avslöjas en hex bara om ingen täckt hex ligger emellan.',
-          'Avslöjandeavstånd för hexar lagras på hexarna när de ritas. Dessa hexar avslöjas bara inom så många hexars avstånd, hur långt en token än kan se. Använd det för berg eller skogar som döljer vad som finns bakom dem.',
-          'I läget Glimt blir hexar inom synhåll genomskinliga i stället för att försvinna, och de tas bort när en token går in i dem.',
+          'Siktavstånd avslöjar hexarna runt var och en av dessa hexar, de närmaste först. Med Siktlinje på avslöjas en hex inte så länge en täckt hex ligger mellan den och token. Närmare hexar avslöjas oftast först, så i öppen terräng ändrar Siktlinje ingenting: den spelar bara roll med ett Siktavstånd på 2 eller mer och hexar som förblir täckta, till exempel terräng som fyllts med ett Avslöjandeavstånd för hexar.',
+          'Avslöjandeavstånd för hexar lagras på varje hex när den fylls, så ställ in det innan du fyller; att ändra det senare påverkar inte hexar som redan finns på kartan. En token måste vara inom så många hexar för att avslöja dem, hur långt den än kan se, och med 0 avslöjas de bara när man går in i dem. För en bergskedja: ställ in Avslöjandeavstånd för hexar på 0, fyll bergen, återställ det till inget och fyll sedan landet bortom. Med Siktavstånd 3 och Siktlinje på ser gruppen den öppna marken runt sig, men inte bergen eller det som ligger bakom dem. Varje berghex avslöjas när en token går in i den.',
+          'I läget Glimt blir hexar inom synhåll genomskinliga i stället för att försvinna, och de tas bort när en token går in i dem. Genomskinliga Glimt-hexar blockerar inte Siktlinje.',
           'Roll20 ritar tokennamn, staplar och auror ovanpå hexarna. Med Dölj täckta tokens på stängs det namn, de staplar och de auror som spelarna kan se av för en token under en täckt hex tills den avtäcks, så att dolda monster inte avslöjar sig. Om du slår på något av dem medan token är täckt förblir det dolt och slås på när token avtäcks.',
           'API:et rapporterar inte förflyttningar som görs av andra moddar. TokenMod-förflyttningar fångas upp automatiskt; för andra moddar markerar du tokens och klickar på Utforska, eller anropar Hexploration.revealAround(token) från din egen mod.',
         ],
@@ -9489,7 +9557,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Altıgen Açığa Çıkarma Mesafesi',
-        desc: 'Altıgenlere çizilirken uygulanır: Bir jetonun, görebildiği kadar uzağı ortaya çıkarabilmesi için bu sayıda altıgen içinde olması gerekir. Sınırsız olarak boş bırakın.',
+        desc: 'Altıgenler doldurulurken onlara kaydedilir, bu yüzden doldurmadan önce ayarlayın: sonradan değiştirmek haritada zaten bulunan altıgenleri etkilemez. Bir jeton ne kadar uzağı görürse görsün, altıgenleri açığa çıkarmak için bu kadar altıgen mesafede olmalıdır; 0 ile yalnızca içlerine girilerek açığa çıkarlar. Dağlar veya ormanlar için kullanın. Sınır olmaması için boş bırakın.',
       },
       revealDistance: {
         label: 'Görüş Mesafesi',
@@ -9497,7 +9565,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Görüş Hattı',
-        desc: 'Açıkken, bir altıgen yalnızca onunla belirteç arasında örtülü bir altıgen bulunmadığında ortaya çıkar.',
+        desc: 'Açıkken, Altıgen Açığa Çıkarma Mesafesi ile doldurulmuş dağlar gibi örtülü kalan altıgenler, arkalarındaki altıgenleri gizler. Yalnızca 2 veya daha fazla Görüş Mesafesi ile fark yaratır.',
       },
       revealPath: {
         label: 'Yol Boyunca Açığa Çıkar',
@@ -9677,9 +9745,9 @@ const HexplorationMod = (() => {
         points: [
           'Altıgenleri yalnızca jeton katmanındaki jetonlar açığa çıkarır. Hangi jetonların sayılacağını Açığa Çıkaran Jetonlar ayarı belirler: varsayılan olarak oyuncu jetonları; böylece GM haritayı açmadan canavarları hareket ettirebilir.',
           'Bir jeton kapladığı her altıgeni (büyük jetonlar birkaç altıgen kaplar) ve Yol Boyunca Açığa Çıkar açıkken, ara noktalar dahil sürüklendiği rotadaki her altıgeni açığa çıkarır.',
-          'Görüş Mesafesi, bu altıgenlerin her birinin çevresindeki altıgenleri açığa çıkarır. Görüş Hattı açıkken bir altıgen yalnızca arada örtülü bir altıgen yoksa açığa çıkar.',
-          'Altıgen Açığa Çıkarma Mesafesi, altıgenler çizilirken onlara kaydedilir. Bu altıgenler, bir jeton ne kadar uzağı görürse görsün, yalnızca o kadar altıgen mesafeden açığa çıkar. Arkasındakini gizleyen dağlar veya ormanlar için kullanın.',
-          'Bakış modunda, görüş alanındaki altıgenler kaybolmak yerine yarı saydam olur ve içlerine bir jeton girdiğinde kaldırılır.',
+          'Görüş Mesafesi, bu altıgenlerin her birinin çevresindeki altıgenleri en yakından başlayarak açığa çıkarır. Görüş Hattı açıkken, bir altıgen ile jeton arasında örtülü bir altıgen bulunduğu sürece o altıgen açığa çıkmaz. Yakın altıgenler genellikle önce açığa çıktığından, açık arazide Görüş Hattı hiçbir şeyi değiştirmez: yalnızca 2 veya daha fazla Görüş Mesafesi ve Altıgen Açığa Çıkarma Mesafesi ile doldurulmuş arazi gibi örtülü kalan altıgenler olduğunda önem taşır.',
+          'Altıgen Açığa Çıkarma Mesafesi, her altıgen doldurulurken ona kaydedilir, bu yüzden doldurmadan önce ayarlayın; sonradan değiştirmek haritada zaten bulunan altıgenleri etkilemez. Bir jeton ne kadar uzağı görürse görsün, altıgenleri açığa çıkarmak için o kadar altıgen mesafede olmalıdır ve 0 ile yalnızca içlerine girilerek açığa çıkarlar. Bir sıradağ için: Altıgen Açığa Çıkarma Mesafesi ayarını 0 yapın, dağları doldurun, ayarı yeniden boşaltın, ardından ötedeki araziyi doldurun. Görüş Mesafesi 3 ve Görüş Hattı açıkken grup çevresindeki açık araziyi görür, ancak dağları ya da arkalarında olanları göremez. Her dağ altıgeni, bir jeton içine girdiğinde açığa çıkar.',
+          "Bakış modunda, görüş alanındaki altıgenler kaybolmak yerine yarı saydam olur ve içlerine bir jeton girdiğinde kaldırılır. Bakış durumundaki altıgenler Görüş Hattı'nı engellemez.",
           'Roll20, jeton adlarını, çubuklarını ve auralarını altıgenlerin üzerine çizer. Örtülü Jetonları Gizle açıkken, örtülü bir altıgenin altındaki jetonun oyunculara görünen adı, çubukları ve auraları açığa çıkana kadar kapatılır; böylece gizli canavarlar kendilerini belli etmez. Jeton örtülüyken bunlardan birini açarsanız gizli kalır ve jeton açığa çıktığında açılır.',
           "API, diğer modların yaptığı hareketleri bildirmez. TokenMod hareketleri otomatik olarak algılanır; diğer modlar için jetonları seçip Keşfet'e tıklayın veya kendi modunuzdan Hexploration.revealAround(token) çağırın.",
         ],
@@ -9864,7 +9932,7 @@ const HexplorationMod = (() => {
       },
       maxDistance: {
         label: 'Відстань розкриття шестикутників',
-        desc: 'Застосовується до гексів, коли вони намальовані: жетон має бути в межах такої кількості гексів, щоб відкрити їх, як би далеко він не бачив. Залиште порожнім, щоб не було обмежень.',
+        desc: 'Зберігається в гексах під час їх заповнення, тому задайте значення до заповнення: подальша зміна не впливає на гекси, що вже є на карті. Жетон має бути в межах такої кількості гексів, щоб відкрити їх, хоч би як далеко він бачив; при значенні 0 вони відкриваються лише тоді, коли на них заходять. Використовуйте для гір або лісів. Залиште порожнім, щоб не було обмежень.',
       },
       revealDistance: {
         label: 'Дальність огляду',
@@ -9872,7 +9940,7 @@ const HexplorationMod = (() => {
       },
       lineOfSight: {
         label: 'Лінія видимості',
-        desc: 'Коли ввімкнено, гекс відкривається, лише якщо між ним і жетоном немає закритого гексу.',
+        desc: 'Коли ввімкнено, гекси, які залишаються закритими, як-от гори, заповнені з параметром «Відстань розкриття шестикутників», приховують гекси за ними. Це має значення лише тоді, коли «Дальність огляду» становить 2 або більше.',
       },
       revealPath: {
         label: 'Розкривати вздовж шляху',
@@ -10051,9 +10119,9 @@ const HexplorationMod = (() => {
         points: [
           'Гекси розкривають лише маркери на шарі маркерів. Які саме, визначає параметр «Маркери, що розкривають»: типово це маркери гравців, тож GM може пересувати монстрів, не відкриваючи карту.',
           'Маркер розкриває кожен гекс, який він займає (великі маркери займають кілька), а з увімкненим параметром «Розкривати вздовж шляху» — і кожен гекс на маршруті, яким його перетягнули, включно з проміжними точками.',
-          '«Дальність огляду» розкриває гекси навколо кожного з цих гексів. З увімкненою «Лінією видимості» гекс розкривається, лише якщо між ним і маркером немає закритого гекса.',
-          '«Відстань розкриття шестикутників» зберігається в гексах під час їх малювання. Такі гекси розкриваються лише з відстані, не більшої за цю кількість гексів, хоч би як далеко бачив маркер. Використовуйте її для гір або лісів, що приховують те, що за ними.',
-          'У режимі «Проблиск» гекси в межах видимості не зникають, а стають напівпрозорими й видаляються, коли на них заходить маркер.',
+          '«Дальність огляду» розкриває гекси навколо кожного з цих гексів, починаючи з найближчих. Коли «Лінія видимості» ввімкнена, гекс не розкривається, доки між ним і маркером лежить закритий гекс. Ближчі гекси зазвичай розкриваються першими, тож на відкритій місцевості «Лінія видимості» нічого не змінює: вона має значення лише тоді, коли «Дальність огляду» становить 2 або більше і є гекси, які залишаються закритими, як-от місцевість, заповнена з параметром «Відстань розкриття шестикутників».',
+          '«Відстань розкриття шестикутників» зберігається в кожному гексі під час його заповнення, тому задайте її до заповнення; подальша зміна не впливає на гекси, що вже є на карті. Маркер має бути в межах такої кількості гексів, щоб розкрити їх, хоч би як далеко він бачив, а при значенні 0 вони розкриваються лише тоді, коли на них заходять. Для гірського хребта: встановіть «Відстань розкриття шестикутників» на 0, заповніть гори, знову очистьте значення (без обмежень), а потім заповніть землі за ними. Коли «Дальність огляду» становить 3, а «Лінія видимості» ввімкнена, загін бачить відкриту місцевість навколо себе, але не гори й не те, що лежить за ними. Кожен гірський гекс розкривається, коли на нього заходить маркер.',
+          'У режимі «Проблиск» гекси в межах видимості не зникають, а стають напівпрозорими й видаляються, коли на них заходить маркер. Гекси, побачені в режимі «Проблиск», не закривають огляд для параметра «Лінія видимості».',
           "Roll20 малює імена, смуги й аури маркерів поверх гексів. З увімкненим параметром «Ховати маркери під гексами» у маркера під закритим гексом вимикаються видимі гравцям ім'я, смуги й аури, доки його не відкриють, тож сховані монстри себе не видають. Якщо ввімкнути щось із цього, поки маркер закритий, воно лишиться прихованим і ввімкнеться, коли маркер відкриють.",
           'API не повідомляє про переміщення, зроблені іншими модами. Переміщення TokenMod підхоплюються автоматично; для інших модів виділіть маркери й натисніть «Дослідити» або викличте Hexploration.revealAround(token) зі свого моду.',
         ],
@@ -11890,6 +11958,35 @@ const HexplorationMod = (() => {
   }
 
   /**
+   * Returns a colour in a form the given path type accepts.
+   *
+   * @param {string} color Colour from the settings.
+   * @param {string} type Path type.
+   * @returns {string} Colour to write.
+   */
+  function pathColor(color, type) {
+    return type === PATH_TYPE_V2 ? toPathV2Color(color) : color;
+  }
+
+  /**
+   * Sets a path's colours, converting them for Jumpgate pathv2 objects.
+   *
+   * @param {object} obj Roll20 path or pathv2.
+   * @param {object} attrs Attributes to set; `fill` and `stroke` are converted.
+   * @returns {void}
+   */
+  function setPathStyle(obj, attrs) {
+    const type = obj.get('_type');
+    const converted = { ...attrs };
+    for (const key of ['fill', 'stroke']) {
+      if (key in converted) {
+        converted[key] = pathColor(converted[key], type);
+      }
+    }
+    obj.set(converted);
+  }
+
+  /**
    * Copies the properties the polygon module needs from a path.
    *
    * @param {object} obj Roll20 path or pathv2.
@@ -11990,8 +12087,8 @@ const HexplorationMod = (() => {
     const attrs = {
       ...geometry,
       _pageid: pageId,
-      fill: style.fill,
-      stroke: style.stroke,
+      fill: pathColor(style.fill, type),
+      stroke: pathColor(style.stroke, type),
       stroke_width: style.strokeWidth,
       controlledby: '',
     };
@@ -12201,7 +12298,7 @@ const HexplorationMod = (() => {
             maxDistance: hex.maxDistance ?? null,
             glimpsed: hex.glimpsed === true,
           });
-          existingPath.set({
+          setPathStyle(existingPath, {
             fill: style.fill,
             stroke: style.stroke,
             stroke_width: style.strokeWidth,
@@ -12302,7 +12399,11 @@ const HexplorationMod = (() => {
       const hex = getHex(record.pageId, prev.key);
       const path = hex ? getPathObject(hex.id, hex.type) : null;
       if (path) {
-        path.set({ fill: prev.fill, stroke: prev.stroke, stroke_width: prev.strokeWidth });
+        setPathStyle(path, {
+          fill: prev.fill,
+          stroke: prev.stroke,
+          stroke_width: prev.strokeWidth,
+        });
         if (Number.isInteger(prev.maxDistance)) {
           hex.maxDistance = prev.maxDistance;
         } else {
@@ -12847,17 +12948,26 @@ const HexplorationMod = (() => {
    */
   function glimpseHex(ctx, key, distance) {
     const hex = getHex(ctx.pageId, key);
-    if (!hex || hex.glimpsed) {
-      return false;
-    }
-    if (Number.isInteger(hex.maxDistance) && distance > hex.maxDistance) {
+    if (!hex) {
       return false;
     }
     const path = getPathObject(hex.id, hex.type);
     if (!path) {
       return false;
     }
-    path.set('fill', getConfig().glimpseColor);
+    const fill = pathColor(getConfig().glimpseColor, path.get('_type'));
+    if (hex.glimpsed) {
+      // Versions before this fix marked Jumpgate hexes as glimpsed without
+      // changing their colour; repaint them when they are seen again.
+      if (path.get('fill') !== fill) {
+        path.set('fill', fill);
+      }
+      return false;
+    }
+    if (Number.isInteger(hex.maxDistance) && distance > hex.maxDistance) {
+      return false;
+    }
+    path.set('fill', fill);
     hex.glimpsed = true;
     return true;
   }

@@ -4,7 +4,7 @@ A Roll20 Mod that covers a hex map with opaque hexes and uncovers them as the pa
 
 Draw a shape over the area to hide, fill it with hexes, and every hex a player token moves through (and, if you like, the hexes around it) is revealed. Hidden locations can be tucked under hexes and are announced when they are found.
 
-**Version 2.0.0 is a full rewrite that works in Jumpgate and Legacy games.** It no longer needs PathMath, MatrixMath, Vector Math or HTML Builder, and existing version 1 hex maps and commands keep working.
+**Version 2 is a full rewrite that works in Jumpgate and Legacy games.** It no longer needs PathMath, MatrixMath, Vector Math or HTML Builder, and existing version 1 hex maps and commands keep working.
 
 ![Hexploration demo (version 1)](Hexploration.gif)
 
@@ -152,7 +152,7 @@ The swatch next to each colour on the settings card shows the colour with its tr
 // Pass its previous position to reveal along the route as well.
 Hexploration.revealAround(token, { left: oldLeft, top: oldTop });
 Hexploration.revealAround(tokenId);
-Hexploration.version; // "2.0.0"
+Hexploration.version; // "2.0.1"
 ```
 
 ## Credits

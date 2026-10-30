@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.1 - 2026-10-30
+
+### Fixed
+
+- Glimpse works in Jumpgate. Jumpgate ignores `rgb()` and `rgba()` colours on drawn shapes, so glimpsed hexes kept their solid fill. Fill, border and glimpse colours are now converted to `#rrggbb` or `#rrggbbaa` for Jumpgate hexes, so `rgba()` fill colours make see-through hexes too. Hexes left solid by 2.0.0 are repainted the next time a token sees them.
+- The colour swatches on the settings card show colours with transparency. Roll20 chat dropped `#rrggbbaa` colours and `rgb()` colours with a fourth value, leaving the swatch empty.
+
+### Changed
+
+- The README lists the colour formats the settings accept and explains how they are used in Jumpgate.
+- The help handout, settings descriptions and README explain how Hex Reveal Distance and Line of Sight work together, with a mountain range example. Neither makes a difference with the default Sight Distance of 1, and Hex Reveal Distance only applies to hexes filled after it is set.
+
 ## 2.0.0 - 2026-10-29
 
 A full rewrite by MidNiteShadow7 of Ada Lindberg's Hexploration, which no longer worked in Jumpgate games.

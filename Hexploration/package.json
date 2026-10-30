@@ -1,6 +1,6 @@
 {
   "name": "hexploration-roll20",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Roll20 API Mod that covers hex maps with hexes that are revealed as tokens explore.",
   "private": true,
   "type": "module",
