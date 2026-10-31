@@ -13,6 +13,9 @@ export const COMMAND = '!tokencontroller';
 // so existing macros and the T-Cntrl_ macros keep working.
 export const LEGACY_PREFIXES = ['!tc', '!token-control'];
 
+// The player ID Roll20 gives chat messages sent by Mods with sendChat.
+export const API_PLAYER_ID = 'API';
+
 export const HANDOUT_HELP_NAME = 'TokenController - Help';
 export const HANDOUT_DECK_NAME = 'TokenController - Command Deck';
 

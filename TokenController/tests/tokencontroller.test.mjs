@@ -462,6 +462,17 @@ test('only GMs can use commands', () => {
   assertNoErrors(api);
 });
 
+test('commands sent by other Mods are accepted and answered to the GM', () => {
+  const api = game();
+  const guard = api.token();
+  api.command('!tc add East R5', [], 'API');
+  assert.doesNotMatch(api.allChat(), /Only the GM/);
+  assert.match(api.lastChat(), /^\/w gm /);
+  api.command('!tc start East', [guard], 'API');
+  assert.ok(api.tcState().patrols[guard.id]);
+  assertNoErrors(api);
+});
+
 test('menus, settings, status and help render without errors', () => {
   const api = game();
   api.command('!tokencontroller examples');

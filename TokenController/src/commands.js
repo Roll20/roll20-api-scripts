@@ -11,6 +11,7 @@ import {
 import {
   ANCHOR_PAGE,
   ANCHOR_TOKEN,
+  API_PLAYER_ID,
   COMBAT_BEHAVIOUR_OPTIONS,
   COMBAT_DETECTION_OPTIONS,
   COMMAND,
@@ -1741,7 +1742,9 @@ export function handleInput(msg) {
   if (prefix !== COMMAND && !legacy) {
     return;
   }
-  if (!playerIsGM(msg.playerid)) {
+  // Commands sent by other Mods (ScriptCards, macros run by the API) come from
+  // the player "API". Replies to them go to the GM.
+  if (msg.playerid !== API_PLAYER_ID && !playerIsGM(msg.playerid)) {
     fail(msg.playerid, 'gmOnly');
     return;
   }
