@@ -7,6 +7,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates f
 
 AoEs can stop at walls, from user feedback. There are no breaking changes.
 
+### Added
+
+- **`--blockedBy|walls`** stops an AoE at dynamic lighting walls (Jumpgate `pathv2` and Legacy `path` drawings on the walls layer) and at closed doors and windows, so a fireball no longer reaches tokens in the next room just because they are inside its radius. A square is left out when no straight line from the point of origin reaches it past a wall, as the D&D 5e rules say; its centre and four points near its corners are tried, so a square seen through a doorway still counts. Open doors and windows let the AoE through. An origin on the caster's edge is measured from just inside the caster, so a caster standing against a wall is not blocked by it.
+- **`--blockedBy|walls, spread`** also lets the AoE flow round corners from square to square, as the 2014 *Fireball* does, as far as its reach. Without `--blockedBy`, walls are ignored as before.
+
 ## [1.0.1] – 2026-10-28
 
 Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20.net/forum/post/12842711/script-update-smartaoe/?pageforid=12843906#post-12843906). There are no breaking changes.
