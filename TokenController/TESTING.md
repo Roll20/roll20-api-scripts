@@ -39,6 +39,7 @@ For the upgrade test, install TokenController **4.0.1** in the Legacy game first
 - [ ] The Journal has **TokenController - Help** and **TokenController - Command Deck**, neither visible to players.
 - [ ] Every button in the Command Deck works.
 - [ ] A player typing `!tokencontroller` or `!tc` is told only the GM can use it.
+- [ ] A command sent by another Mod (for example a ScriptCards `--@tc|stop --ids [*S:t-id]`) works, and its reply is whispered to the GM.
 
 ## Grids — do this first
 
@@ -58,6 +59,7 @@ For the upgrade test, install TokenController **4.0.1** in the Legacy game first
 - [ ] **Record**: arrows, Wait, Stealth, Undo and dragging (with Jumpgate waypoints) are all recorded; Save gives a step code on square pages and a waypoint route on hex pages.
 - [ ] Route options: mode (loop, back and forth, once), interval, max tokens, random start, fixed start (set with a token selected, then start a token elsewhere on the page).
 - [ ] Rename, Copy, Edit Code, Export, Import (into the other game), Remove (asks first).
+- [ ] **Bounce Area**: draw a rectangle, a concave polygon and an ellipse; each becomes a bounce route. A token started inside wanders in straight lines and bounces off the edges without leaving the area, on Square, Hex V, Hex H, Isometric and Gridless pages. A token outside is refused unless the route has a random start. Drag a bouncing token out of the area: it heads back in.
 
 ## Patrols
 
@@ -71,6 +73,29 @@ For the upgrade test, install TokenController **4.0.1** in the Legacy game first
 - [ ] Resize a page while tokens patrol; they keep moving correctly.
 - [ ] Stealth (`S`) hides and shows the token for players.
 - [ ] Restart the API sandbox: patrols carry on from where they were.
+- [ ] `--ids`: with nothing selected, `!tc start <route> --ids ID1;ID2`, `stop --ids`, `reset --ids`, `lock --ids`, `unlock --ids` and `remove --ids` act on those tokens; `remove --ids` leaves the route in place; an unknown ID is reported.
+
+## Stop Markers
+
+- [ ] `set stopMarkers dead;red`, start two patrols, then add the `dead` marker to one by hand: it stops at once and the GM is told.
+- [ ] Add a marker with TokenMod (`!token-mod --set statusmarkers|red`) to the other: it stops within a quarter of a second.
+- [ ] Open the turn tracker (patrols pause), mark a token, close the tracker: the marked token does not move again.
+- [ ] `set markerAction reset`: a marked token goes back to where it started.
+- [ ] A custom marker from the token marker library (by name) and a marker with a number badge both count.
+- [ ] A marked follower stops following; when the leader is marked its followers stop.
+- [ ] Starting a marked token is refused.
+
+## Walls
+
+- [ ] Jumpgate: draw walls with the Dynamic Lighting wall tool across a route. With Walls = ignore (the default) patrols walk through them, as before.
+- [ ] Walls = hold: the patrol waits at the wall. Add a door in the wall: the patrol waits while it is closed and goes through when a player opens it.
+- [ ] Walls = turn: the patrol turns back at the wall; a run-once route stops when it is back at its start.
+- [ ] A route with `walls ignore` (a ghost) walks through while the others stop.
+- [ ] Wall Check = width: a large token cannot squeeze through a gap narrower than itself, but walks along walls on the cell edges.
+- [ ] One-Way Walls and See-Through Walls = pass let tokens through those kinds of wall only.
+- [ ] Formation followers wait rather than cross a wall.
+- [ ] A bounce area with a wall across it: tokens bounce off the wall and stay on their side.
+- [ ] Legacy: repeat hold and turn with walls drawn on the Dynamic Lighting layer.
 
 ## Following
 

@@ -28,6 +28,8 @@ Every version in `script.json`'s `version` and `previousversions` must have a fo
 | `routes.js`    | Pure route maths: step-code parsing, track compilation, next-frame logic, recordings to routes.        |
 | `grid.js`      | Pure grid geometry for square, hex, isometric/dimetric and gridless pages; calibration.                |
 | `drawings.js`  | Pure maths turning Legacy `path` and Jumpgate `pathv2` drawings into waypoints.                        |
+| `walls.js`     | Reads walls, doors and windows into segments (cached per page); pure blocking and door geometry.       |
+| `bounce.js`    | Pure maths for bounce areas: point in polygon, reflection, the next cell along a line of travel.       |
 | `context.js`   | Builds a page's grid (with calibration) and size from the Roll20 page.                                 |
 | `state.js`     | Persistent state, config and route validation, v4 migration, accessors.                                |
 | `journals.js`  | Help and Command Deck handouts; removal of the v4 usage guide.                                         |
@@ -36,7 +38,7 @@ Every version in `script.json`'s `version` and `previousversions` must have a fo
 | `constants.js` | Build placeholders, command names, defaults, limits, help table, examples and colours.                 |
 | `utils.js`     | Small helpers: HTML escaping, parsing, quoting-aware tokenizer, markers, `lastmove`, engine detection. |
 
-`grid.js`, `routes.js` and `drawings.js` must stay free of Roll20 globals so they can be unit tested directly. There are no circular imports.
+`grid.js`, `routes.js`, `drawings.js` and `bounce.js` (and the geometry in `walls.js`) must stay free of Roll20 globals so they can be unit tested directly. There are no circular imports.
 
 ## How Movement Works
 
@@ -54,9 +56,23 @@ Patrols store `index`, `dir` and `anchor`, never the track itself; tracks are co
 
 Directions with no matching hex neighbour (up/down on Hex (V), left/right on Hex (H)) pick between the two nearest neighbours, keeping close to a reference line set when the zigzag starts and kept until a sideways move. Ties lean the same way (left on Hex (V), up on Hex (H)) whichever way the token travels, so stepping back retraces the same hexes.
 
+### Bounce areas
+
+Area routes (`kind: 'area'`) have no track. The patrol keeps a `heading` (a bearing) and a `line` (where the current line of travel started), and `bounce.nextBounce` works out each step: on a grid, the neighbouring cell (from `grid.stepFrom`, leaving out hex zigzag directions) that moves forwards and stays closest to the line; on gridless pages, one cell pitch along the heading. When that cell is outside the polygon, crosses an edge or is blocked by a wall, the heading is reflected off what is in the way and turned by up to `JITTER_DEGREES`, and a new line starts from the token. A token dragged outside its area heads for the polygon's centre.
+
+### Walls
+
+The API's moves ignore Roll20's own movement restriction, so `walls.getWalls` reads the page's barriers (pathv2 and path drawings on the `walls` layer, with their `barrierType`, and closed `door`/`window` objects) into segments, cached per page and cleared by the add/change/destroy events of those object types. `engine.moveIsBlocked` checks the line from the token to its next frame against them (`blockingWall`), with a body radius in `width` mode. Doors and windows are placed by `x` and `-y` with handles relative to that point, also with y upwards (`portalEnds`).
+
+A blocked patrol either keeps its `index` and `dir` and tries again next tick (`hold`), or reverses `dir` and takes the first step back at once (`turn`). A run-once route that turned back finishes when it reaches frame 0.
+
+### Stop markers
+
+`applyStopMarkers` runs at the start of every scheduler tick (before the pause and combat checks) and whenever a person changes a token's `statusmarkers`. The API raises no change events for markers set by other Mods, so the tick is what catches those.
+
 ### Scheduling
 
-One `setInterval` runs every `SCHEDULER_TICK_MS` (250 ms). Each patrol has a `dueAt` time and moves when it has passed, so every route keeps its own interval. The scheduler also re-checks combat on each tick.
+One `setInterval` runs every `SCHEDULER_TICK_MS` (250 ms). Each patrol has a `dueAt` time and moves when it has passed, so every route keeps its own interval. The scheduler also re-checks combat and Stop Markers on each tick.
 
 ## State Structure
 
@@ -67,16 +83,19 @@ One `setInterval` runs every `SCHEDULER_TICK_MS` (250 ms). Each patrol has a `du
   schemaVersion: 5,
   version: '5.0.0',
   config: { language, interval, movement, facing, combatDetection, combatBehaviour,
-            lockMode, lockMarker, followMode, manualMove, buttonStep },
+            lockMode, lockMarker, followMode, manualMove, stopMarkers, markerAction,
+            wallMode, wallCheck, oneWayWalls, transparentWalls, buttonStep },
   routes: {
-    [id]: { id, name, kind: 'code'|'waypoints', code?, anchor?: 'page'|'token', pageId?,
-            points?: [{ x, y } | { wait } | { stealth: true }],
+    [id]: { id, name, kind: 'code'|'waypoints'|'area', code?, anchor?: 'page'|'token', pageId?,
+            points?: [{ x, y } | { wait } | { stealth: true }], // area: polygon corners
             mode: 'loop'|'pingpong'|'once', interval, maxTokens, randomStart,
+            walls: null | 'ignore'|'hold'|'turn',  // null follows the wallMode setting
             start: null | { pageId, left, top, rotation } },
   },
   nextId: 1,                       // shared by routes (r#) and recordings (d#)
   patrols: { [tokenId]: { routeId, pageId, index, dir, anchor: [x, y] | null,
-                          origin: { left, top, rotation, layer }, dueAt } },
+                          origin: { left, top, rotation, layer }, dueAt,
+                          heading: number | null, line: [x, y] | null } }, // area routes
   locks: { [tokenId]: { pageId, left, top, rotation, marker, mode, native } },
   follows: { [tokenId]: { leaderId, offset: [dx, dy] | null } },
   leaders: { [playerId]: tokenId }, // set by `leader`

@@ -21,6 +21,7 @@ A quick reference for where to find each feature in the source.
 | v4 `!tc` / `!token-control` commands | `src/legacy.js`   | `translateLegacy`                                                        |
 | Split words, keeping "quoted" names  | `src/utils.js`    | `tokenize`                                                               |
 | Sort the selection                   | `src/commands.js` | `readSelection`                                                          |
+| Tokens from `--ids` or the selection | `src/commands.js` | `splitIds`, `tokensFromIds`, `requireTokens`                             |
 | Menu and cards                       | `src/commands.js` | `showMainMenu`, `showRoute`, `showRecording`, `showSettings`, `showHelp` |
 
 ## Routes
@@ -32,6 +33,8 @@ A quick reference for where to find each feature in the source.
 | Loop / ping-pong / once stepping | `src/routes.js`   | `nextFrame`                                           |
 | Recording to code or waypoints   | `src/routes.js`   | `recordingToRoute`                                    |
 | Drawing to waypoints             | `src/drawings.js` | `drawingWaypoints`                                    |
+| Bounce area from a drawing       | `src/commands.js` | `commandBounce`                                       |
+| Bounce steps and reflections     | `src/bounce.js`   | `nextBounce`, `reflectHeading`, `pointInPolygon`      |
 | `add`, `edit`, `draw`            | `src/commands.js` | `commandAdd`, `commandEdit`, `commandDraw`            |
 | Route options                    | `src/commands.js` | `commandRouteOption`                                  |
 | Rename, copy, remove             | `src/commands.js` | `commandRename`, `commandCopy`, `commandRemove`       |
@@ -45,6 +48,11 @@ A quick reference for where to find each feature in the source.
 | Scheduler                                                   | `src/engine.js` | `startScheduler`, `tick`, `runPatrols`     |
 | Start / stop / reset a patrol                               | `src/engine.js` | `startPatrol`, `stopPatrol`, `resetPatrol` |
 | One step of a patrol                                        | `src/engine.js` | `advancePatrol`                            |
+| One step of a bounce patrol                                 | `src/engine.js` | `startBounce`, `advanceBounce`             |
+| Walls, doors and windows in the way                         | `src/engine.js` | `moveIsBlocked`, `wallInTheWay`            |
+| Read and cache a page's barriers                            | `src/walls.js`  | `getWalls`, `clearWallCache`, `isBarrier`  |
+| Wall geometry                                               | `src/walls.js`  | `blockingWall`, `portalEnds`, `kindBlocks` |
+| Stop Markers                                                | `src/engine.js` | `applyStopMarkers`, `stopMarkerOf`         |
 | Move a token and tell everyone                              | `src/engine.js` | `moveTokenTo`, `announceMove`              |
 | Stealth                                                     | `src/engine.js` | `toggleStealth`                            |
 | Turning tokens                                              | `src/routes.js` | `rotationFor`                              |
