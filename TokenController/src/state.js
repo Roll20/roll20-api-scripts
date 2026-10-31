@@ -15,6 +15,7 @@ import {
   MAX_TOKENS_PER_ROUTE,
   MIN_INTERVAL,
   MOVEMENT_OPTIONS,
+  ROUTE_KIND_AREA,
   ROUTE_KIND_CODE,
   ROUTE_KIND_WAYPOINTS,
   ROUTE_MODE_OPTIONS,
@@ -258,7 +259,7 @@ export function normaliseRoute(raw) {
   const route = {
     id: toText(raw.id),
     name: cleanName(raw.name),
-    kind: raw.kind === ROUTE_KIND_WAYPOINTS ? ROUTE_KIND_WAYPOINTS : ROUTE_KIND_CODE,
+    kind: [ROUTE_KIND_WAYPOINTS, ROUTE_KIND_AREA].includes(raw.kind) ? raw.kind : ROUTE_KIND_CODE,
     mode: ROUTE_MODE_OPTIONS.includes(raw.mode) ? raw.mode : 'pingpong',
     interval: validateRouteOption('interval', raw.interval ?? '').value ?? null,
     maxTokens: validateRouteOption('maxTokens', raw.maxTokens ?? '').value ?? null,
@@ -271,6 +272,14 @@ export function normaliseRoute(raw) {
       return null;
     }
     route.code = toText(raw.code);
+  } else if (route.kind === ROUTE_KIND_AREA) {
+    // An area is a polygon fixed to the page it was drawn on.
+    route.anchor = ANCHOR_PAGE;
+    route.pageId = toText(raw.pageId);
+    route.points = normalisePoints(raw.points).filter((p) => 'x' in p);
+    if (route.points.length < 3) {
+      return null;
+    }
   } else {
     route.anchor = raw.anchor === ANCHOR_PAGE ? ANCHOR_PAGE : ANCHOR_TOKEN;
     route.points = normalisePoints(raw.points);
@@ -357,6 +366,12 @@ function normalisePatrol(raw, routes) {
     anchor,
     origin: normalisePosition(raw.origin),
     dueAt: Number(raw.dueAt) || 0,
+    // Bounce routes: the bearing the token travels on and where that line began.
+    heading: Number.isFinite(raw.heading) ? raw.heading : null,
+    line:
+      Array.isArray(raw.line) && raw.line.length === 2 && raw.line.every(Number.isFinite)
+        ? [raw.line[0], raw.line[1]]
+        : null,
   };
 }
 

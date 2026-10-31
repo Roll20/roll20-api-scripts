@@ -225,7 +225,7 @@ export function buildDeckHtml(locale) {
       <p style="${STYLE.subtitle}">${escapeHtml(tr('deck.subtitle'))} • v${SCRIPT_VERSION}</p>
     </div>
     ${group('menu.patrols', 'deck.patrolsDesc', [btn('menu', ''), btn('startRoute', `start ${q('prompts.route')}`), btn('stop', 'stop', true), btn('reset', 'reset', true), btn('stopAll', 'stop all', true), btn('pause', 'pause', true), btn('resume', 'resume', true)])}
-    ${group('menu.create', 'deck.createDesc', [btn('add', `add ${q('prompts.name')} ${q('prompts.code', 'U2R2D2L2')}`), btn('draw', `draw ${q('prompts.name')}`), btn('record', `record ${q('prompts.name')}`), btn('examples', 'examples', true), btn('list', 'list', true)])}
+    ${group('menu.create', 'deck.createDesc', [btn('add', `add ${q('prompts.name')} ${q('prompts.code', 'U2R2D2L2')}`), btn('draw', `draw ${q('prompts.name')}`), btn('bounce', `bounce ${q('prompts.name')}`), btn('record', `record ${q('prompts.name')}`), btn('examples', 'examples', true), btn('list', 'list', true)])}
     ${group('menu.selected', 'deck.selectedDesc', [btn('lock', 'lock'), btn('unlock', 'unlock', true), btn('leader', 'leader'), btn('follow', 'follow'), btn('unfollow', 'unfollow', true)])}
     ${group('menu.tools', 'deck.toolsDesc', [btn('combatOn', 'combat on', true), btn('combatOff', 'combat off', true), btn('settings', 'set', true), btn('status', 'status', true), btn('calibrate', 'calibrate', true), btn('help', 'help', true)])}
     <div style="${STYLE.footer}">${escapeHtml(tr('deck.footer', { help: HANDOUT_HELP_NAME }))}</div>

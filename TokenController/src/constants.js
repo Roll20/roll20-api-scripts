@@ -47,9 +47,11 @@ export const PATH_TYPE_V2 = 'pathv2';
 // Roll20 pages measure width and height in 70 px units.
 export const PAGE_UNIT_PX = 70;
 
-// Route kinds: a step code ("U2R2D2L2") or a list of waypoints.
+// Route kinds: a step code ("U2R2D2L2"), a list of waypoints, or an area to
+// bounce around inside.
 export const ROUTE_KIND_CODE = 'code';
 export const ROUTE_KIND_WAYPOINTS = 'waypoints';
+export const ROUTE_KIND_AREA = 'area';
 
 // Waypoint anchors: fixed to a page (drawn routes) or relative to where the
 // token starts (recorded routes).
@@ -137,6 +139,7 @@ export const HELP_COMMANDS = [
   ['add <name> <code>', 'add'],
   ['edit <route> <code>', 'edit'],
   ['draw <name>', 'draw'],
+  ['bounce <name>', 'bounce'],
   ['record <name>', 'record'],
   ['route <route> <option> <value>', 'route'],
   ['show <route>', 'show'],

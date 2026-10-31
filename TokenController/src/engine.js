@@ -5,12 +5,14 @@
 // not raise change events for moves the API makes, so followers, other Mods
 // and Hexploration are told about every move here.
 
+import { nextBounce, pointInPolygon, randomPointInArea } from './bounce.js';
 import { whisper } from './chat.js';
 import {
   ANCHOR_PAGE,
   LAYER_GM,
   LAYER_TOKEN,
   POSITION_EPSILON,
+  ROUTE_KIND_AREA,
   SCHEDULER_TICK_MS,
   SCRIPT_NAME,
   TRAIL_LENGTH,
@@ -295,6 +297,9 @@ export function startPatrol(token, route) {
     origin,
     dueAt: now() + intervalFor(route),
   };
+  if (route.kind === ROUTE_KIND_AREA) {
+    return startBounce(token, route, patrol, ctx);
+  }
   const frames = trackFor(patrol, route, ctx);
   if (frames.length < 2) {
     return { ok: false, reason: 'emptyTrack' };
@@ -309,6 +314,62 @@ export function startPatrol(token, route) {
   const first = frames[patrol.index];
   moveTokenTo(token, [first.x, first.y]);
   return { ok: true, offPage: framesOffPage(frames, ctx.widthPx, ctx.heightPx) };
+}
+
+/**
+ * Puts a token on a bounce route, at a random cell of the area when the route
+ * has a random start, heading off in a random direction.
+ *
+ * @param {object} token Roll20 graphic.
+ * @param {object} route Area route.
+ * @param {object} patrol New patrol record.
+ * @param {object} ctx Page context.
+ * @returns {{ok: true, offPage: number}|{ok: false, reason: string}} Outcome.
+ */
+function startBounce(token, route, patrol, ctx) {
+  const polygon = route.points.map((p) => [p.x, p.y]);
+  let pos = positionOf(token);
+  if (route.randomStart) {
+    pos = randomPointInArea(ctx.grid, polygon, Math.random) || pos;
+  }
+  if (!pointInPolygon(pos, polygon)) {
+    return { ok: false, reason: 'outsideArea' };
+  }
+  const s = getState();
+  patrol.heading = Math.random() * 360;
+  patrol.line = pos;
+  delete s.follows[token.id];
+  s.patrols[token.id] = patrol;
+  moveTokenTo(token, pos);
+  return { ok: true, offPage: 0 };
+}
+
+/**
+ * Moves a token on a bounce route one step, bouncing off the area's edges and,
+ * unless the route ignores them, off walls and closed doors.
+ *
+ * @param {object} token Roll20 graphic.
+ * @param {object} patrol Patrol record.
+ * @param {object} route Area route.
+ * @param {object} ctx Page context.
+ * @returns {void}
+ */
+function advanceBounce(token, patrol, route, ctx) {
+  const pos = positionOf(token);
+  const ignoreWalls = wallModeFor(route) === 'ignore';
+  const step = nextBounce({
+    grid: ctx.grid,
+    pos,
+    heading: Number.isFinite(patrol.heading) ? patrol.heading : Math.random() * 360,
+    origin: patrol.line || pos,
+    polygon: route.points.map((p) => [p.x, p.y]),
+    blockedBy: ignoreWalls ? undefined : (from, to) => wallInTheWay(token, to, ctx),
+  });
+  patrol.heading = step.heading;
+  patrol.line = step.origin;
+  if (step.to && onPage({ x: step.to[0], y: step.to[1] }, ctx)) {
+    moveTokenTo(token, step.to);
+  }
 }
 
 /**
@@ -390,14 +451,26 @@ export function moveIsBlocked(token, frame, ctx) {
   if (!frame || frame.wait || frame.stealth || frame.face !== undefined || !onPage(frame, ctx)) {
     return false;
   }
+  return Boolean(wallInTheWay(token, [frame.x, frame.y], ctx));
+}
+
+/**
+ * Returns the wall, door or window between a token and a point, if any.
+ *
+ * @param {object} token Roll20 graphic.
+ * @param {number[]} to [x, y].
+ * @param {object} ctx Page context.
+ * @returns {object|null} The barrier segment ({ a, b, kind }), or null.
+ */
+function wallInTheWay(token, to, ctx) {
   const config = getConfig();
-  const walls = getWalls(token.get('_pageid'), config);
+  const walls = getWalls(ctx.page.id, config);
   if (walls.length === 0) {
-    return false;
+    return null;
   }
   const radius =
     config.wallCheck === 'width' ? bodyRadius(token.get('width'), token.get('height')) : 0;
-  return Boolean(blockingWall(walls, positionOf(token), [frame.x, frame.y], radius));
+  return blockingWall(walls, positionOf(token), to, radius);
 }
 
 /**
@@ -424,6 +497,10 @@ function advancePatrol(tokenId, patrol) {
   }
   const ctx = getPageContext(token.get('_pageid'));
   if (!ctx) {
+    return;
+  }
+  if (route.kind === ROUTE_KIND_AREA) {
+    advanceBounce(token, patrol, route, ctx);
     return;
   }
   if (!patrol.anchor) {
@@ -981,6 +1058,9 @@ export function handleTokenChange(token, prev) {
   if (patrol) {
     if (getConfig().manualMove === 'stop') {
       delete s.patrols[tokenId];
+    } else if (s.routes[patrol.routeId]?.kind === ROUTE_KIND_AREA) {
+      // Bounce on from where it was dropped.
+      patrol.line = to;
     } else if (patrol.anchor && s.routes[patrol.routeId]?.anchor !== ANCHOR_PAGE) {
       // Carry on along the same route from the new spot.
       patrol.anchor = [patrol.anchor[0] + to[0] - from[0], patrol.anchor[1] + to[1] - from[1]];

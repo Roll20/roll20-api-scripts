@@ -75,6 +75,10 @@ const TRANSLATION = {
     badJson: 'That is not route export text.',
     tokenLocked: '{tokens} cannot start: locked.',
     tokenMarked: '{tokens} cannot start: they have a Stop Marker.',
+    outsideArea: '{tokens} cannot start: they are outside "{name}".',
+    selectOneArea:
+      'Select exactly one closed drawing (a polygon, rectangle, ellipse or freehand loop).',
+    areaTooSmall: 'The selected drawing needs at least three corners to make an area.',
     idsNotFound: 'No tokens have these IDs: {ids}.',
     routeOnOtherPage: '{tokens} cannot start: "{name}" was drawn on another page.',
     startOnOtherPage: '{tokens} cannot start: the fixed start of "{name}" is on another page.',
@@ -121,6 +125,9 @@ const TRANSLATION = {
     unknownCommand: 'Type !tokencontroller help for the list of commands.',
     tokenLocked: 'Unlock the token first.',
     tokenMarked: 'Remove the marker, or change the Stop Markers setting.',
+    outsideArea: 'Move the tokens inside the area first, or turn on Random start for the route.',
+    selectOneArea:
+      'Draw the area with a drawing tool, select it (drag a box around a thin outline if clicking misses it), then try again.',
     idsNotFound: 'Give token IDs after --ids, separated by semicolons.',
   },
   warnings: {
@@ -228,6 +235,7 @@ const TRANSLATION = {
     stop: 'Stop',
     add: 'Step Code',
     draw: 'From Drawing',
+    bounce: 'Bounce Area',
     record: 'Record',
     examples: 'Examples',
     reset: 'Reset',
@@ -274,6 +282,7 @@ const TRANSLATION = {
   route: {
     drawn: 'Drawn route, {points} points',
     recorded: 'Recorded route, {points} points',
+    area: 'Bounce area, {points} corners',
     path: 'Path',
     mode: 'Mode',
     interval: 'Interval',
@@ -384,6 +393,8 @@ const TRANSLATION = {
     add: 'Create a route from a step code, such as U2R2D2L2.',
     edit: "Change a route's step code.",
     draw: 'Create a route that follows the selected drawing on this page.',
+    bounce:
+      'Create a route on which tokens wander inside the selected closed drawing, bouncing off its edges.',
     record: 'Record a route by moving the selected token with buttons or by dragging it.',
     route: 'Change a route option: mode, interval, max, random, walls or start.',
     show: "Show a route's details and buttons.",
@@ -427,6 +438,7 @@ const TRANSLATION = {
         'From Drawing: draw a line, polygon, freehand shape, rectangle or ellipse with the drawing tools, select it and click From Drawing. Tokens walk along it, on that page only. You can delete the drawing afterwards.',
         'Record: select a token and click Record. Move it with the arrow buttons or drag it on the map (Roll20 waypoints are followed), then click Save. On square grids the recording becomes a step code you can edit.',
         'Loop routes start again from the beginning; back-and-forth routes walk back the way they came; once routes stop at the end. New routes that end where they start loop; others go back and forth.',
+        'Bounce Area: draw a closed shape around the area, select it and click Bounce Area. Tokens started on it travel in straight lines and bounce off its edges (and off walls, unless the route ignores them), turning a little at random each time. Random start puts each token in a random cell of the area.',
       ],
     },
     codes: {

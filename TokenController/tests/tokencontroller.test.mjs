@@ -500,6 +500,52 @@ test('Jumpgate drawings reported as path in chat still make routes', () => {
   assertNoErrors(api);
 });
 
+test('bounce areas keep tokens inside the drawing and off walls', () => {
+  const api = game();
+  // A room from (70, 70) to (490, 350): cells 105…455 across and 105…315 down.
+  const room = api.add('pathv2', {
+    _pageid: 'page1',
+    shape: 'rec',
+    points: JSON.stringify([
+      [0, 0],
+      [420, 280],
+    ]),
+    x: 280,
+    y: 210,
+  });
+  api.command('!tokencontroller bounce Pen', [room]);
+  const route = Object.values(api.tcState().routes)[0];
+  assert.equal(route.kind, 'area');
+  assert.equal(route.points.length, 4);
+  addWall(api, 280, 0, 700);
+  api.command('!tokencontroller set wallMode hold');
+
+  const goat = api.token({ name: 'Goat', left: 175, top: 175 });
+  api.command('!tokencontroller start Pen', [goat]);
+  const seen = new Set();
+  for (let i = 0; i < 40; i++) {
+    api.advance(2000);
+    const [x, y] = at(goat);
+    assert.ok(x > 70 && x < 280 && y > 70 && y < 350, `Goat left its side of the pen: ${x},${y}`);
+    seen.add(`${x},${y}`);
+  }
+  assert.ok(seen.size > 2, 'the goat wanders about');
+
+  const sheep = api.token({ name: 'Sheep', left: 600, top: 600 });
+  api.command('!tokencontroller start Pen', [sheep]);
+  assert.match(api.lastChat(), /Sheep cannot start: they are outside "Pen"/);
+  api.command('!tokencontroller route Pen random on');
+  api.command('!tokencontroller start Pen', [sheep]);
+  const [sx, sy] = at(sheep);
+  assert.ok(sx > 70 && sx < 490 && sy > 70 && sy < 350);
+
+  api.command('!tokencontroller show Pen');
+  assert.match(api.lastChat(), /Bounce area, 4 corners/);
+  api.command('!tokencontroller bounce Nothing');
+  assert.match(api.lastChat(), /Select exactly one closed drawing/);
+  assertNoErrors(api);
+});
+
 test('recording with buttons and drags saves a step code', () => {
   const api = game();
   const guard = api.token();

@@ -29,6 +29,7 @@ import {
   MOVEMENT_OPTIONS,
   PATH_TYPE_LEGACY,
   PATH_TYPE_V2,
+  ROUTE_KIND_AREA,
   ROUTE_KIND_CODE,
   ROUTE_KIND_WAYPOINTS,
   ROUTE_MODE_OPTIONS,
@@ -39,7 +40,7 @@ import {
   WALL_PASS_OPTIONS,
 } from './constants.js';
 import { getPageContext, pageGridOptions } from './context.js';
-import { drawingWaypoints } from './drawings.js';
+import { drawingWaypoints, pathToRings, simplifyPoints } from './drawings.js';
 import {
   clearTrackCache,
   followLeader,
@@ -251,6 +252,9 @@ function describeRoute(route) {
     return route.code;
   }
   const points = route.points.filter((p) => 'x' in p).length;
+  if (route.kind === ROUTE_KIND_AREA) {
+    return tr('route.area', { points });
+  }
   return tr(route.anchor === ANCHOR_PAGE ? 'route.drawn' : 'route.recorded', { points });
 }
 
@@ -492,6 +496,7 @@ export function showMainMenu(playerId) {
         cmd(`add ${query(tr('prompts.name'), null)} ${query(tr('prompts.code'), null, 'U2R2D2L2')}`)
       ),
       buildButton(tr('buttons.draw'), cmd(`draw ${query(tr('prompts.name'), null)}`)),
+      buildButton(tr('buttons.bounce'), cmd(`bounce ${query(tr('prompts.name'), null)}`)),
       buildButton(tr('buttons.record'), cmd(`record ${query(tr('prompts.name'), null)}`)),
       buildSecondaryButton(tr('buttons.examples'), cmd('examples')),
     ].join('')
@@ -555,15 +560,18 @@ function showRoute(playerId, route) {
   const tokens = tokensOnRoute(route.id).map(
     (id) => getObj('graphic', id) || { id, get: () => id }
   );
+  const area = route.kind === ROUTE_KIND_AREA;
   const lines = [
     buildRow(tr('route.path'), `<code>${escapeHtml(describeRoute(route))}</code>`),
-    buildRow(
-      tr('route.mode'),
-      buildSecondaryButton(
-        tr(`values.mode.${route.mode}`),
-        cmd(`route ${ref} mode ${query(tr('route.mode'), ROUTE_MODE_OPTIONS)}`)
-      )
-    ),
+    area
+      ? ''
+      : buildRow(
+          tr('route.mode'),
+          buildSecondaryButton(
+            tr(`values.mode.${route.mode}`),
+            cmd(`route ${ref} mode ${query(tr('route.mode'), ROUTE_MODE_OPTIONS)}`)
+          )
+        ),
     buildRow(
       tr('route.interval'),
       buildSecondaryButton(
@@ -862,6 +870,54 @@ function commandDraw(msg, words) {
     anchor: ANCHOR_PAGE,
     pageId,
     points: result.points.map(([x, y]) => ({ x, y })),
+  });
+}
+
+/**
+ * `bounce <name>`: create a route on which tokens bounce around inside the
+ * selected closed drawing.
+ *
+ * @param {object} msg Chat message.
+ * @param {object[]} words Arguments.
+ * @returns {void}
+ */
+function commandBounce(msg, words) {
+  const { drawings } = readSelection(msg);
+  if (drawings.length !== 1) {
+    fail(msg.playerid, 'selectOneArea');
+    return;
+  }
+  const name = checkNewName(msg, joinWords(words));
+  if (!name) {
+    return;
+  }
+  const drawing = drawings[0];
+  const pageId = drawing.get('_pageid');
+  const page = getObj('page', pageId);
+  const [ring] = pathToRings(drawingProps(drawing), {
+    width: page?.get('width'),
+    height: page?.get('height'),
+  });
+  const corners = ring ? simplifyPoints(ring) : [];
+  // A closed outline repeats its first corner at the end.
+  const last = corners.at(-1);
+  if (
+    last &&
+    corners.length > 1 &&
+    Math.hypot(last[0] - corners[0][0], last[1] - corners[0][1]) < 1
+  ) {
+    corners.pop();
+  }
+  if (corners.length < 3) {
+    fail(msg.playerid, 'areaTooSmall');
+    return;
+  }
+  createRoute(msg, {
+    name,
+    kind: ROUTE_KIND_AREA,
+    mode: 'loop',
+    pageId,
+    points: corners.map(([x, y]) => ({ x, y })),
   });
 }
 
@@ -1750,6 +1806,9 @@ function routeCommand(msg, words, rawRest) {
       break;
     case 'draw':
       commandDraw(msg, args);
+      break;
+    case 'bounce':
+      commandBounce(msg, args);
       break;
     case 'record':
       commandRecord(msg, args);
