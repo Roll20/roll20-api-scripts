@@ -189,7 +189,7 @@ export function buildHelpHtml(locale) {
     ${section('tokens', list(raw('tokens.points')))}
     ${section('grids', list(raw('grids.points')))}
     ${section('combat', list(raw('combat.points')))}
-    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
+    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p><p style="${STYLE.p}">${h('commands.mods')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('settings', `<p style="${STYLE.p}">${h('settings.intro')}</p>${table([t('handout.settings.colKey', lang), t('handout.settings.colName', lang), t('handout.settings.colDesc', lang)], settings)}`)}
     ${section('upgrading', `${list(raw('upgrading.points'))}${table([t('handout.upgrading.colV4', lang), t('handout.upgrading.colV5', lang)], legacyCommands)}`)}
     ${section('troubleshooting', list(raw('troubleshooting.points')))}

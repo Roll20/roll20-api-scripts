@@ -499,6 +499,7 @@ const TRANSLATION = {
       heading: 'Commands',
       intro:
         'Only GMs can use these commands. Routes can be named, or referred to by their #id from the menu buttons. Put names with spaces in "quotes" when a command takes two names.',
+      mods: 'Other Mods can send these commands too, for example from ScriptCards. They cannot select tokens, so they name them with --ids followed by token IDs separated by semicolons: !tc stop --ids ID1;ID2. Replies go to the GM.',
       colCommand: 'Command',
       colDesc: 'What it does',
     },
