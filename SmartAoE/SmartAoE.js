@@ -1,5 +1,5 @@
 // ========================
-// === SmartAoE v1.0.1 ===
+// === SmartAoE v1.0.2 ===
 // ========================
 
 // AUTHORS:
@@ -16,7 +16,7 @@ const SmartAoE = (() => {
 
   // ————— CONSTANTS & STATE —————
   const scriptName = 'SmartAoE';
-  const version = '1.0.1';
+  const version = '1.0.2';
   const schemaVersion = '0.1';
 
   let cardParameters = {};

@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.  
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/). Dates for 0.25–0.30 are the dates each version was added to the Roll20 One-Click repository.
 
+## [1.0.2] – 2026-10-31
+
+AoEs can stop at walls, from user feedback. There are no breaking changes.
+
 ## [1.0.1] – 2026-10-28
 
 Further D&D 2024 (Beacon) sheet fixes from the [forum report](https://app.roll20.net/forum/post/12842711/script-update-smartaoe/?pageforid=12843906#post-12843906). There are no breaking changes.
