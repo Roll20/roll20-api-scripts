@@ -25,6 +25,7 @@ import {
   LEGACY_PREFIXES,
   LOCK_MODE_OPTIONS,
   MANUAL_MOVE_OPTIONS,
+  MARKER_ACTION_OPTIONS,
   MOVEMENT_OPTIONS,
   PATH_TYPE_LEGACY,
   PATH_TYPE_V2,
@@ -97,6 +98,8 @@ const SETTING_ROWS = [
   { key: 'lockMarker' },
   { key: 'followMode', options: FOLLOW_MODE_OPTIONS },
   { key: 'manualMove', options: MANUAL_MOVE_OPTIONS },
+  { key: 'stopMarkers' },
+  { key: 'markerAction', options: MARKER_ACTION_OPTIONS },
   { key: 'buttonStep' },
   { key: 'language' },
 ];
@@ -176,7 +179,7 @@ function formatValue(key, value) {
   if (key === 'interval') {
     return tr('values.ms', { ms: value });
   }
-  if (key === 'lockMarker' && value === 'none') {
+  if ((key === 'lockMarker' || key === 'stopMarkers') && value === 'none') {
     return tr('values.none');
   }
   if (OPTION_KEYS.includes(key)) {

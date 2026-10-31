@@ -47,6 +47,8 @@ const TRANSLATION = {
     paused: 'All patrols paused.',
     resumed: 'Patrols resumed.',
     journalRebuilt: 'Handouts rebuilt: {help} and {deck}.',
+    markerStopped: 'Stopped by a Stop Marker: {tokens}.',
+    markerReset: 'Sent back to where they started by a Stop Marker: {tokens}.',
   },
   errors: {
     noTokens: 'No tokens selected.',
@@ -72,6 +74,7 @@ const TRANSLATION = {
     usageCopy: 'Give a route and a name for the copy.',
     badJson: 'That is not route export text.',
     tokenLocked: '{tokens} cannot start: locked.',
+    tokenMarked: '{tokens} cannot start: they have a Stop Marker.',
     routeOnOtherPage: '{tokens} cannot start: "{name}" was drawn on another page.',
     startOnOtherPage: '{tokens} cannot start: the fixed start of "{name}" is on another page.',
     routeFull: '{tokens} cannot start: "{name}" already has {max} tokens.',
@@ -116,6 +119,7 @@ const TRANSLATION = {
       'Make sure the tokens are in neighbouring cells of the same row (column on Hex (H) pages).',
     unknownCommand: 'Type !tokencontroller help for the list of commands.',
     tokenLocked: 'Unlock the token first.',
+    tokenMarked: 'Remove the marker, or change the Stop Markers setting.',
   },
   warnings: {
     offPage: 'Part of the route runs off the page (steps: {count}). Those steps are skipped.',
@@ -178,6 +182,10 @@ const TRANSLATION = {
     manualMove: {
       continue: 'Carry on from there',
       stop: 'Stop the patrol',
+    },
+    markerAction: {
+      stop: 'Stop where it is',
+      reset: 'Go back to the start',
     },
   },
   menu: {
@@ -296,6 +304,14 @@ const TRANSLATION = {
       label: 'Dragging a Patrol',
       desc: 'When you drag a patrolling token: continue (the route carries on from where you dropped it) or stop (the patrol ends).',
     },
+    stopMarkers: {
+      label: 'Stop Markers',
+      desc: 'Status markers that take a token off its route and stop it following, separated by semicolons (for example dead;red), or none. Followers of a leader with one of these markers stop too.',
+    },
+    markerAction: {
+      label: 'Stop Marker Action',
+      desc: 'What a patrolling token does when it gets a Stop Marker: stop (it stays where it is) or reset (it goes back to where it started).',
+    },
     buttonStep: {
       label: 'Cells per Click',
       desc: 'How far the recording arrows move a token.',
@@ -406,6 +422,7 @@ const TRANSLATION = {
         "Follow: select the leader and click Leader, then select the followers and click Follow. You can also type the leader's name: !tokencontroller follow Goblin Boss. Followers follow tokens that patrol, tokens you drag and tokens moved by TokenMod.",
         'Followers can follow other followers, making a chain or a column.',
         'Dragging a patrolling token carries the patrol on from where you drop it, unless Dragging a Patrol is set to stop.',
+        'Stop Markers: a token that gets one of these status markers (for example dead) leaves its route and stops following, and the followers of a leader that gets one stop too. Set them with !tokencontroller set stopMarkers dead;red. This also works when another Mod adds the marker.',
       ],
     },
     grids: {

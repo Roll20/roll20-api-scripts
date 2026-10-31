@@ -226,6 +226,55 @@ test('a locked patrol waits where it is and carries on when unlocked', () => {
   assertNoErrors(api);
 });
 
+test('tokens with a Stop Marker leave their routes, set by hand or by another Mod', () => {
+  const api = game();
+  const guard = api.token();
+  const ghoul = api.token({ name: 'Ghoul', top: 245 });
+  api.command('!tokencontroller set stopMarkers dead;Bloodied');
+  assert.equal(api.tcState().config.stopMarkers, 'dead;Bloodied');
+  api.command('!tokencontroller add East R9');
+  api.command('!tokencontroller start East', [guard, ghoul]);
+  api.advance(2000);
+
+  // Another Mod sets a marker: no change event, so the next tick notices it.
+  guard.attrs.statusmarkers = 'blue,dead@3';
+  api.advance(250);
+  assert.equal(api.tcState().patrols[guard.id], undefined);
+  assert.match(api.allChat(), /Stopped by a Stop Marker: Guard/);
+
+  // A GM adds a custom marker by hand: it is matched by its name.
+  api.edit(ghoul, { statusmarkers: 'Bloodied::4012' });
+  assert.equal(api.tcState().patrols[ghoul.id], undefined);
+  const ghoulAt = at(ghoul);
+  api.advance(4000);
+  assert.deepEqual(at(ghoul), ghoulAt);
+
+  api.command('!tokencontroller start East', [guard]);
+  assert.match(api.lastChat(), /cannot start: they have a Stop Marker/);
+  assertNoErrors(api);
+});
+
+test('a Stop Marker can send a token back, and stops followers of a marked leader', () => {
+  const api = game();
+  const leader = api.token({ name: 'Captain', left: 245 });
+  const first = api.token({ name: 'First', left: 175 });
+  api.command('!tokencontroller set stopMarkers dead');
+  api.command('!tokencontroller set markerAction reset');
+  api.command('!tokencontroller follow Captain', [first]);
+  api.command('!tokencontroller add East R5');
+  api.command('!tokencontroller start East', [leader]);
+  api.advance(4000);
+  leader.attrs.statusmarkers = 'dead';
+  api.advance(250);
+  assert.deepEqual(at(leader), [245, 105]);
+  assert.equal(api.tcState().follows[first.id], undefined);
+  assert.match(api.allChat(), /Sent back to where they started by a Stop Marker: Captain/);
+  assert.match(api.allChat(), /Stopped by a Stop Marker: First/);
+  api.command('!tokencontroller set stopMarkers bad@name');
+  assert.match(api.lastChat(), /not a valid value/);
+  assertNoErrors(api);
+});
+
 test('followers walk single file behind a patrolling leader', () => {
   const api = game();
   const leader = api.token({ name: 'Captain', left: 245 });

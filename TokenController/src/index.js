@@ -2,6 +2,7 @@ import { whisper } from './chat.js';
 import { handleInput, showMainMenu } from './commands.js';
 import { SCRIPT_LAST_UPDATED, SCRIPT_NAME, SCRIPT_VERSION } from './constants.js';
 import {
+  applyStopMarkers,
   clearTrackCache,
   handleObservedChange,
   handleTokenChange,
@@ -59,8 +60,12 @@ function guarded(label, fn) {
  * @returns {void}
  */
 function handleGraphicChange(obj, prev) {
-  if (isToken(obj)) {
-    handleTokenChange(obj, prev);
+  if (!isToken(obj)) {
+    return;
+  }
+  handleTokenChange(obj, prev);
+  if (prev?.statusmarkers !== obj.get('statusmarkers')) {
+    applyStopMarkers();
   }
 }
 

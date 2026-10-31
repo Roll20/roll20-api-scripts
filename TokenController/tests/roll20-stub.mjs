@@ -204,6 +204,13 @@ export function createSandbox({
       fire('change:graphic', token, prev);
       api.flush();
     },
+    // A change made by a person in the Roll20 UI, which raises change:graphic.
+    edit(token, attrs) {
+      const prev = { ...token.attrs };
+      Object.assign(token.attrs, attrs);
+      fire('change:graphic', token, prev);
+      api.flush();
+    },
     setTurnOrder(entries, open = true) {
       const prev = { ...campaign.attrs };
       campaign.attrs.turnorder = JSON.stringify(entries);

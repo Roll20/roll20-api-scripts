@@ -27,7 +27,15 @@ import {
   getRecordingForToken,
   getState,
 } from './state.js';
-import { escapeHtml, isRecord, parseLastMove, setMarker, toText } from './utils.js';
+import {
+  escapeHtml,
+  findMarker,
+  isRecord,
+  parseLastMove,
+  setMarker,
+  tokenLabel,
+  toText,
+} from './utils.js';
 
 // In-memory caches, rebuilt on demand: compiled tracks per token and the
 // recent positions of every leader (for trail following).
@@ -243,6 +251,9 @@ export function startPatrol(token, route) {
   if (s.locks[tokenId]) {
     return { ok: false, reason: 'tokenLocked' };
   }
+  if (stopMarkerOf(token)) {
+    return { ok: false, reason: 'tokenMarked' };
+  }
   if (route.anchor === ANCHOR_PAGE && route.pageId !== pageId) {
     return { ok: false, reason: 'routeOnOtherPage' };
   }
@@ -361,6 +372,10 @@ function advancePatrol(tokenId, patrol) {
   if (s.locks[tokenId]) {
     return;
   }
+  if (stopMarkerOf(token)) {
+    applyStopMarkers();
+    return;
+  }
   const ctx = getPageContext(token.get('_pageid'));
   if (!ctx) {
     return;
@@ -441,6 +456,9 @@ export function runPatrols(force = false) {
  */
 export function tick() {
   const s = getState();
+  // Markers are checked even while patrols wait, so a token killed in combat
+  // has already left its route when the fight ends.
+  applyStopMarkers();
   const inCombat = updateCombatState();
   if (s.paused) {
     return;
@@ -504,6 +522,77 @@ export function preparePatrols() {
  */
 export function clearTrackCache() {
   trackCache.clear();
+}
+
+// ---------------------------------------------------------------------------
+// Stop markers
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the Stop Marker a token shows, if any.
+ *
+ * @param {object} token Roll20 graphic.
+ * @returns {string|null} Marker name, or null.
+ */
+function stopMarkerOf(token) {
+  const setting = getConfig().stopMarkers;
+  return setting && setting !== 'none' ? findMarker(token, setting.split(';')) : null;
+}
+
+/**
+ * Takes tokens that show a Stop Marker off their routes (stopping them or
+ * sending them back, as Stop Marker Action says), and stops them following.
+ * Followers of a leader that shows one stop too. Tells the GM who stopped.
+ *
+ * The API raises no change events for markers set by other Mods, so this runs
+ * on every scheduler tick as well as when a GM changes a token's markers.
+ *
+ * @returns {number} Number of tokens stopped.
+ */
+export function applyStopMarkers() {
+  if (getConfig().stopMarkers === 'none') {
+    return 0;
+  }
+  const s = getState();
+  const marked = new Map();
+  const isMarked = (tokenId) => {
+    if (!marked.has(tokenId)) {
+      const token = getObj('graphic', tokenId);
+      marked.set(tokenId, token ? Boolean(stopMarkerOf(token)) : false);
+    }
+    return marked.get(tokenId);
+  };
+
+  const stopped = [];
+  const sentBack = [];
+  const reset = getConfig().markerAction === 'reset';
+  for (const tokenId of Object.keys(s.patrols)) {
+    if (isMarked(tokenId)) {
+      (reset ? sentBack : stopped).push(tokenId);
+      if (reset) {
+        resetPatrol(tokenId);
+      } else {
+        stopPatrol(tokenId);
+      }
+    }
+  }
+  for (const [followerId, follow] of Object.entries(s.follows)) {
+    if (isMarked(followerId) || isMarked(follow.leaderId)) {
+      delete s.follows[followerId];
+      if (!stopped.includes(followerId) && !sentBack.includes(followerId)) {
+        stopped.push(followerId);
+      }
+    }
+  }
+
+  const names = (ids) => ids.map((id) => tokenLabel(getObj('graphic', id), id)).join(', ');
+  if (stopped.length > 0) {
+    notifyGm('markerStopped', { tokens: names(stopped) });
+  }
+  if (sentBack.length > 0) {
+    notifyGm('markerReset', { tokens: names(sentBack) });
+  }
+  return stopped.length + sentBack.length;
 }
 
 // ---------------------------------------------------------------------------

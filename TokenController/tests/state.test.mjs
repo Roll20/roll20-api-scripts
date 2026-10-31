@@ -166,3 +166,18 @@ test('validates route options and names', () => {
   assert.equal(cleanName('  The "Big" | Loop  '), 'The Big Loop');
   assert.equal(normaliseRoute({ id: 'r1', name: 'A', kind: 'code', code: 'nope' }), null);
 });
+
+test('Stop Markers accept lists and reject names that are not markers', () => {
+  assert.deepEqual(validateConfigValue('stopMarkers', 'dead; red,green'), {
+    valid: true,
+    value: 'dead;red;green',
+  });
+  assert.deepEqual(validateConfigValue('stopMarkers', 'Bloodied::4012'), {
+    valid: true,
+    value: 'Bloodied::4012',
+  });
+  assert.deepEqual(validateConfigValue('stopMarkers', 'none'), { valid: true, value: 'none' });
+  assert.equal(validateConfigValue('stopMarkers', 'red@2').valid, false);
+  assert.deepEqual(validateConfigValue('markerAction', 'Reset'), { valid: true, value: 'reset' });
+  assert.equal(validateConfigValue('markerAction', 'explode').valid, false);
+});

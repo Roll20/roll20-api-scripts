@@ -200,6 +200,43 @@ export function setMarker(token, marker, on) {
 }
 
 /**
+ * Parses a list of status marker names separated by semicolons, commas or
+ * spaces ("dead;red"). `none`, `off` and `-` mean an empty list.
+ *
+ * @param {*} raw Raw input.
+ * @returns {string[]|null} Marker names, or null when one is not a valid name.
+ */
+export function parseMarkerList(raw) {
+  const text = toText(raw);
+  if (!text || ['none', 'off', '-'].includes(text.toLowerCase())) {
+    return [];
+  }
+  const names = text.split(/[;,\s]+/).filter(Boolean);
+  return names.every((name) => /^[\w:-]{1,60}$/.test(name)) ? [...new Set(names)] : null;
+}
+
+/**
+ * Returns the first of the given marker names that a token shows. Number
+ * badges (`red@2`) are ignored, and a custom marker (`Poisoned::1234`) matches
+ * by its whole tag or by its name. Names match whatever their case.
+ *
+ * @param {object} token Roll20 graphic.
+ * @param {string[]} names Marker names to look for.
+ * @returns {string|null} The matching name, or null.
+ */
+export function findMarker(token, names) {
+  const shown = new Set();
+  for (const tag of toText(token.get('statusmarkers')).split(',')) {
+    const base = tag.split('@')[0].trim().toLowerCase();
+    if (base) {
+      shown.add(base);
+      shown.add(base.split('::')[0]);
+    }
+  }
+  return names.find((name) => shown.has(name.toLowerCase())) || null;
+}
+
+/**
  * Parses Roll20's `lastmove` ("x1,y1,x2,y2,…") into points.
  *
  * @param {*} raw lastmove value.

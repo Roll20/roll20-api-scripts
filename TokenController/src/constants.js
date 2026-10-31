@@ -65,6 +65,7 @@ export const COMBAT_BEHAVIOUR_OPTIONS = ['pause', 'step', 'ignore'];
 export const LOCK_MODE_OPTIONS = ['native', 'revert', 'freeze'];
 export const FOLLOW_MODE_OPTIONS = ['trail', 'formation'];
 export const MANUAL_MOVE_OPTIONS = ['continue', 'stop'];
+export const MARKER_ACTION_OPTIONS = ['stop', 'reset'];
 
 // Default configuration for new installs. Upgraded v4 games keep their own values.
 export const DEFAULT_CONFIG = {
@@ -78,6 +79,8 @@ export const DEFAULT_CONFIG = {
   lockMarker: 'none',
   followMode: 'trail',
   manualMove: 'continue',
+  stopMarkers: 'none',
+  markerAction: 'stop',
   buttonStep: 1,
 };
 

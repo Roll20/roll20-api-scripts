@@ -8,6 +8,7 @@ import {
   FOLLOW_MODE_OPTIONS,
   LOCK_MODE_OPTIONS,
   MANUAL_MOVE_OPTIONS,
+  MARKER_ACTION_OPTIONS,
   MAX_BUTTON_STEP,
   MAX_INTERVAL,
   MAX_NAME_LENGTH,
@@ -24,7 +25,7 @@ import {
 } from './constants.js';
 import { normalizeLocale } from './i18n.js';
 import { parseCode, stepsReturnToStart } from './routes.js';
-import { clamp, isRecord, parseBoolean, parseStrictInt, toText } from './utils.js';
+import { clamp, isRecord, parseBoolean, parseMarkerList, parseStrictInt, toText } from './utils.js';
 
 // ---------------------------------------------------------------------------
 // Value validation (pure)
@@ -91,6 +92,15 @@ export function validateConfigValue(key, raw) {
       }
       return /^[\w:-]{1,60}$/.test(text) ? ok(text) : bad;
     }
+    case 'stopMarkers': {
+      const markers = parseMarkerList(raw);
+      if (markers === null) {
+        return bad;
+      }
+      return ok(markers.length > 0 ? markers.join(';') : 'none');
+    }
+    case 'markerAction':
+      return option(MARKER_ACTION_OPTIONS);
     case 'buttonStep': {
       const n = typeof raw === 'number' ? Math.trunc(raw) : parseStrictInt(raw);
       return n === null || n < 1 ? bad : ok(clamp(n, 1, MAX_BUTTON_STEP));
