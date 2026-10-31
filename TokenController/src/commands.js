@@ -299,12 +299,75 @@ function readSelection(msg) {
 }
 
 /**
- * Returns the selected tokens, whispering an error when there are none.
+ * Splits a `--ids` list off the arguments, so other Mods (which cannot select
+ * tokens) can say which tokens a command is for. The IDs follow `--ids` (or
+ * `--ids|`), separated by semicolons, commas or spaces, up to the next `--`
+ * option or the end of the command.
+ *
+ * @param {object[]} words Arguments.
+ * @returns {{ids: string[]|null, words: object[]}} The IDs (null when there is
+ *          no `--ids`) and the other arguments.
+ */
+function splitIds(words) {
+  const index = words.findIndex((w) => /^--ids(?:[|=:]|$)/i.test(w.text));
+  if (index === -1) {
+    return { ids: null, words };
+  }
+  let end = index + 1;
+  while (end < words.length && !words[end].text.startsWith('--')) {
+    end++;
+  }
+  const ids = [
+    words[index].text.replace(/^--ids[|=:]?/i, ''),
+    ...words.slice(index + 1, end).map((w) => w.text),
+  ]
+    .join(';')
+    .split(/[;,\s]+/)
+    .filter(Boolean);
+  return { ids: [...new Set(ids)], words: [...words.slice(0, index), ...words.slice(end)] };
+}
+
+/**
+ * Returns the tokens with the given IDs, warning about IDs that are not tokens.
  *
  * @param {object} msg Chat message.
+ * @param {string[]} ids Token IDs.
+ * @returns {object[]} Tokens.
+ */
+function tokensFromIds(msg, ids) {
+  const tokens = [];
+  const missing = [];
+  for (const id of ids) {
+    const token = getObj('graphic', id);
+    if (isToken(token)) {
+      tokens.push(token);
+    } else {
+      missing.push(id);
+    }
+  }
+  if (tokens.length > 0 && missing.length > 0) {
+    whisperWarning(msg.playerid, tr('warnings.idsNotFound', { ids: missing.join(', ') }));
+  }
+  return tokens;
+}
+
+/**
+ * Returns the tokens a command is for: those given with `--ids`, otherwise
+ * the selected ones. Whispers an error when there are none.
+ *
+ * @param {object} msg Chat message.
+ * @param {string[]|null} [ids] Token IDs from `--ids`, or null for the selection.
  * @returns {object[]|null} Tokens, or null.
  */
-function requireTokens(msg) {
+function requireTokens(msg, ids = null) {
+  if (ids) {
+    const tokens = tokensFromIds(msg, ids);
+    if (tokens.length === 0) {
+      fail(msg.playerid, 'idsNotFound', { ids: ids.join(', ') || '-' });
+      return null;
+    }
+    return tokens;
+  }
   const { tokens } = readSelection(msg);
   if (tokens.length === 0) {
     fail(msg.playerid, 'noTokens');
@@ -918,6 +981,11 @@ function commandCopy(msg, words) {
  * @returns {void}
  */
 function commandRemove(msg, words) {
+  if (splitIds(words).ids) {
+    // `remove --ids` takes tokens off their routes; it never removes a route.
+    commandStop(msg, words);
+    return;
+  }
   const confirmed = words.at(-1)?.text.toLowerCase() === 'confirm';
   const route = requireRoute(msg, joinWords(confirmed ? words.slice(0, -1) : words));
   if (!route) {
@@ -1052,8 +1120,9 @@ function commandImport(msg, raw) {
  * @returns {void}
  */
 function commandStart(msg, words) {
-  const tokens = requireTokens(msg);
-  const route = tokens && requireRoute(msg, joinWords(words));
+  const { ids, words: rest } = splitIds(words);
+  const tokens = requireTokens(msg, ids);
+  const route = tokens && requireRoute(msg, joinWords(rest));
   if (!tokens || !route) {
     return;
   }
@@ -1081,14 +1150,19 @@ function commandStart(msg, words) {
 }
 
 /**
- * Returns the tokens a stop or reset applies to: the selection, a route's
- * tokens, or every patrolling token for `all`.
+ * Returns the tokens a stop or reset applies to: the tokens given with
+ * `--ids`, a route's tokens, every patrolling token for `all`, or the selection.
  *
  * @param {object} msg Chat message.
- * @param {object[]} words Arguments.
+ * @param {object[]} words Arguments, without the `--ids` list.
+ * @param {string[]|null} ids Token IDs from `--ids`, or null.
  * @returns {string[]|null} Token IDs, or null after an error.
  */
-function targetTokenIds(msg, words) {
+function targetTokenIds(msg, words, ids) {
+  if (ids) {
+    const tokens = requireTokens(msg, ids);
+    return tokens ? tokens.map((tok) => tok.id) : null;
+  }
   const text = joinWords(words);
   if (text.toLowerCase() === 'all') {
     return Object.keys(getPatrols());
@@ -1110,14 +1184,15 @@ function targetTokenIds(msg, words) {
  * @returns {void}
  */
 function commandStop(msg, words) {
-  const ids = targetTokenIds(msg, words);
+  const { ids: given, words: rest } = splitIds(words);
+  const ids = targetTokenIds(msg, rest, given);
   if (!ids) {
     return;
   }
   let count = 0;
   for (const id of ids) {
     const stopped = stopPatrol(id);
-    const unfollowed = words.length === 0 && unfollow(id);
+    const unfollowed = (given !== null || rest.length === 0) && unfollow(id);
     if (stopped || unfollowed) {
       count++;
     }
@@ -1133,7 +1208,8 @@ function commandStop(msg, words) {
  * @returns {void}
  */
 function commandReset(msg, words) {
-  const ids = targetTokenIds(msg, words);
+  const { ids: given, words: rest } = splitIds(words);
+  const ids = targetTokenIds(msg, rest, given);
   if (!ids) {
     return;
   }
@@ -1142,14 +1218,15 @@ function commandReset(msg, words) {
 }
 
 /**
- * `lock` / `unlock`.
+ * `lock` / `unlock [--ids <ids>]`.
  *
  * @param {object} msg Chat message.
  * @param {boolean} lock True to lock.
+ * @param {object[]} words Arguments.
  * @returns {void}
  */
-function commandLock(msg, lock) {
-  const tokens = requireTokens(msg);
+function commandLock(msg, lock, words) {
+  const tokens = requireTokens(msg, splitIds(words).ids);
   if (!tokens) {
     return;
   }
@@ -1648,10 +1725,10 @@ function routeCommand(msg, words, rawRest) {
       commandPause(msg, false);
       break;
     case 'lock':
-      commandLock(msg, true);
+      commandLock(msg, true, args);
       break;
     case 'unlock':
-      commandLock(msg, false);
+      commandLock(msg, false, args);
       break;
     case 'leader':
       commandLeader(msg);

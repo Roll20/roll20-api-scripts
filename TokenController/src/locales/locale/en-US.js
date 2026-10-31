@@ -75,6 +75,7 @@ const TRANSLATION = {
     badJson: 'That is not route export text.',
     tokenLocked: '{tokens} cannot start: locked.',
     tokenMarked: '{tokens} cannot start: they have a Stop Marker.',
+    idsNotFound: 'No tokens have these IDs: {ids}.',
     routeOnOtherPage: '{tokens} cannot start: "{name}" was drawn on another page.',
     startOnOtherPage: '{tokens} cannot start: the fixed start of "{name}" is on another page.',
     routeFull: '{tokens} cannot start: "{name}" already has {max} tokens.',
@@ -120,8 +121,10 @@ const TRANSLATION = {
     unknownCommand: 'Type !tokencontroller help for the list of commands.',
     tokenLocked: 'Unlock the token first.',
     tokenMarked: 'Remove the marker, or change the Stop Markers setting.',
+    idsNotFound: 'Give token IDs after --ids, separated by semicolons.',
   },
   warnings: {
+    idsNotFound: 'No tokens have these IDs, so they were skipped: {ids}.',
     offPage: 'Part of the route runs off the page (steps: {count}). Those steps are skipped.',
     combatTrackerOnly:
       'Combat Detection is set to the turn tracker, so this switch has no effect until you change it.',
@@ -353,6 +356,7 @@ const TRANSLATION = {
     rename: 'Rename a route.',
     copy: 'Copy a route under a new name.',
     remove: 'Remove a route (asks first).',
+    ids: 'Act on the tokens with these IDs instead of the selected ones, so other Mods such as ScriptCards can control tokens. remove --ids takes the tokens off their routes; it never removes a route.',
     list: 'List the routes, or the tokens being controlled.',
     examples: 'Add the example routes.',
     export: 'Show routes as text to copy into another game.',

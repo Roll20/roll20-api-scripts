@@ -136,6 +136,7 @@ export const HELP_COMMANDS = [
   ['rename <route> <new name>', 'rename'],
   ['copy <route> <new name>', 'copy'],
   ['remove <route>', 'remove'],
+  ['start | stop | reset | lock | unlock | remove --ids <id;id;…>', 'ids'],
   ['list [routes|tokens]', 'list'],
   ['examples', 'examples'],
   ['export [<route>]', 'export'],

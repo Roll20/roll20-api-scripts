@@ -226,6 +226,35 @@ test('a locked patrol waits where it is and carries on when unlocked', () => {
   assertNoErrors(api);
 });
 
+test('--ids picks tokens for start, stop, reset, lock and remove without a selection', () => {
+  const api = game();
+  const a = api.token({ name: 'A' });
+  const b = api.token({ name: 'B', top: 245 });
+  const c = api.token({ name: 'C', top: 385 });
+  api.command('!tokencontroller add East R9');
+  api.command(`!tc start East --ids ${a.id};${b.id};${c.id}`, [], 'API');
+  assert.equal(Object.keys(api.tcState().patrols).length, 3);
+  api.advance(2000);
+
+  api.command(`!tc stop --ids ${a.id}`, [], 'API');
+  assert.equal(api.tcState().patrols[a.id], undefined);
+  api.command(`!tc remove --ids ${b.id} -nosuchtoken`, [], 'API');
+  assert.equal(api.tcState().patrols[b.id], undefined);
+  assert.ok(Object.values(api.tcState().routes).some((r) => r.name === 'East'));
+  assert.match(api.allChat(), /so they were skipped: -nosuchtoken/);
+
+  api.command(`!tc reset --ids|${c.id}`, [], 'API');
+  assert.deepEqual(at(c), [105, 385]);
+  api.command(`!tc lock --ids ${a.id},${b.id}`, [], 'API');
+  assert.ok(api.tcState().locks[a.id] && api.tcState().locks[b.id]);
+  api.command(`!tc unlock --ids ${a.id}`, [], 'API');
+  assert.equal(api.tcState().locks[a.id], undefined);
+
+  api.command('!tc stop --ids -gone', [], 'API');
+  assert.match(api.lastChat(), /No tokens have these IDs: -gone/);
+  assertNoErrors(api);
+});
+
 test('tokens with a Stop Marker leave their routes, set by hand or by another Mod', () => {
   const api = game();
   const guard = api.token();
