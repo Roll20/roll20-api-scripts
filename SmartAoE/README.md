@@ -10,6 +10,7 @@ Full original documentation: [Roll20 wiki – SmartAoE](https://wiki.roll20.net/
 
 - **Shapes**: line, square, circle, wall and cones (any angle, Pathfinder `PFcone`, or the 5e triangle `5econe`), plus Pathfinder-style `PFcircle`. Squares and circles can be attached to the caster or float freely.
 - **Consistent coverage rules**: a grid square counts when at least `--minGridArea` of it is covered, and a token counts when at least `--minTokArea` of it is inside the AoE. See [Grid rules by game system](#grid-rules-by-game-system) for D&D 2014 and 2024, Pathfinder and other systems.
+- **Walls**: with `--blockedBy|walls` an AoE stops at dynamic lighting walls and closed doors and windows, so a fireball no longer reaches the next room; `--blockedBy|walls, spread` also lets it flow round corners.
 - **Interactive placement**: move the control token to aim; cones can rotate their origin around the caster's corners and faces.
 - **Saves and damage**: per-target saving throws (5e shorthands built in), two damage formulas with damage types, a rule for successful saves (half damage by default) and resistance/vulnerability/immunity checks. 5e Magic Resistance is detected and the save is rolled with advantage. Works with both the 2014 and the 2024 (Beacon) D&D sheets.
 - **Markers**: status markers for passed saves, failed saves, 0 HP and the caster.
@@ -77,6 +78,7 @@ Parameters are case-insensitive. Boolean options accept `true`/`yes`/`1` (and `f
 | `--minTokArea` | Fraction (0–1) of a token that must be inside for it to count. | `0.01` |
 | `--instant` | Delete the control token as soon as the AoE is triggered. | `false` |
 | `--affectsCaster` | Let the caster's own token be affected. | `false` |
+| `--blockedBy` | `walls`: squares that no straight line from the point of origin can reach past a dynamic lighting wall, or a closed door or window, are left out (open doors and windows let the AoE through). `walls, spread`: the AoE also flows round corners, as far as its reach. `none`: walls are ignored. | `none` |
 | `--aoeLayer` | Layer to draw on: `objects`/`token`, `gm` or `map`. | `objects` |
 | `--selectedID` | Token or character id of the caster, when nothing is selected (e.g. called from another script). | Selected token |
 | `--playerID` | Player who may control the control token (for calls from other scripts). | Calling player |
@@ -191,6 +193,21 @@ Ice Storm with a DEX save, damage applied from the chat card and a 0 HP marker:
 }}
 ```
 
+A fireball that stops at walls but spreads round corners, as the 2014 spell does (use plain `walls` for the 2024 rule):
+
+```text
+!smartaoe {{
+  --aoeType|circle, float
+  --radius|20ft
+  --blockedBy|walls, spread
+  --dc|@{selected|spell_save_dc}
+  --saveFormula|5eDEX
+  --damageFormula1|[[8d6]]
+  --damageType1|fire
+  --fx|burn-fire
+}}
+```
+
 Healing (no save). Roll20 can't start an inline roll with a negative number, hence the `0 +`; a plain number such as `--damageFormula1|-5` needs no workaround:
 
 ```text
@@ -289,6 +306,7 @@ The 2024 (Beacon) D&D sheet doesn't store its data as attribute objects. When Sm
 - If the stored AoE links get out of step with the map (e.g. after copying pages), run `!smartclearcache`. (Trigger-Target no longer stops with a "Cannot read properties of undefined" error because of a stale AoE, but clearing the cache tidies up.)
 - **Line lengths** are measured with true (Euclidean) distance, so diagonal lines cover fewer squares than 5e's "every square counts as 5 ft" rule would give. For an exact count, leave out `--radius` and place the control token by hand.
 - **Line origins** for casters larger than one square start from the token's centre or nearest corner/face (`--origin`), not from the edge facing the target.
+- **Walls** (`--blockedBy`) are checked when the AoE is drawn, that is when the control token moves. After opening or closing a door, nudge the control token so the AoE is drawn again before you trigger it. Walls and doors on the walls layer count, whatever their kind (one-way and transparent walls block too). The point of origin is the caster's centre, corner or face (`--origin`), or the centre of a floating AoE.
 - When SmartAoE is called by another script (ScriptCards, etc.), the call has no selected token and a generic player id. Install **SelectManager** and run `!smconfig +playerid` once, or pass `--selectedID` and `--playerID`.
 
 ---

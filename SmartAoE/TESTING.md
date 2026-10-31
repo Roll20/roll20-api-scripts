@@ -106,6 +106,23 @@ Use a game with the D&D 2024 sheet on Mod Script Sandbox v1.5: a PC caster with 
 3. Run `!smartclearcache`.
    - Expected: Stored links are cleared; existing drawings stay.
 
+## Walls
+
+On a page with dynamic lighting walls, draw two rooms side by side, divided by a wall with a door in it. Put an NPC in each room, close to the dividing wall.
+
+1. Select the PC and run `!smartaoe {{ --aoeType|circle, float --radius|20ft --blockedBy|walls }}`, then move the control token into the first room, next to the wall.
+   - Expected: Squares on the far side of the wall are not drawn. Triggering lists only the NPC in the first room.
+2. Open the door, nudge the control token, and trigger again.
+   - Expected: Squares seen through the doorway are drawn, and the second NPC is hit if it stands in one.
+3. Repeat with `--blockedBy|walls, spread` and the door closed, with the control token near the end of a wall that does not reach the outer wall.
+   - Expected: The AoE flows round the end of the wall, but no further than its radius.
+4. Repeat with a 30 ft `5econe` from a caster standing against a wall, aimed along the wall.
+   - Expected: The cone is drawn on the caster's side of the wall only.
+5. Repeat steps 1 and 2 in a Legacy game (walls drawn as `path` on the Dynamic Lighting layer).
+   - Expected: The same results.
+6. Run an AoE without `--blockedBy`.
+   - Expected: Walls are ignored, as before.
+
 ## Calls from other scripts
 
 1. From a ScriptCards or other script, call `!smartaoe` with `--selectedID|<id> --playerID|<id> --aoeColor|#00ff0050`.
