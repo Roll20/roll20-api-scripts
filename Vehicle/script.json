@@ -1,0 +1,22 @@
+{
+  "name": "Vehicle",
+  "script": "Vehicle.js",
+  "version": "1.0.0",
+  "description": "Vehicle lets a token carry other tokens. Mark a boat, raft, wagon, flying carpet or mount as a vehicle, and every token on it moves and turns with it, keeping its place on board.\n\nHOW IT WORKS:\n• When a vehicle is moved or rotated, every token on it is carried along. Passengers swing around the vehicle's center when it turns, and can optionally turn to keep their facing relative to the vehicle.\n• Passengers can still be moved on their own. Moving a passenger never moves the vehicle. Drag a token off the vehicle and it is no longer carried.\n• A token counts as aboard if enough of it overlaps the vehicle: 50% by default, set per vehicle.\n• Vehicles are kept behind other tokens so passengers stay visible on top.\n• Only tokens on the token layer are carried. Vehicles are never carried by other vehicles.\n\nAREA:\nVehicle art often has empty space around the edges for shadows or grid fit. To mark where passengers actually stand, draw a rectangle over that part of the vehicle on the token layer, select the vehicle and the rectangle together, and click Set area. The rectangle is removed afterward. Show area draws a temporary yellow outline to check it. The area is kept as a percentage of the token, so it survives resizing, and it mirrors when the vehicle is flipped.\n\nGETTING STARTED:\n1. Install the script.\n2. Select a token and type !vehicle in chat to open the menu.\n3. Click Define. The token is now a vehicle.\n4. Optionally set its area as described above.\n5. Type !vehicle --list to see every vehicle on the page with its picture and settings, and change them from there. Click a vehicle's picture to pull everyone's view to it, or its name to pull only yours.\n6. Click the ? button on any menu for help.\n\nVehicle settings are stored as a short tag in the token's tooltip, for example [vehicle|rotate|overlap:50|area:5,12,5,20], so a vehicle keeps its settings when the token is copied. Players will see the tag if that tooltip is shown to them.\n\nLIMITS:\n• Passengers move when the vehicle is dropped, not while it is being dragged.\n• Undo on a vehicle move puts the vehicle back but not its passengers.\n• A vehicle moved by another script carries its passengers only if that script calls Vehicle.handleMove(token, prev).\n• Written for the current Roll20 tabletop (Jumpgate).",
+  "authors": "Keith Curtis",
+  "roll20userid": "162065",
+  "patreon": "https://www.patreon.com/c/KeithCurtis",
+  "dependencies": [],
+  "modifies": {
+    "graphic": "read,write",
+    "pathv2": "read,write",
+    "handout": "read,write",
+    "page": "read",
+    "player": "read",
+    "campaign": "read"
+  },
+  "conflicts": [],
+  "previousversions": [
+    "1.0.0"
+  ]
+}
