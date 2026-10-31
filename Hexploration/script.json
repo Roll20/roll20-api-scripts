@@ -1,13 +1,83 @@
 {
-    "name": "Hexploration",
-    "script": "Hexploration.js",
-    "version": "1.3",
-    "previousversions": ["1.0", "1.1", "1.2"],
-    "description": "# Hexploration\r\r_v1.3 Updates:_\r* Fixed a couple state bugs.\r\rThis script allows GMs to draw a polygon on a hex-gridded map and fill in\reach hex inside that polygon with an opaque hexagon. It's great for hex-based\rmaps where the PCs must explore and discover each area hex by hex.\r\r## General Usage\r\rThis script's actions and configurations are accessible through its menu\rdisplayed in the chat (Visible only to the GM).\rTo open the script's menu, activate the 'Hexploration_menu' macro installed\rby the script.\r\rNote that this script only works for maps whose grid types are set to either\r'Hex (V)' or 'Hex (H)'. The opaque hexes will be aligned to the page's hex\rgrid.\r\rWhen you move a token representing a character into an area concealed by a hex,\rthe hex will be revealed. If the script's reveal distance is set greater than 0,\rthen adjacent hexes out to that distance (in hex units) will also be revealed.\r\rWatch https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/Hexploration/Hexploration.gif\rfor a short demo of the basics of how the script works.\r\r### Rendering Hexes\r\rTo create a hex-filled area, first draw one or more polygons containing the\rarea you want filled with hexes. Then select the polygons and press the\r'Fill Polygon' action from the script's menu. That's it!\r\r### Naming Hexes\r\rHexes can be named to represent locations that are concealing. The names of\rthe hexes will be shown on the GM layer, invisible to the PCs. When a named\rhex is revealed, it will announce that its location has been discovered in the\rchat.\r\rThere are two ways to name locations hidden by hexes:\r\rBefore rendering the hexes using the 'Fill Polygon' action, create named tokens\rwith the 'white-tower' status representing the locations you want to conceal\rwith the hexes. This will also set the icon for the hex to that of the named\rtoken.\r\rTo name a hex that's already been rendered, select the hex and set its name\rusing the 'Name Hex' action from the menu.\r\r### Setting a Hex's Icon\r\rHexes can be assigned a named icon. The icon will be hidden on the GM layer,\rand it and its name will be revealed when its hex is revealed.\r\rTo make a hex with an icon, create a named token with the 'white-tower' status\rrepresenting the location you want to conceal within a hex. Then fill the area\rcontaining that token with hexes. It will be automatically concealed and\rassigned to the hex it was in.\r\r## Actions\r\rThe script contains the following actions available from the script's chat menu:\r\r### Fill Polygon\r\rThis renders hexes within one more more polygon areas.\rSelect one or more polygons, then use this action to fill their areas with\rhexes.\r\r### Inverse Fill\r\rThis works like the 'Fill Polygon' action, except that it renders hexes\reverywhere on the page except inside the selected polygons' areas instead.\r\r### Name Hex\r\rThis allows you to name a hex after it has been rendered. Select the hex you\rwant to name, then use this action to specify a name for it.\r\r## Configurations\r\rThe script contains the following configurations that can be set from the\rscript's chat menu:\r\r### Drawing configs\r\rThese configurations set properties for hexes as you are drawing them.\r\r#### Hex Color\r\rThis allows you to specify the color, border color, and label color of hexes.\r\r#### Border Width\r\rThis sets the width of the border outlines on hexes.\r\r#### Hex Reveal Distance\r\rIf this is set, then a character can only reveal the hexes being drawn if they\rare within the specified number of hexes away from them.\r\rE.g., if a hex is drawn while this config is set to 3, then a character must be\rwithin 3 hexes from it to reveal it. The hex will not be revealed if the\rcharacter is 4 or more hexes away from it, even if the global reveal distance\ris set very high.\r\rIf this is not set, then the hex can be revealed from a theoretically infinite\rdistance away (out to the line of sight distance).\r\r### Global configs\r\rThese configs apply globally throughout the use of this script.\r\r#### Line of Sight\r\rThis is the global reveal distance. It specifies how far out (in units) hexes\rare revealed when a character token is moved.\r\r## Help\r\rMy scripts are provided 'as-is', without warranty of any kind, expressed or implied.\r\rThat said, if you experience any issues while using this script,\rneed help using it, or if you have a neat suggestion for a new feature,\rplease shoot me a PM:\rhttps://app.roll20.net/users/46544/ada-l\r\rWhen messaging me about an issue, please be sure to include any error messages that\rappear in your API Console Log, any configurations you've got set up for the\rscript in the VTT, and any options you've got set up for the script on your\rgame's API Scripts page. The more information you provide me, the better the\rchances I'll be able to help.\r\r## Show Support\r\rIf you would like to show your appreciation and support for the work I do in writing,\rupdating, maintaining, and providing tech support my API scripts,\rplease consider buying one of my art packs from the Roll20 marketplace:\r\rhttps://marketplace.roll20.net/browse/publisher/165/ada-lindberg\r",
-    "authors": "Ada Lindberg",
-    "roll20userid": 46544,
-    "useroptions": [],
-    "dependencies": ["HTML Builder", "MatrixMath", "Path Math", "Vector Math"],
-    "modifies": {},
-    "conflicts": []
+  "name": "Hexploration",
+  "script": "Hexploration.js",
+  "version": "2.0.2",
+  "previousversions": [
+    "1.1",
+    "1.2",
+    "1.3",
+    "2.0.0",
+    "2.0.1"
+  ],
+  "description": "# Hexploration\n\nCover a hex map with opaque hexes that are revealed as the party explores. Draw a polygon over the area to hide, fill it with hexes, and every hex a player token moves through (and, optionally, the hexes around it) is uncovered. Hidden locations are announced in chat when they are discovered.\n\n**Version 2.0.0 is a full rewrite that works in Jumpgate and in Legacy games.** It no longer needs PathMath, MatrixMath, Vector Math or HTML Builder. Existing v1 hex maps and the v1 `!hexploration_*` commands keep working.\n\n## Getting started\n\n1. Use a page with a **Hex (V)** or **Hex (H)** grid.\n2. Draw one or more polygons over the area to hide and select them.\n3. Type `!hexploration fill`, or open the **Hexploration - Command Deck** handout and click **Fill**.\n4. Move a player token and watch the map open up.\n\nType `!hexploration` for the menu, or `!hexploration help` for every command. The **Hexploration - Help** handout is created in the Journal on startup.\n\n## Features\n\n* Works with Jumpgate (`pathv2`) and Legacy paths, on both hex grid orientations and any cell size.\n* Hexes are drawn on the foreground layer when the game has one, otherwise on the token layer.\n* Reveals along the whole path a token travels, covers every hex a large token occupies, and respects line of sight.\n* Optional glimpse mode: nearby hexes turn see-through and clear when a token enters them.\n* Named locations and hidden location tokens, announced (and optionally pinged) when discovered.\n* Reveal or re-cover selected hexes, reveal or clear a page, undo the last fill, and per-page settings.\n* Rescan rebuilds the hex list after a page is duplicated or a Legacy game is copied to Jumpgate.\n* Grid calibration for maps whose hexes do not line up.\n* Translated into 24 languages.\n\nOriginal mod by Ada Lindberg. Version 2 is maintained by MidNiteShadow7.",
+  "authors": "Ada Lindberg, MidNiteShadow7",
+  "roll20userid": "46544, 16506286",
+  "useroptions": [
+    {
+      "name": "hexLayer",
+      "displayname": "Hex Layer",
+      "type": "select",
+      "options": [
+        "auto",
+        "foreground",
+        "objects"
+      ],
+      "default": "auto",
+      "description": "Where new hexes are drawn. Auto uses the foreground layer when the game supports it, otherwise the token (objects) layer."
+    },
+    {
+      "name": "revealBy",
+      "displayname": "Tokens That Reveal",
+      "type": "select",
+      "options": [
+        "players",
+        "characters",
+        "all"
+      ],
+      "default": "players",
+      "description": "Which tokens on the token layer reveal hexes when they move: players (controlled by a player), characters (represent any character, the v1 behaviour) or all tokens."
+    },
+    {
+      "name": "language",
+      "displayname": "Language",
+      "type": "select",
+      "options": [
+        "af",
+        "ca",
+        "zh-TW",
+        "cs",
+        "da",
+        "nl",
+        "en-US",
+        "fi",
+        "fr",
+        "de",
+        "el",
+        "he",
+        "hu",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-PT",
+        "pt-BR",
+        "ru",
+        "es",
+        "sv",
+        "tr",
+        "uk"
+      ],
+      "default": "en-US",
+      "description": "Language code for GM messages, menus and handouts. Run !hexploration set language to see all supported codes."
+    }
+  ],
+  "dependencies": [],
+  "modifies": {
+    "path": "read,write",
+    "pathv2": "read,write",
+    "graphic": "read,write",
+    "text": "read,write",
+    "handouts": "read,write"
+  },
+  "conflicts": []
 }

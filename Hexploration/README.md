@@ -1,141 +1,169 @@
 # Hexploration
 
-_v1.3 Updates:_
-* Fixed a couple state bugs.
+A Roll20 Mod that covers a hex map with opaque hexes and uncovers them as the party explores.
 
-This script allows GMs to draw a polygon on a hex-gridded map and fill in
-each hex inside that polygon with an opaque hexagon. It's great for hex-based
-maps where the PCs must explore and discover each area hex by hex.
+Draw a shape over the area to hide, fill it with hexes, and every hex a player token moves through (and, if you like, the hexes around it) is revealed. Hidden locations can be tucked under hexes and are announced when they are found.
 
-## General Usage
+**Version 2 is a full rewrite that works in Jumpgate and Legacy games.** It no longer needs PathMath, MatrixMath, Vector Math or HTML Builder, and existing version 1 hex maps and commands keep working.
 
-This script's actions and configurations are accessible through its menu
-displayed in the chat (Visible only to the GM).
-To open the script's menu, activate the 'Hexploration_menu' macro installed
-by the script.
+![Hexploration demo (version 1)](Hexploration.gif)
 
-Note that this script only works for maps whose grid types are set to either
-'Hex (V)' or 'Hex (H)'. The opaque hexes will be aligned to the page's hex
-grid.
+## Installation
 
-When you move a token representing a character into an area concealed by a hex,
-the hex will be revealed. If the script's reveal distance is set greater than 0,
-then adjacent hexes out to that distance (in hex units) will also be revealed.
+1. Install **Hexploration** from the Roll20 One-Click library, or upload `Hexploration.js` to the game's API Scripts.
+2. Save. On startup the Mod creates two handouts in the Journal:
+   - **Hexploration - Help**: full instructions.
+   - **Hexploration - Command Deck**: one-click buttons for every action.
 
-Watch https://raw.githubusercontent.com/Roll20/roll20-api-scripts/master/Hexploration/Hexploration.gif
-for a short demo of the basics of how the script works.
+If you are upgrading from version 1, you can remove PathMath, MatrixMath, Vector Math and HTML Builder unless another Mod uses them.
 
-### Rendering Hexes
+## Quick Start
 
-To create a hex-filled area, first draw one or more polygons containing the
-area you want filled with hexes. Then select the polygons and press the
-'Fill Polygon' action from the script's menu. That's it!
+1. Open a page whose grid is **Hex (V)** or **Hex (H)**.
+2. Draw one or more shapes (polygon, rectangle, ellipse or freehand) around the area to hide.
+3. Select the shapes and click **Fill** in the Command Deck, or type `!hexploration fill`.
+4. Optionally, select tokens for important places and click **Mark Location** before filling. They are hidden under the hexes and announced when discovered.
+5. Move a player token. The hexes it passes through, and those within its sight distance, are revealed.
 
-### Naming Hexes
+Type `!hexploration` for the chat menu or `!hexploration help` for the command list.
 
-Hexes can be named to represent locations that are concealing. The names of
-the hexes will be shown on the GM layer, invisible to the PCs. When a named
-hex is revealed, it will announce that its location has been discovered in the
-chat.
+## Commands
 
-There are two ways to name locations hidden by hexes:
+Only GMs can use these commands.
 
-Before rendering the hexes using the 'Fill Polygon' action, create named tokens
-with the 'white-tower' status representing the locations you want to conceal
-with the hexes. This will also set the icon for the hex to that of the named
-token.
+| Command                                       | What it does                                                                        |
+| --------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `!hexploration`                               | Show the menu.                                                                      |
+| `!hexploration fill`                          | Cover the selected shapes with hexes.                                               |
+| `!hexploration fill inverse`                  | Cover the whole page except inside the selected shapes.                             |
+| `!hexploration undo`                          | Undo the last fill, inverse fill or conceal, and restore the shapes it used.        |
+| `!hexploration reveal`                        | Reveal the selected hexes, and the hexes under the selected shapes and tokens.      |
+| `!hexploration reveal page`                   | Reveal every hex on the page without announcements.                                 |
+| `!hexploration conceal`                       | Cover the area under the selected shapes and tokens with hexes again.               |
+| `!hexploration explore`                       | Reveal around the selected tokens as if they had just moved there.                  |
+| `!hexploration reset page`                    | Remove every hex on the page (asks first).                                          |
+| `!hexploration name <text>`                   | Name the selected hexes, or the hexes under the selected tokens. Empty clears it.   |
+| `!hexploration mark` / `unmark`               | Turn the selected tokens into hidden locations, or back.                            |
+| `!hexploration set [<setting> <value>]`       | Change a setting, or show all settings.                                             |
+| `!hexploration page set <setting> <value>`    | Override a reveal setting on the current page only.                                 |
+| `!hexploration page clear`                    | Remove the current page's overrides.                                                |
+| `!hexploration rescan`                        | Rebuild the page's hex list, for example after copying a page or game.              |
+| `!hexploration calibrate` / `calibrate reset` | Line the hex grid up with tokens snapped to hex centres, or remove the calibration. |
+| `!hexploration status`                        | Show what the Mod knows about the current page.                                     |
+| `!hexploration journal rebuild`               | Rebuild the Help and Command Deck handouts.                                         |
+| `!hexploration help`                          | List the commands.                                                                  |
 
-To name a hex that's already been rendered, select the hex and set its name
-using the 'Name Hex' action from the menu.
+### Version 1 commands
 
-### Setting a Hex's Icon
+The version 1 commands still work, including the `Hexploration_menu` macro:
 
-Hexes can be assigned a named icon. The icon will be hidden on the GM layer,
-and it and its name will be revealed when its hex is revealed.
+| Version 1                                 | Version 2                    |
+| ----------------------------------------- | ---------------------------- |
+| `!hexploration_showMenuMain`              | `!hexploration`              |
+| `!hexploration_fillPoly`                  | `!hexploration fill`         |
+| `!hexploration_fillInversePoly`           | `!hexploration fill inverse` |
+| `!hexploration_hexModifyProperty name&&…` | `!hexploration name …`       |
+| `!hexploration_configModifyProperty …`    | `!hexploration set …`        |
 
-To make a hex with an icon, create a named token with the 'white-tower' status
-representing the location you want to conceal within a hex. Then fill the area
-containing that token with hexes. It will be automatically concealed and
-assigned to the hex it was in.
+## How Revealing Works
 
-## Actions
+- Only tokens on the token layer reveal hexes. **Tokens That Reveal** chooses which: tokens controlled by a player (the default, so the GM can move monsters freely), tokens that represent any character (the version 1 behaviour), or all tokens.
+- A token reveals every hex it covers, so large tokens reveal several. With **Reveal Along Path** on, it also reveals every hex on the route it was dragged along, waypoints included.
+- **Sight Distance** reveals the hexes around each of those hexes, nearest first.
+- **Reveal Mode: Glimpse** turns hexes within sight see-through instead of removing them; they are removed when a token enters them.
+- Roll20 draws token names, bars and auras above hexes. With **Hide Covered Tokens** on (the default), tokens under a covered hex have their player-visible name, bars and auras switched off until they are uncovered, so hidden monsters do not give themselves away.
+- The Roll20 API does not report token moves made by other Mods. Moves made by TokenMod are picked up automatically. For other Mods, select the tokens and use `!hexploration explore`, or call the API below.
 
-The script contains the following actions available from the script's chat menu:
+### Terrain That Blocks Sight
 
-### Fill Polygon
+**Hex Reveal Distance** and **Line of Sight** work together to make terrain, such as mountains or dense forest, that the party cannot see into or past.
 
-This renders hexes within one more more polygon areas.
-Select one or more polygons, then use this action to fill their areas with
-hexes.
+- **Hex Reveal Distance** is stored on each hex when it is filled. A token must be within that many hexes to reveal the hex, however far it can see; with `0`, the hex is only revealed by entering it. Set it _before_ filling: changing it does not affect hexes already on the map.
+- **Line of Sight** stops a hex being revealed while a covered hex lies between it and the token. Nearer hexes are revealed first, so in open country nothing is in the way and Line of Sight changes nothing. It only blocks behind hexes that stay covered, such as terrain filled with a Hex Reveal Distance.
 
-### Inverse Fill
+Neither makes a difference with the default **Sight Distance** of 1, apart from a Hex Reveal Distance of 0: a token only looks at the six hexes next to it, with nothing in between.
 
-This works like the 'Fill Polygon' action, except that it renders hexes
-everywhere on the page except inside the selected polygons' areas instead.
+For example, to add a mountain range:
 
-### Name Hex
+1. `!hexploration set revealDistance 3`
+2. `!hexploration set maxDistance 0`, then select the shapes over the mountains and fill them.
+3. `!hexploration set maxDistance none`, then fill the land beyond the mountains.
 
-This allows you to name a hex after it has been rendered. Select the hex you
-want to name, then use this action to specify a name for it.
+A token walking up to the mountains reveals the open ground within 3 hexes, but the mountain hexes stay covered and so does everything behind them. Each mountain hex is revealed when a token walks into it. With Line of Sight off, the land behind the mountains is revealed from a distance, but the mountains still are not.
 
-## Configurations
+Glimpsed hexes do not block Line of Sight.
 
-The script contains the following configurations that can be set from the
-script's chat menu:
+## Settings
 
-### Drawing configs
+| Key                 | Setting              | Default              | Per page | Description                                                                                                                                                           |
+| ------------------- | -------------------- | -------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hexLayer`          | Hex Layer            | `auto`               |          | `auto`, `foreground` or `objects`. Auto tries the foreground layer first.                                                                                             |
+| `fillColor`         | Fill Colour          | `#222222`            |          | Colour of new hexes. A colour with transparency makes see-through hexes.                                                                                              |
+| `strokeColor`       | Border Colour        | `#444444`            |          | Outline colour of new hexes.                                                                                                                                          |
+| `labelColor`        | Label Colour         | `#FFFFFF`            |          | Colour of GM-only name labels. In Jumpgate they only show over covered hexes when Hex Layer is `objects`.                                                             |
+| `glimpseColor`      | Glimpse Colour       | `rgba(34,34,34,0.5)` |          | Colour of glimpsed hexes. Use a colour with transparency.                                                                                                             |
+| `strokeWidth`       | Border Width         | `1`                  |          | Outline width in pixels (0–20).                                                                                                                                       |
+| `maxDistance`       | Hex Reveal Distance  | none                 |          | Stored on hexes as they are filled; they reveal only from within this many hexes. Set it before filling. See [Terrain That Blocks Sight](#terrain-that-blocks-sight). |
+| `revealDistance`    | Sight Distance       | `1`                  | ✓        | Hexes revealed around a moving token (0–20).                                                                                                                          |
+| `lineOfSight`       | Line of Sight        | `on`                 | ✓        | Hexes that stay covered hide the hexes behind them. Needs a Sight Distance of 2 or more.                                                                              |
+| `revealPath`        | Reveal Along Path    | `on`                 | ✓        | Reveal the whole route a token is dragged along.                                                                                                                      |
+| `revealBy`          | Tokens That Reveal   | `players`            | ✓        | `players`, `characters` or `all`.                                                                                                                                     |
+| `revealMode`        | Reveal Mode          | `clear`              | ✓        | `clear` or `glimpse`.                                                                                                                                                 |
+| `announce`          | Announce Discoveries | `all`                | ✓        | `all`, `gm` or `off`.                                                                                                                                                 |
+| `pingDiscoveries`   | Ping Discoveries     | `off`                | ✓        | Ping players to discovered locations.                                                                                                                                 |
+| `hideCoveredTokens` | Hide Covered Tokens  | `on`                 |          | Switch off player-visible names, bars and auras of tokens under covered hexes.                                                                                        |
+| `language`          | Language             | `en-US`              |          | One of 24 languages. `!hexploration set language` lists them.                                                                                                         |
 
-These configurations set properties for hexes as you are drawing them.
+**Hex Layer**, **Tokens That Reveal** and **Language** can also be set on the Mod's settings page in the API Scripts screen.
 
-#### Hex Color
+Games upgraded from version 1 keep their colours, border width and sight distance.
 
-This allows you to specify the color, border color, and label color of hexes.
+### Colours
 
-#### Border Width
+The colour settings accept:
 
-This sets the width of the border outlines on hexes.
+| Format              | Example                | Transparency                         |
+| ------------------- | ---------------------- | ------------------------------------ |
+| `#rrggbb` or `#rgb` | `#222222`              | None                                 |
+| `#rrggbbaa`         | `#22222280`            | The last pair, from `00` to `ff`     |
+| `rgb(r,g,b)`        | `rgb(34,34,34)`        | None                                 |
+| `rgba(r,g,b,a)`     | `rgba(34,34,34,0.5)`   | `a`, from `0` (clear) to `1` (solid) |
+| Colour names        | `black`, `transparent` | `transparent` only                   |
 
-#### Hex Reveal Distance
+The red, green and blue values run from 0 to 255 or 0% to 100%. An `rgb()` with a fourth value is read as `rgba()`.
 
-If this is set, then a character can only reveal the hexes being drawn if they
-are within the specified number of hexes away from them.
+Use a colour with transparency for **Glimpse Colour**, and for **Fill Colour** if you want see-through hexes. For example, `rgba(0,0,0,0.8)` and `#000000cc` are the same dark, mostly solid colour.
 
-E.g., if a hex is drawn while this config is set to 3, then a character must be
-within 3 hexes from it to reveal it. The hex will not be revealed if the
-character is 4 or more hexes away from it, even if the global reveal distance
-is set very high.
+Jumpgate ignores `rgb()` and `rgba()` colours on drawn shapes, so Hexploration converts the fill, border and glimpse colours of Jumpgate hexes to `#rrggbb` or `#rrggbbaa`. For example, `rgba(34,34,34,0.5)` is drawn as `#22222280`. The setting keeps the colour as you typed it, and Legacy games use it unchanged. Colour names cannot be converted, so in Jumpgate use a hex, `rgb()` or `rgba()` colour instead of a name.
 
-If this is not set, then the hex can be revealed from a theoretically infinite
-distance away (out to the line of sight distance).
+The swatch next to each colour on the settings card shows the colour with its transparency.
 
-### Global configs
+## Jumpgate and Legacy
 
-These configs apply globally throughout the use of this script.
+- Hexploration detects the engine and draws `pathv2` shapes in Jumpgate and `path` shapes in Legacy games. Shapes drawn in either editor can be filled.
+- With **Hex Layer** on `auto`, hexes go on the foreground layer, above tokens. If the game rejects that layer, the token layer is used instead and the GM is told.
+- Jumpgate draws regular hexes, which differ slightly from Legacy's. If hexes do not line up with a page's grid, snap a token to a hex centre, select it and run `!hexploration calibrate`. Select two tokens in neighbouring hexes of the same row (Hex V) or column (Hex H) to correct the hex size as well.
+- Name Hex labels sit on the GM layer, which Jumpgate draws below the foreground layer. With hexes on the foreground layer, the labels are hidden under them; set Hex Layer to `objects` to see them. Each name is still announced when its hex is revealed.
+- Copying a page or game gives its hexes new IDs. Run `!hexploration rescan` on the page to pick them up again, together with their name labels and location tokens.
 
-#### Line of Sight
+## API for Other Mods
 
-This is the global reveal distance. It specifies how far out (in units) hexes
-are revealed when a character token is moved.
+```js
+// Reveal around a token as if it had just moved there.
+// Pass its previous position to reveal along the route as well.
+Hexploration.revealAround(token, { left: oldLeft, top: oldTop });
+Hexploration.revealAround(tokenId);
+Hexploration.version; // "2.0.2"
+```
 
-## Help
+## Credits
 
-My scripts are provided 'as-is', without warranty of any kind, expressed or implied.
+Original Mod by [Ada Lindberg](https://app.roll20.net/users/46544/ada-l). Ada's art packs are on the [Roll20 Marketplace](https://marketplace.roll20.net/browse/publisher/165/ada-lindberg).
 
-That said, if you experience any issues while using this script,
-need help using it, or if you have a neat suggestion for a new feature,
-please shoot me a PM:
-https://app.roll20.net/users/46544/ada-l
+Version 2 maintained by [MidNiteShadow7](https://app.roll20.net/users/16506286/midniteshadow7) ([GitHub](https://github.com/steverobertsuk)).
 
-When messaging me about an issue, please be sure to include any error messages that
-appear in your API Console Log, any configurations you've got set up for the
-script in the VTT, and any options you've got set up for the script on your
-game's API Scripts page. The more information you provide me, the better the
-chances I'll be able to help.
+If you find a bug or have an idea, post in the Roll20 Mod forum or open an issue on GitHub, and include any messages from the API console log.
 
-## Show Support
+## License
 
-If you would like to show your appreciation and support for the work I do in writing,
-updating, maintaining, and providing tech support my API scripts,
-please consider buying one of my art packs from the Roll20 marketplace:
-
-https://marketplace.roll20.net/browse/publisher/165/ada-lindberg
+This script is licensed under the MIT License.
