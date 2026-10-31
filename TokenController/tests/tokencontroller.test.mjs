@@ -304,6 +304,108 @@ test('a Stop Marker can send a token back, and stops followers of a marked leade
   assertNoErrors(api);
 });
 
+/**
+ * Adds a dynamic lighting wall from (x, y1) to (x, y2) on the default page.
+ *
+ * @param {object} api Sandbox API.
+ * @param {number} x Wall x.
+ * @param {number} y1 Top.
+ * @param {number} y2 Bottom.
+ * @param {object} [attrs] Extra attributes.
+ * @returns {object} The wall.
+ */
+function addWall(api, x, y1, y2, attrs = {}) {
+  return api.add('pathv2', {
+    _pageid: 'page1',
+    layer: 'walls',
+    shape: 'pol',
+    points: JSON.stringify([
+      [0, 0],
+      [0, y2 - y1],
+    ]),
+    x,
+    y: (y1 + y2) / 2,
+    ...attrs,
+  });
+}
+
+test('walls stop patrols when the Walls setting is on, and routes can ignore them', () => {
+  const api = game();
+  addWall(api, 210, 0, 420);
+  const guard = api.token();
+  const ghost = api.token({ name: 'Ghost', top: 245 });
+  api.command('!tokencontroller add East R5');
+  api.command('!tokencontroller copy East Haunt');
+  api.command('!tokencontroller route Haunt walls off');
+  api.command('!tokencontroller set wallMode hold');
+  api.command('!tokencontroller start East', [guard]);
+  api.command('!tokencontroller start Haunt', [ghost]);
+  api.advance(8000);
+  assert.deepEqual(at(guard), [175, 105]);
+  assert.deepEqual(at(ghost), [385, 245]);
+
+  // Turning back walks the patrol to and fro on its own side of the wall.
+  api.command('!tokencontroller set wallMode turn');
+  api.advance(2000);
+  assert.deepEqual(at(guard), [105, 105]);
+  api.advance(2000);
+  assert.deepEqual(at(guard), [175, 105]);
+  api.advance(2000);
+  assert.deepEqual(at(guard), [105, 105]);
+  assertNoErrors(api);
+});
+
+test('closed doors block until they open; one-way walls follow their setting', () => {
+  const api = game();
+  const door = api.add('door', {
+    _pageid: 'page1',
+    x: 210,
+    y: -105,
+    isOpen: false,
+    path: { handle0: { x: 0, y: 70 }, handle1: { x: 0, y: -70 } },
+  });
+  addWall(api, 280, 210, 280, { barrierType: 'oneWay' });
+  const guard = api.token();
+  const scout = api.token({ name: 'Scout', top: 245 });
+  api.command('!tokencontroller set wallMode hold');
+  api.command('!tokencontroller set oneWayWalls pass');
+  api.command('!tokencontroller add East R5');
+  api.command('!tokencontroller start East', [guard, scout]);
+  api.advance(4000);
+  assert.deepEqual(at(guard), [175, 105]);
+  assert.deepEqual(at(scout), [245, 245]);
+  api.edit(door, { isOpen: true });
+  api.advance(2000);
+  assert.deepEqual(at(guard), [245, 105]);
+  api.advance(2000);
+  assert.deepEqual(at(scout), [385, 245]);
+  assertNoErrors(api);
+});
+
+test('Legacy walls drawn as paths stop followers too', () => {
+  const api = game({ jumpgate: false });
+  api.add('path', {
+    _pageid: 'page1',
+    layer: 'walls',
+    _path: JSON.stringify([
+      ['M', 0, 0],
+      ['L', 0, 420],
+    ]),
+    left: 280,
+    top: 210,
+    width: 0,
+    height: 420,
+  });
+  const leader = api.token({ name: 'Captain', left: 245 });
+  const dog = api.token({ name: 'Dog', left: 175 });
+  api.command('!tokencontroller set wallMode hold');
+  api.command('!tokencontroller set followMode formation');
+  api.command('!tokencontroller follow Captain', [dog]);
+  api.drag(leader, 385, 105);
+  assert.deepEqual(at(dog), [175, 105]);
+  assertNoErrors(api);
+});
+
 test('followers walk single file behind a patrolling leader', () => {
   const api = game();
   const leader = api.token({ name: 'Captain', left: 245 });

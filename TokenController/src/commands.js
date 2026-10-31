@@ -34,6 +34,9 @@ import {
   ROUTE_MODE_OPTIONS,
   SCRIPT_NAME,
   SCRIPT_VERSION,
+  WALL_CHECK_OPTIONS,
+  WALL_MODE_OPTIONS,
+  WALL_PASS_OPTIONS,
 } from './constants.js';
 import { getPageContext, pageGridOptions } from './context.js';
 import { drawingWaypoints } from './drawings.js';
@@ -78,6 +81,7 @@ import {
   validateRouteOption,
 } from './state.js';
 import {
+  drawingProps,
   escapeHtml,
   getPlayerPageId,
   isToken,
@@ -100,6 +104,10 @@ const SETTING_ROWS = [
   { key: 'manualMove', options: MANUAL_MOVE_OPTIONS },
   { key: 'stopMarkers' },
   { key: 'markerAction', options: MARKER_ACTION_OPTIONS },
+  { key: 'wallMode', options: WALL_MODE_OPTIONS },
+  { key: 'wallCheck', options: WALL_CHECK_OPTIONS },
+  { key: 'oneWayWalls', options: WALL_PASS_OPTIONS },
+  { key: 'transparentWalls', options: WALL_PASS_OPTIONS },
   { key: 'buttonStep' },
   { key: 'language' },
 ];
@@ -578,6 +586,15 @@ function showRoute(playerId, route) {
       )
     ),
     buildRow(
+      tr('route.walls'),
+      buildSecondaryButton(
+        route.walls
+          ? tr(`values.wallMode.${route.walls}`)
+          : `${tr('values.default')} (${tr(`values.wallMode.${getConfig().wallMode}`)})`,
+        cmd(`route ${ref} walls ${query(tr('route.walls'), ['default', ...WALL_MODE_OPTIONS])}`)
+      )
+    ),
+    buildRow(
       tr('route.start'),
       route.start
         ? buildSecondaryButton(tr('buttons.clearStart'), cmd(`route ${ref} start clear`))
@@ -831,22 +848,7 @@ function commandDraw(msg, words) {
   const drawing = drawings[0];
   const pageId = drawing.get('_pageid');
   const page = getObj('page', pageId);
-  const props = {
-    type: drawing.get('_type'),
-    _path: drawing.get('_path') ?? drawing.get('path'),
-    points: drawing.get('points'),
-    shape: drawing.get('shape'),
-    x: drawing.get('x'),
-    y: drawing.get('y'),
-    left: drawing.get('left'),
-    top: drawing.get('top'),
-    width: drawing.get('width'),
-    height: drawing.get('height'),
-    scaleX: drawing.get('scaleX'),
-    scaleY: drawing.get('scaleY'),
-    rotation: drawing.get('rotation'),
-  };
-  const result = drawingWaypoints(props, {
+  const result = drawingWaypoints(drawingProps(drawing), {
     width: page?.get('width'),
     height: page?.get('height'),
   });
@@ -888,6 +890,7 @@ function commandRouteOption(msg, words) {
     maxtokens: 'maxTokens',
     random: 'randomStart',
     randomstart: 'randomStart',
+    walls: 'walls',
     start: 'start',
   };
   const key = aliases[option];

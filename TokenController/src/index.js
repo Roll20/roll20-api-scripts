@@ -26,6 +26,7 @@ import {
   initialiseState,
 } from './state.js';
 import { escapeHtml, isJumpgate, isToken } from './utils.js';
+import { clearWallCache, isBarrier } from './walls.js';
 
 let ready = false;
 
@@ -214,6 +215,17 @@ function registerEventHandlers() {
     guarded('destroy:graphic', (obj) => forgetToken(obj.id))
   );
   on('change:page', guarded('change:page', clearTrackCache));
+  // Walls, doors and windows are read once per page and read again when one changes.
+  const wallChanged = (obj, prev) => {
+    if (isBarrier(obj, prev)) {
+      clearWallCache();
+    }
+  };
+  for (const type of ['path', 'pathv2', 'door', 'window']) {
+    for (const event of ['add', 'change', 'destroy']) {
+      on(`${event}:${type}`, guarded(`${event}:${type}`, wallChanged));
+    }
+  }
   on(
     'change:campaign:turnorder',
     guarded('change:campaign:turnorder', (campaign) => handleTurnOrderChange(campaign))

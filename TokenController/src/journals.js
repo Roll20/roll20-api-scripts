@@ -145,7 +145,7 @@ export function buildHelpHtml(locale) {
     ['S', 'stealth'],
   ].map(([c, key]) => [code(c), escapeHtml(t(`handout.codes.${key}`, lang))]);
 
-  const routeOptions = ['mode', 'interval', 'max', 'random', 'start'].map((key) => [
+  const routeOptions = ['mode', 'interval', 'max', 'random', 'walls', 'start'].map((key) => [
     code(key),
     escapeHtml(t(`handout.routeOptions.${key}`, lang)),
   ]);

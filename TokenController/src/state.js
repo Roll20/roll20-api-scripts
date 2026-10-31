@@ -22,6 +22,9 @@ import {
   SCRIPT_VERSION,
   STATE_KEY,
   USEROPTION_KEYS,
+  WALL_CHECK_OPTIONS,
+  WALL_MODE_OPTIONS,
+  WALL_PASS_OPTIONS,
 } from './constants.js';
 import { normalizeLocale } from './i18n.js';
 import { parseCode, stepsReturnToStart } from './routes.js';
@@ -101,6 +104,13 @@ export function validateConfigValue(key, raw) {
     }
     case 'markerAction':
       return option(MARKER_ACTION_OPTIONS);
+    case 'wallMode':
+      return option(WALL_MODE_OPTIONS);
+    case 'wallCheck':
+      return option(WALL_CHECK_OPTIONS);
+    case 'oneWayWalls':
+    case 'transparentWalls':
+      return option(WALL_PASS_OPTIONS);
     case 'buttonStep': {
       const n = typeof raw === 'number' ? Math.trunc(raw) : parseStrictInt(raw);
       return n === null || n < 1 ? bad : ok(clamp(n, 1, MAX_BUTTON_STEP));
@@ -145,7 +155,7 @@ export function cleanName(raw) {
 /**
  * Validates one route option.
  *
- * @param {string} key Option: mode, interval, maxTokens or randomStart.
+ * @param {string} key Option: mode, interval, maxTokens, randomStart or walls.
  * @param {*} raw Raw value.
  * @returns {{valid: boolean, value?: *}} Result.
  */
@@ -175,6 +185,15 @@ export function validateRouteOption(key, raw) {
       const b = parseBoolean(raw);
       return b === null ? { valid: false } : { valid: true, value: b };
     }
+    case 'walls':
+      // Empty or "default" follows the Walls setting; "off" means walk through.
+      if (['', 'default', '-'].includes(text)) {
+        return { valid: true, value: null };
+      }
+      if (['off', 'none', '0'].includes(text)) {
+        return { valid: true, value: 'ignore' };
+      }
+      return WALL_MODE_OPTIONS.includes(text) ? { valid: true, value: text } : { valid: false };
     default:
       return { valid: false };
   }
@@ -244,6 +263,7 @@ export function normaliseRoute(raw) {
     interval: validateRouteOption('interval', raw.interval ?? '').value ?? null,
     maxTokens: validateRouteOption('maxTokens', raw.maxTokens ?? '').value ?? null,
     randomStart: raw.randomStart === true,
+    walls: validateRouteOption('walls', raw.walls ?? '').value ?? null,
     start: normaliseStart(raw.start),
   };
   if (route.kind === ROUTE_KIND_CODE) {

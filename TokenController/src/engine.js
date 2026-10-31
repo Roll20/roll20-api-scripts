@@ -36,6 +36,7 @@ import {
   tokenLabel,
   toText,
 } from './utils.js';
+import { blockingWall, bodyRadius, getWalls } from './walls.js';
 
 // In-memory caches, rebuilt on demand: compiled tracks per token and the
 // recent positions of every leader (for trail following).
@@ -355,6 +356,51 @@ export function resetPatrol(tokenId) {
 }
 
 /**
+ * Returns true when a frame's position is on the page.
+ *
+ * @param {object} frame Track frame.
+ * @param {object} ctx Page context.
+ * @returns {boolean} True when on the page.
+ */
+function onPage(frame, ctx) {
+  return frame.x >= 0 && frame.y >= 0 && frame.x <= ctx.widthPx && frame.y <= ctx.heightPx;
+}
+
+/**
+ * Returns how a route treats walls: its own Walls option, or the setting.
+ *
+ * @param {object} route Route record.
+ * @returns {string} ignore, hold or turn.
+ */
+function wallModeFor(route) {
+  return route.walls || getConfig().wallMode;
+}
+
+/**
+ * Returns true when a wall, or a closed door or window, stands between a
+ * token and where it would move to. Frames that do not move the token (waits,
+ * turns, stealth) and frames off the page are never blocked.
+ *
+ * @param {object} token Roll20 graphic.
+ * @param {object} frame Track frame, or { x, y }.
+ * @param {object} ctx Page context.
+ * @returns {boolean} True when blocked.
+ */
+export function moveIsBlocked(token, frame, ctx) {
+  if (!frame || frame.wait || frame.stealth || frame.face !== undefined || !onPage(frame, ctx)) {
+    return false;
+  }
+  const config = getConfig();
+  const walls = getWalls(token.get('_pageid'), config);
+  if (walls.length === 0) {
+    return false;
+  }
+  const radius =
+    config.wallCheck === 'width' ? bodyRadius(token.get('width'), token.get('height')) : 0;
+  return Boolean(blockingWall(walls, positionOf(token), [frame.x, frame.y], radius));
+}
+
+/**
  * Moves one patrol to its next frame.
  *
  * @param {string} tokenId Token ID.
@@ -390,13 +436,28 @@ function advancePatrol(tokenId, patrol) {
     return;
   }
 
-  const step = nextFrame(
-    frames,
-    Math.min(patrol.index, frames.length - 1),
-    patrol.dir,
-    route.mode,
-    getConfig().movement === 'segment'
-  );
+  const mode = wallModeFor(route);
+  const segment = getConfig().movement === 'segment';
+  const index = Math.min(patrol.index, frames.length - 1);
+  if (route.mode === 'once' && patrol.dir < 0 && index <= 0) {
+    // A run-once patrol that turned back at a wall is home again.
+    delete s.patrols[tokenId];
+    return;
+  }
+
+  let step = nextFrame(frames, index, patrol.dir, route.mode, segment);
+  if (mode !== 'ignore' && moveIsBlocked(token, frames[step.index], ctx)) {
+    if (mode === 'hold') {
+      // Wait for the way to clear, for example for a door to open.
+      return;
+    }
+    // Turn back, and take the first step back now if that way is clear.
+    patrol.dir = -patrol.dir;
+    step = nextFrame(frames, index, patrol.dir, route.mode, segment);
+    if (moveIsBlocked(token, frames[step.index], ctx)) {
+      return;
+    }
+  }
   patrol.index = step.index;
   patrol.dir = step.dir;
   const target = frames[step.index];
@@ -408,14 +469,10 @@ function advancePatrol(tokenId, patrol) {
     if (facing !== 'off') {
       token.set('rotation', rotationFor(target.face, facing));
     }
-  } else if (!target.wait) {
+  } else if (!target.wait && onPage(target, ctx)) {
     // Frames off the page are skipped; the patrol keeps its place on the track
     // and rejoins it when the route comes back on to the page.
-    const onPage =
-      target.x >= 0 && target.y >= 0 && target.x <= ctx.widthPx && target.y <= ctx.heightPx;
-    if (onPage) {
-      moveTokenTo(token, [target.x, target.y]);
-    }
+    moveTokenTo(token, [target.x, target.y]);
   }
 
   if (step.finished) {
@@ -865,9 +922,15 @@ function moveFollowers(leader, visited) {
       const y = ly + follow.offset[1];
       target = grid ? snapToCell(grid, x, y) : [x, y];
     }
-    if (target) {
-      moveTokenTo(follower, target, visited);
+    if (!target) {
+      return;
     }
+    const ctx = getConfig().wallMode === 'ignore' ? null : getPageContext(leader.get('_pageid'));
+    // Followers wait rather than walk through walls, when walls are on.
+    if (ctx && moveIsBlocked(follower, { x: target[0], y: target[1] }, ctx)) {
+      return;
+    }
+    moveTokenTo(follower, target, visited);
   });
 }
 

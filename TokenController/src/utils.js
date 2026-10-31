@@ -200,6 +200,31 @@ export function setMarker(token, marker, on) {
 }
 
 /**
+ * Reads the properties of a drawing (Legacy `path` or Jumpgate `pathv2`)
+ * that the drawing geometry needs.
+ *
+ * @param {object} drawing Roll20 path or pathv2.
+ * @returns {object} Plain properties.
+ */
+export function drawingProps(drawing) {
+  return {
+    type: drawing.get('_type'),
+    _path: drawing.get('_path') ?? drawing.get('path'),
+    points: drawing.get('points'),
+    shape: drawing.get('shape'),
+    x: drawing.get('x'),
+    y: drawing.get('y'),
+    left: drawing.get('left'),
+    top: drawing.get('top'),
+    width: drawing.get('width'),
+    height: drawing.get('height'),
+    scaleX: drawing.get('scaleX'),
+    scaleY: drawing.get('scaleY'),
+    rotation: drawing.get('rotation'),
+  };
+}
+
+/**
  * Parses a list of status marker names separated by semicolons, commas or
  * spaces ("dead;red"). `none`, `off` and `-` mean an empty list.
  *

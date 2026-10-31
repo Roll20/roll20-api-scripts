@@ -204,11 +204,11 @@ export function createSandbox({
       fire('change:graphic', token, prev);
       api.flush();
     },
-    // A change made by a person in the Roll20 UI, which raises change:graphic.
-    edit(token, attrs) {
-      const prev = { ...token.attrs };
-      Object.assign(token.attrs, attrs);
-      fire('change:graphic', token, prev);
+    // A change made by a person in the Roll20 UI, which raises a change event.
+    edit(obj, attrs) {
+      const prev = { ...obj.attrs };
+      Object.assign(obj.attrs, attrs);
+      fire(`change:${obj.attrs._type}`, obj, prev);
       api.flush();
     },
     setTurnOrder(entries, open = true) {

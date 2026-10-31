@@ -66,6 +66,9 @@ export const LOCK_MODE_OPTIONS = ['native', 'revert', 'freeze'];
 export const FOLLOW_MODE_OPTIONS = ['trail', 'formation'];
 export const MANUAL_MOVE_OPTIONS = ['continue', 'stop'];
 export const MARKER_ACTION_OPTIONS = ['stop', 'reset'];
+export const WALL_MODE_OPTIONS = ['ignore', 'hold', 'turn'];
+export const WALL_CHECK_OPTIONS = ['centre', 'width'];
+export const WALL_PASS_OPTIONS = ['block', 'pass'];
 
 // Default configuration for new installs. Upgraded v4 games keep their own values.
 export const DEFAULT_CONFIG = {
@@ -81,6 +84,10 @@ export const DEFAULT_CONFIG = {
   manualMove: 'continue',
   stopMarkers: 'none',
   markerAction: 'stop',
+  wallMode: 'ignore',
+  wallCheck: 'centre',
+  oneWayWalls: 'block',
+  transparentWalls: 'block',
   buttonStep: 1,
 };
 

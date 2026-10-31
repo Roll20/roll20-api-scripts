@@ -107,7 +107,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Draw the route with a drawing tool, select it (drag a box around a thin outline if clicking misses it), then try again.',
-    usageRoute: 'Options: mode, interval, max, random, start.',
+    usageRoute: 'Options: mode, interval, max, random, walls, start.',
     routeOnOtherPage: 'Drawn routes only work on the page they were drawn on.',
     startOnOtherPage: 'Clear the fixed start, or move the token to that page first.',
     noLeader: 'Select the leader and click Leader, or give its name: !tokencontroller follow Name',
@@ -190,6 +190,23 @@ const TRANSLATION = {
       stop: 'Stop where it is',
       reset: 'Go back to the start',
     },
+    wallMode: {
+      ignore: 'Walk through walls',
+      hold: 'Wait at walls',
+      turn: 'Turn back at walls',
+    },
+    wallCheck: {
+      centre: 'Centre of the token',
+      width: 'Whole token',
+    },
+    oneWayWalls: {
+      block: 'Block',
+      pass: 'Let through',
+    },
+    transparentWalls: {
+      block: 'Block',
+      pass: 'Let through',
+    },
   },
   menu: {
     statusRunning: 'Patrolling tokens: {patrols}. Routes: {routes}.',
@@ -262,6 +279,7 @@ const TRANSLATION = {
     interval: 'Interval',
     maxTokens: 'Most tokens',
     randomStart: 'Random start',
+    walls: 'Walls',
     start: 'Fixed start',
     tokens: 'Tokens',
   },
@@ -315,6 +333,22 @@ const TRANSLATION = {
       label: 'Stop Marker Action',
       desc: 'What a patrolling token does when it gets a Stop Marker: stop (it stays where it is) or reset (it goes back to where it started).',
     },
+    wallMode: {
+      label: 'Walls',
+      desc: 'What patrols and followers do at dynamic lighting walls and closed doors and windows: ignore (walk through), hold (wait until the way is clear, for example until a door opens) or turn (patrols turn back). Each route can choose its own, so ghosts can still walk through walls.',
+    },
+    wallCheck: {
+      label: 'Wall Check',
+      desc: 'centre: only the middle of a token has to stay clear of walls. width: the whole token does, so a large token cannot squeeze through a narrow gap.',
+    },
+    oneWayWalls: {
+      label: 'One-Way Walls',
+      desc: 'Whether one-way walls stop tokens (block) or not (pass).',
+    },
+    transparentWalls: {
+      label: 'See-Through Walls',
+      desc: 'Whether transparent walls, which let light through, stop tokens (block) or not (pass).',
+    },
     buttonStep: {
       label: 'Cells per Click',
       desc: 'How far the recording arrows move a token.',
@@ -351,7 +385,7 @@ const TRANSLATION = {
     edit: "Change a route's step code.",
     draw: 'Create a route that follows the selected drawing on this page.',
     record: 'Record a route by moving the selected token with buttons or by dragging it.',
-    route: 'Change a route option: mode, interval, max, random or start.',
+    route: 'Change a route option: mode, interval, max, random, walls or start.',
     show: "Show a route's details and buttons.",
     rename: 'Rename a route.',
     copy: 'Copy a route under a new name.',
@@ -414,6 +448,8 @@ const TRANSLATION = {
       interval: 'Milliseconds per step for this route, or 0 for the global interval.',
       max: 'The most tokens that can be on the route at once, or 0 for no limit.',
       random: 'on: each token starts at a random point along the route.',
+      walls:
+        'ignore (walk through walls), hold (wait at walls and closed doors), turn (turn back) or default (use the Walls setting).',
       start:
         "set: tokens jump to the selected token's position when they start. clear: they start where they stand.",
     },
@@ -426,6 +462,7 @@ const TRANSLATION = {
         "Follow: select the leader and click Leader, then select the followers and click Follow. You can also type the leader's name: !tokencontroller follow Goblin Boss. Followers follow tokens that patrol, tokens you drag and tokens moved by TokenMod.",
         'Followers can follow other followers, making a chain or a column.',
         'Dragging a patrolling token carries the patrol on from where you drop it, unless Dragging a Patrol is set to stop.',
+        'Walls: with the Walls setting on, patrols and followers do not walk through dynamic lighting walls or closed doors and windows; open doors and windows let them through. Give a route its own walls option (for example ignore for a ghost).',
         'Stop Markers: a token that gets one of these status markers (for example dead) leaves its route and stops following, and the followers of a leader that gets one stop too. Set them with !tokencontroller set stopMarkers dead;red. This also works when another Mod adds the marker.',
       ],
     },
