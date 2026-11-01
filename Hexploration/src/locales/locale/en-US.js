@@ -285,6 +285,7 @@ export default {
       heading: 'Commands',
       intro:
         'Only GMs can use these commands. Most act on the selected objects; the rest act on the page you are viewing.',
+      mods: 'Other mods, such as ScriptCards, can send these commands too. Their replies are whispered to the GM.',
       colCommand: 'Command',
       colDesc: 'What it does',
     },
