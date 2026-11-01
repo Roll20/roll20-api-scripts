@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Miten teksti luetaan',
     who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
     players: 'Pelaajien nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
+    fields: 'Pohjan kentät, esim. subcategory=Attack && title~sword - tyhjä = mikä tahansa',
     results: 'Heiton tulos',
     total: 'Heiton summa, esim. 15 tai 19-20 - katso Ohje-moniste - tyhjä = mikä tahansa',
     natural: 'Nopan luonnollinen tulos, esim. 20 tai 1-2 - tyhjä = mikä tahansa',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Teksti on',
     who: 'Puhujat / hahmot',
     players: 'Pelaajat',
+    fields: 'Pohjan kentät',
     results: 'Heiton tulos',
     total: 'Heiton summa',
     natural: 'Luonnollinen noppa',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'heittopohja ei täsmää',
       who: 'puhuja tai hahmo ei täsmää',
       player: 'pelaaja ei täsmää',
+      field: 'pohjan kenttä ei täsmää',
       text: 'tekstiä ei löytynyt',
       roll: 'mikään heitto ei täytä heittoehtoja',
     },
@@ -181,6 +184,8 @@ const TRANSLATION = {
     badType: 'Tuntemattomat viestityypit: {value}.',
     badRegex: 'Säännöllinen lauseke ”{term}” ei kelpaa: {error}',
     tooManyTerms: 'Kuuntelija voi etsiä enintään {max} tekstinpätkää.',
+    badField: 'Pohjan kentän ehtoa ”{term}” ei voi lukea.',
+    tooManyFields: 'Kuuntelija voi tarkistaa enintään {max} pohjan kenttää.',
     badResult: 'Tuntemattomat heiton tulokset: {value}.',
     badComparison: 'Arvo ”{value}” ei kelpaa valitsimelle --{option}.',
     badDice: 'Arvo ”{value}” ei kelpaa valitsimelle --dice.',
@@ -194,11 +199,13 @@ const TRANSLATION = {
     gmOnly: 'Pyydä pelinjohtajaa määrittämään kuuntelijat puolestasi.',
     unknownCommand: 'Kirjoita !crl help nähdäksesi kaikki komennot.',
     badOption:
-      'Valitsimet ovat --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
+      'Valitsimet ovat --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
     notFound: 'Kirjoita !crl nähdäksesi kuuntelijoiden luettelon.',
     nameInvalid:
       'Käytä enintään {max} merkkiä ilman näitä: | { } [ ] \\ @ % # ? ~ tai "--", äläkä aloita merkillä "-".',
     badOnOff: 'Käytä on tai off.',
+    badField:
+      'Käytä kentän nimeä, sitten = (on), != (ei ole), ~ (sisältää) tai !~ (ei sisällä), sitten arvoa, esim. subcategory=Attack. Tutki näyttää heiton kentät.',
     badType: 'Viestityypit ovat: {types}.',
     badResult: 'Käytä crit, fumble, success tai fail.',
     badComparison: 'Käytä lukua, vertailua kuten >=15 tai <3, tai väliä kuten 19-20.',
@@ -228,7 +235,7 @@ const TRANSLATION = {
     help: 'Näytä tämä luettelo.',
     optionsTitle: 'Valitsimet',
     options:
-      'Valitsimet: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
+      'Valitsimet: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
     placeholders:
       'Komennoissa voi käyttää muuttujia ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ja ${field:name}.',
     handouts: 'Moniste ”{help}” selittää kaiken; monisteessa ”{deck}” on painikkeet.',
@@ -291,6 +298,7 @@ const TRANSLATION = {
         '## tekstissä tarkoittaa rivin sisäistä heittoa; heittotarkistukset katsovat silloin vain siitä löytyviä heittoja. Ilman ##-merkkiä tarkistetaan viestin jokainen heitto.',
         'Teksti voi olla tavallisen tekstin sijaan säännöllinen lauseke (--regex on).',
         'Puhujat / hahmot: chatissa näkyvä nimi tai heittopohjan hahmon nimi. Pelaajat: pelaajan näyttönimi.',
+        'Pohjan kentät: ehdot kentille, jotka Tutki listaa, esim. subcategory=Attack tai title~sword, &&-merkein eroteltuina. = ja != vertaavat koko arvoa, ~ ja !~ etsivät siitä tekstiä, eikä isoilla ja pienillä kirjaimilla ole väliä. Puuttuva kenttä lasketaan tyhjäksi. Käytä tätä --text-asetuksen sijaan, kun tarkoitat yhtä kenttää, sillä --text etsii myös Beacon-kortin piilotetusta HTML:stä.',
       ],
     },
     templates: {
@@ -341,6 +349,8 @@ const TRANSLATION = {
       regex: 'on lukee tekstin säännöllisinä lausekkeina, off tavallisena tekstinä.',
       who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina.',
       players: 'Pelaajien näyttönimet pilkuin eroteltuina.',
+      fields:
+        'Pohjan kenttien ehdot &&-merkein eroteltuina: name=value (on), name!=value (ei ole), name~text (sisältää), name!~text (ei sisällä). Asetuksella --regex on ~ lukee säännöllisen lausekkeen.',
       results: 'crit, fumble, success ja/tai fail.',
       total: 'Heiton summa: 15, >=15, <5 tai 19-20.',
       natural: 'Nopan luonnollinen silmäluku: 20, <=2 tai 19-20.',

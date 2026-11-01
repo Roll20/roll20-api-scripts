@@ -51,6 +51,8 @@ const TRANSLATION = {
     regex: 'Come leggere il testo',
     who: 'Nomi di mittenti o personaggi separati da virgole - vuoto per chiunque',
     players: 'Nomi dei giocatori separati da virgole - vuoto per chiunque',
+    fields:
+      'Campi del template, ad esempio subcategory=Attack && title~sword - vuoto per qualsiasi',
     results: 'Risultato del tiro',
     total: 'Totale del tiro, ad esempio 15 o 19-20 - vedi la dispensa Help - vuoto per qualsiasi',
     natural: 'Risultato naturale del dado, ad esempio 20 o 1-2 - vuoto per qualsiasi',
@@ -92,6 +94,7 @@ const TRANSLATION = {
     regex: 'Il testo è',
     who: 'Mittenti / personaggi',
     players: 'Giocatori',
+    fields: 'Campi del template',
     results: 'Risultato del tiro',
     total: 'Totale del tiro',
     natural: 'Dado naturale',
@@ -144,6 +147,7 @@ const TRANSLATION = {
       template: 'il template di tiro non corrisponde',
       who: 'mittente o personaggio non corrisponde',
       player: 'il giocatore non corrisponde',
+      field: 'il campo del template non corrisponde',
       text: 'testo non trovato',
       roll: 'nessun tiro soddisfa le condizioni sui tiri',
     },
@@ -181,6 +185,8 @@ const TRANSLATION = {
     badType: 'Tipi di messaggio sconosciuti: {value}.',
     badRegex: 'L\'espressione regolare "{term}" non è valida: {error}',
     tooManyTerms: 'Un listener può cercare al massimo {max} frammenti di testo.',
+    badField: 'La condizione sul campo del template "{term}" non può essere letta.',
+    tooManyFields: 'Un listener può controllare al massimo {max} campi del template.',
     badResult: 'Risultati del tiro sconosciuti: {value}.',
     badComparison: 'Il valore "{value}" non è valido per --{option}.',
     badDice: 'Il valore "{value}" non è valido per --dice.',
@@ -194,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Chiedi al tuo GM di configurare i listener per te.',
     unknownCommand: 'Digita !crl help per vedere tutti i comandi.',
     badOption:
-      'Le opzioni sono --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+      'Le opzioni sono --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
     notFound: "Digita !crl per vedere l'elenco dei listener.",
     nameInvalid:
       'Usa al massimo {max} caratteri, senza questi: | { } [ ] \\ @ % # ? ~ o "--", e non iniziare con "-".',
     badOnOff: 'Usa on o off.',
+    badField:
+      'Usa un nome di campo, poi = (è), != (non è), ~ (contiene) o !~ (non contiene), poi il valore, ad esempio subcategory=Attack. Ispeziona mostra i campi di un tiro.',
     badType: 'I tipi di messaggio sono: {types}.',
     badResult: 'Usa crit, fumble, success o fail.',
     badComparison: 'Usa un numero, un confronto come >=15 o <3, o un intervallo come 19-20.',
@@ -227,7 +235,7 @@ const TRANSLATION = {
     help: 'Mostra questo elenco.',
     optionsTitle: 'Opzioni',
     options:
-      'Opzioni: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
+      'Opzioni: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
     placeholders:
       'I comandi possono usare ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
     handouts: 'La dispensa "{help}" spiega tutto; la dispensa "{deck}" ha i pulsanti.',
@@ -291,6 +299,7 @@ const TRANSLATION = {
         '## nel testo indica un tiro inline; i controlli sui tiri esaminano allora solo i tiri trovati lì. Senza ##, viene controllato ogni tiro del messaggio.',
         "Il testo può essere un'espressione regolare invece di testo semplice (--regex on).",
         'Mittenti / personaggi: il nome mostrato in chat o il nome del personaggio nel template di tiro. Giocatori: il nome visualizzato del giocatore.',
+        "Campi del template: condizioni sui campi elencati da Ispeziona, ad esempio subcategory=Attack o title~sword, separate da &&. = e != confrontano l'intero valore, ~ e !~ cercano del testo al suo interno, e maiuscole e minuscole sono ignorate. Un campo mancante conta come vuoto. Usalo al posto di --text quando intendi un solo campo, perché --text cerca anche nell'HTML nascosto di una scheda Beacon.",
       ],
     },
     templates: {
@@ -341,6 +350,8 @@ const TRANSLATION = {
       regex: 'on per leggere il testo come espressioni regolari, off per testo semplice.',
       who: 'Nomi di mittenti o personaggi, separati da virgole.',
       players: 'Nomi visualizzati dei giocatori, separati da virgole.',
+      fields:
+        "Condizioni sui campi del template, separate da &&: name=value (è), name!=value (non è), name~text (contiene), name!~text (non contiene). Con --regex on, ~ legge un'espressione regolare.",
       results: 'crit, fumble, success e/o fail.',
       total: 'Totale del tiro: 15, >=15, <5 o 19-20.',
       natural: 'Faccia del dado naturale: 20, <=2 o 19-20.',

@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Jak číst text',
     who: 'Jména mluvčích nebo postav oddělená čárkami – prázdné pro kohokoli',
     players: 'Jména hráčů oddělená čárkami – prázdné pro kohokoli',
+    fields: 'Pole šablony, např. subcategory=Attack && title~sword – prázdné pro jakákoli',
     results: 'Výsledek hodu',
     total: 'Součet hodu, např. 15 nebo 19-20 – viz podklad Nápověda – prázdné pro jakýkoli',
     natural: 'Přirozený výsledek kostky, např. 20 nebo 1-2 – prázdné pro jakýkoli',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Text je',
     who: 'Mluvčí / postavy',
     players: 'Hráči',
+    fields: 'Pole šablony',
     results: 'Výsledek hodu',
     total: 'Součet hodu',
     natural: 'Přirozená kostka',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'šablona hodu neodpovídá',
       who: 'mluvčí nebo postava neodpovídá',
       player: 'hráč neodpovídá',
+      field: 'pole šablony neodpovídá',
       text: 'text nenalezen',
       roll: 'žádný hod nesplňuje podmínky hodu',
     },
@@ -180,6 +183,8 @@ const TRANSLATION = {
     badType: 'Neznámé typy zpráv: {value}.',
     badRegex: 'Regulární výraz „{term}“ není platný: {error}',
     tooManyTerms: 'Posluchač může hledat nejvýše {max} částí textu.',
+    badField: 'Podmínku pole šablony „{term}“ nelze přečíst.',
+    tooManyFields: 'Posluchač může kontrolovat nejvýše {max} polí šablony.',
     badResult: 'Neznámé výsledky hodu: {value}.',
     badComparison: 'Hodnota „{value}“ není platná pro --{option}.',
     badDice: 'Hodnota „{value}“ není platná pro --dice.',
@@ -193,11 +198,13 @@ const TRANSLATION = {
     gmOnly: 'Požádejte svého GM, aby vám posluchače nastavil.',
     unknownCommand: 'Napište !crl help a uvidíte všechny příkazy.',
     badOption:
-      'Volby jsou --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
+      'Volby jsou --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
     notFound: 'Napište !crl a uvidíte seznam posluchačů.',
     nameInvalid:
       'Použijte nejvýše {max} znaků, bez těchto: | { } [ ] \\ @ % # ? ~ ani "--", a nezačínejte znakem "-".',
     badOnOff: 'Použijte on nebo off.',
+    badField:
+      'Použijte název pole, pak = (je), != (není), ~ (obsahuje) nebo !~ (neobsahuje), pak hodnotu, např. subcategory=Attack. Prozkoumat ukáže pole hodu.',
     badType: 'Typy zpráv jsou: {types}.',
     badResult: 'Použijte crit, fumble, success nebo fail.',
     badComparison: 'Použijte číslo, porovnání jako >=15 nebo <3, nebo rozsah jako 19-20.',
@@ -226,7 +233,7 @@ const TRANSLATION = {
     help: 'Zobrazit tento seznam.',
     optionsTitle: 'Volby',
     options:
-      'Volby: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
+      'Volby: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
     placeholders:
       'Příkazy mohou používat ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} a ${field:name}.',
     handouts: 'Podklad „{help}“ vše vysvětluje; podklad „{deck}“ obsahuje tlačítka.',
@@ -290,6 +297,7 @@ const TRANSLATION = {
         '## v textu zastupuje inline hod; kontroly hodu pak sledují jen hody nalezené na tomto místě. Bez ## se kontroluje každý hod ve zprávě.',
         'Text může být místo prostého textu regulární výraz (--regex on).',
         'Mluvčí / postavy: jméno zobrazené v chatu, nebo jméno postavy v šabloně hodu. Hráči: zobrazované jméno hráče.',
+        'Pole šablony: podmínky na pole, která vypíše Prozkoumat, např. subcategory=Attack nebo title~sword, oddělené &&. = a != porovnávají celou hodnotu, ~ a !~ v ní hledají text a velikost písmen se nerozlišuje. Chybějící pole se počítá jako prázdné. Použijte je místo --text, když myslíte jedno pole, protože --text prohledává i skryté HTML karty Beacon.',
       ],
     },
     templates: {
@@ -339,6 +347,8 @@ const TRANSLATION = {
       regex: 'on pro čtení textu jako regulárních výrazů, off pro prostý text.',
       who: 'Jména mluvčích nebo postav oddělená čárkami.',
       players: 'Zobrazovaná jména hráčů oddělená čárkami.',
+      fields:
+        'Podmínky polí šablony oddělené &&: name=value (je), name!=value (není), name~text (obsahuje), name!~text (neobsahuje). Při --regex on čte ~ regulární výraz.',
       results: 'crit, fumble, success a/nebo fail.',
       total: 'Součet hodu: 15, >=15, <5 nebo 19-20.',
       natural: 'Stěna přirozené kostky: 20, <=2 nebo 19-20.',

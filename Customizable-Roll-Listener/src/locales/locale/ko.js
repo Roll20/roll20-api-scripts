@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: '텍스트 해석 방식',
     who: '발언자 또는 캐릭터 이름(쉼표로 구분) - 비우면 누구나',
     players: '플레이어 이름(쉼표로 구분) - 비우면 누구나',
+    fields: '템플릿 필드(예: subcategory=Attack && title~sword) - 비우면 전체',
     results: '굴림 결과',
     total: '굴림 합계(예: 15 또는 19-20) - 도움말 핸드아웃 참고 - 비우면 전체',
     natural: '주사위 눈(예: 20 또는 1-2) - 비우면 전체',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: '텍스트 형식',
     who: '발언자/캐릭터',
     players: '플레이어',
+    fields: '템플릿 필드',
     results: '굴림 결과',
     total: '굴림 합계',
     natural: '주사위 눈',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: '롤 템플릿이 일치하지 않음',
       who: '발언자 또는 캐릭터가 일치하지 않음',
       player: '플레이어가 일치하지 않음',
+      field: '템플릿 필드가 일치하지 않음',
       text: '텍스트를 찾지 못함',
       roll: '굴림 조건을 충족하는 굴림이 없음',
     },
@@ -180,6 +183,8 @@ const TRANSLATION = {
     badType: '알 수 없는 메시지 유형: {value}.',
     badRegex: '정규식 "{term}"이(가) 올바르지 않습니다: {error}',
     tooManyTerms: '리스너 하나가 찾을 수 있는 텍스트는 최대 {max}개입니다.',
+    badField: '템플릿 필드 조건 "{term}"을(를) 읽을 수 없습니다.',
+    tooManyFields: '리스너 하나가 확인할 수 있는 템플릿 필드는 최대 {max}개입니다.',
     badResult: '알 수 없는 굴림 결과: {value}.',
     badComparison: '"{value}"은(는) --{option}에 사용할 수 없는 값입니다.',
     badDice: '"{value}"은(는) --dice에 사용할 수 없는 값입니다.',
@@ -193,11 +198,13 @@ const TRANSLATION = {
     gmOnly: 'GM에게 리스너 설정을 요청하세요.',
     unknownCommand: '모든 명령어를 보려면 !crl help를 입력하세요.',
     badOption:
-      '옵션은 --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands입니다.',
+      '옵션은 --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands입니다.',
     notFound: '!crl을 입력하면 리스너 목록을 볼 수 있습니다.',
     nameInvalid:
       '최대 {max}자까지 쓸 수 있으며, | { } [ ] \\ @ % # ? ~ 와 "--"는 쓸 수 없고 "-"로 시작할 수 없습니다.',
     badOnOff: 'on 또는 off를 사용하세요.',
+    badField:
+      '필드 이름, 그다음 = (같음), != (같지 않음), ~ (포함) 또는 !~ (포함하지 않음), 그다음 값을 쓰세요. 예: subcategory=Attack. 굴림의 필드는 검사로 확인할 수 있습니다.',
     badType: '메시지 유형: {types}.',
     badResult: 'crit, fumble, success, fail 중 하나를 사용하세요.',
     badComparison: '숫자, >=15나 <3 같은 비교, 또는 19-20 같은 범위를 사용하세요.',
@@ -226,7 +233,7 @@ const TRANSLATION = {
     help: '이 목록을 표시합니다.',
     optionsTitle: '옵션',
     options:
-      '옵션: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands. ID 대신 이름을 써도 됩니다.',
+      '옵션: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands. ID 대신 이름을 써도 됩니다.',
     placeholders:
       '명령어에는 ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener}, ${field:name}을(를) 쓸 수 있습니다.',
     handouts: '"{help}" 핸드아웃에 모든 설명이 있고, "{deck}" 핸드아웃에는 버튼이 있습니다.',
@@ -289,6 +296,7 @@ const TRANSLATION = {
         '텍스트 속 ##은 인라인 굴림을 나타내며, 이때 굴림 확인은 그 자리에서 찾은 굴림만 봅니다. ##이 없으면 메시지의 모든 굴림을 확인합니다.',
         '텍스트는 일반 텍스트 대신 정규식으로 쓸 수도 있습니다(--regex on).',
         '발언자/캐릭터: 채팅에 표시되는 이름, 또는 롤 템플릿 속 캐릭터 이름. 플레이어: 플레이어의 표시 이름.',
+        '템플릿 필드: 검사에 나열되는 필드에 대한 조건으로, subcategory=Attack 또는 title~sword처럼 &&로 구분합니다. =와 !=는 값 전체를 비교하고, ~와 !~는 값 안에서 텍스트를 찾으며, 대소문자는 구분하지 않습니다. 없는 필드는 빈 값으로 취급합니다. 필드 하나를 뜻할 때는 --text 대신 이것을 쓰세요. --text는 Beacon 카드의 숨겨진 HTML도 검색하기 때문입니다.',
       ],
     },
     templates: {
@@ -338,6 +346,8 @@ const TRANSLATION = {
       regex: 'on이면 텍스트를 정규식으로, off면 일반 텍스트로 읽습니다.',
       who: '발언자 또는 캐릭터 이름(쉼표로 구분).',
       players: '플레이어 표시 이름(쉼표로 구분).',
+      fields:
+        '템플릿 필드 조건(&&로 구분): name=value (같음), name!=value (같지 않음), name~text (포함), name!~text (포함하지 않음). --regex on이면 ~는 정규식으로 읽습니다.',
       results: 'crit, fumble, success, fail 중 하나 이상.',
       total: '굴림 합계: 15, >=15, <5 또는 19-20.',
       natural: '주사위 눈: 20, <=2 또는 19-20.',

@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Hogyan értelmezze a szöveget',
     who: 'Beszélők vagy karakterek nevei vesszővel elválasztva – üres: bárki',
     players: 'Játékosnevek vesszővel elválasztva – üres: bárki',
+    fields: 'Sablonmezők, pl. subcategory=Attack && title~sword – üres: bármelyik',
     results: 'Dobás eredménye',
     total: 'Dobás összege, pl. 15 vagy 19-20 – lásd a Súgó segédanyagot – üres: bármennyi',
     natural: 'Natúr kockaérték, pl. 20 vagy 1-2 – üres: bármennyi',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Szöveg típusa',
     who: 'Beszélők / karakterek',
     players: 'Játékosok',
+    fields: 'Sablonmezők',
     results: 'Dobás eredménye',
     total: 'Dobás összege',
     natural: 'Natúr kocka',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'a dobássablon nem egyezik',
       who: 'a beszélő vagy a karakter nem egyezik',
       player: 'a játékos nem egyezik',
+      field: 'a sablonmező nem egyezik',
       text: 'a szöveg nem található',
       roll: 'egyik dobás sem felel meg a dobásfeltételeknek',
     },
@@ -180,6 +183,8 @@ const TRANSLATION = {
     badType: 'Ismeretlen üzenettípus(ok): {value}.',
     badRegex: 'A(z) „{term}” reguláris kifejezés érvénytelen: {error}',
     tooManyTerms: 'Egy figyelő legfeljebb {max} szövegrészt kereshet.',
+    badField: 'A(z) „{term}” sablonmező-feltétel nem olvasható.',
+    tooManyFields: 'Egy figyelő legfeljebb {max} sablonmezőt ellenőrizhet.',
     badResult: 'Ismeretlen dobáseredmény(ek): {value}.',
     badComparison: 'A(z) „{value}” érték érvénytelen ehhez: --{option}.',
     badDice: 'A(z) „{value}” érték érvénytelen ehhez: --dice.',
@@ -193,11 +198,13 @@ const TRANSLATION = {
     gmOnly: 'Kérje meg a GM-et, hogy állítson be figyelőket.',
     unknownCommand: 'Az összes parancsot a !crl help paranccsal láthatja.',
     badOption:
-      'A lehetőségek: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
+      'A lehetőségek: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
     notFound: 'A figyelők listáját a !crl paranccsal láthatja.',
     nameInvalid:
       'Legfeljebb {max} karakter, ezek nélkül: | { } [ ] \\ @ % # ? ~ vagy "--", és nem kezdődhet "-" jellel.',
     badOnOff: 'Használja: on vagy off.',
+    badField:
+      'Adjon meg egy mezőnevet, majd = (egyenlő), != (nem egyenlő), ~ (tartalmazza) vagy !~ (nem tartalmazza), majd az értéket, pl. subcategory=Attack. A vizsgáló megmutatja egy dobás mezőit.',
     badType: 'Az üzenettípusok a következők: {types}.',
     badResult: 'Használja: crit, fumble, success vagy fail.',
     badComparison:
@@ -227,7 +234,7 @@ const TRANSLATION = {
     help: 'Ez a lista.',
     optionsTitle: 'Opciók',
     options:
-      'Opciók: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
+      'Opciók: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
     placeholders:
       'A parancsok a következőket használhatják: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} és ${field:name}.',
     handouts:
@@ -292,6 +299,7 @@ const TRANSLATION = {
         'A ## a szövegben egy beágyazott dobást jelöl; ilyenkor a dobásellenőrzések csak az ott talált dobásokat nézik. ## nélkül az üzenet minden dobását ellenőrzi.',
         'A szöveg egyszerű szöveg helyett reguláris kifejezés is lehet (--regex on).',
         'Beszélők / karakterek: a chatben megjelenő név, vagy a karakter neve a dobássablonban. Játékosok: a játékos megjelenített neve.',
+        'Sablonmezők: feltételek a vizsgáló által listázott mezőkre, pl. subcategory=Attack vagy title~sword, &&-vel elválasztva. Az = és a != a teljes értéket hasonlítja össze, a ~ és a !~ szöveget keres benne, a kis- és nagybetű nem számít. A hiányzó mező üresnek számít. Ezt használja --text helyett, ha egy mezőre gondol, mert a --text egy Beacon-kártya rejtett HTML-jében is keres.',
       ],
     },
     templates: {
@@ -342,6 +350,8 @@ const TRANSLATION = {
       regex: 'on: a szöveg reguláris kifejezés, off: egyszerű szöveg.',
       who: 'Beszélők vagy karakterek nevei vesszővel elválasztva.',
       players: 'Játékosok megjelenített nevei vesszővel elválasztva.',
+      fields:
+        'Sablonmező-feltételek &&-vel elválasztva: name=value (egyenlő), name!=value (nem egyenlő), name~text (tartalmazza), name!~text (nem tartalmazza). --regex on esetén a ~ reguláris kifejezést olvas.',
       results: 'crit, fumble, success és/vagy fail.',
       total: 'Dobás összege: 15, >=15, <5 vagy 19-20.',
       natural: 'Natúr kockaérték: 20, <=2 vagy 19-20.',

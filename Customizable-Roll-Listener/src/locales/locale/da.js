@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Hvordan teksten skal læses',
     who: 'Navne på talere eller figurer adskilt af kommaer – tom for alle',
     players: 'Spillernavne adskilt af kommaer – tom for alle',
+    fields: 'Skabelonfelter som subcategory=Attack && title~sword – tom for alle',
     results: 'Slagresultat',
     total: 'Slagtotal som 15 eller 19-20 – se Hjælp-handoutet – tom for alle',
     natural: 'Naturligt terningresultat som 20 eller 1-2 – tom for alle',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Teksten er',
     who: 'Talere / figurer',
     players: 'Spillere',
+    fields: 'Skabelonfelter',
     results: 'Slagresultat',
     total: 'Slagtotal',
     natural: 'Naturlig terning',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'slagskabelonen passer ikke',
       who: 'taler eller figur passer ikke',
       player: 'spilleren passer ikke',
+      field: 'skabelonfelt passer ikke',
       text: 'teksten blev ikke fundet',
       roll: 'intet slag opfylder slagbetingelserne',
     },
@@ -180,6 +183,8 @@ const TRANSLATION = {
     badType: 'Ukendt(e) beskedtype(r): {value}.',
     badRegex: 'Det regulære udtryk "{term}" er ikke gyldigt: {error}',
     tooManyTerms: 'En lytter kan højst søge efter {max} tekststykker.',
+    badField: 'Skabelonfeltbetingelsen "{term}" kan ikke læses.',
+    tooManyFields: 'En lytter kan højst tjekke {max} skabelonfelter.',
     badResult: 'Ukendt(e) slagresultat(er): {value}.',
     badComparison: 'Værdien "{value}" er ikke gyldig for --{option}.',
     badDice: 'Værdien "{value}" er ikke gyldig for --dice.',
@@ -193,11 +198,13 @@ const TRANSLATION = {
     gmOnly: 'Bed din GM om at opsætte lyttere for dig.',
     unknownCommand: 'Skriv !crl help for at se alle kommandoer.',
     badOption:
-      'Valgmulighederne er --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
+      'Valgmulighederne er --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
     notFound: 'Skriv !crl for at se listen over lyttere.',
     nameInvalid:
       'Brug op til {max} tegn, uden disse: | { } [ ] \\ @ % # ? ~ eller "--", og start ikke med "-".',
     badOnOff: 'Brug on eller off.',
+    badField:
+      'Brug et feltnavn, derefter = (er), != (er ikke), ~ (indeholder) eller !~ (indeholder ikke), og derefter værdien, som subcategory=Attack. Inspicér viser et slags felter.',
     badType: 'Beskedtyper er: {types}.',
     badResult: 'Brug crit, fumble, success eller fail.',
     badComparison: 'Brug et tal, en sammenligning som >=15 eller <3, eller et interval som 19-20.',
@@ -225,7 +232,7 @@ const TRANSLATION = {
     help: 'Vis denne liste.',
     optionsTitle: 'Valgmuligheder',
     options:
-      'Valgmuligheder: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
+      'Valgmuligheder: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
     placeholders:
       'Kommandoer kan bruge ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} og ${field:name}.',
     handouts: 'Handoutet "{help}" forklarer alt; handoutet "{deck}" har knapper.',
@@ -288,6 +295,7 @@ const TRANSLATION = {
         '## i teksten står for et inline-slag; slagtjekkene ser så kun på de slag, der findes dér. Uden ## tjekkes alle slag i beskeden.',
         'Teksten kan være et regulært udtryk i stedet for almindelig tekst (--regex on).',
         'Talere / figurer: navnet vist i chatten eller figurnavnet i slagskabelonen. Spillere: spillerens visningsnavn.',
+        'Skabelonfelter: betingelser for de felter, Inspicér viser, som subcategory=Attack eller title~sword, adskilt af &&. = og != sammenligner hele værdien, ~ og !~ søger efter tekst i den, og der skelnes ikke mellem store og små bogstaver. Et manglende felt tæller som tomt. Brug det frem for --text, når du mener ét felt, for --text søger også i et Beacon-korts skjulte HTML.',
       ],
     },
     templates: {
@@ -337,6 +345,8 @@ const TRANSLATION = {
       regex: 'on for at læse teksten som regulære udtryk, off for almindelig tekst.',
       who: 'Navne på talere eller figurer adskilt af kommaer.',
       players: 'Spilleres visningsnavne adskilt af kommaer.',
+      fields:
+        'Betingelser for skabelonfelter, adskilt af &&: name=value (er), name!=value (er ikke), name~text (indeholder), name!~text (indeholder ikke). Med --regex on læser ~ et regulært udtryk.',
       results: 'crit, fumble, success og/eller fail.',
       total: 'Slagtotal: 15, >=15, <5 eller 19-20.',
       natural: 'Naturlig terningside: 20, <=2 eller 19-20.',

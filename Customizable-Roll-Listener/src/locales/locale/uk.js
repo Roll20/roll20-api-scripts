@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Як читати текст',
     who: 'Імена відправників або персонажів через кому — порожньо, якщо будь-хто',
     players: 'Імена гравців через кому — порожньо, якщо будь-хто',
+    fields: 'Поля шаблону, наприклад subcategory=Attack && title~sword — порожньо, якщо будь-які',
     results: 'Результат кидка',
     total:
       'Сума кидка, наприклад 15 або 19-20 — див. роздатковий матеріал «Довідка» — порожньо, якщо будь-яка',
@@ -93,6 +94,7 @@ const TRANSLATION = {
     regex: 'Текст як',
     who: 'Відправники / персонажі',
     players: 'Гравці',
+    fields: 'Поля шаблону',
     results: 'Результат кидка',
     total: 'Сума кидка',
     natural: 'Натуральний результат',
@@ -145,6 +147,7 @@ const TRANSLATION = {
       template: 'шаблон кидка не збігається',
       who: 'відправник або персонаж не збігається',
       player: 'гравець не збігається',
+      field: 'поле шаблону не збігається',
       text: 'текст не знайдено',
       roll: 'жоден кидок не відповідає умовам кидка',
     },
@@ -182,6 +185,8 @@ const TRANSLATION = {
     badType: 'Невідомі типи повідомлень: {value}.',
     badRegex: 'Регулярний вираз «{term}» неприпустимий: {error}',
     tooManyTerms: 'Слухач може шукати щонайбільше {max} фрагментів тексту.',
+    badField: 'Не вдається прочитати умову поля шаблону «{term}».',
+    tooManyFields: 'Слухач може перевіряти щонайбільше {max} полів шаблону.',
     badResult: 'Невідомі результати кидка: {value}.',
     badComparison: 'Значення «{value}» неприпустиме для --{option}.',
     badDice: 'Значення «{value}» неприпустиме для --dice.',
@@ -195,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Попросіть майстра налаштувати для вас слухачів.',
     unknownCommand: 'Введіть !crl help, щоб побачити всі команди.',
     badOption:
-      'Доступні параметри: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands.',
+      'Доступні параметри: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands.',
     notFound: 'Введіть !crl, щоб побачити список слухачів.',
     nameInvalid:
       'Не більше {max} символів, без таких: | { } [ ] \\ @ % # ? ~ і «--»; ім’я не повинно починатися з «-».',
     badOnOff: 'Використовуйте on або off.',
+    badField:
+      'Вкажіть ім’я поля, потім = (дорівнює), != (не дорівнює), ~ (містить) або !~ (не містить), потім значення, наприклад subcategory=Attack. Інспектор показує поля кидка.',
     badType: 'Типи повідомлень: {types}.',
     badResult: 'Використовуйте crit, fumble, success або fail.',
     badComparison:
@@ -230,7 +237,7 @@ const TRANSLATION = {
     help: 'Показати цей список.',
     optionsTitle: 'Параметри',
     options:
-      'Параметри: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands. Замість ID можна вказувати імена.',
+      'Параметри: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands. Замість ID можна вказувати імена.',
     placeholders:
       'У командах можна використовувати ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} і ${field:name}.',
     handouts: 'У роздатковому матеріалі «{help}» усе докладно пояснено, а в «{deck}» є кнопки.',
@@ -294,6 +301,7 @@ const TRANSLATION = {
         '## у тексті позначає вбудований кидок; тоді перевірки кидка дивляться лише на знайдені там кидки. Без ## перевіряється кожен кидок у повідомленні.',
         'Замість звичайного тексту можна використати регулярний вираз (--regex on).',
         'Відправники / персонажі: ім’я, показане в чаті, або ім’я персонажа в шаблоні кидка. Гравці: відображуване ім’я гравця.',
+        'Поля шаблону: умови на поля, які показує інспектор, наприклад subcategory=Attack або title~sword, через &&. = і != порівнюють значення цілком, ~ і !~ шукають у ньому текст, регістр літер не враховується. Відсутнє поле вважається порожнім. Використовуйте це замість --text, коли маєте на увазі одне поле, бо --text шукає і в прихованому HTML картки Beacon.',
       ],
     },
     templates: {
@@ -343,6 +351,8 @@ const TRANSLATION = {
       regex: 'on — читати текст як регулярні вирази, off — як звичайний текст.',
       who: 'Імена відправників або персонажів через кому.',
       players: 'Відображувані імена гравців через кому.',
+      fields:
+        'Умови на поля шаблону через &&: name=value (дорівнює), name!=value (не дорівнює), name~text (містить), name!~text (не містить). За --regex on ~ читає регулярний вираз.',
       results: 'crit, fumble, success і/або fail.',
       total: 'Сума кидка: 15, >=15, <5 або 19-20.',
       natural: 'Натуральний результат кубика: 20, <=2 або 19-20.',

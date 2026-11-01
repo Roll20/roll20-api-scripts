@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Hoe om die teks te lees',
     who: 'Spreker- of karaktername geskei deur kommas - leeg vir enigiemand',
     players: 'Spelername geskei deur kommas - leeg vir enigiemand',
+    fields: 'Sjabloonvelde soos subcategory=Attack && title~sword - leeg vir enige',
     results: 'Rolresultaat',
     total: 'Roltotaal soos 15 of 19-20 - sien die Hulp-uitdeelstuk - leeg vir enige',
     natural: 'Natuurlike dobbelsteenresultaat soos 20 of 1-2 - leeg vir enige',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Teks is',
     who: 'Sprekers / karakters',
     players: 'Spelers',
+    fields: 'Sjabloonvelde',
     results: 'Rolresultaat',
     total: 'Roltotaal',
     natural: 'Natuurlike dobbelsteen',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'rolsjabloon pas nie',
       who: 'spreker of karakter pas nie',
       player: 'speler pas nie',
+      field: 'sjabloonveld pas nie',
       text: 'teks nie gevind nie',
       roll: 'geen rol voldoen aan die rolvoorwaardes nie',
     },
@@ -182,6 +185,8 @@ const TRANSLATION = {
     badType: 'Onbekende boodskaptipe(s): {value}.',
     badRegex: 'Die gereelde uitdrukking "{term}" is nie geldig nie: {error}',
     tooManyTerms: "'n Luisteraar kan na hoogstens {max} stukke teks soek.",
+    badField: 'Die sjabloonveldvoorwaarde "{term}" kan nie gelees word nie.',
+    tooManyFields: "'n Luisteraar kan hoogstens {max} sjabloonvelde nagaan.",
     badResult: 'Onbekende rolresultaat/-resultate: {value}.',
     badComparison: 'Die waarde "{value}" is nie geldig vir --{option} nie.',
     badDice: 'Die waarde "{value}" is nie geldig vir --dice nie.',
@@ -195,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Vra jou GM om luisteraars vir jou op te stel.',
     unknownCommand: 'Tik !crl help om elke bevel te sien.',
     badOption:
-      'Opsies is --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+      'Opsies is --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
     notFound: 'Tik !crl om die lys luisteraars te sien.',
     nameInvalid:
       'Gebruik hoogstens {max} karakters, sonder hierdie: | { } [ ] \\ @ % # ? ~ of "--", en moenie met "-" begin nie.',
     badOnOff: 'Gebruik on of off.',
+    badField:
+      "Gebruik 'n veldnaam, dan = (is), != (is nie), ~ (bevat) of !~ (bevat nie), dan die waarde, soos subcategory=Attack. Inspekteer wys 'n rol se velde.",
     badType: 'Boodskaptipes is: {types}.',
     badResult: 'Gebruik crit, fumble, success of fail.',
     badComparison: "Gebruik 'n getal, 'n vergelyking soos >=15 of <3, of 'n reeks soos 19-20.",
@@ -229,7 +236,7 @@ const TRANSLATION = {
     help: 'Wys hierdie lys.',
     optionsTitle: 'Opsies',
     options:
-      "Opsies: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
+      "Opsies: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
     placeholders:
       'Bevele kan ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruik.',
     handouts: 'Die uitdeelstuk "{help}" verduidelik alles; die uitdeelstuk "{deck}" het knoppies.',
@@ -293,6 +300,7 @@ const TRANSLATION = {
         "## in die teks staan vir 'n inlyn-rol; die roltoetse kyk dan net na die rolle wat daar gevind word. Sonder ## word elke rol in die boodskap nagegaan.",
         "Teks kan 'n gereelde uitdrukking wees in plaas van gewone teks (--regex on).",
         'Sprekers / karakters: die naam wat in die klets gewys word, of die karakternaam in die rolsjabloon. Spelers: die speler se vertoonnaam.',
+        "Sjabloonvelde: voorwaardes op die velde wat Inspekteer lys, soos subcategory=Attack of title~sword, geskei deur &&. = en != vergelyk die hele waarde, ~ en !~ soek na teks daarin, en hoof- en kleinletters word geïgnoreer. 'n Ontbrekende veld tel as leeg. Gebruik dit eerder as --text wanneer jy een veld bedoel, want --text deursoek ook 'n Beacon-kaart se versteekte HTML.",
       ],
     },
     templates: {
@@ -342,6 +350,8 @@ const TRANSLATION = {
       regex: 'on om die teks as gereelde uitdrukkings te lees, off vir gewone teks.',
       who: 'Spreker- of karaktername, geskei deur kommas.',
       players: 'Spelers se vertoonname, geskei deur kommas.',
+      fields:
+        "Sjabloonveldvoorwaardes, geskei deur &&: name=value (is), name!=value (is nie), name~text (bevat), name!~text (bevat nie). Met --regex on lees ~ 'n gereelde uitdrukking.",
       results: 'crit, fumble, success en/of fail.',
       total: 'Roltotaal: 15, >=15, <5 of 19-20.',
       natural: 'Natuurlike dobbelsteenkant: 20, <=2 of 19-20.',

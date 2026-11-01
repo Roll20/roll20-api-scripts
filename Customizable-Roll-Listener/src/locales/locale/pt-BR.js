@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Como ler o texto',
     who: 'Nomes de falantes ou personagens separados por vírgulas - vazio para qualquer um',
     players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
+    fields: 'Campos do modelo, como subcategory=Attack && title~sword - vazio para qualquer um',
     results: 'Resultado da rolagem',
     total: 'Total da rolagem, como 15 ou 19-20 - veja o folheto Help - vazio para qualquer um',
     natural: 'Resultado natural do dado, como 20 ou 1-2 - vazio para qualquer um',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'O texto é',
     who: 'Falantes / personagens',
     players: 'Jogadores',
+    fields: 'Campos do modelo',
     results: 'Resultado da rolagem',
     total: 'Total da rolagem',
     natural: 'Dado natural',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'o modelo de rolagem não corresponde',
       who: 'o falante ou personagem não corresponde',
       player: 'o jogador não corresponde',
+      field: 'o campo do modelo não corresponde',
       text: 'texto não encontrado',
       roll: 'nenhuma rolagem atende às condições de rolagem',
     },
@@ -182,6 +185,8 @@ const TRANSLATION = {
     badType: 'Tipo(s) de mensagem desconhecido(s): {value}.',
     badRegex: 'A expressão regular "{term}" não é válida: {error}',
     tooManyTerms: 'Um ouvinte pode procurar no máximo {max} trechos de texto.',
+    badField: 'A condição de campo do modelo "{term}" não pode ser lida.',
+    tooManyFields: 'Um ouvinte pode verificar no máximo {max} campos do modelo.',
     badResult: 'Resultado(s) de rolagem desconhecido(s): {value}.',
     badComparison: 'O valor "{value}" não é válido para --{option}.',
     badDice: 'O valor "{value}" não é válido para --dice.',
@@ -195,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Peça ao seu mestre para configurar ouvintes para você.',
     unknownCommand: 'Digite !crl help para ver todos os comandos.',
     badOption:
-      'As opções são --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+      'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
     notFound: 'Digite !crl para ver a lista de ouvintes.',
     nameInvalid:
       'Use até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ ou "--", e não comece com "-".',
     badOnOff: 'Use on ou off.',
+    badField:
+      'Use um nome de campo, depois = (é), != (não é), ~ (contém) ou !~ (não contém), depois o valor, como subcategory=Attack. Inspecionar mostra os campos de uma rolagem.',
     badType: 'Os tipos de mensagem são: {types}.',
     badResult: 'Use crit, fumble, success ou fail.',
     badComparison: 'Use um número, uma comparação como >=15 ou <3, ou um intervalo como 19-20.',
@@ -228,7 +235,7 @@ const TRANSLATION = {
     help: 'Mostra esta lista.',
     optionsTitle: 'Opções',
     options:
-      'Opções: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
+      'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
     placeholders:
       'Os comandos podem usar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
     handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -293,6 +300,7 @@ const TRANSLATION = {
         '## no texto representa uma rolagem em linha; as verificações de rolagem então consideram só as rolagens encontradas ali. Sem ##, todas as rolagens da mensagem são verificadas.',
         'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
         'Falantes / personagens: o nome mostrado no chat, ou o nome do personagem no modelo de rolagem. Jogadores: o nome de exibição do jogador.',
+        'Campos do modelo: condições sobre os campos que Inspecionar lista, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor inteiro, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo ausente conta como vazio. Use isso em vez de --text quando quiser um único campo, porque --text também procura no HTML oculto de um cartão do Beacon.',
       ],
     },
     templates: {
@@ -343,6 +351,8 @@ const TRANSLATION = {
       regex: 'on para ler o texto como expressões regulares, off para texto simples.',
       who: 'Nomes de falantes ou personagens, separados por vírgulas.',
       players: 'Nomes de exibição dos jogadores, separados por vírgulas.',
+      fields:
+        'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
       results: 'crit, fumble, success e/ou fail.',
       total: 'Total da rolagem: 15, >=15, <5 ou 19-20.',
       natural: 'Face natural do dado: 20, <=2 ou 19-20.',

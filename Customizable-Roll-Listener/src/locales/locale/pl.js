@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Jak czytać tekst',
     who: 'Nazwy nadawców lub postaci oddzielone przecinkami - puste dla każdego',
     players: 'Nazwy graczy oddzielone przecinkami - puste dla każdego',
+    fields: 'Pola szablonu, np. subcategory=Attack && title~sword - puste dla dowolnych',
     results: 'Wynik rzutu',
     total: 'Suma rzutu, np. 15 lub 19-20 - zobacz notatkę Help - puste dla dowolnej',
     natural: 'Naturalny wynik kości, np. 20 lub 1-2 - puste dla dowolnego',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Tekst to',
     who: 'Nadawcy / postacie',
     players: 'Gracze',
+    fields: 'Pola szablonu',
     results: 'Wynik rzutu',
     total: 'Suma rzutu',
     natural: 'Naturalna kość',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'szablon rzutu nie pasuje',
       who: 'nadawca lub postać nie pasuje',
       player: 'gracz nie pasuje',
+      field: 'pole szablonu nie pasuje',
       text: 'nie znaleziono tekstu',
       roll: 'żaden rzut nie spełnia warunków rzutu',
     },
@@ -181,6 +184,8 @@ const TRANSLATION = {
     badType: 'Nieznane typy wiadomości: {value}.',
     badRegex: 'Wyrażenie regularne „{term}” jest nieprawidłowe: {error}',
     tooManyTerms: 'Listener może szukać najwyżej {max} fragmentów tekstu.',
+    badField: 'Nie można odczytać warunku pola szablonu „{term}”.',
+    tooManyFields: 'Listener może sprawdzać najwyżej {max} pól szablonu.',
     badResult: 'Nieznane wyniki rzutu: {value}.',
     badComparison: 'Wartość „{value}” jest nieprawidłowa dla --{option}.',
     badDice: 'Wartość „{value}” jest nieprawidłowa dla --dice.',
@@ -194,11 +199,13 @@ const TRANSLATION = {
     gmOnly: 'Poproś MG o skonfigurowanie listenerów.',
     unknownCommand: 'Wpisz !crl help, aby zobaczyć wszystkie polecenia.',
     badOption:
-      'Opcje to --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+      'Opcje to --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
     notFound: 'Wpisz !crl, aby zobaczyć listę listenerów.',
     nameInvalid:
       'Użyj najwyżej {max} znaków, bez tych: | { } [ ] \\ @ % # ? ~ ani „--”, i nie zaczynaj od „-”.',
     badOnOff: 'Użyj on lub off.',
+    badField:
+      'Użyj nazwy pola, potem = (jest), != (nie jest), ~ (zawiera) lub !~ (nie zawiera), a potem wartości, np. subcategory=Attack. Sprawdź pokazuje pola rzutu.',
     badType: 'Typy wiadomości to: {types}.',
     badResult: 'Użyj crit, fumble, success lub fail.',
     badComparison: 'Użyj liczby, porównania, np. >=15 lub <3, albo zakresu, np. 19-20.',
@@ -228,7 +235,7 @@ const TRANSLATION = {
     help: 'Pokaż tę listę.',
     optionsTitle: 'Opcje',
     options:
-      'Opcje: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
+      'Opcje: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
     placeholders:
       'Polecenia mogą używać ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
     handouts: 'Notatka „{help}” wyjaśnia wszystko; notatka „{deck}” zawiera przyciski.',
@@ -292,6 +299,7 @@ const TRANSLATION = {
         '## w tekście oznacza rzut inline; warunki rzutu dotyczą wtedy tylko znalezionych tam rzutów. Bez ## sprawdzany jest każdy rzut w wiadomości.',
         'Tekst może być wyrażeniem regularnym zamiast zwykłego tekstu (--regex on).',
         'Nadawcy / postacie: nazwa wyświetlana na czacie lub nazwa postaci w szablonie rzutu. Gracze: wyświetlana nazwa gracza.',
+        'Pola szablonu: warunki na polach, które wyświetla Sprawdź, np. subcategory=Attack lub title~sword, oddzielone &&. = i != porównują całą wartość, ~ i !~ szukają w niej tekstu, a wielkość liter nie ma znaczenia. Brakujące pole liczy się jako puste. Używaj tego zamiast --text, gdy chodzi o jedno pole, bo --text przeszukuje też ukryty HTML karty Beacon.',
       ],
     },
     templates: {
@@ -342,6 +350,8 @@ const TRANSLATION = {
       regex: 'on, aby czytać tekst jako wyrażenia regularne, off dla zwykłego tekstu.',
       who: 'Nazwy nadawców lub postaci oddzielone przecinkami.',
       players: 'Wyświetlane nazwy graczy oddzielone przecinkami.',
+      fields:
+        'Warunki pól szablonu, oddzielone &&: name=value (jest), name!=value (nie jest), name~text (zawiera), name!~text (nie zawiera). Przy --regex on ~ czyta wyrażenie regularne.',
       results: 'crit, fumble, success i/lub fail.',
       total: 'Suma rzutu: 15, >=15, <5 lub 19-20.',
       natural: 'Naturalna ścianka kości: 20, <=2 lub 19-20.',

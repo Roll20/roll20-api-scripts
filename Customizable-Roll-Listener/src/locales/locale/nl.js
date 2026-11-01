@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Hoe de tekst gelezen wordt',
     who: 'Namen van sprekers of personages gescheiden door komma’s - leeg voor iedereen',
     players: 'Spelersnamen gescheiden door komma’s - leeg voor iedereen',
+    fields: 'Sjabloonvelden zoals subcategory=Attack && title~sword - leeg voor alle',
     results: 'Worpresultaat',
     total: 'Worptotaal zoals 15 of 19-20 - zie de Help-handout - leeg voor alle',
     natural: 'Natuurlijke worp zoals 20 of 1-2 - leeg voor alle',
@@ -93,6 +94,7 @@ const TRANSLATION = {
     regex: 'Tekst is',
     who: 'Sprekers / personages',
     players: 'Spelers',
+    fields: 'Sjabloonvelden',
     results: 'Worpresultaat',
     total: 'Worptotaal',
     natural: 'Natuurlijke worp',
@@ -145,6 +147,7 @@ const TRANSLATION = {
       template: 'rolsjabloon komt niet overeen',
       who: 'spreker of personage komt niet overeen',
       player: 'speler komt niet overeen',
+      field: 'sjabloonveld komt niet overeen',
       text: 'tekst niet gevonden',
       roll: 'geen worp voldoet aan de worpvoorwaarden',
     },
@@ -183,6 +186,8 @@ const TRANSLATION = {
     badType: 'Onbekende berichttype(n): {value}.',
     badRegex: 'De reguliere expressie "{term}" is ongeldig: {error}',
     tooManyTerms: 'Een luisteraar kan naar hoogstens {max} tekststukken zoeken.',
+    badField: 'De sjabloonveldvoorwaarde "{term}" kan niet worden gelezen.',
+    tooManyFields: 'Een luisteraar kan hoogstens {max} sjabloonvelden controleren.',
     badResult: 'Onbekende worpresultaten: {value}.',
     badComparison: 'De waarde "{value}" is ongeldig voor --{option}.',
     badDice: 'De waarde "{value}" is ongeldig voor --dice.',
@@ -196,11 +201,13 @@ const TRANSLATION = {
     gmOnly: 'Vraag je GM om luisteraars voor je in te stellen.',
     unknownCommand: 'Typ !crl help om alle commando’s te zien.',
     badOption:
-      'Opties zijn --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+      'Opties zijn --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
     notFound: 'Typ !crl om de lijst met luisteraars te zien.',
     nameInvalid:
       'Gebruik maximaal {max} tekens, zonder deze: | { } [ ] \\ @ % # ? ~ of "--", en begin niet met "-".',
     badOnOff: 'Gebruik on of off.',
+    badField:
+      'Gebruik een veldnaam, dan = (is), != (is niet), ~ (bevat) of !~ (bevat niet), dan de waarde, zoals subcategory=Attack. Inspecteren toont de velden van een worp.',
     badType: 'Berichttypen zijn: {types}.',
     badResult: 'Gebruik crit, fumble, success of fail.',
     badComparison:
@@ -231,7 +238,7 @@ const TRANSLATION = {
     help: 'Toon deze lijst.',
     optionsTitle: 'Opties',
     options:
-      'Opties: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
+      'Opties: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
     placeholders:
       'Commando’s kunnen ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruiken.',
     handouts: 'De handout "{help}" legt alles uit; de handout "{deck}" heeft knoppen.',
@@ -295,6 +302,7 @@ const TRANSLATION = {
         '## in de tekst staat voor een inline-worp; de worpcontroles kijken dan alleen naar de worpen die daar staan. Zonder ## wordt elke worp in het bericht gecontroleerd.',
         'Tekst kan een reguliere expressie zijn in plaats van platte tekst (--regex on).',
         'Sprekers / personages: de naam die in de chat staat, of de personagenaam in het rolsjabloon. Spelers: de weergavenaam van de speler.',
+        'Sjabloonvelden: voorwaarden op de velden die Inspecteren toont, zoals subcategory=Attack of title~sword, gescheiden door &&. = en != vergelijken de hele waarde, ~ en !~ zoeken tekst erin, en hoofdletters en kleine letters maken niet uit. Een ontbrekend veld telt als leeg. Gebruik dit in plaats van --text als je één veld bedoelt, want --text doorzoekt ook de verborgen HTML van een Beacon-kaart.',
       ],
     },
     templates: {
@@ -345,6 +353,8 @@ const TRANSLATION = {
       regex: 'on om de tekst als reguliere expressies te lezen, off voor platte tekst.',
       who: 'Namen van sprekers of personages, gescheiden door komma’s.',
       players: 'Weergavenamen van spelers, gescheiden door komma’s.',
+      fields:
+        'Voorwaarden voor sjabloonvelden, gescheiden door &&: name=value (is), name!=value (is niet), name~text (bevat), name!~text (bevat niet). Met --regex on leest ~ een reguliere expressie.',
       results: 'crit, fumble, success en/of fail.',
       total: 'Worptotaal: 15, >=15, <5 of 19-20.',
       natural: 'Natuurlijke worp: 20, <=2 of 19-20.',

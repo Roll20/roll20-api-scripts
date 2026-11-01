@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Como interpretar o texto',
     who: 'Nomes de oradores ou personagens separados por vírgulas - vazio para qualquer um',
     players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
+    fields: 'Campos do modelo, como subcategory=Attack && title~sword - vazio para qualquer um',
     results: 'Resultado do lançamento',
     total:
       'Total do lançamento, como 15 ou 19-20 - consulte o folheto Help - vazio para qualquer um',
@@ -93,6 +94,7 @@ const TRANSLATION = {
     regex: 'O texto é',
     who: 'Oradores / personagens',
     players: 'Jogadores',
+    fields: 'Campos do modelo',
     results: 'Resultado do lançamento',
     total: 'Total do lançamento',
     natural: 'Dado natural',
@@ -145,6 +147,7 @@ const TRANSLATION = {
       template: 'o modelo de lançamento não corresponde',
       who: 'o orador ou a personagem não corresponde',
       player: 'o jogador não corresponde',
+      field: 'o campo do modelo não corresponde',
       text: 'texto não encontrado',
       roll: 'nenhum lançamento cumpre as condições de lançamento',
     },
@@ -182,6 +185,8 @@ const TRANSLATION = {
     badType: 'Tipo(s) de mensagem desconhecido(s): {value}.',
     badRegex: 'A expressão regular "{term}" não é válida: {error}',
     tooManyTerms: 'Um ouvinte pode procurar no máximo {max} excertos de texto.',
+    badField: 'Não é possível ler a condição de campo do modelo "{term}".',
+    tooManyFields: 'Um ouvinte pode verificar no máximo {max} campos do modelo.',
     badResult: 'Resultado(s) de lançamento desconhecido(s): {value}.',
     badComparison: 'O valor "{value}" não é válido para --{option}.',
     badDice: 'O valor "{value}" não é válido para --dice.',
@@ -195,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Peça ao seu mestre que configure ouvintes por si.',
     unknownCommand: 'Escreva !crl help para ver todos os comandos.',
     badOption:
-      'As opções são --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+      'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
     notFound: 'Escreva !crl para ver a lista de ouvintes.',
     nameInvalid:
       'Utilize até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ nem "--", e não comece por "-".',
     badOnOff: 'Utilize on ou off.',
+    badField:
+      'Utilize um nome de campo, depois = (é), != (não é), ~ (contém) ou !~ (não contém), depois o valor, como subcategory=Attack. Inspecionar mostra os campos de um lançamento.',
     badType: 'Os tipos de mensagem são: {types}.',
     badResult: 'Utilize crit, fumble, success ou fail.',
     badComparison: 'Utilize um número, uma comparação como >=15 ou <3, ou um intervalo como 19-20.',
@@ -228,7 +235,7 @@ const TRANSLATION = {
     help: 'Mostra esta lista.',
     optionsTitle: 'Opções',
     options:
-      'Opções: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
+      'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
     placeholders:
       'Os comandos podem utilizar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
     handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -293,6 +300,7 @@ const TRANSLATION = {
         '## no texto representa um lançamento em linha; as verificações de lançamento passam então a considerar apenas os lançamentos aí encontrados. Sem ##, são verificados todos os lançamentos da mensagem.',
         'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
         'Oradores / personagens: o nome apresentado no chat, ou o nome da personagem no modelo de lançamento. Jogadores: o nome de apresentação do jogador.',
+        'Campos do modelo: condições sobre os campos que Inspecionar apresenta, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor completo, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo em falta conta como vazio. Utilize-o em vez de --text quando pretender um único campo, porque --text também procura no HTML oculto de um cartão Beacon.',
       ],
     },
     templates: {
@@ -343,6 +351,8 @@ const TRANSLATION = {
       regex: 'on para ler o texto como expressões regulares, off para texto simples.',
       who: 'Nomes de oradores ou personagens, separados por vírgulas.',
       players: 'Nomes de apresentação dos jogadores, separados por vírgulas.',
+      fields:
+        'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
       results: 'crit, fumble, success e/ou fail.',
       total: 'Total do lançamento: 15, >=15, <5 ou 19-20.',
       natural: 'Face natural do dado: 20, <=2 ou 19-20.',

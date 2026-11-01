@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'איך לקרוא את הטקסט',
     who: 'שמות דוברים או דמויות מופרדים בפסיקים - ריק לכולם',
     players: 'שמות שחקנים מופרדים בפסיקים - ריק לכולם',
+    fields: 'שדות תבנית כגון subcategory=Attack && title~sword - ריק לכל ערך',
     results: 'תוצאת ההטלה',
     total: 'סכום ההטלה, כגון 15 או 19-20 - ראו את דף העזרה - ריק לכל סכום',
     natural: 'תוצאה טבעית של הקובייה, כגון 20 או 1-2 - ריק לכל תוצאה',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'הטקסט הוא',
     who: 'דוברים / דמויות',
     players: 'שחקנים',
+    fields: 'שדות התבנית',
     results: 'תוצאת ההטלה',
     total: 'סכום ההטלה',
     natural: 'קובייה טבעית',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'תבנית ההטלה לא תואמת',
       who: 'הדובר או הדמות לא תואמים',
       player: 'השחקן לא תואם',
+      field: 'שדה התבנית לא תואם',
       text: 'הטקסט לא נמצא',
       roll: 'אף הטלה לא עומדת בתנאי ההטלה',
     },
@@ -179,6 +182,8 @@ const TRANSLATION = {
     badType: 'סוגי הודעות לא מוכרים: {value}.',
     badRegex: 'הביטוי הרגולרי "{term}" אינו תקין: {error}',
     tooManyTerms: 'מאזין יכול לחפש לכל היותר {max} קטעי טקסט.',
+    badField: 'לא ניתן לקרוא את תנאי שדה התבנית "{term}".',
+    tooManyFields: 'מאזין יכול לבדוק לכל היותר {max} שדות תבנית.',
     badResult: 'תוצאות הטלה לא מוכרות: {value}.',
     badComparison: 'הערך "{value}" אינו תקין עבור --{option}.',
     badDice: 'הערך "{value}" אינו תקין עבור --dice.',
@@ -192,11 +197,13 @@ const TRANSLATION = {
     gmOnly: 'בקשו מה-GM שלכם להגדיר עבורכם מאזינים.',
     unknownCommand: 'הקלידו !crl help כדי לראות את כל הפקודות.',
     badOption:
-      'האפשרויות הן --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands.',
+      'האפשרויות הן --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands.',
     notFound: 'הקלידו !crl כדי לראות את רשימת המאזינים.',
     nameInvalid:
       'עד {max} תווים, בלי התווים האלה: | { } [ ] \\ @ % # ? ~ או "--", ובלי "-" בהתחלה.',
     badOnOff: 'השתמשו ב-on או off.',
+    badField:
+      'השתמשו בשם שדה, אחריו = (שווה), != (לא שווה), ~ (מכיל) או !~ (לא מכיל), ואחריו הערך, כגון subcategory=Attack. בדיקת ההודעה מציגה את השדות של הטלה.',
     badType: 'סוגי ההודעות הם: {types}.',
     badResult: 'השתמשו ב-crit, fumble, success או fail.',
     badComparison: 'השתמשו במספר, בהשוואה כגון >=15 או <3, או בטווח כגון 19-20.',
@@ -224,7 +231,7 @@ const TRANSLATION = {
     help: 'הצגת הרשימה הזו.',
     optionsTitle: 'אפשרויות',
     options:
-      'אפשרויות: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands. ניתן להשתמש בשמות במקום במזהים.',
+      'אפשרויות: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands. ניתן להשתמש בשמות במקום במזהים.',
     placeholders:
       'פקודות יכולות להשתמש ב-${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ו-${field:name}.',
     handouts: 'דף המידע "{help}" מסביר הכול; בדף המידע "{deck}" יש לחצנים.',
@@ -287,6 +294,7 @@ const TRANSLATION = {
         '## בטקסט מייצג הטלה מוטבעת; בדיקות ההטלה בודקות אז רק את ההטלות שנמצאו שם. בלי ##, נבדקת כל הטלה בהודעה.',
         'הטקסט יכול להיות ביטוי רגולרי במקום טקסט רגיל (--regex on).',
         "דוברים / דמויות: השם שמוצג בצ'אט, או שם הדמות בתבנית ההטלה. שחקנים: שם התצוגה של השחקן.",
+        'שדות התבנית: תנאים על השדות שבדיקת ההודעה מציגה, כגון subcategory=Attack או title~sword, מופרדים ב-&&. = ו-!= משווים את הערך כולו, ~ ו-!~ מחפשים בו טקסט, ואין הבחנה בין אותיות גדולות לקטנות. שדה חסר נחשב ריק. השתמשו בזה במקום --text כשהכוונה לשדה אחד, כי --text מחפש גם ב-HTML המוסתר של כרטיס Beacon.',
       ],
     },
     templates: {
@@ -336,6 +344,8 @@ const TRANSLATION = {
       regex: 'on כדי לקרוא את הטקסט כביטויים רגולריים, off לטקסט רגיל.',
       who: 'שמות דוברים או דמויות, מופרדים בפסיקים.',
       players: 'שמות התצוגה של שחקנים, מופרדים בפסיקים.',
+      fields:
+        'תנאים על שדות התבנית, מופרדים ב-&&: name=value (שווה), name!=value (לא שווה), name~text (מכיל), name!~text (לא מכיל). עם --regex on, ~ קורא ביטוי רגולרי.',
       results: 'crit, fumble, success ו/או fail.',
       total: 'סכום ההטלה: 15, >=15, <5 או 19-20.',
       natural: 'הפאה הטבעית של הקובייה: 20, <=2 או 19-20.',

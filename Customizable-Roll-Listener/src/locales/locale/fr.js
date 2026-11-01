@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Comment lire le texte',
     who: 'Noms d’orateurs ou de personnages séparés par des virgules - vide pour tout le monde',
     players: 'Noms de joueurs séparés par des virgules - vide pour tout le monde',
+    fields: 'Champs du modèle, par exemple subcategory=Attack && title~sword - vide pour tous',
     results: 'Résultat du jet',
     total: 'Total du jet, par exemple 15 ou 19-20 - voir le document d’aide - vide pour tous',
     natural: 'Résultat naturel du dé, par exemple 20 ou 1-2 - vide pour tous',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Le texte est',
     who: 'Orateurs / personnages',
     players: 'Joueurs',
+    fields: 'Champs du modèle',
     results: 'Résultat du jet',
     total: 'Total du jet',
     natural: 'Dé naturel',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'le modèle de jet ne correspond pas',
       who: 'l’orateur ou le personnage ne correspond pas',
       player: 'le joueur ne correspond pas',
+      field: 'le champ du modèle ne correspond pas',
       text: 'texte introuvable',
       roll: 'aucun jet ne remplit les conditions de jet',
     },
@@ -182,6 +185,8 @@ const TRANSLATION = {
     badType: 'Type(s) de message inconnu(s) : {value}.',
     badRegex: 'L’expression régulière « {term} » n’est pas valide : {error}',
     tooManyTerms: 'Un écouteur peut chercher au plus {max} morceaux de texte.',
+    badField: 'La condition de champ du modèle « {term} » ne peut pas être lue.',
+    tooManyFields: 'Un écouteur peut vérifier au plus {max} champs du modèle.',
     badResult: 'Résultat(s) de jet inconnu(s) : {value}.',
     badComparison: 'La valeur « {value} » n’est pas valide pour --{option}.',
     badDice: 'La valeur « {value} » n’est pas valide pour --dice.',
@@ -195,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Demandez à votre MJ de configurer les écouteurs pour vous.',
     unknownCommand: 'Tapez !crl help pour voir toutes les commandes.',
     badOption:
-      'Les options sont --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
+      'Les options sont --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
     notFound: 'Tapez !crl pour voir la liste des écouteurs.',
     nameInvalid:
       'Utilisez au plus {max} caractères, sans ceux-ci : | { } [ ] \\ @ % # ? ~ ni "--", et ne commencez pas par "-".',
     badOnOff: 'Utilisez on ou off.',
+    badField:
+      'Utilisez un nom de champ, puis = (est), != (n’est pas), ~ (contient) ou !~ (ne contient pas), puis la valeur, par exemple subcategory=Attack. Inspecter affiche les champs d’un jet.',
     badType: 'Les types de message sont : {types}.',
     badResult: 'Utilisez crit, fumble, success ou fail.',
     badComparison:
@@ -230,7 +237,7 @@ const TRANSLATION = {
     help: 'Affiche cette liste.',
     optionsTitle: 'Options',
     options:
-      'Options : --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
+      'Options : --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
     placeholders:
       'Les commandes peuvent utiliser ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} et ${field:name}.',
     handouts: 'Le document « {help} » explique tout ; le document « {deck} » contient des boutons.',
@@ -295,6 +302,7 @@ const TRANSLATION = {
         '## dans le texte représente un jet en ligne ; les vérifications de jet n’examinent alors que les jets trouvés à cet endroit. Sans ##, tous les jets du message sont vérifiés.',
         'Le texte peut être une expression régulière au lieu de texte simple (--regex on).',
         'Orateurs / personnages : le nom affiché dans le chat, ou le nom du personnage dans le modèle de jet. Joueurs : le nom d’affichage du joueur.',
+        'Champs du modèle : conditions sur les champs listés par Inspecter, par exemple subcategory=Attack ou title~sword, séparées par &&. = et != comparent la valeur entière, ~ et !~ cherchent du texte dedans, et la casse est ignorée. Un champ absent compte comme vide. Utilisez-le plutôt que --text quand vous visez un seul champ, car --text cherche aussi dans le HTML caché d’une carte Beacon.',
       ],
     },
     templates: {
@@ -345,6 +353,8 @@ const TRANSLATION = {
       regex: 'on pour lire le texte comme des expressions régulières, off pour du texte simple.',
       who: 'Noms d’orateurs ou de personnages, séparés par des virgules.',
       players: 'Noms d’affichage des joueurs, séparés par des virgules.',
+      fields:
+        'Conditions sur les champs du modèle, séparées par && : name=value (est), name!=value (n’est pas), name~text (contient), name!~text (ne contient pas). Avec --regex on, ~ lit une expression régulière.',
       results: 'crit, fumble, success et/ou fail.',
       total: 'Total du jet : 15, >=15, <5 ou 19-20.',
       natural: 'Face naturelle du dé : 20, <=2 ou 19-20.',

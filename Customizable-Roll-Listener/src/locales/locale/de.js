@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Wie der Text gelesen wird',
     who: 'Sprecher- oder Charakternamen, durch Kommas getrennt – leer für alle',
     players: 'Spielernamen, durch Kommas getrennt – leer für alle',
+    fields: 'Vorlagenfelder wie subcategory=Attack && title~sword – leer für alle',
     results: 'Wurfergebnis',
     total: 'Wurfsumme wie 15 oder 19-20 – siehe Hilfe-Handout – leer für jede',
     natural: 'Natürliches Würfelergebnis wie 20 oder 1-2 – leer für jedes',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Text ist',
     who: 'Sprecher / Charaktere',
     players: 'Spieler',
+    fields: 'Vorlagenfelder',
     results: 'Wurfergebnis',
     total: 'Wurfsumme',
     natural: 'Natürlicher Wurf',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'Wurfvorlage passt nicht',
       who: 'Sprecher oder Charakter passt nicht',
       player: 'Spieler passt nicht',
+      field: 'Vorlagenfeld passt nicht',
       text: 'Text nicht gefunden',
       roll: 'kein Wurf erfüllt die Wurfbedingungen',
     },
@@ -181,6 +184,8 @@ const TRANSLATION = {
     badType: 'Unbekannte(r) Nachrichtentyp(en): {value}.',
     badRegex: 'Der reguläre Ausdruck „{term}“ ist nicht gültig: {error}',
     tooManyTerms: 'Ein Listener kann nach höchstens {max} Textstücken suchen.',
+    badField: 'Die Vorlagenfeld-Bedingung „{term}“ kann nicht gelesen werden.',
+    tooManyFields: 'Ein Listener kann höchstens {max} Vorlagenfelder prüfen.',
     badResult: 'Unbekannte(s) Wurfergebnis(se): {value}.',
     badComparison: 'Der Wert „{value}“ ist für --{option} nicht gültig.',
     badDice: 'Der Wert „{value}“ ist für --dice nicht gültig.',
@@ -194,11 +199,13 @@ const TRANSLATION = {
     gmOnly: 'Bitte deine SL, Listener für dich einzurichten.',
     unknownCommand: 'Gib !crl help ein, um alle Befehle zu sehen.',
     badOption:
-      'Optionen sind --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
+      'Optionen sind --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
     notFound: 'Gib !crl ein, um die Liste der Listener zu sehen.',
     nameInvalid:
       'Verwende bis zu {max} Zeichen, ohne diese: | { } [ ] \\ @ % # ? ~ oder „--“, und beginne nicht mit „-“.',
     badOnOff: 'Verwende on oder off.',
+    badField:
+      'Verwende einen Feldnamen, dann = (ist), != (ist nicht), ~ (enthält) oder !~ (enthält nicht), dann den Wert, etwa subcategory=Attack. Der Inspektor zeigt die Felder eines Wurfs.',
     badType: 'Nachrichtentypen sind: {types}.',
     badResult: 'Verwende crit, fumble, success oder fail.',
     badComparison:
@@ -229,7 +236,7 @@ const TRANSLATION = {
     help: 'Zeigt diese Liste.',
     optionsTitle: 'Optionen',
     options:
-      'Optionen: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
+      'Optionen: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
     placeholders:
       'Befehle können ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} und ${field:name} verwenden.',
     handouts: 'Das Handout „{help}“ erklärt alles; das Handout „{deck}“ enthält Schaltflächen.',
@@ -293,6 +300,7 @@ const TRANSLATION = {
         '## im Text steht für einen Inline-Wurf; die Wurfprüfungen betrachten dann nur die dort gefundenen Würfe. Ohne ## wird jeder Wurf der Nachricht geprüft.',
         'Text kann statt Klartext ein regulärer Ausdruck sein (--regex on).',
         'Sprecher / Charaktere: der im Chat angezeigte Name oder der Charaktername in der Wurfvorlage. Spieler: der Anzeigename des Spielers.',
+        'Vorlagenfelder: Bedingungen für die Felder, die der Inspektor auflistet, etwa subcategory=Attack oder title~sword, getrennt durch &&. = und != vergleichen den ganzen Wert, ~ und !~ suchen Text darin, Groß- und Kleinschreibung wird ignoriert. Ein fehlendes Feld gilt als leer. Verwende es statt --text, wenn du ein bestimmtes Feld meinst, denn --text durchsucht auch das versteckte HTML einer Beacon-Karte.',
       ],
     },
     templates: {
@@ -343,6 +351,8 @@ const TRANSLATION = {
       regex: 'on, um den Text als reguläre Ausdrücke zu lesen, off für Klartext.',
       who: 'Sprecher- oder Charakternamen, durch Kommas getrennt.',
       players: 'Anzeigenamen der Spieler, durch Kommas getrennt.',
+      fields:
+        'Bedingungen für Vorlagenfelder, getrennt durch &&: name=value (ist), name!=value (ist nicht), name~text (enthält), name!~text (enthält nicht). Mit --regex on liest ~ einen regulären Ausdruck.',
       results: 'crit, fumble, success und/oder fail.',
       total: 'Wurfsumme: 15, >=15, <5 oder 19-20.',
       natural: 'Natürliche Würfelseite: 20, <=2 oder 19-20.',

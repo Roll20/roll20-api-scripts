@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Metin nasıl okunsun',
     who: 'Virgülle ayrılmış gönderen veya karakter adları - herkes için boş',
     players: 'Virgülle ayrılmış oyuncu adları - herkes için boş',
+    fields: 'subcategory=Attack && title~sword gibi şablon alanları - hepsi için boş',
     results: 'Atış sonucu',
     total: '15 veya 19-20 gibi atış toplamı - Yardım belgesine bakın - hepsi için boş',
     natural: '20 veya 1-2 gibi doğal zar sonucu - hepsi için boş',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Metin türü',
     who: 'Gönderenler / karakterler',
     players: 'Oyuncular',
+    fields: 'Şablon alanları',
     results: 'Atış sonucu',
     total: 'Atış toplamı',
     natural: 'Doğal zar',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'atış şablonu eşleşmiyor',
       who: 'gönderen veya karakter eşleşmiyor',
       player: 'oyuncu eşleşmiyor',
+      field: 'şablon alanı eşleşmiyor',
       text: 'metin bulunamadı',
       roll: 'hiçbir atış atış koşullarını karşılamıyor',
     },
@@ -179,6 +182,8 @@ const TRANSLATION = {
     badType: 'Bilinmeyen mesaj türleri: {value}.',
     badRegex: '"{term}" düzenli ifadesi geçerli değil: {error}',
     tooManyTerms: 'Bir dinleyici en fazla {max} metin parçası arayabilir.',
+    badField: '"{term}" şablon alanı koşulu okunamıyor.',
+    tooManyFields: 'Bir dinleyici en fazla {max} şablon alanını denetleyebilir.',
     badResult: 'Bilinmeyen atış sonuçları: {value}.',
     badComparison: '"{value}" değeri --{option} için geçerli değil.',
     badDice: '"{value}" değeri --dice için geçerli değil.',
@@ -192,11 +197,13 @@ const TRANSLATION = {
     gmOnly: "GM'inizden sizin için dinleyici ayarlamasını isteyin.",
     unknownCommand: 'Tüm komutları görmek için !crl help yazın.',
     badOption:
-      'Seçenekler: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
+      'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
     notFound: 'Dinleyici listesini görmek için !crl yazın.',
     nameInvalid:
       'En fazla {max} karakter kullanın; şunları kullanmayın: | { } [ ] \\ @ % # ? ~ veya "--". Ad "-" ile başlamamalı.',
     badOnOff: 'on veya off kullanın.',
+    badField:
+      'Bir alan adı, ardından = (eşittir), != (eşit değildir), ~ (içerir) veya !~ (içermez), ardından değeri kullanın; örneğin subcategory=Attack. İnceleme, atışın alanlarını gösterir.',
     badType: 'Mesaj türleri: {types}.',
     badResult: 'crit, fumble, success veya fail kullanın.',
     badComparison:
@@ -228,7 +235,7 @@ const TRANSLATION = {
     help: 'Bu listeyi gösterir.',
     optionsTitle: 'Seçenekler',
     options:
-      'Seçenekler: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
+      'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
     placeholders:
       'Komutlarda şunlar kullanılabilir: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ve ${field:name}.',
     handouts: '"{help}" belgesi her şeyi açıklar; "{deck}" belgesinde düğmeler bulunur.',
@@ -292,6 +299,7 @@ const TRANSLATION = {
         'Metindeki ## bir satır içi atışı temsil eder; atış kontrolleri bu durumda yalnızca orada bulunan atışlara bakar. ## yoksa mesajdaki her atış kontrol edilir.',
         'Metin, düz metin yerine düzenli ifade olabilir (--regex on).',
         'Gönderenler / karakterler: sohbette görünen ad veya atış şablonundaki karakter adı. Oyuncular: oyuncunun görünen adı.',
+        "Şablon alanları: İnceleme tarafından listelenen alanlar üzerindeki koşullar, örneğin subcategory=Attack veya title~sword, && ile ayrılır. = ve != tüm değeri karşılaştırır, ~ ve !~ içinde metin arar ve büyük/küçük harf ayrımı yapılmaz. Eksik bir alan boş sayılır. Tek bir alanı kastettiğinizde --text yerine bunu kullanın, çünkü --text bir Beacon kartının gizli HTML'inde de arama yapar.",
       ],
     },
     templates: {
@@ -342,6 +350,8 @@ const TRANSLATION = {
       regex: 'Metni düzenli ifade olarak okumak için on, düz metin için off.',
       who: 'Virgülle ayrılmış gönderen veya karakter adları.',
       players: 'Virgülle ayrılmış oyuncu görünen adları.',
+      fields:
+        '&& ile ayrılmış şablon alanı koşulları: name=value (eşittir), name!=value (eşit değildir), name~text (içerir), name!~text (içermez). --regex on olduğunda ~ düzenli ifade olarak okunur.',
       results: 'crit, fumble, success ve/veya fail.',
       total: 'Atış toplamı: 15, >=15, <5 veya 19-20.',
       natural: 'Doğal zar yüzü: 20, <=2 veya 19-20.',

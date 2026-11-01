@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'テキストの解釈方法',
     who: '発言者名またはキャラクター名（カンマ区切り）- 空欄で全員',
     players: 'プレイヤー名（カンマ区切り）- 空欄で全員',
+    fields: 'テンプレートのフィールド（subcategory=Attack && title~sword など）- 空欄ですべて',
     results: 'ロール結果',
     total: 'ロールの合計（15 や 19-20 など）- ヘルプのハンドアウトを参照 - 空欄ですべて',
     natural: 'ダイスの出目（20 や 1-2 など）- 空欄ですべて',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'テキストの形式',
     who: '発言者 / キャラクター',
     players: 'プレイヤー',
+    fields: 'テンプレートのフィールド',
     results: 'ロール結果',
     total: 'ロールの合計',
     natural: 'ダイスの出目',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'ロールテンプレートが一致しない',
       who: '発言者またはキャラクターが一致しない',
       player: 'プレイヤーが一致しない',
+      field: 'テンプレートのフィールドが一致しない',
       text: 'テキストが見つからない',
       roll: 'ロール条件を満たすロールがない',
     },
@@ -180,6 +183,8 @@ const TRANSLATION = {
     badType: '不明なメッセージタイプ: {value}',
     badRegex: '正規表現「{term}」が正しくありません: {error}',
     tooManyTerms: '1 つのリスナーで検索できるテキストは最大 {max} 個です。',
+    badField: 'テンプレートのフィールド条件「{term}」を読み取れません。',
+    tooManyFields: '1 つのリスナーで確認できるテンプレートのフィールドは最大 {max} 個です。',
     badResult: '不明なロール結果: {value}',
     badComparison: '値「{value}」は --{option} には使用できません。',
     badDice: '値「{value}」は --dice には使用できません。',
@@ -193,11 +198,13 @@ const TRANSLATION = {
     gmOnly: 'リスナーの設定は GM に依頼してください。',
     unknownCommand: '!crl help と入力すると、すべてのコマンドを表示します。',
     badOption:
-      'オプションは --templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands です。',
+      'オプションは --templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands です。',
     notFound: '!crl と入力すると、リスナーの一覧を表示します。',
     nameInvalid:
       '{max} 文字以内で、| { } [ ] \\ @ % # ? ~ と "--" を含めず、"-" で始めないでください。',
     badOnOff: 'on または off を指定してください。',
+    badField:
+      'フィールド名、= (一致)・!= (不一致)・~ (含む)・!~ (含まない) のいずれか、値の順に指定してください（subcategory=Attack など）。ロールのフィールドは検査で確認できます。',
     badType: 'メッセージタイプ: {types}',
     badResult: 'crit、fumble、success、fail のいずれかを指定してください。',
     badComparison: '数値、>=15 や <3 などの比較、または 19-20 などの範囲を指定してください。',
@@ -226,7 +233,7 @@ const TRANSLATION = {
     help: 'この一覧を表示します。',
     optionsTitle: 'オプション',
     options:
-      'オプション: --templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands。ID の代わりに名前も使えます。',
+      'オプション: --templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands。ID の代わりに名前も使えます。',
     placeholders:
       'コマンドでは ${who}、${character}、${player}、${template}、${total}、${natural}、${result}、${expression}、${table}、${listener}、${field:name} を使えます。',
     handouts:
@@ -291,6 +298,7 @@ const TRANSLATION = {
         'テキスト中の ## はインラインロールを表し、ロールのチェックはそこで見つかったロールだけを対象にします。## がない場合は、メッセージ内のすべてのロールがチェックされます。',
         'テキストはプレーンテキストの代わりに正規表現にもできます（--regex on）。',
         '発言者 / キャラクター: チャットに表示される名前、またはロールテンプレート内のキャラクター名。プレイヤー: プレイヤーの表示名。',
+        'テンプレートのフィールド: 検査で一覧表示されるフィールドに対する条件で、subcategory=Attack や title~sword のように && で区切ります。= と != は値全体を比較し、~ と !~ は値に含まれるテキストを探します。大文字と小文字は区別しません。存在しないフィールドは空として扱います。特定のフィールドを指すときは --text ではなくこちらを使ってください。--text は Beacon カードの非表示の HTML も検索するためです。',
       ],
     },
     templates: {
@@ -340,6 +348,8 @@ const TRANSLATION = {
       regex: 'on でテキストを正規表現として、off でプレーンテキストとして扱います。',
       who: '発言者名またはキャラクター名（カンマ区切り）。',
       players: 'プレイヤーの表示名（カンマ区切り）。',
+      fields:
+        'テンプレートのフィールド条件（&& 区切り）: name=value (一致)、name!=value (不一致)、name~text (含む)、name!~text (含まない)。--regex on の場合、~ は正規表現として読みます。',
       results: 'crit、fumble、success、fail（複数可）。',
       total: 'ロールの合計: 15、>=15、<5、19-20 など。',
       natural: 'ダイスの出目: 20、<=2、19-20 など。',

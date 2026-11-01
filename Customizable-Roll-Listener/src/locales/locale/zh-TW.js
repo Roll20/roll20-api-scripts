@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: '如何解讀文字',
     who: '發言者或角色名稱，以逗號分隔 - 留空表示任何人',
     players: '玩家名稱，以逗號分隔 - 留空表示任何人',
+    fields: '模板欄位，例如 subcategory=Attack && title~sword - 留空表示任何值',
     results: '擲骰結果',
     total: '擲骰總值，例如 15 或 19-20 - 請見說明講義 - 留空表示任何值',
     natural: '原始骰值，例如 20 或 1-2 - 留空表示任何值',
@@ -93,6 +94,7 @@ const TRANSLATION = {
     regex: '文字類型',
     who: '發言者／角色',
     players: '玩家',
+    fields: '模板欄位',
     results: '擲骰結果',
     total: '擲骰總值',
     natural: '原始骰值',
@@ -145,6 +147,7 @@ const TRANSLATION = {
       template: '擲骰模板不符',
       who: '發言者或角色不符',
       player: '玩家不符',
+      field: '模板欄位不符',
       text: '找不到文字',
       roll: '沒有擲骰符合擲骰條件',
     },
@@ -180,6 +183,8 @@ const TRANSLATION = {
     badType: '未知的訊息類型：{value}。',
     badRegex: '正規表達式「{term}」無效：{error}',
     tooManyTerms: '一個監聽器最多只能尋找 {max} 段文字。',
+    badField: '無法讀取模板欄位條件「{term}」。',
+    tooManyFields: '一個監聽器最多只能檢查 {max} 個模板欄位。',
     badResult: '未知的擲骰結果：{value}。',
     badComparison: '值「{value}」不適用於 --{option}。',
     badDice: '值「{value}」不適用於 --dice。',
@@ -193,11 +198,13 @@ const TRANSLATION = {
     gmOnly: '請 GM 幫你設定監聽器。',
     unknownCommand: '輸入 !crl help 查看所有指令。',
     badOption:
-      '可用選項：--templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
+      '可用選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
     notFound: '輸入 !crl 查看監聽器列表。',
     nameInvalid:
       '最多使用 {max} 個字元，不可包含以下字元：| { } [ ] \\ @ % # ? ~ 或 "--"，且不可以 "-" 開頭。',
     badOnOff: '請使用 on 或 off。',
+    badField:
+      '請先寫欄位名稱，再寫 = (是)、!= (不是)、~ (包含) 或 !~ (不包含)，最後寫值，例如 subcategory=Attack。「檢查」可顯示擲骰的欄位。',
     badType: '訊息類型有：{types}。',
     badResult: '請使用 crit、fumble、success 或 fail。',
     badComparison: '請使用數字、比較式（例如 >=15 或 <3）或範圍（例如 19-20）。',
@@ -225,7 +232,7 @@ const TRANSLATION = {
     help: '顯示此列表。',
     optionsTitle: '選項',
     options:
-      '選項：--templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
+      '選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
     placeholders:
       '指令中可使用 ${who}、${character}、${player}、${template}、${total}、${natural}、${result}、${expression}、${table}、${listener} 和 ${field:name}。',
     handouts: '「{help}」講義說明了一切；「{deck}」講義提供按鈕。',
@@ -288,6 +295,7 @@ const TRANSLATION = {
         '文字中的 ## 代表一個行內擲骰；擲骰檢查此時只看該處的擲骰。沒有 ## 時，會檢查訊息中的每一次擲骰。',
         '文字可以是正規表達式而非純文字（--regex on）。',
         '發言者／角色：聊天中顯示的名稱，或擲骰模板中的角色名稱。玩家：玩家的顯示名稱。',
+        '模板欄位：針對「檢查」列出之欄位的條件，例如 subcategory=Attack 或 title~sword，以 && 分隔。= 和 != 比較整個值，~ 和 !~ 在值中尋找文字，且不分大小寫。缺少的欄位視為空白。若指的是單一欄位，請改用此選項而非 --text，因為 --text 也會搜尋 Beacon 卡片隱藏的 HTML。',
       ],
     },
     templates: {
@@ -336,6 +344,8 @@ const TRANSLATION = {
       regex: 'on 表示將文字視為正規表達式，off 表示純文字。',
       who: '發言者或角色名稱，以逗號分隔。',
       players: '玩家顯示名稱，以逗號分隔。',
+      fields:
+        '模板欄位條件，以 && 分隔：name=value (是)、name!=value (不是)、name~text (包含)、name!~text (不包含)。使用 --regex on 時，~ 會讀取正規表達式。',
       results: 'crit、fumble、success 和／或 fail。',
       total: '擲骰總值：15、>=15、<5 或 19-20。',
       natural: '原始骰值：20、<=2 或 19-20。',

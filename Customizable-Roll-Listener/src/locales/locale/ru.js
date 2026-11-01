@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Как читать текст',
     who: 'Имена отправителей или персонажей через запятую — пусто, если любые',
     players: 'Имена игроков через запятую — пусто, если любые',
+    fields: 'Поля шаблона, например subcategory=Attack && title~sword — пусто, если любые',
     results: 'Результат броска',
     total:
       'Сумма броска, например 15 или 19-20 — см. раздаточный материал «Справка» — пусто, если любая',
@@ -93,6 +94,7 @@ const TRANSLATION = {
     regex: 'Текст как',
     who: 'Отправители / персонажи',
     players: 'Игроки',
+    fields: 'Поля шаблона',
     results: 'Результат броска',
     total: 'Сумма броска',
     natural: 'Натуральный результат',
@@ -145,6 +147,7 @@ const TRANSLATION = {
       template: 'шаблон броска не совпадает',
       who: 'отправитель или персонаж не совпадает',
       player: 'игрок не совпадает',
+      field: 'поле шаблона не совпадает',
       text: 'текст не найден',
       roll: 'ни один бросок не подходит под условия броска',
     },
@@ -182,6 +185,8 @@ const TRANSLATION = {
     badType: 'Неизвестные типы сообщений: {value}.',
     badRegex: 'Регулярное выражение «{term}» недопустимо: {error}',
     tooManyTerms: 'Слушатель может искать не более {max} фрагментов текста.',
+    badField: 'Не удаётся прочитать условие поля шаблона «{term}».',
+    tooManyFields: 'Слушатель может проверять не более {max} полей шаблона.',
     badResult: 'Неизвестные результаты броска: {value}.',
     badComparison: 'Значение «{value}» недопустимо для --{option}.',
     badDice: 'Значение «{value}» недопустимо для --dice.',
@@ -195,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Попросите мастера настроить для вас слушателей.',
     unknownCommand: 'Введите !crl help, чтобы увидеть все команды.',
     badOption:
-      'Доступные параметры: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands.',
+      'Доступные параметры: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands.',
     notFound: 'Введите !crl, чтобы увидеть список слушателей.',
     nameInvalid:
       'Не более {max} символов, без следующих: | { } [ ] \\ @ % # ? ~ и «--»; имя не должно начинаться с «-».',
     badOnOff: 'Используйте on или off.',
+    badField:
+      'Укажите имя поля, затем = (равно), != (не равно), ~ (содержит) или !~ (не содержит), затем значение, например subcategory=Attack. Инспектор показывает поля броска.',
     badType: 'Типы сообщений: {types}.',
     badResult: 'Используйте crit, fumble, success или fail.',
     badComparison:
@@ -230,7 +237,7 @@ const TRANSLATION = {
     help: 'Показать этот список.',
     optionsTitle: 'Параметры',
     options:
-      'Параметры: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands. Вместо ID можно указывать имена.',
+      'Параметры: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands. Вместо ID можно указывать имена.',
     placeholders:
       'В командах можно использовать ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} и ${field:name}.',
     handouts: 'В раздаточном материале «{help}» всё подробно объяснено, а в «{deck}» есть кнопки.',
@@ -294,6 +301,7 @@ const TRANSLATION = {
         '## в тексте обозначает встроенный бросок; тогда проверки броска смотрят только на найденные там броски. Без ## проверяется каждый бросок в сообщении.',
         'Вместо обычного текста можно использовать регулярное выражение (--regex on).',
         'Отправители / персонажи: имя, показанное в чате, или имя персонажа в шаблоне броска. Игроки: отображаемое имя игрока.',
+        'Поля шаблона: условия на поля, которые показывает инспектор, например subcategory=Attack или title~sword, через &&. = и != сравнивают значение целиком, ~ и !~ ищут в нём текст, регистр букв не учитывается. Отсутствующее поле считается пустым. Используйте это вместо --text, когда имеете в виду одно поле, потому что --text ищет и в скрытом HTML карточки Beacon.',
       ],
     },
     templates: {
@@ -343,6 +351,8 @@ const TRANSLATION = {
       regex: 'on — читать текст как регулярные выражения, off — как обычный текст.',
       who: 'Имена отправителей или персонажей через запятую.',
       players: 'Отображаемые имена игроков через запятую.',
+      fields:
+        'Условия на поля шаблона через &&: name=value (равно), name!=value (не равно), name~text (содержит), name!~text (не содержит). При --regex on ~ читает регулярное выражение.',
       results: 'crit, fumble, success и/или fail.',
       total: 'Сумма броска: 15, >=15, <5 или 19-20.',
       natural: 'Натуральный результат кубика: 20, <=2 или 19-20.',

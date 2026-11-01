@@ -51,6 +51,8 @@ const TRANSLATION = {
     regex: 'Com s’ha de llegir el text',
     who: 'Noms de parlants o personatges separats per comes - buit per a tothom',
     players: 'Noms de jugadors separats per comes - buit per a tothom',
+    fields:
+      'Camps de la plantilla, com ara subcategory=Attack && title~sword - buit per a qualsevol',
     results: 'Resultat de la tirada',
     total:
       'Total de la tirada, com ara 15 o 19-20 - vegeu el document d’Ajuda - buit per a qualsevol',
@@ -93,6 +95,7 @@ const TRANSLATION = {
     regex: 'El text és',
     who: 'Parlants / personatges',
     players: 'Jugadors',
+    fields: 'Camps de la plantilla',
     results: 'Resultat de la tirada',
     total: 'Total de la tirada',
     natural: 'Dau natural',
@@ -145,6 +148,7 @@ const TRANSLATION = {
       template: 'la plantilla de tirada no coincideix',
       who: 'el parlant o personatge no coincideix',
       player: 'el jugador no coincideix',
+      field: 'el camp de la plantilla no coincideix',
       text: 'no s’ha trobat el text',
       roll: 'cap tirada no compleix les condicions de tirada',
     },
@@ -181,6 +185,8 @@ const TRANSLATION = {
     badType: 'Tipus de missatge desconegut(s): {value}.',
     badRegex: 'L’expressió regular "{term}" no és vàlida: {error}',
     tooManyTerms: 'Un oient pot cercar com a màxim {max} fragments de text.',
+    badField: 'No es pot llegir la condició de camp de plantilla "{term}".',
+    tooManyFields: 'Un oient pot comprovar com a màxim {max} camps de la plantilla.',
     badResult: 'Resultat(s) de tirada desconegut(s): {value}.',
     badComparison: 'El valor "{value}" no és vàlid per a --{option}.',
     badDice: 'El valor "{value}" no és vàlid per a --dice.',
@@ -194,11 +200,13 @@ const TRANSLATION = {
     gmOnly: 'Demana al teu DJ que et configuri els oients.',
     unknownCommand: 'Escriu !crl help per veure totes les ordres.',
     badOption:
-      'Les opcions són --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+      'Les opcions són --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
     notFound: 'Escriu !crl per veure la llista d’oients.',
     nameInvalid:
       'Fes servir fins a {max} caràcters, sense aquests: | { } [ ] \\ @ % # ? ~ o "--", i no comencis amb "-".',
     badOnOff: 'Fes servir on o off.',
+    badField:
+      'Fes servir un nom de camp, després = (és), != (no és), ~ (conté) o !~ (no conté), i després el valor, com ara subcategory=Attack. Inspecciona mostra els camps d’una tirada.',
     badType: 'Els tipus de missatge són: {types}.',
     badResult: 'Fes servir crit, fumble, success o fail.',
     badComparison:
@@ -228,7 +236,7 @@ const TRANSLATION = {
     help: 'Mostra aquesta llista.',
     optionsTitle: 'Opcions',
     options:
-      'Opcions: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
+      'Opcions: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
     placeholders:
       'Les ordres poden fer servir ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
     handouts: 'El document "{help}" ho explica tot; el document "{deck}" té botons.',
@@ -293,6 +301,7 @@ const TRANSLATION = {
         '## al text representa una tirada en línia; aleshores les comprovacions de tirada només miren les tirades que s’hi troben. Sense ##, es comprova cada tirada del missatge.',
         'El text pot ser una expressió regular en lloc de text normal (--regex on).',
         'Parlants / personatges: el nom que es mostra al xat, o el nom del personatge a la plantilla de tirada. Jugadors: el nom visible del jugador.',
+        'Camps de la plantilla: condicions sobre els camps que llista Inspecciona, com ara subcategory=Attack o title~sword, separades per &&. = i != comparen el valor sencer, ~ i !~ hi busquen text, i no es distingeix entre majúscules i minúscules. Un camp que falta compta com a buit. Fes-lo servir en lloc de --text quan vulguis un sol camp, perquè --text també cerca a l’HTML ocult d’una targeta de Beacon.',
       ],
     },
     templates: {
@@ -343,6 +352,8 @@ const TRANSLATION = {
       regex: 'on per llegir el text com a expressions regulars, off per a text normal.',
       who: 'Noms de parlants o personatges, separats per comes.',
       players: 'Noms visibles dels jugadors, separats per comes.',
+      fields:
+        'Condicions sobre camps de la plantilla, separades per &&: name=value (és), name!=value (no és), name~text (conté), name!~text (no conté). Amb --regex on, ~ llegeix una expressió regular.',
       results: 'crit, fumble, success i/o fail.',
       total: 'Total de la tirada: 15, >=15, <5 o 19-20.',
       natural: 'Cara natural del dau: 20, <=2 o 19-20.',

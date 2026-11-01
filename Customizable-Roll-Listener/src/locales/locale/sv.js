@@ -51,6 +51,7 @@ const TRANSLATION = {
     regex: 'Hur texten ska läsas',
     who: 'Talar- eller karaktärsnamn åtskilda med kommatecken - tomt för alla',
     players: 'Spelarnamn åtskilda med kommatecken - tomt för alla',
+    fields: 'Mallfält, till exempel subcategory=Attack && title~sword - tomt för alla',
     results: 'Slagresultat',
     total: 'Slagsumma, till exempel 15 eller 19-20 - se Help-handouten - tomt för alla',
     natural: 'Naturligt tärningsresultat, till exempel 20 eller 1-2 - tomt för alla',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     regex: 'Texten är',
     who: 'Talare / karaktärer',
     players: 'Spelare',
+    fields: 'Mallfält',
     results: 'Slagresultat',
     total: 'Slagsumma',
     natural: 'Naturlig tärning',
@@ -144,6 +146,7 @@ const TRANSLATION = {
       template: 'slagmallen matchar inte',
       who: 'talare eller karaktär matchar inte',
       player: 'spelaren matchar inte',
+      field: 'mallfält matchar inte',
       text: 'texten hittades inte',
       roll: 'inget slag uppfyller slagvillkoren',
     },
@@ -180,6 +183,8 @@ const TRANSLATION = {
     badType: 'Okänd(a) meddelandetyp(er): {value}.',
     badRegex: 'Det reguljära uttrycket "{term}" är inte giltigt: {error}',
     tooManyTerms: 'En lyssnare kan leta efter högst {max} textbitar.',
+    badField: 'Mallfältsvillkoret "{term}" kan inte läsas.',
+    tooManyFields: 'En lyssnare kan kontrollera högst {max} mallfält.',
     badResult: 'Okänt/okända slagresultat: {value}.',
     badComparison: 'Värdet "{value}" är inte giltigt för --{option}.',
     badDice: 'Värdet "{value}" är inte giltigt för --dice.',
@@ -193,11 +198,13 @@ const TRANSLATION = {
     gmOnly: 'Be din GM att ställa in lyssnare åt dig.',
     unknownCommand: 'Skriv !crl help för att se alla kommandon.',
     badOption:
-      'Alternativen är --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
+      'Alternativen är --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
     notFound: 'Skriv !crl för att se listan över lyssnare.',
     nameInvalid:
       'Använd högst {max} tecken, utan dessa: | { } [ ] \\ @ % # ? ~ eller "--", och börja inte med "-".',
     badOnOff: 'Använd on eller off.',
+    badField:
+      'Använd ett fältnamn, sedan = (är), != (är inte), ~ (innehåller) eller !~ (innehåller inte), sedan värdet, till exempel subcategory=Attack. Inspektera visar ett slags fält.',
     badType: 'Meddelandetyperna är: {types}.',
     badResult: 'Använd crit, fumble, success eller fail.',
     badComparison:
@@ -226,7 +233,7 @@ const TRANSLATION = {
     help: 'Visa den här listan.',
     optionsTitle: 'Alternativ',
     options:
-      'Alternativ: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
+      'Alternativ: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
     placeholders:
       'Kommandon kan använda ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} och ${field:name}.',
     handouts: 'Handouten "{help}" förklarar allt; handouten "{deck}" har knappar.',
@@ -290,6 +297,7 @@ const TRANSLATION = {
         '## i texten står för ett inline-slag; slagkontrollerna tittar då bara på slagen som finns där. Utan ## kontrolleras alla slag i meddelandet.',
         'Texten kan vara ett reguljärt uttryck i stället för vanlig text (--regex on).',
         'Talare / karaktärer: namnet som visas i chatten, eller karaktärsnamnet i slagmallen. Spelare: spelarens visningsnamn.',
+        'Mallfält: villkor på fälten som Inspektera listar, till exempel subcategory=Attack eller title~sword, åtskilda med &&. = och != jämför hela värdet, ~ och !~ letar efter text i det, och matchningen skiljer inte på stora och små bokstäver. Ett fält som saknas räknas som tomt. Använd det i stället för --text när du menar ett enda fält, eftersom --text även söker i ett Beacon-korts dolda HTML.',
       ],
     },
     templates: {
@@ -339,6 +347,8 @@ const TRANSLATION = {
       regex: 'on för att läsa texten som reguljära uttryck, off för vanlig text.',
       who: 'Talar- eller karaktärsnamn, åtskilda med kommatecken.',
       players: 'Spelarnas visningsnamn, åtskilda med kommatecken.',
+      fields:
+        'Villkor för mallfält, åtskilda med &&: name=value (är), name!=value (är inte), name~text (innehåller), name!~text (innehåller inte). Med --regex on läser ~ ett reguljärt uttryck.',
       results: 'crit, fumble, success och/eller fail.',
       total: 'Slagsumma: 15, >=15, <5 eller 19-20.',
       natural: 'Naturlig tärningssida: 20, <=2 eller 19-20.',
