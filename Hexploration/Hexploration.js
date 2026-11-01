@@ -4,22 +4,25 @@
  * ------------------------------------------------
  * Name: Hexploration
  * Script: Hexploration.js
- * Version: 2.0.2
- * Built: 2026-10-30T23:43:06.779Z
+ * Version: 2.0.3
+ * Built: 2026-11-01T00:30:24.255Z
  */
 const HexplorationMod = (() => {
   'use strict';
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Hexploration';
-  const SCRIPT_VERSION = '2.0.2';
-  const SCRIPT_LAST_UPDATED = '2026-10-30T23:43:06.779Z';
+  const SCRIPT_VERSION = '2.0.3';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T00:30:24.255Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
   const STATE_KEY = 'Hexploration';
   const SCHEMA_VERSION = 2;
   const COMMAND = '!hexploration';
+
+  // The player ID Roll20 gives chat messages sent by Mods with sendChat.
+  const API_PLAYER_ID = 'API';
 
   // v1 commands, kept so existing macros and the Hexploration_menu macro still work.
   const LEGACY_COMMANDS = {
@@ -14147,7 +14150,9 @@ const HexplorationMod = (() => {
     if (!isMain && !legacy) {
       return;
     }
-    if (!playerIsGM(msg.playerid)) {
+    // Commands sent by other Mods (ScriptCards, macros run by the API) come from
+    // the player "API". Replies to them go to the GM.
+    if (msg.playerid !== API_PLAYER_ID && !playerIsGM(msg.playerid)) {
       return;
     }
 

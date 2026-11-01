@@ -43,7 +43,7 @@
 ```js
 {
   schemaVersion: 2,
-  version: '2.0.2',
+  version: '2.0.3',
   config: { language, hexLayer, fillColor, strokeColor, labelColor, glimpseColor,
             strokeWidth, maxDistance, revealDistance, lineOfSight, revealPath,
             revealBy, revealMode, announce, pingDiscoveries },

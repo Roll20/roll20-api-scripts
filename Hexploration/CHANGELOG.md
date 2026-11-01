@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.3 - 2026-11-01
+
+### Fixed
+
+- Commands sent by other Mods, such as a ScriptCards `--@hexploration|` call, are no longer ignored. Roll20 sends them from the player "API", which is not a GM. Their replies are whispered to the GM.
+
 ## 2.0.2 - 2026-10-30
 
 ### Fixed
