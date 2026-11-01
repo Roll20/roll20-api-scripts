@@ -296,7 +296,7 @@ const TRANSLATION = {
         'Un oyente se activa cuando coinciden todos sus filtros. Los filtros vacíos coinciden con todo.',
         'Plantillas de tirada: el nombre de la plantilla, como atkdmg o simple. "none" coincide con los mensajes sin plantilla. Si hay varios nombres, vale cualquiera de ellos.',
         'Tipos de mensaje: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (hojas Beacon) y api. Si está vacío, se comprueban todos los tipos excepto los comandos de la API.',
-        'Texto: uno o más fragmentos de texto, separados por &&, que deben aparecer todos. No se distingue entre mayúsculas y minúsculas. El texto también se busca en los totales de las tiradas y en los resultados de tablas aleatorias.',
+        'Texto: uno o más fragmentos de texto, separados por &&, que deben aparecer todos. No se distingue entre mayúsculas y minúsculas. El texto también se busca en los totales de las tiradas y en los resultados de tablas aleatorias, y en el contenido sin procesar del mensaje, que Inspeccionar muestra en Contenido sin procesar: en una tarjeta de Beacon, es su HTML.',
         '## en el texto representa una tirada en línea; entonces las comprobaciones de tirada solo miran las tiradas que haya ahí. Sin ##, se comprueban todas las tiradas del mensaje.',
         'El texto puede ser una expresión regular en lugar de texto normal (--regex on).',
         'Hablantes / personajes: el nombre que se muestra en el chat, o el nombre del personaje en la plantilla de tirada. Jugadores: el nombre visible del jugador.',
@@ -321,7 +321,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Comprobaciones de tirada',
       points: [
-        'Resultado de la tirada: crítico (la cara más alta del dado, o el rango cs), pifia (un 1, o el rango cf), éxito (al menos un dado alcanza un objetivo, como en 1d20>15), fallo (una tirada con objetivo sin ningún éxito). Si hay varios resultados, vale cualquiera de ellos.',
+        'Resultado de la tirada: crítico (la cara más alta del dado, o el rango cs), pifia (un 1, o el rango cf), éxito (al menos un dado alcanza el objetivo escrito en la tirada, como en 1d20>15 o la reserva de dados 5d6>4), fallo (una tirada con objetivo y ningún éxito). Si hay varios resultados, vale cualquiera de ellos.',
+        'El éxito y el fallo solo funcionan con tiradas que llevan su propio objetivo. Los ataques, salvaciones y pruebas de las hojas de D&D son tiradas simples como 1d20+5, porque la hoja no conoce la AC ni la DC, así que nunca son un éxito ni un fallo. Para reaccionar cuando se alcanza una AC o una DC, usa Total de la tirada, como >=15.',
         'Total de la tirada: un número, una comparación como >=15 o un rango como 19-20.',
         'Dado natural: la cara en la que cayó un dado, como 20 o <=2.',
         'Dados comprobados: auto solo mira los d20 cuando se ha tirado alguno, así que los dados de daño que sacan su cara más alta no cuentan como críticos. Elige Cualquier dado, o un tamaño como d100, para cambiarlo.',
@@ -353,7 +354,8 @@ const TRANSLATION = {
       players: 'Nombres visibles de los jugadores, separados por comas.',
       fields:
         'Condiciones sobre campos de la plantilla, separadas por &&: name=value (es), name!=value (no es), name~text (contiene), name!~text (no contiene). Con --regex on, ~ lee una expresión regular.',
-      results: 'crit, fumble, success y/o fail.',
+      results:
+        'crit, fumble, success y/o fail. success y fail necesitan un objetivo en la tirada, como 1d20>15.',
       total: 'Total de la tirada: 15, >=15, <5 o 19-20.',
       natural: 'Cara natural del dado: 20, <=2 o 19-20.',
       dice: 'auto, any o un tamaño de dado como 20.',
@@ -397,7 +399,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'El inspector',
       points: [
-        'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes y por qué cada oyente se activó o no.',
+        'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes, el contenido sin procesar (el mensaje tal como lo envió Roll20, donde --text también busca) y por qué cada oyente se activó o no.',
         'Úsalo para averiguar el nombre de plantilla de una hoja, o para ver qué envía una hoja Beacon (como D&D 2024).',
         'Las hojas Beacon publican tarjetas de tirada en lugar de plantillas de tirada. CRL las lee: la plantilla es la primera clase de la tarjeta (dnd-2024 para D&D 2024), el personaje, el título (como Prueba de Destreza) y la subcategoría pasan a ser campos, y cada tirada del desglose es una tirada, así que funcionan las comprobaciones de crítico, pifia, total y dado natural.',
       ],

@@ -296,7 +296,7 @@ const TRANSLATION = {
         "'n Luisteraar gaan af wanneer elke filter wat dit het, pas. Leë filters pas by alles.",
         'Rolsjablone: die sjabloonnaam, soos atkdmg of simple. "none" pas by boodskappe sonder \'n sjabloon. Verskeie name beteken enigeen daarvan.',
         'Boodskaptipes: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-blaaie) en api. Wanneer leeg, word elke tipe behalwe api-bevele nagegaan.',
-        'Teks: een of meer stukke teks, geskei deur &&, wat almal moet voorkom. Hoof- en kleinletters word geïgnoreer. Teks word ook in roltotale en rolbare tabelresultate gevind.',
+        "Teks: een of meer stukke teks, geskei deur &&, wat almal moet voorkom. Hoof- en kleinletters word geïgnoreer. Teks word ook in roltotale en rolbare tabelresultate gevind, en in die boodskap se rou inhoud, wat Inspekteer onder Rou inhoud wys: vir 'n Beacon-kaart is dit sy HTML.",
         "## in die teks staan vir 'n inlyn-rol; die roltoetse kyk dan net na die rolle wat daar gevind word. Sonder ## word elke rol in die boodskap nagegaan.",
         "Teks kan 'n gereelde uitdrukking wees in plaas van gewone teks (--regex on).",
         'Sprekers / karakters: die naam wat in die klets gewys word, of die karakternaam in die rolsjabloon. Spelers: die speler se vertoonnaam.',
@@ -321,7 +321,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Roltoetse',
       points: [
-        "Rolresultaat: kritiek (die dobbelsteen se hoogste kant, of die cs-reeks), flater ('n 1, of die cf-reeks), sukses (minstens een dobbelsteen haal 'n teiken soos 1d20>15), mislukking ('n teikenrol sonder suksesse). Verskeie resultate beteken enigeen daarvan.",
+        "Rolresultaat: kritiek (die dobbelsteen se hoogste kant, of die cs-reeks), flater ('n 1, of die cf-reeks), sukses (minstens een dobbelsteen haal die teiken wat in die rol geskryf is, soos 1d20>15 of die dobbelpoel 5d6>4), mislukking ('n rol met 'n teiken en geen suksesse nie). Verskeie resultate beteken enigeen daarvan.",
+        "Sukses en mislukking werk net met rolle wat hul eie teiken bevat. Aanvalle, reddingsrolle en toetse van D&D-karakterblaaie is gewone rolle soos 1d20+5, omdat die karakterblad nie die AC of DC ken nie, so hulle is nooit 'n sukses of 'n mislukking nie. Om te reageer wanneer 'n AC of DC gehaal word, gebruik Roltotaal, soos >=15.",
         "Roltotaal: 'n getal, 'n vergelyking soos >=15, of 'n reeks soos 19-20.",
         "Natuurlike dobbelsteen: die kant waarop 'n dobbelsteen geland het, soos 20, of <=2.",
         "Dobbelstene nagegaan: auto kyk net na d20's wanneer een gegooi is, sodat skadedobbelstene wat hul hoogste kant gooi nie as kritiek tel nie. Kies any (enige dobbelsteen), of 'n grootte soos d100, om dit te verander.",
@@ -352,7 +353,8 @@ const TRANSLATION = {
       players: 'Spelers se vertoonname, geskei deur kommas.',
       fields:
         "Sjabloonveldvoorwaardes, geskei deur &&: name=value (is), name!=value (is nie), name~text (bevat), name!~text (bevat nie). Met --regex on lees ~ 'n gereelde uitdrukking.",
-      results: 'crit, fumble, success en/of fail.',
+      results:
+        "crit, fumble, success en/of fail. success en fail het 'n teiken in die rol nodig, soos 1d20>15.",
       total: 'Roltotaal: 15, >=15, <5 of 19-20.',
       natural: 'Natuurlike dobbelsteenkant: 20, <=2 of 19-20.',
       dice: "auto, any, of 'n dobbelsteengrootte soos 20.",
@@ -394,7 +396,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Die inspekteur',
       points: [
-        'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, en waarom elke luisteraar wel of nie afgegaan het nie.',
+        'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, die rou inhoud (die boodskap soos Roll20 dit gestuur het, wat --text ook deursoek), en waarom elke luisteraar wel of nie afgegaan het nie.',
         "Gebruik dit om 'n blad se sjabloonnaam te vind, of om te sien wat 'n Beacon-blad (soos D&D 2024) stuur.",
         "Beacon-blaaie plaas rolkaarte in plaas van rolsjablone. CRL lees hulle: die sjabloon is die kaart se eerste klas (dnd-2024 vir D&D 2024), die karakter, titel (soos Dexterity Check) en subkategorie word velde, en elke rol in die ontleding is 'n rol, so kritiek-, flater-, totaal- en natuurlike-dobbelsteentoetse werk.",
       ],

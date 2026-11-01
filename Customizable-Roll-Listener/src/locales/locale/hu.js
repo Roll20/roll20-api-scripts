@@ -295,7 +295,7 @@ const TRANSLATION = {
         'Egy figyelő akkor aktiválódik, ha minden szűrője egyezik. Az üres szűrő mindenre illeszkedik.',
         'Dobássablonok: a sablon neve, például atkdmg vagy simple. A „none” a sablon nélküli üzenetekre illeszkedik. Több név esetén bármelyik megfelel.',
         'Üzenettípusok: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon lapok) és api. Ha üres, az api-parancsok kivételével minden típust ellenőriz.',
-        'Szöveg: egy vagy több szövegrész &&-vel elválasztva, amelyeknek mind szerepelniük kell. A kis- és nagybetű nem számít. A szöveget a dobásösszegekben és a dobótáblázat-eredményekben is keresi.',
+        'Szöveg: egy vagy több szövegrész &&-vel elválasztva, amelyeknek mind szerepelniük kell. A kis- és nagybetű nem számít. A szöveget a dobásösszegekben és a dobótáblázat-eredményekben is keresi, valamint az üzenet nyers tartalmában, amelyet a vizsgáló a Nyers tartalom alatt mutat: Beacon-kártyánál ez a kártya HTML-je.',
         'A ## a szövegben egy beágyazott dobást jelöl; ilyenkor a dobásellenőrzések csak az ott talált dobásokat nézik. ## nélkül az üzenet minden dobását ellenőrzi.',
         'A szöveg egyszerű szöveg helyett reguláris kifejezés is lehet (--regex on).',
         'Beszélők / karakterek: a chatben megjelenő név, vagy a karakter neve a dobássablonban. Játékosok: a játékos megjelenített neve.',
@@ -320,7 +320,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Dobásellenőrzések',
       points: [
-        'Dobás eredménye: kritikus (a kocka legnagyobb értéke vagy a cs tartomány), kritikus hiba (1-es vagy a cf tartomány), siker (legalább egy kocka eléri a célt, pl. 1d20>15), kudarc (céldobás siker nélkül). Több eredmény esetén bármelyik megfelel.',
+        'Dobás eredménye: kritikus (a kocka legnagyobb értéke vagy a cs tartomány), kritikus hiba (1-es vagy a cf tartomány), siker (legalább egy kocka eléri a dobásba írt célt, pl. 1d20>15 vagy az 5d6>4 kockakészlet), kudarc (céllal rendelkező dobás siker nélkül). Több eredmény esetén bármelyik megfelel.',
+        'A siker és a kudarc csak olyan dobásoknál működik, amelyek saját célt tartalmaznak. A D&D-lapok támadásai, mentődobásai és próbái egyszerű dobások, pl. 1d20+5, mert a lap nem ismeri az AC-t vagy a DC-t, így sosem számítanak sikernek vagy kudarcnak. Ha arra szeretne reagálni, hogy a dobás eléri az AC-t vagy a DC-t, használja a Dobás összege beállítást, pl. >=15.',
         'Dobás összege: szám, összehasonlítás (pl. >=15) vagy tartomány (pl. 19-20).',
         'Natúr kocka: az érték, amelyre a kocka esett, pl. 20 vagy <=2.',
         'Ellenőrzött kockák: az Automatikus csak a d20-akat nézi, ha dobtak ilyet, így a maximumot dobó sebzéskockák nem számítanak kritikusnak. Ezen a Bármely kocka vagy egy méret (pl. d100) választásával változtathat.',
@@ -352,7 +353,8 @@ const TRANSLATION = {
       players: 'Játékosok megjelenített nevei vesszővel elválasztva.',
       fields:
         'Sablonmező-feltételek &&-vel elválasztva: name=value (egyenlő), name!=value (nem egyenlő), name~text (tartalmazza), name!~text (nem tartalmazza). --regex on esetén a ~ reguláris kifejezést olvas.',
-      results: 'crit, fumble, success és/vagy fail.',
+      results:
+        'crit, fumble, success és/vagy fail. A success és a fail csak akkor működik, ha a dobásban van cél, pl. 1d20>15.',
       total: 'Dobás összege: 15, >=15, <5 vagy 19-20.',
       natural: 'Natúr kockaérték: 20, <=2 vagy 19-20.',
       dice: 'auto, any, vagy egy kockaméret, pl. 20.',
@@ -395,7 +397,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'A vizsgáló',
       points: [
-        'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
+        'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, a nyers tartalmat (az üzenetet úgy, ahogy a Roll20 elküldte; a --text ebben is keres), és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
         'Ezzel megtalálhatja egy lap sablonnevét, vagy megnézheti, mit küld egy Beacon lap (például a D&D 2024).',
         'A Beacon lapok dobássablonok helyett dobáskártyákat küldenek. A CRL ezeket is beolvassa: a sablon a kártya első osztálya (D&D 2024 esetén dnd-2024), a karakter, a cím (pl. Dexterity Check) és az alkategória mezők lesznek, a lebontás minden dobása pedig dobásnak számít, így a kritikus, kritikus hiba, összeg és natúr ellenőrzések működnek.',
       ],

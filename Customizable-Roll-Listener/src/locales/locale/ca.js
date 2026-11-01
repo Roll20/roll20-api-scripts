@@ -297,7 +297,7 @@ const TRANSLATION = {
         'Un oient s’activa quan coincideixen tots els filtres que té. Els filtres buits coincideixen amb tot.',
         'Plantilles de tirada: el nom de la plantilla, com ara atkdmg o simple. "none" coincideix amb els missatges sense plantilla. Diversos noms volen dir qualsevol d’ells.',
         'Tipus de missatge: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fulls Beacon) i api. Si és buit, es comproven tots els tipus excepte les ordres api.',
-        'Text: un o més fragments de text, separats per &&, que han d’aparèixer tots. No es distingeix entre majúscules i minúscules. El text també es troba als totals de tirada i als resultats de taules aleatòries.',
+        'Text: un o més fragments de text, separats per &&, que han d’aparèixer tots. No es distingeix entre majúscules i minúscules. El text també es troba als totals de tirada i als resultats de taules aleatòries, i al contingut en brut del missatge, que Inspecciona mostra a Contingut en brut: en una targeta de Beacon, és el seu HTML.',
         '## al text representa una tirada en línia; aleshores les comprovacions de tirada només miren les tirades que s’hi troben. Sense ##, es comprova cada tirada del missatge.',
         'El text pot ser una expressió regular en lloc de text normal (--regex on).',
         'Parlants / personatges: el nom que es mostra al xat, o el nom del personatge a la plantilla de tirada. Jugadors: el nom visible del jugador.',
@@ -322,7 +322,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Comprovacions de tirada',
       points: [
-        'Resultat de la tirada: crític (la cara més alta del dau, o l’interval cs), pifia (un 1, o l’interval cf), èxit (almenys un dau assoleix un objectiu com ara 1d20>15), fracàs (una tirada amb objectiu sense cap èxit). Diversos resultats volen dir qualsevol d’ells.',
+        'Resultat de la tirada: crític (la cara més alta del dau, o l’interval cs), pifia (un 1, o l’interval cf), èxit (almenys un dau assoleix l’objectiu escrit a la tirada, com ara 1d20>15 o la reserva de daus 5d6>4), fracàs (una tirada amb objectiu i cap èxit). Diversos resultats volen dir qualsevol d’ells.',
+        'L’èxit i el fracàs només funcionen amb tirades que porten el seu propi objectiu. Els atacs, les salvacions i les proves dels fulls de D&D són tirades simples com ara 1d20+5, perquè el full no coneix ni l’AC ni la DC, així que mai no són un èxit ni un fracàs. Per reaccionar quan s’assoleix una AC o una DC, fes servir Total de la tirada, com ara >=15.',
         'Total de la tirada: un nombre, una comparació com ara >=15, o un interval com ara 19-20.',
         'Dau natural: la cara en què ha caigut un dau, com ara 20, o <=2.',
         'Daus comprovats: auto només mira els d20 quan se n’ha tirat un, de manera que els daus de dany que treuen la cara més alta no compten com a crítics. Tria any (qualsevol dau), o una mida com ara d100, per canviar-ho.',
@@ -354,7 +355,8 @@ const TRANSLATION = {
       players: 'Noms visibles dels jugadors, separats per comes.',
       fields:
         'Condicions sobre camps de la plantilla, separades per &&: name=value (és), name!=value (no és), name~text (conté), name!~text (no conté). Amb --regex on, ~ llegeix una expressió regular.',
-      results: 'crit, fumble, success i/o fail.',
+      results:
+        'crit, fumble, success i/o fail. success i fail necessiten un objectiu a la tirada, com ara 1d20>15.',
       total: 'Total de la tirada: 15, >=15, <5 o 19-20.',
       natural: 'Cara natural del dau: 20, <=2 o 19-20.',
       dice: 'auto, any o una mida de dau com ara 20.',
@@ -397,7 +399,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'L’inspector',
       points: [
-        'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients i per què cada oient s’ha activat o no.',
+        'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients, el contingut en brut (el missatge tal com l’ha enviat Roll20, on --text també cerca) i per què cada oient s’ha activat o no.',
         'Fes-lo servir per trobar el nom de la plantilla d’un full, o per veure què envia un full Beacon (com ara D&D 2024).',
         'Els fulls Beacon publiquen targetes de tirada en lloc de plantilles de tirada. CRL les llegeix: la plantilla és la primera classe de la targeta (dnd-2024 per a D&D 2024), el personatge, el títol (com ara Dexterity Check) i la subcategoria es converteixen en camps, i cada tirada del desglossament és una tirada, de manera que funcionen les comprovacions de crític, pifia, total i dau natural.',
       ],

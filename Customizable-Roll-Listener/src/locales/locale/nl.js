@@ -298,7 +298,7 @@ const TRANSLATION = {
         'Een luisteraar activeert wanneer al zijn filters overeenkomen. Lege filters komen met alles overeen.',
         'Rolsjablonen: de naam van het sjabloon, zoals atkdmg of simple. "none" komt overeen met berichten zonder sjabloon. Meerdere namen betekent: een van die namen.',
         'Berichttypen: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-sheets) en api. Als dit leeg is, wordt elk type behalve api-commando’s gecontroleerd.',
-        'Tekst: een of meer tekststukken, gescheiden door &&, die allemaal moeten voorkomen. Hoofdletters en kleine letters maken niet uit. Tekst wordt ook gevonden in worptotalen en resultaten van gooibare tabellen.',
+        'Tekst: een of meer tekststukken, gescheiden door &&, die allemaal moeten voorkomen. Hoofdletters en kleine letters maken niet uit. Tekst wordt ook gevonden in worptotalen en resultaten van gooibare tabellen, en in de ruwe inhoud van het bericht, die Inspecteren toont onder Ruwe inhoud: bij een Beacon-kaart is dat de HTML ervan.',
         '## in de tekst staat voor een inline-worp; de worpcontroles kijken dan alleen naar de worpen die daar staan. Zonder ## wordt elke worp in het bericht gecontroleerd.',
         'Tekst kan een reguliere expressie zijn in plaats van platte tekst (--regex on).',
         'Sprekers / personages: de naam die in de chat staat, of de personagenaam in het rolsjabloon. Spelers: de weergavenaam van de speler.',
@@ -323,7 +323,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Worpcontroles',
       points: [
-        'Worpresultaat: kritiek (de hoogste zijde van de dobbelsteen, of het cs-bereik), blunder (een 1, of het cf-bereik), succes (minstens één dobbelsteen haalt een doel zoals 1d20>15), mislukking (een worp met doel zonder successen). Meerdere resultaten betekent: een van die resultaten.',
+        'Worpresultaat: kritiek (de hoogste zijde van de dobbelsteen, of het cs-bereik), blunder (een 1, of het cf-bereik), succes (minstens één dobbelsteen haalt het doel dat in de worp staat, zoals 1d20>15 of de dobbelsteenpool 5d6>4), mislukking (een worp met een doel en geen successen). Meerdere resultaten betekent: een van die resultaten.',
+        'Succes en mislukking werken alleen bij worpen die hun eigen doel bevatten. Aanvallen, reddingsworpen en checks van D&D-sheets zijn gewone worpen zoals 1d20+5, omdat de sheet de AC of DC niet kent, dus zijn ze nooit een succes of een mislukking. Om te reageren op het halen van een AC of DC, gebruik je Worptotaal, zoals >=15.',
         'Worptotaal: een getal, een vergelijking zoals >=15, of een bereik zoals 19-20.',
         'Natuurlijke worp: de zijde waarop een dobbelsteen landde, zoals 20, of <=2.',
         'Gecontroleerde dobbelstenen: auto kijkt alleen naar d20’s als er een is gegooid, zodat schadedobbelstenen met hun hoogste zijde niet als kritiek tellen. Kies Elke dobbelsteen, of een grootte zoals d100, om dat te veranderen.',
@@ -355,7 +356,8 @@ const TRANSLATION = {
       players: 'Weergavenamen van spelers, gescheiden door komma’s.',
       fields:
         'Voorwaarden voor sjabloonvelden, gescheiden door &&: name=value (is), name!=value (is niet), name~text (bevat), name!~text (bevat niet). Met --regex on leest ~ een reguliere expressie.',
-      results: 'crit, fumble, success en/of fail.',
+      results:
+        'crit, fumble, success en/of fail. success en fail hebben een doel in de worp nodig, zoals 1d20>15.',
       total: 'Worptotaal: 15, >=15, <5 of 19-20.',
       natural: 'Natuurlijke worp: 20, <=2 of 19-20.',
       dice: 'auto, any, of een dobbelsteengrootte zoals 20.',
@@ -398,7 +400,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'De inspecteur',
       points: [
-        'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, en waarom elke luisteraar wel of niet activeerde.',
+        'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, de ruwe inhoud (het bericht zoals Roll20 het verstuurde, dat --text ook doorzoekt), en waarom elke luisteraar wel of niet activeerde.',
         'Gebruik hem om de sjabloonnaam van een sheet te vinden, of om te zien wat een Beacon-sheet (zoals D&D 2024) verstuurt.',
         'Beacon-sheets plaatsen worpkaarten in plaats van rolsjablonen. CRL leest ze: het sjabloon is de eerste class van de kaart (dnd-2024 voor D&D 2024), het personage, de titel (zoals Dexterity Check) en de subcategorie worden velden, en elke worp in de uitsplitsing is een worp, dus controles op crit, fumble, totaal en natuurlijke worp werken.',
       ],

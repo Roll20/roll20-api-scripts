@@ -296,7 +296,7 @@ const TRANSLATION = {
         'Um ouvinte é acionado quando todos os seus filtros correspondem. Filtros vazios correspondem a tudo.',
         'Modelos de rolagem: o nome do modelo, como atkdmg ou simple. "none" corresponde a mensagens sem modelo. Vários nomes significam qualquer um deles.',
         'Tipos de mensagem: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fichas Beacon) e api. Quando vazio, todos os tipos são verificados, exceto comandos de API.',
-        'Texto: um ou mais trechos de texto, separados por &&, que precisam aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais das rolagens e nos resultados de tabelas roláveis.',
+        'Texto: um ou mais trechos de texto, separados por &&, que precisam aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais das rolagens e nos resultados de tabelas roláveis, e no conteúdo bruto da mensagem, que Inspecionar mostra em Conteúdo bruto: em um cartão do Beacon, é o HTML dele.',
         '## no texto representa uma rolagem em linha; as verificações de rolagem então consideram só as rolagens encontradas ali. Sem ##, todas as rolagens da mensagem são verificadas.',
         'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
         'Falantes / personagens: o nome mostrado no chat, ou o nome do personagem no modelo de rolagem. Jogadores: o nome de exibição do jogador.',
@@ -321,7 +321,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Verificações de rolagem',
       points: [
-        'Resultado da rolagem: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge um alvo, como em 1d20>15), falha (uma rolagem com alvo sem nenhum sucesso). Vários resultados significam qualquer um deles.',
+        'Resultado da rolagem: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge o alvo escrito na rolagem, como em 1d20>15 ou na parada de dados 5d6>4), falha (uma rolagem com alvo e nenhum sucesso). Vários resultados significam qualquer um deles.',
+        'Sucesso e falha só funcionam com rolagens que trazem o próprio alvo. Ataques, testes de resistência e testes de habilidade das fichas de D&D são rolagens simples como 1d20+5, porque a ficha não conhece a AC nem a DC, então nunca são um sucesso nem uma falha. Para reagir quando uma AC ou DC é alcançada, use Total da rolagem, como >=15.',
         'Total da rolagem: um número, uma comparação como >=15 ou um intervalo como 19-20.',
         'Dado natural: a face que o dado mostrou, como 20 ou <=2.',
         'Dados verificados: auto considera só os d20 quando algum foi rolado, então dados de dano que tiram a face mais alta não contam como críticos. Escolha Qualquer dado, ou um tamanho como d100, para mudar isso.',
@@ -353,7 +354,8 @@ const TRANSLATION = {
       players: 'Nomes de exibição dos jogadores, separados por vírgulas.',
       fields:
         'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
-      results: 'crit, fumble, success e/ou fail.',
+      results:
+        'crit, fumble, success e/ou fail. success e fail precisam de um alvo na rolagem, como 1d20>15.',
       total: 'Total da rolagem: 15, >=15, <5 ou 19-20.',
       natural: 'Face natural do dado: 20, <=2 ou 19-20.',
       dice: 'auto, any ou um tamanho de dado como 20.',
@@ -396,7 +398,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'O inspetor',
       points: [
-        'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram e por que cada ouvinte foi ou não acionado.',
+        'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram, o conteúdo bruto (a mensagem como o Roll20 a enviou, em que --text também procura) e por que cada ouvinte foi ou não acionado.',
         'Use-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
         'As fichas Beacon publicam cartões de rolagem em vez de modelos de rolagem. O CRL os lê: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), o personagem, o título (como Teste de Destreza) e a subcategoria viram campos, e cada rolagem do detalhamento é uma rolagem, então as verificações de crítico, falha crítica, total e dado natural funcionam.',
       ],

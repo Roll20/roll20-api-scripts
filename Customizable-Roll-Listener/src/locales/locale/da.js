@@ -291,7 +291,7 @@ const TRANSLATION = {
         'En lytter udløses, når alle dens filtre matcher. Tomme filtre matcher alt.',
         'Slagskabeloner: skabelonens navn, f.eks. atkdmg eller simple. "none" matcher beskeder uden skabelon. Flere navne betyder et hvilket som helst af dem.',
         'Beskedtyper: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-ark) og api. Når feltet er tomt, tjekkes alle typer undtagen api-kommandoer.',
-        'Tekst: et eller flere tekststykker, adskilt af &&, som alle skal forekomme. Der skelnes ikke mellem store og små bogstaver. Tekst findes også i slagtotaler og resultater fra slagtabeller.',
+        'Tekst: et eller flere tekststykker, adskilt af &&, som alle skal forekomme. Der skelnes ikke mellem store og små bogstaver. Tekst findes også i slagtotaler og resultater fra slagtabeller, og i beskedens rå indhold, som Inspicér viser under Råt indhold: for et Beacon-kort er det dets HTML.',
         '## i teksten står for et inline-slag; slagtjekkene ser så kun på de slag, der findes dér. Uden ## tjekkes alle slag i beskeden.',
         'Teksten kan være et regulært udtryk i stedet for almindelig tekst (--regex on).',
         'Talere / figurer: navnet vist i chatten eller figurnavnet i slagskabelonen. Spillere: spillerens visningsnavn.',
@@ -316,7 +316,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Slagtjek',
       points: [
-        'Slagresultat: kritisk (terningens højeste side eller cs-intervallet), fumle (en 1’er eller cf-intervallet), succes (mindst én terning når et mål som 1d20>15), fiasko (et slag mod et mål uden succeser). Flere resultater betyder et hvilket som helst af dem.',
+        'Slagresultat: kritisk (terningens højeste side eller cs-intervallet), fumle (en 1’er eller cf-intervallet), succes (mindst én terning når det mål, der står i slaget, som 1d20>15 eller terningpuljen 5d6>4), fiasko (et slag med et mål og ingen succeser). Flere resultater betyder et hvilket som helst af dem.',
+        'Succes og fiasko virker kun med slag, der har deres eget mål. Angreb, redningsslag og evneprøver fra D&D-ark er almindelige slag som 1d20+5, fordi arket ikke kender AC eller DC, så de er aldrig en succes eller en fiasko. Brug Slagtotal, som >=15, for at reagere på at nå en AC eller DC.',
         'Slagtotal: et tal, en sammenligning som >=15 eller et interval som 19-20.',
         'Naturlig terning: den side, en terning landede på, f.eks. 20 eller <=2.',
         'Tjekkede terninger: auto ser kun på d20’ere, når der blev slået en, så skadesterninger, der slår deres højeste side, tæller ikke som kritiske slag. Vælg Enhver terning eller en størrelse som d100 for at ændre det.',
@@ -347,7 +348,8 @@ const TRANSLATION = {
       players: 'Spilleres visningsnavne adskilt af kommaer.',
       fields:
         'Betingelser for skabelonfelter, adskilt af &&: name=value (er), name!=value (er ikke), name~text (indeholder), name!~text (indeholder ikke). Med --regex on læser ~ et regulært udtryk.',
-      results: 'crit, fumble, success og/eller fail.',
+      results:
+        'crit, fumble, success og/eller fail. success og fail kræver et mål i slaget, som 1d20>15.',
       total: 'Slagtotal: 15, >=15, <5 eller 19-20.',
       natural: 'Naturlig terningside: 20, <=2 eller 19-20.',
       dice: 'auto, any eller en terningstørrelse som 20.',
@@ -390,7 +392,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektøren',
       points: [
-        'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, og hvorfor hver lytter blev eller ikke blev udløst.',
+        'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, det rå indhold (beskeden, som Roll20 sendte den, og som --text også søger i), og hvorfor hver lytter blev eller ikke blev udløst.',
         'Brug den til at finde et arks skabelonnavn eller til at se, hvad et Beacon-ark (f.eks. D&D 2024) sender.',
         'Beacon-ark sender slagkort i stedet for slagskabeloner. CRL læser dem: skabelonen er kortets første klasse (dnd-2024 for D&D 2024), figuren, titlen (f.eks. Dexterity Check) og underkategorien bliver til felter, og hvert slag i opgørelsen er et slag, så crit-, fumble-, total- og natural-tjek virker.',
       ],

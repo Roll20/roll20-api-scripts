@@ -293,7 +293,7 @@ const TRANSLATION = {
         'Posluchač se spustí, když odpovídají všechny jeho filtry. Prázdné filtry odpovídají všemu.',
         'Šablony hodů: název šablony, např. atkdmg nebo simple. „none“ odpovídá zprávám bez šablony. Více názvů znamená kterýkoli z nich.',
         'Typy zpráv: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (listy Beacon) a api. Když je pole prázdné, kontrolují se všechny typy kromě příkazů api.',
-        'Text: jedna či více částí textu oddělených &&, které se musí všechny objevit. Porovnání nerozlišuje velká a malá písmena. Text se hledá i v součtech hodů a výsledcích náhodných tabulek.',
+        'Text: jedna či více částí textu oddělených &&, které se musí všechny objevit. Porovnání nerozlišuje velká a malá písmena. Text se hledá i v součtech hodů a výsledcích náhodných tabulek, a také v surovém obsahu zprávy, který Prozkoumat ukazuje pod Surový obsah: u karty Beacon je to její HTML.',
         '## v textu zastupuje inline hod; kontroly hodu pak sledují jen hody nalezené na tomto místě. Bez ## se kontroluje každý hod ve zprávě.',
         'Text může být místo prostého textu regulární výraz (--regex on).',
         'Mluvčí / postavy: jméno zobrazené v chatu, nebo jméno postavy v šabloně hodu. Hráči: zobrazované jméno hráče.',
@@ -318,7 +318,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Kontroly hodu',
       points: [
-        'Výsledek hodu: kritický zásah (nejvyšší stěna kostky nebo rozsah cs), kritické selhání (1 nebo rozsah cf), úspěch (aspoň jedna kostka splní cíl, např. 1d20>15), neúspěch (hod na cíl bez úspěchů). Více výsledků znamená kterýkoli z nich.',
+        'Výsledek hodu: kritický zásah (nejvyšší stěna kostky nebo rozsah cs), kritické selhání (1 nebo rozsah cf), úspěch (aspoň jedna kostka splní cíl zapsaný v hodu, např. 1d20>15 nebo sada kostek 5d6>4), neúspěch (hod s cílem bez úspěchů). Více výsledků znamená kterýkoli z nich.',
+        'Úspěch a neúspěch fungují jen u hodů, které nesou vlastní cíl. Útoky, záchranné hody a ověření z deníků D&D jsou prosté hody jako 1d20+5, protože deník nezná AC ani DC, takže nikdy nejsou úspěchem ani neúspěchem. Chcete-li reagovat na dosažení AC nebo DC, použijte Součet hodu, např. >=15.',
         'Součet hodu: číslo, porovnání jako >=15, nebo rozsah jako 19-20.',
         'Přirozená kostka: stěna, na kterou kostka padla, např. 20 nebo <=2.',
         'Kontrolované kostky: auto sleduje jen d20, pokud se házela, takže kostky zranění s nejvyšší stěnou se nepočítají jako kritické zásahy. Chcete-li to změnit, zvolte Jakákoli kostka nebo velikost jako d100.',
@@ -349,7 +350,8 @@ const TRANSLATION = {
       players: 'Zobrazovaná jména hráčů oddělená čárkami.',
       fields:
         'Podmínky polí šablony oddělené &&: name=value (je), name!=value (není), name~text (obsahuje), name!~text (neobsahuje). Při --regex on čte ~ regulární výraz.',
-      results: 'crit, fumble, success a/nebo fail.',
+      results:
+        'crit, fumble, success a/nebo fail. success a fail potřebují cíl v hodu, např. 1d20>15.',
       total: 'Součet hodu: 15, >=15, <5 nebo 19-20.',
       natural: 'Stěna přirozené kostky: 20, <=2 nebo 19-20.',
       dice: 'auto, any, nebo velikost kostky jako 20.',
@@ -391,7 +393,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektor',
       points: [
-        'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají, a proč se který posluchač spustil či nespustil.',
+        'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají,, surový obsah (zprávu tak, jak ji poslal Roll20, a v níž hledá i --text) a proč se který posluchač spustil či nespustil.',
         'Použijte ho ke zjištění názvu šablony listu nebo k zobrazení toho, co posílá list Beacon (např. D&D 2024).',
         'Listy Beacon posílají místo šablon hodů karty hodů. CRL je umí číst: šablonou je první třída karty (dnd-2024 pro D&D 2024), postava, titulek (např. Dexterity Check) a podkategorie se stanou poli a každý hod v rozpisu je hod, takže kontroly crit, fumble, total a natural fungují.',
       ],

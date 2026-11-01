@@ -296,7 +296,7 @@ const TRANSLATION = {
         'Um ouvinte é acionado quando todos os seus filtros correspondem. Os filtros vazios correspondem a tudo.',
         'Modelos de lançamento: o nome do modelo, como atkdmg ou simple. "none" corresponde a mensagens sem modelo. Vários nomes significam qualquer um deles.',
         'Tipos de mensagem: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fichas Beacon) e api. Quando vazio, são verificados todos os tipos exceto os comandos da API.',
-        'Texto: um ou mais excertos de texto, separados por &&, que têm de aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais dos lançamentos e nos resultados de tabelas aleatórias.',
+        'Texto: um ou mais excertos de texto, separados por &&, que têm de aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais dos lançamentos e nos resultados de tabelas aleatórias, e no conteúdo em bruto da mensagem, que Inspecionar apresenta em Conteúdo em bruto: num cartão Beacon, é o seu HTML.',
         '## no texto representa um lançamento em linha; as verificações de lançamento passam então a considerar apenas os lançamentos aí encontrados. Sem ##, são verificados todos os lançamentos da mensagem.',
         'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
         'Oradores / personagens: o nome apresentado no chat, ou o nome da personagem no modelo de lançamento. Jogadores: o nome de apresentação do jogador.',
@@ -321,7 +321,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Verificações de lançamento',
       points: [
-        'Resultado do lançamento: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge um alvo, como em 1d20>15), falha (um lançamento com alvo sem nenhum sucesso). Vários resultados significam qualquer um deles.',
+        'Resultado do lançamento: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge o alvo escrito no lançamento, como em 1d20>15 ou na reserva de dados 5d6>4), falha (um lançamento com alvo e nenhum sucesso). Vários resultados significam qualquer um deles.',
+        'Sucesso e falha só funcionam com lançamentos que trazem o seu próprio alvo. Ataques, testes de resistência e testes de atributo das fichas de D&D são lançamentos simples como 1d20+5, porque a ficha não conhece a AC nem a DC, pelo que nunca são um sucesso nem uma falha. Para reagir quando uma AC ou DC é alcançada, utilize Total do lançamento, como >=15.',
         'Total do lançamento: um número, uma comparação como >=15 ou um intervalo como 19-20.',
         'Dado natural: a face em que o dado caiu, como 20 ou <=2.',
         'Dados verificados: auto considera apenas os d20 quando foi lançado algum, por isso os dados de dano que tiram a face mais alta não contam como críticos. Escolha Qualquer dado, ou um tamanho como d100, para mudar isto.',
@@ -353,7 +354,8 @@ const TRANSLATION = {
       players: 'Nomes de apresentação dos jogadores, separados por vírgulas.',
       fields:
         'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
-      results: 'crit, fumble, success e/ou fail.',
+      results:
+        'crit, fumble, success e/ou fail. success e fail precisam de um alvo no lançamento, como 1d20>15.',
       total: 'Total do lançamento: 15, >=15, <5 ou 19-20.',
       natural: 'Face natural do dado: 20, <=2 ou 19-20.',
       dice: 'auto, any ou um tamanho de dado como 20.',
@@ -396,7 +398,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'O inspetor',
       points: [
-        'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram e porque é que cada ouvinte foi ou não acionado.',
+        'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram, o conteúdo em bruto (a mensagem tal como o Roll20 a enviou, onde --text também procura) e porque é que cada ouvinte foi ou não acionado.',
         'Utilize-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
         'As fichas Beacon publicam cartões de lançamento em vez de modelos de lançamento. O CRL lê-os: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), a personagem, o título (como Teste de Destreza) e a subcategoria tornam-se campos, e cada lançamento do detalhe é um lançamento, por isso as verificações de crítico, falha crítica, total e dado natural funcionam.',
       ],

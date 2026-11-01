@@ -295,7 +295,7 @@ const TRANSLATION = {
         'Bir dinleyici, sahip olduğu tüm filtreler eşleştiğinde tetiklenir. Boş filtreler her şeyle eşleşir.',
         'Atış şablonları: atkdmg veya simple gibi şablon adı. "none", şablonu olmayan mesajlarla eşleşir. Birden fazla ad, bunlardan herhangi biri anlamına gelir.',
         'Mesaj türleri: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon sayfaları) ve api. Boş olduğunda api komutları dışındaki tüm türler kontrol edilir.',
-        'Metin: && ile ayrılmış, hepsinin geçmesi gereken bir veya daha fazla metin parçası. Eşleştirmede büyük/küçük harf ayrımı yapılmaz. Metin, atış toplamlarında ve atış tablosu sonuçlarında da aranır.',
+        "Metin: && ile ayrılmış, hepsinin geçmesi gereken bir veya daha fazla metin parçası. Eşleştirmede büyük/küçük harf ayrımı yapılmaz. Metin, atış toplamlarında ve atış tablosu sonuçlarında ve mesajın ham içeriğinde de aranır; İnceleme bunu Ham içerik altında gösterir: bir Beacon kartı için bu, kartın HTML'idir.",
         'Metindeki ## bir satır içi atışı temsil eder; atış kontrolleri bu durumda yalnızca orada bulunan atışlara bakar. ## yoksa mesajdaki her atış kontrol edilir.',
         'Metin, düz metin yerine düzenli ifade olabilir (--regex on).',
         'Gönderenler / karakterler: sohbette görünen ad veya atış şablonundaki karakter adı. Oyuncular: oyuncunun görünen adı.',
@@ -320,7 +320,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Atış Kontrolleri',
       points: [
-        'Atış sonucu: kritik başarı (zarın en yüksek yüzü veya cs aralığı), kritik başarısızlık (1 veya cf aralığı), başarı (en az bir zar 1d20>15 gibi bir hedefi tutturur), başarısızlık (hiç başarı olmayan hedefli atış). Birden fazla sonuç, bunlardan herhangi biri anlamına gelir.',
+        'Atış sonucu: kritik başarı (zarın en yüksek yüzü veya cs aralığı), kritik başarısızlık (1 veya cf aralığı), başarı (en az bir zar, atışa yazılmış hedefi tutturur; örneğin 1d20>15 veya 5d6>4 zar havuzu), başarısızlık (hedefi olan ama hiç başarı içermeyen atış). Birden fazla sonuç, bunlardan herhangi biri anlamına gelir.',
+        "Başarı ve başarısızlık yalnızca kendi hedefini taşıyan atışlarda çalışır. D&D karakter kâğıtlarındaki saldırılar, kurtarma atışları ve yetenek kontrolleri 1d20+5 gibi düz atışlardır; kâğıt AC'yi veya DC'yi bilmediği için bunlar asla başarı ya da başarısızlık olmaz. Bir AC'ye veya DC'ye ulaşıldığında tepki vermek için >=15 gibi Atış toplamı kullanın.",
         'Atış toplamı: bir sayı, >=15 gibi bir karşılaştırma veya 19-20 gibi bir aralık.',
         'Doğal zar: zarın geldiği yüz, örneğin 20 veya <=2.',
         "Kontrol edilen zarlar: auto, d20 atıldıysa yalnızca d20'lere bakar; böylece en yüksek yüzü gelen hasar zarları kritik sayılmaz. Bunu değiştirmek için herhangi bir zarı ya da d100 gibi bir boyutu seçin.",
@@ -352,7 +353,8 @@ const TRANSLATION = {
       players: 'Virgülle ayrılmış oyuncu görünen adları.',
       fields:
         '&& ile ayrılmış şablon alanı koşulları: name=value (eşittir), name!=value (eşit değildir), name~text (içerir), name!~text (içermez). --regex on olduğunda ~ düzenli ifade olarak okunur.',
-      results: 'crit, fumble, success ve/veya fail.',
+      results:
+        'crit, fumble, success ve/veya fail. success ve fail için atışta bir hedef olmalıdır, örneğin 1d20>15.',
       total: 'Atış toplamı: 15, >=15, <5 veya 19-20.',
       natural: 'Doğal zar yüzü: 20, <=2 veya 19-20.',
       dice: 'auto, any veya 20 gibi bir zar boyutu.',
@@ -395,7 +397,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Denetleyici',
       points: [
-        "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
+        "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin, ham içerik (mesajın Roll20'nin gönderdiği hâli; --text de burada arar) ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
         'Bir sayfanın şablon adını bulmak veya bir Beacon sayfasının (D&D 2024 gibi) ne gönderdiğini görmek için kullanın.',
         'Beacon sayfaları atış şablonları yerine atış kartları gönderir. CRL bunları okur: şablon, kartın ilk sınıfıdır (D&D 2024 için dnd-2024); karakter, başlık (Dexterity Check gibi) ve alt kategori alan olur; dökümdeki her atış bir atış sayılır, böylece kritik başarı, kritik başarısızlık, toplam ve doğal zar kontrolleri çalışır.',
       ],

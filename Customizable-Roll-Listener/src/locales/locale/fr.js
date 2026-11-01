@@ -298,7 +298,7 @@ const TRANSLATION = {
         'Un écouteur se déclenche quand tous ses filtres correspondent. Les filtres vides correspondent à tout.',
         'Modèles de jet : le nom du modèle, comme atkdmg ou simple. « none » correspond aux messages sans modèle. Plusieurs noms signifient n’importe lequel d’entre eux.',
         'Types de message : general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fiches Beacon) et api. Si vide, tous les types sauf les commandes api sont vérifiés.',
-        'Texte : un ou plusieurs morceaux de texte, séparés par &&, qui doivent tous apparaître. La recherche ignore les majuscules et minuscules. Le texte est aussi trouvé dans les totaux de jets et les résultats de tables aléatoires.',
+        'Texte : un ou plusieurs morceaux de texte, séparés par &&, qui doivent tous apparaître. La recherche ignore les majuscules et minuscules. Le texte est aussi trouvé dans les totaux de jets et les résultats de tables aléatoires, ainsi que dans le contenu brut du message, que montre Inspecter sous Contenu brut : pour une carte Beacon, c’est son HTML.',
         '## dans le texte représente un jet en ligne ; les vérifications de jet n’examinent alors que les jets trouvés à cet endroit. Sans ##, tous les jets du message sont vérifiés.',
         'Le texte peut être une expression régulière au lieu de texte simple (--regex on).',
         'Orateurs / personnages : le nom affiché dans le chat, ou le nom du personnage dans le modèle de jet. Joueurs : le nom d’affichage du joueur.',
@@ -323,7 +323,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Vérifications de jet',
       points: [
-        'Résultat du jet : critique (la face la plus haute du dé, ou la plage cs), échec critique (un 1, ou la plage cf), réussite (au moins un dé atteint un seuil comme 1d20>15), échec (un jet à seuil sans aucune réussite). Plusieurs résultats signifient n’importe lequel d’entre eux.',
+        'Résultat du jet : critique (la face la plus haute du dé, ou la plage cs), échec critique (un 1, ou la plage cf), réussite (au moins un dé atteint le seuil écrit dans le jet, comme 1d20>15 ou la réserve de dés 5d6>4), échec (un jet avec un seuil et aucune réussite). Plusieurs résultats signifient n’importe lequel d’entre eux.',
+        'La réussite et l’échec ne fonctionnent qu’avec des jets qui portent leur propre seuil. Les attaques, jets de sauvegarde et tests des fiches D&D sont des jets simples comme 1d20+5, car la fiche ne connaît ni l’AC ni le DC : ils ne sont donc jamais une réussite ni un échec. Pour réagir quand une AC ou un DC est atteint, utilisez Total du jet, comme >=15.',
         'Total du jet : un nombre, une comparaison comme >=15, ou une plage comme 19-20.',
         'Dé naturel : la face sur laquelle un dé est tombé, comme 20, ou <=2.',
         'Dés vérifiés : auto n’examine que les d20 quand il y en a un, pour que les dés de dégâts sur leur face maximale ne comptent pas comme des critiques. Choisissez N’importe quel dé, ou une taille comme d100, pour changer cela.',
@@ -355,7 +356,8 @@ const TRANSLATION = {
       players: 'Noms d’affichage des joueurs, séparés par des virgules.',
       fields:
         'Conditions sur les champs du modèle, séparées par && : name=value (est), name!=value (n’est pas), name~text (contient), name!~text (ne contient pas). Avec --regex on, ~ lit une expression régulière.',
-      results: 'crit, fumble, success et/ou fail.',
+      results:
+        'crit, fumble, success et/ou fail. success et fail exigent un seuil dans le jet, comme 1d20>15.',
       total: 'Total du jet : 15, >=15, <5 ou 19-20.',
       natural: 'Face naturelle du dé : 20, <=2 ou 19-20.',
       dice: 'auto, any, ou une taille de dé comme 20.',
@@ -398,7 +400,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'L’inspecteur',
       points: [
-        'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, et pourquoi chaque écouteur s’est déclenché ou non.',
+        'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, le contenu brut (le message tel que Roll20 l’a envoyé, que --text examine aussi), et pourquoi chaque écouteur s’est déclenché ou non.',
         'Utilisez-le pour trouver le nom de modèle d’une fiche, ou pour voir ce qu’envoie une fiche Beacon (comme D&D 2024).',
         'Les fiches Beacon publient des cartes de jet au lieu de modèles de jet. CRL les lit : le modèle est la première classe de la carte (dnd-2024 pour D&D 2024), le personnage, le titre (comme Test de Dextérité) et la sous-catégorie deviennent des champs, et chaque jet du détail est un jet ; les vérifications critique, échec critique, total et naturel fonctionnent donc.',
       ],

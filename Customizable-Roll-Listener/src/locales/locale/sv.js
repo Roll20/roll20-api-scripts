@@ -293,7 +293,7 @@ const TRANSLATION = {
         'En lyssnare utlöses när alla dess filter matchar. Tomma filter matchar allt.',
         'Slagmallar: mallens namn, till exempel atkdmg eller simple. "none" matchar meddelanden utan mall. Flera namn betyder vilket som helst av dem.',
         'Meddelandetyper: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-formulär) och api. Om fältet är tomt kontrolleras alla typer utom api-kommandon.',
-        'Text: en eller flera textbitar, åtskilda med &&, som alla måste förekomma. Matchningen skiljer inte på stora och små bokstäver. Text hittas även i slagsummor och resultat från slumptabeller.',
+        'Text: en eller flera textbitar, åtskilda med &&, som alla måste förekomma. Matchningen skiljer inte på stora och små bokstäver. Text hittas även i slagsummor och resultat från slumptabeller, och i meddelandets råinnehåll, som Inspektera visar under Råinnehåll: för ett Beacon-kort är det kortets HTML.',
         '## i texten står för ett inline-slag; slagkontrollerna tittar då bara på slagen som finns där. Utan ## kontrolleras alla slag i meddelandet.',
         'Texten kan vara ett reguljärt uttryck i stället för vanlig text (--regex on).',
         'Talare / karaktärer: namnet som visas i chatten, eller karaktärsnamnet i slagmallen. Spelare: spelarens visningsnamn.',
@@ -318,7 +318,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Slagkontroller',
       points: [
-        'Slagresultat: kritiskt (tärningens högsta sida, eller cs-intervallet), fummel (en 1:a, eller cf-intervallet), lyckat (minst en tärning når ett mål som 1d20>15), misslyckat (ett slag mot mål utan lyckade). Flera resultat betyder vilket som helst av dem.',
+        'Slagresultat: kritiskt (tärningens högsta sida, eller cs-intervallet), fummel (en 1:a, eller cf-intervallet), lyckat (minst en tärning når målet som står i slaget, som 1d20>15 eller tärningspölen 5d6>4), misslyckat (ett slag med mål och inga lyckade). Flera resultat betyder vilket som helst av dem.',
+        'Lyckat och misslyckat fungerar bara med slag som har ett eget mål. Attacker, räddningsslag och färdighetsslag från D&D-rollformulär är vanliga slag som 1d20+5, eftersom formuläret inte känner till AC eller DC, så de blir aldrig lyckade eller misslyckade. För att reagera när en AC eller DC nås, använd Slagsumma, som >=15.',
         'Slagsumma: ett tal, en jämförelse som >=15, eller ett intervall som 19-20.',
         'Naturlig tärning: sidan en tärning landade på, till exempel 20, eller <=2.',
         'Kontrollerade tärningar: auto tittar bara på d20 när en sådan slogs, så skadetärningar som visar sin högsta sida räknas inte som kritiska. Välj valfri tärning, eller en storlek som d100, för att ändra det.',
@@ -349,7 +350,8 @@ const TRANSLATION = {
       players: 'Spelarnas visningsnamn, åtskilda med kommatecken.',
       fields:
         'Villkor för mallfält, åtskilda med &&: name=value (är), name!=value (är inte), name~text (innehåller), name!~text (innehåller inte). Med --regex on läser ~ ett reguljärt uttryck.',
-      results: 'crit, fumble, success och/eller fail.',
+      results:
+        'crit, fumble, success och/eller fail. success och fail kräver ett mål i slaget, som 1d20>15.',
       total: 'Slagsumma: 15, >=15, <5 eller 19-20.',
       natural: 'Naturlig tärningssida: 20, <=2 eller 19-20.',
       dice: 'auto, any eller en tärningsstorlek som 20.',
@@ -391,7 +393,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektören',
       points: [
-        'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i och varför varje lyssnare utlöstes eller inte.',
+        'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i, råinnehållet (meddelandet som Roll20 skickade det, som --text också söker i) och varför varje lyssnare utlöstes eller inte.',
         'Använd den för att hitta ett formulärs mallnamn, eller för att se vad ett Beacon-formulär (som D&D 2024) skickar.',
         'Beacon-formulär skickar slagkort i stället för slagmallar. CRL läser dem: mallen är kortets första klass (dnd-2024 för D&D 2024), karaktären, titeln (som Dexterity Check) och underkategorin blir fält, och varje slag i uppdelningen är ett slag, så kontroller av kritiskt, fummel, summa och naturlig tärning fungerar.',
       ],

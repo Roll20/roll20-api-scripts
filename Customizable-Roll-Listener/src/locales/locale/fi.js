@@ -294,7 +294,7 @@ const TRANSLATION = {
         'Kuuntelija laukeaa, kun sen jokainen suodatin täsmää. Tyhjät suodattimet täsmäävät kaikkeen.',
         'Heittopohjat: pohjan nimi, kuten atkdmg tai simple. ”none” täsmää viesteihin, joissa ei ole pohjaa. Useampi nimi tarkoittaa mitä tahansa niistä.',
         'Viestityypit: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-lomakkeet) ja api. Tyhjänä tarkistetaan kaikki tyypit paitsi api-komennot.',
-        'Teksti: yksi tai useampi tekstinpätkä &&-merkein eroteltuina, joiden kaikkien on esiinnyttävä. Vertailu ei välitä isoista ja pienistä kirjaimista. Teksti löytyy myös heittojen summista ja heittotaulukoiden tuloksista.',
+        'Teksti: yksi tai useampi tekstinpätkä &&-merkein eroteltuina, joiden kaikkien on esiinnyttävä. Vertailu ei välitä isoista ja pienistä kirjaimista. Teksti löytyy myös heittojen summista ja heittotaulukoiden tuloksista, sekä viestin raakasisällöstä, jonka Tutki näyttää kohdassa Raakasisältö: Beacon-kortilla se on kortin HTML.',
         '## tekstissä tarkoittaa rivin sisäistä heittoa; heittotarkistukset katsovat silloin vain siitä löytyviä heittoja. Ilman ##-merkkiä tarkistetaan viestin jokainen heitto.',
         'Teksti voi olla tavallisen tekstin sijaan säännöllinen lauseke (--regex on).',
         'Puhujat / hahmot: chatissa näkyvä nimi tai heittopohjan hahmon nimi. Pelaajat: pelaajan näyttönimi.',
@@ -319,7 +319,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Heittotarkistukset',
       points: [
-        'Heiton tulos: kriittinen (nopan suurin silmäluku tai cs-väli), kömmähdys (1 tai cf-väli), onnistuminen (vähintään yksi noppa saavuttaa rajan, kuten 1d20>15), epäonnistuminen (rajaheitto ilman onnistumisia). Useampi tulos tarkoittaa mitä tahansa niistä.',
+        'Heiton tulos: kriittinen (nopan suurin silmäluku tai cs-väli), kömmähdys (1 tai cf-väli), onnistuminen (vähintään yksi noppa saavuttaa heittoon kirjoitetun rajan, kuten 1d20>15 tai noppapooli 5d6>4), epäonnistuminen (heitto, jossa on raja mutta ei onnistumisia). Useampi tulos tarkoittaa mitä tahansa niistä.',
+        'Onnistuminen ja epäonnistuminen toimivat vain heitoissa, joissa on oma raja. D&D-hahmolomakkeiden hyökkäykset, pelastusheitot ja kokeet ovat tavallisia heittoja, kuten 1d20+5, koska lomake ei tiedä AC:tä tai DC:tä, joten ne eivät ole koskaan onnistumisia tai epäonnistumisia. Jos haluat reagoida AC:n tai DC:n saavuttamiseen, käytä Heiton summa -asetusta, kuten >=15.',
         'Heiton summa: luku, vertailu kuten >=15 tai väli kuten 19-20.',
         'Luonnollinen noppa: silmäluku, jolle noppa pysähtyi, kuten 20 tai <=2.',
         'Tarkistetut nopat: auto katsoo vain d20-noppia, kun sellainen heitettiin, joten suurimman silmäluvun saaneita vahinkonoppia ei lasketa kriittisiksi. Valitse Mikä tahansa noppa tai koko kuten d100 muuttaaksesi tätä.',
@@ -351,7 +352,8 @@ const TRANSLATION = {
       players: 'Pelaajien näyttönimet pilkuin eroteltuina.',
       fields:
         'Pohjan kenttien ehdot &&-merkein eroteltuina: name=value (on), name!=value (ei ole), name~text (sisältää), name!~text (ei sisällä). Asetuksella --regex on ~ lukee säännöllisen lausekkeen.',
-      results: 'crit, fumble, success ja/tai fail.',
+      results:
+        'crit, fumble, success ja/tai fail. success ja fail tarvitsevat heittoon rajan, kuten 1d20>15.',
       total: 'Heiton summa: 15, >=15, <5 tai 19-20.',
       natural: 'Nopan luonnollinen silmäluku: 20, <=2 tai 19-20.',
       dice: 'auto, any tai nopan koko kuten 20.',
@@ -394,7 +396,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Tarkastin',
       points: [
-        'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
+        'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin, raakasisällön (viestin sellaisena kuin Roll20 sen lähetti; myös --text etsii siitä) sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
         'Käytä sitä lomakkeen pohjan nimen löytämiseen tai nähdäksesi, mitä Beacon-lomake (kuten D&D 2024) lähettää.',
         'Beacon-lomakkeet lähettävät heittopohjien sijaan heittokortteja. CRL lukee ne: pohja on kortin ensimmäinen luokka (dnd-2024 D&D 2024:lle), hahmosta, otsikosta (kuten Dexterity Check) ja alaluokasta tulee kenttiä, ja jokainen erittelyn heitto on heitto, joten kriittinen-, kömmähdys-, summa- ja luonnollinen-tarkistukset toimivat.',
       ],

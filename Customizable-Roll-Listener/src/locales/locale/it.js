@@ -295,7 +295,7 @@ const TRANSLATION = {
         'Un listener si attiva quando tutti i suoi filtri corrispondono. I filtri vuoti corrispondono a tutto.',
         'Template di tiro: il nome del template, ad esempio atkdmg o simple. "none" corrisponde ai messaggi senza template. Più nomi indicano uno qualsiasi di essi.',
         'Tipi di messaggio: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (schede Beacon) e api. Se vuoto, vengono controllati tutti i tipi tranne i comandi api.',
-        'Testo: uno o più frammenti di testo, separati da &&, che devono comparire tutti. Il confronto ignora maiuscole e minuscole. Il testo viene cercato anche nei totali dei tiri e nei risultati delle tabelle casuali.',
+        'Testo: uno o più frammenti di testo, separati da &&, che devono comparire tutti. Il confronto ignora maiuscole e minuscole. Il testo viene cercato anche nei totali dei tiri e nei risultati delle tabelle casuali, e nel contenuto grezzo del messaggio, che Ispeziona mostra sotto Contenuto grezzo: per una scheda Beacon, è il suo HTML.',
         '## nel testo indica un tiro inline; i controlli sui tiri esaminano allora solo i tiri trovati lì. Senza ##, viene controllato ogni tiro del messaggio.',
         "Il testo può essere un'espressione regolare invece di testo semplice (--regex on).",
         'Mittenti / personaggi: il nome mostrato in chat o il nome del personaggio nel template di tiro. Giocatori: il nome visualizzato del giocatore.',
@@ -320,7 +320,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Controlli sui tiri',
       points: [
-        "Risultato del tiro: critico (la faccia più alta del dado, o l'intervallo cs), fallimento critico (un 1, o l'intervallo cf), successo (almeno un dado raggiunge una soglia come 1d20>15), fallimento (un tiro con soglia senza successi). Più risultati indicano uno qualsiasi di essi.",
+        "Risultato del tiro: critico (la faccia più alta del dado, o l'intervallo cs), fallimento critico (un 1, o l'intervallo cf), successo (almeno un dado raggiunge la soglia scritta nel tiro, come 1d20>15 o la riserva di dadi 5d6>4), fallimento (un tiro con una soglia e nessun successo). Più risultati indicano uno qualsiasi di essi.",
+        'Successo e fallimento funzionano solo con tiri che contengono la propria soglia. Attacchi, tiri salvezza e prove delle schede di D&D sono tiri semplici come 1d20+5, perché la scheda non conosce la AC o la DC, quindi non sono mai un successo o un fallimento. Per reagire al raggiungimento di una AC o una DC, usa Totale del tiro, come >=15.',
         'Totale del tiro: un numero, un confronto come >=15 o un intervallo come 19-20.',
         'Dado naturale: la faccia su cui è caduto un dado, ad esempio 20, o <=2.',
         'Dadi controllati: auto esamina solo i d20 quando ne è stato tirato uno, così i dadi dei danni che fanno il massimo non contano come critici. Scegli qualsiasi dado, o una dimensione come d100, per cambiare questo comportamento.',
@@ -352,7 +353,8 @@ const TRANSLATION = {
       players: 'Nomi visualizzati dei giocatori, separati da virgole.',
       fields:
         "Condizioni sui campi del template, separate da &&: name=value (è), name!=value (non è), name~text (contiene), name!~text (non contiene). Con --regex on, ~ legge un'espressione regolare.",
-      results: 'crit, fumble, success e/o fail.',
+      results:
+        'crit, fumble, success e/o fail. success e fail richiedono una soglia nel tiro, come 1d20>15.',
       total: 'Totale del tiro: 15, >=15, <5 o 19-20.',
       natural: 'Faccia del dado naturale: 20, <=2 o 19-20.',
       dice: 'auto, any o una dimensione di dado come 20.',
@@ -395,7 +397,7 @@ const TRANSLATION = {
     inspector: {
       heading: "L'ispettore",
       points: [
-        'Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener e perché ogni listener si è attivato o no.',
+        "Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener, il contenuto grezzo (il messaggio così come l'ha inviato Roll20, in cui cerca anche --text) e perché ogni listener si è attivato o no.",
         'Usalo per trovare il nome del template di una scheda o per vedere cosa invia una scheda Beacon (come D&D 2024).',
         'Le schede Beacon pubblicano riquadri di tiro invece dei template di tiro. CRL li legge: il template è la prima classe del riquadro (dnd-2024 per D&D 2024), personaggio, titolo (come Prova di Destrezza) e sottocategoria diventano campi, e ogni tiro nel dettaglio è un tiro, quindi i controlli su critico, fallimento critico, totale e dado naturale funzionano.',
       ],

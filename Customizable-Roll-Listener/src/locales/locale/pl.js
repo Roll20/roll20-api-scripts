@@ -295,7 +295,7 @@ const TRANSLATION = {
         'Listener uruchamia się, gdy pasują wszystkie jego filtry. Puste filtry pasują do wszystkiego.',
         'Szablony rzutów: nazwa szablonu, np. atkdmg lub simple. „none” pasuje do wiadomości bez szablonu. Kilka nazw oznacza dowolną z nich.',
         'Typy wiadomości: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (karty Beacon) i api. Gdy pole jest puste, sprawdzane są wszystkie typy oprócz poleceń api.',
-        'Tekst: jeden lub więcej fragmentów tekstu, oddzielonych &&, które muszą wystąpić wszystkie. Wielkość liter nie ma znaczenia. Tekst jest wyszukiwany także w sumach rzutów i wynikach tabel losowych.',
+        'Tekst: jeden lub więcej fragmentów tekstu, oddzielonych &&, które muszą wystąpić wszystkie. Wielkość liter nie ma znaczenia. Tekst jest wyszukiwany także w sumach rzutów i wynikach tabel losowych, a także w surowej treści wiadomości, którą Sprawdź pokazuje pod Surowa treść: w przypadku karty Beacon jest to jej HTML.',
         '## w tekście oznacza rzut inline; warunki rzutu dotyczą wtedy tylko znalezionych tam rzutów. Bez ## sprawdzany jest każdy rzut w wiadomości.',
         'Tekst może być wyrażeniem regularnym zamiast zwykłego tekstu (--regex on).',
         'Nadawcy / postacie: nazwa wyświetlana na czacie lub nazwa postaci w szablonie rzutu. Gracze: wyświetlana nazwa gracza.',
@@ -320,7 +320,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Warunki rzutów',
       points: [
-        'Wynik rzutu: krytyczny sukces (najwyższa ścianka kości lub zakres cs), krytyczna porażka (1 lub zakres cf), sukces (co najmniej jedna kość osiąga próg, np. 1d20>15), porażka (rzut z progiem bez sukcesów). Kilka wyników oznacza dowolny z nich.',
+        'Wynik rzutu: krytyczny sukces (najwyższa ścianka kości lub zakres cs), krytyczna porażka (1 lub zakres cf), sukces (co najmniej jedna kość osiąga próg zapisany w rzucie, np. 1d20>15 lub pula kości 5d6>4), porażka (rzut z progiem bez sukcesów). Kilka wyników oznacza dowolny z nich.',
+        'Sukces i porażka działają tylko z rzutami, które zawierają własny próg. Ataki, rzuty obronne i testy z kart D&D to zwykłe rzuty, np. 1d20+5, bo karta nie zna AC ani DC, więc nigdy nie są sukcesem ani porażką. Aby reagować na osiągnięcie AC lub DC, użyj opcji Suma rzutu, np. >=15.',
         'Suma rzutu: liczba, porównanie, np. >=15, lub zakres, np. 19-20.',
         'Naturalna kość: ścianka, na którą upadła kość, np. 20 lub <=2.',
         'Sprawdzane kości: auto bierze pod uwagę tylko d20, jeśli rzucono taką kością, więc kości obrażeń z najwyższym wynikiem nie liczą się jako krytyki. Aby to zmienić, wybierz dowolną kość lub rozmiar, np. d100.',
@@ -352,7 +353,8 @@ const TRANSLATION = {
       players: 'Wyświetlane nazwy graczy oddzielone przecinkami.',
       fields:
         'Warunki pól szablonu, oddzielone &&: name=value (jest), name!=value (nie jest), name~text (zawiera), name!~text (nie zawiera). Przy --regex on ~ czyta wyrażenie regularne.',
-      results: 'crit, fumble, success i/lub fail.',
+      results:
+        'crit, fumble, success i/lub fail. success i fail wymagają progu w rzucie, np. 1d20>15.',
       total: 'Suma rzutu: 15, >=15, <5 lub 19-20.',
       natural: 'Naturalna ścianka kości: 20, <=2 lub 19-20.',
       dice: 'auto, any lub rozmiar kości, np. 20.',
@@ -394,7 +396,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektor',
       points: [
-        'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery oraz powód, dla którego każdy listener się uruchomił lub nie.',
+        'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery, surową treść (wiadomość w postaci wysłanej przez Roll20, którą przeszukuje też --text) oraz powód, dla którego każdy listener się uruchomił lub nie.',
         'Użyj go, aby poznać nazwę szablonu karty postaci lub zobaczyć, co wysyła karta Beacon (np. D&D 2024).',
         'Karty Beacon wysyłają okienka rzutów zamiast szablonów rzutów. CRL je odczytuje: szablon to pierwsza klasa okienka (dnd-2024 dla D&D 2024), postać, tytuł (np. Test Zręczności) i podkategoria stają się polami, a każdy rzut w rozbiciu jest rzutem, więc warunki krytycznego sukcesu, krytycznej porażki, sumy i naturalnej kości działają.',
       ],

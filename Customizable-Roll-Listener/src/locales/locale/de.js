@@ -296,7 +296,7 @@ const TRANSLATION = {
         'Ein Listener löst aus, wenn alle seine Filter passen. Leere Filter passen auf alles.',
         'Wurfvorlagen: der Vorlagenname, etwa atkdmg oder simple. „none“ passt auf Nachrichten ohne Vorlage. Mehrere Namen bedeuten: einer davon.',
         'Nachrichtentypen: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-Bögen) und api. Wenn leer, wird jeder Typ außer api-Befehlen geprüft.',
-        'Text: ein oder mehrere Textstücke, getrennt durch &&, die alle vorkommen müssen. Groß- und Kleinschreibung wird ignoriert. Text wird auch in Wurfsummen und Ergebnissen von Würfeltabellen gefunden.',
+        'Text: ein oder mehrere Textstücke, getrennt durch &&, die alle vorkommen müssen. Groß- und Kleinschreibung wird ignoriert. Text wird auch in Wurfsummen und Ergebnissen von Würfeltabellen gefunden, sowie im Rohinhalt der Nachricht, den der Inspektor unter Rohinhalt zeigt: Bei einer Beacon-Karte ist das ihr HTML.',
         '## im Text steht für einen Inline-Wurf; die Wurfprüfungen betrachten dann nur die dort gefundenen Würfe. Ohne ## wird jeder Wurf der Nachricht geprüft.',
         'Text kann statt Klartext ein regulärer Ausdruck sein (--regex on).',
         'Sprecher / Charaktere: der im Chat angezeigte Name oder der Charaktername in der Wurfvorlage. Spieler: der Anzeigename des Spielers.',
@@ -321,7 +321,8 @@ const TRANSLATION = {
     rolls: {
       heading: 'Wurfprüfungen',
       points: [
-        'Wurfergebnis: kritisch (die höchste Seite des Würfels oder der cs-Bereich), Patzer (eine 1 oder der cf-Bereich), Erfolg (mindestens ein Würfel erreicht einen Zielwert wie 1d20>15), Fehlschlag (ein Zielwurf ohne Erfolge). Mehrere Ergebnisse bedeuten: eines davon.',
+        'Wurfergebnis: kritisch (die höchste Seite des Würfels oder der cs-Bereich), Patzer (eine 1 oder der cf-Bereich), Erfolg (mindestens ein Würfel erreicht den im Wurf angegebenen Zielwert, etwa 1d20>15 oder der Würfelpool 5d6>4), Fehlschlag (ein Wurf mit Zielwert ohne Erfolge). Mehrere Ergebnisse bedeuten: eines davon.',
+        'Erfolg und Fehlschlag funktionieren nur bei Würfen, die ihren eigenen Zielwert mitbringen. Angriffe, Rettungswürfe und Proben von D&D-Charakterbögen sind einfache Würfe wie 1d20+5, weil der Bogen die AC oder DC nicht kennt; sie sind also nie ein Erfolg oder Fehlschlag. Um darauf zu reagieren, dass eine AC oder DC erreicht wird, verwende Wurfsumme, etwa >=15.',
         'Wurfsumme: eine Zahl, ein Vergleich wie >=15 oder ein Bereich wie 19-20.',
         'Natürlicher Wurf: die Seite, auf der ein Würfel landete, etwa 20 oder <=2.',
         'Geprüfte Würfel: auto betrachtet nur W20, wenn einer gewürfelt wurde, damit Schadenswürfel mit ihrer höchsten Seite nicht als Krit zählen. Wähle Jeder Würfel oder eine Größe wie d100, um das zu ändern.',
@@ -353,7 +354,8 @@ const TRANSLATION = {
       players: 'Anzeigenamen der Spieler, durch Kommas getrennt.',
       fields:
         'Bedingungen für Vorlagenfelder, getrennt durch &&: name=value (ist), name!=value (ist nicht), name~text (enthält), name!~text (enthält nicht). Mit --regex on liest ~ einen regulären Ausdruck.',
-      results: 'crit, fumble, success und/oder fail.',
+      results:
+        'crit, fumble, success und/oder fail. success und fail brauchen einen Zielwert im Wurf, etwa 1d20>15.',
       total: 'Wurfsumme: 15, >=15, <5 oder 19-20.',
       natural: 'Natürliche Würfelseite: 20, <=2 oder 19-20.',
       dice: 'auto, any oder eine Würfelgröße wie 20.',
@@ -396,7 +398,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Der Inspektor',
       points: [
-        'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, und warum jeder Listener ausgelöst hat oder nicht.',
+        'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, den Rohinhalt (die Nachricht, wie Roll20 sie gesendet hat, die auch --text durchsucht), und warum jeder Listener ausgelöst hat oder nicht.',
         'Nutze ihn, um den Vorlagennamen eines Bogens zu finden oder um zu sehen, was ein Beacon-Bogen (etwa D&D 2024) sendet.',
         'Beacon-Bögen posten Wurfkarten statt Wurfvorlagen. CRL liest sie: Die Vorlage ist die erste Klasse der Karte (dnd-2024 für D&D 2024), Charakter, Titel (etwa Geschicklichkeitswurf) und Unterkategorie werden zu Feldern, und jeder Wurf in der Aufschlüsselung ist ein Wurf, sodass Krit-, Patzer-, Summen- und Natürlich-Prüfungen funktionieren.',
       ],
