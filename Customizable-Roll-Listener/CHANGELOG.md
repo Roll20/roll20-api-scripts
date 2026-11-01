@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.0] – 2026-11-01
+
+### Added
+
+- `--fields` filters on roll template fields, such as `--fields subcategory=Attack && title~sword` to trigger only on D&D 2024 attack cards for swords. `=` and `!=` compare the whole value, `~` and `!~` look for text in it (a regular expression with `--regex on`), and case is ignored. The inspector lists each message's fields and says when a field does not match. Asked for by Pak on Discord.
+
 ## [2.0.1] – 2026-11-01
 
 ### Fixed

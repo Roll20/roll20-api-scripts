@@ -2,7 +2,7 @@
 
 Run chat commands automatically when a matching roll or message appears in chat. Play a sound on a critical hit, roll on a fumble table on a natural 1, post a reminder when a character uses a certain attack, react to a rollable table result, and so on.
 
-- **Version:** 2.0.1
+- **Version:** 2.1.0
 - **Authors:** Scott C. (original), The Aaron (version 1.1 fixes), MidNiteShadow7 (version 2)
 - **Dependencies:** none
 - **Command:** `!crl` (GM only; other Mods such as ScriptCards can send it too, and replies go to the GM)
@@ -37,22 +37,38 @@ The same listener in one line:
 
 A listener triggers when **every** filter it has matches. Empty filters match everything.
 
-| Filter                | Option        | Matches when…                                                                                                                                                             |
-| --------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Roll templates        | `--templates` | The message uses one of these templates (`none` = no template). See [Roll Template Names](#roll-template-names).                                                          |
-| Message types         | `--types`     | The message is one of: `general`, `rollresult`, `gmrollresult`, `emote`, `whisper`, `desc`, `advancedroll` (Beacon), `api`. Empty means every type except `api` commands. |
-| Text                  | `--text`      | Every piece of text (separated by `&&`) appears. Case is ignored. Roll totals and rollable table results count as text. `##` stands for an inline roll.                   |
-| Text mode             | `--regex`     | `on` reads the text as regular expressions.                                                                                                                               |
-| Speakers / characters | `--who`       | The name shown in chat, or the character name in the roll template, is listed (comma separated).                                                                          |
-| Players               | `--players`   | The sending player's display name is listed (comma separated).                                                                                                            |
-| Roll result           | `--results`   | `crit` (highest face or `cs` range), `fumble` (a 1 or `cf` range), `success` (a die meets a target such as `1d20>15`), `fail` (a target roll with no successes).          |
-| Roll total            | `--total`     | A roll's total meets `15`, `>=15`, `<5` or `19-20`.                                                                                                                       |
-| Natural die           | `--natural`   | A die landed on `20`, `<=2`, `19-20` and so on.                                                                                                                           |
-| Dice checked          | `--dice`      | `auto` (only d20s when a d20 was rolled, so damage dice do not count as crits), `any`, or a size such as `20` or `d100`.                                                  |
+| Filter                | Option        | Matches when…                                                                                                                                                                                 |
+| --------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Roll templates        | `--templates` | The message uses one of these templates (`none` = no template). See [Roll Template Names](#roll-template-names).                                                                              |
+| Message types         | `--types`     | The message is one of: `general`, `rollresult`, `gmrollresult`, `emote`, `whisper`, `desc`, `advancedroll` (Beacon), `api`. Empty means every type except `api` commands.                     |
+| Text                  | `--text`      | Every piece of text (separated by `&&`) appears. Case is ignored. Roll totals and rollable table results count as text. `##` stands for an inline roll.                                       |
+| Text mode             | `--regex`     | `on` reads the text as regular expressions.                                                                                                                                                   |
+| Speakers / characters | `--who`       | The name shown in chat, or the character name in the roll template, is listed (comma separated).                                                                                              |
+| Players               | `--players`   | The sending player's display name is listed (comma separated).                                                                                                                                |
+| Template fields       | `--fields`    | Every field condition (separated by `&&`) holds: `name=value` (is), `name!=value` (is not), `name~text` (contains), `name!~text` (does not contain). See [Template Fields](#template-fields). |
+| Roll result           | `--results`   | `crit` (highest face or `cs` range), `fumble` (a 1 or `cf` range), `success` (a die meets a target such as `1d20>15`), `fail` (a target roll with no successes).                              |
+| Roll total            | `--total`     | A roll's total meets `15`, `>=15`, `<5` or `19-20`.                                                                                                                                           |
+| Natural die           | `--natural`   | A die landed on `20`, `<=2`, `19-20` and so on.                                                                                                                                               |
+| Dice checked          | `--dice`      | `auto` (only d20s when a d20 was rolled, so damage dice do not count as crits), `any`, or a size such as `20` or `d100`.                                                                      |
 
 Roll checks look at every roll in the message, or only the rolls a `##` in the text found. Dropped dice (advantage and disadvantage) and rerolled dice are ignored. A listener triggers when at least one roll meets every roll check.
 
 The D&D 5E by Roll20 (2014) sheet rolls advantage and disadvantage as two separate d20 rolls (`r1` and `r2`) instead of keeping one, so CRL cannot tell which one counts and checks both. With advantage, a 1 on the lower die still counts as a fumble; with disadvantage, a 20 on the higher die still counts as a crit.
+
+## Template Fields
+
+The inspector's **Template fields** line lists the fields of a message, such as `title=Longsword (Two-Handed)` and `subcategory=Attack` on a D&D 2024 card, or `rname=Longsword` in a 5e 2014 `atkdmg` template. `--fields` checks them directly, so a listener is not fooled by the same word elsewhere in the card:
+
+```
+!crl new Sword Attacks --fields subcategory=Attack && title~sword --commands /em swings a sword!
+```
+
+- `=` and `!=` compare the whole value; `~` and `!~` look for text anywhere in it. Case is ignored.
+- With `--regex on`, `~` and `!~` read the text as a regular expression, so `title~long|great` matches either word.
+- Inline rolls in a field count as their result, so `r1=20` works.
+- A field the message does not have counts as empty: `title=` matches messages without a title.
+
+`--text` searches the readable text the inspector shows and the message's raw content, which for Beacon cards is the card's HTML. Use `--fields` when you mean a particular field.
 
 ## Roll Template Names
 
@@ -169,7 +185,7 @@ Mods only see Beacon rolls in the newer (v1.5 / Experimental) Mod sandbox. Use `
 ## For Other Mods
 
 ```js
-CRL.version; // "2.0.1"
+CRL.version; // "2.1.0"
 CRL.analyse(msg); // how listeners see a chat message
 CRL.matches(msg); // names of the listeners a message would trigger
 CRL.onMatch(({ id, listener, message, verdict }) => {}); // called when a listener triggers

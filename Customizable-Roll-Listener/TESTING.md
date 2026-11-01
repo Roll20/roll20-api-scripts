@@ -41,7 +41,7 @@ Roll a few attacks and note which listeners fire (expect "not parseable" in the 
 
 ## Setup
 
-- [ ] Install `CRL.js` and save. The API console shows `-=> Customizable Roll Listener v2.0.1 … <=-` with no errors.
+- [ ] Install `CRL.js` and save. The API console shows `-=> Customizable Roll Listener v2.1.0 … <=-` with no errors.
 - [ ] A `!crl` command sent by another Mod (for example a ScriptCards `--@crl|list`) works, and its reply is whispered to the GM.
 - [ ] The GM receives the "Customizable Roll Listener is ready." whisper.
 - [ ] The Journal has **Customizable Roll Listener - Help** and **Customizable Roll Listener - Command Deck**, neither visible to players.
@@ -93,6 +93,7 @@ Roll a few attacks and note which listeners fire (expect "not parseable" in the 
 - [ ] **Inspect Next Message**, then roll an attack, a save and a skill from the 2024 sheet. Record what the inspector shows (type, speaker, template, fields, rolls, text) in the results below.
 - [ ] `--results crit` fires on a natural 20 attack from the 2024 sheet.
 - [ ] `--who <character>` and `--text <attack name>` match 2024 rolls.
+- [ ] `--fields subcategory=Attack && title~sword` fires on a 2024 sword attack, not on its damage card or on other weapons; the inspector says "template field does not match" for the others.
 - [ ] Note anything the 2024 sheet sends that CRL cannot see.
 
 ## Copying a Game

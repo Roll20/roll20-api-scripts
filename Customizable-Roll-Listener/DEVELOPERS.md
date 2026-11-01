@@ -19,7 +19,7 @@ The script file keeps version 1's name, `CRL.js`, so One-Click upgrades replace 
 
 ```bash
 npm install
-npm run build -- --no-bump   # build CRL.js and 2.0.1/CRL.js without changing the version
+npm run build -- --no-bump   # build CRL.js and 2.1.0/CRL.js without changing the version
 npm test                     # run every suite against src/ and the built bundle
 npm run format               # Prettier
 ```
@@ -80,6 +80,7 @@ Rules (`normaliseListener`):
 | `regex`     | boolean  | Text terms are regular expressions.            |
 | `who`       | string[] | Speaker or template character, any of.         |
 | `players`   | string[] | Player display names, any of.                  |
+| `fields`    | string[] | Template field conditions, all of.             |
 | `results`   | string[] | `crit`, `fumble`, `success`, `fail`, any of.   |
 | `total`     | string   | Comparison text, e.g. `>=15`, `19-20`.         |
 | `natural`   | string   | Comparison text for kept die faces.            |
@@ -98,7 +99,7 @@ Rules (`normaliseListener`):
 
 Beacon sheets (D&D 2024) send `advancedroll` messages with no `inlinerolls` or `rolltemplate`. Their dice come in `msg.rolls`, an object keyed by roll name (`Base`, …) whose values have the inline-roll shape (`expression`, `results.rolls[].results[]` with `isCrit`/`isFumble`); their content is an HTML card read by `beacon.js` for the template (first class, `dnd-2024`), character, title, subcategory, mode and the headline total, which replaces the `Base` roll's dice-only total. `msg.characterId` is used for the roller speaker. When `msg.rolls` is missing, the rolls are read from the card's `rt-formula` blocks.
 
-`matchListener` checks, in order: enabled, type, template, who, player, text, then roll checks, and returns the first failing reason (used by the inspector). Text terms are compiled with `compileTerm`: plain terms are escaped, `##` becomes `\$\[\[\d+\]\]`, and matching is case-insensitive. Terms with `##` are searched in `raw` and the markers inside each hit give the roll scope; other terms are searched in `raw` and then `text`. Roll checks pass when one roll in scope meets every condition. `dice: auto` becomes `20` when a d20 is in scope, otherwise `any`.
+`matchListener` checks, in order: enabled, type, template, who, player, fields, text, then roll checks, and returns the first failing reason (used by the inspector). Text terms are compiled with `compileTerm`: plain terms are escaped, `##` becomes `\$\[\[\d+\]\]`, and matching is case-insensitive. Terms with `##` are searched in `raw` and the markers inside each hit give the roll scope; other terms are searched in `raw` and then `text`. Roll checks pass when one roll in scope meets every condition. `dice: auto` becomes `20` when a d20 is in scope, otherwise `any`.
 
 ## Commands and Speakers
 
