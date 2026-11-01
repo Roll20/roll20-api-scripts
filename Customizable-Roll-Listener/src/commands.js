@@ -34,7 +34,7 @@ import { LOCALE_LABELS, SUPPORTED_LOCALES, t } from './i18n.js';
 import { installHandouts } from './journals.js';
 import { isLegacyCommand, parseLegacyCommand } from './legacy.js';
 import { setInspector, testListener } from './listen.js';
-import { findInvalidTerm, parseComparison, parseDice } from './match.js';
+import { findInvalidField, findInvalidTerm, parseComparison, parseDice } from './match.js';
 import {
   deleteListener,
   getConfig,
@@ -77,6 +77,8 @@ const OPTION_KEYS = {
   sendas: 'speaker',
   player: 'players',
   players: 'players',
+  field: 'fields',
+  fields: 'fields',
   result: 'results',
   results: 'results',
   roll: 'results',
@@ -99,6 +101,7 @@ const LISTENER_ROWS = [
   'regex',
   'who',
   'players',
+  'fields',
   'results',
   'total',
   'natural',
@@ -370,6 +373,27 @@ export function applyOptions(base, options, ownId) {
       problem('badRegex', invalid);
     }
   }
+  if ('fields' in options) {
+    const terms = cleared(options.fields)
+      ? []
+      : toText(options.fields)
+          .split(/s*&&s*/)
+          .map((term) => term.trim())
+          .filter(Boolean);
+    const invalid = findInvalidField(terms, next.regex);
+    if (terms.length > MAX_TEXT_TERMS) {
+      problem('tooManyFields', { max: MAX_TEXT_TERMS });
+    } else if (invalid) {
+      problem(invalid.error ? 'badRegex' : 'badField', invalid);
+    } else {
+      next.fields = terms;
+    }
+  } else if ('regex' in options && next.regex) {
+    const invalid = findInvalidField(next.fields, true);
+    if (invalid) {
+      problem(invalid.error ? 'badRegex' : 'badField', invalid);
+    }
+  }
   for (const key of ['who', 'players']) {
     if (key in options) {
       next[key] = cleared(options[key]) ? [] : splitList(options[key], /\s*,\s*/);
@@ -468,6 +492,7 @@ function formatField(listener, key) {
     case 'regex':
       return tr(value ? 'values.regex' : 'values.plain');
     case 'text':
+    case 'fields':
       return value.length > 0 ? value.join(' && ') : tr('values.any');
     case 'results':
       return value.length > 0 ? value.map((r) => tr(`results.${r}`)).join(', ') : tr('values.any');

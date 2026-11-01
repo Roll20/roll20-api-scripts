@@ -71,7 +71,7 @@ test('startup creates the store character, handouts and greets the GM', () => {
     'Customizable Roll Listener - Help',
   ]);
   assert.match(game.chat[0].text, /Customizable Roll Listener is ready/);
-  assert.ok(game.logs.some((l) => l.includes('-=> Customizable Roll Listener v2.0.1')));
+  assert.ok(game.logs.some((l) => l.includes('-=> Customizable Roll Listener v2.1.0')));
   assertNoRawKeys(game);
 });
 
@@ -163,6 +163,18 @@ test('creating, editing and triggering a listener', () => {
   rollAttack(game, 1);
   assert.equal(game.actions().length, 2);
 
+  game.command(`!crl edit ${id} --fields rname~sword && rname!~short`);
+  same(game.crlState().listeners[id].fields, ['rname~sword', 'rname!~short']);
+  game.clearChat();
+  rollAttack(game, 1);
+  assert.equal(game.actions().length, 2);
+  game.command(`!crl edit ${id} --fields rname=Dagger`);
+  game.clearChat();
+  rollAttack(game, 1);
+  same(game.actions(), []);
+  game.command(`!crl edit ${id} --fields -`);
+  same(game.crlState().listeners[id].fields, []);
+
   game.command('!crl edit crit sound --name Fumble Sound --results -');
   assert.equal(game.objects.get(id).attrs.name, 'Fumble Sound');
   same(game.crlState().listeners[id].results, []);
@@ -190,6 +202,8 @@ test('bad input is reported, never crashes, and changes nothing', () => {
     '!crl edit A --results maybe',
     '!crl edit A --regex on --text (unclosed',
     '!crl edit A --total abc',
+    '!crl edit A --fields title',
+    '!crl edit A --regex on --fields title~(unclosed',
     '!crl edit A --colour red',
     '!crl new A',
     '!crl new Bad|Name',
@@ -199,7 +213,7 @@ test('bad input is reported, never crashes, and changes nothing', () => {
   ]) {
     game.command(cmd);
   }
-  assert.equal(game.chat.length, 11);
+  assert.equal(game.chat.length, 13);
   assert.ok(game.chat.every((c) => c.text.startsWith('/w ')));
   same(game.crlState().listeners[idOf(game, 'A')].results, ['crit']);
   assert.ok(!game.logs.some((l) => l.includes('ERROR')), game.logs.join('\n'));

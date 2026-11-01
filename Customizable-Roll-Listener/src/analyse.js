@@ -225,6 +225,21 @@ function toPlainText(text) {
 }
 
 /**
+ * Returns a template field of an analysed message as readable text, with its
+ * inline rolls replaced by their results. Field names ignore case.
+ *
+ * @param {object} message Analysed message.
+ * @param {string} name Field name.
+ * @returns {string} Field text, or an empty string when the field is missing.
+ */
+export function readField(message, name) {
+  const fields = message?.fields || {};
+  const wanted = toText(name).toLowerCase();
+  const key = Object.keys(fields).find((k) => k.toLowerCase() === wanted);
+  return key === undefined ? '' : toPlainText(expandMarkers(fields[key], message.rolls || []));
+}
+
+/**
  * Describes a chat message.
  *
  * @param {object} msg Roll20 chat message.

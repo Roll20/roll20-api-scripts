@@ -155,6 +155,19 @@ test('plain text ignores case and regular expression symbols', () => {
   assert.equal(matchListener(listener({ text: ['Attack', 'misses'] }), message).ok, false);
 });
 
+test('template fields are read with their inline rolls as results', () => {
+  const message = analyseMessage({
+    type: 'general',
+    who: 'Bob',
+    rolltemplate: 'atkdmg',
+    content: '{{rname=Longsword}} {{r1=$[[0]]}}',
+    inlinerolls: [inlineRoll('1d20+5', [dice(20, [12])], 17)],
+  });
+  assert.equal(matchListener(listener({ fields: ['rname~sword'] }), message).ok, true);
+  assert.equal(matchListener(listener({ fields: ['r1=17'] }), message).ok, true);
+  assert.equal(matchListener(listener({ fields: ['rname=Dagger'] }), message).ok, false);
+});
+
 test('regular expression text', () => {
   const message = analyseMessage({ type: 'general', who: 'Bob', content: 'Rolled a 17' });
   assert.equal(matchListener(listener({ text: ['rolled a \\d+'], regex: true }), message).ok, true);

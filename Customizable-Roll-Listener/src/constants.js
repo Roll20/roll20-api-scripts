@@ -110,6 +110,7 @@ export const DEFAULT_LISTENER = {
   regex: false,
   who: [],
   players: [],
+  fields: [],
   results: [],
   total: '',
   natural: '',

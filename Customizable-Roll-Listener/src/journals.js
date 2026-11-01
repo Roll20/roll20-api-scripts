@@ -166,6 +166,7 @@ export function buildHelpHtml(locale) {
     ['--regex', 'regex'],
     ['--who', 'who'],
     ['--players', 'players'],
+    ['--fields', 'fields'],
     ['--results', 'results'],
     ['--total', 'total'],
     ['--natural', 'natural'],

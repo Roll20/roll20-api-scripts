@@ -62,6 +62,27 @@ test('Beacon filters: template, character, type and text', () => {
   assert.equal(matchListener(listener({ text: ['strength check'] }), message).ok, false);
 });
 
+test('Beacon template fields: is, is not, contains and does not contain', () => {
+  const message = check(5);
+  const ok = (fields, regex = false) => matchListener(listener({ fields, regex }), message).ok;
+  assert.equal(ok(['subcategory=Ability Check']), true);
+  assert.equal(ok(['SUBCATEGORY = ability check']), true);
+  assert.equal(ok(['subcategory=Attack']), false);
+  assert.equal(
+    matchListener(listener({ fields: ['subcategory=Attack'] }), message).reason,
+    'field'
+  );
+  assert.equal(ok(['subcategory!=Damage']), true);
+  assert.equal(ok(['title~dexterity']), true);
+  assert.equal(ok(['title!~dexterity']), false);
+  assert.equal(ok(['title~check', 'subcategory=Attack']), false);
+  assert.equal(ok(['title~^(dex|str)'], true), true);
+  assert.equal(ok(['title~^(dex|str)']), false);
+  assert.equal(ok(['missing=']), true);
+  assert.equal(ok(['missing~x']), false);
+  assert.equal(ok(['no operator']), false);
+});
+
 /** The card plus the msg.rolls data Roll20 sends with it (captured live). */
 function withRolls(results, natural = results[0].v) {
   return analyseMessage({

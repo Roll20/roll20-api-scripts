@@ -2,7 +2,7 @@
 // functions only, so the inspector can explain a verdict and tests need no
 // Roll20.
 
-import { compare } from './analyse.js';
+import { compare, readField } from './analyse.js';
 import { TEMPLATE_NONE } from './constants.js';
 import { escapeRegExp, toText } from './utils.js';
 
@@ -11,6 +11,10 @@ export const ROLL_PLACEHOLDER = '##';
 
 const MARKER_PATTERN = '\\$\\[\\[\\d+\\]\\]';
 const MARKER_GLOBAL = /\$\[\[(\d+)\]\]/g;
+
+// A template field condition: name, operator (= is, != is not, ~ contains,
+// !~ does not contain) and value, such as "subcategory=Attack".
+const FIELD_TERM = /^([^=~!]+?)\s*(!=|!~|=|~)\s*([\s\S]*)$/;
 
 /**
  * Parses a comparison typed by the GM: "15", "=15", ">=15", ">15", "<=5",
@@ -137,6 +141,81 @@ export function matchText(listener, message) {
 }
 
 /**
+ * Parses a template field condition such as "subcategory=Attack" or
+ * "title~sword".
+ *
+ * @param {string} term Condition typed by the GM.
+ * @returns {{name: string, op: string, value: string}|null} Parsed condition,
+ *          or null when it has no field name or operator.
+ */
+export function parseFieldTerm(term) {
+  const match = FIELD_TERM.exec(toText(term).trim());
+  if (!match) {
+    return null;
+  }
+  return { name: match[1].trim(), op: match[2], value: match[3].trim() };
+}
+
+/**
+ * Returns the first field condition that cannot be used: one without a
+ * field name and operator, or, in regular expression mode, a ~ value that
+ * does not compile.
+ *
+ * @param {string[]} terms Conditions.
+ * @param {boolean} regex Whether ~ values are regular expressions.
+ * @returns {{term: string, error: string}|null} The problem (error is empty
+ *          when the condition cannot be read at all), or null.
+ */
+export function findInvalidField(terms, regex) {
+  for (const term of terms) {
+    const parsed = parseFieldTerm(term);
+    if (!parsed) {
+      return { term, error: '' };
+    }
+    if (regex && parsed.op.endsWith('~')) {
+      try {
+        new RegExp(parsed.value, 'i');
+      } catch (err) {
+        return { term: parsed.value, error: err?.message || String(err) };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Checks every template field condition of a listener. A missing field
+ * counts as empty, and comparisons ignore case.
+ *
+ * @param {object} listener Listener rules.
+ * @param {object} message Analysed message.
+ * @returns {boolean} True when every condition holds.
+ */
+export function matchFields(listener, message) {
+  return listener.fields.every((term) => {
+    const parsed = parseFieldTerm(term);
+    if (!parsed) {
+      return false;
+    }
+    const actual = readField(message, parsed.name).toLowerCase();
+    const value = parsed.value.toLowerCase();
+    let found;
+    if (parsed.op.endsWith('=')) {
+      found = actual === value;
+    } else if (listener.regex) {
+      try {
+        found = new RegExp(parsed.value, 'i').test(actual);
+      } catch {
+        return false;
+      }
+    } else {
+      found = actual.includes(value);
+    }
+    return parsed.op.startsWith('!') ? !found : found;
+  });
+}
+
+/**
  * Returns true when a name list contains a name (case-insensitive).
  *
  * @param {string[]} list Names.
@@ -231,6 +310,9 @@ export function matchListener(listener, message) {
   }
   if (listener.players.length > 0 && !listHas(listener.players, message.playerName)) {
     return fail('player');
+  }
+  if (listener.fields.length > 0 && !matchFields(listener, message)) {
+    return fail('field');
   }
 
   const text = matchText(listener, message);

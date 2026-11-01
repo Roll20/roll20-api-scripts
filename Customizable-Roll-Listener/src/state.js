@@ -190,6 +190,7 @@ export function normaliseListener(raw) {
     regex: src.regex === true,
     who: cleanList(src.who),
     players: cleanList(src.players),
+    fields: cleanList(src.fields, MAX_TEXT_TERMS),
     results: [...new Set(results)],
     total: toText(src.total),
     natural: toText(src.natural),

@@ -51,6 +51,7 @@ export default {
     regex: 'How to read the text',
     who: 'Speaker or character names separated by commas - empty for anyone',
     players: 'Player names separated by commas - empty for anyone',
+    fields: 'Template fields such as subcategory=Attack && title~sword - empty for any',
     results: 'Roll result',
     total: 'Roll total such as 15 or 19-20 - see the Help handout - empty for any',
     natural: 'Natural die result such as 20 or 1-2 - empty for any',
@@ -93,6 +94,7 @@ export default {
     regex: 'Text is',
     who: 'Speakers / characters',
     players: 'Players',
+    fields: 'Template fields',
     results: 'Roll result',
     total: 'Roll total',
     natural: 'Natural die',
@@ -145,6 +147,7 @@ export default {
       template: 'roll template does not match',
       who: 'speaker or character does not match',
       player: 'player does not match',
+      field: 'template field does not match',
       text: 'text not found',
       roll: 'no roll meets the roll conditions',
     },
@@ -181,6 +184,8 @@ export default {
     badType: 'Unknown message type(s): {value}.',
     badRegex: 'The regular expression "{term}" is not valid: {error}',
     tooManyTerms: 'A listener can look for at most {max} pieces of text.',
+    badField: 'The template field condition "{term}" cannot be read.',
+    tooManyFields: 'A listener can check at most {max} template fields.',
     badResult: 'Unknown roll result(s): {value}.',
     badComparison: 'The value "{value}" is not valid for --{option}.',
     badDice: 'The value "{value}" is not valid for --dice.',
@@ -194,11 +199,13 @@ export default {
     gmOnly: 'Ask your GM to set up listeners for you.',
     unknownCommand: 'Type !crl help to see every command.',
     badOption:
-      'Options are --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
+      'Options are --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
     notFound: 'Type !crl to see the list of listeners.',
     nameInvalid:
       'Use up to {max} characters, without these: | { } [ ] \\ @ % # ? ~ or "--", and do not start with "-".',
     badOnOff: 'Use on or off.',
+    badField:
+      'Use a field name, then = (is), != (is not), ~ (contains) or !~ (does not contain), then the value, such as subcategory=Attack. Inspect shows a roll’s fields.',
     badType: 'Message types are: {types}.',
     badResult: 'Use crit, fumble, success or fail.',
     badComparison: 'Use a number, a comparison such as >=15 or <3, or a range such as 19-20.',
@@ -226,7 +233,7 @@ export default {
     help: 'Show this list.',
     optionsTitle: 'Options',
     options:
-      'Options: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
+      'Options: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
     placeholders:
       'Commands can use ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} and ${field:name}.',
     handouts: 'The "{help}" handout explains everything; the "{deck}" handout has buttons.',
@@ -289,6 +296,7 @@ export default {
         '## in the text stands for an inline roll; the roll checks then only look at the rolls found there. Without ##, every roll in the message is checked.',
         'Text can be a regular expression instead of plain text (--regex on).',
         'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
+        'Template fields: conditions on the fields Inspect lists, such as subcategory=Attack or title~sword, separated by &&. = and != compare the whole value, ~ and !~ look for text in it, and case is ignored. A missing field counts as empty. Use it rather than --text when you mean one field, because --text also searches a Beacon card’s hidden HTML.',
       ],
     },
     templates: {
@@ -338,6 +346,8 @@ export default {
       regex: 'on to read the text as regular expressions, off for plain text.',
       who: 'Speaker or character names, separated by commas.',
       players: 'Player display names, separated by commas.',
+      fields:
+        'Template field conditions, separated by &&: name=value (is), name!=value (is not), name~text (contains), name!~text (does not contain). With --regex on, ~ reads a regular expression.',
       results: 'crit, fumble, success and/or fail.',
       total: 'Roll total: 15, >=15, <5 or 19-20.',
       natural: 'Natural die face: 20, <=2 or 19-20.',
