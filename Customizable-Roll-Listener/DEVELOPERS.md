@@ -19,7 +19,7 @@ The script file keeps version 1's name, `CRL.js`, so One-Click upgrades replace 
 
 ```bash
 npm install
-npm run build -- --no-bump   # build CRL.js and 2.0.0/CRL.js without changing the version
+npm run build -- --no-bump   # build CRL.js and 2.0.1/CRL.js without changing the version
 npm test                     # run every suite against src/ and the built bundle
 npm run format               # Prettier
 ```

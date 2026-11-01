@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Customizable Roll Listener
  * Script: CRL.js
- * Version: 2.0.0
- * Built: 2026-10-29T22:04:48.494Z
+ * Version: 2.0.1
+ * Built: 2026-11-01T00:32:30.064Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -609,14 +609,17 @@ const CustomizableRollListenerMod = (() => {
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
-  const SCRIPT_VERSION = '2.0.0';
-  const SCRIPT_LAST_UPDATED = '2026-10-29T22:04:48.494Z';
+  const SCRIPT_VERSION = '2.0.1';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T00:32:30.064Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
   const STATE_KEY = 'CRL';
   const SCHEMA_VERSION = 2;
   const COMMAND = '!crl';
+
+  // The player ID Roll20 gives chat messages sent by Mods with sendChat.
+  const API_PLAYER_ID = 'API';
 
   // Name listener commands are sent as when they are not sent as the roller.
   // Version 1 used the same name, so existing macros and filters still see it.
@@ -14713,7 +14716,9 @@ const CustomizableRollListenerMod = (() => {
     if (!/^!crl(?:\s|$)/i.test(content)) {
       return false;
     }
-    if (!playerIsGM(msg.playerid)) {
+    // Commands sent by other Mods (ScriptCards, macros run by the API) come from
+    // the player "API". Replies to them go to the GM.
+    if (msg.playerid !== API_PLAYER_ID && !playerIsGM(msg.playerid)) {
       fail(msg.playerid, 'gmOnly');
       return true;
     }

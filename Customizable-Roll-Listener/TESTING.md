@@ -41,7 +41,8 @@ Roll a few attacks and note which listeners fire (expect "not parseable" in the 
 
 ## Setup
 
-- [ ] Install `CRL.js` and save. The API console shows `-=> Customizable Roll Listener v2.0.0 … <=-` with no errors.
+- [ ] Install `CRL.js` and save. The API console shows `-=> Customizable Roll Listener v2.0.1 … <=-` with no errors.
+- [ ] A `!crl` command sent by another Mod (for example a ScriptCards `--@crl|list`) works, and its reply is whispered to the GM.
 - [ ] The GM receives the "Customizable Roll Listener is ready." whisper.
 - [ ] The Journal has **Customizable Roll Listener - Help** and **Customizable Roll Listener - Command Deck**, neither visible to players.
 - [ ] The **Customizable Roll Listener** character exists, is archived, and its bio explains what it is.

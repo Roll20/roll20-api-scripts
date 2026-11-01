@@ -71,7 +71,7 @@ test('startup creates the store character, handouts and greets the GM', () => {
     'Customizable Roll Listener - Help',
   ]);
   assert.match(game.chat[0].text, /Customizable Roll Listener is ready/);
-  assert.ok(game.logs.some((l) => l.includes('-=> Customizable Roll Listener v2.0.0')));
+  assert.ok(game.logs.some((l) => l.includes('-=> Customizable Roll Listener v2.0.1')));
   assertNoRawKeys(game);
 });
 

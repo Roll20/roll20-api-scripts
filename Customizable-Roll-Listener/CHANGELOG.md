@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1] – 2026-11-01
+
+### Fixed
+
+- Commands sent by other Mods, such as a ScriptCards `--@crl|` call, are no longer refused with "Only a GM can use Customizable Roll Listener". Roll20 sends them from the player "API", which is not a GM. Their replies are whispered to the GM.
+
 ## [2.0.0] – 2026-10-29
 
 A full rewrite by MidNiteShadow7 of Scott C.'s Customizable Roll Listener, which was reported as working on some chat output but not all, especially since Beacon sheets arrived, and is no longer supported.

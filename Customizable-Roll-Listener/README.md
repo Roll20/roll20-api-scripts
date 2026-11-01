@@ -2,7 +2,7 @@
 
 Run chat commands automatically when a matching roll or message appears in chat. Play a sound on a critical hit, roll on a fumble table on a natural 1, post a reminder when a character uses a certain attack, react to a rollable table result, and so on.
 
-- **Version:** 2.0.0
+- **Version:** 2.0.1
 - **Authors:** Scott C. (original), The Aaron (version 1.1 fixes), MidNiteShadow7 (version 2)
 - **Dependencies:** none
 - **Command:** `!crl` (GM only; other Mods such as ScriptCards can send it too, and replies go to the GM)
@@ -169,7 +169,7 @@ Mods only see Beacon rolls in the newer (v1.5 / Experimental) Mod sandbox. Use `
 ## For Other Mods
 
 ```js
-CRL.version; // "2.0.0"
+CRL.version; // "2.0.1"
 CRL.analyse(msg); // how listeners see a chat message
 CRL.matches(msg); // names of the listeners a message would trigger
 CRL.onMatch(({ id, listener, message, verdict }) => {}); // called when a listener triggers
