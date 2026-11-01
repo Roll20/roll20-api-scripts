@@ -5,7 +5,7 @@
  * Name: Hexploration
  * Script: Hexploration.js
  * Version: 2.0.3
- * Built: 2026-11-01T00:30:24.255Z
+ * Built: 2026-11-01T09:31:42.498Z
  */
 const HexplorationMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const HexplorationMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Hexploration';
   const SCRIPT_VERSION = '2.0.3';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T00:30:24.255Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T09:31:42.498Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1505,6 +1505,7 @@ const HexplorationMod = (() => {
         heading: 'Opdragte',
         intro:
           "Slegs GM'e kan hierdie opdragte gebruik. Die meeste werk op die geselekteerde voorwerpe; die res tree op op die bladsy wat jy bekyk.",
+        mods: 'Ander mods, soos ScriptCards, kan ook hierdie opdragte stuur. Hulle antwoorde word aan die GM gefluister.',
         colCommand: 'Opdrag',
         colDesc: 'Wat dit doen',
       },
@@ -1884,6 +1885,7 @@ const HexplorationMod = (() => {
         heading: 'Ordres',
         intro:
           'Només els GM poden utilitzar aquestes ordres. La majoria actuen sobre els objectes seleccionats; la resta actuen a la pàgina que esteu veient.',
+        mods: 'Altres mods, com ara ScriptCards, també poden enviar aquestes ordres. Les seves respostes es xiuxiuegen al GM.',
         colCommand: 'Ordre',
         colDesc: 'Què fa',
       },
@@ -2243,6 +2245,7 @@ const HexplorationMod = (() => {
         heading: '命令',
         intro:
           '只有 GM 可以使用這些指令。大多數作用於選定的物件；其餘的將在您正在查看的頁面上進行操作。',
+        mods: '其他 Mod（例如 ScriptCards）也可以發送這些指令。它們的回覆會以密語傳給 GM。',
         colCommand: '命令',
         colDesc: '它的作用',
       },
@@ -2616,6 +2619,7 @@ const HexplorationMod = (() => {
         heading: 'Příkazy',
         intro:
           'Tyto příkazy mohou používat pouze GM. Většina působí na vybrané objekty; zbytek působí na stránce, kterou si prohlížíte.',
+        mods: 'Jiné mody, jako jsou ScriptCards, mohou také odesílat tyto příkazy. Jejich odpovědi jsou šeptány GM.',
         colCommand: 'Příkaz',
         colDesc: 'Co to dělá',
       },
@@ -2990,6 +2994,7 @@ const HexplorationMod = (() => {
         heading: 'Kommandoer',
         intro:
           "Kun GM'er kan bruge disse kommandoer. De fleste handler på de valgte objekter; resten handler på den side, du ser.",
+        mods: 'Andre mods, såsom ScriptCards, kan også sende disse kommandoer. Deres svar bliver hvisket til GM.',
         colCommand: 'Kommando',
         colDesc: 'Hvad den gør',
       },
@@ -3368,6 +3373,7 @@ const HexplorationMod = (() => {
         heading: "Commando's",
         intro:
           "Alleen GM's kunnen deze commando's gebruiken. De meeste werken op de geselecteerde objecten; de rest handelt op de pagina die u bekijkt.",
+        mods: 'Andere mods, zoals ScriptCards, kunnen deze opdrachten ook verzenden. Hun antwoorden worden naar de GM gefluisterd.',
         colCommand: 'Commando',
         colDesc: 'Wat het doet',
       },
@@ -3737,6 +3743,7 @@ const HexplorationMod = (() => {
         heading: 'Commands',
         intro:
           'Only GMs can use these commands. Most act on the selected objects; the rest act on the page you are viewing.',
+        mods: 'Other mods, such as ScriptCards, can send these commands too. Their replies are whispered to the GM.',
         colCommand: 'Command',
         colDesc: 'What it does',
       },
@@ -4113,6 +4120,7 @@ const HexplorationMod = (() => {
         heading: 'Komennot',
         intro:
           'Vain GM:t voivat käyttää näitä komentoja. Useimmat toimivat valittuihin objekteihin; loput toimivat katsomallasi sivulla.',
+        mods: 'Myös muut modit, kuten ScriptCards, voivat lähettää näitä komentoja. Niiden vastaukset kuiskataan GM:lle.',
         colCommand: 'Komento',
         colDesc: 'Mitä se tekee',
       },
@@ -4493,6 +4501,7 @@ const HexplorationMod = (() => {
         heading: 'Commandes',
         intro:
           'Seuls les MJ peuvent utiliser ces commandes. La plupart agissent sur les objets sélectionnés ; le reste agit sur la page que vous consultez.',
+        mods: "D'autres mods, tels que ScriptCards, peuvent également envoyer ces commandes. Leurs réponses sont murmurées au MJ.",
         colCommand: 'Commande',
         colDesc: 'Ce que ça fait',
       },
@@ -4879,6 +4888,7 @@ const HexplorationMod = (() => {
         heading: 'Befehle',
         intro:
           'Nur GMs können diese Befehle verwenden. Die meisten wirken auf die ausgewählten Objekte; Der Rest wirkt auf der Seite, die Sie gerade betrachten.',
+        mods: 'Andere Mods, wie zum Beispiel ScriptCards, können diese Befehle ebenfalls senden. Ihre Antworten werden dem GM zugeflüstert.',
         colCommand: 'Befehl',
         colDesc: 'Was es bewirkt',
       },
@@ -5255,6 +5265,7 @@ const HexplorationMod = (() => {
         heading: 'Εντολές',
         intro:
           'Μόνο οι GM μπορούν να χρησιμοποιήσουν αυτές τις εντολές. Οι περισσότερες ενεργούν στα επιλεγμένα αντικείμενα· οι υπόλοιπες ενεργούν στη σελίδα που βλέπετε.',
+        mods: 'Άλλα mods, όπως το ScriptCards, μπορούν επίσης να στείλουν αυτές τις εντολές. Οι απαντήσεις τους ψιθυρίζονται στον GM.',
         colCommand: 'Εντολή',
         colDesc: 'Τι κάνει',
       },
@@ -5624,6 +5635,7 @@ const HexplorationMod = (() => {
         heading: 'פקודות',
         intro:
           'רק GMs יכולים להשתמש בפקודות אלה. רובם פועלים על האובייקטים שנבחרו; השאר פועלים בדף שבו אתה צופה.',
+        mods: 'מודים אחרים, כמו ScriptCards, יכולים גם הם לשלוח את הפקודות האלה. התשובות שלהם נשלחות בלחישה ל-GM.',
         colCommand: 'פְּקוּדָה',
         colDesc: 'מה זה עושה',
       },
@@ -6000,6 +6012,7 @@ const HexplorationMod = (() => {
         heading: 'Parancsok',
         intro:
           'Csak a GM-ek használhatják ezeket a parancsokat. A legtöbb a kiválasztott objektumokra hat; a többi az éppen megtekintett oldalon működik.',
+        mods: 'Más modok, például a ScriptCards is küldhetik ezeket a parancsokat. Válaszaikat a GM-nek suttogják.',
         colCommand: 'Parancs',
         colDesc: 'Mit csinál',
       },
@@ -6377,6 +6390,7 @@ const HexplorationMod = (() => {
         heading: 'Comandi',
         intro:
           'Solo i GM possono utilizzare questi comandi. La maggior parte agisce sugli oggetti selezionati; il resto agisce sulla pagina che stai visualizzando.',
+        mods: 'Anche altri mod, come ScriptCards, possono inviare questi comandi. Le loro risposte vengono sussurrate al GM.',
         colCommand: 'Comando',
         colDesc: 'Cosa fa',
       },
@@ -6750,6 +6764,7 @@ const HexplorationMod = (() => {
         heading: 'コマンド',
         intro:
           'これらのコマンドは GM のみが使用できます。ほとんどは、選択したオブジェクトに作用します。残りの部分は、表示しているページに基づいて動作します。',
+        mods: 'ScriptCards などの他の Mod もこれらのコマンドを送信できます。返信は GM にささやかれます。',
         colCommand: 'コマンド',
         colDesc: '何をするのか',
       },
@@ -7121,6 +7136,7 @@ const HexplorationMod = (() => {
         heading: '명령',
         intro:
           'GM만이 이 명령을 사용할 수 있습니다. 대부분은 선택한 개체에 작용합니다. 나머지는 현재 보고 있는 페이지에서 수행됩니다.',
+        mods: 'ScriptCards 같은 다른 모드도 이 명령을 보낼 수 있습니다. 응답은 GM에게 귓속말로 전달됩니다.',
         colCommand: '명령',
         colDesc: '기능',
       },
@@ -7495,6 +7511,7 @@ const HexplorationMod = (() => {
         heading: 'Polecenia',
         intro:
           'Tylko MG mogą używać tych poleceń. Większość działa na wybrane obiekty; reszta działa na stronie, którą przeglądasz.',
+        mods: 'Inne mody, takie jak ScriptCards, również mogą wysyłać te polecenia. Ich odpowiedzi są szeptane do GM.',
         colCommand: 'Polecenie',
         colDesc: 'Co to robi',
       },
@@ -7872,6 +7889,7 @@ const HexplorationMod = (() => {
         heading: 'Comandos',
         intro:
           'Apenas os GMs podem usar estes comandos. A maioria atua sobre os objetos selecionados; o resto atua na página que está a visualizar.',
+        mods: 'Outros mods, como os ScriptCards, também podem enviar estes comandos. As suas respostas são sussurradas para o GM.',
         colCommand: 'Comando',
         colDesc: 'O que faz',
       },
@@ -8249,6 +8267,7 @@ const HexplorationMod = (() => {
         heading: 'Comandos',
         intro:
           'Somente GMs podem usar esses comandos. A maioria atua nos objetos selecionados; o resto atua na página que você está visualizando.',
+        mods: 'Outros mods, como ScriptCards, também podem enviar esses comandos. Suas respostas são sussurradas para o GM.',
         colCommand: 'Comando',
         colDesc: 'O que isso faz',
       },
@@ -8624,6 +8643,7 @@ const HexplorationMod = (() => {
         heading: 'Команды',
         intro:
           'Только ГМ могут использовать эти команды. Большинство действует на выбранные объекты; остальные действуют на просматриваемой вами странице.',
+        mods: 'Другие моды, такие как ScriptCards, тоже могут отправлять эти команды. Их ответы шёпотом приходят ГМ.',
         colCommand: 'Команда',
         colDesc: 'Что он делает',
       },
@@ -9003,6 +9023,7 @@ const HexplorationMod = (() => {
         heading: 'Comandos',
         intro:
           'Solo los DJ pueden usar estos comandos. La mayoría actúa sobre los objetos seleccionados; el resto actúa sobre la página que estás viendo.',
+        mods: 'Otros mods, como ScriptCards, también pueden enviar estos comandos. Sus respuestas se susurran al GM.',
         colCommand: 'Comando',
         colDesc: 'Qué hace',
       },
@@ -9377,6 +9398,7 @@ const HexplorationMod = (() => {
         heading: 'Kommandon',
         intro:
           'Endast GM:er kan använda dessa kommandon. De flesta agerar på de valda objekten; resten agerar på sidan du tittar på.',
+        mods: 'Andra mods, som ScriptCards, kan också skicka dessa kommandon. Deras svar viskas till GM.',
         colCommand: 'Kommando',
         colDesc: 'Vad den gör',
       },
@@ -9752,6 +9774,7 @@ const HexplorationMod = (() => {
         heading: 'Komutlar',
         intro:
           "Bu komutları yalnızca GM'ler kullanabilir. Çoğu seçili nesneler üzerinde çalışır; geri kalanı görüntülediğiniz sayfada çalışır.",
+        mods: 'ScriptCards gibi diğer modlar da bu komutları gönderebilir. Yanıtları GM’ye fısıldanır.',
         colCommand: 'Komut',
         colDesc: 'Ne işe yarar',
       },
@@ -10126,6 +10149,7 @@ const HexplorationMod = (() => {
         heading: 'Команди',
         intro:
           "Тільки GM можуть використовувати ці команди. Більшість діють на обрані об'єкти; решта діють на сторінці, яку ви переглядаєте.",
+        mods: 'Інші моди, такі як ScriptCards, також можуть надсилати ці команди. Їхні відповіді надходять GM пошепки.',
         colCommand: 'Команда',
         colDesc: 'Що воно робить',
       },
@@ -12837,7 +12861,7 @@ const HexplorationMod = (() => {
     </div>
     ${section('overview', `<p style="${STYLE.p}">${h('overview.body')}</p><p style="${STYLE.p}">${link(DEMO_GIF_URL, t('handout.overview.demo', lang))}</p>`)}
     ${section('quickStart', list(raw('quickStart.steps'), true))}
-    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
+    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p><p style="${STYLE.p}">${h('commands.mods')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('revealing', list(raw('revealing.points')))}
     ${section('locations', list(raw('locations.points')))}
     ${section('settings', `<p style="${STYLE.p}">${h('settings.intro')}</p>${table([t('handout.settings.colKey', lang), t('handout.settings.colName', lang), t('handout.settings.colDesc', lang)], settings)}`)}
