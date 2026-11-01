@@ -53,6 +53,9 @@ const TRANSLATION = {
     paused: 'Alle Patrouillen pausierten.',
     resumed: 'Die Patrouillen wurden wieder aufgenommen.',
     journalRebuilt: 'Handouts neu erstellt: {help} und {deck}.',
+    markerStopped: 'Gestoppt durch einen Stoppmarker: {tokens}.',
+    markerReset:
+      'Durch einen Stoppmarker dorthin zurückgeschickt, wo sie begonnen haben: {tokens}.',
   },
   errors: {
     noTokens: 'Keine Token ausgewählt.',
@@ -78,6 +81,13 @@ const TRANSLATION = {
     usageCopy: 'Geben Sie eine Route und einen Namen für die Kopie ein.',
     badJson: 'Das ist kein Routenexporttext.',
     tokenLocked: '{tokens} kann nicht gestartet werden: gesperrt.',
+    tokenMarked: '{tokens} kann nicht starten: Sie haben eine Stoppmarkierung.',
+    outsideArea: '{tokens} kann nicht gestartet werden: Sie liegen außerhalb von „{name}“.',
+    selectOneArea:
+      'Wählen Sie genau eine geschlossene Zeichnung (ein Polygon, ein Rechteck, eine Ellipse oder eine Freihandschleife) aus.',
+    areaTooSmall:
+      'Die ausgewählte Zeichnung benötigt mindestens drei Ecken, um eine Fläche zu bilden.',
+    idsNotFound: 'Keine Token haben diese IDs: {ids}.',
     routeOnOtherPage:
       '{tokens} kann nicht gestartet werden: „{name}“ wurde auf einer anderen Seite gezeichnet.',
     startOnOtherPage:
@@ -114,7 +124,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Zeichnen Sie die Route mit einem Zeichenwerkzeug, wählen Sie sie aus (ziehen Sie einen Rahmen um einen dünnen Umriss, wenn Sie darauf klicken, und versuchen Sie es erneut).',
-    usageRoute: 'Optionen: Modus, Intervall, Max, Zufall, Start.',
+    usageRoute: 'Optionen: Modus, Intervall, Max, Zufall, Wände, Start.',
     routeOnOtherPage:
       'Gezeichnete Routen funktionieren nur auf der Seite, auf der sie gezeichnet wurden.',
     startOnOtherPage:
@@ -126,13 +136,21 @@ const TRANSLATION = {
     badJson: 'Fügen Sie den Text aus !tokencontroller export (oder v4 exportpaths) genau ein.',
     unknownSetting: 'Geben Sie !tokencontroller set ein, um alle Einstellungen anzuzeigen.',
     calibrateNeedsTokens:
-      'Ein Spielstein richtet das Raster aus; Zwei Spielsteine ​​in benachbarten Zellen einer Zeile legen ebenfalls die Zellengröße fest.',
+      'Ein Spielstein richtet das Raster aus; Zwei Spielsteine in benachbarten Zellen einer Zeile legen ebenfalls die Zellengröße fest.',
     calibrateFailed:
       'Stellen Sie sicher, dass sich die Token in benachbarten Zellen derselben Zeile (Spalte auf Hex-Seiten (H)) befinden.',
     unknownCommand: 'Geben Sie !tokencontroller help für die Liste der Befehle ein.',
     tokenLocked: 'Entsperren Sie zuerst den Token.',
+    tokenMarked:
+      'Entfernen Sie die Markierung oder ändern Sie die Einstellung „Stoppmarkierungen“.',
+    outsideArea:
+      'Bewegen Sie die Spielsteine zuerst innerhalb des Bereichs oder aktivieren Sie „Zufälliger Start“ für die Route.',
+    selectOneArea:
+      'Zeichnen Sie den Bereich mit einem Zeichenwerkzeug, wählen Sie ihn aus (ziehen Sie einen Rahmen um einen dünnen Umriss, falls dieser beim Klicken übersehen wird), und versuchen Sie es erneut.',
+    idsNotFound: 'Geben Sie nach --ids Token-IDs an, getrennt durch Semikolons.',
   },
   warnings: {
+    idsNotFound: 'Keine Token haben diese IDs, daher wurden sie übersprungen: {ids}.',
     offPage:
       'Ein Teil der Route verläuft außerhalb der Seite (Schritte: {count}). Diese Schritte werden übersprungen.',
     combatTrackerOnly:
@@ -195,6 +213,27 @@ const TRANSLATION = {
       continue: 'Von dort aus weitermachen',
       stop: 'Stoppen Sie die Patrouille',
     },
+    markerAction: {
+      stop: 'Stehen bleiben',
+      reset: 'Zurück zum Start',
+    },
+    wallMode: {
+      ignore: 'Durch Wände gehen',
+      hold: 'An Wänden warten',
+      turn: 'An Wänden umkehren',
+    },
+    wallCheck: {
+      centre: 'Mittelpunkt des Tokens',
+      width: 'Ganzes Token',
+    },
+    oneWayWalls: {
+      block: 'Blockieren',
+      pass: 'Durchlassen',
+    },
+    transparentWalls: {
+      block: 'Blockieren',
+      pass: 'Durchlassen',
+    },
   },
   menu: {
     statusRunning: 'Patrouillentoken: {patrols}. Routen: {routes}.',
@@ -217,6 +256,7 @@ const TRANSLATION = {
     stop: 'Stoppen',
     add: 'Schrittcode',
     draw: 'Aus der Zeichnung',
+    bounce: 'Bounce-Bereich',
     record: 'Aufzeichnen',
     examples: 'Beispiele',
     reset: 'Zurücksetzen',
@@ -263,11 +303,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Gezeichnete Route, {points} Punkte',
     recorded: 'Aufgezeichnete Route, {points} Punkte',
+    area: 'Absprungbereich, {points} Ecken',
     path: 'Weg',
     mode: 'Modus',
     interval: 'Intervall',
     maxTokens: 'Die meisten Token',
     randomStart: 'Zufälliger Start',
+    walls: 'Wände',
     start: 'Fester Start',
     tokens: 'Token',
   },
@@ -286,8 +328,8 @@ const TRANSLATION = {
       desc: 'Zelle bewegt sich eine Zelle pro Schritt; Das Segment bewegt einen ganzen Schritt (z. B. U3) auf einmal, wie es in Version 4 der Fall war.',
     },
     facing: {
-      label: 'Spielsteine ​​umdrehen',
-      desc: 'Drehen Sie die Spielsteine ​​so, dass sie dorthin zeigen, wo sie hingehören: weg, oder in die Richtung, in die das Spielsteinbild zeigt (nach oben, unten, links oder rechts).',
+      label: 'Spielsteine umdrehen',
+      desc: 'Drehen Sie die Spielsteine so, dass sie dorthin zeigen, wo sie hingehören: weg, oder in die Richtung, in die das Spielsteinbild zeigt (nach oben, unten, links oder rechts).',
     },
     combatDetection: {
       label: 'Kampferkennung',
@@ -312,6 +354,30 @@ const TRANSLATION = {
     manualMove: {
       label: 'Eine Patrouille ziehen',
       desc: 'Wenn Sie einen Patrouillenmarker ziehen: Fahren Sie fort (die Route wird an der Stelle fortgesetzt, an der Sie sie abgelegt haben) oder stoppen Sie (die Patrouille endet).',
+    },
+    stopMarkers: {
+      label: 'Stoppmarkierungen',
+      desc: 'Statusmarkierungen, die einen Token von seiner Route abhalten und ihn daran hindern, ihm zu folgen, getrennt durch Semikolons (z. B. dead;red) oder keine. Anhänger eines Anführers mit einem dieser Marker bleiben ebenfalls stehen.',
+    },
+    markerAction: {
+      label: 'Markierungsaktion stoppen',
+      desc: 'Was ein Patrouillenmarker tut, wenn er einen Stoppmarker erhält: anhalten (er bleibt dort, wo er ist) oder zurücksetzen (er geht dorthin zurück, wo er begonnen hat).',
+    },
+    wallMode: {
+      label: 'Wände',
+      desc: 'Was Patrouillen und Verfolger bei dynamischen Beleuchtungswänden und geschlossenen Türen und Fenstern tun: ignorieren (durchgehen), halten (warten, bis der Weg frei ist, zum Beispiel bis sich eine Tür öffnet) oder umdrehen (Streifen umdrehen). Jeder Weg kann seinen eigenen wählen, sodass Geister immer noch durch Wände gehen können.',
+    },
+    wallCheck: {
+      label: 'Wandcheck',
+      desc: 'Mitte: Nur die Mitte eines Spielsteins darf von Wänden fern bleiben. Breite: Der gesamte Token reicht aus, daher kann sich ein großer Token nicht durch eine schmale Lücke quetschen.',
+    },
+    oneWayWalls: {
+      label: 'Einbahnstraßen',
+      desc: 'Ob Einwegwände Token stoppen (blockieren) oder nicht (passieren).',
+    },
+    transparentWalls: {
+      label: 'Durchsichtige Wände',
+      desc: 'Ob transparente Wände, die Licht durchlassen, Spielsteine stoppen (blockieren) oder nicht (passieren).',
     },
     buttonStep: {
       label: 'Zellen pro Klick',
@@ -344,18 +410,21 @@ const TRANSLATION = {
     lock: 'Halten Sie die ausgewählten Token fest oder lassen Sie sie los.',
     leader: 'Wählen Sie den ausgewählten Token als Anführer aus, dem Sie folgen möchten.',
     follow:
-      'Lassen Sie die ausgewählten Spielsteine ​​dem Anführer oder einem namentlich genannten Spielstein folgen.',
+      'Lassen Sie die ausgewählten Spielsteine dem Anführer oder einem namentlich genannten Spielstein folgen.',
     unfollow: 'Stoppen Sie die folgenden ausgewählten Token.',
     add: 'Erstellen Sie eine Route aus einem Schrittcode, z. B. U2R2D2L2.',
     edit: 'Ändern Sie den Schrittcode einer Route.',
     draw: 'Erstellen Sie eine Route, die der ausgewählten Zeichnung auf dieser Seite folgt.',
+    bounce:
+      'Erstellen Sie eine Route, auf der Spielsteine innerhalb der ausgewählten geschlossenen Zeichnung wandern und von deren Rändern abprallen.',
     record:
       'Zeichnen Sie eine Route auf, indem Sie das ausgewählte Token mit den Tasten verschieben oder ziehen.',
-    route: 'Ändern Sie eine Routenoption: Modus, Intervall, Maximum, Zufall oder Start.',
+    route: 'Ändern Sie eine Routenoption: Modus, Intervall, Maximum, Zufall, Wände oder Start.',
     show: 'Zeigt die Details und Schaltflächen einer Route an.',
     rename: 'Benennen Sie eine Route um.',
     copy: 'Kopieren Sie eine Route unter einem neuen Namen.',
     remove: 'Eine Route entfernen (fragt zuerst).',
+    ids: 'Handeln Sie auf die Token mit diesen IDs anstelle der ausgewählten, sodass andere Mods wie ScriptCards Token steuern können. Remove --ids entfernt die Token von ihren Routen; Es wird niemals eine Route entfernt.',
     list: 'Listen Sie die Routen oder die kontrollierten Token auf.',
     examples: 'Fügen Sie die Beispielrouten hinzu.',
     export: 'Routen als Text anzeigen, um sie in ein anderes Spiel zu kopieren.',
@@ -393,6 +462,7 @@ const TRANSLATION = {
         'Aus Zeichnung: Zeichnen Sie mit den Zeichenwerkzeugen eine Linie, ein Polygon, eine Freihandform, ein Rechteck oder eine Ellipse, wählen Sie sie aus und klicken Sie auf „Aus Zeichnung“. Token laufen daran entlang, nur auf dieser Seite. Sie können die Zeichnung anschließend löschen.',
         'Aufzeichnen: Wählen Sie ein Token aus und klicken Sie auf Aufzeichnen. Bewegen Sie es mit den Pfeiltasten oder ziehen Sie es auf der Karte (Roll20 Wegpunkte werden verfolgt) und klicken Sie dann auf Speichern. Auf quadratischen Rastern wird die Aufnahme zu einem Schrittcode, den Sie bearbeiten können.',
         'Rundrouten beginnen wieder von vorne; Hin- und Herrouten gehen den Weg zurück, den sie gekommen sind; Sobald Routen am Ende anhalten. Neue Routen, die dort enden, wo sie beginnen, Schleife; andere gehen hin und her.',
+        'Bounce-Bereich: Zeichnen Sie eine geschlossene Form um den Bereich, wählen Sie ihn aus und klicken Sie auf Bounce-Bereich. Darauf begonnene Spielsteine bewegen sich in geraden Linien und prallen von seinen Kanten (und von Wänden, es sei denn, die Route ignoriert sie) ab, wobei sie sich jedes Mal ein wenig zufällig drehen. Beim zufälligen Start wird jeder Spielstein in eine zufällige Zelle des Bereichs gelegt.',
       ],
     },
     codes: {
@@ -414,6 +484,8 @@ const TRANSLATION = {
       interval: 'Millisekunden pro Schritt für diese Route oder 0 für das globale Intervall.',
       max: 'Die meisten Token, die gleichzeitig auf der Route sein können, oder 0 für keine Begrenzung.',
       random: 'on: Jeder Token beginnt an einem zufälligen Punkt entlang der Route.',
+      walls:
+        'ignorieren (durch Wände gehen), halten (an Wänden und geschlossenen Türen warten), umdrehen (umdrehen) oder Standard (die Einstellung „Wände“ verwenden).',
       start:
         'Set: Token springen beim Start zur Position des ausgewählten Tokens. Klar: Sie fangen dort an, wo sie stehen.',
     },
@@ -426,6 +498,8 @@ const TRANSLATION = {
         'Folgen: Wählen Sie den Anführer aus und klicken Sie auf „Anführer“. Wählen Sie dann die Follower aus und klicken Sie auf „Folgen“. Sie können auch den Namen des Anführers eingeben: !tokencontroller follow Goblin Boss. Follower folgen Token, die patrouillieren, Token, die Sie ziehen, und Token, die von TokenMod verschoben werden.',
         'Follower können anderen Followern folgen und so eine Kette oder Spalte bilden.',
         'Durch Ziehen eines Patrouillenmarkers wird die Patrouille an der Stelle fortgesetzt, an der Sie sie abgelegt haben, es sei denn, das Ziehen einer Patrouille ist auf Stopp eingestellt.',
+        'Wände: Wenn die Einstellung „Wände“ aktiviert ist, gehen Patrouillen und Begleiter nicht durch dynamische Beleuchtungswände oder geschlossene Türen und Fenster; Offene Türen und Fenster lassen sie durch. Geben Sie einer Route die Option „eigene Wände“ (z. B. „Ignorieren“ für einen Geist).',
+        'Stoppmarkierungen: Ein Spielstein, der eine dieser Statusmarkierungen erhält (z. B. tot), verlässt seine Route und hört auf, ihm zu folgen, und die Anhänger eines Anführers, der einen Stopp erhält, ebenfalls. Setzen Sie sie mit !tokencontroller set stopMarkers dead;red. Dies funktioniert auch, wenn ein anderer Mod die Markierung hinzufügt.',
       ],
     },
     grids: {
@@ -449,6 +523,7 @@ const TRANSLATION = {
       heading: 'Befehle',
       intro:
         'Nur GMs können diese Befehle verwenden. Routen können über die Menüschaltflächen benannt oder mit ihrer #id bezeichnet werden. Setzen Sie Namen mit Leerzeichen in „Anführungszeichen“, wenn ein Befehl zwei Namen annimmt.',
+      mods: 'Auch andere Mods können diese Befehle senden, beispielsweise von ScriptCards. Sie können keine Token auswählen und benennen sie daher mit --ids, gefolgt von durch Semikolons getrennten Token-IDs: !tc stop --ids ID1;ID2. Antworten gehen an den GM.',
       colCommand: 'Befehl',
       colDesc: 'Was es bewirkt',
     },

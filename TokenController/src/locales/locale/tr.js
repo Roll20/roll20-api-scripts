@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Tüm devriyeler durduruldu.',
     resumed: 'Devriyeler yeniden başladı.',
     journalRebuilt: 'Ödevler yeniden oluşturuldu: {help} ve {deck}.',
+    markerStopped: 'Bir Durdurma İşareti Tarafından Durduruldu: {tokens}.',
+    markerReset: 'Durdurma İşareti ile başladıkları yere geri gönderildiler: {tokens}.',
   },
   errors: {
     noTokens: 'Hiçbir jeton seçilmedi.',
@@ -73,6 +75,12 @@ const TRANSLATION = {
     usageCopy: 'Kopya için bir rota ve ad verin.',
     badJson: 'Bu rota dışa aktarma metni değil.',
     tokenLocked: '{tokens} başlatılamıyor: kilitli.',
+    tokenMarked: '{tokens} başlayamıyor: bir Durdurma İşareti var.',
+    outsideArea: '{tokens} başlatılamıyor: "{name}" dışındalar.',
+    selectOneArea:
+      'Tam olarak bir kapalı çizim seçin (çokgen, dikdörtgen, elips veya serbest el döngüsü).',
+    areaTooSmall: 'Seçilen çizimin alan oluşturabilmesi için en az üç köşeye ihtiyacı vardır.',
+    idsNotFound: 'Şu kimliklere sahip jeton yok: {ids}.',
     routeOnOtherPage: '{tokens} başlatılamıyor: "{name}" başka bir sayfaya çizilmiş.',
     startOnOtherPage: '{tokens} başlatılamıyor: "{name}" sabit başlangıcı başka bir sayfadadır.',
     routeFull: '{tokens} başlatılamıyor: "{name}" zaten {max} belirteçlerine sahip.',
@@ -104,7 +112,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Rotayı bir çizim aracıyla çizin, seçin (tıklandığında gözden kaçırılırsa kutuyu ince bir anahat etrafında sürükleyin), sonra tekrar deneyin.',
-    usageRoute: 'Seçenekler: mod, aralık, maksimum, rastgele, başlangıç.',
+    usageRoute: 'Seçenekler: mod, aralık, maksimum, rastgele, duvarlar, başlangıç.',
     routeOnOtherPage: 'Çizilen rotalar yalnızca çizildikleri sayfada çalışır.',
     startOnOtherPage: 'Sabit başlangıcı temizleyin veya önce jetonu o sayfaya taşıyın.',
     noLeader: "Lideri seçin ve Lider'e tıklayın veya adını verin: !tokencontroller follow Name",
@@ -119,8 +127,15 @@ const TRANSLATION = {
       'Belirteçlerin aynı satırın komşu hücrelerinde olduğundan emin olun (Hex (H) sayfalardaki sütun).',
     unknownCommand: 'Komutların listesi için !tokencontroller help yazın.',
     tokenLocked: 'Önce jetonun kilidini açın.',
+    tokenMarked: 'İşaretçiyi kaldırın veya İşaretçileri Durdurma ayarını değiştirin.',
+    outsideArea:
+      'Önce jetonları alanın içine taşıyın veya rota için Rastgele başlangıç seçeneğini açın.',
+    selectOneArea:
+      'Alanı bir çizim aracıyla çizin, seçin (tıklandığında gözden kaçırılırsa kutuyu ince bir çerçevenin etrafında sürükleyin), sonra tekrar deneyin.',
+    idsNotFound: 'Jeton kimliklerini --ids sonrasında noktalı virgülle ayırarak verin.',
   },
   warnings: {
+    idsNotFound: 'Hiçbir jeton bu kimliklere sahip olmadığından atlandı: {ids}.',
     offPage: 'Rotanın bir kısmı sayfanın dışına çıkıyor (adımlar: {count}). Bu adımlar atlanır.',
     combatTrackerOnly:
       'Savaş Tespiti dönüş izleyiciye ayarlıdır, dolayısıyla bu anahtarın siz değiştirene kadar hiçbir etkisi yoktur.',
@@ -182,6 +197,27 @@ const TRANSLATION = {
       continue: 'Oradan devam et',
       stop: 'Devriyeyi durdur',
     },
+    markerAction: {
+      stop: 'Olduğu yerde dur',
+      reset: 'Başlangıca geri dön',
+    },
+    wallMode: {
+      ignore: 'Duvarların içinden geç',
+      hold: 'Duvarlarda bekleyin',
+      turn: 'Duvarlara arkanı dön',
+    },
+    wallCheck: {
+      centre: 'Belirtecin merkezi',
+      width: 'Bütün jeton',
+    },
+    oneWayWalls: {
+      block: 'Engellemek',
+      pass: 'Geçmesine izin ver',
+    },
+    transparentWalls: {
+      block: 'Engellemek',
+      pass: 'Geçmesine izin ver',
+    },
   },
   menu: {
     statusRunning: 'Devriye jetonları: {patrols}. Rotalar: {routes}.',
@@ -204,6 +240,7 @@ const TRANSLATION = {
     stop: 'Durmak',
     add: 'Adım Kodu',
     draw: 'Çizimden',
+    bounce: 'Sıçrama Alanı',
     record: 'Kayıt',
     examples: 'Örnekler',
     reset: 'Sıfırla',
@@ -250,11 +287,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Rota çizildi, {points} puan',
     recorded: 'Kaydedilen rota, {points} puan',
+    area: 'Sıçrama alanı, {points} köşeler',
     path: 'Yol',
     mode: 'Mod',
     interval: 'Aralık',
     maxTokens: 'Çoğu jeton',
     randomStart: 'Rastgele başlangıç',
+    walls: 'Duvarlar',
     start: 'Sabit başlangıç',
     tokens: 'Jetonlar',
   },
@@ -300,6 +339,30 @@ const TRANSLATION = {
       label: 'Bir Devriyeyi Sürüklemek',
       desc: 'Bir devriye jetonunu sürüklediğinizde: devam edin (rota, bıraktığınız yerden devam eder) veya durun (devriye biter).',
     },
+    stopMarkers: {
+      label: 'İşaretçileri Durdur',
+      desc: 'Noktalı virgüllerle (örneğin ölü; kırmızı) ayrılmış veya hiçbiriyle ayrılmış olarak, bir jetonu rotasından çıkaran ve takip etmesini durduran durum işaretçileri. Bu işaretlerden birine sahip bir liderin takipçileri de durur.',
+    },
+    markerAction: {
+      label: 'İşaretçi Eylemini Durdur',
+      desc: 'Devriye gezen bir token, Durdurma İşareti aldığında ne yapar: Durdurun (olduğu yerde kalır) veya sıfırlayın (başladığı yere geri döner).',
+    },
+    wallMode: {
+      label: 'Duvarlar',
+      desc: 'Dinamik aydınlatmalı duvarlarda ve kapalı kapı ve pencerelerde devriyelerin ve takipçilerin yaptığı şey: görmezden gelmek (içeriden geçmek), beklemek (yol boşalıncaya kadar beklemek, örneğin bir kapı açılıncaya kadar) veya dönmek (devriyeler geri dönmek). Her rota kendi rotasını seçebilir, böylece hayaletler hâlâ duvarların içinden geçebilir.',
+    },
+    wallCheck: {
+      label: 'Duvar Kontrolü',
+      desc: 'merkez: jetonun yalnızca ortasının duvarlardan uzak durması gerekir. genişlik: jetonun tamamı öyledir, bu nedenle büyük bir jeton dar bir aralıktan geçemez.',
+    },
+    oneWayWalls: {
+      label: 'Tek Yönlü Duvarlar',
+      desc: 'Tek yönlü duvarların jetonları durdurup durdurmadığı (blok) veya durdurmadığı (geçme).',
+    },
+    transparentWalls: {
+      label: 'Şeffaf Duvarlar',
+      desc: 'Işığın geçmesine izin veren şeffaf duvarların jetonları durdurup durdurmadığı (bloke) veya etmemesi (geçmesi).',
+    },
     buttonStep: {
       label: 'Tıklama Başına Hücre Sayısı',
       desc: 'Kayıt oklarının jetonu ne kadar uzağa taşıdığı.',
@@ -335,12 +398,16 @@ const TRANSLATION = {
     add: 'U2R2D2L2 gibi bir adım kodundan rota oluşturun.',
     edit: 'Bir rotanın adım kodunu değiştirin.',
     draw: 'Bu sayfada seçilen çizimi takip eden bir rota oluşturun.',
+    bounce:
+      'Belirteçlerin seçilen kapalı çizimin içinde dolaşıp kenarlarından sıçradığı bir rota oluşturun.',
     record: 'Seçilen jetonu düğmelerle hareket ettirerek veya sürükleyerek bir rota kaydedin.',
-    route: 'Bir rota seçeneğini değiştirin: mod, aralık, maksimum, rastgele veya başlangıç.',
+    route:
+      'Bir rota seçeneğini değiştirin: mod, aralık, maksimum, rastgele, duvarlar veya başlangıç.',
     show: 'Bir rotanın ayrıntılarını ve düğmelerini gösterin.',
     rename: 'Bir rotayı yeniden adlandırın.',
     copy: 'Bir rotayı yeni bir adla kopyalayın.',
     remove: 'Bir rotayı kaldırın (önce sorar).',
+    ids: "Seçilenler yerine bu kimliklere sahip jetonlar üzerinde hareket edin, böylece ScriptCard'lar gibi diğer Modlar jetonları kontrol edebilir. kaldır --ids jetonları rotalarından çıkarır; asla bir rotayı kaldırmaz.",
     list: 'Rotaları veya kontrol edilen jetonları listeleyin.',
     examples: 'Örnek rotaları ekleyin.',
     export: 'Başka bir oyuna kopyalamak için rotaları metin olarak gösterin.',
@@ -378,6 +445,7 @@ const TRANSLATION = {
         'Çizimden: çizim araçlarını kullanarak bir çizgi, çokgen, serbest şekil, dikdörtgen veya elips çizin, seçin ve Çizimden öğesine tıklayın. Jetonlar yalnızca bu sayfada yürür. Daha sonra çizimi silebilirsiniz.',
         "Kaydet: Bir belirteç seçin ve Kaydet'e tıklayın. Ok düğmeleriyle hareket ettirin veya harita üzerinde sürükleyin (Roll20 yol noktaları takip edilir), ardından Kaydet'e tıklayın. Kare ızgaralarda kayıt, düzenleyebileceğiniz bir adım koduna dönüşür.",
         'Döngü rotaları yeniden baştan başlar; ileri geri rotalar geldikleri yoldan geri yürür; rotalar sonunda durduğunda. Döngünün başladığı yerde biten yeni rotalar; diğerleri ileri geri gider.',
+        "Sıçrama Alanı: alanın çevresine kapalı bir şekil çizin, onu seçin ve Sıçrama Alanı'na tıklayın. Üzerinde başlatılan jetonlar düz çizgiler halinde hareket eder ve kenarlarından (ve rota onları görmezden gelmediği sürece duvarlardan) sekerek her seferinde biraz rastgele döner. Rastgele başlangıç, her jetonu alanın rastgele bir hücresine yerleştirir.",
       ],
     },
     codes: {
@@ -399,6 +467,8 @@ const TRANSLATION = {
       interval: 'Bu rota için adım başına milisaniye veya genel aralık için 0.',
       max: 'Aynı anda rotada olabilecek en fazla jeton veya sınırsız olarak 0.',
       random: 'açık: her jeton rota boyunca rastgele bir noktada başlar.',
+      walls:
+        'görmezden gelin (duvarlardan geçin), tutun (duvarlarda ve kapalı kapılarda bekleyin), dönün (geri dönün) veya varsayılanı kullanın (Duvarlar ayarını kullanın).',
       start:
         'set: jetonlar başladığında seçilen jetonun konumuna atlar. açık: durdukları yerden başlıyorlar.',
     },
@@ -411,6 +481,8 @@ const TRANSLATION = {
         "Takip et: lideri seçin ve Lider'e tıklayın, ardından takipçileri seçin ve Takip Et'e tıklayın. Ayrıca liderin adını da yazabilirsiniz: !tokencontroller Goblin Boss'u takip edin. Takipçiler devriye gezen jetonları, sürüklediğiniz jetonları ve TokenMod tarafından taşınan jetonları takip eder.",
         'Takipçiler diğer takipçileri takip ederek bir zincir veya sütun oluşturabilirler.',
         'Bir Devriyeyi Sürüklemek durmaya ayarlı olmadığı sürece, bir devriye jetonunu sürüklemek, devriyeyi bıraktığınız yerden devam ettirir.',
+        'Duvarlar: Duvarlar ayarı açıkken devriyeler ve takipçiler dinamik aydınlatmalı duvarlardan veya kapalı kapı ve pencerelerden geçmez; açık kapılar ve pencereler onların geçmesine izin veriyor. Bir rotaya kendi duvarları seçeneğini verin (örneğin bir hayaleti görmezden gelin).',
+        'Durdurma İşaretçileri: Bu durum işaretleyicilerinden (örneğin ölü) birini alan bir token, rotasını terk eder ve takip etmeyi bırakır ve bir liderin takipçileri de bir durak alır. Bunları !tokencontroller set stopMarkers dead;red ile ayarlayın. Bu aynı zamanda başka bir Mod işaretçiyi eklediğinde de çalışır.',
       ],
     },
     grids: {
@@ -434,6 +506,7 @@ const TRANSLATION = {
       heading: 'Komutlar',
       intro:
         'Bu komutları yalnızca GM\'ler kullanabilir. Rotalar, menü düğmelerinden #id\'leriyle adlandırılabilir veya bunlara başvurulabilir. Bir komut iki ad aldığında adları boşluklu olarak "tırnak" içine koyun.',
+      mods: "Diğer Modlar da bu komutları örneğin ScriptCard'lardan gönderebilir. Belirteçleri seçemezler, bu nedenle onları --ids ve ardından noktalı virgülle ayrılmış belirteç kimlikleriyle adlandırırlar: !tc stop --ids ID1;ID2. Cevaplar GM'ye gidiyor.",
       colCommand: 'Emretmek',
       colDesc: 'Ne işe yarar',
     },

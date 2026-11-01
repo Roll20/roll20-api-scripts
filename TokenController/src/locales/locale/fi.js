@@ -47,6 +47,8 @@ const TRANSLATION = {
     paused: 'Kaikki partiot pysähtyivät.',
     resumed: 'Partioita jatkettiin.',
     journalRebuilt: 'Uudelleen rakennetut monisteet: {help} ja {deck}.',
+    markerStopped: 'Pysäytysmerkin pysäyttämä: {tokens}.',
+    markerReset: 'Pysäytysmerkinnän lähettämä takaisin aloituspaikkaan: {tokens}.',
   },
   errors: {
     noTokens: 'Tunnuksia ei ole valittu.',
@@ -72,6 +74,13 @@ const TRANSLATION = {
     usageCopy: 'Anna kopiolle reitti ja nimi.',
     badJson: 'Se ei ole reitin vientiteksti.',
     tokenLocked: '{tokens} ei käynnisty: lukittu.',
+    tokenMarked: '{tokens} ei voi käynnistyä: niissä on pysäytysmerkki.',
+    outsideArea: '{tokens} ei voi alkaa: ne ovat kohteen "{name}" ulkopuolella.',
+    selectOneArea:
+      'Valitse täsmälleen yksi suljettu piirros (monikulmio, suorakulmio, ellipsi tai vapaakäden silmukka).',
+    areaTooSmall:
+      'Valitussa piirustuksessa tarvitaan vähintään kolme kulmaa alueen muodostamiseksi.',
+    idsNotFound: 'Millään tunnuksilla ei ole näitä tunnuksia: {ids}.',
     routeOnOtherPage: '{tokens} ei voi alkaa: "{name}" piirrettiin toiselle sivulle.',
     startOnOtherPage: '{tokens} ei voi alkaa: "{name}" -kohdan kiinteä alku on toisella sivulla.',
     routeFull: '{tokens} ei voi alkaa: "{name}" sisältää jo {max} tunnuksia.',
@@ -102,7 +111,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Piirrä reitti piirtotyökalulla, valitse se (vetämällä laatikko ohuen ääriviivan ympärille, jos se ei napsauttakaan), yritä sitten uudelleen.',
-    usageRoute: 'Vaihtoehdot: tila, intervalli, maksimi, satunnainen, aloitus.',
+    usageRoute: 'Vaihtoehdot: tila, intervalli, maksimi, satunnainen, seinät, aloitus.',
     routeOnOtherPage: 'Piirretyt reitit toimivat vain sillä sivulla, jolle ne on piirretty.',
     startOnOtherPage: 'Tyhjennä kiinteä aloitus tai siirrä merkki tälle sivulle ensin.',
     noLeader:
@@ -117,8 +126,14 @@ const TRANSLATION = {
       'Varmista, että tunnukset ovat saman rivin viereisissä soluissa (sarake Hex (H) -sivuilla).',
     unknownCommand: 'Kirjoita komentoluetteloon !tokencontroller help.',
     tokenLocked: 'Avaa tunnuksen lukitus ensin.',
+    tokenMarked: 'Poista merkki tai muuta Stop Markers -asetusta.',
+    outsideArea: 'Siirrä ensin merkit alueen sisällä tai ota käyttöön reitin satunnainen aloitus.',
+    selectOneArea:
+      'Piirrä alue piirtotyökalulla, valitse se (vetämällä laatikko ohuen ääriviivan ympärille, jos napsauttaminen ei onnistu) ja yritä sitten uudelleen.',
+    idsNotFound: 'Anna tunnustunnukset --ids jälkeen puolipisteillä erotettuina.',
   },
   warnings: {
+    idsNotFound: 'Millään tunnuksilla ei ole näitä tunnuksia, joten ne ohitettiin: {ids}.',
     offPage: 'Osa reitistä kulkee sivulta (vaiheet: {count}). Ne vaiheet ohitetaan.',
     combatTrackerOnly:
       'Combat Detection on asetettu käännösseurantaan, joten tällä kytkimellä ei ole vaikutusta ennen kuin muutat sen.',
@@ -180,6 +195,27 @@ const TRANSLATION = {
       continue: 'Jatka sieltä',
       stop: 'Pysäytä partio',
     },
+    markerAction: {
+      stop: 'Pysähdy missä se on',
+      reset: 'Palaa alkuun',
+    },
+    wallMode: {
+      ignore: 'Kävele seinien läpi',
+      hold: 'Odota seinillä',
+      turn: 'Käänny takaisin seiniin',
+    },
+    wallCheck: {
+      centre: 'Tunnusmerkin keskusta',
+      width: 'Koko merkki',
+    },
+    oneWayWalls: {
+      block: 'Lohko',
+      pass: 'Päästä läpi',
+    },
+    transparentWalls: {
+      block: 'Lohko',
+      pass: 'Päästä läpi',
+    },
   },
   menu: {
     statusRunning: 'Partiomerkit: {patrols}. Reitit: {routes}.',
@@ -201,6 +237,7 @@ const TRANSLATION = {
     stop: 'Pysäytä',
     add: 'Vaihekoodi',
     draw: 'Piirtämisestä',
+    bounce: 'Pomppualue',
     record: 'Tallentaa',
     examples: 'Esimerkkejä',
     reset: 'Nollaa',
@@ -247,11 +284,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Piirretty reitti, {points} pistettä',
     recorded: 'Reitti tallennettu, {points} pistettä',
+    area: 'Pomppualue, {points} kulmat',
     path: 'Polku',
     mode: 'tila',
     interval: 'Intervalli',
     maxTokens: 'Suurin osa tokeneista',
     randomStart: 'Satunnainen aloitus',
+    walls: 'Seinät',
     start: 'Kiinteä aloitus',
     tokens: 'Tokenit',
   },
@@ -297,6 +336,30 @@ const TRANSLATION = {
       label: 'Partion vetäminen',
       desc: 'Kun vedät partiomerkkiä: jatka (reitti jatkuu kohdasta, josta pudotit sen) tai pysähdy (partio päättyy).',
     },
+    stopMarkers: {
+      label: 'Pysäytysmerkit',
+      desc: 'Tilamerkit, jotka vievät tunnuksen pois reitiltä ja pysäyttävät sen seuraamisen puolipisteillä erotettuina (esimerkiksi kuollut;punainen) tai ei mitään. Myös johtajan seuraajat, joilla on yksi näistä merkeistä, pysähtyvät.',
+    },
+    markerAction: {
+      label: 'Lopeta merkkitoiminto',
+      desc: 'Mitä partiomerkki tekee, kun se saa Stop Markerin: pysäyttää (se pysyy paikallaan) tai nollaa (se palaa alkuun).',
+    },
+    wallMode: {
+      label: 'Seinät',
+      desc: 'Mitä partiot ja seuraajat tekevät dynaamisissa valaistusseinissä ja suljetuissa ovissa ja ikkunoissa: jätä huomiotta (kävele läpi), pidä kiinni (odota, kunnes tie on vapaa, esimerkiksi kunnes ovi avautuu) tai käänny (partiot kääntyvät takaisin). Jokainen reitti voi valita oman, joten haamut voivat silti kävellä seinien läpi.',
+    },
+    wallCheck: {
+      label: 'Seinätarkastus',
+      desc: 'keskus: vain merkin keskiosan on pysyttävä poissa seinistä. leveys: koko merkki riittää, joten suuri merkki ei voi puristaa kapeasta raosta.',
+    },
+    oneWayWalls: {
+      label: 'Yksisuuntaiset seinät',
+      desc: 'Pysäyttävätkö yksisuuntaiset seinät merkit (estää) vai eivät (läpäisevätkö).',
+    },
+    transparentWalls: {
+      label: 'Läpinäkyvät seinät',
+      desc: 'Olipa sitten läpinäkyvät seinät, jotka päästävät valoa läpi, pysäyttävät tokeneita (lohko) tai eivät (läpäisevät).',
+    },
     buttonStep: {
       label: 'Solut per napsautus',
       desc: 'Kuinka pitkälle tallennusnuolet siirtävät merkkiä.',
@@ -332,12 +395,15 @@ const TRANSLATION = {
     add: 'Luo reitti askelkoodista, kuten U2R2D2L2.',
     edit: 'Muuta reitin askelkoodia.',
     draw: 'Luo reitti, joka seuraa valittua piirustusta tällä sivulla.',
+    bounce:
+      'Luo reitti, jolla merkit vaeltavat valitun suljetun piirustuksen sisällä pomppien sen reunoista.',
     record: 'Tallenna reitti siirtämällä valittua merkkiä painikkeilla tai vetämällä sitä.',
-    route: 'Muuta reittivaihtoehtoa: tila, väli, maksimi, satunnainen tai aloitus.',
+    route: 'Muuta reittivaihtoehtoa: tila, väli, maksimi, satunnainen, seinät tai alku.',
     show: 'Näytä reitin tiedot ja painikkeet.',
     rename: 'Nimeä reitti uudelleen.',
     copy: 'Kopioi reitti uudella nimellä.',
     remove: 'Poista reitti (kysyy ensin).',
+    ids: 'Käytä tunnuksia näillä tunnuksilla valittujen tunnuksien sijaan, jotta muut modit, kuten ScriptCards, voivat hallita tokeneita. poista --ids poistaa tunnukset niiden reiteiltä; se ei koskaan poista reittiä.',
     list: 'Listaa reitit tai ohjattavat merkit.',
     examples: 'Lisää esimerkkireitit.',
     export: 'Näytä reitit tekstinä kopioitavaksi toiseen peliin.',
@@ -375,6 +441,7 @@ const TRANSLATION = {
         'Piirrosta: piirrä viiva, monikulmio, vapaalla kädellä oleva muoto, suorakulmio tai ellipsi piirtotyökaluilla, valitse se ja napsauta Piirustuksesta. Rahakkeet kulkevat sitä pitkin, vain sillä sivulla. Voit poistaa piirroksen jälkeenpäin.',
         'Tallenna: valitse tunnus ja napsauta Tallenna. Siirrä sitä nuolipainikkeilla tai vedä sitä kartalla (Roll20 reittipisteitä seurataan) ja napsauta sitten Tallenna. Neliöruudukoissa tallennuksesta tulee askelkoodi, jota voit muokata.',
         'Silmukkareitit alkavat uudelleen alusta; edestakaiset reitit kävelevät takaisin samaa tietä kuin tulivat; kun reitit pysähtyvät lopussa. Uudet reitit, jotka päättyvät silmukan alkuun; toiset menevät edestakaisin.',
+        'Poistumisalue: piirrä suljettu muoto alueen ympärille, valitse se ja napsauta Poistumisalue. Sillä alkavat merkit kulkevat suoria linjoja ja pomppaavat sen reunoista (ja seiniltä, ellei reitti jätä niitä huomiotta), kääntyen joka kerta hieman satunnaisesti. Satunnaisaloitus asettaa jokaisen merkin alueen satunnaiseen soluun.',
       ],
     },
     codes: {
@@ -396,6 +463,8 @@ const TRANSLATION = {
       interval: 'Millisekuntia askelta kohden tälle reitille tai 0 globaalille aikavälille.',
       max: 'Eniten tokeneita, jotka voivat olla reitillä kerralla, tai 0 ilman rajoitusta.',
       random: 'päällä: jokainen merkki alkaa satunnaisesta pisteestä reitin varrella.',
+      walls:
+        'ohita (kävele seinien läpi), pidä kiinni (odota seinillä ja suljetuilla ovilla), käännä (käänny taaksepäin) tai oletus (käytä Seinät-asetusta).',
       start:
         'set: Tokenit hyppäävät valitun merkin paikkaan alkaessaan. selvä: ne alkavat siitä, missä ovat.',
     },
@@ -408,12 +477,14 @@ const TRANSLATION = {
         'Seuraa: valitse johtaja ja napsauta Johtaja, valitse sitten seuraajat ja napsauta Seuraa. Voit myös kirjoittaa johtajan nimen: !tokencontroller follow Goblin Boss. Seuraajat seuraavat partioivia tunnuksia, vetämiäsi tokeneja ja TokenModin siirtämiä tokeneita.',
         'Seuraajat voivat seurata muita seuraajia muodostaen ketjun tai sarakkeen.',
         'Partiomerkin vetäminen kuljettaa partioa siitä kohdasta, josta sen pudotat, ellei Partion vetäminen ole asetettu pysähtymään.',
+        'Seinät: Seinät-asetuksen ollessa päällä partiot ja seuraajat eivät kulje dynaamisten valaistusseinien tai suljettujen ovien ja ikkunoiden läpi; avoimet ovet ja ikkunat päästävät ne läpi. Anna reitille omat seinänsä vaihtoehto (esimerkiksi ohita haamu).',
+        'Pysäytysmerkit: merkki, joka saa yhden näistä tilamerkeistä (esimerkiksi kuollut), poistuu reitiltä ja lakkaa seuraamasta, sekä johtajan seuraajat, joka saa yhden pysähdyksen. Aseta ne komennolla !tokencontroller set stopMarkers dead;red. Tämä toimii myös, kun toinen modi lisää merkin.',
       ],
     },
     grids: {
       heading: 'Ristikot',
       points: [
-        'Solun koko ja ruudukkotyyppi luetaan jokaiselta sivulta, joten eri sivuilla voidaan käyttää erilaisia ​​ruudukoita.',
+        'Solun koko ja ruudukkotyyppi luetaan jokaiselta sivulta, joten eri sivuilla voidaan käyttää erilaisia ruudukoita.',
         'U ja D tarkoittavat aina näyttöä ylös ja alas. Hex-ruudukoilla liikkuu ilman vastaavaa naapurin siksakia; isometrisissa ja dimetrisissä ruudukoissa lävistäjät ylittävät yhden vinoneliön.',
         'Sivut, joiden napsautus on poistettu käytöstä, liikkuvat 70 pikselin askelin ilman, että ne asettuvat ruudukkoon.',
         'Jos merkit ajautuvat ruudukosta, kiinnitä merkki solun keskelle, valitse se ja napsauta Kalibroi. Valitse kaksi merkkiä rivin viereisistä soluista myös solun koon korjaamiseksi.',
@@ -431,6 +502,7 @@ const TRANSLATION = {
       heading: 'komennot',
       intro:
         'Vain GM:t voivat käyttää näitä komentoja. Reittejä voidaan nimetä tai viitata niiden #id:llä valikkopainikkeista. Laita nimet välilyönneillä "lainausmerkkeihin", kun komennossa on kaksi nimeä.',
+      mods: 'Myös muut modit voivat lähettää näitä komentoja, esimerkiksi ScriptCardista. He eivät voi valita tunnuksia, joten he nimeävät ne tunnuksella --ids, jota seuraa tunnukset puolipisteillä erotettuina: !tc stop --ids ID1;ID2. Vastaukset menevät GM:lle.',
       colCommand: 'Komento',
       colDesc: 'Mitä se tekee',
     },

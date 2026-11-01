@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Alla patruller pausade.',
     resumed: 'Patruller återupptogs.',
     journalRebuilt: 'Handouts ombyggda: {help} och {deck}.',
+    markerStopped: 'Stoppas av en stoppmarkör: {tokens}.',
+    markerReset: 'Skickade tillbaka till där de började av en stoppmarkör: {tokens}.',
   },
   errors: {
     noTokens: 'Inga tokens har valts.',
@@ -73,6 +75,12 @@ const TRANSLATION = {
     usageCopy: 'Ge en rutt och ett namn för kopian.',
     badJson: 'Det är inte ruttexporttext.',
     tokenLocked: '{tokens} kan inte starta: låst.',
+    tokenMarked: '{tokens} kan inte starta: de har en stoppmarkör.',
+    outsideArea: '{tokens} kan inte starta: de är utanför "{name}".',
+    selectOneArea:
+      'Välj exakt en sluten ritning (en polygon, rektangel, ellips eller frihandsögla).',
+    areaTooSmall: 'Den valda ritningen behöver minst tre hörn för att göra ett område.',
+    idsNotFound: 'Inga tokens har dessa ID:n: {ids}.',
     routeOnOtherPage: '{tokens} kan inte starta: "{name}" ritades på en annan sida.',
     startOnOtherPage:
       '{tokens} kan inte starta: den fasta starten för "{name}" finns på en annan sida.',
@@ -105,7 +113,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Rita rutten med ett ritverktyg, markera det (dra en ruta runt en tunn kontur om du missar den genom att klicka), försök sedan igen.',
-    usageRoute: 'Alternativ: läge, intervall, max, slumpmässig, start.',
+    usageRoute: 'Alternativ: läge, intervall, max, slumpmässigt, väggar, start.',
     routeOnOtherPage: 'Ritade rutter fungerar bara på sidan de ritades på.',
     startOnOtherPage: 'Rensa den fasta starten eller flytta token till den sidan först.',
     noLeader:
@@ -119,8 +127,15 @@ const TRANSLATION = {
       'Se till att tokens finns i närliggande celler på samma rad (kolumn på Hex (H)-sidor).',
     unknownCommand: 'Skriv !tokencontroller help för listan med kommandon.',
     tokenLocked: 'Lås upp token först.',
+    tokenMarked: 'Ta bort markören eller ändra inställningen för stoppmarkörer.',
+    outsideArea:
+      'Flytta tokens innanför området först, eller aktivera Slumpmässig start för rutten.',
+    selectOneArea:
+      'Rita området med ett ritverktyg, markera det (dra en ruta runt en tunn kontur om du missar det genom att klicka), försök sedan igen.',
+    idsNotFound: 'Ge token-ID:n efter --ids, avgränsade med semikolon.',
   },
   warnings: {
+    idsNotFound: 'Inga tokens har dessa ID:n, så de hoppades över: {ids}.',
     offPage: 'En del av rutten går utanför sidan (steg: {count}). De stegen hoppas över.',
     combatTrackerOnly:
       'Combat Detection är inställt på svängspåraren, så den här omkopplaren har ingen effekt förrän du ändrar den.',
@@ -182,6 +197,27 @@ const TRANSLATION = {
       continue: 'Fortsätt därifrån',
       stop: 'Stoppa patrullen',
     },
+    markerAction: {
+      stop: 'Stanna där det är',
+      reset: 'Gå tillbaka till början',
+    },
+    wallMode: {
+      ignore: 'Gå genom väggar',
+      hold: 'Vänta vid väggarna',
+      turn: 'Vänd tillbaka vid väggarna',
+    },
+    wallCheck: {
+      centre: 'Mitten av token',
+      width: 'Hel token',
+    },
+    oneWayWalls: {
+      block: 'Blockera',
+      pass: 'Släppa fram',
+    },
+    transparentWalls: {
+      block: 'Blockera',
+      pass: 'Släppa fram',
+    },
   },
   menu: {
     statusRunning: 'Patrullerande tokens: {patrols}. Rutter: {routes}.',
@@ -203,6 +239,7 @@ const TRANSLATION = {
     stop: 'Stopp',
     add: 'Stegkod',
     draw: 'Från ritning',
+    bounce: 'Studsområde',
     record: 'Spela in',
     examples: 'Exempel',
     reset: 'Återställa',
@@ -249,11 +286,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Ritad rutt, {points} poäng',
     recorded: 'Inspelad rutt, {points} poäng',
+    area: 'Avvisningsområde, {points} hörn',
     path: 'Väg',
     mode: 'Läge',
     interval: 'Intervall',
     maxTokens: 'De flesta tokens',
     randomStart: 'Slumpmässig start',
+    walls: 'Väggar',
     start: 'Fast start',
     tokens: 'Polletter',
   },
@@ -299,6 +338,30 @@ const TRANSLATION = {
       label: 'Dra en patrull',
       desc: 'När du drar en patrulleringstoken: fortsätt (rutten fortsätter där du tappade den) eller stanna (patrullen slutar).',
     },
+    stopMarkers: {
+      label: 'Stoppmarkörer',
+      desc: 'Statusmarkörer som tar bort en token från dess rutt och stoppar den efter, åtskilda av semikolon (till exempel död;röd), eller ingen. Följare av en ledare med en av dessa markörer slutar också.',
+    },
+    markerAction: {
+      label: 'Åtgärd vid stoppmarkör',
+      desc: 'Vad en patrullerande token gör när den får en stoppmarkering: stoppa (den stannar där den är) eller återställ (den går tillbaka till där den började).',
+    },
+    wallMode: {
+      label: 'Väggar',
+      desc: 'Vad patruller och följare gör vid dynamiska belysningsväggar och stängda dörrar och fönster: ignorera (gå igenom), hålla (vänta tills vägen är fri, till exempel tills en dörr öppnas) eller vända (patruller vänder tillbaka). Varje rutt kan välja sin egen, så spöken kan fortfarande gå genom väggar.',
+    },
+    wallCheck: {
+      label: 'Väggkontroll',
+      desc: 'mitten: endast mitten av en token måste hålla sig borta från väggar. bredd: hela poletten gör det, så en stor pollett kan inte pressa sig genom ett smalt gap.',
+    },
+    oneWayWalls: {
+      label: 'Enkelriktade väggar',
+      desc: 'Om enkelriktade väggar stoppar polletter (blockera) eller inte (pass).',
+    },
+    transparentWalls: {
+      label: 'Genomskinliga väggar',
+      desc: 'Oavsett om genomskinliga väggar, som släpper igenom ljus, stoppar tokens (blockerar) eller inte (passerar).',
+    },
     buttonStep: {
       label: 'Celler per klick',
       desc: 'Hur långt inspelningspilarna flyttar en token.',
@@ -334,13 +397,16 @@ const TRANSLATION = {
     add: 'Skapa en rutt från en stegkod, till exempel U2R2D2L2.',
     edit: 'Ändra en rutts stegkod.',
     draw: 'Skapa en rutt som följer den valda ritningen på denna sida.',
+    bounce:
+      'Skapa en rutt där tokens vandrar in i den valda stängda ritningen och studsar mot dess kanter.',
     record:
       'Spela in en rutt genom att flytta den valda token med knappar eller genom att dra den.',
-    route: 'Ändra ett ruttalternativ: läge, intervall, max, slumpmässigt eller start.',
+    route: 'Ändra ett ruttalternativ: läge, intervall, max, slumpmässigt, väggar eller start.',
     show: 'Visa en rutts detaljer och knappar.',
     rename: 'Byt namn på en rutt.',
     copy: 'Kopiera en rutt under ett nytt namn.',
     remove: 'Ta bort en rutt (frågar först).',
+    ids: 'Agera på tokens med dessa ID:n istället för de valda, så att andra Mods som ScriptCards kan styra tokens. ta bort --ids tar tokens från sina rutter; den tar aldrig bort en rutt.',
     list: 'Lista rutterna eller de tokens som kontrolleras.',
     examples: 'Lägg till exempel på rutter.',
     export: 'Visa rutter som text att kopiera till ett annat spel.',
@@ -378,6 +444,7 @@ const TRANSLATION = {
         'Från ritning: rita en linje, polygon, frihandsform, rektangel eller ellips med ritverktygen, välj den och klicka på Från ritning. Tokens går längs den, bara på den sidan. Du kan radera ritningen i efterhand.',
         'Spela in: välj en token och klicka på Spela in. Flytta den med pilknapparna eller dra den på kartan (Roll20 waypoints följs), klicka sedan på Spara. På kvadratiska rutnät blir inspelningen en stegkod som du kan redigera.',
         'Slingrutter börjar om från början; rutter fram och tillbaka går tillbaka som de kom; när rutter stannar i slutet. Nya rutter som slutar där de börjar loopa; andra går fram och tillbaka.',
+        'Bounce Area: rita en stängd form runt området, markera den och klicka på Bounce Area. Tokens som startas på den färdas i raka linjer och studsar från dess kanter (och från väggar, om inte rutten ignorerar dem), och svänger lite slumpmässigt varje gång. Slumpmässig start placerar varje token i en slumpmässig cell i området.',
       ],
     },
     codes: {
@@ -399,6 +466,8 @@ const TRANSLATION = {
       interval: 'Millisekunder per steg för denna rutt, eller 0 för det globala intervallet.',
       max: 'De flesta tokens som kan finnas på rutten på en gång, eller 0 utan gräns.',
       random: 'på: varje token börjar på en slumpmässig punkt längs rutten.',
+      walls:
+        'ignorera (gå genom väggar), håll (vänta vid väggar och stängda dörrar), vänd (vänd tillbaka) eller standard (använd inställningen Väggar).',
       start:
         'set: tokens hoppar till den valda tokens position när de startar. klart: de börjar där de står.',
     },
@@ -411,6 +480,8 @@ const TRANSLATION = {
         'Följ: välj ledaren och klicka på Ledare, välj sedan följare och klicka på Följ. Du kan också skriva in ledarens namn: !tokencontroller follow Goblin Boss. Följare följer tokens som patrullerar, tokens du drar och tokens som flyttas av TokenMod.',
         'Följare kan följa andra följare, skapa en kedja eller en kolumn.',
         'Att dra en patrulleringstoken för patrullen vidare där du tappar den, om inte Drag a Patrol är inställd på att stoppa.',
+        'Väggar: med inställningen Väggar på går patruller och följare inte genom dynamiska belysningsväggar eller stängda dörrar och fönster; öppna dörrar och fönster släpper igenom dem. Ge en rutt dess egna väggalternativ (till exempel ignorera för ett spöke).',
+        'Stoppmarkörer: en token som får en av dessa statusmarkörer (till exempel död) lämnar sin rutt och slutar följa, och anhängarna till en ledare som får ett stopp också. Ställ in dem med !tokencontroller set stopMarkers dead;red. Detta fungerar också när en annan mod lägger till markören.',
       ],
     },
     grids: {
@@ -434,6 +505,7 @@ const TRANSLATION = {
       heading: 'Kommandon',
       intro:
         'Endast GM:er kan använda dessa kommandon. Rutter kan namnges eller refereras till med deras #id från menyknapparna. Sätt namn med mellanslag inom "citattecken" när ett kommando tar två namn.',
+      mods: 'Andra Mods kan också skicka dessa kommandon, till exempel från ScriptCards. De kan inte välja tokens, så de namnger dem med --ids följt av token-ID:n separerade med semikolon: !tc stop --ids ID1;ID2. Svaren går till GM.',
       colCommand: 'Kommando',
       colDesc: 'Vad den gör',
     },

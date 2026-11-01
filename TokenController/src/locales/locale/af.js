@@ -13,7 +13,7 @@ const TRANSLATION = {
       "Opgegradeer vanaf weergawe 4. Roetes gehou: {routes}. Patrolleertekens gehou: {patrols}. Jou ou makro's en !tc-opdragte werk steeds.",
     removedGuide:
       'Die ou "TokenController Usage Guide"-uitdeelstuk, wat spelers kon sien, is vervang deur die GM-enigste Help-uitdeelstuk.',
-    pruned: 'Patrollies vergeet omdat hul tokens nie meer bestaan ​​nie: {count}.',
+    pruned: 'Patrollies vergeet omdat hul tokens nie meer bestaan nie: {count}.',
     readyHint: 'Tik !tokencontroller vir die spyskaart, of maak die Command Deck-uitdeelstuk oop.',
     combatStarted: {
       pause: 'Geveg het begin: patrollies word onderbreek totdat dit eindig.',
@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Alle patrollies het stilgestaan.',
     resumed: 'Patrollies is hervat.',
     journalRebuilt: 'Uitdeelstukke herbou: {help} en {deck}.',
+    markerStopped: "Gestop deur 'n stopmerker: {tokens}.",
+    markerReset: "Teruggestuur na waar hulle begin het deur 'n stopmerker: {tokens}.",
   },
   errors: {
     noTokens: 'Geen tokens gekies nie.',
@@ -56,7 +58,7 @@ const TRANSLATION = {
     routeExists: 'Daar is reeds \'n roete genaamd "{name}".',
     code: {
       empty: 'Die stapkode is leeg.',
-      badToken: 'Die stapkode "{code}" het iets wat dit nie verstaan ​​nie by "{at}".',
+      badToken: 'Die stapkode "{code}" het iets wat dit nie verstaan nie by "{at}".',
       tooFar: 'Die stap "{at}" is te lank.',
     },
     routeInvalid: 'Daardie roete kon nie gestoor word nie.',
@@ -73,6 +75,12 @@ const TRANSLATION = {
     usageCopy: "Gee 'n roete en 'n naam vir die kopie.",
     badJson: 'Dit is nie roete-uitvoerteks nie.',
     tokenLocked: '{tokens} kan nie begin nie: gesluit.',
+    tokenMarked: "{tokens} kan nie begin nie: hulle het 'n stopmerker.",
+    outsideArea: '{tokens} kan nie begin nie: hulle is buite "{name}".',
+    selectOneArea:
+      "Kies presies een geslote tekening ('n veelhoek, reghoek, ellips of vryhandlus).",
+    areaTooSmall: "Die geselekteerde tekening benodig ten minste drie hoeke om 'n area te maak.",
+    idsNotFound: "Geen tokens het hierdie ID's nie: {ids}.",
     routeOnOtherPage: '{tokens} kan nie begin nie: "{name}" is op \'n ander bladsy geteken.',
     startOnOtherPage:
       '{tokens} kan nie begin nie: die vaste begin van "{name}" is op \'n ander bladsy.',
@@ -83,7 +91,7 @@ const TRANSLATION = {
     noLeader: 'Daar is nog geen leier nie.',
     followLoop: "{tokens} kan nie 'n teken volg wat hulle volg nie.",
     alreadyRecording: '{token} word reeds opgeneem.',
-    recordingTokenGone: 'Die teken vir die opname van "{name}" bestaan ​​nie meer nie.',
+    recordingTokenGone: 'Die teken vir die opname van "{name}" bestaan nie meer nie.',
     recordingEmpty: 'Niks is nog aangeteken nie.',
     unknownSetting: 'Daar is geen instelling genaamd "{key}" nie.',
     badSettingValue: '"{value}" is nie \'n geldige waarde vir {key} nie.',
@@ -106,7 +114,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       "Teken die roete met 'n tekengereedskap, kies dit (sleep 'n blokkie om 'n dun buitelyn as jy dit mis deur te klik), probeer dan weer.",
-    usageRoute: 'Opsies: modus, interval, maksimum, ewekansig, begin.',
+    usageRoute: 'Opsies: modus, interval, maksimum, ewekansig, mure, begin.',
     routeOnOtherPage: 'Getekende roetes werk net op die bladsy waarop hulle geteken is.',
     startOnOtherPage: 'Maak die vaste begin skoon, of skuif eers die teken na daardie bladsy.',
     noLeader: 'Kies die leier en klik Leier, of gee sy naam: !tokencontroller follow Name',
@@ -119,8 +127,15 @@ const TRANSLATION = {
       'Maak seker dat die tokens in naburige selle van dieselfde ry is (kolom op Hex (H) bladsye).',
     unknownCommand: 'Tik !tokencontroller-hulp vir die lys opdragte.',
     tokenLocked: 'Ontsluit eers die teken.',
+    tokenMarked: 'Verwyder die merker, of verander die Stop Merkers instelling.',
+    outsideArea:
+      'Beweeg eers die tekens binne die area, of skakel Willekeurige begin vir die roete aan.',
+    selectOneArea:
+      "Teken die area met 'n tekengereedskap, kies dit (sleep 'n blokkie om 'n dun buitelyn as jy dit mis deur te klik), probeer dan weer.",
+    idsNotFound: "Gee teken-ID's na --ids, geskei deur kommapunte.",
   },
   warnings: {
+    idsNotFound: "Geen tokens het hierdie ID's nie, so hulle is oorgeslaan: {ids}.",
     offPage:
       "'n Deel van die roete loop van die bladsy af (stappe: {count}). Daardie stappe word oorgeslaan.",
     combatTrackerOnly:
@@ -183,6 +198,27 @@ const TRANSLATION = {
       continue: 'Gaan voort van daar af',
       stop: 'Stop die patrollie',
     },
+    markerAction: {
+      stop: 'Stop waar dit is',
+      reset: 'Gaan terug na die begin',
+    },
+    wallMode: {
+      ignore: 'Loop deur mure',
+      hold: 'Wag by mure',
+      turn: 'Draai terug by mure',
+    },
+    wallCheck: {
+      centre: 'Middel van die teken',
+      width: 'Hele teken',
+    },
+    oneWayWalls: {
+      block: 'Blok',
+      pass: 'Laat deur',
+    },
+    transparentWalls: {
+      block: 'Blok',
+      pass: 'Laat deur',
+    },
   },
   menu: {
     statusRunning: 'Patrolleertekens: {patrols}. Roetes: {routes}.',
@@ -205,6 +241,7 @@ const TRANSLATION = {
     stop: 'Stop',
     add: 'Stap Kode',
     draw: 'Van Tekening',
+    bounce: 'Weerkaatsarea',
     record: 'Rekord',
     examples: 'Voorbeelde',
     reset: 'Stel terug',
@@ -251,11 +288,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Getekende roete, {points} punte',
     recorded: 'Opgeneemde roete, {points} punte',
+    area: 'Weiering area, {points} hoeke',
     path: 'Pad',
     mode: 'Modus',
     interval: 'Interval',
     maxTokens: 'Die meeste tekens',
     randomStart: 'Willekeurige begin',
+    walls: 'Mure',
     start: 'Vaste begin',
     tokens: 'Tekens',
   },
@@ -301,6 +340,30 @@ const TRANSLATION = {
       label: "Sleep 'n patrollie",
       desc: "Wanneer jy 'n patrollieteken sleep: gaan voort (die roete gaan voort van waar jy dit laat val het) of stop (die patrollie eindig).",
     },
+    stopMarkers: {
+      label: 'Stop Merkers',
+      desc: "Statusmerkers wat 'n teken van sy roete afhaal en keer dat dit volg, geskei deur kommapunte (byvoorbeeld dood;rooi), of geen. Volgers van 'n leier met een van hierdie merkers stop ook.",
+    },
+    markerAction: {
+      label: 'Stop Merker Aksie',
+      desc: "Wat 'n patrollieteken doen wanneer dit 'n stopmerker kry: stop (dit bly waar dit is) of herstel (dit gaan terug na waar dit begin het).",
+    },
+    wallMode: {
+      label: 'Mure',
+      desc: "Wat patrollies en volgelinge doen by dinamiese beligtingsmure en toe deure en vensters: ignoreer (loop deur), hou vas (wag totdat die pad oop is, byvoorbeeld totdat 'n deur oopgaan) of draai (patrollies draai terug). Elke roete kan sy eie kies, so spoke kan steeds deur mure loop.",
+    },
+    wallCheck: {
+      label: 'Muurtjek',
+      desc: "middel: slegs die middel van 'n teken moet wegbly van mure. breedte: die hele teken doen dit, so 'n groot teken kan nie deur 'n nou gaping druk nie.",
+    },
+    oneWayWalls: {
+      label: 'Eenrigtingmure',
+      desc: 'Of eenrigtingmure stoptekens (blok) of nie (slaag).',
+    },
+    transparentWalls: {
+      label: 'Sien-Deur Mure',
+      desc: 'Of deursigtige mure, wat lig deurlaat, tekens stop (blok) of nie (slaag).',
+    },
     buttonStep: {
       label: 'Selle per klik',
       desc: "Hoe ver beweeg die opnamepyle 'n teken.",
@@ -336,13 +399,16 @@ const TRANSLATION = {
     add: "Skep 'n roete vanaf 'n stapkode, soos U2R2D2L2.",
     edit: "Verander 'n roete se stapkode.",
     draw: "Skep 'n roete wat die geselekteerde tekening op hierdie bladsy volg.",
+    bounce:
+      "Skep 'n roete waarop tokens binne die geselekteerde geslote tekening dwaal en van sy rande af bons.",
     record:
       "Teken 'n roete op deur die geselekteerde teken met knoppies te skuif of deur dit te sleep.",
-    route: "Verander 'n roete-opsie: modus, interval, maksimum, ewekansig of begin.",
+    route: "Verander 'n roete-opsie: modus, interval, maksimum, ewekansig, mure of begin.",
     show: "Wys 'n roete se besonderhede en knoppies.",
     rename: "Hernoem 'n roete.",
     copy: "Kopieer 'n roete onder 'n nuwe naam.",
     remove: "Verwyder 'n roete (vra eers).",
+    ids: "Reageer op die tokens met hierdie ID's in plaas van die geselekteerdes, sodat ander Mods soos ScriptCards tokens kan beheer. verwyder --ids neem die tekens van hul roetes af; dit verwyder nooit 'n roete nie.",
     list: 'Lys die roetes, of die tekens wat beheer word.',
     examples: 'Voeg die voorbeeldroetes by.',
     export: "Wys roetes as teks om na 'n ander speletjie te kopieer.",
@@ -380,6 +446,7 @@ const TRANSLATION = {
         "Van tekening: teken 'n lyn, veelhoek, vryhandvorm, reghoek of ellips met die tekengereedskap, kies dit en klik vanaf tekening. Tekens loop daarlangs, slegs op daardie bladsy. Jy kan die tekening daarna uitvee.",
         "Rekord: kies 'n teken en klik Rekord. Beweeg dit met die pyltjieknoppies of sleep dit op die kaart (Roll20-wegpunte word gevolg), klik dan Stoor. Op vierkantige roosters word die opname 'n stapkode wat jy kan wysig.",
         'Lusroetes begin weer van voor af; heen-en-weer roetes stap terug soos hulle gekom het; sodra roetes aan die einde stop. Nuwe roetes wat eindig waar hulle begin lus; ander gaan heen en weer.',
+        "Weerkaatsarea: teken 'n geslote vorm om die area, kies dit en klik op Weieringgebied. Tekens wat daarop begin, beweeg in reguit lyne en bons van sy rande af (en van mure af, tensy die roete dit ignoreer), en draai elke keer 'n bietjie lukraak. Ewekansige begin plaas elke teken in 'n ewekansige sel van die area.",
       ],
     },
     codes: {
@@ -401,6 +468,8 @@ const TRANSLATION = {
       interval: 'Millisekondes per stap vir hierdie roete, of 0 vir die globale interval.',
       max: 'Die meeste tekens wat gelyktydig op die roete kan wees, of 0 vir geen limiet nie.',
       random: "aan: elke teken begin by 'n ewekansige punt langs die roete.",
+      walls:
+        'ignoreer (loop deur mure), hou (wag by mure en toe deure), draai (draai terug) of verstek (gebruik die Mure-instelling).',
       start:
         'stel: tokens spring na die geselekteerde token se posisie wanneer hulle begin. duidelik: hulle begin waar hulle staan.',
     },
@@ -413,13 +482,15 @@ const TRANSLATION = {
         'Volg: kies die leier en klik Leier, kies dan die volgers en klik Volg. Jy kan ook die leier se naam tik: !tokencontroller volg Goblin Boss. Volgers volg tekens wat patrolleer, tekens wat jy sleep en tekens wat deur TokenMod geskuif word.',
         "Volgers kan ander volgelinge volg, 'n ketting of 'n kolom maak.",
         "Deur 'n patrollieteken te sleep, dra die patrollie voort van waar jy dit laat val, tensy Sleep 'n patrollie gestel is om te stop.",
+        "Mure: met die Mure aan, loop patrollies en volgelinge nie deur dinamiese beligtingsmure of toe deure en vensters nie; oop deure en vensters laat hulle deur. Gee 'n roete sy eie mure opsie (byvoorbeeld ignoreer vir 'n spook).",
+        "Stopmerkers: 'n teken wat een van hierdie statusmerkers kry (byvoorbeeld dood) verlaat sy roete en hou op om te volg, en die volgelinge van 'n leier wat een stop kry ook. Stel hulle met !tokenbeheerder stel stopMerkers dood;rooi. Dit werk ook wanneer 'n ander Mod die merker byvoeg.",
       ],
     },
     grids: {
       heading: 'Roosters',
       points: [
         'Die selgrootte en roostertipe word vanaf elke bladsy gelees, so verskillende bladsye kan verskillende roosters gebruik.',
-        'U en D beteken altyd op en af ​​op die skerm. Op hex-roosters, beweeg met geen bypassende buur-sigsag nie; op isometriese en dimetriese roosters kruis diagonale een diamant.',
+        'U en D beteken altyd op en af op die skerm. Op hex-roosters, beweeg met geen bypassende buur-sigsag nie; op isometriese en dimetriese roosters kruis diagonale een diamant.',
         "Bladsye met knip afgeskakel beweeg in 70-pixel stappe sonder om in lyn te wees met 'n rooster.",
         "As tekens van die rooster af dryf, snap 'n teken na 'n selsentrum, kies dit en klik Kalibreer. Kies twee tekens in naburige selle van 'n ry om ook die selgrootte reg te stel.",
       ],
@@ -436,6 +507,7 @@ const TRANSLATION = {
       heading: 'Opdragte',
       intro:
         'Slegs GM\'e kan hierdie opdragte gebruik. Roetes kan genoem word, of na verwys word deur hul #id vanaf die kieslysknoppies. Plaas name met spasies in "aanhalingstekens" wanneer \'n opdrag twee name neem.',
+      mods: "Ander Mods kan ook hierdie opdragte stuur, byvoorbeeld vanaf ScriptCards. Hulle kan nie tekens kies nie, daarom noem hulle hulle met --ids gevolg deur teken-ID's geskei deur kommapunte: !tc stop --ids ID1;ID2. Antwoorde gaan na die GM.",
       colCommand: 'Bevel',
       colDesc: 'Wat dit doen',
     },

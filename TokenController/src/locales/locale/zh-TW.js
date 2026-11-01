@@ -47,6 +47,8 @@ const TRANSLATION = {
     paused: '所有巡邏隊都暫停了。',
     resumed: '巡邏恢復了。',
     journalRebuilt: '重建講義：{help} 和 {deck}。',
+    markerStopped: '由停止標記停止：{tokens}。',
+    markerReset: '由停止標記發送回他們開始的位置：{tokens}。',
   },
   errors: {
     noTokens: '未選擇任何標記。',
@@ -71,6 +73,11 @@ const TRANSLATION = {
     usageCopy: '指定副本的路線和名稱。',
     badJson: '這不是路由導出文字。',
     tokenLocked: '{tokens} 無法啟動：已鎖定。',
+    tokenMarked: '{tokens} 無法啟動：它們有一個停止標記。',
+    outsideArea: '{tokens} 無法啟動：它們位於「{name}」之外。',
+    selectOneArea: '精確選擇一幅閉合圖形（多邊形、矩形、橢圓形或手繪環）。',
+    areaTooSmall: '所選圖形至少需要三個角落才能形成一個區域。',
+    idsNotFound: '沒有令牌具有以下 ID：{ids}。',
     routeOnOtherPage: '{tokens} 無法啟動：「{name}」繪製在另一頁。',
     startOnOtherPage: '{tokens} 無法啟動：「{name}」的固定開頭位於另一頁。',
     routeFull: '{tokens} 無法啟動：「{name}」已具有 {max} 令牌。',
@@ -101,7 +108,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       '使用繪圖工具繪製路線，選擇它（如果單擊錯過了，則在細輪廓周圍拖曳一個框），然後重試。',
-    usageRoute: '選項：模式、間隔、最大、隨機、開始。',
+    usageRoute: '選項：模式、間隔、最大、隨機、牆壁、開始。',
     routeOnOtherPage: '繪製的路線僅在繪製它們的頁面上有效。',
     startOnOtherPage: '清除固定開始，或先將令牌移到該頁面。',
     noLeader: '選擇領導者並點擊領導者，或給出其名稱： !tokencontroller follow Name',
@@ -112,8 +119,14 @@ const TRANSLATION = {
     calibrateFailed: '確保標記位於同一行（十六進位 (H) 頁上的列）的相鄰儲存格中。',
     unknownCommand: '鍵入 !tokencontroller help 以取得命令清單。',
     tokenLocked: '先解鎖令牌。',
+    tokenMarked: '刪除標記，或變更停止標記設定。',
+    outsideArea: '首先將標記移動到區域內，或開啟路線的「隨機開始」。',
+    selectOneArea:
+      '使用繪圖工具繪製該區域，選擇它（如果單擊錯過了，則在細輪廓周圍拖曳一個框），然後重試。',
+    idsNotFound: '在 --ids 之後給予令牌 ID，以分號分隔。',
   },
   warnings: {
+    idsNotFound: '沒有令牌具有這些 ID，因此它們被跳過：{ids}。',
     offPage: '部分路線超出頁面（步驟：{count}）。這些步驟將會被跳過。',
     combatTrackerOnly: '戰鬥偵測設定為回合追蹤器，因此在您更改它之前此開關無效。',
     unitPx:
@@ -174,6 +187,27 @@ const TRANSLATION = {
       continue: '從那裡繼續',
       stop: '停止巡邏',
     },
+    markerAction: {
+      stop: '停在原處',
+      reset: '回到起點',
+    },
+    wallMode: {
+      ignore: '穿牆而行',
+      hold: '靠牆等候',
+      turn: '靠牆回頭',
+    },
+    wallCheck: {
+      centre: '令牌的中心',
+      width: '整個代幣',
+    },
+    oneWayWalls: {
+      block: '堵塞',
+      pass: '讓透過',
+    },
+    transparentWalls: {
+      block: '堵塞',
+      pass: '讓透過',
+    },
   },
   menu: {
     statusRunning: '巡邏令牌：{patrols}。路線：{routes}。',
@@ -195,6 +229,7 @@ const TRANSLATION = {
     stop: '停止',
     add: '步驟程式碼',
     draw: '從繪圖',
+    bounce: '彈跳區',
     record: '記錄',
     examples: '範例',
     reset: '重置',
@@ -241,11 +276,13 @@ const TRANSLATION = {
   route: {
     drawn: '繪製路線，{points} 點',
     recorded: '已記錄路線，{points} 點',
+    area: '彈跳區域，{points} 角',
     path: '小路',
     mode: '模式',
     interval: '間隔',
     maxTokens: '大多數代幣',
     randomStart: '隨機開始',
+    walls: '牆壁',
     start: '固定啟動',
     tokens: '代幣',
   },
@@ -291,6 +328,30 @@ const TRANSLATION = {
       label: '拖曳巡邏隊',
       desc: '當您拖曳巡邏標記時：繼續（路線從您放置它的位置繼續）或停止（巡邏結束）。',
     },
+    stopMarkers: {
+      label: '停止標記',
+      desc: '狀態標記，將令牌從其路線上取下並停止其跟隨，用分號分隔（例如死亡；紅色），或無。具有這些標記之一的領導者的追隨者也會停下來。',
+    },
+    markerAction: {
+      label: '停止標記動作',
+      desc: '當巡邏令牌獲得停止標記時，它會做什麼：停止（它停留在原來的位置）或重置（它回到開始的位置）。',
+    },
+    wallMode: {
+      label: '牆壁',
+      desc: '巡邏隊和追隨者在動態照明牆和關閉的門窗處做什麼：忽略（走過）、等待（等到道路暢通，例如直到門打開）或轉身（巡邏隊返回）。每條路線都可以選擇自己的路線，所以鬼魂仍然可以穿牆而過。',
+    },
+    wallCheck: {
+      label: '牆壁檢查',
+      desc: '中心：只有令牌的中間必須遠離牆壁。寬度：整個令牌都是如此，因此大令牌無法擠過狹窄的間隙。',
+    },
+    oneWayWalls: {
+      label: '單向牆',
+      desc: '單向牆是否阻止代幣（阻止）或不阻止（通過）。',
+    },
+    transparentWalls: {
+      label: '透明牆',
+      desc: '讓光線通過的透明牆是否會阻止令牌（阻擋）或不阻止（通過）。',
+    },
     buttonStep: {
       label: '每次點擊的單元數',
       desc: '記錄箭頭將令牌移動多遠。',
@@ -326,12 +387,14 @@ const TRANSLATION = {
     add: '從步驟代碼建立路線，例如 U2R2D2L2。',
     edit: '更改路線的步驟代碼。',
     draw: '建立遵循此頁面上所選圖形的路線。',
+    bounce: '建立一條路線，讓標記在選定的封閉圖形內徘徊，並從其邊緣反彈。',
     record: '透過使用按鈕移動選定的標記或拖曳它來記錄路線。',
-    route: '變更路線選項：模式、間隔、最大、隨機或開始。',
+    route: '變更路線選項：模式、間隔、最大、隨機、牆壁或起點。',
     show: '顯示路線的詳細資訊和按鈕。',
     rename: '重命名路線。',
     copy: '以新名稱複製路線。',
     remove: '刪除一條路線（首先詢問）。',
+    ids: '對具有這些 ID（而不是選定的 ID）的令牌進行操作，因此其他 Mod（例如 ScriptCard）可以控制令牌。 remove --ids 將令牌從其路線上移除；它永遠不會刪除路線。',
     list: '列出路由或受控制的令牌。',
     examples: '新增範例路線。',
     export: '將路線顯示為文字以複製到另一個遊戲中。',
@@ -365,8 +428,9 @@ const TRANSLATION = {
       points: [
         '步驟代碼：鍵入動作，例如U2R2D2L2。程式碼不與地圖上的位置綁定，因此相同的路線在任何地方都適用。',
         '從繪圖：使用繪圖工具繪製直線、多邊形、手繪形狀、矩形或橢圓形，選擇它並按一下從繪圖。令牌僅在該頁面上沿著它行走。之後您可以刪除該繪圖。',
-        '錄製：選擇一個token，點選錄製。使用箭頭按鈕移動它或將其拖曳到地圖上（跟隨 Roll20 航點​​），然後按一下「儲存」。在方形網格上，錄音變成可以編輯的步驟代碼。',
+        '錄製：選擇一個token，點選錄製。使用箭頭按鈕移動它或將其拖曳到地圖上（跟隨 Roll20 航點），然後按一下「儲存」。在方形網格上，錄音變成可以編輯的步驟代碼。',
         '循環路線從頭開始；來迴路線 沿著來時的路走回去；一旦路線停在終點。新路線從起點開始循環；其他人則來回走動。',
+        '彈跳區域：圍繞該區域繪製一個閉合形狀，選擇它並點擊彈跳區域。令牌開始沿直線行進，並從其邊緣（以及牆壁，除非路線忽略它們）反彈，每次都會隨機轉動一點。隨機開始將每個令牌放入該區域的隨機儲存格中。',
       ],
     },
     codes: {
@@ -387,6 +451,8 @@ const TRANSLATION = {
       interval: '此路線每步的毫秒數，或全域間隔的 0 毫秒。',
       max: '一次可以在路線上的代幣數量最多，或 0 表示沒有限制。',
       random: 'on：每個標記從沿路線的隨機點開始。',
+      walls:
+        '忽略（穿過牆壁）、保持（在牆壁和關閉的門處等待）、轉身（返回）或預設（使用牆壁設定）。',
       start: 'set：標記在開始時跳到所選標記的位置。明確：他們從他們所處的位置開始。',
     },
     tokens: {
@@ -398,6 +464,8 @@ const TRANSLATION = {
         '关注：选择领导者并单击领导者，然后选择关注者并单击关注。您也可以輸入領導者的名字：!tokencontroller follow Goblin Boss。追隨者跟隨巡邏的令牌、您拖曳的令牌以及 TokenMod 移動的令牌。',
         '追隨者可以追隨其他追隨者，形成一條鍊或一列。',
         '拖曳巡邏標記會從放置它的位置開始巡邏，除非拖曳巡邏設定為停止。',
+        '牆壁：啟用牆壁後，巡邏人員和追隨者不會穿過動態照明牆或關閉的門窗；打開門窗讓他們通過。為路線提供自己的牆壁選項（例如忽略幽靈）。',
+        '停止標記：獲得這些狀態標記之一（例如死亡）的令牌離開其路線並停止跟隨，領導者的追隨者也獲得一站。使用 !tokencontroller set stopMarkers dead;red 設定它們。當另一個 Mod 添加標記時，這也適用。',
       ],
     },
     grids: {
@@ -421,6 +489,7 @@ const TRANSLATION = {
       heading: '命令',
       intro:
         '只有 GM 可以使用這些指令。可以命名路線，或透過選單按鈕中的 #id 來引用路線。當指令採用兩個名稱時，請將帶空格的名稱放在「引號」中。',
+      mods: '其他 Mod 也可以發送這些命令，例如從 ScriptCard。他們無法選擇令牌，因此使用 --ids 命名，後面跟著以分號分隔的令牌 ID：!tc stop --ids ID1;ID2。回覆將發送至 GM。',
       colCommand: '命令',
       colDesc: '它的作用',
     },

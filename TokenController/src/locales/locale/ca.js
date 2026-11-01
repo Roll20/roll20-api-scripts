@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Totes les patrulles es van aturar.',
     resumed: 'Es van reprendre les patrulles.',
     journalRebuilt: 'Fullets reconstruïts: {help} i {deck}.',
+    markerStopped: "Aturat per un marcador d'aturada: {tokens}.",
+    markerReset: 'Un marcador de parada els ha enviat de tornada a on van començar: {tokens}.',
   },
   errors: {
     noTokens: "No s'han seleccionat fitxes.",
@@ -73,6 +75,12 @@ const TRANSLATION = {
     usageCopy: 'Doneu una ruta i un nom per a la còpia.',
     badJson: "Això no és text d'exportació de ruta.",
     tokenLocked: '{tokens} no pot començar: bloquejat.',
+    tokenMarked: "{tokens} no pot començar: tenen un marcador d'aturada.",
+    outsideArea: '{tokens} no pot començar: són fora de "{name}".',
+    selectOneArea:
+      'Seleccioneu exactament un dibuix tancat (un polígon, rectangle, el·lipse o bucle a mà alçada).',
+    areaTooSmall: 'El dibuix seleccionat necessita almenys tres cantonades per fer una àrea.',
+    idsNotFound: 'Cap testimoni no té aquests identificadors: {ids}.',
     routeOnOtherPage: '{tokens} no pot començar: "{name}" s\'ha dibuixat en una altra pàgina.',
     startOnOtherPage:
       '{tokens} no pot començar: l\'inici fix de "{name}" es troba en una altra pàgina.',
@@ -106,7 +114,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       "Dibuixa la ruta amb una eina de dibuix, selecciona-la (arrossegueu un quadre al voltant d'un contorn prim si no hi feu clic) i torneu-ho a provar.",
-    usageRoute: 'Opcions: mode, interval, màxim, aleatori, inici.',
+    usageRoute: 'Opcions: mode, interval, màxim, aleatori, parets, inici.',
     routeOnOtherPage: "Les rutes dibuixades només funcionen a la pàgina on s'han dibuixat.",
     startOnOtherPage: "Esborra l'inici fix o mou primer el testimoni a aquesta pàgina.",
     noLeader:
@@ -121,8 +129,14 @@ const TRANSLATION = {
       'Assegureu-vos que les fitxes estiguin a les cel·les veïnes de la mateixa fila (columna a les pàgines Hex (H)).',
     unknownCommand: "Escriviu !tokencontroller help per a la llista d'ordres.",
     tokenLocked: 'Desbloquegeu primer el testimoni.',
+    tokenMarked: 'Traieu el marcador o canvieu la configuració de Stop Markers.',
+    outsideArea: "Primer moveu les fitxes dins de l'àrea o activeu Inici aleatori per a la ruta.",
+    selectOneArea:
+      "Dibuixa l'àrea amb una eina de dibuix, selecciona-la (arrossegueu un quadre al voltant d'un contorn prim si no hi feu clic) i torneu-ho a provar.",
+    idsNotFound: 'Doneu els ID de testimoni després de --ids, separats per punt i coma.',
   },
   warnings: {
+    idsNotFound: "Cap testimoni no té aquests identificadors, de manera que s'han omès: {ids}.",
     offPage: 'Part de la ruta surt de la pàgina (passos: {count}). Es salten aquests passos.',
     combatTrackerOnly:
       'La detecció de combat està configurada per al rastrejador de torns, de manera que aquest interruptor no té cap efecte fins que el canvieu.',
@@ -184,6 +198,27 @@ const TRANSLATION = {
       continue: "Seguiu des d'allà",
       stop: 'Atureu la patrulla',
     },
+    markerAction: {
+      stop: 'Atureu-vos on és',
+      reset: "Torna a l'inici",
+    },
+    wallMode: {
+      ignore: 'Caminar per les parets',
+      hold: 'Espereu a les parets',
+      turn: 'Gireu enrere a les parets',
+    },
+    wallCheck: {
+      centre: 'Centre de la fitxa',
+      width: 'Fitxa sencera',
+    },
+    oneWayWalls: {
+      block: 'Bloc',
+      pass: 'Deixa passar',
+    },
+    transparentWalls: {
+      block: 'Bloc',
+      pass: 'Deixa passar',
+    },
   },
   menu: {
     statusRunning: 'Fitxes de patrulla: {patrols}. Rutes: {routes}.',
@@ -206,6 +241,7 @@ const TRANSLATION = {
     stop: 'Atureu-vos',
     add: 'Codi de pas',
     draw: 'Del Dibuix',
+    bounce: 'Àrea de rebot',
     record: 'Registre',
     examples: 'Exemples',
     reset: 'Restableix',
@@ -252,11 +288,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Ruta dibuixada, {points} punts',
     recorded: 'Ruta registrada, {points} punts',
+    area: 'Àrea de rebot, {points} cantonades',
     path: 'Camí',
     mode: 'Mode',
     interval: 'Interval',
     maxTokens: 'La majoria de fitxes',
     randomStart: 'Inici aleatori',
+    walls: 'Murs',
     start: 'Inici fix',
     tokens: 'Fitxes',
   },
@@ -302,6 +340,30 @@ const TRANSLATION = {
       label: 'Arrossegant una patrulla',
       desc: "Quan arrossegueu una fitxa de patrulla: continueu (la ruta continua des d'on l'heu deixat) o atureu-vos (la patrulla acaba).",
     },
+    stopMarkers: {
+      label: "Marcadors d'aturada",
+      desc: "Marcadors d'estat que treuen un indicador de la seva ruta i deixen de seguir-lo, separats per punt i coma (per exemple, mort; vermell) o cap. Els seguidors d'un líder amb un d'aquests marcadors també s'aturen.",
+    },
+    markerAction: {
+      label: "Aturar l'acció del marcador",
+      desc: "Què fa un testimoni de patrulla quan rep un marcador d'aturada: aturar-se (es queda on està) o reiniciar (torna a on va començar).",
+    },
+    wallMode: {
+      label: 'Murs',
+      desc: "Què fan les patrulles i els seguidors a les parets d'il·luminació dinàmica i a portes i finestres tancades: ignorar (passar per), aguantar (esperar fins que el camí estigui lliure, per exemple fins que s'obri una porta) o girar (les patrulles tornen enrere). Cada ruta pot triar la seva, de manera que els fantasmes encara poden travessar les parets.",
+    },
+    wallCheck: {
+      label: 'Revisió de paret',
+      desc: "centre: només la meitat d'una fitxa ha d'estar allunyada de les parets. amplada: tota la fitxa ho fa, de manera que una fitxa gran no pot passar per un buit estret.",
+    },
+    oneWayWalls: {
+      label: 'Murs unidireccionals',
+      desc: 'Si les parets unidireccionals detenen fitxes (bloquejar) o no (passar).',
+    },
+    transparentWalls: {
+      label: 'Murs Transparents',
+      desc: 'Ja siguin parets transparents, que deixen passar la llum, aturar fitxes (bloquejar) o no (passar).',
+    },
     buttonStep: {
       label: 'Cel·les per clic',
       desc: "Fins a quina distància mouen les fletxes d'enregistrament una fitxa.",
@@ -337,12 +399,15 @@ const TRANSLATION = {
     add: "Creeu una ruta a partir d'un codi de pas, com ara U2R2D2L2.",
     edit: "Canviar el codi de pas d'una ruta.",
     draw: 'Crea una ruta que segueixi el dibuix seleccionat en aquesta pàgina.',
+    bounce:
+      'Crea una ruta on les fitxes vagin dins del dibuix tancat seleccionat, rebotant a les vores.',
     record: 'Enregistreu una ruta movent el testimoni seleccionat amb botons o arrossegant-lo.',
-    route: 'Canviar una opció de ruta: mode, interval, màxim, aleatori o inici.',
+    route: "Canvia l'opció d'una ruta: mode, interval, màxim, aleatori, parets o inici.",
     show: "Mostra els detalls i els botons d'una ruta.",
     rename: "Canvia el nom d'una ruta.",
     copy: 'Copia una ruta amb un nom nou.',
     remove: 'Eliminar una ruta (demana primer).',
+    ids: 'Actueu sobre les fitxes amb aquestes identificacions en comptes de les seleccionades, de manera que altres mods com ara ScriptCards poden controlar fitxes. eliminar --ids treu les fitxes de les seves rutes; mai elimina una ruta.',
     list: 'Enumereu les rutes o les fitxes que es controlen.',
     examples: 'Afegiu els exemples de rutes.',
     export: 'Mostra les rutes com a text per copiar-les a un altre joc.',
@@ -380,6 +445,7 @@ const TRANSLATION = {
         'Des del dibuix: dibuixeu una línia, polígon, forma a mà alçada, rectangle o el·lipse amb les eines de dibuix, seleccioneu-lo i feu clic a Des del dibuix. Hi passen fitxes, només en aquesta pàgina. Podeu esborrar el dibuix després.',
         'Enregistrament: seleccioneu un testimoni i feu clic a Enregistrar. Moveu-lo amb els botons de fletxa o arrossegueu-lo al mapa (se segueixen els waypoints Roll20) i feu clic a Desa. A les quadrícules quadrades, la gravació es converteix en un codi de pas que podeu editar.',
         "Les rutes de bucle comencen de nou des del principi; les rutes d'anada i tornada recorren pel camí que van arribar; un cop les rutes s'aturin al final. Noves rutes que acaben on comencen bucle; altres van i torna.",
+        "Àrea de rebot: dibuixa una forma tancada al voltant de l'àrea, selecciona-la i fes clic a Àrea de rebot. Les fitxes que s'hi han començat viatgen en línia recta i reboten a les vores (i a les parets, tret que la ruta les ignori), girant una mica a l'atzar cada vegada. L'inici aleatori posa cada fitxa en una cel·la aleatòria de l'àrea.",
       ],
     },
     codes: {
@@ -401,6 +467,8 @@ const TRANSLATION = {
       interval: "Mil·lisegons per pas per a aquesta ruta, o 0 per a l'interval global.",
       max: 'La majoria de fitxes que es poden trobar a la ruta alhora, o 0 sense límit.',
       random: 'on: cada fitxa comença en un punt aleatori de la ruta.',
+      walls:
+        'ignorar (caminar per les parets), mantenir premut (esperar a les parets i les portes tancades), girar (tornar enrere) o predeterminar (utilitzar la configuració Murs).',
       start:
         'set: les fitxes salten a la posició de la fitxa seleccionada quan comencen. clar: comencen on estan.',
     },
@@ -413,6 +481,8 @@ const TRANSLATION = {
         'Seguiu: seleccioneu el líder i feu clic a Líder, després seleccioneu els seguidors i feu clic a Segueix. També pots escriure el nom del líder: !tokencontroller segueix Goblin Boss. Els seguidors segueixen fitxes que patrullen, fitxes que arrossegueu i fitxes mogudes per TokenMod.',
         'Els seguidors poden seguir a altres seguidors, fent una cadena o una columna.',
         "Si arrossegueu una fitxa de patrulla, la patrulla continua des d'on la deixeu anar, tret que Arrossegar una patrulla estigui configurada per aturar-se.",
+        "Murs: amb la configuració de Murs activada, les patrulles i els seguidors no passen per parets d'il·luminació dinàmica o portes i finestres tancades; portes i finestres obertes els deixen passar. Doneu una opció de parets a una ruta (per exemple, ignorar per a un fantasma).",
+        "Marcadors d'aturada: una fitxa que obté un d'aquests marcadors d'estat (per exemple, mort) deixa la seva ruta i deixa de seguir, i els seguidors d'un líder que aconsegueixen també una parada. Estableix-los amb !tokencontroller set stopMarkers dead;red. Això també funciona quan un altre mod afegeix el marcador.",
       ],
     },
     grids: {
@@ -436,6 +506,7 @@ const TRANSLATION = {
       heading: 'Ordres',
       intro:
         'Només els GM poden utilitzar aquestes ordres. Les rutes es poden anomenar o fer referència amb el seu #id als botons del menú. Posa noms amb espais entre "cometes" quan una ordre pren dos noms.',
+      mods: "Altres mods també poden enviar aquestes ordres, per exemple des de ScriptCards. No poden seleccionar fitxes, de manera que els anomenen amb --ids seguit d'ID de testimoni separats per punt i coma: !tc stop --ids ID1;ID2. Les respostes van al GM.",
       colCommand: 'Comandament',
       colDesc: 'Què fa',
     },

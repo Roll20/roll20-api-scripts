@@ -36,7 +36,7 @@ const TRANSLATION = {
     unlocked: 'Ontgrendeld: {tokens}.',
     leaderSet: '{token} is de leider. Selecteer de volgers en klik op Volgen.',
     following: 'Volgt nu {leader} ({mode}): {tokens}.',
-    unfollowed: 'Tokens volgen niet meer: ​​{count}.',
+    unfollowed: 'Tokens volgen niet meer: {count}.',
     noRecordings: 'Er wordt niets opgenomen.',
     recordingCancelled: 'Opname "{name}" geannuleerd.',
     languages: 'Ondersteunde talen: {list}',
@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Alle patrouilles stopten.',
     resumed: 'De patrouilles werden hervat.',
     journalRebuilt: 'Hand-outs herbouwd: {help} en {deck}.',
+    markerStopped: 'Gestopt door een stopmarkering: {tokens}.',
+    markerReset: 'Teruggestuurd naar waar ze begonnen door een stopmarkering: {tokens}.',
   },
   errors: {
     noTokens: 'Geen tokens geselecteerd.',
@@ -73,6 +75,13 @@ const TRANSLATION = {
     usageCopy: 'Geef een route en een naam voor de kopie.',
     badJson: 'Dat is geen route-exporttekst.',
     tokenLocked: '{tokens} kan niet starten: vergrendeld.',
+    tokenMarked: '{tokens} kan niet starten: ze hebben een stopmarkering.',
+    outsideArea: '{tokens} kan niet starten: ze bevinden zich buiten "{name}".',
+    selectOneArea:
+      'Selecteer precies één gesloten tekening (een veelhoek, rechthoek, ellips of lus uit de vrije hand).',
+    areaTooSmall:
+      'De geselecteerde tekening heeft minimaal drie hoeken nodig om een gebied te vormen.',
+    idsNotFound: "Er zijn geen tokens met deze ID's: {ids}.",
     routeOnOtherPage: '{tokens} kan niet starten: "{name}" is op een andere pagina getekend.',
     startOnOtherPage:
       '{tokens} kan niet starten: het vaste begin van "{name}" bevindt zich op een andere pagina.',
@@ -92,7 +101,7 @@ const TRANSLATION = {
       'De geselecteerde tokens konden niet worden gebruikt om het raster te kalibreren.',
     unknownCommand: 'Onbekend commando "{command}".',
     gmOnly: 'Alleen de GM kan TokenController gebruiken.',
-    internal: 'Er is iets misgegaan. Details staan ​​in de API-console.',
+    internal: 'Er is iets misgegaan. Details staan in de API-console.',
   },
   hints: {
     noTokens: 'Selecteer eerst de tokens op de kaart.',
@@ -106,7 +115,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Teken de route met een tekengereedschap, selecteer deze (sleep een kader rond een dunne omtrek als u deze mist door te klikken) en probeer het opnieuw.',
-    usageRoute: 'Opties: modus, interval, max, willekeurig, start.',
+    usageRoute: 'Opties: modus, interval, max, willekeurig, muren, start.',
     routeOnOtherPage: 'Getekende routes werken alleen op de pagina waarop ze getekend zijn.',
     startOnOtherPage: 'Wis de vaste start of verplaats het token eerst naar die pagina.',
     noLeader:
@@ -120,8 +129,15 @@ const TRANSLATION = {
       "Zorg ervoor dat de tokens zich in aangrenzende cellen van dezelfde rij bevinden (kolom op Hex (H)-pagina's).",
     unknownCommand: 'Typ !tokencontroller help voor de lijst met opdrachten.',
     tokenLocked: 'Ontgrendel eerst het token.',
+    tokenMarked: 'Verwijder de markering of wijzig de instelling Stopmarkeringen.',
+    outsideArea:
+      'Verplaats de tokens eerst binnen het gebied of schakel Willekeurige start in voor de route.',
+    selectOneArea:
+      'Teken het gebied met een tekengereedschap, selecteer het (sleep een kader rond een dunne omtrek als u er niet op klikt) en probeer het opnieuw.',
+    idsNotFound: "Geef token-ID's op na --ids, gescheiden door puntkomma's.",
   },
   warnings: {
+    idsNotFound: "Er zijn geen tokens met deze ID's, dus deze zijn overgeslagen: {ids}.",
     offPage:
       'Een deel van de route loopt buiten de pagina (stappen: {count}). Die stappen worden overgeslagen.',
     combatTrackerOnly:
@@ -184,6 +200,27 @@ const TRANSLATION = {
       continue: 'Ga vanaf daar verder',
       stop: 'Stop de patrouille',
     },
+    markerAction: {
+      stop: 'Stop waar het is',
+      reset: 'Ga terug naar het begin',
+    },
+    wallMode: {
+      ignore: 'Loop door muren',
+      hold: 'Wacht bij muren',
+      turn: 'Keer terug bij muren',
+    },
+    wallCheck: {
+      centre: 'Midden van het token',
+      width: 'Hele teken',
+    },
+    oneWayWalls: {
+      block: 'Blok',
+      pass: 'Doorlaten',
+    },
+    transparentWalls: {
+      block: 'Blok',
+      pass: 'Doorlaten',
+    },
   },
   menu: {
     statusRunning: 'Patrouillerende tokens: {patrols}. Routes: {routes}.',
@@ -206,6 +243,7 @@ const TRANSLATION = {
     stop: 'Stop',
     add: 'Stapcode',
     draw: 'Van tekening',
+    bounce: 'Stuitergebied',
     record: 'Dossier',
     examples: 'Voorbeelden',
     reset: 'Opnieuw instellen',
@@ -252,11 +290,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Getekende route, {points} punten',
     recorded: 'Opgenomen route, {points} punten',
+    area: 'Stuiteergebied, {points} hoeken',
     path: 'Pad',
     mode: 'Modus',
     interval: 'Interval',
     maxTokens: 'De meeste tokens',
     randomStart: 'Willekeurig begin',
+    walls: 'Muren',
     start: 'Vast begin',
     tokens: 'Tokens',
   },
@@ -302,6 +342,30 @@ const TRANSLATION = {
       label: 'Een patrouille slepen',
       desc: 'Als je een patrouillefiche versleept: ga verder (de route gaat verder vanaf het punt waar je hem hebt laten vallen) of stop (de patrouille eindigt).',
     },
+    stopMarkers: {
+      label: 'Stopmarkeringen',
+      desc: "Statusmarkeringen die een fiche van zijn route halen en hem ervan weerhouden deze te volgen, gescheiden door puntkomma's (bijvoorbeeld dood;rood), of geen. Volgers van een leider met een van deze markeringen stoppen ook.",
+    },
+    markerAction: {
+      label: 'Markeractie stoppen',
+      desc: 'Wat een patrouillefiche doet als het een stopmarkering krijgt: stoppen (het blijft waar het is) of resetten (het gaat terug naar waar het begon).',
+    },
+    wallMode: {
+      label: 'Muren',
+      desc: 'Wat patrouilles en volgers doen bij dynamische lichtmuren en gesloten deuren en ramen: negeren (doorlopen), vasthouden (wachten tot de weg vrij is, bijvoorbeeld tot een deur opengaat) of draaien (patrouilles keren terug). Elke route kan zijn eigen route kiezen, zodat geesten nog steeds door muren kunnen lopen.',
+    },
+    wallCheck: {
+      label: 'Muurcontrole',
+      desc: 'midden: alleen het midden van een fiche mag vrij blijven van muren. breedte: het hele token doet dat, dus een groot token kan niet door een nauwe opening wurmen.',
+    },
+    oneWayWalls: {
+      label: 'Eenrichtingsmuren',
+      desc: 'Of eenrichtingsmuren tokens tegenhouden (blokkeren) of niet (passeren).',
+    },
+    transparentWalls: {
+      label: 'Doorzichtige muren',
+      desc: 'Of het nu gaat om transparante muren, die licht doorlaten, tokens tegenhouden (blokkeren) of niet (passeren).',
+    },
     buttonStep: {
       label: 'Cellen per klik',
       desc: 'Hoe ver de opnamepijlen een fiche verplaatsen.',
@@ -337,13 +401,16 @@ const TRANSLATION = {
     add: 'Maak een route op basis van een stapcode, zoals U2R2D2L2.',
     edit: 'Wijzig de stapcode van een route.',
     draw: 'Maak een route die de geselecteerde tekening op deze pagina volgt.',
+    bounce:
+      'Creëer een route waarop tokens binnen de geselecteerde gesloten tekening dwalen en tegen de randen stuiteren.',
     record:
       'Leg een route vast door het geselecteerde token met knoppen te verplaatsen of door het te slepen.',
-    route: 'Wijzig een routeoptie: modus, interval, max, willekeurig of start.',
+    route: 'Wijzig een routeoptie: modus, interval, max, willekeurig, muren of start.',
     show: 'Toon de details en knoppen van een route.',
     rename: 'De naam van een route wijzigen.',
     copy: 'Kopieer een route onder een nieuwe naam.',
     remove: 'Verwijder een route (vraag eerst).',
+    ids: "Handel op de tokens met deze ID's in plaats van op de geselecteerde, zodat andere Mods zoals ScriptCards tokens kunnen controleren. verwijder --ids haalt de tokens van hun routes; het verwijdert nooit een route.",
     list: 'Maak een lijst van de routes of de tokens die worden gecontroleerd.',
     examples: 'Voeg de voorbeeldroutes toe.',
     export: 'Toon routes als tekst om naar een ander spel te kopiëren.',
@@ -381,6 +448,7 @@ const TRANSLATION = {
         'Uit tekening: teken een lijn, veelhoek, vorm uit de vrije hand, rechthoek of ellips met de tekengereedschappen, selecteer deze en klik op Uit tekening. Tokens lopen erlangs, alleen op die pagina. Je kunt de tekening achteraf verwijderen.',
         'Opnemen: selecteer een token en klik op Opnemen. Verplaats het met de pijlknoppen of sleep het over de kaart (Roll20-waypoints worden gevolgd) en klik vervolgens op Opslaan. Op vierkante rasters wordt de opname een stapcode die u kunt bewerken.',
         'Lusroutes beginnen opnieuw vanaf het begin; heen en weer routes lopen terug zoals ze gekomen zijn; zodra routes aan het einde stoppen. Nieuwe routes die eindigen waar ze beginnen, lus; anderen gaan heen en weer.',
+        'Stuiteringsgebied: teken een gesloten vorm rond het gebied, selecteer deze en klik op Stuiteringsgebied. Tokens die erop zijn begonnen, reizen in rechte lijnen en stuiteren tegen de randen (en tegen muren, tenzij de route ze negeert), waarbij ze elke keer een beetje willekeurig draaien. Willekeurige start plaatst elk token in een willekeurige cel van het gebied.',
       ],
     },
     codes: {
@@ -402,6 +470,8 @@ const TRANSLATION = {
       interval: 'Milliseconden per stap voor deze route, of 0 voor het globale interval.',
       max: 'De meeste tokens die tegelijk op de route kunnen liggen, of 0 voor geen limiet.',
       random: 'op: elk token begint op een willekeurig punt langs de route.',
+      walls:
+        'negeren (door muren lopen), vasthouden (wachten bij muren en gesloten deuren), draaien (terugdraaien) of standaard (gebruik de instelling Muren).',
       start:
         'set: tokens springen naar de positie van het geselecteerde token wanneer ze starten. duidelijk: ze beginnen waar ze staan.',
     },
@@ -414,6 +484,8 @@ const TRANSLATION = {
         'Volgen: selecteer de leider en klik op Leider, selecteer vervolgens de volgers en klik op Volgen. Je kunt ook de naam van de leider typen: !tokencontroller volg Goblin Boss. Volgers volgen tokens die patrouilleren, tokens die je sleept en tokens die door TokenMod worden verplaatst.',
         'Volgers kunnen andere volgers volgen, waardoor een ketting of een kolom ontstaat.',
         'Door een patrouillefiche te slepen, gaat de patrouille verder vanaf het punt waar je hem neerzet, tenzij het slepen van een patrouille stopt.',
+        'Muren: als de Muren zijn ingeschakeld, lopen patrouilles en volgers niet door dynamische verlichtingsmuren of gesloten deuren en ramen; open deuren en ramen laten ze door. Geef een route een eigen muuroptie (bijvoorbeeld negeren vanwege een geest).',
+        'Stopmarkeringen: een fiche die één van deze statusmarkeringen krijgt (bijvoorbeeld dood), verlaat zijn route en stopt met volgen, en de volgers van een leider die één stop krijgen ook. Stel ze in met !tokencontroller set stopMarkers dead;red. Dit werkt ook als een andere Mod de markering toevoegt.',
       ],
     },
     grids: {
@@ -437,6 +509,7 @@ const TRANSLATION = {
       heading: "Commando's",
       intro:
         'Alleen GM\'s kunnen deze commando\'s gebruiken. Routes kunnen een naam krijgen of er kan naar worden verwezen met hun #id via de menuknoppen. Plaats namen met spaties tussen "aanhalingstekens" als een commando twee namen heeft.',
+      mods: "Andere Mods kunnen deze commando's ook verzenden, bijvoorbeeld vanuit ScriptCards. Ze kunnen geen tokens selecteren, dus geven ze ze de naam --ids gevolgd door token-ID's gescheiden door puntkomma's: !tc stop --ids ID1;ID2. De antwoorden gaan naar de GM.",
       colCommand: 'Commando',
       colDesc: 'Wat het doet',
     },
@@ -484,7 +557,7 @@ const TRANSLATION = {
       maintainer: 'Versie 5 onderhouden door',
       support: 'Rapporteer bugs en ideeën op het Roll20 Mod-forum of op GitHub.',
     },
-    footer: 'Knoppen voor elke actie staan ​​in de uitreikblad "{deck}".',
+    footer: 'Knoppen voor elke actie staan in de uitreikblad "{deck}".',
   },
   deck: {
     subtitle: 'Commandodek',

@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Všechny hlídky se zastavily.',
     resumed: 'Hlídky byly obnoveny.',
     journalRebuilt: 'Přepracované podklady: {help} a {deck}.',
+    markerStopped: 'Zastaveno značkou zastávky: {tokens}.',
+    markerReset: 'Posláno zpět tam, kde začali, značkou zastávky: {tokens}.',
   },
   errors: {
     noTokens: 'Nejsou vybrány žádné tokeny.',
@@ -73,6 +75,12 @@ const TRANSLATION = {
     usageCopy: 'Uveďte trasu a název kopie.',
     badJson: 'Toto není text exportu trasy.',
     tokenLocked: '{tokens} nelze spustit: uzamčeno.',
+    tokenMarked: '{tokens} nelze spustit: mají značku zastavení.',
+    outsideArea: '{tokens} nelze spustit: jsou mimo „{name}“.',
+    selectOneArea:
+      'Vyberte přesně jeden uzavřený výkres (mnohoúhelník, obdélník, elipsa nebo smyčka od ruky).',
+    areaTooSmall: 'Vybraný výkres potřebuje k vytvoření oblasti alespoň tři rohy.',
+    idsNotFound: 'Žádné tokeny nemají tato ID: {ids}.',
     routeOnOtherPage: '{tokens} nelze spustit: „{name}“ bylo nakresleno na jiné stránce.',
     startOnOtherPage: '{tokens} nelze spustit: pevný začátek „{name}“ je na jiné stránce.',
     routeFull: '{tokens} nelze spustit: „{name}“ již má {max} tokenů.',
@@ -104,7 +112,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Nakreslete trasu pomocí kreslicího nástroje, vyberte ji (přetáhněte rámeček kolem tenkého obrysu, pokud jej kliknutím minete), a zkuste to znovu.',
-    usageRoute: 'Možnosti: režim, interval, max, náhodný, start.',
+    usageRoute: 'Možnosti: režim, interval, max, náhodný, stěny, start.',
     routeOnOtherPage: 'Nakreslené trasy fungují pouze na stránce, na které byly nakresleny.',
     startOnOtherPage: 'Vymažte pevný začátek nebo nejprve přesuňte token na tuto stránku.',
     noLeader:
@@ -119,8 +127,14 @@ const TRANSLATION = {
       'Ujistěte se, že žetony jsou v sousedních buňkách stejného řádku (sloupec na Hex (H) stránkách).',
     unknownCommand: 'Pro seznam příkazů napište !tokencontroller help.',
     tokenLocked: 'Nejprve odemkněte token.',
+    tokenMarked: 'Odstraňte značku nebo změňte nastavení Stop Markers.',
+    outsideArea: 'Nejprve přesuňte žetony uvnitř oblasti nebo zapněte pro trasu Náhodný start.',
+    selectOneArea:
+      'Nakreslete oblast pomocí kreslicího nástroje, vyberte ji (přetáhněte rámeček kolem tenkého obrysu, pokud jej kliknutím minete), a zkuste to znovu.',
+    idsNotFound: 'ID tokenů uveďte za --ids oddělené středníky.',
   },
   warnings: {
+    idsNotFound: 'Žádné tokeny nemají tato ID, takže byly přeskočeny: {ids}.',
     offPage: 'Část trasy vede mimo stránku (kroky: {count}). Tyto kroky jsou přeskočeny.',
     combatTrackerOnly:
       'Detekce boje je nastavena na sledování zatáček, takže tento přepínač nemá žádný účinek, dokud jej nezměníte.',
@@ -182,6 +196,27 @@ const TRANSLATION = {
       continue: 'Pokračujte odtud',
       stop: 'Zastavte hlídku',
     },
+    markerAction: {
+      stop: 'Zastavte se, kde to je',
+      reset: 'Vraťte se na začátek',
+    },
+    wallMode: {
+      ignore: 'Procházet zdmi',
+      hold: 'Čekej u zdí',
+      turn: 'Otočte se zpět ke stěnám',
+    },
+    wallCheck: {
+      centre: 'Střed tokenu',
+      width: 'Celý token',
+    },
+    oneWayWalls: {
+      block: 'Blok',
+      pass: 'Nechat projít',
+    },
+    transparentWalls: {
+      block: 'Blok',
+      pass: 'Nechat projít',
+    },
   },
   menu: {
     statusRunning: 'Hlídací tokeny: {patrols}. Trasy: {routes}.',
@@ -204,6 +239,7 @@ const TRANSLATION = {
     stop: 'Zastávka',
     add: 'Krokový kód',
     draw: 'Z Kreslení',
+    bounce: 'Oblast odrážení',
     record: 'Záznam',
     examples: 'Příklady',
     reset: 'Resetovat',
@@ -250,11 +286,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Nakreslená trasa, {points} bodů',
     recorded: 'Zaznamenaná trasa, {points} bodů',
+    area: 'Oblast odrazu, {points} rohy',
     path: 'Cesta',
     mode: 'Režim',
     interval: 'Interval',
     maxTokens: 'Většina tokenů',
     randomStart: 'Náhodný start',
+    walls: 'Stěny',
     start: 'Pevný start',
     tokens: 'Tokeny',
   },
@@ -300,6 +338,30 @@ const TRANSLATION = {
       label: 'Tažení hlídky',
       desc: 'Když přetáhnete žeton hlídky: pokračujte (trasa pokračuje od místa, kde jste ji upustili) nebo zastavte (hlídka končí).',
     },
+    stopMarkers: {
+      label: 'Značky zastavení',
+      desc: 'Značky stavu, které oddělují token z jeho trasy a zabraňují mu následovat, oddělené středníky (například mrtvý;červený) nebo žádné. Následovníci vůdce s jedním z těchto značek se také zastaví.',
+    },
+    markerAction: {
+      label: 'Zastavit akci značky',
+      desc: 'Co udělá žeton hlídky, když dostane značku zastavení: zastavit (zůstane tam, kde je) nebo resetovat (vrátit se tam, kde začal).',
+    },
+    wallMode: {
+      label: 'Stěny',
+      desc: 'Co dělají hlídky a následovníci u dynamických osvětlovacích stěn a zavřených dveří a oken: ignorovat (procházet), držet (čekat, dokud se cesta neuvolní, například dokud se neotevřou dveře) nebo se otočit (hlídky se otočí zpět). Každá trasa si může vybrat svou, takže duchové mohou stále procházet zdmi.',
+    },
+    wallCheck: {
+      label: 'Kontrola stěny',
+      desc: 'střed: pouze střed žetonu musí zůstat mimo zdi. šířka: celý žeton ano, takže velký žeton se nemůže protlačit úzkou mezerou.',
+    },
+    oneWayWalls: {
+      label: 'Jednosměrné stěny',
+      desc: 'Zda jednosměrné zdi zastaví žetony (blok) nebo ne (průchod).',
+    },
+    transparentWalls: {
+      label: 'Průhledné stěny',
+      desc: 'Zda průhledné stěny, které propouštějí světlo, zastavují žetony (blok) nebo ne (průchod).',
+    },
     buttonStep: {
       label: 'Počet buněk na kliknutí',
       desc: 'Jak daleko posunou šipky záznamu token.',
@@ -335,12 +397,15 @@ const TRANSLATION = {
     add: 'Vytvořte trasu z kódu kroku, například U2R2D2L2.',
     edit: 'Změňte kód kroku trasy.',
     draw: 'Vytvořte trasu, která sleduje vybraný výkres na této stránce.',
+    bounce:
+      'Vytvořte trasu, na které žetony putují uvnitř vybraného uzavřeného výkresu a odrážejí se od jeho okrajů.',
     record: 'Zaznamenejte trasu přesunutím vybraného tokenu pomocí tlačítek nebo přetažením.',
-    route: 'Změňte možnost trasy: režim, interval, maximální, náhodná nebo začátek.',
+    route: 'Změňte možnost trasy: režim, interval, maximální, náhodná, stěny nebo začátek.',
     show: 'Zobrazit podrobnosti o trase a tlačítka.',
     rename: 'Přejmenujte trasu.',
     copy: 'Zkopírujte trasu pod novým názvem.',
     remove: 'Odebrat trasu (nejprve se zeptá).',
+    ids: 'Jednejte s tokeny s těmito ID namísto s vybranými, takže jiné mody, jako jsou ScriptCards, mohou ovládat tokeny. odstranit --ids odebere tokeny z jejich tras; nikdy neodstraní trasu.',
     list: 'Seznam tras nebo žetonů, které jsou ovládány.',
     examples: 'Přidejte ukázkové trasy.',
     export: 'Zobrazit trasy jako text ke zkopírování do jiné hry.',
@@ -378,6 +443,7 @@ const TRANSLATION = {
         'Z kreslení: nakreslete pomocí nástrojů kreslení čáru, mnohoúhelník, tvar od ruky, obdélník nebo elipsu, vyberte je a klikněte na Z kresby. Tokeny po ní chodí, pouze na této stránce. Nákres můžete poté smazat.',
         'Záznam: vyberte token a klikněte na Záznam. Přesuňte jej pomocí tlačítek se šipkami nebo jej přetáhněte na mapu (sledují se trasové body Roll20) a poté klikněte na Uložit. Na čtvercové mřížce se záznam stane kódem kroku, který můžete upravit.',
         'Smyčkové trasy začínají znovu od začátku; trasy tam a zpět jdou zpět tak, jak přišli; jakmile se trasy zastaví na konci. Nové trasy, které končí tam, kde začínají, smyčka; ostatní jdou tam a zpět.',
+        'Oblast odrazu: nakreslete kolem oblasti uzavřený tvar, vyberte jej a klikněte na Oblast odrazu. Žetony, které na něm začaly, cestují v přímých liniích a odrážejí se od jeho okrajů (a od zdí, pokud je trasa ignoruje), přičemž se pokaždé trochu náhodně otočí. Náhodný start umístí každý žeton do náhodné buňky oblasti.',
       ],
     },
     codes: {
@@ -398,6 +464,8 @@ const TRANSLATION = {
       interval: 'Milisekundy na krok pro tuto trasu nebo 0 pro globální interval.',
       max: 'Nejvíce žetonů, které mohou být na trase najednou, nebo 0 bez omezení.',
       random: 'zapnuto: každý žeton začíná v náhodném bodě na trase.',
+      walls:
+        'ignorovat (procházet zdmi), držet (čekat u zdí a zavřených dveří), otáčet se (vrátit se zpět) nebo výchozí (použít nastavení Zdi).',
       start:
         'sada: žetony na začátku přeskočí na pozici vybraného žetonu. jasné: začínají tam, kde stojí.',
     },
@@ -410,6 +478,8 @@ const TRANSLATION = {
         'Následovat: vyberte vůdce a klikněte na vůdce, poté vyberte následovníky a klikněte na Následovat. Můžete také napsat jméno vůdce: !tokencontroller follow Goblin Boss. Následovníci sledují žetony, které hlídkují, žetony, které přetáhnete, a žetony přesunuté TokenModem.',
         'Následovníci mohou následovat ostatní příznivce a vytvořit tak řetěz nebo sloupec.',
         'Přetažení žetonu hlídky přenese hlídku z místa, kde ji upustíte, pokud není přetažení hlídky nastaveno na zastavení.',
+        'Zdi: při zapnutém Zdi hlídky a následovníci neprocházejí dynamickými osvětlovacími stěnami nebo zavřenými dveřmi a okny; otevřené dveře a okna je propustí. Dejte trase možnost vlastní zdi (například ignorovat pro ducha).',
+        'Stop Markers: Token, který získá jeden z těchto ukazatelů stavu (například mrtvý), opustí svou trasu a přestane ho následovat a následovníci vůdce, který dostane jednu zastávku také. Nastavte je pomocí !tokencontroller set stopMarkers dead;red. To také funguje, když jiný Mod přidá značku.',
       ],
     },
     grids: {
@@ -433,6 +503,7 @@ const TRANSLATION = {
       heading: 'Příkazy',
       intro:
         'Tyto příkazy mohou používat pouze GM. Trasy lze pojmenovat nebo na ně odkazovat pomocí #id z tlačítek nabídky. Pokud má příkaz dvě jména, vložte jména s mezerami do "uvozovek".',
+      mods: 'Tyto příkazy mohou odesílat i jiné mody, například ze ScriptCards. Nemohou vybrat tokeny, takže je pojmenují --ids následované ID tokenu oddělenými středníky: !tc stop --ids ID1;ID2. Odpovědi jdou GM.',
       colCommand: 'Příkaz',
       colDesc: 'Co to dělá',
     },

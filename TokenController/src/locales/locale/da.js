@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Alle patruljer holdt pause.',
     resumed: 'Patruljer blev genoptaget.',
     journalRebuilt: 'Handouts genopbygget: {help} og {deck}.',
+    markerStopped: 'Stoppet af en stopmarkør: {tokens}.',
+    markerReset: 'Sendt tilbage til det sted, hvor de startede af en stopmarkør: {tokens}.',
   },
   errors: {
     noTokens: 'Ingen tokens valgt.',
@@ -73,6 +75,12 @@ const TRANSLATION = {
     usageCopy: 'Giv en rute og et navn til kopien.',
     badJson: 'Det er ikke ruteeksporttekst.',
     tokenLocked: '{tokens} kan ikke starte: låst.',
+    tokenMarked: '{tokens} kan ikke starte: de har en stopmarkør.',
+    outsideArea: '{tokens} kan ikke starte: de er uden for "{name}".',
+    selectOneArea:
+      'Vælg præcis én lukket tegning (en polygon, rektangel, ellipse eller frihåndsløkke).',
+    areaTooSmall: 'Den valgte tegning skal have mindst tre hjørner for at lave et område.',
+    idsNotFound: "Ingen tokens har disse id'er: {ids}.",
     routeOnOtherPage: '{tokens} kan ikke starte: "{name}" blev tegnet på en anden side.',
     startOnOtherPage: '{tokens} kan ikke starte: den faste start på "{name}" er på en anden side.',
     routeFull: '{tokens} kan ikke starte: "{name}" har allerede {max} tokens.',
@@ -104,7 +112,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Tegn ruten med et tegneværktøj, vælg den (træk en boks rundt om en tynd kontur, hvis du klikker forbi den), prøv derefter igen.',
-    usageRoute: 'Indstillinger: tilstand, interval, max, tilfældig, start.',
+    usageRoute: 'Indstillinger: tilstand, interval, max, tilfældig, vægge, start.',
     routeOnOtherPage: 'Tegnede ruter virker kun på den side, de er tegnet på.',
     startOnOtherPage: 'Ryd den faste start, eller flyt tokenet til den side først.',
     noLeader: 'Vælg lederen og klik Leder, eller giv dens navn: !tokencontroller følg Navn',
@@ -117,8 +125,14 @@ const TRANSLATION = {
       'Sørg for, at tokens er i tilstødende celler i samme række (kolonne på Hex (H) sider).',
     unknownCommand: 'Skriv !tokencontroller help for listen over kommandoer.',
     tokenLocked: 'Lås først tokenet op.',
+    tokenMarked: 'Fjern markøren, eller skift indstillingen Stop Markers.',
+    outsideArea: 'Flyt tokens inden for området først, eller slå tilfældig start til for ruten.',
+    selectOneArea:
+      'Tegn området med et tegneværktøj, vælg det (træk en boks rundt om et tyndt omrids, hvis du klikker forbi det), prøv derefter igen.',
+    idsNotFound: "Giv token-id'er efter --ids, adskilt af semikolon.",
   },
   warnings: {
+    idsNotFound: "Ingen tokens har disse id'er, så de blev sprunget over: {ids}.",
     offPage: 'En del af ruten løber væk fra siden (trin: {count}). Disse trin springes over.',
     combatTrackerOnly:
       'Combat Detection er indstillet til turn tracker, så denne kontakt har ingen effekt, før du ændrer den.',
@@ -180,6 +194,27 @@ const TRANSLATION = {
       continue: 'Fortsæt derfra',
       stop: 'Stop patruljen',
     },
+    markerAction: {
+      stop: 'Stop hvor det er',
+      reset: 'Gå tilbage til starten',
+    },
+    wallMode: {
+      ignore: 'Gå gennem vægge',
+      hold: 'Vent ved vægge',
+      turn: 'Vend tilbage ved vægge',
+    },
+    wallCheck: {
+      centre: 'Midten af tokenet',
+      width: 'Hel token',
+    },
+    oneWayWalls: {
+      block: 'Blok',
+      pass: 'Slip igennem',
+    },
+    transparentWalls: {
+      block: 'Blok',
+      pass: 'Slip igennem',
+    },
   },
   menu: {
     statusRunning: 'Patruljerende tokens: {patrols}. Ruter: {routes}.',
@@ -201,6 +236,7 @@ const TRANSLATION = {
     stop: 'Stop',
     add: 'Trin kode',
     draw: 'Fra Tegning',
+    bounce: 'Bounce område',
     record: 'Optage',
     examples: 'Eksempler',
     reset: 'Nulstil',
@@ -247,11 +283,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Tegnet rute, {points} point',
     recorded: 'Registreret rute, {points} point',
+    area: 'Afvisningsområde, {points} hjørner',
     path: 'Sti',
     mode: 'Tilstand',
     interval: 'Interval',
     maxTokens: 'De fleste tokens',
     randomStart: 'Tilfældig start',
+    walls: 'Vægge',
     start: 'Fast start',
     tokens: 'Poletter',
   },
@@ -297,6 +335,30 @@ const TRANSLATION = {
       label: 'Trækker en patrulje',
       desc: 'Når du trækker et patruljerende token: fortsæt (ruten fortsætter fra det sted, hvor du tabte den) eller stop (patruljen slutter).',
     },
+    stopMarkers: {
+      label: 'Stopmarkører',
+      desc: 'Statusmarkører, der fjerner et token fra ruten og stopper det med at følge, adskilt af semikolon (f.eks. død;rød) eller ingen. Tilhængere af en leder med en af disse markører stopper også.',
+    },
+    markerAction: {
+      label: 'Stop markør handling',
+      desc: 'Hvad et patruljerende token gør, når det får en stopmarkør: stop (det bliver, hvor det er) eller nulstil (det går tilbage til, hvor det startede).',
+    },
+    wallMode: {
+      label: 'Vægge',
+      desc: 'Hvad patruljer og følgere gør ved dynamiske belysningsvægge og lukkede døre og vinduer: ignorere (gå igennem), holde (vente indtil vejen er fri, for eksempel indtil en dør åbner) eller dreje (patruljer vender tilbage). Hver rute kan vælge sin egen, så spøgelser kan stadig gå gennem vægge.',
+    },
+    wallCheck: {
+      label: 'Vægtjek',
+      desc: 'i midten: kun midten af en token skal holde sig fri af vægge. bredde: hele token gør det, så en stor token kan ikke presse sig gennem et smalt mellemrum.',
+    },
+    oneWayWalls: {
+      label: 'Envejsvægge',
+      desc: 'Hvorvidt envejsvægge stopper tokens (blok) eller ej (pas).',
+    },
+    transparentWalls: {
+      label: 'Gennemsigtige vægge',
+      desc: 'Om gennemsigtige vægge, som slipper lys igennem, stopper tokens (blokerer) eller ej (passerer).',
+    },
     buttonStep: {
       label: 'Celler pr. klik',
       desc: 'Hvor langt optagelsespilene flytter et token.',
@@ -332,12 +394,15 @@ const TRANSLATION = {
     add: 'Opret en rute fra en trinkode, såsom U2R2D2L2.',
     edit: 'Skift en rutes trinkode.',
     draw: 'Opret en rute, der følger den valgte tegning på denne side.',
+    bounce:
+      'Opret en rute, hvor tokens vandrer inde i den valgte lukkede tegning og hopper af dens kanter.',
     record: 'Optag en rute ved at flytte det valgte token med knapper eller ved at trække det.',
-    route: 'Skift en ruteindstilling: tilstand, interval, maks., tilfældig eller start.',
+    route: 'Skift en ruteindstilling: tilstand, interval, maks., tilfældig, vægge eller start.',
     show: 'Vis en rutes detaljer og knapper.',
     rename: 'Omdøb en rute.',
     copy: 'Kopier en rute under et nyt navn.',
     remove: 'Fjern en rute (spørger først).',
+    ids: "Handl på tokens med disse ID'er i stedet for de valgte, så andre Mods såsom ScriptCards kan styre tokens. fjern --ids fjerner tokens fra deres ruter; det fjerner aldrig en rute.",
     list: 'Liste over ruterne eller de tokens, der kontrolleres.',
     examples: 'Tilføj eksempler på ruter.',
     export: 'Vis ruter som tekst, der skal kopieres til et andet spil.',
@@ -375,6 +440,7 @@ const TRANSLATION = {
         'Fra tegning: Tegn en linje, polygon, frihåndsform, rektangel eller ellipse med tegneværktøjerne, vælg den og klik på Fra tegning. Poletter går langs den, kun på den side. Du kan slette tegningen efterfølgende.',
         'Optag: Vælg et token, og klik på Optag. Flyt den med pileknapperne eller træk den på kortet (Roll20 waypoints følges), og klik derefter på Gem. På firkantede gitter bliver optagelsen en trinkode, du kan redigere.',
         'Loop-ruter starter igen fra begyndelsen; frem og tilbage ruter går tilbage på den måde, de kom; når ruterne stopper for enden. Nye ruter, der slutter, hvor de starter, loop; andre går frem og tilbage.',
+        'Bounce-område: Tegn en lukket form rundt om området, vælg det, og klik på Bounce-område. Tokens, der startes på den, rejser i lige linjer og hopper af dens kanter (og fra vægge, medmindre ruten ignorerer dem), og drejer lidt tilfældigt hver gang. Tilfældig start placerer hver token i en tilfældig celle i området.',
       ],
     },
     codes: {
@@ -395,6 +461,8 @@ const TRANSLATION = {
       interval: 'Millisekunder pr. trin for denne rute, eller 0 for det globale interval.',
       max: 'De fleste tokens, der kan være på ruten på én gang, eller 0 uden grænse.',
       random: 'tændt: hvert token starter på et tilfældigt punkt langs ruten.',
+      walls:
+        'ignorere (gå gennem vægge), hold (vent ved vægge og lukkede døre), vend (vend tilbage) eller standard (brug indstillingen Vægge).',
       start:
         'sæt: tokens hopper til det valgte tokens position, når de starter. klart: de starter, hvor de står.',
     },
@@ -407,6 +475,8 @@ const TRANSLATION = {
         'Følg: vælg lederen, og klik på Leder, vælg derefter følgerne, og klik på Følg. Du kan også skrive lederens navn: !tokencontroller follow Goblin Boss. Følgere følger tokens, der patruljerer, tokens, du trækker, og tokens, der flyttes af TokenMod.',
         'Følgere kan følge andre følgere, lave en kæde eller en kolonne.',
         'At trække et patruljerende token fører patruljen videre fra det sted, hvor du taber det, medmindre at trække en patrulje er indstillet til at stoppe.',
+        'Vægge: med vægge aktiveret, går patruljer og følgere ikke gennem dynamiske lysvægge eller lukkede døre og vinduer; åbne døre og vinduer slipper dem igennem. Giv en rute sin egen væg mulighed (for eksempel ignorer for et spøgelse).',
+        'Stopmarkører: et token, der får en af disse statusmarkører (for eksempel død) forlader sin rute og stopper med at følge, og følgerne af en leder, der får et stop også. Indstil dem med !tokencontroller sæt stopMarkers dead;red. Dette virker også, når en anden Mod tilføjer markøren.',
       ],
     },
     grids: {
@@ -430,6 +500,7 @@ const TRANSLATION = {
       heading: 'Kommandoer',
       intro:
         'Kun GM\'er kan bruge disse kommandoer. Ruter kan navngives eller henvises til med deres #id fra menuknapperne. Sæt navne med mellemrum i "anførselstegn", når en kommando tager to navne.',
+      mods: "Andre Mods kan også sende disse kommandoer, for eksempel fra ScriptCards. De kan ikke vælge tokens, så de navngiver dem med --ids efterfulgt af token-id'er adskilt af semikolon: !tc stop --ids ID1;ID2. Svar går til GM.",
       colCommand: 'Kommando',
       colDesc: 'Hvad den gør',
     },
@@ -457,7 +528,7 @@ const TRANSLATION = {
     troubleshooting: {
       heading: 'Fejlfinding',
       points: [
-        'Tokens flytter sig ikke: Tjek Status. Patruljer venter, mens de er på pause, mens de er låst, og i kamp, ​​når kampadfærd er pause.',
+        'Tokens flytter sig ikke: Tjek Status. Patruljer venter, mens de er på pause, mens de er låst, og i kamp, når kampadfærd er pause.',
         'Tokens flytter sig den forkerte afstand: sidens gitterstørrelse eller snapping kan have ændret sig; prøv Kalibrer.',
         'En tegnet rute starter ikke: Tegnede ruter fungerer kun på den side, de er tegnet på.',
         'Følgere flytter sig ikke, når en anden Mod flytter lederen: kun TokenMod rapporterer sine træk. Andre Mods kan kalde TokenController.ObserveTokenChange.',

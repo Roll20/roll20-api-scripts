@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Tutte le pattuglie si fermarono.',
     resumed: 'Sono riprese le pattuglie.',
     journalRebuilt: 'Schede ricostruite: {help} e {deck}.',
+    markerStopped: 'Fermato da un indicatore di fermata: {tokens}.',
+    markerReset: 'Rimandati al punto di partenza tramite un indicatore di stop: {tokens}.',
   },
   errors: {
     noTokens: 'Nessun token selezionato.',
@@ -73,6 +75,12 @@ const TRANSLATION = {
     usageCopy: 'Assegna un percorso e un nome alla copia.',
     badJson: 'Questo non è il testo di esportazione del percorso.',
     tokenLocked: '{tokens} non può essere avviato: bloccato.',
+    tokenMarked: '{tokens} non può iniziare: ha un indicatore di stop.',
+    outsideArea: '{tokens} non può avviarsi: è esterno a "{name}".',
+    selectOneArea:
+      "Seleziona esattamente un disegno chiuso (un poligono, un rettangolo, un'ellisse o un ciclo a mano libera).",
+    areaTooSmall: "Il disegno selezionato necessita di almeno tre angoli per creare un'area.",
+    idsNotFound: 'Nessun token ha questi ID: {ids}.',
     routeOnOtherPage: '{tokens} non può iniziare: "{name}" è stato disegnato su un\'altra pagina.',
     startOnOtherPage:
       '{tokens} non può iniziare: l\'inizio fisso di "{name}" è su un\'altra pagina.',
@@ -106,7 +114,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Disegna il percorso con uno strumento di disegno, selezionalo (trascina una casella attorno a un contorno sottile se facendo clic non si riesce a raggiungerlo), quindi riprova.',
-    usageRoute: 'Opzioni: modalità, intervallo, max, casuale, avvio.',
+    usageRoute: 'Opzioni: modalità, intervallo, max, casuale, muri, avvio.',
     routeOnOtherPage:
       'I percorsi disegnati funzionano solo sulla pagina su cui sono stati disegnati.',
     startOnOtherPage: "Cancella l'inizio fisso o sposta prima il token su quella pagina.",
@@ -122,8 +130,15 @@ const TRANSLATION = {
       'Assicurati che i token si trovino nelle celle vicine della stessa riga (colonna sulle pagine esadecimali (H)).',
     unknownCommand: "Digitare !tokencontroller help per l'elenco dei comandi.",
     tokenLocked: 'Sblocca prima il token.',
+    tokenMarked: "Rimuovere il contrassegno o modificare l'impostazione Contrassegni di arresto.",
+    outsideArea:
+      "Sposta prima i gettoni all'interno dell'area o attiva l'avvio casuale del percorso.",
+    selectOneArea:
+      "Disegna l'area con uno strumento di disegno, selezionala (trascina una casella attorno a un contorno sottile se facendo clic non si riesce a raggiungerlo), quindi riprova.",
+    idsNotFound: 'Fornisci gli ID token dopo --ids, separati da punto e virgola.',
   },
   warnings: {
+    idsNotFound: 'Nessun token ha questi ID, quindi sono stati ignorati: {ids}.',
     offPage:
       'Parte del percorso esce dalla pagina (passi: {count}). Questi passaggi vengono saltati.',
     combatTrackerOnly:
@@ -186,6 +201,27 @@ const TRANSLATION = {
       continue: 'Continua da lì',
       stop: 'Ferma la pattuglia',
     },
+    markerAction: {
+      stop: "Fermati dov'è",
+      reset: "Torna all'inizio",
+    },
+    wallMode: {
+      ignore: 'Cammina attraverso i muri',
+      hold: 'Aspetta ai muri',
+      turn: 'Tornare alle mura',
+    },
+    wallCheck: {
+      centre: 'Centro del gettone',
+      width: 'Gettone intero',
+    },
+    oneWayWalls: {
+      block: 'Bloccare',
+      pass: 'Lascia passare',
+    },
+    transparentWalls: {
+      block: 'Bloccare',
+      pass: 'Lascia passare',
+    },
   },
   menu: {
     statusRunning: 'Gettoni di pattugliamento: {patrols}. Percorsi: {routes}.',
@@ -208,6 +244,7 @@ const TRANSLATION = {
     stop: 'Fermare',
     add: 'Codice passo',
     draw: 'Dal disegno',
+    bounce: 'Area di rimbalzo',
     record: 'Documentazione',
     examples: 'Esempi',
     reset: 'Reset',
@@ -254,11 +291,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Percorso tracciato, {points} punti',
     recorded: 'Percorso registrato, {points} punti',
+    area: 'Area di rimbalzo, {points} angoli',
     path: 'Sentiero',
     mode: 'Modalità',
     interval: 'Intervallo',
     maxTokens: 'La maggior parte dei gettoni',
     randomStart: 'Inizio casuale',
+    walls: 'Muri',
     start: 'Inizio fisso',
     tokens: 'Gettoni',
   },
@@ -304,6 +343,30 @@ const TRANSLATION = {
       label: 'Trascinare una pattuglia',
       desc: 'Quando trascini un segnalino pattuglia: continua (il percorso prosegue da dove lo hai lasciato) oppure fermati (la pattuglia termina).',
     },
+    stopMarkers: {
+      label: 'Indicatori di arresto',
+      desc: 'Indicatori di stato che tolgono un gettone dal suo percorso e gli impediscono di seguirlo, separati da punto e virgola (ad esempio morto; rosso) o nessuno. Anche i seguaci di un leader con uno di questi segnalini si fermano.',
+    },
+    markerAction: {
+      label: "Arresta l'azione del marcatore",
+      desc: "Cosa fa un segnalino di pattuglia quando riceve un Segnalino di Stop: si ferma (rimane dov'è) o si resetta (torna al punto di partenza).",
+    },
+    wallMode: {
+      label: 'Muri',
+      desc: "Cosa fanno le pattuglie e i seguaci con l'illuminazione dinamica dei muri e delle porte e finestre chiuse: ignorare (attraversare), trattenere (aspettare finché la strada è libera, ad esempio finché non si apre una porta) o girare (le pattuglie tornano indietro). Ogni percorso può scegliere il proprio, quindi i fantasmi possono ancora camminare attraverso i muri.",
+    },
+    wallCheck: {
+      label: 'Controllo del muro',
+      desc: "centro: solo la parte centrale del gettone deve restare lontana dai muri. larghezza: lo fa l'intero gettone, quindi un gettone grande non può passare attraverso uno spazio stretto.",
+    },
+    oneWayWalls: {
+      label: 'Muri a senso unico',
+      desc: 'Se i muri unidirezionali fermano i gettoni (blocco) o meno (passaggio).',
+    },
+    transparentWalls: {
+      label: 'Pareti trasparenti',
+      desc: 'Sia che le pareti trasparenti, che lasciano passare la luce, fermino i gettoni (bloccano) oppure no (passino).',
+    },
     buttonStep: {
       label: 'Celle per clic',
       desc: 'Di quanto le frecce di registrazione spostano un token.',
@@ -340,12 +403,15 @@ const TRANSLATION = {
     add: 'Crea un percorso da un codice passo, come U2R2D2L2.',
     edit: 'Modificare il codice passo di un percorso.',
     draw: 'Crea un percorso che segue il disegno selezionato in questa pagina.',
+    bounce:
+      "Crea un percorso sul quale i token vagano all'interno del disegno chiuso selezionato, rimbalzando sui suoi bordi.",
     record: 'Registra un percorso spostando il token selezionato con i pulsanti o trascinandolo.',
-    route: "Modifica un'opzione di percorso: modalità, intervallo, massimo, casuale o inizio.",
+    route: "Cambia un'opzione di percorso: modalità, intervallo, max, casuale, muri o inizio.",
     show: 'Mostra i dettagli e i pulsanti di un percorso.',
     rename: 'Rinominare un percorso.',
     copy: 'Copia un percorso con un nuovo nome.',
     remove: 'Rimuovere un percorso (chiede prima).',
+    ids: 'Agisci sui token con questi ID invece che su quelli selezionati, in modo che altri Mod come ScriptCard possano controllare i token. rimuovi --ids toglie i token dai loro percorsi; non rimuove mai un percorso.',
     list: 'Elenca i percorsi o i token controllati.',
     examples: 'Aggiungi i percorsi di esempio.',
     export: 'Mostra percorsi come testo da copiare in un altro gioco.',
@@ -383,6 +449,7 @@ const TRANSLATION = {
         "Dal disegno: disegna una linea, un poligono, una forma a mano libera, un rettangolo o un'ellisse con gli strumenti di disegno, selezionala e fai clic su Da disegno. I token la percorrono, solo su quella pagina. Successivamente è possibile eliminare il disegno.",
         'Registra: seleziona un token e fai clic su Registra. Spostarlo con i pulsanti freccia o trascinarlo sulla mappa (vengono seguiti 20 waypoint), quindi fare clic su Salva. Sulle griglie quadrate la registrazione diventa un codice passo che è possibile modificare.',
         'I percorsi ad anello riprendono da capo; i percorsi di andata e ritorno ripercorrono la strada da cui sono venuti; una volta che i percorsi si fermano alla fine. Nuovi percorsi che terminano dove iniziano il giro; altri vanno avanti e indietro.',
+        "Area di rimbalzo: disegna una forma chiusa attorno all'area, selezionala e fai clic su Area di rimbalzo. I gettoni avviati su di esso viaggiano in linea retta e rimbalzano sui suoi bordi (e sui muri, a meno che il percorso non li ignori), girando un po' a caso ogni volta. L'avvio casuale inserisce ciascun gettone in una cella casuale dell'area.",
       ],
     },
     codes: {
@@ -404,6 +471,8 @@ const TRANSLATION = {
       interval: "Millisecondi per passo per questo percorso o 0 per l'intervallo globale.",
       max: 'Il numero massimo di token che possono trovarsi sul percorso contemporaneamente o 0 per nessun limite.',
       random: 'on: ogni token inizia in un punto casuale lungo il percorso.',
+      walls:
+        "ignora (cammina attraverso i muri), tieni premuto (aspetta davanti ai muri e alle porte chiuse), gira (torna indietro) o imposta il valore predefinito (usa l'impostazione Muri).",
       start:
         'set: i token saltano alla posizione del token selezionato quando iniziano. chiaro: iniziano da dove si trovano.',
     },
@@ -416,6 +485,8 @@ const TRANSLATION = {
         'Segui: seleziona il leader e fai clic su Leader, quindi seleziona i follower e fai clic su Segui. Puoi anche digitare il nome del leader: !tokencontroller segui Goblin Boss. I follower seguono i token che pattugliano, i token che trascini e i token spostati da TokenMod.',
         'I follower possono seguire altri follower, creando una catena o una colonna.',
         "Trascinare un gettone di pattuglia riporta la pattuglia dal punto in cui l'hai rilasciata, a meno che il trascinamento di una pattuglia non sia impostato per interrompersi.",
+        "Muri: con l'impostazione Muri attiva, pattuglie e seguaci non attraversano muri con illuminazione dinamica o porte e finestre chiuse; porte e finestre aperte li lasciano passare. Assegna a un percorso l'opzione delle proprie mura (ad esempio ignora per un fantasma).",
+        'Segnalini di Stop: un gettone che ottiene uno di questi segnalini di stato (ad esempio morto) lascia il suo percorso e smette di seguirlo, e anche i seguaci di un leader che ottiene uno si fermano. Impostali con !tokencontroller set stopMarkers dead;red. Funziona anche quando un altro Mod aggiunge il marcatore.',
       ],
     },
     grids: {
@@ -439,6 +510,7 @@ const TRANSLATION = {
       heading: 'Comandi',
       intro:
         'Solo i GM possono utilizzare questi comandi. È possibile nominare i percorsi o fare riferimento al loro #id dai pulsanti del menu. Metti i nomi con spazi tra "virgolette" quando un comando richiede due nomi.',
+      mods: 'Anche altri mod possono inviare questi comandi, ad esempio da ScriptCards. Non possono selezionare i token, quindi li nominano con --ids seguito da ID token separati da punto e virgola: !tc stop --ids ID1;ID2. Le risposte vanno al GM.',
       colCommand: 'Comando',
       colDesc: 'Cosa fa',
     },

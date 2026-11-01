@@ -48,6 +48,8 @@ const TRANSLATION = {
     paused: 'Toutes les patrouilles se sont arrêtées.',
     resumed: 'Les patrouilles ont repris.',
     journalRebuilt: 'Documents reconstruits : {help} et {deck}.',
+    markerStopped: "Arrêté par un marqueur d'arrêt : {tokens}.",
+    markerReset: "Renvoyé à son point de départ par un marqueur d'arrêt : {tokens}.",
   },
   errors: {
     noTokens: 'Aucun jeton sélectionné.',
@@ -74,6 +76,12 @@ const TRANSLATION = {
     usageCopy: 'Donnez un itinéraire et un nom pour la copie.',
     badJson: "Ce n'est pas un texte d'exportation d'itinéraire.",
     tokenLocked: '{tokens} ne peut pas démarrer : verrouillé.',
+    tokenMarked: "{tokens} ne peut pas démarrer : il a un marqueur d'arrêt.",
+    outsideArea: '{tokens} ne peut pas démarrer : ils se trouvent en dehors de "{name}".',
+    selectOneArea:
+      'Sélectionnez exactement un dessin fermé (un polygone, un rectangle, une ellipse ou une boucle à main levée).',
+    areaTooSmall: "Le dessin sélectionné a besoin d'au moins trois coins pour créer une zone.",
+    idsNotFound: "Aucun jeton n'a ces identifiants : {ids}.",
     routeOnOtherPage: '{tokens} ne peut pas démarrer : "{name}" a été dessiné sur une autre page.',
     startOnOtherPage:
       '{tokens} ne peut pas démarrer : le début fixe de "{name}" se trouve sur une autre page.',
@@ -107,7 +115,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       "Dessinez l'itinéraire avec un outil de dessin, sélectionnez-le (faites glisser un cadre autour d'un contour fin si le clic le manque), puis réessayez.",
-    usageRoute: 'Options : mode, intervalle, max, aléatoire, démarrage.',
+    usageRoute: 'Options : mode, intervalle, max, aléatoire, murs, démarrage.',
     routeOnOtherPage:
       'Les itinéraires dessinés ne fonctionnent que sur la page sur laquelle ils ont été dessinés.',
     startOnOtherPage: "Effacez le début fixe ou déplacez d'abord le jeton vers cette page.",
@@ -123,8 +131,15 @@ const TRANSLATION = {
       'Assurez-vous que les jetons se trouvent dans les cellules voisines de la même ligne (colonne des pages Hex (H)).',
     unknownCommand: 'Tapez !tokencontroller help pour la liste des commandes.',
     tokenLocked: "Débloquez d'abord le jeton.",
+    tokenMarked: 'Supprimez le marqueur ou modifiez le paramètre Stop Markers.',
+    outsideArea:
+      "Déplacez d'abord les jetons à l'intérieur de la zone ou activez le démarrage aléatoire pour l'itinéraire.",
+    selectOneArea:
+      "Dessinez la zone avec un outil de dessin, sélectionnez-la (faites glisser un cadre autour d'un contour fin si vous cliquez dessus), puis réessayez.",
+    idsNotFound: 'Donnez les ID de jeton après --ids, séparés par des points-virgules.',
   },
   warnings: {
+    idsNotFound: 'Aucun jeton ne possède ces identifiants, ils ont donc été ignorés : {ids}.',
     offPage:
       "Une partie de l'itinéraire s'effectue hors de la page (étapes : {count}). Ces étapes sont ignorées.",
     combatTrackerOnly:
@@ -187,6 +202,27 @@ const TRANSLATION = {
       continue: 'Continuez à partir de là',
       stop: 'Arrêtez la patrouille',
     },
+    markerAction: {
+      stop: "Arrêtez-vous là où c'est",
+      reset: 'Revenir au début',
+    },
+    wallMode: {
+      ignore: 'Traverser les murs',
+      hold: 'Attendez aux murs',
+      turn: 'Retournez aux murs',
+    },
+    wallCheck: {
+      centre: 'Centre du jeton',
+      width: 'Jeton entier',
+    },
+    oneWayWalls: {
+      block: 'Bloc',
+      pass: 'Laisser passer',
+    },
+    transparentWalls: {
+      block: 'Bloc',
+      pass: 'Laisser passer',
+    },
   },
   menu: {
     statusRunning: 'Jetons de patrouille : {patrols}. Itinéraires : {routes}.',
@@ -209,6 +245,7 @@ const TRANSLATION = {
     stop: 'Arrêt',
     add: "Code d'étape",
     draw: 'Du dessin',
+    bounce: 'Zone de rebond',
     record: 'Enregistrer',
     examples: 'Exemples',
     reset: 'Réinitialiser',
@@ -255,11 +292,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Itinéraire tracé, {points} points',
     recorded: 'Itinéraire enregistré, {points} points',
+    area: 'Zone de rebond, {points} coins',
     path: 'Chemin',
     mode: 'Mode',
     interval: 'Intervalle',
     maxTokens: 'La plupart des jetons',
     randomStart: 'Démarrage aléatoire',
+    walls: 'Murs',
     start: 'Démarrage fixe',
     tokens: 'Jetons',
   },
@@ -305,6 +344,30 @@ const TRANSLATION = {
       label: 'Faire glisser une patrouille',
       desc: "Lorsque vous faites glisser un jeton de patrouille : continuez (l'itinéraire continue là où vous l'avez déposé) ou arrêtez (la patrouille se termine).",
     },
+    stopMarkers: {
+      label: "Marqueurs d'arrêt",
+      desc: "Marqueurs d'état qui retirent un jeton de son itinéraire et l'empêchent de suivre, séparés par des points-virgules (par exemple mort ; rouge) ou aucun. Les partisans d'un leader avec l'un de ces marqueurs s'arrêtent également.",
+    },
+    markerAction: {
+      label: "Arrêter l'action du marqueur",
+      desc: "Ce que fait un jeton de patrouille lorsqu'il reçoit un marqueur d'arrêt : s'arrêter (il reste là où il se trouve) ou se réinitialiser (il revient à son point de départ).",
+    },
+    wallMode: {
+      label: 'Murs',
+      desc: "Ce que font les patrouilles et les suiveurs face à des murs à éclairage dynamique et à des portes et fenêtres fermées : ignorer (traverser), attendre (attendre que la voie soit libre, par exemple jusqu'à ce qu'une porte s'ouvre) ou tourner (les patrouilles font demi-tour). Chaque itinéraire peut choisir le sien, afin que les fantômes puissent toujours traverser les murs.",
+    },
+    wallCheck: {
+      label: 'Vérification du mur',
+      desc: "centre : seul le milieu d'un jeton doit rester à l'écart des murs. width : le jeton entier le fait, donc un gros jeton ne peut pas se faufiler à travers un espace étroit.",
+    },
+    oneWayWalls: {
+      label: 'Murs à sens unique',
+      desc: 'Que les murs à sens unique arrêtent les jetons (bloquer) ou non (passer).',
+    },
+    transparentWalls: {
+      label: 'Murs transparents',
+      desc: "Qu'il s'agisse de murs transparents, qui laissent passer la lumière, arrêtent les jetons (bloquer) ou non (passer).",
+    },
     buttonStep: {
       label: 'Cellules par clic',
       desc: "Jusqu'où les flèches d'enregistrement déplacent un jeton.",
@@ -341,13 +404,17 @@ const TRANSLATION = {
     add: "Créez un itinéraire à partir d'un code d'étape, tel que U2R2D2L2.",
     edit: "Modifier le code d'étape d'un itinéraire.",
     draw: 'Créez un itinéraire qui suit le dessin sélectionné sur cette page.',
+    bounce:
+      "Créez un itinéraire sur lequel les jetons errent à l'intérieur du dessin fermé sélectionné, rebondissant sur ses bords.",
     record:
       'Enregistrez un itinéraire en déplaçant le jeton sélectionné avec les boutons ou en le faisant glisser.',
-    route: "Modifier une option d'itinéraire : mode, intervalle, maximum, aléatoire ou début.",
+    route:
+      "Modifiez une option d'itinéraire : mode, intervalle, maximum, aléatoire, murs ou début.",
     show: "Afficher les détails et les boutons d'un itinéraire.",
     rename: 'Renommer un itinéraire.',
     copy: 'Copiez un itinéraire sous un nouveau nom.',
     remove: 'Supprimer un itinéraire (demande en premier).',
+    ids: "Agissez sur les jetons avec ces identifiants au lieu de ceux sélectionnés, afin que d'autres mods tels que les ScriptCards puissent contrôler les jetons. Remove --ids retire les jetons de leurs itinéraires ; il ne supprime jamais un itinéraire.",
     list: 'Répertoriez les itinéraires ou les jetons contrôlés.',
     examples: "Ajoutez les exemples d'itinéraires.",
     export: 'Afficher les itinéraires sous forme de texte à copier dans un autre jeu.',
@@ -385,6 +452,7 @@ const TRANSLATION = {
         'Depuis le dessin : dessinez une ligne, un polygone, une forme à main levée, un rectangle ou une ellipse avec les outils de dessin, sélectionnez-le et cliquez sur Depuis le dessin. Les jetons le parcourent, sur cette page uniquement. Vous pourrez ensuite supprimer le dessin.',
         "Enregistrer : sélectionnez un jeton et cliquez sur Enregistrer. Déplacez-le avec les boutons fléchés ou faites-le glisser sur la carte (les waypoints Roll20 sont suivis), puis cliquez sur Enregistrer. Sur les grilles carrées, l'enregistrement devient un code d'étape que vous pouvez modifier.",
         "Les itinéraires en boucle recommencent depuis le début ; les itinéraires aller-retour reviennent par où ils sont venus ; une fois que les itinéraires s'arrêtent à la fin. De nouveaux itinéraires qui se terminent là où ils commencent la boucle ; d'autres vont et viennent.",
+        "Zone de rebond : dessinez une forme fermée autour de la zone, sélectionnez-la et cliquez sur Zone de rebond. Les jetons qui y sont lancés se déplacent en lignes droites et rebondissent sur ses bords (et sur les murs, à moins que l'itinéraire ne les ignore), tournant un peu au hasard à chaque fois. Le démarrage aléatoire place chaque jeton dans une cellule aléatoire de la zone.",
       ],
     },
     codes: {
@@ -406,6 +474,8 @@ const TRANSLATION = {
       interval: "Millisecondes par étape pour cet itinéraire, ou 0 pour l'intervalle global.",
       max: 'Le plus grand nombre de jetons pouvant être sur la route en même temps, ou 0 pour aucune limite.',
       random: 'activé : chaque jeton commence à un point aléatoire le long du parcours.',
+      walls:
+        'ignorer (traverser les murs), maintenir (attendre devant les murs et les portes fermées), tourner (faire demi-tour) ou par défaut (utiliser le paramètre Murs).',
       start:
         "set : les jetons sautent à la position du jeton sélectionné lorsqu'ils démarrent. clair : ils commencent là où ils en sont.",
     },
@@ -418,6 +488,8 @@ const TRANSLATION = {
         'Suivre : sélectionnez le leader et cliquez sur Leader, puis sélectionnez les suiveurs et cliquez sur Suivre. Vous pouvez également saisir le nom du leader : !tokencontroller follow Goblin Boss. Les abonnés suivent les jetons qui patrouillent, les jetons que vous faites glisser et les jetons déplacés par TokenMod.',
         'Les abonnés peuvent suivre d’autres abonnés en créant une chaîne ou une colonne.',
         "Faire glisser un jeton de patrouille permet à la patrouille de continuer là où vous l'avez déposé, à moins que le déplacement d'une patrouille ne soit réglé pour s'arrêter.",
+        "Murs : lorsque l'option Murs est activée, les patrouilles et les suiveurs ne traversent pas les murs à éclairage dynamique ou les portes et fenêtres fermées ; portes et fenêtres ouvertes les laissent passer. Donnez à un itinéraire ses propres options de murs (par exemple ignorer un fantôme).",
+        "Marqueurs d'arrêt : un jeton qui obtient l'un de ces marqueurs de statut (par exemple mort) quitte son itinéraire et arrête de le suivre, ainsi que les partisans d'un leader qui obtiennent un arrêt également. Définissez-les avec !tokencontroller set stopMarkers dead;red. Cela fonctionne également lorsqu'un autre Mod ajoute le marqueur.",
       ],
     },
     grids: {
@@ -441,6 +513,7 @@ const TRANSLATION = {
       heading: 'Commandes',
       intro:
         'Seuls les MJ peuvent utiliser ces commandes. Les itinéraires peuvent être nommés ou référencés par leur #id à partir des boutons de menu. Mettez les noms avec des espaces entre "guillemets" lorsqu\'une commande prend deux noms.',
+      mods: "D'autres Mods peuvent également envoyer ces commandes, par exemple depuis des ScriptCards. Ils ne peuvent pas sélectionner de jetons, ils les nomment donc avec --ids suivi d'ID de jeton séparés par des points-virgules : !tc stop --ids ID1;ID2. Les réponses vont au GM.",
       colCommand: 'Commande',
       colDesc: 'Ce que ça fait',
     },

@@ -47,6 +47,8 @@ const TRANSLATION = {
     paused: 'Todas las patrullas hicieron una pausa.',
     resumed: 'Se reanudaron las patrullas.',
     journalRebuilt: 'Documentos reconstruidos: {help} y {deck}.',
+    markerStopped: 'Detenido por un marcador de parada: {tokens}.',
+    markerReset: 'Enviado de regreso al punto de partida mediante un marcador de parada: {tokens}.',
   },
   errors: {
     noTokens: 'No hay tokens seleccionados.',
@@ -72,6 +74,12 @@ const TRANSLATION = {
     usageCopy: 'Da una ruta y un nombre para la copia.',
     badJson: 'Ese no es un texto de exportación de ruta.',
     tokenLocked: '{tokens} no puede iniciarse: bloqueado.',
+    tokenMarked: '{tokens} no puede comenzar: tiene un marcador de parada.',
+    outsideArea: '{tokens} no puede iniciar: están fuera de "{name}".',
+    selectOneArea:
+      'Seleccione exactamente un dibujo cerrado (un polígono, un rectángulo, una elipse o un bucle a mano alzada).',
+    areaTooSmall: 'El dibujo seleccionado necesita al menos tres esquinas para formar un área.',
+    idsNotFound: 'Ningún token tiene estos ID: {ids}.',
     routeOnOtherPage: '{tokens} no puede iniciarse: "{name}" se dibujó en otra página.',
     startOnOtherPage:
       '{tokens} no puede iniciarse: el inicio fijo de "{name}" está en otra página.',
@@ -104,7 +112,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Dibuje la ruta con una herramienta de dibujo, selecciónela (arrastre un cuadro alrededor de un contorno delgado si no logra hacer clic) y vuelva a intentarlo.',
-    usageRoute: 'Opciones: modo, intervalo, máximo, aleatorio, inicio.',
+    usageRoute: 'Opciones: modo, intervalo, máximo, aleatorio, paredes, inicio.',
     routeOnOtherPage: 'Las rutas dibujadas sólo funcionan en la página en la que fueron dibujadas.',
     startOnOtherPage: 'Borre el inicio fijo o mueva el token a esa página primero.',
     noLeader:
@@ -120,8 +128,15 @@ const TRANSLATION = {
       'Asegúrese de que las fichas estén en celdas vecinas de la misma fila (columna en las páginas Hex (H)).',
     unknownCommand: 'Escriba !tokencontroller help para obtener la lista de comandos.',
     tokenLocked: 'Desbloquea el token primero.',
+    tokenMarked: 'Elimine el marcador o cambie la configuración de Detener marcadores.',
+    outsideArea:
+      'Primero mueve las fichas dentro del área o activa el inicio aleatorio de la ruta.',
+    selectOneArea:
+      'Dibuje el área con una herramienta de dibujo, selecciónela (arrastre un cuadro alrededor de un contorno delgado si no logra hacer clic) y vuelva a intentarlo.',
+    idsNotFound: 'Proporcione los ID de los tokens después de --ids, separados por punto y coma.',
   },
   warnings: {
+    idsNotFound: 'Ningún token tiene estos ID, por lo que se omitieron: {ids}.',
     offPage: 'Parte de la ruta sale de la página (pasos: {count}). Esos pasos se omiten.',
     combatTrackerOnly:
       'La detección de combate está configurada en el rastreador de turnos, por lo que este interruptor no tiene efecto hasta que lo cambies.',
@@ -183,6 +198,27 @@ const TRANSLATION = {
       continue: 'Continúe desde allí',
       stop: 'detener la patrulla',
     },
+    markerAction: {
+      stop: 'Deténgase donde está',
+      reset: 'volver al inicio',
+    },
+    wallMode: {
+      ignore: 'Caminar a través de paredes',
+      hold: 'Espera en las paredes',
+      turn: 'Vuelve a las paredes',
+    },
+    wallCheck: {
+      centre: 'Centro de la ficha',
+      width: 'ficha entera',
+    },
+    oneWayWalls: {
+      block: 'Bloquear',
+      pass: 'Dejar pasar',
+    },
+    transparentWalls: {
+      block: 'Bloquear',
+      pass: 'Dejar pasar',
+    },
   },
   menu: {
     statusRunning: 'Fichas de patrullaje: {patrols}. Rutas: {routes}.',
@@ -204,6 +240,7 @@ const TRANSLATION = {
     stop: 'Detener',
     add: 'Código de paso',
     draw: 'Del dibujo',
+    bounce: 'Área de rebote',
     record: 'Registro',
     examples: 'Ejemplos',
     reset: 'Reiniciar',
@@ -250,11 +287,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Ruta dibujada, {points} puntos',
     recorded: 'Ruta registrada, {points} puntos',
+    area: 'Área de rebote, {points} esquinas',
     path: 'Camino',
     mode: 'Modo',
     interval: 'Intervalo',
     maxTokens: 'La mayoría de las fichas',
     randomStart: 'Inicio aleatorio',
+    walls: 'Paredes',
     start: 'inicio fijo',
     tokens: 'Fichas',
   },
@@ -300,6 +339,30 @@ const TRANSLATION = {
       label: 'Arrastrando una patrulla',
       desc: 'Cuando arrastras una ficha de patrulla: continúa (la ruta continúa desde donde la dejaste) o detente (la patrulla termina).',
     },
+    stopMarkers: {
+      label: 'Marcadores de parada',
+      desc: 'Marcadores de estado que sacan un token de su ruta y evitan que siga, separados por punto y coma (por ejemplo, muerto; rojo) o ninguno. Los seguidores de un líder con uno de estos marcadores también se detienen.',
+    },
+    markerAction: {
+      label: 'Detener acción del marcador',
+      desc: 'Qué hace una ficha de patrulla cuando recibe un Marcador de Parada: detenerse (permanece donde está) o reiniciarse (vuelve al punto de inicio).',
+    },
+    wallMode: {
+      label: 'Paredes',
+      desc: 'Lo que hacen las patrullas y los seguidores en paredes con iluminación dinámica y puertas y ventanas cerradas: ignorar (caminar), esperar hasta que el camino esté despejado, por ejemplo hasta que se abra una puerta) o girar (las patrullas retroceden). Cada ruta puede elegir la suya propia, por lo que los fantasmas aún pueden atravesar las paredes.',
+    },
+    wallCheck: {
+      label: 'Verificación de pared',
+      desc: 'Centro: sólo la mitad de una ficha debe quedar libre de las paredes. ancho: toda la ficha lo hace, por lo que una ficha grande no puede pasar por un espacio estrecho.',
+    },
+    oneWayWalls: {
+      label: 'Muros unidireccionales',
+      desc: 'Si los muros unidireccionales detienen las fichas (bloquean) o no (pasan).',
+    },
+    transparentWalls: {
+      label: 'Paredes transparentes',
+      desc: 'Ya sean paredes transparentes, que dejan pasar la luz, detienen las fichas (bloquean) o no (pasan).',
+    },
     buttonStep: {
       label: 'Celdas por clic',
       desc: 'Hasta qué punto las flechas de grabación mueven una ficha.',
@@ -335,12 +398,15 @@ const TRANSLATION = {
     add: 'Cree una ruta a partir de un código de paso, como U2R2D2L2.',
     edit: 'Cambiar el código de paso de una ruta.',
     draw: 'Cree una ruta que siga el dibujo seleccionado en esta página.',
+    bounce:
+      'Cree una ruta en la que las fichas deambulen dentro del dibujo cerrado seleccionado, rebotando en sus bordes.',
     record: 'Graba una ruta moviendo el token seleccionado con botones o arrastrándolo.',
-    route: 'Cambie una opción de ruta: modo, intervalo, máximo, aleatorio o inicio.',
+    route: 'Cambie una opción de ruta: modo, intervalo, máximo, aleatorio, paredes o inicio.',
     show: 'Muestra los detalles y botones de una ruta.',
     rename: 'Cambiar el nombre de una ruta.',
     copy: 'Copie una ruta con un nuevo nombre.',
     remove: 'Eliminar una ruta (pregunta primero).',
+    ids: 'Actúa sobre los tokens con estos ID en lugar de los seleccionados, para que otros Mods como ScriptCards puedan controlar los tokens. eliminar --ids elimina los tokens de sus rutas; nunca elimina una ruta.',
     list: 'Enumere las rutas o los tokens que se controlan.',
     examples: 'Agregue las rutas de ejemplo.',
     export: 'Muestra rutas como texto para copiar en otro juego.',
@@ -378,6 +444,7 @@ const TRANSLATION = {
         'Desde Dibujo: dibuja una línea, polígono, forma a mano alzada, rectángulo o elipse con las herramientas de dibujo, selecciónala y haz clic en Desde Dibujo. Las fichas caminan a lo largo de él, solo en esa página. Puedes borrar el dibujo después.',
         'Grabar: seleccione un token y haga clic en Grabar. Muévalo con los botones de flecha o arrástrelo en el mapa (se siguen los puntos de referencia de Roll20), luego haga clic en Guardar. En las cuadrículas, la grabación se convierte en un código de paso que puedes editar.',
         'Las rutas circulares empiezan de nuevo desde el principio; las rutas de ida y vuelta regresan por donde vinieron; una vez que las rutas se detienen al final. Nuevas rutas que terminan donde empiezan el bucle; otros van y vienen.',
+        'Área de rebote: dibuje una forma cerrada alrededor del área, selecciónela y haga clic en Área de rebote. Las fichas que comienzan en él viajan en línea recta y rebotan en sus bordes (y en las paredes, a menos que la ruta las ignore), girando un poco al azar cada vez. El inicio aleatorio coloca cada ficha en una celda aleatoria del área.',
       ],
     },
     codes: {
@@ -399,6 +466,8 @@ const TRANSLATION = {
       interval: 'Milisegundos por paso para esta ruta o 0 para el intervalo global.',
       max: 'La mayor cantidad de tokens que puede haber en la ruta a la vez, o 0 sin límite.',
       random: 'activado: cada ficha comienza en un punto aleatorio a lo largo de la ruta.',
+      walls:
+        'ignorar (caminar a través de paredes), mantener (esperar en paredes y puertas cerradas), girar (retroceder) o predeterminado (usar la configuración de Paredes).',
       start:
         'set: las fichas saltan a la posición de la ficha seleccionada cuando comienzan. claro: empiezan donde están.',
     },
@@ -411,6 +480,8 @@ const TRANSLATION = {
         'Seguir: seleccione el líder y haga clic en Líder, luego seleccione los seguidores y haga clic en Seguir. También puedes escribir el nombre del líder: !tokencontroller sigue a Goblin Boss. Los seguidores siguen los tokens que patrullan, los tokens que arrastras y los tokens movidos por TokenMod.',
         'Los seguidores pueden seguir a otros seguidores, formando una cadena o una columna.',
         'Al arrastrar una ficha de patrulla, la patrulla continúa desde donde la dejaste, a menos que Arrastrar una patrulla esté configurado para detenerse.',
+        'Muros: con los Muros activados, las patrullas y seguidores no caminan a través de muros con iluminación dinámica o puertas y ventanas cerradas; puertas abiertas y ventanas les dejan pasar. Dale a una ruta su propia opción de paredes (por ejemplo, ignorarla si aparece un fantasma).',
+        'Marcadores de parada: una ficha que obtiene uno de estos marcadores de estado (por ejemplo, muerto) abandona su ruta y deja de seguir, y los seguidores de un líder que obtiene uno también se detienen. Configúrelos con !tokencontroller set stopMarkers dead;red. Esto también funciona cuando otro Mod agrega el marcador.',
       ],
     },
     grids: {
@@ -434,6 +505,7 @@ const TRANSLATION = {
       heading: 'Comandos',
       intro:
         'Sólo los GM pueden usar estos comandos. Las rutas se pueden nombrar o hacer referencia a ellas mediante su #id en los botones del menú. Coloque los nombres con espacios entre "comillas" cuando un comando tenga dos nombres.',
+      mods: 'Otros Mods también pueden enviar estos comandos, por ejemplo desde ScriptCards. No pueden seleccionar tokens, por lo que los nombran con --ids seguido de ID de token separados por punto y coma: !tc stop --ids ID1;ID2. Las respuestas van al GM.',
       colCommand: 'Dominio',
       colDesc: 'que hace',
     },

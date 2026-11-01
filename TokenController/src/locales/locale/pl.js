@@ -33,7 +33,7 @@ const TRANSLATION = {
       'Zaimportowane trasy {added}; pominięto {skipped} (nazwa już używana lub nieprawidłowa).',
     started: '{tokens} rozpoczęło się w dniu „{name}”.',
     stopped: 'Tokeny zatrzymane: {count}.',
-    reset: 'Tokeny wróciły do ​​miejsca, w którym zaczęły: {count}.',
+    reset: 'Tokeny wróciły do miejsca, w którym zaczęły: {count}.',
     locked: 'Zablokowano: {tokens} ({mode}).',
     unlocked: 'Odblokowano: {tokens}.',
     leaderSet: '{token} jest liderem. Wybierz obserwujących i kliknij Obserwuj.',
@@ -50,6 +50,8 @@ const TRANSLATION = {
     paused: 'Wszystkie patrole zatrzymały się.',
     resumed: 'Patrole zostały wznowione.',
     journalRebuilt: 'Przebudowano materiały informacyjne: {help} i {deck}.',
+    markerStopped: 'Zatrzymany przez znacznik zatrzymania: {tokens}.',
+    markerReset: 'Odesłany z powrotem do miejsca rozpoczęcia przez znacznik zatrzymania: {tokens}.',
   },
   errors: {
     noTokens: 'Nie wybrano tokenów.',
@@ -75,6 +77,12 @@ const TRANSLATION = {
     usageCopy: 'Podaj trasę i nazwę kopii.',
     badJson: 'To nie jest tekst eksportu trasy.',
     tokenLocked: '{tokens} nie można uruchomić: zablokowane.',
+    tokenMarked: '{tokens} nie mogą rozpocząć się: mają znacznik zatrzymania.',
+    outsideArea: '{tokens} nie może rozpocząć się: znajdują się poza „{name}”.',
+    selectOneArea:
+      'Wybierz dokładnie jeden zamknięty rysunek (wielokąt, prostokąt, elipsa lub odręczna pętla).',
+    areaTooSmall: 'Wybrany rysunek potrzebuje co najmniej trzech narożników, aby utworzyć obszar.',
+    idsNotFound: 'Żadne tokeny nie mają tych identyfikatorów: {ids}.',
     routeOnOtherPage:
       '{tokens} nie może się rozpocząć: „{name}” został narysowany na innej stronie.',
     startOnOtherPage:
@@ -109,7 +117,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Narysuj trasę za pomocą narzędzia do rysowania, zaznacz ją (przeciągnij ramkę wokół cienkiego konturu, jeśli kliknięcie go nie zauważy), a następnie spróbuj ponownie.',
-    usageRoute: 'Opcje: tryb, interwał, max, losowy, start.',
+    usageRoute: 'Opcje: tryb, interwał, max, losowy, ściany, start.',
     routeOnOtherPage: 'Narysowane trasy działają tylko na stronie, na której zostały narysowane.',
     startOnOtherPage: 'Wyczyść stały początek lub najpierw przesuń token na tę stronę.',
     noLeader: 'Wybierz lidera i kliknij Lidera lub podaj jego nazwę: !tokencontroller follow Name',
@@ -123,8 +131,14 @@ const TRANSLATION = {
       'Upewnij się, że tokeny znajdują się w sąsiednich komórkach tego samego wiersza (kolumna na stronach szesnastkowych (H)).',
     unknownCommand: 'Wpisz !tokencontroller help, aby wyświetlić listę poleceń.',
     tokenLocked: 'Najpierw odblokuj token.',
+    tokenMarked: 'Usuń znacznik lub zmień ustawienie znaczników zatrzymania.',
+    outsideArea: 'Najpierw przesuń żetony do obszaru lub włącz opcję Losowy start dla trasy.',
+    selectOneArea:
+      'Narysuj obszar za pomocą narzędzia do rysowania, zaznacz go (przeciągnij ramkę wokół cienkiego konturu, jeśli kliknięcie go nie zauważy), a następnie spróbuj ponownie.',
+    idsNotFound: 'Podaj identyfikatory tokenów po --ids, oddzielone średnikami.',
   },
   warnings: {
+    idsNotFound: 'Żadne tokeny nie mają tych identyfikatorów, więc zostały pominięte: {ids}.',
     offPage: 'Część trasy wychodzi poza stronę (kroki: {count}). Te kroki są pomijane.',
     combatTrackerOnly:
       'Wykrywanie walki jest ustawione na śledzenie tur, więc ten przełącznik nie działa, dopóki go nie zmienisz.',
@@ -186,6 +200,27 @@ const TRANSLATION = {
       continue: 'Stamtąd kontynuuj',
       stop: 'Zatrzymaj patrol',
     },
+    markerAction: {
+      stop: 'Zatrzymaj się tam, gdzie to jest',
+      reset: 'Wróć do początku',
+    },
+    wallMode: {
+      ignore: 'Przejdź przez ściany',
+      hold: 'Poczekaj pod ścianami',
+      turn: 'Odwróć się do ścian',
+    },
+    wallCheck: {
+      centre: 'Środek tokena',
+      width: 'Cały token',
+    },
+    oneWayWalls: {
+      block: 'Blok',
+      pass: 'Przepuszczać',
+    },
+    transparentWalls: {
+      block: 'Blok',
+      pass: 'Przepuszczać',
+    },
   },
   menu: {
     statusRunning: 'Żetony patrolowania: {patrols}. Trasy: {routes}.',
@@ -207,6 +242,7 @@ const TRANSLATION = {
     stop: 'Zatrzymywać się',
     add: 'Kod kroku',
     draw: 'Z rysunku',
+    bounce: 'Obszar odbicia',
     record: 'Nagrywać',
     examples: 'Przykłady',
     reset: 'Nastawić',
@@ -253,11 +289,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Wyznaczona trasa, {points} punktów',
     recorded: 'Zapisana trasa, {points} punktów',
+    area: 'Obszar odbicia, {points} narożniki',
     path: 'Ścieżka',
     mode: 'Tryb',
     interval: 'Interwał',
     maxTokens: 'Większość tokenów',
     randomStart: 'Losowy początek',
+    walls: 'Ściany',
     start: 'Naprawiono start',
     tokens: 'Żetony',
   },
@@ -303,6 +341,30 @@ const TRANSLATION = {
       label: 'Przeciąganie patrolu',
       desc: 'Gdy przeciągniesz żeton patrolowania: kontynuuj (trasa będzie kontynuowana od miejsca, w którym go upuściłeś) lub zatrzymaj (patrol zakończy się).',
     },
+    stopMarkers: {
+      label: 'Zatrzymaj znaczniki',
+      desc: 'Znaczniki stanu, które usuwają żeton z trasy i zatrzymują go, oddzielając je średnikami (na przykład martwy; czerwony) lub żadnym. Podążający za liderem posiadającym jeden z tych znaczników również się zatrzymują.',
+    },
+    markerAction: {
+      label: 'Zatrzymaj działanie znacznika',
+      desc: 'Co robi żeton patrolujący, gdy otrzyma znacznik zatrzymania: zatrzymuje się (pozostaje tam, gdzie był) lub resetuje (wraca do miejsca, w którym zaczął).',
+    },
+    wallMode: {
+      label: 'Ściany',
+      desc: 'Co patrole i towarzysze robią przy dynamicznym oświetlaniu ścian oraz zamkniętych drzwi i okien: ignoruj (przejdź), przytrzymaj (poczekaj, aż droga będzie wolna, np. aż otworzą się drzwi) lub odwróć się (patrole zawracają). Każda trasa może wybrać własną, więc duchy nadal mogą przechodzić przez ściany.',
+    },
+    wallCheck: {
+      label: 'Kontrola ściany',
+      desc: 'środek: tylko środek żetonu musi znajdować się z dala od ścian. szerokość: robi to cały żeton, więc duży żeton nie może przecisnąć się przez wąską szczelinę.',
+    },
+    oneWayWalls: {
+      label: 'Ściany jednokierunkowe',
+      desc: 'Czy ściany jednokierunkowe zatrzymują żetony (blok), czy nie (pas).',
+    },
+    transparentWalls: {
+      label: 'Przezroczyste ściany',
+      desc: 'Niezależnie od tego, czy przezroczyste ściany, które przepuszczają światło, zatrzymują żetony (blok), czy nie (przechodzą).',
+    },
     buttonStep: {
       label: 'Komórki na kliknięcie',
       desc: 'Jak daleko strzałki nagrywania przesuwają żeton.',
@@ -338,12 +400,15 @@ const TRANSLATION = {
     add: 'Utwórz trasę na podstawie kodu kroku, np. U2R2D2L2.',
     edit: 'Zmień kod etapu trasy.',
     draw: 'Utwórz trasę zgodnie z wybranym rysunkiem na tej stronie.',
+    bounce:
+      'Utwórz trasę, po której żetony wędrują wewnątrz wybranego zamkniętego rysunku, odbijając się od jego krawędzi.',
     record: 'Zapisz trasę przesuwając wybrany token przyciskami lub przeciągając go.',
-    route: 'Zmień opcję trasy: tryb, interwał, maks., losowo lub start.',
+    route: 'Zmień opcję trasy: tryb, interwał, maks., losowo, ściany lub start.',
     show: 'Pokaż szczegóły trasy i przyciski.',
     rename: 'Zmień nazwę trasy.',
     copy: 'Skopiuj trasę pod nową nazwą.',
     remove: 'Usuń trasę (najpierw pyta).',
+    ids: 'Działaj na tokenach z tymi identyfikatorami, a nie na wybranych, aby inne Mody, takie jak Karty Skryptów, mogły kontrolować tokeny. usuń --ids usuwa tokeny ze swoich tras; nigdy nie usuwa trasy.',
     list: 'Wypisz trasy lub tokeny, które są kontrolowane.',
     examples: 'Dodaj przykładowe trasy.',
     export: 'Pokaż trasy jako tekst do skopiowania do innej gry.',
@@ -380,6 +445,7 @@ const TRANSLATION = {
         'Z rysunku: narysuj linię, wielokąt, kształt odręczny, prostokąt lub elipsę za pomocą narzędzi do rysowania, wybierz go i kliknij Z rysunku. Żetony chodzą po niej, tylko na tej stronie. Możesz później usunąć rysunek.',
         'Nagraj: wybierz token i kliknij Nagraj. Przesuń go za pomocą przycisków strzałek lub przeciągnij na mapę (podążane będą punkty trasy Roll20), a następnie kliknij Zapisz. Na siatkach kwadratowych nagranie staje się kodem kroku, który można edytować.',
         'Trasy pętli rozpoczynają się od początku; trasy tam i z powrotem prowadzą z powrotem tą samą drogą, którą przyszli; gdy trasy zatrzymują się na końcu. Nowe trasy, które kończą się w miejscu rozpoczęcia pętli; inni chodzą tam i z powrotem.',
+        'Obszar odbicia: narysuj zamknięty kształt wokół obszaru, wybierz go i kliknij Obszar odbicia. Rozpoczęte na nim żetony poruszają się po liniach prostych i odbijają się od jego krawędzi (oraz od ścian, chyba że trasa je ignoruje), za każdym razem obracając się nieco losowo. Losowy start umieszcza każdy żeton w losowej komórce obszaru.',
       ],
     },
     codes: {
@@ -401,6 +467,8 @@ const TRANSLATION = {
       interval: 'Milisekundy na krok dla tej trasy lub 0 dla interwału globalnego.',
       max: 'Najwięcej żetonów, które mogą znajdować się na trasie jednocześnie, lub 0 w przypadku braku limitu.',
       random: 'on: każdy żeton zaczyna się w losowym punkcie na trasie.',
+      walls:
+        'ignoruj (przejdź przez ściany), przytrzymaj (czekaj przy ścianach i zamkniętych drzwiach), odwróć się (odwróć) lub domyśl (użyj ustawienia Ściany).',
       start:
         'set: żetony przeskakują na pozycję wybranego żetonu po uruchomieniu. jasne: zaczynają tam, gdzie stoją.',
     },
@@ -413,6 +481,8 @@ const TRANSLATION = {
         'Obserwuj: wybierz lidera i kliknij Lidera, następnie wybierz obserwujących i kliknij Obserwuj. Możesz także wpisać imię lidera: !tokencontroller podążaj za Goblinem Bossem. Obserwujący podążają za tokenami, które patrolują, tokenami, które przeciągasz i tokenami przenoszonymi przez TokenMod.',
         'Obserwujący mogą podążać za innymi obserwującymi, tworząc łańcuch lub kolumnę.',
         'Przeciągnięcie żetonu patrolowania powoduje kontynuację patrolu od miejsca, w którym go upuściłeś, chyba że przeciąganie patrolu zostanie zatrzymane.',
+        'Ściany: przy włączonej opcji Ściany patrole i towarzysze nie przechodzą przez dynamicznie oświetlane ściany lub zamknięte drzwi i okna; otwarte drzwi i okna ich przepuszczają. Nadaj trasie opcję własnych ścian (na przykład ignorowanie ducha).',
+        'Znaczniki zatrzymania: żeton, który otrzyma jeden z tych znaczników statusu (na przykład martwy), opuszcza swoją trasę i przestaje podążać, a także zwolennicy lidera, którzy również otrzymują jeden przystanek. Ustaw je za pomocą !tokencontroller set stopMarkers dead;red. Działa to również, gdy inny Mod dodaje znacznik.',
       ],
     },
     grids: {
@@ -436,6 +506,7 @@ const TRANSLATION = {
       heading: 'Polecenia',
       intro:
         'Tylko MG mogą używać tych poleceń. Trasom można nadać nazwy lub można do nich odnosić się za pomocą #id za pomocą przycisków menu. Nazwy ze spacjami należy umieszczać w cudzysłowie, gdy polecenie przyjmuje dwie nazwy.',
+      mods: "Inni Modowie również mogą wysyłać te polecenia, na przykład z Kart Skryptów. Nie mogą wybierać tokenów, więc nadają im nazwę za pomocą --ids, po którym następują identyfikatory tokenów oddzielone średnikami: !tc stop --ids ID1;ID2. Odpowiedzi trafiają do GM'a.",
       colCommand: 'Rozkaz',
       colDesc: 'Co to robi',
     },

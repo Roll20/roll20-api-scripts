@@ -50,6 +50,8 @@ const TRANSLATION = {
     paused: 'Minden járőr megállt.',
     resumed: 'A járőrözés újraindult.',
     journalRebuilt: 'Átépített tájékoztatók: {help} és {deck}.',
+    markerStopped: 'Megálló jelzővel megállítva: {tokens}.',
+    markerReset: 'Stop Marker visszaküldte oda, ahonnan indultak: {tokens}.',
   },
   errors: {
     noTokens: 'Nincs kiválasztva token.',
@@ -75,6 +77,13 @@ const TRANSLATION = {
     usageCopy: 'Adjon útvonalat és nevet a másolatnak.',
     badJson: 'Ez nem útvonalexportálási szöveg.',
     tokenLocked: '{tokens} nem indítható: zárolva.',
+    tokenMarked: '{tokens} nem tud elindulni: Stop Markerrel rendelkeznek.',
+    outsideArea: 'A {tokens} nem tud elindulni: a következőn kívül vannak: "{name}".',
+    selectOneArea:
+      'Válasszon ki pontosan egy zárt rajzot (sokszög, téglalap, ellipszis vagy szabadkézi hurok).',
+    areaTooSmall:
+      'A kiválasztott rajznak legalább három sarokra van szüksége egy terület létrehozásához.',
+    idsNotFound: 'Egyik tokenek sem rendelkeznek a következő azonosítókkal: {ids}.',
     routeOnOtherPage: 'A {tokens} nem indulhat el: a „{name}” egy másik oldalra került.',
     startOnOtherPage:
       'A {tokens} nem indulhat el: a „{name}” rögzített kezdete egy másik oldalon található.',
@@ -108,7 +117,7 @@ const TRANSLATION = {
     },
     selectOneDrawing:
       'Rajzolja meg az útvonalat egy rajzeszközzel, jelölje ki (ha a kattintás elmulasztja, húzzon egy négyzetet egy vékony körvonal köré), majd próbálkozzon újra.',
-    usageRoute: 'Opciók: mód, intervallum, max, véletlenszerű, start.',
+    usageRoute: 'Opciók: mód, intervallum, max, véletlenszerű, falak, indítás.',
     routeOnOtherPage:
       'A megrajzolt útvonalak csak azon az oldalon működnek, amelyre megrajzolták őket.',
     startOnOtherPage:
@@ -125,8 +134,16 @@ const TRANSLATION = {
       'Győződjön meg arról, hogy a tokenek ugyanannak a sornak a szomszédos celláiban vannak (a hexadecimális (H) oldalak oszlopa).',
     unknownCommand: 'Írja be a !tokencontroller help parancsot a parancsok listájához.',
     tokenLocked: 'Először oldja fel a tokent.',
+    tokenMarked: 'Távolítsa el a jelölőt, vagy módosítsa a Stop Markers beállítást.',
+    outsideArea:
+      'Először mozgassa a tokeneket a területen belül, vagy kapcsolja be a Véletlenszerű indítást az útvonalon.',
+    selectOneArea:
+      'Rajzolja meg a területet egy rajzeszközzel, jelölje ki (ha rákattintva kihagyja, húzzon egy négyzetet egy vékony körvonal köré), majd próbálja újra.',
+    idsNotFound: 'Adja meg a tokenazonosítókat a --ids után, pontosvesszővel elválasztva.',
   },
   warnings: {
+    idsNotFound:
+      'Egyik tokenek sem rendelkeznek ezekkel az azonosítókkal, ezért kimaradtak: {ids}.',
     offPage:
       'Az útvonal egy része lefut az oldalról (lépések: {count}). Ezek a lépések kimaradnak.',
     combatTrackerOnly:
@@ -189,6 +206,27 @@ const TRANSLATION = {
       continue: 'Folytasd onnan',
       stop: 'Állítsd meg a járőrt',
     },
+    markerAction: {
+      stop: 'Állj meg ott, ahol van',
+      reset: 'Menj vissza az elejére',
+    },
+    wallMode: {
+      ignore: 'Sétálj át a falakon',
+      hold: 'Várj a falaknál',
+      turn: 'Fordulj vissza a falaknál',
+    },
+    wallCheck: {
+      centre: 'A token közepe',
+      width: 'Egész token',
+    },
+    oneWayWalls: {
+      block: 'Tömb',
+      pass: 'Engedd át',
+    },
+    transparentWalls: {
+      block: 'Tömb',
+      pass: 'Engedd át',
+    },
   },
   menu: {
     statusRunning: 'Járőrözési tokenek: {patrols}. Útvonalak: {routes}.',
@@ -211,6 +249,7 @@ const TRANSLATION = {
     stop: 'Leállítás',
     add: 'Lépéskód',
     draw: 'Rajzból',
+    bounce: 'Visszapattanási terület',
     record: 'Rekord',
     examples: 'Példák',
     reset: 'Visszaállítás',
@@ -257,11 +296,13 @@ const TRANSLATION = {
   route: {
     drawn: 'Megrajzolt útvonal, {points} pont',
     recorded: 'Felvett útvonal, {points} pont',
+    area: 'Visszapattanó terület, {points} sarkok',
     path: 'Útvonal',
     mode: 'Mód',
     interval: 'Intervallum',
     maxTokens: 'A legtöbb token',
     randomStart: 'Véletlenszerű indítás',
+    walls: 'Falak',
     start: 'Fix indítás',
     tokens: 'Tokenek',
   },
@@ -307,6 +348,30 @@ const TRANSLATION = {
       label: 'Járőr húzása',
       desc: 'Amikor húz egy járőrjelzőt: folytassa (az útvonal onnan folytatódik, ahol elejtette) vagy álljon meg (az őrjárat véget ér).',
     },
+    stopMarkers: {
+      label: 'Stop jelzők',
+      desc: 'Állapotjelzők, amelyek leállítják a tokent az útvonaláról, és megállítják a követését, pontosvesszővel elválasztva (például halott;piros), vagy nincs. Egy ilyen jelzővel rendelkező vezető követői is megállnak.',
+    },
+    markerAction: {
+      label: 'Marker akció leállítása',
+      desc: 'Mit csinál egy járőr token, ha Stop Markert kap: megáll (ahol van) vagy reset (visszamegy oda, ahonnan indult).',
+    },
+    wallMode: {
+      label: 'Falak',
+      desc: 'Mit tesznek a járőrök és a követők a dinamikus világítású falaknál és a zárt ajtóknál és ablakoknál: figyelmen kívül hagyni (átmenni), tartani (várni, amíg szabaddá válik az út, például, amíg kinyílik egy ajtó) vagy megfordulni (az járőrök visszafordulnak). Mindegyik útvonal kiválaszthatja a sajátját, így a szellemek továbbra is áthaladhatnak a falakon.',
+    },
+    wallCheck: {
+      label: 'Falellenőrzés',
+      desc: 'központ: csak a token közepének kell távol maradnia a falaktól. szélesség: az egész token igen, tehát egy nagy token nem tud átnyomni egy szűk résen.',
+    },
+    oneWayWalls: {
+      label: 'Egyirányú falak',
+      desc: 'Függetlenül attól, hogy az egyirányú falak megállítják-e a jelzőket (blokk) vagy sem (áthalad).',
+    },
+    transparentWalls: {
+      label: 'Átlátszó falak',
+      desc: 'Akár átlátszó falak, amelyek átengedik a fényt, megállítják a jelzőket (blokk), vagy nem (áthaladnak).',
+    },
     buttonStep: {
       label: 'Cellák kattintásonként',
       desc: 'Milyen messzire mozgatják a rögzítési nyilak a tokent.',
@@ -342,13 +407,16 @@ const TRANSLATION = {
     add: 'Hozzon létre egy útvonalat lépéskódból, például U2R2D2L2.',
     edit: 'Módosítsa az útvonal lépéskódját.',
     draw: 'Hozzon létre egy útvonalat, amely követi a kiválasztott rajzot ezen az oldalon.',
+    bounce:
+      'Hozzon létre egy útvonalat, amelyen a tokenek a kiválasztott zárt rajzon belül vándorolnak, annak széleiről visszapattanva.',
     record:
       'Rögzítsen egy útvonalat a kiválasztott token gombokkal történő mozgatásával vagy húzásával.',
-    route: 'Útvonalopció módosítása: mód, intervallum, max., véletlenszerű vagy kezdés.',
+    route: 'Útvonalopció módosítása: mód, intervallum, max., véletlenszerű, falak vagy kezdet.',
     show: 'Az útvonal részleteinek és gombjainak megjelenítése.',
     rename: 'Útvonal átnevezése.',
     copy: 'Útvonal másolása új néven.',
     remove: 'Útvonal eltávolítása (először kérdez).',
+    ids: 'A kiválasztott azonosítók helyett ezekkel az azonosítókkal járjon el a tokenekkel, így más modok, például a ScriptCards vezérelhetik a tokeneket. Remove --ids leveszi a tokeneket az útvonalukról; soha nem távolít el útvonalat.',
     list: 'Sorolja fel az útvonalakat vagy a vezérelt tokeneket.',
     examples: 'Adja hozzá a példaútvonalakat.',
     export: 'Útvonalak megjelenítése szövegként egy másik játékba másoláshoz.',
@@ -386,6 +454,7 @@ const TRANSLATION = {
         'Rajzból: rajzoljon vonalat, sokszöget, szabadkézi alakzatot, téglalapot vagy ellipszist a rajzeszközökkel, jelölje ki, majd kattintson a Rajzból elemre. A tokenek végigmennek rajta, csak ezen az oldalon. A rajzot utólag törölheti.',
         'Rögzítés: válasszon ki egy tokent, és kattintson a Rögzítés gombra. Mozgassa a nyílgombokkal, vagy húzza a térképen (a Roll20 útpontokat követi), majd kattintson a Mentés gombra. A négyzetrácsokon a felvétel szerkeszthető lépéskód lesz.',
         'A hurokútvonalak újra elölről kezdődnek; oda-vissza utak járnak vissza, ahogy jöttek; ha az útvonalak a végén megállnak. Új útvonalak, amelyek ott végződnek, ahol indulnak; mások oda-vissza járnak.',
+        'Visszapattanási terület: rajzoljon egy zárt alakzatot a terület köré, jelölje ki, majd kattintson a Visszapattanási terület elemre. A rajta indult tokenek egyenes vonalban haladnak, és visszapattannak a széleiről (és a falakról, hacsak az útvonal nem hagyja figyelmen kívül), minden alkalommal véletlenszerűen fordulnak egy kicsit. A véletlenszerű indítás minden tokent a terület véletlenszerű cellájába helyezi.',
       ],
     },
     codes: {
@@ -407,6 +476,8 @@ const TRANSLATION = {
       interval: 'Ezredmásodperc lépésenként ehhez az útvonalhoz, vagy 0 a globális intervallumhoz.',
       max: 'A legtöbb token, amely egyszerre lehet az útvonalon, vagy 0 korlát nélkül.',
       random: 'be: minden token az útvonal egy véletlenszerű pontján kezdődik.',
+      walls:
+        'figyelmen kívül hagyja (sétáljon át a falakon), tartsa (várjon a falaknál és zárt ajtóknál), forduljon (forduljon vissza) vagy alapértelmezett (használja a Falak beállítást).',
       start:
         'set: a tokenek induláskor a kiválasztott token pozíciójára ugranak. világos: ott kezdik, ahol állnak.',
     },
@@ -419,6 +490,8 @@ const TRANSLATION = {
         'Követés: válassza ki a vezetőt, majd kattintson a Vezető gombra, majd válassza ki a követőket, és kattintson a Követés gombra. Beírhatod a vezető nevét is: !tokencontroller follow Goblin Boss. A követők követik a járőröző tokeneket, a húzott tokeneket és a TokenMod által mozgatott tokeneket.',
         'A követők követhetnek más követőket, láncot vagy oszlopot alkotva.',
         'Az őrjárati token elhúzása onnan továbbítja az őrjáratot, ahol ledobta, kivéve, ha a Járőrhúzás leállításra van állítva.',
+        'Falak: bekapcsolt falak mellett a járőrök és a követők nem mennek át dinamikus világító falakon vagy zárt ajtókon és ablakokon; nyitott ajtók és ablakok engedik át őket. Adja meg az útvonalnak saját falait (például szellem esetén figyelmen kívül hagyja).',
+        'Stop Markers: egy jelző, amely megkapja az egyik ilyen állapotjelzőt (például halott), elhagyja az útvonalat és abbahagyja a követést, valamint a vezető követői, akik egy megállót kapnak. Állítsa be őket: !tokencontroller set stopMarkers dead;red. Ez akkor is működik, ha egy másik Mod hozzáadja a jelölőt.',
       ],
     },
     grids: {
@@ -442,6 +515,7 @@ const TRANSLATION = {
       heading: 'Parancsok',
       intro:
         'Csak a GM-ek használhatják ezeket a parancsokat. Az útvonalakat a menügombok segítségével el lehet nevezni, vagy #id-jükkel hivatkozni lehet rájuk. Tegye a neveket szóközzel „idézőjelbe”, ha egy parancs két nevet vesz fel.',
+      mods: 'Más modok is el tudják küldeni ezeket a parancsokat, például ScriptCard-okról. Nem tudnak kiválasztani tokeneket, ezért a --ids jellel, majd pontosvesszővel elválasztott tokenazonosítókkal nevezik el őket: !tc stop --ids ID1;ID2. A válaszok a GM-hez mennek.',
       colCommand: 'Parancs',
       colDesc: 'Mit csinál',
     },
