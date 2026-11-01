@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Modèles de jet séparés par des espaces - none pour aucun modèle - vide pour tous - Inspecter affiche le modèle d’un jet',
     types: 'Types de message séparés par des espaces - vide pour tous sauf api',
     text: 'Texte à chercher - voir le document d’aide - vide pour tout',
+    exclude: 'Texte qui arrête l’écouteur - séparez les morceaux par && - vide pour aucun',
     regex: 'Comment lire le texte',
     who: 'Noms d’orateurs ou de personnages séparés par des virgules - vide pour tout le monde',
     players: 'Noms de joueurs séparés par des virgules - vide pour tout le monde',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Modèles de jet',
     types: 'Types de message',
     text: 'Texte',
+    exclude: 'Texte exclu',
     regex: 'Le texte est',
     who: 'Orateurs / personnages',
     players: 'Joueurs',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'le joueur ne correspond pas',
       field: 'le champ du modèle ne correspond pas',
       text: 'texte introuvable',
+      exclude: 'texte exclu trouvé',
       roll: 'aucun jet ne remplit les conditions de jet',
     },
   },
@@ -200,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Demandez à votre MJ de configurer les écouteurs pour vous.',
     unknownCommand: 'Tapez !crl help pour voir toutes les commandes.',
     badOption:
-      'Les options sont --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
+      'Les options sont --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
     notFound: 'Tapez !crl pour voir la liste des écouteurs.',
     nameInvalid:
       'Utilisez au plus {max} caractères, sans ceux-ci : | { } [ ] \\ @ % # ? ~ ni "--", et ne commencez pas par "-".',
@@ -237,7 +240,7 @@ const TRANSLATION = {
     help: 'Affiche cette liste.',
     optionsTitle: 'Options',
     options:
-      'Options : --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
+      'Options : --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
     placeholders:
       'Les commandes peuvent utiliser ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} et ${field:name}.',
     handouts: 'Le document « {help} » explique tout ; le document « {deck} » contient des boutons.',
@@ -301,6 +304,7 @@ const TRANSLATION = {
         'Texte : un ou plusieurs morceaux de texte, séparés par &&, qui doivent tous apparaître. La recherche ignore les majuscules et minuscules. Le texte est aussi trouvé dans les totaux de jets et les résultats de tables aléatoires, ainsi que dans le contenu brut du message, que montre Inspecter sous Contenu brut : pour une carte Beacon, c’est son HTML.',
         '## dans le texte représente un jet en ligne ; les vérifications de jet n’examinent alors que les jets trouvés à cet endroit. Sans ##, tous les jets du message sont vérifiés.',
         'Le texte peut être une expression régulière au lieu de texte simple (--regex on).',
+        'Texte exclu : morceaux de texte, séparés par &&, qui arrêtent l’écouteur dès que l’un d’eux apparaît, comme --text sword --exclude dagger. Ils sont cherchés comme le texte, et lus comme des expressions régulières avec --regex on.',
         'Orateurs / personnages : le nom affiché dans le chat, ou le nom du personnage dans le modèle de jet. Joueurs : le nom d’affichage du joueur.',
         'Champs du modèle : conditions sur les champs listés par Inspecter, par exemple subcategory=Attack ou title~sword, séparées par &&. = et != comparent la valeur entière, ~ et !~ cherchent du texte dedans, et la casse est ignorée. Un champ absent compte comme vide. Utilisez-le plutôt que --text quand vous visez un seul champ, car --text cherche aussi dans le HTML caché d’une carte Beacon.',
       ],
@@ -351,6 +355,8 @@ const TRANSLATION = {
         'Noms des modèles de jet, séparés par des espaces. none = aucun modèle. Voir Noms des modèles de jet ci-dessus.',
       types: 'Types de message, séparés par des espaces : {types}.',
       text: 'Texte à trouver. Séparez les morceaux par &&. ## marque un jet en ligne.',
+      exclude:
+        'Texte qui arrête l’écouteur : si un morceau apparaît, il ne se déclenche pas. Séparez les morceaux par &&. Cherché comme --text.',
       regex: 'on pour lire le texte comme des expressions régulières, off pour du texte simple.',
       who: 'Noms d’orateurs ou de personnages, séparés par des virgules.',
       players: 'Noms d’affichage des joueurs, séparés par des virgules.',
@@ -400,7 +406,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'L’inspecteur',
       points: [
-        'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, le contenu brut (le message tel que Roll20 l’a envoyé, que --text examine aussi), et pourquoi chaque écouteur s’est déclenché ou non.',
+        'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, le contenu brut (le message tel que Roll20 l’a envoyé, avec les images intégrées raccourcies, que --text examine aussi), et pourquoi chaque écouteur s’est déclenché ou non.',
         'Utilisez-le pour trouver le nom de modèle d’une fiche, ou pour voir ce qu’envoie une fiche Beacon (comme D&D 2024).',
         'Les fiches Beacon publient des cartes de jet au lieu de modèles de jet. CRL les lit : le modèle est la première classe de la carte (dnd-2024 pour D&D 2024), le personnage, le titre (comme Test de Dextérité) et la sous-catégorie deviennent des champs, et chaque jet du détail est un jet ; les vérifications critique, échec critique, total et naturel fonctionnent donc.',
       ],

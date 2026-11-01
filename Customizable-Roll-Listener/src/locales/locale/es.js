@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Plantillas de tirada separadas por espacios - none para sin plantilla - vacío para cualquiera - Inspeccionar muestra la plantilla de una tirada',
     types: 'Tipos de mensaje separados por espacios - vacío para cualquiera excepto api',
     text: 'Texto que buscar - consulta el folleto Help - vacío para cualquiera',
+    exclude: 'Texto que detiene al oyente - separa los fragmentos con && - vacío para ninguno',
     regex: 'Cómo interpretar el texto',
     who: 'Nombres de hablantes o personajes separados por comas - vacío para cualquiera',
     players: 'Nombres de jugadores separados por comas - vacío para cualquiera',
@@ -91,6 +92,7 @@ const TRANSLATION = {
     templates: 'Plantillas de tirada',
     types: 'Tipos de mensaje',
     text: 'Texto',
+    exclude: 'Texto excluido',
     regex: 'El texto es',
     who: 'Hablantes / personajes',
     players: 'Jugadores',
@@ -149,6 +151,7 @@ const TRANSLATION = {
       player: 'el jugador no coincide',
       field: 'el campo de la plantilla no coincide',
       text: 'texto no encontrado',
+      exclude: 'texto excluido encontrado',
       roll: 'ninguna tirada cumple las condiciones de tirada',
     },
   },
@@ -200,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Pide a tu DJ que configure los oyentes por ti.',
     unknownCommand: 'Escribe !crl help para ver todos los comandos.',
     badOption:
-      'Las opciones son --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands.',
+      'Las opciones son --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands.',
     notFound: 'Escribe !crl para ver la lista de oyentes.',
     nameInvalid:
       'Usa hasta {max} caracteres, sin estos: | { } [ ] \\ @ % # ? ~ ni "--", y no empieces por "-".',
@@ -235,7 +238,7 @@ const TRANSLATION = {
     help: 'Muestra esta lista.',
     optionsTitle: 'Opciones',
     options:
-      'Opciones: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands. Se pueden usar nombres en lugar de ID.',
+      'Opciones: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands. Se pueden usar nombres en lugar de ID.',
     placeholders:
       'Los comandos pueden usar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} y ${field:name}.',
     handouts: 'El folleto "{help}" lo explica todo; el folleto "{deck}" tiene botones.',
@@ -299,6 +302,7 @@ const TRANSLATION = {
         'Texto: uno o más fragmentos de texto, separados por &&, que deben aparecer todos. No se distingue entre mayúsculas y minúsculas. El texto también se busca en los totales de las tiradas y en los resultados de tablas aleatorias, y en el contenido sin procesar del mensaje, que Inspeccionar muestra en Contenido sin procesar: en una tarjeta de Beacon, es su HTML.',
         '## en el texto representa una tirada en línea; entonces las comprobaciones de tirada solo miran las tiradas que haya ahí. Sin ##, se comprueban todas las tiradas del mensaje.',
         'El texto puede ser una expresión regular en lugar de texto normal (--regex on).',
+        'Texto excluido: fragmentos de texto, separados por &&, que detienen al oyente cuando aparece cualquiera de ellos, como --text sword --exclude dagger. Se buscan como el texto y se leen como expresiones regulares con --regex on.',
         'Hablantes / personajes: el nombre que se muestra en el chat, o el nombre del personaje en la plantilla de tirada. Jugadores: el nombre visible del jugador.',
         'Campos de la plantilla: condiciones sobre los campos que lista Inspeccionar, como subcategory=Attack o title~sword, separadas por &&. = y != comparan el valor completo, ~ y !~ buscan texto en él, y no se distingue entre mayúsculas y minúsculas. Un campo que falta cuenta como vacío. Úsalo en lugar de --text cuando te refieras a un solo campo, porque --text también busca en el HTML oculto de una tarjeta de Beacon.',
       ],
@@ -349,6 +353,8 @@ const TRANSLATION = {
         'Nombres de plantillas de tirada, separados por espacios. none = sin plantilla. Consulta Nombres de plantillas de tirada más arriba.',
       types: 'Tipos de mensaje, separados por espacios: {types}.',
       text: 'Texto que buscar. Separa los fragmentos con &&. ## marca una tirada en línea.',
+      exclude:
+        'Texto que detiene al oyente: si aparece cualquier fragmento, no se activa. Separa los fragmentos con &&. Se busca como --text.',
       regex: 'on para leer el texto como expresiones regulares, off para texto normal.',
       who: 'Nombres de hablantes o personajes, separados por comas.',
       players: 'Nombres visibles de los jugadores, separados por comas.',
@@ -399,7 +405,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'El inspector',
       points: [
-        'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes, el contenido sin procesar (el mensaje tal como lo envió Roll20, donde --text también busca) y por qué cada oyente se activó o no.',
+        'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes, el contenido sin procesar (el mensaje tal como lo envió Roll20, con las imágenes incrustadas acortadas, donde --text también busca) y por qué cada oyente se activó o no.',
         'Úsalo para averiguar el nombre de plantilla de una hoja, o para ver qué envía una hoja Beacon (como D&D 2024).',
         'Las hojas Beacon publican tarjetas de tirada en lugar de plantillas de tirada. CRL las lee: la plantilla es la primera clase de la tarjeta (dnd-2024 para D&D 2024), el personaje, el título (como Prueba de Destreza) y la subcategoría pasan a ser campos, y cada tirada del desglose es una tirada, así que funcionan las comprobaciones de crítico, pifia, total y dado natural.',
       ],

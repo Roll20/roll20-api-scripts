@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Heittopohjat välilyönnein eroteltuina - none = ei pohjaa - tyhjä = mikä tahansa - Tutki näyttää heiton pohjan',
     types: 'Viestityypit välilyönnein eroteltuina - tyhjä = kaikki paitsi api',
     text: 'Etsittävä teksti - katso Ohje-moniste - tyhjä = mikä tahansa',
+    exclude: 'Teksti, joka pysäyttää kuuntelijan - erota pätkät merkeillä && - tyhjä = ei mitään',
     regex: 'Miten teksti luetaan',
     who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
     players: 'Pelaajien nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Heittopohjat',
     types: 'Viestityypit',
     text: 'Teksti',
+    exclude: 'Poissuljettu teksti',
     regex: 'Teksti on',
     who: 'Puhujat / hahmot',
     players: 'Pelaajat',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'pelaaja ei täsmää',
       field: 'pohjan kenttä ei täsmää',
       text: 'tekstiä ei löytynyt',
+      exclude: 'poissuljettu teksti löytyi',
       roll: 'mikään heitto ei täytä heittoehtoja',
     },
   },
@@ -199,7 +202,7 @@ const TRANSLATION = {
     gmOnly: 'Pyydä pelinjohtajaa määrittämään kuuntelijat puolestasi.',
     unknownCommand: 'Kirjoita !crl help nähdäksesi kaikki komennot.',
     badOption:
-      'Valitsimet ovat --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
+      'Valitsimet ovat --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
     notFound: 'Kirjoita !crl nähdäksesi kuuntelijoiden luettelon.',
     nameInvalid:
       'Käytä enintään {max} merkkiä ilman näitä: | { } [ ] \\ @ % # ? ~ tai "--", äläkä aloita merkillä "-".',
@@ -235,7 +238,7 @@ const TRANSLATION = {
     help: 'Näytä tämä luettelo.',
     optionsTitle: 'Valitsimet',
     options:
-      'Valitsimet: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
+      'Valitsimet: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
     placeholders:
       'Komennoissa voi käyttää muuttujia ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ja ${field:name}.',
     handouts: 'Moniste ”{help}” selittää kaiken; monisteessa ”{deck}” on painikkeet.',
@@ -297,6 +300,7 @@ const TRANSLATION = {
         'Teksti: yksi tai useampi tekstinpätkä &&-merkein eroteltuina, joiden kaikkien on esiinnyttävä. Vertailu ei välitä isoista ja pienistä kirjaimista. Teksti löytyy myös heittojen summista ja heittotaulukoiden tuloksista, sekä viestin raakasisällöstä, jonka Tutki näyttää kohdassa Raakasisältö: Beacon-kortilla se on kortin HTML.',
         '## tekstissä tarkoittaa rivin sisäistä heittoa; heittotarkistukset katsovat silloin vain siitä löytyviä heittoja. Ilman ##-merkkiä tarkistetaan viestin jokainen heitto.',
         'Teksti voi olla tavallisen tekstin sijaan säännöllinen lauseke (--regex on).',
+        'Poissuljettu teksti: tekstinpätkiä &&-merkein eroteltuina, jotka pysäyttävät kuuntelijan, kun mikä tahansa niistä esiintyy, esimerkiksi --text sword --exclude dagger. Niitä etsitään kuten tekstiä, ja --regex on lukee ne säännöllisinä lausekkeina.',
         'Puhujat / hahmot: chatissa näkyvä nimi tai heittopohjan hahmon nimi. Pelaajat: pelaajan näyttönimi.',
         'Pohjan kentät: ehdot kentille, jotka Tutki listaa, esim. subcategory=Attack tai title~sword, &&-merkein eroteltuina. = ja != vertaavat koko arvoa, ~ ja !~ etsivät siitä tekstiä, eikä isoilla ja pienillä kirjaimilla ole väliä. Puuttuva kenttä lasketaan tyhjäksi. Käytä tätä --text-asetuksen sijaan, kun tarkoitat yhtä kenttää, sillä --text etsii myös Beacon-kortin piilotetusta HTML:stä.',
       ],
@@ -347,6 +351,8 @@ const TRANSLATION = {
         'Heittopohjien nimet välilyönnein eroteltuina. none = ei pohjaa. Katso Heittopohjien nimet yllä.',
       types: 'Viestityypit välilyönnein eroteltuina: {types}.',
       text: 'Etsittävä teksti. Erota pätkät merkeillä &&. ## merkitsee rivin sisäistä heittoa.',
+      exclude:
+        'Teksti, joka pysäyttää kuuntelijan: jos mikä tahansa pätkä esiintyy, se ei laukea. Erota pätkät merkeillä &&. Etsitään kuten --text.',
       regex: 'on lukee tekstin säännöllisinä lausekkeina, off tavallisena tekstinä.',
       who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina.',
       players: 'Pelaajien näyttönimet pilkuin eroteltuina.',
@@ -396,7 +402,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Tarkastin',
       points: [
-        'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin, raakasisällön (viestin sellaisena kuin Roll20 sen lähetti; myös --text etsii siitä) sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
+        'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin, raakasisällön (viestin sellaisena kuin Roll20 sen lähetti, upotetut kuvat lyhennettyinä; myös --text etsii siitä) sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
         'Käytä sitä lomakkeen pohjan nimen löytämiseen tai nähdäksesi, mitä Beacon-lomake (kuten D&D 2024) lähettää.',
         'Beacon-lomakkeet lähettävät heittopohjien sijaan heittokortteja. CRL lukee ne: pohja on kortin ensimmäinen luokka (dnd-2024 D&D 2024:lle), hahmosta, otsikosta (kuten Dexterity Check) ja alaluokasta tulee kenttiä, ja jokainen erittelyn heitto on heitto, joten kriittinen-, kömmähdys-, summa- ja luonnollinen-tarkistukset toimivat.',
       ],

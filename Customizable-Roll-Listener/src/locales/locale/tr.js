@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Boşlukla ayrılmış atış şablonları - şablonsuz için none - hepsi için boş - İnceleme, atışın şablonunu gösterir',
     types: 'Boşlukla ayrılmış mesaj türleri - api dışındaki hepsi için boş',
     text: 'Aranacak metin - Yardım belgesine bakın - hepsi için boş',
+    exclude: 'Dinleyiciyi durduran metin - parçaları && ile ayırın - hiçbiri için boş',
     regex: 'Metin nasıl okunsun',
     who: 'Virgülle ayrılmış gönderen veya karakter adları - herkes için boş',
     players: 'Virgülle ayrılmış oyuncu adları - herkes için boş',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Atış şablonları',
     types: 'Mesaj türleri',
     text: 'Metin',
+    exclude: 'Hariç tutulan metin',
     regex: 'Metin türü',
     who: 'Gönderenler / karakterler',
     players: 'Oyuncular',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'oyuncu eşleşmiyor',
       field: 'şablon alanı eşleşmiyor',
       text: 'metin bulunamadı',
+      exclude: 'hariç tutulan metin bulundu',
       roll: 'hiçbir atış atış koşullarını karşılamıyor',
     },
   },
@@ -197,7 +200,7 @@ const TRANSLATION = {
     gmOnly: "GM'inizden sizin için dinleyici ayarlamasını isteyin.",
     unknownCommand: 'Tüm komutları görmek için !crl help yazın.',
     badOption:
-      'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
+      'Seçenekler: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
     notFound: 'Dinleyici listesini görmek için !crl yazın.',
     nameInvalid:
       'En fazla {max} karakter kullanın; şunları kullanmayın: | { } [ ] \\ @ % # ? ~ veya "--". Ad "-" ile başlamamalı.',
@@ -235,7 +238,7 @@ const TRANSLATION = {
     help: 'Bu listeyi gösterir.',
     optionsTitle: 'Seçenekler',
     options:
-      'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
+      'Seçenekler: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
     placeholders:
       'Komutlarda şunlar kullanılabilir: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ve ${field:name}.',
     handouts: '"{help}" belgesi her şeyi açıklar; "{deck}" belgesinde düğmeler bulunur.',
@@ -298,6 +301,7 @@ const TRANSLATION = {
         "Metin: && ile ayrılmış, hepsinin geçmesi gereken bir veya daha fazla metin parçası. Eşleştirmede büyük/küçük harf ayrımı yapılmaz. Metin, atış toplamlarında ve atış tablosu sonuçlarında ve mesajın ham içeriğinde de aranır; İnceleme bunu Ham içerik altında gösterir: bir Beacon kartı için bu, kartın HTML'idir.",
         'Metindeki ## bir satır içi atışı temsil eder; atış kontrolleri bu durumda yalnızca orada bulunan atışlara bakar. ## yoksa mesajdaki her atış kontrol edilir.',
         'Metin, düz metin yerine düzenli ifade olabilir (--regex on).',
+        'Hariç tutulan metin: && ile ayrılmış, herhangi biri geçtiğinde dinleyiciyi durduran metin parçaları; örneğin --text sword --exclude dagger. Metin gibi aranır ve --regex on ile düzenli ifade olarak okunur.',
         'Gönderenler / karakterler: sohbette görünen ad veya atış şablonundaki karakter adı. Oyuncular: oyuncunun görünen adı.',
         "Şablon alanları: İnceleme tarafından listelenen alanlar üzerindeki koşullar, örneğin subcategory=Attack veya title~sword, && ile ayrılır. = ve != tüm değeri karşılaştırır, ~ ve !~ içinde metin arar ve büyük/küçük harf ayrımı yapılmaz. Eksik bir alan boş sayılır. Tek bir alanı kastettiğinizde --text yerine bunu kullanın, çünkü --text bir Beacon kartının gizli HTML'inde de arama yapar.",
       ],
@@ -348,6 +352,8 @@ const TRANSLATION = {
         'Boşlukla ayrılmış atış şablonu adları. none = şablon yok. Yukarıdaki Atış Şablonu Adları bölümüne bakın.',
       types: 'Boşlukla ayrılmış mesaj türleri: {types}.',
       text: 'Aranacak metin. Parçaları && ile ayırın. ## bir satır içi atışı işaretler.',
+      exclude:
+        'Dinleyiciyi durduran metin: herhangi bir parça geçerse dinleyici tetiklenmez. Parçaları && ile ayırın. --text gibi aranır.',
       regex: 'Metni düzenli ifade olarak okumak için on, düz metin için off.',
       who: 'Virgülle ayrılmış gönderen veya karakter adları.',
       players: 'Virgülle ayrılmış oyuncu görünen adları.',
@@ -397,7 +403,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Denetleyici',
       points: [
-        "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin, ham içerik (mesajın Roll20'nin gönderdiği hâli; --text de burada arar) ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
+        "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin, ham içerik (mesajın Roll20'nin gönderdiği hâli, gömülü görseller kısaltılmış olarak; --text de burada arar) ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
         'Bir sayfanın şablon adını bulmak veya bir Beacon sayfasının (D&D 2024 gibi) ne gönderdiğini görmek için kullanın.',
         'Beacon sayfaları atış şablonları yerine atış kartları gönderir. CRL bunları okur: şablon, kartın ilk sınıfıdır (D&D 2024 için dnd-2024); karakter, başlık (Dexterity Check gibi) ve alt kategori alan olur; dökümdeki her atış bir atış sayılır, böylece kritik başarı, kritik başarısızlık, toplam ve doğal zar kontrolleri çalışır.',
       ],

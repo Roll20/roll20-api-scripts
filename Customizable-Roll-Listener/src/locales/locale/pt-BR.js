@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Modelos de rolagem separados por espaços - none para nenhum modelo - vazio para qualquer um - Inspecionar mostra o modelo de uma rolagem',
     types: 'Tipos de mensagem separados por espaços - vazio para qualquer um, exceto api',
     text: 'Texto a procurar - veja o folheto Help - vazio para qualquer um',
+    exclude: 'Texto que bloqueia o ouvinte - separe os trechos com && - vazio para nenhum',
     regex: 'Como ler o texto',
     who: 'Nomes de falantes ou personagens separados por vírgulas - vazio para qualquer um',
     players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Modelos de rolagem',
     types: 'Tipos de mensagem',
     text: 'Texto',
+    exclude: 'Texto excluído',
     regex: 'O texto é',
     who: 'Falantes / personagens',
     players: 'Jogadores',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'o jogador não corresponde',
       field: 'o campo do modelo não corresponde',
       text: 'texto não encontrado',
+      exclude: 'texto excluído encontrado',
       roll: 'nenhuma rolagem atende às condições de rolagem',
     },
   },
@@ -200,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Peça ao seu mestre para configurar ouvintes para você.',
     unknownCommand: 'Digite !crl help para ver todos os comandos.',
     badOption:
-      'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+      'As opções são --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
     notFound: 'Digite !crl para ver a lista de ouvintes.',
     nameInvalid:
       'Use até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ ou "--", e não comece com "-".',
@@ -235,7 +238,7 @@ const TRANSLATION = {
     help: 'Mostra esta lista.',
     optionsTitle: 'Opções',
     options:
-      'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
+      'Opções: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
     placeholders:
       'Os comandos podem usar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
     handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -299,6 +302,7 @@ const TRANSLATION = {
         'Texto: um ou mais trechos de texto, separados por &&, que precisam aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais das rolagens e nos resultados de tabelas roláveis, e no conteúdo bruto da mensagem, que Inspecionar mostra em Conteúdo bruto: em um cartão do Beacon, é o HTML dele.',
         '## no texto representa uma rolagem em linha; as verificações de rolagem então consideram só as rolagens encontradas ali. Sem ##, todas as rolagens da mensagem são verificadas.',
         'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
+        'Texto excluído: trechos de texto, separados por &&, que bloqueiam o ouvinte quando qualquer um deles aparece, como --text sword --exclude dagger. Eles são procurados como o texto e lidos como expressões regulares com --regex on.',
         'Falantes / personagens: o nome mostrado no chat, ou o nome do personagem no modelo de rolagem. Jogadores: o nome de exibição do jogador.',
         'Campos do modelo: condições sobre os campos que Inspecionar lista, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor inteiro, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo ausente conta como vazio. Use isso em vez de --text quando quiser um único campo, porque --text também procura no HTML oculto de um cartão do Beacon.',
       ],
@@ -349,6 +353,8 @@ const TRANSLATION = {
         'Nomes de modelos de rolagem, separados por espaços. none = sem modelo. Veja Nomes de modelos de rolagem acima.',
       types: 'Tipos de mensagem, separados por espaços: {types}.',
       text: 'Texto a procurar. Separe os trechos com &&. ## marca uma rolagem em linha.',
+      exclude:
+        'Texto que bloqueia o ouvinte: se qualquer trecho aparecer, ele não é acionado. Separe os trechos com &&. Procurado como --text.',
       regex: 'on para ler o texto como expressões regulares, off para texto simples.',
       who: 'Nomes de falantes ou personagens, separados por vírgulas.',
       players: 'Nomes de exibição dos jogadores, separados por vírgulas.',
@@ -398,7 +404,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'O inspetor',
       points: [
-        'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram, o conteúdo bruto (a mensagem como o Roll20 a enviou, em que --text também procura) e por que cada ouvinte foi ou não acionado.',
+        'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram, o conteúdo bruto (a mensagem como o Roll20 a enviou, com as imagens incorporadas encurtadas, em que --text também procura) e por que cada ouvinte foi ou não acionado.',
         'Use-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
         'As fichas Beacon publicam cartões de rolagem em vez de modelos de rolagem. O CRL os lê: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), o personagem, o título (como Teste de Destreza) e a subcategoria viram campos, e cada rolagem do detalhamento é uma rolagem, então as verificações de crítico, falha crítica, total e dado natural funcionam.',
       ],

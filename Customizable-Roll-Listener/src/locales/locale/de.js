@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Wurfvorlagen, durch Leerzeichen getrennt – none für keine Vorlage – leer für jede – der Inspektor zeigt die Vorlage eines Wurfs',
     types: 'Nachrichtentypen, durch Leerzeichen getrennt – leer für alle außer api',
     text: 'Gesuchter Text – siehe Hilfe-Handout – leer für jeden',
+    exclude: 'Text, der den Listener stoppt – Stücke mit && trennen – leer für keinen',
     regex: 'Wie der Text gelesen wird',
     who: 'Sprecher- oder Charakternamen, durch Kommas getrennt – leer für alle',
     players: 'Spielernamen, durch Kommas getrennt – leer für alle',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Wurfvorlagen',
     types: 'Nachrichtentypen',
     text: 'Text',
+    exclude: 'Ausgeschlossener Text',
     regex: 'Text ist',
     who: 'Sprecher / Charaktere',
     players: 'Spieler',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'Spieler passt nicht',
       field: 'Vorlagenfeld passt nicht',
       text: 'Text nicht gefunden',
+      exclude: 'ausgeschlossener Text gefunden',
       roll: 'kein Wurf erfüllt die Wurfbedingungen',
     },
   },
@@ -199,7 +202,7 @@ const TRANSLATION = {
     gmOnly: 'Bitte deine SL, Listener für dich einzurichten.',
     unknownCommand: 'Gib !crl help ein, um alle Befehle zu sehen.',
     badOption:
-      'Optionen sind --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
+      'Optionen sind --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
     notFound: 'Gib !crl ein, um die Liste der Listener zu sehen.',
     nameInvalid:
       'Verwende bis zu {max} Zeichen, ohne diese: | { } [ ] \\ @ % # ? ~ oder „--“, und beginne nicht mit „-“.',
@@ -236,7 +239,7 @@ const TRANSLATION = {
     help: 'Zeigt diese Liste.',
     optionsTitle: 'Optionen',
     options:
-      'Optionen: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
+      'Optionen: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
     placeholders:
       'Befehle können ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} und ${field:name} verwenden.',
     handouts: 'Das Handout „{help}“ erklärt alles; das Handout „{deck}“ enthält Schaltflächen.',
@@ -299,6 +302,7 @@ const TRANSLATION = {
         'Text: ein oder mehrere Textstücke, getrennt durch &&, die alle vorkommen müssen. Groß- und Kleinschreibung wird ignoriert. Text wird auch in Wurfsummen und Ergebnissen von Würfeltabellen gefunden, sowie im Rohinhalt der Nachricht, den der Inspektor unter Rohinhalt zeigt: Bei einer Beacon-Karte ist das ihr HTML.',
         '## im Text steht für einen Inline-Wurf; die Wurfprüfungen betrachten dann nur die dort gefundenen Würfe. Ohne ## wird jeder Wurf der Nachricht geprüft.',
         'Text kann statt Klartext ein regulärer Ausdruck sein (--regex on).',
+        'Ausgeschlossener Text: Textstücke, getrennt durch &&, die den Listener stoppen, sobald eines davon vorkommt, etwa --text sword --exclude dagger. Sie werden wie der Text gesucht und mit --regex on als reguläre Ausdrücke gelesen.',
         'Sprecher / Charaktere: der im Chat angezeigte Name oder der Charaktername in der Wurfvorlage. Spieler: der Anzeigename des Spielers.',
         'Vorlagenfelder: Bedingungen für die Felder, die der Inspektor auflistet, etwa subcategory=Attack oder title~sword, getrennt durch &&. = und != vergleichen den ganzen Wert, ~ und !~ suchen Text darin, Groß- und Kleinschreibung wird ignoriert. Ein fehlendes Feld gilt als leer. Verwende es statt --text, wenn du ein bestimmtes Feld meinst, denn --text durchsucht auch das versteckte HTML einer Beacon-Karte.',
       ],
@@ -349,6 +353,8 @@ const TRANSLATION = {
         'Namen von Wurfvorlagen, durch Leerzeichen getrennt. none = keine Vorlage. Siehe Namen von Wurfvorlagen oben.',
       types: 'Nachrichtentypen, durch Leerzeichen getrennt: {types}.',
       text: 'Gesuchter Text. Stücke mit && trennen. ## markiert einen Inline-Wurf.',
+      exclude:
+        'Text, der den Listener stoppt: Kommt eines der Stücke vor, löst er nicht aus. Stücke mit && trennen. Wird wie --text gesucht.',
       regex: 'on, um den Text als reguläre Ausdrücke zu lesen, off für Klartext.',
       who: 'Sprecher- oder Charakternamen, durch Kommas getrennt.',
       players: 'Anzeigenamen der Spieler, durch Kommas getrennt.',
@@ -398,7 +404,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Der Inspektor',
       points: [
-        'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, den Rohinhalt (die Nachricht, wie Roll20 sie gesendet hat, die auch --text durchsucht), und warum jeder Listener ausgelöst hat oder nicht.',
+        'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, den Rohinhalt (die Nachricht, wie Roll20 sie gesendet hat, mit gekürzten eingebetteten Bildern, die auch --text durchsucht), und warum jeder Listener ausgelöst hat oder nicht.',
         'Nutze ihn, um den Vorlagennamen eines Bogens zu finden oder um zu sehen, was ein Beacon-Bogen (etwa D&D 2024) sendet.',
         'Beacon-Bögen posten Wurfkarten statt Wurfvorlagen. CRL liest sie: Die Vorlage ist die erste Klasse der Karte (dnd-2024 für D&D 2024), Charakter, Titel (etwa Geschicklichkeitswurf) und Unterkategorie werden zu Feldern, und jeder Wurf in der Aufschlüsselung ist ein Wurf, sodass Krit-, Patzer-, Summen- und Natürlich-Prüfungen funktionieren.',
       ],

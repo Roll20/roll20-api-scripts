@@ -48,6 +48,7 @@ const TRANSLATION = {
       "Rolsjablone geskei deur spasies - none vir geen sjabloon - leeg vir enige - Inspekteer wys 'n rol se sjabloon",
     types: 'Boodskaptipes geskei deur spasies - leeg vir enige behalwe api',
     text: 'Teks om na te soek - sien die Hulp-uitdeelstuk - leeg vir enige',
+    exclude: 'Teks wat die luisteraar keer - skei stukke met && - leeg vir geen',
     regex: 'Hoe om die teks te lees',
     who: 'Spreker- of karaktername geskei deur kommas - leeg vir enigiemand',
     players: 'Spelername geskei deur kommas - leeg vir enigiemand',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Rolsjablone',
     types: 'Boodskaptipes',
     text: 'Teks',
+    exclude: 'Uitgeslote teks',
     regex: 'Teks is',
     who: 'Sprekers / karakters',
     players: 'Spelers',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'speler pas nie',
       field: 'sjabloonveld pas nie',
       text: 'teks nie gevind nie',
+      exclude: 'uitgeslote teks gevind',
       roll: 'geen rol voldoen aan die rolvoorwaardes nie',
     },
   },
@@ -200,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Vra jou GM om luisteraars vir jou op te stel.',
     unknownCommand: 'Tik !crl help om elke bevel te sien.',
     badOption:
-      'Opsies is --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+      'Opsies is --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
     notFound: 'Tik !crl om die lys luisteraars te sien.',
     nameInvalid:
       'Gebruik hoogstens {max} karakters, sonder hierdie: | { } [ ] \\ @ % # ? ~ of "--", en moenie met "-" begin nie.',
@@ -236,7 +239,7 @@ const TRANSLATION = {
     help: 'Wys hierdie lys.',
     optionsTitle: 'Opsies',
     options:
-      "Opsies: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
+      "Opsies: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
     placeholders:
       'Bevele kan ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruik.',
     handouts: 'Die uitdeelstuk "{help}" verduidelik alles; die uitdeelstuk "{deck}" het knoppies.',
@@ -299,6 +302,7 @@ const TRANSLATION = {
         "Teks: een of meer stukke teks, geskei deur &&, wat almal moet voorkom. Hoof- en kleinletters word geïgnoreer. Teks word ook in roltotale en rolbare tabelresultate gevind, en in die boodskap se rou inhoud, wat Inspekteer onder Rou inhoud wys: vir 'n Beacon-kaart is dit sy HTML.",
         "## in die teks staan vir 'n inlyn-rol; die roltoetse kyk dan net na die rolle wat daar gevind word. Sonder ## word elke rol in die boodskap nagegaan.",
         "Teks kan 'n gereelde uitdrukking wees in plaas van gewone teks (--regex on).",
+        'Uitgeslote teks: stukke teks, geskei deur &&, wat die luisteraar keer wanneer enige daarvan voorkom, soos --text sword --exclude dagger. Hulle word soos die teks deursoek, en met --regex on as gereelde uitdrukkings gelees.',
         'Sprekers / karakters: die naam wat in die klets gewys word, of die karakternaam in die rolsjabloon. Spelers: die speler se vertoonnaam.',
         "Sjabloonvelde: voorwaardes op die velde wat Inspekteer lys, soos subcategory=Attack of title~sword, geskei deur &&. = en != vergelyk die hele waarde, ~ en !~ soek na teks daarin, en hoof- en kleinletters word geïgnoreer. 'n Ontbrekende veld tel as leeg. Gebruik dit eerder as --text wanneer jy een veld bedoel, want --text deursoek ook 'n Beacon-kaart se versteekte HTML.",
       ],
@@ -348,6 +352,8 @@ const TRANSLATION = {
         'Rolsjabloonname, geskei deur spasies. none = geen sjabloon. Sien Rolsjabloonname hierbo.',
       types: 'Boodskaptipes, geskei deur spasies: {types}.',
       text: "Teks om te vind. Skei stukke met &&. ## merk 'n inlyn-rol.",
+      exclude:
+        'Teks wat die luisteraar keer: as enige stuk voorkom, gaan dit nie af nie. Skei stukke met &&. Word soos --text deursoek.',
       regex: 'on om die teks as gereelde uitdrukkings te lees, off vir gewone teks.',
       who: 'Spreker- of karaktername, geskei deur kommas.',
       players: 'Spelers se vertoonname, geskei deur kommas.',
@@ -396,7 +402,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Die inspekteur',
       points: [
-        'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, die rou inhoud (die boodskap soos Roll20 dit gestuur het, wat --text ook deursoek), en waarom elke luisteraar wel of nie afgegaan het nie.',
+        'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, die rou inhoud (die boodskap soos Roll20 dit gestuur het, met ingebedde beelde verkort, wat --text ook deursoek), en waarom elke luisteraar wel of nie afgegaan het nie.',
         "Gebruik dit om 'n blad se sjabloonnaam te vind, of om te sien wat 'n Beacon-blad (soos D&D 2024) stuur.",
         "Beacon-blaaie plaas rolkaarte in plaas van rolsjablone. CRL lees hulle: die sjabloon is die kaart se eerste klas (dnd-2024 vir D&D 2024), die karakter, titel (soos Dexterity Check) en subkategorie word velde, en elke rol in die ontleding is 'n rol, so kritiek-, flater-, totaal- en natuurlike-dobbelsteentoetse werk.",
       ],

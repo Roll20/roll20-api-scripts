@@ -48,6 +48,7 @@ const TRANSLATION = {
       '擲骰模板，以空格分隔 - none 表示無模板 - 留空表示任何模板 - 「檢查」可顯示擲骰所用的模板',
     types: '訊息類型，以空格分隔 - 留空表示除 api 外的任何類型',
     text: '要尋找的文字 - 請見說明講義 - 留空表示任何文字',
+    exclude: '會讓監聽器停止的文字 - 用 && 分隔各段 - 留空表示無',
     regex: '如何解讀文字',
     who: '發言者或角色名稱，以逗號分隔 - 留空表示任何人',
     players: '玩家名稱，以逗號分隔 - 留空表示任何人',
@@ -91,6 +92,7 @@ const TRANSLATION = {
     templates: '擲骰模板',
     types: '訊息類型',
     text: '文字',
+    exclude: '排除的文字',
     regex: '文字類型',
     who: '發言者／角色',
     players: '玩家',
@@ -149,6 +151,7 @@ const TRANSLATION = {
       player: '玩家不符',
       field: '模板欄位不符',
       text: '找不到文字',
+      exclude: '找到排除的文字',
       roll: '沒有擲骰符合擲骰條件',
     },
   },
@@ -198,7 +201,7 @@ const TRANSLATION = {
     gmOnly: '請 GM 幫你設定監聽器。',
     unknownCommand: '輸入 !crl help 查看所有指令。',
     badOption:
-      '可用選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
+      '可用選項：--templates、--types、--text、--exclude、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
     notFound: '輸入 !crl 查看監聽器列表。',
     nameInvalid:
       '最多使用 {max} 個字元，不可包含以下字元：| { } [ ] \\ @ % # ? ~ 或 "--"，且不可以 "-" 開頭。',
@@ -232,7 +235,7 @@ const TRANSLATION = {
     help: '顯示此列表。',
     optionsTitle: '選項',
     options:
-      '選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
+      '選項：--templates、--types、--text、--exclude、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
     placeholders:
       '指令中可使用 ${who}、${character}、${player}、${template}、${total}、${natural}、${result}、${expression}、${table}、${listener} 和 ${field:name}。',
     handouts: '「{help}」講義說明了一切；「{deck}」講義提供按鈕。',
@@ -294,6 +297,7 @@ const TRANSLATION = {
         '文字：一段或多段文字，以 && 分隔，必須全部出現。比對時不分大小寫。擲骰總值、可擲表格的結果，以及訊息的原始內容中也能找到文字；原始內容會顯示在「檢查」的「原始內容」下，Beacon 卡片的原始內容就是它的 HTML。',
         '文字中的 ## 代表一個行內擲骰；擲骰檢查此時只看該處的擲骰。沒有 ## 時，會檢查訊息中的每一次擲骰。',
         '文字可以是正規表達式而非純文字（--regex on）。',
+        '排除的文字：一段或多段文字，以 && 分隔，只要出現其中任何一段，監聽器就不會觸發，例如 --text sword --exclude dagger。搜尋方式與文字相同，使用 --regex on 時視為正規表達式。',
         '發言者／角色：聊天中顯示的名稱，或擲骰模板中的角色名稱。玩家：玩家的顯示名稱。',
         '模板欄位：針對「檢查」列出之欄位的條件，例如 subcategory=Attack 或 title~sword，以 && 分隔。= 和 != 比較整個值，~ 和 !~ 在值中尋找文字，且不分大小寫。缺少的欄位視為空白。若指的是單一欄位，請改用此選項而非 --text，因為 --text 也會搜尋 Beacon 卡片隱藏的 HTML。',
       ],
@@ -342,6 +346,8 @@ const TRANSLATION = {
       templates: '擲骰模板名稱，以空格分隔。none = 無模板。請見上方的「擲骰模板名稱」。',
       types: '訊息類型，以空格分隔：{types}。',
       text: '要尋找的文字。用 && 分隔各段。## 標示一個行內擲骰。',
+      exclude:
+        '會讓監聽器停止的文字：只要出現任何一段，就不會觸發。用 && 分隔各段。搜尋方式與 --text 相同。',
       regex: 'on 表示將文字視為正規表達式，off 表示純文字。',
       who: '發言者或角色名稱，以逗號分隔。',
       players: '玩家顯示名稱，以逗號分隔。',
@@ -390,7 +396,7 @@ const TRANSLATION = {
     inspector: {
       heading: '檢查器',
       points: [
-        '點選「檢查下一則訊息」，然後擲骰。CRL 會密語它看到的內容：訊息類型、發言者、角色、模板及其欄位、每次擲骰及其骰子、監聽器搜尋的文字、原始內容（Roll20 送出的原始訊息，--text 也會搜尋這裡），以及每個監聽器為何觸發或未觸發。',
+        '點選「檢查下一則訊息」，然後擲骰。CRL 會密語它看到的內容：訊息類型、發言者、角色、模板及其欄位、每次擲骰及其骰子、監聽器搜尋的文字、原始內容（Roll20 送出的原始訊息，內嵌圖片會縮短，--text 也會搜尋這裡），以及每個監聽器為何觸發或未觸發。',
         '用它來找出角色卡的模板名稱，或查看 Beacon 角色卡（例如 D&D 2024）發送了什麼。',
         'Beacon 角色卡發送的是擲骰卡片而非擲骰模板。CRL 會讀取它們：模板是卡片的第一個 class（D&D 2024 為 dnd-2024），角色、標題（例如 Dexterity Check）和子類別會成為欄位，分解中的每次擲骰都是一次擲骰，因此爆擊、大失敗、總值和原始骰值檢查都能運作。',
       ],

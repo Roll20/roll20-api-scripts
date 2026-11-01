@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Dobássablonok szóközzel elválasztva – none: sablon nélkül – üres: bármelyik – a vizsgáló megmutatja egy dobás sablonját',
     types: 'Üzenettípusok szóközzel elválasztva – üres: bármelyik, kivéve api',
     text: 'Keresett szöveg – lásd a Súgó segédanyagot – üres: bármi',
+    exclude: 'Szöveg, amely leállítja a figyelőt – a részeket &&-vel válassza el – üres: nincs',
     regex: 'Hogyan értelmezze a szöveget',
     who: 'Beszélők vagy karakterek nevei vesszővel elválasztva – üres: bárki',
     players: 'Játékosnevek vesszővel elválasztva – üres: bárki',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Dobássablonok',
     types: 'Üzenettípusok',
     text: 'Szöveg',
+    exclude: 'Kizárt szöveg',
     regex: 'Szöveg típusa',
     who: 'Beszélők / karakterek',
     players: 'Játékosok',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'a játékos nem egyezik',
       field: 'a sablonmező nem egyezik',
       text: 'a szöveg nem található',
+      exclude: 'kizárt szöveg található',
       roll: 'egyik dobás sem felel meg a dobásfeltételeknek',
     },
   },
@@ -198,7 +201,7 @@ const TRANSLATION = {
     gmOnly: 'Kérje meg a GM-et, hogy állítson be figyelőket.',
     unknownCommand: 'Az összes parancsot a !crl help paranccsal láthatja.',
     badOption:
-      'A lehetőségek: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
+      'A lehetőségek: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
     notFound: 'A figyelők listáját a !crl paranccsal láthatja.',
     nameInvalid:
       'Legfeljebb {max} karakter, ezek nélkül: | { } [ ] \\ @ % # ? ~ vagy "--", és nem kezdődhet "-" jellel.',
@@ -234,7 +237,7 @@ const TRANSLATION = {
     help: 'Ez a lista.',
     optionsTitle: 'Opciók',
     options:
-      'Opciók: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
+      'Opciók: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
     placeholders:
       'A parancsok a következőket használhatják: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} és ${field:name}.',
     handouts:
@@ -298,6 +301,7 @@ const TRANSLATION = {
         'Szöveg: egy vagy több szövegrész &&-vel elválasztva, amelyeknek mind szerepelniük kell. A kis- és nagybetű nem számít. A szöveget a dobásösszegekben és a dobótáblázat-eredményekben is keresi, valamint az üzenet nyers tartalmában, amelyet a vizsgáló a Nyers tartalom alatt mutat: Beacon-kártyánál ez a kártya HTML-je.',
         'A ## a szövegben egy beágyazott dobást jelöl; ilyenkor a dobásellenőrzések csak az ott talált dobásokat nézik. ## nélkül az üzenet minden dobását ellenőrzi.',
         'A szöveg egyszerű szöveg helyett reguláris kifejezés is lehet (--regex on).',
+        'Kizárt szöveg: &&-vel elválasztott szövegrészek, amelyek leállítják a figyelőt, ha bármelyikük szerepel, például --text sword --exclude dagger. Ugyanúgy keresi őket, mint a szöveget, és --regex on esetén reguláris kifejezésként olvassa.',
         'Beszélők / karakterek: a chatben megjelenő név, vagy a karakter neve a dobássablonban. Játékosok: a játékos megjelenített neve.',
         'Sablonmezők: feltételek a vizsgáló által listázott mezőkre, pl. subcategory=Attack vagy title~sword, &&-vel elválasztva. Az = és a != a teljes értéket hasonlítja össze, a ~ és a !~ szöveget keres benne, a kis- és nagybetű nem számít. A hiányzó mező üresnek számít. Ezt használja --text helyett, ha egy mezőre gondol, mert a --text egy Beacon-kártya rejtett HTML-jében is keres.',
       ],
@@ -348,6 +352,8 @@ const TRANSLATION = {
         'Dobássablonok nevei szóközzel elválasztva. none = nincs sablon. Lásd fent: Dobássablonok nevei.',
       types: 'Üzenettípusok szóközzel elválasztva: {types}.',
       text: 'Keresett szöveg. A részeket &&-vel válassza el. A ## beágyazott dobást jelöl.',
+      exclude:
+        'Szöveg, amely leállítja a figyelőt: ha bármelyik rész szerepel, nem aktiválódik. A részeket &&-vel válassza el. Ugyanúgy keresi, mint a --text opciót.',
       regex: 'on: a szöveg reguláris kifejezés, off: egyszerű szöveg.',
       who: 'Beszélők vagy karakterek nevei vesszővel elválasztva.',
       players: 'Játékosok megjelenített nevei vesszővel elválasztva.',
@@ -397,7 +403,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'A vizsgáló',
       points: [
-        'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, a nyers tartalmat (az üzenetet úgy, ahogy a Roll20 elküldte; a --text ebben is keres), és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
+        'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, a nyers tartalmat (az üzenetet úgy, ahogy a Roll20 elküldte, rövidített beágyazott képekkel; a --text ebben is keres), és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
         'Ezzel megtalálhatja egy lap sablonnevét, vagy megnézheti, mit küld egy Beacon lap (például a D&D 2024).',
         'A Beacon lapok dobássablonok helyett dobáskártyákat küldenek. A CRL ezeket is beolvassa: a sablon a kártya első osztálya (D&D 2024 esetén dnd-2024), a karakter, a cím (pl. Dexterity Check) és az alkategória mezők lesznek, a lebontás minden dobása pedig dobásnak számít, így a kritikus, kritikus hiba, összeg és natúr ellenőrzések működnek.',
       ],

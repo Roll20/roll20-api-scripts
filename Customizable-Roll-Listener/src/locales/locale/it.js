@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Template di tiro separati da spazi - none per nessun template - vuoto per qualsiasi - Ispeziona mostra il template di un tiro',
     types: 'Tipi di messaggio separati da spazi - vuoto per tutti tranne api',
     text: 'Testo da cercare - vedi la dispensa Help - vuoto per qualsiasi',
+    exclude: 'Testo che ferma il listener - separa i frammenti con && - vuoto per nessuno',
     regex: 'Come leggere il testo',
     who: 'Nomi di mittenti o personaggi separati da virgole - vuoto per chiunque',
     players: 'Nomi dei giocatori separati da virgole - vuoto per chiunque',
@@ -91,6 +92,7 @@ const TRANSLATION = {
     templates: 'Template di tiro',
     types: 'Tipi di messaggio',
     text: 'Testo',
+    exclude: 'Testo escluso',
     regex: 'Il testo è',
     who: 'Mittenti / personaggi',
     players: 'Giocatori',
@@ -149,6 +151,7 @@ const TRANSLATION = {
       player: 'il giocatore non corrisponde',
       field: 'il campo del template non corrisponde',
       text: 'testo non trovato',
+      exclude: 'testo escluso trovato',
       roll: 'nessun tiro soddisfa le condizioni sui tiri',
     },
   },
@@ -200,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Chiedi al tuo GM di configurare i listener per te.',
     unknownCommand: 'Digita !crl help per vedere tutti i comandi.',
     badOption:
-      'Le opzioni sono --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+      'Le opzioni sono --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
     notFound: "Digita !crl per vedere l'elenco dei listener.",
     nameInvalid:
       'Usa al massimo {max} caratteri, senza questi: | { } [ ] \\ @ % # ? ~ o "--", e non iniziare con "-".',
@@ -235,7 +238,7 @@ const TRANSLATION = {
     help: 'Mostra questo elenco.',
     optionsTitle: 'Opzioni',
     options:
-      'Opzioni: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
+      'Opzioni: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
     placeholders:
       'I comandi possono usare ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
     handouts: 'La dispensa "{help}" spiega tutto; la dispensa "{deck}" ha i pulsanti.',
@@ -298,6 +301,7 @@ const TRANSLATION = {
         'Testo: uno o più frammenti di testo, separati da &&, che devono comparire tutti. Il confronto ignora maiuscole e minuscole. Il testo viene cercato anche nei totali dei tiri e nei risultati delle tabelle casuali, e nel contenuto grezzo del messaggio, che Ispeziona mostra sotto Contenuto grezzo: per una scheda Beacon, è il suo HTML.',
         '## nel testo indica un tiro inline; i controlli sui tiri esaminano allora solo i tiri trovati lì. Senza ##, viene controllato ogni tiro del messaggio.',
         "Il testo può essere un'espressione regolare invece di testo semplice (--regex on).",
+        'Testo escluso: frammenti di testo, separati da &&, che fermano il listener quando ne compare uno qualsiasi, come --text sword --exclude dagger. Vengono cercati come il testo e letti come espressioni regolari con --regex on.',
         'Mittenti / personaggi: il nome mostrato in chat o il nome del personaggio nel template di tiro. Giocatori: il nome visualizzato del giocatore.',
         "Campi del template: condizioni sui campi elencati da Ispeziona, ad esempio subcategory=Attack o title~sword, separate da &&. = e != confrontano l'intero valore, ~ e !~ cercano del testo al suo interno, e maiuscole e minuscole sono ignorate. Un campo mancante conta come vuoto. Usalo al posto di --text quando intendi un solo campo, perché --text cerca anche nell'HTML nascosto di una scheda Beacon.",
       ],
@@ -348,6 +352,8 @@ const TRANSLATION = {
         'Nomi dei template di tiro, separati da spazi. none = nessun template. Vedi Nomi dei template di tiro sopra.',
       types: 'Tipi di messaggio, separati da spazi: {types}.',
       text: 'Testo da trovare. Separa i frammenti con &&. ## indica un tiro inline.',
+      exclude:
+        'Testo che ferma il listener: se compare uno qualsiasi dei frammenti, non si attiva. Separa i frammenti con &&. Cercato come --text.',
       regex: 'on per leggere il testo come espressioni regolari, off per testo semplice.',
       who: 'Nomi di mittenti o personaggi, separati da virgole.',
       players: 'Nomi visualizzati dei giocatori, separati da virgole.',
@@ -397,7 +403,7 @@ const TRANSLATION = {
     inspector: {
       heading: "L'ispettore",
       points: [
-        "Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener, il contenuto grezzo (il messaggio così come l'ha inviato Roll20, in cui cerca anche --text) e perché ogni listener si è attivato o no.",
+        "Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener, il contenuto grezzo (il messaggio così come l'ha inviato Roll20, con le immagini incorporate abbreviate, in cui cerca anche --text) e perché ogni listener si è attivato o no.",
         'Usalo per trovare il nome del template di una scheda o per vedere cosa invia una scheda Beacon (come D&D 2024).',
         'Le schede Beacon pubblicano riquadri di tiro invece dei template di tiro. CRL li legge: il template è la prima classe del riquadro (dnd-2024 per D&D 2024), personaggio, titolo (come Prova di Destrezza) e sottocategoria diventano campi, e ogni tiro nel dettaglio è un tiro, quindi i controlli su critico, fallimento critico, totale e dado naturale funzionano.',
       ],

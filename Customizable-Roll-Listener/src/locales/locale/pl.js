@@ -48,6 +48,8 @@ const TRANSLATION = {
       'Szablony rzutów oddzielone spacjami - none, jeśli bez szablonu - puste dla dowolnego - Sprawdź pokazuje szablon rzutu',
     types: 'Typy wiadomości oddzielone spacjami - puste dla wszystkich oprócz api',
     text: 'Tekst do wyszukania - zobacz notatkę Help - puste dla dowolnego',
+    exclude:
+      'Tekst, który zatrzymuje listener - fragmenty oddzielaj && - puste, aby nic nie wykluczać',
     regex: 'Jak czytać tekst',
     who: 'Nazwy nadawców lub postaci oddzielone przecinkami - puste dla każdego',
     players: 'Nazwy graczy oddzielone przecinkami - puste dla każdego',
@@ -90,6 +92,7 @@ const TRANSLATION = {
     templates: 'Szablony rzutów',
     types: 'Typy wiadomości',
     text: 'Tekst',
+    exclude: 'Tekst wykluczony',
     regex: 'Tekst to',
     who: 'Nadawcy / postacie',
     players: 'Gracze',
@@ -148,6 +151,7 @@ const TRANSLATION = {
       player: 'gracz nie pasuje',
       field: 'pole szablonu nie pasuje',
       text: 'nie znaleziono tekstu',
+      exclude: 'znaleziono wykluczony tekst',
       roll: 'żaden rzut nie spełnia warunków rzutu',
     },
   },
@@ -199,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Poproś MG o skonfigurowanie listenerów.',
     unknownCommand: 'Wpisz !crl help, aby zobaczyć wszystkie polecenia.',
     badOption:
-      'Opcje to --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+      'Opcje to --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
     notFound: 'Wpisz !crl, aby zobaczyć listę listenerów.',
     nameInvalid:
       'Użyj najwyżej {max} znaków, bez tych: | { } [ ] \\ @ % # ? ~ ani „--”, i nie zaczynaj od „-”.',
@@ -235,7 +239,7 @@ const TRANSLATION = {
     help: 'Pokaż tę listę.',
     optionsTitle: 'Opcje',
     options:
-      'Opcje: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
+      'Opcje: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
     placeholders:
       'Polecenia mogą używać ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
     handouts: 'Notatka „{help}” wyjaśnia wszystko; notatka „{deck}” zawiera przyciski.',
@@ -298,6 +302,7 @@ const TRANSLATION = {
         'Tekst: jeden lub więcej fragmentów tekstu, oddzielonych &&, które muszą wystąpić wszystkie. Wielkość liter nie ma znaczenia. Tekst jest wyszukiwany także w sumach rzutów i wynikach tabel losowych, a także w surowej treści wiadomości, którą Sprawdź pokazuje pod Surowa treść: w przypadku karty Beacon jest to jej HTML.',
         '## w tekście oznacza rzut inline; warunki rzutu dotyczą wtedy tylko znalezionych tam rzutów. Bez ## sprawdzany jest każdy rzut w wiadomości.',
         'Tekst może być wyrażeniem regularnym zamiast zwykłego tekstu (--regex on).',
+        'Tekst wykluczony: fragmenty tekstu, oddzielone &&, które zatrzymują listener, gdy wystąpi którykolwiek z nich, np. --text sword --exclude dagger. Są wyszukiwane tak jak tekst, a przy --regex on czytane jako wyrażenia regularne.',
         'Nadawcy / postacie: nazwa wyświetlana na czacie lub nazwa postaci w szablonie rzutu. Gracze: wyświetlana nazwa gracza.',
         'Pola szablonu: warunki na polach, które wyświetla Sprawdź, np. subcategory=Attack lub title~sword, oddzielone &&. = i != porównują całą wartość, ~ i !~ szukają w niej tekstu, a wielkość liter nie ma znaczenia. Brakujące pole liczy się jako puste. Używaj tego zamiast --text, gdy chodzi o jedno pole, bo --text przeszukuje też ukryty HTML karty Beacon.',
       ],
@@ -348,6 +353,8 @@ const TRANSLATION = {
         'Nazwy szablonów rzutów oddzielone spacjami. none = bez szablonu. Zobacz Nazwy szablonów rzutów powyżej.',
       types: 'Typy wiadomości oddzielone spacjami: {types}.',
       text: 'Tekst do znalezienia. Fragmenty oddzielaj &&. ## oznacza rzut inline.',
+      exclude:
+        'Tekst, który zatrzymuje listener: jeśli wystąpi którykolwiek fragment, listener się nie uruchomi. Fragmenty oddzielaj &&. Wyszukiwany tak jak --text.',
       regex: 'on, aby czytać tekst jako wyrażenia regularne, off dla zwykłego tekstu.',
       who: 'Nazwy nadawców lub postaci oddzielone przecinkami.',
       players: 'Wyświetlane nazwy graczy oddzielone przecinkami.',
@@ -396,7 +403,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektor',
       points: [
-        'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery, surową treść (wiadomość w postaci wysłanej przez Roll20, którą przeszukuje też --text) oraz powód, dla którego każdy listener się uruchomił lub nie.',
+        'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery, surową treść (wiadomość w postaci wysłanej przez Roll20, ze skróconymi osadzonymi obrazami, którą przeszukuje też --text) oraz powód, dla którego każdy listener się uruchomił lub nie.',
         'Użyj go, aby poznać nazwę szablonu karty postaci lub zobaczyć, co wysyła karta Beacon (np. D&D 2024).',
         'Karty Beacon wysyłają okienka rzutów zamiast szablonów rzutów. CRL je odczytuje: szablon to pierwsza klasa okienka (dnd-2024 dla D&D 2024), postać, tytuł (np. Test Zręczności) i podkategoria stają się polami, a każdy rzut w rozbiciu jest rzutem, więc warunki krytycznego sukcesu, krytycznej porażki, sumy i naturalnej kości działają.',
       ],

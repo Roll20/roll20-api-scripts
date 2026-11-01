@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Slagskabeloner adskilt af mellemrum – none for ingen skabelon – tom for alle – Inspicér viser et slags skabelon',
     types: 'Beskedtyper adskilt af mellemrum – tom for alle undtagen api',
     text: 'Tekst at søge efter – se Hjælp-handoutet – tom for alle',
+    exclude: 'Tekst der stopper lytteren – adskil stykker med && – tom for ingen',
     regex: 'Hvordan teksten skal læses',
     who: 'Navne på talere eller figurer adskilt af kommaer – tom for alle',
     players: 'Spillernavne adskilt af kommaer – tom for alle',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Slagskabeloner',
     types: 'Beskedtyper',
     text: 'Tekst',
+    exclude: 'Udelukket tekst',
     regex: 'Teksten er',
     who: 'Talere / figurer',
     players: 'Spillere',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'spilleren passer ikke',
       field: 'skabelonfelt passer ikke',
       text: 'teksten blev ikke fundet',
+      exclude: 'udelukket tekst fundet',
       roll: 'intet slag opfylder slagbetingelserne',
     },
   },
@@ -198,7 +201,7 @@ const TRANSLATION = {
     gmOnly: 'Bed din GM om at opsætte lyttere for dig.',
     unknownCommand: 'Skriv !crl help for at se alle kommandoer.',
     badOption:
-      'Valgmulighederne er --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
+      'Valgmulighederne er --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
     notFound: 'Skriv !crl for at se listen over lyttere.',
     nameInvalid:
       'Brug op til {max} tegn, uden disse: | { } [ ] \\ @ % # ? ~ eller "--", og start ikke med "-".',
@@ -232,7 +235,7 @@ const TRANSLATION = {
     help: 'Vis denne liste.',
     optionsTitle: 'Valgmuligheder',
     options:
-      'Valgmuligheder: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
+      'Valgmuligheder: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
     placeholders:
       'Kommandoer kan bruge ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} og ${field:name}.',
     handouts: 'Handoutet "{help}" forklarer alt; handoutet "{deck}" har knapper.',
@@ -294,6 +297,7 @@ const TRANSLATION = {
         'Tekst: et eller flere tekststykker, adskilt af &&, som alle skal forekomme. Der skelnes ikke mellem store og små bogstaver. Tekst findes også i slagtotaler og resultater fra slagtabeller, og i beskedens rå indhold, som Inspicér viser under Råt indhold: for et Beacon-kort er det dets HTML.',
         '## i teksten står for et inline-slag; slagtjekkene ser så kun på de slag, der findes dér. Uden ## tjekkes alle slag i beskeden.',
         'Teksten kan være et regulært udtryk i stedet for almindelig tekst (--regex on).',
+        'Udelukket tekst: tekststykker, adskilt af &&, som stopper lytteren, når et af dem forekommer, f.eks. --text sword --exclude dagger. De søges som teksten og læses som regulære udtryk med --regex on.',
         'Talere / figurer: navnet vist i chatten eller figurnavnet i slagskabelonen. Spillere: spillerens visningsnavn.',
         'Skabelonfelter: betingelser for de felter, Inspicér viser, som subcategory=Attack eller title~sword, adskilt af &&. = og != sammenligner hele værdien, ~ og !~ søger efter tekst i den, og der skelnes ikke mellem store og små bogstaver. Et manglende felt tæller som tomt. Brug det frem for --text, når du mener ét felt, for --text søger også i et Beacon-korts skjulte HTML.',
       ],
@@ -343,6 +347,8 @@ const TRANSLATION = {
         'Navne på slagskabeloner adskilt af mellemrum. none = ingen skabelon. Se Navne på slagskabeloner ovenfor.',
       types: 'Beskedtyper adskilt af mellemrum: {types}.',
       text: 'Tekst at finde. Adskil stykker med &&. ## markerer et inline-slag.',
+      exclude:
+        'Tekst der stopper lytteren: hvis et af stykkerne forekommer, udløses den ikke. Adskil stykker med &&. Søges som --text.',
       regex: 'on for at læse teksten som regulære udtryk, off for almindelig tekst.',
       who: 'Navne på talere eller figurer adskilt af kommaer.',
       players: 'Spilleres visningsnavne adskilt af kommaer.',
@@ -392,7 +398,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektøren',
       points: [
-        'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, det rå indhold (beskeden, som Roll20 sendte den, og som --text også søger i), og hvorfor hver lytter blev eller ikke blev udløst.',
+        'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, det rå indhold (beskeden, som Roll20 sendte den, med indlejrede billeder forkortet, og som --text også søger i), og hvorfor hver lytter blev eller ikke blev udløst.',
         'Brug den til at finde et arks skabelonnavn eller til at se, hvad et Beacon-ark (f.eks. D&D 2024) sender.',
         'Beacon-ark sender slagkort i stedet for slagskabeloner. CRL læser dem: skabelonen er kortets første klasse (dnd-2024 for D&D 2024), figuren, titlen (f.eks. Dexterity Check) og underkategorien bliver til felter, og hvert slag i opgørelsen er et slag, så crit-, fumble-, total- og natural-tjek virker.',
       ],

@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Slagmallar åtskilda med mellanslag - none för ingen mall - tomt för alla - Inspektera visar vilken mall ett slag har',
     types: 'Meddelandetyper åtskilda med mellanslag - tomt för alla utom api',
     text: 'Text att leta efter - se Help-handouten - tomt för all text',
+    exclude: 'Text som stoppar lyssnaren - skilj bitarna åt med && - tomt för ingen',
     regex: 'Hur texten ska läsas',
     who: 'Talar- eller karaktärsnamn åtskilda med kommatecken - tomt för alla',
     players: 'Spelarnamn åtskilda med kommatecken - tomt för alla',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Slagmallar',
     types: 'Meddelandetyper',
     text: 'Text',
+    exclude: 'Utesluten text',
     regex: 'Texten är',
     who: 'Talare / karaktärer',
     players: 'Spelare',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'spelaren matchar inte',
       field: 'mallfält matchar inte',
       text: 'texten hittades inte',
+      exclude: 'utesluten text hittades',
       roll: 'inget slag uppfyller slagvillkoren',
     },
   },
@@ -198,7 +201,7 @@ const TRANSLATION = {
     gmOnly: 'Be din GM att ställa in lyssnare åt dig.',
     unknownCommand: 'Skriv !crl help för att se alla kommandon.',
     badOption:
-      'Alternativen är --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
+      'Alternativen är --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
     notFound: 'Skriv !crl för att se listan över lyssnare.',
     nameInvalid:
       'Använd högst {max} tecken, utan dessa: | { } [ ] \\ @ % # ? ~ eller "--", och börja inte med "-".',
@@ -233,7 +236,7 @@ const TRANSLATION = {
     help: 'Visa den här listan.',
     optionsTitle: 'Alternativ',
     options:
-      'Alternativ: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
+      'Alternativ: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
     placeholders:
       'Kommandon kan använda ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} och ${field:name}.',
     handouts: 'Handouten "{help}" förklarar allt; handouten "{deck}" har knappar.',
@@ -296,6 +299,7 @@ const TRANSLATION = {
         'Text: en eller flera textbitar, åtskilda med &&, som alla måste förekomma. Matchningen skiljer inte på stora och små bokstäver. Text hittas även i slagsummor och resultat från slumptabeller, och i meddelandets råinnehåll, som Inspektera visar under Råinnehåll: för ett Beacon-kort är det kortets HTML.',
         '## i texten står för ett inline-slag; slagkontrollerna tittar då bara på slagen som finns där. Utan ## kontrolleras alla slag i meddelandet.',
         'Texten kan vara ett reguljärt uttryck i stället för vanlig text (--regex on).',
+        'Utesluten text: textbitar, åtskilda med &&, som stoppar lyssnaren när någon av dem förekommer, till exempel --text sword --exclude dagger. De söks som texten och läses som reguljära uttryck med --regex on.',
         'Talare / karaktärer: namnet som visas i chatten, eller karaktärsnamnet i slagmallen. Spelare: spelarens visningsnamn.',
         'Mallfält: villkor på fälten som Inspektera listar, till exempel subcategory=Attack eller title~sword, åtskilda med &&. = och != jämför hela värdet, ~ och !~ letar efter text i det, och matchningen skiljer inte på stora och små bokstäver. Ett fält som saknas räknas som tomt. Använd det i stället för --text när du menar ett enda fält, eftersom --text även söker i ett Beacon-korts dolda HTML.',
       ],
@@ -345,6 +349,8 @@ const TRANSLATION = {
         'Namn på slagmallar, åtskilda med mellanslag. none = ingen mall. Se Namn på slagmallar ovan.',
       types: 'Meddelandetyper, åtskilda med mellanslag: {types}.',
       text: 'Text att hitta. Skilj bitarna åt med &&. ## markerar ett inline-slag.',
+      exclude:
+        'Text som stoppar lyssnaren: om någon av bitarna förekommer utlöses den inte. Skilj bitarna åt med &&. Söks som --text.',
       regex: 'on för att läsa texten som reguljära uttryck, off för vanlig text.',
       who: 'Talar- eller karaktärsnamn, åtskilda med kommatecken.',
       players: 'Spelarnas visningsnamn, åtskilda med kommatecken.',
@@ -393,7 +399,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektören',
       points: [
-        'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i, råinnehållet (meddelandet som Roll20 skickade det, som --text också söker i) och varför varje lyssnare utlöstes eller inte.',
+        'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i, råinnehållet (meddelandet som Roll20 skickade det, med inbäddade bilder förkortade, som --text också söker i) och varför varje lyssnare utlöstes eller inte.',
         'Använd den för att hitta ett formulärs mallnamn, eller för att se vad ett Beacon-formulär (som D&D 2024) skickar.',
         'Beacon-formulär skickar slagkort i stället för slagmallar. CRL läser dem: mallen är kortets första klass (dnd-2024 för D&D 2024), karaktären, titeln (som Dexterity Check) och underkategorin blir fält, och varje slag i uppdelningen är ett slag, så kontroller av kritiskt, fummel, summa och naturlig tärning fungerar.',
       ],

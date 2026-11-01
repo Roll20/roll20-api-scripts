@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Plantilles de tirada separades per espais - none per a cap plantilla - buit per a qualsevol - Inspecciona mostra la plantilla d’una tirada',
     types: 'Tipus de missatge separats per espais - buit per a qualsevol excepte api',
     text: 'Text a cercar - vegeu el document d’Ajuda - buit per a qualsevol',
+    exclude: 'Text que atura l’oient - separa els fragments amb && - buit per a cap',
     regex: 'Com s’ha de llegir el text',
     who: 'Noms de parlants o personatges separats per comes - buit per a tothom',
     players: 'Noms de jugadors separats per comes - buit per a tothom',
@@ -92,6 +93,7 @@ const TRANSLATION = {
     templates: 'Plantilles de tirada',
     types: 'Tipus de missatge',
     text: 'Text',
+    exclude: 'Text exclòs',
     regex: 'El text és',
     who: 'Parlants / personatges',
     players: 'Jugadors',
@@ -150,6 +152,7 @@ const TRANSLATION = {
       player: 'el jugador no coincideix',
       field: 'el camp de la plantilla no coincideix',
       text: 'no s’ha trobat el text',
+      exclude: 's’ha trobat text exclòs',
       roll: 'cap tirada no compleix les condicions de tirada',
     },
   },
@@ -200,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Demana al teu DJ que et configuri els oients.',
     unknownCommand: 'Escriu !crl help per veure totes les ordres.',
     badOption:
-      'Les opcions són --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+      'Les opcions són --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
     notFound: 'Escriu !crl per veure la llista d’oients.',
     nameInvalid:
       'Fes servir fins a {max} caràcters, sense aquests: | { } [ ] \\ @ % # ? ~ o "--", i no comencis amb "-".',
@@ -236,7 +239,7 @@ const TRANSLATION = {
     help: 'Mostra aquesta llista.',
     optionsTitle: 'Opcions',
     options:
-      'Opcions: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
+      'Opcions: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
     placeholders:
       'Les ordres poden fer servir ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
     handouts: 'El document "{help}" ho explica tot; el document "{deck}" té botons.',
@@ -300,6 +303,7 @@ const TRANSLATION = {
         'Text: un o més fragments de text, separats per &&, que han d’aparèixer tots. No es distingeix entre majúscules i minúscules. El text també es troba als totals de tirada i als resultats de taules aleatòries, i al contingut en brut del missatge, que Inspecciona mostra a Contingut en brut: en una targeta de Beacon, és el seu HTML.',
         '## al text representa una tirada en línia; aleshores les comprovacions de tirada només miren les tirades que s’hi troben. Sense ##, es comprova cada tirada del missatge.',
         'El text pot ser una expressió regular en lloc de text normal (--regex on).',
+        'Text exclòs: fragments de text, separats per &&, que aturen l’oient quan n’apareix qualsevol, com ara --text sword --exclude dagger. Es cerquen com el text i es llegeixen com a expressions regulars amb --regex on.',
         'Parlants / personatges: el nom que es mostra al xat, o el nom del personatge a la plantilla de tirada. Jugadors: el nom visible del jugador.',
         'Camps de la plantilla: condicions sobre els camps que llista Inspecciona, com ara subcategory=Attack o title~sword, separades per &&. = i != comparen el valor sencer, ~ i !~ hi busquen text, i no es distingeix entre majúscules i minúscules. Un camp que falta compta com a buit. Fes-lo servir en lloc de --text quan vulguis un sol camp, perquè --text també cerca a l’HTML ocult d’una targeta de Beacon.',
       ],
@@ -350,6 +354,8 @@ const TRANSLATION = {
         'Noms de plantilles de tirada, separats per espais. none = cap plantilla. Vegeu Noms de plantilles de tirada més amunt.',
       types: 'Tipus de missatge, separats per espais: {types}.',
       text: 'Text a cercar. Separa els fragments amb &&. ## marca una tirada en línia.',
+      exclude:
+        'Text que atura l’oient: si apareix qualsevol fragment, no s’activa. Separa els fragments amb &&. Es cerca com --text.',
       regex: 'on per llegir el text com a expressions regulars, off per a text normal.',
       who: 'Noms de parlants o personatges, separats per comes.',
       players: 'Noms visibles dels jugadors, separats per comes.',
@@ -399,7 +405,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'L’inspector',
       points: [
-        'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients, el contingut en brut (el missatge tal com l’ha enviat Roll20, on --text també cerca) i per què cada oient s’ha activat o no.',
+        'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients, el contingut en brut (el missatge tal com l’ha enviat Roll20, amb les imatges incrustades escurçades, on --text també cerca) i per què cada oient s’ha activat o no.',
         'Fes-lo servir per trobar el nom de la plantilla d’un full, o per veure què envia un full Beacon (com ara D&D 2024).',
         'Els fulls Beacon publiquen targetes de tirada en lloc de plantilles de tirada. CRL les llegeix: la plantilla és la primera classe de la targeta (dnd-2024 per a D&D 2024), el personatge, el títol (com ara Dexterity Check) i la subcategoria es converteixen en camps, i cada tirada del desglossament és una tirada, de manera que funcionen les comprovacions de crític, pifia, total i dau natural.',
       ],

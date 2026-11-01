@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Šablony hodů oddělené mezerami – none pro žádnou šablonu – prázdné pro jakoukoli – Prozkoumat ukáže šablonu hodu',
     types: 'Typy zpráv oddělené mezerami – prázdné pro jakýkoli kromě api',
     text: 'Hledaný text – viz podklad Nápověda – prázdné pro jakýkoli',
+    exclude: 'Text, který zastaví posluchače – části oddělte && – prázdné pro žádný',
     regex: 'Jak číst text',
     who: 'Jména mluvčích nebo postav oddělená čárkami – prázdné pro kohokoli',
     players: 'Jména hráčů oddělená čárkami – prázdné pro kohokoli',
@@ -90,6 +91,7 @@ const TRANSLATION = {
     templates: 'Šablony hodů',
     types: 'Typy zpráv',
     text: 'Text',
+    exclude: 'Vyloučený text',
     regex: 'Text je',
     who: 'Mluvčí / postavy',
     players: 'Hráči',
@@ -148,6 +150,7 @@ const TRANSLATION = {
       player: 'hráč neodpovídá',
       field: 'pole šablony neodpovídá',
       text: 'text nenalezen',
+      exclude: 'nalezen vyloučený text',
       roll: 'žádný hod nesplňuje podmínky hodu',
     },
   },
@@ -198,7 +201,7 @@ const TRANSLATION = {
     gmOnly: 'Požádejte svého GM, aby vám posluchače nastavil.',
     unknownCommand: 'Napište !crl help a uvidíte všechny příkazy.',
     badOption:
-      'Volby jsou --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
+      'Volby jsou --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
     notFound: 'Napište !crl a uvidíte seznam posluchačů.',
     nameInvalid:
       'Použijte nejvýše {max} znaků, bez těchto: | { } [ ] \\ @ % # ? ~ ani "--", a nezačínejte znakem "-".',
@@ -233,7 +236,7 @@ const TRANSLATION = {
     help: 'Zobrazit tento seznam.',
     optionsTitle: 'Volby',
     options:
-      'Volby: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
+      'Volby: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
     placeholders:
       'Příkazy mohou používat ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} a ${field:name}.',
     handouts: 'Podklad „{help}“ vše vysvětluje; podklad „{deck}“ obsahuje tlačítka.',
@@ -296,6 +299,7 @@ const TRANSLATION = {
         'Text: jedna či více částí textu oddělených &&, které se musí všechny objevit. Porovnání nerozlišuje velká a malá písmena. Text se hledá i v součtech hodů a výsledcích náhodných tabulek, a také v surovém obsahu zprávy, který Prozkoumat ukazuje pod Surový obsah: u karty Beacon je to její HTML.',
         '## v textu zastupuje inline hod; kontroly hodu pak sledují jen hody nalezené na tomto místě. Bez ## se kontroluje každý hod ve zprávě.',
         'Text může být místo prostého textu regulární výraz (--regex on).',
+        'Vyloučený text: části textu oddělené &&, které posluchače zastaví, jakmile se kterákoli z nich objeví, například --text sword --exclude dagger. Hledají se stejně jako text a s --regex on se čtou jako regulární výrazy.',
         'Mluvčí / postavy: jméno zobrazené v chatu, nebo jméno postavy v šabloně hodu. Hráči: zobrazované jméno hráče.',
         'Pole šablony: podmínky na pole, která vypíše Prozkoumat, např. subcategory=Attack nebo title~sword, oddělené &&. = a != porovnávají celou hodnotu, ~ a !~ v ní hledají text a velikost písmen se nerozlišuje. Chybějící pole se počítá jako prázdné. Použijte je místo --text, když myslíte jedno pole, protože --text prohledává i skryté HTML karty Beacon.',
       ],
@@ -345,6 +349,8 @@ const TRANSLATION = {
         'Názvy šablon hodů oddělené mezerami. none = žádná šablona. Viz Názvy šablon hodů výše.',
       types: 'Typy zpráv oddělené mezerami: {types}.',
       text: 'Hledaný text. Části oddělte &&. ## označuje inline hod.',
+      exclude:
+        'Text, který zastaví posluchače: pokud se objeví kterákoli část, nespustí se. Části oddělte &&. Hledá se stejně jako --text.',
       regex: 'on pro čtení textu jako regulárních výrazů, off pro prostý text.',
       who: 'Jména mluvčích nebo postav oddělená čárkami.',
       players: 'Zobrazovaná jména hráčů oddělená čárkami.',
@@ -393,7 +399,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'Inspektor',
       points: [
-        'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají,, surový obsah (zprávu tak, jak ji poslal Roll20, a v níž hledá i --text) a proč se který posluchač spustil či nespustil.',
+        'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají, surový obsah (zprávu tak, jak ji poslal Roll20, se zkrácenými vloženými obrázky, a v níž hledá i --text) a proč se který posluchač spustil či nespustil.',
         'Použijte ho ke zjištění názvu šablony listu nebo k zobrazení toho, co posílá list Beacon (např. D&D 2024).',
         'Listy Beacon posílají místo šablon hodů karty hodů. CRL je umí číst: šablonou je první třída karty (dnd-2024 pro D&D 2024), postava, titulek (např. Dexterity Check) a podkategorie se stanou poli a každý hod v rozpisu je hod, takže kontroly crit, fumble, total a natural fungují.',
       ],

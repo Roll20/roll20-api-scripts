@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Modelos de lançamento separados por espaços - none para nenhum modelo - vazio para qualquer um - Inspecionar mostra o modelo de um lançamento',
     types: 'Tipos de mensagem separados por espaços - vazio para qualquer um, exceto api',
     text: 'Texto a procurar - consulte o folheto Help - vazio para qualquer um',
+    exclude: 'Texto que bloqueia o ouvinte - separe os excertos com && - vazio para nenhum',
     regex: 'Como interpretar o texto',
     who: 'Nomes de oradores ou personagens separados por vírgulas - vazio para qualquer um',
     players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
@@ -91,6 +92,7 @@ const TRANSLATION = {
     templates: 'Modelos de lançamento',
     types: 'Tipos de mensagem',
     text: 'Texto',
+    exclude: 'Texto excluído',
     regex: 'O texto é',
     who: 'Oradores / personagens',
     players: 'Jogadores',
@@ -149,6 +151,7 @@ const TRANSLATION = {
       player: 'o jogador não corresponde',
       field: 'o campo do modelo não corresponde',
       text: 'texto não encontrado',
+      exclude: 'texto excluído encontrado',
       roll: 'nenhum lançamento cumpre as condições de lançamento',
     },
   },
@@ -200,7 +203,7 @@ const TRANSLATION = {
     gmOnly: 'Peça ao seu mestre que configure ouvintes por si.',
     unknownCommand: 'Escreva !crl help para ver todos os comandos.',
     badOption:
-      'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+      'As opções são --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
     notFound: 'Escreva !crl para ver a lista de ouvintes.',
     nameInvalid:
       'Utilize até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ nem "--", e não comece por "-".',
@@ -235,7 +238,7 @@ const TRANSLATION = {
     help: 'Mostra esta lista.',
     optionsTitle: 'Opções',
     options:
-      'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
+      'Opções: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
     placeholders:
       'Os comandos podem utilizar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
     handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -299,6 +302,7 @@ const TRANSLATION = {
         'Texto: um ou mais excertos de texto, separados por &&, que têm de aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais dos lançamentos e nos resultados de tabelas aleatórias, e no conteúdo em bruto da mensagem, que Inspecionar apresenta em Conteúdo em bruto: num cartão Beacon, é o seu HTML.',
         '## no texto representa um lançamento em linha; as verificações de lançamento passam então a considerar apenas os lançamentos aí encontrados. Sem ##, são verificados todos os lançamentos da mensagem.',
         'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
+        'Texto excluído: excertos de texto, separados por &&, que bloqueiam o ouvinte quando aparece qualquer um deles, como --text sword --exclude dagger. São procurados como o texto e lidos como expressões regulares com --regex on.',
         'Oradores / personagens: o nome apresentado no chat, ou o nome da personagem no modelo de lançamento. Jogadores: o nome de apresentação do jogador.',
         'Campos do modelo: condições sobre os campos que Inspecionar apresenta, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor completo, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo em falta conta como vazio. Utilize-o em vez de --text quando pretender um único campo, porque --text também procura no HTML oculto de um cartão Beacon.',
       ],
@@ -349,6 +353,8 @@ const TRANSLATION = {
         'Nomes de modelos de lançamento, separados por espaços. none = sem modelo. Consulte Nomes de modelos de lançamento acima.',
       types: 'Tipos de mensagem, separados por espaços: {types}.',
       text: 'Texto a procurar. Separe os excertos com &&. ## marca um lançamento em linha.',
+      exclude:
+        'Texto que bloqueia o ouvinte: se aparecer qualquer excerto, não é acionado. Separe os excertos com &&. Procurado como --text.',
       regex: 'on para ler o texto como expressões regulares, off para texto simples.',
       who: 'Nomes de oradores ou personagens, separados por vírgulas.',
       players: 'Nomes de apresentação dos jogadores, separados por vírgulas.',
@@ -398,7 +404,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'O inspetor',
       points: [
-        'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram, o conteúdo em bruto (a mensagem tal como o Roll20 a enviou, onde --text também procura) e porque é que cada ouvinte foi ou não acionado.',
+        'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram, o conteúdo em bruto (a mensagem tal como o Roll20 a enviou, com as imagens incorporadas encurtadas, onde --text também procura) e porque é que cada ouvinte foi ou não acionado.',
         'Utilize-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
         'As fichas Beacon publicam cartões de lançamento em vez de modelos de lançamento. O CRL lê-os: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), a personagem, o título (como Teste de Destreza) e a subcategoria tornam-se campos, e cada lançamento do detalhe é um lançamento, por isso as verificações de crítico, falha crítica, total e dado natural funcionam.',
       ],

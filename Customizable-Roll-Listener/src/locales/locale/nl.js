@@ -48,6 +48,7 @@ const TRANSLATION = {
       'Rolsjablonen gescheiden door spaties - none voor geen sjabloon - leeg voor alle - Inspecteren toont het sjabloon van een worp',
     types: 'Berichttypen gescheiden door spaties - leeg voor alle behalve api',
     text: 'Te zoeken tekst - zie de Help-handout - leeg voor alle',
+    exclude: 'Tekst die de luisteraar stopt - scheid stukken met && - leeg voor geen',
     regex: 'Hoe de tekst gelezen wordt',
     who: 'Namen van sprekers of personages gescheiden door komma’s - leeg voor iedereen',
     players: 'Spelersnamen gescheiden door komma’s - leeg voor iedereen',
@@ -91,6 +92,7 @@ const TRANSLATION = {
     templates: 'Rolsjablonen',
     types: 'Berichttypen',
     text: 'Tekst',
+    exclude: 'Uitgesloten tekst',
     regex: 'Tekst is',
     who: 'Sprekers / personages',
     players: 'Spelers',
@@ -149,6 +151,7 @@ const TRANSLATION = {
       player: 'speler komt niet overeen',
       field: 'sjabloonveld komt niet overeen',
       text: 'tekst niet gevonden',
+      exclude: 'uitgesloten tekst gevonden',
       roll: 'geen worp voldoet aan de worpvoorwaarden',
     },
   },
@@ -201,7 +204,7 @@ const TRANSLATION = {
     gmOnly: 'Vraag je GM om luisteraars voor je in te stellen.',
     unknownCommand: 'Typ !crl help om alle commando’s te zien.',
     badOption:
-      'Opties zijn --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+      'Opties zijn --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
     notFound: 'Typ !crl om de lijst met luisteraars te zien.',
     nameInvalid:
       'Gebruik maximaal {max} tekens, zonder deze: | { } [ ] \\ @ % # ? ~ of "--", en begin niet met "-".',
@@ -238,7 +241,7 @@ const TRANSLATION = {
     help: 'Toon deze lijst.',
     optionsTitle: 'Opties',
     options:
-      'Opties: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
+      'Opties: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
     placeholders:
       'Commando’s kunnen ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruiken.',
     handouts: 'De handout "{help}" legt alles uit; de handout "{deck}" heeft knoppen.',
@@ -301,6 +304,7 @@ const TRANSLATION = {
         'Tekst: een of meer tekststukken, gescheiden door &&, die allemaal moeten voorkomen. Hoofdletters en kleine letters maken niet uit. Tekst wordt ook gevonden in worptotalen en resultaten van gooibare tabellen, en in de ruwe inhoud van het bericht, die Inspecteren toont onder Ruwe inhoud: bij een Beacon-kaart is dat de HTML ervan.',
         '## in de tekst staat voor een inline-worp; de worpcontroles kijken dan alleen naar de worpen die daar staan. Zonder ## wordt elke worp in het bericht gecontroleerd.',
         'Tekst kan een reguliere expressie zijn in plaats van platte tekst (--regex on).',
+        'Uitgesloten tekst: tekststukken, gescheiden door &&, die de luisteraar stoppen zodra een ervan voorkomt, zoals --text sword --exclude dagger. Ze worden gezocht zoals de tekst, en met --regex on gelezen als reguliere expressies.',
         'Sprekers / personages: de naam die in de chat staat, of de personagenaam in het rolsjabloon. Spelers: de weergavenaam van de speler.',
         'Sjabloonvelden: voorwaarden op de velden die Inspecteren toont, zoals subcategory=Attack of title~sword, gescheiden door &&. = en != vergelijken de hele waarde, ~ en !~ zoeken tekst erin, en hoofdletters en kleine letters maken niet uit. Een ontbrekend veld telt als leeg. Gebruik dit in plaats van --text als je één veld bedoelt, want --text doorzoekt ook de verborgen HTML van een Beacon-kaart.',
       ],
@@ -351,6 +355,8 @@ const TRANSLATION = {
         'Namen van rolsjablonen, gescheiden door spaties. none = geen sjabloon. Zie Namen van rolsjablonen hierboven.',
       types: 'Berichttypen, gescheiden door spaties: {types}.',
       text: 'Te zoeken tekst. Scheid stukken met &&. ## markeert een inline-worp.',
+      exclude:
+        'Tekst die de luisteraar stopt: als een van de stukken voorkomt, activeert hij niet. Scheid stukken met &&. Wordt gezocht zoals --text.',
       regex: 'on om de tekst als reguliere expressies te lezen, off voor platte tekst.',
       who: 'Namen van sprekers of personages, gescheiden door komma’s.',
       players: 'Weergavenamen van spelers, gescheiden door komma’s.',
@@ -400,7 +406,7 @@ const TRANSLATION = {
     inspector: {
       heading: 'De inspecteur',
       points: [
-        'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, de ruwe inhoud (het bericht zoals Roll20 het verstuurde, dat --text ook doorzoekt), en waarom elke luisteraar wel of niet activeerde.',
+        'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, de ruwe inhoud (het bericht zoals Roll20 het verstuurde, met ingesloten afbeeldingen ingekort, dat --text ook doorzoekt), en waarom elke luisteraar wel of niet activeerde.',
         'Gebruik hem om de sjabloonnaam van een sheet te vinden, of om te zien wat een Beacon-sheet (zoals D&D 2024) verstuurt.',
         'Beacon-sheets plaatsen worpkaarten in plaats van rolsjablonen. CRL leest ze: het sjabloon is de eerste class van de kaart (dnd-2024 voor D&D 2024), het personage, de titel (zoals Dexterity Check) en de subcategorie worden velden, en elke worp in de uitsplitsing is een worp, dus controles op crit, fumble, totaal en natuurlijke worp werken.',
       ],
