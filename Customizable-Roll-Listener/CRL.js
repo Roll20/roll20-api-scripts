@@ -4,8 +4,8 @@
  * ------------------------------------------------
  * Name: Customizable Roll Listener
  * Script: CRL.js
- * Version: 2.0.1
- * Built: 2026-11-01T09:31:46.489Z
+ * Version: 2.1.0
+ * Built: 2026-11-01T16:34:58.095Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -513,6 +513,21 @@ const CustomizableRollListenerMod = (() => {
   }
 
   /**
+   * Returns a template field of an analysed message as readable text, with its
+   * inline rolls replaced by their results. Field names ignore case.
+   *
+   * @param {object} message Analysed message.
+   * @param {string} name Field name.
+   * @returns {string} Field text, or an empty string when the field is missing.
+   */
+  function readField(message, name) {
+    const fields = message?.fields || {};
+    const wanted = toText(name).toLowerCase();
+    const key = Object.keys(fields).find((k) => k.toLowerCase() === wanted);
+    return key === undefined ? '' : toPlainText(expandMarkers(fields[key], message.rolls || []));
+  }
+
+  /**
    * Describes a chat message.
    *
    * @param {object} msg Roll20 chat message.
@@ -609,8 +624,8 @@ const CustomizableRollListenerMod = (() => {
 
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
-  const SCRIPT_VERSION = '2.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T09:31:46.489Z';
+  const SCRIPT_VERSION = '2.1.0';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T16:34:58.095Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -716,6 +731,7 @@ const CustomizableRollListenerMod = (() => {
     regex: false,
     who: [],
     players: [],
+    fields: [],
     results: [],
     total: '',
     natural: '',
@@ -1225,6 +1241,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Hoe om die teks te lees',
       who: 'Spreker- of karaktername geskei deur kommas - leeg vir enigiemand',
       players: 'Spelername geskei deur kommas - leeg vir enigiemand',
+      fields: 'Sjabloonvelde soos subcategory=Attack && title~sword - leeg vir enige',
       results: 'Rolresultaat',
       total: 'Roltotaal soos 15 of 19-20 - sien die Hulp-uitdeelstuk - leeg vir enige',
       natural: 'Natuurlike dobbelsteenresultaat soos 20 of 1-2 - leeg vir enige',
@@ -1266,6 +1283,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Teks is',
       who: 'Sprekers / karakters',
       players: 'Spelers',
+      fields: 'Sjabloonvelde',
       results: 'Rolresultaat',
       total: 'Roltotaal',
       natural: 'Natuurlike dobbelsteen',
@@ -1318,6 +1336,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'rolsjabloon pas nie',
         who: 'spreker of karakter pas nie',
         player: 'speler pas nie',
+        field: 'sjabloonveld pas nie',
         text: 'teks nie gevind nie',
         roll: 'geen rol voldoen aan die rolvoorwaardes nie',
       },
@@ -1356,6 +1375,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Onbekende boodskaptipe(s): {value}.',
       badRegex: 'Die gereelde uitdrukking "{term}" is nie geldig nie: {error}',
       tooManyTerms: "'n Luisteraar kan na hoogstens {max} stukke teks soek.",
+      badField: 'Die sjabloonveldvoorwaarde "{term}" kan nie gelees word nie.',
+      tooManyFields: "'n Luisteraar kan hoogstens {max} sjabloonvelde nagaan.",
       badResult: 'Onbekende rolresultaat/-resultate: {value}.',
       badComparison: 'Die waarde "{value}" is nie geldig vir --{option} nie.',
       badDice: 'Die waarde "{value}" is nie geldig vir --dice nie.',
@@ -1369,11 +1390,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Vra jou GM om luisteraars vir jou op te stel.',
       unknownCommand: 'Tik !crl help om elke bevel te sien.',
       badOption:
-        'Opsies is --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+        'Opsies is --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
       notFound: 'Tik !crl om die lys luisteraars te sien.',
       nameInvalid:
         'Gebruik hoogstens {max} karakters, sonder hierdie: | { } [ ] \\ @ % # ? ~ of "--", en moenie met "-" begin nie.',
       badOnOff: 'Gebruik on of off.',
+      badField:
+        "Gebruik 'n veldnaam, dan = (is), != (is nie), ~ (bevat) of !~ (bevat nie), dan die waarde, soos subcategory=Attack. Inspekteer wys 'n rol se velde.",
       badType: 'Boodskaptipes is: {types}.',
       badResult: 'Gebruik crit, fumble, success of fail.',
       badComparison: "Gebruik 'n getal, 'n vergelyking soos >=15 of <3, of 'n reeks soos 19-20.",
@@ -1403,7 +1426,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Wys hierdie lys.',
       optionsTitle: 'Opsies',
       options:
-        "Opsies: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
+        "Opsies: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
       placeholders:
         'Bevele kan ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruik.',
       handouts:
@@ -1468,6 +1491,7 @@ const CustomizableRollListenerMod = (() => {
           "## in die teks staan vir 'n inlyn-rol; die roltoetse kyk dan net na die rolle wat daar gevind word. Sonder ## word elke rol in die boodskap nagegaan.",
           "Teks kan 'n gereelde uitdrukking wees in plaas van gewone teks (--regex on).",
           'Sprekers / karakters: die naam wat in die klets gewys word, of die karakternaam in die rolsjabloon. Spelers: die speler se vertoonnaam.',
+          "Sjabloonvelde: voorwaardes op die velde wat Inspekteer lys, soos subcategory=Attack of title~sword, geskei deur &&. = en != vergelyk die hele waarde, ~ en !~ soek na teks daarin, en hoof- en kleinletters word geïgnoreer. 'n Ontbrekende veld tel as leeg. Gebruik dit eerder as --text wanneer jy een veld bedoel, want --text deursoek ook 'n Beacon-kaart se versteekte HTML.",
         ],
       },
       templates: {
@@ -1517,6 +1541,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on om die teks as gereelde uitdrukkings te lees, off vir gewone teks.',
         who: 'Spreker- of karaktername, geskei deur kommas.',
         players: 'Spelers se vertoonname, geskei deur kommas.',
+        fields:
+          "Sjabloonveldvoorwaardes, geskei deur &&: name=value (is), name!=value (is nie), name~text (bevat), name!~text (bevat nie). Met --regex on lees ~ 'n gereelde uitdrukking.",
         results: 'crit, fumble, success en/of fail.',
         total: 'Roltotaal: 15, >=15, <5 of 19-20.',
         natural: 'Natuurlike dobbelsteenkant: 20, <=2 of 19-20.',
@@ -1669,6 +1695,8 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Com s’ha de llegir el text',
       who: 'Noms de parlants o personatges separats per comes - buit per a tothom',
       players: 'Noms de jugadors separats per comes - buit per a tothom',
+      fields:
+        'Camps de la plantilla, com ara subcategory=Attack && title~sword - buit per a qualsevol',
       results: 'Resultat de la tirada',
       total:
         'Total de la tirada, com ara 15 o 19-20 - vegeu el document d’Ajuda - buit per a qualsevol',
@@ -1711,6 +1739,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'El text és',
       who: 'Parlants / personatges',
       players: 'Jugadors',
+      fields: 'Camps de la plantilla',
       results: 'Resultat de la tirada',
       total: 'Total de la tirada',
       natural: 'Dau natural',
@@ -1763,6 +1792,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'la plantilla de tirada no coincideix',
         who: 'el parlant o personatge no coincideix',
         player: 'el jugador no coincideix',
+        field: 'el camp de la plantilla no coincideix',
         text: 'no s’ha trobat el text',
         roll: 'cap tirada no compleix les condicions de tirada',
       },
@@ -1800,6 +1830,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Tipus de missatge desconegut(s): {value}.',
       badRegex: 'L’expressió regular "{term}" no és vàlida: {error}',
       tooManyTerms: 'Un oient pot cercar com a màxim {max} fragments de text.',
+      badField: 'No es pot llegir la condició de camp de plantilla "{term}".',
+      tooManyFields: 'Un oient pot comprovar com a màxim {max} camps de la plantilla.',
       badResult: 'Resultat(s) de tirada desconegut(s): {value}.',
       badComparison: 'El valor "{value}" no és vàlid per a --{option}.',
       badDice: 'El valor "{value}" no és vàlid per a --dice.',
@@ -1813,11 +1845,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Demana al teu DJ que et configuri els oients.',
       unknownCommand: 'Escriu !crl help per veure totes les ordres.',
       badOption:
-        'Les opcions són --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+        'Les opcions són --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
       notFound: 'Escriu !crl per veure la llista d’oients.',
       nameInvalid:
         'Fes servir fins a {max} caràcters, sense aquests: | { } [ ] \\ @ % # ? ~ o "--", i no comencis amb "-".',
       badOnOff: 'Fes servir on o off.',
+      badField:
+        'Fes servir un nom de camp, després = (és), != (no és), ~ (conté) o !~ (no conté), i després el valor, com ara subcategory=Attack. Inspecciona mostra els camps d’una tirada.',
       badType: 'Els tipus de missatge són: {types}.',
       badResult: 'Fes servir crit, fumble, success o fail.',
       badComparison:
@@ -1847,7 +1881,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra aquesta llista.',
       optionsTitle: 'Opcions',
       options:
-        'Opcions: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
+        'Opcions: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
       placeholders:
         'Les ordres poden fer servir ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
       handouts: 'El document "{help}" ho explica tot; el document "{deck}" té botons.',
@@ -1912,6 +1946,7 @@ const CustomizableRollListenerMod = (() => {
           '## al text representa una tirada en línia; aleshores les comprovacions de tirada només miren les tirades que s’hi troben. Sense ##, es comprova cada tirada del missatge.',
           'El text pot ser una expressió regular en lloc de text normal (--regex on).',
           'Parlants / personatges: el nom que es mostra al xat, o el nom del personatge a la plantilla de tirada. Jugadors: el nom visible del jugador.',
+          'Camps de la plantilla: condicions sobre els camps que llista Inspecciona, com ara subcategory=Attack o title~sword, separades per &&. = i != comparen el valor sencer, ~ i !~ hi busquen text, i no es distingeix entre majúscules i minúscules. Un camp que falta compta com a buit. Fes-lo servir en lloc de --text quan vulguis un sol camp, perquè --text també cerca a l’HTML ocult d’una targeta de Beacon.',
         ],
       },
       templates: {
@@ -1962,6 +1997,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on per llegir el text com a expressions regulars, off per a text normal.',
         who: 'Noms de parlants o personatges, separats per comes.',
         players: 'Noms visibles dels jugadors, separats per comes.',
+        fields:
+          'Condicions sobre camps de la plantilla, separades per &&: name=value (és), name!=value (no és), name~text (conté), name!~text (no conté). Amb --regex on, ~ llegeix una expressió regular.',
         results: 'crit, fumble, success i/o fail.',
         total: 'Total de la tirada: 15, >=15, <5 o 19-20.',
         natural: 'Cara natural del dau: 20, <=2 o 19-20.',
@@ -2116,6 +2153,7 @@ const CustomizableRollListenerMod = (() => {
       regex: '如何解讀文字',
       who: '發言者或角色名稱，以逗號分隔 - 留空表示任何人',
       players: '玩家名稱，以逗號分隔 - 留空表示任何人',
+      fields: '模板欄位，例如 subcategory=Attack && title~sword - 留空表示任何值',
       results: '擲骰結果',
       total: '擲骰總值，例如 15 或 19-20 - 請見說明講義 - 留空表示任何值',
       natural: '原始骰值，例如 20 或 1-2 - 留空表示任何值',
@@ -2158,6 +2196,7 @@ const CustomizableRollListenerMod = (() => {
       regex: '文字類型',
       who: '發言者／角色',
       players: '玩家',
+      fields: '模板欄位',
       results: '擲骰結果',
       total: '擲骰總值',
       natural: '原始骰值',
@@ -2210,6 +2249,7 @@ const CustomizableRollListenerMod = (() => {
         template: '擲骰模板不符',
         who: '發言者或角色不符',
         player: '玩家不符',
+        field: '模板欄位不符',
         text: '找不到文字',
         roll: '沒有擲骰符合擲骰條件',
       },
@@ -2245,6 +2285,8 @@ const CustomizableRollListenerMod = (() => {
       badType: '未知的訊息類型：{value}。',
       badRegex: '正規表達式「{term}」無效：{error}',
       tooManyTerms: '一個監聽器最多只能尋找 {max} 段文字。',
+      badField: '無法讀取模板欄位條件「{term}」。',
+      tooManyFields: '一個監聽器最多只能檢查 {max} 個模板欄位。',
       badResult: '未知的擲骰結果：{value}。',
       badComparison: '值「{value}」不適用於 --{option}。',
       badDice: '值「{value}」不適用於 --dice。',
@@ -2258,11 +2300,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: '請 GM 幫你設定監聽器。',
       unknownCommand: '輸入 !crl help 查看所有指令。',
       badOption:
-        '可用選項：--templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
+        '可用選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
       notFound: '輸入 !crl 查看監聽器列表。',
       nameInvalid:
         '最多使用 {max} 個字元，不可包含以下字元：| { } [ ] \\ @ % # ? ~ 或 "--"，且不可以 "-" 開頭。',
       badOnOff: '請使用 on 或 off。',
+      badField:
+        '請先寫欄位名稱，再寫 = (是)、!= (不是)、~ (包含) 或 !~ (不包含)，最後寫值，例如 subcategory=Attack。「檢查」可顯示擲骰的欄位。',
       badType: '訊息類型有：{types}。',
       badResult: '請使用 crit、fumble、success 或 fail。',
       badComparison: '請使用數字、比較式（例如 >=15 或 <3）或範圍（例如 19-20）。',
@@ -2290,7 +2334,7 @@ const CustomizableRollListenerMod = (() => {
       help: '顯示此列表。',
       optionsTitle: '選項',
       options:
-        '選項：--templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
+        '選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
       placeholders:
         '指令中可使用 ${who}、${character}、${player}、${template}、${total}、${natural}、${result}、${expression}、${table}、${listener} 和 ${field:name}。',
       handouts: '「{help}」講義說明了一切；「{deck}」講義提供按鈕。',
@@ -2353,6 +2397,7 @@ const CustomizableRollListenerMod = (() => {
           '文字中的 ## 代表一個行內擲骰；擲骰檢查此時只看該處的擲骰。沒有 ## 時，會檢查訊息中的每一次擲骰。',
           '文字可以是正規表達式而非純文字（--regex on）。',
           '發言者／角色：聊天中顯示的名稱，或擲骰模板中的角色名稱。玩家：玩家的顯示名稱。',
+          '模板欄位：針對「檢查」列出之欄位的條件，例如 subcategory=Attack 或 title~sword，以 && 分隔。= 和 != 比較整個值，~ 和 !~ 在值中尋找文字，且不分大小寫。缺少的欄位視為空白。若指的是單一欄位，請改用此選項而非 --text，因為 --text 也會搜尋 Beacon 卡片隱藏的 HTML。',
         ],
       },
       templates: {
@@ -2401,6 +2446,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on 表示將文字視為正規表達式，off 表示純文字。',
         who: '發言者或角色名稱，以逗號分隔。',
         players: '玩家顯示名稱，以逗號分隔。',
+        fields:
+          '模板欄位條件，以 && 分隔：name=value (是)、name!=value (不是)、name~text (包含)、name!~text (不包含)。使用 --regex on 時，~ 會讀取正規表達式。',
         results: 'crit、fumble、success 和／或 fail。',
         total: '擲骰總值：15、>=15、<5 或 19-20。',
         natural: '原始骰值：20、<=2 或 19-20。',
@@ -2552,6 +2599,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Jak číst text',
       who: 'Jména mluvčích nebo postav oddělená čárkami – prázdné pro kohokoli',
       players: 'Jména hráčů oddělená čárkami – prázdné pro kohokoli',
+      fields: 'Pole šablony, např. subcategory=Attack && title~sword – prázdné pro jakákoli',
       results: 'Výsledek hodu',
       total: 'Součet hodu, např. 15 nebo 19-20 – viz podklad Nápověda – prázdné pro jakýkoli',
       natural: 'Přirozený výsledek kostky, např. 20 nebo 1-2 – prázdné pro jakýkoli',
@@ -2593,6 +2641,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Text je',
       who: 'Mluvčí / postavy',
       players: 'Hráči',
+      fields: 'Pole šablony',
       results: 'Výsledek hodu',
       total: 'Součet hodu',
       natural: 'Přirozená kostka',
@@ -2645,6 +2694,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'šablona hodu neodpovídá',
         who: 'mluvčí nebo postava neodpovídá',
         player: 'hráč neodpovídá',
+        field: 'pole šablony neodpovídá',
         text: 'text nenalezen',
         roll: 'žádný hod nesplňuje podmínky hodu',
       },
@@ -2682,6 +2732,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Neznámé typy zpráv: {value}.',
       badRegex: 'Regulární výraz „{term}“ není platný: {error}',
       tooManyTerms: 'Posluchač může hledat nejvýše {max} částí textu.',
+      badField: 'Podmínku pole šablony „{term}“ nelze přečíst.',
+      tooManyFields: 'Posluchač může kontrolovat nejvýše {max} polí šablony.',
       badResult: 'Neznámé výsledky hodu: {value}.',
       badComparison: 'Hodnota „{value}“ není platná pro --{option}.',
       badDice: 'Hodnota „{value}“ není platná pro --dice.',
@@ -2695,11 +2747,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Požádejte svého GM, aby vám posluchače nastavil.',
       unknownCommand: 'Napište !crl help a uvidíte všechny příkazy.',
       badOption:
-        'Volby jsou --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
+        'Volby jsou --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
       notFound: 'Napište !crl a uvidíte seznam posluchačů.',
       nameInvalid:
         'Použijte nejvýše {max} znaků, bez těchto: | { } [ ] \\ @ % # ? ~ ani "--", a nezačínejte znakem "-".',
       badOnOff: 'Použijte on nebo off.',
+      badField:
+        'Použijte název pole, pak = (je), != (není), ~ (obsahuje) nebo !~ (neobsahuje), pak hodnotu, např. subcategory=Attack. Prozkoumat ukáže pole hodu.',
       badType: 'Typy zpráv jsou: {types}.',
       badResult: 'Použijte crit, fumble, success nebo fail.',
       badComparison: 'Použijte číslo, porovnání jako >=15 nebo <3, nebo rozsah jako 19-20.',
@@ -2728,7 +2782,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Zobrazit tento seznam.',
       optionsTitle: 'Volby',
       options:
-        'Volby: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
+        'Volby: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
       placeholders:
         'Příkazy mohou používat ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} a ${field:name}.',
       handouts: 'Podklad „{help}“ vše vysvětluje; podklad „{deck}“ obsahuje tlačítka.',
@@ -2792,6 +2846,7 @@ const CustomizableRollListenerMod = (() => {
           '## v textu zastupuje inline hod; kontroly hodu pak sledují jen hody nalezené na tomto místě. Bez ## se kontroluje každý hod ve zprávě.',
           'Text může být místo prostého textu regulární výraz (--regex on).',
           'Mluvčí / postavy: jméno zobrazené v chatu, nebo jméno postavy v šabloně hodu. Hráči: zobrazované jméno hráče.',
+          'Pole šablony: podmínky na pole, která vypíše Prozkoumat, např. subcategory=Attack nebo title~sword, oddělené &&. = a != porovnávají celou hodnotu, ~ a !~ v ní hledají text a velikost písmen se nerozlišuje. Chybějící pole se počítá jako prázdné. Použijte je místo --text, když myslíte jedno pole, protože --text prohledává i skryté HTML karty Beacon.',
         ],
       },
       templates: {
@@ -2841,6 +2896,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on pro čtení textu jako regulárních výrazů, off pro prostý text.',
         who: 'Jména mluvčích nebo postav oddělená čárkami.',
         players: 'Zobrazovaná jména hráčů oddělená čárkami.',
+        fields:
+          'Podmínky polí šablony oddělené &&: name=value (je), name!=value (není), name~text (obsahuje), name!~text (neobsahuje). Při --regex on čte ~ regulární výraz.',
         results: 'crit, fumble, success a/nebo fail.',
         total: 'Součet hodu: 15, >=15, <5 nebo 19-20.',
         natural: 'Stěna přirozené kostky: 20, <=2 nebo 19-20.',
@@ -2994,6 +3051,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Hvordan teksten skal læses',
       who: 'Navne på talere eller figurer adskilt af kommaer – tom for alle',
       players: 'Spillernavne adskilt af kommaer – tom for alle',
+      fields: 'Skabelonfelter som subcategory=Attack && title~sword – tom for alle',
       results: 'Slagresultat',
       total: 'Slagtotal som 15 eller 19-20 – se Hjælp-handoutet – tom for alle',
       natural: 'Naturligt terningresultat som 20 eller 1-2 – tom for alle',
@@ -3035,6 +3093,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Teksten er',
       who: 'Talere / figurer',
       players: 'Spillere',
+      fields: 'Skabelonfelter',
       results: 'Slagresultat',
       total: 'Slagtotal',
       natural: 'Naturlig terning',
@@ -3087,6 +3146,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'slagskabelonen passer ikke',
         who: 'taler eller figur passer ikke',
         player: 'spilleren passer ikke',
+        field: 'skabelonfelt passer ikke',
         text: 'teksten blev ikke fundet',
         roll: 'intet slag opfylder slagbetingelserne',
       },
@@ -3123,6 +3183,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Ukendt(e) beskedtype(r): {value}.',
       badRegex: 'Det regulære udtryk "{term}" er ikke gyldigt: {error}',
       tooManyTerms: 'En lytter kan højst søge efter {max} tekststykker.',
+      badField: 'Skabelonfeltbetingelsen "{term}" kan ikke læses.',
+      tooManyFields: 'En lytter kan højst tjekke {max} skabelonfelter.',
       badResult: 'Ukendt(e) slagresultat(er): {value}.',
       badComparison: 'Værdien "{value}" er ikke gyldig for --{option}.',
       badDice: 'Værdien "{value}" er ikke gyldig for --dice.',
@@ -3136,11 +3198,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Bed din GM om at opsætte lyttere for dig.',
       unknownCommand: 'Skriv !crl help for at se alle kommandoer.',
       badOption:
-        'Valgmulighederne er --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
+        'Valgmulighederne er --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
       notFound: 'Skriv !crl for at se listen over lyttere.',
       nameInvalid:
         'Brug op til {max} tegn, uden disse: | { } [ ] \\ @ % # ? ~ eller "--", og start ikke med "-".',
       badOnOff: 'Brug on eller off.',
+      badField:
+        'Brug et feltnavn, derefter = (er), != (er ikke), ~ (indeholder) eller !~ (indeholder ikke), og derefter værdien, som subcategory=Attack. Inspicér viser et slags felter.',
       badType: 'Beskedtyper er: {types}.',
       badResult: 'Brug crit, fumble, success eller fail.',
       badComparison:
@@ -3169,7 +3233,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Vis denne liste.',
       optionsTitle: 'Valgmuligheder',
       options:
-        'Valgmuligheder: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
+        'Valgmuligheder: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
       placeholders:
         'Kommandoer kan bruge ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} og ${field:name}.',
       handouts: 'Handoutet "{help}" forklarer alt; handoutet "{deck}" har knapper.',
@@ -3232,6 +3296,7 @@ const CustomizableRollListenerMod = (() => {
           '## i teksten står for et inline-slag; slagtjekkene ser så kun på de slag, der findes dér. Uden ## tjekkes alle slag i beskeden.',
           'Teksten kan være et regulært udtryk i stedet for almindelig tekst (--regex on).',
           'Talere / figurer: navnet vist i chatten eller figurnavnet i slagskabelonen. Spillere: spillerens visningsnavn.',
+          'Skabelonfelter: betingelser for de felter, Inspicér viser, som subcategory=Attack eller title~sword, adskilt af &&. = og != sammenligner hele værdien, ~ og !~ søger efter tekst i den, og der skelnes ikke mellem store og små bogstaver. Et manglende felt tæller som tomt. Brug det frem for --text, når du mener ét felt, for --text søger også i et Beacon-korts skjulte HTML.',
         ],
       },
       templates: {
@@ -3281,6 +3346,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on for at læse teksten som regulære udtryk, off for almindelig tekst.',
         who: 'Navne på talere eller figurer adskilt af kommaer.',
         players: 'Spilleres visningsnavne adskilt af kommaer.',
+        fields:
+          'Betingelser for skabelonfelter, adskilt af &&: name=value (er), name!=value (er ikke), name~text (indeholder), name!~text (indeholder ikke). Med --regex on læser ~ et regulært udtryk.',
         results: 'crit, fumble, success og/eller fail.',
         total: 'Slagtotal: 15, >=15, <5 eller 19-20.',
         natural: 'Naturlig terningside: 20, <=2 eller 19-20.',
@@ -3434,6 +3501,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Hoe de tekst gelezen wordt',
       who: 'Namen van sprekers of personages gescheiden door komma’s - leeg voor iedereen',
       players: 'Spelersnamen gescheiden door komma’s - leeg voor iedereen',
+      fields: 'Sjabloonvelden zoals subcategory=Attack && title~sword - leeg voor alle',
       results: 'Worpresultaat',
       total: 'Worptotaal zoals 15 of 19-20 - zie de Help-handout - leeg voor alle',
       natural: 'Natuurlijke worp zoals 20 of 1-2 - leeg voor alle',
@@ -3476,6 +3544,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Tekst is',
       who: 'Sprekers / personages',
       players: 'Spelers',
+      fields: 'Sjabloonvelden',
       results: 'Worpresultaat',
       total: 'Worptotaal',
       natural: 'Natuurlijke worp',
@@ -3528,6 +3597,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'rolsjabloon komt niet overeen',
         who: 'spreker of personage komt niet overeen',
         player: 'speler komt niet overeen',
+        field: 'sjabloonveld komt niet overeen',
         text: 'tekst niet gevonden',
         roll: 'geen worp voldoet aan de worpvoorwaarden',
       },
@@ -3566,6 +3636,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Onbekende berichttype(n): {value}.',
       badRegex: 'De reguliere expressie "{term}" is ongeldig: {error}',
       tooManyTerms: 'Een luisteraar kan naar hoogstens {max} tekststukken zoeken.',
+      badField: 'De sjabloonveldvoorwaarde "{term}" kan niet worden gelezen.',
+      tooManyFields: 'Een luisteraar kan hoogstens {max} sjabloonvelden controleren.',
       badResult: 'Onbekende worpresultaten: {value}.',
       badComparison: 'De waarde "{value}" is ongeldig voor --{option}.',
       badDice: 'De waarde "{value}" is ongeldig voor --dice.',
@@ -3579,11 +3651,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Vraag je GM om luisteraars voor je in te stellen.',
       unknownCommand: 'Typ !crl help om alle commando’s te zien.',
       badOption:
-        'Opties zijn --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+        'Opties zijn --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
       notFound: 'Typ !crl om de lijst met luisteraars te zien.',
       nameInvalid:
         'Gebruik maximaal {max} tekens, zonder deze: | { } [ ] \\ @ % # ? ~ of "--", en begin niet met "-".',
       badOnOff: 'Gebruik on of off.',
+      badField:
+        'Gebruik een veldnaam, dan = (is), != (is niet), ~ (bevat) of !~ (bevat niet), dan de waarde, zoals subcategory=Attack. Inspecteren toont de velden van een worp.',
       badType: 'Berichttypen zijn: {types}.',
       badResult: 'Gebruik crit, fumble, success of fail.',
       badComparison:
@@ -3614,7 +3688,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Toon deze lijst.',
       optionsTitle: 'Opties',
       options:
-        'Opties: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
+        'Opties: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
       placeholders:
         'Commando’s kunnen ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruiken.',
       handouts: 'De handout "{help}" legt alles uit; de handout "{deck}" heeft knoppen.',
@@ -3678,6 +3752,7 @@ const CustomizableRollListenerMod = (() => {
           '## in de tekst staat voor een inline-worp; de worpcontroles kijken dan alleen naar de worpen die daar staan. Zonder ## wordt elke worp in het bericht gecontroleerd.',
           'Tekst kan een reguliere expressie zijn in plaats van platte tekst (--regex on).',
           'Sprekers / personages: de naam die in de chat staat, of de personagenaam in het rolsjabloon. Spelers: de weergavenaam van de speler.',
+          'Sjabloonvelden: voorwaarden op de velden die Inspecteren toont, zoals subcategory=Attack of title~sword, gescheiden door &&. = en != vergelijken de hele waarde, ~ en !~ zoeken tekst erin, en hoofdletters en kleine letters maken niet uit. Een ontbrekend veld telt als leeg. Gebruik dit in plaats van --text als je één veld bedoelt, want --text doorzoekt ook de verborgen HTML van een Beacon-kaart.',
         ],
       },
       templates: {
@@ -3728,6 +3803,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on om de tekst als reguliere expressies te lezen, off voor platte tekst.',
         who: 'Namen van sprekers of personages, gescheiden door komma’s.',
         players: 'Weergavenamen van spelers, gescheiden door komma’s.',
+        fields:
+          'Voorwaarden voor sjabloonvelden, gescheiden door &&: name=value (is), name!=value (is niet), name~text (bevat), name!~text (bevat niet). Met --regex on leest ~ een reguliere expressie.',
         results: 'crit, fumble, success en/of fail.',
         total: 'Worptotaal: 15, >=15, <5 of 19-20.',
         natural: 'Natuurlijke worp: 20, <=2 of 19-20.',
@@ -3881,6 +3958,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'How to read the text',
       who: 'Speaker or character names separated by commas - empty for anyone',
       players: 'Player names separated by commas - empty for anyone',
+      fields: 'Template fields such as subcategory=Attack && title~sword - empty for any',
       results: 'Roll result',
       total: 'Roll total such as 15 or 19-20 - see the Help handout - empty for any',
       natural: 'Natural die result such as 20 or 1-2 - empty for any',
@@ -3923,6 +4001,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Text is',
       who: 'Speakers / characters',
       players: 'Players',
+      fields: 'Template fields',
       results: 'Roll result',
       total: 'Roll total',
       natural: 'Natural die',
@@ -3975,6 +4054,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'roll template does not match',
         who: 'speaker or character does not match',
         player: 'player does not match',
+        field: 'template field does not match',
         text: 'text not found',
         roll: 'no roll meets the roll conditions',
       },
@@ -4011,6 +4091,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Unknown message type(s): {value}.',
       badRegex: 'The regular expression "{term}" is not valid: {error}',
       tooManyTerms: 'A listener can look for at most {max} pieces of text.',
+      badField: 'The template field condition "{term}" cannot be read.',
+      tooManyFields: 'A listener can check at most {max} template fields.',
       badResult: 'Unknown roll result(s): {value}.',
       badComparison: 'The value "{value}" is not valid for --{option}.',
       badDice: 'The value "{value}" is not valid for --dice.',
@@ -4024,11 +4106,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Ask your GM to set up listeners for you.',
       unknownCommand: 'Type !crl help to see every command.',
       badOption:
-        'Options are --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
+        'Options are --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
       notFound: 'Type !crl to see the list of listeners.',
       nameInvalid:
         'Use up to {max} characters, without these: | { } [ ] \\ @ % # ? ~ or "--", and do not start with "-".',
       badOnOff: 'Use on or off.',
+      badField:
+        'Use a field name, then = (is), != (is not), ~ (contains) or !~ (does not contain), then the value, such as subcategory=Attack. Inspect shows a roll’s fields.',
       badType: 'Message types are: {types}.',
       badResult: 'Use crit, fumble, success or fail.',
       badComparison: 'Use a number, a comparison such as >=15 or <3, or a range such as 19-20.',
@@ -4057,7 +4141,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Show this list.',
       optionsTitle: 'Options',
       options:
-        'Options: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
+        'Options: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
       placeholders:
         'Commands can use ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} and ${field:name}.',
       handouts: 'The "{help}" handout explains everything; the "{deck}" handout has buttons.',
@@ -4120,6 +4204,7 @@ const CustomizableRollListenerMod = (() => {
           '## in the text stands for an inline roll; the roll checks then only look at the rolls found there. Without ##, every roll in the message is checked.',
           'Text can be a regular expression instead of plain text (--regex on).',
           'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
+          'Template fields: conditions on the fields Inspect lists, such as subcategory=Attack or title~sword, separated by &&. = and != compare the whole value, ~ and !~ look for text in it, and case is ignored. A missing field counts as empty. Use it rather than --text when you mean one field, because --text also searches a Beacon card’s hidden HTML.',
         ],
       },
       templates: {
@@ -4169,6 +4254,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on to read the text as regular expressions, off for plain text.',
         who: 'Speaker or character names, separated by commas.',
         players: 'Player display names, separated by commas.',
+        fields:
+          'Template field conditions, separated by &&: name=value (is), name!=value (is not), name~text (contains), name!~text (does not contain). With --regex on, ~ reads a regular expression.',
         results: 'crit, fumble, success and/or fail.',
         total: 'Roll total: 15, >=15, <5 or 19-20.',
         natural: 'Natural die face: 20, <=2 or 19-20.',
@@ -4322,6 +4409,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Miten teksti luetaan',
       who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
       players: 'Pelaajien nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
+      fields: 'Pohjan kentät, esim. subcategory=Attack && title~sword - tyhjä = mikä tahansa',
       results: 'Heiton tulos',
       total: 'Heiton summa, esim. 15 tai 19-20 - katso Ohje-moniste - tyhjä = mikä tahansa',
       natural: 'Nopan luonnollinen tulos, esim. 20 tai 1-2 - tyhjä = mikä tahansa',
@@ -4363,6 +4451,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Teksti on',
       who: 'Puhujat / hahmot',
       players: 'Pelaajat',
+      fields: 'Pohjan kentät',
       results: 'Heiton tulos',
       total: 'Heiton summa',
       natural: 'Luonnollinen noppa',
@@ -4415,6 +4504,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'heittopohja ei täsmää',
         who: 'puhuja tai hahmo ei täsmää',
         player: 'pelaaja ei täsmää',
+        field: 'pohjan kenttä ei täsmää',
         text: 'tekstiä ei löytynyt',
         roll: 'mikään heitto ei täytä heittoehtoja',
       },
@@ -4452,6 +4542,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Tuntemattomat viestityypit: {value}.',
       badRegex: 'Säännöllinen lauseke ”{term}” ei kelpaa: {error}',
       tooManyTerms: 'Kuuntelija voi etsiä enintään {max} tekstinpätkää.',
+      badField: 'Pohjan kentän ehtoa ”{term}” ei voi lukea.',
+      tooManyFields: 'Kuuntelija voi tarkistaa enintään {max} pohjan kenttää.',
       badResult: 'Tuntemattomat heiton tulokset: {value}.',
       badComparison: 'Arvo ”{value}” ei kelpaa valitsimelle --{option}.',
       badDice: 'Arvo ”{value}” ei kelpaa valitsimelle --dice.',
@@ -4465,11 +4557,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Pyydä pelinjohtajaa määrittämään kuuntelijat puolestasi.',
       unknownCommand: 'Kirjoita !crl help nähdäksesi kaikki komennot.',
       badOption:
-        'Valitsimet ovat --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
+        'Valitsimet ovat --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
       notFound: 'Kirjoita !crl nähdäksesi kuuntelijoiden luettelon.',
       nameInvalid:
         'Käytä enintään {max} merkkiä ilman näitä: | { } [ ] \\ @ % # ? ~ tai "--", äläkä aloita merkillä "-".',
       badOnOff: 'Käytä on tai off.',
+      badField:
+        'Käytä kentän nimeä, sitten = (on), != (ei ole), ~ (sisältää) tai !~ (ei sisällä), sitten arvoa, esim. subcategory=Attack. Tutki näyttää heiton kentät.',
       badType: 'Viestityypit ovat: {types}.',
       badResult: 'Käytä crit, fumble, success tai fail.',
       badComparison: 'Käytä lukua, vertailua kuten >=15 tai <3, tai väliä kuten 19-20.',
@@ -4499,7 +4593,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Näytä tämä luettelo.',
       optionsTitle: 'Valitsimet',
       options:
-        'Valitsimet: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
+        'Valitsimet: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
       placeholders:
         'Komennoissa voi käyttää muuttujia ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ja ${field:name}.',
       handouts: 'Moniste ”{help}” selittää kaiken; monisteessa ”{deck}” on painikkeet.',
@@ -4562,6 +4656,7 @@ const CustomizableRollListenerMod = (() => {
           '## tekstissä tarkoittaa rivin sisäistä heittoa; heittotarkistukset katsovat silloin vain siitä löytyviä heittoja. Ilman ##-merkkiä tarkistetaan viestin jokainen heitto.',
           'Teksti voi olla tavallisen tekstin sijaan säännöllinen lauseke (--regex on).',
           'Puhujat / hahmot: chatissa näkyvä nimi tai heittopohjan hahmon nimi. Pelaajat: pelaajan näyttönimi.',
+          'Pohjan kentät: ehdot kentille, jotka Tutki listaa, esim. subcategory=Attack tai title~sword, &&-merkein eroteltuina. = ja != vertaavat koko arvoa, ~ ja !~ etsivät siitä tekstiä, eikä isoilla ja pienillä kirjaimilla ole väliä. Puuttuva kenttä lasketaan tyhjäksi. Käytä tätä --text-asetuksen sijaan, kun tarkoitat yhtä kenttää, sillä --text etsii myös Beacon-kortin piilotetusta HTML:stä.',
         ],
       },
       templates: {
@@ -4612,6 +4707,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on lukee tekstin säännöllisinä lausekkeina, off tavallisena tekstinä.',
         who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina.',
         players: 'Pelaajien näyttönimet pilkuin eroteltuina.',
+        fields:
+          'Pohjan kenttien ehdot &&-merkein eroteltuina: name=value (on), name!=value (ei ole), name~text (sisältää), name!~text (ei sisällä). Asetuksella --regex on ~ lukee säännöllisen lausekkeen.',
         results: 'crit, fumble, success ja/tai fail.',
         total: 'Heiton summa: 15, >=15, <5 tai 19-20.',
         natural: 'Nopan luonnollinen silmäluku: 20, <=2 tai 19-20.',
@@ -4765,6 +4862,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Comment lire le texte',
       who: 'Noms d’orateurs ou de personnages séparés par des virgules - vide pour tout le monde',
       players: 'Noms de joueurs séparés par des virgules - vide pour tout le monde',
+      fields: 'Champs du modèle, par exemple subcategory=Attack && title~sword - vide pour tous',
       results: 'Résultat du jet',
       total: 'Total du jet, par exemple 15 ou 19-20 - voir le document d’aide - vide pour tous',
       natural: 'Résultat naturel du dé, par exemple 20 ou 1-2 - vide pour tous',
@@ -4806,6 +4904,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Le texte est',
       who: 'Orateurs / personnages',
       players: 'Joueurs',
+      fields: 'Champs du modèle',
       results: 'Résultat du jet',
       total: 'Total du jet',
       natural: 'Dé naturel',
@@ -4858,6 +4957,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'le modèle de jet ne correspond pas',
         who: 'l’orateur ou le personnage ne correspond pas',
         player: 'le joueur ne correspond pas',
+        field: 'le champ du modèle ne correspond pas',
         text: 'texte introuvable',
         roll: 'aucun jet ne remplit les conditions de jet',
       },
@@ -4896,6 +4996,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Type(s) de message inconnu(s) : {value}.',
       badRegex: 'L’expression régulière « {term} » n’est pas valide : {error}',
       tooManyTerms: 'Un écouteur peut chercher au plus {max} morceaux de texte.',
+      badField: 'La condition de champ du modèle « {term} » ne peut pas être lue.',
+      tooManyFields: 'Un écouteur peut vérifier au plus {max} champs du modèle.',
       badResult: 'Résultat(s) de jet inconnu(s) : {value}.',
       badComparison: 'La valeur « {value} » n’est pas valide pour --{option}.',
       badDice: 'La valeur « {value} » n’est pas valide pour --dice.',
@@ -4909,11 +5011,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Demandez à votre MJ de configurer les écouteurs pour vous.',
       unknownCommand: 'Tapez !crl help pour voir toutes les commandes.',
       badOption:
-        'Les options sont --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
+        'Les options sont --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
       notFound: 'Tapez !crl pour voir la liste des écouteurs.',
       nameInvalid:
         'Utilisez au plus {max} caractères, sans ceux-ci : | { } [ ] \\ @ % # ? ~ ni "--", et ne commencez pas par "-".',
       badOnOff: 'Utilisez on ou off.',
+      badField:
+        'Utilisez un nom de champ, puis = (est), != (n’est pas), ~ (contient) ou !~ (ne contient pas), puis la valeur, par exemple subcategory=Attack. Inspecter affiche les champs d’un jet.',
       badType: 'Les types de message sont : {types}.',
       badResult: 'Utilisez crit, fumble, success ou fail.',
       badComparison:
@@ -4944,7 +5048,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Affiche cette liste.',
       optionsTitle: 'Options',
       options:
-        'Options : --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
+        'Options : --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
       placeholders:
         'Les commandes peuvent utiliser ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} et ${field:name}.',
       handouts:
@@ -5010,6 +5114,7 @@ const CustomizableRollListenerMod = (() => {
           '## dans le texte représente un jet en ligne ; les vérifications de jet n’examinent alors que les jets trouvés à cet endroit. Sans ##, tous les jets du message sont vérifiés.',
           'Le texte peut être une expression régulière au lieu de texte simple (--regex on).',
           'Orateurs / personnages : le nom affiché dans le chat, ou le nom du personnage dans le modèle de jet. Joueurs : le nom d’affichage du joueur.',
+          'Champs du modèle : conditions sur les champs listés par Inspecter, par exemple subcategory=Attack ou title~sword, séparées par &&. = et != comparent la valeur entière, ~ et !~ cherchent du texte dedans, et la casse est ignorée. Un champ absent compte comme vide. Utilisez-le plutôt que --text quand vous visez un seul champ, car --text cherche aussi dans le HTML caché d’une carte Beacon.',
         ],
       },
       templates: {
@@ -5060,6 +5165,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on pour lire le texte comme des expressions régulières, off pour du texte simple.',
         who: 'Noms d’orateurs ou de personnages, séparés par des virgules.',
         players: 'Noms d’affichage des joueurs, séparés par des virgules.',
+        fields:
+          'Conditions sur les champs du modèle, séparées par && : name=value (est), name!=value (n’est pas), name~text (contient), name!~text (ne contient pas). Avec --regex on, ~ lit une expression régulière.',
         results: 'crit, fumble, success et/ou fail.',
         total: 'Total du jet : 15, >=15, <5 ou 19-20.',
         natural: 'Face naturelle du dé : 20, <=2 ou 19-20.',
@@ -5213,6 +5320,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Wie der Text gelesen wird',
       who: 'Sprecher- oder Charakternamen, durch Kommas getrennt – leer für alle',
       players: 'Spielernamen, durch Kommas getrennt – leer für alle',
+      fields: 'Vorlagenfelder wie subcategory=Attack && title~sword – leer für alle',
       results: 'Wurfergebnis',
       total: 'Wurfsumme wie 15 oder 19-20 – siehe Hilfe-Handout – leer für jede',
       natural: 'Natürliches Würfelergebnis wie 20 oder 1-2 – leer für jedes',
@@ -5254,6 +5362,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Text ist',
       who: 'Sprecher / Charaktere',
       players: 'Spieler',
+      fields: 'Vorlagenfelder',
       results: 'Wurfergebnis',
       total: 'Wurfsumme',
       natural: 'Natürlicher Wurf',
@@ -5306,6 +5415,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'Wurfvorlage passt nicht',
         who: 'Sprecher oder Charakter passt nicht',
         player: 'Spieler passt nicht',
+        field: 'Vorlagenfeld passt nicht',
         text: 'Text nicht gefunden',
         roll: 'kein Wurf erfüllt die Wurfbedingungen',
       },
@@ -5343,6 +5453,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Unbekannte(r) Nachrichtentyp(en): {value}.',
       badRegex: 'Der reguläre Ausdruck „{term}“ ist nicht gültig: {error}',
       tooManyTerms: 'Ein Listener kann nach höchstens {max} Textstücken suchen.',
+      badField: 'Die Vorlagenfeld-Bedingung „{term}“ kann nicht gelesen werden.',
+      tooManyFields: 'Ein Listener kann höchstens {max} Vorlagenfelder prüfen.',
       badResult: 'Unbekannte(s) Wurfergebnis(se): {value}.',
       badComparison: 'Der Wert „{value}“ ist für --{option} nicht gültig.',
       badDice: 'Der Wert „{value}“ ist für --dice nicht gültig.',
@@ -5356,11 +5468,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Bitte deine SL, Listener für dich einzurichten.',
       unknownCommand: 'Gib !crl help ein, um alle Befehle zu sehen.',
       badOption:
-        'Optionen sind --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
+        'Optionen sind --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
       notFound: 'Gib !crl ein, um die Liste der Listener zu sehen.',
       nameInvalid:
         'Verwende bis zu {max} Zeichen, ohne diese: | { } [ ] \\ @ % # ? ~ oder „--“, und beginne nicht mit „-“.',
       badOnOff: 'Verwende on oder off.',
+      badField:
+        'Verwende einen Feldnamen, dann = (ist), != (ist nicht), ~ (enthält) oder !~ (enthält nicht), dann den Wert, etwa subcategory=Attack. Der Inspektor zeigt die Felder eines Wurfs.',
       badType: 'Nachrichtentypen sind: {types}.',
       badResult: 'Verwende crit, fumble, success oder fail.',
       badComparison:
@@ -5391,7 +5505,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Zeigt diese Liste.',
       optionsTitle: 'Optionen',
       options:
-        'Optionen: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
+        'Optionen: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
       placeholders:
         'Befehle können ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} und ${field:name} verwenden.',
       handouts: 'Das Handout „{help}“ erklärt alles; das Handout „{deck}“ enthält Schaltflächen.',
@@ -5455,6 +5569,7 @@ const CustomizableRollListenerMod = (() => {
           '## im Text steht für einen Inline-Wurf; die Wurfprüfungen betrachten dann nur die dort gefundenen Würfe. Ohne ## wird jeder Wurf der Nachricht geprüft.',
           'Text kann statt Klartext ein regulärer Ausdruck sein (--regex on).',
           'Sprecher / Charaktere: der im Chat angezeigte Name oder der Charaktername in der Wurfvorlage. Spieler: der Anzeigename des Spielers.',
+          'Vorlagenfelder: Bedingungen für die Felder, die der Inspektor auflistet, etwa subcategory=Attack oder title~sword, getrennt durch &&. = und != vergleichen den ganzen Wert, ~ und !~ suchen Text darin, Groß- und Kleinschreibung wird ignoriert. Ein fehlendes Feld gilt als leer. Verwende es statt --text, wenn du ein bestimmtes Feld meinst, denn --text durchsucht auch das versteckte HTML einer Beacon-Karte.',
         ],
       },
       templates: {
@@ -5505,6 +5620,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on, um den Text als reguläre Ausdrücke zu lesen, off für Klartext.',
         who: 'Sprecher- oder Charakternamen, durch Kommas getrennt.',
         players: 'Anzeigenamen der Spieler, durch Kommas getrennt.',
+        fields:
+          'Bedingungen für Vorlagenfelder, getrennt durch &&: name=value (ist), name!=value (ist nicht), name~text (enthält), name!~text (enthält nicht). Mit --regex on liest ~ einen regulären Ausdruck.',
         results: 'crit, fumble, success und/oder fail.',
         total: 'Wurfsumme: 15, >=15, <5 oder 19-20.',
         natural: 'Natürliche Würfelseite: 20, <=2 oder 19-20.',
@@ -5658,6 +5775,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Πώς διαβάζεται το κείμενο',
       who: 'Ονόματα ομιλητών ή χαρακτήρων χωρισμένα με κόμματα - κενό για όλους',
       players: 'Ονόματα παικτών χωρισμένα με κόμματα - κενό για όλους',
+      fields: 'Πεδία προτύπου, π.χ. subcategory=Attack && title~sword - κενό για οποιοδήποτε',
       results: 'Αποτέλεσμα ζαριάς',
       total: 'Σύνολο ζαριάς, π.χ. 15 ή 19-20 - δείτε το φυλλάδιο Βοήθειας - κενό για οποιοδήποτε',
       natural: 'Φυσικό αποτέλεσμα ζαριού, π.χ. 20 ή 1-2 - κενό για οποιοδήποτε',
@@ -5699,6 +5817,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Το κείμενο είναι',
       who: 'Ομιλητές / χαρακτήρες',
       players: 'Παίκτες',
+      fields: 'Πεδία προτύπου',
       results: 'Αποτέλεσμα ζαριάς',
       total: 'Σύνολο ζαριάς',
       natural: 'Φυσικό ζάρι',
@@ -5751,6 +5870,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'το πρότυπο ζαριάς δεν ταιριάζει',
         who: 'ο ομιλητής ή ο χαρακτήρας δεν ταιριάζει',
         player: 'ο παίκτης δεν ταιριάζει',
+        field: 'το πεδίο προτύπου δεν ταιριάζει',
         text: 'το κείμενο δεν βρέθηκε',
         roll: 'καμία ζαριά δεν πληροί τις συνθήκες ζαριάς',
       },
@@ -5789,6 +5909,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Άγνωστος τύπος μηνύματος: {value}.',
       badRegex: 'Η κανονική έκφραση «{term}» δεν είναι έγκυρη: {error}',
       tooManyTerms: 'Ένας ακροατής μπορεί να αναζητά το πολύ {max} τμήματα κειμένου.',
+      badField: 'Η συνθήκη πεδίου προτύπου «{term}» δεν μπορεί να διαβαστεί.',
+      tooManyFields: 'Ένας ακροατής μπορεί να ελέγχει το πολύ {max} πεδία προτύπου.',
       badResult: 'Άγνωστο αποτέλεσμα ζαριάς: {value}.',
       badComparison: 'Η τιμή «{value}» δεν είναι έγκυρη για το --{option}.',
       badDice: 'Η τιμή «{value}» δεν είναι έγκυρη για το --dice.',
@@ -5802,11 +5924,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Ζητήστε από τον GM να ρυθμίσει ακροατές για εσάς.',
       unknownCommand: 'Πληκτρολογήστε !crl help για να δείτε όλες τις εντολές.',
       badOption:
-        'Οι επιλογές είναι --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands.',
+        'Οι επιλογές είναι --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands.',
       notFound: 'Πληκτρολογήστε !crl για να δείτε τη λίστα ακροατών.',
       nameInvalid:
         'Χρησιμοποιήστε έως {max} χαρακτήρες, χωρίς τους: | { } [ ] \\ @ % # ? ~ ή «--», και μην ξεκινάτε με «-».',
       badOnOff: 'Χρησιμοποιήστε on ή off.',
+      badField:
+        'Χρησιμοποιήστε ένα όνομα πεδίου, μετά = (είναι), != (δεν είναι), ~ (περιέχει) ή !~ (δεν περιέχει), μετά την τιμή, π.χ. subcategory=Attack. Η Επιθεώρηση δείχνει τα πεδία μιας ζαριάς.',
       badType: 'Οι τύποι μηνυμάτων είναι: {types}.',
       badResult: 'Χρησιμοποιήστε crit, fumble, success ή fail.',
       badComparison:
@@ -5837,7 +5961,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Εμφανίζει αυτή τη λίστα.',
       optionsTitle: 'Επιλογές',
       options:
-        'Επιλογές: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands. Μπορούν να χρησιμοποιηθούν ονόματα αντί για IDs.',
+        'Επιλογές: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands. Μπορούν να χρησιμοποιηθούν ονόματα αντί για IDs.',
       placeholders:
         'Οι εντολές μπορούν να χρησιμοποιούν ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} και ${field:name}.',
       handouts: 'Το φυλλάδιο «{help}» εξηγεί τα πάντα· το φυλλάδιο «{deck}» έχει κουμπιά.',
@@ -5901,6 +6025,7 @@ const CustomizableRollListenerMod = (() => {
           'Το ## στο κείμενο αντιστοιχεί σε μια ενσωματωμένη ζαριά· οι έλεγχοι ζαριάς εξετάζουν τότε μόνο τις ζαριές που βρέθηκαν εκεί. Χωρίς ##, ελέγχεται κάθε ζαριά του μηνύματος.',
           'Το κείμενο μπορεί να είναι κανονική έκφραση αντί για απλό κείμενο (--regex on).',
           'Ομιλητές / χαρακτήρες: το όνομα που εμφανίζεται στη συνομιλία ή το όνομα χαρακτήρα στο πρότυπο ζαριάς. Παίκτες: το εμφανιζόμενο όνομα του παίκτη.',
+          'Πεδία προτύπου: συνθήκες στα πεδία που εμφανίζει η Επιθεώρηση, π.χ. subcategory=Attack ή title~sword, χωρισμένες με &&. Τα = και != συγκρίνουν ολόκληρη την τιμή, τα ~ και !~ αναζητούν κείμενο μέσα της, και δεν γίνεται διάκριση πεζών-κεφαλαίων. Ένα πεδίο που λείπει μετράει ως κενό. Χρησιμοποιήστε το αντί για --text όταν εννοείτε ένα πεδίο, επειδή το --text ψάχνει και στο κρυφό HTML μιας κάρτας Beacon.',
         ],
       },
       templates: {
@@ -5951,6 +6076,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on για ανάγνωση του κειμένου ως κανονικές εκφράσεις, off για απλό κείμενο.',
         who: 'Ονόματα ομιλητών ή χαρακτήρων, χωρισμένα με κόμματα.',
         players: 'Εμφανιζόμενα ονόματα παικτών, χωρισμένα με κόμματα.',
+        fields:
+          'Συνθήκες πεδίων προτύπου, χωρισμένες με &&: name=value (είναι), name!=value (δεν είναι), name~text (περιέχει), name!~text (δεν περιέχει). Με --regex on, το ~ διαβάζει κανονική έκφραση.',
         results: 'crit, fumble, success και/ή fail.',
         total: 'Σύνολο ζαριάς: 15, >=15, <5 ή 19-20.',
         natural: 'Φυσική έδρα ζαριού: 20, <=2 ή 19-20.',
@@ -6105,6 +6232,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'איך לקרוא את הטקסט',
       who: 'שמות דוברים או דמויות מופרדים בפסיקים - ריק לכולם',
       players: 'שמות שחקנים מופרדים בפסיקים - ריק לכולם',
+      fields: 'שדות תבנית כגון subcategory=Attack && title~sword - ריק לכל ערך',
       results: 'תוצאת ההטלה',
       total: 'סכום ההטלה, כגון 15 או 19-20 - ראו את דף העזרה - ריק לכל סכום',
       natural: 'תוצאה טבעית של הקובייה, כגון 20 או 1-2 - ריק לכל תוצאה',
@@ -6146,6 +6274,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'הטקסט הוא',
       who: 'דוברים / דמויות',
       players: 'שחקנים',
+      fields: 'שדות התבנית',
       results: 'תוצאת ההטלה',
       total: 'סכום ההטלה',
       natural: 'קובייה טבעית',
@@ -6198,6 +6327,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'תבנית ההטלה לא תואמת',
         who: 'הדובר או הדמות לא תואמים',
         player: 'השחקן לא תואם',
+        field: 'שדה התבנית לא תואם',
         text: 'הטקסט לא נמצא',
         roll: 'אף הטלה לא עומדת בתנאי ההטלה',
       },
@@ -6233,6 +6363,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'סוגי הודעות לא מוכרים: {value}.',
       badRegex: 'הביטוי הרגולרי "{term}" אינו תקין: {error}',
       tooManyTerms: 'מאזין יכול לחפש לכל היותר {max} קטעי טקסט.',
+      badField: 'לא ניתן לקרוא את תנאי שדה התבנית "{term}".',
+      tooManyFields: 'מאזין יכול לבדוק לכל היותר {max} שדות תבנית.',
       badResult: 'תוצאות הטלה לא מוכרות: {value}.',
       badComparison: 'הערך "{value}" אינו תקין עבור --{option}.',
       badDice: 'הערך "{value}" אינו תקין עבור --dice.',
@@ -6246,11 +6378,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'בקשו מה-GM שלכם להגדיר עבורכם מאזינים.',
       unknownCommand: 'הקלידו !crl help כדי לראות את כל הפקודות.',
       badOption:
-        'האפשרויות הן --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands.',
+        'האפשרויות הן --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands.',
       notFound: 'הקלידו !crl כדי לראות את רשימת המאזינים.',
       nameInvalid:
         'עד {max} תווים, בלי התווים האלה: | { } [ ] \\ @ % # ? ~ או "--", ובלי "-" בהתחלה.',
       badOnOff: 'השתמשו ב-on או off.',
+      badField:
+        'השתמשו בשם שדה, אחריו = (שווה), != (לא שווה), ~ (מכיל) או !~ (לא מכיל), ואחריו הערך, כגון subcategory=Attack. בדיקת ההודעה מציגה את השדות של הטלה.',
       badType: 'סוגי ההודעות הם: {types}.',
       badResult: 'השתמשו ב-crit, fumble, success או fail.',
       badComparison: 'השתמשו במספר, בהשוואה כגון >=15 או <3, או בטווח כגון 19-20.',
@@ -6278,7 +6412,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'הצגת הרשימה הזו.',
       optionsTitle: 'אפשרויות',
       options:
-        'אפשרויות: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands. ניתן להשתמש בשמות במקום במזהים.',
+        'אפשרויות: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands. ניתן להשתמש בשמות במקום במזהים.',
       placeholders:
         'פקודות יכולות להשתמש ב-${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ו-${field:name}.',
       handouts: 'דף המידע "{help}" מסביר הכול; בדף המידע "{deck}" יש לחצנים.',
@@ -6341,6 +6475,7 @@ const CustomizableRollListenerMod = (() => {
           '## בטקסט מייצג הטלה מוטבעת; בדיקות ההטלה בודקות אז רק את ההטלות שנמצאו שם. בלי ##, נבדקת כל הטלה בהודעה.',
           'הטקסט יכול להיות ביטוי רגולרי במקום טקסט רגיל (--regex on).',
           "דוברים / דמויות: השם שמוצג בצ'אט, או שם הדמות בתבנית ההטלה. שחקנים: שם התצוגה של השחקן.",
+          'שדות התבנית: תנאים על השדות שבדיקת ההודעה מציגה, כגון subcategory=Attack או title~sword, מופרדים ב-&&. = ו-!= משווים את הערך כולו, ~ ו-!~ מחפשים בו טקסט, ואין הבחנה בין אותיות גדולות לקטנות. שדה חסר נחשב ריק. השתמשו בזה במקום --text כשהכוונה לשדה אחד, כי --text מחפש גם ב-HTML המוסתר של כרטיס Beacon.',
         ],
       },
       templates: {
@@ -6390,6 +6525,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on כדי לקרוא את הטקסט כביטויים רגולריים, off לטקסט רגיל.',
         who: 'שמות דוברים או דמויות, מופרדים בפסיקים.',
         players: 'שמות התצוגה של שחקנים, מופרדים בפסיקים.',
+        fields:
+          'תנאים על שדות התבנית, מופרדים ב-&&: name=value (שווה), name!=value (לא שווה), name~text (מכיל), name!~text (לא מכיל). עם --regex on, ~ קורא ביטוי רגולרי.',
         results: 'crit, fumble, success ו/או fail.',
         total: 'סכום ההטלה: 15, >=15, <5 או 19-20.',
         natural: 'הפאה הטבעית של הקובייה: 20, <=2 או 19-20.',
@@ -6542,6 +6679,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Hogyan értelmezze a szöveget',
       who: 'Beszélők vagy karakterek nevei vesszővel elválasztva – üres: bárki',
       players: 'Játékosnevek vesszővel elválasztva – üres: bárki',
+      fields: 'Sablonmezők, pl. subcategory=Attack && title~sword – üres: bármelyik',
       results: 'Dobás eredménye',
       total: 'Dobás összege, pl. 15 vagy 19-20 – lásd a Súgó segédanyagot – üres: bármennyi',
       natural: 'Natúr kockaérték, pl. 20 vagy 1-2 – üres: bármennyi',
@@ -6583,6 +6721,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Szöveg típusa',
       who: 'Beszélők / karakterek',
       players: 'Játékosok',
+      fields: 'Sablonmezők',
       results: 'Dobás eredménye',
       total: 'Dobás összege',
       natural: 'Natúr kocka',
@@ -6635,6 +6774,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'a dobássablon nem egyezik',
         who: 'a beszélő vagy a karakter nem egyezik',
         player: 'a játékos nem egyezik',
+        field: 'a sablonmező nem egyezik',
         text: 'a szöveg nem található',
         roll: 'egyik dobás sem felel meg a dobásfeltételeknek',
       },
@@ -6672,6 +6812,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Ismeretlen üzenettípus(ok): {value}.',
       badRegex: 'A(z) „{term}” reguláris kifejezés érvénytelen: {error}',
       tooManyTerms: 'Egy figyelő legfeljebb {max} szövegrészt kereshet.',
+      badField: 'A(z) „{term}” sablonmező-feltétel nem olvasható.',
+      tooManyFields: 'Egy figyelő legfeljebb {max} sablonmezőt ellenőrizhet.',
       badResult: 'Ismeretlen dobáseredmény(ek): {value}.',
       badComparison: 'A(z) „{value}” érték érvénytelen ehhez: --{option}.',
       badDice: 'A(z) „{value}” érték érvénytelen ehhez: --dice.',
@@ -6685,11 +6827,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Kérje meg a GM-et, hogy állítson be figyelőket.',
       unknownCommand: 'Az összes parancsot a !crl help paranccsal láthatja.',
       badOption:
-        'A lehetőségek: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
+        'A lehetőségek: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
       notFound: 'A figyelők listáját a !crl paranccsal láthatja.',
       nameInvalid:
         'Legfeljebb {max} karakter, ezek nélkül: | { } [ ] \\ @ % # ? ~ vagy "--", és nem kezdődhet "-" jellel.',
       badOnOff: 'Használja: on vagy off.',
+      badField:
+        'Adjon meg egy mezőnevet, majd = (egyenlő), != (nem egyenlő), ~ (tartalmazza) vagy !~ (nem tartalmazza), majd az értéket, pl. subcategory=Attack. A vizsgáló megmutatja egy dobás mezőit.',
       badType: 'Az üzenettípusok a következők: {types}.',
       badResult: 'Használja: crit, fumble, success vagy fail.',
       badComparison:
@@ -6720,7 +6864,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Ez a lista.',
       optionsTitle: 'Opciók',
       options:
-        'Opciók: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
+        'Opciók: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
       placeholders:
         'A parancsok a következőket használhatják: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} és ${field:name}.',
       handouts:
@@ -6785,6 +6929,7 @@ const CustomizableRollListenerMod = (() => {
           'A ## a szövegben egy beágyazott dobást jelöl; ilyenkor a dobásellenőrzések csak az ott talált dobásokat nézik. ## nélkül az üzenet minden dobását ellenőrzi.',
           'A szöveg egyszerű szöveg helyett reguláris kifejezés is lehet (--regex on).',
           'Beszélők / karakterek: a chatben megjelenő név, vagy a karakter neve a dobássablonban. Játékosok: a játékos megjelenített neve.',
+          'Sablonmezők: feltételek a vizsgáló által listázott mezőkre, pl. subcategory=Attack vagy title~sword, &&-vel elválasztva. Az = és a != a teljes értéket hasonlítja össze, a ~ és a !~ szöveget keres benne, a kis- és nagybetű nem számít. A hiányzó mező üresnek számít. Ezt használja --text helyett, ha egy mezőre gondol, mert a --text egy Beacon-kártya rejtett HTML-jében is keres.',
         ],
       },
       templates: {
@@ -6835,6 +6980,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on: a szöveg reguláris kifejezés, off: egyszerű szöveg.',
         who: 'Beszélők vagy karakterek nevei vesszővel elválasztva.',
         players: 'Játékosok megjelenített nevei vesszővel elválasztva.',
+        fields:
+          'Sablonmező-feltételek &&-vel elválasztva: name=value (egyenlő), name!=value (nem egyenlő), name~text (tartalmazza), name!~text (nem tartalmazza). --regex on esetén a ~ reguláris kifejezést olvas.',
         results: 'crit, fumble, success és/vagy fail.',
         total: 'Dobás összege: 15, >=15, <5 vagy 19-20.',
         natural: 'Natúr kockaérték: 20, <=2 vagy 19-20.',
@@ -6988,6 +7135,8 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Come leggere il testo',
       who: 'Nomi di mittenti o personaggi separati da virgole - vuoto per chiunque',
       players: 'Nomi dei giocatori separati da virgole - vuoto per chiunque',
+      fields:
+        'Campi del template, ad esempio subcategory=Attack && title~sword - vuoto per qualsiasi',
       results: 'Risultato del tiro',
       total: 'Totale del tiro, ad esempio 15 o 19-20 - vedi la dispensa Help - vuoto per qualsiasi',
       natural: 'Risultato naturale del dado, ad esempio 20 o 1-2 - vuoto per qualsiasi',
@@ -7029,6 +7178,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Il testo è',
       who: 'Mittenti / personaggi',
       players: 'Giocatori',
+      fields: 'Campi del template',
       results: 'Risultato del tiro',
       total: 'Totale del tiro',
       natural: 'Dado naturale',
@@ -7081,6 +7231,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'il template di tiro non corrisponde',
         who: 'mittente o personaggio non corrisponde',
         player: 'il giocatore non corrisponde',
+        field: 'il campo del template non corrisponde',
         text: 'testo non trovato',
         roll: 'nessun tiro soddisfa le condizioni sui tiri',
       },
@@ -7118,6 +7269,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Tipi di messaggio sconosciuti: {value}.',
       badRegex: 'L\'espressione regolare "{term}" non è valida: {error}',
       tooManyTerms: 'Un listener può cercare al massimo {max} frammenti di testo.',
+      badField: 'La condizione sul campo del template "{term}" non può essere letta.',
+      tooManyFields: 'Un listener può controllare al massimo {max} campi del template.',
       badResult: 'Risultati del tiro sconosciuti: {value}.',
       badComparison: 'Il valore "{value}" non è valido per --{option}.',
       badDice: 'Il valore "{value}" non è valido per --dice.',
@@ -7131,11 +7284,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Chiedi al tuo GM di configurare i listener per te.',
       unknownCommand: 'Digita !crl help per vedere tutti i comandi.',
       badOption:
-        'Le opzioni sono --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+        'Le opzioni sono --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
       notFound: "Digita !crl per vedere l'elenco dei listener.",
       nameInvalid:
         'Usa al massimo {max} caratteri, senza questi: | { } [ ] \\ @ % # ? ~ o "--", e non iniziare con "-".',
       badOnOff: 'Usa on o off.',
+      badField:
+        'Usa un nome di campo, poi = (è), != (non è), ~ (contiene) o !~ (non contiene), poi il valore, ad esempio subcategory=Attack. Ispeziona mostra i campi di un tiro.',
       badType: 'I tipi di messaggio sono: {types}.',
       badResult: 'Usa crit, fumble, success o fail.',
       badComparison: 'Usa un numero, un confronto come >=15 o <3, o un intervallo come 19-20.',
@@ -7164,7 +7319,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra questo elenco.',
       optionsTitle: 'Opzioni',
       options:
-        'Opzioni: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
+        'Opzioni: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
       placeholders:
         'I comandi possono usare ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
       handouts: 'La dispensa "{help}" spiega tutto; la dispensa "{deck}" ha i pulsanti.',
@@ -7228,6 +7383,7 @@ const CustomizableRollListenerMod = (() => {
           '## nel testo indica un tiro inline; i controlli sui tiri esaminano allora solo i tiri trovati lì. Senza ##, viene controllato ogni tiro del messaggio.',
           "Il testo può essere un'espressione regolare invece di testo semplice (--regex on).",
           'Mittenti / personaggi: il nome mostrato in chat o il nome del personaggio nel template di tiro. Giocatori: il nome visualizzato del giocatore.',
+          "Campi del template: condizioni sui campi elencati da Ispeziona, ad esempio subcategory=Attack o title~sword, separate da &&. = e != confrontano l'intero valore, ~ e !~ cercano del testo al suo interno, e maiuscole e minuscole sono ignorate. Un campo mancante conta come vuoto. Usalo al posto di --text quando intendi un solo campo, perché --text cerca anche nell'HTML nascosto di una scheda Beacon.",
         ],
       },
       templates: {
@@ -7278,6 +7434,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on per leggere il testo come espressioni regolari, off per testo semplice.',
         who: 'Nomi di mittenti o personaggi, separati da virgole.',
         players: 'Nomi visualizzati dei giocatori, separati da virgole.',
+        fields:
+          "Condizioni sui campi del template, separate da &&: name=value (è), name!=value (non è), name~text (contiene), name!~text (non contiene). Con --regex on, ~ legge un'espressione regolare.",
         results: 'crit, fumble, success e/o fail.',
         total: 'Totale del tiro: 15, >=15, <5 o 19-20.',
         natural: 'Faccia del dado naturale: 20, <=2 o 19-20.',
@@ -7431,6 +7589,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'テキストの解釈方法',
       who: '発言者名またはキャラクター名（カンマ区切り）- 空欄で全員',
       players: 'プレイヤー名（カンマ区切り）- 空欄で全員',
+      fields: 'テンプレートのフィールド（subcategory=Attack && title~sword など）- 空欄ですべて',
       results: 'ロール結果',
       total: 'ロールの合計（15 や 19-20 など）- ヘルプのハンドアウトを参照 - 空欄ですべて',
       natural: 'ダイスの出目（20 や 1-2 など）- 空欄ですべて',
@@ -7472,6 +7631,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'テキストの形式',
       who: '発言者 / キャラクター',
       players: 'プレイヤー',
+      fields: 'テンプレートのフィールド',
       results: 'ロール結果',
       total: 'ロールの合計',
       natural: 'ダイスの出目',
@@ -7524,6 +7684,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'ロールテンプレートが一致しない',
         who: '発言者またはキャラクターが一致しない',
         player: 'プレイヤーが一致しない',
+        field: 'テンプレートのフィールドが一致しない',
         text: 'テキストが見つからない',
         roll: 'ロール条件を満たすロールがない',
       },
@@ -7560,6 +7721,8 @@ const CustomizableRollListenerMod = (() => {
       badType: '不明なメッセージタイプ: {value}',
       badRegex: '正規表現「{term}」が正しくありません: {error}',
       tooManyTerms: '1 つのリスナーで検索できるテキストは最大 {max} 個です。',
+      badField: 'テンプレートのフィールド条件「{term}」を読み取れません。',
+      tooManyFields: '1 つのリスナーで確認できるテンプレートのフィールドは最大 {max} 個です。',
       badResult: '不明なロール結果: {value}',
       badComparison: '値「{value}」は --{option} には使用できません。',
       badDice: '値「{value}」は --dice には使用できません。',
@@ -7573,11 +7736,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'リスナーの設定は GM に依頼してください。',
       unknownCommand: '!crl help と入力すると、すべてのコマンドを表示します。',
       badOption:
-        'オプションは --templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands です。',
+        'オプションは --templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands です。',
       notFound: '!crl と入力すると、リスナーの一覧を表示します。',
       nameInvalid:
         '{max} 文字以内で、| { } [ ] \\ @ % # ? ~ と "--" を含めず、"-" で始めないでください。',
       badOnOff: 'on または off を指定してください。',
+      badField:
+        'フィールド名、= (一致)・!= (不一致)・~ (含む)・!~ (含まない) のいずれか、値の順に指定してください（subcategory=Attack など）。ロールのフィールドは検査で確認できます。',
       badType: 'メッセージタイプ: {types}',
       badResult: 'crit、fumble、success、fail のいずれかを指定してください。',
       badComparison: '数値、>=15 や <3 などの比較、または 19-20 などの範囲を指定してください。',
@@ -7606,7 +7771,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'この一覧を表示します。',
       optionsTitle: 'オプション',
       options:
-        'オプション: --templates、--types、--text、--regex、--who、--players、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands。ID の代わりに名前も使えます。',
+        'オプション: --templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands。ID の代わりに名前も使えます。',
       placeholders:
         'コマンドでは ${who}、${character}、${player}、${template}、${total}、${natural}、${result}、${expression}、${table}、${listener}、${field:name} を使えます。',
       handouts:
@@ -7671,6 +7836,7 @@ const CustomizableRollListenerMod = (() => {
           'テキスト中の ## はインラインロールを表し、ロールのチェックはそこで見つかったロールだけを対象にします。## がない場合は、メッセージ内のすべてのロールがチェックされます。',
           'テキストはプレーンテキストの代わりに正規表現にもできます（--regex on）。',
           '発言者 / キャラクター: チャットに表示される名前、またはロールテンプレート内のキャラクター名。プレイヤー: プレイヤーの表示名。',
+          'テンプレートのフィールド: 検査で一覧表示されるフィールドに対する条件で、subcategory=Attack や title~sword のように && で区切ります。= と != は値全体を比較し、~ と !~ は値に含まれるテキストを探します。大文字と小文字は区別しません。存在しないフィールドは空として扱います。特定のフィールドを指すときは --text ではなくこちらを使ってください。--text は Beacon カードの非表示の HTML も検索するためです。',
         ],
       },
       templates: {
@@ -7720,6 +7886,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on でテキストを正規表現として、off でプレーンテキストとして扱います。',
         who: '発言者名またはキャラクター名（カンマ区切り）。',
         players: 'プレイヤーの表示名（カンマ区切り）。',
+        fields:
+          'テンプレートのフィールド条件（&& 区切り）: name=value (一致)、name!=value (不一致)、name~text (含む)、name!~text (含まない)。--regex on の場合、~ は正規表現として読みます。',
         results: 'crit、fumble、success、fail（複数可）。',
         total: 'ロールの合計: 15、>=15、<5、19-20 など。',
         natural: 'ダイスの出目: 20、<=2、19-20 など。',
@@ -7873,6 +8041,7 @@ const CustomizableRollListenerMod = (() => {
       regex: '텍스트 해석 방식',
       who: '발언자 또는 캐릭터 이름(쉼표로 구분) - 비우면 누구나',
       players: '플레이어 이름(쉼표로 구분) - 비우면 누구나',
+      fields: '템플릿 필드(예: subcategory=Attack && title~sword) - 비우면 전체',
       results: '굴림 결과',
       total: '굴림 합계(예: 15 또는 19-20) - 도움말 핸드아웃 참고 - 비우면 전체',
       natural: '주사위 눈(예: 20 또는 1-2) - 비우면 전체',
@@ -7914,6 +8083,7 @@ const CustomizableRollListenerMod = (() => {
       regex: '텍스트 형식',
       who: '발언자/캐릭터',
       players: '플레이어',
+      fields: '템플릿 필드',
       results: '굴림 결과',
       total: '굴림 합계',
       natural: '주사위 눈',
@@ -7966,6 +8136,7 @@ const CustomizableRollListenerMod = (() => {
         template: '롤 템플릿이 일치하지 않음',
         who: '발언자 또는 캐릭터가 일치하지 않음',
         player: '플레이어가 일치하지 않음',
+        field: '템플릿 필드가 일치하지 않음',
         text: '텍스트를 찾지 못함',
         roll: '굴림 조건을 충족하는 굴림이 없음',
       },
@@ -8002,6 +8173,8 @@ const CustomizableRollListenerMod = (() => {
       badType: '알 수 없는 메시지 유형: {value}.',
       badRegex: '정규식 "{term}"이(가) 올바르지 않습니다: {error}',
       tooManyTerms: '리스너 하나가 찾을 수 있는 텍스트는 최대 {max}개입니다.',
+      badField: '템플릿 필드 조건 "{term}"을(를) 읽을 수 없습니다.',
+      tooManyFields: '리스너 하나가 확인할 수 있는 템플릿 필드는 최대 {max}개입니다.',
       badResult: '알 수 없는 굴림 결과: {value}.',
       badComparison: '"{value}"은(는) --{option}에 사용할 수 없는 값입니다.',
       badDice: '"{value}"은(는) --dice에 사용할 수 없는 값입니다.',
@@ -8015,11 +8188,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'GM에게 리스너 설정을 요청하세요.',
       unknownCommand: '모든 명령어를 보려면 !crl help를 입력하세요.',
       badOption:
-        '옵션은 --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands입니다.',
+        '옵션은 --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands입니다.',
       notFound: '!crl을 입력하면 리스너 목록을 볼 수 있습니다.',
       nameInvalid:
         '최대 {max}자까지 쓸 수 있으며, | { } [ ] \\ @ % # ? ~ 와 "--"는 쓸 수 없고 "-"로 시작할 수 없습니다.',
       badOnOff: 'on 또는 off를 사용하세요.',
+      badField:
+        '필드 이름, 그다음 = (같음), != (같지 않음), ~ (포함) 또는 !~ (포함하지 않음), 그다음 값을 쓰세요. 예: subcategory=Attack. 굴림의 필드는 검사로 확인할 수 있습니다.',
       badType: '메시지 유형: {types}.',
       badResult: 'crit, fumble, success, fail 중 하나를 사용하세요.',
       badComparison: '숫자, >=15나 <3 같은 비교, 또는 19-20 같은 범위를 사용하세요.',
@@ -8048,7 +8223,7 @@ const CustomizableRollListenerMod = (() => {
       help: '이 목록을 표시합니다.',
       optionsTitle: '옵션',
       options:
-        '옵션: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands. ID 대신 이름을 써도 됩니다.',
+        '옵션: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands. ID 대신 이름을 써도 됩니다.',
       placeholders:
         '명령어에는 ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener}, ${field:name}을(를) 쓸 수 있습니다.',
       handouts: '"{help}" 핸드아웃에 모든 설명이 있고, "{deck}" 핸드아웃에는 버튼이 있습니다.',
@@ -8111,6 +8286,7 @@ const CustomizableRollListenerMod = (() => {
           '텍스트 속 ##은 인라인 굴림을 나타내며, 이때 굴림 확인은 그 자리에서 찾은 굴림만 봅니다. ##이 없으면 메시지의 모든 굴림을 확인합니다.',
           '텍스트는 일반 텍스트 대신 정규식으로 쓸 수도 있습니다(--regex on).',
           '발언자/캐릭터: 채팅에 표시되는 이름, 또는 롤 템플릿 속 캐릭터 이름. 플레이어: 플레이어의 표시 이름.',
+          '템플릿 필드: 검사에 나열되는 필드에 대한 조건으로, subcategory=Attack 또는 title~sword처럼 &&로 구분합니다. =와 !=는 값 전체를 비교하고, ~와 !~는 값 안에서 텍스트를 찾으며, 대소문자는 구분하지 않습니다. 없는 필드는 빈 값으로 취급합니다. 필드 하나를 뜻할 때는 --text 대신 이것을 쓰세요. --text는 Beacon 카드의 숨겨진 HTML도 검색하기 때문입니다.',
         ],
       },
       templates: {
@@ -8160,6 +8336,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on이면 텍스트를 정규식으로, off면 일반 텍스트로 읽습니다.',
         who: '발언자 또는 캐릭터 이름(쉼표로 구분).',
         players: '플레이어 표시 이름(쉼표로 구분).',
+        fields:
+          '템플릿 필드 조건(&&로 구분): name=value (같음), name!=value (같지 않음), name~text (포함), name!~text (포함하지 않음). --regex on이면 ~는 정규식으로 읽습니다.',
         results: 'crit, fumble, success, fail 중 하나 이상.',
         total: '굴림 합계: 15, >=15, <5 또는 19-20.',
         natural: '주사위 눈: 20, <=2 또는 19-20.',
@@ -8312,6 +8490,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Jak czytać tekst',
       who: 'Nazwy nadawców lub postaci oddzielone przecinkami - puste dla każdego',
       players: 'Nazwy graczy oddzielone przecinkami - puste dla każdego',
+      fields: 'Pola szablonu, np. subcategory=Attack && title~sword - puste dla dowolnych',
       results: 'Wynik rzutu',
       total: 'Suma rzutu, np. 15 lub 19-20 - zobacz notatkę Help - puste dla dowolnej',
       natural: 'Naturalny wynik kości, np. 20 lub 1-2 - puste dla dowolnego',
@@ -8353,6 +8532,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Tekst to',
       who: 'Nadawcy / postacie',
       players: 'Gracze',
+      fields: 'Pola szablonu',
       results: 'Wynik rzutu',
       total: 'Suma rzutu',
       natural: 'Naturalna kość',
@@ -8405,6 +8585,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'szablon rzutu nie pasuje',
         who: 'nadawca lub postać nie pasuje',
         player: 'gracz nie pasuje',
+        field: 'pole szablonu nie pasuje',
         text: 'nie znaleziono tekstu',
         roll: 'żaden rzut nie spełnia warunków rzutu',
       },
@@ -8442,6 +8623,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Nieznane typy wiadomości: {value}.',
       badRegex: 'Wyrażenie regularne „{term}” jest nieprawidłowe: {error}',
       tooManyTerms: 'Listener może szukać najwyżej {max} fragmentów tekstu.',
+      badField: 'Nie można odczytać warunku pola szablonu „{term}”.',
+      tooManyFields: 'Listener może sprawdzać najwyżej {max} pól szablonu.',
       badResult: 'Nieznane wyniki rzutu: {value}.',
       badComparison: 'Wartość „{value}” jest nieprawidłowa dla --{option}.',
       badDice: 'Wartość „{value}” jest nieprawidłowa dla --dice.',
@@ -8455,11 +8638,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Poproś MG o skonfigurowanie listenerów.',
       unknownCommand: 'Wpisz !crl help, aby zobaczyć wszystkie polecenia.',
       badOption:
-        'Opcje to --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+        'Opcje to --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
       notFound: 'Wpisz !crl, aby zobaczyć listę listenerów.',
       nameInvalid:
         'Użyj najwyżej {max} znaków, bez tych: | { } [ ] \\ @ % # ? ~ ani „--”, i nie zaczynaj od „-”.',
       badOnOff: 'Użyj on lub off.',
+      badField:
+        'Użyj nazwy pola, potem = (jest), != (nie jest), ~ (zawiera) lub !~ (nie zawiera), a potem wartości, np. subcategory=Attack. Sprawdź pokazuje pola rzutu.',
       badType: 'Typy wiadomości to: {types}.',
       badResult: 'Użyj crit, fumble, success lub fail.',
       badComparison: 'Użyj liczby, porównania, np. >=15 lub <3, albo zakresu, np. 19-20.',
@@ -8489,7 +8674,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Pokaż tę listę.',
       optionsTitle: 'Opcje',
       options:
-        'Opcje: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
+        'Opcje: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
       placeholders:
         'Polecenia mogą używać ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
       handouts: 'Notatka „{help}” wyjaśnia wszystko; notatka „{deck}” zawiera przyciski.',
@@ -8553,6 +8738,7 @@ const CustomizableRollListenerMod = (() => {
           '## w tekście oznacza rzut inline; warunki rzutu dotyczą wtedy tylko znalezionych tam rzutów. Bez ## sprawdzany jest każdy rzut w wiadomości.',
           'Tekst może być wyrażeniem regularnym zamiast zwykłego tekstu (--regex on).',
           'Nadawcy / postacie: nazwa wyświetlana na czacie lub nazwa postaci w szablonie rzutu. Gracze: wyświetlana nazwa gracza.',
+          'Pola szablonu: warunki na polach, które wyświetla Sprawdź, np. subcategory=Attack lub title~sword, oddzielone &&. = i != porównują całą wartość, ~ i !~ szukają w niej tekstu, a wielkość liter nie ma znaczenia. Brakujące pole liczy się jako puste. Używaj tego zamiast --text, gdy chodzi o jedno pole, bo --text przeszukuje też ukryty HTML karty Beacon.',
         ],
       },
       templates: {
@@ -8603,6 +8789,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on, aby czytać tekst jako wyrażenia regularne, off dla zwykłego tekstu.',
         who: 'Nazwy nadawców lub postaci oddzielone przecinkami.',
         players: 'Wyświetlane nazwy graczy oddzielone przecinkami.',
+        fields:
+          'Warunki pól szablonu, oddzielone &&: name=value (jest), name!=value (nie jest), name~text (zawiera), name!~text (nie zawiera). Przy --regex on ~ czyta wyrażenie regularne.',
         results: 'crit, fumble, success i/lub fail.',
         total: 'Suma rzutu: 15, >=15, <5 lub 19-20.',
         natural: 'Naturalna ścianka kości: 20, <=2 lub 19-20.',
@@ -8756,6 +8944,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Como interpretar o texto',
       who: 'Nomes de oradores ou personagens separados por vírgulas - vazio para qualquer um',
       players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
+      fields: 'Campos do modelo, como subcategory=Attack && title~sword - vazio para qualquer um',
       results: 'Resultado do lançamento',
       total:
         'Total do lançamento, como 15 ou 19-20 - consulte o folheto Help - vazio para qualquer um',
@@ -8798,6 +8987,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'O texto é',
       who: 'Oradores / personagens',
       players: 'Jogadores',
+      fields: 'Campos do modelo',
       results: 'Resultado do lançamento',
       total: 'Total do lançamento',
       natural: 'Dado natural',
@@ -8850,6 +9040,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'o modelo de lançamento não corresponde',
         who: 'o orador ou a personagem não corresponde',
         player: 'o jogador não corresponde',
+        field: 'o campo do modelo não corresponde',
         text: 'texto não encontrado',
         roll: 'nenhum lançamento cumpre as condições de lançamento',
       },
@@ -8888,6 +9079,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Tipo(s) de mensagem desconhecido(s): {value}.',
       badRegex: 'A expressão regular "{term}" não é válida: {error}',
       tooManyTerms: 'Um ouvinte pode procurar no máximo {max} excertos de texto.',
+      badField: 'Não é possível ler a condição de campo do modelo "{term}".',
+      tooManyFields: 'Um ouvinte pode verificar no máximo {max} campos do modelo.',
       badResult: 'Resultado(s) de lançamento desconhecido(s): {value}.',
       badComparison: 'O valor "{value}" não é válido para --{option}.',
       badDice: 'O valor "{value}" não é válido para --dice.',
@@ -8901,11 +9094,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Peça ao seu mestre que configure ouvintes por si.',
       unknownCommand: 'Escreva !crl help para ver todos os comandos.',
       badOption:
-        'As opções são --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+        'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
       notFound: 'Escreva !crl para ver a lista de ouvintes.',
       nameInvalid:
         'Utilize até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ nem "--", e não comece por "-".',
       badOnOff: 'Utilize on ou off.',
+      badField:
+        'Utilize um nome de campo, depois = (é), != (não é), ~ (contém) ou !~ (não contém), depois o valor, como subcategory=Attack. Inspecionar mostra os campos de um lançamento.',
       badType: 'Os tipos de mensagem são: {types}.',
       badResult: 'Utilize crit, fumble, success ou fail.',
       badComparison:
@@ -8935,7 +9130,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra esta lista.',
       optionsTitle: 'Opções',
       options:
-        'Opções: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
+        'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
       placeholders:
         'Os comandos podem utilizar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
       handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -9000,6 +9195,7 @@ const CustomizableRollListenerMod = (() => {
           '## no texto representa um lançamento em linha; as verificações de lançamento passam então a considerar apenas os lançamentos aí encontrados. Sem ##, são verificados todos os lançamentos da mensagem.',
           'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
           'Oradores / personagens: o nome apresentado no chat, ou o nome da personagem no modelo de lançamento. Jogadores: o nome de apresentação do jogador.',
+          'Campos do modelo: condições sobre os campos que Inspecionar apresenta, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor completo, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo em falta conta como vazio. Utilize-o em vez de --text quando pretender um único campo, porque --text também procura no HTML oculto de um cartão Beacon.',
         ],
       },
       templates: {
@@ -9050,6 +9246,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on para ler o texto como expressões regulares, off para texto simples.',
         who: 'Nomes de oradores ou personagens, separados por vírgulas.',
         players: 'Nomes de apresentação dos jogadores, separados por vírgulas.',
+        fields:
+          'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
         results: 'crit, fumble, success e/ou fail.',
         total: 'Total do lançamento: 15, >=15, <5 ou 19-20.',
         natural: 'Face natural do dado: 20, <=2 ou 19-20.',
@@ -9203,6 +9401,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Como ler o texto',
       who: 'Nomes de falantes ou personagens separados por vírgulas - vazio para qualquer um',
       players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
+      fields: 'Campos do modelo, como subcategory=Attack && title~sword - vazio para qualquer um',
       results: 'Resultado da rolagem',
       total: 'Total da rolagem, como 15 ou 19-20 - veja o folheto Help - vazio para qualquer um',
       natural: 'Resultado natural do dado, como 20 ou 1-2 - vazio para qualquer um',
@@ -9244,6 +9443,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'O texto é',
       who: 'Falantes / personagens',
       players: 'Jogadores',
+      fields: 'Campos do modelo',
       results: 'Resultado da rolagem',
       total: 'Total da rolagem',
       natural: 'Dado natural',
@@ -9296,6 +9496,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'o modelo de rolagem não corresponde',
         who: 'o falante ou personagem não corresponde',
         player: 'o jogador não corresponde',
+        field: 'o campo do modelo não corresponde',
         text: 'texto não encontrado',
         roll: 'nenhuma rolagem atende às condições de rolagem',
       },
@@ -9334,6 +9535,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Tipo(s) de mensagem desconhecido(s): {value}.',
       badRegex: 'A expressão regular "{term}" não é válida: {error}',
       tooManyTerms: 'Um ouvinte pode procurar no máximo {max} trechos de texto.',
+      badField: 'A condição de campo do modelo "{term}" não pode ser lida.',
+      tooManyFields: 'Um ouvinte pode verificar no máximo {max} campos do modelo.',
       badResult: 'Resultado(s) de rolagem desconhecido(s): {value}.',
       badComparison: 'O valor "{value}" não é válido para --{option}.',
       badDice: 'O valor "{value}" não é válido para --dice.',
@@ -9347,11 +9550,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Peça ao seu mestre para configurar ouvintes para você.',
       unknownCommand: 'Digite !crl help para ver todos os comandos.',
       badOption:
-        'As opções são --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+        'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
       notFound: 'Digite !crl para ver a lista de ouvintes.',
       nameInvalid:
         'Use até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ ou "--", e não comece com "-".',
       badOnOff: 'Use on ou off.',
+      badField:
+        'Use um nome de campo, depois = (é), != (não é), ~ (contém) ou !~ (não contém), depois o valor, como subcategory=Attack. Inspecionar mostra os campos de uma rolagem.',
       badType: 'Os tipos de mensagem são: {types}.',
       badResult: 'Use crit, fumble, success ou fail.',
       badComparison: 'Use um número, uma comparação como >=15 ou <3, ou um intervalo como 19-20.',
@@ -9381,7 +9586,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra esta lista.',
       optionsTitle: 'Opções',
       options:
-        'Opções: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
+        'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
       placeholders:
         'Os comandos podem usar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
       handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -9446,6 +9651,7 @@ const CustomizableRollListenerMod = (() => {
           '## no texto representa uma rolagem em linha; as verificações de rolagem então consideram só as rolagens encontradas ali. Sem ##, todas as rolagens da mensagem são verificadas.',
           'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
           'Falantes / personagens: o nome mostrado no chat, ou o nome do personagem no modelo de rolagem. Jogadores: o nome de exibição do jogador.',
+          'Campos do modelo: condições sobre os campos que Inspecionar lista, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor inteiro, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo ausente conta como vazio. Use isso em vez de --text quando quiser um único campo, porque --text também procura no HTML oculto de um cartão do Beacon.',
         ],
       },
       templates: {
@@ -9496,6 +9702,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on para ler o texto como expressões regulares, off para texto simples.',
         who: 'Nomes de falantes ou personagens, separados por vírgulas.',
         players: 'Nomes de exibição dos jogadores, separados por vírgulas.',
+        fields:
+          'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
         results: 'crit, fumble, success e/ou fail.',
         total: 'Total da rolagem: 15, >=15, <5 ou 19-20.',
         natural: 'Face natural do dado: 20, <=2 ou 19-20.',
@@ -9649,6 +9857,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Как читать текст',
       who: 'Имена отправителей или персонажей через запятую — пусто, если любые',
       players: 'Имена игроков через запятую — пусто, если любые',
+      fields: 'Поля шаблона, например subcategory=Attack && title~sword — пусто, если любые',
       results: 'Результат броска',
       total:
         'Сумма броска, например 15 или 19-20 — см. раздаточный материал «Справка» — пусто, если любая',
@@ -9691,6 +9900,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Текст как',
       who: 'Отправители / персонажи',
       players: 'Игроки',
+      fields: 'Поля шаблона',
       results: 'Результат броска',
       total: 'Сумма броска',
       natural: 'Натуральный результат',
@@ -9743,6 +9953,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'шаблон броска не совпадает',
         who: 'отправитель или персонаж не совпадает',
         player: 'игрок не совпадает',
+        field: 'поле шаблона не совпадает',
         text: 'текст не найден',
         roll: 'ни один бросок не подходит под условия броска',
       },
@@ -9780,6 +9991,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Неизвестные типы сообщений: {value}.',
       badRegex: 'Регулярное выражение «{term}» недопустимо: {error}',
       tooManyTerms: 'Слушатель может искать не более {max} фрагментов текста.',
+      badField: 'Не удаётся прочитать условие поля шаблона «{term}».',
+      tooManyFields: 'Слушатель может проверять не более {max} полей шаблона.',
       badResult: 'Неизвестные результаты броска: {value}.',
       badComparison: 'Значение «{value}» недопустимо для --{option}.',
       badDice: 'Значение «{value}» недопустимо для --dice.',
@@ -9793,11 +10006,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Попросите мастера настроить для вас слушателей.',
       unknownCommand: 'Введите !crl help, чтобы увидеть все команды.',
       badOption:
-        'Доступные параметры: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands.',
+        'Доступные параметры: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands.',
       notFound: 'Введите !crl, чтобы увидеть список слушателей.',
       nameInvalid:
         'Не более {max} символов, без следующих: | { } [ ] \\ @ % # ? ~ и «--»; имя не должно начинаться с «-».',
       badOnOff: 'Используйте on или off.',
+      badField:
+        'Укажите имя поля, затем = (равно), != (не равно), ~ (содержит) или !~ (не содержит), затем значение, например subcategory=Attack. Инспектор показывает поля броска.',
       badType: 'Типы сообщений: {types}.',
       badResult: 'Используйте crit, fumble, success или fail.',
       badComparison:
@@ -9828,7 +10043,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Показать этот список.',
       optionsTitle: 'Параметры',
       options:
-        'Параметры: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands. Вместо ID можно указывать имена.',
+        'Параметры: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands. Вместо ID можно указывать имена.',
       placeholders:
         'В командах можно использовать ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} и ${field:name}.',
       handouts:
@@ -9894,6 +10109,7 @@ const CustomizableRollListenerMod = (() => {
           '## в тексте обозначает встроенный бросок; тогда проверки броска смотрят только на найденные там броски. Без ## проверяется каждый бросок в сообщении.',
           'Вместо обычного текста можно использовать регулярное выражение (--regex on).',
           'Отправители / персонажи: имя, показанное в чате, или имя персонажа в шаблоне броска. Игроки: отображаемое имя игрока.',
+          'Поля шаблона: условия на поля, которые показывает инспектор, например subcategory=Attack или title~sword, через &&. = и != сравнивают значение целиком, ~ и !~ ищут в нём текст, регистр букв не учитывается. Отсутствующее поле считается пустым. Используйте это вместо --text, когда имеете в виду одно поле, потому что --text ищет и в скрытом HTML карточки Beacon.',
         ],
       },
       templates: {
@@ -9943,6 +10159,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on — читать текст как регулярные выражения, off — как обычный текст.',
         who: 'Имена отправителей или персонажей через запятую.',
         players: 'Отображаемые имена игроков через запятую.',
+        fields:
+          'Условия на поля шаблона через &&: name=value (равно), name!=value (не равно), name~text (содержит), name!~text (не содержит). При --regex on ~ читает регулярное выражение.',
         results: 'crit, fumble, success и/или fail.',
         total: 'Сумма броска: 15, >=15, <5 или 19-20.',
         natural: 'Натуральный результат кубика: 20, <=2 или 19-20.',
@@ -10096,6 +10314,8 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Cómo interpretar el texto',
       who: 'Nombres de hablantes o personajes separados por comas - vacío para cualquiera',
       players: 'Nombres de jugadores separados por comas - vacío para cualquiera',
+      fields:
+        'Campos de la plantilla, como subcategory=Attack && title~sword - vacío para cualquiera',
       results: 'Resultado de la tirada',
       total:
         'Total de la tirada, como 15 o 19-20 - consulta el folleto Help - vacío para cualquiera',
@@ -10138,6 +10358,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'El texto es',
       who: 'Hablantes / personajes',
       players: 'Jugadores',
+      fields: 'Campos de la plantilla',
       results: 'Resultado de la tirada',
       total: 'Total de la tirada',
       natural: 'Dado natural',
@@ -10190,6 +10411,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'la plantilla de tirada no coincide',
         who: 'el hablante o el personaje no coincide',
         player: 'el jugador no coincide',
+        field: 'el campo de la plantilla no coincide',
         text: 'texto no encontrado',
         roll: 'ninguna tirada cumple las condiciones de tirada',
       },
@@ -10227,6 +10449,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Tipo(s) de mensaje desconocido(s): {value}.',
       badRegex: 'La expresión regular "{term}" no es válida: {error}',
       tooManyTerms: 'Un oyente puede buscar como máximo {max} fragmentos de texto.',
+      badField: 'No se puede leer la condición de campo de plantilla "{term}".',
+      tooManyFields: 'Un oyente puede comprobar como máximo {max} campos de la plantilla.',
       badResult: 'Resultado(s) de tirada desconocido(s): {value}.',
       badComparison: 'El valor "{value}" no es válido para --{option}.',
       badDice: 'El valor "{value}" no es válido para --dice.',
@@ -10240,11 +10464,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Pide a tu DJ que configure los oyentes por ti.',
       unknownCommand: 'Escribe !crl help para ver todos los comandos.',
       badOption:
-        'Las opciones son --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands.',
+        'Las opciones son --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands.',
       notFound: 'Escribe !crl para ver la lista de oyentes.',
       nameInvalid:
         'Usa hasta {max} caracteres, sin estos: | { } [ ] \\ @ % # ? ~ ni "--", y no empieces por "-".',
       badOnOff: 'Usa on u off.',
+      badField:
+        'Usa un nombre de campo, luego = (es), != (no es), ~ (contiene) o !~ (no contiene), y luego el valor, como subcategory=Attack. Inspeccionar muestra los campos de una tirada.',
       badType: 'Los tipos de mensaje son: {types}.',
       badResult: 'Usa crit, fumble, success o fail.',
       badComparison: 'Usa un número, una comparación como >=15 o <3, o un rango como 19-20.',
@@ -10273,7 +10499,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Muestra esta lista.',
       optionsTitle: 'Opciones',
       options:
-        'Opciones: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands. Se pueden usar nombres en lugar de ID.',
+        'Opciones: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands. Se pueden usar nombres en lugar de ID.',
       placeholders:
         'Los comandos pueden usar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} y ${field:name}.',
       handouts: 'El folleto "{help}" lo explica todo; el folleto "{deck}" tiene botones.',
@@ -10338,6 +10564,7 @@ const CustomizableRollListenerMod = (() => {
           '## en el texto representa una tirada en línea; entonces las comprobaciones de tirada solo miran las tiradas que haya ahí. Sin ##, se comprueban todas las tiradas del mensaje.',
           'El texto puede ser una expresión regular en lugar de texto normal (--regex on).',
           'Hablantes / personajes: el nombre que se muestra en el chat, o el nombre del personaje en la plantilla de tirada. Jugadores: el nombre visible del jugador.',
+          'Campos de la plantilla: condiciones sobre los campos que lista Inspeccionar, como subcategory=Attack o title~sword, separadas por &&. = y != comparan el valor completo, ~ y !~ buscan texto en él, y no se distingue entre mayúsculas y minúsculas. Un campo que falta cuenta como vacío. Úsalo en lugar de --text cuando te refieras a un solo campo, porque --text también busca en el HTML oculto de una tarjeta de Beacon.',
         ],
       },
       templates: {
@@ -10388,6 +10615,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on para leer el texto como expresiones regulares, off para texto normal.',
         who: 'Nombres de hablantes o personajes, separados por comas.',
         players: 'Nombres visibles de los jugadores, separados por comas.',
+        fields:
+          'Condiciones sobre campos de la plantilla, separadas por &&: name=value (es), name!=value (no es), name~text (contiene), name!~text (no contiene). Con --regex on, ~ lee una expresión regular.',
         results: 'crit, fumble, success y/o fail.',
         total: 'Total de la tirada: 15, >=15, <5 o 19-20.',
         natural: 'Cara natural del dado: 20, <=2 o 19-20.',
@@ -10542,6 +10771,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Hur texten ska läsas',
       who: 'Talar- eller karaktärsnamn åtskilda med kommatecken - tomt för alla',
       players: 'Spelarnamn åtskilda med kommatecken - tomt för alla',
+      fields: 'Mallfält, till exempel subcategory=Attack && title~sword - tomt för alla',
       results: 'Slagresultat',
       total: 'Slagsumma, till exempel 15 eller 19-20 - se Help-handouten - tomt för alla',
       natural: 'Naturligt tärningsresultat, till exempel 20 eller 1-2 - tomt för alla',
@@ -10583,6 +10813,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Texten är',
       who: 'Talare / karaktärer',
       players: 'Spelare',
+      fields: 'Mallfält',
       results: 'Slagresultat',
       total: 'Slagsumma',
       natural: 'Naturlig tärning',
@@ -10635,6 +10866,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'slagmallen matchar inte',
         who: 'talare eller karaktär matchar inte',
         player: 'spelaren matchar inte',
+        field: 'mallfält matchar inte',
         text: 'texten hittades inte',
         roll: 'inget slag uppfyller slagvillkoren',
       },
@@ -10671,6 +10903,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Okänd(a) meddelandetyp(er): {value}.',
       badRegex: 'Det reguljära uttrycket "{term}" är inte giltigt: {error}',
       tooManyTerms: 'En lyssnare kan leta efter högst {max} textbitar.',
+      badField: 'Mallfältsvillkoret "{term}" kan inte läsas.',
+      tooManyFields: 'En lyssnare kan kontrollera högst {max} mallfält.',
       badResult: 'Okänt/okända slagresultat: {value}.',
       badComparison: 'Värdet "{value}" är inte giltigt för --{option}.',
       badDice: 'Värdet "{value}" är inte giltigt för --dice.',
@@ -10684,11 +10918,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Be din GM att ställa in lyssnare åt dig.',
       unknownCommand: 'Skriv !crl help för att se alla kommandon.',
       badOption:
-        'Alternativen är --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
+        'Alternativen är --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
       notFound: 'Skriv !crl för att se listan över lyssnare.',
       nameInvalid:
         'Använd högst {max} tecken, utan dessa: | { } [ ] \\ @ % # ? ~ eller "--", och börja inte med "-".',
       badOnOff: 'Använd on eller off.',
+      badField:
+        'Använd ett fältnamn, sedan = (är), != (är inte), ~ (innehåller) eller !~ (innehåller inte), sedan värdet, till exempel subcategory=Attack. Inspektera visar ett slags fält.',
       badType: 'Meddelandetyperna är: {types}.',
       badResult: 'Använd crit, fumble, success eller fail.',
       badComparison:
@@ -10717,7 +10953,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Visa den här listan.',
       optionsTitle: 'Alternativ',
       options:
-        'Alternativ: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
+        'Alternativ: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
       placeholders:
         'Kommandon kan använda ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} och ${field:name}.',
       handouts: 'Handouten "{help}" förklarar allt; handouten "{deck}" har knappar.',
@@ -10781,6 +11017,7 @@ const CustomizableRollListenerMod = (() => {
           '## i texten står för ett inline-slag; slagkontrollerna tittar då bara på slagen som finns där. Utan ## kontrolleras alla slag i meddelandet.',
           'Texten kan vara ett reguljärt uttryck i stället för vanlig text (--regex on).',
           'Talare / karaktärer: namnet som visas i chatten, eller karaktärsnamnet i slagmallen. Spelare: spelarens visningsnamn.',
+          'Mallfält: villkor på fälten som Inspektera listar, till exempel subcategory=Attack eller title~sword, åtskilda med &&. = och != jämför hela värdet, ~ och !~ letar efter text i det, och matchningen skiljer inte på stora och små bokstäver. Ett fält som saknas räknas som tomt. Använd det i stället för --text när du menar ett enda fält, eftersom --text även söker i ett Beacon-korts dolda HTML.',
         ],
       },
       templates: {
@@ -10831,6 +11068,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on för att läsa texten som reguljära uttryck, off för vanlig text.',
         who: 'Talar- eller karaktärsnamn, åtskilda med kommatecken.',
         players: 'Spelarnas visningsnamn, åtskilda med kommatecken.',
+        fields:
+          'Villkor för mallfält, åtskilda med &&: name=value (är), name!=value (är inte), name~text (innehåller), name!~text (innehåller inte). Med --regex on läser ~ ett reguljärt uttryck.',
         results: 'crit, fumble, success och/eller fail.',
         total: 'Slagsumma: 15, >=15, <5 eller 19-20.',
         natural: 'Naturlig tärningssida: 20, <=2 eller 19-20.',
@@ -10984,6 +11223,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Metin nasıl okunsun',
       who: 'Virgülle ayrılmış gönderen veya karakter adları - herkes için boş',
       players: 'Virgülle ayrılmış oyuncu adları - herkes için boş',
+      fields: 'subcategory=Attack && title~sword gibi şablon alanları - hepsi için boş',
       results: 'Atış sonucu',
       total: '15 veya 19-20 gibi atış toplamı - Yardım belgesine bakın - hepsi için boş',
       natural: '20 veya 1-2 gibi doğal zar sonucu - hepsi için boş',
@@ -11025,6 +11265,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Metin türü',
       who: 'Gönderenler / karakterler',
       players: 'Oyuncular',
+      fields: 'Şablon alanları',
       results: 'Atış sonucu',
       total: 'Atış toplamı',
       natural: 'Doğal zar',
@@ -11077,6 +11318,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'atış şablonu eşleşmiyor',
         who: 'gönderen veya karakter eşleşmiyor',
         player: 'oyuncu eşleşmiyor',
+        field: 'şablon alanı eşleşmiyor',
         text: 'metin bulunamadı',
         roll: 'hiçbir atış atış koşullarını karşılamıyor',
       },
@@ -11112,6 +11354,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Bilinmeyen mesaj türleri: {value}.',
       badRegex: '"{term}" düzenli ifadesi geçerli değil: {error}',
       tooManyTerms: 'Bir dinleyici en fazla {max} metin parçası arayabilir.',
+      badField: '"{term}" şablon alanı koşulu okunamıyor.',
+      tooManyFields: 'Bir dinleyici en fazla {max} şablon alanını denetleyebilir.',
       badResult: 'Bilinmeyen atış sonuçları: {value}.',
       badComparison: '"{value}" değeri --{option} için geçerli değil.',
       badDice: '"{value}" değeri --dice için geçerli değil.',
@@ -11125,11 +11369,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: "GM'inizden sizin için dinleyici ayarlamasını isteyin.",
       unknownCommand: 'Tüm komutları görmek için !crl help yazın.',
       badOption:
-        'Seçenekler: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
+        'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
       notFound: 'Dinleyici listesini görmek için !crl yazın.',
       nameInvalid:
         'En fazla {max} karakter kullanın; şunları kullanmayın: | { } [ ] \\ @ % # ? ~ veya "--". Ad "-" ile başlamamalı.',
       badOnOff: 'on veya off kullanın.',
+      badField:
+        'Bir alan adı, ardından = (eşittir), != (eşit değildir), ~ (içerir) veya !~ (içermez), ardından değeri kullanın; örneğin subcategory=Attack. İnceleme, atışın alanlarını gösterir.',
       badType: 'Mesaj türleri: {types}.',
       badResult: 'crit, fumble, success veya fail kullanın.',
       badComparison:
@@ -11161,7 +11407,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Bu listeyi gösterir.',
       optionsTitle: 'Seçenekler',
       options:
-        'Seçenekler: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
+        'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
       placeholders:
         'Komutlarda şunlar kullanılabilir: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ve ${field:name}.',
       handouts: '"{help}" belgesi her şeyi açıklar; "{deck}" belgesinde düğmeler bulunur.',
@@ -11225,6 +11471,7 @@ const CustomizableRollListenerMod = (() => {
           'Metindeki ## bir satır içi atışı temsil eder; atış kontrolleri bu durumda yalnızca orada bulunan atışlara bakar. ## yoksa mesajdaki her atış kontrol edilir.',
           'Metin, düz metin yerine düzenli ifade olabilir (--regex on).',
           'Gönderenler / karakterler: sohbette görünen ad veya atış şablonundaki karakter adı. Oyuncular: oyuncunun görünen adı.',
+          "Şablon alanları: İnceleme tarafından listelenen alanlar üzerindeki koşullar, örneğin subcategory=Attack veya title~sword, && ile ayrılır. = ve != tüm değeri karşılaştırır, ~ ve !~ içinde metin arar ve büyük/küçük harf ayrımı yapılmaz. Eksik bir alan boş sayılır. Tek bir alanı kastettiğinizde --text yerine bunu kullanın, çünkü --text bir Beacon kartının gizli HTML'inde de arama yapar.",
         ],
       },
       templates: {
@@ -11275,6 +11522,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'Metni düzenli ifade olarak okumak için on, düz metin için off.',
         who: 'Virgülle ayrılmış gönderen veya karakter adları.',
         players: 'Virgülle ayrılmış oyuncu görünen adları.',
+        fields:
+          '&& ile ayrılmış şablon alanı koşulları: name=value (eşittir), name!=value (eşit değildir), name~text (içerir), name!~text (içermez). --regex on olduğunda ~ düzenli ifade olarak okunur.',
         results: 'crit, fumble, success ve/veya fail.',
         total: 'Atış toplamı: 15, >=15, <5 veya 19-20.',
         natural: 'Doğal zar yüzü: 20, <=2 veya 19-20.',
@@ -11428,6 +11677,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Як читати текст',
       who: 'Імена відправників або персонажів через кому — порожньо, якщо будь-хто',
       players: 'Імена гравців через кому — порожньо, якщо будь-хто',
+      fields: 'Поля шаблону, наприклад subcategory=Attack && title~sword — порожньо, якщо будь-які',
       results: 'Результат кидка',
       total:
         'Сума кидка, наприклад 15 або 19-20 — див. роздатковий матеріал «Довідка» — порожньо, якщо будь-яка',
@@ -11470,6 +11720,7 @@ const CustomizableRollListenerMod = (() => {
       regex: 'Текст як',
       who: 'Відправники / персонажі',
       players: 'Гравці',
+      fields: 'Поля шаблону',
       results: 'Результат кидка',
       total: 'Сума кидка',
       natural: 'Натуральний результат',
@@ -11522,6 +11773,7 @@ const CustomizableRollListenerMod = (() => {
         template: 'шаблон кидка не збігається',
         who: 'відправник або персонаж не збігається',
         player: 'гравець не збігається',
+        field: 'поле шаблону не збігається',
         text: 'текст не знайдено',
         roll: 'жоден кидок не відповідає умовам кидка',
       },
@@ -11559,6 +11811,8 @@ const CustomizableRollListenerMod = (() => {
       badType: 'Невідомі типи повідомлень: {value}.',
       badRegex: 'Регулярний вираз «{term}» неприпустимий: {error}',
       tooManyTerms: 'Слухач може шукати щонайбільше {max} фрагментів тексту.',
+      badField: 'Не вдається прочитати умову поля шаблону «{term}».',
+      tooManyFields: 'Слухач може перевіряти щонайбільше {max} полів шаблону.',
       badResult: 'Невідомі результати кидка: {value}.',
       badComparison: 'Значення «{value}» неприпустиме для --{option}.',
       badDice: 'Значення «{value}» неприпустиме для --dice.',
@@ -11572,11 +11826,13 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Попросіть майстра налаштувати для вас слухачів.',
       unknownCommand: 'Введіть !crl help, щоб побачити всі команди.',
       badOption:
-        'Доступні параметри: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands.',
+        'Доступні параметри: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands.',
       notFound: 'Введіть !crl, щоб побачити список слухачів.',
       nameInvalid:
         'Не більше {max} символів, без таких: | { } [ ] \\ @ % # ? ~ і «--»; ім’я не повинно починатися з «-».',
       badOnOff: 'Використовуйте on або off.',
+      badField:
+        'Вкажіть ім’я поля, потім = (дорівнює), != (не дорівнює), ~ (містить) або !~ (не містить), потім значення, наприклад subcategory=Attack. Інспектор показує поля кидка.',
       badType: 'Типи повідомлень: {types}.',
       badResult: 'Використовуйте crit, fumble, success або fail.',
       badComparison:
@@ -11607,7 +11863,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Показати цей список.',
       optionsTitle: 'Параметри',
       options:
-        'Параметри: --templates, --types, --text, --regex, --who, --players, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands. Замість ID можна вказувати імена.',
+        'Параметри: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands. Замість ID можна вказувати імена.',
       placeholders:
         'У командах можна використовувати ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} і ${field:name}.',
       handouts: 'У роздатковому матеріалі «{help}» усе докладно пояснено, а в «{deck}» є кнопки.',
@@ -11671,6 +11927,7 @@ const CustomizableRollListenerMod = (() => {
           '## у тексті позначає вбудований кидок; тоді перевірки кидка дивляться лише на знайдені там кидки. Без ## перевіряється кожен кидок у повідомленні.',
           'Замість звичайного тексту можна використати регулярний вираз (--regex on).',
           'Відправники / персонажі: ім’я, показане в чаті, або ім’я персонажа в шаблоні кидка. Гравці: відображуване ім’я гравця.',
+          'Поля шаблону: умови на поля, які показує інспектор, наприклад subcategory=Attack або title~sword, через &&. = і != порівнюють значення цілком, ~ і !~ шукають у ньому текст, регістр літер не враховується. Відсутнє поле вважається порожнім. Використовуйте це замість --text, коли маєте на увазі одне поле, бо --text шукає і в прихованому HTML картки Beacon.',
         ],
       },
       templates: {
@@ -11720,6 +11977,8 @@ const CustomizableRollListenerMod = (() => {
         regex: 'on — читати текст як регулярні вирази, off — як звичайний текст.',
         who: 'Імена відправників або персонажів через кому.',
         players: 'Відображувані імена гравців через кому.',
+        fields:
+          'Умови на поля шаблону через &&: name=value (дорівнює), name!=value (не дорівнює), name~text (містить), name!~text (не містить). За --regex on ~ читає регулярний вираз.',
         results: 'crit, fumble, success і/або fail.',
         total: 'Сума кидка: 15, >=15, <5 або 19-20.',
         natural: 'Натуральний результат кубика: 20, <=2 або 19-20.',
@@ -12208,6 +12467,10 @@ const CustomizableRollListenerMod = (() => {
   const MARKER_PATTERN = '\\$\\[\\[\\d+\\]\\]';
   const MARKER_GLOBAL = /\$\[\[(\d+)\]\]/g;
 
+  // A template field condition: name, operator (= is, != is not, ~ contains,
+  // !~ does not contain) and value, such as "subcategory=Attack".
+  const FIELD_TERM = /^([^=~!]+?)\s*(!=|!~|=|~)\s*([\s\S]*)$/;
+
   /**
    * Parses a comparison typed by the GM: "15", "=15", ">=15", ">15", "<=5",
    * "<5" or a range "19-20".
@@ -12335,6 +12598,81 @@ const CustomizableRollListenerMod = (() => {
   }
 
   /**
+   * Parses a template field condition such as "subcategory=Attack" or
+   * "title~sword".
+   *
+   * @param {string} term Condition typed by the GM.
+   * @returns {{name: string, op: string, value: string}|null} Parsed condition,
+   *          or null when it has no field name or operator.
+   */
+  function parseFieldTerm(term) {
+    const match = FIELD_TERM.exec(toText(term).trim());
+    if (!match) {
+      return null;
+    }
+    return { name: match[1].trim(), op: match[2], value: match[3].trim() };
+  }
+
+  /**
+   * Returns the first field condition that cannot be used: one without a
+   * field name and operator, or, in regular expression mode, a ~ value that
+   * does not compile.
+   *
+   * @param {string[]} terms Conditions.
+   * @param {boolean} regex Whether ~ values are regular expressions.
+   * @returns {{term: string, error: string}|null} The problem (error is empty
+   *          when the condition cannot be read at all), or null.
+   */
+  function findInvalidField(terms, regex) {
+    for (const term of terms) {
+      const parsed = parseFieldTerm(term);
+      if (!parsed) {
+        return { term, error: '' };
+      }
+      if (regex && parsed.op.endsWith('~')) {
+        try {
+          new RegExp(parsed.value, 'i');
+        } catch (err) {
+          return { term: parsed.value, error: err?.message || String(err) };
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Checks every template field condition of a listener. A missing field
+   * counts as empty, and comparisons ignore case.
+   *
+   * @param {object} listener Listener rules.
+   * @param {object} message Analysed message.
+   * @returns {boolean} True when every condition holds.
+   */
+  function matchFields(listener, message) {
+    return listener.fields.every((term) => {
+      const parsed = parseFieldTerm(term);
+      if (!parsed) {
+        return false;
+      }
+      const actual = readField(message, parsed.name).toLowerCase();
+      const value = parsed.value.toLowerCase();
+      let found;
+      if (parsed.op.endsWith('=')) {
+        found = actual === value;
+      } else if (listener.regex) {
+        try {
+          found = new RegExp(parsed.value, 'i').test(actual);
+        } catch {
+          return false;
+        }
+      } else {
+        found = actual.includes(value);
+      }
+      return parsed.op.startsWith('!') ? !found : found;
+    });
+  }
+
+  /**
    * Returns true when a name list contains a name (case-insensitive).
    *
    * @param {string[]} list Names.
@@ -12429,6 +12767,9 @@ const CustomizableRollListenerMod = (() => {
     }
     if (listener.players.length > 0 && !listHas(listener.players, message.playerName)) {
       return fail('player');
+    }
+    if (listener.fields.length > 0 && !matchFields(listener, message)) {
+      return fail('field');
     }
 
     const text = matchText(listener, message);
@@ -12641,6 +12982,7 @@ const CustomizableRollListenerMod = (() => {
       regex: src.regex === true,
       who: cleanList(src.who),
       players: cleanList(src.players),
+      fields: cleanList(src.fields, MAX_TEXT_TERMS),
       results: [...new Set(results)],
       total: toText(src.total),
       natural: toText(src.natural),
@@ -12935,6 +13277,7 @@ const CustomizableRollListenerMod = (() => {
       ['--regex', 'regex'],
       ['--who', 'who'],
       ['--players', 'players'],
+      ['--fields', 'fields'],
       ['--results', 'results'],
       ['--total', 'total'],
       ['--natural', 'natural'],
@@ -13731,6 +14074,8 @@ const CustomizableRollListenerMod = (() => {
     sendas: 'speaker',
     player: 'players',
     players: 'players',
+    field: 'fields',
+    fields: 'fields',
     result: 'results',
     results: 'results',
     roll: 'results',
@@ -13753,6 +14098,7 @@ const CustomizableRollListenerMod = (() => {
     'regex',
     'who',
     'players',
+    'fields',
     'results',
     'total',
     'natural',
@@ -14024,6 +14370,27 @@ const CustomizableRollListenerMod = (() => {
         problem('badRegex', invalid);
       }
     }
+    if ('fields' in options) {
+      const terms = cleared(options.fields)
+        ? []
+        : toText(options.fields)
+            .split(/s*&&s*/)
+            .map((term) => term.trim())
+            .filter(Boolean);
+      const invalid = findInvalidField(terms, next.regex);
+      if (terms.length > MAX_TEXT_TERMS) {
+        problem('tooManyFields', { max: MAX_TEXT_TERMS });
+      } else if (invalid) {
+        problem(invalid.error ? 'badRegex' : 'badField', invalid);
+      } else {
+        next.fields = terms;
+      }
+    } else if ('regex' in options && next.regex) {
+      const invalid = findInvalidField(next.fields, true);
+      if (invalid) {
+        problem(invalid.error ? 'badRegex' : 'badField', invalid);
+      }
+    }
     for (const key of ['who', 'players']) {
       if (key in options) {
         next[key] = cleared(options[key]) ? [] : splitList(options[key], /\s*,\s*/);
@@ -14122,6 +14489,7 @@ const CustomizableRollListenerMod = (() => {
       case 'regex':
         return tr(value ? 'values.regex' : 'values.plain');
       case 'text':
+      case 'fields':
         return value.length > 0 ? value.join(' && ') : tr('values.any');
       case 'results':
         return value.length > 0
