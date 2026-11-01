@@ -5,7 +5,7 @@
  * Name: TokenController
  * Script: TokenController.js
  * Version: 5.0.1
- * Built: 2026-11-01T00:25:45.548Z
+ * Built: 2026-11-01T09:19:14.970Z
  */
 const TokenControllerMod = (() => {
   'use strict';
@@ -13,7 +13,7 @@ const TokenControllerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'TokenController';
   const SCRIPT_VERSION = '5.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T00:25:45.548Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T09:19:14.970Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -18647,10 +18647,12 @@ const TokenControllerMod = (() => {
     const legacyCommands = [
       ['!tc / !token-control', `${COMMAND}`],
       ['!tc set <path> <code>', `${COMMAND} edit <route> <code>`],
+      ['!tc set <setting> <value>', `${COMMAND} set <setting> <value>`],
       ['!tc setstart / clearstart <path>', `${COMMAND} route <route> start set|clear`],
       ['!tc build, !tc draft', `${COMMAND} record`],
       ['!tc tick <ms>', `${COMMAND} set interval <ms>`],
       ['!tc rotate / combat / substeps', `${COMMAND} set facing / combatBehaviour / movement`],
+      ['!tc combat on / off', `${COMMAND} combat on / off`],
       ['!tc pathinterval / maxtokens', `${COMMAND} route <route> interval / max`],
       ['!tc runonce / cycle / randomstart', `${COMMAND} route <route> mode / random`],
       ['!tc duplicate', `${COMMAND} copy`],
@@ -18794,6 +18796,22 @@ const TokenControllerMod = (() => {
   }
 
   /**
+   * Returns true when `set` names a v5 setting rather than a v4 path, so
+   * `!tc set wallMode hold` changes the setting. A route with that name wins.
+   *
+   * @param {object[]} rest Words after `set`.
+   * @returns {boolean} True for a v5 setting.
+   */
+  function isV5Set(rest) {
+    if (rest.length === 0) {
+      return true;
+    }
+    const key = rest[0].text.toLowerCase();
+    const isSetting = Object.keys(DEFAULT_CONFIG).some((k) => k.toLowerCase() === key);
+    return isSetting && !routeRef(rest.slice(0, -1)).route;
+  }
+
+  /**
    * Translates a v4 subcommand.
    *
    * @param {{text: string, quoted: boolean}[]} words Words after the prefix.
@@ -18833,7 +18851,7 @@ const TokenControllerMod = (() => {
         return { words: [word('list'), word('routes')] };
       }
       case 'set':
-        return { words: [word('edit'), ...rest] };
+        return isV5Set(rest) ? pass : { words: [word('edit'), ...rest] };
       case 'setstart':
       case 'clearstart':
         return {
@@ -18871,6 +18889,10 @@ const TokenControllerMod = (() => {
           words: [word('set'), word('facing'), word(config.facing === 'off' ? 'down' : 'off')],
         };
       case 'combat':
+        // v4 `combat` toggled combat behaviour; v5 `combat on|off` switches combat.
+        if (['on', 'off'].includes(rest[0]?.text.toLowerCase())) {
+          return pass;
+        }
         return {
           words: [
             word('set'),
