@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.1.0
- * Built: 2026-11-01T16:59:15.169Z
+ * Built: 2026-11-01T17:33:57.897Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -625,7 +625,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T16:59:15.169Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T17:33:57.897Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -728,6 +728,7 @@ const CustomizableRollListenerMod = (() => {
     templates: [],
     types: [],
     text: [],
+    exclude: [],
     regex: false,
     who: [],
     players: [],
@@ -1238,6 +1239,7 @@ const CustomizableRollListenerMod = (() => {
         "Rolsjablone geskei deur spasies - none vir geen sjabloon - leeg vir enige - Inspekteer wys 'n rol se sjabloon",
       types: 'Boodskaptipes geskei deur spasies - leeg vir enige behalwe api',
       text: 'Teks om na te soek - sien die Hulp-uitdeelstuk - leeg vir enige',
+      exclude: 'Teks wat die luisteraar keer - skei stukke met && - leeg vir geen',
       regex: 'Hoe om die teks te lees',
       who: 'Spreker- of karaktername geskei deur kommas - leeg vir enigiemand',
       players: 'Spelername geskei deur kommas - leeg vir enigiemand',
@@ -1280,6 +1282,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Rolsjablone',
       types: 'Boodskaptipes',
       text: 'Teks',
+      exclude: 'Uitgeslote teks',
       regex: 'Teks is',
       who: 'Sprekers / karakters',
       players: 'Spelers',
@@ -1338,6 +1341,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'speler pas nie',
         field: 'sjabloonveld pas nie',
         text: 'teks nie gevind nie',
+        exclude: 'uitgeslote teks gevind',
         roll: 'geen rol voldoen aan die rolvoorwaardes nie',
       },
     },
@@ -1390,7 +1394,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Vra jou GM om luisteraars vir jou op te stel.',
       unknownCommand: 'Tik !crl help om elke bevel te sien.',
       badOption:
-        'Opsies is --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+        'Opsies is --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
       notFound: 'Tik !crl om die lys luisteraars te sien.',
       nameInvalid:
         'Gebruik hoogstens {max} karakters, sonder hierdie: | { } [ ] \\ @ % # ? ~ of "--", en moenie met "-" begin nie.',
@@ -1426,7 +1430,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Wys hierdie lys.',
       optionsTitle: 'Opsies',
       options:
-        "Opsies: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
+        "Opsies: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Name kan in plaas van ID's gebruik word.",
       placeholders:
         'Bevele kan ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruik.',
       handouts:
@@ -1490,6 +1494,7 @@ const CustomizableRollListenerMod = (() => {
           "Teks: een of meer stukke teks, geskei deur &&, wat almal moet voorkom. Hoof- en kleinletters word geïgnoreer. Teks word ook in roltotale en rolbare tabelresultate gevind, en in die boodskap se rou inhoud, wat Inspekteer onder Rou inhoud wys: vir 'n Beacon-kaart is dit sy HTML.",
           "## in die teks staan vir 'n inlyn-rol; die roltoetse kyk dan net na die rolle wat daar gevind word. Sonder ## word elke rol in die boodskap nagegaan.",
           "Teks kan 'n gereelde uitdrukking wees in plaas van gewone teks (--regex on).",
+          'Uitgeslote teks: stukke teks, geskei deur &&, wat die luisteraar keer wanneer enige daarvan voorkom, soos --text sword --exclude dagger. Hulle word soos die teks deursoek, en met --regex on as gereelde uitdrukkings gelees.',
           'Sprekers / karakters: die naam wat in die klets gewys word, of die karakternaam in die rolsjabloon. Spelers: die speler se vertoonnaam.',
           "Sjabloonvelde: voorwaardes op die velde wat Inspekteer lys, soos subcategory=Attack of title~sword, geskei deur &&. = en != vergelyk die hele waarde, ~ en !~ soek na teks daarin, en hoof- en kleinletters word geïgnoreer. 'n Ontbrekende veld tel as leeg. Gebruik dit eerder as --text wanneer jy een veld bedoel, want --text deursoek ook 'n Beacon-kaart se versteekte HTML.",
         ],
@@ -1539,6 +1544,8 @@ const CustomizableRollListenerMod = (() => {
           'Rolsjabloonname, geskei deur spasies. none = geen sjabloon. Sien Rolsjabloonname hierbo.',
         types: 'Boodskaptipes, geskei deur spasies: {types}.',
         text: "Teks om te vind. Skei stukke met &&. ## merk 'n inlyn-rol.",
+        exclude:
+          'Teks wat die luisteraar keer: as enige stuk voorkom, gaan dit nie af nie. Skei stukke met &&. Word soos --text deursoek.',
         regex: 'on om die teks as gereelde uitdrukkings te lees, off vir gewone teks.',
         who: 'Spreker- of karaktername, geskei deur kommas.',
         players: 'Spelers se vertoonname, geskei deur kommas.',
@@ -1587,7 +1594,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Die inspekteur',
         points: [
-          'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, die rou inhoud (die boodskap soos Roll20 dit gestuur het, wat --text ook deursoek), en waarom elke luisteraar wel of nie afgegaan het nie.',
+          'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, die rou inhoud (die boodskap soos Roll20 dit gestuur het, met ingebedde beelde verkort, wat --text ook deursoek), en waarom elke luisteraar wel of nie afgegaan het nie.',
           "Gebruik dit om 'n blad se sjabloonnaam te vind, of om te sien wat 'n Beacon-blad (soos D&D 2024) stuur.",
           "Beacon-blaaie plaas rolkaarte in plaas van rolsjablone. CRL lees hulle: die sjabloon is die kaart se eerste klas (dnd-2024 vir D&D 2024), die karakter, titel (soos Dexterity Check) en subkategorie word velde, en elke rol in die ontleding is 'n rol, so kritiek-, flater-, totaal- en natuurlike-dobbelsteentoetse werk.",
         ],
@@ -1694,6 +1701,7 @@ const CustomizableRollListenerMod = (() => {
         'Plantilles de tirada separades per espais - none per a cap plantilla - buit per a qualsevol - Inspecciona mostra la plantilla d’una tirada',
       types: 'Tipus de missatge separats per espais - buit per a qualsevol excepte api',
       text: 'Text a cercar - vegeu el document d’Ajuda - buit per a qualsevol',
+      exclude: 'Text que atura l’oient - separa els fragments amb && - buit per a cap',
       regex: 'Com s’ha de llegir el text',
       who: 'Noms de parlants o personatges separats per comes - buit per a tothom',
       players: 'Noms de jugadors separats per comes - buit per a tothom',
@@ -1738,6 +1746,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Plantilles de tirada',
       types: 'Tipus de missatge',
       text: 'Text',
+      exclude: 'Text exclòs',
       regex: 'El text és',
       who: 'Parlants / personatges',
       players: 'Jugadors',
@@ -1796,6 +1805,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'el jugador no coincideix',
         field: 'el camp de la plantilla no coincideix',
         text: 'no s’ha trobat el text',
+        exclude: 's’ha trobat text exclòs',
         roll: 'cap tirada no compleix les condicions de tirada',
       },
     },
@@ -1847,7 +1857,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Demana al teu DJ que et configuri els oients.',
       unknownCommand: 'Escriu !crl help per veure totes les ordres.',
       badOption:
-        'Les opcions són --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+        'Les opcions són --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
       notFound: 'Escriu !crl per veure la llista d’oients.',
       nameInvalid:
         'Fes servir fins a {max} caràcters, sense aquests: | { } [ ] \\ @ % # ? ~ o "--", i no comencis amb "-".',
@@ -1883,7 +1893,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra aquesta llista.',
       optionsTitle: 'Opcions',
       options:
-        'Opcions: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
+        'Opcions: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Es poden fer servir noms en lloc d’ID.',
       placeholders:
         'Les ordres poden fer servir ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
       handouts: 'El document "{help}" ho explica tot; el document "{deck}" té botons.',
@@ -1947,6 +1957,7 @@ const CustomizableRollListenerMod = (() => {
           'Text: un o més fragments de text, separats per &&, que han d’aparèixer tots. No es distingeix entre majúscules i minúscules. El text també es troba als totals de tirada i als resultats de taules aleatòries, i al contingut en brut del missatge, que Inspecciona mostra a Contingut en brut: en una targeta de Beacon, és el seu HTML.',
           '## al text representa una tirada en línia; aleshores les comprovacions de tirada només miren les tirades que s’hi troben. Sense ##, es comprova cada tirada del missatge.',
           'El text pot ser una expressió regular en lloc de text normal (--regex on).',
+          'Text exclòs: fragments de text, separats per &&, que aturen l’oient quan n’apareix qualsevol, com ara --text sword --exclude dagger. Es cerquen com el text i es llegeixen com a expressions regulars amb --regex on.',
           'Parlants / personatges: el nom que es mostra al xat, o el nom del personatge a la plantilla de tirada. Jugadors: el nom visible del jugador.',
           'Camps de la plantilla: condicions sobre els camps que llista Inspecciona, com ara subcategory=Attack o title~sword, separades per &&. = i != comparen el valor sencer, ~ i !~ hi busquen text, i no es distingeix entre majúscules i minúscules. Un camp que falta compta com a buit. Fes-lo servir en lloc de --text quan vulguis un sol camp, perquè --text també cerca a l’HTML ocult d’una targeta de Beacon.',
         ],
@@ -1997,6 +2008,8 @@ const CustomizableRollListenerMod = (() => {
           'Noms de plantilles de tirada, separats per espais. none = cap plantilla. Vegeu Noms de plantilles de tirada més amunt.',
         types: 'Tipus de missatge, separats per espais: {types}.',
         text: 'Text a cercar. Separa els fragments amb &&. ## marca una tirada en línia.',
+        exclude:
+          'Text que atura l’oient: si apareix qualsevol fragment, no s’activa. Separa els fragments amb &&. Es cerca com --text.',
         regex: 'on per llegir el text com a expressions regulars, off per a text normal.',
         who: 'Noms de parlants o personatges, separats per comes.',
         players: 'Noms visibles dels jugadors, separats per comes.',
@@ -2047,7 +2060,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'L’inspector',
         points: [
-          'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients, el contingut en brut (el missatge tal com l’ha enviat Roll20, on --text també cerca) i per què cada oient s’ha activat o no.',
+          'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients, el contingut en brut (el missatge tal com l’ha enviat Roll20, amb les imatges incrustades escurçades, on --text també cerca) i per què cada oient s’ha activat o no.',
           'Fes-lo servir per trobar el nom de la plantilla d’un full, o per veure què envia un full Beacon (com ara D&D 2024).',
           'Els fulls Beacon publiquen targetes de tirada en lloc de plantilles de tirada. CRL les llegeix: la plantilla és la primera classe de la targeta (dnd-2024 per a D&D 2024), el personatge, el títol (com ara Dexterity Check) i la subcategoria es converteixen en camps, i cada tirada del desglossament és una tirada, de manera que funcionen les comprovacions de crític, pifia, total i dau natural.',
         ],
@@ -2154,6 +2167,7 @@ const CustomizableRollListenerMod = (() => {
         '擲骰模板，以空格分隔 - none 表示無模板 - 留空表示任何模板 - 「檢查」可顯示擲骰所用的模板',
       types: '訊息類型，以空格分隔 - 留空表示除 api 外的任何類型',
       text: '要尋找的文字 - 請見說明講義 - 留空表示任何文字',
+      exclude: '會讓監聽器停止的文字 - 用 && 分隔各段 - 留空表示無',
       regex: '如何解讀文字',
       who: '發言者或角色名稱，以逗號分隔 - 留空表示任何人',
       players: '玩家名稱，以逗號分隔 - 留空表示任何人',
@@ -2197,6 +2211,7 @@ const CustomizableRollListenerMod = (() => {
       templates: '擲骰模板',
       types: '訊息類型',
       text: '文字',
+      exclude: '排除的文字',
       regex: '文字類型',
       who: '發言者／角色',
       players: '玩家',
@@ -2255,6 +2270,7 @@ const CustomizableRollListenerMod = (() => {
         player: '玩家不符',
         field: '模板欄位不符',
         text: '找不到文字',
+        exclude: '找到排除的文字',
         roll: '沒有擲骰符合擲骰條件',
       },
     },
@@ -2304,7 +2320,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: '請 GM 幫你設定監聽器。',
       unknownCommand: '輸入 !crl help 查看所有指令。',
       badOption:
-        '可用選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
+        '可用選項：--templates、--types、--text、--exclude、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。',
       notFound: '輸入 !crl 查看監聽器列表。',
       nameInvalid:
         '最多使用 {max} 個字元，不可包含以下字元：| { } [ ] \\ @ % # ? ~ 或 "--"，且不可以 "-" 開頭。',
@@ -2338,7 +2354,7 @@ const CustomizableRollListenerMod = (() => {
       help: '顯示此列表。',
       optionsTitle: '選項',
       options:
-        '選項：--templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
+        '選項：--templates、--types、--text、--exclude、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name 和 --commands。可用名稱代替 ID。',
       placeholders:
         '指令中可使用 ${who}、${character}、${player}、${template}、${total}、${natural}、${result}、${expression}、${table}、${listener} 和 ${field:name}。',
       handouts: '「{help}」講義說明了一切；「{deck}」講義提供按鈕。',
@@ -2400,6 +2416,7 @@ const CustomizableRollListenerMod = (() => {
           '文字：一段或多段文字，以 && 分隔，必須全部出現。比對時不分大小寫。擲骰總值、可擲表格的結果，以及訊息的原始內容中也能找到文字；原始內容會顯示在「檢查」的「原始內容」下，Beacon 卡片的原始內容就是它的 HTML。',
           '文字中的 ## 代表一個行內擲骰；擲骰檢查此時只看該處的擲骰。沒有 ## 時，會檢查訊息中的每一次擲骰。',
           '文字可以是正規表達式而非純文字（--regex on）。',
+          '排除的文字：一段或多段文字，以 && 分隔，只要出現其中任何一段，監聽器就不會觸發，例如 --text sword --exclude dagger。搜尋方式與文字相同，使用 --regex on 時視為正規表達式。',
           '發言者／角色：聊天中顯示的名稱，或擲骰模板中的角色名稱。玩家：玩家的顯示名稱。',
           '模板欄位：針對「檢查」列出之欄位的條件，例如 subcategory=Attack 或 title~sword，以 && 分隔。= 和 != 比較整個值，~ 和 !~ 在值中尋找文字，且不分大小寫。缺少的欄位視為空白。若指的是單一欄位，請改用此選項而非 --text，因為 --text 也會搜尋 Beacon 卡片隱藏的 HTML。',
         ],
@@ -2448,6 +2465,8 @@ const CustomizableRollListenerMod = (() => {
         templates: '擲骰模板名稱，以空格分隔。none = 無模板。請見上方的「擲骰模板名稱」。',
         types: '訊息類型，以空格分隔：{types}。',
         text: '要尋找的文字。用 && 分隔各段。## 標示一個行內擲骰。',
+        exclude:
+          '會讓監聽器停止的文字：只要出現任何一段，就不會觸發。用 && 分隔各段。搜尋方式與 --text 相同。',
         regex: 'on 表示將文字視為正規表達式，off 表示純文字。',
         who: '發言者或角色名稱，以逗號分隔。',
         players: '玩家顯示名稱，以逗號分隔。',
@@ -2496,7 +2515,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: '檢查器',
         points: [
-          '點選「檢查下一則訊息」，然後擲骰。CRL 會密語它看到的內容：訊息類型、發言者、角色、模板及其欄位、每次擲骰及其骰子、監聽器搜尋的文字、原始內容（Roll20 送出的原始訊息，--text 也會搜尋這裡），以及每個監聽器為何觸發或未觸發。',
+          '點選「檢查下一則訊息」，然後擲骰。CRL 會密語它看到的內容：訊息類型、發言者、角色、模板及其欄位、每次擲骰及其骰子、監聽器搜尋的文字、原始內容（Roll20 送出的原始訊息，內嵌圖片會縮短，--text 也會搜尋這裡），以及每個監聽器為何觸發或未觸發。',
           '用它來找出角色卡的模板名稱，或查看 Beacon 角色卡（例如 D&D 2024）發送了什麼。',
           'Beacon 角色卡發送的是擲骰卡片而非擲骰模板。CRL 會讀取它們：模板是卡片的第一個 class（D&D 2024 為 dnd-2024），角色、標題（例如 Dexterity Check）和子類別會成為欄位，分解中的每次擲骰都是一次擲骰，因此爆擊、大失敗、總值和原始骰值檢查都能運作。',
         ],
@@ -2602,6 +2621,7 @@ const CustomizableRollListenerMod = (() => {
         'Šablony hodů oddělené mezerami – none pro žádnou šablonu – prázdné pro jakoukoli – Prozkoumat ukáže šablonu hodu',
       types: 'Typy zpráv oddělené mezerami – prázdné pro jakýkoli kromě api',
       text: 'Hledaný text – viz podklad Nápověda – prázdné pro jakýkoli',
+      exclude: 'Text, který zastaví posluchače – části oddělte && – prázdné pro žádný',
       regex: 'Jak číst text',
       who: 'Jména mluvčích nebo postav oddělená čárkami – prázdné pro kohokoli',
       players: 'Jména hráčů oddělená čárkami – prázdné pro kohokoli',
@@ -2644,6 +2664,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Šablony hodů',
       types: 'Typy zpráv',
       text: 'Text',
+      exclude: 'Vyloučený text',
       regex: 'Text je',
       who: 'Mluvčí / postavy',
       players: 'Hráči',
@@ -2702,6 +2723,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'hráč neodpovídá',
         field: 'pole šablony neodpovídá',
         text: 'text nenalezen',
+        exclude: 'nalezen vyloučený text',
         roll: 'žádný hod nesplňuje podmínky hodu',
       },
     },
@@ -2753,7 +2775,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Požádejte svého GM, aby vám posluchače nastavil.',
       unknownCommand: 'Napište !crl help a uvidíte všechny příkazy.',
       badOption:
-        'Volby jsou --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
+        'Volby jsou --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands.',
       notFound: 'Napište !crl a uvidíte seznam posluchačů.',
       nameInvalid:
         'Použijte nejvýše {max} znaků, bez těchto: | { } [ ] \\ @ % # ? ~ ani "--", a nezačínejte znakem "-".',
@@ -2788,7 +2810,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Zobrazit tento seznam.',
       optionsTitle: 'Volby',
       options:
-        'Volby: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
+        'Volby: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name a --commands. Místo ID lze používat názvy.',
       placeholders:
         'Příkazy mohou používat ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} a ${field:name}.',
       handouts: 'Podklad „{help}“ vše vysvětluje; podklad „{deck}“ obsahuje tlačítka.',
@@ -2851,6 +2873,7 @@ const CustomizableRollListenerMod = (() => {
           'Text: jedna či více částí textu oddělených &&, které se musí všechny objevit. Porovnání nerozlišuje velká a malá písmena. Text se hledá i v součtech hodů a výsledcích náhodných tabulek, a také v surovém obsahu zprávy, který Prozkoumat ukazuje pod Surový obsah: u karty Beacon je to její HTML.',
           '## v textu zastupuje inline hod; kontroly hodu pak sledují jen hody nalezené na tomto místě. Bez ## se kontroluje každý hod ve zprávě.',
           'Text může být místo prostého textu regulární výraz (--regex on).',
+          'Vyloučený text: části textu oddělené &&, které posluchače zastaví, jakmile se kterákoli z nich objeví, například --text sword --exclude dagger. Hledají se stejně jako text a s --regex on se čtou jako regulární výrazy.',
           'Mluvčí / postavy: jméno zobrazené v chatu, nebo jméno postavy v šabloně hodu. Hráči: zobrazované jméno hráče.',
           'Pole šablony: podmínky na pole, která vypíše Prozkoumat, např. subcategory=Attack nebo title~sword, oddělené &&. = a != porovnávají celou hodnotu, ~ a !~ v ní hledají text a velikost písmen se nerozlišuje. Chybějící pole se počítá jako prázdné. Použijte je místo --text, když myslíte jedno pole, protože --text prohledává i skryté HTML karty Beacon.',
         ],
@@ -2900,6 +2923,8 @@ const CustomizableRollListenerMod = (() => {
           'Názvy šablon hodů oddělené mezerami. none = žádná šablona. Viz Názvy šablon hodů výše.',
         types: 'Typy zpráv oddělené mezerami: {types}.',
         text: 'Hledaný text. Části oddělte &&. ## označuje inline hod.',
+        exclude:
+          'Text, který zastaví posluchače: pokud se objeví kterákoli část, nespustí se. Části oddělte &&. Hledá se stejně jako --text.',
         regex: 'on pro čtení textu jako regulárních výrazů, off pro prostý text.',
         who: 'Jména mluvčích nebo postav oddělená čárkami.',
         players: 'Zobrazovaná jména hráčů oddělená čárkami.',
@@ -2949,7 +2974,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektor',
         points: [
-          'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají,, surový obsah (zprávu tak, jak ji poslal Roll20, a v níž hledá i --text) a proč se který posluchač spustil či nespustil.',
+          'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají, surový obsah (zprávu tak, jak ji poslal Roll20, se zkrácenými vloženými obrázky, a v níž hledá i --text) a proč se který posluchač spustil či nespustil.',
           'Použijte ho ke zjištění názvu šablony listu nebo k zobrazení toho, co posílá list Beacon (např. D&D 2024).',
           'Listy Beacon posílají místo šablon hodů karty hodů. CRL je umí číst: šablonou je první třída karty (dnd-2024 pro D&D 2024), postava, titulek (např. Dexterity Check) a podkategorie se stanou poli a každý hod v rozpisu je hod, takže kontroly crit, fumble, total a natural fungují.',
         ],
@@ -3056,6 +3081,7 @@ const CustomizableRollListenerMod = (() => {
         'Slagskabeloner adskilt af mellemrum – none for ingen skabelon – tom for alle – Inspicér viser et slags skabelon',
       types: 'Beskedtyper adskilt af mellemrum – tom for alle undtagen api',
       text: 'Tekst at søge efter – se Hjælp-handoutet – tom for alle',
+      exclude: 'Tekst der stopper lytteren – adskil stykker med && – tom for ingen',
       regex: 'Hvordan teksten skal læses',
       who: 'Navne på talere eller figurer adskilt af kommaer – tom for alle',
       players: 'Spillernavne adskilt af kommaer – tom for alle',
@@ -3098,6 +3124,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Slagskabeloner',
       types: 'Beskedtyper',
       text: 'Tekst',
+      exclude: 'Udelukket tekst',
       regex: 'Teksten er',
       who: 'Talere / figurer',
       players: 'Spillere',
@@ -3156,6 +3183,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'spilleren passer ikke',
         field: 'skabelonfelt passer ikke',
         text: 'teksten blev ikke fundet',
+        exclude: 'udelukket tekst fundet',
         roll: 'intet slag opfylder slagbetingelserne',
       },
     },
@@ -3206,7 +3234,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Bed din GM om at opsætte lyttere for dig.',
       unknownCommand: 'Skriv !crl help for at se alle kommandoer.',
       badOption:
-        'Valgmulighederne er --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
+        'Valgmulighederne er --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands.',
       notFound: 'Skriv !crl for at se listen over lyttere.',
       nameInvalid:
         'Brug op til {max} tegn, uden disse: | { } [ ] \\ @ % # ? ~ eller "--", og start ikke med "-".',
@@ -3241,7 +3269,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Vis denne liste.',
       optionsTitle: 'Valgmuligheder',
       options:
-        'Valgmuligheder: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
+        'Valgmuligheder: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name og --commands. Navne kan bruges i stedet for ID’er.',
       placeholders:
         'Kommandoer kan bruge ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} og ${field:name}.',
       handouts: 'Handoutet "{help}" forklarer alt; handoutet "{deck}" har knapper.',
@@ -3303,6 +3331,7 @@ const CustomizableRollListenerMod = (() => {
           'Tekst: et eller flere tekststykker, adskilt af &&, som alle skal forekomme. Der skelnes ikke mellem store og små bogstaver. Tekst findes også i slagtotaler og resultater fra slagtabeller, og i beskedens rå indhold, som Inspicér viser under Råt indhold: for et Beacon-kort er det dets HTML.',
           '## i teksten står for et inline-slag; slagtjekkene ser så kun på de slag, der findes dér. Uden ## tjekkes alle slag i beskeden.',
           'Teksten kan være et regulært udtryk i stedet for almindelig tekst (--regex on).',
+          'Udelukket tekst: tekststykker, adskilt af &&, som stopper lytteren, når et af dem forekommer, f.eks. --text sword --exclude dagger. De søges som teksten og læses som regulære udtryk med --regex on.',
           'Talere / figurer: navnet vist i chatten eller figurnavnet i slagskabelonen. Spillere: spillerens visningsnavn.',
           'Skabelonfelter: betingelser for de felter, Inspicér viser, som subcategory=Attack eller title~sword, adskilt af &&. = og != sammenligner hele værdien, ~ og !~ søger efter tekst i den, og der skelnes ikke mellem store og små bogstaver. Et manglende felt tæller som tomt. Brug det frem for --text, når du mener ét felt, for --text søger også i et Beacon-korts skjulte HTML.',
         ],
@@ -3352,6 +3381,8 @@ const CustomizableRollListenerMod = (() => {
           'Navne på slagskabeloner adskilt af mellemrum. none = ingen skabelon. Se Navne på slagskabeloner ovenfor.',
         types: 'Beskedtyper adskilt af mellemrum: {types}.',
         text: 'Tekst at finde. Adskil stykker med &&. ## markerer et inline-slag.',
+        exclude:
+          'Tekst der stopper lytteren: hvis et af stykkerne forekommer, udløses den ikke. Adskil stykker med &&. Søges som --text.',
         regex: 'on for at læse teksten som regulære udtryk, off for almindelig tekst.',
         who: 'Navne på talere eller figurer adskilt af kommaer.',
         players: 'Spilleres visningsnavne adskilt af kommaer.',
@@ -3401,7 +3432,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektøren',
         points: [
-          'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, det rå indhold (beskeden, som Roll20 sendte den, og som --text også søger i), og hvorfor hver lytter blev eller ikke blev udløst.',
+          'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, det rå indhold (beskeden, som Roll20 sendte den, med indlejrede billeder forkortet, og som --text også søger i), og hvorfor hver lytter blev eller ikke blev udløst.',
           'Brug den til at finde et arks skabelonnavn eller til at se, hvad et Beacon-ark (f.eks. D&D 2024) sender.',
           'Beacon-ark sender slagkort i stedet for slagskabeloner. CRL læser dem: skabelonen er kortets første klasse (dnd-2024 for D&D 2024), figuren, titlen (f.eks. Dexterity Check) og underkategorien bliver til felter, og hvert slag i opgørelsen er et slag, så crit-, fumble-, total- og natural-tjek virker.',
         ],
@@ -3508,6 +3539,7 @@ const CustomizableRollListenerMod = (() => {
         'Rolsjablonen gescheiden door spaties - none voor geen sjabloon - leeg voor alle - Inspecteren toont het sjabloon van een worp',
       types: 'Berichttypen gescheiden door spaties - leeg voor alle behalve api',
       text: 'Te zoeken tekst - zie de Help-handout - leeg voor alle',
+      exclude: 'Tekst die de luisteraar stopt - scheid stukken met && - leeg voor geen',
       regex: 'Hoe de tekst gelezen wordt',
       who: 'Namen van sprekers of personages gescheiden door komma’s - leeg voor iedereen',
       players: 'Spelersnamen gescheiden door komma’s - leeg voor iedereen',
@@ -3551,6 +3583,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Rolsjablonen',
       types: 'Berichttypen',
       text: 'Tekst',
+      exclude: 'Uitgesloten tekst',
       regex: 'Tekst is',
       who: 'Sprekers / personages',
       players: 'Spelers',
@@ -3609,6 +3642,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'speler komt niet overeen',
         field: 'sjabloonveld komt niet overeen',
         text: 'tekst niet gevonden',
+        exclude: 'uitgesloten tekst gevonden',
         roll: 'geen worp voldoet aan de worpvoorwaarden',
       },
     },
@@ -3661,7 +3695,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Vraag je GM om luisteraars voor je in te stellen.',
       unknownCommand: 'Typ !crl help om alle commando’s te zien.',
       badOption:
-        'Opties zijn --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
+        'Opties zijn --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands.',
       notFound: 'Typ !crl om de lijst met luisteraars te zien.',
       nameInvalid:
         'Gebruik maximaal {max} tekens, zonder deze: | { } [ ] \\ @ % # ? ~ of "--", en begin niet met "-".',
@@ -3698,7 +3732,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Toon deze lijst.',
       optionsTitle: 'Opties',
       options:
-        'Opties: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
+        'Opties: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name en --commands. Namen mogen in plaats van ID’s worden gebruikt.',
       placeholders:
         'Commando’s kunnen ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} en ${field:name} gebruiken.',
       handouts: 'De handout "{help}" legt alles uit; de handout "{deck}" heeft knoppen.',
@@ -3761,6 +3795,7 @@ const CustomizableRollListenerMod = (() => {
           'Tekst: een of meer tekststukken, gescheiden door &&, die allemaal moeten voorkomen. Hoofdletters en kleine letters maken niet uit. Tekst wordt ook gevonden in worptotalen en resultaten van gooibare tabellen, en in de ruwe inhoud van het bericht, die Inspecteren toont onder Ruwe inhoud: bij een Beacon-kaart is dat de HTML ervan.',
           '## in de tekst staat voor een inline-worp; de worpcontroles kijken dan alleen naar de worpen die daar staan. Zonder ## wordt elke worp in het bericht gecontroleerd.',
           'Tekst kan een reguliere expressie zijn in plaats van platte tekst (--regex on).',
+          'Uitgesloten tekst: tekststukken, gescheiden door &&, die de luisteraar stoppen zodra een ervan voorkomt, zoals --text sword --exclude dagger. Ze worden gezocht zoals de tekst, en met --regex on gelezen als reguliere expressies.',
           'Sprekers / personages: de naam die in de chat staat, of de personagenaam in het rolsjabloon. Spelers: de weergavenaam van de speler.',
           'Sjabloonvelden: voorwaarden op de velden die Inspecteren toont, zoals subcategory=Attack of title~sword, gescheiden door &&. = en != vergelijken de hele waarde, ~ en !~ zoeken tekst erin, en hoofdletters en kleine letters maken niet uit. Een ontbrekend veld telt als leeg. Gebruik dit in plaats van --text als je één veld bedoelt, want --text doorzoekt ook de verborgen HTML van een Beacon-kaart.',
         ],
@@ -3811,6 +3846,8 @@ const CustomizableRollListenerMod = (() => {
           'Namen van rolsjablonen, gescheiden door spaties. none = geen sjabloon. Zie Namen van rolsjablonen hierboven.',
         types: 'Berichttypen, gescheiden door spaties: {types}.',
         text: 'Te zoeken tekst. Scheid stukken met &&. ## markeert een inline-worp.',
+        exclude:
+          'Tekst die de luisteraar stopt: als een van de stukken voorkomt, activeert hij niet. Scheid stukken met &&. Wordt gezocht zoals --text.',
         regex: 'on om de tekst als reguliere expressies te lezen, off voor platte tekst.',
         who: 'Namen van sprekers of personages, gescheiden door komma’s.',
         players: 'Weergavenamen van spelers, gescheiden door komma’s.',
@@ -3860,7 +3897,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'De inspecteur',
         points: [
-          'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, de ruwe inhoud (het bericht zoals Roll20 het verstuurde, dat --text ook doorzoekt), en waarom elke luisteraar wel of niet activeerde.',
+          'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, de ruwe inhoud (het bericht zoals Roll20 het verstuurde, met ingesloten afbeeldingen ingekort, dat --text ook doorzoekt), en waarom elke luisteraar wel of niet activeerde.',
           'Gebruik hem om de sjabloonnaam van een sheet te vinden, of om te zien wat een Beacon-sheet (zoals D&D 2024) verstuurt.',
           'Beacon-sheets plaatsen worpkaarten in plaats van rolsjablonen. CRL leest ze: het sjabloon is de eerste class van de kaart (dnd-2024 voor D&D 2024), het personage, de titel (zoals Dexterity Check) en de subcategorie worden velden, en elke worp in de uitsplitsing is een worp, dus controles op crit, fumble, totaal en natuurlijke worp werken.',
         ],
@@ -3967,6 +4004,7 @@ const CustomizableRollListenerMod = (() => {
         'Roll templates separated by spaces - none for no template - empty for any - Inspect shows a roll’s template',
       types: 'Message types separated by spaces - empty for any except api',
       text: 'Text to look for - see the Help handout - empty for any',
+      exclude: 'Text that stops the listener - separate pieces with && - empty for none',
       regex: 'How to read the text',
       who: 'Speaker or character names separated by commas - empty for anyone',
       players: 'Player names separated by commas - empty for anyone',
@@ -4010,6 +4048,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Roll templates',
       types: 'Message types',
       text: 'Text',
+      exclude: 'Excluded text',
       regex: 'Text is',
       who: 'Speakers / characters',
       players: 'Players',
@@ -4068,6 +4107,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'player does not match',
         field: 'template field does not match',
         text: 'text not found',
+        exclude: 'excluded text found',
         roll: 'no roll meets the roll conditions',
       },
     },
@@ -4118,7 +4158,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Ask your GM to set up listeners for you.',
       unknownCommand: 'Type !crl help to see every command.',
       badOption:
-        'Options are --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
+        'Options are --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands.',
       notFound: 'Type !crl to see the list of listeners.',
       nameInvalid:
         'Use up to {max} characters, without these: | { } [ ] \\ @ % # ? ~ or "--", and do not start with "-".',
@@ -4153,7 +4193,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Show this list.',
       optionsTitle: 'Options',
       options:
-        'Options: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
+        'Options: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name and --commands. Names may be used instead of IDs.',
       placeholders:
         'Commands can use ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} and ${field:name}.',
       handouts: 'The "{help}" handout explains everything; the "{deck}" handout has buttons.',
@@ -4215,6 +4255,7 @@ const CustomizableRollListenerMod = (() => {
           'Text: one or more pieces of text, separated by &&, that must all appear. Matching ignores upper and lower case. Text is also found in roll totals and rollable table results, and in the message’s raw content, which Inspect shows under Raw content: for a Beacon card, that is its HTML.',
           '## in the text stands for an inline roll; the roll checks then only look at the rolls found there. Without ##, every roll in the message is checked.',
           'Text can be a regular expression instead of plain text (--regex on).',
+          'Excluded text: pieces of text, separated by &&, that stop the listener when any of them appears, such as --text sword --exclude dagger. They are searched like the text, and read as regular expressions with --regex on.',
           'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
           'Template fields: conditions on the fields Inspect lists, such as subcategory=Attack or title~sword, separated by &&. = and != compare the whole value, ~ and !~ look for text in it, and case is ignored. A missing field counts as empty. Use it rather than --text when you mean one field, because --text also searches a Beacon card’s hidden HTML.',
         ],
@@ -4264,6 +4305,8 @@ const CustomizableRollListenerMod = (() => {
           'Roll template names, separated by spaces. none = no template. See Roll Template Names above.',
         types: 'Message types, separated by spaces: {types}.',
         text: 'Text to find. Separate pieces with &&. ## marks an inline roll.',
+        exclude:
+          'Text that stops the listener: if any piece appears, it does not trigger. Separate pieces with &&. Searched like --text.',
         regex: 'on to read the text as regular expressions, off for plain text.',
         who: 'Speaker or character names, separated by commas.',
         players: 'Player display names, separated by commas.',
@@ -4313,7 +4356,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'The Inspector',
         points: [
-          'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, the raw content (the message as Roll20 sent it, which --text also searches), and why each listener did or did not trigger.',
+          'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, the raw content (the message as Roll20 sent it, with embedded images shortened, which --text also searches), and why each listener did or did not trigger.',
           'Use it to find a sheet’s template name, or to see what a Beacon sheet (such as D&D 2024) sends.',
           'Beacon sheets post roll cards instead of roll templates. CRL reads them: the template is the card’s first class (dnd-2024 for D&D 2024), the character, title (such as Dexterity Check) and subcategory become fields, and each roll in the breakdown is a roll, so crit, fumble, total and natural checks work.',
         ],
@@ -4420,6 +4463,7 @@ const CustomizableRollListenerMod = (() => {
         'Heittopohjat välilyönnein eroteltuina - none = ei pohjaa - tyhjä = mikä tahansa - Tutki näyttää heiton pohjan',
       types: 'Viestityypit välilyönnein eroteltuina - tyhjä = kaikki paitsi api',
       text: 'Etsittävä teksti - katso Ohje-moniste - tyhjä = mikä tahansa',
+      exclude: 'Teksti, joka pysäyttää kuuntelijan - erota pätkät merkeillä && - tyhjä = ei mitään',
       regex: 'Miten teksti luetaan',
       who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
       players: 'Pelaajien nimet pilkuin eroteltuina - tyhjä = kuka tahansa',
@@ -4462,6 +4506,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Heittopohjat',
       types: 'Viestityypit',
       text: 'Teksti',
+      exclude: 'Poissuljettu teksti',
       regex: 'Teksti on',
       who: 'Puhujat / hahmot',
       players: 'Pelaajat',
@@ -4520,6 +4565,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'pelaaja ei täsmää',
         field: 'pohjan kenttä ei täsmää',
         text: 'tekstiä ei löytynyt',
+        exclude: 'poissuljettu teksti löytyi',
         roll: 'mikään heitto ei täytä heittoehtoja',
       },
     },
@@ -4571,7 +4617,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Pyydä pelinjohtajaa määrittämään kuuntelijat puolestasi.',
       unknownCommand: 'Kirjoita !crl help nähdäksesi kaikki komennot.',
       badOption:
-        'Valitsimet ovat --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
+        'Valitsimet ovat --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands.',
       notFound: 'Kirjoita !crl nähdäksesi kuuntelijoiden luettelon.',
       nameInvalid:
         'Käytä enintään {max} merkkiä ilman näitä: | { } [ ] \\ @ % # ? ~ tai "--", äläkä aloita merkillä "-".',
@@ -4607,7 +4653,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Näytä tämä luettelo.',
       optionsTitle: 'Valitsimet',
       options:
-        'Valitsimet: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
+        'Valitsimet: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ja --commands. ID-tunnusten sijaan voi käyttää nimiä.',
       placeholders:
         'Komennoissa voi käyttää muuttujia ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ja ${field:name}.',
       handouts: 'Moniste ”{help}” selittää kaiken; monisteessa ”{deck}” on painikkeet.',
@@ -4669,6 +4715,7 @@ const CustomizableRollListenerMod = (() => {
           'Teksti: yksi tai useampi tekstinpätkä &&-merkein eroteltuina, joiden kaikkien on esiinnyttävä. Vertailu ei välitä isoista ja pienistä kirjaimista. Teksti löytyy myös heittojen summista ja heittotaulukoiden tuloksista, sekä viestin raakasisällöstä, jonka Tutki näyttää kohdassa Raakasisältö: Beacon-kortilla se on kortin HTML.',
           '## tekstissä tarkoittaa rivin sisäistä heittoa; heittotarkistukset katsovat silloin vain siitä löytyviä heittoja. Ilman ##-merkkiä tarkistetaan viestin jokainen heitto.',
           'Teksti voi olla tavallisen tekstin sijaan säännöllinen lauseke (--regex on).',
+          'Poissuljettu teksti: tekstinpätkiä &&-merkein eroteltuina, jotka pysäyttävät kuuntelijan, kun mikä tahansa niistä esiintyy, esimerkiksi --text sword --exclude dagger. Niitä etsitään kuten tekstiä, ja --regex on lukee ne säännöllisinä lausekkeina.',
           'Puhujat / hahmot: chatissa näkyvä nimi tai heittopohjan hahmon nimi. Pelaajat: pelaajan näyttönimi.',
           'Pohjan kentät: ehdot kentille, jotka Tutki listaa, esim. subcategory=Attack tai title~sword, &&-merkein eroteltuina. = ja != vertaavat koko arvoa, ~ ja !~ etsivät siitä tekstiä, eikä isoilla ja pienillä kirjaimilla ole väliä. Puuttuva kenttä lasketaan tyhjäksi. Käytä tätä --text-asetuksen sijaan, kun tarkoitat yhtä kenttää, sillä --text etsii myös Beacon-kortin piilotetusta HTML:stä.',
         ],
@@ -4719,6 +4766,8 @@ const CustomizableRollListenerMod = (() => {
           'Heittopohjien nimet välilyönnein eroteltuina. none = ei pohjaa. Katso Heittopohjien nimet yllä.',
         types: 'Viestityypit välilyönnein eroteltuina: {types}.',
         text: 'Etsittävä teksti. Erota pätkät merkeillä &&. ## merkitsee rivin sisäistä heittoa.',
+        exclude:
+          'Teksti, joka pysäyttää kuuntelijan: jos mikä tahansa pätkä esiintyy, se ei laukea. Erota pätkät merkeillä &&. Etsitään kuten --text.',
         regex: 'on lukee tekstin säännöllisinä lausekkeina, off tavallisena tekstinä.',
         who: 'Puhujien tai hahmojen nimet pilkuin eroteltuina.',
         players: 'Pelaajien näyttönimet pilkuin eroteltuina.',
@@ -4768,7 +4817,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Tarkastin',
         points: [
-          'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin, raakasisällön (viestin sellaisena kuin Roll20 sen lähetti; myös --text etsii siitä) sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
+          'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin, raakasisällön (viestin sellaisena kuin Roll20 sen lähetti, upotetut kuvat lyhennettyinä; myös --text etsii siitä) sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
           'Käytä sitä lomakkeen pohjan nimen löytämiseen tai nähdäksesi, mitä Beacon-lomake (kuten D&D 2024) lähettää.',
           'Beacon-lomakkeet lähettävät heittopohjien sijaan heittokortteja. CRL lukee ne: pohja on kortin ensimmäinen luokka (dnd-2024 D&D 2024:lle), hahmosta, otsikosta (kuten Dexterity Check) ja alaluokasta tulee kenttiä, ja jokainen erittelyn heitto on heitto, joten kriittinen-, kömmähdys-, summa- ja luonnollinen-tarkistukset toimivat.',
         ],
@@ -4875,6 +4924,7 @@ const CustomizableRollListenerMod = (() => {
         'Modèles de jet séparés par des espaces - none pour aucun modèle - vide pour tous - Inspecter affiche le modèle d’un jet',
       types: 'Types de message séparés par des espaces - vide pour tous sauf api',
       text: 'Texte à chercher - voir le document d’aide - vide pour tout',
+      exclude: 'Texte qui arrête l’écouteur - séparez les morceaux par && - vide pour aucun',
       regex: 'Comment lire le texte',
       who: 'Noms d’orateurs ou de personnages séparés par des virgules - vide pour tout le monde',
       players: 'Noms de joueurs séparés par des virgules - vide pour tout le monde',
@@ -4917,6 +4967,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Modèles de jet',
       types: 'Types de message',
       text: 'Texte',
+      exclude: 'Texte exclu',
       regex: 'Le texte est',
       who: 'Orateurs / personnages',
       players: 'Joueurs',
@@ -4975,6 +5026,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'le joueur ne correspond pas',
         field: 'le champ du modèle ne correspond pas',
         text: 'texte introuvable',
+        exclude: 'texte exclu trouvé',
         roll: 'aucun jet ne remplit les conditions de jet',
       },
     },
@@ -5027,7 +5079,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Demandez à votre MJ de configurer les écouteurs pour vous.',
       unknownCommand: 'Tapez !crl help pour voir toutes les commandes.',
       badOption:
-        'Les options sont --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
+        'Les options sont --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands.',
       notFound: 'Tapez !crl pour voir la liste des écouteurs.',
       nameInvalid:
         'Utilisez au plus {max} caractères, sans ceux-ci : | { } [ ] \\ @ % # ? ~ ni "--", et ne commencez pas par "-".',
@@ -5064,7 +5116,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Affiche cette liste.',
       optionsTitle: 'Options',
       options:
-        'Options : --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
+        'Options : --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name et --commands. Les noms peuvent remplacer les ID.',
       placeholders:
         'Les commandes peuvent utiliser ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} et ${field:name}.',
       handouts:
@@ -5129,6 +5181,7 @@ const CustomizableRollListenerMod = (() => {
           'Texte : un ou plusieurs morceaux de texte, séparés par &&, qui doivent tous apparaître. La recherche ignore les majuscules et minuscules. Le texte est aussi trouvé dans les totaux de jets et les résultats de tables aléatoires, ainsi que dans le contenu brut du message, que montre Inspecter sous Contenu brut : pour une carte Beacon, c’est son HTML.',
           '## dans le texte représente un jet en ligne ; les vérifications de jet n’examinent alors que les jets trouvés à cet endroit. Sans ##, tous les jets du message sont vérifiés.',
           'Le texte peut être une expression régulière au lieu de texte simple (--regex on).',
+          'Texte exclu : morceaux de texte, séparés par &&, qui arrêtent l’écouteur dès que l’un d’eux apparaît, comme --text sword --exclude dagger. Ils sont cherchés comme le texte, et lus comme des expressions régulières avec --regex on.',
           'Orateurs / personnages : le nom affiché dans le chat, ou le nom du personnage dans le modèle de jet. Joueurs : le nom d’affichage du joueur.',
           'Champs du modèle : conditions sur les champs listés par Inspecter, par exemple subcategory=Attack ou title~sword, séparées par &&. = et != comparent la valeur entière, ~ et !~ cherchent du texte dedans, et la casse est ignorée. Un champ absent compte comme vide. Utilisez-le plutôt que --text quand vous visez un seul champ, car --text cherche aussi dans le HTML caché d’une carte Beacon.',
         ],
@@ -5179,6 +5232,8 @@ const CustomizableRollListenerMod = (() => {
           'Noms des modèles de jet, séparés par des espaces. none = aucun modèle. Voir Noms des modèles de jet ci-dessus.',
         types: 'Types de message, séparés par des espaces : {types}.',
         text: 'Texte à trouver. Séparez les morceaux par &&. ## marque un jet en ligne.',
+        exclude:
+          'Texte qui arrête l’écouteur : si un morceau apparaît, il ne se déclenche pas. Séparez les morceaux par &&. Cherché comme --text.',
         regex: 'on pour lire le texte comme des expressions régulières, off pour du texte simple.',
         who: 'Noms d’orateurs ou de personnages, séparés par des virgules.',
         players: 'Noms d’affichage des joueurs, séparés par des virgules.',
@@ -5228,7 +5283,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'L’inspecteur',
         points: [
-          'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, le contenu brut (le message tel que Roll20 l’a envoyé, que --text examine aussi), et pourquoi chaque écouteur s’est déclenché ou non.',
+          'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, le contenu brut (le message tel que Roll20 l’a envoyé, avec les images intégrées raccourcies, que --text examine aussi), et pourquoi chaque écouteur s’est déclenché ou non.',
           'Utilisez-le pour trouver le nom de modèle d’une fiche, ou pour voir ce qu’envoie une fiche Beacon (comme D&D 2024).',
           'Les fiches Beacon publient des cartes de jet au lieu de modèles de jet. CRL les lit : le modèle est la première classe de la carte (dnd-2024 pour D&D 2024), le personnage, le titre (comme Test de Dextérité) et la sous-catégorie deviennent des champs, et chaque jet du détail est un jet ; les vérifications critique, échec critique, total et naturel fonctionnent donc.',
         ],
@@ -5335,6 +5390,7 @@ const CustomizableRollListenerMod = (() => {
         'Wurfvorlagen, durch Leerzeichen getrennt – none für keine Vorlage – leer für jede – der Inspektor zeigt die Vorlage eines Wurfs',
       types: 'Nachrichtentypen, durch Leerzeichen getrennt – leer für alle außer api',
       text: 'Gesuchter Text – siehe Hilfe-Handout – leer für jeden',
+      exclude: 'Text, der den Listener stoppt – Stücke mit && trennen – leer für keinen',
       regex: 'Wie der Text gelesen wird',
       who: 'Sprecher- oder Charakternamen, durch Kommas getrennt – leer für alle',
       players: 'Spielernamen, durch Kommas getrennt – leer für alle',
@@ -5377,6 +5433,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Wurfvorlagen',
       types: 'Nachrichtentypen',
       text: 'Text',
+      exclude: 'Ausgeschlossener Text',
       regex: 'Text ist',
       who: 'Sprecher / Charaktere',
       players: 'Spieler',
@@ -5435,6 +5492,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'Spieler passt nicht',
         field: 'Vorlagenfeld passt nicht',
         text: 'Text nicht gefunden',
+        exclude: 'ausgeschlossener Text gefunden',
         roll: 'kein Wurf erfüllt die Wurfbedingungen',
       },
     },
@@ -5486,7 +5544,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Bitte deine SL, Listener für dich einzurichten.',
       unknownCommand: 'Gib !crl help ein, um alle Befehle zu sehen.',
       badOption:
-        'Optionen sind --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
+        'Optionen sind --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands.',
       notFound: 'Gib !crl ein, um die Liste der Listener zu sehen.',
       nameInvalid:
         'Verwende bis zu {max} Zeichen, ohne diese: | { } [ ] \\ @ % # ? ~ oder „--“, und beginne nicht mit „-“.',
@@ -5523,7 +5581,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Zeigt diese Liste.',
       optionsTitle: 'Optionen',
       options:
-        'Optionen: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
+        'Optionen: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name und --commands. Statt IDs können Namen verwendet werden.',
       placeholders:
         'Befehle können ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} und ${field:name} verwenden.',
       handouts: 'Das Handout „{help}“ erklärt alles; das Handout „{deck}“ enthält Schaltflächen.',
@@ -5586,6 +5644,7 @@ const CustomizableRollListenerMod = (() => {
           'Text: ein oder mehrere Textstücke, getrennt durch &&, die alle vorkommen müssen. Groß- und Kleinschreibung wird ignoriert. Text wird auch in Wurfsummen und Ergebnissen von Würfeltabellen gefunden, sowie im Rohinhalt der Nachricht, den der Inspektor unter Rohinhalt zeigt: Bei einer Beacon-Karte ist das ihr HTML.',
           '## im Text steht für einen Inline-Wurf; die Wurfprüfungen betrachten dann nur die dort gefundenen Würfe. Ohne ## wird jeder Wurf der Nachricht geprüft.',
           'Text kann statt Klartext ein regulärer Ausdruck sein (--regex on).',
+          'Ausgeschlossener Text: Textstücke, getrennt durch &&, die den Listener stoppen, sobald eines davon vorkommt, etwa --text sword --exclude dagger. Sie werden wie der Text gesucht und mit --regex on als reguläre Ausdrücke gelesen.',
           'Sprecher / Charaktere: der im Chat angezeigte Name oder der Charaktername in der Wurfvorlage. Spieler: der Anzeigename des Spielers.',
           'Vorlagenfelder: Bedingungen für die Felder, die der Inspektor auflistet, etwa subcategory=Attack oder title~sword, getrennt durch &&. = und != vergleichen den ganzen Wert, ~ und !~ suchen Text darin, Groß- und Kleinschreibung wird ignoriert. Ein fehlendes Feld gilt als leer. Verwende es statt --text, wenn du ein bestimmtes Feld meinst, denn --text durchsucht auch das versteckte HTML einer Beacon-Karte.',
         ],
@@ -5636,6 +5695,8 @@ const CustomizableRollListenerMod = (() => {
           'Namen von Wurfvorlagen, durch Leerzeichen getrennt. none = keine Vorlage. Siehe Namen von Wurfvorlagen oben.',
         types: 'Nachrichtentypen, durch Leerzeichen getrennt: {types}.',
         text: 'Gesuchter Text. Stücke mit && trennen. ## markiert einen Inline-Wurf.',
+        exclude:
+          'Text, der den Listener stoppt: Kommt eines der Stücke vor, löst er nicht aus. Stücke mit && trennen. Wird wie --text gesucht.',
         regex: 'on, um den Text als reguläre Ausdrücke zu lesen, off für Klartext.',
         who: 'Sprecher- oder Charakternamen, durch Kommas getrennt.',
         players: 'Anzeigenamen der Spieler, durch Kommas getrennt.',
@@ -5685,7 +5746,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Der Inspektor',
         points: [
-          'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, den Rohinhalt (die Nachricht, wie Roll20 sie gesendet hat, die auch --text durchsucht), und warum jeder Listener ausgelöst hat oder nicht.',
+          'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, den Rohinhalt (die Nachricht, wie Roll20 sie gesendet hat, mit gekürzten eingebetteten Bildern, die auch --text durchsucht), und warum jeder Listener ausgelöst hat oder nicht.',
           'Nutze ihn, um den Vorlagennamen eines Bogens zu finden oder um zu sehen, was ein Beacon-Bogen (etwa D&D 2024) sendet.',
           'Beacon-Bögen posten Wurfkarten statt Wurfvorlagen. CRL liest sie: Die Vorlage ist die erste Klasse der Karte (dnd-2024 für D&D 2024), Charakter, Titel (etwa Geschicklichkeitswurf) und Unterkategorie werden zu Feldern, und jeder Wurf in der Aufschlüsselung ist ein Wurf, sodass Krit-, Patzer-, Summen- und Natürlich-Prüfungen funktionieren.',
         ],
@@ -5792,6 +5853,7 @@ const CustomizableRollListenerMod = (() => {
         'Πρότυπα ζαριάς χωρισμένα με κενά - none για κανένα πρότυπο - κενό για οποιοδήποτε - η Επιθεώρηση δείχνει το πρότυπο μιας ζαριάς',
       types: 'Τύποι μηνυμάτων χωρισμένοι με κενά - κενό για όλους εκτός από api',
       text: 'Κείμενο προς αναζήτηση - δείτε το φυλλάδιο Βοήθειας - κενό για οποιοδήποτε',
+      exclude: 'Κείμενο που σταματά τον ακροατή - χωρίστε τα τμήματα με && - κενό για κανένα',
       regex: 'Πώς διαβάζεται το κείμενο',
       who: 'Ονόματα ομιλητών ή χαρακτήρων χωρισμένα με κόμματα - κενό για όλους',
       players: 'Ονόματα παικτών χωρισμένα με κόμματα - κενό για όλους',
@@ -5834,6 +5896,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Πρότυπα ζαριάς',
       types: 'Τύποι μηνυμάτων',
       text: 'Κείμενο',
+      exclude: 'Εξαιρούμενο κείμενο',
       regex: 'Το κείμενο είναι',
       who: 'Ομιλητές / χαρακτήρες',
       players: 'Παίκτες',
@@ -5892,6 +5955,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'ο παίκτης δεν ταιριάζει',
         field: 'το πεδίο προτύπου δεν ταιριάζει',
         text: 'το κείμενο δεν βρέθηκε',
+        exclude: 'βρέθηκε εξαιρούμενο κείμενο',
         roll: 'καμία ζαριά δεν πληροί τις συνθήκες ζαριάς',
       },
     },
@@ -5944,7 +6008,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Ζητήστε από τον GM να ρυθμίσει ακροατές για εσάς.',
       unknownCommand: 'Πληκτρολογήστε !crl help για να δείτε όλες τις εντολές.',
       badOption:
-        'Οι επιλογές είναι --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands.',
+        'Οι επιλογές είναι --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands.',
       notFound: 'Πληκτρολογήστε !crl για να δείτε τη λίστα ακροατών.',
       nameInvalid:
         'Χρησιμοποιήστε έως {max} χαρακτήρες, χωρίς τους: | { } [ ] \\ @ % # ? ~ ή «--», και μην ξεκινάτε με «-».',
@@ -5981,7 +6045,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Εμφανίζει αυτή τη λίστα.',
       optionsTitle: 'Επιλογές',
       options:
-        'Επιλογές: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands. Μπορούν να χρησιμοποιηθούν ονόματα αντί για IDs.',
+        'Επιλογές: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name και --commands. Μπορούν να χρησιμοποιηθούν ονόματα αντί για IDs.',
       placeholders:
         'Οι εντολές μπορούν να χρησιμοποιούν ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} και ${field:name}.',
       handouts: 'Το φυλλάδιο «{help}» εξηγεί τα πάντα· το φυλλάδιο «{deck}» έχει κουμπιά.',
@@ -6044,6 +6108,7 @@ const CustomizableRollListenerMod = (() => {
           'Κείμενο: ένα ή περισσότερα τμήματα κειμένου, χωρισμένα με &&, που πρέπει να εμφανίζονται όλα. Δεν γίνεται διάκριση πεζών-κεφαλαίων. Το κείμενο βρίσκεται και σε σύνολα ζαριών και σε αποτελέσματα πινάκων ζαριάς, καθώς και στο ακατέργαστο περιεχόμενο του μηνύματος, που η Επιθεώρηση εμφανίζει στο Ακατέργαστο περιεχόμενο: για μια κάρτα Beacon, αυτό είναι το HTML της.',
           'Το ## στο κείμενο αντιστοιχεί σε μια ενσωματωμένη ζαριά· οι έλεγχοι ζαριάς εξετάζουν τότε μόνο τις ζαριές που βρέθηκαν εκεί. Χωρίς ##, ελέγχεται κάθε ζαριά του μηνύματος.',
           'Το κείμενο μπορεί να είναι κανονική έκφραση αντί για απλό κείμενο (--regex on).',
+          'Εξαιρούμενο κείμενο: τμήματα κειμένου, χωρισμένα με &&, που σταματούν τον ακροατή όταν εμφανιστεί οποιοδήποτε από αυτά, όπως --text sword --exclude dagger. Αναζητούνται όπως το κείμενο και διαβάζονται ως κανονικές εκφράσεις με --regex on.',
           'Ομιλητές / χαρακτήρες: το όνομα που εμφανίζεται στη συνομιλία ή το όνομα χαρακτήρα στο πρότυπο ζαριάς. Παίκτες: το εμφανιζόμενο όνομα του παίκτη.',
           'Πεδία προτύπου: συνθήκες στα πεδία που εμφανίζει η Επιθεώρηση, π.χ. subcategory=Attack ή title~sword, χωρισμένες με &&. Τα = και != συγκρίνουν ολόκληρη την τιμή, τα ~ και !~ αναζητούν κείμενο μέσα της, και δεν γίνεται διάκριση πεζών-κεφαλαίων. Ένα πεδίο που λείπει μετράει ως κενό. Χρησιμοποιήστε το αντί για --text όταν εννοείτε ένα πεδίο, επειδή το --text ψάχνει και στο κρυφό HTML μιας κάρτας Beacon.',
         ],
@@ -6094,6 +6159,8 @@ const CustomizableRollListenerMod = (() => {
           'Ονόματα προτύπων ζαριάς, χωρισμένα με κενά. none = κανένα πρότυπο. Δείτε Ονόματα προτύπων ζαριάς παραπάνω.',
         types: 'Τύποι μηνυμάτων, χωρισμένοι με κενά: {types}.',
         text: 'Κείμενο προς αναζήτηση. Χωρίστε τα τμήματα με &&. Το ## σημαίνει ενσωματωμένη ζαριά.',
+        exclude:
+          'Κείμενο που σταματά τον ακροατή: αν εμφανιστεί οποιοδήποτε τμήμα, δεν ενεργοποιείται. Χωρίστε τα τμήματα με &&. Αναζητείται όπως το --text.',
         regex: 'on για ανάγνωση του κειμένου ως κανονικές εκφράσεις, off για απλό κείμενο.',
         who: 'Ονόματα ομιλητών ή χαρακτήρων, χωρισμένα με κόμματα.',
         players: 'Εμφανιζόμενα ονόματα παικτών, χωρισμένα με κόμματα.',
@@ -6144,7 +6211,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Ο Επιθεωρητής',
         points: [
-          'Πατήστε Επιθεώρηση επόμενου μηνύματος και μετά ρίξτε. Το CRL ψιθυρίζει τι είδε: τον τύπο μηνύματος, τον ομιλητή, τον χαρακτήρα, το πρότυπο και τα πεδία του, κάθε ζαριά με τα ζάρια της, το κείμενο που αναζητούν οι ακροατές, το ακατέργαστο περιεχόμενο (το μήνυμα όπως το έστειλε το Roll20, όπου ψάχνει και το --text) και γιατί κάθε ακροατής ενεργοποιήθηκε ή όχι.',
+          'Πατήστε Επιθεώρηση επόμενου μηνύματος και μετά ρίξτε. Το CRL ψιθυρίζει τι είδε: τον τύπο μηνύματος, τον ομιλητή, τον χαρακτήρα, το πρότυπο και τα πεδία του, κάθε ζαριά με τα ζάρια της, το κείμενο που αναζητούν οι ακροατές, το ακατέργαστο περιεχόμενο (το μήνυμα όπως το έστειλε το Roll20, με τις ενσωματωμένες εικόνες συντομευμένες, όπου ψάχνει και το --text) και γιατί κάθε ακροατής ενεργοποιήθηκε ή όχι.',
           'Χρησιμοποιήστε τον για να βρείτε το όνομα προτύπου ενός φύλλου ή για να δείτε τι στέλνει ένα φύλλο Beacon (όπως το D&D 2024).',
           'Τα φύλλα Beacon δημοσιεύουν κάρτες ζαριάς αντί για πρότυπα ζαριάς. Το CRL τις διαβάζει: το πρότυπο είναι η πρώτη κλάση της κάρτας (dnd-2024 για το D&D 2024), ο χαρακτήρας, ο τίτλος (π.χ. Έλεγχος Επιδεξιότητας) και η υποκατηγορία γίνονται πεδία, και κάθε ζαριά της ανάλυσης είναι μια ζαριά, οπότε λειτουργούν οι έλεγχοι κρίσιμης επιτυχίας, κρίσιμης αποτυχίας, συνόλου και φυσικού ζαριού.',
         ],
@@ -6251,6 +6318,7 @@ const CustomizableRollListenerMod = (() => {
         'תבניות הטלה מופרדות ברווחים - none ללא תבנית - ריק לכל תבנית - בדיקת ההודעה מציגה את התבנית של הטלה',
       types: 'סוגי הודעות מופרדים ברווחים - ריק לכל סוג מלבד api',
       text: 'טקסט לחיפוש - ראו את דף העזרה - ריק לכל טקסט',
+      exclude: 'טקסט שעוצר את המאזין - הפרידו קטעים ב-&& - ריק ללא טקסט',
       regex: 'איך לקרוא את הטקסט',
       who: 'שמות דוברים או דמויות מופרדים בפסיקים - ריק לכולם',
       players: 'שמות שחקנים מופרדים בפסיקים - ריק לכולם',
@@ -6293,6 +6361,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'תבניות הטלה',
       types: 'סוגי הודעות',
       text: 'טקסט',
+      exclude: 'טקסט מוחרג',
       regex: 'הטקסט הוא',
       who: 'דוברים / דמויות',
       players: 'שחקנים',
@@ -6351,6 +6420,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'השחקן לא תואם',
         field: 'שדה התבנית לא תואם',
         text: 'הטקסט לא נמצא',
+        exclude: 'נמצא טקסט מוחרג',
         roll: 'אף הטלה לא עומדת בתנאי ההטלה',
       },
     },
@@ -6400,7 +6470,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'בקשו מה-GM שלכם להגדיר עבורכם מאזינים.',
       unknownCommand: 'הקלידו !crl help כדי לראות את כל הפקודות.',
       badOption:
-        'האפשרויות הן --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands.',
+        'האפשרויות הן --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands.',
       notFound: 'הקלידו !crl כדי לראות את רשימת המאזינים.',
       nameInvalid:
         'עד {max} תווים, בלי התווים האלה: | { } [ ] \\ @ % # ? ~ או "--", ובלי "-" בהתחלה.',
@@ -6434,7 +6504,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'הצגת הרשימה הזו.',
       optionsTitle: 'אפשרויות',
       options:
-        'אפשרויות: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands. ניתן להשתמש בשמות במקום במזהים.',
+        'אפשרויות: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ו--commands. ניתן להשתמש בשמות במקום במזהים.',
       placeholders:
         'פקודות יכולות להשתמש ב-${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ו-${field:name}.',
       handouts: 'דף המידע "{help}" מסביר הכול; בדף המידע "{deck}" יש לחצנים.',
@@ -6496,6 +6566,7 @@ const CustomizableRollListenerMod = (() => {
           'טקסט: קטע טקסט אחד או יותר, מופרדים ב-&&, שכולם חייבים להופיע. אין הבחנה בין אותיות גדולות לקטנות. הטקסט נמצא גם בסכומי הטלות ובתוצאות של טבלאות הטלה, וגם בתוכן הגולמי של ההודעה, שבדיקת ההודעה מציגה תחת תוכן גולמי: בכרטיס Beacon, זה ה-HTML שלו.',
           '## בטקסט מייצג הטלה מוטבעת; בדיקות ההטלה בודקות אז רק את ההטלות שנמצאו שם. בלי ##, נבדקת כל הטלה בהודעה.',
           'הטקסט יכול להיות ביטוי רגולרי במקום טקסט רגיל (--regex on).',
+          'טקסט מוחרג: קטעי טקסט, מופרדים ב-&&, שעוצרים את המאזין כשאחד מהם מופיע, למשל --text sword --exclude dagger. מחפשים אותם כמו את הטקסט, ועם --regex on הם נקראים כביטויים רגולריים.',
           "דוברים / דמויות: השם שמוצג בצ'אט, או שם הדמות בתבנית ההטלה. שחקנים: שם התצוגה של השחקן.",
           'שדות התבנית: תנאים על השדות שבדיקת ההודעה מציגה, כגון subcategory=Attack או title~sword, מופרדים ב-&&. = ו-!= משווים את הערך כולו, ~ ו-!~ מחפשים בו טקסט, ואין הבחנה בין אותיות גדולות לקטנות. שדה חסר נחשב ריק. השתמשו בזה במקום --text כשהכוונה לשדה אחד, כי --text מחפש גם ב-HTML המוסתר של כרטיס Beacon.',
         ],
@@ -6545,6 +6616,8 @@ const CustomizableRollListenerMod = (() => {
           'שמות תבניות הטלה, מופרדים ברווחים. none = ללא תבנית. ראו שמות של תבניות הטלה למעלה.',
         types: 'סוגי הודעות, מופרדים ברווחים: {types}.',
         text: 'טקסט לחיפוש. הפרידו קטעים ב-&&. ## מסמן הטלה מוטבעת.',
+        exclude:
+          'טקסט שעוצר את המאזין: אם קטע כלשהו מופיע, המאזין לא מופעל. הפרידו קטעים ב-&&. מחפשים אותו כמו את --text.',
         regex: 'on כדי לקרוא את הטקסט כביטויים רגולריים, off לטקסט רגיל.',
         who: 'שמות דוברים או דמויות, מופרדים בפסיקים.',
         players: 'שמות התצוגה של שחקנים, מופרדים בפסיקים.',
@@ -6592,7 +6665,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'הבודק',
         points: [
-          'לחצו על בדיקת ההודעה הבאה, ואז הטילו. CRL לוחש מה הוא ראה: סוג ההודעה, הדובר, הדמות, התבנית והשדות שלה, כל הטלה עם הקוביות שלה, הטקסט שהמאזינים מחפשים בו, התוכן הגולמי (ההודעה כפי ש-Roll20 שלח אותה, שגם --text מחפש בה), ולמה כל מאזין הופעל או לא.',
+          'לחצו על בדיקת ההודעה הבאה, ואז הטילו. CRL לוחש מה הוא ראה: סוג ההודעה, הדובר, הדמות, התבנית והשדות שלה, כל הטלה עם הקוביות שלה, הטקסט שהמאזינים מחפשים בו, התוכן הגולמי (ההודעה כפי ש-Roll20 שלח אותה, עם תמונות מוטמעות מקוצרות, שגם --text מחפש בה), ולמה כל מאזין הופעל או לא.',
           'השתמשו בו כדי למצוא את שם התבנית של גיליון, או כדי לראות מה גיליון Beacon (כגון D&D 2024) שולח.',
           'גיליונות Beacon מפרסמים כרטיסי הטלה במקום תבניות הטלה. CRL קורא אותם: התבנית היא ה-class הראשון של הכרטיס (dnd-2024 עבור D&D 2024), הדמות, הכותרת (כגון Dexterity Check) ותת-הקטגוריה הופכות לשדות, וכל הטלה בפירוט נחשבת הטלה, כך שבדיקות קריטי, כישלון חרוץ, סכום וקובייה טבעית עובדות.',
         ],
@@ -6699,6 +6772,7 @@ const CustomizableRollListenerMod = (() => {
         'Dobássablonok szóközzel elválasztva – none: sablon nélkül – üres: bármelyik – a vizsgáló megmutatja egy dobás sablonját',
       types: 'Üzenettípusok szóközzel elválasztva – üres: bármelyik, kivéve api',
       text: 'Keresett szöveg – lásd a Súgó segédanyagot – üres: bármi',
+      exclude: 'Szöveg, amely leállítja a figyelőt – a részeket &&-vel válassza el – üres: nincs',
       regex: 'Hogyan értelmezze a szöveget',
       who: 'Beszélők vagy karakterek nevei vesszővel elválasztva – üres: bárki',
       players: 'Játékosnevek vesszővel elválasztva – üres: bárki',
@@ -6741,6 +6815,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Dobássablonok',
       types: 'Üzenettípusok',
       text: 'Szöveg',
+      exclude: 'Kizárt szöveg',
       regex: 'Szöveg típusa',
       who: 'Beszélők / karakterek',
       players: 'Játékosok',
@@ -6799,6 +6874,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'a játékos nem egyezik',
         field: 'a sablonmező nem egyezik',
         text: 'a szöveg nem található',
+        exclude: 'kizárt szöveg található',
         roll: 'egyik dobás sem felel meg a dobásfeltételeknek',
       },
     },
@@ -6850,7 +6926,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Kérje meg a GM-et, hogy állítson be figyelőket.',
       unknownCommand: 'Az összes parancsot a !crl help paranccsal láthatja.',
       badOption:
-        'A lehetőségek: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
+        'A lehetőségek: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands.',
       notFound: 'A figyelők listáját a !crl paranccsal láthatja.',
       nameInvalid:
         'Legfeljebb {max} karakter, ezek nélkül: | { } [ ] \\ @ % # ? ~ vagy "--", és nem kezdődhet "-" jellel.',
@@ -6887,7 +6963,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Ez a lista.',
       optionsTitle: 'Opciók',
       options:
-        'Opciók: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
+        'Opciók: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name és --commands. Az azonosítók helyett nevek is használhatók.',
       placeholders:
         'A parancsok a következőket használhatják: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} és ${field:name}.',
       handouts:
@@ -6951,6 +7027,7 @@ const CustomizableRollListenerMod = (() => {
           'Szöveg: egy vagy több szövegrész &&-vel elválasztva, amelyeknek mind szerepelniük kell. A kis- és nagybetű nem számít. A szöveget a dobásösszegekben és a dobótáblázat-eredményekben is keresi, valamint az üzenet nyers tartalmában, amelyet a vizsgáló a Nyers tartalom alatt mutat: Beacon-kártyánál ez a kártya HTML-je.',
           'A ## a szövegben egy beágyazott dobást jelöl; ilyenkor a dobásellenőrzések csak az ott talált dobásokat nézik. ## nélkül az üzenet minden dobását ellenőrzi.',
           'A szöveg egyszerű szöveg helyett reguláris kifejezés is lehet (--regex on).',
+          'Kizárt szöveg: &&-vel elválasztott szövegrészek, amelyek leállítják a figyelőt, ha bármelyikük szerepel, például --text sword --exclude dagger. Ugyanúgy keresi őket, mint a szöveget, és --regex on esetén reguláris kifejezésként olvassa.',
           'Beszélők / karakterek: a chatben megjelenő név, vagy a karakter neve a dobássablonban. Játékosok: a játékos megjelenített neve.',
           'Sablonmezők: feltételek a vizsgáló által listázott mezőkre, pl. subcategory=Attack vagy title~sword, &&-vel elválasztva. Az = és a != a teljes értéket hasonlítja össze, a ~ és a !~ szöveget keres benne, a kis- és nagybetű nem számít. A hiányzó mező üresnek számít. Ezt használja --text helyett, ha egy mezőre gondol, mert a --text egy Beacon-kártya rejtett HTML-jében is keres.',
         ],
@@ -7001,6 +7078,8 @@ const CustomizableRollListenerMod = (() => {
           'Dobássablonok nevei szóközzel elválasztva. none = nincs sablon. Lásd fent: Dobássablonok nevei.',
         types: 'Üzenettípusok szóközzel elválasztva: {types}.',
         text: 'Keresett szöveg. A részeket &&-vel válassza el. A ## beágyazott dobást jelöl.',
+        exclude:
+          'Szöveg, amely leállítja a figyelőt: ha bármelyik rész szerepel, nem aktiválódik. A részeket &&-vel válassza el. Ugyanúgy keresi, mint a --text opciót.',
         regex: 'on: a szöveg reguláris kifejezés, off: egyszerű szöveg.',
         who: 'Beszélők vagy karakterek nevei vesszővel elválasztva.',
         players: 'Játékosok megjelenített nevei vesszővel elválasztva.',
@@ -7050,7 +7129,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'A vizsgáló',
         points: [
-          'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, a nyers tartalmat (az üzenetet úgy, ahogy a Roll20 elküldte; a --text ebben is keres), és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
+          'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, a nyers tartalmat (az üzenetet úgy, ahogy a Roll20 elküldte, rövidített beágyazott képekkel; a --text ebben is keres), és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
           'Ezzel megtalálhatja egy lap sablonnevét, vagy megnézheti, mit küld egy Beacon lap (például a D&D 2024).',
           'A Beacon lapok dobássablonok helyett dobáskártyákat küldenek. A CRL ezeket is beolvassa: a sablon a kártya első osztálya (D&D 2024 esetén dnd-2024), a karakter, a cím (pl. Dexterity Check) és az alkategória mezők lesznek, a lebontás minden dobása pedig dobásnak számít, így a kritikus, kritikus hiba, összeg és natúr ellenőrzések működnek.',
         ],
@@ -7157,6 +7236,7 @@ const CustomizableRollListenerMod = (() => {
         'Template di tiro separati da spazi - none per nessun template - vuoto per qualsiasi - Ispeziona mostra il template di un tiro',
       types: 'Tipi di messaggio separati da spazi - vuoto per tutti tranne api',
       text: 'Testo da cercare - vedi la dispensa Help - vuoto per qualsiasi',
+      exclude: 'Testo che ferma il listener - separa i frammenti con && - vuoto per nessuno',
       regex: 'Come leggere il testo',
       who: 'Nomi di mittenti o personaggi separati da virgole - vuoto per chiunque',
       players: 'Nomi dei giocatori separati da virgole - vuoto per chiunque',
@@ -7200,6 +7280,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Template di tiro',
       types: 'Tipi di messaggio',
       text: 'Testo',
+      exclude: 'Testo escluso',
       regex: 'Il testo è',
       who: 'Mittenti / personaggi',
       players: 'Giocatori',
@@ -7258,6 +7339,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'il giocatore non corrisponde',
         field: 'il campo del template non corrisponde',
         text: 'testo non trovato',
+        exclude: 'testo escluso trovato',
         roll: 'nessun tiro soddisfa le condizioni sui tiri',
       },
     },
@@ -7309,7 +7391,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Chiedi al tuo GM di configurare i listener per te.',
       unknownCommand: 'Digita !crl help per vedere tutti i comandi.',
       badOption:
-        'Le opzioni sono --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+        'Le opzioni sono --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
       notFound: "Digita !crl per vedere l'elenco dei listener.",
       nameInvalid:
         'Usa al massimo {max} caratteri, senza questi: | { } [ ] \\ @ % # ? ~ o "--", e non iniziare con "-".',
@@ -7344,7 +7426,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra questo elenco.',
       optionsTitle: 'Opzioni',
       options:
-        'Opzioni: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
+        'Opzioni: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Si possono usare i nomi al posto degli ID.',
       placeholders:
         'I comandi possono usare ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
       handouts: 'La dispensa "{help}" spiega tutto; la dispensa "{deck}" ha i pulsanti.',
@@ -7407,6 +7489,7 @@ const CustomizableRollListenerMod = (() => {
           'Testo: uno o più frammenti di testo, separati da &&, che devono comparire tutti. Il confronto ignora maiuscole e minuscole. Il testo viene cercato anche nei totali dei tiri e nei risultati delle tabelle casuali, e nel contenuto grezzo del messaggio, che Ispeziona mostra sotto Contenuto grezzo: per una scheda Beacon, è il suo HTML.',
           '## nel testo indica un tiro inline; i controlli sui tiri esaminano allora solo i tiri trovati lì. Senza ##, viene controllato ogni tiro del messaggio.',
           "Il testo può essere un'espressione regolare invece di testo semplice (--regex on).",
+          'Testo escluso: frammenti di testo, separati da &&, che fermano il listener quando ne compare uno qualsiasi, come --text sword --exclude dagger. Vengono cercati come il testo e letti come espressioni regolari con --regex on.',
           'Mittenti / personaggi: il nome mostrato in chat o il nome del personaggio nel template di tiro. Giocatori: il nome visualizzato del giocatore.',
           "Campi del template: condizioni sui campi elencati da Ispeziona, ad esempio subcategory=Attack o title~sword, separate da &&. = e != confrontano l'intero valore, ~ e !~ cercano del testo al suo interno, e maiuscole e minuscole sono ignorate. Un campo mancante conta come vuoto. Usalo al posto di --text quando intendi un solo campo, perché --text cerca anche nell'HTML nascosto di una scheda Beacon.",
         ],
@@ -7457,6 +7540,8 @@ const CustomizableRollListenerMod = (() => {
           'Nomi dei template di tiro, separati da spazi. none = nessun template. Vedi Nomi dei template di tiro sopra.',
         types: 'Tipi di messaggio, separati da spazi: {types}.',
         text: 'Testo da trovare. Separa i frammenti con &&. ## indica un tiro inline.',
+        exclude:
+          'Testo che ferma il listener: se compare uno qualsiasi dei frammenti, non si attiva. Separa i frammenti con &&. Cercato come --text.',
         regex: 'on per leggere il testo come espressioni regolari, off per testo semplice.',
         who: 'Nomi di mittenti o personaggi, separati da virgole.',
         players: 'Nomi visualizzati dei giocatori, separati da virgole.',
@@ -7506,7 +7591,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: "L'ispettore",
         points: [
-          "Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener, il contenuto grezzo (il messaggio così come l'ha inviato Roll20, in cui cerca anche --text) e perché ogni listener si è attivato o no.",
+          "Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener, il contenuto grezzo (il messaggio così come l'ha inviato Roll20, con le immagini incorporate abbreviate, in cui cerca anche --text) e perché ogni listener si è attivato o no.",
           'Usalo per trovare il nome del template di una scheda o per vedere cosa invia una scheda Beacon (come D&D 2024).',
           'Le schede Beacon pubblicano riquadri di tiro invece dei template di tiro. CRL li legge: il template è la prima classe del riquadro (dnd-2024 per D&D 2024), personaggio, titolo (come Prova di Destrezza) e sottocategoria diventano campi, e ogni tiro nel dettaglio è un tiro, quindi i controlli su critico, fallimento critico, totale e dado naturale funzionano.',
         ],
@@ -7613,6 +7698,7 @@ const CustomizableRollListenerMod = (() => {
         'ロールテンプレート（スペース区切り）- テンプレートなしは none - 空欄ですべて - ロールのテンプレートは検査で確認できます',
       types: 'メッセージタイプ（スペース区切り）- 空欄で api 以外すべて',
       text: '検索するテキスト - ヘルプのハンドアウトを参照 - 空欄ですべて',
+      exclude: 'リスナーを止めるテキスト - 複数のテキストは && で区切る - 空欄でなし',
       regex: 'テキストの解釈方法',
       who: '発言者名またはキャラクター名（カンマ区切り）- 空欄で全員',
       players: 'プレイヤー名（カンマ区切り）- 空欄で全員',
@@ -7655,6 +7741,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'ロールテンプレート',
       types: 'メッセージタイプ',
       text: 'テキスト',
+      exclude: '除外テキスト',
       regex: 'テキストの形式',
       who: '発言者 / キャラクター',
       players: 'プレイヤー',
@@ -7713,6 +7800,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'プレイヤーが一致しない',
         field: 'テンプレートのフィールドが一致しない',
         text: 'テキストが見つからない',
+        exclude: '除外テキストが見つかった',
         roll: 'ロール条件を満たすロールがない',
       },
     },
@@ -7763,7 +7851,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'リスナーの設定は GM に依頼してください。',
       unknownCommand: '!crl help と入力すると、すべてのコマンドを表示します。',
       badOption:
-        'オプションは --templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands です。',
+        'オプションは --templates、--types、--text、--exclude、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands です。',
       notFound: '!crl と入力すると、リスナーの一覧を表示します。',
       nameInvalid:
         '{max} 文字以内で、| { } [ ] \\ @ % # ? ~ と "--" を含めず、"-" で始めないでください。',
@@ -7798,7 +7886,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'この一覧を表示します。',
       optionsTitle: 'オプション',
       options:
-        'オプション: --templates、--types、--text、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands。ID の代わりに名前も使えます。',
+        'オプション: --templates、--types、--text、--exclude、--regex、--who、--players、--fields、--results、--total、--natural、--dice、--cooldown、--stop、--speaker、--enabled、--name、--commands。ID の代わりに名前も使えます。',
       placeholders:
         'コマンドでは ${who}、${character}、${player}、${template}、${total}、${natural}、${result}、${expression}、${table}、${listener}、${field:name} を使えます。',
       handouts:
@@ -7862,6 +7950,7 @@ const CustomizableRollListenerMod = (() => {
           'テキスト: && で区切った 1 つ以上のテキストで、すべてが含まれている必要があります。大文字と小文字は区別しません。ロールの合計やロール可能テーブルの結果、そしてメッセージの元の内容からも検索されます。元の内容は検査の「元の内容」に表示され、Beacon カードの場合はその HTML です。',
           'テキスト中の ## はインラインロールを表し、ロールのチェックはそこで見つかったロールだけを対象にします。## がない場合は、メッセージ内のすべてのロールがチェックされます。',
           'テキストはプレーンテキストの代わりに正規表現にもできます（--regex on）。',
+          '除外テキスト: && で区切った 1 つ以上のテキストで、どれか 1 つでも含まれているとリスナーを止めます（例: --text sword --exclude dagger）。テキストと同じように検索され、--regex on では正規表現として扱われます。',
           '発言者 / キャラクター: チャットに表示される名前、またはロールテンプレート内のキャラクター名。プレイヤー: プレイヤーの表示名。',
           'テンプレートのフィールド: 検査で一覧表示されるフィールドに対する条件で、subcategory=Attack や title~sword のように && で区切ります。= と != は値全体を比較し、~ と !~ は値に含まれるテキストを探します。大文字と小文字は区別しません。存在しないフィールドは空として扱います。特定のフィールドを指すときは --text ではなくこちらを使ってください。--text は Beacon カードの非表示の HTML も検索するためです。',
         ],
@@ -7911,6 +8000,8 @@ const CustomizableRollListenerMod = (() => {
           'ロールテンプレート名（スペース区切り）。none = テンプレートなし。上の「ロールテンプレート名」を参照してください。',
         types: 'メッセージタイプ（スペース区切り）: {types}。',
         text: '検索するテキスト。複数のテキストは && で区切ります。## はインラインロールを表します。',
+        exclude:
+          'リスナーを止めるテキスト。どれか 1 つでも含まれていると発動しません。複数のテキストは && で区切ります。--text と同じように検索されます。',
         regex: 'on でテキストを正規表現として、off でプレーンテキストとして扱います。',
         who: '発言者名またはキャラクター名（カンマ区切り）。',
         players: 'プレイヤーの表示名（カンマ区切り）。',
@@ -7960,7 +8051,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'インスペクター',
         points: [
-          '「次のメッセージを検査」をクリックしてからロールします。CRL は確認した内容をウィスパーで送ります: メッセージタイプ、発言者、キャラクター、テンプレートとそのフィールド、すべてのロールとそのダイス、リスナーが検索するテキスト、元の内容（Roll20 が送信したままのメッセージで、--text もここを検索します）、そして各リスナーが発動した理由・しなかった理由。',
+          '「次のメッセージを検査」をクリックしてからロールします。CRL は確認した内容をウィスパーで送ります: メッセージタイプ、発言者、キャラクター、テンプレートとそのフィールド、すべてのロールとそのダイス、リスナーが検索するテキスト、元の内容（Roll20 が送信したままのメッセージで、埋め込み画像は短縮され、--text もここを検索します）、そして各リスナーが発動した理由・しなかった理由。',
           'シートのテンプレート名を調べたり、Beacon シート（D&D 2024 など）が何を送信しているかを確認したりするのに使います。',
           'Beacon シートはロールテンプレートの代わりにロールカードを投稿します。CRL はこれも読み取ります。カードの最初のクラスがテンプレート（D&D 2024 では dnd-2024）になり、キャラクター、タイトル（「【敏捷力】判定」など）、サブカテゴリーがフィールドになります。内訳の各ロールもロールとして扱われるので、クリティカル、ファンブル、合計、出目のチェックが機能します。',
         ],
@@ -8067,6 +8158,7 @@ const CustomizableRollListenerMod = (() => {
         '롤 템플릿(공백으로 구분) - 템플릿 없음은 none - 비우면 전체 - 굴림의 템플릿은 검사로 확인',
       types: '메시지 유형(공백으로 구분) - 비우면 api를 제외한 전체',
       text: '찾을 텍스트 - 도움말 핸드아웃 참고 - 비우면 전체',
+      exclude: '리스너를 멈추는 텍스트 - 여러 텍스트는 &&로 구분 - 비우면 없음',
       regex: '텍스트 해석 방식',
       who: '발언자 또는 캐릭터 이름(쉼표로 구분) - 비우면 누구나',
       players: '플레이어 이름(쉼표로 구분) - 비우면 누구나',
@@ -8109,6 +8201,7 @@ const CustomizableRollListenerMod = (() => {
       templates: '롤 템플릿',
       types: '메시지 유형',
       text: '텍스트',
+      exclude: '제외 텍스트',
       regex: '텍스트 형식',
       who: '발언자/캐릭터',
       players: '플레이어',
@@ -8167,6 +8260,7 @@ const CustomizableRollListenerMod = (() => {
         player: '플레이어가 일치하지 않음',
         field: '템플릿 필드가 일치하지 않음',
         text: '텍스트를 찾지 못함',
+        exclude: '제외 텍스트를 찾음',
         roll: '굴림 조건을 충족하는 굴림이 없음',
       },
     },
@@ -8217,7 +8311,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'GM에게 리스너 설정을 요청하세요.',
       unknownCommand: '모든 명령어를 보려면 !crl help를 입력하세요.',
       badOption:
-        '옵션은 --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands입니다.',
+        '옵션은 --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands입니다.',
       notFound: '!crl을 입력하면 리스너 목록을 볼 수 있습니다.',
       nameInvalid:
         '최대 {max}자까지 쓸 수 있으며, | { } [ ] \\ @ % # ? ~ 와 "--"는 쓸 수 없고 "-"로 시작할 수 없습니다.',
@@ -8252,7 +8346,7 @@ const CustomizableRollListenerMod = (() => {
       help: '이 목록을 표시합니다.',
       optionsTitle: '옵션',
       options:
-        '옵션: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands. ID 대신 이름을 써도 됩니다.',
+        '옵션: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name, --commands. ID 대신 이름을 써도 됩니다.',
       placeholders:
         '명령어에는 ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener}, ${field:name}을(를) 쓸 수 있습니다.',
       handouts: '"{help}" 핸드아웃에 모든 설명이 있고, "{deck}" 핸드아웃에는 버튼이 있습니다.',
@@ -8314,6 +8408,7 @@ const CustomizableRollListenerMod = (() => {
           '텍스트: &&로 구분한 하나 이상의 텍스트로, 모두 들어 있어야 합니다. 대소문자는 구분하지 않습니다. 굴림 합계와 굴림 테이블 결과, 그리고 메시지의 원본 내용에서도 찾습니다. 원본 내용은 검사의 원본 내용 항목에 표시되며, Beacon 카드의 경우 그 HTML입니다.',
           '텍스트 속 ##은 인라인 굴림을 나타내며, 이때 굴림 확인은 그 자리에서 찾은 굴림만 봅니다. ##이 없으면 메시지의 모든 굴림을 확인합니다.',
           '텍스트는 일반 텍스트 대신 정규식으로 쓸 수도 있습니다(--regex on).',
+          '제외 텍스트: &&로 구분한 텍스트로, 그중 하나라도 들어 있으면 리스너를 멈춥니다(예: --text sword --exclude dagger). 텍스트와 같은 방식으로 찾으며, --regex on이면 정규식으로 읽습니다.',
           '발언자/캐릭터: 채팅에 표시되는 이름, 또는 롤 템플릿 속 캐릭터 이름. 플레이어: 플레이어의 표시 이름.',
           '템플릿 필드: 검사에 나열되는 필드에 대한 조건으로, subcategory=Attack 또는 title~sword처럼 &&로 구분합니다. =와 !=는 값 전체를 비교하고, ~와 !~는 값 안에서 텍스트를 찾으며, 대소문자는 구분하지 않습니다. 없는 필드는 빈 값으로 취급합니다. 필드 하나를 뜻할 때는 --text 대신 이것을 쓰세요. --text는 Beacon 카드의 숨겨진 HTML도 검색하기 때문입니다.',
         ],
@@ -8363,6 +8458,8 @@ const CustomizableRollListenerMod = (() => {
           '롤 템플릿 이름(공백으로 구분). none = 템플릿 없음. 위의 롤 템플릿 이름을 참고하세요.',
         types: '메시지 유형(공백으로 구분): {types}.',
         text: '찾을 텍스트. 여러 텍스트는 &&로 구분합니다. ##은 인라인 굴림을 나타냅니다.',
+        exclude:
+          '리스너를 멈추는 텍스트. 하나라도 들어 있으면 발동하지 않습니다. 여러 텍스트는 &&로 구분합니다. --text와 같은 방식으로 찾습니다.',
         regex: 'on이면 텍스트를 정규식으로, off면 일반 텍스트로 읽습니다.',
         who: '발언자 또는 캐릭터 이름(쉼표로 구분).',
         players: '플레이어 표시 이름(쉼표로 구분).',
@@ -8411,7 +8508,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: '검사기',
         points: [
-          '다음 메시지 검사를 클릭한 뒤 굴립니다. CRL은 확인한 내용을 귓속말로 보냅니다. 메시지 유형, 발언자, 캐릭터, 템플릿과 그 필드, 모든 굴림과 주사위, 리스너가 검색하는 텍스트, 원본 내용(Roll20이 보낸 그대로의 메시지로, --text도 여기서 검색함), 각 리스너가 발동했거나 발동하지 않은 이유.',
+          '다음 메시지 검사를 클릭한 뒤 굴립니다. CRL은 확인한 내용을 귓속말로 보냅니다. 메시지 유형, 발언자, 캐릭터, 템플릿과 그 필드, 모든 굴림과 주사위, 리스너가 검색하는 텍스트, 원본 내용(Roll20이 보낸 그대로의 메시지로, 삽입된 이미지는 줄여서 표시하며, --text도 여기서 검색함), 각 리스너가 발동했거나 발동하지 않은 이유.',
           '시트의 템플릿 이름을 찾거나, Beacon 시트(예: D&D 2024)가 무엇을 보내는지 확인할 때 쓰세요.',
           'Beacon 시트는 롤 템플릿 대신 굴림 카드를 게시합니다. CRL은 이것도 읽습니다. 카드의 첫 번째 클래스가 템플릿(D&D 2024는 dnd-2024)이 되고, 캐릭터, 제목(예: 민첩 판정), 하위 분류가 필드가 됩니다. 분석 내역의 각 굴림도 굴림으로 처리되므로 치명타, 펌블, 합계, 주사위 눈 확인이 작동합니다.',
         ],
@@ -8518,6 +8615,8 @@ const CustomizableRollListenerMod = (() => {
         'Szablony rzutów oddzielone spacjami - none, jeśli bez szablonu - puste dla dowolnego - Sprawdź pokazuje szablon rzutu',
       types: 'Typy wiadomości oddzielone spacjami - puste dla wszystkich oprócz api',
       text: 'Tekst do wyszukania - zobacz notatkę Help - puste dla dowolnego',
+      exclude:
+        'Tekst, który zatrzymuje listener - fragmenty oddzielaj && - puste, aby nic nie wykluczać',
       regex: 'Jak czytać tekst',
       who: 'Nazwy nadawców lub postaci oddzielone przecinkami - puste dla każdego',
       players: 'Nazwy graczy oddzielone przecinkami - puste dla każdego',
@@ -8560,6 +8659,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Szablony rzutów',
       types: 'Typy wiadomości',
       text: 'Tekst',
+      exclude: 'Tekst wykluczony',
       regex: 'Tekst to',
       who: 'Nadawcy / postacie',
       players: 'Gracze',
@@ -8618,6 +8718,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'gracz nie pasuje',
         field: 'pole szablonu nie pasuje',
         text: 'nie znaleziono tekstu',
+        exclude: 'znaleziono wykluczony tekst',
         roll: 'żaden rzut nie spełnia warunków rzutu',
       },
     },
@@ -8669,7 +8770,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Poproś MG o skonfigurowanie listenerów.',
       unknownCommand: 'Wpisz !crl help, aby zobaczyć wszystkie polecenia.',
       badOption:
-        'Opcje to --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
+        'Opcje to --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands.',
       notFound: 'Wpisz !crl, aby zobaczyć listę listenerów.',
       nameInvalid:
         'Użyj najwyżej {max} znaków, bez tych: | { } [ ] \\ @ % # ? ~ ani „--”, i nie zaczynaj od „-”.',
@@ -8705,7 +8806,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Pokaż tę listę.',
       optionsTitle: 'Opcje',
       options:
-        'Opcje: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
+        'Opcje: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name i --commands. Zamiast identyfikatorów można używać nazw.',
       placeholders:
         'Polecenia mogą używać ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} i ${field:name}.',
       handouts: 'Notatka „{help}” wyjaśnia wszystko; notatka „{deck}” zawiera przyciski.',
@@ -8768,6 +8869,7 @@ const CustomizableRollListenerMod = (() => {
           'Tekst: jeden lub więcej fragmentów tekstu, oddzielonych &&, które muszą wystąpić wszystkie. Wielkość liter nie ma znaczenia. Tekst jest wyszukiwany także w sumach rzutów i wynikach tabel losowych, a także w surowej treści wiadomości, którą Sprawdź pokazuje pod Surowa treść: w przypadku karty Beacon jest to jej HTML.',
           '## w tekście oznacza rzut inline; warunki rzutu dotyczą wtedy tylko znalezionych tam rzutów. Bez ## sprawdzany jest każdy rzut w wiadomości.',
           'Tekst może być wyrażeniem regularnym zamiast zwykłego tekstu (--regex on).',
+          'Tekst wykluczony: fragmenty tekstu, oddzielone &&, które zatrzymują listener, gdy wystąpi którykolwiek z nich, np. --text sword --exclude dagger. Są wyszukiwane tak jak tekst, a przy --regex on czytane jako wyrażenia regularne.',
           'Nadawcy / postacie: nazwa wyświetlana na czacie lub nazwa postaci w szablonie rzutu. Gracze: wyświetlana nazwa gracza.',
           'Pola szablonu: warunki na polach, które wyświetla Sprawdź, np. subcategory=Attack lub title~sword, oddzielone &&. = i != porównują całą wartość, ~ i !~ szukają w niej tekstu, a wielkość liter nie ma znaczenia. Brakujące pole liczy się jako puste. Używaj tego zamiast --text, gdy chodzi o jedno pole, bo --text przeszukuje też ukryty HTML karty Beacon.',
         ],
@@ -8818,6 +8920,8 @@ const CustomizableRollListenerMod = (() => {
           'Nazwy szablonów rzutów oddzielone spacjami. none = bez szablonu. Zobacz Nazwy szablonów rzutów powyżej.',
         types: 'Typy wiadomości oddzielone spacjami: {types}.',
         text: 'Tekst do znalezienia. Fragmenty oddzielaj &&. ## oznacza rzut inline.',
+        exclude:
+          'Tekst, który zatrzymuje listener: jeśli wystąpi którykolwiek fragment, listener się nie uruchomi. Fragmenty oddzielaj &&. Wyszukiwany tak jak --text.',
         regex: 'on, aby czytać tekst jako wyrażenia regularne, off dla zwykłego tekstu.',
         who: 'Nazwy nadawców lub postaci oddzielone przecinkami.',
         players: 'Wyświetlane nazwy graczy oddzielone przecinkami.',
@@ -8867,7 +8971,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektor',
         points: [
-          'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery, surową treść (wiadomość w postaci wysłanej przez Roll20, którą przeszukuje też --text) oraz powód, dla którego każdy listener się uruchomił lub nie.',
+          'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery, surową treść (wiadomość w postaci wysłanej przez Roll20, ze skróconymi osadzonymi obrazami, którą przeszukuje też --text) oraz powód, dla którego każdy listener się uruchomił lub nie.',
           'Użyj go, aby poznać nazwę szablonu karty postaci lub zobaczyć, co wysyła karta Beacon (np. D&D 2024).',
           'Karty Beacon wysyłają okienka rzutów zamiast szablonów rzutów. CRL je odczytuje: szablon to pierwsza klasa okienka (dnd-2024 dla D&D 2024), postać, tytuł (np. Test Zręczności) i podkategoria stają się polami, a każdy rzut w rozbiciu jest rzutem, więc warunki krytycznego sukcesu, krytycznej porażki, sumy i naturalnej kości działają.',
         ],
@@ -8974,6 +9078,7 @@ const CustomizableRollListenerMod = (() => {
         'Modelos de lançamento separados por espaços - none para nenhum modelo - vazio para qualquer um - Inspecionar mostra o modelo de um lançamento',
       types: 'Tipos de mensagem separados por espaços - vazio para qualquer um, exceto api',
       text: 'Texto a procurar - consulte o folheto Help - vazio para qualquer um',
+      exclude: 'Texto que bloqueia o ouvinte - separe os excertos com && - vazio para nenhum',
       regex: 'Como interpretar o texto',
       who: 'Nomes de oradores ou personagens separados por vírgulas - vazio para qualquer um',
       players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
@@ -9017,6 +9122,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Modelos de lançamento',
       types: 'Tipos de mensagem',
       text: 'Texto',
+      exclude: 'Texto excluído',
       regex: 'O texto é',
       who: 'Oradores / personagens',
       players: 'Jogadores',
@@ -9075,6 +9181,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'o jogador não corresponde',
         field: 'o campo do modelo não corresponde',
         text: 'texto não encontrado',
+        exclude: 'texto excluído encontrado',
         roll: 'nenhum lançamento cumpre as condições de lançamento',
       },
     },
@@ -9127,7 +9234,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Peça ao seu mestre que configure ouvintes por si.',
       unknownCommand: 'Escreva !crl help para ver todos os comandos.',
       badOption:
-        'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+        'As opções são --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
       notFound: 'Escreva !crl para ver a lista de ouvintes.',
       nameInvalid:
         'Utilize até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ nem "--", e não comece por "-".',
@@ -9163,7 +9270,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra esta lista.',
       optionsTitle: 'Opções',
       options:
-        'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
+        'Opções: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. Pode usar nomes em vez de IDs.',
       placeholders:
         'Os comandos podem utilizar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
       handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -9227,6 +9334,7 @@ const CustomizableRollListenerMod = (() => {
           'Texto: um ou mais excertos de texto, separados por &&, que têm de aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais dos lançamentos e nos resultados de tabelas aleatórias, e no conteúdo em bruto da mensagem, que Inspecionar apresenta em Conteúdo em bruto: num cartão Beacon, é o seu HTML.',
           '## no texto representa um lançamento em linha; as verificações de lançamento passam então a considerar apenas os lançamentos aí encontrados. Sem ##, são verificados todos os lançamentos da mensagem.',
           'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
+          'Texto excluído: excertos de texto, separados por &&, que bloqueiam o ouvinte quando aparece qualquer um deles, como --text sword --exclude dagger. São procurados como o texto e lidos como expressões regulares com --regex on.',
           'Oradores / personagens: o nome apresentado no chat, ou o nome da personagem no modelo de lançamento. Jogadores: o nome de apresentação do jogador.',
           'Campos do modelo: condições sobre os campos que Inspecionar apresenta, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor completo, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo em falta conta como vazio. Utilize-o em vez de --text quando pretender um único campo, porque --text também procura no HTML oculto de um cartão Beacon.',
         ],
@@ -9277,6 +9385,8 @@ const CustomizableRollListenerMod = (() => {
           'Nomes de modelos de lançamento, separados por espaços. none = sem modelo. Consulte Nomes de modelos de lançamento acima.',
         types: 'Tipos de mensagem, separados por espaços: {types}.',
         text: 'Texto a procurar. Separe os excertos com &&. ## marca um lançamento em linha.',
+        exclude:
+          'Texto que bloqueia o ouvinte: se aparecer qualquer excerto, não é acionado. Separe os excertos com &&. Procurado como --text.',
         regex: 'on para ler o texto como expressões regulares, off para texto simples.',
         who: 'Nomes de oradores ou personagens, separados por vírgulas.',
         players: 'Nomes de apresentação dos jogadores, separados por vírgulas.',
@@ -9326,7 +9436,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'O inspetor',
         points: [
-          'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram, o conteúdo em bruto (a mensagem tal como o Roll20 a enviou, onde --text também procura) e porque é que cada ouvinte foi ou não acionado.',
+          'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram, o conteúdo em bruto (a mensagem tal como o Roll20 a enviou, com as imagens incorporadas encurtadas, onde --text também procura) e porque é que cada ouvinte foi ou não acionado.',
           'Utilize-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
           'As fichas Beacon publicam cartões de lançamento em vez de modelos de lançamento. O CRL lê-os: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), a personagem, o título (como Teste de Destreza) e a subcategoria tornam-se campos, e cada lançamento do detalhe é um lançamento, por isso as verificações de crítico, falha crítica, total e dado natural funcionam.',
         ],
@@ -9433,6 +9543,7 @@ const CustomizableRollListenerMod = (() => {
         'Modelos de rolagem separados por espaços - none para nenhum modelo - vazio para qualquer um - Inspecionar mostra o modelo de uma rolagem',
       types: 'Tipos de mensagem separados por espaços - vazio para qualquer um, exceto api',
       text: 'Texto a procurar - veja o folheto Help - vazio para qualquer um',
+      exclude: 'Texto que bloqueia o ouvinte - separe os trechos com && - vazio para nenhum',
       regex: 'Como ler o texto',
       who: 'Nomes de falantes ou personagens separados por vírgulas - vazio para qualquer um',
       players: 'Nomes de jogadores separados por vírgulas - vazio para qualquer um',
@@ -9475,6 +9586,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Modelos de rolagem',
       types: 'Tipos de mensagem',
       text: 'Texto',
+      exclude: 'Texto excluído',
       regex: 'O texto é',
       who: 'Falantes / personagens',
       players: 'Jogadores',
@@ -9533,6 +9645,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'o jogador não corresponde',
         field: 'o campo do modelo não corresponde',
         text: 'texto não encontrado',
+        exclude: 'texto excluído encontrado',
         roll: 'nenhuma rolagem atende às condições de rolagem',
       },
     },
@@ -9585,7 +9698,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Peça ao seu mestre para configurar ouvintes para você.',
       unknownCommand: 'Digite !crl help para ver todos os comandos.',
       badOption:
-        'As opções são --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
+        'As opções são --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands.',
       notFound: 'Digite !crl para ver a lista de ouvintes.',
       nameInvalid:
         'Use até {max} caracteres, sem estes: | { } [ ] \\ @ % # ? ~ ou "--", e não comece com "-".',
@@ -9621,7 +9734,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Mostra esta lista.',
       optionsTitle: 'Opções',
       options:
-        'Opções: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
+        'Opções: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name e --commands. É possível usar nomes em vez de IDs.',
       placeholders:
         'Os comandos podem usar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} e ${field:name}.',
       handouts: 'O folheto "{help}" explica tudo; o folheto "{deck}" tem botões.',
@@ -9685,6 +9798,7 @@ const CustomizableRollListenerMod = (() => {
           'Texto: um ou mais trechos de texto, separados por &&, que precisam aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais das rolagens e nos resultados de tabelas roláveis, e no conteúdo bruto da mensagem, que Inspecionar mostra em Conteúdo bruto: em um cartão do Beacon, é o HTML dele.',
           '## no texto representa uma rolagem em linha; as verificações de rolagem então consideram só as rolagens encontradas ali. Sem ##, todas as rolagens da mensagem são verificadas.',
           'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
+          'Texto excluído: trechos de texto, separados por &&, que bloqueiam o ouvinte quando qualquer um deles aparece, como --text sword --exclude dagger. Eles são procurados como o texto e lidos como expressões regulares com --regex on.',
           'Falantes / personagens: o nome mostrado no chat, ou o nome do personagem no modelo de rolagem. Jogadores: o nome de exibição do jogador.',
           'Campos do modelo: condições sobre os campos que Inspecionar lista, como subcategory=Attack ou title~sword, separadas por &&. = e != comparam o valor inteiro, ~ e !~ procuram texto nele, e maiúsculas e minúsculas são ignoradas. Um campo ausente conta como vazio. Use isso em vez de --text quando quiser um único campo, porque --text também procura no HTML oculto de um cartão do Beacon.',
         ],
@@ -9735,6 +9849,8 @@ const CustomizableRollListenerMod = (() => {
           'Nomes de modelos de rolagem, separados por espaços. none = sem modelo. Veja Nomes de modelos de rolagem acima.',
         types: 'Tipos de mensagem, separados por espaços: {types}.',
         text: 'Texto a procurar. Separe os trechos com &&. ## marca uma rolagem em linha.',
+        exclude:
+          'Texto que bloqueia o ouvinte: se qualquer trecho aparecer, ele não é acionado. Separe os trechos com &&. Procurado como --text.',
         regex: 'on para ler o texto como expressões regulares, off para texto simples.',
         who: 'Nomes de falantes ou personagens, separados por vírgulas.',
         players: 'Nomes de exibição dos jogadores, separados por vírgulas.',
@@ -9784,7 +9900,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'O inspetor',
         points: [
-          'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram, o conteúdo bruto (a mensagem como o Roll20 a enviou, em que --text também procura) e por que cada ouvinte foi ou não acionado.',
+          'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram, o conteúdo bruto (a mensagem como o Roll20 a enviou, com as imagens incorporadas encurtadas, em que --text também procura) e por que cada ouvinte foi ou não acionado.',
           'Use-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
           'As fichas Beacon publicam cartões de rolagem em vez de modelos de rolagem. O CRL os lê: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), o personagem, o título (como Teste de Destreza) e a subcategoria viram campos, e cada rolagem do detalhamento é uma rolagem, então as verificações de crítico, falha crítica, total e dado natural funcionam.',
         ],
@@ -9891,6 +10007,8 @@ const CustomizableRollListenerMod = (() => {
         'Шаблоны бросков через пробел — none, если без шаблона — пусто, если любой — инспектор показывает шаблон броска',
       types: 'Типы сообщений через пробел — пусто, если любой, кроме api',
       text: 'Искомый текст — см. раздаточный материал «Справка» — пусто, если любой',
+      exclude:
+        'Текст, который останавливает слушателя — фрагменты разделяются && — пусто, если нет',
       regex: 'Как читать текст',
       who: 'Имена отправителей или персонажей через запятую — пусто, если любые',
       players: 'Имена игроков через запятую — пусто, если любые',
@@ -9934,6 +10052,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Шаблоны бросков',
       types: 'Типы сообщений',
       text: 'Текст',
+      exclude: 'Исключённый текст',
       regex: 'Текст как',
       who: 'Отправители / персонажи',
       players: 'Игроки',
@@ -9992,6 +10111,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'игрок не совпадает',
         field: 'поле шаблона не совпадает',
         text: 'текст не найден',
+        exclude: 'найден исключённый текст',
         roll: 'ни один бросок не подходит под условия броска',
       },
     },
@@ -10043,7 +10163,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Попросите мастера настроить для вас слушателей.',
       unknownCommand: 'Введите !crl help, чтобы увидеть все команды.',
       badOption:
-        'Доступные параметры: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands.',
+        'Доступные параметры: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands.',
       notFound: 'Введите !crl, чтобы увидеть список слушателей.',
       nameInvalid:
         'Не более {max} символов, без следующих: | { } [ ] \\ @ % # ? ~ и «--»; имя не должно начинаться с «-».',
@@ -10080,7 +10200,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Показать этот список.',
       optionsTitle: 'Параметры',
       options:
-        'Параметры: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands. Вместо ID можно указывать имена.',
+        'Параметры: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name и --commands. Вместо ID можно указывать имена.',
       placeholders:
         'В командах можно использовать ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} и ${field:name}.',
       handouts:
@@ -10145,6 +10265,7 @@ const CustomizableRollListenerMod = (() => {
           'Текст: один или несколько фрагментов текста через &&, которые должны встретиться все. Регистр букв не учитывается. Текст ищется также в суммах бросков и результатах таблиц бросков, а также в исходном содержимом сообщения, которое инспектор показывает в разделе «Исходное содержимое»: для карточки Beacon это её HTML.',
           '## в тексте обозначает встроенный бросок; тогда проверки броска смотрят только на найденные там броски. Без ## проверяется каждый бросок в сообщении.',
           'Вместо обычного текста можно использовать регулярное выражение (--regex on).',
+          'Исключённый текст: фрагменты текста через &&, которые останавливают слушателя, если встретится любой из них, например --text sword --exclude dagger. Они ищутся так же, как текст, а с --regex on читаются как регулярные выражения.',
           'Отправители / персонажи: имя, показанное в чате, или имя персонажа в шаблоне броска. Игроки: отображаемое имя игрока.',
           'Поля шаблона: условия на поля, которые показывает инспектор, например subcategory=Attack или title~sword, через &&. = и != сравнивают значение целиком, ~ и !~ ищут в нём текст, регистр букв не учитывается. Отсутствующее поле считается пустым. Используйте это вместо --text, когда имеете в виду одно поле, потому что --text ищет и в скрытом HTML карточки Beacon.',
         ],
@@ -10194,6 +10315,8 @@ const CustomizableRollListenerMod = (() => {
           'Имена шаблонов бросков через пробел. none — без шаблона. См. «Имена шаблонов бросков» выше.',
         types: 'Типы сообщений через пробел: {types}.',
         text: 'Искомый текст. Фрагменты разделяются &&. ## обозначает встроенный бросок.',
+        exclude:
+          'Текст, который останавливает слушателя: если встретится любой фрагмент, он не сработает. Фрагменты разделяются &&. Ищется так же, как --text.',
         regex: 'on — читать текст как регулярные выражения, off — как обычный текст.',
         who: 'Имена отправителей или персонажей через запятую.',
         players: 'Отображаемые имена игроков через запятую.',
@@ -10243,7 +10366,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Инспектор',
         points: [
-          'Нажмите «Проверить следующее сообщение», затем сделайте бросок. CRL шёпотом сообщит, что увидел: тип сообщения, отправителя, персонажа, шаблон и его поля, каждый бросок с кубиками, текст, в котором ищут слушатели, исходное содержимое (сообщение в том виде, в каком его отправил Roll20; в нём ищет и --text), и почему каждый слушатель сработал или нет.',
+          'Нажмите «Проверить следующее сообщение», затем сделайте бросок. CRL шёпотом сообщит, что увидел: тип сообщения, отправителя, персонажа, шаблон и его поля, каждый бросок с кубиками, текст, в котором ищут слушатели, исходное содержимое (сообщение в том виде, в каком его отправил Roll20, с сокращёнными встроенными изображениями; в нём ищет и --text), и почему каждый слушатель сработал или нет.',
           'Так можно узнать имя шаблона листа или посмотреть, что отправляет лист Beacon (например, D&D 2024).',
           'Листы Beacon публикуют карточки бросков вместо шаблонов бросков. CRL их читает: шаблоном считается первый класс карточки (dnd-2024 для D&D 2024), персонаж, заголовок (например, «Проверка Ловкости») и подкатегория становятся полями, а каждый бросок из расшифровки — отдельным броском, так что проверки критического успеха, критического провала, суммы и натурального результата работают.',
         ],
@@ -10350,6 +10473,7 @@ const CustomizableRollListenerMod = (() => {
         'Plantillas de tirada separadas por espacios - none para sin plantilla - vacío para cualquiera - Inspeccionar muestra la plantilla de una tirada',
       types: 'Tipos de mensaje separados por espacios - vacío para cualquiera excepto api',
       text: 'Texto que buscar - consulta el folleto Help - vacío para cualquiera',
+      exclude: 'Texto que detiene al oyente - separa los fragmentos con && - vacío para ninguno',
       regex: 'Cómo interpretar el texto',
       who: 'Nombres de hablantes o personajes separados por comas - vacío para cualquiera',
       players: 'Nombres de jugadores separados por comas - vacío para cualquiera',
@@ -10394,6 +10518,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Plantillas de tirada',
       types: 'Tipos de mensaje',
       text: 'Texto',
+      exclude: 'Texto excluido',
       regex: 'El texto es',
       who: 'Hablantes / personajes',
       players: 'Jugadores',
@@ -10452,6 +10577,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'el jugador no coincide',
         field: 'el campo de la plantilla no coincide',
         text: 'texto no encontrado',
+        exclude: 'texto excluido encontrado',
         roll: 'ninguna tirada cumple las condiciones de tirada',
       },
     },
@@ -10503,7 +10629,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Pide a tu DJ que configure los oyentes por ti.',
       unknownCommand: 'Escribe !crl help para ver todos los comandos.',
       badOption:
-        'Las opciones son --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands.',
+        'Las opciones son --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands.',
       notFound: 'Escribe !crl para ver la lista de oyentes.',
       nameInvalid:
         'Usa hasta {max} caracteres, sin estos: | { } [ ] \\ @ % # ? ~ ni "--", y no empieces por "-".',
@@ -10538,7 +10664,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Muestra esta lista.',
       optionsTitle: 'Opciones',
       options:
-        'Opciones: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands. Se pueden usar nombres en lugar de ID.',
+        'Opciones: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name y --commands. Se pueden usar nombres en lugar de ID.',
       placeholders:
         'Los comandos pueden usar ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} y ${field:name}.',
       handouts: 'El folleto "{help}" lo explica todo; el folleto "{deck}" tiene botones.',
@@ -10602,6 +10728,7 @@ const CustomizableRollListenerMod = (() => {
           'Texto: uno o más fragmentos de texto, separados por &&, que deben aparecer todos. No se distingue entre mayúsculas y minúsculas. El texto también se busca en los totales de las tiradas y en los resultados de tablas aleatorias, y en el contenido sin procesar del mensaje, que Inspeccionar muestra en Contenido sin procesar: en una tarjeta de Beacon, es su HTML.',
           '## en el texto representa una tirada en línea; entonces las comprobaciones de tirada solo miran las tiradas que haya ahí. Sin ##, se comprueban todas las tiradas del mensaje.',
           'El texto puede ser una expresión regular en lugar de texto normal (--regex on).',
+          'Texto excluido: fragmentos de texto, separados por &&, que detienen al oyente cuando aparece cualquiera de ellos, como --text sword --exclude dagger. Se buscan como el texto y se leen como expresiones regulares con --regex on.',
           'Hablantes / personajes: el nombre que se muestra en el chat, o el nombre del personaje en la plantilla de tirada. Jugadores: el nombre visible del jugador.',
           'Campos de la plantilla: condiciones sobre los campos que lista Inspeccionar, como subcategory=Attack o title~sword, separadas por &&. = y != comparan el valor completo, ~ y !~ buscan texto en él, y no se distingue entre mayúsculas y minúsculas. Un campo que falta cuenta como vacío. Úsalo en lugar de --text cuando te refieras a un solo campo, porque --text también busca en el HTML oculto de una tarjeta de Beacon.',
         ],
@@ -10652,6 +10779,8 @@ const CustomizableRollListenerMod = (() => {
           'Nombres de plantillas de tirada, separados por espacios. none = sin plantilla. Consulta Nombres de plantillas de tirada más arriba.',
         types: 'Tipos de mensaje, separados por espacios: {types}.',
         text: 'Texto que buscar. Separa los fragmentos con &&. ## marca una tirada en línea.',
+        exclude:
+          'Texto que detiene al oyente: si aparece cualquier fragmento, no se activa. Separa los fragmentos con &&. Se busca como --text.',
         regex: 'on para leer el texto como expresiones regulares, off para texto normal.',
         who: 'Nombres de hablantes o personajes, separados por comas.',
         players: 'Nombres visibles de los jugadores, separados por comas.',
@@ -10702,7 +10831,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'El inspector',
         points: [
-          'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes, el contenido sin procesar (el mensaje tal como lo envió Roll20, donde --text también busca) y por qué cada oyente se activó o no.',
+          'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes, el contenido sin procesar (el mensaje tal como lo envió Roll20, con las imágenes incrustadas acortadas, donde --text también busca) y por qué cada oyente se activó o no.',
           'Úsalo para averiguar el nombre de plantilla de una hoja, o para ver qué envía una hoja Beacon (como D&D 2024).',
           'Las hojas Beacon publican tarjetas de tirada en lugar de plantillas de tirada. CRL las lee: la plantilla es la primera clase de la tarjeta (dnd-2024 para D&D 2024), el personaje, el título (como Prueba de Destreza) y la subcategoría pasan a ser campos, y cada tirada del desglose es una tirada, así que funcionan las comprobaciones de crítico, pifia, total y dado natural.',
         ],
@@ -10809,6 +10938,7 @@ const CustomizableRollListenerMod = (() => {
         'Slagmallar åtskilda med mellanslag - none för ingen mall - tomt för alla - Inspektera visar vilken mall ett slag har',
       types: 'Meddelandetyper åtskilda med mellanslag - tomt för alla utom api',
       text: 'Text att leta efter - se Help-handouten - tomt för all text',
+      exclude: 'Text som stoppar lyssnaren - skilj bitarna åt med && - tomt för ingen',
       regex: 'Hur texten ska läsas',
       who: 'Talar- eller karaktärsnamn åtskilda med kommatecken - tomt för alla',
       players: 'Spelarnamn åtskilda med kommatecken - tomt för alla',
@@ -10851,6 +10981,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Slagmallar',
       types: 'Meddelandetyper',
       text: 'Text',
+      exclude: 'Utesluten text',
       regex: 'Texten är',
       who: 'Talare / karaktärer',
       players: 'Spelare',
@@ -10909,6 +11040,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'spelaren matchar inte',
         field: 'mallfält matchar inte',
         text: 'texten hittades inte',
+        exclude: 'utesluten text hittades',
         roll: 'inget slag uppfyller slagvillkoren',
       },
     },
@@ -10959,7 +11091,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Be din GM att ställa in lyssnare åt dig.',
       unknownCommand: 'Skriv !crl help för att se alla kommandon.',
       badOption:
-        'Alternativen är --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
+        'Alternativen är --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands.',
       notFound: 'Skriv !crl för att se listan över lyssnare.',
       nameInvalid:
         'Använd högst {max} tecken, utan dessa: | { } [ ] \\ @ % # ? ~ eller "--", och börja inte med "-".',
@@ -10994,7 +11126,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Visa den här listan.',
       optionsTitle: 'Alternativ',
       options:
-        'Alternativ: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
+        'Alternativ: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name och --commands. Namn kan användas i stället för ID.',
       placeholders:
         'Kommandon kan använda ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} och ${field:name}.',
       handouts: 'Handouten "{help}" förklarar allt; handouten "{deck}" har knappar.',
@@ -11057,6 +11189,7 @@ const CustomizableRollListenerMod = (() => {
           'Text: en eller flera textbitar, åtskilda med &&, som alla måste förekomma. Matchningen skiljer inte på stora och små bokstäver. Text hittas även i slagsummor och resultat från slumptabeller, och i meddelandets råinnehåll, som Inspektera visar under Råinnehåll: för ett Beacon-kort är det kortets HTML.',
           '## i texten står för ett inline-slag; slagkontrollerna tittar då bara på slagen som finns där. Utan ## kontrolleras alla slag i meddelandet.',
           'Texten kan vara ett reguljärt uttryck i stället för vanlig text (--regex on).',
+          'Utesluten text: textbitar, åtskilda med &&, som stoppar lyssnaren när någon av dem förekommer, till exempel --text sword --exclude dagger. De söks som texten och läses som reguljära uttryck med --regex on.',
           'Talare / karaktärer: namnet som visas i chatten, eller karaktärsnamnet i slagmallen. Spelare: spelarens visningsnamn.',
           'Mallfält: villkor på fälten som Inspektera listar, till exempel subcategory=Attack eller title~sword, åtskilda med &&. = och != jämför hela värdet, ~ och !~ letar efter text i det, och matchningen skiljer inte på stora och små bokstäver. Ett fält som saknas räknas som tomt. Använd det i stället för --text när du menar ett enda fält, eftersom --text även söker i ett Beacon-korts dolda HTML.',
         ],
@@ -11107,6 +11240,8 @@ const CustomizableRollListenerMod = (() => {
           'Namn på slagmallar, åtskilda med mellanslag. none = ingen mall. Se Namn på slagmallar ovan.',
         types: 'Meddelandetyper, åtskilda med mellanslag: {types}.',
         text: 'Text att hitta. Skilj bitarna åt med &&. ## markerar ett inline-slag.',
+        exclude:
+          'Text som stoppar lyssnaren: om någon av bitarna förekommer utlöses den inte. Skilj bitarna åt med &&. Söks som --text.',
         regex: 'on för att läsa texten som reguljära uttryck, off för vanlig text.',
         who: 'Talar- eller karaktärsnamn, åtskilda med kommatecken.',
         players: 'Spelarnas visningsnamn, åtskilda med kommatecken.',
@@ -11156,7 +11291,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektören',
         points: [
-          'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i, råinnehållet (meddelandet som Roll20 skickade det, som --text också söker i) och varför varje lyssnare utlöstes eller inte.',
+          'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i, råinnehållet (meddelandet som Roll20 skickade det, med inbäddade bilder förkortade, som --text också söker i) och varför varje lyssnare utlöstes eller inte.',
           'Använd den för att hitta ett formulärs mallnamn, eller för att se vad ett Beacon-formulär (som D&D 2024) skickar.',
           'Beacon-formulär skickar slagkort i stället för slagmallar. CRL läser dem: mallen är kortets första klass (dnd-2024 för D&D 2024), karaktären, titeln (som Dexterity Check) och underkategorin blir fält, och varje slag i uppdelningen är ett slag, så kontroller av kritiskt, fummel, summa och naturlig tärning fungerar.',
         ],
@@ -11263,6 +11398,7 @@ const CustomizableRollListenerMod = (() => {
         'Boşlukla ayrılmış atış şablonları - şablonsuz için none - hepsi için boş - İnceleme, atışın şablonunu gösterir',
       types: 'Boşlukla ayrılmış mesaj türleri - api dışındaki hepsi için boş',
       text: 'Aranacak metin - Yardım belgesine bakın - hepsi için boş',
+      exclude: 'Dinleyiciyi durduran metin - parçaları && ile ayırın - hiçbiri için boş',
       regex: 'Metin nasıl okunsun',
       who: 'Virgülle ayrılmış gönderen veya karakter adları - herkes için boş',
       players: 'Virgülle ayrılmış oyuncu adları - herkes için boş',
@@ -11305,6 +11441,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Atış şablonları',
       types: 'Mesaj türleri',
       text: 'Metin',
+      exclude: 'Hariç tutulan metin',
       regex: 'Metin türü',
       who: 'Gönderenler / karakterler',
       players: 'Oyuncular',
@@ -11363,6 +11500,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'oyuncu eşleşmiyor',
         field: 'şablon alanı eşleşmiyor',
         text: 'metin bulunamadı',
+        exclude: 'hariç tutulan metin bulundu',
         roll: 'hiçbir atış atış koşullarını karşılamıyor',
       },
     },
@@ -11412,7 +11550,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: "GM'inizden sizin için dinleyici ayarlamasını isteyin.",
       unknownCommand: 'Tüm komutları görmek için !crl help yazın.',
       badOption:
-        'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
+        'Seçenekler: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands.',
       notFound: 'Dinleyici listesini görmek için !crl yazın.',
       nameInvalid:
         'En fazla {max} karakter kullanın; şunları kullanmayın: | { } [ ] \\ @ % # ? ~ veya "--". Ad "-" ile başlamamalı.',
@@ -11450,7 +11588,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Bu listeyi gösterir.',
       optionsTitle: 'Seçenekler',
       options:
-        'Seçenekler: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
+        'Seçenekler: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name ve --commands. Kimlik yerine ad kullanılabilir.',
       placeholders:
         'Komutlarda şunlar kullanılabilir: ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} ve ${field:name}.',
       handouts: '"{help}" belgesi her şeyi açıklar; "{deck}" belgesinde düğmeler bulunur.',
@@ -11513,6 +11651,7 @@ const CustomizableRollListenerMod = (() => {
           "Metin: && ile ayrılmış, hepsinin geçmesi gereken bir veya daha fazla metin parçası. Eşleştirmede büyük/küçük harf ayrımı yapılmaz. Metin, atış toplamlarında ve atış tablosu sonuçlarında ve mesajın ham içeriğinde de aranır; İnceleme bunu Ham içerik altında gösterir: bir Beacon kartı için bu, kartın HTML'idir.",
           'Metindeki ## bir satır içi atışı temsil eder; atış kontrolleri bu durumda yalnızca orada bulunan atışlara bakar. ## yoksa mesajdaki her atış kontrol edilir.',
           'Metin, düz metin yerine düzenli ifade olabilir (--regex on).',
+          'Hariç tutulan metin: && ile ayrılmış, herhangi biri geçtiğinde dinleyiciyi durduran metin parçaları; örneğin --text sword --exclude dagger. Metin gibi aranır ve --regex on ile düzenli ifade olarak okunur.',
           'Gönderenler / karakterler: sohbette görünen ad veya atış şablonundaki karakter adı. Oyuncular: oyuncunun görünen adı.',
           "Şablon alanları: İnceleme tarafından listelenen alanlar üzerindeki koşullar, örneğin subcategory=Attack veya title~sword, && ile ayrılır. = ve != tüm değeri karşılaştırır, ~ ve !~ içinde metin arar ve büyük/küçük harf ayrımı yapılmaz. Eksik bir alan boş sayılır. Tek bir alanı kastettiğinizde --text yerine bunu kullanın, çünkü --text bir Beacon kartının gizli HTML'inde de arama yapar.",
         ],
@@ -11563,6 +11702,8 @@ const CustomizableRollListenerMod = (() => {
           'Boşlukla ayrılmış atış şablonu adları. none = şablon yok. Yukarıdaki Atış Şablonu Adları bölümüne bakın.',
         types: 'Boşlukla ayrılmış mesaj türleri: {types}.',
         text: 'Aranacak metin. Parçaları && ile ayırın. ## bir satır içi atışı işaretler.',
+        exclude:
+          'Dinleyiciyi durduran metin: herhangi bir parça geçerse dinleyici tetiklenmez. Parçaları && ile ayırın. --text gibi aranır.',
         regex: 'Metni düzenli ifade olarak okumak için on, düz metin için off.',
         who: 'Virgülle ayrılmış gönderen veya karakter adları.',
         players: 'Virgülle ayrılmış oyuncu görünen adları.',
@@ -11612,7 +11753,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Denetleyici',
         points: [
-          "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin, ham içerik (mesajın Roll20'nin gönderdiği hâli; --text de burada arar) ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
+          "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin, ham içerik (mesajın Roll20'nin gönderdiği hâli, gömülü görseller kısaltılmış olarak; --text de burada arar) ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
           'Bir sayfanın şablon adını bulmak veya bir Beacon sayfasının (D&D 2024 gibi) ne gönderdiğini görmek için kullanın.',
           'Beacon sayfaları atış şablonları yerine atış kartları gönderir. CRL bunları okur: şablon, kartın ilk sınıfıdır (D&D 2024 için dnd-2024); karakter, başlık (Dexterity Check gibi) ve alt kategori alan olur; dökümdeki her atış bir atış sayılır, böylece kritik başarı, kritik başarısızlık, toplam ve doğal zar kontrolleri çalışır.',
         ],
@@ -11719,6 +11860,7 @@ const CustomizableRollListenerMod = (() => {
         'Шаблони кидків через пробіл — none, якщо без шаблону — порожньо, якщо будь-який — інспектор показує шаблон кидка',
       types: 'Типи повідомлень через пробіл — порожньо, якщо будь-який, крім api',
       text: 'Текст для пошуку — див. роздатковий матеріал «Довідка» — порожньо, якщо будь-який',
+      exclude: 'Текст, який зупиняє слухача — фрагменти розділяються && — порожньо, якщо немає',
       regex: 'Як читати текст',
       who: 'Імена відправників або персонажів через кому — порожньо, якщо будь-хто',
       players: 'Імена гравців через кому — порожньо, якщо будь-хто',
@@ -11762,6 +11904,7 @@ const CustomizableRollListenerMod = (() => {
       templates: 'Шаблони кидків',
       types: 'Типи повідомлень',
       text: 'Текст',
+      exclude: 'Виключений текст',
       regex: 'Текст як',
       who: 'Відправники / персонажі',
       players: 'Гравці',
@@ -11820,6 +11963,7 @@ const CustomizableRollListenerMod = (() => {
         player: 'гравець не збігається',
         field: 'поле шаблону не збігається',
         text: 'текст не знайдено',
+        exclude: 'знайдено виключений текст',
         roll: 'жоден кидок не відповідає умовам кидка',
       },
     },
@@ -11871,7 +12015,7 @@ const CustomizableRollListenerMod = (() => {
       gmOnly: 'Попросіть майстра налаштувати для вас слухачів.',
       unknownCommand: 'Введіть !crl help, щоб побачити всі команди.',
       badOption:
-        'Доступні параметри: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands.',
+        'Доступні параметри: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands.',
       notFound: 'Введіть !crl, щоб побачити список слухачів.',
       nameInvalid:
         'Не більше {max} символів, без таких: | { } [ ] \\ @ % # ? ~ і «--»; ім’я не повинно починатися з «-».',
@@ -11908,7 +12052,7 @@ const CustomizableRollListenerMod = (() => {
       help: 'Показати цей список.',
       optionsTitle: 'Параметри',
       options:
-        'Параметри: --templates, --types, --text, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands. Замість ID можна вказувати імена.',
+        'Параметри: --templates, --types, --text, --exclude, --regex, --who, --players, --fields, --results, --total, --natural, --dice, --cooldown, --stop, --speaker, --enabled, --name і --commands. Замість ID можна вказувати імена.',
       placeholders:
         'У командах можна використовувати ${who}, ${character}, ${player}, ${template}, ${total}, ${natural}, ${result}, ${expression}, ${table}, ${listener} і ${field:name}.',
       handouts: 'У роздатковому матеріалі «{help}» усе докладно пояснено, а в «{deck}» є кнопки.',
@@ -11971,6 +12115,7 @@ const CustomizableRollListenerMod = (() => {
           'Текст: один або кілька фрагментів тексту через &&, які мають трапитися всі. Регістр літер не враховується. Текст шукається також у сумах кидків і результатах таблиць кидків, а також у вихідному вмісті повідомлення, який інспектор показує в розділі «Вихідний вміст»: для картки Beacon це її HTML.',
           '## у тексті позначає вбудований кидок; тоді перевірки кидка дивляться лише на знайдені там кидки. Без ## перевіряється кожен кидок у повідомленні.',
           'Замість звичайного тексту можна використати регулярний вираз (--regex on).',
+          'Виключений текст: фрагменти тексту через &&, які зупиняють слухача, якщо трапиться будь-який із них, наприклад --text sword --exclude dagger. Вони шукаються так само, як текст, а з --regex on читаються як регулярні вирази.',
           'Відправники / персонажі: ім’я, показане в чаті, або ім’я персонажа в шаблоні кидка. Гравці: відображуване ім’я гравця.',
           'Поля шаблону: умови на поля, які показує інспектор, наприклад subcategory=Attack або title~sword, через &&. = і != порівнюють значення цілком, ~ і !~ шукають у ньому текст, регістр літер не враховується. Відсутнє поле вважається порожнім. Використовуйте це замість --text, коли маєте на увазі одне поле, бо --text шукає і в прихованому HTML картки Beacon.',
         ],
@@ -12020,6 +12165,8 @@ const CustomizableRollListenerMod = (() => {
           'Імена шаблонів кидків через пробіл. none — без шаблону. Див. «Імена шаблонів кидків» вище.',
         types: 'Типи повідомлень через пробіл: {types}.',
         text: 'Текст для пошуку. Фрагменти розділяються &&. ## позначає вбудований кидок.',
+        exclude:
+          'Текст, який зупиняє слухача: якщо трапиться будь-який фрагмент, він не спрацює. Фрагменти розділяються &&. Шукається так само, як --text.',
         regex: 'on — читати текст як регулярні вирази, off — як звичайний текст.',
         who: 'Імена відправників або персонажів через кому.',
         players: 'Відображувані імена гравців через кому.',
@@ -12069,7 +12216,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Інспектор',
         points: [
-          'Натисніть «Перевірити наступне повідомлення», потім зробіть кидок. CRL пошепки повідомить, що побачив: тип повідомлення, відправника, персонажа, шаблон і його поля, кожен кидок із кубиками, текст, у якому шукають слухачі, вихідний вміст (повідомлення в тому вигляді, в якому його надіслав Roll20; у ньому шукає і --text), і чому кожен слухач спрацював чи ні.',
+          'Натисніть «Перевірити наступне повідомлення», потім зробіть кидок. CRL пошепки повідомить, що побачив: тип повідомлення, відправника, персонажа, шаблон і його поля, кожен кидок із кубиками, текст, у якому шукають слухачі, вихідний вміст (повідомлення в тому вигляді, в якому його надіслав Roll20, зі скороченими вбудованими зображеннями; у ньому шукає і --text), і чому кожен слухач спрацював чи ні.',
           'Так можна дізнатися ім’я шаблону аркуша або подивитися, що надсилає аркуш Beacon (наприклад, D&D 2024).',
           'Аркуші Beacon публікують картки кидків замість шаблонів кидків. CRL їх читає: шаблоном вважається перший клас картки (dnd-2024 для D&D 2024), персонаж, заголовок (наприклад, «Перевірка Спритності») і підкатегорія стають полями, а кожен кидок із розшифровки — окремим кидком, тож перевірки критичного успіху, критичного провалу, суми й натурального результату працюють.',
         ],
@@ -12645,6 +12792,28 @@ const CustomizableRollListenerMod = (() => {
   }
 
   /**
+   * Returns true when any of a listener's excluded pieces of text appears in
+   * a message, searched like its text: the raw content, then the readable
+   * text.
+   *
+   * @param {object} listener Listener rules.
+   * @param {object} message Analysed message.
+   * @returns {boolean} True when an excluded piece is found.
+   */
+  function matchExclude(listener, message) {
+    return listener.exclude.some((term) => {
+      let pattern;
+      try {
+        pattern = compileTerm(term, listener.regex);
+      } catch {
+        return false;
+      }
+      const found = (source) => [...source.matchAll(pattern)].some((hit) => hit[0].length > 0);
+      return found(message.raw) || found(message.text);
+    });
+  }
+
+  /**
    * Parses a template field condition such as "subcategory=Attack" or
    * "title~sword".
    *
@@ -12822,6 +12991,9 @@ const CustomizableRollListenerMod = (() => {
     const text = matchText(listener, message);
     if (!text.ok) {
       return fail('text');
+    }
+    if (listener.exclude.length > 0 && matchExclude(listener, message)) {
+      return fail('exclude');
     }
 
     const checks = {
@@ -13026,6 +13198,7 @@ const CustomizableRollListenerMod = (() => {
       templates: cleanList(src.templates),
       types: cleanList(src.types).map((t) => t.toLowerCase()),
       text: cleanList(src.text, MAX_TEXT_TERMS),
+      exclude: cleanList(src.exclude, MAX_TEXT_TERMS),
       regex: src.regex === true,
       who: cleanList(src.who),
       players: cleanList(src.players),
@@ -13321,6 +13494,7 @@ const CustomizableRollListenerMod = (() => {
       ['--templates', 'templates'],
       ['--types', 'types'],
       ['--text', 'text'],
+      ['--exclude', 'exclude'],
       ['--regex', 'regex'],
       ['--who', 'who'],
       ['--players', 'players'],
@@ -13879,6 +14053,18 @@ const CustomizableRollListenerMod = (() => {
   }
 
   /**
+   * Shortens embedded data such as a Beacon card's weapon icon
+   * (src="data:image/svg+xml,…"), which can fill the inspector's limit before
+   * the attributes a GM may want to match.
+   *
+   * @param {string} text Raw content.
+   * @returns {string} Content with each quoted data: URI cut to its type.
+   */
+  function shortenDataUris(text) {
+    return String(text).replaceAll(/(["'])data:([^,;"']*)[^"']*\1/gi, '$1data:$2,…$1');
+  }
+
+  /**
    * Shortens text for display.
    *
    * @param {string} text Text.
@@ -13954,7 +14140,7 @@ const CustomizableRollListenerMod = (() => {
     lines.push(buildSectionLabel(tr$1('inspect.text')));
     lines.push(buildCode(truncate(message.text)));
     lines.push(buildSectionLabel(tr$1('inspect.raw')));
-    lines.push(buildCode(truncate(message.raw)));
+    lines.push(buildCode(truncate(shortenDataUris(message.raw))));
     lines.push(buildSectionLabel(tr$1('inspect.listeners')));
     const listeners = getListeners();
     if (listeners.length === 0) {
@@ -14111,6 +14297,8 @@ const CustomizableRollListenerMod = (() => {
     type: 'types',
     types: 'types',
     text: 'text',
+    exclude: 'exclude',
+    not: 'exclude',
     regex: 'regex',
     mode: 'regex',
     who: 'who',
@@ -14142,6 +14330,7 @@ const CustomizableRollListenerMod = (() => {
     'templates',
     'types',
     'text',
+    'exclude',
     'regex',
     'who',
     'players',
@@ -14417,11 +14606,32 @@ const CustomizableRollListenerMod = (() => {
         problem('badRegex', invalid);
       }
     }
+    if ('exclude' in options) {
+      const terms = cleared(options.exclude)
+        ? []
+        : toText(options.exclude)
+            .split(/\s*&&\s*/)
+            .map((term) => term.trim())
+            .filter(Boolean);
+      const invalid = next.regex ? findInvalidTerm(terms) : null;
+      if (terms.length > MAX_TEXT_TERMS) {
+        problem('tooManyTerms', { max: MAX_TEXT_TERMS });
+      } else if (invalid) {
+        problem('badRegex', invalid);
+      } else {
+        next.exclude = terms;
+      }
+    } else if ('regex' in options && next.regex) {
+      const invalid = findInvalidTerm(next.exclude);
+      if (invalid) {
+        problem('badRegex', invalid);
+      }
+    }
     if ('fields' in options) {
       const terms = cleared(options.fields)
         ? []
         : toText(options.fields)
-            .split(/s*&&s*/)
+            .split(/\s*&&\s*/)
             .map((term) => term.trim())
             .filter(Boolean);
       const invalid = findInvalidField(terms, next.regex);
@@ -14538,6 +14748,8 @@ const CustomizableRollListenerMod = (() => {
       case 'text':
       case 'fields':
         return value.length > 0 ? value.join(' && ') : tr('values.any');
+      case 'exclude':
+        return value.length > 0 ? value.join(' && ') : tr('values.none');
       case 'results':
         return value.length > 0
           ? value.map((r) => tr(`results.${r}`)).join(', ')
