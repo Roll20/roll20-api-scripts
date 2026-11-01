@@ -12,7 +12,7 @@ const Vehicle = (() => {
   const scriptName = 'Vehicle';
   const commandName = '!vehicle';
   const version = '1.0.0';
-  const lastUpdate = 1793465796; // unix timestamp, seconds
+  const lastUpdate = 1793573363; // unix timestamp, seconds
   const schemaVersion = 0.1;
 
   const DEBUG = false;
@@ -49,6 +49,10 @@ const Vehicle = (() => {
     nameLink: 'background-color:transparent;border:none;padding:0;margin:0;font-weight:bold;font-size:12px;color:#2b2418;text-decoration:none;',
     name: 'font-weight:bold;font-size:12px;color:#2b2418;text-decoration:none;',
     count: 'color:#7a6a4f;font-size:11px;',
+    countLink: 'background-color:transparent;border:none;padding:0;margin:0;color:#7a6a4f;font-size:11px;font-weight:normal;text-decoration:underline;',
+    smallThumbCell: 'width:30px;vertical-align:middle;padding:0;',
+    smallThumbBox: 'display:block;width:26px;height:26px;line-height:26px;text-align:center;background-color:#e6dcc6;border:1px solid #b9a782;border-radius:3px;overflow:hidden;',
+    smallThumb: 'max-width:26px;max-height:26px;width:auto;height:auto;vertical-align:middle;border:none;margin:0;padding:0;',
     chip: 'display:inline-block;background-color:#fffaf0;border:1px solid #b9a782;border-radius:10px;color:#2b2418;padding:0 5px;margin:3px 1px 0 0;font-size:10px;line-height:15px;white-space:nowrap;font-weight:normal;text-decoration:none;',
     chipOn: 'display:inline-block;background-color:#3f6b3a;border:1px solid #2c4d28;border-radius:10px;color:#fff;padding:0 5px;margin:3px 1px 0 0;font-size:10px;line-height:15px;white-space:nowrap;font-weight:normal;text-decoration:none;',
     remove: 'display:block;background-color:#f6dcd6;border:1px solid #b9786a;border-radius:3px;color:#7a2a1a;width:16px;height:16px;line-height:16px;padding:0;margin:0;text-align:center;text-decoration:none;font-size:11px;',
@@ -137,8 +141,10 @@ const Vehicle = (() => {
 
   };
 
-  // Tooltip tag: [vehicle|rotate|overlap:50|area:l,t,r,b]; keys at their default are left out.
+  // Tooltip tag: [vehicle|rotate|overlap:50|area:l,t,r,b|aboard:id,id]; settings at their default are left out.
   // area is the inset from each side (left, top, right, bottom) in percent of the unflipped, unrotated token.
+  // aboard is the passenger roll; it is always written once set (empty when nobody is aboard), so a missing
+  // aboard key means the roll has not been set yet.
 
   const NO_AREA = [0, 0, 0, 0];
 
@@ -157,10 +163,14 @@ const Vehicle = (() => {
     parse: (tooltip) => {
       const m = (tooltip || '').match(Tag.pattern);
       if (!m) return null;
-      const opts = { rotate: false, overlap: DEFAULT_OVERLAP, area: NO_AREA.slice() };
-      (m[1] || '').split('|').map(s => s.trim().toLowerCase()).filter(Boolean).forEach(part => {
-        const [key, value] = part.split(':').map(s => s.trim());
-        if (key === 'rotate') {
+      const opts = { rotate: false, overlap: DEFAULT_OVERLAP, area: NO_AREA.slice(), aboard: null };
+      (m[1] || '').split('|').map(s => s.trim()).filter(Boolean).forEach(part => {
+        const i = part.indexOf(':');
+        const key = (i < 0 ? part : part.slice(0, i)).trim().toLowerCase();
+        const value = i < 0 ? '' : part.slice(i + 1).trim();
+        if (key === 'aboard') {
+          opts.aboard = value.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (key === 'rotate') {
           opts.rotate = true;
         } else if (key === 'overlap') {
           const n = parseFloat(value);
@@ -180,6 +190,7 @@ const Vehicle = (() => {
       if (opts.rotate) parts.push('rotate');
       if (opts.overlap !== DEFAULT_OVERLAP) parts.push(`overlap:${opts.overlap}`);
       if (Tag.hasArea(opts)) parts.push(`area:${opts.area.map(round1).join(',')}`);
+      if (Array.isArray(opts.aboard)) parts.push(`aboard:${opts.aboard.join(',')}`);
       return `[${parts.join('|')}]`;
     },
 
@@ -393,7 +404,10 @@ const Vehicle = (() => {
     return validArea(area) ? area : 'The rectangle is too small.';
   };
 
-  // Carry: find riders and move them with the vehicle
+  // Boarding and carrying.
+  // Each vehicle keeps a passenger roll (the aboard key of its tag). A token joins a roll when its own move
+  // ends on a vehicle, and leaves when its own move ends off it. When a vehicle moves, it carries the tokens
+  // on its roll that are still aboard; tokens it merely passes over are left where they are.
 
   const recentMoves = {};
 
@@ -407,87 +421,243 @@ const Vehicle = (() => {
     });
   };
 
-  // Riders: token-layer tokens, not vehicles, with at least overlap% of their footprint on the area
-  const findRiders = (pageid, vehicleId, snap, opts, skipSince) => {
-    const poly = areaPoly(snap, opts.area);
-    const cx = snap.left;
-    const cy = snap.top;
+  const isRider = (t) => !!t && t.get('_type') === 'graphic' && t.get('_subtype') === 'token' && t.get('layer') === 'objects';
+
+  const vehiclesOn = (pageid) => findObjs({ _type: 'graphic', _pageid: pageid }).filter(isVehicle);
+
+  // Area of a vehicle's passenger area, used to find the smallest vehicle a token is on
+  const areaSize = (v) => {
+    const opts = Tag.parse(v.get('tooltip'));
+    const a = areaRect(snapshotOf(v), opts.area);
+    return a.w * a.h;
+  };
+
+  // Whether a token has at least the vehicle's overlap percentage on the vehicle's area
+  const isAboard = (t, snap, opts) => {
+    const tw = Geo.num(t.get('width'));
+    const th = Geo.num(t.get('height'));
+    const tx = Geo.num(t.get('left'));
+    const ty = Geo.num(t.get('top'));
     const vRadius = Math.sqrt(snap.width * snap.width + snap.height * snap.height) / 2;
-    return findObjs({ _type: 'graphic', _pageid: pageid, layer: 'objects' }).filter(t => {
-      if (t.id === vehicleId) return false;
-      if (t.get('_subtype') !== 'token') return false;
-      if (isVehicle(t)) return false;
-      if (skipSince !== undefined && recentMoves[t.id] !== undefined && recentMoves[t.id] >= skipSince) return false;
+    const tRadius = Math.sqrt(tw * tw + th * th) / 2;
+    if (Math.hypot(tx - snap.left, ty - snap.top) > vRadius + tRadius) return false;
+    const frac = Geo.overlapFraction(Geo.rect(tx, ty, tw, th, Geo.num(t.get('rotation'))), areaPoly(snap, opts.area));
+    return frac * 100 >= opts.overlap - 1e-6;
+  };
 
-      const tw = Geo.num(t.get('width'));
-      const th = Geo.num(t.get('height'));
-      const tx = Geo.num(t.get('left'));
-      const ty = Geo.num(t.get('top'));
-      const tRadius = Math.sqrt(tw * tw + th * th) / 2;
-      if (Math.hypot(tx - cx, ty - cy) > vRadius + tRadius) return false;
+  const Roll = {
 
-      const frac = Geo.overlapFraction(Geo.rect(tx, ty, tw, th, Geo.num(t.get('rotation'))), poly);
-      return frac * 100 >= opts.overlap - 1e-6;
+    get: (v) => {
+      const opts = Tag.parse(v.get('tooltip'));
+      return opts && Array.isArray(opts.aboard) ? opts.aboard : null;
+    },
+
+    set: (v, ids) => {
+      const opts = Tag.parse(v.get('tooltip'));
+      if (!opts) return;
+      const next = ids.filter((id, i) => ids.indexOf(id) === i);
+      if (Array.isArray(opts.aboard) && opts.aboard.join(',') === next.join(',')) return;
+      opts.aboard = next;
+      Tag.write(v, opts);
+    },
+
+    // Passengers that still exist
+    members: (v) => (Roll.get(v) || []).map(id => getObj('graphic', id)).filter(Boolean),
+
+    // All vehicles carried by v, directly or through other vehicles
+    descendants: (v, seen = {}) => {
+      seen[v.id] = true;
+      let out = [];
+      Roll.members(v).filter(isVehicle).forEach(c => {
+        if (seen[c.id]) return;
+        out.push(c.id);
+        out = out.concat(Roll.descendants(c, seen));
+      });
+      return out;
+    }
+  };
+
+  // The vehicle a token should ride now: the smallest one it is aboard, never itself or one it carries
+  const boardingTarget = (t, vehicles) => {
+    if (!isRider(t)) return null;
+    const exclude = isVehicle(t) ? [t.id].concat(Roll.descendants(t)) : [t.id];
+    const on = (vehicles || vehiclesOn(t.get('_pageid')))
+      .filter(v => !exclude.includes(v.id) && isAboard(t, snapshotOf(v), Tag.parse(v.get('tooltip'))));
+    if (!on.length) return null;
+    return on.reduce((best, v) => (areaSize(v) < areaSize(best) ? v : best));
+  };
+
+  // Puts a token on one roll (or none) and takes it off every other roll on its page
+  const assign = (t, target, vehicles) => {
+    (vehicles || vehiclesOn(t.get('_pageid'))).forEach(v => {
+      const roll = Roll.get(v);
+      if (v === target || (target && v.id === target.id)) {
+        if (!roll || !roll.includes(t.id)) Roll.set(v, (roll || []).concat(t.id));
+      } else if (roll && roll.includes(t.id)) {
+        Roll.set(v, roll.filter(id => id !== t.id));
+      }
     });
   };
 
-  // before/after: snapshots of the vehicle
-  const carry = (vehicle, before, after, eventTime) => {
+  // A token's own move (or arrival) decides whether it boards, stays, or leaves
+  const updateBoarding = (t) => {
+    const vehicles = vehiclesOn(t.get('_pageid'));
+    assign(t, boardingTarget(t, vehicles), vehicles);
+  };
+
+  // Everything currently on the vehicle (and not on a smaller vehicle) becomes a passenger; everything else is dropped
+  const setPassengers = (v) => {
+    const vehicles = vehiclesOn(v.get('_pageid'));
+    const ids = findObjs({ _type: 'graphic', _pageid: v.get('_pageid'), layer: 'objects' })
+      .filter(t => t.id !== v.id && isRider(t))
+      .filter(t => {
+        const target = boardingTarget(t, vehicles);
+        return target && target.id === v.id;
+      })
+      .map(t => t.id);
+    ids.forEach(id => {
+      vehicles.forEach(o => {
+        if (o.id === v.id) return;
+        const roll = Roll.get(o);
+        if (roll && roll.includes(id)) Roll.set(o, roll.filter(x => x !== id));
+      });
+    });
+    Roll.set(v, ids);
+  };
+
+  // Overlapping vehicles are stacked by size, largest at the back
+  const restack = (pageid) => {
+    vehiclesOn(pageid)
+      .map(v => ({ v, size: areaSize(v) }))
+      .sort((a, b) => a.size - b.size)
+      .forEach(o => toBack(o.v));
+  };
+
+  // before/after: snapshots of the vehicle. Moves the roll members still aboard, then the passengers of any
+  // vehicle among them by however far that vehicle moved.
+  const carry = (vehicle, before, after, eventTime, seen = {}) => {
     const opts = Tag.parse(vehicle.get('tooltip'));
-    if (!opts) return 0;
+    if (!opts || seen[vehicle.id]) return 0;
+    seen[vehicle.id] = true;
 
     const dx = after.left - before.left;
     const dy = after.top - before.top;
     const dRot = after.rotation - before.rotation;
     if (!dx && !dy && !dRot) return 0;
 
-    const skipSince = eventTime === undefined ? undefined : eventTime - GROUP_WINDOW_MS;
-    const riders = findRiders(vehicle.get('_pageid'), vehicle.id, before, opts, skipSince);
+    if (!Array.isArray(opts.aboard)) {
+      setPassengers(vehicle);
+      return 0;
+    }
 
-    riders.forEach(t => {
-      const rel = Geo.rotate(Geo.num(t.get('left')) - before.left, Geo.num(t.get('top')) - before.top, dRot);
+    const skipSince = eventTime === undefined ? undefined : eventTime - GROUP_WINDOW_MS;
+    const keep = [];
+    let count = 0;
+
+    opts.aboard.forEach(id => {
+      const t = getObj('graphic', id);
+      if (!t || !isRider(t) || t.get('_pageid') !== vehicle.get('_pageid')) return;
+
+      // Dragged together with the vehicle: already moved, stays on the roll
+      if (skipSince !== undefined && recentMoves[id] !== undefined && recentMoves[id] >= skipSince) {
+        keep.push(id);
+        return;
+      }
+      if (!isAboard(t, before, opts)) return;
+
+      keep.push(id);
+      const tBefore = snapshotOf(t);
+      const rel = Geo.rotate(tBefore.left - before.left, tBefore.top - before.top, dRot);
       const update = { left: after.left + rel.x, top: after.top + rel.y };
-      if (opts.rotate && dRot) update.rotation = Geo.normDeg(Geo.num(t.get('rotation')) + dRot);
+      // A carried vehicle always turns with its carrier; other passengers only when the carrier's rotate is on
+      if (dRot && (opts.rotate || isVehicle(t))) update.rotation = Geo.normDeg(tBefore.rotation + dRot);
       t.set(update);
+      count += 1;
+
+      if (isVehicle(t)) count += carry(t, tBefore, snapshotOf(t), eventTime, seen);
     });
 
-    Logger.debug(`${vehicle.get('name') || vehicle.id} carried ${riders.length} token(s)`);
-    return riders.length;
+    if (keep.length !== opts.aboard.length) Roll.set(vehicle, keep);
+    Logger.debug(`${vehicle.get('name') || vehicle.id} carried ${count} token(s)`);
+    return count;
   };
 
+  // Moves by hand and moves reported by other scripts both come through here
   const handleGraphicChange = (obj, prev) => {
+    if (!obj || !prev || obj.get('_subtype') !== 'token') return;
     const now = Date.now();
     const moved = obj.get('left') !== prev.left || obj.get('top') !== prev.top || obj.get('rotation') !== prev.rotation;
+    const layerChanged = prev.layer !== undefined && obj.get('layer') !== prev.layer;
+    const resized = (prev.width !== undefined && obj.get('width') !== prev.width) ||
+      (prev.height !== undefined && obj.get('height') !== prev.height);
     if (moved) noteMove(obj.id, now);
 
-    if (!isVehicle(obj)) return;
+    const vehicle = isVehicle(obj);
 
-    // Tag added by hand: send to back
-    if (!Tag.has(prev.tooltip)) toBack(obj);
+    // Tag typed by hand: set the roll now
+    if (vehicle && prev.tooltip !== undefined && !Tag.has(prev.tooltip)) {
+      defer(() => {
+        const v = getObj('graphic', obj.id);
+        if (!v || !isVehicle(v)) return;
+        if (!Array.isArray(Tag.parse(v.get('tooltip')).aboard)) setPassengers(v);
+        restack(v.get('_pageid'));
+      });
+    }
 
-    if (!moved) return;
-    if (obj.get('layer') !== prev.layer) return;
+    if (!moved && !layerChanged && !resized) return;
 
-    const before = snapshot(prev);
-    const after = snapshotOf(obj);
-
-    // Resizing also shifts the center; don't carry on a resize
-    if (before.width !== after.width || before.height !== after.height) {
-      toBack(obj);
+    if (!vehicle) {
+      defer(() => {
+        const t = getObj('graphic', obj.id);
+        if (t) updateBoarding(t);
+      });
       return;
     }
 
+    const before = snapshot(prev);
+    const after = snapshotOf(obj);
+    defer(() => {
+      const v = getObj('graphic', obj.id);
+      if (!v) return;
+      // A resize also shifts the center, so it carries nothing
+      if (moved && !layerChanged && !resized) carry(v, before, after, now);
+      updateBoarding(v);
+      restack(v.get('_pageid'));
+      pruneRecent(Date.now());
+    });
+  };
+
+  // A token dropped, pasted or created on top of a vehicle boards it; a new vehicle (a copy, or one from
+  // the journal) takes whatever is on it
+  const handleGraphicAdd = (obj) => {
+    defer(() => {
+      const t = getObj('graphic', obj.id);
+      if (!t || t.get('_subtype') !== 'token') return;
+      if (isVehicle(t)) {
+        setPassengers(t);
+        restack(t.get('_pageid'));
+      }
+      updateBoarding(t);
+    });
+  };
+
+  const defer = (fn) => {
     setTimeout(() => {
       try {
-        const vehicle = getObj('graphic', obj.id);
-        if (!vehicle) return;
-        carry(vehicle, before, after, now);
-        toBack(vehicle);
-        pruneRecent(Date.now());
+        fn();
       } catch (err) {
         Logger.error(err && err.stack ? err.stack : err);
       }
     }, DEFER_MS);
+  };
+
+  // Vehicles from before rolls existed, or with a tag typed while the sandbox was off, get a roll at startup
+  const initRolls = () => {
+    const pages = {};
+    findObjs({ _type: 'graphic' }).filter(isVehicle).forEach(v => {
+      if (!Array.isArray(Tag.parse(v.get('tooltip')).aboard)) pages[v.get('_pageid')] = (pages[v.get('_pageid')] || []).concat(v);
+    });
+    Object.keys(pages).forEach(pageid => pages[pageid].forEach(setPassengers));
   };
 
   // Outline: a temporary rectangle showing a vehicle's area. Recognized by its stroke color mark,
@@ -686,6 +856,10 @@ const Vehicle = (() => {
 
       if (args.straighten) {
         Commands.straighten(msg, args);
+      } else if (args.unboard) {
+        Commands.unboard(msg, args);
+      } else if (args['set-passengers']) {
+        Commands.setPassengers(msg, args);
       } else if (args.remove) {
         Commands.remove(msg, args);
       } else if (changesSettings) {
@@ -695,8 +869,10 @@ const Vehicle = (() => {
       if (args.show) Commands.show(msg, args);
       if (args.ping) Commands.ping(msg, args);
 
+      if (args.passengers) return Commands.passengers(msg, args);
       if (args.list) return Commands.list(msg);
-      if (!changesSettings && !args.straighten && !args.remove && !args.show && !args.ping) return Commands.menu(msg);
+      const acted = changesSettings || args.straighten || args.remove || args.show || args.ping || args.unboard || args['set-passengers'];
+      if (!acted) return Commands.menu(msg);
     },
 
     // --define and the settings: rotate, overlap, area (by value or from a selected rectangle)
@@ -732,22 +908,47 @@ const Vehicle = (() => {
       }
 
       targets.forEach(t => {
-        const opts = Tag.parse(t.get('tooltip')) || { rotate: false, overlap: DEFAULT_OVERLAP, area: NO_AREA.slice() };
+        const opts = Tag.parse(t.get('tooltip')) || { rotate: false, overlap: DEFAULT_OVERLAP, area: NO_AREA.slice(), aboard: null };
         if (set.rotate !== undefined) opts.rotate = set.rotate;
         if (set.overlap !== undefined) opts.overlap = set.overlap;
         if (set.area) opts.area = set.area;
         if (drawnArea) opts.area = drawnArea;
         Tag.write(t, opts);
-        if (args.define) toBack(t);
       });
 
       if (path) Outline.removePath(path);
+
+      // A new vehicle takes whatever is on it now; an existing one keeps its roll
+      if (args.define) {
+        targets.filter(t => !Array.isArray(Tag.parse(t.get('tooltip')).aboard)).forEach(setPassengers);
+        restack(targets[0].get('_pageid'));
+      }
     },
 
     remove: (msg, args) => {
       const targets = getTargets(msg, args).filter(isVehicle);
       if (!targets.length) return Output.error(msg, 'None of the selected tokens is a vehicle.');
-      targets.forEach(t => Tag.remove(t));
+      targets.forEach(t => {
+        const former = Roll.members(t);
+        Tag.remove(t);
+        former.forEach(updateBoarding);
+        updateBoarding(t);
+      });
+    },
+
+    // --set-passengers: everything on the vehicle now becomes a passenger
+    setPassengers: (msg, args) => {
+      const targets = getTargets(msg, args).filter(isVehicle);
+      if (!targets.length) return Output.error(msg, 'None of the selected tokens is a vehicle.');
+      targets.forEach(setPassengers);
+    },
+
+    // --unboard <token id> --ids <vehicle id>: takes one token off the roll without moving it
+    unboard: (msg, args) => {
+      const v = getTargets(msg, args).filter(isVehicle)[0];
+      if (!v || args.unboard === true) return;
+      const id = String(args.unboard).trim();
+      Roll.set(v, (Roll.get(v) || []).filter(x => x !== id));
     },
 
     // Turns the vehicle to the nearest right angle (riders stay put) and deletes the rectangle
@@ -782,7 +983,7 @@ const Vehicle = (() => {
       }
     },
 
-    passengerCount: (t) => findRiders(t.get('_pageid'), t.id, snapshotOf(t), Tag.parse(t.get('tooltip'))).length,
+    passengerCount: (t) => Roll.members(t).length,
 
     areaText: (opts) => {
       if (!Tag.hasArea(opts)) return 'whole';
@@ -816,10 +1017,58 @@ const Vehicle = (() => {
 
       return `<div style="${CSS.row}"><table style="width:100%;border-collapse:collapse;"><tr>` +
         `<td style="${CSS.thumbCell}">${image}</td>` +
-        `<td style="vertical-align:top;padding:0 4px;">${title} <span style="${CSS.count}">${count} aboard</span><div>${chips}</div></td>` +
+        `<td style="vertical-align:top;padding:0 4px;">${title} ` +
+        Output.button(`${count}&nbsp;aboard`, `${commandName} --passengers ${ids}`, CSS.countLink, 'List the passengers') +
+        `<div>${chips}</div></td>` +
         `<td style="width:18px;vertical-align:top;padding:0;">` +
         Output.button('×', `${commandName} --remove ${ids} --list`, CSS.remove, 'Stop treating this token as a vehicle') +
         `</td></tr></table></div>`;
+    },
+
+    passengers: (msg, args) => {
+      const v = getTargets(msg, args).filter(isVehicle)[0];
+      if (!v) return Output.error(msg, 'Select a vehicle first.');
+      const ids = `--ids ${v.id}`;
+      const name = v.get('name') || '[Unnamed]';
+      const members = Roll.members(v);
+      const snap = snapshotOf(v);
+      const opts = Tag.parse(v.get('tooltip'));
+
+      const head = `<div style="${CSS.row}"><table style="width:100%;border-collapse:collapse;"><tr>` +
+        `<td style="${CSS.thumbCell}">` +
+        Output.button(`<img src="${Commands.thumbUrl(v)}" style="${CSS.thumb}">`, `${commandName} --ping all ${ids}`,
+          CSS.thumbBox, 'Ping and pull everyone to this vehicle') + `</td>` +
+        `<td style="vertical-align:top;padding:0 4px;">` +
+        Output.button(`<span style="${CSS.name}">${name}</span>`, `${commandName} --ping ${ids}`, CSS.nameLink,
+          'Ping and pull only your view to this vehicle') +
+        `<div style="${CSS.count}">${members.length} aboard</div></td></tr></table></div>`;
+
+      const rows = members.map(t => {
+        const tName = t.get('name') || '[Unnamed]';
+        const tIds = `--ids ${t.id}`;
+        const off = !isAboard(t, snap, opts) ? ` <span style="${CSS.count}">(off the vehicle)</span>` : '';
+        const nested = isVehicle(t)
+          ? ` ` + Output.button(`${Roll.members(t).length}&nbsp;aboard`, `${commandName} --passengers ${tIds}`, CSS.countLink, 'List this vehicle\'s passengers')
+          : '';
+        return `<div style="${CSS.row}"><table style="width:100%;border-collapse:collapse;"><tr>` +
+          `<td style="${CSS.smallThumbCell}"><span style="${CSS.smallThumbBox}"><img src="${Commands.thumbUrl(t)}" style="${CSS.smallThumb}"></span></td>` +
+          `<td style="vertical-align:middle;padding:0 4px;">` +
+          Output.button(`<span style="${CSS.name}">${tName}</span>`, `${commandName} --ping ${tIds}`, CSS.nameLink,
+            'Ping and pull only your view to this token') + nested + off + `</td>` +
+          `<td style="width:18px;vertical-align:middle;padding:0;">` +
+          Output.button('×', `${commandName} --unboard ${t.id} ${ids} --passengers`, CSS.remove,
+            'Take this token off the passenger roll without moving it') +
+          `</td></tr></table></div>`;
+      });
+
+      const body = head + (rows.length ? rows.join('') : `<div style="${CSS.empty}">No passengers.</div>`);
+      const footer = `<div style="${CSS.row}">` +
+        Output.button('Set Passengers', `${commandName} --set-passengers ${ids} --passengers`, CSS.chip,
+          'Make everything on the vehicle now its passengers, and drop everything else') +
+        Output.button('Back', `${commandName} --list`, CSS.chip, 'Back to the vehicle list') +
+        `</div>`;
+
+      Output.whisper(msg, Output.box('Passengers', body + footer));
     },
 
     list: (msg) => {
@@ -881,11 +1130,26 @@ const Vehicle = (() => {
     '<ul>',
     '<li>A vehicle is any token whose tooltip contains a <code>[vehicle]</code> tag. The script adds and removes the tag for you, but you can also type it by hand.</li>',
     '<li>Vehicles are kept at the back of their layer so tokens on them stay visible.</li>',
-    '<li>When a vehicle moves, a token rides along if it is on the token layer and at least the vehicle\'s overlap percentage of it (50% by default) was on the vehicle\'s area before the move. Rotation of both the vehicle and the token is taken into account.</li>',
     '<li>Tokens are carried when the vehicle is dropped, not while it is being dragged.</li>',
-    '<li>Vehicles are never carried by other vehicles.</li>',
     '<li>Moving a token on the vehicle never moves the vehicle.</li>',
     '</ul>',
+
+    '<h2>Passengers</h2>',
+    '<p>Each vehicle keeps a list of its passengers. Only tokens on the token layer can be passengers.</p>',
+    '<ul>',
+    '<li><b>Boarding.</b> A token boards a vehicle when it is moved onto it: at least the vehicle\'s overlap percentage of the token (50% by default) ends up on the vehicle\'s area. A token dragged in from the journal or pasted on top of a vehicle also boards it.</li>',
+    '<li><b>Leaving.</b> A token leaves when it is moved off the vehicle.</li>',
+    '<li><b>Passing over.</b> A vehicle does not pick up tokens it moves over. A horse ridden through a crowd leaves the crowd behind.</li>',
+    '<li><b>New vehicles.</b> When a token is made a vehicle, everything on it at that moment becomes a passenger. The same happens when a vehicle is copied, dropped in from the journal, or tagged by hand.</li>',
+    '<li><b>Set Passengers</b> makes everything on the vehicle now its passengers, and drops everything else. Use it after setup, or after a script moved tokens without Vehicle knowing.</li>',
+    '</ul>',
+
+    '<h2>Vehicles on vehicles</h2>',
+    '<p>A vehicle can be a passenger of another vehicle, such as a lifeboat on a ship. When the ship moves or turns, the lifeboat moves and turns with it, whatever the ship\'s rotate setting, and the lifeboat carries its own passengers. A token rides only the smallest vehicle it is on, so a sailor in the lifeboat is the lifeboat\'s passenger, not the ship\'s. Overlapping vehicles are stacked by size, with the largest at the back.</p>',
+
+    '<h2>The vehicle list and passenger list</h2>',
+    '<p><code>!vehicle --list</code> shows the vehicles on your current page. Click a vehicle\'s picture to ping it and pull everyone\'s view to it, or its name to pull only yours. Click a setting to change it. Click <b>N aboard</b> to see its passengers.</p>',
+    '<p>The passenger list shows each passenger\'s picture and name; click a name to ping it for you only. A passenger that is no longer on the vehicle is marked <i>off the vehicle</i> and is dropped at the vehicle\'s next move. The <b>×</b> beside a passenger takes it off the list without moving it, for a token that should stay behind when the vehicle leaves.</p>',
 
     '<h2>Area</h2>',
     '<p>The area is the part of the vehicle where passengers are. By default it is the whole token. If the art has a transparent margin, set a smaller area:</p>',
@@ -899,11 +1163,12 @@ const Vehicle = (() => {
     '<p><b>Show area</b> draws a yellow outline of the area. It disappears after 10 seconds unless you move or resize it. Click Show area again to remove it. You can adjust the outline, select it with the vehicle and click Set area to use it.</p>',
 
     '<h2>Tag format</h2>',
-    '<p><code>[vehicle|rotate|overlap:50|area:5,12,5,20]</code>. Settings at their default are left out, so a plain vehicle is just <code>[vehicle]</code>.</p>',
+    '<p><code>[vehicle|rotate|overlap:50|area:5,12,5,20|aboard:...]</code>. Settings at their default are left out. Typing <code>[vehicle]</code> by hand makes a vehicle; the script adds the passenger list.</p>',
     '<ul>',
     '<li><code>rotate</code>: riders turn to match the vehicle\'s rotation. Useful for top-down tokens.</li>',
     '<li><code>overlap:N</code>: the percentage of a token that must overlap the area for it to ride. Default 50.</li>',
     '<li><code>area:l,t,r,b</code>: how far in from the left, top, right and bottom edges the area starts, in percent of the token\'s width and height.</li>',
+    '<li><code>aboard:</code>: the IDs of the passengers. Kept by the script; there is no need to edit it.</li>',
     '</ul>',
     '<p>If a vehicle\'s tooltip is shown to players, they will see the tag.</p>',
 
@@ -912,7 +1177,10 @@ const Vehicle = (() => {
     '<ul>',
     '<li><code>!vehicle</code>: shows the menu.</li>',
     '<li><code>!vehicle --define</code>: makes the tokens vehicles and sends them to the back. Can be combined with the settings below, for example <code>!vehicle --define --rotate on --overlap 75</code>.</li>',
-    '<li><code>!vehicle --remove</code>: removes the vehicle tag. The token stays where it is.</li>',
+    '<li><code>!vehicle --remove</code>: removes the vehicle tag. The token stays where it is, and its passengers board whatever they are now on, if anything.</li>',
+    '<li><code>!vehicle --passengers</code>: lists the vehicle\'s passengers.</li>',
+    '<li><code>!vehicle --set-passengers</code>: makes everything on the vehicle now its passengers.</li>',
+    '<li><code>!vehicle --unboard tokenID</code>: takes that token off the vehicle\'s passenger list without moving it.</li>',
     '<li><code>!vehicle --rotate on|off</code>: sets whether riders\' facing turns with the vehicle.</li>',
     '<li><code>!vehicle --overlap N</code>: sets the percentage (1 to 100) of a token that must overlap the area for it to ride.</li>',
     '<li><code>!vehicle --area</code>: sets the area from a rectangle selected with the vehicle.</li>',
@@ -920,17 +1188,15 @@ const Vehicle = (() => {
     '<li><code>!vehicle --show</code>: shows or hides an outline of the area.</li>',
     '<li><code>!vehicle --straighten</code>: turns the vehicle to the nearest right angle.</li>',
     '<li><code>!vehicle --ids id1,id2</code>: targets tokens by ID instead of selection.</li>',
-    '<li><code>!vehicle --list</code>: lists the vehicles on your current page, with their settings and how many tokens are aboard. Click a setting to change it. Click a vehicle\'s picture to ping it and pull everyone\'s view to it, or its name to pull only your own view.</li>',
+    '<li><code>!vehicle --list</code>: lists the vehicles on your current page.</li>',
     '<li><code>!vehicle --ping</code>: pings the vehicle and pulls your view to it. <code>--ping all</code> pulls everyone.</li>',
     '<li><code>!vehicle --help</code>: opens this handout.</li>',
     '</ul>',
 
     '<h2>Limits</h2>',
     '<ul>',
-    '<li>Undo (Ctrl-Z) on a vehicle move returns the vehicle but not its riders.</li>',
     '<li>Resizing a vehicle does not move its riders.</li>',
-    '<li>If tokens on a vehicle are selected and dragged together with it, they are moved by the drag and not carried a second time.</li>',
-    '<li>A vehicle moved by another script is only carried if that script calls <code>Vehicle.handleMove(token, prev)</code>.</li>',
+    '<li>Moves made by TokenMod and ScriptCards are handled like moves by hand. A token moved by another script is only handled if that script calls <code>Vehicle.handleMove(token, prev)</code>; otherwise it does not board or leave, and a passenger moved off this way is dropped at the vehicle\'s next move.</li>',
     '<li>After a turn, riders can sit between grid lines. They are not snapped back to the grid.</li>',
     '</ul>'
   ].join('');
@@ -959,7 +1225,28 @@ const Vehicle = (() => {
   const registerEventHandlers = () => {
     on('chat:message', handleInput);
     on('change:graphic', handleGraphicChange);
+    on('add:graphic', handleGraphicAdd);
     on('change:pathv2', (obj) => Outline.handleChange(obj));
+    registerObservers();
+  };
+
+  // Moves made by TokenMod and ScriptCards are reported through their observer hooks.
+  // ScriptCards exposes its interface through a promise, so both are resolved before subscribing.
+  const registerObservers = () => {
+    const hooks = [
+      ['TokenMod', () => (typeof TokenMod !== 'undefined' ? TokenMod : null)],
+      ['ScriptCards', () => (typeof ScriptCards !== 'undefined' ? ScriptCards : null)]
+    ];
+    hooks.forEach(([name, get]) => {
+      const api = get();
+      if (!api) return;
+      Promise.resolve(api).then(resolved => {
+        if (resolved && typeof resolved.ObserveTokenChange === 'function') {
+          resolved.ObserveTokenChange(handleGraphicChange);
+          Logger.log(`Observing ${name}`);
+        }
+      }).catch(err => Logger.error(`${name} hook: ${err}`));
+    });
   };
 
   // Initialization
@@ -972,6 +1259,11 @@ const Vehicle = (() => {
 
   on('ready', () => {
     if (checkInstall()) {
+      try {
+        initRolls();
+      } catch (err) {
+        Logger.error(err && err.stack ? err.stack : err);
+      }
       registerEventHandlers();
     }
   });
@@ -979,20 +1271,21 @@ const Vehicle = (() => {
   // Public Interface
 
   return {
-    // For other scripts that move a vehicle with set(): pass the token and its previous values
+    // For other scripts that move or rotate a token with set(): pass the token and its previous values.
+    // A vehicle carries its passengers; any token boards or leaves vehicles.
+    // Pass {} as prev for a token the script has just created, so it boards whatever it was placed on.
     handleMove: (token, prev) => {
-      if (!isVehicle(token) || !prev) return 0;
-      const after = snapshotOf(token);
+      if (!token || !prev) return;
+      if (!Object.keys(prev).length) return handleGraphicAdd(token);
       const pick = (k) => (prev[k] !== undefined ? prev[k] : token.get(k));
-      const before = snapshot({
+      handleGraphicChange(token, {
         left: pick('left'), top: pick('top'), width: pick('width'), height: pick('height'),
-        rotation: pick('rotation'), fliph: pick('fliph'), flipv: pick('flipv')
+        rotation: pick('rotation'), fliph: pick('fliph'), flipv: pick('flipv'),
+        layer: pick('layer'), tooltip: token.get('tooltip')
       });
-      const n = carry(token, before, after);
-      toBack(token);
-      return n;
     },
-    isVehicle
+    isVehicle,
+    passengers: (vehicle) => (isVehicle(vehicle) ? Roll.members(vehicle) : [])
   };
 
 })();
