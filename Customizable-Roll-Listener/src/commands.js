@@ -377,7 +377,7 @@ export function applyOptions(base, options, ownId) {
     const terms = cleared(options.fields)
       ? []
       : toText(options.fields)
-          .split(/s*&&s*/)
+          .split(/\s*&&\s*/)
           .map((term) => term.trim())
           .filter(Boolean);
     const invalid = findInvalidField(terms, next.regex);
