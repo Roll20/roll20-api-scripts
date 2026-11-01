@@ -321,6 +321,7 @@ export default {
     commands: {
       heading: 'Chat Commands',
       intro: 'Every command is GM only. A listener can be named by its name or its ID.',
+      mods: 'Other mods, such as ScriptCards, can send these commands too. Their replies are whispered to the GM.',
       colCommand: 'Command',
       colDesc: 'What it does',
     },

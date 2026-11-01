@@ -248,7 +248,7 @@ export function buildHelpHtml(locale) {
        <p style="${STYLE.p}">${h('templates.links')} ${templateLinks}</p>`
     )}
     ${section('rolls', list(raw('rolls.points')))}
-    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
+    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p><p style="${STYLE.p}">${h('commands.mods')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('options', `<p style="${STYLE.p}">${h('options.intro')}</p>${table([t('handout.options.colOption', lang), t('handout.options.colDesc', lang)], options)}`)}
     ${section('placeholders', `<p style="${STYLE.p}">${h('placeholders.intro')}</p>${table([t('handout.placeholders.colName', lang), t('handout.placeholders.colDesc', lang)], placeholders)}`)}
     ${section('running', list(raw('running.points')))}
