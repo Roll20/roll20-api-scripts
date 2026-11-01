@@ -324,6 +324,7 @@ const TRANSLATION = {
       heading: 'Chat-komennot',
       intro:
         'Kaikki komennot ovat vain pelinjohtajalle. Kuuntelijaan voi viitata nimellä tai ID-tunnuksella.',
+      mods: 'Myös muut modit, kuten ScriptCards, voivat lähettää näitä komentoja. Niiden vastaukset kuiskataan GM:lle.',
       colCommand: 'Komento',
       colDesc: 'Mitä se tekee',
     },

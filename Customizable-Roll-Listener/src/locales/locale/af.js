@@ -325,6 +325,7 @@ const TRANSLATION = {
     commands: {
       heading: 'Kletsbevele',
       intro: "Elke bevel is slegs vir die GM. 'n Luisteraar kan by sy naam of sy ID genoem word.",
+      mods: 'Ander mods, soos ScriptCards, kan ook hierdie opdragte stuur. Hulle antwoorde word aan die GM gefluister.',
       colCommand: 'Bevel',
       colDesc: 'Wat dit doen',
     },

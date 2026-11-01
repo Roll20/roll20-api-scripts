@@ -325,6 +325,7 @@ const TRANSLATION = {
       heading: 'Chatparancsok',
       intro:
         'Minden parancs csak GM-nek érhető el. A figyelőre a nevével vagy az azonosítójával hivatkozhat.',
+      mods: 'Más modok, például a ScriptCards is küldhetik ezeket a parancsokat. Válaszaikat a GM-nek suttogják.',
       colCommand: 'Parancs',
       colDesc: 'Mit csinál',
     },

@@ -328,6 +328,7 @@ const TRANSLATION = {
       heading: 'Chatcommando’s',
       intro:
         'Elk commando is alleen voor de GM. Een luisteraar kan worden aangeduid met zijn naam of zijn ID.',
+      mods: 'Andere mods, zoals ScriptCards, kunnen deze opdrachten ook verzenden. Hun antwoorden worden naar de GM gefluisterd.',
       colCommand: 'Commando',
       colDesc: 'Wat het doet',
     },

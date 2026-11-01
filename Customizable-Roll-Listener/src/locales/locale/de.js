@@ -326,6 +326,7 @@ const TRANSLATION = {
       heading: 'Chatbefehle',
       intro:
         'Alle Befehle sind nur für die SL. Ein Listener kann über seinen Namen oder seine ID angegeben werden.',
+      mods: 'Andere Mods, wie zum Beispiel ScriptCards, können diese Befehle ebenfalls senden. Ihre Antworten werden dem GM zugeflüstert.',
       colCommand: 'Befehl',
       colDesc: 'Funktion',
     },

@@ -328,6 +328,7 @@ const TRANSLATION = {
       heading: 'Commandes de chat',
       intro:
         'Toutes les commandes sont réservées au MJ. Un écouteur peut être désigné par son nom ou son ID.',
+      mods: "D'autres mods, tels que ScriptCards, peuvent également envoyer ces commandes. Leurs réponses sont murmurées au MJ.",
       colCommand: 'Commande',
       colDesc: 'Ce qu’elle fait',
     },

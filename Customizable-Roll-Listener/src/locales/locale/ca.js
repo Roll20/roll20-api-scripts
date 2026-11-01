@@ -326,6 +326,7 @@ const TRANSLATION = {
       heading: 'Ordres de xat',
       intro:
         'Totes les ordres són només per al DJ. Un oient es pot indicar pel seu nom o pel seu ID.',
+      mods: 'Altres mods, com ara ScriptCards, també poden enviar aquestes ordres. Les seves respostes es xiuxiuegen al GM.',
       colCommand: 'Ordre',
       colDesc: 'Què fa',
     },

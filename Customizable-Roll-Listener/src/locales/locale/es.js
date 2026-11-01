@@ -325,6 +325,7 @@ const TRANSLATION = {
       heading: 'Comandos de chat',
       intro:
         'Todos los comandos son solo para el DJ. Un oyente se puede indicar por su nombre o por su ID.',
+      mods: 'Otros mods, como ScriptCards, también pueden enviar estos comandos. Sus respuestas se susurran al GM.',
       colCommand: 'Comando',
       colDesc: 'Qué hace',
     },

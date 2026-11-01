@@ -323,6 +323,7 @@ const TRANSLATION = {
     commands: {
       heading: 'チャットコマンド',
       intro: 'すべてのコマンドは GM 専用です。リスナーは名前または ID で指定できます。',
+      mods: 'ScriptCards などの他の Mod もこれらのコマンドを送信できます。返信は GM にささやかれます。',
       colCommand: 'コマンド',
       colDesc: '機能',
     },

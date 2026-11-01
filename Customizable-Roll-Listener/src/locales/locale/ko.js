@@ -321,6 +321,7 @@ const TRANSLATION = {
     commands: {
       heading: '채팅 명령어',
       intro: '모든 명령어는 GM 전용입니다. 리스너는 이름이나 ID로 지정할 수 있습니다.',
+      mods: 'ScriptCards 같은 다른 모드도 이 명령을 보낼 수 있습니다. 응답은 GM에게 귓속말로 전달됩니다.',
       colCommand: '명령어',
       colDesc: '기능',
     },

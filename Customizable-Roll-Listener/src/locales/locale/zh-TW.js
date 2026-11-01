@@ -320,6 +320,7 @@ const TRANSLATION = {
     commands: {
       heading: '聊天指令',
       intro: '所有指令僅限 GM 使用。可用名稱或 ID 指定監聽器。',
+      mods: '其他 Mod（例如 ScriptCards）也可以發送這些指令。它們的回覆會以密語傳給 GM。',
       colCommand: '指令',
       colDesc: '作用',
     },

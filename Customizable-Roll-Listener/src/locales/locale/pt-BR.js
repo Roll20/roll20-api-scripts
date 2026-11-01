@@ -326,6 +326,7 @@ const TRANSLATION = {
       heading: 'Comandos de chat',
       intro:
         'Todos os comandos são exclusivos do mestre. Um ouvinte pode ser indicado pelo nome ou pelo ID.',
+      mods: 'Outros mods, como ScriptCards, também podem enviar esses comandos. Suas respostas são sussurradas para o GM.',
       colCommand: 'Comando',
       colDesc: 'O que faz',
     },

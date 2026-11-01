@@ -322,6 +322,7 @@ const TRANSLATION = {
     commands: {
       heading: 'Příkazy chatu',
       intro: 'Každý příkaz je jen pro GM. Posluchače lze označit jeho názvem nebo ID.',
+      mods: 'Jiné mody, jako jsou ScriptCards, mohou také odesílat tyto příkazy. Jejich odpovědi jsou šeptány GM.',
       colCommand: 'Příkaz',
       colDesc: 'Co dělá',
     },

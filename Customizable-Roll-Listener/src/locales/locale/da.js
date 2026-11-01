@@ -320,6 +320,7 @@ const TRANSLATION = {
     commands: {
       heading: 'Chatkommandoer',
       intro: 'Alle kommandoer er kun for GM. En lytter kan angives med sit navn eller sit ID.',
+      mods: 'Andre mods, såsom ScriptCards, kan også sende disse kommandoer. Deres svar bliver hvisket til GM.',
       colCommand: 'Kommando',
       colDesc: 'Hvad den gør',
     },

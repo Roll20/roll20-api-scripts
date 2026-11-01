@@ -325,6 +325,7 @@ const TRANSLATION = {
       heading: 'Polecenia czatu',
       intro:
         'Wszystkie polecenia są tylko dla MG. Listener można wskazać nazwą lub identyfikatorem.',
+      mods: 'Inne mody, takie jak ScriptCards, również mogą wysyłać te polecenia. Ich odpowiedzi są szeptane do GM.',
       colCommand: 'Polecenie',
       colDesc: 'Działanie',
     },

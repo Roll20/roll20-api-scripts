@@ -325,6 +325,7 @@ const TRANSLATION = {
       heading: 'Sohbet Komutları',
       intro:
         'Tüm komutlar yalnızca GM içindir. Bir dinleyici adıyla veya kimliğiyle belirtilebilir.',
+      mods: 'ScriptCards gibi diğer modlar da bu komutları gönderebilir. Yanıtları GM’ye fısıldanır.',
       colCommand: 'Komut',
       colDesc: 'Ne yapar',
     },
