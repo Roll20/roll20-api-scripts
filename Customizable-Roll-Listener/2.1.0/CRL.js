@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.1.0
- * Built: 2026-11-01T16:34:58.095Z
+ * Built: 2026-11-01T16:59:15.169Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -625,7 +625,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.1.0';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T16:34:58.095Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T16:59:15.169Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1487,7 +1487,7 @@ const CustomizableRollListenerMod = (() => {
           "'n Luisteraar gaan af wanneer elke filter wat dit het, pas. Leë filters pas by alles.",
           'Rolsjablone: die sjabloonnaam, soos atkdmg of simple. "none" pas by boodskappe sonder \'n sjabloon. Verskeie name beteken enigeen daarvan.',
           'Boodskaptipes: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-blaaie) en api. Wanneer leeg, word elke tipe behalwe api-bevele nagegaan.',
-          'Teks: een of meer stukke teks, geskei deur &&, wat almal moet voorkom. Hoof- en kleinletters word geïgnoreer. Teks word ook in roltotale en rolbare tabelresultate gevind.',
+          "Teks: een of meer stukke teks, geskei deur &&, wat almal moet voorkom. Hoof- en kleinletters word geïgnoreer. Teks word ook in roltotale en rolbare tabelresultate gevind, en in die boodskap se rou inhoud, wat Inspekteer onder Rou inhoud wys: vir 'n Beacon-kaart is dit sy HTML.",
           "## in die teks staan vir 'n inlyn-rol; die roltoetse kyk dan net na die rolle wat daar gevind word. Sonder ## word elke rol in die boodskap nagegaan.",
           "Teks kan 'n gereelde uitdrukking wees in plaas van gewone teks (--regex on).",
           'Sprekers / karakters: die naam wat in die klets gewys word, of die karakternaam in die rolsjabloon. Spelers: die speler se vertoonnaam.',
@@ -1512,7 +1512,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Roltoetse',
         points: [
-          "Rolresultaat: kritiek (die dobbelsteen se hoogste kant, of die cs-reeks), flater ('n 1, of die cf-reeks), sukses (minstens een dobbelsteen haal 'n teiken soos 1d20>15), mislukking ('n teikenrol sonder suksesse). Verskeie resultate beteken enigeen daarvan.",
+          "Rolresultaat: kritiek (die dobbelsteen se hoogste kant, of die cs-reeks), flater ('n 1, of die cf-reeks), sukses (minstens een dobbelsteen haal die teiken wat in die rol geskryf is, soos 1d20>15 of die dobbelpoel 5d6>4), mislukking ('n rol met 'n teiken en geen suksesse nie). Verskeie resultate beteken enigeen daarvan.",
+          "Sukses en mislukking werk net met rolle wat hul eie teiken bevat. Aanvalle, reddingsrolle en toetse van D&D-karakterblaaie is gewone rolle soos 1d20+5, omdat die karakterblad nie die AC of DC ken nie, so hulle is nooit 'n sukses of 'n mislukking nie. Om te reageer wanneer 'n AC of DC gehaal word, gebruik Roltotaal, soos >=15.",
           "Roltotaal: 'n getal, 'n vergelyking soos >=15, of 'n reeks soos 19-20.",
           "Natuurlike dobbelsteen: die kant waarop 'n dobbelsteen geland het, soos 20, of <=2.",
           "Dobbelstene nagegaan: auto kyk net na d20's wanneer een gegooi is, sodat skadedobbelstene wat hul hoogste kant gooi nie as kritiek tel nie. Kies any (enige dobbelsteen), of 'n grootte soos d100, om dit te verander.",
@@ -1543,7 +1544,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Spelers se vertoonname, geskei deur kommas.',
         fields:
           "Sjabloonveldvoorwaardes, geskei deur &&: name=value (is), name!=value (is nie), name~text (bevat), name!~text (bevat nie). Met --regex on lees ~ 'n gereelde uitdrukking.",
-        results: 'crit, fumble, success en/of fail.',
+        results:
+          "crit, fumble, success en/of fail. success en fail het 'n teiken in die rol nodig, soos 1d20>15.",
         total: 'Roltotaal: 15, >=15, <5 of 19-20.',
         natural: 'Natuurlike dobbelsteenkant: 20, <=2 of 19-20.',
         dice: "auto, any, of 'n dobbelsteengrootte soos 20.",
@@ -1585,7 +1587,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Die inspekteur',
         points: [
-          'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, en waarom elke luisteraar wel of nie afgegaan het nie.',
+          'Klik Inspekteer volgende boodskap en gooi dan die rol. CRL fluister wat dit gesien het: die boodskaptipe, spreker, karakter, sjabloon en sy velde, elke rol met sy dobbelstene, die teks wat luisteraars deursoek, die rou inhoud (die boodskap soos Roll20 dit gestuur het, wat --text ook deursoek), en waarom elke luisteraar wel of nie afgegaan het nie.',
           "Gebruik dit om 'n blad se sjabloonnaam te vind, of om te sien wat 'n Beacon-blad (soos D&D 2024) stuur.",
           "Beacon-blaaie plaas rolkaarte in plaas van rolsjablone. CRL lees hulle: die sjabloon is die kaart se eerste klas (dnd-2024 vir D&D 2024), die karakter, titel (soos Dexterity Check) en subkategorie word velde, en elke rol in die ontleding is 'n rol, so kritiek-, flater-, totaal- en natuurlike-dobbelsteentoetse werk.",
         ],
@@ -1942,7 +1944,7 @@ const CustomizableRollListenerMod = (() => {
           'Un oient s’activa quan coincideixen tots els filtres que té. Els filtres buits coincideixen amb tot.',
           'Plantilles de tirada: el nom de la plantilla, com ara atkdmg o simple. "none" coincideix amb els missatges sense plantilla. Diversos noms volen dir qualsevol d’ells.',
           'Tipus de missatge: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fulls Beacon) i api. Si és buit, es comproven tots els tipus excepte les ordres api.',
-          'Text: un o més fragments de text, separats per &&, que han d’aparèixer tots. No es distingeix entre majúscules i minúscules. El text també es troba als totals de tirada i als resultats de taules aleatòries.',
+          'Text: un o més fragments de text, separats per &&, que han d’aparèixer tots. No es distingeix entre majúscules i minúscules. El text també es troba als totals de tirada i als resultats de taules aleatòries, i al contingut en brut del missatge, que Inspecciona mostra a Contingut en brut: en una targeta de Beacon, és el seu HTML.',
           '## al text representa una tirada en línia; aleshores les comprovacions de tirada només miren les tirades que s’hi troben. Sense ##, es comprova cada tirada del missatge.',
           'El text pot ser una expressió regular en lloc de text normal (--regex on).',
           'Parlants / personatges: el nom que es mostra al xat, o el nom del personatge a la plantilla de tirada. Jugadors: el nom visible del jugador.',
@@ -1967,7 +1969,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Comprovacions de tirada',
         points: [
-          'Resultat de la tirada: crític (la cara més alta del dau, o l’interval cs), pifia (un 1, o l’interval cf), èxit (almenys un dau assoleix un objectiu com ara 1d20>15), fracàs (una tirada amb objectiu sense cap èxit). Diversos resultats volen dir qualsevol d’ells.',
+          'Resultat de la tirada: crític (la cara més alta del dau, o l’interval cs), pifia (un 1, o l’interval cf), èxit (almenys un dau assoleix l’objectiu escrit a la tirada, com ara 1d20>15 o la reserva de daus 5d6>4), fracàs (una tirada amb objectiu i cap èxit). Diversos resultats volen dir qualsevol d’ells.',
+          'L’èxit i el fracàs només funcionen amb tirades que porten el seu propi objectiu. Els atacs, les salvacions i les proves dels fulls de D&D són tirades simples com ara 1d20+5, perquè el full no coneix ni l’AC ni la DC, així que mai no són un èxit ni un fracàs. Per reaccionar quan s’assoleix una AC o una DC, fes servir Total de la tirada, com ara >=15.',
           'Total de la tirada: un nombre, una comparació com ara >=15, o un interval com ara 19-20.',
           'Dau natural: la cara en què ha caigut un dau, com ara 20, o <=2.',
           'Daus comprovats: auto només mira els d20 quan se n’ha tirat un, de manera que els daus de dany que treuen la cara més alta no compten com a crítics. Tria any (qualsevol dau), o una mida com ara d100, per canviar-ho.',
@@ -1999,7 +2002,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Noms visibles dels jugadors, separats per comes.',
         fields:
           'Condicions sobre camps de la plantilla, separades per &&: name=value (és), name!=value (no és), name~text (conté), name!~text (no conté). Amb --regex on, ~ llegeix una expressió regular.',
-        results: 'crit, fumble, success i/o fail.',
+        results:
+          'crit, fumble, success i/o fail. success i fail necessiten un objectiu a la tirada, com ara 1d20>15.',
         total: 'Total de la tirada: 15, >=15, <5 o 19-20.',
         natural: 'Cara natural del dau: 20, <=2 o 19-20.',
         dice: 'auto, any o una mida de dau com ara 20.',
@@ -2043,7 +2047,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'L’inspector',
         points: [
-          'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients i per què cada oient s’ha activat o no.',
+          'Fes clic a Inspecciona el missatge següent i després fes la tirada. CRL et xiuxiueja el que ha vist: el tipus de missatge, el parlant, el personatge, la plantilla i els seus camps, cada tirada amb els seus daus, el text que cerquen els oients, el contingut en brut (el missatge tal com l’ha enviat Roll20, on --text també cerca) i per què cada oient s’ha activat o no.',
           'Fes-lo servir per trobar el nom de la plantilla d’un full, o per veure què envia un full Beacon (com ara D&D 2024).',
           'Els fulls Beacon publiquen targetes de tirada en lloc de plantilles de tirada. CRL les llegeix: la plantilla és la primera classe de la targeta (dnd-2024 per a D&D 2024), el personatge, el títol (com ara Dexterity Check) i la subcategoria es converteixen en camps, i cada tirada del desglossament és una tirada, de manera que funcionen les comprovacions de crític, pifia, total i dau natural.',
         ],
@@ -2393,7 +2397,7 @@ const CustomizableRollListenerMod = (() => {
           '當監聽器的所有篩選條件都符合時就會觸發。空的篩選條件符合一切。',
           '擲骰模板：模板名稱，例如 atkdmg 或 simple。"none" 符合沒有模板的訊息。多個名稱表示符合其中任一即可。',
           '訊息類型：general、rollresult、gmrollresult、emote、whisper、desc、advancedroll（Beacon 角色卡）和 api。留空時，會檢查除 api 指令外的所有類型。',
-          '文字：一段或多段文字，以 && 分隔，必須全部出現。比對時不分大小寫。擲骰總值和可擲表格的結果中也能找到文字。',
+          '文字：一段或多段文字，以 && 分隔，必須全部出現。比對時不分大小寫。擲骰總值、可擲表格的結果，以及訊息的原始內容中也能找到文字；原始內容會顯示在「檢查」的「原始內容」下，Beacon 卡片的原始內容就是它的 HTML。',
           '文字中的 ## 代表一個行內擲骰；擲骰檢查此時只看該處的擲骰。沒有 ## 時，會檢查訊息中的每一次擲骰。',
           '文字可以是正規表達式而非純文字（--regex on）。',
           '發言者／角色：聊天中顯示的名稱，或擲骰模板中的角色名稱。玩家：玩家的顯示名稱。',
@@ -2418,7 +2422,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: '擲骰檢查',
         points: [
-          '擲骰結果：爆擊（骰子的最大面，或 cs 範圍）、大失敗（1，或 cf 範圍）、成功（至少一顆骰子達到目標值，例如 1d20>15）、失敗（有目標值但沒有任何成功的擲骰）。多個結果表示符合其中任一即可。',
+          '擲骰結果：爆擊（骰子的最大面，或 cs 範圍）、大失敗（1，或 cf 範圍）、成功（至少一顆骰子達到寫在擲骰中的目標值，例如 1d20>15 或骰池 5d6>4）、失敗（有目標值但沒有任何成功的擲骰）。多個結果表示符合其中任一即可。',
+          '成功與失敗只適用於本身帶有目標值的擲骰。D&D 角色卡的攻擊、豁免和檢定都是像 1d20+5 這樣的一般擲骰，因為角色卡不知道 AC 或 DC，所以永遠不會是成功或失敗。若要在達到 AC 或 DC 時做出反應，請使用「擲骰總值」，例如 >=15。',
           '擲骰總值：數字、比較式（例如 >=15）或範圍（例如 19-20）。',
           '原始骰值：骰子擲出的面，例如 20 或 <=2。',
           '檢查的骰子：auto 在有擲 d20 時只看 d20，因此傷害骰擲出最大面不會算作爆擊。選擇「任何骰子」或某個面數（例如 d100）即可改變此行為。',
@@ -2448,7 +2453,8 @@ const CustomizableRollListenerMod = (() => {
         players: '玩家顯示名稱，以逗號分隔。',
         fields:
           '模板欄位條件，以 && 分隔：name=value (是)、name!=value (不是)、name~text (包含)、name!~text (不包含)。使用 --regex on 時，~ 會讀取正規表達式。',
-        results: 'crit、fumble、success 和／或 fail。',
+        results:
+          'crit、fumble、success 和／或 fail。success 和 fail 需要擲骰中有目標值，例如 1d20>15。',
         total: '擲骰總值：15、>=15、<5 或 19-20。',
         natural: '原始骰值：20、<=2 或 19-20。',
         dice: 'auto、any，或骰子面數，例如 20。',
@@ -2490,7 +2496,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: '檢查器',
         points: [
-          '點選「檢查下一則訊息」，然後擲骰。CRL 會密語它看到的內容：訊息類型、發言者、角色、模板及其欄位、每次擲骰及其骰子、監聽器搜尋的文字，以及每個監聽器為何觸發或未觸發。',
+          '點選「檢查下一則訊息」，然後擲骰。CRL 會密語它看到的內容：訊息類型、發言者、角色、模板及其欄位、每次擲骰及其骰子、監聽器搜尋的文字、原始內容（Roll20 送出的原始訊息，--text 也會搜尋這裡），以及每個監聽器為何觸發或未觸發。',
           '用它來找出角色卡的模板名稱，或查看 Beacon 角色卡（例如 D&D 2024）發送了什麼。',
           'Beacon 角色卡發送的是擲骰卡片而非擲骰模板。CRL 會讀取它們：模板是卡片的第一個 class（D&D 2024 為 dnd-2024），角色、標題（例如 Dexterity Check）和子類別會成為欄位，分解中的每次擲骰都是一次擲骰，因此爆擊、大失敗、總值和原始骰值檢查都能運作。',
         ],
@@ -2842,7 +2848,7 @@ const CustomizableRollListenerMod = (() => {
           'Posluchač se spustí, když odpovídají všechny jeho filtry. Prázdné filtry odpovídají všemu.',
           'Šablony hodů: název šablony, např. atkdmg nebo simple. „none“ odpovídá zprávám bez šablony. Více názvů znamená kterýkoli z nich.',
           'Typy zpráv: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (listy Beacon) a api. Když je pole prázdné, kontrolují se všechny typy kromě příkazů api.',
-          'Text: jedna či více částí textu oddělených &&, které se musí všechny objevit. Porovnání nerozlišuje velká a malá písmena. Text se hledá i v součtech hodů a výsledcích náhodných tabulek.',
+          'Text: jedna či více částí textu oddělených &&, které se musí všechny objevit. Porovnání nerozlišuje velká a malá písmena. Text se hledá i v součtech hodů a výsledcích náhodných tabulek, a také v surovém obsahu zprávy, který Prozkoumat ukazuje pod Surový obsah: u karty Beacon je to její HTML.',
           '## v textu zastupuje inline hod; kontroly hodu pak sledují jen hody nalezené na tomto místě. Bez ## se kontroluje každý hod ve zprávě.',
           'Text může být místo prostého textu regulární výraz (--regex on).',
           'Mluvčí / postavy: jméno zobrazené v chatu, nebo jméno postavy v šabloně hodu. Hráči: zobrazované jméno hráče.',
@@ -2867,7 +2873,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Kontroly hodu',
         points: [
-          'Výsledek hodu: kritický zásah (nejvyšší stěna kostky nebo rozsah cs), kritické selhání (1 nebo rozsah cf), úspěch (aspoň jedna kostka splní cíl, např. 1d20>15), neúspěch (hod na cíl bez úspěchů). Více výsledků znamená kterýkoli z nich.',
+          'Výsledek hodu: kritický zásah (nejvyšší stěna kostky nebo rozsah cs), kritické selhání (1 nebo rozsah cf), úspěch (aspoň jedna kostka splní cíl zapsaný v hodu, např. 1d20>15 nebo sada kostek 5d6>4), neúspěch (hod s cílem bez úspěchů). Více výsledků znamená kterýkoli z nich.',
+          'Úspěch a neúspěch fungují jen u hodů, které nesou vlastní cíl. Útoky, záchranné hody a ověření z deníků D&D jsou prosté hody jako 1d20+5, protože deník nezná AC ani DC, takže nikdy nejsou úspěchem ani neúspěchem. Chcete-li reagovat na dosažení AC nebo DC, použijte Součet hodu, např. >=15.',
           'Součet hodu: číslo, porovnání jako >=15, nebo rozsah jako 19-20.',
           'Přirozená kostka: stěna, na kterou kostka padla, např. 20 nebo <=2.',
           'Kontrolované kostky: auto sleduje jen d20, pokud se házela, takže kostky zranění s nejvyšší stěnou se nepočítají jako kritické zásahy. Chcete-li to změnit, zvolte Jakákoli kostka nebo velikost jako d100.',
@@ -2898,7 +2905,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Zobrazovaná jména hráčů oddělená čárkami.',
         fields:
           'Podmínky polí šablony oddělené &&: name=value (je), name!=value (není), name~text (obsahuje), name!~text (neobsahuje). Při --regex on čte ~ regulární výraz.',
-        results: 'crit, fumble, success a/nebo fail.',
+        results:
+          'crit, fumble, success a/nebo fail. success a fail potřebují cíl v hodu, např. 1d20>15.',
         total: 'Součet hodu: 15, >=15, <5 nebo 19-20.',
         natural: 'Stěna přirozené kostky: 20, <=2 nebo 19-20.',
         dice: 'auto, any, nebo velikost kostky jako 20.',
@@ -2941,7 +2949,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektor',
         points: [
-          'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají, a proč se který posluchač spustil či nespustil.',
+          'Klikněte na Prozkoumat další zprávu a pak hoďte. CRL pošeptá, co viděl: typ zprávy, mluvčího, postavu, šablonu a její pole, každý hod s jeho kostkami, text, ve kterém posluchači hledají,, surový obsah (zprávu tak, jak ji poslal Roll20, a v níž hledá i --text) a proč se který posluchač spustil či nespustil.',
           'Použijte ho ke zjištění názvu šablony listu nebo k zobrazení toho, co posílá list Beacon (např. D&D 2024).',
           'Listy Beacon posílají místo šablon hodů karty hodů. CRL je umí číst: šablonou je první třída karty (dnd-2024 pro D&D 2024), postava, titulek (např. Dexterity Check) a podkategorie se stanou poli a každý hod v rozpisu je hod, takže kontroly crit, fumble, total a natural fungují.',
         ],
@@ -3292,7 +3300,7 @@ const CustomizableRollListenerMod = (() => {
           'En lytter udløses, når alle dens filtre matcher. Tomme filtre matcher alt.',
           'Slagskabeloner: skabelonens navn, f.eks. atkdmg eller simple. "none" matcher beskeder uden skabelon. Flere navne betyder et hvilket som helst af dem.',
           'Beskedtyper: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-ark) og api. Når feltet er tomt, tjekkes alle typer undtagen api-kommandoer.',
-          'Tekst: et eller flere tekststykker, adskilt af &&, som alle skal forekomme. Der skelnes ikke mellem store og små bogstaver. Tekst findes også i slagtotaler og resultater fra slagtabeller.',
+          'Tekst: et eller flere tekststykker, adskilt af &&, som alle skal forekomme. Der skelnes ikke mellem store og små bogstaver. Tekst findes også i slagtotaler og resultater fra slagtabeller, og i beskedens rå indhold, som Inspicér viser under Råt indhold: for et Beacon-kort er det dets HTML.',
           '## i teksten står for et inline-slag; slagtjekkene ser så kun på de slag, der findes dér. Uden ## tjekkes alle slag i beskeden.',
           'Teksten kan være et regulært udtryk i stedet for almindelig tekst (--regex on).',
           'Talere / figurer: navnet vist i chatten eller figurnavnet i slagskabelonen. Spillere: spillerens visningsnavn.',
@@ -3317,7 +3325,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Slagtjek',
         points: [
-          'Slagresultat: kritisk (terningens højeste side eller cs-intervallet), fumle (en 1’er eller cf-intervallet), succes (mindst én terning når et mål som 1d20>15), fiasko (et slag mod et mål uden succeser). Flere resultater betyder et hvilket som helst af dem.',
+          'Slagresultat: kritisk (terningens højeste side eller cs-intervallet), fumle (en 1’er eller cf-intervallet), succes (mindst én terning når det mål, der står i slaget, som 1d20>15 eller terningpuljen 5d6>4), fiasko (et slag med et mål og ingen succeser). Flere resultater betyder et hvilket som helst af dem.',
+          'Succes og fiasko virker kun med slag, der har deres eget mål. Angreb, redningsslag og evneprøver fra D&D-ark er almindelige slag som 1d20+5, fordi arket ikke kender AC eller DC, så de er aldrig en succes eller en fiasko. Brug Slagtotal, som >=15, for at reagere på at nå en AC eller DC.',
           'Slagtotal: et tal, en sammenligning som >=15 eller et interval som 19-20.',
           'Naturlig terning: den side, en terning landede på, f.eks. 20 eller <=2.',
           'Tjekkede terninger: auto ser kun på d20’ere, når der blev slået en, så skadesterninger, der slår deres højeste side, tæller ikke som kritiske slag. Vælg Enhver terning eller en størrelse som d100 for at ændre det.',
@@ -3348,7 +3357,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Spilleres visningsnavne adskilt af kommaer.',
         fields:
           'Betingelser for skabelonfelter, adskilt af &&: name=value (er), name!=value (er ikke), name~text (indeholder), name!~text (indeholder ikke). Med --regex on læser ~ et regulært udtryk.',
-        results: 'crit, fumble, success og/eller fail.',
+        results:
+          'crit, fumble, success og/eller fail. success og fail kræver et mål i slaget, som 1d20>15.',
         total: 'Slagtotal: 15, >=15, <5 eller 19-20.',
         natural: 'Naturlig terningside: 20, <=2 eller 19-20.',
         dice: 'auto, any eller en terningstørrelse som 20.',
@@ -3391,7 +3401,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektøren',
         points: [
-          'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, og hvorfor hver lytter blev eller ikke blev udløst.',
+          'Klik på Inspicér næste besked, og slå så slaget. CRL hvisker, hvad den så: beskedtypen, taleren, figuren, skabelonen og dens felter, hvert slag med dets terninger, teksten som lyttere søger i, det rå indhold (beskeden, som Roll20 sendte den, og som --text også søger i), og hvorfor hver lytter blev eller ikke blev udløst.',
           'Brug den til at finde et arks skabelonnavn eller til at se, hvad et Beacon-ark (f.eks. D&D 2024) sender.',
           'Beacon-ark sender slagkort i stedet for slagskabeloner. CRL læser dem: skabelonen er kortets første klasse (dnd-2024 for D&D 2024), figuren, titlen (f.eks. Dexterity Check) og underkategorien bliver til felter, og hvert slag i opgørelsen er et slag, så crit-, fumble-, total- og natural-tjek virker.',
         ],
@@ -3748,7 +3758,7 @@ const CustomizableRollListenerMod = (() => {
           'Een luisteraar activeert wanneer al zijn filters overeenkomen. Lege filters komen met alles overeen.',
           'Rolsjablonen: de naam van het sjabloon, zoals atkdmg of simple. "none" komt overeen met berichten zonder sjabloon. Meerdere namen betekent: een van die namen.',
           'Berichttypen: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-sheets) en api. Als dit leeg is, wordt elk type behalve api-commando’s gecontroleerd.',
-          'Tekst: een of meer tekststukken, gescheiden door &&, die allemaal moeten voorkomen. Hoofdletters en kleine letters maken niet uit. Tekst wordt ook gevonden in worptotalen en resultaten van gooibare tabellen.',
+          'Tekst: een of meer tekststukken, gescheiden door &&, die allemaal moeten voorkomen. Hoofdletters en kleine letters maken niet uit. Tekst wordt ook gevonden in worptotalen en resultaten van gooibare tabellen, en in de ruwe inhoud van het bericht, die Inspecteren toont onder Ruwe inhoud: bij een Beacon-kaart is dat de HTML ervan.',
           '## in de tekst staat voor een inline-worp; de worpcontroles kijken dan alleen naar de worpen die daar staan. Zonder ## wordt elke worp in het bericht gecontroleerd.',
           'Tekst kan een reguliere expressie zijn in plaats van platte tekst (--regex on).',
           'Sprekers / personages: de naam die in de chat staat, of de personagenaam in het rolsjabloon. Spelers: de weergavenaam van de speler.',
@@ -3773,7 +3783,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Worpcontroles',
         points: [
-          'Worpresultaat: kritiek (de hoogste zijde van de dobbelsteen, of het cs-bereik), blunder (een 1, of het cf-bereik), succes (minstens één dobbelsteen haalt een doel zoals 1d20>15), mislukking (een worp met doel zonder successen). Meerdere resultaten betekent: een van die resultaten.',
+          'Worpresultaat: kritiek (de hoogste zijde van de dobbelsteen, of het cs-bereik), blunder (een 1, of het cf-bereik), succes (minstens één dobbelsteen haalt het doel dat in de worp staat, zoals 1d20>15 of de dobbelsteenpool 5d6>4), mislukking (een worp met een doel en geen successen). Meerdere resultaten betekent: een van die resultaten.',
+          'Succes en mislukking werken alleen bij worpen die hun eigen doel bevatten. Aanvallen, reddingsworpen en checks van D&D-sheets zijn gewone worpen zoals 1d20+5, omdat de sheet de AC of DC niet kent, dus zijn ze nooit een succes of een mislukking. Om te reageren op het halen van een AC of DC, gebruik je Worptotaal, zoals >=15.',
           'Worptotaal: een getal, een vergelijking zoals >=15, of een bereik zoals 19-20.',
           'Natuurlijke worp: de zijde waarop een dobbelsteen landde, zoals 20, of <=2.',
           'Gecontroleerde dobbelstenen: auto kijkt alleen naar d20’s als er een is gegooid, zodat schadedobbelstenen met hun hoogste zijde niet als kritiek tellen. Kies Elke dobbelsteen, of een grootte zoals d100, om dat te veranderen.',
@@ -3805,7 +3816,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Weergavenamen van spelers, gescheiden door komma’s.',
         fields:
           'Voorwaarden voor sjabloonvelden, gescheiden door &&: name=value (is), name!=value (is niet), name~text (bevat), name!~text (bevat niet). Met --regex on leest ~ een reguliere expressie.',
-        results: 'crit, fumble, success en/of fail.',
+        results:
+          'crit, fumble, success en/of fail. success en fail hebben een doel in de worp nodig, zoals 1d20>15.',
         total: 'Worptotaal: 15, >=15, <5 of 19-20.',
         natural: 'Natuurlijke worp: 20, <=2 of 19-20.',
         dice: 'auto, any, of een dobbelsteengrootte zoals 20.',
@@ -3848,7 +3860,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'De inspecteur',
         points: [
-          'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, en waarom elke luisteraar wel of niet activeerde.',
+          'Klik op Volgend bericht inspecteren en gooi dan. CRL fluistert wat het zag: het berichttype, de spreker, het personage, het sjabloon en zijn velden, elke worp met zijn dobbelstenen, de tekst die luisteraars doorzoeken, de ruwe inhoud (het bericht zoals Roll20 het verstuurde, dat --text ook doorzoekt), en waarom elke luisteraar wel of niet activeerde.',
           'Gebruik hem om de sjabloonnaam van een sheet te vinden, of om te zien wat een Beacon-sheet (zoals D&D 2024) verstuurt.',
           'Beacon-sheets plaatsen worpkaarten in plaats van rolsjablonen. CRL leest ze: het sjabloon is de eerste class van de kaart (dnd-2024 voor D&D 2024), het personage, de titel (zoals Dexterity Check) en de subcategorie worden velden, en elke worp in de uitsplitsing is een worp, dus controles op crit, fumble, totaal en natuurlijke worp werken.',
         ],
@@ -4200,7 +4212,7 @@ const CustomizableRollListenerMod = (() => {
           'A listener triggers when every filter it has matches. Empty filters match everything.',
           'Roll templates: the template name, such as atkdmg or simple. "none" matches messages without a template. Several names mean any of them.',
           'Message types: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon sheets) and api. When empty, every type except api commands is checked.',
-          'Text: one or more pieces of text, separated by &&, that must all appear. Matching ignores upper and lower case. Text is also found in roll totals and rollable table results.',
+          'Text: one or more pieces of text, separated by &&, that must all appear. Matching ignores upper and lower case. Text is also found in roll totals and rollable table results, and in the message’s raw content, which Inspect shows under Raw content: for a Beacon card, that is its HTML.',
           '## in the text stands for an inline roll; the roll checks then only look at the rolls found there. Without ##, every roll in the message is checked.',
           'Text can be a regular expression instead of plain text (--regex on).',
           'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
@@ -4225,7 +4237,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Roll Checks',
         points: [
-          'Roll result: critical (the die’s highest face, or the cs range), fumble (a 1, or the cf range), success (at least one die meets a target such as 1d20>15), failure (a target roll with no successes). Several results mean any of them.',
+          'Roll result: critical (the die’s highest face, or the cs range), fumble (a 1, or the cf range), success (at least one die meets the target written into the roll, such as 1d20>15 or the dice pool 5d6>4), failure (a roll with a target and no successes). Several results mean any of them.',
+          'Success and failure only work with rolls that carry their own target. D&D sheet attacks, saves and checks are plain rolls such as 1d20+5, because the sheet does not know the AC or DC, so they are never a success or a failure. To react to beating an AC or DC, use Roll total, such as >=15.',
           'Roll total: a number, a comparison such as >=15, or a range such as 19-20.',
           'Natural die: the face a die landed on, such as 20, or <=2.',
           'Dice checked: auto looks only at d20s when one was rolled, so damage dice rolling their highest face do not count as crits. Choose any die, or a size such as d100, to change that.',
@@ -4256,7 +4269,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Player display names, separated by commas.',
         fields:
           'Template field conditions, separated by &&: name=value (is), name!=value (is not), name~text (contains), name!~text (does not contain). With --regex on, ~ reads a regular expression.',
-        results: 'crit, fumble, success and/or fail.',
+        results:
+          'crit, fumble, success and/or fail. success and fail need a target in the roll, such as 1d20>15.',
         total: 'Roll total: 15, >=15, <5 or 19-20.',
         natural: 'Natural die face: 20, <=2 or 19-20.',
         dice: 'auto, any, or a die size such as 20.',
@@ -4299,7 +4313,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'The Inspector',
         points: [
-          'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, and why each listener did or did not trigger.',
+          'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, the raw content (the message as Roll20 sent it, which --text also searches), and why each listener did or did not trigger.',
           'Use it to find a sheet’s template name, or to see what a Beacon sheet (such as D&D 2024) sends.',
           'Beacon sheets post roll cards instead of roll templates. CRL reads them: the template is the card’s first class (dnd-2024 for D&D 2024), the character, title (such as Dexterity Check) and subcategory become fields, and each roll in the breakdown is a roll, so crit, fumble, total and natural checks work.',
         ],
@@ -4652,7 +4666,7 @@ const CustomizableRollListenerMod = (() => {
           'Kuuntelija laukeaa, kun sen jokainen suodatin täsmää. Tyhjät suodattimet täsmäävät kaikkeen.',
           'Heittopohjat: pohjan nimi, kuten atkdmg tai simple. ”none” täsmää viesteihin, joissa ei ole pohjaa. Useampi nimi tarkoittaa mitä tahansa niistä.',
           'Viestityypit: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-lomakkeet) ja api. Tyhjänä tarkistetaan kaikki tyypit paitsi api-komennot.',
-          'Teksti: yksi tai useampi tekstinpätkä &&-merkein eroteltuina, joiden kaikkien on esiinnyttävä. Vertailu ei välitä isoista ja pienistä kirjaimista. Teksti löytyy myös heittojen summista ja heittotaulukoiden tuloksista.',
+          'Teksti: yksi tai useampi tekstinpätkä &&-merkein eroteltuina, joiden kaikkien on esiinnyttävä. Vertailu ei välitä isoista ja pienistä kirjaimista. Teksti löytyy myös heittojen summista ja heittotaulukoiden tuloksista, sekä viestin raakasisällöstä, jonka Tutki näyttää kohdassa Raakasisältö: Beacon-kortilla se on kortin HTML.',
           '## tekstissä tarkoittaa rivin sisäistä heittoa; heittotarkistukset katsovat silloin vain siitä löytyviä heittoja. Ilman ##-merkkiä tarkistetaan viestin jokainen heitto.',
           'Teksti voi olla tavallisen tekstin sijaan säännöllinen lauseke (--regex on).',
           'Puhujat / hahmot: chatissa näkyvä nimi tai heittopohjan hahmon nimi. Pelaajat: pelaajan näyttönimi.',
@@ -4677,7 +4691,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Heittotarkistukset',
         points: [
-          'Heiton tulos: kriittinen (nopan suurin silmäluku tai cs-väli), kömmähdys (1 tai cf-väli), onnistuminen (vähintään yksi noppa saavuttaa rajan, kuten 1d20>15), epäonnistuminen (rajaheitto ilman onnistumisia). Useampi tulos tarkoittaa mitä tahansa niistä.',
+          'Heiton tulos: kriittinen (nopan suurin silmäluku tai cs-väli), kömmähdys (1 tai cf-väli), onnistuminen (vähintään yksi noppa saavuttaa heittoon kirjoitetun rajan, kuten 1d20>15 tai noppapooli 5d6>4), epäonnistuminen (heitto, jossa on raja mutta ei onnistumisia). Useampi tulos tarkoittaa mitä tahansa niistä.',
+          'Onnistuminen ja epäonnistuminen toimivat vain heitoissa, joissa on oma raja. D&D-hahmolomakkeiden hyökkäykset, pelastusheitot ja kokeet ovat tavallisia heittoja, kuten 1d20+5, koska lomake ei tiedä AC:tä tai DC:tä, joten ne eivät ole koskaan onnistumisia tai epäonnistumisia. Jos haluat reagoida AC:n tai DC:n saavuttamiseen, käytä Heiton summa -asetusta, kuten >=15.',
           'Heiton summa: luku, vertailu kuten >=15 tai väli kuten 19-20.',
           'Luonnollinen noppa: silmäluku, jolle noppa pysähtyi, kuten 20 tai <=2.',
           'Tarkistetut nopat: auto katsoo vain d20-noppia, kun sellainen heitettiin, joten suurimman silmäluvun saaneita vahinkonoppia ei lasketa kriittisiksi. Valitse Mikä tahansa noppa tai koko kuten d100 muuttaaksesi tätä.',
@@ -4709,7 +4724,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Pelaajien näyttönimet pilkuin eroteltuina.',
         fields:
           'Pohjan kenttien ehdot &&-merkein eroteltuina: name=value (on), name!=value (ei ole), name~text (sisältää), name!~text (ei sisällä). Asetuksella --regex on ~ lukee säännöllisen lausekkeen.',
-        results: 'crit, fumble, success ja/tai fail.',
+        results:
+          'crit, fumble, success ja/tai fail. success ja fail tarvitsevat heittoon rajan, kuten 1d20>15.',
         total: 'Heiton summa: 15, >=15, <5 tai 19-20.',
         natural: 'Nopan luonnollinen silmäluku: 20, <=2 tai 19-20.',
         dice: 'auto, any tai nopan koko kuten 20.',
@@ -4752,7 +4768,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Tarkastin',
         points: [
-          'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
+          'Napsauta Tutki seuraava viesti ja heitä sitten. CRL kuiskaa, mitä se näki: viestityypin, puhujan, hahmon, pohjan ja sen kentät, jokaisen heiton noppineen, kuuntelijoiden etsimän tekstin, raakasisällön (viestin sellaisena kuin Roll20 sen lähetti; myös --text etsii siitä) sekä syyn, miksi kukin kuuntelija laukesi tai ei lauennut.',
           'Käytä sitä lomakkeen pohjan nimen löytämiseen tai nähdäksesi, mitä Beacon-lomake (kuten D&D 2024) lähettää.',
           'Beacon-lomakkeet lähettävät heittopohjien sijaan heittokortteja. CRL lukee ne: pohja on kortin ensimmäinen luokka (dnd-2024 D&D 2024:lle), hahmosta, otsikosta (kuten Dexterity Check) ja alaluokasta tulee kenttiä, ja jokainen erittelyn heitto on heitto, joten kriittinen-, kömmähdys-, summa- ja luonnollinen-tarkistukset toimivat.',
         ],
@@ -5110,7 +5126,7 @@ const CustomizableRollListenerMod = (() => {
           'Un écouteur se déclenche quand tous ses filtres correspondent. Les filtres vides correspondent à tout.',
           'Modèles de jet : le nom du modèle, comme atkdmg ou simple. « none » correspond aux messages sans modèle. Plusieurs noms signifient n’importe lequel d’entre eux.',
           'Types de message : general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fiches Beacon) et api. Si vide, tous les types sauf les commandes api sont vérifiés.',
-          'Texte : un ou plusieurs morceaux de texte, séparés par &&, qui doivent tous apparaître. La recherche ignore les majuscules et minuscules. Le texte est aussi trouvé dans les totaux de jets et les résultats de tables aléatoires.',
+          'Texte : un ou plusieurs morceaux de texte, séparés par &&, qui doivent tous apparaître. La recherche ignore les majuscules et minuscules. Le texte est aussi trouvé dans les totaux de jets et les résultats de tables aléatoires, ainsi que dans le contenu brut du message, que montre Inspecter sous Contenu brut : pour une carte Beacon, c’est son HTML.',
           '## dans le texte représente un jet en ligne ; les vérifications de jet n’examinent alors que les jets trouvés à cet endroit. Sans ##, tous les jets du message sont vérifiés.',
           'Le texte peut être une expression régulière au lieu de texte simple (--regex on).',
           'Orateurs / personnages : le nom affiché dans le chat, ou le nom du personnage dans le modèle de jet. Joueurs : le nom d’affichage du joueur.',
@@ -5135,7 +5151,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Vérifications de jet',
         points: [
-          'Résultat du jet : critique (la face la plus haute du dé, ou la plage cs), échec critique (un 1, ou la plage cf), réussite (au moins un dé atteint un seuil comme 1d20>15), échec (un jet à seuil sans aucune réussite). Plusieurs résultats signifient n’importe lequel d’entre eux.',
+          'Résultat du jet : critique (la face la plus haute du dé, ou la plage cs), échec critique (un 1, ou la plage cf), réussite (au moins un dé atteint le seuil écrit dans le jet, comme 1d20>15 ou la réserve de dés 5d6>4), échec (un jet avec un seuil et aucune réussite). Plusieurs résultats signifient n’importe lequel d’entre eux.',
+          'La réussite et l’échec ne fonctionnent qu’avec des jets qui portent leur propre seuil. Les attaques, jets de sauvegarde et tests des fiches D&D sont des jets simples comme 1d20+5, car la fiche ne connaît ni l’AC ni le DC : ils ne sont donc jamais une réussite ni un échec. Pour réagir quand une AC ou un DC est atteint, utilisez Total du jet, comme >=15.',
           'Total du jet : un nombre, une comparaison comme >=15, ou une plage comme 19-20.',
           'Dé naturel : la face sur laquelle un dé est tombé, comme 20, ou <=2.',
           'Dés vérifiés : auto n’examine que les d20 quand il y en a un, pour que les dés de dégâts sur leur face maximale ne comptent pas comme des critiques. Choisissez N’importe quel dé, ou une taille comme d100, pour changer cela.',
@@ -5167,7 +5184,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Noms d’affichage des joueurs, séparés par des virgules.',
         fields:
           'Conditions sur les champs du modèle, séparées par && : name=value (est), name!=value (n’est pas), name~text (contient), name!~text (ne contient pas). Avec --regex on, ~ lit une expression régulière.',
-        results: 'crit, fumble, success et/ou fail.',
+        results:
+          'crit, fumble, success et/ou fail. success et fail exigent un seuil dans le jet, comme 1d20>15.',
         total: 'Total du jet : 15, >=15, <5 ou 19-20.',
         natural: 'Face naturelle du dé : 20, <=2 ou 19-20.',
         dice: 'auto, any, ou une taille de dé comme 20.',
@@ -5210,7 +5228,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'L’inspecteur',
         points: [
-          'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, et pourquoi chaque écouteur s’est déclenché ou non.',
+          'Cliquez sur Inspecter le prochain message, puis faites le jet. CRL chuchote ce qu’il a vu : le type de message, l’orateur, le personnage, le modèle et ses champs, chaque jet avec ses dés, le texte examiné par les écouteurs, le contenu brut (le message tel que Roll20 l’a envoyé, que --text examine aussi), et pourquoi chaque écouteur s’est déclenché ou non.',
           'Utilisez-le pour trouver le nom de modèle d’une fiche, ou pour voir ce qu’envoie une fiche Beacon (comme D&D 2024).',
           'Les fiches Beacon publient des cartes de jet au lieu de modèles de jet. CRL les lit : le modèle est la première classe de la carte (dnd-2024 pour D&D 2024), le personnage, le titre (comme Test de Dextérité) et la sous-catégorie deviennent des champs, et chaque jet du détail est un jet ; les vérifications critique, échec critique, total et naturel fonctionnent donc.',
         ],
@@ -5565,7 +5583,7 @@ const CustomizableRollListenerMod = (() => {
           'Ein Listener löst aus, wenn alle seine Filter passen. Leere Filter passen auf alles.',
           'Wurfvorlagen: der Vorlagenname, etwa atkdmg oder simple. „none“ passt auf Nachrichten ohne Vorlage. Mehrere Namen bedeuten: einer davon.',
           'Nachrichtentypen: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-Bögen) und api. Wenn leer, wird jeder Typ außer api-Befehlen geprüft.',
-          'Text: ein oder mehrere Textstücke, getrennt durch &&, die alle vorkommen müssen. Groß- und Kleinschreibung wird ignoriert. Text wird auch in Wurfsummen und Ergebnissen von Würfeltabellen gefunden.',
+          'Text: ein oder mehrere Textstücke, getrennt durch &&, die alle vorkommen müssen. Groß- und Kleinschreibung wird ignoriert. Text wird auch in Wurfsummen und Ergebnissen von Würfeltabellen gefunden, sowie im Rohinhalt der Nachricht, den der Inspektor unter Rohinhalt zeigt: Bei einer Beacon-Karte ist das ihr HTML.',
           '## im Text steht für einen Inline-Wurf; die Wurfprüfungen betrachten dann nur die dort gefundenen Würfe. Ohne ## wird jeder Wurf der Nachricht geprüft.',
           'Text kann statt Klartext ein regulärer Ausdruck sein (--regex on).',
           'Sprecher / Charaktere: der im Chat angezeigte Name oder der Charaktername in der Wurfvorlage. Spieler: der Anzeigename des Spielers.',
@@ -5590,7 +5608,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Wurfprüfungen',
         points: [
-          'Wurfergebnis: kritisch (die höchste Seite des Würfels oder der cs-Bereich), Patzer (eine 1 oder der cf-Bereich), Erfolg (mindestens ein Würfel erreicht einen Zielwert wie 1d20>15), Fehlschlag (ein Zielwurf ohne Erfolge). Mehrere Ergebnisse bedeuten: eines davon.',
+          'Wurfergebnis: kritisch (die höchste Seite des Würfels oder der cs-Bereich), Patzer (eine 1 oder der cf-Bereich), Erfolg (mindestens ein Würfel erreicht den im Wurf angegebenen Zielwert, etwa 1d20>15 oder der Würfelpool 5d6>4), Fehlschlag (ein Wurf mit Zielwert ohne Erfolge). Mehrere Ergebnisse bedeuten: eines davon.',
+          'Erfolg und Fehlschlag funktionieren nur bei Würfen, die ihren eigenen Zielwert mitbringen. Angriffe, Rettungswürfe und Proben von D&D-Charakterbögen sind einfache Würfe wie 1d20+5, weil der Bogen die AC oder DC nicht kennt; sie sind also nie ein Erfolg oder Fehlschlag. Um darauf zu reagieren, dass eine AC oder DC erreicht wird, verwende Wurfsumme, etwa >=15.',
           'Wurfsumme: eine Zahl, ein Vergleich wie >=15 oder ein Bereich wie 19-20.',
           'Natürlicher Wurf: die Seite, auf der ein Würfel landete, etwa 20 oder <=2.',
           'Geprüfte Würfel: auto betrachtet nur W20, wenn einer gewürfelt wurde, damit Schadenswürfel mit ihrer höchsten Seite nicht als Krit zählen. Wähle Jeder Würfel oder eine Größe wie d100, um das zu ändern.',
@@ -5622,7 +5641,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Anzeigenamen der Spieler, durch Kommas getrennt.',
         fields:
           'Bedingungen für Vorlagenfelder, getrennt durch &&: name=value (ist), name!=value (ist nicht), name~text (enthält), name!~text (enthält nicht). Mit --regex on liest ~ einen regulären Ausdruck.',
-        results: 'crit, fumble, success und/oder fail.',
+        results:
+          'crit, fumble, success und/oder fail. success und fail brauchen einen Zielwert im Wurf, etwa 1d20>15.',
         total: 'Wurfsumme: 15, >=15, <5 oder 19-20.',
         natural: 'Natürliche Würfelseite: 20, <=2 oder 19-20.',
         dice: 'auto, any oder eine Würfelgröße wie 20.',
@@ -5665,7 +5685,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Der Inspektor',
         points: [
-          'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, und warum jeder Listener ausgelöst hat oder nicht.',
+          'Klicke auf Nächste Nachricht prüfen und würfle dann. CRL flüstert, was es gesehen hat: Nachrichtentyp, Sprecher, Charakter, Vorlage und ihre Felder, jeden Wurf mit seinen Würfeln, den Text, den Listener durchsuchen, den Rohinhalt (die Nachricht, wie Roll20 sie gesendet hat, die auch --text durchsucht), und warum jeder Listener ausgelöst hat oder nicht.',
           'Nutze ihn, um den Vorlagennamen eines Bogens zu finden oder um zu sehen, was ein Beacon-Bogen (etwa D&D 2024) sendet.',
           'Beacon-Bögen posten Wurfkarten statt Wurfvorlagen. CRL liest sie: Die Vorlage ist die erste Klasse der Karte (dnd-2024 für D&D 2024), Charakter, Titel (etwa Geschicklichkeitswurf) und Unterkategorie werden zu Feldern, und jeder Wurf in der Aufschlüsselung ist ein Wurf, sodass Krit-, Patzer-, Summen- und Natürlich-Prüfungen funktionieren.',
         ],
@@ -6021,7 +6041,7 @@ const CustomizableRollListenerMod = (() => {
           'Ένας ακροατής ενεργοποιείται όταν ταιριάζουν όλα τα φίλτρα του. Τα κενά φίλτρα ταιριάζουν με όλα.',
           'Πρότυπα ζαριάς: το όνομα του προτύπου, π.χ. atkdmg ή simple. Το «none» ταιριάζει με μηνύματα χωρίς πρότυπο. Πολλά ονόματα σημαίνουν οποιοδήποτε από αυτά.',
           'Τύποι μηνυμάτων: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (φύλλα Beacon) και api. Όταν είναι κενό, ελέγχονται όλοι οι τύποι εκτός από τις εντολές api.',
-          'Κείμενο: ένα ή περισσότερα τμήματα κειμένου, χωρισμένα με &&, που πρέπει να εμφανίζονται όλα. Δεν γίνεται διάκριση πεζών-κεφαλαίων. Το κείμενο βρίσκεται και σε σύνολα ζαριών και σε αποτελέσματα πινάκων ζαριάς.',
+          'Κείμενο: ένα ή περισσότερα τμήματα κειμένου, χωρισμένα με &&, που πρέπει να εμφανίζονται όλα. Δεν γίνεται διάκριση πεζών-κεφαλαίων. Το κείμενο βρίσκεται και σε σύνολα ζαριών και σε αποτελέσματα πινάκων ζαριάς, καθώς και στο ακατέργαστο περιεχόμενο του μηνύματος, που η Επιθεώρηση εμφανίζει στο Ακατέργαστο περιεχόμενο: για μια κάρτα Beacon, αυτό είναι το HTML της.',
           'Το ## στο κείμενο αντιστοιχεί σε μια ενσωματωμένη ζαριά· οι έλεγχοι ζαριάς εξετάζουν τότε μόνο τις ζαριές που βρέθηκαν εκεί. Χωρίς ##, ελέγχεται κάθε ζαριά του μηνύματος.',
           'Το κείμενο μπορεί να είναι κανονική έκφραση αντί για απλό κείμενο (--regex on).',
           'Ομιλητές / χαρακτήρες: το όνομα που εμφανίζεται στη συνομιλία ή το όνομα χαρακτήρα στο πρότυπο ζαριάς. Παίκτες: το εμφανιζόμενο όνομα του παίκτη.',
@@ -6046,7 +6066,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Έλεγχοι ζαριάς',
         points: [
-          'Αποτέλεσμα ζαριάς: κρίσιμη επιτυχία (η μέγιστη έδρα του ζαριού ή το εύρος cs), κρίσιμη αποτυχία (ένα 1 ή το εύρος cf), επιτυχία (τουλάχιστον ένα ζάρι πιάνει στόχο όπως 1d20>15), αποτυχία (ζαριά με στόχο χωρίς επιτυχίες). Πολλά αποτελέσματα σημαίνουν οποιοδήποτε από αυτά.',
+          'Αποτέλεσμα ζαριάς: κρίσιμη επιτυχία (η μέγιστη έδρα του ζαριού ή το εύρος cs), κρίσιμη αποτυχία (ένα 1 ή το εύρος cf), επιτυχία (τουλάχιστον ένα ζάρι πιάνει τον στόχο που είναι γραμμένος στη ζαριά, όπως 1d20>15 ή η δεξαμενή ζαριών 5d6>4), αποτυχία (ζαριά με στόχο χωρίς επιτυχίες). Πολλά αποτελέσματα σημαίνουν οποιοδήποτε από αυτά.',
+          'Η επιτυχία και η αποτυχία λειτουργούν μόνο με ζαριές που έχουν δικό τους στόχο. Οι επιθέσεις, οι ζαριές σωτηρίας και οι έλεγχοι από φύλλα D&D είναι απλές ζαριές όπως 1d20+5, επειδή το φύλλο δεν γνωρίζει το AC ή το DC, οπότε δεν είναι ποτέ επιτυχία ή αποτυχία. Για να αντιδράσετε όταν πιάνεται ένα AC ή DC, χρησιμοποιήστε το Σύνολο ζαριάς, όπως >=15.',
           'Σύνολο ζαριάς: ένας αριθμός, μια σύγκριση όπως >=15 ή ένα εύρος όπως 19-20.',
           'Φυσικό ζάρι: η έδρα στην οποία έπεσε ένα ζάρι, π.χ. 20 ή <=2.',
           'Ελεγχόμενα ζάρια: το auto εξετάζει μόνο d20 όταν ρίχτηκε κάποιο, ώστε τα ζάρια ζημιάς στη μέγιστη έδρα τους να μη μετρούν ως κρίσιμες. Επιλέξτε Οποιοδήποτε ζάρι ή ένα μέγεθος όπως d100 για να το αλλάξετε.',
@@ -6078,7 +6099,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Εμφανιζόμενα ονόματα παικτών, χωρισμένα με κόμματα.',
         fields:
           'Συνθήκες πεδίων προτύπου, χωρισμένες με &&: name=value (είναι), name!=value (δεν είναι), name~text (περιέχει), name!~text (δεν περιέχει). Με --regex on, το ~ διαβάζει κανονική έκφραση.',
-        results: 'crit, fumble, success και/ή fail.',
+        results:
+          'crit, fumble, success και/ή fail. Τα success και fail χρειάζονται στόχο στη ζαριά, όπως 1d20>15.',
         total: 'Σύνολο ζαριάς: 15, >=15, <5 ή 19-20.',
         natural: 'Φυσική έδρα ζαριού: 20, <=2 ή 19-20.',
         dice: 'auto, any ή ένα μέγεθος ζαριού όπως 20.',
@@ -6122,7 +6144,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Ο Επιθεωρητής',
         points: [
-          'Πατήστε Επιθεώρηση επόμενου μηνύματος και μετά ρίξτε. Το CRL ψιθυρίζει τι είδε: τον τύπο μηνύματος, τον ομιλητή, τον χαρακτήρα, το πρότυπο και τα πεδία του, κάθε ζαριά με τα ζάρια της, το κείμενο που αναζητούν οι ακροατές και γιατί κάθε ακροατής ενεργοποιήθηκε ή όχι.',
+          'Πατήστε Επιθεώρηση επόμενου μηνύματος και μετά ρίξτε. Το CRL ψιθυρίζει τι είδε: τον τύπο μηνύματος, τον ομιλητή, τον χαρακτήρα, το πρότυπο και τα πεδία του, κάθε ζαριά με τα ζάρια της, το κείμενο που αναζητούν οι ακροατές, το ακατέργαστο περιεχόμενο (το μήνυμα όπως το έστειλε το Roll20, όπου ψάχνει και το --text) και γιατί κάθε ακροατής ενεργοποιήθηκε ή όχι.',
           'Χρησιμοποιήστε τον για να βρείτε το όνομα προτύπου ενός φύλλου ή για να δείτε τι στέλνει ένα φύλλο Beacon (όπως το D&D 2024).',
           'Τα φύλλα Beacon δημοσιεύουν κάρτες ζαριάς αντί για πρότυπα ζαριάς. Το CRL τις διαβάζει: το πρότυπο είναι η πρώτη κλάση της κάρτας (dnd-2024 για το D&D 2024), ο χαρακτήρας, ο τίτλος (π.χ. Έλεγχος Επιδεξιότητας) και η υποκατηγορία γίνονται πεδία, και κάθε ζαριά της ανάλυσης είναι μια ζαριά, οπότε λειτουργούν οι έλεγχοι κρίσιμης επιτυχίας, κρίσιμης αποτυχίας, συνόλου και φυσικού ζαριού.',
         ],
@@ -6471,7 +6493,7 @@ const CustomizableRollListenerMod = (() => {
           'מאזין מופעל כשכל המסננים שלו תואמים. מסנן ריק תואם הכול.',
           'תבניות הטלה: שם התבנית, כגון atkdmg או simple. "none" תואם הודעות ללא תבנית. כמה שמות פירושם כל אחד מהם.',
           'סוגי הודעות: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (גיליונות Beacon) ו-api. אם השדה ריק, נבדקים כל הסוגים מלבד פקודות api.',
-          'טקסט: קטע טקסט אחד או יותר, מופרדים ב-&&, שכולם חייבים להופיע. אין הבחנה בין אותיות גדולות לקטנות. הטקסט נמצא גם בסכומי הטלות ובתוצאות של טבלאות הטלה.',
+          'טקסט: קטע טקסט אחד או יותר, מופרדים ב-&&, שכולם חייבים להופיע. אין הבחנה בין אותיות גדולות לקטנות. הטקסט נמצא גם בסכומי הטלות ובתוצאות של טבלאות הטלה, וגם בתוכן הגולמי של ההודעה, שבדיקת ההודעה מציגה תחת תוכן גולמי: בכרטיס Beacon, זה ה-HTML שלו.',
           '## בטקסט מייצג הטלה מוטבעת; בדיקות ההטלה בודקות אז רק את ההטלות שנמצאו שם. בלי ##, נבדקת כל הטלה בהודעה.',
           'הטקסט יכול להיות ביטוי רגולרי במקום טקסט רגיל (--regex on).',
           "דוברים / דמויות: השם שמוצג בצ'אט, או שם הדמות בתבנית ההטלה. שחקנים: שם התצוגה של השחקן.",
@@ -6496,7 +6518,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'בדיקות הטלה',
         points: [
-          'תוצאת ההטלה: קריטי (הפאה הגבוהה ביותר של הקובייה, או טווח ה-cs), כישלון חרוץ (1, או טווח ה-cf), הצלחה (לפחות קובייה אחת מגיעה ליעד, כגון 1d20>15), כישלון (הטלה עם יעד ללא הצלחות). כמה תוצאות פירושן כל אחת מהן.',
+          'תוצאת ההטלה: קריטי (הפאה הגבוהה ביותר של הקובייה, או טווח ה-cs), כישלון חרוץ (1, או טווח ה-cf), הצלחה (לפחות קובייה אחת מגיעה ליעד שכתוב בהטלה, כגון 1d20>15 או מאגר הקוביות 5d6>4), כישלון (הטלה עם יעד וללא הצלחות). כמה תוצאות פירושן כל אחת מהן.',
+          'הצלחה וכישלון עובדים רק עם הטלות שנושאות יעד משלהן. התקפות, הטלות הצלה ובדיקות מגיליונות D&D הן הטלות רגילות כגון 1d20+5, כי הגיליון לא יודע את ה-AC או את ה-DC, ולכן הן אף פעם לא הצלחה או כישלון. כדי להגיב להשגת AC או DC, השתמשו בסכום ההטלה, כגון >=15.',
           'סכום ההטלה: מספר, השוואה כגון >=15, או טווח כגון 19-20.',
           'קובייה טבעית: הפאה שעליה נחתה הקובייה, כגון 20 או <=2.',
           'קוביות נבדקות: אוטומטי בודק רק קוביות d20 כשהוטלה אחת, כך שקוביות נזק שיצאה בהן הפאה הגבוהה ביותר לא נחשבות קריטי. כדי לשנות זאת, בחרו כל קובייה או גודל כגון d100.',
@@ -6527,7 +6550,7 @@ const CustomizableRollListenerMod = (() => {
         players: 'שמות התצוגה של שחקנים, מופרדים בפסיקים.',
         fields:
           'תנאים על שדות התבנית, מופרדים ב-&&: name=value (שווה), name!=value (לא שווה), name~text (מכיל), name!~text (לא מכיל). עם --regex on, ~ קורא ביטוי רגולרי.',
-        results: 'crit, fumble, success ו/או fail.',
+        results: 'crit, fumble, success ו/או fail. success ו-fail דורשים יעד בהטלה, כגון 1d20>15.',
         total: 'סכום ההטלה: 15, >=15, <5 או 19-20.',
         natural: 'הפאה הטבעית של הקובייה: 20, <=2 או 19-20.',
         dice: 'auto, any, או גודל קובייה כגון 20.',
@@ -6569,7 +6592,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'הבודק',
         points: [
-          'לחצו על בדיקת ההודעה הבאה, ואז הטילו. CRL לוחש מה הוא ראה: סוג ההודעה, הדובר, הדמות, התבנית והשדות שלה, כל הטלה עם הקוביות שלה, הטקסט שהמאזינים מחפשים בו, ולמה כל מאזין הופעל או לא.',
+          'לחצו על בדיקת ההודעה הבאה, ואז הטילו. CRL לוחש מה הוא ראה: סוג ההודעה, הדובר, הדמות, התבנית והשדות שלה, כל הטלה עם הקוביות שלה, הטקסט שהמאזינים מחפשים בו, התוכן הגולמי (ההודעה כפי ש-Roll20 שלח אותה, שגם --text מחפש בה), ולמה כל מאזין הופעל או לא.',
           'השתמשו בו כדי למצוא את שם התבנית של גיליון, או כדי לראות מה גיליון Beacon (כגון D&D 2024) שולח.',
           'גיליונות Beacon מפרסמים כרטיסי הטלה במקום תבניות הטלה. CRL קורא אותם: התבנית היא ה-class הראשון של הכרטיס (dnd-2024 עבור D&D 2024), הדמות, הכותרת (כגון Dexterity Check) ותת-הקטגוריה הופכות לשדות, וכל הטלה בפירוט נחשבת הטלה, כך שבדיקות קריטי, כישלון חרוץ, סכום וקובייה טבעית עובדות.',
         ],
@@ -6925,7 +6948,7 @@ const CustomizableRollListenerMod = (() => {
           'Egy figyelő akkor aktiválódik, ha minden szűrője egyezik. Az üres szűrő mindenre illeszkedik.',
           'Dobássablonok: a sablon neve, például atkdmg vagy simple. A „none” a sablon nélküli üzenetekre illeszkedik. Több név esetén bármelyik megfelel.',
           'Üzenettípusok: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon lapok) és api. Ha üres, az api-parancsok kivételével minden típust ellenőriz.',
-          'Szöveg: egy vagy több szövegrész &&-vel elválasztva, amelyeknek mind szerepelniük kell. A kis- és nagybetű nem számít. A szöveget a dobásösszegekben és a dobótáblázat-eredményekben is keresi.',
+          'Szöveg: egy vagy több szövegrész &&-vel elválasztva, amelyeknek mind szerepelniük kell. A kis- és nagybetű nem számít. A szöveget a dobásösszegekben és a dobótáblázat-eredményekben is keresi, valamint az üzenet nyers tartalmában, amelyet a vizsgáló a Nyers tartalom alatt mutat: Beacon-kártyánál ez a kártya HTML-je.',
           'A ## a szövegben egy beágyazott dobást jelöl; ilyenkor a dobásellenőrzések csak az ott talált dobásokat nézik. ## nélkül az üzenet minden dobását ellenőrzi.',
           'A szöveg egyszerű szöveg helyett reguláris kifejezés is lehet (--regex on).',
           'Beszélők / karakterek: a chatben megjelenő név, vagy a karakter neve a dobássablonban. Játékosok: a játékos megjelenített neve.',
@@ -6950,7 +6973,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Dobásellenőrzések',
         points: [
-          'Dobás eredménye: kritikus (a kocka legnagyobb értéke vagy a cs tartomány), kritikus hiba (1-es vagy a cf tartomány), siker (legalább egy kocka eléri a célt, pl. 1d20>15), kudarc (céldobás siker nélkül). Több eredmény esetén bármelyik megfelel.',
+          'Dobás eredménye: kritikus (a kocka legnagyobb értéke vagy a cs tartomány), kritikus hiba (1-es vagy a cf tartomány), siker (legalább egy kocka eléri a dobásba írt célt, pl. 1d20>15 vagy az 5d6>4 kockakészlet), kudarc (céllal rendelkező dobás siker nélkül). Több eredmény esetén bármelyik megfelel.',
+          'A siker és a kudarc csak olyan dobásoknál működik, amelyek saját célt tartalmaznak. A D&D-lapok támadásai, mentődobásai és próbái egyszerű dobások, pl. 1d20+5, mert a lap nem ismeri az AC-t vagy a DC-t, így sosem számítanak sikernek vagy kudarcnak. Ha arra szeretne reagálni, hogy a dobás eléri az AC-t vagy a DC-t, használja a Dobás összege beállítást, pl. >=15.',
           'Dobás összege: szám, összehasonlítás (pl. >=15) vagy tartomány (pl. 19-20).',
           'Natúr kocka: az érték, amelyre a kocka esett, pl. 20 vagy <=2.',
           'Ellenőrzött kockák: az Automatikus csak a d20-akat nézi, ha dobtak ilyet, így a maximumot dobó sebzéskockák nem számítanak kritikusnak. Ezen a Bármely kocka vagy egy méret (pl. d100) választásával változtathat.',
@@ -6982,7 +7006,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Játékosok megjelenített nevei vesszővel elválasztva.',
         fields:
           'Sablonmező-feltételek &&-vel elválasztva: name=value (egyenlő), name!=value (nem egyenlő), name~text (tartalmazza), name!~text (nem tartalmazza). --regex on esetén a ~ reguláris kifejezést olvas.',
-        results: 'crit, fumble, success és/vagy fail.',
+        results:
+          'crit, fumble, success és/vagy fail. A success és a fail csak akkor működik, ha a dobásban van cél, pl. 1d20>15.',
         total: 'Dobás összege: 15, >=15, <5 vagy 19-20.',
         natural: 'Natúr kockaérték: 20, <=2 vagy 19-20.',
         dice: 'auto, any, vagy egy kockaméret, pl. 20.',
@@ -7025,7 +7050,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'A vizsgáló',
         points: [
-          'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
+          'Kattintson a Következő üzenet vizsgálata gombra, majd dobjon. A CRL visszasúgja, mit látott: az üzenet típusát, a beszélőt, a karaktert, a sablont és a mezőit, minden dobást a kockáival, a szöveget, amelyben a figyelők keresnek, a nyers tartalmat (az üzenetet úgy, ahogy a Roll20 elküldte; a --text ebben is keres), és hogy az egyes figyelők miért aktiválódtak vagy miért nem.',
           'Ezzel megtalálhatja egy lap sablonnevét, vagy megnézheti, mit küld egy Beacon lap (például a D&D 2024).',
           'A Beacon lapok dobássablonok helyett dobáskártyákat küldenek. A CRL ezeket is beolvassa: a sablon a kártya első osztálya (D&D 2024 esetén dnd-2024), a karakter, a cím (pl. Dexterity Check) és az alkategória mezők lesznek, a lebontás minden dobása pedig dobásnak számít, így a kritikus, kritikus hiba, összeg és natúr ellenőrzések működnek.',
         ],
@@ -7379,7 +7404,7 @@ const CustomizableRollListenerMod = (() => {
           'Un listener si attiva quando tutti i suoi filtri corrispondono. I filtri vuoti corrispondono a tutto.',
           'Template di tiro: il nome del template, ad esempio atkdmg o simple. "none" corrisponde ai messaggi senza template. Più nomi indicano uno qualsiasi di essi.',
           'Tipi di messaggio: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (schede Beacon) e api. Se vuoto, vengono controllati tutti i tipi tranne i comandi api.',
-          'Testo: uno o più frammenti di testo, separati da &&, che devono comparire tutti. Il confronto ignora maiuscole e minuscole. Il testo viene cercato anche nei totali dei tiri e nei risultati delle tabelle casuali.',
+          'Testo: uno o più frammenti di testo, separati da &&, che devono comparire tutti. Il confronto ignora maiuscole e minuscole. Il testo viene cercato anche nei totali dei tiri e nei risultati delle tabelle casuali, e nel contenuto grezzo del messaggio, che Ispeziona mostra sotto Contenuto grezzo: per una scheda Beacon, è il suo HTML.',
           '## nel testo indica un tiro inline; i controlli sui tiri esaminano allora solo i tiri trovati lì. Senza ##, viene controllato ogni tiro del messaggio.',
           "Il testo può essere un'espressione regolare invece di testo semplice (--regex on).",
           'Mittenti / personaggi: il nome mostrato in chat o il nome del personaggio nel template di tiro. Giocatori: il nome visualizzato del giocatore.',
@@ -7404,7 +7429,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Controlli sui tiri',
         points: [
-          "Risultato del tiro: critico (la faccia più alta del dado, o l'intervallo cs), fallimento critico (un 1, o l'intervallo cf), successo (almeno un dado raggiunge una soglia come 1d20>15), fallimento (un tiro con soglia senza successi). Più risultati indicano uno qualsiasi di essi.",
+          "Risultato del tiro: critico (la faccia più alta del dado, o l'intervallo cs), fallimento critico (un 1, o l'intervallo cf), successo (almeno un dado raggiunge la soglia scritta nel tiro, come 1d20>15 o la riserva di dadi 5d6>4), fallimento (un tiro con una soglia e nessun successo). Più risultati indicano uno qualsiasi di essi.",
+          'Successo e fallimento funzionano solo con tiri che contengono la propria soglia. Attacchi, tiri salvezza e prove delle schede di D&D sono tiri semplici come 1d20+5, perché la scheda non conosce la AC o la DC, quindi non sono mai un successo o un fallimento. Per reagire al raggiungimento di una AC o una DC, usa Totale del tiro, come >=15.',
           'Totale del tiro: un numero, un confronto come >=15 o un intervallo come 19-20.',
           'Dado naturale: la faccia su cui è caduto un dado, ad esempio 20, o <=2.',
           'Dadi controllati: auto esamina solo i d20 quando ne è stato tirato uno, così i dadi dei danni che fanno il massimo non contano come critici. Scegli qualsiasi dado, o una dimensione come d100, per cambiare questo comportamento.',
@@ -7436,7 +7462,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Nomi visualizzati dei giocatori, separati da virgole.',
         fields:
           "Condizioni sui campi del template, separate da &&: name=value (è), name!=value (non è), name~text (contiene), name!~text (non contiene). Con --regex on, ~ legge un'espressione regolare.",
-        results: 'crit, fumble, success e/o fail.',
+        results:
+          'crit, fumble, success e/o fail. success e fail richiedono una soglia nel tiro, come 1d20>15.',
         total: 'Totale del tiro: 15, >=15, <5 o 19-20.',
         natural: 'Faccia del dado naturale: 20, <=2 o 19-20.',
         dice: 'auto, any o una dimensione di dado come 20.',
@@ -7479,7 +7506,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: "L'ispettore",
         points: [
-          'Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener e perché ogni listener si è attivato o no.',
+          "Fai clic su Ispeziona prossimo messaggio, poi effettua il tiro. CRL sussurra ciò che ha visto: tipo di messaggio, mittente, personaggio, template e i suoi campi, ogni tiro con i suoi dadi, il testo cercato dai listener, il contenuto grezzo (il messaggio così come l'ha inviato Roll20, in cui cerca anche --text) e perché ogni listener si è attivato o no.",
           'Usalo per trovare il nome del template di una scheda o per vedere cosa invia una scheda Beacon (come D&D 2024).',
           'Le schede Beacon pubblicano riquadri di tiro invece dei template di tiro. CRL li legge: il template è la prima classe del riquadro (dnd-2024 per D&D 2024), personaggio, titolo (come Prova di Destrezza) e sottocategoria diventano campi, e ogni tiro nel dettaglio è un tiro, quindi i controlli su critico, fallimento critico, totale e dado naturale funzionano.',
         ],
@@ -7832,7 +7859,7 @@ const CustomizableRollListenerMod = (() => {
           'リスナーは、設定したフィルターがすべて一致すると発動します。空のフィルターは何にでも一致します。',
           'ロールテンプレート: atkdmg や simple などのテンプレート名。「none」はテンプレートのないメッセージに一致します。複数の名前を指定すると、いずれかに一致すれば対象になります。',
           'メッセージタイプ: general、rollresult、gmrollresult、emote、whisper、desc、advancedroll（Beacon シート）、api。空欄の場合は api コマンド以外のすべてのタイプが対象です。',
-          'テキスト: && で区切った 1 つ以上のテキストで、すべてが含まれている必要があります。大文字と小文字は区別しません。ロールの合計やロール可能テーブルの結果からも検索されます。',
+          'テキスト: && で区切った 1 つ以上のテキストで、すべてが含まれている必要があります。大文字と小文字は区別しません。ロールの合計やロール可能テーブルの結果、そしてメッセージの元の内容からも検索されます。元の内容は検査の「元の内容」に表示され、Beacon カードの場合はその HTML です。',
           'テキスト中の ## はインラインロールを表し、ロールのチェックはそこで見つかったロールだけを対象にします。## がない場合は、メッセージ内のすべてのロールがチェックされます。',
           'テキストはプレーンテキストの代わりに正規表現にもできます（--regex on）。',
           '発言者 / キャラクター: チャットに表示される名前、またはロールテンプレート内のキャラクター名。プレイヤー: プレイヤーの表示名。',
@@ -7857,7 +7884,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'ロールのチェック',
         points: [
-          'ロール結果: クリティカル（ダイスの最大の目、または cs の範囲）、ファンブル（1、または cf の範囲）、成功（1d20>15 のような目標値を少なくとも 1 つのダイスが満たす）、失敗（目標値付きのロールで成功が 0）。複数の結果を指定すると、いずれかに一致すれば対象になります。',
+          'ロール結果: クリティカル（ダイスの最大の目、または cs の範囲）、ファンブル（1、または cf の範囲）、成功（ロールに書かれた目標値を少なくとも 1 つのダイスが満たす。例: 1d20>15 やダイスプール 5d6>4）、失敗（目標値付きのロールで成功が 0）。複数の結果を指定すると、いずれかに一致すれば対象になります。',
+          '成功と失敗は、ロール自体に目標値が含まれている場合にのみ機能します。D&D シートの攻撃、セーヴ、判定は 1d20+5 のような通常のロールです。シートは AC や DC を知らないため、成功にも失敗にもなりません。AC や DC に達したときに反応させるには、>=15 のように「ロールの合計」を使ってください。',
           'ロールの合計: 数値、>=15 などの比較、または 19-20 などの範囲。',
           'ダイスの出目: ダイスの出た目（20 や <=2 など）。',
           'チェック対象のダイス: auto は d20 を振ったときは d20 だけを見るため、ダメージダイスが最大の目を出してもクリティカルにはなりません。変えるには any か、d100 などのダイスの種類を選びます。',
@@ -7888,7 +7916,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'プレイヤーの表示名（カンマ区切り）。',
         fields:
           'テンプレートのフィールド条件（&& 区切り）: name=value (一致)、name!=value (不一致)、name~text (含む)、name!~text (含まない)。--regex on の場合、~ は正規表現として読みます。',
-        results: 'crit、fumble、success、fail（複数可）。',
+        results:
+          'crit、fumble、success、fail（複数可）。success と fail には、1d20>15 のようにロールに目標値が必要です。',
         total: 'ロールの合計: 15、>=15、<5、19-20 など。',
         natural: 'ダイスの出目: 20、<=2、19-20 など。',
         dice: 'auto、any、または 20 などのダイスの種類。',
@@ -7931,7 +7960,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'インスペクター',
         points: [
-          '「次のメッセージを検査」をクリックしてからロールします。CRL は確認した内容をウィスパーで送ります: メッセージタイプ、発言者、キャラクター、テンプレートとそのフィールド、すべてのロールとそのダイス、リスナーが検索するテキスト、そして各リスナーが発動した理由・しなかった理由。',
+          '「次のメッセージを検査」をクリックしてからロールします。CRL は確認した内容をウィスパーで送ります: メッセージタイプ、発言者、キャラクター、テンプレートとそのフィールド、すべてのロールとそのダイス、リスナーが検索するテキスト、元の内容（Roll20 が送信したままのメッセージで、--text もここを検索します）、そして各リスナーが発動した理由・しなかった理由。',
           'シートのテンプレート名を調べたり、Beacon シート（D&D 2024 など）が何を送信しているかを確認したりするのに使います。',
           'Beacon シートはロールテンプレートの代わりにロールカードを投稿します。CRL はこれも読み取ります。カードの最初のクラスがテンプレート（D&D 2024 では dnd-2024）になり、キャラクター、タイトル（「【敏捷力】判定」など）、サブカテゴリーがフィールドになります。内訳の各ロールもロールとして扱われるので、クリティカル、ファンブル、合計、出目のチェックが機能します。',
         ],
@@ -8282,7 +8311,7 @@ const CustomizableRollListenerMod = (() => {
           '리스너는 설정된 필터가 모두 일치하면 발동합니다. 비어 있는 필터는 모든 것과 일치합니다.',
           '롤 템플릿: atkdmg나 simple 같은 템플릿 이름. "none"은 템플릿이 없는 메시지와 일치합니다. 이름을 여러 개 쓰면 그중 하나만 일치해도 됩니다.',
           '메시지 유형: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll(Beacon 시트), api. 비어 있으면 api 명령어를 제외한 모든 유형을 확인합니다.',
-          '텍스트: &&로 구분한 하나 이상의 텍스트로, 모두 들어 있어야 합니다. 대소문자는 구분하지 않습니다. 굴림 합계와 굴림 테이블 결과에서도 찾습니다.',
+          '텍스트: &&로 구분한 하나 이상의 텍스트로, 모두 들어 있어야 합니다. 대소문자는 구분하지 않습니다. 굴림 합계와 굴림 테이블 결과, 그리고 메시지의 원본 내용에서도 찾습니다. 원본 내용은 검사의 원본 내용 항목에 표시되며, Beacon 카드의 경우 그 HTML입니다.',
           '텍스트 속 ##은 인라인 굴림을 나타내며, 이때 굴림 확인은 그 자리에서 찾은 굴림만 봅니다. ##이 없으면 메시지의 모든 굴림을 확인합니다.',
           '텍스트는 일반 텍스트 대신 정규식으로 쓸 수도 있습니다(--regex on).',
           '발언자/캐릭터: 채팅에 표시되는 이름, 또는 롤 템플릿 속 캐릭터 이름. 플레이어: 플레이어의 표시 이름.',
@@ -8307,7 +8336,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: '굴림 확인',
         points: [
-          '굴림 결과: 치명타(주사위의 최댓값 또는 cs 범위), 펌블(1 또는 cf 범위), 성공(1d20>15 같은 목표값을 주사위 하나 이상이 충족), 실패(목표값이 있는 굴림에서 성공이 없음). 여러 결과를 지정하면 그중 하나만 일치해도 됩니다.',
+          '굴림 결과: 치명타(주사위의 최댓값 또는 cs 범위), 펌블(1 또는 cf 범위), 성공(굴림에 적힌 목표값을 주사위 하나 이상이 충족, 예: 1d20>15 또는 주사위 풀 5d6>4), 실패(목표값이 있는 굴림에서 성공이 없음). 여러 결과를 지정하면 그중 하나만 일치해도 됩니다.',
+          '성공과 실패는 굴림 자체에 목표값이 있을 때만 작동합니다. D&D 시트의 공격, 내성 굴림, 판정은 1d20+5 같은 일반 굴림입니다. 시트는 AC나 DC를 모르기 때문에 성공이나 실패가 되지 않습니다. AC나 DC에 도달했을 때 반응하려면 >=15 같은 굴림 합계를 사용하세요.',
           '굴림 합계: 숫자, >=15 같은 비교, 또는 19-20 같은 범위.',
           '주사위 눈: 주사위에서 나온 눈(예: 20 또는 <=2).',
           '확인할 주사위: auto는 d20을 굴렸을 때 d20만 보므로, 피해 주사위가 최댓값을 내도 치명타로 치지 않습니다. 바꾸려면 any나 d100 같은 주사위 종류를 고르세요.',
@@ -8338,7 +8368,8 @@ const CustomizableRollListenerMod = (() => {
         players: '플레이어 표시 이름(쉼표로 구분).',
         fields:
           '템플릿 필드 조건(&&로 구분): name=value (같음), name!=value (같지 않음), name~text (포함), name!~text (포함하지 않음). --regex on이면 ~는 정규식으로 읽습니다.',
-        results: 'crit, fumble, success, fail 중 하나 이상.',
+        results:
+          'crit, fumble, success, fail 중 하나 이상. success와 fail은 1d20>15처럼 굴림에 목표값이 있어야 합니다.',
         total: '굴림 합계: 15, >=15, <5 또는 19-20.',
         natural: '주사위 눈: 20, <=2 또는 19-20.',
         dice: 'auto, any, 또는 20 같은 주사위 종류.',
@@ -8380,7 +8411,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: '검사기',
         points: [
-          '다음 메시지 검사를 클릭한 뒤 굴립니다. CRL은 확인한 내용을 귓속말로 보냅니다. 메시지 유형, 발언자, 캐릭터, 템플릿과 그 필드, 모든 굴림과 주사위, 리스너가 검색하는 텍스트, 각 리스너가 발동했거나 발동하지 않은 이유.',
+          '다음 메시지 검사를 클릭한 뒤 굴립니다. CRL은 확인한 내용을 귓속말로 보냅니다. 메시지 유형, 발언자, 캐릭터, 템플릿과 그 필드, 모든 굴림과 주사위, 리스너가 검색하는 텍스트, 원본 내용(Roll20이 보낸 그대로의 메시지로, --text도 여기서 검색함), 각 리스너가 발동했거나 발동하지 않은 이유.',
           '시트의 템플릿 이름을 찾거나, Beacon 시트(예: D&D 2024)가 무엇을 보내는지 확인할 때 쓰세요.',
           'Beacon 시트는 롤 템플릿 대신 굴림 카드를 게시합니다. CRL은 이것도 읽습니다. 카드의 첫 번째 클래스가 템플릿(D&D 2024는 dnd-2024)이 되고, 캐릭터, 제목(예: 민첩 판정), 하위 분류가 필드가 됩니다. 분석 내역의 각 굴림도 굴림으로 처리되므로 치명타, 펌블, 합계, 주사위 눈 확인이 작동합니다.',
         ],
@@ -8734,7 +8765,7 @@ const CustomizableRollListenerMod = (() => {
           'Listener uruchamia się, gdy pasują wszystkie jego filtry. Puste filtry pasują do wszystkiego.',
           'Szablony rzutów: nazwa szablonu, np. atkdmg lub simple. „none” pasuje do wiadomości bez szablonu. Kilka nazw oznacza dowolną z nich.',
           'Typy wiadomości: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (karty Beacon) i api. Gdy pole jest puste, sprawdzane są wszystkie typy oprócz poleceń api.',
-          'Tekst: jeden lub więcej fragmentów tekstu, oddzielonych &&, które muszą wystąpić wszystkie. Wielkość liter nie ma znaczenia. Tekst jest wyszukiwany także w sumach rzutów i wynikach tabel losowych.',
+          'Tekst: jeden lub więcej fragmentów tekstu, oddzielonych &&, które muszą wystąpić wszystkie. Wielkość liter nie ma znaczenia. Tekst jest wyszukiwany także w sumach rzutów i wynikach tabel losowych, a także w surowej treści wiadomości, którą Sprawdź pokazuje pod Surowa treść: w przypadku karty Beacon jest to jej HTML.',
           '## w tekście oznacza rzut inline; warunki rzutu dotyczą wtedy tylko znalezionych tam rzutów. Bez ## sprawdzany jest każdy rzut w wiadomości.',
           'Tekst może być wyrażeniem regularnym zamiast zwykłego tekstu (--regex on).',
           'Nadawcy / postacie: nazwa wyświetlana na czacie lub nazwa postaci w szablonie rzutu. Gracze: wyświetlana nazwa gracza.',
@@ -8759,7 +8790,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Warunki rzutów',
         points: [
-          'Wynik rzutu: krytyczny sukces (najwyższa ścianka kości lub zakres cs), krytyczna porażka (1 lub zakres cf), sukces (co najmniej jedna kość osiąga próg, np. 1d20>15), porażka (rzut z progiem bez sukcesów). Kilka wyników oznacza dowolny z nich.',
+          'Wynik rzutu: krytyczny sukces (najwyższa ścianka kości lub zakres cs), krytyczna porażka (1 lub zakres cf), sukces (co najmniej jedna kość osiąga próg zapisany w rzucie, np. 1d20>15 lub pula kości 5d6>4), porażka (rzut z progiem bez sukcesów). Kilka wyników oznacza dowolny z nich.',
+          'Sukces i porażka działają tylko z rzutami, które zawierają własny próg. Ataki, rzuty obronne i testy z kart D&D to zwykłe rzuty, np. 1d20+5, bo karta nie zna AC ani DC, więc nigdy nie są sukcesem ani porażką. Aby reagować na osiągnięcie AC lub DC, użyj opcji Suma rzutu, np. >=15.',
           'Suma rzutu: liczba, porównanie, np. >=15, lub zakres, np. 19-20.',
           'Naturalna kość: ścianka, na którą upadła kość, np. 20 lub <=2.',
           'Sprawdzane kości: auto bierze pod uwagę tylko d20, jeśli rzucono taką kością, więc kości obrażeń z najwyższym wynikiem nie liczą się jako krytyki. Aby to zmienić, wybierz dowolną kość lub rozmiar, np. d100.',
@@ -8791,7 +8823,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Wyświetlane nazwy graczy oddzielone przecinkami.',
         fields:
           'Warunki pól szablonu, oddzielone &&: name=value (jest), name!=value (nie jest), name~text (zawiera), name!~text (nie zawiera). Przy --regex on ~ czyta wyrażenie regularne.',
-        results: 'crit, fumble, success i/lub fail.',
+        results:
+          'crit, fumble, success i/lub fail. success i fail wymagają progu w rzucie, np. 1d20>15.',
         total: 'Suma rzutu: 15, >=15, <5 lub 19-20.',
         natural: 'Naturalna ścianka kości: 20, <=2 lub 19-20.',
         dice: 'auto, any lub rozmiar kości, np. 20.',
@@ -8834,7 +8867,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektor',
         points: [
-          'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery oraz powód, dla którego każdy listener się uruchomił lub nie.',
+          'Kliknij Sprawdź następną wiadomość, a potem wykonaj rzut. CRL wyśle szeptem to, co zobaczył: typ wiadomości, nadawcę, postać, szablon i jego pola, każdy rzut z kośćmi, tekst przeszukiwany przez listenery, surową treść (wiadomość w postaci wysłanej przez Roll20, którą przeszukuje też --text) oraz powód, dla którego każdy listener się uruchomił lub nie.',
           'Użyj go, aby poznać nazwę szablonu karty postaci lub zobaczyć, co wysyła karta Beacon (np. D&D 2024).',
           'Karty Beacon wysyłają okienka rzutów zamiast szablonów rzutów. CRL je odczytuje: szablon to pierwsza klasa okienka (dnd-2024 dla D&D 2024), postać, tytuł (np. Test Zręczności) i podkategoria stają się polami, a każdy rzut w rozbiciu jest rzutem, więc warunki krytycznego sukcesu, krytycznej porażki, sumy i naturalnej kości działają.',
         ],
@@ -9191,7 +9224,7 @@ const CustomizableRollListenerMod = (() => {
           'Um ouvinte é acionado quando todos os seus filtros correspondem. Os filtros vazios correspondem a tudo.',
           'Modelos de lançamento: o nome do modelo, como atkdmg ou simple. "none" corresponde a mensagens sem modelo. Vários nomes significam qualquer um deles.',
           'Tipos de mensagem: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fichas Beacon) e api. Quando vazio, são verificados todos os tipos exceto os comandos da API.',
-          'Texto: um ou mais excertos de texto, separados por &&, que têm de aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais dos lançamentos e nos resultados de tabelas aleatórias.',
+          'Texto: um ou mais excertos de texto, separados por &&, que têm de aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais dos lançamentos e nos resultados de tabelas aleatórias, e no conteúdo em bruto da mensagem, que Inspecionar apresenta em Conteúdo em bruto: num cartão Beacon, é o seu HTML.',
           '## no texto representa um lançamento em linha; as verificações de lançamento passam então a considerar apenas os lançamentos aí encontrados. Sem ##, são verificados todos os lançamentos da mensagem.',
           'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
           'Oradores / personagens: o nome apresentado no chat, ou o nome da personagem no modelo de lançamento. Jogadores: o nome de apresentação do jogador.',
@@ -9216,7 +9249,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Verificações de lançamento',
         points: [
-          'Resultado do lançamento: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge um alvo, como em 1d20>15), falha (um lançamento com alvo sem nenhum sucesso). Vários resultados significam qualquer um deles.',
+          'Resultado do lançamento: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge o alvo escrito no lançamento, como em 1d20>15 ou na reserva de dados 5d6>4), falha (um lançamento com alvo e nenhum sucesso). Vários resultados significam qualquer um deles.',
+          'Sucesso e falha só funcionam com lançamentos que trazem o seu próprio alvo. Ataques, testes de resistência e testes de atributo das fichas de D&D são lançamentos simples como 1d20+5, porque a ficha não conhece a AC nem a DC, pelo que nunca são um sucesso nem uma falha. Para reagir quando uma AC ou DC é alcançada, utilize Total do lançamento, como >=15.',
           'Total do lançamento: um número, uma comparação como >=15 ou um intervalo como 19-20.',
           'Dado natural: a face em que o dado caiu, como 20 ou <=2.',
           'Dados verificados: auto considera apenas os d20 quando foi lançado algum, por isso os dados de dano que tiram a face mais alta não contam como críticos. Escolha Qualquer dado, ou um tamanho como d100, para mudar isto.',
@@ -9248,7 +9282,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Nomes de apresentação dos jogadores, separados por vírgulas.',
         fields:
           'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
-        results: 'crit, fumble, success e/ou fail.',
+        results:
+          'crit, fumble, success e/ou fail. success e fail precisam de um alvo no lançamento, como 1d20>15.',
         total: 'Total do lançamento: 15, >=15, <5 ou 19-20.',
         natural: 'Face natural do dado: 20, <=2 ou 19-20.',
         dice: 'auto, any ou um tamanho de dado como 20.',
@@ -9291,7 +9326,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'O inspetor',
         points: [
-          'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram e porque é que cada ouvinte foi ou não acionado.',
+          'Clique em Inspecionar próxima mensagem e faça o lançamento. O CRL sussurra o que viu: o tipo de mensagem, o orador, a personagem, o modelo e os seus campos, cada lançamento com os seus dados, o texto em que os ouvintes procuram, o conteúdo em bruto (a mensagem tal como o Roll20 a enviou, onde --text também procura) e porque é que cada ouvinte foi ou não acionado.',
           'Utilize-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
           'As fichas Beacon publicam cartões de lançamento em vez de modelos de lançamento. O CRL lê-os: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), a personagem, o título (como Teste de Destreza) e a subcategoria tornam-se campos, e cada lançamento do detalhe é um lançamento, por isso as verificações de crítico, falha crítica, total e dado natural funcionam.',
         ],
@@ -9647,7 +9682,7 @@ const CustomizableRollListenerMod = (() => {
           'Um ouvinte é acionado quando todos os seus filtros correspondem. Filtros vazios correspondem a tudo.',
           'Modelos de rolagem: o nome do modelo, como atkdmg ou simple. "none" corresponde a mensagens sem modelo. Vários nomes significam qualquer um deles.',
           'Tipos de mensagem: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (fichas Beacon) e api. Quando vazio, todos os tipos são verificados, exceto comandos de API.',
-          'Texto: um ou mais trechos de texto, separados por &&, que precisam aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais das rolagens e nos resultados de tabelas roláveis.',
+          'Texto: um ou mais trechos de texto, separados por &&, que precisam aparecer todos. Maiúsculas e minúsculas são ignoradas. O texto também é procurado nos totais das rolagens e nos resultados de tabelas roláveis, e no conteúdo bruto da mensagem, que Inspecionar mostra em Conteúdo bruto: em um cartão do Beacon, é o HTML dele.',
           '## no texto representa uma rolagem em linha; as verificações de rolagem então consideram só as rolagens encontradas ali. Sem ##, todas as rolagens da mensagem são verificadas.',
           'O texto pode ser uma expressão regular em vez de texto simples (--regex on).',
           'Falantes / personagens: o nome mostrado no chat, ou o nome do personagem no modelo de rolagem. Jogadores: o nome de exibição do jogador.',
@@ -9672,7 +9707,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Verificações de rolagem',
         points: [
-          'Resultado da rolagem: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge um alvo, como em 1d20>15), falha (uma rolagem com alvo sem nenhum sucesso). Vários resultados significam qualquer um deles.',
+          'Resultado da rolagem: crítico (a face mais alta do dado, ou o intervalo cs), falha crítica (um 1, ou o intervalo cf), sucesso (pelo menos um dado atinge o alvo escrito na rolagem, como em 1d20>15 ou na parada de dados 5d6>4), falha (uma rolagem com alvo e nenhum sucesso). Vários resultados significam qualquer um deles.',
+          'Sucesso e falha só funcionam com rolagens que trazem o próprio alvo. Ataques, testes de resistência e testes de habilidade das fichas de D&D são rolagens simples como 1d20+5, porque a ficha não conhece a AC nem a DC, então nunca são um sucesso nem uma falha. Para reagir quando uma AC ou DC é alcançada, use Total da rolagem, como >=15.',
           'Total da rolagem: um número, uma comparação como >=15 ou um intervalo como 19-20.',
           'Dado natural: a face que o dado mostrou, como 20 ou <=2.',
           'Dados verificados: auto considera só os d20 quando algum foi rolado, então dados de dano que tiram a face mais alta não contam como críticos. Escolha Qualquer dado, ou um tamanho como d100, para mudar isso.',
@@ -9704,7 +9740,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Nomes de exibição dos jogadores, separados por vírgulas.',
         fields:
           'Condições sobre campos do modelo, separadas por &&: name=value (é), name!=value (não é), name~text (contém), name!~text (não contém). Com --regex on, ~ lê uma expressão regular.',
-        results: 'crit, fumble, success e/ou fail.',
+        results:
+          'crit, fumble, success e/ou fail. success e fail precisam de um alvo na rolagem, como 1d20>15.',
         total: 'Total da rolagem: 15, >=15, <5 ou 19-20.',
         natural: 'Face natural do dado: 20, <=2 ou 19-20.',
         dice: 'auto, any ou um tamanho de dado como 20.',
@@ -9747,7 +9784,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'O inspetor',
         points: [
-          'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram e por que cada ouvinte foi ou não acionado.',
+          'Clique em Inspecionar próxima mensagem e faça a rolagem. O CRL sussurra o que viu: o tipo de mensagem, o falante, o personagem, o modelo e seus campos, cada rolagem com seus dados, o texto em que os ouvintes procuram, o conteúdo bruto (a mensagem como o Roll20 a enviou, em que --text também procura) e por que cada ouvinte foi ou não acionado.',
           'Use-o para descobrir o nome do modelo de uma ficha, ou para ver o que uma ficha Beacon (como a de D&D 2024) envia.',
           'As fichas Beacon publicam cartões de rolagem em vez de modelos de rolagem. O CRL os lê: o modelo é a primeira classe do cartão (dnd-2024 para D&D 2024), o personagem, o título (como Teste de Destreza) e a subcategoria viram campos, e cada rolagem do detalhamento é uma rolagem, então as verificações de crítico, falha crítica, total e dado natural funcionam.',
         ],
@@ -10105,7 +10142,7 @@ const CustomizableRollListenerMod = (() => {
           'Слушатель срабатывает, когда совпадают все заданные в нём фильтры. Пустой фильтр подходит подо всё.',
           'Шаблоны бросков: имя шаблона, например atkdmg или simple. «none» подходит для сообщений без шаблона. Если указано несколько имён, подходит любое из них.',
           'Типы сообщений: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (листы Beacon) и api. Если поле пустое, проверяются все типы, кроме команд api.',
-          'Текст: один или несколько фрагментов текста через &&, которые должны встретиться все. Регистр букв не учитывается. Текст ищется также в суммах бросков и результатах таблиц бросков.',
+          'Текст: один или несколько фрагментов текста через &&, которые должны встретиться все. Регистр букв не учитывается. Текст ищется также в суммах бросков и результатах таблиц бросков, а также в исходном содержимом сообщения, которое инспектор показывает в разделе «Исходное содержимое»: для карточки Beacon это её HTML.',
           '## в тексте обозначает встроенный бросок; тогда проверки броска смотрят только на найденные там броски. Без ## проверяется каждый бросок в сообщении.',
           'Вместо обычного текста можно использовать регулярное выражение (--regex on).',
           'Отправители / персонажи: имя, показанное в чате, или имя персонажа в шаблоне броска. Игроки: отображаемое имя игрока.',
@@ -10130,7 +10167,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Проверки броска',
         points: [
-          'Результат броска: критический успех (максимальная грань кубика или диапазон cs), критический провал (1 или диапазон cf), успех (хотя бы один кубик достиг порога, например 1d20>15), провал (бросок с порогом без единого успеха). Если указано несколько результатов, подходит любой.',
+          'Результат броска: критический успех (максимальная грань кубика или диапазон cs), критический провал (1 или диапазон cf), успех (хотя бы один кубик достиг порога, записанного в броске, например 1d20>15 или пул кубиков 5d6>4), провал (бросок с порогом без единого успеха). Если указано несколько результатов, подходит любой.',
+          'Успех и провал работают только с бросками, в которых записан собственный порог. Атаки, спасброски и проверки из листов D&D — это обычные броски вроде 1d20+5: лист не знает AC или DC, поэтому они никогда не бывают успехом или провалом. Чтобы реагировать на достижение AC или DC, используйте «Сумма броска», например >=15.',
           'Сумма броска: число, сравнение, например >=15, или диапазон, например 19-20.',
           'Натуральный результат: грань, выпавшая на кубике, например 20 или <=2.',
           'Проверяемые кубики: auto смотрит только на d20, если они были брошены, поэтому максимальная грань на кубиках урона не считается критом. Чтобы это изменить, выберите любой кубик или размер, например d100.',
@@ -10161,7 +10199,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Отображаемые имена игроков через запятую.',
         fields:
           'Условия на поля шаблона через &&: name=value (равно), name!=value (не равно), name~text (содержит), name!~text (не содержит). При --regex on ~ читает регулярное выражение.',
-        results: 'crit, fumble, success и/или fail.',
+        results:
+          'crit, fumble, success и/или fail. Для success и fail нужен порог в броске, например 1d20>15.',
         total: 'Сумма броска: 15, >=15, <5 или 19-20.',
         natural: 'Натуральный результат кубика: 20, <=2 или 19-20.',
         dice: 'auto, any или размер кубика, например 20.',
@@ -10204,7 +10243,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Инспектор',
         points: [
-          'Нажмите «Проверить следующее сообщение», затем сделайте бросок. CRL шёпотом сообщит, что увидел: тип сообщения, отправителя, персонажа, шаблон и его поля, каждый бросок с кубиками, текст, в котором ищут слушатели, и почему каждый слушатель сработал или нет.',
+          'Нажмите «Проверить следующее сообщение», затем сделайте бросок. CRL шёпотом сообщит, что увидел: тип сообщения, отправителя, персонажа, шаблон и его поля, каждый бросок с кубиками, текст, в котором ищут слушатели, исходное содержимое (сообщение в том виде, в каком его отправил Roll20; в нём ищет и --text), и почему каждый слушатель сработал или нет.',
           'Так можно узнать имя шаблона листа или посмотреть, что отправляет лист Beacon (например, D&D 2024).',
           'Листы Beacon публикуют карточки бросков вместо шаблонов бросков. CRL их читает: шаблоном считается первый класс карточки (dnd-2024 для D&D 2024), персонаж, заголовок (например, «Проверка Ловкости») и подкатегория становятся полями, а каждый бросок из расшифровки — отдельным броском, так что проверки критического успеха, критического провала, суммы и натурального результата работают.',
         ],
@@ -10560,7 +10599,7 @@ const CustomizableRollListenerMod = (() => {
           'Un oyente se activa cuando coinciden todos sus filtros. Los filtros vacíos coinciden con todo.',
           'Plantillas de tirada: el nombre de la plantilla, como atkdmg o simple. "none" coincide con los mensajes sin plantilla. Si hay varios nombres, vale cualquiera de ellos.',
           'Tipos de mensaje: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (hojas Beacon) y api. Si está vacío, se comprueban todos los tipos excepto los comandos de la API.',
-          'Texto: uno o más fragmentos de texto, separados por &&, que deben aparecer todos. No se distingue entre mayúsculas y minúsculas. El texto también se busca en los totales de las tiradas y en los resultados de tablas aleatorias.',
+          'Texto: uno o más fragmentos de texto, separados por &&, que deben aparecer todos. No se distingue entre mayúsculas y minúsculas. El texto también se busca en los totales de las tiradas y en los resultados de tablas aleatorias, y en el contenido sin procesar del mensaje, que Inspeccionar muestra en Contenido sin procesar: en una tarjeta de Beacon, es su HTML.',
           '## en el texto representa una tirada en línea; entonces las comprobaciones de tirada solo miran las tiradas que haya ahí. Sin ##, se comprueban todas las tiradas del mensaje.',
           'El texto puede ser una expresión regular en lugar de texto normal (--regex on).',
           'Hablantes / personajes: el nombre que se muestra en el chat, o el nombre del personaje en la plantilla de tirada. Jugadores: el nombre visible del jugador.',
@@ -10585,7 +10624,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Comprobaciones de tirada',
         points: [
-          'Resultado de la tirada: crítico (la cara más alta del dado, o el rango cs), pifia (un 1, o el rango cf), éxito (al menos un dado alcanza un objetivo, como en 1d20>15), fallo (una tirada con objetivo sin ningún éxito). Si hay varios resultados, vale cualquiera de ellos.',
+          'Resultado de la tirada: crítico (la cara más alta del dado, o el rango cs), pifia (un 1, o el rango cf), éxito (al menos un dado alcanza el objetivo escrito en la tirada, como en 1d20>15 o la reserva de dados 5d6>4), fallo (una tirada con objetivo y ningún éxito). Si hay varios resultados, vale cualquiera de ellos.',
+          'El éxito y el fallo solo funcionan con tiradas que llevan su propio objetivo. Los ataques, salvaciones y pruebas de las hojas de D&D son tiradas simples como 1d20+5, porque la hoja no conoce la AC ni la DC, así que nunca son un éxito ni un fallo. Para reaccionar cuando se alcanza una AC o una DC, usa Total de la tirada, como >=15.',
           'Total de la tirada: un número, una comparación como >=15 o un rango como 19-20.',
           'Dado natural: la cara en la que cayó un dado, como 20 o <=2.',
           'Dados comprobados: auto solo mira los d20 cuando se ha tirado alguno, así que los dados de daño que sacan su cara más alta no cuentan como críticos. Elige Cualquier dado, o un tamaño como d100, para cambiarlo.',
@@ -10617,7 +10657,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Nombres visibles de los jugadores, separados por comas.',
         fields:
           'Condiciones sobre campos de la plantilla, separadas por &&: name=value (es), name!=value (no es), name~text (contiene), name!~text (no contiene). Con --regex on, ~ lee una expresión regular.',
-        results: 'crit, fumble, success y/o fail.',
+        results:
+          'crit, fumble, success y/o fail. success y fail necesitan un objetivo en la tirada, como 1d20>15.',
         total: 'Total de la tirada: 15, >=15, <5 o 19-20.',
         natural: 'Cara natural del dado: 20, <=2 o 19-20.',
         dice: 'auto, any o un tamaño de dado como 20.',
@@ -10661,7 +10702,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'El inspector',
         points: [
-          'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes y por qué cada oyente se activó o no.',
+          'Haz clic en Inspeccionar siguiente mensaje y haz la tirada. CRL te susurra lo que ha visto: el tipo de mensaje, el hablante, el personaje, la plantilla y sus campos, cada tirada con sus dados, el texto en el que buscan los oyentes, el contenido sin procesar (el mensaje tal como lo envió Roll20, donde --text también busca) y por qué cada oyente se activó o no.',
           'Úsalo para averiguar el nombre de plantilla de una hoja, o para ver qué envía una hoja Beacon (como D&D 2024).',
           'Las hojas Beacon publican tarjetas de tirada en lugar de plantillas de tirada. CRL las lee: la plantilla es la primera clase de la tarjeta (dnd-2024 para D&D 2024), el personaje, el título (como Prueba de Destreza) y la subcategoría pasan a ser campos, y cada tirada del desglose es una tirada, así que funcionan las comprobaciones de crítico, pifia, total y dado natural.',
         ],
@@ -11013,7 +11054,7 @@ const CustomizableRollListenerMod = (() => {
           'En lyssnare utlöses när alla dess filter matchar. Tomma filter matchar allt.',
           'Slagmallar: mallens namn, till exempel atkdmg eller simple. "none" matchar meddelanden utan mall. Flera namn betyder vilket som helst av dem.',
           'Meddelandetyper: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon-formulär) och api. Om fältet är tomt kontrolleras alla typer utom api-kommandon.',
-          'Text: en eller flera textbitar, åtskilda med &&, som alla måste förekomma. Matchningen skiljer inte på stora och små bokstäver. Text hittas även i slagsummor och resultat från slumptabeller.',
+          'Text: en eller flera textbitar, åtskilda med &&, som alla måste förekomma. Matchningen skiljer inte på stora och små bokstäver. Text hittas även i slagsummor och resultat från slumptabeller, och i meddelandets råinnehåll, som Inspektera visar under Råinnehåll: för ett Beacon-kort är det kortets HTML.',
           '## i texten står för ett inline-slag; slagkontrollerna tittar då bara på slagen som finns där. Utan ## kontrolleras alla slag i meddelandet.',
           'Texten kan vara ett reguljärt uttryck i stället för vanlig text (--regex on).',
           'Talare / karaktärer: namnet som visas i chatten, eller karaktärsnamnet i slagmallen. Spelare: spelarens visningsnamn.',
@@ -11038,7 +11079,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Slagkontroller',
         points: [
-          'Slagresultat: kritiskt (tärningens högsta sida, eller cs-intervallet), fummel (en 1:a, eller cf-intervallet), lyckat (minst en tärning når ett mål som 1d20>15), misslyckat (ett slag mot mål utan lyckade). Flera resultat betyder vilket som helst av dem.',
+          'Slagresultat: kritiskt (tärningens högsta sida, eller cs-intervallet), fummel (en 1:a, eller cf-intervallet), lyckat (minst en tärning når målet som står i slaget, som 1d20>15 eller tärningspölen 5d6>4), misslyckat (ett slag med mål och inga lyckade). Flera resultat betyder vilket som helst av dem.',
+          'Lyckat och misslyckat fungerar bara med slag som har ett eget mål. Attacker, räddningsslag och färdighetsslag från D&D-rollformulär är vanliga slag som 1d20+5, eftersom formuläret inte känner till AC eller DC, så de blir aldrig lyckade eller misslyckade. För att reagera när en AC eller DC nås, använd Slagsumma, som >=15.',
           'Slagsumma: ett tal, en jämförelse som >=15, eller ett intervall som 19-20.',
           'Naturlig tärning: sidan en tärning landade på, till exempel 20, eller <=2.',
           'Kontrollerade tärningar: auto tittar bara på d20 när en sådan slogs, så skadetärningar som visar sin högsta sida räknas inte som kritiska. Välj valfri tärning, eller en storlek som d100, för att ändra det.',
@@ -11070,7 +11112,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Spelarnas visningsnamn, åtskilda med kommatecken.',
         fields:
           'Villkor för mallfält, åtskilda med &&: name=value (är), name!=value (är inte), name~text (innehåller), name!~text (innehåller inte). Med --regex on läser ~ ett reguljärt uttryck.',
-        results: 'crit, fumble, success och/eller fail.',
+        results:
+          'crit, fumble, success och/eller fail. success och fail kräver ett mål i slaget, som 1d20>15.',
         total: 'Slagsumma: 15, >=15, <5 eller 19-20.',
         natural: 'Naturlig tärningssida: 20, <=2 eller 19-20.',
         dice: 'auto, any eller en tärningsstorlek som 20.',
@@ -11113,7 +11156,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Inspektören',
         points: [
-          'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i och varför varje lyssnare utlöstes eller inte.',
+          'Klicka på Inspektera nästa meddelande och slå sedan slaget. CRL viskar vad den såg: meddelandetyp, talare, karaktär, mall och dess fält, varje slag med sina tärningar, texten som lyssnarna söker i, råinnehållet (meddelandet som Roll20 skickade det, som --text också söker i) och varför varje lyssnare utlöstes eller inte.',
           'Använd den för att hitta ett formulärs mallnamn, eller för att se vad ett Beacon-formulär (som D&D 2024) skickar.',
           'Beacon-formulär skickar slagkort i stället för slagmallar. CRL läser dem: mallen är kortets första klass (dnd-2024 för D&D 2024), karaktären, titeln (som Dexterity Check) och underkategorin blir fält, och varje slag i uppdelningen är ett slag, så kontroller av kritiskt, fummel, summa och naturlig tärning fungerar.',
         ],
@@ -11467,7 +11510,7 @@ const CustomizableRollListenerMod = (() => {
           'Bir dinleyici, sahip olduğu tüm filtreler eşleştiğinde tetiklenir. Boş filtreler her şeyle eşleşir.',
           'Atış şablonları: atkdmg veya simple gibi şablon adı. "none", şablonu olmayan mesajlarla eşleşir. Birden fazla ad, bunlardan herhangi biri anlamına gelir.',
           'Mesaj türleri: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon sayfaları) ve api. Boş olduğunda api komutları dışındaki tüm türler kontrol edilir.',
-          'Metin: && ile ayrılmış, hepsinin geçmesi gereken bir veya daha fazla metin parçası. Eşleştirmede büyük/küçük harf ayrımı yapılmaz. Metin, atış toplamlarında ve atış tablosu sonuçlarında da aranır.',
+          "Metin: && ile ayrılmış, hepsinin geçmesi gereken bir veya daha fazla metin parçası. Eşleştirmede büyük/küçük harf ayrımı yapılmaz. Metin, atış toplamlarında ve atış tablosu sonuçlarında ve mesajın ham içeriğinde de aranır; İnceleme bunu Ham içerik altında gösterir: bir Beacon kartı için bu, kartın HTML'idir.",
           'Metindeki ## bir satır içi atışı temsil eder; atış kontrolleri bu durumda yalnızca orada bulunan atışlara bakar. ## yoksa mesajdaki her atış kontrol edilir.',
           'Metin, düz metin yerine düzenli ifade olabilir (--regex on).',
           'Gönderenler / karakterler: sohbette görünen ad veya atış şablonundaki karakter adı. Oyuncular: oyuncunun görünen adı.',
@@ -11492,7 +11535,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Atış Kontrolleri',
         points: [
-          'Atış sonucu: kritik başarı (zarın en yüksek yüzü veya cs aralığı), kritik başarısızlık (1 veya cf aralığı), başarı (en az bir zar 1d20>15 gibi bir hedefi tutturur), başarısızlık (hiç başarı olmayan hedefli atış). Birden fazla sonuç, bunlardan herhangi biri anlamına gelir.',
+          'Atış sonucu: kritik başarı (zarın en yüksek yüzü veya cs aralığı), kritik başarısızlık (1 veya cf aralığı), başarı (en az bir zar, atışa yazılmış hedefi tutturur; örneğin 1d20>15 veya 5d6>4 zar havuzu), başarısızlık (hedefi olan ama hiç başarı içermeyen atış). Birden fazla sonuç, bunlardan herhangi biri anlamına gelir.',
+          "Başarı ve başarısızlık yalnızca kendi hedefini taşıyan atışlarda çalışır. D&D karakter kâğıtlarındaki saldırılar, kurtarma atışları ve yetenek kontrolleri 1d20+5 gibi düz atışlardır; kâğıt AC'yi veya DC'yi bilmediği için bunlar asla başarı ya da başarısızlık olmaz. Bir AC'ye veya DC'ye ulaşıldığında tepki vermek için >=15 gibi Atış toplamı kullanın.",
           'Atış toplamı: bir sayı, >=15 gibi bir karşılaştırma veya 19-20 gibi bir aralık.',
           'Doğal zar: zarın geldiği yüz, örneğin 20 veya <=2.',
           "Kontrol edilen zarlar: auto, d20 atıldıysa yalnızca d20'lere bakar; böylece en yüksek yüzü gelen hasar zarları kritik sayılmaz. Bunu değiştirmek için herhangi bir zarı ya da d100 gibi bir boyutu seçin.",
@@ -11524,7 +11568,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Virgülle ayrılmış oyuncu görünen adları.',
         fields:
           '&& ile ayrılmış şablon alanı koşulları: name=value (eşittir), name!=value (eşit değildir), name~text (içerir), name!~text (içermez). --regex on olduğunda ~ düzenli ifade olarak okunur.',
-        results: 'crit, fumble, success ve/veya fail.',
+        results:
+          'crit, fumble, success ve/veya fail. success ve fail için atışta bir hedef olmalıdır, örneğin 1d20>15.',
         total: 'Atış toplamı: 15, >=15, <5 veya 19-20.',
         natural: 'Doğal zar yüzü: 20, <=2 veya 19-20.',
         dice: 'auto, any veya 20 gibi bir zar boyutu.',
@@ -11567,7 +11612,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Denetleyici',
         points: [
-          "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
+          "Sonraki Mesajı İncele'ye tıklayın, ardından atışı yapın. CRL gördüklerini fısıldar: mesaj türü, gönderen, karakter, şablon ve alanları, zarlarıyla birlikte her atış, dinleyicilerin aradığı metin, ham içerik (mesajın Roll20'nin gönderdiği hâli; --text de burada arar) ve her dinleyicinin neden tetiklendiği ya da tetiklenmediği.",
           'Bir sayfanın şablon adını bulmak veya bir Beacon sayfasının (D&D 2024 gibi) ne gönderdiğini görmek için kullanın.',
           'Beacon sayfaları atış şablonları yerine atış kartları gönderir. CRL bunları okur: şablon, kartın ilk sınıfıdır (D&D 2024 için dnd-2024); karakter, başlık (Dexterity Check gibi) ve alt kategori alan olur; dökümdeki her atış bir atış sayılır, böylece kritik başarı, kritik başarısızlık, toplam ve doğal zar kontrolleri çalışır.',
         ],
@@ -11923,7 +11968,7 @@ const CustomizableRollListenerMod = (() => {
           'Слухач спрацьовує, коли збігаються всі задані в ньому фільтри. Порожній фільтр підходить під усе.',
           'Шаблони кидків: ім’я шаблону, наприклад atkdmg або simple. «none» підходить для повідомлень без шаблону. Якщо вказано кілька імен, підходить будь-яке з них.',
           'Типи повідомлень: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (аркуші Beacon) і api. Якщо поле порожнє, перевіряються всі типи, крім команд api.',
-          'Текст: один або кілька фрагментів тексту через &&, які мають трапитися всі. Регістр літер не враховується. Текст шукається також у сумах кидків і результатах таблиць кидків.',
+          'Текст: один або кілька фрагментів тексту через &&, які мають трапитися всі. Регістр літер не враховується. Текст шукається також у сумах кидків і результатах таблиць кидків, а також у вихідному вмісті повідомлення, який інспектор показує в розділі «Вихідний вміст»: для картки Beacon це її HTML.',
           '## у тексті позначає вбудований кидок; тоді перевірки кидка дивляться лише на знайдені там кидки. Без ## перевіряється кожен кидок у повідомленні.',
           'Замість звичайного тексту можна використати регулярний вираз (--regex on).',
           'Відправники / персонажі: ім’я, показане в чаті, або ім’я персонажа в шаблоні кидка. Гравці: відображуване ім’я гравця.',
@@ -11948,7 +11993,8 @@ const CustomizableRollListenerMod = (() => {
       rolls: {
         heading: 'Перевірки кидка',
         points: [
-          'Результат кидка: критичний успіх (найвища грань кубика або діапазон cs), критичний провал (1 або діапазон cf), успіх (хоча б один кубик досяг порогу, наприклад 1d20>15), провал (кидок із порогом без жодного успіху). Якщо вказано кілька результатів, підходить будь-який.',
+          'Результат кидка: критичний успіх (найвища грань кубика або діапазон cs), критичний провал (1 або діапазон cf), успіх (хоча б один кубик досяг порогу, записаного в кидку, наприклад 1d20>15 або пул кубиків 5d6>4), провал (кидок із порогом без жодного успіху). Якщо вказано кілька результатів, підходить будь-який.',
+          'Успіх і провал працюють лише з кидками, у яких записано власний поріг. Атаки, рятівні кидки й перевірки з аркушів D&D — це звичайні кидки на кшталт 1d20+5: аркуш не знає AC чи DC, тому вони ніколи не бувають успіхом чи провалом. Щоб реагувати на досягнення AC чи DC, використовуйте «Сума кидка», наприклад >=15.',
           'Сума кидка: число, порівняння, наприклад >=15, або діапазон, наприклад 19-20.',
           'Натуральний результат: грань, що випала на кубику, наприклад 20 або <=2.',
           'Кубики, що перевіряються: auto дивиться лише на d20, якщо їх кидали, тож найвища грань на кубиках шкоди не вважається критом. Щоб це змінити, виберіть будь-який кубик або розмір, наприклад d100.',
@@ -11979,7 +12025,8 @@ const CustomizableRollListenerMod = (() => {
         players: 'Відображувані імена гравців через кому.',
         fields:
           'Умови на поля шаблону через &&: name=value (дорівнює), name!=value (не дорівнює), name~text (містить), name!~text (не містить). За --regex on ~ читає регулярний вираз.',
-        results: 'crit, fumble, success і/або fail.',
+        results:
+          'crit, fumble, success і/або fail. Для success і fail потрібен поріг у кидку, наприклад 1d20>15.',
         total: 'Сума кидка: 15, >=15, <5 або 19-20.',
         natural: 'Натуральний результат кубика: 20, <=2 або 19-20.',
         dice: 'auto, any або розмір кубика, наприклад 20.',
@@ -12022,7 +12069,7 @@ const CustomizableRollListenerMod = (() => {
       inspector: {
         heading: 'Інспектор',
         points: [
-          'Натисніть «Перевірити наступне повідомлення», потім зробіть кидок. CRL пошепки повідомить, що побачив: тип повідомлення, відправника, персонажа, шаблон і його поля, кожен кидок із кубиками, текст, у якому шукають слухачі, і чому кожен слухач спрацював чи ні.',
+          'Натисніть «Перевірити наступне повідомлення», потім зробіть кидок. CRL пошепки повідомить, що побачив: тип повідомлення, відправника, персонажа, шаблон і його поля, кожен кидок із кубиками, текст, у якому шукають слухачі, вихідний вміст (повідомлення в тому вигляді, в якому його надіслав Roll20; у ньому шукає і --text), і чому кожен слухач спрацював чи ні.',
           'Так можна дізнатися ім’я шаблону аркуша або подивитися, що надсилає аркуш Beacon (наприклад, D&D 2024).',
           'Аркуші Beacon публікують картки кидків замість шаблонів кидків. CRL їх читає: шаблоном вважається перший клас картки (dnd-2024 для D&D 2024), персонаж, заголовок (наприклад, «Перевірка Спритності») і підкатегорія стають полями, а кожен кидок із розшифровки — окремим кидком, тож перевірки критичного успіху, критичного провалу, суми й натурального результату працюють.',
         ],
