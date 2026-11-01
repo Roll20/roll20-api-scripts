@@ -5,7 +5,7 @@
  * Name: Customizable Roll Listener
  * Script: CRL.js
  * Version: 2.0.1
- * Built: 2026-11-01T00:32:30.064Z
+ * Built: 2026-11-01T09:31:46.489Z
  */
 const CustomizableRollListenerMod = (() => {
   'use strict';
@@ -610,7 +610,7 @@ const CustomizableRollListenerMod = (() => {
   // Build-time placeholders replaced by rollup.config.js inject-build-metadata plugin.
   const SCRIPT_NAME = 'Customizable Roll Listener';
   const SCRIPT_VERSION = '2.0.1';
-  const SCRIPT_LAST_UPDATED = '2026-11-01T00:32:30.064Z';
+  const SCRIPT_LAST_UPDATED = '2026-11-01T09:31:46.489Z';
 
   const DEFAULT_LOCALE$1 = 'en-US';
 
@@ -1500,6 +1500,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: 'Kletsbevele',
         intro: "Elke bevel is slegs vir die GM. 'n Luisteraar kan by sy naam of sy ID genoem word.",
+        mods: 'Ander mods, soos ScriptCards, kan ook hierdie opdragte stuur. Hulle antwoorde word aan die GM gefluister.',
         colCommand: 'Bevel',
         colDesc: 'Wat dit doen',
       },
@@ -1944,6 +1945,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Ordres de xat',
         intro:
           'Totes les ordres són només per al DJ. Un oient es pot indicar pel seu nom o pel seu ID.',
+        mods: 'Altres mods, com ara ScriptCards, també poden enviar aquestes ordres. Les seves respostes es xiuxiuegen al GM.',
         colCommand: 'Ordre',
         colDesc: 'Què fa',
       },
@@ -2383,6 +2385,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: '聊天指令',
         intro: '所有指令僅限 GM 使用。可用名稱或 ID 指定監聽器。',
+        mods: '其他 Mod（例如 ScriptCards）也可以發送這些指令。它們的回覆會以密語傳給 GM。',
         colCommand: '指令',
         colDesc: '作用',
       },
@@ -2821,6 +2824,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: 'Příkazy chatu',
         intro: 'Každý příkaz je jen pro GM. Posluchače lze označit jeho názvem nebo ID.',
+        mods: 'Jiné mody, jako jsou ScriptCards, mohou také odesílat tyto příkazy. Jejich odpovědi jsou šeptány GM.',
         colCommand: 'Příkaz',
         colDesc: 'Co dělá',
       },
@@ -3260,6 +3264,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: 'Chatkommandoer',
         intro: 'Alle kommandoer er kun for GM. En lytter kan angives med sit navn eller sit ID.',
+        mods: 'Andre mods, såsom ScriptCards, kan også sende disse kommandoer. Deres svar bliver hvisket til GM.',
         colCommand: 'Kommando',
         colDesc: 'Hvad den gør',
       },
@@ -3706,6 +3711,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Chatcommando’s',
         intro:
           'Elk commando is alleen voor de GM. Een luisteraar kan worden aangeduid met zijn naam of zijn ID.',
+        mods: 'Andere mods, zoals ScriptCards, kunnen deze opdrachten ook verzenden. Hun antwoorden worden naar de GM gefluisterd.',
         colCommand: 'Commando',
         colDesc: 'Wat het doet',
       },
@@ -4146,6 +4152,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: 'Chat Commands',
         intro: 'Every command is GM only. A listener can be named by its name or its ID.',
+        mods: 'Other mods, such as ScriptCards, can send these commands too. Their replies are whispered to the GM.',
         colCommand: 'Command',
         colDesc: 'What it does',
       },
@@ -4588,6 +4595,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Chat-komennot',
         intro:
           'Kaikki komennot ovat vain pelinjohtajalle. Kuuntelijaan voi viitata nimellä tai ID-tunnuksella.',
+        mods: 'Myös muut modit, kuten ScriptCards, voivat lähettää näitä komentoja. Niiden vastaukset kuiskataan GM:lle.',
         colCommand: 'Komento',
         colDesc: 'Mitä se tekee',
       },
@@ -5035,6 +5043,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Commandes de chat',
         intro:
           'Toutes les commandes sont réservées au MJ. Un écouteur peut être désigné par son nom ou son ID.',
+        mods: "D'autres mods, tels que ScriptCards, peuvent également envoyer ces commandes. Leurs réponses sont murmurées au MJ.",
         colCommand: 'Commande',
         colDesc: 'Ce qu’elle fait',
       },
@@ -5479,6 +5488,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Chatbefehle',
         intro:
           'Alle Befehle sind nur für die SL. Ein Listener kann über seinen Namen oder seine ID angegeben werden.',
+        mods: 'Andere Mods, wie zum Beispiel ScriptCards, können diese Befehle ebenfalls senden. Ihre Antworten werden dem GM zugeflüstert.',
         colCommand: 'Befehl',
         colDesc: 'Funktion',
       },
@@ -5924,6 +5934,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Εντολές συνομιλίας',
         intro:
           'Όλες οι εντολές είναι μόνο για τον GM. Ένας ακροατής μπορεί να δηλωθεί με το όνομα ή το ID του.',
+        mods: 'Άλλα mods, όπως το ScriptCards, μπορούν επίσης να στείλουν αυτές τις εντολές. Οι απαντήσεις τους ψιθυρίζονται στον GM.',
         colCommand: 'Εντολή',
         colDesc: 'Τι κάνει',
       },
@@ -6362,6 +6373,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: "פקודות צ'אט",
         intro: 'כל הפקודות מיועדות ל-GM בלבד. אפשר לציין מאזין לפי השם או המזהה שלו.',
+        mods: 'מודים אחרים, כמו ScriptCards, יכולים גם הם לשלוח את הפקודות האלה. התשובות שלהם נשלחות בלחישה ל-GM.',
         colCommand: 'פקודה',
         colDesc: 'מה היא עושה',
       },
@@ -6806,6 +6818,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Chatparancsok',
         intro:
           'Minden parancs csak GM-nek érhető el. A figyelőre a nevével vagy az azonosítójával hivatkozhat.',
+        mods: 'Más modok, például a ScriptCards is küldhetik ezeket a parancsokat. Válaszaikat a GM-nek suttogják.',
         colCommand: 'Parancs',
         colDesc: 'Mit csinál',
       },
@@ -7248,6 +7261,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Comandi di chat',
         intro:
           "Tutti i comandi sono riservati al GM. Un listener si può indicare con il nome o con l'ID.",
+        mods: 'Anche altri mod, come ScriptCards, possono inviare questi comandi. Le loro risposte vengono sussurrate al GM.',
         colCommand: 'Comando',
         colDesc: 'Cosa fa',
       },
@@ -7689,6 +7703,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: 'チャットコマンド',
         intro: 'すべてのコマンドは GM 専用です。リスナーは名前または ID で指定できます。',
+        mods: 'ScriptCards などの他の Mod もこれらのコマンドを送信できます。返信は GM にささやかれます。',
         colCommand: 'コマンド',
         colDesc: '機能',
       },
@@ -8128,6 +8143,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: '채팅 명령어',
         intro: '모든 명령어는 GM 전용입니다. 리스너는 이름이나 ID로 지정할 수 있습니다.',
+        mods: 'ScriptCards 같은 다른 모드도 이 명령을 보낼 수 있습니다. 응답은 GM에게 귓속말로 전달됩니다.',
         colCommand: '명령어',
         colDesc: '기능',
       },
@@ -8570,6 +8586,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Polecenia czatu',
         intro:
           'Wszystkie polecenia są tylko dla MG. Listener można wskazać nazwą lub identyfikatorem.',
+        mods: 'Inne mody, takie jak ScriptCards, również mogą wysyłać te polecenia. Ich odpowiedzi są szeptane do GM.',
         colCommand: 'Polecenie',
         colDesc: 'Działanie',
       },
@@ -9016,6 +9033,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Comandos de chat',
         intro:
           'Todos os comandos são exclusivos do mestre. Um ouvinte pode ser indicado pelo nome ou pelo ID.',
+        mods: 'Outros mods, como os ScriptCards, também podem enviar estes comandos. As suas respostas são sussurradas para o GM.',
         colCommand: 'Comando',
         colDesc: 'O que faz',
       },
@@ -9461,6 +9479,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Comandos de chat',
         intro:
           'Todos os comandos são exclusivos do mestre. Um ouvinte pode ser indicado pelo nome ou pelo ID.',
+        mods: 'Outros mods, como ScriptCards, também podem enviar esses comandos. Suas respostas são sussurradas para o GM.',
         colCommand: 'Comando',
         colDesc: 'O que faz',
       },
@@ -9907,6 +9926,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: 'Команды чата',
         intro: 'Все команды доступны только мастеру. Слушателя можно указать по имени или по ID.',
+        mods: 'Другие моды, такие как ScriptCards, тоже могут отправлять эти команды. Их ответы шёпотом приходят ГМ.',
         colCommand: 'Команда',
         colDesc: 'Что делает',
       },
@@ -10351,6 +10371,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Comandos de chat',
         intro:
           'Todos los comandos son solo para el DJ. Un oyente se puede indicar por su nombre o por su ID.',
+        mods: 'Otros mods, como ScriptCards, también pueden enviar estos comandos. Sus respuestas se susurran al GM.',
         colCommand: 'Comando',
         colDesc: 'Qué hace',
       },
@@ -10793,6 +10814,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Chattkommandon',
         intro:
           'Alla kommandon är endast för GM. En lyssnare kan anges med sitt namn eller sitt ID.',
+        mods: 'Andra mods, som ScriptCards, kan också skicka dessa kommandon. Deras svar viskas till GM.',
         colCommand: 'Kommando',
         colDesc: 'Vad det gör',
       },
@@ -11236,6 +11258,7 @@ const CustomizableRollListenerMod = (() => {
         heading: 'Sohbet Komutları',
         intro:
           'Tüm komutlar yalnızca GM içindir. Bir dinleyici adıyla veya kimliğiyle belirtilebilir.',
+        mods: 'ScriptCards gibi diğer modlar da bu komutları gönderebilir. Yanıtları GM’ye fısıldanır.',
         colCommand: 'Komut',
         colDesc: 'Ne yapar',
       },
@@ -11680,6 +11703,7 @@ const CustomizableRollListenerMod = (() => {
       commands: {
         heading: 'Команди чату',
         intro: 'Усі команди доступні лише майстру. Слухача можна вказати за ім’ям або за ID.',
+        mods: 'Інші моди, такі як ScriptCards, також можуть надсилати ці команди. Їхні відповіді надходять GM пошепки.',
         colCommand: 'Команда',
         colDesc: 'Що робить',
       },
@@ -12993,7 +13017,7 @@ const CustomizableRollListenerMod = (() => {
        <p style="${STYLE.p}">${h('templates.links')} ${templateLinks}</p>`
     )}
     ${section('rolls', list(raw('rolls.points')))}
-    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
+    ${section('commands', `<p style="${STYLE.p}">${h('commands.intro')}</p><p style="${STYLE.p}">${h('commands.mods')}</p>${table([t('handout.commands.colCommand', lang), t('handout.commands.colDesc', lang)], commands)}`)}
     ${section('options', `<p style="${STYLE.p}">${h('options.intro')}</p>${table([t('handout.options.colOption', lang), t('handout.options.colDesc', lang)], options)}`)}
     ${section('placeholders', `<p style="${STYLE.p}">${h('placeholders.intro')}</p>${table([t('handout.placeholders.colName', lang), t('handout.placeholders.colDesc', lang)], placeholders)}`)}
     ${section('running', list(raw('running.points')))}
