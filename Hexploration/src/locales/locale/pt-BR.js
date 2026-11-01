@@ -292,6 +292,7 @@ const TRANSLATION = {
       heading: 'Comandos',
       intro:
         'Somente GMs podem usar esses comandos. A maioria atua nos objetos selecionados; o resto atua na página que você está visualizando.',
+      mods: 'Outros mods, como ScriptCards, também podem enviar esses comandos. Suas respostas são sussurradas para o GM.',
       colCommand: 'Comando',
       colDesc: 'O que isso faz',
     },

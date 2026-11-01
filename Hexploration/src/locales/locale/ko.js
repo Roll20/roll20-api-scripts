@@ -286,6 +286,7 @@ const TRANSLATION = {
       heading: '명령',
       intro:
         'GM만이 이 명령을 사용할 수 있습니다. 대부분은 선택한 개체에 작용합니다. 나머지는 현재 보고 있는 페이지에서 수행됩니다.',
+      mods: 'ScriptCards 같은 다른 모드도 이 명령을 보낼 수 있습니다. 응답은 GM에게 귓속말로 전달됩니다.',
       colCommand: '명령',
       colDesc: '기능',
     },

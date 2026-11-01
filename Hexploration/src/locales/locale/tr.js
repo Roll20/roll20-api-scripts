@@ -290,6 +290,7 @@ const TRANSLATION = {
       heading: 'Komutlar',
       intro:
         "Bu komutları yalnızca GM'ler kullanabilir. Çoğu seçili nesneler üzerinde çalışır; geri kalanı görüntülediğiniz sayfada çalışır.",
+      mods: 'ScriptCards gibi diğer modlar da bu komutları gönderebilir. Yanıtları GM’ye fısıldanır.',
       colCommand: 'Komut',
       colDesc: 'Ne işe yarar',
     },

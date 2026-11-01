@@ -275,6 +275,7 @@ const TRANSLATION = {
       heading: '命令',
       intro:
         '只有 GM 可以使用這些指令。大多數作用於選定的物件；其餘的將在您正在查看的頁面上進行操作。',
+      mods: '其他 Mod（例如 ScriptCards）也可以發送這些指令。它們的回覆會以密語傳給 GM。',
       colCommand: '命令',
       colDesc: '它的作用',
     },

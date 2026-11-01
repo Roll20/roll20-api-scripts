@@ -6,6 +6,10 @@
 
 - Commands sent by other Mods, such as a ScriptCards `--@hexploration|` call, are no longer ignored. Roll20 sends them from the player "API", which is not a GM. Their replies are whispered to the GM.
 
+### Changed
+
+- The Help handout says that other Mods can send these commands, in all 24 languages.
+
 ## 2.0.2 - 2026-10-30
 
 ### Fixed

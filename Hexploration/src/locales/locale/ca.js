@@ -295,6 +295,7 @@ const TRANSLATION = {
       heading: 'Ordres',
       intro:
         'Només els GM poden utilitzar aquestes ordres. La majoria actuen sobre els objectes seleccionats; la resta actuen a la pàgina que esteu veient.',
+      mods: 'Altres mods, com ara ScriptCards, també poden enviar aquestes ordres. Les seves respostes es xiuxiuegen al GM.',
       colCommand: 'Ordre',
       colDesc: 'Què fa',
     },

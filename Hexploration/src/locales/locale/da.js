@@ -290,6 +290,7 @@ const TRANSLATION = {
       heading: 'Kommandoer',
       intro:
         "Kun GM'er kan bruge disse kommandoer. De fleste handler på de valgte objekter; resten handler på den side, du ser.",
+      mods: 'Andre mods, såsom ScriptCards, kan også sende disse kommandoer. Deres svar bliver hvisket til GM.',
       colCommand: 'Kommando',
       colDesc: 'Hvad den gør',
     },

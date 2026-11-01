@@ -291,6 +291,7 @@ const TRANSLATION = {
       heading: 'Parancsok',
       intro:
         'Csak a GM-ek használhatják ezeket a parancsokat. A legtöbb a kiválasztott objektumokra hat; a többi az éppen megtekintett oldalon működik.',
+      mods: 'Más modok, például a ScriptCards is küldhetik ezeket a parancsokat. Válaszaikat a GM-nek suttogják.',
       colCommand: 'Parancs',
       colDesc: 'Mit csinál',
     },

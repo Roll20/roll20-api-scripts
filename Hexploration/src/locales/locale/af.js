@@ -291,6 +291,7 @@ const TRANSLATION = {
       heading: 'Opdragte',
       intro:
         "Slegs GM'e kan hierdie opdragte gebruik. Die meeste werk op die geselekteerde voorwerpe; die res tree op op die bladsy wat jy bekyk.",
+      mods: 'Ander mods, soos ScriptCards, kan ook hierdie opdragte stuur. Hulle antwoorde word aan die GM gefluister.',
       colCommand: 'Opdrag',
       colDesc: 'Wat dit doen',
     },

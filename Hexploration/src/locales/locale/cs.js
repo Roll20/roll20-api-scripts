@@ -288,6 +288,7 @@ const TRANSLATION = {
       heading: 'Příkazy',
       intro:
         'Tyto příkazy mohou používat pouze GM. Většina působí na vybrané objekty; zbytek působí na stránce, kterou si prohlížíte.',
+      mods: 'Jiné mody, jako jsou ScriptCards, mohou také odesílat tyto příkazy. Jejich odpovědi jsou šeptány GM.',
       colCommand: 'Příkaz',
       colDesc: 'Co to dělá',
     },

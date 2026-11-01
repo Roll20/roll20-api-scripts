@@ -292,6 +292,7 @@ const TRANSLATION = {
       heading: 'Komennot',
       intro:
         'Vain GM:t voivat käyttää näitä komentoja. Useimmat toimivat valittuihin objekteihin; loput toimivat katsomallasi sivulla.',
+      mods: 'Myös muut modit, kuten ScriptCards, voivat lähettää näitä komentoja. Niiden vastaukset kuiskataan GM:lle.',
       colCommand: 'Komento',
       colDesc: 'Mitä se tekee',
     },

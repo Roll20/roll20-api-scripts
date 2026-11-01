@@ -294,6 +294,7 @@ const TRANSLATION = {
       heading: 'Comandos',
       intro:
         'Solo los DJ pueden usar estos comandos. La mayoría actúa sobre los objetos seleccionados; el resto actúa sobre la página que estás viendo.',
+      mods: 'Otros mods, como ScriptCards, también pueden enviar estos comandos. Sus respuestas se susurran al GM.',
       colCommand: 'Comando',
       colDesc: 'Qué hace',
     },

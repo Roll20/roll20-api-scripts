@@ -299,6 +299,7 @@ const TRANSLATION = {
       heading: 'Befehle',
       intro:
         'Nur GMs können diese Befehle verwenden. Die meisten wirken auf die ausgewählten Objekte; Der Rest wirkt auf der Seite, die Sie gerade betrachten.',
+      mods: 'Andere Mods, wie zum Beispiel ScriptCards, können diese Befehle ebenfalls senden. Ihre Antworten werden dem GM zugeflüstert.',
       colCommand: 'Befehl',
       colDesc: 'Was es bewirkt',
     },

@@ -294,6 +294,7 @@ const TRANSLATION = {
       heading: "Commando's",
       intro:
         "Alleen GM's kunnen deze commando's gebruiken. De meeste werken op de geselecteerde objecten; de rest handelt op de pagina die u bekijkt.",
+      mods: 'Andere mods, zoals ScriptCards, kunnen deze opdrachten ook verzenden. Hun antwoorden worden naar de GM gefluisterd.',
       colCommand: 'Commando',
       colDesc: 'Wat het doet',
     },

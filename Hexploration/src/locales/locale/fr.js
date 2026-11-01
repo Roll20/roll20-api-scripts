@@ -295,6 +295,7 @@ const TRANSLATION = {
       heading: 'Commandes',
       intro:
         'Seuls les MJ peuvent utiliser ces commandes. La plupart agissent sur les objets sélectionnés ; le reste agit sur la page que vous consultez.',
+      mods: "D'autres mods, tels que ScriptCards, peuvent également envoyer ces commandes. Leurs réponses sont murmurées au MJ.",
       colCommand: 'Commande',
       colDesc: 'Ce que ça fait',
     },

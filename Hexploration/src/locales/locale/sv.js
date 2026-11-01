@@ -289,6 +289,7 @@ const TRANSLATION = {
       heading: 'Kommandon',
       intro:
         'Endast GM:er kan använda dessa kommandon. De flesta agerar på de valda objekten; resten agerar på sidan du tittar på.',
+      mods: 'Andra mods, som ScriptCards, kan också skicka dessa kommandon. Deras svar viskas till GM.',
       colCommand: 'Kommando',
       colDesc: 'Vad den gör',
     },

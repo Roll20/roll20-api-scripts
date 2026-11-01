@@ -290,6 +290,7 @@ const TRANSLATION = {
       heading: 'Polecenia',
       intro:
         'Tylko MG mogą używać tych poleceń. Większość działa na wybrane obiekty; reszta działa na stronie, którą przeglądasz.',
+      mods: 'Inne mody, takie jak ScriptCards, również mogą wysyłać te polecenia. Ich odpowiedzi są szeptane do GM.',
       colCommand: 'Polecenie',
       colDesc: 'Co to robi',
     },
