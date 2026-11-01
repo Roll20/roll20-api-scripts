@@ -5,10 +5,12 @@
 ### Added
 
 - `--fields` filters on roll template fields, such as `--fields subcategory=Attack && title~sword` to trigger only on D&D 2024 attack cards for swords. `=` and `!=` compare the whole value, `~` and `!~` look for text in it (a regular expression with `--regex on`), and case is ignored. The inspector lists each message's fields and says when a field does not match. Asked for by Pak on Discord.
+- `--exclude` stops a listener when any of its pieces of text appears, such as `--text sword --exclude dagger`. It is searched like `--text`, and the inspector says when excluded text was found. Suggested by Pak on Discord.
 
 ### Changed
 
 - The README and Help handout explain that `success` and `fail` need a target written into the roll, such as `1d20>15`, so they never trigger on D&D sheet attacks, saves and checks (use `--total` for an AC or DC), and that `--text` also searches the raw content the inspector shows, which for a Beacon card is its HTML.
+- The inspector shortens embedded images in the raw content to their type. The weapon icon on a D&D 2024 attack card used up most of the 3,000 characters shown, hiding attributes such as `data-rollSubcategory`.
 
 ## [2.0.1] – 2026-11-01
 

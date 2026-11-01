@@ -70,24 +70,25 @@ A listener is identified by its ability's ID. Its **commands** live only in the 
 
 Rules (`normaliseListener`):
 
-| Field       | Type     | Meaning                                        |
-| ----------- | -------- | ---------------------------------------------- |
-| `name`      | string   | Mirrors the ability name.                      |
-| `enabled`   | boolean  |                                                |
-| `templates` | string[] | Any of; `none` = no template.                  |
-| `types`     | string[] | Any of; empty = every type but `api`.          |
-| `text`      | string[] | All of; `##` = inline roll.                    |
-| `regex`     | boolean  | Text terms are regular expressions.            |
-| `who`       | string[] | Speaker or template character, any of.         |
-| `players`   | string[] | Player display names, any of.                  |
-| `fields`    | string[] | Template field conditions, all of.             |
-| `results`   | string[] | `crit`, `fumble`, `success`, `fail`, any of.   |
-| `total`     | string   | Comparison text, e.g. `>=15`, `19-20`.         |
-| `natural`   | string   | Comparison text for kept die faces.            |
-| `dice`      | string   | `auto`, `any` or a die size.                   |
-| `cooldown`  | number   | Seconds.                                       |
-| `stop`      | boolean  | Stop evaluating later listeners after a match. |
-| `speaker`   | string   | `default`, `crl` or `roller`.                  |
+| Field       | Type     | Meaning                                         |
+| ----------- | -------- | ----------------------------------------------- |
+| `name`      | string   | Mirrors the ability name.                       |
+| `enabled`   | boolean  |                                                 |
+| `templates` | string[] | Any of; `none` = no template.                   |
+| `types`     | string[] | Any of; empty = every type but `api`.           |
+| `text`      | string[] | All of; `##` = inline roll.                     |
+| `exclude`   | string[] | None of; searched like `text`.                  |
+| `regex`     | boolean  | Text and exclude terms are regular expressions. |
+| `who`       | string[] | Speaker or template character, any of.          |
+| `players`   | string[] | Player display names, any of.                   |
+| `fields`    | string[] | Template field conditions, all of.              |
+| `results`   | string[] | `crit`, `fumble`, `success`, `fail`, any of.    |
+| `total`     | string   | Comparison text, e.g. `>=15`, `19-20`.          |
+| `natural`   | string   | Comparison text for kept die faces.             |
+| `dice`      | string   | `auto`, `any` or a die size.                    |
+| `cooldown`  | number   | Seconds.                                        |
+| `stop`      | boolean  | Stop evaluating later listeners after a match.  |
+| `speaker`   | string   | `default`, `crl` or `roller`.                   |
 
 ## How Matching Works
 
@@ -99,7 +100,7 @@ Rules (`normaliseListener`):
 
 Beacon sheets (D&D 2024) send `advancedroll` messages with no `inlinerolls` or `rolltemplate`. Their dice come in `msg.rolls`, an object keyed by roll name (`Base`, …) whose values have the inline-roll shape (`expression`, `results.rolls[].results[]` with `isCrit`/`isFumble`); their content is an HTML card read by `beacon.js` for the template (first class, `dnd-2024`), character, title, subcategory, mode and the headline total, which replaces the `Base` roll's dice-only total. `msg.characterId` is used for the roller speaker. When `msg.rolls` is missing, the rolls are read from the card's `rt-formula` blocks.
 
-`matchListener` checks, in order: enabled, type, template, who, player, fields, text, then roll checks, and returns the first failing reason (used by the inspector). Text terms are compiled with `compileTerm`: plain terms are escaped, `##` becomes `\$\[\[\d+\]\]`, and matching is case-insensitive. Terms with `##` are searched in `raw` and the markers inside each hit give the roll scope; other terms are searched in `raw` and then `text`. Roll checks pass when one roll in scope meets every condition. `dice: auto` becomes `20` when a d20 is in scope, otherwise `any`.
+`matchListener` checks, in order: enabled, type, template, who, player, fields, text, exclude, then roll checks, and returns the first failing reason (used by the inspector). Text terms are compiled with `compileTerm`: plain terms are escaped, `##` becomes `\$\[\[\d+\]\]`, and matching is case-insensitive. Terms with `##` are searched in `raw` and the markers inside each hit give the roll scope; other terms are searched in `raw` and then `text`. Roll checks pass when one roll in scope meets every condition. `dice: auto` becomes `20` when a d20 is in scope, otherwise `any`.
 
 ## Commands and Speakers
 

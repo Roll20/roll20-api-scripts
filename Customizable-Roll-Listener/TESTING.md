@@ -94,6 +94,8 @@ Roll a few attacks and note which listeners fire (expect "not parseable" in the 
 - [ ] `--results crit` fires on a natural 20 attack from the 2024 sheet.
 - [ ] `--who <character>` and `--text <attack name>` match 2024 rolls.
 - [ ] `--fields subcategory=Attack && title~sword` fires on a 2024 sword attack, not on its damage card or on other weapons; the inspector says "template field does not match" for the others.
+- [ ] `--text sword --exclude dagger` fires on a sword attack and not on a dagger attack; the inspector says "excluded text found".
+- [ ] The inspector's raw content for a 2024 attack shows `src="data:image/svg+xml,…"` instead of the icon's data, and `data-rollSubcategory` is visible.
 - [ ] Note anything the 2024 sheet sends that CRL cannot see.
 
 ## Copying a Game
