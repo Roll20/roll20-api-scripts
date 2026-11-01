@@ -37,21 +37,39 @@ The same listener in one line:
 
 A listener triggers when **every** filter it has matches. Empty filters match everything.
 
-| Filter                | Option        | Matches when…                                                                                                                                                                                 |
-| --------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Roll templates        | `--templates` | The message uses one of these templates (`none` = no template). See [Roll Template Names](#roll-template-names).                                                                              |
-| Message types         | `--types`     | The message is one of: `general`, `rollresult`, `gmrollresult`, `emote`, `whisper`, `desc`, `advancedroll` (Beacon), `api`. Empty means every type except `api` commands.                     |
-| Text                  | `--text`      | Every piece of text (separated by `&&`) appears. Case is ignored. Roll totals and rollable table results count as text. `##` stands for an inline roll.                                       |
-| Text mode             | `--regex`     | `on` reads the text as regular expressions.                                                                                                                                                   |
-| Speakers / characters | `--who`       | The name shown in chat, or the character name in the roll template, is listed (comma separated).                                                                                              |
-| Players               | `--players`   | The sending player's display name is listed (comma separated).                                                                                                                                |
-| Template fields       | `--fields`    | Every field condition (separated by `&&`) holds: `name=value` (is), `name!=value` (is not), `name~text` (contains), `name!~text` (does not contain). See [Template Fields](#template-fields). |
-| Roll result           | `--results`   | `crit` (highest face or `cs` range), `fumble` (a 1 or `cf` range), `success` (a die meets a target such as `1d20>15`), `fail` (a target roll with no successes).                              |
-| Roll total            | `--total`     | A roll's total meets `15`, `>=15`, `<5` or `19-20`.                                                                                                                                           |
-| Natural die           | `--natural`   | A die landed on `20`, `<=2`, `19-20` and so on.                                                                                                                                               |
-| Dice checked          | `--dice`      | `auto` (only d20s when a d20 was rolled, so damage dice do not count as crits), `any`, or a size such as `20` or `d100`.                                                                      |
+| Filter                | Option        | Matches when…                                                                                                                                                                                                                                    |
+| --------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Roll templates        | `--templates` | The message uses one of these templates (`none` = no template). See [Roll Template Names](#roll-template-names).                                                                                                                                 |
+| Message types         | `--types`     | The message is one of: `general`, `rollresult`, `gmrollresult`, `emote`, `whisper`, `desc`, `advancedroll` (Beacon), `api`. Empty means every type except `api` commands.                                                                        |
+| Text                  | `--text`      | Every piece of text (separated by `&&`) appears. Case is ignored. Roll totals, rollable table results and the message's raw content count as text (see [The Inspector](#the-inspector)). `##` stands for an inline roll.                         |
+| Text mode             | `--regex`     | `on` reads the text as regular expressions.                                                                                                                                                                                                      |
+| Speakers / characters | `--who`       | The name shown in chat, or the character name in the roll template, is listed (comma separated).                                                                                                                                                 |
+| Players               | `--players`   | The sending player's display name is listed (comma separated).                                                                                                                                                                                   |
+| Template fields       | `--fields`    | Every field condition (separated by `&&`) holds: `name=value` (is), `name!=value` (is not), `name~text` (contains), `name!~text` (does not contain). See [Template Fields](#template-fields).                                                    |
+| Roll result           | `--results`   | `crit` (highest face or `cs` range), `fumble` (a 1 or `cf` range), `success` (a die meets the target written into the roll, such as `1d20>15`), `fail` (a roll with a target and no successes). See [Success and Failure](#success-and-failure). |
+| Roll total            | `--total`     | A roll's total meets `15`, `>=15`, `<5` or `19-20`.                                                                                                                                                                                              |
+| Natural die           | `--natural`   | A die landed on `20`, `<=2`, `19-20` and so on.                                                                                                                                                                                                  |
+| Dice checked          | `--dice`      | `auto` (only d20s when a d20 was rolled, so damage dice do not count as crits), `any`, or a size such as `20` or `d100`.                                                                                                                         |
 
 Roll checks look at every roll in the message, or only the rolls a `##` in the text found. Dropped dice (advantage and disadvantage) and rerolled dice are ignored. A listener triggers when at least one roll meets every roll check.
+
+### Success and Failure
+
+`success` and `fail` only work with Roll20's target rolls, where the target is written into the roll itself:
+
+- `[[1d20>15]]`: a success when the die shows 15 or more.
+- `[[5d6>4]]`: a dice pool counting the dice that show 4 or more.
+- `[[1d20<10]]`: a roll-under target.
+
+`success` triggers when at least one die meets the target, and `fail` when the roll has a target and no die meets it. A roll exactly on the target is a success.
+
+D&D sheet attacks, saves and checks, on both the 2014 and the 2024 sheets, are plain rolls such as `1d20+5`. The sheet does not know the target's AC or the save's DC, so these rolls are never a success or a failure. To react to beating an AC or DC, use `--total`, such as `--total >=15`; for natural 20s and 1s, use `--results crit` or `fumble`.
+
+### The Inspector
+
+`!crl inspect` (or **Inspect Next Message**) whispers what CRL sees in the next chat message: its type, speaker, character, roll template and **Template fields**, every roll with its dice, the **Text (as listeners read it)**, the **Raw content**, and why each listener did or did not trigger.
+
+`--text` searches both the readable text and the raw content. The raw content is the message as Roll20 sent it: a roll template's `{{field=value}}` source, or for a Beacon card its HTML, so text such as `data-rollSubcategory="Attack"` matches even though it is not shown in the readable text. Long raw content is cut off after 3,000 characters in the inspector, but listeners search all of it. To check one field, `--fields` is clearer.
 
 The D&D 5E by Roll20 (2014) sheet rolls advantage and disadvantage as two separate d20 rolls (`r1` and `r2`) instead of keeping one, so CRL cannot tell which one counts and checks both. With advantage, a 1 on the lower die still counts as a fumble; with disadvantage, a 20 on the higher die still counts as a crit.
 

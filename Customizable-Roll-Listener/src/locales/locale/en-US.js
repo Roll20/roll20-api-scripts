@@ -292,7 +292,7 @@ export default {
         'A listener triggers when every filter it has matches. Empty filters match everything.',
         'Roll templates: the template name, such as atkdmg or simple. "none" matches messages without a template. Several names mean any of them.',
         'Message types: general, rollresult, gmrollresult, emote, whisper, desc, advancedroll (Beacon sheets) and api. When empty, every type except api commands is checked.',
-        'Text: one or more pieces of text, separated by &&, that must all appear. Matching ignores upper and lower case. Text is also found in roll totals and rollable table results.',
+        'Text: one or more pieces of text, separated by &&, that must all appear. Matching ignores upper and lower case. Text is also found in roll totals and rollable table results, and in the message’s raw content, which Inspect shows under Raw content: for a Beacon card, that is its HTML.',
         '## in the text stands for an inline roll; the roll checks then only look at the rolls found there. Without ##, every roll in the message is checked.',
         'Text can be a regular expression instead of plain text (--regex on).',
         'Speakers / characters: the name shown in chat, or the character name in the roll template. Players: the player’s display name.',
@@ -317,7 +317,8 @@ export default {
     rolls: {
       heading: 'Roll Checks',
       points: [
-        'Roll result: critical (the die’s highest face, or the cs range), fumble (a 1, or the cf range), success (at least one die meets a target such as 1d20>15), failure (a target roll with no successes). Several results mean any of them.',
+        'Roll result: critical (the die’s highest face, or the cs range), fumble (a 1, or the cf range), success (at least one die meets the target written into the roll, such as 1d20>15 or the dice pool 5d6>4), failure (a roll with a target and no successes). Several results mean any of them.',
+        'Success and failure only work with rolls that carry their own target. D&D sheet attacks, saves and checks are plain rolls such as 1d20+5, because the sheet does not know the AC or DC, so they are never a success or a failure. To react to beating an AC or DC, use Roll total, such as >=15.',
         'Roll total: a number, a comparison such as >=15, or a range such as 19-20.',
         'Natural die: the face a die landed on, such as 20, or <=2.',
         'Dice checked: auto looks only at d20s when one was rolled, so damage dice rolling their highest face do not count as crits. Choose any die, or a size such as d100, to change that.',
@@ -348,7 +349,8 @@ export default {
       players: 'Player display names, separated by commas.',
       fields:
         'Template field conditions, separated by &&: name=value (is), name!=value (is not), name~text (contains), name!~text (does not contain). With --regex on, ~ reads a regular expression.',
-      results: 'crit, fumble, success and/or fail.',
+      results:
+        'crit, fumble, success and/or fail. success and fail need a target in the roll, such as 1d20>15.',
       total: 'Roll total: 15, >=15, <5 or 19-20.',
       natural: 'Natural die face: 20, <=2 or 19-20.',
       dice: 'auto, any, or a die size such as 20.',
@@ -391,7 +393,7 @@ export default {
     inspector: {
       heading: 'The Inspector',
       points: [
-        'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, and why each listener did or did not trigger.',
+        'Click Inspect Next Message, then make the roll. CRL whispers what it saw: the message type, speaker, character, template and its fields, every roll with its dice, the text listeners search, the raw content (the message as Roll20 sent it, which --text also searches), and why each listener did or did not trigger.',
         'Use it to find a sheet’s template name, or to see what a Beacon sheet (such as D&D 2024) sends.',
         'Beacon sheets post roll cards instead of roll templates. CRL reads them: the template is the card’s first class (dnd-2024 for D&D 2024), the character, title (such as Dexterity Check) and subcategory become fields, and each roll in the breakdown is a roll, so crit, fumble, total and natural checks work.',
       ],
